@@ -5,6 +5,7 @@ name = "diplomat"
 version = "0.1.0"
 dependencies = [
  "diplomat_core",
+ "proc-macro2",
  "quote",
  "syn",
 ]
@@ -14,6 +15,7 @@ name = "diplomat-tool"
 version = "0.1.0"
 dependencies = [
  "diplomat_core",
+ "quote",
  "syn",
  "syn-inline-mod",
 ]
@@ -23,6 +25,7 @@ name = "diplomat_core"
 version = "0.1.0"
 dependencies = [
  "impls",
+ "proc-macro2",
  "quote",
  "syn",
 ]

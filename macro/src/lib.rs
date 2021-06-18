@@ -1,8 +1,7 @@
 use std::str::FromStr;
 
-use proc_macro::TokenStream;
-use quote::{__private::Span, quote};
-use syn::__private::{ToTokens, TokenStream2};
+use proc_macro2::{Span, TokenStream};
+use quote::{quote, ToTokens};
 use syn::*;
 
 use diplomat_core::extract_from_mod;
@@ -69,7 +68,7 @@ fn gen_trait_method(strct: &meta::Struct, m: &meta::Method) -> Item {
         ),
         Some(return_typ) => {
             let return_typ_syn = syn::Type::Path(
-                syn::parse2(TokenStream2::from_str(return_typ.name.as_str()).unwrap()).unwrap(),
+                syn::parse2(TokenStream::from_str(return_typ.name.as_str()).unwrap()).unwrap(),
             );
 
             Item::Fn(
@@ -107,7 +106,10 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
 }
 
 #[proc_macro_attribute]
-pub fn bridge(_attr: TokenStream, input: TokenStream) -> TokenStream {
+pub fn bridge(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let expanded = gen_bridge(parse_macro_input!(input));
-    TokenStream::from(expanded.to_token_stream())
+    proc_macro::TokenStream::from(expanded.to_token_stream())
 }

@@ -12,3 +12,4 @@ path = "src/lib.rs"
 diplomat_core = { path = "../core" }
 syn = { version = "1.0", features = [ "full", "extra-traits" ] }
 quote = "1.0"
+proc-macro2 = "1.0.27"
