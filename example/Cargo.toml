@@ -5,6 +5,6 @@ authors = ["Shadaj Laddad <shadaj@users.noreply.github.com>"]
 edition = "2018"
 
 [dependencies]
-diplomat = { path = "../diplomat" }
+diplomat = { path = "../macro" }
 icu = "0.2"
 fixed_decimal = "0.2.0"

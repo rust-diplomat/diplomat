@@ -1,11 +1,10 @@
 [package]
-name = "diplomat"
+name = "diplomat_core"
 version = "0.1.0"
 authors = ["Shadaj Laddad <shadaj@users.noreply.github.com>"]
 edition = "2018"
 
 [lib]
-proc-macro = true
 path = "src/lib.rs"
 
 [dependencies]

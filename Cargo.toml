@@ -1,5 +1,7 @@
 [workspace]
 members = [
-  "diplomat",
-  "example",
+  "core",
+  "macro",
+  "tool",
+  "example"
 ]

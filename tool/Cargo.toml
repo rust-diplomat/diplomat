@@ -1,0 +1,10 @@
+[package]
+name = "diplomat-tool"
+version = "0.1.0"
+authors = ["Shadaj Laddad <shadaj@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies]
+diplomat_core = { path = "../core" }
+syn = { version = "1.0", features = [ "full", "extra-traits" ] }
+syn-inline-mod = "0.4.0"

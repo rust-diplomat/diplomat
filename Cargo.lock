@@ -4,6 +4,24 @@
 name = "diplomat"
 version = "0.1.0"
 dependencies = [
+ "diplomat_core",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "diplomat-tool"
+version = "0.1.0"
+dependencies = [
+ "diplomat_core",
+ "syn",
+ "syn-inline-mod",
+]
+
+[[package]]
+name = "diplomat_core"
+version = "0.1.0"
+dependencies = [
  "impls",
  "quote",
  "syn",
@@ -237,6 +255,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "syn-inline-mod"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0356188b235b38dc1357a13fa13b79319d80598028d549af5750e4b03a0fc47"
+dependencies = [
+ "proc-macro2",
+ "syn",
 ]
 
 [[package]]
