@@ -39,7 +39,7 @@ impl Method {
         let self_param = m.sig.receiver().map(|rec| match rec {
             FnArg::Receiver(rec) => Param {
                 name: "self".to_string(),
-                tpe: Type {
+                ty: Type {
                     name: self_ident.to_string(),
                     mutability: rec.mutability.is_some(),
                     reference: rec.reference.is_some(),
@@ -48,7 +48,7 @@ impl Method {
             _ => panic!("Unexpected self param type"),
         });
 
-        let return_tpe = match &m.sig.output {
+        let return_ty = match &m.sig.output {
             ReturnType::Type(_, return_typ) => Some(return_typ.as_ref().into()),
             ReturnType::Default => None,
         };
@@ -58,7 +58,7 @@ impl Method {
             full_path_name: extern_ident.to_string(),
             self_param,
             params: all_params,
-            return_type: return_tpe,
+            return_type: return_ty,
         }
     }
 }
@@ -66,7 +66,7 @@ impl Method {
 #[derive(Debug)]
 pub struct Param {
     pub name: String,
-    pub tpe: Type,
+    pub ty: Type,
 }
 
 impl From<&syn::PatType> for Param {
@@ -78,7 +78,7 @@ impl From<&syn::PatType> for Param {
 
         Param {
             name: ident.ident.to_string(),
-            tpe: t.ty.as_ref().into(),
+            ty: t.ty.as_ref().into(),
         }
     }
 }
@@ -117,8 +117,8 @@ impl Type {
 }
 
 impl From<&syn::Type> for Type {
-    fn from(tpe: &syn::Type) -> Type {
-        match tpe {
+    fn from(ty: &syn::Type) -> Type {
+        match ty {
             syn::Type::Reference(r) => {
                 let mut without_ref: Type = r.elem.as_ref().into();
                 without_ref.reference = true;

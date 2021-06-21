@@ -3,7 +3,7 @@ use std::path::Path;
 use quote::ToTokens;
 use syn::Item;
 
-use diplomat_core::{extract_from_mod, meta};
+use diplomat_core::{extract_from_file, meta};
 
 fn gen_js(strcts: Vec<meta::Struct>) {
     let mut out = vec![];
@@ -41,19 +41,5 @@ fn gen_js(strcts: Vec<meta::Struct>) {
 
 fn main() {
     let lib_file = syn_inline_mod::parse_and_inline_modules(&Path::new("./src/main.rs"));
-    let mut all_structs = vec![];
-
-    lib_file.items.iter().for_each(|i| {
-        if let Item::Mod(item_mod) = i {
-            if item_mod
-                .attrs
-                .iter()
-                .any(|a| a.path.to_token_stream().to_string() == "diplomat :: bridge")
-            {
-                all_structs.append(&mut extract_from_mod(&item_mod));
-            }
-        }
-    });
-
-    gen_js(all_structs);
+    gen_js(extract_from_file(lib_file));
 }

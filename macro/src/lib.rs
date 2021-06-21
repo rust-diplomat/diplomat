@@ -7,7 +7,7 @@ use syn::*;
 use diplomat_core::extract_from_mod;
 use diplomat_core::meta;
 
-fn gen_trait_method(strct: &meta::Struct, m: &meta::Method) -> Item {
+fn gen_struct_method(strct: &meta::Struct, m: &meta::Method) -> Item {
     let self_ident = Ident::new(strct.name.as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());
@@ -26,7 +26,7 @@ fn gen_trait_method(strct: &meta::Struct, m: &meta::Method) -> Item {
                     subpat: None,
                 })),
                 colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(p.tpe.to_syn()),
+                ty: Box::new(p.ty.to_syn()),
             })
         })
         .collect::<Vec<FnArg>>();
@@ -51,7 +51,7 @@ fn gen_trait_method(strct: &meta::Struct, m: &meta::Method) -> Item {
                 attrs: vec![],
                 pat: Box::new(this_ident.clone()),
                 colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(self_param.tpe.to_syn()),
+                ty: Box::new(self_param.ty.to_syn()),
             }),
         );
     }
@@ -105,7 +105,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         strct
             .methods
             .iter()
-            .for_each(|m| new_contents.push(gen_trait_method(&strct, m)));
+            .for_each(|m| new_contents.push(gen_struct_method(&strct, m)));
     }
 
     ItemMod {

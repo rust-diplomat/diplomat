@@ -1,4 +1,5 @@
 use syn::*;
+use quote::ToTokens;
 
 pub mod meta;
 
@@ -33,4 +34,21 @@ pub fn extract_from_mod(input: &ItemMod) -> Vec<meta::Struct> {
             _ => None,
         })
         .collect()
+}
+
+pub fn extract_from_file(file: File) -> Vec<meta::Struct> {
+    let mut out = vec![];
+    file.items.iter().for_each(|i| {
+        if let Item::Mod(item_mod) = i {
+            if item_mod
+                .attrs
+                .iter()
+                .any(|a| a.path.to_token_stream().to_string() == "diplomat :: bridge")
+            {
+                out.append(&mut extract_from_mod(&item_mod));
+            }
+        }
+    });
+
+    out
 }
