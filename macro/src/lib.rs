@@ -56,12 +56,25 @@ fn gen_trait_method(strct: &meta::Struct, m: &meta::Method) -> Item {
         );
     }
 
+    let method_invocation = match &m.self_param {
+        Some(_) => {
+            quote! {
+                #this_ident.#method_ident
+            }
+        }
+        None => {
+            quote! {
+                #self_ident::#method_ident
+            }
+        }
+    };
+
     match &m.return_type {
         None => Item::Fn(
             syn::parse2(quote! {
                 #[no_mangle]
                 pub extern "C" fn #extern_ident(#(#all_params),*) {
-                    #this_ident.#method_ident(#(#all_param_names),*);
+                    #method_invocation(#(#all_param_names),*);
                 }
             })
             .unwrap(),
@@ -75,7 +88,7 @@ fn gen_trait_method(strct: &meta::Struct, m: &meta::Method) -> Item {
                 syn::parse2(quote! {
                     #[no_mangle]
                     pub extern "C" fn #extern_ident(#(#all_params),*) -> #return_typ_syn {
-                        #self_ident::#method_ident(#(#all_param_names),*)
+                        #method_invocation(#(#all_param_names),*)
                     }
                 })
                 .unwrap(),
