@@ -1,8 +1,5 @@
 use std::path::Path;
 
-use quote::ToTokens;
-use syn::Item;
-
 use diplomat_core::{extract_from_file, meta};
 
 fn gen_js(strcts: Vec<meta::Struct>) {

@@ -101,6 +101,18 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     let all_structs = extract_from_mod(&input);
     let (brace, mut new_contents) = input.content.unwrap();
 
+    new_contents.iter_mut().for_each(|c| match c {
+        Item::Struct(s) => {
+            if !s.attrs.iter().find(|a| a.path.to_token_stream().to_string() == "repr").is_some() {
+                *s = syn::parse2(quote! {
+                    #[repr(C)]
+                    #s
+                }).unwrap();
+            }
+        },
+        _ => {}
+    });
+
     for strct in all_structs.iter() {
         strct
             .methods
