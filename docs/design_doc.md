@@ -41,7 +41,7 @@ Diplomat will provide a proc macro for generating the C bindings, as well as a `
 
 Essentially the user can define blocks like the following:
 
-```rust=
+```rust
 // The Rust-side PluralRules.
 struct PluralRules {
  // ...
