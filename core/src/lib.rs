@@ -1,5 +1,5 @@
-use syn::*;
 use quote::ToTokens;
+use syn::*;
 
 pub mod meta;
 
@@ -45,7 +45,7 @@ pub fn extract_from_file(file: File) -> Vec<meta::Struct> {
                 .iter()
                 .any(|a| a.path.to_token_stream().to_string() == "diplomat :: bridge")
             {
-                out.append(&mut extract_from_mod(&item_mod));
+                out.append(&mut extract_from_mod(item_mod));
             }
         }
     });
