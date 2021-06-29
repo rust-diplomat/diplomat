@@ -5,7 +5,7 @@ use syn::*;
 use diplomat_core::extract_from_mod;
 use diplomat_core::meta;
 
-fn gen_struct_method(strct: &meta::Struct, m: &meta::Method) -> Item {
+fn gen_struct_method(strct: &meta::structs::Struct, m: &meta::methods::Method) -> Item {
     let self_ident = Ident::new(strct.name.as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());

@@ -2,7 +2,7 @@ use std::path::Path;
 
 use diplomat_core::{extract_from_file, meta};
 
-fn gen_js(strcts: Vec<meta::Struct>) {
+fn gen_js(strcts: Vec<meta::structs::Struct>) {
     let mut out = vec![];
     for strct in strcts.iter() {
         out.push(format!("export class {} {{", strct.name));

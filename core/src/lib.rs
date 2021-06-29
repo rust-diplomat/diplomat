@@ -1,16 +1,22 @@
+use std::collections::HashMap;
+
 use quote::ToTokens;
 use syn::*;
 
 pub mod meta;
 
-pub fn extract_from_mod(input: &ItemMod) -> Vec<meta::Struct> {
+pub fn extract_from_mod(input: &ItemMod) -> Vec<meta::structs::Struct> {
+    let mut structs_by_name = HashMap::new();
     input
         .content
         .as_ref()
         .unwrap()
         .1
         .iter()
-        .filter_map(|a| match a {
+        .for_each(|a| match a {
+            Item::Struct(strct) => {
+                structs_by_name.insert(strct.ident.to_string(), meta::structs::Struct::from(strct));
+            }
             Item::Impl(ipl) => {
                 assert!(ipl.trait_.is_none());
 
@@ -19,24 +25,28 @@ pub fn extract_from_mod(input: &ItemMod) -> Vec<meta::Struct> {
                     _ => panic!("Self type not found"),
                 };
 
-                Some(meta::Struct {
-                    name: self_typ.path.get_ident().unwrap().to_string(),
-                    methods: ipl
-                        .items
-                        .iter()
-                        .filter_map(|i| match i {
-                            ImplItem::Method(m) => Some(meta::Method::from_syn(m, self_typ)),
-                            _ => None,
-                        })
-                        .collect(),
-                })
+                let mut new_methods = ipl
+                    .items
+                    .iter()
+                    .filter_map(|i| match i {
+                        ImplItem::Method(m) => Some(meta::methods::Method::from_syn(m, self_typ)),
+                        _ => None,
+                    })
+                    .collect();
+
+                structs_by_name
+                    .get_mut(&self_typ.path.get_ident().unwrap().to_string())
+                    .unwrap()
+                    .methods
+                    .append(&mut new_methods);
             }
-            _ => None,
-        })
-        .collect()
+            _ => {}
+        });
+
+    structs_by_name.values().cloned().collect()
 }
 
-pub fn extract_from_file(file: File) -> Vec<meta::Struct> {
+pub fn extract_from_file(file: File) -> Vec<meta::structs::Struct> {
     let mut out = vec![];
     file.items.iter().for_each(|i| {
         if let Item::Mod(item_mod) = i {
