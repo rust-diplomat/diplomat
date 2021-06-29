@@ -23,7 +23,7 @@ impl From<&syn::ItemStruct> for Struct {
                             .as_ref()
                             .map(|i| i.to_string())
                             .unwrap_or(format!("{}", i)),
-                        Type::from(&f.ty),
+                        (&f.ty).into(),
                     )
                 })
                 .collect(),
