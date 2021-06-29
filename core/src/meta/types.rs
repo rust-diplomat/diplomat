@@ -6,9 +6,12 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
+use super::structs::Struct;
+
 #[derive(Clone, Debug)]
 pub enum Type {
     Primitive(PrimitiveType),
+    Struct(Box<Struct>),
     Named(String),
     Reference(Box<Type>, /* mutable */ bool),
     Box(Box<Type>),
@@ -19,6 +22,9 @@ impl Type {
         match self {
             Type::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
+            }
+            Type::Struct(strct) => {
+                syn::Type::Path(syn::parse_str(strct.as_ref().name.as_str()).unwrap())
             }
             Type::Named(name) => syn::Type::Path(syn::parse_str(name.as_str()).unwrap()),
             Type::Reference(underlying, mutable) => syn::Type::Reference(TypeReference {
@@ -48,6 +54,52 @@ impl Type {
                     }]),
                 },
             }),
+        }
+    }
+
+    pub fn deref(&self, env: HashMap<String, Struct>) -> Type {
+        match self {
+            Type::Primitive(_) => self.clone(),
+            Type::Struct(_) => self.clone(),
+            Type::Named(name) => Type::Struct(Box::new(env.get(name).unwrap().clone())),
+            Type::Reference(underlying, mutability) => Type::Reference(
+                Box::new(underlying.as_ref().deref(env).clone()),
+                *mutability,
+            ),
+            Type::Box(underlying) => Type::Box(Box::new(underlying.as_ref().deref(env).clone())),
+        }
+    }
+}
+
+impl From<&syn::Type> for Type {
+    fn from(ty: &syn::Type) -> Type {
+        match ty {
+            syn::Type::Reference(r) => {
+                Type::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
+            }
+            syn::Type::Path(p) => {
+                if let Some(primitive) = p
+                    .path
+                    .get_ident()
+                    .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                {
+                    Type::Primitive(primitive.clone())
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
+                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    {
+                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                            Type::Box(Box::new(tpe.into()))
+                        } else {
+                            panic!("Expected first type argument for Box to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Box type")
+                    }
+                } else {
+                    Type::Named(p.path.to_token_stream().to_string())
+                }
+            }
+            _ => panic!(),
         }
     }
 }
@@ -98,37 +150,4 @@ lazy_static! {
         .iter()
         .map(|t| (t.1.clone(), t.0))
         .collect();
-}
-
-impl From<&syn::Type> for Type {
-    fn from(ty: &syn::Type) -> Type {
-        match ty {
-            syn::Type::Reference(r) => {
-                Type::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
-            }
-            syn::Type::Path(p) => {
-                if let Some(primitive) = p
-                    .path
-                    .get_ident()
-                    .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
-                {
-                    Type::Primitive(primitive.clone())
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
-                    {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
-                            Type::Box(Box::new(tpe.into()))
-                        } else {
-                            panic!("Expected first type argument for Box to be a type")
-                        }
-                    } else {
-                        panic!("Expected angle brackets for Box type")
-                    }
-                } else {
-                    Type::Named(p.path.to_token_stream().to_string())
-                }
-            }
-            _ => panic!(),
-        }
-    }
 }

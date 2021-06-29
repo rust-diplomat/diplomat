@@ -99,11 +99,10 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
 
     new_contents.iter_mut().for_each(|c| {
         if let Item::Struct(s) = c {
-            if !s
-                .attrs
-                .iter()
-                .any(|a| a.path.to_token_stream().to_string() == "repr")
-            {
+            if !s.attrs.iter().any(|a| {
+                let string_path = a.path.to_token_stream().to_string();
+                string_path == "repr" || string_path == "diplomat :: opaque"
+            }) {
                 *s = syn::parse2(quote! {
                     #[repr(C)]
                     #s
@@ -137,4 +136,16 @@ pub fn bridge(
 ) -> proc_macro::TokenStream {
     let expanded = gen_bridge(parse_macro_input!(input));
     proc_macro::TokenStream::from(expanded.to_token_stream())
+}
+
+#[proc_macro_attribute]
+pub fn opaque(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let strct: ItemStruct = parse_macro_input!(input);
+    proc_macro::TokenStream::from(quote! {
+        #[repr(transparent)]
+        #strct
+    })
 }
