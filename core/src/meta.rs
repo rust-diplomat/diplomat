@@ -45,11 +45,11 @@ impl Method {
                 name: "self".to_string(),
                 ty: if rec.reference.is_some() {
                     Type::Reference(
-                        Box::new(Type::FFIStruct(self_ident.to_string())),
+                        Box::new(Type::Named(self_ident.to_string())),
                         rec.mutability.is_some(),
                     )
                 } else {
-                    Type::FFIStruct(self_ident.to_string())
+                    Type::Named(self_ident.to_string())
                 },
             },
             _ => panic!("Unexpected self param type"),
@@ -93,8 +93,8 @@ impl From<&syn::PatType> for Param {
 #[derive(Clone, Debug)]
 pub enum Type {
     Primitive(PrimitiveType),
-    FFIStruct(String),
-    Reference(Box<Type>, bool),
+    Named(String),
+    Reference(Box<Type>, /* mutable */ bool),
     Box(Box<Type>),
 }
 
@@ -104,7 +104,7 @@ impl Type {
             Type::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
-            Type::FFIStruct(name) => syn::Type::Path(syn::parse_str(name.as_str()).unwrap()),
+            Type::Named(name) => syn::Type::Path(syn::parse_str(name.as_str()).unwrap()),
             Type::Reference(underlying, mutable) => syn::Type::Reference(TypeReference {
                 and_token: syn::token::And(Span::call_site()),
                 lifetime: None,
@@ -209,7 +209,7 @@ impl From<&syn::Type> for Type {
                         panic!("Expected angle brackets for Box type")
                     }
                 } else {
-                    Type::FFIStruct(p.path.to_token_stream().to_string())
+                    Type::Named(p.path.to_token_stream().to_string())
                 }
             }
             _ => panic!(),
