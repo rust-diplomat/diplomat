@@ -62,11 +62,10 @@ impl Type {
             Type::Primitive(_) => self.clone(),
             Type::Struct(_) => self.clone(),
             Type::Named(name) => Type::Struct(Box::new(env.get(name).unwrap().clone())),
-            Type::Reference(underlying, mutability) => Type::Reference(
-                Box::new(underlying.as_ref().deref(env).clone()),
-                *mutability,
-            ),
-            Type::Box(underlying) => Type::Box(Box::new(underlying.as_ref().deref(env).clone())),
+            Type::Reference(underlying, mutability) => {
+                Type::Reference(Box::new(underlying.as_ref().deref(env)), *mutability)
+            }
+            Type::Box(underlying) => Type::Box(Box::new(underlying.as_ref().deref(env))),
         }
     }
 }
