@@ -1,6 +1,4 @@
-use std::str::FromStr;
-
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::Span;
 use quote::{quote, ToTokens};
 use syn::*;
 
@@ -80,9 +78,7 @@ fn gen_struct_method(strct: &meta::Struct, m: &meta::Method) -> Item {
             .unwrap(),
         ),
         Some(return_typ) => {
-            let return_typ_syn = syn::Type::Path(
-                syn::parse2(TokenStream::from_str(return_typ.name.as_str()).unwrap()).unwrap(),
-            );
+            let return_typ_syn = return_typ.to_syn();
 
             Item::Fn(
                 syn::parse2(quote! {
@@ -101,23 +97,27 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     let all_structs = extract_from_mod(&input);
     let (brace, mut new_contents) = input.content.unwrap();
 
-    new_contents.iter_mut().for_each(|c| match c {
-        Item::Struct(s) => {
-            if !s.attrs.iter().find(|a| a.path.to_token_stream().to_string() == "repr").is_some() {
+    new_contents.iter_mut().for_each(|c| {
+        if let Item::Struct(s) = c {
+            if !s
+                .attrs
+                .iter()
+                .any(|a| a.path.to_token_stream().to_string() == "repr")
+            {
                 *s = syn::parse2(quote! {
                     #[repr(C)]
                     #s
-                }).unwrap();
+                })
+                .unwrap();
             }
-        },
-        _ => {}
+        }
     });
 
     for strct in all_structs.iter() {
         strct
             .methods
             .iter()
-            .for_each(|m| new_contents.push(gen_struct_method(&strct, m)));
+            .for_each(|m| new_contents.push(gen_struct_method(strct, m)));
     }
 
     ItemMod {
