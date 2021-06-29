@@ -112,7 +112,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         }
     });
 
-    for strct in all_structs.iter() {
+    for strct in all_structs.values() {
         strct
             .methods
             .iter()

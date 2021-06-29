@@ -1,10 +1,10 @@
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use diplomat_core::{extract_from_file, meta};
 
-fn gen_js(strcts: Vec<meta::structs::Struct>) {
+fn gen_js(strcts: HashMap<String, meta::structs::Struct>) {
     let mut out = vec![];
-    for strct in strcts.iter() {
+    for strct in strcts.values() {
         out.push(format!("export class {} {{", strct.name));
         for method in strct.methods.iter() {
             if method.self_param.is_some() {
