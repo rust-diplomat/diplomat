@@ -8,38 +8,61 @@ use std::iter::FromIterator;
 
 use super::{methods::Method, structs::Struct};
 
+/// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Debug)]
 pub enum CustomType {
+    /// A non-opaque struct whose fields will be visible across the FFI boundary.
     Struct(Struct),
     // TODO(shadaj): Enum
-    Opaque(String, Vec<Method>),
+    /// A struct annotated with [`diplomat::opaque` ]whose fields are not visible.
+    Opaque(OpaqueStruct),
+}
+
+/// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
+/// Opaque structs cannot be passed by-value across the FFI boundary, so they
+/// must be boxed or passed as references.
+#[derive(Clone, Debug)]
+pub struct OpaqueStruct {
+    pub name: String,
+    pub methods: Vec<Method>,
 }
 
 impl CustomType {
+    /// Get the name of the custom type, which is unique within a module.
     pub fn name(&self) -> &String {
         match self {
             CustomType::Struct(strct) => &strct.name,
-            CustomType::Opaque(name, _) => name,
+            CustomType::Opaque(strct) => &strct.name,
         }
     }
 
+    /// Get the methods declared in impls of the custom type.
     pub fn methods(&self) -> &Vec<Method> {
         match self {
             CustomType::Struct(strct) => &strct.methods,
-            CustomType::Opaque(_, methods) => methods,
+            CustomType::Opaque(strct) => &strct.methods,
         }
     }
 }
 
+/// A local type reference, such as the type of a field, parameter, or return value.
+/// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
+/// types through references and boxing, and can also capture unresolved paths.
 #[derive(Clone, Debug)]
 pub enum TypeName {
+    /// A built-in Rust scalar primitive.
     Primitive(PrimitiveType),
+    /// An unresolved path to a custom type, which can be resolved after all types
+    /// are collected with [`TypeName::resolve(env)`].
     Named(String),
+    /// An optionally mutable reference to another type.
     Reference(Box<TypeName>, /* mutable */ bool),
+    /// A `Box<T>` type.
     Box(Box<TypeName>),
 }
 
 impl TypeName {
+    /// Converts the [`TypeName`] back into an AST node that can be spliced into a program.
     pub fn to_syn(&self) -> syn::Type {
         match self {
             TypeName::Primitive(name) => {
@@ -76,6 +99,8 @@ impl TypeName {
         }
     }
 
+    /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
+    /// the `env`, which contains all [`CustomType`]s across all FFI modules.
     pub fn resolve<'a>(&self, env: &'a HashMap<String, CustomType>) -> &'a CustomType {
         match self {
             TypeName::Named(name) => env.get(name).unwrap(),
@@ -85,6 +110,12 @@ impl TypeName {
 }
 
 impl From<&syn::Type> for TypeName {
+    /// Extract a [`TypeName`] from a [`syn::Type`] AST node.
+    /// The following rules are used to infer [`TypeName`] variants:
+    /// - If the type is a path with a single element that is the name of a Rust primitive, returns a [`TypeName::Primitive`]
+    /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type paramter recursively converted
+    /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
+    /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
     fn from(ty: &syn::Type) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
@@ -117,6 +148,7 @@ impl From<&syn::Type> for TypeName {
     }
 }
 
+/// A built-in Rust primitive scalar type.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[allow(non_camel_case_types)]
 pub enum PrimitiveType {

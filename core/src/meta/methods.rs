@@ -2,16 +2,29 @@ use syn::*;
 
 use super::types::TypeName;
 
+/// A method declared in the `impl` associated with an FFI struct.
+/// Includes both static and non-static methods, which can be distinguished
+/// by inspecting [`self_param`].
 #[derive(Clone, Debug)]
 pub struct Method {
+    /// The name of the method as initially declared.
     pub name: String,
+
+    /// The name of the FFI function wrapping around the method.
     pub full_path_name: String,
+
+    /// The `self` param of the method, if any.
     pub self_param: Option<Param>,
+
+    /// All non-`self` params taken by the method.
     pub params: Vec<Param>,
+
+    /// The return type of the method, if any.
     pub return_type: Option<TypeName>,
 }
 
 impl Method {
+    /// Extracts a [`Method`] from an AST node inside an `impl`.
     pub fn from_syn(m: &ImplItemMethod, self_type: &TypePath) -> Method {
         let self_ident = self_type.path.get_ident().unwrap();
         let method_ident = &m.sig.ident;
@@ -60,9 +73,14 @@ impl Method {
     }
 }
 
+/// A parameter taken by a [`Method`], including `self`.
 #[derive(Clone, Debug)]
 pub struct Param {
+    /// The name of the parameter in the original method declaration.
     pub name: String,
+
+    /// The type of the parameter, which will be a named reference to
+    /// the associated struct if this is the `self` parameter.
     pub ty: TypeName,
 }
 

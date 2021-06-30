@@ -129,6 +129,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     }
 }
 
+/// Mark a module to be exposed through Diplomat-generated FFI.
 #[proc_macro_attribute]
 pub fn bridge(
     _attr: proc_macro::TokenStream,
@@ -138,6 +139,9 @@ pub fn bridge(
     proc_macro::TokenStream::from(expanded.to_token_stream())
 }
 
+/// Mark a struct as opaque, which means that its field will not be
+/// visible across the FFI boundary and all instances of the struct
+/// must be passed as references.
 #[proc_macro_attribute]
 pub fn opaque(
     _attr: proc_macro::TokenStream,

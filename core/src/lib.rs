@@ -7,6 +7,8 @@ use crate::meta::types::CustomType;
 
 pub mod meta;
 
+/// Get all custom types defined in a module as a mapping from their name to
+/// the extracted metadata.
 pub fn extract_from_mod(input: &ItemMod) -> HashMap<String, meta::types::CustomType> {
     let mut custom_types_by_name = HashMap::new();
     input
@@ -24,7 +26,10 @@ pub fn extract_from_mod(input: &ItemMod) -> HashMap<String, meta::types::CustomT
                 {
                     custom_types_by_name.insert(
                         strct.ident.to_string(),
-                        meta::types::CustomType::Opaque(strct.ident.to_string(), vec![]),
+                        meta::types::CustomType::Opaque(meta::types::OpaqueStruct {
+                            name: strct.ident.to_string(),
+                            methods: vec![],
+                        }),
                     );
                 } else {
                     custom_types_by_name.insert(
@@ -57,7 +62,9 @@ pub fn extract_from_mod(input: &ItemMod) -> HashMap<String, meta::types::CustomT
                     CustomType::Struct(strct) => {
                         strct.methods.append(&mut new_methods);
                     }
-                    CustomType::Opaque(_, methods) => methods.append(&mut new_methods),
+                    CustomType::Opaque(strct) => {
+                        strct.methods.append(&mut new_methods);
+                    }
                 }
             }
             _ => {}
@@ -66,6 +73,7 @@ pub fn extract_from_mod(input: &ItemMod) -> HashMap<String, meta::types::CustomT
     custom_types_by_name
 }
 
+/// Get all custom types across all modules defined in a given file.
 pub fn extract_from_file(file: File) -> HashMap<String, meta::types::CustomType> {
     let mut out = HashMap::new();
     file.items.iter().for_each(|i| {

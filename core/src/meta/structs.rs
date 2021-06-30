@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::{methods::Method, types::TypeName};
 
+/// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, Debug)]
 pub struct Struct {
     pub name: String,
@@ -10,6 +11,7 @@ pub struct Struct {
 }
 
 impl From<&syn::ItemStruct> for Struct {
+    /// Extract a [`Struct`] metadata value from an AST node.
     fn from(strct: &syn::ItemStruct) -> Struct {
         Struct {
             name: strct.ident.to_string(),
