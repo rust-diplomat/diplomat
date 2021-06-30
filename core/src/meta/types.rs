@@ -6,28 +6,47 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use super::structs::Struct;
+use super::{methods::Method, structs::Struct};
 
 #[derive(Clone, Debug)]
-pub enum Type {
-    Primitive(PrimitiveType),
-    Struct(Box<Struct>),
-    Named(String),
-    Reference(Box<Type>, /* mutable */ bool),
-    Box(Box<Type>),
+pub enum CustomType {
+    Struct(Struct),
+    // TODO(shadaj): Enum
+    Opaque(String, Vec<Method>),
 }
 
-impl Type {
+impl CustomType {
+    pub fn name(&self) -> &String {
+        match self {
+            CustomType::Struct(strct) => &strct.name,
+            CustomType::Opaque(name, _) => name,
+        }
+    }
+
+    pub fn methods(&self) -> &Vec<Method> {
+        match self {
+            CustomType::Struct(strct) => &strct.methods,
+            CustomType::Opaque(_, methods) => methods,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum TypeName {
+    Primitive(PrimitiveType),
+    Named(String),
+    Reference(Box<TypeName>, /* mutable */ bool),
+    Box(Box<TypeName>),
+}
+
+impl TypeName {
     pub fn to_syn(&self) -> syn::Type {
         match self {
-            Type::Primitive(name) => {
+            TypeName::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
-            Type::Struct(strct) => {
-                syn::Type::Path(syn::parse_str(strct.as_ref().name.as_str()).unwrap())
-            }
-            Type::Named(name) => syn::Type::Path(syn::parse_str(name.as_str()).unwrap()),
-            Type::Reference(underlying, mutable) => syn::Type::Reference(TypeReference {
+            TypeName::Named(name) => syn::Type::Path(syn::parse_str(name.as_str()).unwrap()),
+            TypeName::Reference(underlying, mutable) => syn::Type::Reference(TypeReference {
                 and_token: syn::token::And(Span::call_site()),
                 lifetime: None,
                 mutability: if *mutable {
@@ -37,7 +56,7 @@ impl Type {
                 },
                 elem: Box::new(underlying.to_syn()),
             }),
-            Type::Box(underlying) => syn::Type::Path(TypePath {
+            TypeName::Box(underlying) => syn::Type::Path(TypePath {
                 qself: None,
                 path: Path {
                     leading_colon: None,
@@ -57,24 +76,19 @@ impl Type {
         }
     }
 
-    pub fn deref(&self, env: HashMap<String, Struct>) -> Type {
+    pub fn resolve<'a>(&self, env: &'a HashMap<String, CustomType>) -> &'a CustomType {
         match self {
-            Type::Primitive(_) => self.clone(),
-            Type::Struct(_) => self.clone(),
-            Type::Named(name) => Type::Struct(Box::new(env.get(name).unwrap().clone())),
-            Type::Reference(underlying, mutability) => {
-                Type::Reference(Box::new(underlying.as_ref().deref(env)), *mutability)
-            }
-            Type::Box(underlying) => Type::Box(Box::new(underlying.as_ref().deref(env))),
+            TypeName::Named(name) => env.get(name).unwrap(),
+            _ => panic!(),
         }
     }
 }
 
-impl From<&syn::Type> for Type {
-    fn from(ty: &syn::Type) -> Type {
+impl From<&syn::Type> for TypeName {
+    fn from(ty: &syn::Type) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
-                Type::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
+                TypeName::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
             }
             syn::Type::Path(p) => {
                 if let Some(primitive) = p
@@ -82,12 +96,12 @@ impl From<&syn::Type> for Type {
                     .get_ident()
                     .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                 {
-                    Type::Primitive(primitive.clone())
+                    TypeName::Primitive(primitive.clone())
                 } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
                         if let GenericArgument::Type(tpe) = &type_args.args[0] {
-                            Type::Box(Box::new(tpe.into()))
+                            TypeName::Box(Box::new(tpe.into()))
                         } else {
                             panic!("Expected first type argument for Box to be a type")
                         }
@@ -95,7 +109,7 @@ impl From<&syn::Type> for Type {
                         panic!("Expected angle brackets for Box type")
                     }
                 } else {
-                    Type::Named(p.path.to_token_stream().to_string())
+                    TypeName::Named(p.path.to_token_stream().to_string())
                 }
             }
             _ => panic!(),

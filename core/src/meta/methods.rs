@@ -1,6 +1,6 @@
 use syn::*;
 
-use super::types::Type;
+use super::types::TypeName;
 
 #[derive(Clone, Debug)]
 pub struct Method {
@@ -8,7 +8,7 @@ pub struct Method {
     pub full_path_name: String,
     pub self_param: Option<Param>,
     pub params: Vec<Param>,
-    pub return_type: Option<Type>,
+    pub return_type: Option<TypeName>,
 }
 
 impl Method {
@@ -34,12 +34,12 @@ impl Method {
             FnArg::Receiver(rec) => Param {
                 name: "self".to_string(),
                 ty: if rec.reference.is_some() {
-                    Type::Reference(
-                        Box::new(Type::Named(self_ident.to_string())),
+                    TypeName::Reference(
+                        Box::new(TypeName::Named(self_ident.to_string())),
                         rec.mutability.is_some(),
                     )
                 } else {
-                    Type::Named(self_ident.to_string())
+                    TypeName::Named(self_ident.to_string())
                 },
             },
             _ => panic!("Unexpected self param type"),
@@ -63,7 +63,7 @@ impl Method {
 #[derive(Clone, Debug)]
 pub struct Param {
     pub name: String,
-    pub ty: Type,
+    pub ty: TypeName,
 }
 
 impl From<&syn::PatType> for Param {

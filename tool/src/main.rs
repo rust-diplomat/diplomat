@@ -2,11 +2,11 @@ use std::{collections::HashMap, path::Path};
 
 use diplomat_core::{extract_from_file, meta};
 
-fn gen_js(strcts: HashMap<String, meta::structs::Struct>) {
+fn gen_js(strcts: HashMap<String, meta::types::CustomType>) {
     let mut out = vec![];
-    for strct in strcts.values() {
-        out.push(format!("export class {} {{", strct.name));
-        for method in strct.methods.iter() {
+    for custom_type in strcts.values() {
+        out.push(format!("export class {} {{", custom_type.name()));
+        for method in custom_type.methods().iter() {
             if method.self_param.is_some() {
                 let all_params = method
                     .params
@@ -38,7 +38,7 @@ fn gen_js(strcts: HashMap<String, meta::structs::Struct>) {
 
 fn main() {
     let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/main.rs"));
-    let structs = extract_from_file(lib_file);
-    dbg!(&structs);
-    gen_js(structs);
+    let custom_types = extract_from_file(lib_file);
+    dbg!(&custom_types);
+    gen_js(custom_types);
 }

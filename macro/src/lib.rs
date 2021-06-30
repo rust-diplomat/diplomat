@@ -5,8 +5,8 @@ use syn::*;
 use diplomat_core::extract_from_mod;
 use diplomat_core::meta;
 
-fn gen_struct_method(strct: &meta::structs::Struct, m: &meta::methods::Method) -> Item {
-    let self_ident = Ident::new(strct.name.as_str(), Span::call_site());
+fn gen_custom_type_method(strct: &meta::types::CustomType, m: &meta::methods::Method) -> Item {
+    let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());
 
@@ -94,7 +94,7 @@ fn gen_struct_method(strct: &meta::structs::Struct, m: &meta::methods::Method) -
 }
 
 fn gen_bridge(input: ItemMod) -> ItemMod {
-    let all_structs = extract_from_mod(&input);
+    let all_custom_types = extract_from_mod(&input);
     let (brace, mut new_contents) = input.content.unwrap();
 
     new_contents.iter_mut().for_each(|c| {
@@ -112,11 +112,11 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         }
     });
 
-    for strct in all_structs.values() {
-        strct
-            .methods
+    for custom_type in all_custom_types.values() {
+        custom_type
+            .methods()
             .iter()
-            .for_each(|m| new_contents.push(gen_struct_method(strct, m)));
+            .for_each(|m| new_contents.push(gen_custom_type_method(custom_type, m)));
     }
 
     ItemMod {
