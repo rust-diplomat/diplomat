@@ -5,8 +5,8 @@ use syn::*;
 use diplomat_core::extract_from_mod;
 use diplomat_core::meta;
 
-fn gen_struct_method(strct: &meta::Struct, m: &meta::Method) -> Item {
-    let self_ident = Ident::new(strct.name.as_str(), Span::call_site());
+fn gen_custom_type_method(strct: &meta::types::CustomType, m: &meta::methods::Method) -> Item {
+    let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());
 
@@ -94,16 +94,15 @@ fn gen_struct_method(strct: &meta::Struct, m: &meta::Method) -> Item {
 }
 
 fn gen_bridge(input: ItemMod) -> ItemMod {
-    let all_structs = extract_from_mod(&input);
+    let all_custom_types = extract_from_mod(&input);
     let (brace, mut new_contents) = input.content.unwrap();
 
     new_contents.iter_mut().for_each(|c| {
         if let Item::Struct(s) = c {
-            if !s
-                .attrs
-                .iter()
-                .any(|a| a.path.to_token_stream().to_string() == "repr")
-            {
+            if !s.attrs.iter().any(|a| {
+                let string_path = a.path.to_token_stream().to_string();
+                string_path == "repr" || string_path == "diplomat :: opaque"
+            }) {
                 *s = syn::parse2(quote! {
                     #[repr(C)]
                     #s
@@ -113,11 +112,11 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         }
     });
 
-    for strct in all_structs.iter() {
-        strct
-            .methods
+    for custom_type in all_custom_types.values() {
+        custom_type
+            .methods()
             .iter()
-            .for_each(|m| new_contents.push(gen_struct_method(strct, m)));
+            .for_each(|m| new_contents.push(gen_custom_type_method(custom_type, m)));
     }
 
     ItemMod {
@@ -137,4 +136,16 @@ pub fn bridge(
 ) -> proc_macro::TokenStream {
     let expanded = gen_bridge(parse_macro_input!(input));
     proc_macro::TokenStream::from(expanded.to_token_stream())
+}
+
+#[proc_macro_attribute]
+pub fn opaque(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let strct: ItemStruct = parse_macro_input!(input);
+    proc_macro::TokenStream::from(quote! {
+        #[repr(transparent)]
+        #strct
+    })
 }

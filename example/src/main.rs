@@ -2,7 +2,7 @@
 mod ffi {
     use fixed_decimal::FixedDecimal;
 
-    #[repr(transparent)]
+    #[diplomat::opaque]
     pub struct ICU4XFixedDecimal(pub FixedDecimal);
 
     impl ICU4XFixedDecimal {
