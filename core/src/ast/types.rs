@@ -6,7 +6,10 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use super::{methods::Method, structs::Struct};
+use super::{
+    methods::Method,
+    structs::{OpaqueStruct, Struct},
+};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Debug)]
@@ -16,15 +19,6 @@ pub enum CustomType {
     // TODO(shadaj): Enum
     /// A struct annotated with [`diplomat::opaque` ]whose fields are not visible.
     Opaque(OpaqueStruct),
-}
-
-/// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
-/// Opaque structs cannot be passed by-value across the FFI boundary, so they
-/// must be boxed or passed as references.
-#[derive(Clone, Debug)]
-pub struct OpaqueStruct {
-    pub name: String,
-    pub methods: Vec<Method>,
 }
 
 impl CustomType {

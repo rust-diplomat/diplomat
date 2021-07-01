@@ -33,3 +33,12 @@ impl From<&syn::ItemStruct> for Struct {
         }
     }
 }
+
+/// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
+/// Opaque structs cannot be passed by-value across the FFI boundary, so they
+/// must be boxed or passed as references.
+#[derive(Clone, Debug)]
+pub struct OpaqueStruct {
+    pub name: String,
+    pub methods: Vec<Method>,
+}
