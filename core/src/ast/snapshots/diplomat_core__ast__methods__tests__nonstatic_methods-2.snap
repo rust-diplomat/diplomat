@@ -1,0 +1,23 @@
+---
+source: core/src/ast/methods.rs
+expression: "Method::from_syn(&syn::parse2(quote! {\n                                  fn\n                                  foo(& mut self, x : u64, y : MyCustomStruct)\n                                  -> u64 { x }\n                              }).unwrap(),\n                 &syn::parse2(quote! { MyStructContainingMethod }).unwrap())"
+
+---
+name: foo
+full_path_name: MyStructContainingMethod_foo
+self_param:
+  name: self
+  ty:
+    Reference:
+      - Named: MyStructContainingMethod
+      - true
+params:
+  - name: x
+    ty:
+      Primitive: u64
+  - name: y
+    ty:
+      Named: MyCustomStruct
+return_type:
+  Primitive: u64
+

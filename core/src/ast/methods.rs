@@ -98,3 +98,71 @@ impl From<&syn::PatType> for Param {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use insta;
+
+    use quote::quote;
+    use syn;
+
+    use super::Method;
+
+    #[test]
+    fn static_methods() {
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse2(quote! {
+                fn foo(x: u64, y: MyCustomStruct) {
+
+                }
+            })
+            .unwrap(),
+            &syn::parse2(quote! {
+                MyStructContainingMethod
+            })
+            .unwrap()
+        ));
+
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse2(quote! {
+                fn foo(x: u64, y: MyCustomStruct) -> u64 {
+                    x
+                }
+            })
+            .unwrap(),
+            &syn::parse2(quote! {
+                MyStructContainingMethod
+            })
+            .unwrap()
+        ));
+    }
+
+    #[test]
+    fn nonstatic_methods() {
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse2(quote! {
+                fn foo(&self, x: u64, y: MyCustomStruct) {
+
+                }
+            })
+            .unwrap(),
+            &syn::parse2(quote! {
+                MyStructContainingMethod
+            })
+            .unwrap()
+        ));
+
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse2(quote! {
+                fn foo(&mut self, x: u64, y: MyCustomStruct) -> u64 {
+                    x
+                }
+            })
+            .unwrap(),
+            &syn::parse2(quote! {
+                MyStructContainingMethod
+            })
+            .unwrap()
+        ));
+    }
+}
