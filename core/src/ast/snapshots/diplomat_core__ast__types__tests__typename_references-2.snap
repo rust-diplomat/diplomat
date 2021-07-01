@@ -1,0 +1,9 @@
+---
+source: core/src/ast/types.rs
+expression: "TypeName::from(&syn::parse2(quote! { & mut MyLocalStruct }).unwrap())"
+
+---
+Reference:
+  - Named: MyLocalStruct
+  - true
+

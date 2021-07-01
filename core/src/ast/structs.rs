@@ -43,3 +43,30 @@ pub struct OpaqueStruct {
     pub name: String,
     pub methods: Vec<Method>,
 }
+
+#[cfg(test)]
+mod tests {
+    use insta::{self, Settings};
+
+    use quote::quote;
+    use syn;
+
+    use super::Struct;
+
+    #[test]
+    fn simple_struct() {
+        let mut settings = Settings::new();
+        settings.set_sort_maps(true);
+
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(Struct::from(
+                &syn::parse2(quote! {
+                    struct MyLocalStruct {
+                        a: i32,
+                        b: Box<MyLocalStruct>
+                    }
+                }).unwrap()
+            ));
+        });
+    }
+}
