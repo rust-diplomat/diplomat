@@ -1,11 +1,12 @@
 use syn::*;
+use serde::{Serialize, Deserialize};
 
 use super::types::TypeName;
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
 /// by inspecting [`Method::self_param`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Method {
     /// The name of the method as initially declared.
     pub name: String,
@@ -74,7 +75,7 @@ impl Method {
 }
 
 /// A parameter taken by a [`Method`], including `self`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Param {
     /// The name of the parameter in the original method declaration.
     pub name: String,

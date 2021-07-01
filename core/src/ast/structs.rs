@@ -1,9 +1,10 @@
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
 use super::{methods::Method, types::TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Struct {
     pub name: String,
     pub fields: HashMap<String, TypeName>,
@@ -37,7 +38,7 @@ impl From<&syn::ItemStruct> for Struct {
 /// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
 /// Opaque structs cannot be passed by-value across the FFI boundary, so they
 /// must be boxed or passed as references.
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct OpaqueStruct {
     pub name: String,
     pub methods: Vec<Method>,
