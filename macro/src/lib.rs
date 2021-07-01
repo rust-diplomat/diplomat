@@ -2,10 +2,9 @@ use proc_macro2::Span;
 use quote::{quote, ToTokens};
 use syn::*;
 
-use diplomat_core::extract_from_mod;
-use diplomat_core::meta;
+use diplomat_core::ast;
 
-fn gen_custom_type_method(strct: &meta::types::CustomType, m: &meta::methods::Method) -> Item {
+fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
     let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());
@@ -94,7 +93,7 @@ fn gen_custom_type_method(strct: &meta::types::CustomType, m: &meta::methods::Me
 }
 
 fn gen_bridge(input: ItemMod) -> ItemMod {
-    let all_custom_types = extract_from_mod(&input);
+    let module = ast::Module::from(&input);
     let (brace, mut new_contents) = input.content.unwrap();
 
     new_contents.iter_mut().for_each(|c| {
@@ -112,7 +111,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         }
     });
 
-    for custom_type in all_custom_types.values() {
+    for custom_type in module.declared_types.values() {
         custom_type
             .methods()
             .iter()
@@ -129,6 +128,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     }
 }
 
+/// Mark a module to be exposed through Diplomat-generated FFI.
 #[proc_macro_attribute]
 pub fn bridge(
     _attr: proc_macro::TokenStream,
@@ -138,6 +138,9 @@ pub fn bridge(
     proc_macro::TokenStream::from(expanded.to_token_stream())
 }
 
+/// Mark a struct as opaque, which means that its field will not be
+/// visible across the FFI boundary and all instances of the struct
+/// must be passed as references.
 #[proc_macro_attribute]
 pub fn opaque(
     _attr: proc_macro::TokenStream,

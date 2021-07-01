@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::{methods::Method, types::TypeName};
 
+/// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, Debug)]
 pub struct Struct {
     pub name: String,
@@ -10,6 +11,7 @@ pub struct Struct {
 }
 
 impl From<&syn::ItemStruct> for Struct {
+    /// Extract a [`Struct`] metadata value from an AST node.
     fn from(strct: &syn::ItemStruct) -> Struct {
         Struct {
             name: strct.ident.to_string(),
@@ -30,4 +32,13 @@ impl From<&syn::ItemStruct> for Struct {
             methods: vec![],
         }
     }
+}
+
+/// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
+/// Opaque structs cannot be passed by-value across the FFI boundary, so they
+/// must be boxed or passed as references.
+#[derive(Clone, Debug)]
+pub struct OpaqueStruct {
+    pub name: String,
+    pub methods: Vec<Method>,
 }
