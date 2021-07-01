@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use syn::*;
-use serde::{Serialize, Deserialize};
 
 use super::types::TypeName;
 

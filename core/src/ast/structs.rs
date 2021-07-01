@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
 
 use super::{methods::Method, types::TypeName};
 
@@ -65,7 +65,8 @@ mod tests {
                         a: i32,
                         b: Box<MyLocalStruct>
                     }
-                }).unwrap()
+                })
+                .unwrap()
             ));
         });
     }

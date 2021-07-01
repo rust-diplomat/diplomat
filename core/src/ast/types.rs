@@ -1,7 +1,7 @@
 use proc_macro2::Span;
 use quote::ToTokens;
+use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
-use serde::{Serialize, Deserialize};
 
 use lazy_static::lazy_static;
 use std::collections::HashMap;
@@ -206,19 +206,22 @@ mod tests {
         insta::assert_yaml_snapshot!(TypeName::from(
             &syn::parse2(quote! {
                 i32
-            }).unwrap()
+            })
+            .unwrap()
         ));
 
         insta::assert_yaml_snapshot!(TypeName::from(
             &syn::parse2(quote! {
                 usize
-            }).unwrap()
+            })
+            .unwrap()
         ));
 
         insta::assert_yaml_snapshot!(TypeName::from(
             &syn::parse2(quote! {
                 bool
-            }).unwrap()
+            })
+            .unwrap()
         ));
     }
 
@@ -227,7 +230,8 @@ mod tests {
         insta::assert_yaml_snapshot!(TypeName::from(
             &syn::parse2(quote! {
                 MyLocalStruct
-            }).unwrap()
+            })
+            .unwrap()
         ));
     }
 
@@ -236,13 +240,15 @@ mod tests {
         insta::assert_yaml_snapshot!(TypeName::from(
             &syn::parse2(quote! {
                 &i32
-            }).unwrap()
+            })
+            .unwrap()
         ));
 
         insta::assert_yaml_snapshot!(TypeName::from(
             &syn::parse2(quote! {
                 &mut MyLocalStruct
-            }).unwrap()
+            })
+            .unwrap()
         ));
     }
 
@@ -251,13 +257,15 @@ mod tests {
         insta::assert_yaml_snapshot!(TypeName::from(
             &syn::parse2(quote! {
                 Box<i32>
-            }).unwrap()
+            })
+            .unwrap()
         ));
 
         insta::assert_yaml_snapshot!(TypeName::from(
             &syn::parse2(quote! {
                 Box<MyLocalStruct>
-            }).unwrap()
+            })
+            .unwrap()
         ));
     }
 }
