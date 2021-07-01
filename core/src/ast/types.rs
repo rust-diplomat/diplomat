@@ -17,7 +17,7 @@ pub enum CustomType {
     /// A non-opaque struct whose fields will be visible across the FFI boundary.
     Struct(Struct),
     // TODO(shadaj): Enum
-    /// A struct annotated with [`diplomat::opaque` ]whose fields are not visible.
+    /// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
     Opaque(OpaqueStruct),
 }
 
@@ -47,7 +47,7 @@ pub enum TypeName {
     /// A built-in Rust scalar primitive.
     Primitive(PrimitiveType),
     /// An unresolved path to a custom type, which can be resolved after all types
-    /// are collected with [`TypeName::resolve(env)`].
+    /// are collected with [`TypeName::resolve()`].
     Named(String),
     /// An optionally mutable reference to another type.
     Reference(Box<TypeName>, /* mutable */ bool),

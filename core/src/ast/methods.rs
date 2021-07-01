@@ -4,7 +4,7 @@ use super::types::TypeName;
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
-/// by inspecting [`self_param`].
+/// by inspecting [`Method::self_param`].
 #[derive(Clone, Debug)]
 pub struct Method {
     /// The name of the method as initially declared.

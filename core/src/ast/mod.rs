@@ -3,13 +3,13 @@
 /// types such as opaque structs, [`Box`], and [`Result`] with utilities
 /// for handling such types.
 mod methods;
-pub use methods::*;
+pub use methods::{Method, Param};
 
 mod modules;
-pub use modules::*;
+pub use modules::{File, Module};
 
 mod structs;
-pub use structs::*;
+pub use structs::{OpaqueStruct, Struct};
 
 mod types;
-pub use types::*;
+pub use types::{CustomType, PrimitiveType, TypeName};
