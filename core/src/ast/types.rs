@@ -1,5 +1,6 @@
 use proc_macro2::Span;
 use quote::ToTokens;
+use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
 
 use lazy_static::lazy_static;
@@ -12,7 +13,7 @@ use super::{
 };
 
 /// A type declared inside a Diplomat-annotated module.
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum CustomType {
     /// A non-opaque struct whose fields will be visible across the FFI boundary.
     Struct(Struct),
@@ -42,7 +43,7 @@ impl CustomType {
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum TypeName {
     /// A built-in Rust scalar primitive.
     Primitive(PrimitiveType),
@@ -143,7 +144,7 @@ impl From<&syn::Type> for TypeName {
 }
 
 /// A built-in Rust primitive scalar type.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 #[allow(non_camel_case_types)]
 pub enum PrimitiveType {
     i8,
@@ -189,4 +190,82 @@ lazy_static! {
         .iter()
         .map(|t| (t.1.clone(), t.0))
         .collect();
+}
+
+#[cfg(test)]
+mod tests {
+    use insta;
+
+    use quote::quote;
+    use syn;
+
+    use super::TypeName;
+
+    #[test]
+    fn typename_primitives() {
+        insta::assert_yaml_snapshot!(TypeName::from(
+            &syn::parse2(quote! {
+                i32
+            })
+            .unwrap()
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from(
+            &syn::parse2(quote! {
+                usize
+            })
+            .unwrap()
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from(
+            &syn::parse2(quote! {
+                bool
+            })
+            .unwrap()
+        ));
+    }
+
+    #[test]
+    fn typename_named() {
+        insta::assert_yaml_snapshot!(TypeName::from(
+            &syn::parse2(quote! {
+                MyLocalStruct
+            })
+            .unwrap()
+        ));
+    }
+
+    #[test]
+    fn typename_references() {
+        insta::assert_yaml_snapshot!(TypeName::from(
+            &syn::parse2(quote! {
+                &i32
+            })
+            .unwrap()
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from(
+            &syn::parse2(quote! {
+                &mut MyLocalStruct
+            })
+            .unwrap()
+        ));
+    }
+
+    #[test]
+    fn typename_boxes() {
+        insta::assert_yaml_snapshot!(TypeName::from(
+            &syn::parse2(quote! {
+                Box<i32>
+            })
+            .unwrap()
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from(
+            &syn::parse2(quote! {
+                Box<MyLocalStruct>
+            })
+            .unwrap()
+        ));
+    }
 }

@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use quote::ToTokens;
@@ -7,7 +8,7 @@ use super::methods::Method;
 use super::structs::{OpaqueStruct, Struct};
 use super::types::CustomType;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
     pub declared_types: HashMap<String, CustomType>,
 }
@@ -104,5 +105,60 @@ impl From<&syn::File> for File {
         });
 
         File { modules: out }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use insta::{self, Settings};
+
+    use quote::quote;
+    use syn;
+
+    use super::Module;
+
+    #[test]
+    fn simple_mod() {
+        let mut settings = Settings::new();
+        settings.set_sort_maps(true);
+
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(Module::from(
+                &syn::parse2(quote! {
+                    mod ffi {
+                        struct NonOpaqueStruct {
+                            a: i32,
+                            b: Box<NonOpaqueStruct>
+                        }
+
+                        impl NonOpaqueStruct {
+                            fn new(x: i32) -> NonOpaqueStruct {
+                                unimplemented!();
+                            }
+
+                            fn set_a(&mut self, new_a: i32) {
+                                self.a = new_a;
+                            }
+                        }
+
+                        #[diplomat::opaque]
+                        struct OpaqueStruct {
+                            a: SomeExternalType
+                        }
+
+                        impl OpaqueStruct {
+                            fn new() -> Box<OpaqueStruct> {
+                                unimplemented!();
+                            }
+
+                            fn get_string(&self) -> String {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                })
+                .unwrap()
+            ));
+        });
     }
 }

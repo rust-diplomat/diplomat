@@ -1,0 +1,9 @@
+---
+source: core/src/ast/types.rs
+expression: "TypeName::from(&syn::parse2(quote! { & i32 }).unwrap())"
+
+---
+Reference:
+  - Primitive: i32
+  - false
+

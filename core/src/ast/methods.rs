@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use syn::*;
 
 use super::types::TypeName;
@@ -5,7 +6,7 @@ use super::types::TypeName;
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
 /// by inspecting [`Method::self_param`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Method {
     /// The name of the method as initially declared.
     pub name: String,
@@ -74,7 +75,7 @@ impl Method {
 }
 
 /// A parameter taken by a [`Method`], including `self`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Param {
     /// The name of the parameter in the original method declaration.
     pub name: String,
@@ -95,5 +96,73 @@ impl From<&syn::PatType> for Param {
             name: ident.ident.to_string(),
             ty: t.ty.as_ref().into(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use insta;
+
+    use quote::quote;
+    use syn;
+
+    use super::Method;
+
+    #[test]
+    fn static_methods() {
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse2(quote! {
+                fn foo(x: u64, y: MyCustomStruct) {
+
+                }
+            })
+            .unwrap(),
+            &syn::parse2(quote! {
+                MyStructContainingMethod
+            })
+            .unwrap()
+        ));
+
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse2(quote! {
+                fn foo(x: u64, y: MyCustomStruct) -> u64 {
+                    x
+                }
+            })
+            .unwrap(),
+            &syn::parse2(quote! {
+                MyStructContainingMethod
+            })
+            .unwrap()
+        ));
+    }
+
+    #[test]
+    fn nonstatic_methods() {
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse2(quote! {
+                fn foo(&self, x: u64, y: MyCustomStruct) {
+
+                }
+            })
+            .unwrap(),
+            &syn::parse2(quote! {
+                MyStructContainingMethod
+            })
+            .unwrap()
+        ));
+
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse2(quote! {
+                fn foo(&mut self, x: u64, y: MyCustomStruct) -> u64 {
+                    x
+                }
+            })
+            .unwrap(),
+            &syn::parse2(quote! {
+                MyStructContainingMethod
+            })
+            .unwrap()
+        ));
     }
 }
