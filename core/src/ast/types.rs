@@ -123,7 +123,7 @@ impl TypeName {
         }
     }
 
-    pub fn check_opaque_internal<'a>(
+    fn check_opaque_internal<'a>(
         &'a self,
         env: &HashMap<String, CustomType>,
         behind_reference: bool,
