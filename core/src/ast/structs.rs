@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::{methods::Method, types::TypeName};
+use super::{Method, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, Serialize, Deserialize, Debug)]

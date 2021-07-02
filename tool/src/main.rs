@@ -39,7 +39,18 @@ fn gen_js(strcts: &HashMap<String, ast::CustomType>) {
 fn main() {
     let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/main.rs"));
     let custom_types = ast::File::from(&lib_file);
-    dbg!(&custom_types);
+    let env = custom_types.all_types();
+    let mut opaque_errors = vec![];
+    custom_types.check_opaque(&env, &mut opaque_errors);
+    if !opaque_errors.is_empty() {
+        opaque_errors.iter().for_each(|e| {
+            println!(
+                "An opaque type crossed the FFI boundary as a value: {:?}",
+                e
+            )
+        });
+        panic!();
+    }
 
     custom_types.modules.iter().for_each(|(mod_name, module)| {
         println!("// {}", mod_name);

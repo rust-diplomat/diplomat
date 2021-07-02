@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use syn::*;
 
-use super::types::TypeName;
+use super::{CustomType, TypeName};
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
@@ -71,6 +73,26 @@ impl Method {
             params: all_params,
             return_type: return_ty,
         }
+    }
+
+    /// Checks that any references to opaque structs in parameters or return values
+    /// are always behind a box or reference.
+    ///
+    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
+    pub fn check_opaque<'a>(
+        &'a self,
+        env: &HashMap<String, CustomType>,
+        errors: &mut Vec<&'a TypeName>,
+    ) {
+        self.self_param
+            .iter()
+            .for_each(|m| m.ty.check_opaque(env, errors));
+        self.params
+            .iter()
+            .for_each(|m| m.ty.check_opaque(env, errors));
+        self.return_type
+            .iter()
+            .for_each(|t| t.check_opaque(env, errors));
     }
 }
 

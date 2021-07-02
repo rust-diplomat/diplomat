@@ -7,10 +7,7 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use super::{
-    methods::Method,
-    structs::{OpaqueStruct, Struct},
-};
+use super::{Method, OpaqueStruct, Struct};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -36,6 +33,29 @@ impl CustomType {
         match self {
             CustomType::Struct(strct) => &strct.methods,
             CustomType::Opaque(strct) => &strct.methods,
+        }
+    }
+
+    /// Checks that any references to opaque structs in parameters or return values
+    /// are always behind a box or reference.
+    ///
+    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
+    pub fn check_opaque<'a>(
+        &'a self,
+        env: &HashMap<String, CustomType>,
+        errors: &mut Vec<&'a TypeName>,
+    ) {
+        match self {
+            CustomType::Struct(strct) => {
+                for (_, field) in strct.fields.iter() {
+                    field.check_opaque(env, errors);
+                }
+            }
+            CustomType::Opaque(_) => {}
+        }
+
+        for method in self.methods().iter() {
+            method.check_opaque(env, errors);
         }
     }
 }
@@ -101,6 +121,40 @@ impl TypeName {
             TypeName::Named(name) => env.get(name).unwrap(),
             _ => panic!(),
         }
+    }
+
+    pub fn check_opaque_internal<'a>(
+        &'a self,
+        env: &HashMap<String, CustomType>,
+        behind_reference: bool,
+        errors: &mut Vec<&'a TypeName>,
+    ) {
+        match self {
+            TypeName::Reference(underlying, _) => {
+                underlying.check_opaque_internal(env, true, errors)
+            }
+            TypeName::Box(underlying) => underlying.check_opaque_internal(env, true, errors),
+            TypeName::Primitive(_) => {}
+            TypeName::Named(_) => {
+                if let CustomType::Opaque(_) = self.resolve(env) {
+                    if !behind_reference {
+                        errors.push(self)
+                    }
+                }
+            }
+        }
+    }
+
+    /// Checks that any references to opaque structs in parameters or return values
+    /// are always behind a box or reference.
+    ///
+    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
+    pub fn check_opaque<'a>(
+        &'a self,
+        env: &HashMap<String, CustomType>,
+        errors: &mut Vec<&'a TypeName>,
+    ) {
+        self.check_opaque_internal(env, false, errors);
     }
 }
 

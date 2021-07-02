@@ -4,13 +4,27 @@ use std::collections::HashMap;
 use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod};
 
-use super::methods::Method;
-use super::structs::{OpaqueStruct, Struct};
-use super::types::CustomType;
+use super::{CustomType, Method, OpaqueStruct, Struct, TypeName};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
     pub declared_types: HashMap<String, CustomType>,
+}
+
+impl Module {
+    /// Checks that any references to opaque structs in parameters or return values
+    /// are always behind a box or reference.
+    ///
+    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
+    pub fn check_opaque<'a>(
+        &'a self,
+        env: &HashMap<String, CustomType>,
+        errors: &mut Vec<&'a TypeName>,
+    ) {
+        self.declared_types
+            .values()
+            .for_each(|t| t.check_opaque(env, errors));
+    }
 }
 
 impl From<&ItemMod> for Module {
@@ -86,6 +100,37 @@ impl From<&ItemMod> for Module {
 #[derive(Clone, Debug)]
 pub struct File {
     pub modules: HashMap<String, Module>,
+}
+
+impl File {
+    /// Checks that any references to opaque structs in parameters or return values
+    /// are always behind a box or reference.
+    ///
+    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
+    pub fn check_opaque<'a>(
+        &'a self,
+        env: &HashMap<String, CustomType>,
+        errors: &mut Vec<&'a TypeName>,
+    ) {
+        self.modules
+            .values()
+            .for_each(|t| t.check_opaque(env, errors));
+    }
+
+    /// Fuses all declared types into a single environment `HashMap`.
+    pub fn all_types(&self) -> HashMap<String, CustomType> {
+        let mut out = HashMap::new();
+        self.modules.values().for_each(|m| {
+            m.declared_types.iter().for_each(|(k, v)| {
+                if out.insert(k.clone(), v.clone()).is_some() {
+                    panic!(
+                        "Two types were declared with the same name, this needs to be implemented"
+                    );
+                }
+            })
+        });
+        out
+    }
 }
 
 impl From<&syn::File> for File {

@@ -6,8 +6,8 @@ mod ffi {
     pub struct ICU4XFixedDecimal(pub FixedDecimal);
 
     impl ICU4XFixedDecimal {
-        fn new(v: i32) -> Box<ICU4XFixedDecimal> {
-            Box::new(ICU4XFixedDecimal(FixedDecimal::from(v)))
+        fn new(v: i32) -> ICU4XFixedDecimal {
+            ICU4XFixedDecimal(FixedDecimal::from(v))
         }
 
         fn multiply_pow10(&mut self, power: i16) {
