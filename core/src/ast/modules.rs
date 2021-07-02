@@ -4,13 +4,27 @@ use std::collections::HashMap;
 use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod};
 
-use super::methods::Method;
-use super::structs::{OpaqueStruct, Struct};
-use super::types::CustomType;
+use super::{CustomType, Method, OpaqueStruct, Struct, TypeName};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
     pub declared_types: HashMap<String, CustomType>,
+}
+
+impl Module {
+    /// Checks that any references to opaque structs in parameters or return values
+    /// are always behind a box or reference.
+    ///
+    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
+    pub fn check_opaque<'a>(
+        &'a self,
+        env: &HashMap<String, CustomType>,
+        errors: &mut Vec<&'a TypeName>,
+    ) {
+        self.declared_types
+            .values()
+            .for_each(|t| t.check_opaque(env, errors));
+    }
 }
 
 impl From<&ItemMod> for Module {
@@ -88,6 +102,37 @@ pub struct File {
     pub modules: HashMap<String, Module>,
 }
 
+impl File {
+    /// Checks that any references to opaque structs in parameters or return values
+    /// are always behind a box or reference.
+    ///
+    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
+    pub fn check_opaque<'a>(
+        &'a self,
+        env: &HashMap<String, CustomType>,
+        errors: &mut Vec<&'a TypeName>,
+    ) {
+        self.modules
+            .values()
+            .for_each(|t| t.check_opaque(env, errors));
+    }
+
+    /// Fuses all declared types into a single environment `HashMap`.
+    pub fn all_types(&self) -> HashMap<String, CustomType> {
+        let mut out = HashMap::new();
+        self.modules.values().for_each(|m| {
+            m.declared_types.iter().for_each(|(k, v)| {
+                if out.insert(k.clone(), v.clone()).is_some() {
+                    panic!(
+                        "Two types were declared with the same name, this needs to be implemented"
+                    );
+                }
+            })
+        });
+        out
+    }
+}
+
 impl From<&syn::File> for File {
     /// Get all custom types across all modules defined in a given file.
     fn from(file: &syn::File) -> File {
@@ -115,7 +160,7 @@ mod tests {
     use quote::quote;
     use syn;
 
-    use super::Module;
+    use super::{File, Module, TypeName};
 
     #[test]
     fn simple_mod() {
@@ -160,5 +205,75 @@ mod tests {
                 .unwrap()
             ));
         });
+    }
+
+    #[test]
+    fn opaque_checks_with_safe_use() {
+        let file_with_safe_opaque = File::from(
+            &syn::parse2(quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    struct NonOpaqueStruct {}
+
+                    impl NonOpaqueStruct {
+                        fn new(x: i32) -> NonOpaqueStruct {
+                            unimplemented!();
+                        }
+                    }
+
+                    #[diplomat::opaque]
+                    struct OpaqueStruct {}
+
+                    impl OpaqueStruct {
+                        fn new() -> Box<OpaqueStruct> {
+                            unimplemented!();
+                        }
+
+                        fn get_i32(&self) -> i32 {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .unwrap(),
+        );
+
+        let mut errors = Vec::new();
+        file_with_safe_opaque.check_opaque(&file_with_safe_opaque.all_types(), &mut errors);
+        assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn opaque_checks_with_error() {
+        let file_with_error_opaque = File::from(
+            &syn::parse2(quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::opaque]
+                    struct OpaqueStruct {}
+
+                    impl OpaqueStruct {
+                        fn new() -> OpaqueStruct {
+                            unimplemented!();
+                        }
+
+                        fn get_i32(self) -> i32 {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .unwrap(),
+        );
+
+        let mut errors = Vec::new();
+        file_with_error_opaque.check_opaque(&file_with_error_opaque.all_types(), &mut errors);
+        assert_eq!(
+            errors,
+            vec![
+                &TypeName::Named("OpaqueStruct".to_string()),
+                &TypeName::Named("OpaqueStruct".to_string())
+            ]
+        );
     }
 }
