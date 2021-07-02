@@ -160,7 +160,7 @@ mod tests {
     use quote::quote;
     use syn;
 
-    use super::Module;
+    use super::{File, Module, TypeName};
 
     #[test]
     fn simple_mod() {
@@ -205,5 +205,75 @@ mod tests {
                 .unwrap()
             ));
         });
+    }
+
+    #[test]
+    fn opaque_checks_with_safe_use() {
+        let file_with_safe_opaque = File::from(
+            &syn::parse2(quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    struct NonOpaqueStruct {}
+
+                    impl NonOpaqueStruct {
+                        fn new(x: i32) -> NonOpaqueStruct {
+                            unimplemented!();
+                        }
+                    }
+
+                    #[diplomat::opaque]
+                    struct OpaqueStruct {}
+
+                    impl OpaqueStruct {
+                        fn new() -> Box<OpaqueStruct> {
+                            unimplemented!();
+                        }
+
+                        fn get_i32(&self) -> i32 {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .unwrap(),
+        );
+
+        let mut errors = Vec::new();
+        file_with_safe_opaque.check_opaque(&file_with_safe_opaque.all_types(), &mut errors);
+        assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn opaque_checks_with_error() {
+        let file_with_error_opaque = File::from(
+            &syn::parse2(quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::opaque]
+                    struct OpaqueStruct {}
+
+                    impl OpaqueStruct {
+                        fn new() -> OpaqueStruct {
+                            unimplemented!();
+                        }
+
+                        fn get_i32(self) -> i32 {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .unwrap(),
+        );
+
+        let mut errors = Vec::new();
+        file_with_error_opaque.check_opaque(&file_with_error_opaque.all_types(), &mut errors);
+        assert_eq!(
+            errors,
+            vec![
+                &TypeName::Named("OpaqueStruct".to_string()),
+                &TypeName::Named("OpaqueStruct".to_string())
+            ]
+        );
     }
 }
