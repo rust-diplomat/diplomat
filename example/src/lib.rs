@@ -19,8 +19,3 @@ mod ffi {
         }
     }
 }
-
-fn main() {
-    let mut decimal = ffi::ICU4XFixedDecimal_new(123);
-    ffi::ICU4XFixedDecimal_multiply_pow10(&mut decimal, -1);
-}
