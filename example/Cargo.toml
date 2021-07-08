@@ -4,7 +4,12 @@ version = "0.1.0"
 authors = ["Shadaj Laddad <shadaj@users.noreply.github.com>"]
 edition = "2018"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 diplomat = { path = "../macro" }
+diplomat-runtime = { path = "../runtime" }
 icu = "0.2"
 fixed_decimal = "0.2.0"
+writeable = "0.2.0"

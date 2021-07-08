@@ -116,6 +116,22 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             .methods()
             .iter()
             .for_each(|m| new_contents.push(gen_custom_type_method(custom_type, m)));
+
+        let destroy_ident = Ident::new(
+            (custom_type.name().to_string() + "_destroy").as_str(),
+            Span::call_site(),
+        );
+        let type_ident = Ident::new(custom_type.name(), Span::call_site());
+
+        // for now, body is empty since all we need to do is drop the box
+        // TODO(shadaj): change to take a pointer and handle DST boxes appropriately
+        new_contents.push(Item::Fn(
+            syn::parse2(quote! {
+                #[no_mangle]
+                pub extern "C" fn #destroy_ident(this: Box<#type_ident>) {}
+            })
+            .unwrap(),
+        ));
     }
 
     ItemMod {

@@ -2,6 +2,7 @@
 members = [
   "core",
   "macro",
+  "runtime",
   "tool",
   "example"
 ]

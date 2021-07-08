@@ -1,6 +1,7 @@
 #[diplomat::bridge]
 mod ffi {
     use fixed_decimal::FixedDecimal;
+    use writeable::Writeable;
 
     #[diplomat::opaque]
     pub struct ICU4XFixedDecimal(pub FixedDecimal);
@@ -17,10 +18,9 @@ mod ffi {
         fn digit_at(&self, magnitude: i16) -> u8 {
             self.0.digit_at(magnitude)
         }
-    }
-}
 
-fn main() {
-    let mut decimal = ffi::ICU4XFixedDecimal_new(123);
-    ffi::ICU4XFixedDecimal_multiply_pow10(&mut decimal, -1);
+        fn to_string(&self, to: &mut diplomat_runtime::DiplomatWriteable) {
+            self.0.write_to(to).unwrap();
+        }
+    }
 }

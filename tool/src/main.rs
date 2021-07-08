@@ -1,43 +1,11 @@
-use std::{collections::HashMap, path::Path};
+use std::{env, fs::File, io::Write, path::Path};
 
 use diplomat_core::ast;
 
-fn gen_js(strcts: &HashMap<String, ast::CustomType>) {
-    let mut out = vec![];
-    for custom_type in strcts.values() {
-        out.push(format!("export class {} {{", custom_type.name()));
-        for method in custom_type.methods().iter() {
-            if method.self_param.is_some() {
-                let all_params = method
-                    .params
-                    .iter()
-                    .map(|p| p.name.clone())
-                    .collect::<Vec<String>>()
-                    .join(", ");
-                out.push(format!("{}({}) {{", method.name, &all_params));
-                if method.return_type.is_some() {
-                    out.push(format!(
-                        "return wasm.{}(this.underlying, {});",
-                        method.full_path_name, all_params
-                    ));
-                } else {
-                    out.push(format!(
-                        "wasm.{}(this.underlying, {});",
-                        method.full_path_name, all_params
-                    ));
-                }
-                out.push("}".to_string());
-            } else {
-            }
-        }
-        out.push("}".to_string());
-    }
+mod js;
 
-    println!("{}", out.join("\n"));
-}
-
-fn main() {
-    let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/main.rs"));
+fn main() -> std::io::Result<()> {
+    let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/lib.rs"));
     let custom_types = ast::File::from(&lib_file);
     let env = custom_types.all_types();
     let mut opaque_errors = vec![];
@@ -52,8 +20,14 @@ fn main() {
         panic!();
     }
 
-    custom_types.modules.iter().for_each(|(mod_name, module)| {
-        println!("// {}", mod_name);
-        gen_js(&module.declared_types);
-    });
+    dbg!(&env);
+
+    let mut out_text = String::new();
+    js::gen_bindings(&env, &mut out_text).unwrap();
+
+    let args: Vec<String> = env::args().collect();
+    let mut out_file = File::create(args[1].clone())?;
+    out_file.write_all(out_text.as_bytes())?;
+
+    Ok(())
 }
