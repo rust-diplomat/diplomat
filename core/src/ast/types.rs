@@ -74,6 +74,8 @@ pub enum TypeName {
     Reference(Box<TypeName>, /* mutable */ bool),
     /// A `Box<T>` type.
     Box(Box<TypeName>),
+    /// A `diplomat_runtime::DiplomatWriteable` type.
+    Writeable,
 }
 
 impl TypeName {
@@ -111,6 +113,22 @@ impl TypeName {
                     }]),
                 },
             }),
+            TypeName::Writeable => syn::Type::Path(TypePath {
+                qself: None,
+                path: Path {
+                    leading_colon: None,
+                    segments: Punctuated::from_iter(vec![
+                        PathSegment {
+                            ident: Ident::new("diplomat_runtime", Span::call_site()),
+                            arguments: PathArguments::None,
+                        },
+                        PathSegment {
+                            ident: Ident::new("DiplomatWriteable", Span::call_site()),
+                            arguments: PathArguments::None,
+                        },
+                    ]),
+                },
+            }),
         }
     }
 
@@ -142,6 +160,7 @@ impl TypeName {
                     }
                 }
             }
+            TypeName::Writeable => {}
         }
     }
 
@@ -188,6 +207,10 @@ impl From<&syn::Type> for TypeName {
                     } else {
                         panic!("Expected angle brackets for Box type")
                     }
+                } else if p.path.to_token_stream().to_string()
+                    == "diplomat_runtime :: DiplomatWriteable"
+                {
+                    TypeName::Writeable
                 } else {
                     TypeName::Named(p.path.to_token_stream().to_string())
                 }

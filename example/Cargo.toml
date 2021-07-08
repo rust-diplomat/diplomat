@@ -9,5 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 diplomat = { path = "../macro" }
+diplomat-runtime = { path = "../runtime" }
 icu = "0.2"
 fixed_decimal = "0.2.0"
+writeable = "0.2.0"

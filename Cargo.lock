@@ -26,6 +26,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "diplomat-runtime"
+version = "0.1.0"
+
+[[package]]
 name = "diplomat-tool"
 version = "0.1.0"
 dependencies = [
@@ -67,8 +71,10 @@ name = "example"
 version = "0.1.0"
 dependencies = [
  "diplomat",
+ "diplomat-runtime",
  "fixed_decimal",
  "icu",
+ "writeable",
 ]
 
 [[package]]

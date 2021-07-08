@@ -10,6 +10,10 @@ pub fn gen_bindings<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     writeln!(out, "import wasm from \"./wasm.mjs\"")?;
+    writeln!(
+        out,
+        "import * as diplomatRuntime from \"./diplomat-runtime.mjs\""
+    )?;
 
     for custom_type in env.values() {
         writeln!(out)?;
@@ -62,64 +66,109 @@ fn gen_method<W: fmt::Write>(
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
 ) -> fmt::Result {
-    let all_params = method
-        .params
+    // TODO(shadaj): support results with empty success value
+    // TODO(shadaj): reconsider if we should auto-detect writeables
+    if method.return_type.is_none()
+        && !method.params.is_empty()
+        && method.params[method.params.len() - 1].ty
+            == ast::TypeName::Reference(Box::new(ast::TypeName::Writeable), true)
+    {
+        gen_writeable_method(method, out)?;
+    } else {
+        let all_params = method
+            .params
+            .iter()
+            .map(|p| p.name.clone())
+            .collect::<Vec<String>>()
+            .join(", ");
+        if method.self_param.is_some() {
+            writeln!(out, "{}({}) {{", method.name, &all_params)?;
+            let mut method_body_out = indented(out).with_str("  ");
+            match &method.return_type {
+                Some(ret_type) => {
+                    let value = gen_value_rust_to_js(
+                        format!(
+                            "wasm.{}(this.underlying, {})",
+                            method.full_path_name, all_params
+                        ),
+                        ret_type,
+                        env,
+                    );
+                    writeln!(&mut method_body_out, "return {};", value)?;
+                }
+
+                None => {
+                    writeln!(
+                        &mut method_body_out,
+                        "wasm.{}(this.underlying, {});",
+                        method.full_path_name, all_params
+                    )?;
+                }
+            }
+        } else {
+            writeln!(out, "static {}({}) {{", method.name, &all_params)?;
+            let mut method_body_out = indented(out).with_str("  ");
+            match &method.return_type {
+                Some(ret_type) => {
+                    let value = gen_value_rust_to_js(
+                        format!("wasm.{}({})", method.full_path_name, all_params),
+                        ret_type,
+                        env,
+                    );
+                    writeln!(&mut method_body_out, "return {};", value)?;
+                }
+
+                None => {
+                    writeln!(
+                        &mut method_body_out,
+                        "wasm.{}({});",
+                        method.full_path_name, all_params
+                    )?;
+                }
+            }
+        }
+
+        writeln!(out, "}}")?;
+    }
+
+    Ok(())
+}
+
+fn gen_writeable_method<W: fmt::Write>(
+    method: &ast::Method,
+    out: &mut W,
+) -> Result<(), fmt::Error> {
+    let all_params_except_last = method.params[..method.params.len() - 1]
         .iter()
         .map(|p| p.name.clone())
         .collect::<Vec<String>>()
         .join(", ");
+    writeln!(out, "{}({}) {{", method.name, &all_params_except_last)?;
+    let mut method_body_out = indented(out).with_str("  ");
     if method.self_param.is_some() {
-        writeln!(out, "{}({}) {{", method.name, &all_params)?;
-        let mut method_body_out = indented(out).with_str("  ");
-        match &method.return_type {
-            Some(ret_type) => {
-                let value = gen_rust_to_js(
-                    format!(
-                        "wasm.{}(this.underlying, {})",
-                        method.full_path_name, all_params
-                    ),
-                    ret_type,
-                    env,
-                );
-                writeln!(&mut method_body_out, "return {};", value)?;
-            }
-
-            None => {
-                writeln!(
-                    &mut method_body_out,
-                    "wasm.{}(this.underlying, {});",
-                    method.full_path_name, all_params
-                )?;
-            }
-        }
+        writeln!(
+            &mut method_body_out,
+            "return diplomatRuntime.withWriteable(wasm, (writeable) => wasm.{}(this.underlying, {}{}writeable));",
+            method.full_path_name, if method.params.len() > 1 {
+                ", "
+            } else {
+                ""
+            }, all_params_except_last
+        )?;
     } else {
-        writeln!(out, "static {}({}) {{", method.name, &all_params)?;
-        let mut method_body_out = indented(out).with_str("  ");
-        match &method.return_type {
-            Some(ret_type) => {
-                let value = gen_rust_to_js(
-                    format!("wasm.{}({})", method.full_path_name, all_params),
-                    ret_type,
-                    env,
-                );
-                writeln!(&mut method_body_out, "return {};", value)?;
-            }
-
-            None => {
-                writeln!(
-                    &mut method_body_out,
-                    "wasm.{}({});",
-                    method.full_path_name, all_params
-                )?;
-            }
-        }
+        writeln!(
+            &mut method_body_out,
+            "return diplomatRuntime.withWriteable(wasm, (writeable) => wasm.{}({}{}writeable));",
+            method.full_path_name,
+            if method.params.len() > 1 { ", " } else { "" },
+            all_params_except_last
+        )?;
     }
-
     writeln!(out, "}}")?;
     Ok(())
 }
 
-fn gen_rust_to_js(
+fn gen_value_rust_to_js(
     value_expr: String,
     typ: &ast::TypeName,
     env: &HashMap<String, ast::CustomType>,
@@ -150,5 +199,6 @@ fn gen_rust_to_js(
         ast::TypeName::Reference(_underlying, _mutability) => {
             todo!()
         }
+        ast::TypeName::Writeable => todo!(),
     }
 }

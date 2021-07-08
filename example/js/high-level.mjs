@@ -1,4 +1,5 @@
 import wasm from "./wasm.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 const ICU4XFixedDecimal_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XFixedDecimal_destroy(underlying);
@@ -23,5 +24,9 @@ export class ICU4XFixedDecimal {
 
   digit_at(magnitude) {
     return wasm.ICU4XFixedDecimal_digit_at(this.underlying, magnitude);
+  }
+
+  to_string() {
+    return diplomatRuntime.withWriteable(wasm, (writeable) => wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable));
   }
 }

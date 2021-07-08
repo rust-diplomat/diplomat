@@ -20,6 +20,8 @@ fn main() -> std::io::Result<()> {
         panic!();
     }
 
+    dbg!(&env);
+
     let mut out_text = String::new();
     js::gen_bindings(&env, &mut out_text).unwrap();
 
