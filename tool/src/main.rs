@@ -5,7 +5,7 @@ use diplomat_core::ast;
 mod js;
 
 fn main() -> std::io::Result<()> {
-    let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/main.rs"));
+    let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/lib.rs"));
     let custom_types = ast::File::from(&lib_file);
     let env = custom_types.all_types();
     let mut opaque_errors = vec![];
@@ -20,9 +20,12 @@ fn main() -> std::io::Result<()> {
         panic!();
     }
 
-    let bindings = js::gen_bindings(&env);
+    let mut out_text = String::new();
+    js::gen_bindings(&env, &mut out_text).unwrap();
+
     let args: Vec<String> = env::args().collect();
     let mut out_file = File::create(args[1].clone())?;
-    out_file.write_all(bindings.join("\n").as_bytes())?;
+    out_file.write_all(out_text.as_bytes())?;
+
     Ok(())
 }

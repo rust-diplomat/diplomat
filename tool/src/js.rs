@@ -1,43 +1,67 @@
-use std::collections::HashMap;
+use std::fmt::Write;
+use std::{collections::HashMap, fmt};
 
 use diplomat_core::ast;
+use indenter::indented;
+use indoc::formatdoc;
 
-pub fn gen_bindings(env: &HashMap<String, ast::CustomType>) -> Vec<String> {
-    let mut out = vec!["import wasm from \"./wasm.mjs\"".to_string()];
+pub fn gen_bindings<W: fmt::Write>(
+    env: &HashMap<String, ast::CustomType>,
+    out: &mut W,
+) -> fmt::Result {
+    writeln!(out, "import wasm from \"./wasm.mjs\"")?;
 
     for custom_type in env.values() {
-        gen_struct(&mut out, custom_type, env);
+        writeln!(out)?;
+        gen_struct(out, custom_type, env)?;
     }
 
-    out
+    Ok(())
 }
 
-fn gen_struct(
-    out: &mut Vec<String>,
+fn gen_struct<W: fmt::Write>(
+    out: &mut W,
     custom_type: &ast::CustomType,
     env: &HashMap<String, ast::CustomType>,
-) {
-    out.push(format!(
+) -> fmt::Result {
+    writeln!(
+        out,
         "const {}_destroy_registry = new FinalizationRegistry(underlying => {{",
         custom_type.name()
-    ));
-    out.push(format!("wasm.{}_destroy(underlying);", custom_type.name()));
-    out.push("});".to_string());
+    )?;
+    writeln!(
+        indented(out).with_str("  "),
+        "wasm.{}_destroy(underlying);",
+        custom_type.name()
+    )?;
+    writeln!(out, "}});")?;
+    writeln!(out)?;
 
-    out.push(format!("export class {} {{", custom_type.name()));
+    writeln!(out, "export class {} {{", custom_type.name())?;
 
-    out.push("constructor(underlying) {".to_string());
-    out.push("this.underlying = underlying;".to_string());
-    out.push("}".to_string());
+    let mut class_body_out = indented(out).with_str("  ");
+
+    writeln!(&mut class_body_out, "constructor(underlying) {{")?;
+    writeln!(
+        indented(&mut class_body_out).with_str("  "),
+        "this.underlying = underlying;"
+    )?;
+    writeln!(&mut class_body_out, "}}")?;
 
     for method in custom_type.methods().iter() {
-        gen_method(method, &env, out);
+        writeln!(&mut class_body_out)?;
+        gen_method(method, env, &mut class_body_out)?;
     }
 
-    out.push("}".to_string());
+    writeln!(out, "}}")?;
+    Ok(())
 }
 
-fn gen_method(method: &ast::Method, env: &HashMap<String, ast::CustomType>, out: &mut Vec<String>) {
+fn gen_method<W: fmt::Write>(
+    method: &ast::Method,
+    env: &HashMap<String, ast::CustomType>,
+    out: &mut W,
+) -> fmt::Result {
     let all_params = method
         .params
         .iter()
@@ -45,10 +69,11 @@ fn gen_method(method: &ast::Method, env: &HashMap<String, ast::CustomType>, out:
         .collect::<Vec<String>>()
         .join(", ");
     if method.self_param.is_some() {
-        out.push(format!("{}({}) {{", method.name, &all_params));
+        writeln!(out, "{}({}) {{", method.name, &all_params)?;
+        let mut method_body_out = indented(out).with_str("  ");
         match &method.return_type {
             Some(ret_type) => {
-                let value = gen_value(
+                let value = gen_rust_to_js(
                     format!(
                         "wasm.{}(this.underlying, {})",
                         method.full_path_name, all_params
@@ -56,38 +81,45 @@ fn gen_method(method: &ast::Method, env: &HashMap<String, ast::CustomType>, out:
                     ret_type,
                     env,
                 );
-                out.push(format!("return {};", value));
+                writeln!(&mut method_body_out, "return {};", value)?;
             }
 
             None => {
-                out.push(format!(
+                writeln!(
+                    &mut method_body_out,
                     "wasm.{}(this.underlying, {});",
                     method.full_path_name, all_params
-                ));
+                )?;
             }
         }
     } else {
-        out.push(format!("static {}({}) {{", method.name, &all_params));
+        writeln!(out, "static {}({}) {{", method.name, &all_params)?;
+        let mut method_body_out = indented(out).with_str("  ");
         match &method.return_type {
             Some(ret_type) => {
-                let value = gen_value(
+                let value = gen_rust_to_js(
                     format!("wasm.{}({})", method.full_path_name, all_params),
                     ret_type,
                     env,
                 );
-                out.push(format!("return {};", value));
+                writeln!(&mut method_body_out, "return {};", value)?;
             }
 
             None => {
-                out.push(format!("wasm.{}({});", method.full_path_name, all_params));
+                writeln!(
+                    &mut method_body_out,
+                    "wasm.{}({});",
+                    method.full_path_name, all_params
+                )?;
             }
         }
     }
 
-    out.push("}".to_string());
+    writeln!(out, "}}")?;
+    Ok(())
 }
 
-fn gen_value(
+fn gen_rust_to_js(
     value_expr: String,
     typ: &ast::TypeName,
     env: &HashMap<String, ast::CustomType>,
@@ -98,14 +130,14 @@ fn gen_value(
         }
         ast::TypeName::Box(underlying) => match underlying.resolve(env) {
             ast::CustomType::Opaque(name) => {
-                format!(
-                    "(() => {{\n\
-                      const out = new {}({});\n\
-                      {}_destroy_registry.register(out, out.underlying);\n\
-                      return out;\n\
+                formatdoc! {"
+                    (() => {{
+                      const out = new {}({});
+                      {}_destroy_registry.register(out, out.underlying);
+                      return out;
                     }})()",
                     name.name, value_expr, name.name
-                )
+                }
             }
             ast::CustomType::Struct(_strct) => {
                 todo!()

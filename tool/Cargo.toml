@@ -9,3 +9,5 @@ diplomat_core = { path = "../core" }
 syn = { version = "1.0", features = [ "full", "extra-traits" ] }
 syn-inline-mod = "0.4.0"
 quote = "1.0"
+indenter = "0.3.3"
+indoc = "1.0"
