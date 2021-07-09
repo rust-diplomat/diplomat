@@ -3,7 +3,11 @@ mod ffi {
     use std::str::FromStr;
 
     use fixed_decimal::FixedDecimal;
-    use icu::locid::Locale;
+    use icu::{
+        decimal::{options::FixedDecimalFormatOptions, FixedDecimalFormat},
+        locid::Locale,
+    };
+    use icu_provider::serde::SerdeDeDataProvider;
     use writeable::Writeable;
 
     #[diplomat::opaque]
@@ -33,6 +37,39 @@ mod ffi {
     impl ICU4XLocale {
         fn new(name: &str) -> Box<ICU4XLocale> {
             Box::new(ICU4XLocale(Locale::from_str(name).unwrap()))
+        }
+    }
+
+    #[diplomat::opaque]
+    pub struct ICU4XDataProvider(Box<dyn SerdeDeDataProvider>);
+
+    impl ICU4XDataProvider {
+        fn new_static() -> Box<ICU4XDataProvider> {
+            let provider = icu_testdata::get_static_provider();
+            Box::new(ICU4XDataProvider(Box::new(provider)))
+        }
+    }
+
+    #[diplomat::opaque]
+    pub struct ICU4XFixedDecimalFormat(pub FixedDecimalFormat<'static, 'static>);
+
+    impl ICU4XFixedDecimalFormat {
+        fn new(locale: &ICU4XLocale, provider: &ICU4XDataProvider) -> Box<ICU4XFixedDecimalFormat> {
+            let langid = locale.0.as_ref().clone();
+            let provider = provider.0.as_ref();
+            Box::new(ICU4XFixedDecimalFormat(
+                FixedDecimalFormat::try_new(langid, provider, FixedDecimalFormatOptions::default())
+                    .unwrap(),
+            ))
+        }
+
+        fn format_write(
+            &self,
+            value: &ICU4XFixedDecimal,
+            write: &mut diplomat_runtime::DiplomatWriteable,
+        ) {
+            self.0.format(&value.0).write_to(write).unwrap();
+            write.flush();
         }
     }
 }

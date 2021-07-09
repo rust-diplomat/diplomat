@@ -1,4 +1,4 @@
-import { ICU4XFixedDecimal, ICU4XLocale } from "./high-level.mjs";
+import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormat } from "./high-level.mjs";
 
 const my_decimal = ICU4XFixedDecimal.new(123);
 
@@ -9,5 +9,9 @@ console.log("multiplied by 0.1");
 
 console.log(my_decimal.to_string());
 
-const my_locale = ICU4XLocale.new("en-US");
-console.log(my_locale.underlying);
+const locale = ICU4XLocale.new("bn");
+
+const data_provider = ICU4XDataProvider.new_static();
+
+const fdf = ICU4XFixedDecimalFormat.new(locale, data_provider);
+console.log(fdf.format_write(my_decimal));
