@@ -1,6 +1,9 @@
 #[diplomat::bridge]
 mod ffi {
+    use std::str::FromStr;
+
     use fixed_decimal::FixedDecimal;
+    use icu::locid::Locale;
     use writeable::Writeable;
 
     #[diplomat::opaque]
@@ -15,12 +18,21 @@ mod ffi {
             self.0.multiply_pow10(power).unwrap();
         }
 
-        fn digit_at(&self, magnitude: i16) -> u8 {
-            self.0.digit_at(magnitude)
+        fn negate(&mut self) {
+            self.0.negate()
         }
 
         fn to_string(&self, to: &mut diplomat_runtime::DiplomatWriteable) {
             self.0.write_to(to).unwrap();
+        }
+    }
+
+    #[diplomat::opaque]
+    pub struct ICU4XLocale(pub Locale);
+
+    impl ICU4XLocale {
+        fn new(name: &str) -> Box<ICU4XLocale> {
+            Box::new(ICU4XLocale(Locale::from_str(name).unwrap()))
         }
     }
 }

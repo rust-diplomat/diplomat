@@ -4,34 +4,110 @@ use syn::*;
 
 use diplomat_core::ast;
 
-fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
-    let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
-    let method_ident = Ident::new(m.name.as_str(), Span::call_site());
-    let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());
-
-    let mut all_params = m
-        .params
-        .iter()
-        .map(|p| {
-            FnArg::Typed(PatType {
+fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
+    match &param.ty {
+        ast::TypeName::StrReference => {
+            expanded_params.push(FnArg::Typed(PatType {
                 attrs: vec![],
                 pat: Box::new(Pat::Ident(PatIdent {
                     attrs: vec![],
                     by_ref: None,
                     mutability: None,
-                    ident: Ident::new(p.name.as_str(), Span::call_site()),
+                    ident: Ident::new(
+                        (param.name.clone() + "_diplomat_data").as_str(),
+                        Span::call_site(),
+                    ),
                     subpat: None,
                 })),
                 colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(p.ty.to_syn()),
-            })
-        })
-        .collect::<Vec<FnArg>>();
-    let all_param_names = m
-        .params
-        .iter()
-        .map(|p| Ident::new(p.name.as_str(), Span::call_site()))
-        .collect::<Vec<Ident>>();
+                ty: Box::new(
+                    parse2(quote! {
+                        *const u8
+                    })
+                    .unwrap(),
+                ),
+            }));
+
+            expanded_params.push(FnArg::Typed(PatType {
+                attrs: vec![],
+                pat: Box::new(Pat::Ident(PatIdent {
+                    attrs: vec![],
+                    by_ref: None,
+                    mutability: None,
+                    ident: Ident::new(
+                        (param.name.clone() + "_diplomat_len").as_str(),
+                        Span::call_site(),
+                    ),
+                    subpat: None,
+                })),
+                colon_token: syn::token::Colon(Span::call_site()),
+                ty: Box::new(
+                    parse2(quote! {
+                        usize
+                    })
+                    .unwrap(),
+                ),
+            }));
+        }
+        o => {
+            expanded_params.push(FnArg::Typed(PatType {
+                attrs: vec![],
+                pat: Box::new(Pat::Ident(PatIdent {
+                    attrs: vec![],
+                    by_ref: None,
+                    mutability: None,
+                    ident: Ident::new(param.name.as_str(), Span::call_site()),
+                    subpat: None,
+                })),
+                colon_token: syn::token::Colon(Span::call_site()),
+                ty: Box::new(o.to_syn()),
+            }));
+        }
+    }
+}
+
+fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
+    match &param.ty {
+        ast::TypeName::StrReference => {
+            let data_ident = Ident::new(
+                (param.name.clone() + "_diplomat_data").as_str(),
+                Span::call_site(),
+            );
+            let len_ident = Ident::new(
+                (param.name.clone() + "_diplomat_len").as_str(),
+                Span::call_site(),
+            );
+            // TODO(shadaj): don't just unwrap? or should we assume that the other side gives us a good value?
+            expanded_params.push(parse2(quote! {
+                unsafe {
+                    std::str::from_utf8(std::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
+                }
+            }).unwrap());
+        }
+        _ => {
+            expanded_params.push(Expr::Path(ExprPath {
+                attrs: vec![],
+                qself: None,
+                path: Ident::new(param.name.as_str(), Span::call_site()).into(),
+            }));
+        }
+    }
+}
+
+fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
+    let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
+    let method_ident = Ident::new(m.name.as_str(), Span::call_site());
+    let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());
+
+    let mut all_params = vec![];
+    m.params.iter().for_each(|p| {
+        gen_params_at_boundary(p, &mut all_params);
+    });
+
+    let mut all_params_invocation = vec![];
+    m.params.iter().for_each(|p| {
+        gen_params_invocation(p, &mut all_params_invocation);
+    });
 
     let this_ident = Pat::Ident(PatIdent {
         attrs: vec![],
@@ -71,7 +147,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
             syn::parse2(quote! {
                 #[no_mangle]
                 pub extern "C" fn #extern_ident(#(#all_params),*) {
-                    #method_invocation(#(#all_param_names),*);
+                    #method_invocation(#(#all_params_invocation),*);
                 }
             })
             .unwrap(),
@@ -83,7 +159,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
                 syn::parse2(quote! {
                     #[no_mangle]
                     pub extern "C" fn #extern_ident(#(#all_params),*) -> #return_typ_syn {
-                        #method_invocation(#(#all_param_names),*)
+                        #method_invocation(#(#all_params_invocation),*)
                     }
                 })
                 .unwrap(),

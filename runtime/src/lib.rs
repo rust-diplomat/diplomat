@@ -1,6 +1,27 @@
 use std::ffi::c_void;
 use std::{fmt, ptr};
 
+#[no_mangle]
+/// Allocates a buffer of a given size in Rust's memory.
+///
+/// # Safety
+/// - The allocated buffer must be freed with [`icu4x_free()`].
+pub unsafe extern "C" fn diplomat_alloc(size: usize) -> *mut u8 {
+    let mut vec = Vec::<u8>::with_capacity(size);
+    let ret = vec.as_mut_ptr();
+    std::mem::forget(vec);
+    ret
+}
+
+#[no_mangle]
+/// Frees a buffer that was allocated in Rust's memory.
+/// # Safety
+/// - `ptr` must be a pointer to a valid buffer allocated by [`icu4x_alloc()`].
+pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize) {
+    let vec = Vec::from_raw_parts(ptr, size, size);
+    drop(vec);
+}
+
 #[repr(C)]
 /// An object that can one can write UTF-8 strings to
 ///
