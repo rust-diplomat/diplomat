@@ -66,12 +66,7 @@ fn gen_method<W: fmt::Write>(
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
 ) -> fmt::Result {
-    // TODO(shadaj): support results with empty success value
-    // TODO(shadaj): reconsider if we should auto-detect writeables
-    let is_writeable = method.return_type.is_none()
-        && !method.params.is_empty()
-        && method.params[method.params.len() - 1].ty
-            == ast::TypeName::Reference(Box::new(ast::TypeName::Writeable), true);
+    let is_writeable = method.is_writeable_out();
 
     let mut pre_stmts = vec![];
     let mut all_param_exprs = vec![];

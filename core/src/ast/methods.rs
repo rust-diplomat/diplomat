@@ -94,6 +94,23 @@ impl Method {
             .iter()
             .for_each(|t| t.check_opaque(env, errors));
     }
+
+    /// Checks whether the method qualifies for special writeable handling.
+    /// To qualify, a method must:
+    ///  - not return any value
+    ///  - have the last argument be an `&mut diplomat_runtime::DiplomatWriteable`
+    ///
+    /// Typically, methods of this form will be transformed in the bindings to a
+    /// method that doesn't take the writeable as an argument but instead creates
+    /// one locally and just returns the final string.
+    pub fn is_writeable_out(&self) -> bool {
+        // TODO(shadaj): support results with empty success value
+        // TODO(shadaj): reconsider if we should auto-detect writeables
+        self.return_type.is_none()
+            && !self.params.is_empty()
+            && self.params[self.params.len() - 1].ty
+                == TypeName::Reference(Box::new(TypeName::Writeable), true)
+    }
 }
 
 /// A parameter taken by a [`Method`], including `self`.
