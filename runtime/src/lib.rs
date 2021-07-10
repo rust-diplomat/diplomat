@@ -1,7 +1,27 @@
 use std::ffi::c_void;
 use std::{fmt, ptr};
 
-#[repr(C)]
+/// Allocates a buffer of a given size in Rust's memory.
+///
+/// # Safety
+/// - The allocated buffer must be freed with [`diplomat_free()`].
+#[no_mangle]
+pub unsafe extern "C" fn diplomat_alloc(size: usize) -> *mut u8 {
+    let mut vec = Vec::<u8>::with_capacity(size);
+    let ret = vec.as_mut_ptr();
+    std::mem::forget(vec);
+    ret
+}
+
+/// Frees a buffer that was allocated in Rust's memory.
+/// # Safety
+/// - `ptr` must be a pointer to a valid buffer allocated by [`diplomat_alloc()`].
+#[no_mangle]
+pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize) {
+    let vec = Vec::from_raw_parts(ptr, size, size);
+    drop(vec);
+}
+
 /// An object that can one can write UTF-8 strings to
 ///
 /// This allows the C API to write to arbitrary kinds of objects, for example a
@@ -31,6 +51,7 @@ use std::{fmt, ptr};
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
 ///    of at least the requested buffer size
 ///  - Rust code must call `DiplomatWriteable::flush()` before releasing to C
+#[repr(C)]
 pub struct DiplomatWriteable {
     /// Context pointer for additional data needed by `grow()` and `flush()`. May be `null`.
     ///
@@ -116,10 +137,10 @@ pub unsafe extern "C" fn diplomat_simple_writeable(
     }
 }
 
-#[no_mangle]
 /// Create an [`DiplomatWriteable`] that can write to a dynamically allocated buffer managed by Rust.
 ///
 /// Use [`diplomat_buffer_writeable_destroy()`] to free the writable and its underlying buffer.
+#[no_mangle]
 pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatWriteable {
     extern "C" fn grow(this: *mut DiplomatWriteable, new_cap: usize) -> bool {
         unsafe {
@@ -149,33 +170,33 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
     Box::into_raw(Box::new(ret))
 }
 
-#[no_mangle]
 /// Grabs a pointer to the underlying buffer of a writable.
 ///
 /// # Safety
 /// - The returned pointer is valid until the passed writable is destroyed.
 /// - `this` must be a pointer to a valid [`DiplomatWriteable`] constructed by
 /// [`diplomat_buffer_writeable_create()`].
+#[no_mangle]
 pub extern "C" fn diplomat_buffer_writeable_get_bytes(this: &DiplomatWriteable) -> *mut u8 {
     this.buf
 }
 
-#[no_mangle]
 /// Gets the length in bytes of the content written to the writable.
 ///
 /// # Safety
 /// - `this` must be a pointer to a valid [`DiplomatWriteable`] constructed by
 /// [`diplomat_buffer_writeable_create()`].
+#[no_mangle]
 pub extern "C" fn diplomat_buffer_writeable_len(this: &DiplomatWriteable) -> usize {
     this.len
 }
 
-#[no_mangle]
 /// Destructor for Rust-memory backed writables.
 ///
 /// # Safety
 /// - `this` must be a pointer to a valid [`DiplomatWriteable`] constructed by
 /// [`diplomat_buffer_writeable_create()`].
+#[no_mangle]
 pub unsafe extern "C" fn diplomat_buffer_writeable_destroy(this: *mut DiplomatWriteable) {
     let this = Box::from_raw(this);
     let vec = Vec::from_raw_parts(this.buf, 0, this.cap);

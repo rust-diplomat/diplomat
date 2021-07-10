@@ -66,106 +66,125 @@ fn gen_method<W: fmt::Write>(
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
 ) -> fmt::Result {
-    // TODO(shadaj): support results with empty success value
-    // TODO(shadaj): reconsider if we should auto-detect writeables
-    if method.return_type.is_none()
-        && !method.params.is_empty()
-        && method.params[method.params.len() - 1].ty
-            == ast::TypeName::Reference(Box::new(ast::TypeName::Writeable), true)
-    {
-        gen_writeable_method(method, out)?;
-    } else {
-        let all_params = method
-            .params
-            .iter()
-            .map(|p| p.name.clone())
-            .collect::<Vec<String>>()
-            .join(", ");
-        if method.self_param.is_some() {
-            writeln!(out, "{}({}) {{", method.name, &all_params)?;
-            let mut method_body_out = indented(out).with_str("  ");
-            match &method.return_type {
-                Some(ret_type) => {
-                    let value = gen_value_rust_to_js(
-                        format!(
-                            "wasm.{}(this.underlying, {})",
-                            method.full_path_name, all_params
-                        ),
-                        ret_type,
-                        env,
-                    );
-                    writeln!(&mut method_body_out, "return {};", value)?;
-                }
+    let is_writeable = method.is_writeable_out();
 
-                None => {
-                    writeln!(
-                        &mut method_body_out,
-                        "wasm.{}(this.underlying, {});",
-                        method.full_path_name, all_params
-                    )?;
-                }
-            }
-        } else {
-            writeln!(out, "static {}({}) {{", method.name, &all_params)?;
-            let mut method_body_out = indented(out).with_str("  ");
-            match &method.return_type {
-                Some(ret_type) => {
-                    let value = gen_value_rust_to_js(
-                        format!("wasm.{}({})", method.full_path_name, all_params),
-                        ret_type,
-                        env,
-                    );
-                    writeln!(&mut method_body_out, "return {};", value)?;
-                }
+    let mut pre_stmts = vec![];
+    let mut all_param_exprs = vec![];
+    let mut post_stmts = vec![];
 
-                None => {
-                    writeln!(
-                        &mut method_body_out,
-                        "wasm.{}({});",
-                        method.full_path_name, all_params
-                    )?;
-                }
-            }
-        }
+    method.params.iter().for_each(|p| {
+        gen_value_js_to_rust(
+            p.name.clone(),
+            &p.ty,
+            env,
+            &mut pre_stmts,
+            &mut all_param_exprs,
+            &mut post_stmts,
+        )
+    });
 
-        writeln!(out, "}}")?;
+    if is_writeable {
+        let last_index = all_param_exprs.len() - 1;
+        all_param_exprs[last_index] = "writeable".to_string();
     }
 
-    Ok(())
-}
-
-fn gen_writeable_method<W: fmt::Write>(
-    method: &ast::Method,
-    out: &mut W,
-) -> Result<(), fmt::Error> {
-    let all_params_except_last = method.params[..method.params.len() - 1]
+    let all_params = method
+        .params
         .iter()
         .map(|p| p.name.clone())
         .collect::<Vec<String>>()
         .join(", ");
-    writeln!(out, "{}({}) {{", method.name, &all_params_except_last)?;
-    let mut method_body_out = indented(out).with_str("  ");
+
+    let all_params_invocation = {
+        if method.self_param.is_some() {
+            all_param_exprs.insert(0, "this.underlying".to_string());
+        }
+
+        all_param_exprs.join(", ")
+    };
+
     if method.self_param.is_some() {
-        writeln!(
-            &mut method_body_out,
-            "return diplomatRuntime.withWriteable(wasm, (writeable) => wasm.{}(this.underlying, {}{}writeable));",
-            method.full_path_name, if method.params.len() > 1 {
-                ", "
-            } else {
-                ""
-            }, all_params_except_last
-        )?;
+        writeln!(out, "{}({}) {{", method.name, &all_params)?;
     } else {
-        writeln!(
-            &mut method_body_out,
-            "return diplomatRuntime.withWriteable(wasm, (writeable) => wasm.{}({}{}writeable));",
-            method.full_path_name,
-            if method.params.len() > 1 { ", " } else { "" },
-            all_params_except_last
-        )?;
+        writeln!(out, "static {}({}) {{", method.name, &all_params)?;
     }
+
+    let mut method_body_out = indented(out).with_str("  ");
+
+    for s in pre_stmts.iter() {
+        writeln!(&mut method_body_out, "{}", s)?
+    }
+
+    let invocation_expr = format!("wasm.{}({})", method.full_path_name, all_params_invocation);
+
+    match &method.return_type {
+        Some(ret_type) => {
+            let value = gen_value_rust_to_js(invocation_expr, ret_type, env);
+
+            writeln!(&mut method_body_out, "const diplomat_out = {};", value)?;
+        }
+
+        None => {
+            if is_writeable {
+                writeln!(
+                    &mut method_body_out,
+                    "const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {});",
+                    invocation_expr
+                )?;
+            } else {
+                writeln!(&mut method_body_out, "{}", invocation_expr)?;
+            };
+        }
+    }
+
+    for s in post_stmts.iter() {
+        writeln!(&mut method_body_out, "{}", s)?
+    }
+
+    if method.return_type.is_some() || is_writeable {
+        writeln!(&mut method_body_out, "return diplomat_out;")?;
+    }
+
     writeln!(out, "}}")?;
+
     Ok(())
+}
+
+fn gen_value_js_to_rust(
+    param_name: String,
+    typ: &ast::TypeName,
+    _env: &HashMap<String, ast::CustomType>,
+    pre_logic: &mut Vec<String>,
+    invocation_params: &mut Vec<String>,
+    post_logic: &mut Vec<String>,
+) {
+    match typ {
+        ast::TypeName::StrReference => {
+            // TODO(shadaj): consider extracting into runtime function
+            pre_logic.push(format!(
+                "let {}_diplomat_bytes = (new TextEncoder()).encode({});",
+                param_name, param_name
+            ));
+            pre_logic.push(format!(
+                "let {}_diplomat_ptr = wasm.diplomat_alloc({}_diplomat_bytes.length);",
+                param_name, param_name
+            ));
+            pre_logic.push(format!("let {}_diplomat_buf = new Uint8Array(wasm.memory.buffer, {}_diplomat_ptr, {}_diplomat_bytes.length);", param_name, param_name, param_name));
+            pre_logic.push(format!(
+                "{}_diplomat_buf.set({}_diplomat_bytes, 0);",
+                param_name, param_name
+            ));
+
+            invocation_params.push(format!("{}_diplomat_ptr", param_name));
+            invocation_params.push(format!("{}_diplomat_bytes.length", param_name));
+
+            post_logic.push(format!(
+                "wasm.diplomat_free({}_diplomat_ptr, {}_diplomat_bytes.length);",
+                param_name, param_name
+            ));
+        }
+        _ => invocation_params.push(param_name),
+    }
 }
 
 fn gen_value_rust_to_js(
@@ -200,5 +219,6 @@ fn gen_value_rust_to_js(
             todo!()
         }
         ast::TypeName::Writeable => todo!(),
+        ast::TypeName::StrReference => todo!(),
     }
 }

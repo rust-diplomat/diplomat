@@ -1,5 +1,5 @@
 use proc_macro2::Span;
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
 
@@ -76,6 +76,8 @@ pub enum TypeName {
     Box(Box<TypeName>),
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
+    /// A `&str` type.
+    StrReference,
 }
 
 impl TypeName {
@@ -113,22 +115,14 @@ impl TypeName {
                     }]),
                 },
             }),
-            TypeName::Writeable => syn::Type::Path(TypePath {
-                qself: None,
-                path: Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![
-                        PathSegment {
-                            ident: Ident::new("diplomat_runtime", Span::call_site()),
-                            arguments: PathArguments::None,
-                        },
-                        PathSegment {
-                            ident: Ident::new("DiplomatWriteable", Span::call_site()),
-                            arguments: PathArguments::None,
-                        },
-                    ]),
-                },
-            }),
+            TypeName::Writeable => syn::parse2(quote! {
+                diplomat_runtime::DiplomatWriteable
+            })
+            .unwrap(),
+            TypeName::StrReference => syn::parse2(quote! {
+                &str
+            })
+            .unwrap(),
         }
     }
 
@@ -161,6 +155,7 @@ impl TypeName {
                 }
             }
             TypeName::Writeable => {}
+            TypeName::StrReference => {}
         }
     }
 
@@ -182,12 +177,18 @@ impl From<&syn::Type> for TypeName {
     /// The following rules are used to infer [`TypeName`] variants:
     /// - If the type is a path with a single element that is the name of a Rust primitive, returns a [`TypeName::Primitive`]
     /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type paramter recursively converted
+    /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
+    /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
     /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
     fn from(ty: &syn::Type) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
-                TypeName::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
+                if r.elem.to_token_stream().to_string() == "str" {
+                    TypeName::StrReference
+                } else {
+                    TypeName::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
+                }
             }
             syn::Type::Path(p) => {
                 if let Some(primitive) = p
