@@ -29,7 +29,8 @@ pub struct Method {
 impl Method {
     /// Extracts a [`Method`] from an AST node inside an `impl`.
     pub fn from_syn(m: &ImplItemMethod, self_type: &TypePath) -> Method {
-        let self_ident = self_type.path.get_ident().unwrap();
+        assert!(self_type.path.segments.len() == 1);
+        let self_ident = self_type.path.segments[0].ident.clone();
         let method_ident = &m.sig.ident;
         let extern_ident = Ident::new(
             format!("{}_{}", &self_ident.to_string(), method_ident.to_string()).as_str(),

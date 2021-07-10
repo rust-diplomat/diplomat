@@ -83,17 +83,18 @@ fn gen_method<W: fmt::Write>(
         )
     });
 
-    if is_writeable {
-        let last_index = all_param_exprs.len() - 1;
-        all_param_exprs[last_index] = "writeable".to_string();
-    }
-
-    let all_params = method
+    let mut all_params = method
         .params
         .iter()
         .map(|p| p.name.clone())
-        .collect::<Vec<String>>()
-        .join(", ");
+        .collect::<Vec<String>>();
+
+    if is_writeable {
+        let last_index_exprs = all_param_exprs.len() - 1;
+        all_param_exprs[last_index_exprs] = "writeable".to_string();
+
+        all_params.remove(all_params.len() - 1);
+    }
 
     let all_params_invocation = {
         if method.self_param.is_some() {
@@ -104,9 +105,9 @@ fn gen_method<W: fmt::Write>(
     };
 
     if method.self_param.is_some() {
-        writeln!(out, "{}({}) {{", method.name, &all_params)?;
+        writeln!(out, "{}({}) {{", method.name, all_params.join(", "))?;
     } else {
-        writeln!(out, "static {}({}) {{", method.name, &all_params)?;
+        writeln!(out, "static {}({}) {{", method.name, all_params.join(", "))?;
     }
 
     let mut method_body_out = indented(out).with_str("  ");
@@ -182,6 +183,12 @@ fn gen_value_js_to_rust(
                 "wasm.diplomat_free({}_diplomat_ptr, {}_diplomat_bytes.length);",
                 param_name, param_name
             ));
+        }
+        ast::TypeName::Box(_) => {
+            invocation_params.push(format!("{}.underlying", param_name));
+        }
+        ast::TypeName::Reference(_, _) => {
+            invocation_params.push(format!("{}.underlying", param_name));
         }
         _ => invocation_params.push(param_name),
     }

@@ -1,6 +1,30 @@
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
+const ICU4XFixedDecimalFormat_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.ICU4XFixedDecimalFormat_destroy(underlying);
+});
+
+export class ICU4XFixedDecimalFormat {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new(locale, provider) {
+    const diplomat_out = (() => {
+      const out = new ICU4XFixedDecimalFormat(wasm.ICU4XFixedDecimalFormat_new(locale.underlying, provider.underlying));
+      ICU4XFixedDecimalFormat_destroy_registry.register(out, out.underlying);
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  format_write(value) {
+    const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => wasm.ICU4XFixedDecimalFormat_format_write(this.underlying, value.underlying, writeable));
+    return diplomat_out;
+  }
+}
+
 const ICU4XFixedDecimal_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XFixedDecimal_destroy(underlying);
 });
@@ -27,8 +51,27 @@ export class ICU4XFixedDecimal {
     wasm.ICU4XFixedDecimal_negate(this.underlying)
   }
 
-  to_string(to) {
+  to_string() {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable));
+    return diplomat_out;
+  }
+}
+
+const ICU4XDataProvider_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.ICU4XDataProvider_destroy(underlying);
+});
+
+export class ICU4XDataProvider {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new_static() {
+    const diplomat_out = (() => {
+      const out = new ICU4XDataProvider(wasm.ICU4XDataProvider_new_static());
+      ICU4XDataProvider_destroy_registry.register(out, out.underlying);
+      return out;
+    })();
     return diplomat_out;
   }
 }

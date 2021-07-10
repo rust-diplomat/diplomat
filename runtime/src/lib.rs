@@ -1,6 +1,9 @@
 use std::ffi::c_void;
 use std::{fmt, ptr};
 
+#[cfg(target_arch = "wasm32")]
+mod wasm_glue;
+
 /// Allocates a buffer of a given size in Rust's memory.
 ///
 /// # Safety

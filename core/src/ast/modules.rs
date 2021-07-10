@@ -76,8 +76,11 @@ impl From<&ItemMod> for Module {
                         })
                         .collect();
 
+                    assert!(self_typ.path.segments.len() == 1);
+                    let self_ident = self_typ.path.segments[0].ident.clone();
+
                     match custom_types_by_name
-                        .get_mut(&self_typ.path.get_ident().unwrap().to_string())
+                        .get_mut(&self_ident.to_string())
                         .unwrap()
                     {
                         CustomType::Struct(strct) => {
