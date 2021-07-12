@@ -4,7 +4,6 @@ use std::{fmt::Write, usize};
 
 use diplomat_core::ast::{self, PrimitiveType};
 use indenter::indented;
-use indoc::formatdoc;
 
 use crate::layout;
 
@@ -35,7 +34,7 @@ fn gen_struct<W: fmt::Write>(
 ) -> fmt::Result {
     writeln!(
         out,
-        "const {}_destroy_registry = new FinalizationRegistry(underlying => {{",
+        "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {{",
         custom_type.name()
     )?;
     writeln!(
@@ -48,7 +47,7 @@ fn gen_struct<W: fmt::Write>(
 
     writeln!(
         out,
-        "const {}_value_destroy_registry = new FinalizationRegistry(obj => {{",
+        "const {}_alloc_destroy_registry = new FinalizationRegistry(obj => {{",
         custom_type.name()
     )?;
     writeln!(
@@ -100,15 +99,14 @@ fn gen_field<W: fmt::Write>(
 ) -> fmt::Result {
     writeln!(out, "{}() {{", name)?;
     let mut method_body_out = indented(out).with_str("  ");
-    writeln!(
+    write!(&mut method_body_out, "return ")?;
+    gen_value_rust_to_js(
+        &|out| write!(out, "this.underlying + {}", offset),
+        &ast::TypeName::Reference(Box::new(typ.clone()), true),
+        env,
         &mut method_body_out,
-        "return {};",
-        gen_value_rust_to_js(
-            format!("this.underlying + {}", offset),
-            &ast::TypeName::Reference(Box::new(typ.clone()), true),
-            env
-        )
     )?;
+    writeln!(&mut method_body_out, ";")?;
     writeln!(out, "}}")?;
     Ok(())
 }
@@ -178,9 +176,14 @@ fn gen_method<W: fmt::Write>(
 
     match &method.return_type {
         Some(ret_type) => {
-            let value = gen_value_rust_to_js(invocation_expr, ret_type, env);
-
-            writeln!(&mut method_body_out, "const diplomat_out = {};", value)?;
+            write!(&mut method_body_out, "const diplomat_out = ")?;
+            gen_value_rust_to_js(
+                &|out| write!(out, "{}", invocation_expr),
+                ret_type,
+                env,
+                &mut method_body_out,
+            )?;
+            writeln!(&mut method_body_out, ";")?;
         }
 
         None => {
@@ -252,83 +255,135 @@ fn gen_value_js_to_rust(
     }
 }
 
-fn gen_value_rust_to_js(
-    value_expr: String,
+fn gen_value_rust_to_js<W: fmt::Write>(
+    value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
     typ: &ast::TypeName,
     env: &HashMap<String, ast::CustomType>,
-) -> String {
+    out: &mut W,
+) -> fmt::Result {
     match typ {
         ast::TypeName::Named(_) => {
             let custom_type = typ.resolve(env);
             match custom_type {
                 ast::CustomType::Struct(strct) => {
                     let (strct_size, _, _) = layout::struct_size_offsets_max_align(strct, env);
-                    formatdoc! {"
-                        (() => {{
-                            const diplomat_receive_buffer = wasm.diplomat_alloc({});
-                            {};
-                            const out = new {}(diplomat_receive_buffer);
-                            {}_value_destroy_registry.register(out, {{
-                                ptr: out.underlying,
-                                size: {}
-                            }});
-                            return out;
-                        }})()",
-                        strct_size,
-                        value_expr,
-                        strct.name, strct.name,
-                        strct_size,
-                    }
+                    writeln!(out, "(() => {{")?;
+                    let mut iife_indent = indented(out).with_str("  ");
+                    writeln!(
+                        &mut iife_indent,
+                        "const diplomat_receive_buffer = wasm.diplomat_alloc({});",
+                        strct_size
+                    )?;
+                    value_expr(&mut iife_indent)?;
+                    writeln!(&mut iife_indent, ";")?;
+                    writeln!(
+                        &mut iife_indent,
+                        "const out = new {}(diplomat_receive_buffer);",
+                        strct.name
+                    )?;
+                    writeln!(
+                        &mut iife_indent,
+                        "{}_alloc_destroy_registry.register(out, {{",
+                        strct.name
+                    )?;
+
+                    let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");
+                    writeln!(&mut alloc_dict_indent, "ptr: out.underlying,")?;
+                    writeln!(&mut alloc_dict_indent, "size: {}", strct_size)?;
+                    writeln!(&mut iife_indent, "}});")?;
+                    writeln!(&mut iife_indent, "return out;")?;
+                    write!(out, "}})()")?;
                 }
                 ast::CustomType::Opaque(_) => {
                     panic!("Opaque types cannot be used in value position")
                 }
             }
         }
-        ast::TypeName::Box(underlying) => match underlying.resolve(env) {
-            ast::CustomType::Opaque(name) => {
-                formatdoc! {"
-                    (() => {{
-                      const out = new {}({});
-                      {}_destroy_registry.register(out, out.underlying);
-                      return out;
-                    }})()",
-                    name.name, value_expr, name.name
+
+        ast::TypeName::Box(underlying) => {
+            writeln!(out, "(() => {{")?;
+            let mut iife_indent = indented(out).with_str("  ");
+            write!(&mut iife_indent, "const out = ")?;
+            gen_rust_reference_to_js(underlying.as_ref(), value_expr, env, &mut iife_indent)?;
+            writeln!(&mut iife_indent, ";")?;
+
+            match underlying.as_ref() {
+                ast::TypeName::Named(_) => {
+                    writeln!(
+                        &mut iife_indent,
+                        "{}_box_destroy_registry.register(out, out.underlying)",
+                        underlying.resolve(env).name()
+                    )?;
                 }
-            }
-            ast::CustomType::Struct(_strct) => {
-                todo!()
-            }
-        },
+                _ => {},
+            };
+
+            writeln!(&mut iife_indent, "return out;")?;
+            write!(out, "}})()")?;
+        }
+
         ast::TypeName::Primitive(_prim) => {
             // TODO(shadaj): wrap with appropriate types for large widths
-            value_expr
+            value_expr(out)?;
         }
+
         ast::TypeName::Reference(underlying, _mutability) => {
-            gen_rust_reference_to_js(underlying.as_ref(), &value_expr, env)
+            gen_rust_reference_to_js(underlying.as_ref(), value_expr, env, out)?;
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
     }
+
+    Ok(())
 }
 
-fn gen_rust_reference_to_js(
+fn gen_rust_reference_to_js<W: fmt::Write>(
     underlying: &ast::TypeName,
-    value_expr: &str,
+    value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
     env: &HashMap<String, ast::CustomType>,
-) -> String {
+    out: &mut W,
+) -> fmt::Result {
     match underlying {
+        ast::TypeName::Box(typ) | ast::TypeName::Reference(typ, _) => {
+            gen_rust_reference_to_js(
+                typ.as_ref(),
+                &|out| {
+                    write!(out, "(new Uint32Array(wasm.memory.buffer, ")?;
+                    value_expr(out)?;
+                    write!(out, ", 1))[0]")?;
+                    Ok(())
+                },
+                env,
+                out,
+            )?;
+        }
+
+        ast::TypeName::Named(_) => {
+            let custom_type = underlying.resolve(env);
+            writeln!(out, "(() => {{")?;
+            let mut iife_indent = indented(out).with_str("  ");
+            write!(&mut iife_indent, "const out = new {}(", custom_type.name())?;
+            value_expr(&mut iife_indent)?;
+            writeln!(&mut iife_indent, ");")?;
+
+            // TODO(shadaj): add lifetime references
+
+            writeln!(&mut iife_indent, "return out;")?;
+            write!(out, "}})()")?;
+        }
+
         ast::TypeName::Primitive(prim) => {
             if let PrimitiveType::bool = prim {
-                format!(
-                    "(new Uint8Array(wasm.memory.buffer, {}, 1))[0] == 1",
-                    value_expr
-                )
+                write!(out, "(new Uint8Array(wasm.memory.buffer, ")?;
+                value_expr(out)?;
+                write!(out, ", 1))[0] == 1")?;
             } else if let PrimitiveType::char = prim {
-                format!(
-                    "String.fromCharCode((new Uint8Array(wasm.memory.buffer, {}, 1))[0])",
-                    value_expr
-                )
+                write!(
+                    out,
+                    "String.fromCharCode((new Uint8Array(wasm.memory.buffer, "
+                )?;
+                value_expr(out)?;
+                write!(out, ", 1))[0])")?;
             } else {
                 let prim_type = match prim {
                     PrimitiveType::i8 => "Int8Array",
@@ -349,27 +404,14 @@ fn gen_rust_reference_to_js(
                     PrimitiveType::char => panic!(),
                 };
 
-                format!(
-                    "(new {}(wasm.memory.buffer, {}, 1))[0]",
-                    prim_type, value_expr
-                )
+                write!(out, "new {}(wasm.memory.buffer, ", prim_type)?;
+                value_expr(out)?;
+                write!(out, ", 1))[0]")?;
             }
         }
-        ast::TypeName::Box(typ) => match typ.resolve(env) {
-            ast::CustomType::Opaque(name) => {
-                formatdoc! {"
-                    (() => {{
-                        const out = new {}((new Uint32Array(wasm.memory.buffer, {}, 1))[0]);
-                        // TODO(shadaj): back reference
-                        return out;
-                    }})()",
-                    name.name, value_expr
-                }
-            }
-            ast::CustomType::Struct(_strct) => {
-                todo!()
-            }
-        },
+
         _ => todo!(),
     }
+
+    Ok(())
 }
