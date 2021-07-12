@@ -1,9 +1,12 @@
-use std::fmt::Write;
+use core::panic;
 use std::{collections::HashMap, fmt};
+use std::{fmt::Write, usize};
 
-use diplomat_core::ast;
+use diplomat_core::ast::{self, PrimitiveType};
 use indenter::indented;
 use indoc::formatdoc;
+
+use crate::layout;
 
 pub fn gen_bindings<W: fmt::Write>(
     env: &HashMap<String, ast::CustomType>,
@@ -41,6 +44,23 @@ fn gen_struct<W: fmt::Write>(
     writeln!(out, "}});")?;
     writeln!(out)?;
 
+    writeln!(
+        out,
+        "const {}_value_destroy_registry = new FinalizationRegistry(obj => {{",
+        custom_type.name()
+    )?;
+    writeln!(
+        indented(out).with_str("  "),
+        "wasm.{}_drop_ptr(obj[\"ptr\"]);",
+        custom_type.name()
+    )?;
+    writeln!(
+        indented(out).with_str("  "),
+        "wasm.diplomat_free(obj[\"ptr\"], obj[\"size\"]);"
+    )?;
+    writeln!(out, "}});")?;
+    writeln!(out)?;
+
     writeln!(out, "export class {} {{", custom_type.name())?;
 
     let mut class_body_out = indented(out).with_str("  ");
@@ -57,6 +77,36 @@ fn gen_struct<W: fmt::Write>(
         gen_method(method, env, &mut class_body_out)?;
     }
 
+    if let ast::CustomType::Struct(strct) = custom_type {
+        let (_, offsets, _) = layout::struct_size_offsets_max_align(strct, env);
+        for ((name, typ), offset) in strct.fields.iter().zip(offsets.iter()) {
+            writeln!(&mut class_body_out)?;
+            gen_field(name, typ, *offset, env, &mut class_body_out)?;
+        }
+    }
+
+    writeln!(out, "}}")?;
+    Ok(())
+}
+
+fn gen_field<W: fmt::Write>(
+    name: &str,
+    typ: &ast::TypeName,
+    offset: usize,
+    env: &HashMap<String, ast::CustomType>,
+    out: &mut W,
+) -> fmt::Result {
+    writeln!(out, "{}() {{", name)?;
+    let mut method_body_out = indented(out).with_str("  ");
+    writeln!(
+        &mut method_body_out,
+        "return {};",
+        gen_value_rust_to_js(
+            format!("this.underlying + {}", offset),
+            &ast::TypeName::Reference(Box::new(typ.clone()), true),
+            env
+        )
+    )?;
     writeln!(out, "}}")?;
     Ok(())
 }
@@ -97,6 +147,12 @@ fn gen_method<W: fmt::Write>(
     }
 
     let all_params_invocation = {
+        if let Some(ast::TypeName::Named(_)) = &method.return_type {
+            if let ast::CustomType::Struct(_) = method.return_type.as_ref().unwrap().resolve(env) {
+                all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
+            }
+        }
+
         if method.self_param.is_some() {
             all_param_exprs.insert(0, "this.underlying".to_string());
         }
@@ -200,8 +256,32 @@ fn gen_value_rust_to_js(
     env: &HashMap<String, ast::CustomType>,
 ) -> String {
     match typ {
-        ast::TypeName::Named(name) => {
-            todo!("TODO: implement custom type as value {}", name);
+        ast::TypeName::Named(_) => {
+            let custom_type = typ.resolve(env);
+            match custom_type {
+                ast::CustomType::Struct(strct) => {
+                    let strct_size = 128; // TODO(shadaj): get from struct
+                    formatdoc! {"
+                        (() => {{
+                        const diplomat_receive_buffer = wasm.diplomat_alloc({});
+                        {};
+                        const out = new {}(diplomat_receive_buffer);
+                        {}_value_destroy_registry.register(out, {{
+                            ptr: out.underlying,
+                            size: {}
+                        }});
+                        return out;
+                        }})()",
+                        strct_size,
+                        value_expr,
+                        strct.name, strct.name,
+                        strct_size,
+                    }
+                }
+                ast::CustomType::Opaque(_) => {
+                    panic!("Opaque types cannot be used in value position")
+                }
+            }
         }
         ast::TypeName::Box(underlying) => match underlying.resolve(env) {
             ast::CustomType::Opaque(name) => {
@@ -222,10 +302,53 @@ fn gen_value_rust_to_js(
             // TODO(shadaj): wrap with appropriate types for large widths
             value_expr
         }
-        ast::TypeName::Reference(_underlying, _mutability) => {
-            todo!()
+        ast::TypeName::Reference(underlying, _mutability) => {
+            gen_rust_reference_to_js(underlying.as_ref(), &value_expr, env)
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
+    }
+}
+
+fn gen_rust_reference_to_js(
+    underlying: &ast::TypeName,
+    value_expr: &str,
+    env: &HashMap<String, ast::CustomType>,
+) -> String {
+    match underlying {
+        ast::TypeName::Primitive(prim) => {
+            if let PrimitiveType::bool = prim {
+                format!(
+                    "(new Uint8Array(wasm.memory.buffer, {}, 1))[0] == 1",
+                    value_expr
+                )
+            } else {
+                let prim_type = match prim {
+                    PrimitiveType::i8 => "Uint8Array",
+                    _ => todo!("Add support for more primitive types"),
+                };
+
+                format!(
+                    "(new {}(wasm.memory.buffer, {}, 1))[0]",
+                    prim_type, value_expr
+                )
+            }
+        }
+        ast::TypeName::Box(typ) => match typ.resolve(env) {
+            ast::CustomType::Opaque(name) => {
+                formatdoc! {"
+                                (() => {{
+                                  const out = new {}((new Uint32Array(wasm.memory.buffer, {}, 1))[0]);
+                                  // TODO(shadaj): back reference
+                                  return out;
+                                }})()",
+                    name.name, value_expr
+                }
+            }
+            ast::CustomType::Struct(_strct) => {
+                todo!()
+            }
+        },
+        _ => todo!(),
     }
 }
