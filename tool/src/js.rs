@@ -322,10 +322,29 @@ fn gen_rust_reference_to_js(
                     "(new Uint8Array(wasm.memory.buffer, {}, 1))[0] == 1",
                     value_expr
                 )
+            } else if let PrimitiveType::char = prim {
+                format!(
+                    "String.fromCharCode((new Uint8Array(wasm.memory.buffer, {}, 1))[0])",
+                    value_expr
+                )
             } else {
                 let prim_type = match prim {
-                    PrimitiveType::i8 => "Uint8Array",
-                    _ => todo!("Add support for more primitive types"),
+                    PrimitiveType::i8 => "Int8Array",
+                    PrimitiveType::u8 => "Uint8Array",
+                    PrimitiveType::i16 => "Int16Array",
+                    PrimitiveType::u16 => "Uint16Array",
+                    PrimitiveType::i32 => "Int32Array",
+                    PrimitiveType::u32 => "Uint32Array",
+                    PrimitiveType::i64 => "BigInt64Array",
+                    PrimitiveType::u64 => "BigUint64Array",
+                    PrimitiveType::i128 => panic!("i128 not supported on JS"),
+                    PrimitiveType::u128 => panic!("u128 not supported on JS"),
+                    PrimitiveType::isize => "Int32Array",
+                    PrimitiveType::usize => "Uint32Array",
+                    PrimitiveType::f32 => "Float32Array",
+                    PrimitiveType::f64 => "Float64Array",
+                    PrimitiveType::bool => panic!(),
+                    PrimitiveType::char => panic!(),
                 };
 
                 format!(
