@@ -263,14 +263,14 @@ fn gen_value_rust_to_js(
                     let (strct_size, _, _) = layout::struct_size_offsets_max_align(strct, env);
                     formatdoc! {"
                         (() => {{
-                        const diplomat_receive_buffer = wasm.diplomat_alloc({});
-                        {};
-                        const out = new {}(diplomat_receive_buffer);
-                        {}_value_destroy_registry.register(out, {{
-                            ptr: out.underlying,
-                            size: {}
-                        }});
-                        return out;
+                            const diplomat_receive_buffer = wasm.diplomat_alloc({});
+                            {};
+                            const out = new {}(diplomat_receive_buffer);
+                            {}_value_destroy_registry.register(out, {{
+                                ptr: out.underlying,
+                                size: {}
+                            }});
+                            return out;
                         }})()",
                         strct_size,
                         value_expr,
@@ -356,11 +356,11 @@ fn gen_rust_reference_to_js(
         ast::TypeName::Box(typ) => match typ.resolve(env) {
             ast::CustomType::Opaque(name) => {
                 formatdoc! {"
-                                (() => {{
-                                  const out = new {}((new Uint32Array(wasm.memory.buffer, {}, 1))[0]);
-                                  // TODO(shadaj): back reference
-                                  return out;
-                                }})()",
+                    (() => {{
+                        const out = new {}((new Uint32Array(wasm.memory.buffer, {}, 1))[0]);
+                        // TODO(shadaj): back reference
+                        return out;
+                    }})()",
                     name.name, value_expr
                 }
             }
