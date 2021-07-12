@@ -260,7 +260,7 @@ fn gen_value_rust_to_js(
             let custom_type = typ.resolve(env);
             match custom_type {
                 ast::CustomType::Struct(strct) => {
-                    let strct_size = 128; // TODO(shadaj): get from struct
+                    let (strct_size, _, _) = layout::struct_size_offsets_max_align(strct, env);
                     formatdoc! {"
                         (() => {{
                         const diplomat_receive_buffer = wasm.diplomat_alloc({});
