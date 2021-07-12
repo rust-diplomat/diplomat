@@ -18,7 +18,9 @@ pub fn gen_bindings<W: fmt::Write>(
         "import * as diplomatRuntime from \"./diplomat-runtime.mjs\""
     )?;
 
-    for custom_type in env.values() {
+    let mut all_types: Vec<&ast::CustomType> = env.values().collect();
+    all_types.sort_by_key(|t| t.name());
+    for custom_type in all_types {
         writeln!(out)?;
         gen_struct(out, custom_type, env)?;
     }
