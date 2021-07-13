@@ -17,6 +17,16 @@ pub fn gen_bindings<W: fmt::Write>(
         "import * as diplomatRuntime from \"./diplomat-runtime.mjs\""
     )?;
 
+    writeln!(
+        out,
+        "const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {{"
+    )?;
+    writeln!(
+        indented(out).with_str("  "),
+        "wasm.diplomat_free(obj[\"ptr\"], obj[\"size\"]);"
+    )?;
+    writeln!(out, "}});")?;
+
     let mut all_types: Vec<&ast::CustomType> = env.values().collect();
     all_types.sort_by_key(|t| t.name());
     for custom_type in all_types {
@@ -287,7 +297,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
 
                     writeln!(
                         &mut iife_indent,
-                        "diplomatRuntime.diplomat_alloc_destroy_registry.register(out, {{"
+                        "diplomat_alloc_destroy_registry.register(out, {{"
                     )?;
 
                     let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");

@@ -14,7 +14,3 @@ export function withWriteable(wasm, callback) {
     wasm.diplomat_buffer_writeable_destroy(writeable);
   }
 }
-
-export const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
-});

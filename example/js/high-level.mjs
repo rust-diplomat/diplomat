@@ -1,5 +1,8 @@
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
+const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
+  wasm.diplomat_free(obj["ptr"], obj["size"]);
+});
 
 const ICU4XDataProvider_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XDataProvider_destroy(underlying);
@@ -75,7 +78,7 @@ export class ICU4XFixedDecimalFormat {
       const out_fdf_value = out.fdf();
       ICU4XFixedDecimalFormat_box_destroy_registry.register(out_fdf_value, out_fdf_value.underlying)
       out.fdf = () => out_fdf_value;
-      diplomatRuntime.diplomat_alloc_destroy_registry.register(out, {
+      diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
         size: 5
       });
