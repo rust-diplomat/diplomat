@@ -3,6 +3,7 @@ use std::{env, fs::File, io::Write, path::Path};
 use diplomat_core::ast;
 
 mod js;
+mod layout;
 
 fn main() -> std::io::Result<()> {
     let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/lib.rs"));

@@ -13,5 +13,6 @@ const locale = ICU4XLocale.new("bn");
 
 const data_provider = ICU4XDataProvider.new_static();
 
-const fdf = ICU4XFixedDecimalFormat.new(locale, data_provider);
-console.log(fdf.format_write(my_decimal));
+const fdf = ICU4XFixedDecimalFormat.try_new(locale, data_provider);
+console.log(fdf.success());
+console.log(fdf.fdf().format_write(my_decimal));

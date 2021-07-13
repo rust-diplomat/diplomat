@@ -208,6 +208,21 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             })
             .unwrap(),
         ));
+
+        let drop_ptr_ident = Ident::new(
+            (custom_type.name().to_string() + "_drop_ptr").as_str(),
+            Span::call_site(),
+        );
+
+        new_contents.push(Item::Fn(
+            syn::parse2(quote! {
+                #[no_mangle]
+                pub unsafe extern "C" fn #drop_ptr_ident(this: *mut #type_ident) {
+                    std::ptr::drop_in_place(this);
+                }
+            })
+            .unwrap(),
+        ));
     }
 
     ItemMod {

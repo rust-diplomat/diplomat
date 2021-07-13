@@ -1,5 +1,4 @@
 use std::ffi::CString;
-use std::io;
 use std::os::raw::c_char;
 
 #[cfg(debug_assertions)]

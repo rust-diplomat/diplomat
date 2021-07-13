@@ -5,10 +5,10 @@ expression: "Struct::from(&syn::parse2(quote! {\n                              s
 ---
 name: MyLocalStruct
 fields:
-  a:
-    Primitive: i32
-  b:
-    Box:
-      Named: MyLocalStruct
+  - - a
+    - Primitive: i32
+  - - b
+    - Box:
+        Named: MyLocalStruct
 methods: []
 

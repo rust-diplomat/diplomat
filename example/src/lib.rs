@@ -53,14 +53,32 @@ mod ffi {
     #[diplomat::opaque]
     pub struct ICU4XFixedDecimalFormat(pub FixedDecimalFormat<'static, 'static>);
 
+    pub struct ICU4XFixedDecimalFormatResult {
+        pub fdf: Box<ICU4XFixedDecimalFormat>,
+        pub success: bool,
+    }
+
     impl ICU4XFixedDecimalFormat {
-        fn new(locale: &ICU4XLocale, provider: &ICU4XDataProvider) -> Box<ICU4XFixedDecimalFormat> {
+        fn try_new(
+            locale: &ICU4XLocale,
+            provider: &ICU4XDataProvider,
+        ) -> ICU4XFixedDecimalFormatResult {
             let langid = locale.0.as_ref().clone();
             let provider = provider.0.as_ref();
-            Box::new(ICU4XFixedDecimalFormat(
+
+            if let Result::Ok(fdf) =
                 FixedDecimalFormat::try_new(langid, provider, FixedDecimalFormatOptions::default())
-                    .unwrap(),
-            ))
+            {
+                ICU4XFixedDecimalFormatResult {
+                    fdf: Box::new(ICU4XFixedDecimalFormat(fdf)),
+                    success: true,
+                }
+            } else {
+                ICU4XFixedDecimalFormatResult {
+                    fdf: unsafe { Box::from_raw(std::ptr::null_mut()) },
+                    success: false,
+                }
+            }
         }
 
         fn format_write(

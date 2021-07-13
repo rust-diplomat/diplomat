@@ -8,11 +8,11 @@ declared_types:
     Struct:
       name: NonOpaqueStruct
       fields:
-        a:
-          Primitive: i32
-        b:
-          Box:
-            Named: NonOpaqueStruct
+        - - a
+          - Primitive: i32
+        - - b
+          - Box:
+              Named: NonOpaqueStruct
       methods:
         - name: new
           full_path_name: NonOpaqueStruct_new

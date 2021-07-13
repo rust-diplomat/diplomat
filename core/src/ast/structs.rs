@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use super::{Method, TypeName};
 
@@ -7,7 +6,7 @@ use super::{Method, TypeName};
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Struct {
     pub name: String,
-    pub fields: HashMap<String, TypeName>,
+    pub fields: Vec<(String, TypeName)>,
     pub methods: Vec<Method>,
 }
 
