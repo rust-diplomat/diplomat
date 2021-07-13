@@ -1,0 +1,28 @@
+---
+source: macro/src/lib.rs
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                             mod ffi\n                             {\n                                 struct Foo { } impl Foo\n                                 { fn from_str(s : & str) { todo ! () } }\n                             }\n                         }).to_token_stream().to_string())"
+
+---
+mod ffi {
+    #[repr(C)]
+    struct Foo {}
+    impl Foo {
+        fn from_str(s: &str) {
+            todo!()
+        }
+    }
+    #[no_mangle]
+    pub extern "C" fn Foo_from_str(s_diplomat_data: *const u8, s_diplomat_len: usize) {
+        Foo::from_str(unsafe {
+            std::str::from_utf8(std::slice::from_raw_parts(s_diplomat_data, s_diplomat_len))
+                .unwrap()
+        });
+    }
+    #[no_mangle]
+    pub extern "C" fn Foo_destroy(this: Box<Foo>) {}
+    #[no_mangle]
+    pub unsafe extern "C" fn Foo_drop_ptr(this: *mut Foo) {
+        std::ptr::drop_in_place(this);
+    }
+}
+
