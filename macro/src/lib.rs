@@ -266,8 +266,6 @@ mod tests {
     use std::io::{Read, Write};
     use std::process::Command;
 
-    use insta;
-
     use quote::ToTokens;
     use syn::parse_quote;
     use tempfile::tempdir;
