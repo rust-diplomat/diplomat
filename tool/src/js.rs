@@ -307,16 +307,13 @@ fn gen_value_rust_to_js<W: fmt::Write>(
             gen_rust_reference_to_js(underlying.as_ref(), value_expr, env, &mut iife_indent)?;
             writeln!(&mut iife_indent, ";")?;
 
-            match underlying.as_ref() {
-                ast::TypeName::Named(_) => {
-                    writeln!(
-                        &mut iife_indent,
-                        "{}_box_destroy_registry.register(out, out.underlying)",
-                        underlying.resolve(env).name()
-                    )?;
-                }
-                _ => {},
-            };
+            if let ast::TypeName::Named(_) = underlying.as_ref() {
+                writeln!(
+                    &mut iife_indent,
+                    "{}_box_destroy_registry.register(out, out.underlying)",
+                    underlying.resolve(env).name()
+                )?;
+            }
 
             writeln!(&mut iife_indent, "return out;")?;
             write!(out, "}})()")?;
