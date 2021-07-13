@@ -45,23 +45,6 @@ fn gen_struct<W: fmt::Write>(
     writeln!(out, "}});")?;
     writeln!(out)?;
 
-    writeln!(
-        out,
-        "const {}_alloc_destroy_registry = new FinalizationRegistry(obj => {{",
-        custom_type.name()
-    )?;
-    writeln!(
-        indented(out).with_str("  "),
-        "wasm.{}_drop_ptr(obj[\"ptr\"]);",
-        custom_type.name()
-    )?;
-    writeln!(
-        indented(out).with_str("  "),
-        "wasm.diplomat_free(obj[\"ptr\"], obj[\"size\"]);"
-    )?;
-    writeln!(out, "}});")?;
-    writeln!(out)?;
-
     writeln!(out, "export class {} {{", custom_type.name())?;
 
     let mut class_body_out = indented(out).with_str("  ");
@@ -281,10 +264,30 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                         "const out = new {}(diplomat_receive_buffer);",
                         strct.name
                     )?;
+
+                    for (name, typ) in strct.fields.iter() {
+                        if let ast::TypeName::Box(underlying) = typ {
+                            writeln!(
+                                &mut iife_indent,
+                                "const out_{}_value = out.{}();",
+                                name, name
+                            )?;
+                            // TODO(shadaj): delete back-references when we start generating them
+                            // since the function is generated assuming that back references are needed
+                            if let ast::TypeName::Named(_) = underlying.as_ref() {
+                                writeln!(
+                                    &mut iife_indent,
+                                    "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying)",
+                                    underlying.resolve(env).name(), name, name
+                                )?;
+                            }
+                            writeln!(&mut iife_indent, "out.{} = () => out_{}_value;", name, name)?;
+                        }
+                    }
+
                     writeln!(
                         &mut iife_indent,
-                        "{}_alloc_destroy_registry.register(out, {{",
-                        strct.name
+                        "diplomatRuntime.diplomat_alloc_destroy_registry.register(out, {{"
                     )?;
 
                     let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");

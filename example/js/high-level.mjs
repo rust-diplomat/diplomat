@@ -5,11 +5,6 @@ const ICU4XDataProvider_box_destroy_registry = new FinalizationRegistry(underlyi
   wasm.ICU4XDataProvider_destroy(underlying);
 });
 
-const ICU4XDataProvider_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.ICU4XDataProvider_drop_ptr(obj["ptr"]);
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
-});
-
 export class ICU4XDataProvider {
   constructor(underlying) {
     this.underlying = underlying;
@@ -30,11 +25,6 @@ export class ICU4XDataProvider {
 
 const ICU4XFixedDecimal_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XFixedDecimal_destroy(underlying);
-});
-
-const ICU4XFixedDecimal_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.ICU4XFixedDecimal_drop_ptr(obj["ptr"]);
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
 });
 
 export class ICU4XFixedDecimal {
@@ -72,11 +62,6 @@ const ICU4XFixedDecimalFormat_box_destroy_registry = new FinalizationRegistry(un
   wasm.ICU4XFixedDecimalFormat_destroy(underlying);
 });
 
-const ICU4XFixedDecimalFormat_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.ICU4XFixedDecimalFormat_drop_ptr(obj["ptr"]);
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
-});
-
 export class ICU4XFixedDecimalFormat {
   constructor(underlying) {
     this.underlying = underlying;
@@ -87,7 +72,10 @@ export class ICU4XFixedDecimalFormat {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5);
       wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying);
       const out = new ICU4XFixedDecimalFormatResult(diplomat_receive_buffer);
-      ICU4XFixedDecimalFormatResult_alloc_destroy_registry.register(out, {
+      const out_fdf_value = out.fdf();
+      ICU4XFixedDecimalFormat_box_destroy_registry.register(out_fdf_value, out_fdf_value.underlying)
+      out.fdf = () => out_fdf_value;
+      diplomatRuntime.diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
         size: 5
       });
@@ -104,11 +92,6 @@ export class ICU4XFixedDecimalFormat {
 
 const ICU4XFixedDecimalFormatResult_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XFixedDecimalFormatResult_destroy(underlying);
-});
-
-const ICU4XFixedDecimalFormatResult_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.ICU4XFixedDecimalFormatResult_drop_ptr(obj["ptr"]);
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
 });
 
 export class ICU4XFixedDecimalFormatResult {
@@ -130,11 +113,6 @@ export class ICU4XFixedDecimalFormatResult {
 
 const ICU4XLocale_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XLocale_destroy(underlying);
-});
-
-const ICU4XLocale_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.ICU4XLocale_drop_ptr(obj["ptr"]);
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
 });
 
 export class ICU4XLocale {
