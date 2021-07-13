@@ -259,3 +259,60 @@ pub fn opaque(
         #strct
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fs::File;
+    use std::io::{Read, Write};
+    use std::process::Command;
+
+    use insta;
+
+    use quote::ToTokens;
+    use syn::parse_quote;
+    use tempfile::tempdir;
+
+    use super::gen_bridge;
+
+    fn rustfmt_code(code: &str) -> String {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("temp.rs");
+        let mut file = File::create(file_path.clone()).unwrap();
+
+        writeln!(file, "{}", code).unwrap();
+        drop(file);
+
+        Command::new("rustfmt")
+            .arg(file_path.to_str().unwrap())
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+
+        let mut file = File::open(file_path).unwrap();
+        let mut data = String::new();
+        file.read_to_string(&mut data).unwrap();
+        drop(file);
+        dir.close().unwrap();
+        data
+    }
+
+    #[test]
+    fn method_taking_str() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        fn from_str(s: &str) {
+                            todo!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+}
