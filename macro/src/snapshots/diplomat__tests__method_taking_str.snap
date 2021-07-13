@@ -20,9 +20,5 @@ mod ffi {
     }
     #[no_mangle]
     pub extern "C" fn Foo_destroy(this: Box<Foo>) {}
-    #[no_mangle]
-    pub unsafe extern "C" fn Foo_drop_ptr(this: *mut Foo) {
-        std::ptr::drop_in_place(this);
-    }
 }
 
