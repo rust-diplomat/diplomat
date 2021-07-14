@@ -4,8 +4,7 @@ expression: "Method::from_syn(&syn::parse2(quote! {\n                           
 
 ---
 name: foo
-doc_lines:
-  - Some docs.
+doc_lines: Some docs.
 full_path_name: MyStructContainingMethod_foo
 self_param: ~
 params:

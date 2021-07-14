@@ -4,15 +4,14 @@ expression: "Struct::from(&syn::parse2(quote! {\n                              /
 
 ---
 name: MyLocalStruct
-doc_lines:
-  - Some docs.
+doc_lines: Some docs.
 fields:
   - - a
     - Primitive: i32
-    - []
+    - ""
   - - b
     - Box:
         Named: MyLocalStruct
-    - []
+    - ""
 methods: []
 

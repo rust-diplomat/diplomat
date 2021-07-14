@@ -46,10 +46,21 @@ pub fn gen_method_docs<W: fmt::Write>(
     method: &ast::Method,
     env: &HashMap<String, ast::CustomType>,
 ) -> fmt::Result {
+    let param_names: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
     if method.self_param.is_some() {
-        writeln!(out, ".. js:function:: {}", method.name)?;
+        writeln!(
+            out,
+            ".. js:function:: {}({})",
+            method.name,
+            param_names.join(", ")
+        )?;
     } else {
-        writeln!(out, ".. js:staticfunction:: {}", method.name)?;
+        writeln!(
+            out,
+            ".. js:staticfunction:: {}({})",
+            method.name,
+            param_names.join(", ")
+        )?;
     }
 
     let mut method_indented = indented(out).with_str("    ");
