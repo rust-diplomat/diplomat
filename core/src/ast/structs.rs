@@ -7,9 +7,9 @@ use super::{Method, TypeName};
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Struct {
     pub name: String,
-    pub doc_lines: Vec<String>,
+    pub doc_lines: String,
     /// A list of fields in the struct. (name, type, doc_lines)
-    pub fields: Vec<(String, TypeName, Vec<String>)>,
+    pub fields: Vec<(String, TypeName, String)>,
     pub methods: Vec<Method>,
 }
 
@@ -45,7 +45,7 @@ impl From<&syn::ItemStruct> for Struct {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct OpaqueStruct {
     pub name: String,
-    pub doc_lines: Vec<String>,
+    pub doc_lines: String,
     pub methods: Vec<Method>,
 }
 

@@ -37,7 +37,7 @@ impl CustomType {
     }
 
     /// Get the doc lines of the custom type.
-    pub fn doc_lines(&self) -> &Vec<String> {
+    pub fn doc_lines(&self) -> &String {
         match self {
             CustomType::Struct(strct) => &strct.doc_lines,
             CustomType::Opaque(strct) => &strct.doc_lines,

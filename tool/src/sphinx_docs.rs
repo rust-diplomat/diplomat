@@ -24,7 +24,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     writeln!(out, ".. js:class:: {}", typ.name())?;
     writeln!(out)?;
     let mut class_indented = indented(out).with_str("    ");
-    markdown_to_rst(&mut class_indented, &typ.doc_lines().join("\n\n"))?;
+    markdown_to_rst(&mut class_indented, &typ.doc_lines())?;
     writeln!(class_indented)?;
 
     if let ast::CustomType::Struct(strct) = typ {
@@ -53,7 +53,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     }
 
     let mut method_indented = indented(out).with_str("    ");
-    markdown_to_rst(&mut method_indented, &method.doc_lines.join("\n\n"))?;
+    markdown_to_rst(&mut method_indented, &method.doc_lines)?;
     writeln!(method_indented)?;
 
     Ok(())
@@ -61,14 +61,14 @@ pub fn gen_method_docs<W: fmt::Write>(
 
 pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
-    field: &(String, ast::TypeName, Vec<String>),
+    field: &(String, ast::TypeName, String),
     _env: &HashMap<String, ast::CustomType>,
 ) -> fmt::Result {
     writeln!(out, ".. js:function:: {}", field.0)?;
 
     writeln!(out)?;
     let mut method_indented = indented(out).with_str("    ");
-    markdown_to_rst(&mut method_indented, &field.2.join("\n\n"))?;
+    markdown_to_rst(&mut method_indented, &field.2)?;
     writeln!(method_indented)?;
 
     Ok(())
@@ -99,6 +99,9 @@ fn markdown_to_rst<W: fmt::Write>(out: &mut W, markdown: &str) -> fmt::Result {
             }
             Event::Code(text) => {
                 write!(out, "``{}``", text)?;
+            }
+            Event::SoftBreak => {
+                write!(out, " ")?;
             }
             evt => todo!("{:?}", evt),
         }

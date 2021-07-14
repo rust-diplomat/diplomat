@@ -15,7 +15,7 @@ pub struct Method {
     pub name: String,
 
     /// Lines of documentation for the method.
-    pub doc_lines: Vec<String>,
+    pub doc_lines: String,
 
     /// The name of the FFI function wrapping around the method.
     pub full_path_name: String,
