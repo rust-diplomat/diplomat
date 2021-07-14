@@ -84,6 +84,15 @@ mod ffi {
         pub sign_display: u8,
     }
 
+    impl ICU4XFixedDecimalFormatOptions {
+        pub fn default() -> ICU4XFixedDecimalFormatOptions {
+            ICU4XFixedDecimalFormatOptions {
+                grouping_strategy: 0,
+                sign_display: 0,
+            }
+        }
+    }
+
     impl ICU4XFixedDecimalFormat {
         /// Creates a new [`ICU4XFixedDecimalFormat`] from locale data. See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.try_new) for more information.
         fn try_new(

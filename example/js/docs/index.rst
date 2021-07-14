@@ -46,24 +46,27 @@
 
 
 
-    .. js:function:: grouping_strategy
+    .. js:attribute:: grouping_strategy
 
 
 
-    .. js:function:: sign_display
+    .. js:attribute:: sign_display
 
+
+
+    .. js:staticfunction:: default()
 
 
 .. js:class:: ICU4XFixedDecimalFormatResult
 
 
 
-    .. js:function:: fdf
+    .. js:attribute:: fdf
 
 
         The :js:class:`ICU4XFixedDecimalFormat`, valid if creation was successful.
 
-    .. js:function:: success
+    .. js:attribute:: success
 
 
         Whether creating the :js:class:`ICU4XFixedDecimalFormat` was successful.

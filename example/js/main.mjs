@@ -1,4 +1,4 @@
-import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormat } from "./high-level.mjs";
+import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatOptions } from "./high-level.mjs";
 
 const my_decimal = ICU4XFixedDecimal.new(123);
 
@@ -13,9 +13,6 @@ const locale = ICU4XLocale.new("bn");
 
 const data_provider = ICU4XDataProvider.new_static();
 
-const fdf = ICU4XFixedDecimalFormat.try_new(locale, data_provider, {
-  grouping_strategy: 0,
-  sign_display: 0
-});
-console.log(fdf.success());
-console.log(fdf.fdf().format_write(my_decimal));
+const fdf = ICU4XFixedDecimalFormat.try_new(locale, data_provider, ICU4XFixedDecimalFormatOptions.default());
+console.log(fdf.success);
+console.log(fdf.fdf.format_write(my_decimal));

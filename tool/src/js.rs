@@ -90,7 +90,7 @@ fn gen_field<W: fmt::Write>(
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
 ) -> fmt::Result {
-    writeln!(out, "{}() {{", name)?;
+    writeln!(out, "get {}() {{", name)?;
     let mut method_body_out = indented(out).with_str("  ");
     write!(&mut method_body_out, "return ")?;
     gen_value_rust_to_js(
@@ -305,21 +305,21 @@ fn gen_value_rust_to_js<W: fmt::Write>(
 
                     for (name, typ, _) in strct.fields.iter() {
                         if let ast::TypeName::Box(underlying) = typ {
-                            writeln!(
-                                &mut iife_indent,
-                                "const out_{}_value = out.{}();",
-                                name, name
-                            )?;
+                            writeln!(&mut iife_indent, "const out_{}_value = out.{};", name, name)?;
                             // TODO(shadaj): delete back-references when we start generating them
                             // since the function is generated assuming that back references are needed
                             if let ast::TypeName::Named(_) = underlying.as_ref() {
                                 writeln!(
                                     &mut iife_indent,
-                                    "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying)",
+                                    "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying);",
                                     underlying.resolve(env).name(), name, name
                                 )?;
                             }
-                            writeln!(&mut iife_indent, "out.{} = () => out_{}_value;", name, name)?;
+                            writeln!(
+                                &mut iife_indent,
+                                "Object.defineProperty(out, \"{}\", {{ value: out_{}_value }});",
+                                name, name
+                            )?;
                         }
                     }
 
