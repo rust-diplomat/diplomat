@@ -46,7 +46,11 @@ pub fn gen_method_docs<W: fmt::Write>(
     method: &ast::Method,
     env: &HashMap<String, ast::CustomType>,
 ) -> fmt::Result {
-    let param_names: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
+    let mut param_names: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
+    if method.is_writeable_out() {
+        param_names.remove(param_names.len() - 1);
+    }
+
     if method.self_param.is_some() {
         writeln!(
             out,
