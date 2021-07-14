@@ -79,7 +79,7 @@ pub fn gen_field_docs<W: fmt::Write>(
     field: &(String, ast::TypeName, String),
     env: &HashMap<String, ast::CustomType>,
 ) -> fmt::Result {
-    writeln!(out, ".. js:function:: {}", field.0)?;
+    writeln!(out, ".. js:attribute:: {}", field.0)?;
 
     writeln!(out)?;
     let mut method_indented = indented(out).with_str("    ");

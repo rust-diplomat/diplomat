@@ -70,14 +70,16 @@ export class ICU4XFixedDecimalFormat {
     this.underlying = underlying;
   }
 
-  static try_new(locale, provider) {
+  static try_new(locale, provider, options) {
+    const diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy = options["grouping_strategy"];
+    const diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display = options["sign_display"];
     const diplomat_out = (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5);
-      wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying);
+      wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying, diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy, diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display);
       const out = new ICU4XFixedDecimalFormatResult(diplomat_receive_buffer);
-      const out_fdf_value = out.fdf();
-      ICU4XFixedDecimalFormat_box_destroy_registry.register(out_fdf_value, out_fdf_value.underlying)
-      out.fdf = () => out_fdf_value;
+      const out_fdf_value = out.fdf;
+      ICU4XFixedDecimalFormat_box_destroy_registry.register(out_fdf_value, out_fdf_value.underlying);
+      Object.defineProperty(out, "fdf", { value: out_fdf_value });
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
         size: 5
@@ -93,6 +95,38 @@ export class ICU4XFixedDecimalFormat {
   }
 }
 
+const ICU4XFixedDecimalFormatOptions_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.ICU4XFixedDecimalFormatOptions_destroy(underlying);
+});
+
+export class ICU4XFixedDecimalFormatOptions {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static default() {
+    const diplomat_out = (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(2);
+      wasm.ICU4XFixedDecimalFormatOptions_default(diplomat_receive_buffer);
+      const out = new ICU4XFixedDecimalFormatOptions(diplomat_receive_buffer);
+      diplomat_alloc_destroy_registry.register(out, {
+        ptr: out.underlying,
+        size: 2
+      });
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  get grouping_strategy() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
+  }
+
+  get sign_display() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 1, 1))[0];
+  }
+}
+
 const ICU4XFixedDecimalFormatResult_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XFixedDecimalFormatResult_destroy(underlying);
 });
@@ -102,14 +136,14 @@ export class ICU4XFixedDecimalFormatResult {
     this.underlying = underlying;
   }
 
-  fdf() {
+  get fdf() {
     return (() => {
       const out = new ICU4XFixedDecimalFormat((new Uint32Array(wasm.memory.buffer, this.underlying + 0, 1))[0]);
       return out;
     })();
   }
 
-  success() {
+  get success() {
     return (new Uint8Array(wasm.memory.buffer, this.underlying + 4, 1))[0] == 1;
   }
 }

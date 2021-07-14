@@ -4,7 +4,10 @@ mod ffi {
 
     use fixed_decimal::FixedDecimal;
     use icu::{
-        decimal::{options::FixedDecimalFormatOptions, FixedDecimalFormat},
+        decimal::{
+            options::{FixedDecimalFormatOptions, GroupingStrategy, SignDisplay},
+            FixedDecimalFormat,
+        },
         locid::Locale,
     };
     use icu_provider::serde::SerdeDeDataProvider;
@@ -76,18 +79,51 @@ mod ffi {
         pub success: bool,
     }
 
+    pub struct ICU4XFixedDecimalFormatOptions {
+        pub grouping_strategy: u8,
+        pub sign_display: u8,
+    }
+
+    impl ICU4XFixedDecimalFormatOptions {
+        pub fn default() -> ICU4XFixedDecimalFormatOptions {
+            ICU4XFixedDecimalFormatOptions {
+                grouping_strategy: 0,
+                sign_display: 0,
+            }
+        }
+    }
+
     impl ICU4XFixedDecimalFormat {
         /// Creates a new [`ICU4XFixedDecimalFormat`] from locale data. See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.try_new) for more information.
         fn try_new(
             locale: &ICU4XLocale,
             provider: &ICU4XDataProvider,
+            options: ICU4XFixedDecimalFormatOptions,
         ) -> ICU4XFixedDecimalFormatResult {
             let langid = locale.0.as_ref().clone();
             let provider = provider.0.as_ref();
 
-            if let Result::Ok(fdf) =
-                FixedDecimalFormat::try_new(langid, provider, FixedDecimalFormatOptions::default())
-            {
+            if let Result::Ok(fdf) = FixedDecimalFormat::try_new(
+                langid,
+                provider,
+                FixedDecimalFormatOptions {
+                    grouping_strategy: match options.grouping_strategy {
+                        0 => GroupingStrategy::Auto,
+                        1 => GroupingStrategy::Never,
+                        2 => GroupingStrategy::Always,
+                        3 => GroupingStrategy::Min2,
+                        _ => panic!(),
+                    },
+                    sign_display: match options.sign_display {
+                        0 => SignDisplay::Auto,
+                        1 => SignDisplay::Never,
+                        2 => SignDisplay::Always,
+                        3 => SignDisplay::ExceptZero,
+                        4 => SignDisplay::Negative,
+                        _ => panic!(),
+                    },
+                },
+            ) {
                 ICU4XFixedDecimalFormatResult {
                     fdf: Box::new(ICU4XFixedDecimalFormat(fdf)),
                     success: true,

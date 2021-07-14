@@ -90,7 +90,7 @@ fn gen_field<W: fmt::Write>(
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
 ) -> fmt::Result {
-    writeln!(out, "{}() {{", name)?;
+    writeln!(out, "get {}() {{", name)?;
     let mut method_body_out = indented(out).with_str("  ");
     write!(&mut method_body_out, "return ")?;
     gen_value_rust_to_js(
@@ -208,7 +208,7 @@ fn gen_method<W: fmt::Write>(
 fn gen_value_js_to_rust(
     param_name: String,
     typ: &ast::TypeName,
-    _env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<String, ast::CustomType>,
     pre_logic: &mut Vec<String>,
     invocation_params: &mut Vec<String>,
     post_logic: &mut Vec<String>,
@@ -244,6 +244,34 @@ fn gen_value_js_to_rust(
         ast::TypeName::Reference(_, _) => {
             invocation_params.push(format!("{}.underlying", param_name));
         }
+        ast::TypeName::Named(_) => {
+            match typ.resolve(env) {
+                ast::CustomType::Struct(struct_type) => {
+                    // TODO(shadaj): consider if we want to support copying data from a class instance
+                    for (field_name, field_type, _) in struct_type.fields.iter() {
+                        let field_extracted_name =
+                            format!("diplomat_{}_extracted_{}", struct_type.name, field_name);
+                        pre_logic.push(format!(
+                            "const {} = {}[\"{}\"];",
+                            field_extracted_name, param_name, field_name
+                        ));
+
+                        gen_value_js_to_rust(
+                            field_extracted_name,
+                            field_type,
+                            env,
+                            pre_logic,
+                            invocation_params,
+                            post_logic,
+                        );
+                    }
+                }
+
+                ast::CustomType::Opaque(_) => {
+                    panic!("Opaque types cannot be sent as values");
+                }
+            }
+        }
         _ => invocation_params.push(param_name),
     }
 }
@@ -277,21 +305,21 @@ fn gen_value_rust_to_js<W: fmt::Write>(
 
                     for (name, typ, _) in strct.fields.iter() {
                         if let ast::TypeName::Box(underlying) = typ {
-                            writeln!(
-                                &mut iife_indent,
-                                "const out_{}_value = out.{}();",
-                                name, name
-                            )?;
+                            writeln!(&mut iife_indent, "const out_{}_value = out.{};", name, name)?;
                             // TODO(shadaj): delete back-references when we start generating them
                             // since the function is generated assuming that back references are needed
                             if let ast::TypeName::Named(_) = underlying.as_ref() {
                                 writeln!(
                                     &mut iife_indent,
-                                    "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying)",
+                                    "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying);",
                                     underlying.resolve(env).name(), name, name
                                 )?;
                             }
-                            writeln!(&mut iife_indent, "out.{} = () => out_{}_value;", name, name)?;
+                            writeln!(
+                                &mut iife_indent,
+                                "Object.defineProperty(out, \"{}\", {{ value: out_{}_value }});",
+                                name, name
+                            )?;
                         }
                     }
 
@@ -414,7 +442,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     PrimitiveType::char => panic!(),
                 };
 
-                write!(out, "new {}(wasm.memory.buffer, ", prim_type)?;
+                write!(out, "(new {}(wasm.memory.buffer, ", prim_type)?;
                 value_expr(out)?;
                 write!(out, ", 1))[0]")?;
             }
