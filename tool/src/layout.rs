@@ -14,7 +14,7 @@ pub fn struct_size_offsets_max_align(
     let mut next_offset = 0;
     let mut offsets = vec![];
 
-    for (_, typ) in &strct.fields {
+    for (_, typ, _) in &strct.fields {
         let (size, align) = type_size_alignment(typ, env);
         max_align = max(max_align, align);
         let padding = (align - (next_offset % align)) % align;

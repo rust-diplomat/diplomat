@@ -47,10 +47,7 @@ impl From<&ItemMod> for Module {
                     {
                         custom_types_by_name.insert(
                             strct.ident.to_string(),
-                            CustomType::Opaque(OpaqueStruct {
-                                name: strct.ident.to_string(),
-                                methods: vec![],
-                            }),
+                            CustomType::Opaque(OpaqueStruct::from(strct)),
                         );
                     } else {
                         custom_types_by_name.insert(

@@ -73,7 +73,7 @@ fn gen_struct<W: fmt::Write>(
 
     if let ast::CustomType::Struct(strct) = custom_type {
         let (_, offsets, _) = layout::struct_size_offsets_max_align(strct, env);
-        for ((name, typ), offset) in strct.fields.iter().zip(offsets.iter()) {
+        for ((name, typ, _), offset) in strct.fields.iter().zip(offsets.iter()) {
             writeln!(&mut class_body_out)?;
             gen_field(name, typ, *offset, env, &mut class_body_out)?;
         }
@@ -275,7 +275,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                         strct.name
                     )?;
 
-                    for (name, typ) in strct.fields.iter() {
+                    for (name, typ, _) in strct.fields.iter() {
                         if let ast::TypeName::Box(underlying) = typ {
                             writeln!(
                                 &mut iife_indent,

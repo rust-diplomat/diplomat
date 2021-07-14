@@ -4,6 +4,7 @@ use diplomat_core::ast;
 
 mod js;
 mod layout;
+mod sphinx_docs;
 
 fn main() -> std::io::Result<()> {
     let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/lib.rs"));
@@ -29,6 +30,11 @@ fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let mut out_file = File::create(args[1].clone())?;
     out_file.write_all(out_text.as_bytes())?;
+
+    let mut docs_text = String::new();
+    sphinx_docs::gen_docs(&env, &mut docs_text).unwrap();
+    let mut out_docs = File::create(args[2].clone())?;
+    out_docs.write_all(docs_text.as_bytes())?;
 
     Ok(())
 }
