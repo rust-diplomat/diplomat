@@ -7,14 +7,18 @@ declared_types:
   NonOpaqueStruct:
     Struct:
       name: NonOpaqueStruct
+      doc_lines: ""
       fields:
         - - a
           - Primitive: i32
+          - ""
         - - b
           - Box:
               Named: NonOpaqueStruct
+          - ""
       methods:
         - name: new
+          doc_lines: ""
           full_path_name: NonOpaqueStruct_new
           self_param: ~
           params:
@@ -24,6 +28,7 @@ declared_types:
           return_type:
             Named: NonOpaqueStruct
         - name: set_a
+          doc_lines: ""
           full_path_name: NonOpaqueStruct_set_a
           self_param:
             name: self
@@ -39,8 +44,10 @@ declared_types:
   OpaqueStruct:
     Opaque:
       name: OpaqueStruct
+      doc_lines: ""
       methods:
         - name: new
+          doc_lines: ""
           full_path_name: OpaqueStruct_new
           self_param: ~
           params: []
@@ -48,6 +55,7 @@ declared_types:
             Box:
               Named: OpaqueStruct
         - name: get_string
+          doc_lines: ""
           full_path_name: OpaqueStruct_get_string
           self_param:
             name: self

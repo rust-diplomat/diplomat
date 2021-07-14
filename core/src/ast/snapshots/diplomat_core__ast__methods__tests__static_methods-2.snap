@@ -1,9 +1,10 @@
 ---
 source: core/src/ast/methods.rs
-expression: "Method::from_syn(&syn::parse2(quote! {\n                                  fn foo(x : u64, y : MyCustomStruct) -> u64\n                                  { x }\n                              }).unwrap(),\n                 &syn::parse2(quote! { MyStructContainingMethod }).unwrap())"
+expression: "Method::from_syn(&syn::parse2(quote! {\n                                  /// Some docs.\n                                  /// Some more docs.\n                                  ///\n                                  /// Even more docs.\n                                  fn foo(x : u64, y : MyCustomStruct) -> u64\n                                  { x }\n                              }).unwrap(),\n                 &syn::parse2(quote! { MyStructContainingMethod }).unwrap())"
 
 ---
 name: foo
+doc_lines: "Some docs.\nSome more docs.\n\nEven more docs."
 full_path_name: MyStructContainingMethod_foo
 self_param: ~
 params:

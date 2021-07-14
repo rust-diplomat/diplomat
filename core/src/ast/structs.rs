@@ -1,12 +1,15 @@
 use serde::{Deserialize, Serialize};
 
+use super::utils::get_doc_lines;
 use super::{Method, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Struct {
     pub name: String,
-    pub fields: Vec<(String, TypeName)>,
+    pub doc_lines: String,
+    /// A list of fields in the struct. (name, type, doc_lines)
+    pub fields: Vec<(String, TypeName, String)>,
     pub methods: Vec<Method>,
 }
 
@@ -15,6 +18,7 @@ impl From<&syn::ItemStruct> for Struct {
     fn from(strct: &syn::ItemStruct) -> Struct {
         Struct {
             name: strct.ident.to_string(),
+            doc_lines: get_doc_lines(&strct.attrs),
             fields: strct
                 .fields
                 .iter()
@@ -26,6 +30,7 @@ impl From<&syn::ItemStruct> for Struct {
                             .map(|i| i.to_string())
                             .unwrap_or(format!("{}", i)),
                         (&f.ty).into(),
+                        get_doc_lines(&f.attrs),
                     )
                 })
                 .collect(),
@@ -40,7 +45,19 @@ impl From<&syn::ItemStruct> for Struct {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct OpaqueStruct {
     pub name: String,
+    pub doc_lines: String,
     pub methods: Vec<Method>,
+}
+
+impl From<&syn::ItemStruct> for OpaqueStruct {
+    /// Extract a [`OpaqueStruct`] metadata value from an AST node.
+    fn from(strct: &syn::ItemStruct) -> OpaqueStruct {
+        OpaqueStruct {
+            name: strct.ident.to_string(),
+            doc_lines: get_doc_lines(&strct.attrs),
+            methods: vec![],
+        }
+    }
 }
 
 #[cfg(test)]
@@ -60,6 +77,7 @@ mod tests {
         settings.bind(|| {
             insta::assert_yaml_snapshot!(Struct::from(
                 &syn::parse2(quote! {
+                    /// Some docs.
                     struct MyLocalStruct {
                         a: i32,
                         b: Box<MyLocalStruct>

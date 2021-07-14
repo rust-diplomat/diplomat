@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use syn::*;
 
+use super::utils::get_doc_lines;
 use super::{CustomType, TypeName};
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -12,6 +13,9 @@ use super::{CustomType, TypeName};
 pub struct Method {
     /// The name of the method as initially declared.
     pub name: String,
+
+    /// Lines of documentation for the method.
+    pub doc_lines: String,
 
     /// The name of the FFI function wrapping around the method.
     pub full_path_name: String,
@@ -69,6 +73,7 @@ impl Method {
 
         Method {
             name: method_ident.to_string(),
+            doc_lines: get_doc_lines(&m.attrs),
             full_path_name: extern_ident.to_string(),
             self_param,
             params: all_params,
@@ -152,6 +157,7 @@ mod tests {
     fn static_methods() {
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse2(quote! {
+                /// Some docs.
                 fn foo(x: u64, y: MyCustomStruct) {
 
                 }
@@ -165,6 +171,10 @@ mod tests {
 
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse2(quote! {
+                /// Some docs.
+                /// Some more docs.
+                ///
+                /// Even more docs.
                 fn foo(x: u64, y: MyCustomStruct) -> u64 {
                     x
                 }

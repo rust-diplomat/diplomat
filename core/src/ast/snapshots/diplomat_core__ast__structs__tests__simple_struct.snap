@@ -1,14 +1,17 @@
 ---
 source: core/src/ast/structs.rs
-expression: "Struct::from(&syn::parse2(quote! {\n                              struct MyLocalStruct\n                              { a : i32, b : Box < MyLocalStruct > }\n                          }).unwrap())"
+expression: "Struct::from(&syn::parse2(quote! {\n                              /// Some docs.\n                              struct MyLocalStruct\n                              { a : i32, b : Box < MyLocalStruct > }\n                          }).unwrap())"
 
 ---
 name: MyLocalStruct
+doc_lines: Some docs.
 fields:
   - - a
     - Primitive: i32
+    - ""
   - - b
     - Box:
         Named: MyLocalStruct
+    - ""
 methods: []
 

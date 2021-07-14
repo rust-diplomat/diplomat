@@ -13,3 +13,5 @@ pub use structs::{OpaqueStruct, Struct};
 
 mod types;
 pub use types::{CustomType, PrimitiveType, TypeName};
+
+mod utils;

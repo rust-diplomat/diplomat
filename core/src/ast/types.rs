@@ -36,6 +36,14 @@ impl CustomType {
         }
     }
 
+    /// Get the doc lines of the custom type.
+    pub fn doc_lines(&self) -> &String {
+        match self {
+            CustomType::Struct(strct) => &strct.doc_lines,
+            CustomType::Opaque(strct) => &strct.doc_lines,
+        }
+    }
+
     /// Checks that any references to opaque structs in parameters or return values
     /// are always behind a box or reference.
     ///
@@ -47,7 +55,7 @@ impl CustomType {
     ) {
         match self {
             CustomType::Struct(strct) => {
-                for (_, field) in strct.fields.iter() {
+                for (_, field, _) in strct.fields.iter() {
                     field.check_opaque(env, errors);
                 }
             }
