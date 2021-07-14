@@ -70,10 +70,12 @@ export class ICU4XFixedDecimalFormat {
     this.underlying = underlying;
   }
 
-  static try_new(locale, provider) {
+  static try_new(locale, provider, options) {
+    const diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy = options["grouping_strategy"];
+    const diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display = options["sign_display"];
     const diplomat_out = (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5);
-      wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying);
+      wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying, diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy, diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display);
       const out = new ICU4XFixedDecimalFormatResult(diplomat_receive_buffer);
       const out_fdf_value = out.fdf();
       ICU4XFixedDecimalFormat_box_destroy_registry.register(out_fdf_value, out_fdf_value.underlying)
@@ -90,6 +92,24 @@ export class ICU4XFixedDecimalFormat {
   format_write(value) {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => wasm.ICU4XFixedDecimalFormat_format_write(this.underlying, value.underlying, writeable));
     return diplomat_out;
+  }
+}
+
+const ICU4XFixedDecimalFormatOptions_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.ICU4XFixedDecimalFormatOptions_destroy(underlying);
+});
+
+export class ICU4XFixedDecimalFormatOptions {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  grouping_strategy() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
+  }
+
+  sign_display() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 1, 1))[0];
   }
 }
 

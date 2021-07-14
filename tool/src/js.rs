@@ -208,7 +208,7 @@ fn gen_method<W: fmt::Write>(
 fn gen_value_js_to_rust(
     param_name: String,
     typ: &ast::TypeName,
-    _env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<String, ast::CustomType>,
     pre_logic: &mut Vec<String>,
     invocation_params: &mut Vec<String>,
     post_logic: &mut Vec<String>,
@@ -243,6 +243,34 @@ fn gen_value_js_to_rust(
         }
         ast::TypeName::Reference(_, _) => {
             invocation_params.push(format!("{}.underlying", param_name));
+        }
+        ast::TypeName::Named(_) => {
+            match typ.resolve(env) {
+                ast::CustomType::Struct(struct_type) => {
+                    // TODO(shadaj): consider if we want to support copying data from a class instance
+                    for (field_name, field_type, _) in struct_type.fields.iter() {
+                        let field_extracted_name =
+                            format!("diplomat_{}_extracted_{}", struct_type.name, field_name);
+                        pre_logic.push(format!(
+                            "const {} = {}[\"{}\"];",
+                            field_extracted_name, param_name, field_name
+                        ));
+
+                        gen_value_js_to_rust(
+                            field_extracted_name,
+                            field_type,
+                            env,
+                            pre_logic,
+                            invocation_params,
+                            post_logic,
+                        );
+                    }
+                }
+
+                ast::CustomType::Opaque(_) => {
+                    panic!("Opaque types cannot be sent as values");
+                }
+            }
         }
         _ => invocation_params.push(param_name),
     }
@@ -414,7 +442,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     PrimitiveType::char => panic!(),
                 };
 
-                write!(out, "new {}(wasm.memory.buffer, ", prim_type)?;
+                write!(out, "(new {}(wasm.memory.buffer, ", prim_type)?;
                 value_expr(out)?;
                 write!(out, ", 1))[0]")?;
             }
