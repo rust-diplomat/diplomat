@@ -5,7 +5,7 @@ authors = ["Shadaj Laddad <shadaj@users.noreply.github.com>"]
 edition = "2018"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["staticlib", "rlib", "cdylib"]
 
 [dependencies]
 diplomat = { path = "../macro" }
