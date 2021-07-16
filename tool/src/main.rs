@@ -1,11 +1,5 @@
 use core::panic;
-use std::{
-    collections::HashMap,
-    env,
-    fs::File,
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::{collections::HashMap, env, fs::File, io::Write, path::Path};
 
 use diplomat_core::ast;
 
@@ -42,11 +36,9 @@ fn main() -> std::io::Result<()> {
         o => panic!("Unknown target: {}", o),
     }
 
+    let out_folder_path = Path::new(args[2].as_str());
     for (subpath, text) in out_texts {
-        let mut out_path = PathBuf::new();
-        out_path.push(args[2].clone());
-        out_path.push(subpath);
-        let mut out_file = File::create(&out_path)?;
+        let mut out_file = File::create(out_folder_path.join(subpath))?;
         out_file.write_all(text.as_bytes())?;
     }
 
