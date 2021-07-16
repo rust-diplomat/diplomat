@@ -1,3 +1,11 @@
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct DiplomatWriteable {
     void* context;
     char* buf;
@@ -8,3 +16,7 @@ typedef struct DiplomatWriteable {
 } DiplomatWriteable;
 
 DiplomatWriteable diplomat_simple_writeable(char* buf, size_t buf_size);
+
+#ifdef __cplusplus
+}
+#endif

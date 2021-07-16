@@ -1,10 +1,15 @@
 use core::panic;
-use std::{env, fs::File, io::Write, path::Path};
+use std::{
+    collections::HashMap,
+    env,
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use diplomat_core::ast;
 
 mod c;
-mod docs_js;
 mod js;
 mod layout;
 
@@ -29,21 +34,27 @@ fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let target = args[1].as_str();
 
-    let mut out_text = String::new();
+    let mut out_texts: HashMap<&str, String> = HashMap::new();
+
     match target {
-        "js" => js::gen_bindings(&env, &mut out_text).unwrap(),
-        "c" => c::gen_bindings(&env, &mut out_text).unwrap(),
+        "js" => js::gen_bindings(&env, &mut out_texts).unwrap(),
+        "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
         o => panic!("Unknown target: {}", o),
     }
 
-    let mut out_file = File::create(args[2].clone())?;
-    out_file.write_all(out_text.as_bytes())?;
+    for (subpath, text) in out_texts {
+        let mut out_path = PathBuf::new();
+        out_path.push(args[2].clone());
+        out_path.push(subpath);
+        let mut out_file = File::create(&out_path)?;
+        out_file.write_all(text.as_bytes())?;
+    }
 
     if args.len() > 3 {
         let mut docs_text = String::new();
 
         match target {
-            "js" => docs_js::gen_docs(&env, &mut docs_text).unwrap(),
+            "js" => js::docs::gen_docs(&env, &mut docs_text).unwrap(),
             "c" => todo!("Docs generation for C"),
             o => panic!("Unknown target: {}", o),
         }

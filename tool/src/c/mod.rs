@@ -6,21 +6,24 @@ use std::fmt::Write;
 use diplomat_core::ast::{self, PrimitiveType};
 use indenter::indented;
 
-static WRITEABLE_DEFS: &str = include_str!("writeable.h");
+static RUNTIME_H: &str = include_str!("runtime.h");
 
-pub fn gen_bindings<W: fmt::Write>(
+pub fn gen_bindings(
     env: &HashMap<String, ast::CustomType>,
-    out: &mut W,
+    outs: &mut HashMap<&str, String>,
 ) -> fmt::Result {
+    let diplomat_runtime_out = outs.entry("diplomat_runtime.h").or_insert_with(String::new);
+    write!(diplomat_runtime_out, "{}", RUNTIME_H)?;
+
+    let out = outs.entry("api.h").or_insert_with(String::new);
     writeln!(out, "#include <stdint.h>")?;
     writeln!(out, "#include <stddef.h>")?;
     writeln!(out, "#include <stdbool.h>")?;
+    writeln!(out, "#include \"diplomat_runtime.h\"")?;
     writeln!(out)?;
     writeln!(out, "#ifdef __cplusplus")?;
     writeln!(out, "extern \"C\" {{")?;
     writeln!(out, "#endif")?;
-
-    writeln!(out, "{}", WRITEABLE_DEFS)?;
 
     let mut all_types: Vec<&ast::CustomType> = env.values().collect();
     all_types.sort_by_key(|t| t.name());
