@@ -7,10 +7,21 @@ use indenter::indented;
 
 use crate::layout;
 
-pub fn gen_bindings<W: fmt::Write>(
+pub mod docs;
+
+static RUNTIME_MJS: &str = include_str!("runtime.mjs");
+
+pub fn gen_bindings(
     env: &HashMap<String, ast::CustomType>,
-    out: &mut W,
+    outs: &mut HashMap<&str, String>,
 ) -> fmt::Result {
+    let diplomat_runtime_out = outs
+        .entry("diplomat-runtime.mjs")
+        .or_insert_with(String::new);
+    write!(diplomat_runtime_out, "{}", RUNTIME_MJS)?;
+
+    let out = outs.entry("api.mjs").or_insert_with(String::new);
+
     writeln!(out, "import wasm from \"./wasm.mjs\"")?;
     writeln!(
         out,

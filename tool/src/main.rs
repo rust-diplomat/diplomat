@@ -1,10 +1,11 @@
-use std::{env, fs::File, io::Write, path::Path};
+use core::panic;
+use std::{collections::HashMap, env, fs::File, io::Write, path::Path};
 
 use diplomat_core::ast;
 
+mod c;
 mod js;
 mod layout;
-mod sphinx_docs;
 
 fn main() -> std::io::Result<()> {
     let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/lib.rs"));
@@ -24,17 +25,35 @@ fn main() -> std::io::Result<()> {
 
     dbg!(&env);
 
-    let mut out_text = String::new();
-    js::gen_bindings(&env, &mut out_text).unwrap();
-
     let args: Vec<String> = env::args().collect();
-    let mut out_file = File::create(args[1].clone())?;
-    out_file.write_all(out_text.as_bytes())?;
+    let target = args[1].as_str();
 
-    let mut docs_text = String::new();
-    sphinx_docs::gen_docs(&env, &mut docs_text).unwrap();
-    let mut out_docs = File::create(args[2].clone())?;
-    out_docs.write_all(docs_text.as_bytes())?;
+    let mut out_texts: HashMap<&str, String> = HashMap::new();
+
+    match target {
+        "js" => js::gen_bindings(&env, &mut out_texts).unwrap(),
+        "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
+        o => panic!("Unknown target: {}", o),
+    }
+
+    let out_folder_path = Path::new(args[2].as_str());
+    for (subpath, text) in out_texts {
+        let mut out_file = File::create(out_folder_path.join(subpath))?;
+        out_file.write_all(text.as_bytes())?;
+    }
+
+    if args.len() > 3 {
+        let mut docs_text = String::new();
+
+        match target {
+            "js" => js::docs::gen_docs(&env, &mut docs_text).unwrap(),
+            "c" => todo!("Docs generation for C"),
+            o => panic!("Unknown target: {}", o),
+        }
+
+        let mut out_docs = File::create(args[3].clone())?;
+        out_docs.write_all(docs_text.as_bytes())?;
+    }
 
     Ok(())
 }
