@@ -6,17 +6,26 @@ use std::fmt::Write;
 use diplomat_core::ast::{self, PrimitiveType};
 use indenter::indented;
 
+static RUNTIME_HPP: &str = include_str!("runtime.hpp");
+
 pub fn gen_bindings(
     env: &HashMap<String, ast::CustomType>,
     outs: &mut HashMap<&str, String>,
 ) -> fmt::Result {
     super::c::gen_bindings(env, outs)?;
 
+    let diplomat_runtime_out = outs
+        .entry("diplomat_runtime.hpp")
+        .or_insert_with(String::new);
+    write!(diplomat_runtime_out, "{}", RUNTIME_HPP)?;
+
     let out = outs.entry("api.hpp").or_insert_with(String::new);
     writeln!(out, "#include <stdint.h>")?;
     writeln!(out, "#include <stddef.h>")?;
     writeln!(out, "#include <stdbool.h>")?;
+    writeln!(out, "#include <algorithm>")?;
     writeln!(out, "#include <memory>")?;
+    writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
     writeln!(out)?;
     writeln!(out, "namespace capi {{")?;
     writeln!(out, "#include \"api.h\"")?;
@@ -98,13 +107,18 @@ fn gen_method<W: fmt::Write>(
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
 ) -> fmt::Result {
-    match &method.return_type {
-        Some(ret_type) => {
-            gen_type(ret_type, false, env, out)?;
-        }
+    let is_writeable_out = method.is_writeable_out();
+    if is_writeable_out {
+        write!(out, "std::string")?;
+    } else {
+        match &method.return_type {
+            Some(ret_type) => {
+                gen_type(ret_type, false, env, out)?;
+            }
 
-        None => {
-            write!(out, "void")?;
+            None => {
+                write!(out, "void")?;
+            }
         }
     }
 
@@ -112,6 +126,10 @@ fn gen_method<W: fmt::Write>(
     let mut params_to_gen = method.params.clone();
     if let Some(param) = &method.self_param {
         params_to_gen.insert(0, param.clone());
+    }
+
+    if is_writeable_out {
+        params_to_gen.remove(params_to_gen.len() - 1);
     }
 
     let mut all_params_invocation = vec![];
@@ -140,11 +158,25 @@ fn gen_method<W: fmt::Write>(
         }
     }
 
+    if is_writeable_out {
+        all_params_invocation.push("&diplomat_writeable_out".to_string());
+    }
+
     writeln!(out, ") {{")?;
 
     let mut method_body = indented(out).with_str("  ");
-    if let Some(ret_typ) = &method.return_type {
-        write!(
+    if is_writeable_out {
+        writeln!(&mut method_body, "std::string diplomat_writeable_string;")?;
+        writeln!(&mut method_body, "capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);")?;
+        writeln!(
+            &mut method_body,
+            "capi::{}({});",
+            method.full_path_name,
+            all_params_invocation.join(", ")
+        )?;
+        writeln!(&mut method_body, "return diplomat_writeable_string;")?;
+    } else if let Some(ret_typ) = &method.return_type {
+        writeln!(
             &mut method_body,
             "return {};",
             gen_rust_to_cpp(
