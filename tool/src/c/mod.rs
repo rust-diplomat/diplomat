@@ -37,6 +37,13 @@ pub fn gen_bindings(
             writeln!(out)?;
             gen_method(method, env, out)?;
         }
+
+        writeln!(
+            out,
+            "void {}_destroy({}* self);",
+            custom_type.name(),
+            custom_type.name()
+        )?;
     }
 
     writeln!(out, "#ifdef __cplusplus")?;
@@ -136,7 +143,15 @@ fn gen_type<W: fmt::Write>(
             write!(out, "{}", typ.resolve(env).name())?;
         }
 
-        ast::TypeName::Box(underlying) | ast::TypeName::Reference(underlying, _) => {
+        ast::TypeName::Box(underlying) => {
+            gen_type(underlying.as_ref(), env, out)?;
+            write!(out, "*")?;
+        }
+
+        ast::TypeName::Reference(underlying, mutable) => {
+            if !mutable {
+                write!(out, "const ")?;
+            }
             gen_type(underlying.as_ref(), env, out)?;
             write!(out, "*")?;
         }

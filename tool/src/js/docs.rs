@@ -24,7 +24,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     writeln!(out, ".. js:class:: {}", typ.name())?;
     writeln!(out)?;
     let mut class_indented = indented(out).with_str("    ");
-    markdown_to_rst(&mut class_indented, &typ.doc_lines(), env)?;
+    markdown_to_rst(&mut class_indented, typ.doc_lines(), env)?;
     writeln!(class_indented)?;
 
     if let ast::CustomType::Struct(strct) = typ {
