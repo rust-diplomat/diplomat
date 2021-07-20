@@ -128,9 +128,9 @@ ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale
   auto diplomat_optional_raw_out_value_fdf = diplomat_raw_struct_out_value.fdf;
   std::optional<ICU4XFixedDecimalFormat> diplomat_optional_out_value_fdf;
   if (diplomat_optional_raw_out_value_fdf != nullptr) {
-  diplomat_optional_out_value_fdf = std::optional<ICU4XFixedDecimalFormat>{ICU4XFixedDecimalFormat(diplomat_optional_raw_out_value_fdf)};
+    diplomat_optional_out_value_fdf = ICU4XFixedDecimalFormat(diplomat_optional_raw_out_value_fdf);
   } else {
-  diplomat_optional_out_value_fdf = std::nullopt;
+    diplomat_optional_out_value_fdf = std::nullopt;
   }
   return ICU4XFixedDecimalFormatResult{ .fdf = std::move(diplomat_optional_out_value_fdf), .success = std::move(diplomat_raw_struct_out_value.success) };
 }

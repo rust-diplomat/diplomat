@@ -228,12 +228,8 @@ fn gen_method<W: fmt::Write>(
             write!(out, ", ")?;
         }
 
-        if param.ty == ast::TypeName::StrReference {
-            write!(out, "const std::string {}", param.name)?;
-        } else {
-            gen_type(&param.ty, false, env, out)?;
-            write!(out, " {}", param.name)?;
-        }
+        gen_type(&param.ty, false, env, out)?;
+        write!(out, " {}", param.name)?;
     }
 
     if is_header {
@@ -387,7 +383,13 @@ fn gen_type<W: fmt::Write>(
             }
         }
 
-        ast::TypeName::StrReference => panic!(),
+        ast::TypeName::StrReference => {
+            write!(out, "const std::string")?;
+
+            if behind_ref {
+                write!(out, "*")?;
+            }
+        }
     }
 
     Ok(())
@@ -453,12 +455,10 @@ fn gen_rust_to_cpp<W: Write>(
                 writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
 
                 let some_expr = gen_rust_to_cpp(&raw_value_id, path, underlying.as_ref(), env, out);
-                write!(out, "{} = ", wrapped_value_id).unwrap();
-                gen_type(typ, false, env, out).unwrap();
-                writeln!(out, "{{{}}};", some_expr).unwrap();
+                writeln!(out, "  {} = {};", wrapped_value_id, some_expr).unwrap();
 
                 writeln!(out, "}} else {{").unwrap();
-                writeln!(out, "{} = std::nullopt;", wrapped_value_id).unwrap();
+                writeln!(out, "  {} = std::nullopt;", wrapped_value_id).unwrap();
                 writeln!(out, "}}").unwrap();
 
                 wrapped_value_id
