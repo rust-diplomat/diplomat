@@ -157,26 +157,7 @@ fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::Primitive(prim) => {
-            let prim_type = match prim {
-                PrimitiveType::i8 => "int8_t",
-                PrimitiveType::u8 => "uint8_t",
-                PrimitiveType::i16 => "int16_t",
-                PrimitiveType::u16 => "uint16_t",
-                PrimitiveType::i32 => "int32_t",
-                PrimitiveType::u32 => "uint32_t",
-                PrimitiveType::i64 => "int64_t",
-                PrimitiveType::u64 => "uint64_t",
-                PrimitiveType::i128 => panic!("i128 not supported in C"),
-                PrimitiveType::u128 => panic!("u128 not supported in C"),
-                PrimitiveType::isize => "ssize_t",
-                PrimitiveType::usize => "size_t",
-                PrimitiveType::f32 => "float",
-                PrimitiveType::f64 => "double",
-                PrimitiveType::bool => "bool",
-                PrimitiveType::char => "char",
-            };
-
-            write!(out, "{}", prim_type)?;
+            write!(out, "{}", c_type_for_prim(prim))?;
         }
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
@@ -184,4 +165,25 @@ fn gen_type<W: fmt::Write>(
     }
 
     Ok(())
+}
+
+pub fn c_type_for_prim(prim: &PrimitiveType) -> &str {
+    match prim {
+        PrimitiveType::i8 => "int8_t",
+        PrimitiveType::u8 => "uint8_t",
+        PrimitiveType::i16 => "int16_t",
+        PrimitiveType::u16 => "uint16_t",
+        PrimitiveType::i32 => "int32_t",
+        PrimitiveType::u32 => "uint32_t",
+        PrimitiveType::i64 => "int64_t",
+        PrimitiveType::u64 => "uint64_t",
+        PrimitiveType::i128 => panic!("i128 not supported in C"),
+        PrimitiveType::u128 => panic!("u128 not supported in C"),
+        PrimitiveType::isize => "ssize_t",
+        PrimitiveType::usize => "size_t",
+        PrimitiveType::f32 => "float",
+        PrimitiveType::f64 => "double",
+        PrimitiveType::bool => "bool",
+        PrimitiveType::char => "char",
+    }
 }

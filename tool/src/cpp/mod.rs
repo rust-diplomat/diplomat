@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Write;
 
-use diplomat_core::ast::{self, PrimitiveType};
+use diplomat_core::ast;
 use indenter::indented;
 
 static RUNTIME_HPP: &str = include_str!("runtime.hpp");
@@ -151,6 +151,7 @@ fn gen_method<W: fmt::Write>(
             write!(out, " {}", param.name)?;
             all_params_invocation.push(gen_cpp_to_rust(
                 &param.name,
+                false,
                 &param.ty,
                 env,
                 param.name == "self",
@@ -237,26 +238,7 @@ fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::Primitive(prim) => {
-            let prim_type = match prim {
-                PrimitiveType::i8 => "int8_t",
-                PrimitiveType::u8 => "uint8_t",
-                PrimitiveType::i16 => "int16_t",
-                PrimitiveType::u16 => "uint16_t",
-                PrimitiveType::i32 => "int32_t",
-                PrimitiveType::u32 => "uint32_t",
-                PrimitiveType::i64 => "int64_t",
-                PrimitiveType::u64 => "uint64_t",
-                PrimitiveType::i128 => panic!("i128 not supported in C"),
-                PrimitiveType::u128 => panic!("u128 not supported in C"),
-                PrimitiveType::isize => "ssize_t",
-                PrimitiveType::usize => "size_t",
-                PrimitiveType::f32 => "float",
-                PrimitiveType::f64 => "double",
-                PrimitiveType::bool => "bool",
-                PrimitiveType::char => "char",
-            };
-
-            write!(out, "{}", prim_type)?;
+            write!(out, "{}", super::c::c_type_for_prim(prim))?;
 
             if behind_ref {
                 write!(out, "*")?;
@@ -281,11 +263,12 @@ fn gen_rust_to_cpp(
         ast::TypeName::Box(underlying) => match underlying.as_ref() {
             ast::TypeName::Named(_name) => match underlying.resolve(env) {
                 ast::CustomType::Opaque(opaque) => {
-                    return format!("{}({})", opaque.name, cpp);
+                    format!("{}({})", opaque.name, cpp)
                 }
 
                 ast::CustomType::Struct(_strct) => {
-                    todo!()
+                    // TODO(shadaj): wrap non-opaque structs
+                    cpp.to_string()
                 }
             },
             _o => todo!(),
@@ -298,31 +281,40 @@ fn gen_rust_to_cpp(
 
 fn gen_cpp_to_rust(
     cpp: &str,
+    behind_ref: bool,
     typ: &ast::TypeName,
     env: &HashMap<String, ast::CustomType>,
     is_self: bool,
 ) -> String {
     match typ {
-        ast::TypeName::Reference(underlying, _) => match underlying.as_ref() {
-            ast::TypeName::Named(_name) => match underlying.resolve(env) {
-                ast::CustomType::Opaque(_opaque) => {
+        ast::TypeName::Reference(underlying, _) => {
+            gen_cpp_to_rust(cpp, true, underlying.as_ref(), env, is_self)
+        },
+        ast::TypeName::Named(_) => match typ.resolve(env) {
+            ast::CustomType::Opaque(_opaque) => {
+                if behind_ref {
                     if is_self {
                         "this->inner.get()".to_string()
                     } else {
-                        return format!("{}.AsFFI()", cpp);
+                        format!("{}.AsFFI()", cpp)
                     }
+                } else {
+                    panic!("Cannot handle opaque types by value");
                 }
+            }
 
-                ast::CustomType::Struct(_strct) => {
-                    todo!()
-                }
-            },
-
-            ast::TypeName::Writeable => format!("&{}", cpp),
-
-            o => todo!("{:?}", o),
+            ast::CustomType::Struct(_strct) => {
+                // TODO(shadaj): wrap non-opaque structs
+                cpp.to_string()
+            }
         },
-        ast::TypeName::Named(_) => cpp.to_string(),
+        ast::TypeName::Writeable => {
+            if behind_ref {
+                format!("&{}", cpp)
+            } else {
+                panic!("Cannot send Writeable to Rust as a value");
+            }
+        },
         ast::TypeName::Primitive(_) => cpp.to_string(),
         o => todo!("{:?}", o),
     }
