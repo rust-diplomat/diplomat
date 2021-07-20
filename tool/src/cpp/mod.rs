@@ -115,7 +115,6 @@ fn gen_struct<W: fmt::Write>(
                     opaque.name
                 )?;
 
-                // TODO(shadaj): make the constructor private when we support wrapping structs
                 writeln!(
                     &mut public_body,
                     "{}(capi::{}* i) : inner(i) {{}}",
@@ -380,8 +379,8 @@ fn gen_rust_to_cpp<W: Write>(
                 }
 
                 ast::CustomType::Struct(_strct) => {
-                    // TODO(shadaj): wrap non-opaque structs
-                    cpp.to_string()
+                    // TODO(shadaj): should emit a unique_ptr
+                    todo!("Receiving boxes of structs is not yet supported")
                 }
             },
             _o => todo!(),
