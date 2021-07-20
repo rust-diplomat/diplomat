@@ -64,7 +64,7 @@
     .. js:attribute:: fdf
 
 
-        The :js:class:`ICU4XFixedDecimalFormat`, valid if creation was successful.
+        The :js:class:`ICU4XFixedDecimalFormat`, exists if creation was successful.
 
     .. js:attribute:: success
 

@@ -315,23 +315,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                     )?;
 
                     for (name, typ, _) in strct.fields.iter() {
-                        if let ast::TypeName::Box(underlying) = typ {
-                            writeln!(&mut iife_indent, "const out_{}_value = out.{};", name, name)?;
-                            // TODO(shadaj): delete back-references when we start generating them
-                            // since the function is generated assuming that back references are needed
-                            if let ast::TypeName::Named(_) = underlying.as_ref() {
-                                writeln!(
-                                    &mut iife_indent,
-                                    "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying);",
-                                    underlying.resolve(env).name(), name, name
-                                )?;
-                            }
-                            writeln!(
-                                &mut iife_indent,
-                                "Object.defineProperty(out, \"{}\", {{ value: out_{}_value }});",
-                                name, name
-                            )?;
-                        }
+                        gen_box_destructor(name, typ, env, &mut iife_indent)?;
                     }
 
                     writeln!(
@@ -371,6 +355,8 @@ fn gen_value_rust_to_js<W: fmt::Write>(
             write!(out, "}})()")?;
         }
 
+        ast::TypeName::Option(_) => todo!(),
+
         ast::TypeName::Primitive(_prim) => {
             // TODO(shadaj): wrap with appropriate types for large widths
             value_expr(out)?;
@@ -381,6 +367,44 @@ fn gen_value_rust_to_js<W: fmt::Write>(
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
+    }
+
+    Ok(())
+}
+
+fn gen_box_destructor<W: Write>(
+    name: &str,
+    typ: &ast::TypeName,
+    env: &HashMap<String, ast::CustomType>,
+    out: &mut W,
+) -> Result<(), fmt::Error> {
+    match typ {
+        ast::TypeName::Box(underlying) => {
+            writeln!(out, "const out_{}_value = out.{};", name, name)?;
+            // TODO(shadaj): delete back-references when we start generating them
+            // since the function is generated assuming that back references are needed
+            if let ast::TypeName::Named(_) = underlying.as_ref() {
+                writeln!(
+                    out,
+                    "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying);",
+                    underlying.resolve(env).name(),
+                    name,
+                    name
+                )?;
+            }
+            writeln!(
+                out,
+                "Object.defineProperty(out, \"{}\", {{ value: out_{}_value }});",
+                name, name
+            )?;
+        }
+
+        ast::TypeName::Option(underlying) => {
+            // TODO(shadaj): don't generate destructor if null
+            gen_box_destructor(name, underlying.as_ref(), env, out)?;
+        }
+
+        _ => {}
     }
 
     Ok(())
@@ -406,6 +430,14 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                 out,
             )?;
         }
+
+        ast::TypeName::Option(underlying) => match underlying.as_ref() {
+            ast::TypeName::Box(_) => {
+                // TODO(shadaj): return null if pointer is 0
+                gen_rust_reference_to_js(underlying.as_ref(), value_expr, env, out)?;
+            }
+            _ => todo!(),
+        },
 
         ast::TypeName::Named(_) => {
             let custom_type = underlying.resolve(env);

@@ -73,8 +73,8 @@ mod ffi {
     pub struct ICU4XFixedDecimalFormat(pub FixedDecimalFormat<'static, 'static>);
 
     pub struct ICU4XFixedDecimalFormatResult {
-        /// The [`ICU4XFixedDecimalFormat`], valid if creation was successful.
-        pub fdf: Box<ICU4XFixedDecimalFormat>,
+        /// The [`ICU4XFixedDecimalFormat`], exists if creation was successful.
+        pub fdf: Option<Box<ICU4XFixedDecimalFormat>>,
         /// Whether creating the [`ICU4XFixedDecimalFormat`] was successful.
         pub success: bool,
     }
@@ -125,12 +125,12 @@ mod ffi {
                 },
             ) {
                 ICU4XFixedDecimalFormatResult {
-                    fdf: Box::new(ICU4XFixedDecimalFormat(fdf)),
+                    fdf: Some(Box::new(ICU4XFixedDecimalFormat(fdf))),
                     success: true,
                 }
             } else {
                 ICU4XFixedDecimalFormatResult {
-                    fdf: unsafe { Box::from_raw(std::ptr::null_mut()) },
+                    fdf: None,
                     success: false,
                 }
             }

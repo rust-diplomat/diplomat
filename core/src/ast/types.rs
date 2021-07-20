@@ -82,6 +82,8 @@ pub enum TypeName {
     Reference(Box<TypeName>, /* mutable */ bool),
     /// A `Box<T>` type.
     Box(Box<TypeName>),
+    /// A `Option<T>` type.
+    Option(Box<TypeName>),
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
     /// A `&str` type.
@@ -112,6 +114,23 @@ impl TypeName {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![PathSegment {
                         ident: Ident::new("Box", Span::call_site()),
+                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                            colon2_token: None,
+                            lt_token: syn::token::Lt(Span::call_site()),
+                            args: Punctuated::from_iter(vec![GenericArgument::Type(
+                                underlying.to_syn(),
+                            )]),
+                            gt_token: syn::token::Gt(Span::call_site()),
+                        }),
+                    }]),
+                },
+            }),
+            TypeName::Option(underlying) => syn::Type::Path(TypePath {
+                qself: None,
+                path: Path {
+                    leading_colon: None,
+                    segments: Punctuated::from_iter(vec![PathSegment {
+                        ident: Ident::new("Option", Span::call_site()),
                         arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                             colon2_token: None,
                             lt_token: syn::token::Lt(Span::call_site()),
@@ -154,6 +173,7 @@ impl TypeName {
                 underlying.check_opaque_internal(env, true, errors)
             }
             TypeName::Box(underlying) => underlying.check_opaque_internal(env, true, errors),
+            TypeName::Option(underlying) => underlying.check_opaque_internal(env, false, errors),
             TypeName::Primitive(_) => {}
             TypeName::Named(_) => {
                 if let CustomType::Opaque(_) = self.resolve(env) {
@@ -215,6 +235,17 @@ impl From<&syn::Type> for TypeName {
                         }
                     } else {
                         panic!("Expected angle brackets for Box type")
+                    }
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Option" {
+                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    {
+                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                            TypeName::Option(Box::new(tpe.into()))
+                        } else {
+                            panic!("Expected first type argument for Option to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Option type")
                     }
                 } else if p.path.to_token_stream().to_string()
                     == "diplomat_runtime :: DiplomatWriteable"

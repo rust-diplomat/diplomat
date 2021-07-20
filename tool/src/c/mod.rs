@@ -160,6 +160,14 @@ fn gen_type<W: fmt::Write>(
             write!(out, "{}", c_type_for_prim(prim))?;
         }
 
+        ast::TypeName::Option(underlying) => match underlying.as_ref() {
+            ast::TypeName::Box(_) => {
+                gen_type(underlying.as_ref(), env, out)?;
+            }
+
+            _ => todo!(),
+        },
+
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
         ast::TypeName::StrReference => panic!(),
     }

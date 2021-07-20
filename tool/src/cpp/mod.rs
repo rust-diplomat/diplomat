@@ -25,6 +25,7 @@ pub fn gen_bindings(
     writeln!(out, "#include <stdbool.h>")?;
     writeln!(out, "#include <algorithm>")?;
     writeln!(out, "#include <memory>")?;
+    writeln!(out, "#include <optional>")?;
     writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
     writeln!(out)?;
 
@@ -352,6 +353,16 @@ fn gen_type<W: fmt::Write>(
             }
         }
 
+        ast::TypeName::Option(underlying) => match underlying.as_ref() {
+            ast::TypeName::Box(_) => {
+                write!(out, "std::optional<")?;
+                gen_type(underlying.as_ref(), behind_ref, env, out)?;
+                write!(out, ">")?;
+            }
+
+            _ => todo!(),
+        },
+
         ast::TypeName::Primitive(prim) => {
             write!(out, "{}", super::c::c_type_for_prim(prim))?;
 
@@ -406,7 +417,7 @@ fn gen_rust_to_cpp<W: Write>(
                 let mut all_fields_wrapped = vec![];
                 for (name, typ, _) in &strct.fields {
                     all_fields_wrapped.push(format!(
-                        ".{} = {}",
+                        ".{} = std::move({})",
                         name,
                         gen_rust_to_cpp(
                             &format!("{}.{}", raw_struct_id, name),
@@ -421,6 +432,33 @@ fn gen_rust_to_cpp<W: Write>(
                 format!("{}{{ {} }}", strct.name, all_fields_wrapped.join(", "))
             }
         },
+
+        ast::TypeName::Option(underlying) => match underlying.as_ref() {
+            ast::TypeName::Box(_) => {
+                let raw_value_id = format!("diplomat_optional_raw_{}", path);
+                writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
+
+                let wrapped_value_id = format!("diplomat_optional_{}", path);
+                gen_type(typ, false, env, out).unwrap();
+                writeln!(out, " {};", wrapped_value_id).unwrap();
+
+                writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
+
+                let some_expr = gen_rust_to_cpp(&raw_value_id, path, underlying.as_ref(), env, out);
+                write!(out, "{} = ", wrapped_value_id).unwrap();
+                gen_type(typ, false, env, out).unwrap();
+                writeln!(out, "{{{}}};", some_expr).unwrap();
+
+                writeln!(out, "}} else {{").unwrap();
+                writeln!(out, "{} = std::nullopt;", wrapped_value_id).unwrap();
+                writeln!(out, "}}").unwrap();
+
+                wrapped_value_id
+            }
+
+            _ => todo!(),
+        },
+
         ast::TypeName::Primitive(_) => cpp.to_string(),
         o => todo!("{:?}", o),
     }

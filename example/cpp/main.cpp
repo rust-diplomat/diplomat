@@ -17,5 +17,5 @@ int main(int argc, char *argv[]) {
 
     auto fdf = ICU4XFixedDecimalFormat::try_new(locale, data_provider, ICU4XFixedDecimalFormatOptions::default_());
     std::cout << fdf.success << std::endl;
-    std::cout << fdf.fdf.format_write(fd) << std::endl;
+    std::cout << fdf.fdf.value().format_write(fd) << std::endl;
 }
