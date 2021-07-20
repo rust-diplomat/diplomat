@@ -12,7 +12,9 @@ class ICU4XFixedDecimal;
 
 class ICU4XFixedDecimalFormat;
 
+struct ICU4XFixedDecimalFormatOptions;
 
+struct ICU4XFixedDecimalFormatResult;
 
 class ICU4XLocale;
 
@@ -54,24 +56,12 @@ struct ICU4XFixedDecimalFormatDeleter {
 };
 class ICU4XFixedDecimalFormat {
  public:
-  static capi::ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, capi::ICU4XFixedDecimalFormatOptions options);
+  static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
   std::string format_write(const ICU4XFixedDecimal& value);
   inline const capi::ICU4XFixedDecimalFormat* AsFFI() const { return this->inner.get(); }
   ICU4XFixedDecimalFormat(capi::ICU4XFixedDecimalFormat* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatDeleter> inner;
-};
-
-struct ICU4XFixedDecimalFormatOptionsDeleter {
-  void operator()(capi::ICU4XFixedDecimalFormatOptions* l) const noexcept {
-    capi::ICU4XFixedDecimalFormatOptions_destroy(l);
-  }
-};
-
-struct ICU4XFixedDecimalFormatResultDeleter {
-  void operator()(capi::ICU4XFixedDecimalFormatResult* l) const noexcept {
-    capi::ICU4XFixedDecimalFormatResult_destroy(l);
-  }
 };
 
 struct ICU4XLocaleDeleter {
@@ -86,6 +76,29 @@ class ICU4XLocale {
   ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XLocale, ICU4XLocaleDeleter> inner;
+};
+
+struct ICU4XFixedDecimalFormatOptionsDeleter {
+  void operator()(capi::ICU4XFixedDecimalFormatOptions* l) const noexcept {
+    capi::ICU4XFixedDecimalFormatOptions_destroy(l);
+  }
+};
+struct ICU4XFixedDecimalFormatOptions {
+ public:
+  uint8_t grouping_strategy;
+  uint8_t sign_display;
+  static ICU4XFixedDecimalFormatOptions default_();
+};
+
+struct ICU4XFixedDecimalFormatResultDeleter {
+  void operator()(capi::ICU4XFixedDecimalFormatResult* l) const noexcept {
+    capi::ICU4XFixedDecimalFormatResult_destroy(l);
+  }
+};
+struct ICU4XFixedDecimalFormatResult {
+ public:
+  ICU4XFixedDecimalFormat fdf;
+  bool success;
 };
 
 ICU4XDataProvider ICU4XDataProvider::new_static() {
@@ -108,8 +121,10 @@ std::string ICU4XFixedDecimal::to_string() {
   return diplomat_writeable_string;
 }
 
-capi::ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, capi::ICU4XFixedDecimalFormatOptions options) {
-  return capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), options);
+ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {
+ICU4XFixedDecimalFormatOptions diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions = options;
+  capi::ICU4XFixedDecimalFormatResult diplomat_raw_struct_ICU4XFixedDecimalFormatResult = capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatOptions{ .grouping_strategy = diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions.grouping_strategy, .sign_display = diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions.sign_display });
+  return ICU4XFixedDecimalFormatResult{ .fdf = ICU4XFixedDecimalFormat(diplomat_raw_struct_ICU4XFixedDecimalFormatResult.fdf), .success = diplomat_raw_struct_ICU4XFixedDecimalFormatResult.success };
 }
 std::string ICU4XFixedDecimalFormat::format_write(const ICU4XFixedDecimal& value) {
   std::string diplomat_writeable_string;
@@ -118,6 +133,10 @@ std::string ICU4XFixedDecimalFormat::format_write(const ICU4XFixedDecimal& value
   return diplomat_writeable_string;
 }
 
+ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions::default_() {
+  capi::ICU4XFixedDecimalFormatOptions diplomat_raw_struct_ICU4XFixedDecimalFormatOptions = capi::ICU4XFixedDecimalFormatOptions_default();
+  return ICU4XFixedDecimalFormatOptions{ .grouping_strategy = diplomat_raw_struct_ICU4XFixedDecimalFormatOptions.grouping_strategy, .sign_display = diplomat_raw_struct_ICU4XFixedDecimalFormatOptions.sign_display };
+}
 
 
 ICU4XLocale ICU4XLocale::new_(const char* name_data, size_t name_len) {

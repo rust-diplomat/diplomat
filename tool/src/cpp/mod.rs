@@ -39,14 +39,24 @@ pub fn gen_bindings(
             }
 
             ast::CustomType::Struct(_) => {
-                // TODO(shadaj): wrap non-opaque structs
+                writeln!(out, "struct {};", custom_type.name())?;
             }
         }
     }
 
     for custom_type in &all_types {
-        writeln!(out)?;
-        gen_struct(custom_type, true, env, out)?;
+        if let ast::CustomType::Opaque(_) = custom_type {
+            writeln!(out)?;
+            gen_struct(custom_type, true, env, out)?;
+        }
+    }
+
+    // TODO(shadaj): topological sort
+    for custom_type in &all_types {
+        if let ast::CustomType::Struct(_) = custom_type {
+            writeln!(out)?;
+            gen_struct(custom_type, true, env, out)?;
+        }
     }
 
     for custom_type in &all_types {
@@ -123,8 +133,32 @@ fn gen_struct<W: fmt::Write>(
             }
         }
 
-        ast::CustomType::Struct(_strct) => {
-            // TODO(shadaj): wrap non-opaque structs
+        ast::CustomType::Struct(strct) => {
+            if is_header {
+                writeln!(out, "struct {} {{", strct.name)?;
+                writeln!(out, " public:")?;
+            }
+
+            let mut public_body = if is_header {
+                indented(out).with_str("  ")
+            } else {
+                indented(out).with_str("")
+            };
+
+            if is_header {
+                for (name, typ, _) in &strct.fields {
+                    gen_type(typ, false, env, &mut public_body)?;
+                    writeln!(&mut public_body, " {};", name)?;
+                }
+            }
+
+            for method in &strct.methods {
+                gen_method(custom_type, method, is_header, env, &mut public_body)?;
+            }
+
+            if is_header {
+                writeln!(out, "}};")?;
+            }
         }
     }
 
@@ -165,7 +199,7 @@ fn gen_method<W: fmt::Write>(
     }
 
     // TODO(shadaj): handle other keywords
-    if method.name == "new" {
+    if method.name == "new" || method.name == "default" {
         write!(out, "{}_(", method.name)?;
     } else {
         write!(out, "{}(", method.name)?;
@@ -175,12 +209,6 @@ fn gen_method<W: fmt::Write>(
 
     if is_writeable_out {
         params_to_gen.remove(params_to_gen.len() - 1);
-    }
-
-    let mut all_params_invocation = vec![];
-
-    if let Some(param) = &method.self_param {
-        all_params_invocation.push(gen_cpp_to_rust("this", false, &param.ty, env, true));
     }
 
     for (i, param) in params_to_gen.iter().enumerate() {
@@ -194,29 +222,44 @@ fn gen_method<W: fmt::Write>(
                 "const char* {}_data, size_t {}_len",
                 param.name, param.name
             )?;
-            all_params_invocation.push(format!("{}_data", param.name));
-            all_params_invocation.push(format!("{}_len", param.name));
         } else {
             gen_type(&param.ty, false, env, out)?;
             write!(out, " {}", param.name)?;
-            all_params_invocation.push(gen_cpp_to_rust(
-                &param.name,
-                false,
-                &param.ty,
-                env,
-                param.name == "self",
-            ));
         }
-    }
-
-    if is_writeable_out {
-        all_params_invocation.push("&diplomat_writeable_out".to_string());
     }
 
     if is_header {
         writeln!(out, ");")?;
     } else {
         writeln!(out, ") {{")?;
+
+        let mut all_params_invocation = vec![];
+
+        if let Some(param) = &method.self_param {
+            let invocation_expr = gen_cpp_to_rust("this", false, &param.ty, env, true, out);
+            all_params_invocation.push(invocation_expr);
+        }
+
+        for param in params_to_gen.iter() {
+            if param.ty == ast::TypeName::StrReference {
+                all_params_invocation.push(format!("{}_data", param.name));
+                all_params_invocation.push(format!("{}_len", param.name));
+            } else {
+                let invocation_expr = gen_cpp_to_rust(
+                    &param.name,
+                    false,
+                    &param.ty,
+                    env,
+                    param.name == "self",
+                    out,
+                );
+                all_params_invocation.push(invocation_expr);
+            }
+        }
+
+        if is_writeable_out {
+            all_params_invocation.push("&diplomat_writeable_out".to_string());
+        }
 
         let mut method_body = indented(out).with_str("  ");
         if is_writeable_out {
@@ -230,19 +273,18 @@ fn gen_method<W: fmt::Write>(
             )?;
             writeln!(&mut method_body, "return diplomat_writeable_string;")?;
         } else if let Some(ret_typ) = &method.return_type {
-            writeln!(
+            let out_expr = gen_rust_to_cpp(
+                &format!(
+                    "capi::{}({})",
+                    method.full_path_name,
+                    all_params_invocation.join(", ")
+                ),
+                ret_typ,
+                env,
                 &mut method_body,
-                "return {};",
-                gen_rust_to_cpp(
-                    &format!(
-                        "capi::{}({})",
-                        method.full_path_name,
-                        all_params_invocation.join(", ")
-                    ),
-                    ret_typ,
-                    env
-                )
-            )?;
+            );
+
+            writeln!(&mut method_body, "return {};", out_expr)?;
         } else {
             writeln!(
                 &mut method_body,
@@ -265,13 +307,22 @@ fn gen_type<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => {
-            if behind_ref {
-                write!(out, "{}", typ.resolve(env).name())?;
-            } else {
-                write!(out, "capi::{}", typ.resolve(env).name())?;
+        ast::TypeName::Named(_) => match typ.resolve(env) {
+            ast::CustomType::Opaque(opaque) => {
+                if behind_ref {
+                    write!(out, "{}", opaque.name)?;
+                } else {
+                    panic!("Cannot pass opaque structs as values");
+                }
             }
-        }
+
+            ast::CustomType::Struct(strct) => {
+                write!(out, "{}", strct.name)?;
+                if behind_ref {
+                    write!(out, "*")?;
+                }
+            }
+        },
 
         ast::TypeName::Box(underlying) => {
             gen_type(underlying.as_ref(), true, env, out)?;
@@ -301,17 +352,23 @@ fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Writeable => {
             write!(out, "capi::DiplomatWriteable")?;
+
+            if behind_ref {
+                write!(out, "*")?;
+            }
         }
+
         ast::TypeName::StrReference => panic!(),
     }
 
     Ok(())
 }
 
-fn gen_rust_to_cpp(
+fn gen_rust_to_cpp<W: Write>(
     cpp: &str,
     typ: &ast::TypeName,
     env: &HashMap<String, ast::CustomType>,
+    out: &mut W,
 ) -> String {
     match typ {
         ast::TypeName::Box(underlying) => match underlying.as_ref() {
@@ -327,22 +384,42 @@ fn gen_rust_to_cpp(
             },
             _o => todo!(),
         },
-        ast::TypeName::Named(_) => cpp.to_string(),
+        ast::TypeName::Named(_) => match typ.resolve(env) {
+            ast::CustomType::Opaque(_) => {
+                panic!("Cannot handle opaque structs by value");
+            }
+
+            ast::CustomType::Struct(strct) => {
+                let raw_struct_id = format!("diplomat_raw_struct_{}", strct.name);
+                writeln!(out, "capi::{} {} = {};", strct.name, raw_struct_id, cpp).unwrap();
+                let mut all_fields_wrapped = vec![];
+                for (name, typ, _) in &strct.fields {
+                    all_fields_wrapped.push(format!(
+                        ".{} = {}",
+                        name,
+                        gen_rust_to_cpp(&format!("{}.{}", raw_struct_id, name), typ, env, out)
+                    ));
+                }
+
+                format!("{}{{ {} }}", strct.name, all_fields_wrapped.join(", "))
+            }
+        },
         ast::TypeName::Primitive(_) => cpp.to_string(),
         o => todo!("{:?}", o),
     }
 }
 
-fn gen_cpp_to_rust(
+fn gen_cpp_to_rust<W: Write>(
     cpp: &str,
     behind_ref: bool,
     typ: &ast::TypeName,
     env: &HashMap<String, ast::CustomType>,
     is_self: bool,
+    out: &mut W,
 ) -> String {
     match typ {
         ast::TypeName::Reference(underlying, _) => {
-            gen_cpp_to_rust(cpp, true, underlying.as_ref(), env, is_self)
+            gen_cpp_to_rust(cpp, true, underlying.as_ref(), env, is_self, out)
         }
         ast::TypeName::Named(_) => match typ.resolve(env) {
             ast::CustomType::Opaque(_opaque) => {
@@ -357,9 +434,30 @@ fn gen_cpp_to_rust(
                 }
             }
 
-            ast::CustomType::Struct(_strct) => {
-                // TODO(shadaj): wrap non-opaque structs
-                cpp.to_string()
+            ast::CustomType::Struct(strct) => {
+                let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", strct.name);
+                writeln!(out, "{} {} = {};", strct.name, wrapped_struct_id, cpp).unwrap();
+                let mut all_fields_wrapped = vec![];
+                for (name, typ, _) in &strct.fields {
+                    all_fields_wrapped.push(format!(
+                        ".{} = {}",
+                        name,
+                        gen_cpp_to_rust(
+                            &format!("{}.{}", wrapped_struct_id, name),
+                            false,
+                            typ,
+                            env,
+                            false,
+                            out
+                        )
+                    ));
+                }
+
+                format!(
+                    "capi::{}{{ {} }}",
+                    strct.name,
+                    all_fields_wrapped.join(", ")
+                )
             }
         },
         ast::TypeName::Writeable => {
