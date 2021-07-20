@@ -122,7 +122,7 @@ std::string ICU4XFixedDecimal::to_string() {
 }
 
 ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {
-ICU4XFixedDecimalFormatOptions diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions = options;
+  ICU4XFixedDecimalFormatOptions diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions = options;
   capi::ICU4XFixedDecimalFormatResult diplomat_raw_struct_ICU4XFixedDecimalFormatResult = capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatOptions{ .grouping_strategy = diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions.grouping_strategy, .sign_display = diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions.sign_display });
   return ICU4XFixedDecimalFormatResult{ .fdf = ICU4XFixedDecimalFormat(diplomat_raw_struct_ICU4XFixedDecimalFormatResult.fdf), .success = diplomat_raw_struct_ICU4XFixedDecimalFormatResult.success };
 }

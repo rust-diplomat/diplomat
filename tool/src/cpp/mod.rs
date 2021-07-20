@@ -233,10 +233,13 @@ fn gen_method<W: fmt::Write>(
     } else {
         writeln!(out, ") {{")?;
 
+        let mut method_body = indented(out).with_str("  ");
+
         let mut all_params_invocation = vec![];
 
         if let Some(param) = &method.self_param {
-            let invocation_expr = gen_cpp_to_rust("this", false, &param.ty, env, true, out);
+            let invocation_expr =
+                gen_cpp_to_rust("this", false, &param.ty, env, true, &mut method_body);
             all_params_invocation.push(invocation_expr);
         }
 
@@ -251,7 +254,7 @@ fn gen_method<W: fmt::Write>(
                     &param.ty,
                     env,
                     param.name == "self",
-                    out,
+                    &mut method_body,
                 );
                 all_params_invocation.push(invocation_expr);
             }
@@ -261,7 +264,6 @@ fn gen_method<W: fmt::Write>(
             all_params_invocation.push("&diplomat_writeable_out".to_string());
         }
 
-        let mut method_body = indented(out).with_str("  ");
         if is_writeable_out {
             writeln!(&mut method_body, "std::string diplomat_writeable_string;")?;
             writeln!(&mut method_body, "capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);")?;
