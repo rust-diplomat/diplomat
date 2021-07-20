@@ -13,6 +13,8 @@ typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
 
 typedef struct ICU4XFixedDecimalFormat ICU4XFixedDecimalFormat;
 
+typedef struct ICU4XLocale ICU4XLocale;
+
 typedef struct ICU4XFixedDecimalFormatOptions {
     uint8_t grouping_strategy;
     uint8_t sign_display;
@@ -22,8 +24,6 @@ typedef struct ICU4XFixedDecimalFormatResult {
     ICU4XFixedDecimalFormat* fdf;
     bool success;
 } ICU4XFixedDecimalFormatResult;
-
-typedef struct ICU4XLocale ICU4XLocale;
 
 ICU4XDataProvider* ICU4XDataProvider_new_static();
 void ICU4XDataProvider_destroy(ICU4XDataProvider* self);

@@ -1,5 +1,5 @@
 use core::panic;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Write;
 
@@ -52,12 +52,24 @@ pub fn gen_bindings(
         }
     }
 
-    // TODO(shadaj): topological sort
+    let mut structs_seen = HashSet::new();
+    let mut structs_order = Vec::new();
     for custom_type in &all_types {
-        if let ast::CustomType::Struct(_) = custom_type {
-            writeln!(out)?;
-            gen_struct(custom_type, true, env, out)?;
+        if let ast::CustomType::Struct(strct) = custom_type {
+            if !structs_seen.contains(&strct.name) {
+                super::c::topological_sort_structs(
+                    strct,
+                    &mut structs_seen,
+                    &mut structs_order,
+                    env,
+                );
+            }
         }
+    }
+
+    for strct in structs_order {
+        writeln!(out)?;
+        gen_struct(&ast::CustomType::Struct(strct), true, env, out)?;
     }
 
     for custom_type in &all_types {

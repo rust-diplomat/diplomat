@@ -1,5 +1,5 @@
 use core::panic;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Write;
 
@@ -27,9 +27,27 @@ pub fn gen_bindings(
 
     let mut all_types: Vec<&ast::CustomType> = env.values().collect();
     all_types.sort_by_key(|t| t.name());
+
     for custom_type in &all_types {
+        if let ast::CustomType::Opaque(_) = custom_type {
+            writeln!(out)?;
+            gen_struct(custom_type, env, out)?;
+        }
+    }
+
+    let mut structs_seen = HashSet::new();
+    let mut structs_order = Vec::new();
+    for custom_type in &all_types {
+        if let ast::CustomType::Struct(strct) = custom_type {
+            if !structs_seen.contains(&strct.name) {
+                topological_sort_structs(strct, &mut structs_seen, &mut structs_order, env);
+            }
+        }
+    }
+
+    for strct in structs_order {
         writeln!(out)?;
-        gen_struct(custom_type, env, out)?;
+        gen_struct(&ast::CustomType::Struct(strct), env, out)?;
     }
 
     for custom_type in all_types {
@@ -194,4 +212,27 @@ pub fn c_type_for_prim(prim: &PrimitiveType) -> &str {
         PrimitiveType::bool => "bool",
         PrimitiveType::char => "char",
     }
+}
+
+pub fn topological_sort_structs(
+    root: &ast::Struct,
+    seen: &mut HashSet<String>,
+    order: &mut Vec<ast::Struct>,
+    env: &HashMap<String, ast::CustomType>,
+) {
+    seen.insert(root.name.clone());
+    for (_, typ, _) in &root.fields {
+        if let ast::TypeName::Named(_) = typ {
+            match typ.resolve(env) {
+                ast::CustomType::Struct(strct) => {
+                    if !seen.contains(&strct.name) {
+                        topological_sort_structs(strct, seen, order, env);
+                    }
+                }
+                ast::CustomType::Opaque(_) => {}
+            }
+        }
+    }
+
+    order.push(root.clone());
 }
