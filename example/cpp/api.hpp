@@ -122,9 +122,9 @@ std::string ICU4XFixedDecimal::to_string() {
 }
 
 ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {
-  ICU4XFixedDecimalFormatOptions diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions = options;
-  capi::ICU4XFixedDecimalFormatResult diplomat_raw_struct_ICU4XFixedDecimalFormatResult = capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatOptions{ .grouping_strategy = diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions.grouping_strategy, .sign_display = diplomat_wrapped_struct_ICU4XFixedDecimalFormatOptions.sign_display });
-  return ICU4XFixedDecimalFormatResult{ .fdf = ICU4XFixedDecimalFormat(diplomat_raw_struct_ICU4XFixedDecimalFormatResult.fdf), .success = diplomat_raw_struct_ICU4XFixedDecimalFormatResult.success };
+  ICU4XFixedDecimalFormatOptions diplomat_wrapped_struct_options = options;
+  capi::ICU4XFixedDecimalFormatResult diplomat_raw_struct_out_value = capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatOptions{ .grouping_strategy = diplomat_wrapped_struct_options.grouping_strategy, .sign_display = diplomat_wrapped_struct_options.sign_display });
+  return ICU4XFixedDecimalFormatResult{ .fdf = ICU4XFixedDecimalFormat(diplomat_raw_struct_out_value.fdf), .success = diplomat_raw_struct_out_value.success };
 }
 std::string ICU4XFixedDecimalFormat::format_write(const ICU4XFixedDecimal& value) {
   std::string diplomat_writeable_string;
@@ -134,8 +134,8 @@ std::string ICU4XFixedDecimalFormat::format_write(const ICU4XFixedDecimal& value
 }
 
 ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions::default_() {
-  capi::ICU4XFixedDecimalFormatOptions diplomat_raw_struct_ICU4XFixedDecimalFormatOptions = capi::ICU4XFixedDecimalFormatOptions_default();
-  return ICU4XFixedDecimalFormatOptions{ .grouping_strategy = diplomat_raw_struct_ICU4XFixedDecimalFormatOptions.grouping_strategy, .sign_display = diplomat_raw_struct_ICU4XFixedDecimalFormatOptions.sign_display };
+  capi::ICU4XFixedDecimalFormatOptions diplomat_raw_struct_out_value = capi::ICU4XFixedDecimalFormatOptions_default();
+  return ICU4XFixedDecimalFormatOptions{ .grouping_strategy = diplomat_raw_struct_out_value.grouping_strategy, .sign_display = diplomat_raw_struct_out_value.sign_display };
 }
 
 

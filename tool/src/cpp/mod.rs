@@ -237,8 +237,15 @@ fn gen_method<W: fmt::Write>(
         let mut all_params_invocation = vec![];
 
         if let Some(param) = &method.self_param {
-            let invocation_expr =
-                gen_cpp_to_rust("this", false, &param.ty, env, true, &mut method_body);
+            let invocation_expr = gen_cpp_to_rust(
+                "this",
+                "this",
+                false,
+                &param.ty,
+                env,
+                true,
+                &mut method_body,
+            );
             all_params_invocation.push(invocation_expr);
         }
 
@@ -248,6 +255,7 @@ fn gen_method<W: fmt::Write>(
                 all_params_invocation.push(format!("{}_len", param.name));
             } else {
                 let invocation_expr = gen_cpp_to_rust(
+                    &param.name,
                     &param.name,
                     false,
                     &param.ty,
@@ -280,6 +288,7 @@ fn gen_method<W: fmt::Write>(
                     method.full_path_name,
                     all_params_invocation.join(", ")
                 ),
+                "out_value",
                 ret_typ,
                 env,
                 &mut method_body,
@@ -367,6 +376,7 @@ fn gen_type<W: fmt::Write>(
 
 fn gen_rust_to_cpp<W: Write>(
     cpp: &str,
+    path: &str,
     typ: &ast::TypeName,
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
@@ -391,14 +401,20 @@ fn gen_rust_to_cpp<W: Write>(
             }
 
             ast::CustomType::Struct(strct) => {
-                let raw_struct_id = format!("diplomat_raw_struct_{}", strct.name);
+                let raw_struct_id = format!("diplomat_raw_struct_{}", path);
                 writeln!(out, "capi::{} {} = {};", strct.name, raw_struct_id, cpp).unwrap();
                 let mut all_fields_wrapped = vec![];
                 for (name, typ, _) in &strct.fields {
                     all_fields_wrapped.push(format!(
                         ".{} = {}",
                         name,
-                        gen_rust_to_cpp(&format!("{}.{}", raw_struct_id, name), typ, env, out)
+                        gen_rust_to_cpp(
+                            &format!("{}.{}", raw_struct_id, name),
+                            &format!("{}_{}", path, name),
+                            typ,
+                            env,
+                            out
+                        )
                     ));
                 }
 
@@ -412,6 +428,7 @@ fn gen_rust_to_cpp<W: Write>(
 
 fn gen_cpp_to_rust<W: Write>(
     cpp: &str,
+    path: &str,
     behind_ref: bool,
     typ: &ast::TypeName,
     env: &HashMap<String, ast::CustomType>,
@@ -420,7 +437,7 @@ fn gen_cpp_to_rust<W: Write>(
 ) -> String {
     match typ {
         ast::TypeName::Reference(underlying, _) => {
-            gen_cpp_to_rust(cpp, true, underlying.as_ref(), env, is_self, out)
+            gen_cpp_to_rust(cpp, path, true, underlying.as_ref(), env, is_self, out)
         }
         ast::TypeName::Named(_) => match typ.resolve(env) {
             ast::CustomType::Opaque(_opaque) => {
@@ -436,7 +453,7 @@ fn gen_cpp_to_rust<W: Write>(
             }
 
             ast::CustomType::Struct(strct) => {
-                let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", strct.name);
+                let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", path);
                 writeln!(out, "{} {} = {};", strct.name, wrapped_struct_id, cpp).unwrap();
                 let mut all_fields_wrapped = vec![];
                 for (name, typ, _) in &strct.fields {
@@ -445,6 +462,7 @@ fn gen_cpp_to_rust<W: Write>(
                         name,
                         gen_cpp_to_rust(
                             &format!("{}.{}", wrapped_struct_id, name),
+                            &format!("{}_{}", path, name),
                             false,
                             typ,
                             env,
