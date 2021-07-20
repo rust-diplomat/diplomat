@@ -4,6 +4,7 @@ use std::{collections::HashMap, env, fs::File, io::Write, path::Path};
 use diplomat_core::ast;
 
 mod c;
+mod cpp;
 mod js;
 mod layout;
 
@@ -33,6 +34,7 @@ fn main() -> std::io::Result<()> {
     match target {
         "js" => js::gen_bindings(&env, &mut out_texts).unwrap(),
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
+        "cpp" => cpp::gen_bindings(&env, &mut out_texts).unwrap(),
         o => panic!("Unknown target: {}", o),
     }
 

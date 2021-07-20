@@ -33,6 +33,10 @@ pub fn type_size_alignment(
     match typ {
         ast::TypeName::Box(_) => (4, 4),
         ast::TypeName::Reference(_, _) => (4, 4),
+        ast::TypeName::Option(underlying) => match underlying.as_ref() {
+            ast::TypeName::Box(_) => type_size_alignment(underlying.as_ref(), env),
+            _ => todo!(),
+        },
         ast::TypeName::Named(_) => match typ.resolve(env) {
             ast::CustomType::Struct(strct) => {
                 let (size, _, max_align) = struct_size_offsets_max_align(strct, env);
