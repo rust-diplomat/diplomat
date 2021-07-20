@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << fd.to_string() << std::endl;
 
-    ICU4XLocale locale = ICU4XLocale::new_("bn", 2);
+    ICU4XLocale locale = ICU4XLocale::new_("bn");
 
     ICU4XDataProvider data_provider = ICU4XDataProvider::new_static();
 

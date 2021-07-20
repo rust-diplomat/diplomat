@@ -217,11 +217,7 @@ fn gen_method<W: fmt::Write>(
         }
 
         if param.ty == ast::TypeName::StrReference {
-            write!(
-                out,
-                "const char* {}_data, size_t {}_len",
-                param.name, param.name
-            )?;
+            write!(out, "const std::string {}", param.name)?;
         } else {
             gen_type(&param.ty, false, env, out)?;
             write!(out, " {}", param.name)?;
@@ -252,8 +248,8 @@ fn gen_method<W: fmt::Write>(
 
         for param in params_to_gen.iter() {
             if param.ty == ast::TypeName::StrReference {
-                all_params_invocation.push(format!("{}_data", param.name));
-                all_params_invocation.push(format!("{}_len", param.name));
+                all_params_invocation.push(format!("{}.data()", param.name));
+                all_params_invocation.push(format!("{}.length()", param.name));
             } else {
                 let invocation_expr = gen_cpp_to_rust(
                     &param.name,

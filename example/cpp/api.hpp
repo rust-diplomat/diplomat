@@ -72,7 +72,7 @@ struct ICU4XLocaleDeleter {
 };
 class ICU4XLocale {
  public:
-  static ICU4XLocale new_(const char* name_data, size_t name_len);
+  static ICU4XLocale new_(const std::string name);
   inline const capi::ICU4XLocale* AsFFI() const { return this->inner.get(); }
   ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
  private:
@@ -147,6 +147,6 @@ ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions::default_() {
 }
 
 
-ICU4XLocale ICU4XLocale::new_(const char* name_data, size_t name_len) {
-  return ICU4XLocale(capi::ICU4XLocale_new(name_data, name_len));
+ICU4XLocale ICU4XLocale::new_(const std::string name) {
+  return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.length()));
 }
