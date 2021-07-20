@@ -27,16 +27,31 @@ pub fn gen_bindings(
     writeln!(out, "#include <memory>")?;
     writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
     writeln!(out)?;
-    writeln!(out, "namespace capi {{")?;
-    writeln!(out, "#include \"api.h\"")?;
-    writeln!(out, "}}")?;
-    writeln!(out)?;
 
     let mut all_types: Vec<&ast::CustomType> = env.values().collect();
     all_types.sort_by_key(|t| t.name());
+
     for custom_type in &all_types {
         writeln!(out)?;
-        gen_struct(custom_type, env, out)?;
+        match custom_type {
+            ast::CustomType::Opaque(_) => {
+                writeln!(out, "class {};", custom_type.name())?;
+            }
+
+            ast::CustomType::Struct(_) => {
+                // TODO(shadaj): wrap non-opaque structs
+            }
+        }
+    }
+
+    for custom_type in &all_types {
+        writeln!(out)?;
+        gen_struct(custom_type, true, env, out)?;
+    }
+
+    for custom_type in &all_types {
+        writeln!(out)?;
+        gen_struct(custom_type, false, env, out)?;
     }
 
     Ok(())
@@ -44,54 +59,68 @@ pub fn gen_bindings(
 
 fn gen_struct<W: fmt::Write>(
     custom_type: &ast::CustomType,
+    is_header: bool,
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
 ) -> fmt::Result {
-    writeln!(out, "struct {}Deleter {{", custom_type.name())?;
-    let mut deleter_body = indented(out).with_str("  ");
-    writeln!(
-        &mut deleter_body,
-        "void operator()(capi::{}* l) const noexcept {{",
-        custom_type.name()
-    )?;
-    let mut deleter_operator_body = indented(&mut deleter_body).with_str("  ");
-    writeln!(
-        &mut deleter_operator_body,
-        "capi::{}_destroy(l);",
-        custom_type.name()
-    )?;
-    writeln!(&mut deleter_body, "}}")?;
-    writeln!(out, "}};")?;
+    if is_header {
+        writeln!(out, "struct {}Deleter {{", custom_type.name())?;
+        let mut deleter_body = indented(out).with_str("  ");
+        writeln!(
+            &mut deleter_body,
+            "void operator()(capi::{}* l) const noexcept {{",
+            custom_type.name()
+        )?;
+        let mut deleter_operator_body = indented(&mut deleter_body).with_str("  ");
+        writeln!(
+            &mut deleter_operator_body,
+            "capi::{}_destroy(l);",
+            custom_type.name()
+        )?;
+        writeln!(&mut deleter_body, "}}")?;
+        writeln!(out, "}};")?;
+    }
 
     match custom_type {
         ast::CustomType::Opaque(opaque) => {
-            writeln!(out, "class {} {{", opaque.name)?;
-            writeln!(out, " public:")?;
-
-            let mut public_body = indented(out).with_str("  ");
-            for method in &opaque.methods {
-                gen_method(method, env, &mut public_body)?;
+            if is_header {
+                writeln!(out, "class {} {{", opaque.name)?;
+                writeln!(out, " public:")?;
             }
 
-            writeln!(
-                &mut public_body,
-                "inline const capi::{}* AsFFI() const {{ return this->inner.get(); }}",
-                opaque.name
-            )?;
+            let mut public_body = if is_header {
+                indented(out).with_str("  ")
+            } else {
+                indented(out).with_str("")
+            };
 
-            writeln!(out, " private:")?;
-            let mut private_body = indented(out).with_str("  ");
-            writeln!(
-                &mut private_body,
-                "{}(capi::{}* i) : inner(i) {{}}",
-                opaque.name, opaque.name
-            )?;
-            writeln!(
-                &mut private_body,
-                "std::unique_ptr<capi::{}, {}Deleter> inner;",
-                opaque.name, opaque.name
-            )?;
-            writeln!(out, "}};")?;
+            for method in &opaque.methods {
+                gen_method(custom_type, method, is_header, env, &mut public_body)?;
+            }
+
+            if is_header {
+                writeln!(
+                    &mut public_body,
+                    "inline const capi::{}* AsFFI() const {{ return this->inner.get(); }}",
+                    opaque.name
+                )?;
+
+                // TODO(shadaj): make the constructor private when we support wrapping structs
+                writeln!(
+                    &mut public_body,
+                    "{}(capi::{}* i) : inner(i) {{}}",
+                    opaque.name, opaque.name
+                )?;
+
+                writeln!(out, " private:")?;
+                let mut private_body = indented(out).with_str("  ");
+                writeln!(
+                    &mut private_body,
+                    "std::unique_ptr<capi::{}, {}Deleter> inner;",
+                    opaque.name, opaque.name
+                )?;
+                writeln!(out, "}};")?;
+            }
         }
 
         ast::CustomType::Struct(_strct) => {
@@ -103,11 +132,18 @@ fn gen_struct<W: fmt::Write>(
 }
 
 fn gen_method<W: fmt::Write>(
+    enclosing_type: &ast::CustomType,
     method: &ast::Method,
+    is_header: bool,
     env: &HashMap<String, ast::CustomType>,
     out: &mut W,
 ) -> fmt::Result {
+    if method.self_param.is_none() && is_header {
+        write!(out, "static ")?;
+    }
+
     let is_writeable_out = method.is_writeable_out();
+
     if is_writeable_out {
         write!(out, "std::string")?;
     } else {
@@ -122,17 +158,31 @@ fn gen_method<W: fmt::Write>(
         }
     }
 
-    write!(out, " {}(", method.full_path_name)?;
-    let mut params_to_gen = method.params.clone();
-    if let Some(param) = &method.self_param {
-        params_to_gen.insert(0, param.clone());
+    if !is_header {
+        write!(out, " {}::", enclosing_type.name())?;
+    } else {
+        write!(out, " ")?;
     }
+
+    // TODO(shadaj): handle other keywords
+    if method.name == "new" {
+        write!(out, "{}_(", method.name)?;
+    } else {
+        write!(out, "{}(", method.name)?;
+    }
+
+    let mut params_to_gen = method.params.clone();
 
     if is_writeable_out {
         params_to_gen.remove(params_to_gen.len() - 1);
     }
 
     let mut all_params_invocation = vec![];
+
+    if let Some(param) = &method.self_param {
+        all_params_invocation.push(gen_cpp_to_rust("this", false, &param.ty, env, true));
+    }
+
     for (i, param) in params_to_gen.iter().enumerate() {
         if i != 0 {
             write!(out, ", ")?;
@@ -163,43 +213,47 @@ fn gen_method<W: fmt::Write>(
         all_params_invocation.push("&diplomat_writeable_out".to_string());
     }
 
-    writeln!(out, ") {{")?;
-
-    let mut method_body = indented(out).with_str("  ");
-    if is_writeable_out {
-        writeln!(&mut method_body, "std::string diplomat_writeable_string;")?;
-        writeln!(&mut method_body, "capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);")?;
-        writeln!(
-            &mut method_body,
-            "capi::{}({});",
-            method.full_path_name,
-            all_params_invocation.join(", ")
-        )?;
-        writeln!(&mut method_body, "return diplomat_writeable_string;")?;
-    } else if let Some(ret_typ) = &method.return_type {
-        writeln!(
-            &mut method_body,
-            "return {};",
-            gen_rust_to_cpp(
-                &format!(
-                    "capi::{}({})",
-                    method.full_path_name,
-                    all_params_invocation.join(", ")
-                ),
-                ret_typ,
-                env
-            )
-        )?;
+    if is_header {
+        writeln!(out, ");")?;
     } else {
-        writeln!(
-            &mut method_body,
-            "capi::{}({});",
-            method.full_path_name,
-            all_params_invocation.join(", ")
-        )?;
-    }
+        writeln!(out, ") {{")?;
 
-    writeln!(out, "}}")?;
+        let mut method_body = indented(out).with_str("  ");
+        if is_writeable_out {
+            writeln!(&mut method_body, "std::string diplomat_writeable_string;")?;
+            writeln!(&mut method_body, "capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);")?;
+            writeln!(
+                &mut method_body,
+                "capi::{}({});",
+                method.full_path_name,
+                all_params_invocation.join(", ")
+            )?;
+            writeln!(&mut method_body, "return diplomat_writeable_string;")?;
+        } else if let Some(ret_typ) = &method.return_type {
+            writeln!(
+                &mut method_body,
+                "return {};",
+                gen_rust_to_cpp(
+                    &format!(
+                        "capi::{}({})",
+                        method.full_path_name,
+                        all_params_invocation.join(", ")
+                    ),
+                    ret_typ,
+                    env
+                )
+            )?;
+        } else {
+            writeln!(
+                &mut method_body,
+                "capi::{}({});",
+                method.full_path_name,
+                all_params_invocation.join(", ")
+            )?;
+        }
+
+        writeln!(out, "}}")?;
+    }
 
     Ok(())
 }
@@ -289,12 +343,12 @@ fn gen_cpp_to_rust(
     match typ {
         ast::TypeName::Reference(underlying, _) => {
             gen_cpp_to_rust(cpp, true, underlying.as_ref(), env, is_self)
-        },
+        }
         ast::TypeName::Named(_) => match typ.resolve(env) {
             ast::CustomType::Opaque(_opaque) => {
                 if behind_ref {
                     if is_self {
-                        "this->inner.get()".to_string()
+                        format!("{}->inner.get()", cpp)
                     } else {
                         format!("{}.AsFFI()", cpp)
                     }
@@ -314,7 +368,7 @@ fn gen_cpp_to_rust(
             } else {
                 panic!("Cannot send Writeable to Rust as a value");
             }
-        },
+        }
         ast::TypeName::Primitive(_) => cpp.to_string(),
         o => todo!("{:?}", o),
     }

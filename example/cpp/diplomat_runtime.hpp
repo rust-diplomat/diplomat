@@ -1,5 +1,9 @@
 #include <string>
 
+namespace capi {
+#include "api.h"
+}
+
 namespace diplomat {
 
 extern "C" inline void Flush(capi::DiplomatWriteable* w) {
