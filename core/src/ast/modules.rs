@@ -2,13 +2,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use quote::ToTokens;
-use syn::{ImplItem, Item, ItemMod};
+use syn::{ImplItem, Item, ItemMod, UseTree};
 
 use super::{CustomType, Method, ModSymbol, OpaqueStruct, Path, Struct, TypeName};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
     pub name: String,
+    pub imports: Vec<(Path, String)>,
     pub declared_types: HashMap<String, CustomType>,
     pub sub_modules: Vec<Module>,
 }
@@ -35,6 +36,11 @@ impl Module {
 
     fn insert_all_types(&self, in_path: Path, out: &mut HashMap<Path, HashMap<String, ModSymbol>>) {
         let mut mod_symbols = HashMap::new();
+
+        self.imports.iter().for_each(|(path, name)| {
+            mod_symbols.insert(name.clone(), ModSymbol::Alias(path.clone()));
+        });
+
         self.declared_types.iter().for_each(|(k, v)| {
             if mod_symbols
                 .insert(k.clone(), ModSymbol::CustomType(v.clone()))
@@ -47,10 +53,7 @@ impl Module {
         let path_to_self = in_path.sub_path(self.name.clone());
         self.sub_modules.iter().for_each(|m| {
             m.insert_all_types(path_to_self.clone(), out);
-            mod_symbols.insert(
-                m.name.clone(),
-                ModSymbol::Alias(path_to_self.sub_path(m.name.clone())),
-            );
+            mod_symbols.insert(m.name.clone(), ModSymbol::SubModule(m.name.clone()));
         });
 
         out.insert(path_to_self, mod_symbols);
@@ -59,6 +62,7 @@ impl Module {
     pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
         let mut custom_types_by_name = HashMap::new();
         let mut sub_modules = Vec::new();
+        let mut imports = Vec::new();
 
         let analyze_types = force_analyze
             || input
@@ -73,6 +77,9 @@ impl Module {
             .1
             .iter()
             .for_each(|a| match a {
+                Item::Use(u) => {
+                    extract_imports(&Path::empty(), &u.tree, &mut imports);
+                }
                 Item::Struct(strct) => {
                     if analyze_types {
                         if strct
@@ -130,9 +137,33 @@ impl Module {
 
         Module {
             name: input.ident.to_string(),
+            imports,
             declared_types: custom_types_by_name,
             sub_modules,
         }
+    }
+}
+
+fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, String)>) {
+    match use_tree {
+        UseTree::Name(name) => out.push((
+            base_path.sub_path(name.ident.to_string()),
+            name.ident.to_string(),
+        )),
+        UseTree::Path(path) => {
+            extract_imports(&base_path.sub_path(path.ident.to_string()), &path.tree, out)
+        }
+        UseTree::Glob(_) => todo!("Glob imports are not yet supported"),
+        UseTree::Group(group) => {
+            group
+                .items
+                .iter()
+                .for_each(|i| extract_imports(base_path, &i, out));
+        }
+        UseTree::Rename(rename) => out.push((
+            base_path.sub_path(rename.ident.to_string()),
+            rename.rename.to_string(),
+        )),
     }
 }
 
@@ -163,10 +194,7 @@ impl File {
 
         self.modules.values().for_each(|m| {
             m.insert_all_types(Path::empty(), &mut out);
-            top_symbols.insert(
-                m.name.clone(),
-                ModSymbol::Alias(Path::empty().sub_path(m.name.clone())),
-            );
+            top_symbols.insert(m.name.clone(), ModSymbol::SubModule(m.name.clone()));
         });
 
         out.insert(Path::empty(), top_symbols);

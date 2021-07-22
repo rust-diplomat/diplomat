@@ -75,6 +75,8 @@ impl CustomType {
 pub enum ModSymbol {
     /// A symbol that is a pointer to another path.
     Alias(Path),
+    /// A symbol that is a submodule.
+    SubModule(String),
     /// A symbol that is a custom type.
     CustomType(CustomType),
 }
@@ -187,7 +189,17 @@ impl TypeName {
                         "super" => cur_path = cur_path.get_super(),
 
                         o => match env.get(&cur_path).and_then(|env| env.get(o)) {
-                            Some(ModSymbol::Alias(p)) => cur_path = p.clone(),
+                            Some(ModSymbol::Alias(p)) => {
+                                let mut remaining_elements: Vec<String> =
+                                    local_path.elements.iter().skip(i + 1).cloned().collect();
+                                let mut new_path = p.elements.clone();
+                                new_path.append(&mut remaining_elements);
+                                return TypeName::Named(Path { elements: new_path })
+                                    .resolve_with_path(&cur_path.clone(), env);
+                            }
+                            Some(ModSymbol::SubModule(name)) => {
+                                cur_path.elements.push(name.clone());
+                            }
                             Some(ModSymbol::CustomType(t)) => {
                                 if i == local_path.elements.len() - 1 {
                                     return (cur_path, t);

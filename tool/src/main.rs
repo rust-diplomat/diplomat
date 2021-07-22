@@ -14,8 +14,6 @@ fn main() -> std::io::Result<()> {
     let custom_types = ast::File::from(&lib_file);
     let env = custom_types.all_types();
 
-    dbg!(&env);
-
     let mut opaque_errors = vec![];
     custom_types.check_opaque(&env, &mut opaque_errors);
     if !opaque_errors.is_empty() {
