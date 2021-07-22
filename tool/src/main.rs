@@ -7,11 +7,15 @@ mod c;
 mod cpp;
 mod js;
 mod layout;
+mod util;
 
 fn main() -> std::io::Result<()> {
     let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/lib.rs"));
     let custom_types = ast::File::from(&lib_file);
     let env = custom_types.all_types();
+
+    dbg!(&env);
+
     let mut opaque_errors = vec![];
     custom_types.check_opaque(&env, &mut opaque_errors);
     if !opaque_errors.is_empty() {

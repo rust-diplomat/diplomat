@@ -11,7 +11,9 @@ fields:
     - ""
   - - b
     - Box:
-        Named: MyLocalStruct
+        Named:
+          elements:
+            - MyLocalStruct
     - ""
 methods: []
 

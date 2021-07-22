@@ -4,11 +4,13 @@ use std::collections::HashMap;
 use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod};
 
-use super::{CustomType, Method, OpaqueStruct, Struct, TypeName};
+use super::{CustomType, Method, ModSymbol, OpaqueStruct, Path, Struct, TypeName};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
+    pub name: String,
     pub declared_types: HashMap<String, CustomType>,
+    pub sub_modules: Vec<Module>,
 }
 
 impl Module {
@@ -18,20 +20,52 @@ impl Module {
     /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
     pub fn check_opaque<'a>(
         &'a self,
-        env: &HashMap<String, CustomType>,
+        in_path: &Path,
+        env: &HashMap<Path, HashMap<String, ModSymbol>>,
         errors: &mut Vec<&'a TypeName>,
     ) {
         self.declared_types
             .values()
-            .for_each(|t| t.check_opaque(env, errors));
-    }
-}
+            .for_each(|t| t.check_opaque(&in_path.sub_path(self.name.clone()), env, errors));
 
-impl From<&ItemMod> for Module {
-    /// Get all custom types defined in a module as a mapping from their name to
-    /// the extracted metadata.
-    fn from(input: &ItemMod) -> Module {
+        self.sub_modules
+            .iter()
+            .for_each(|m| m.check_opaque(&in_path.sub_path(self.name.clone()), env, errors));
+    }
+
+    fn insert_all_types(&self, in_path: Path, out: &mut HashMap<Path, HashMap<String, ModSymbol>>) {
+        let mut mod_symbols = HashMap::new();
+        self.declared_types.iter().for_each(|(k, v)| {
+            if mod_symbols
+                .insert(k.clone(), ModSymbol::CustomType(v.clone()))
+                .is_some()
+            {
+                panic!("Two types were declared with the same name, this needs to be implemented");
+            }
+        });
+
+        let path_to_self = in_path.sub_path(self.name.clone());
+        self.sub_modules.iter().for_each(|m| {
+            m.insert_all_types(path_to_self.clone(), out);
+            mod_symbols.insert(
+                m.name.clone(),
+                ModSymbol::Alias(path_to_self.sub_path(m.name.clone())),
+            );
+        });
+
+        out.insert(path_to_self, mod_symbols);
+    }
+
+    pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
         let mut custom_types_by_name = HashMap::new();
+        let mut sub_modules = Vec::new();
+
+        let analyze_types = force_analyze
+            || input
+                .attrs
+                .iter()
+                .any(|a| a.path.to_token_stream().to_string() == "diplomat :: bridge");
+
         input
             .content
             .as_ref()
@@ -40,59 +74,64 @@ impl From<&ItemMod> for Module {
             .iter()
             .for_each(|a| match a {
                 Item::Struct(strct) => {
-                    if strct
-                        .attrs
-                        .iter()
-                        .any(|a| a.path.to_token_stream().to_string() == "diplomat :: opaque")
-                    {
-                        custom_types_by_name.insert(
-                            strct.ident.to_string(),
-                            CustomType::Opaque(OpaqueStruct::from(strct)),
-                        );
-                    } else {
-                        custom_types_by_name.insert(
-                            strct.ident.to_string(),
-                            CustomType::Struct(Struct::from(strct)),
-                        );
+                    if analyze_types {
+                        if strct
+                            .attrs
+                            .iter()
+                            .any(|a| a.path.to_token_stream().to_string() == "diplomat :: opaque")
+                        {
+                            custom_types_by_name.insert(
+                                strct.ident.to_string(),
+                                CustomType::Opaque(OpaqueStruct::from(strct)),
+                            );
+                        } else {
+                            custom_types_by_name.insert(
+                                strct.ident.to_string(),
+                                CustomType::Struct(Struct::from(strct)),
+                            );
+                        }
                     }
                 }
                 Item::Impl(ipl) => {
-                    assert!(ipl.trait_.is_none());
+                    if analyze_types {
+                        assert!(ipl.trait_.is_none());
 
-                    let self_typ = match ipl.self_ty.as_ref() {
-                        syn::Type::Path(s) => s,
-                        _ => panic!("Self type not found"),
-                    };
+                        let self_typ = match ipl.self_ty.as_ref() {
+                            syn::Type::Path(s) => Path::from_syn(&s.path),
+                            _ => panic!("Self type not found"),
+                        };
 
-                    let mut new_methods = ipl
-                        .items
-                        .iter()
-                        .filter_map(|i| match i {
-                            ImplItem::Method(m) => Some(Method::from_syn(m, self_typ)),
-                            _ => None,
-                        })
-                        .collect();
+                        let mut new_methods = ipl
+                            .items
+                            .iter()
+                            .filter_map(|i| match i {
+                                ImplItem::Method(m) => Some(Method::from_syn(m, &self_typ)),
+                                _ => None,
+                            })
+                            .collect();
 
-                    assert!(self_typ.path.segments.len() == 1);
-                    let self_ident = self_typ.path.segments[0].ident.clone();
+                        let self_ident = self_typ.elements.last().unwrap();
 
-                    match custom_types_by_name
-                        .get_mut(&self_ident.to_string())
-                        .unwrap()
-                    {
-                        CustomType::Struct(strct) => {
-                            strct.methods.append(&mut new_methods);
-                        }
-                        CustomType::Opaque(strct) => {
-                            strct.methods.append(&mut new_methods);
+                        match custom_types_by_name.get_mut(self_ident).unwrap() {
+                            CustomType::Struct(strct) => {
+                                strct.methods.append(&mut new_methods);
+                            }
+                            CustomType::Opaque(strct) => {
+                                strct.methods.append(&mut new_methods);
+                            }
                         }
                     }
+                }
+                Item::Mod(item_mod) => {
+                    sub_modules.push(Module::from_syn(item_mod, false));
                 }
                 _ => {}
             });
 
         Module {
+            name: input.ident.to_string(),
             declared_types: custom_types_by_name,
+            sub_modules,
         }
     }
 }
@@ -109,26 +148,29 @@ impl File {
     /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
     pub fn check_opaque<'a>(
         &'a self,
-        env: &HashMap<String, CustomType>,
+        env: &HashMap<Path, HashMap<String, ModSymbol>>,
         errors: &mut Vec<&'a TypeName>,
     ) {
         self.modules
             .values()
-            .for_each(|t| t.check_opaque(env, errors));
+            .for_each(|t| t.check_opaque(&Path::empty(), env, errors));
     }
 
     /// Fuses all declared types into a single environment `HashMap`.
-    pub fn all_types(&self) -> HashMap<String, CustomType> {
+    pub fn all_types(&self) -> HashMap<Path, HashMap<String, ModSymbol>> {
         let mut out = HashMap::new();
+        let mut top_symbols = HashMap::new();
+
         self.modules.values().for_each(|m| {
-            m.declared_types.iter().for_each(|(k, v)| {
-                if out.insert(k.clone(), v.clone()).is_some() {
-                    panic!(
-                        "Two types were declared with the same name, this needs to be implemented"
-                    );
-                }
-            })
+            m.insert_all_types(Path::empty(), &mut out);
+            top_symbols.insert(
+                m.name.clone(),
+                ModSymbol::Alias(Path::empty().sub_path(m.name.clone())),
+            );
         });
+
+        out.insert(Path::empty(), top_symbols);
+
         out
     }
 }
@@ -139,13 +181,10 @@ impl From<&syn::File> for File {
         let mut out = HashMap::new();
         file.items.iter().for_each(|i| {
             if let Item::Mod(item_mod) = i {
-                if item_mod
-                    .attrs
-                    .iter()
-                    .any(|a| a.path.to_token_stream().to_string() == "diplomat :: bridge")
-                {
-                    out.insert(item_mod.ident.to_string(), Module::from(item_mod));
-                }
+                out.insert(
+                    item_mod.ident.to_string(),
+                    Module::from_syn(item_mod, false),
+                );
             }
         });
 
@@ -160,6 +199,8 @@ mod tests {
     use quote::quote;
     use syn;
 
+    use crate::ast::Path;
+
     use super::{File, Module, TypeName};
 
     #[test]
@@ -168,7 +209,7 @@ mod tests {
         settings.set_sort_maps(true);
 
         settings.bind(|| {
-            insta::assert_yaml_snapshot!(Module::from(
+            insta::assert_yaml_snapshot!(Module::from_syn(
                 &syn::parse2(quote! {
                     mod ffi {
                         struct NonOpaqueStruct {
@@ -202,7 +243,8 @@ mod tests {
                         }
                     }
                 })
-                .unwrap()
+                .unwrap(),
+                true
             ));
         });
     }
@@ -271,8 +313,8 @@ mod tests {
         assert_eq!(
             errors,
             vec![
-                &TypeName::Named("OpaqueStruct".to_string()),
-                &TypeName::Named("OpaqueStruct".to_string())
+                &TypeName::Named(Path::empty().sub_path("OpaqueStruct".to_string())),
+                &TypeName::Named(Path::empty().sub_path("OpaqueStruct".to_string()))
             ]
         );
     }

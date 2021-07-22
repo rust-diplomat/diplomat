@@ -169,7 +169,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
 }
 
 fn gen_bridge(input: ItemMod) -> ItemMod {
-    let module = ast::Module::from(&input);
+    let module = ast::Module::from_syn(&input, true);
     let (brace, mut new_contents) = input.content.unwrap();
 
     new_contents.iter_mut().for_each(|c| {

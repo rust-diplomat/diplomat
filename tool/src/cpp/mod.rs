@@ -6,10 +6,12 @@ use std::fmt::Write;
 use diplomat_core::ast;
 use indenter::indented;
 
+use crate::util;
+
 static RUNTIME_HPP: &str = include_str!("runtime.hpp");
 
 pub fn gen_bindings(
-    env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     outs: &mut HashMap<&str, String>,
 ) -> fmt::Result {
     super::c::gen_bindings(env, outs)?;
@@ -29,10 +31,10 @@ pub fn gen_bindings(
     writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
     writeln!(out)?;
 
-    let mut all_types: Vec<&ast::CustomType> = env.values().collect();
-    all_types.sort_by_key(|t| t.name());
+    let mut all_types = util::get_all_custom_types(env);
+    all_types.sort_by_key(|t| t.1.name());
 
-    for custom_type in &all_types {
+    for (_, custom_type) in &all_types {
         writeln!(out)?;
         match custom_type {
             ast::CustomType::Opaque(_) => {
@@ -45,20 +47,21 @@ pub fn gen_bindings(
         }
     }
 
-    for custom_type in &all_types {
+    for (in_path, custom_type) in &all_types {
         if let ast::CustomType::Opaque(_) = custom_type {
             writeln!(out)?;
-            gen_struct(custom_type, true, env, out)?;
+            gen_struct(custom_type, in_path, true, env, out)?;
         }
     }
 
     let mut structs_seen = HashSet::new();
     let mut structs_order = Vec::new();
     for custom_type in &all_types {
-        if let ast::CustomType::Struct(strct) = custom_type {
+        if let (in_path, ast::CustomType::Struct(strct)) = custom_type {
             if !structs_seen.contains(&strct.name) {
                 super::c::topological_sort_structs(
                     strct,
+                    (*in_path).clone(),
                     &mut structs_seen,
                     &mut structs_order,
                     env,
@@ -67,14 +70,20 @@ pub fn gen_bindings(
         }
     }
 
-    for strct in structs_order {
+    for (in_path, strct) in structs_order {
         writeln!(out)?;
-        gen_struct(&ast::CustomType::Struct(strct), true, env, out)?;
+        gen_struct(
+            &ast::CustomType::Struct(strct.clone()),
+            &in_path,
+            true,
+            env,
+            out,
+        )?;
     }
 
-    for custom_type in &all_types {
+    for (in_path, custom_type) in all_types {
         writeln!(out)?;
-        gen_struct(custom_type, false, env, out)?;
+        gen_struct(custom_type, in_path, false, env, out)?;
     }
 
     Ok(())
@@ -82,8 +91,9 @@ pub fn gen_bindings(
 
 fn gen_struct<W: fmt::Write>(
     custom_type: &ast::CustomType,
+    in_path: &ast::Path,
     is_header: bool,
-    env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     if is_header {
@@ -118,7 +128,14 @@ fn gen_struct<W: fmt::Write>(
             };
 
             for method in &opaque.methods {
-                gen_method(custom_type, method, is_header, env, &mut public_body)?;
+                gen_method(
+                    custom_type,
+                    method,
+                    in_path,
+                    is_header,
+                    env,
+                    &mut public_body,
+                )?;
             }
 
             if is_header {
@@ -159,13 +176,20 @@ fn gen_struct<W: fmt::Write>(
 
             if is_header {
                 for (name, typ, _) in &strct.fields {
-                    gen_type(typ, false, env, &mut public_body)?;
+                    gen_type(typ, in_path, false, env, &mut public_body)?;
                     writeln!(&mut public_body, " {};", name)?;
                 }
             }
 
             for method in &strct.methods {
-                gen_method(custom_type, method, is_header, env, &mut public_body)?;
+                gen_method(
+                    custom_type,
+                    method,
+                    in_path,
+                    is_header,
+                    env,
+                    &mut public_body,
+                )?;
             }
 
             if is_header {
@@ -180,8 +204,9 @@ fn gen_struct<W: fmt::Write>(
 fn gen_method<W: fmt::Write>(
     enclosing_type: &ast::CustomType,
     method: &ast::Method,
+    in_path: &ast::Path,
     is_header: bool,
-    env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     if method.self_param.is_none() && is_header {
@@ -195,7 +220,7 @@ fn gen_method<W: fmt::Write>(
     } else {
         match &method.return_type {
             Some(ret_type) => {
-                gen_type(ret_type, false, env, out)?;
+                gen_type(ret_type, in_path, false, env, out)?;
             }
 
             None => {
@@ -228,7 +253,7 @@ fn gen_method<W: fmt::Write>(
             write!(out, ", ")?;
         }
 
-        gen_type(&param.ty, false, env, out)?;
+        gen_type(&param.ty, in_path, false, env, out)?;
         write!(out, " {}", param.name)?;
     }
 
@@ -247,6 +272,7 @@ fn gen_method<W: fmt::Write>(
                 "this",
                 false,
                 &param.ty,
+                in_path,
                 env,
                 true,
                 &mut method_body,
@@ -264,6 +290,7 @@ fn gen_method<W: fmt::Write>(
                     &param.name,
                     false,
                     &param.ty,
+                    in_path,
                     env,
                     param.name == "self",
                     &mut method_body,
@@ -295,6 +322,7 @@ fn gen_method<W: fmt::Write>(
                 ),
                 "out_value",
                 ret_typ,
+                in_path,
                 env,
                 &mut method_body,
             );
@@ -317,12 +345,13 @@ fn gen_method<W: fmt::Write>(
 
 fn gen_type<W: fmt::Write>(
     typ: &ast::TypeName,
+    in_path: &ast::Path,
     behind_ref: bool,
-    env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => match typ.resolve(env) {
+        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Opaque(opaque) => {
                 if behind_ref {
                     write!(out, "{}", opaque.name)?;
@@ -340,7 +369,7 @@ fn gen_type<W: fmt::Write>(
         },
 
         ast::TypeName::Box(underlying) => {
-            gen_type(underlying.as_ref(), true, env, out)?;
+            gen_type(underlying.as_ref(), in_path, true, env, out)?;
             if behind_ref {
                 write!(out, "*")?;
             }
@@ -350,7 +379,7 @@ fn gen_type<W: fmt::Write>(
             if !mutable {
                 write!(out, "const ")?;
             }
-            gen_type(underlying.as_ref(), true, env, out)?;
+            gen_type(underlying.as_ref(), in_path, true, env, out)?;
             write!(out, "&")?;
             if behind_ref {
                 write!(out, "*")?;
@@ -360,7 +389,7 @@ fn gen_type<W: fmt::Write>(
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
                 write!(out, "std::optional<")?;
-                gen_type(underlying.as_ref(), behind_ref, env, out)?;
+                gen_type(underlying.as_ref(), in_path, behind_ref, env, out)?;
                 write!(out, ">")?;
             }
 
@@ -399,12 +428,13 @@ fn gen_rust_to_cpp<W: Write>(
     cpp: &str,
     path: &str,
     typ: &ast::TypeName,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> String {
     match typ {
         ast::TypeName::Box(underlying) => match underlying.as_ref() {
-            ast::TypeName::Named(_name) => match underlying.resolve(env) {
+            ast::TypeName::Named(_name) => match underlying.resolve(in_path, env) {
                 ast::CustomType::Opaque(opaque) => {
                     format!("{}({})", opaque.name, cpp)
                 }
@@ -416,12 +446,12 @@ fn gen_rust_to_cpp<W: Write>(
             },
             _o => todo!(),
         },
-        ast::TypeName::Named(_) => match typ.resolve(env) {
-            ast::CustomType::Opaque(_) => {
+        ast::TypeName::Named(_) => match typ.resolve_with_path(in_path, env) {
+            (_, ast::CustomType::Opaque(_)) => {
                 panic!("Cannot handle opaque structs by value");
             }
 
-            ast::CustomType::Struct(strct) => {
+            (in_path, ast::CustomType::Struct(strct)) => {
                 let raw_struct_id = format!("diplomat_raw_struct_{}", path);
                 writeln!(out, "capi::{} {} = {};", strct.name, raw_struct_id, cpp).unwrap();
                 let mut all_fields_wrapped = vec![];
@@ -433,6 +463,7 @@ fn gen_rust_to_cpp<W: Write>(
                             &format!("{}.{}", raw_struct_id, name),
                             &format!("{}_{}", path, name),
                             typ,
+                            &in_path,
                             env,
                             out
                         )
@@ -449,12 +480,13 @@ fn gen_rust_to_cpp<W: Write>(
                 writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
 
                 let wrapped_value_id = format!("diplomat_optional_{}", path);
-                gen_type(typ, false, env, out).unwrap();
+                gen_type(typ, in_path, false, env, out).unwrap();
                 writeln!(out, " {};", wrapped_value_id).unwrap();
 
                 writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
 
-                let some_expr = gen_rust_to_cpp(&raw_value_id, path, underlying.as_ref(), env, out);
+                let some_expr =
+                    gen_rust_to_cpp(&raw_value_id, path, underlying.as_ref(), in_path, env, out);
                 writeln!(out, "  {} = {};", wrapped_value_id, some_expr).unwrap();
 
                 writeln!(out, "}} else {{").unwrap();
@@ -472,20 +504,29 @@ fn gen_rust_to_cpp<W: Write>(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn gen_cpp_to_rust<W: Write>(
     cpp: &str,
     path: &str,
     behind_ref: bool,
     typ: &ast::TypeName,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     is_self: bool,
     out: &mut W,
 ) -> String {
     match typ {
-        ast::TypeName::Reference(underlying, _) => {
-            gen_cpp_to_rust(cpp, path, true, underlying.as_ref(), env, is_self, out)
-        }
-        ast::TypeName::Named(_) => match typ.resolve(env) {
+        ast::TypeName::Reference(underlying, _) => gen_cpp_to_rust(
+            cpp,
+            path,
+            true,
+            underlying.as_ref(),
+            in_path,
+            env,
+            is_self,
+            out,
+        ),
+        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Opaque(_opaque) => {
                 if behind_ref {
                     if is_self {
@@ -511,6 +552,7 @@ fn gen_cpp_to_rust<W: Write>(
                             &format!("{}_{}", path, name),
                             false,
                             typ,
+                            in_path,
                             env,
                             false,
                             out

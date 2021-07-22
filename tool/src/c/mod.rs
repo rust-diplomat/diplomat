@@ -6,10 +6,12 @@ use std::fmt::Write;
 use diplomat_core::ast::{self, PrimitiveType};
 use indenter::indented;
 
+use crate::util;
+
 static RUNTIME_H: &str = include_str!("runtime.h");
 
 pub fn gen_bindings(
-    env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     outs: &mut HashMap<&str, String>,
 ) -> fmt::Result {
     let diplomat_runtime_out = outs.entry("diplomat_runtime.h").or_insert_with(String::new);
@@ -25,35 +27,41 @@ pub fn gen_bindings(
     writeln!(out, "extern \"C\" {{")?;
     writeln!(out, "#endif")?;
 
-    let mut all_types: Vec<&ast::CustomType> = env.values().collect();
-    all_types.sort_by_key(|t| t.name());
+    let mut all_types = util::get_all_custom_types(env);
+    all_types.sort_by_key(|t| t.1.name());
 
-    for custom_type in &all_types {
+    for (in_path, custom_type) in &all_types {
         if let ast::CustomType::Opaque(_) = custom_type {
             writeln!(out)?;
-            gen_struct(custom_type, env, out)?;
+            gen_struct(custom_type, in_path, env, out)?;
         }
     }
 
     let mut structs_seen = HashSet::new();
     let mut structs_order = Vec::new();
-    for custom_type in &all_types {
+    for (in_path, custom_type) in &all_types {
         if let ast::CustomType::Struct(strct) = custom_type {
             if !structs_seen.contains(&strct.name) {
-                topological_sort_structs(strct, &mut structs_seen, &mut structs_order, env);
+                topological_sort_structs(
+                    strct,
+                    (*in_path).clone(),
+                    &mut structs_seen,
+                    &mut structs_order,
+                    env,
+                );
             }
         }
     }
 
-    for strct in structs_order {
+    for (in_path, strct) in structs_order {
         writeln!(out)?;
-        gen_struct(&ast::CustomType::Struct(strct), env, out)?;
+        gen_struct(&ast::CustomType::Struct(strct.clone()), &in_path, env, out)?;
     }
 
-    for custom_type in all_types {
+    for (in_path, custom_type) in all_types {
         for method in custom_type.methods() {
             writeln!(out)?;
-            gen_method(method, env, out)?;
+            gen_method(method, in_path, env, out)?;
         }
 
         writeln!(
@@ -73,7 +81,8 @@ pub fn gen_bindings(
 
 fn gen_struct<W: fmt::Write>(
     custom_type: &ast::CustomType,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     match custom_type {
@@ -86,7 +95,7 @@ fn gen_struct<W: fmt::Write>(
             let mut class_body_out = indented(out).with_str("    ");
             for (name, typ, _) in strct.fields.iter() {
                 writeln!(&mut class_body_out)?;
-                gen_field(name, typ, env, &mut class_body_out)?;
+                gen_field(name, typ, in_path, env, &mut class_body_out)?;
             }
             writeln!(out)?;
             writeln!(out, "}} {};", strct.name)?;
@@ -99,10 +108,11 @@ fn gen_struct<W: fmt::Write>(
 fn gen_field<W: fmt::Write>(
     name: &str,
     typ: &ast::TypeName,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
-    gen_type(typ, env, out)?;
+    gen_type(typ, in_path, env, out)?;
     write!(out, " {};", name)?;
 
     Ok(())
@@ -110,12 +120,13 @@ fn gen_field<W: fmt::Write>(
 
 fn gen_method<W: fmt::Write>(
     method: &ast::Method,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     match &method.return_type {
         Some(ret_type) => {
-            gen_type(ret_type, env, out)?;
+            gen_type(ret_type, in_path, env, out)?;
         }
 
         None => {
@@ -141,7 +152,7 @@ fn gen_method<W: fmt::Write>(
                 param.name, param.name
             )?;
         } else {
-            gen_type(&param.ty, env, out)?;
+            gen_type(&param.ty, in_path, env, out)?;
             write!(out, " {}", param.name)?;
         }
     }
@@ -153,16 +164,17 @@ fn gen_method<W: fmt::Write>(
 
 fn gen_type<W: fmt::Write>(
     typ: &ast::TypeName,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Named(_) => {
-            write!(out, "{}", typ.resolve(env).name())?;
+            write!(out, "{}", typ.resolve(in_path, env).name())?;
         }
 
         ast::TypeName::Box(underlying) => {
-            gen_type(underlying.as_ref(), env, out)?;
+            gen_type(underlying.as_ref(), in_path, env, out)?;
             write!(out, "*")?;
         }
 
@@ -170,7 +182,7 @@ fn gen_type<W: fmt::Write>(
             if !mutable {
                 write!(out, "const ")?;
             }
-            gen_type(underlying.as_ref(), env, out)?;
+            gen_type(underlying.as_ref(), in_path, env, out)?;
             write!(out, "*")?;
         }
 
@@ -180,7 +192,7 @@ fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
-                gen_type(underlying.as_ref(), env, out)?;
+                gen_type(underlying.as_ref(), in_path, env, out)?;
             }
 
             _ => todo!(),
@@ -214,25 +226,26 @@ pub fn c_type_for_prim(prim: &PrimitiveType) -> &str {
     }
 }
 
-pub fn topological_sort_structs(
-    root: &ast::Struct,
+pub fn topological_sort_structs<'a>(
+    root: &'a ast::Struct,
+    in_path: ast::Path,
     seen: &mut HashSet<String>,
-    order: &mut Vec<ast::Struct>,
-    env: &HashMap<String, ast::CustomType>,
+    order: &mut Vec<(ast::Path, &'a ast::Struct)>,
+    env: &'a HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) {
     seen.insert(root.name.clone());
     for (_, typ, _) in &root.fields {
         if let ast::TypeName::Named(_) = typ {
-            match typ.resolve(env) {
-                ast::CustomType::Struct(strct) => {
+            match typ.resolve_with_path(&in_path, env) {
+                (path, ast::CustomType::Struct(strct)) => {
                     if !seen.contains(&strct.name) {
-                        topological_sort_structs(strct, seen, order, env);
+                        topological_sort_structs(strct, path, seen, order, env);
                     }
                 }
-                ast::CustomType::Opaque(_) => {}
+                (_, ast::CustomType::Opaque(_)) => {}
             }
         }
     }
 
-    order.push(root.clone());
+    order.push((in_path, root));
 }

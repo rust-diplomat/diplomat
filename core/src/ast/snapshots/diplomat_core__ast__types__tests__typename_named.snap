@@ -3,5 +3,7 @@ source: core/src/ast/types.rs
 expression: "TypeName::from(&syn::parse2(quote! { MyLocalStruct }).unwrap())"
 
 ---
-Named: MyLocalStruct
+Named:
+  elements:
+    - MyLocalStruct
 

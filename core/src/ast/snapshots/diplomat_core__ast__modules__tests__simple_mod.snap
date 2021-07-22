@@ -3,6 +3,7 @@ source: core/src/ast/modules.rs
 expression: "Module::from(&syn::parse2(quote! {\n                              mod ffi\n                              {\n                                  struct NonOpaqueStruct\n                                  { a : i32, b : Box < NonOpaqueStruct > }\n                                  impl NonOpaqueStruct\n                                  {\n                                      fn new(x : i32) -> NonOpaqueStruct\n                                      { unimplemented ! () ; } fn\n                                      set_a(& mut self, new_a : i32)\n                                      { self . a = new_a ; }\n                                  } #[diplomat :: opaque] struct OpaqueStruct\n                                  { a : SomeExternalType } impl OpaqueStruct\n                                  {\n                                      fn new() -> Box < OpaqueStruct >\n                                      { unimplemented ! () ; } fn\n                                      get_string(& self) -> String\n                                      { unimplemented ! () }\n                                  }\n                              }\n                          }).unwrap())"
 
 ---
+name: ffi
 declared_types:
   NonOpaqueStruct:
     Struct:
@@ -14,7 +15,9 @@ declared_types:
           - ""
         - - b
           - Box:
-              Named: NonOpaqueStruct
+              Named:
+                elements:
+                  - NonOpaqueStruct
           - ""
       methods:
         - name: new
@@ -26,7 +29,9 @@ declared_types:
               ty:
                 Primitive: i32
           return_type:
-            Named: NonOpaqueStruct
+            Named:
+              elements:
+                - NonOpaqueStruct
         - name: set_a
           doc_lines: ""
           full_path_name: NonOpaqueStruct_set_a
@@ -34,7 +39,9 @@ declared_types:
             name: self
             ty:
               Reference:
-                - Named: NonOpaqueStruct
+                - Named:
+                    elements:
+                      - NonOpaqueStruct
                 - true
           params:
             - name: new_a
@@ -53,7 +60,9 @@ declared_types:
           params: []
           return_type:
             Box:
-              Named: OpaqueStruct
+              Named:
+                elements:
+                  - OpaqueStruct
         - name: get_string
           doc_lines: ""
           full_path_name: OpaqueStruct_get_string
@@ -61,9 +70,14 @@ declared_types:
             name: self
             ty:
               Reference:
-                - Named: OpaqueStruct
+                - Named:
+                    elements:
+                      - OpaqueStruct
                 - false
           params: []
           return_type:
-            Named: String
+            Named:
+              elements:
+                - String
+sub_modules: []
 

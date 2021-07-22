@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use syn::*;
 
-use super::utils::get_doc_lines;
-use super::{CustomType, TypeName};
+use super::{utils::get_doc_lines, ModSymbol};
+use super::{Path, TypeName};
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
@@ -32,9 +32,8 @@ pub struct Method {
 
 impl Method {
     /// Extracts a [`Method`] from an AST node inside an `impl`.
-    pub fn from_syn(m: &ImplItemMethod, self_type: &TypePath) -> Method {
-        assert!(self_type.path.segments.len() == 1);
-        let self_ident = self_type.path.segments[0].ident.clone();
+    pub fn from_syn(m: &ImplItemMethod, self_path: &Path) -> Method {
+        let self_ident = self_path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
         let extern_ident = Ident::new(
             format!("{}_{}", &self_ident.to_string(), method_ident.to_string()).as_str(),
@@ -56,11 +55,11 @@ impl Method {
                 name: "self".to_string(),
                 ty: if rec.reference.is_some() {
                     TypeName::Reference(
-                        Box::new(TypeName::Named(self_ident.to_string())),
+                        Box::new(TypeName::Named(self_path.clone())),
                         rec.mutability.is_some(),
                     )
                 } else {
-                    TypeName::Named(self_ident.to_string())
+                    TypeName::Named(self_path.clone())
                 },
             },
             _ => panic!("Unexpected self param type"),
@@ -87,18 +86,19 @@ impl Method {
     /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
     pub fn check_opaque<'a>(
         &'a self,
-        env: &HashMap<String, CustomType>,
+        in_path: &Path,
+        env: &HashMap<Path, HashMap<String, ModSymbol>>,
         errors: &mut Vec<&'a TypeName>,
     ) {
         self.self_param
             .iter()
-            .for_each(|m| m.ty.check_opaque(env, errors));
+            .for_each(|m| m.ty.check_opaque(in_path, env, errors));
         self.params
             .iter()
-            .for_each(|m| m.ty.check_opaque(env, errors));
+            .for_each(|m| m.ty.check_opaque(in_path, env, errors));
         self.return_type
             .iter()
-            .for_each(|t| t.check_opaque(env, errors));
+            .for_each(|t| t.check_opaque(in_path, env, errors));
     }
 
     /// Checks whether the method qualifies for special writeable handling.
@@ -151,7 +151,7 @@ mod tests {
     use quote::quote;
     use syn;
 
-    use super::Method;
+    use super::{Method, Path};
 
     #[test]
     fn static_methods() {
@@ -163,10 +163,7 @@ mod tests {
                 }
             })
             .unwrap(),
-            &syn::parse2(quote! {
-                MyStructContainingMethod
-            })
-            .unwrap()
+            &Path::empty().sub_path("MyStructContainingMethod".to_string())
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -180,10 +177,7 @@ mod tests {
                 }
             })
             .unwrap(),
-            &syn::parse2(quote! {
-                MyStructContainingMethod
-            })
-            .unwrap()
+            &Path::empty().sub_path("MyStructContainingMethod".to_string())
         ));
     }
 
@@ -196,10 +190,7 @@ mod tests {
                 }
             })
             .unwrap(),
-            &syn::parse2(quote! {
-                MyStructContainingMethod
-            })
-            .unwrap()
+            &Path::empty().sub_path("MyStructContainingMethod".to_string())
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -209,10 +200,7 @@ mod tests {
                 }
             })
             .unwrap(),
-            &syn::parse2(quote! {
-                MyStructContainingMethod
-            })
-            .unwrap()
+            &Path::empty().sub_path("MyStructContainingMethod".to_string())
         ));
     }
 }

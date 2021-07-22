@@ -4,5 +4,7 @@ expression: "TypeName::from(&syn::parse2(quote! { Box < MyLocalStruct > }).unwra
 
 ---
 Box:
-  Named: MyLocalStruct
+  Named:
+    elements:
+      - MyLocalStruct
 

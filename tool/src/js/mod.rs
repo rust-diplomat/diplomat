@@ -5,14 +5,14 @@ use std::{fmt::Write, usize};
 use diplomat_core::ast::{self, PrimitiveType};
 use indenter::indented;
 
-use crate::layout;
+use crate::{layout, util};
 
 pub mod docs;
 
 static RUNTIME_MJS: &str = include_str!("runtime.mjs");
 
 pub fn gen_bindings(
-    env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     outs: &mut HashMap<&str, String>,
 ) -> fmt::Result {
     let diplomat_runtime_out = outs
@@ -38,11 +38,11 @@ pub fn gen_bindings(
     )?;
     writeln!(out, "}});")?;
 
-    let mut all_types: Vec<&ast::CustomType> = env.values().collect();
-    all_types.sort_by_key(|t| t.name());
-    for custom_type in all_types {
+    let mut all_types = util::get_all_custom_types(env);
+    all_types.sort_by_key(|t| t.1.name());
+    for (in_path, custom_type) in all_types {
         writeln!(out)?;
-        gen_struct(out, custom_type, env)?;
+        gen_struct(out, custom_type, in_path, env)?;
     }
 
     Ok(())
@@ -51,7 +51,8 @@ pub fn gen_bindings(
 fn gen_struct<W: fmt::Write>(
     out: &mut W,
     custom_type: &ast::CustomType,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) -> fmt::Result {
     writeln!(
         out,
@@ -79,14 +80,14 @@ fn gen_struct<W: fmt::Write>(
 
     for method in custom_type.methods().iter() {
         writeln!(&mut class_body_out)?;
-        gen_method(method, env, &mut class_body_out)?;
+        gen_method(method, in_path, env, &mut class_body_out)?;
     }
 
     if let ast::CustomType::Struct(strct) = custom_type {
-        let (_, offsets, _) = layout::struct_size_offsets_max_align(strct, env);
+        let (_, offsets, _) = layout::struct_size_offsets_max_align(strct, in_path, env);
         for ((name, typ, _), offset) in strct.fields.iter().zip(offsets.iter()) {
             writeln!(&mut class_body_out)?;
-            gen_field(name, typ, *offset, env, &mut class_body_out)?;
+            gen_field(name, typ, in_path, *offset, env, &mut class_body_out)?;
         }
     }
 
@@ -97,8 +98,9 @@ fn gen_struct<W: fmt::Write>(
 fn gen_field<W: fmt::Write>(
     name: &str,
     typ: &ast::TypeName,
+    in_path: &ast::Path,
     offset: usize,
-    env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     writeln!(out, "get {}() {{", name)?;
@@ -107,6 +109,7 @@ fn gen_field<W: fmt::Write>(
     gen_value_rust_to_js(
         &|out| write!(out, "this.underlying + {}", offset),
         &ast::TypeName::Reference(Box::new(typ.clone()), true),
+        in_path,
         env,
         &mut method_body_out,
     )?;
@@ -117,7 +120,8 @@ fn gen_field<W: fmt::Write>(
 
 fn gen_method<W: fmt::Write>(
     method: &ast::Method,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     let is_writeable = method.is_writeable_out();
@@ -130,6 +134,7 @@ fn gen_method<W: fmt::Write>(
         gen_value_js_to_rust(
             p.name.clone(),
             &p.ty,
+            in_path,
             env,
             &mut pre_stmts,
             &mut all_param_exprs,
@@ -152,7 +157,9 @@ fn gen_method<W: fmt::Write>(
 
     let all_params_invocation = {
         if let Some(ast::TypeName::Named(_)) = &method.return_type {
-            if let ast::CustomType::Struct(_) = method.return_type.as_ref().unwrap().resolve(env) {
+            if let ast::CustomType::Struct(_) =
+                method.return_type.as_ref().unwrap().resolve(in_path, env)
+            {
                 all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
             }
         }
@@ -184,6 +191,7 @@ fn gen_method<W: fmt::Write>(
             gen_value_rust_to_js(
                 &|out| write!(out, "{}", invocation_expr),
                 ret_type,
+                in_path,
                 env,
                 &mut method_body_out,
             )?;
@@ -219,7 +227,8 @@ fn gen_method<W: fmt::Write>(
 fn gen_value_js_to_rust(
     param_name: String,
     typ: &ast::TypeName,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     pre_logic: &mut Vec<String>,
     invocation_params: &mut Vec<String>,
     post_logic: &mut Vec<String>,
@@ -256,7 +265,7 @@ fn gen_value_js_to_rust(
             invocation_params.push(format!("{}.underlying", param_name));
         }
         ast::TypeName::Named(_) => {
-            match typ.resolve(env) {
+            match typ.resolve(in_path, env) {
                 ast::CustomType::Struct(struct_type) => {
                     // TODO(shadaj): consider if we want to support copying data from a class instance
                     for (field_name, field_type, _) in struct_type.fields.iter() {
@@ -270,6 +279,7 @@ fn gen_value_js_to_rust(
                         gen_value_js_to_rust(
                             field_extracted_name,
                             field_type,
+                            in_path,
                             env,
                             pre_logic,
                             invocation_params,
@@ -290,15 +300,17 @@ fn gen_value_js_to_rust(
 fn gen_value_rust_to_js<W: fmt::Write>(
     value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
     typ: &ast::TypeName,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Named(_) => {
-            let custom_type = typ.resolve(env);
+            let custom_type = typ.resolve(in_path, env);
             match custom_type {
                 ast::CustomType::Struct(strct) => {
-                    let (strct_size, _, _) = layout::struct_size_offsets_max_align(strct, env);
+                    let (strct_size, _, _) =
+                        layout::struct_size_offsets_max_align(strct, in_path, env);
                     writeln!(out, "(() => {{")?;
                     let mut iife_indent = indented(out).with_str("  ");
                     writeln!(
@@ -315,7 +327,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                     )?;
 
                     for (name, typ, _) in strct.fields.iter() {
-                        gen_box_destructor(name, typ, env, &mut iife_indent)?;
+                        gen_box_destructor(name, typ, in_path, env, &mut iife_indent)?;
                     }
 
                     writeln!(
@@ -340,14 +352,20 @@ fn gen_value_rust_to_js<W: fmt::Write>(
             writeln!(out, "(() => {{")?;
             let mut iife_indent = indented(out).with_str("  ");
             write!(&mut iife_indent, "const out = ")?;
-            gen_rust_reference_to_js(underlying.as_ref(), value_expr, env, &mut iife_indent)?;
+            gen_rust_reference_to_js(
+                underlying.as_ref(),
+                in_path,
+                value_expr,
+                env,
+                &mut iife_indent,
+            )?;
             writeln!(&mut iife_indent, ";")?;
 
             if let ast::TypeName::Named(_) = underlying.as_ref() {
                 writeln!(
                     &mut iife_indent,
                     "{}_box_destroy_registry.register(out, out.underlying)",
-                    underlying.resolve(env).name()
+                    underlying.resolve(in_path, env).name()
                 )?;
             }
 
@@ -363,7 +381,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Reference(underlying, _mutability) => {
-            gen_rust_reference_to_js(underlying.as_ref(), value_expr, env, out)?;
+            gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, env, out)?;
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
@@ -375,7 +393,8 @@ fn gen_value_rust_to_js<W: fmt::Write>(
 fn gen_box_destructor<W: Write>(
     name: &str,
     typ: &ast::TypeName,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> Result<(), fmt::Error> {
     match typ {
@@ -387,7 +406,7 @@ fn gen_box_destructor<W: Write>(
                 writeln!(
                     out,
                     "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying);",
-                    underlying.resolve(env).name(),
+                    underlying.resolve(in_path, env).name(),
                     name,
                     name
                 )?;
@@ -401,7 +420,7 @@ fn gen_box_destructor<W: Write>(
 
         ast::TypeName::Option(underlying) => {
             // TODO(shadaj): don't generate destructor if null
-            gen_box_destructor(name, underlying.as_ref(), env, out)?;
+            gen_box_destructor(name, underlying.as_ref(), in_path, env, out)?;
         }
 
         _ => {}
@@ -412,14 +431,16 @@ fn gen_box_destructor<W: Write>(
 
 fn gen_rust_reference_to_js<W: fmt::Write>(
     underlying: &ast::TypeName,
+    in_path: &ast::Path,
     value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
-    env: &HashMap<String, ast::CustomType>,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     match underlying {
         ast::TypeName::Box(typ) | ast::TypeName::Reference(typ, _) => {
             gen_rust_reference_to_js(
                 typ.as_ref(),
+                in_path,
                 &|out| {
                     write!(out, "(new Uint32Array(wasm.memory.buffer, ")?;
                     value_expr(out)?;
@@ -434,13 +455,13 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
                 // TODO(shadaj): return null if pointer is 0
-                gen_rust_reference_to_js(underlying.as_ref(), value_expr, env, out)?;
+                gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, env, out)?;
             }
             _ => todo!(),
         },
 
         ast::TypeName::Named(_) => {
-            let custom_type = underlying.resolve(env);
+            let custom_type = underlying.resolve(in_path, env);
             writeln!(out, "(() => {{")?;
             let mut iife_indent = indented(out).with_str("  ");
             write!(&mut iife_indent, "const out = new {}(", custom_type.name())?;
