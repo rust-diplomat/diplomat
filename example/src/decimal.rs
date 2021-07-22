@@ -1,43 +1,15 @@
 #[diplomat::bridge]
-mod ffi {
-    use std::str::FromStr;
-
-    use icu::{
-        decimal::{
-            options::{FixedDecimalFormatOptions, GroupingStrategy, SignDisplay},
-            FixedDecimalFormat,
-        },
-        locid::Locale,
+pub mod ffi {
+    use icu::decimal::{
+        options::{FixedDecimalFormatOptions, GroupingStrategy, SignDisplay},
+        FixedDecimalFormat,
     };
-    use icu_provider::serde::SerdeDeDataProvider;
     use writeable::Writeable;
 
-    use crate::fixed_decimal::ffi::ICU4XFixedDecimal;
-
-    #[diplomat::opaque]
-    /// An ICU4X Locale, capable of representing strings like `"en-US"`.
-    /// See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/locid/struct.Locale.html) for more information.
-    pub struct ICU4XLocale(pub Locale);
-
-    impl ICU4XLocale {
-        /// Construct an [`ICU4XLocale`] from an locale identifier.
-        fn new(name: &str) -> Box<ICU4XLocale> {
-            Box::new(ICU4XLocale(Locale::from_str(name).unwrap()))
-        }
-    }
-
-    #[diplomat::opaque]
-    /// An ICU4X data provider, capable of loading ICU4X data keys from some source.
-    /// See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu_provider/prelude/trait.DataProvider.html) for more information.
-    pub struct ICU4XDataProvider(Box<dyn SerdeDeDataProvider>);
-
-    impl ICU4XDataProvider {
-        /// Construct a [StaticDataProvider](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html).
-        fn new_static() -> Box<ICU4XDataProvider> {
-            let provider = icu_testdata::get_static_provider();
-            Box::new(ICU4XDataProvider(Box::new(provider)))
-        }
-    }
+    use crate::{
+        data_provider::ffi::ICU4XDataProvider, fixed_decimal::ffi::ICU4XFixedDecimal,
+        locale::ffi::ICU4XLocale,
+    };
 
     #[diplomat::opaque]
     /// An ICU4X Fixed Decimal Format object, capable of formatting a [`ICU4XFixedDecimal`] as a string.

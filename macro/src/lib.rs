@@ -146,7 +146,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         None => Item::Fn(
             syn::parse2(quote! {
                 #[no_mangle]
-                pub extern "C" fn #extern_ident(#(#all_params),*) {
+                extern "C" fn #extern_ident(#(#all_params),*) {
                     #method_invocation(#(#all_params_invocation),*);
                 }
             })
@@ -158,7 +158,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
             Item::Fn(
                 syn::parse2(quote! {
                     #[no_mangle]
-                    pub extern "C" fn #extern_ident(#(#all_params),*) -> #return_typ_syn {
+                    extern "C" fn #extern_ident(#(#all_params),*) -> #return_typ_syn {
                         #method_invocation(#(#all_params_invocation),*)
                     }
                 })
@@ -204,7 +204,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         new_contents.push(Item::Fn(
             syn::parse2(quote! {
                 #[no_mangle]
-                pub extern "C" fn #destroy_ident(this: Box<#type_ident>) {}
+                extern "C" fn #destroy_ident(this: Box<#type_ident>) {}
             })
             .unwrap(),
         ));

@@ -12,13 +12,13 @@ mod ffi {
         }
     }
     #[no_mangle]
-    pub extern "C" fn Foo_from_str(s_diplomat_data: *const u8, s_diplomat_len: usize) {
+    extern "C" fn Foo_from_str(s_diplomat_data: *const u8, s_diplomat_len: usize) {
         Foo::from_str(unsafe {
             std::str::from_utf8(std::slice::from_raw_parts(s_diplomat_data, s_diplomat_len))
                 .unwrap()
         });
     }
     #[no_mangle]
-    pub extern "C" fn Foo_destroy(this: Box<Foo>) {}
+    extern "C" fn Foo_destroy(this: Box<Foo>) {}
 }
 
