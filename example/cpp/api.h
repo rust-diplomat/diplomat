@@ -13,16 +13,20 @@ typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
 
 typedef struct ICU4XFixedDecimalFormat ICU4XFixedDecimalFormat;
 
-#define ICU4XFixedDecimalGroupingStrategy_Auto 0
-#define ICU4XFixedDecimalGroupingStrategy_Never 1
-#define ICU4XFixedDecimalGroupingStrategy_Always 2
-#define ICU4XFixedDecimalGroupingStrategy_Min2 3
+enum ICU4XFixedDecimalGroupingStrategy {
+  ICU4XFixedDecimalGroupingStrategy_Auto = 0,
+  ICU4XFixedDecimalGroupingStrategy_Never = 1,
+  ICU4XFixedDecimalGroupingStrategy_Always = 2,
+  ICU4XFixedDecimalGroupingStrategy_Min2 = 3,
+};
 
-#define ICU4XFixedDecimalSignDisplay_Auto 0
-#define ICU4XFixedDecimalSignDisplay_Never 1
-#define ICU4XFixedDecimalSignDisplay_Always 2
-#define ICU4XFixedDecimalSignDisplay_ExceptZero 3
-#define ICU4XFixedDecimalSignDisplay_Negative 4
+enum ICU4XFixedDecimalSignDisplay {
+  ICU4XFixedDecimalSignDisplay_Auto = 0,
+  ICU4XFixedDecimalSignDisplay_Never = 1,
+  ICU4XFixedDecimalSignDisplay_Always = 2,
+  ICU4XFixedDecimalSignDisplay_ExceptZero = 3,
+  ICU4XFixedDecimalSignDisplay_Negative = 4,
+};
 
 typedef struct ICU4XLocale ICU4XLocale;
 

@@ -39,9 +39,16 @@ pub fn gen_bindings(
 
             ast::CustomType::Enum(enm) => {
                 writeln!(out)?;
+                writeln!(out, "enum {} {{", enm.name)?;
+                let mut enum_body_out = indented(out).with_str("  ");
                 for (name, discriminant, _) in enm.variants.iter() {
-                    writeln!(out, "#define {}_{} {}", enm.name, name, discriminant)?;
+                    writeln!(
+                        &mut enum_body_out,
+                        "{}_{} = {},",
+                        enm.name, name, discriminant
+                    )?;
                 }
+                writeln!(out, "}};")?;
             }
 
             ast::CustomType::Struct(_) => {}
