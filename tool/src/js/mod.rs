@@ -54,44 +54,61 @@ fn gen_struct<W: fmt::Write>(
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) -> fmt::Result {
-    writeln!(
-        out,
-        "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {{",
-        custom_type.name()
-    )?;
-    writeln!(
-        indented(out).with_str("  "),
-        "wasm.{}_destroy(underlying);",
-        custom_type.name()
-    )?;
-    writeln!(out, "}});")?;
-    writeln!(out)?;
-
-    writeln!(out, "export class {} {{", custom_type.name())?;
-
-    let mut class_body_out = indented(out).with_str("  ");
-
-    writeln!(&mut class_body_out, "constructor(underlying) {{")?;
-    writeln!(
-        indented(&mut class_body_out).with_str("  "),
-        "this.underlying = underlying;"
-    )?;
-    writeln!(&mut class_body_out, "}}")?;
-
-    for method in custom_type.methods().iter() {
-        writeln!(&mut class_body_out)?;
-        gen_method(method, in_path, env, &mut class_body_out)?;
-    }
-
-    if let ast::CustomType::Struct(strct) = custom_type {
-        let (_, offsets, _) = layout::struct_size_offsets_max_align(strct, in_path, env);
-        for ((name, typ, _), offset) in strct.fields.iter().zip(offsets.iter()) {
-            writeln!(&mut class_body_out)?;
-            gen_field(name, typ, in_path, *offset, env, &mut class_body_out)?;
+    if let ast::CustomType::Enum(enm) = custom_type {
+        writeln!(out, "const {}_js_to_rust = {{", enm.name)?;
+        let mut enm_body_out = indented(out).with_str("  ");
+        for (name, discriminant, _) in enm.variants.iter() {
+            writeln!(&mut enm_body_out, "\"{}\": {},", name, discriminant)?;
         }
+        writeln!(out, "}};")?;
+
+        writeln!(out, "const {}_rust_to_js = {{", enm.name)?;
+        let mut enm_reverse_body_out = indented(out).with_str("  ");
+        for (name, discriminant, _) in enm.variants.iter() {
+            writeln!(&mut enm_reverse_body_out, "{}: \"{}\",", discriminant, name)?;
+        }
+        writeln!(out, "}};")?;
+    } else {
+        writeln!(
+            out,
+            "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {{",
+            custom_type.name()
+        )?;
+        writeln!(
+            indented(out).with_str("  "),
+            "wasm.{}_destroy(underlying);",
+            custom_type.name()
+        )?;
+        writeln!(out, "}});")?;
+        writeln!(out)?;
+
+        writeln!(out, "export class {} {{", custom_type.name())?;
+
+        let mut class_body_out = indented(out).with_str("  ");
+
+        writeln!(&mut class_body_out, "constructor(underlying) {{")?;
+        writeln!(
+            indented(&mut class_body_out).with_str("  "),
+            "this.underlying = underlying;"
+        )?;
+        writeln!(&mut class_body_out, "}}")?;
+
+        for method in custom_type.methods().iter() {
+            writeln!(&mut class_body_out)?;
+            gen_method(method, in_path, env, &mut class_body_out)?;
+        }
+
+        if let ast::CustomType::Struct(strct) = custom_type {
+            let (_, offsets, _) = layout::struct_size_offsets_max_align(strct, in_path, env);
+            for ((name, typ, _), offset) in strct.fields.iter().zip(offsets.iter()) {
+                writeln!(&mut class_body_out)?;
+                gen_field(name, typ, in_path, *offset, env, &mut class_body_out)?;
+            }
+        }
+
+        writeln!(out, "}}")?;
     }
 
-    writeln!(out, "}}")?;
     Ok(())
 }
 
@@ -288,6 +305,10 @@ fn gen_value_js_to_rust(
                     }
                 }
 
+                ast::CustomType::Enum(enm) => {
+                    invocation_params.push(format!("{}_js_to_rust[{}]", enm.name, param_name));
+                }
+
                 ast::CustomType::Opaque(_) => {
                     panic!("Opaque types cannot be sent as values");
                 }
@@ -342,6 +363,13 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                     writeln!(&mut iife_indent, "return out;")?;
                     write!(out, "}})()")?;
                 }
+
+                ast::CustomType::Enum(enm) => {
+                    write!(out, "{}_rust_to_js[", enm.name)?;
+                    value_expr(out)?;
+                    write!(out, "]")?;
+                }
+
                 ast::CustomType::Opaque(_) => {
                     panic!("Opaque types cannot be used in value position")
                 }
@@ -462,16 +490,29 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
 
         ast::TypeName::Named(_) => {
             let custom_type = underlying.resolve(in_path, env);
-            writeln!(out, "(() => {{")?;
-            let mut iife_indent = indented(out).with_str("  ");
-            write!(&mut iife_indent, "const out = new {}(", custom_type.name())?;
-            value_expr(&mut iife_indent)?;
-            writeln!(&mut iife_indent, ");")?;
 
-            // TODO(shadaj): add lifetime references
+            if let ast::CustomType::Enum(enm) = custom_type {
+                write!(out, "{}_rust_to_js[", enm.name)?;
+                gen_rust_reference_to_js(
+                    &ast::TypeName::Primitive(PrimitiveType::isize),
+                    in_path,
+                    value_expr,
+                    env,
+                    out,
+                )?;
+                write!(out, "]")?;
+            } else {
+                writeln!(out, "(() => {{")?;
+                let mut iife_indent = indented(out).with_str("  ");
+                write!(&mut iife_indent, "const out = new {}(", custom_type.name())?;
+                value_expr(&mut iife_indent)?;
+                writeln!(&mut iife_indent, ");")?;
 
-            writeln!(&mut iife_indent, "return out;")?;
-            write!(out, "}})()")?;
+                // TODO(shadaj): add lifetime references
+
+                writeln!(&mut iife_indent, "return out;")?;
+                write!(out, "}})()")?;
+            }
         }
 
         ast::TypeName::Primitive(prim) => {

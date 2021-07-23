@@ -41,6 +41,15 @@ pub fn gen_bindings(
                 writeln!(out, "class {};", custom_type.name())?;
             }
 
+            ast::CustomType::Enum(enm) => {
+                writeln!(out, "enum struct {} : ssize_t {{", enm.name)?;
+                let mut enm_indent = indented(out).with_str("  ");
+                for (name, discriminant, _) in enm.variants.iter() {
+                    writeln!(&mut enm_indent, "{} = {},", name, discriminant)?;
+                }
+                writeln!(out, "}};")?;
+            }
+
             ast::CustomType::Struct(_) => {
                 writeln!(out, "struct {};", custom_type.name())?;
             }
@@ -196,6 +205,8 @@ fn gen_struct<W: fmt::Write>(
                 writeln!(out, "}};")?;
             }
         }
+
+        ast::CustomType::Enum(_) => {}
     }
 
     Ok(())
@@ -366,6 +377,13 @@ fn gen_type<W: fmt::Write>(
                     write!(out, "*")?;
                 }
             }
+
+            ast::CustomType::Enum(enm) => {
+                write!(out, "{}", enm.name)?;
+                if behind_ref {
+                    write!(out, "*")?;
+                }
+            }
         },
 
         ast::TypeName::Box(underlying) => {
@@ -443,6 +461,11 @@ fn gen_rust_to_cpp<W: Write>(
                     // TODO(shadaj): should emit a unique_ptr
                     todo!("Receiving boxes of structs is not yet supported")
                 }
+
+                ast::CustomType::Enum(_) => {
+                    // TODO(shadaj): should emit a unique_ptr
+                    todo!("Receiving boxes of enums is not yet supported")
+                }
             },
             _o => todo!(),
         },
@@ -471,6 +494,10 @@ fn gen_rust_to_cpp<W: Write>(
                 }
 
                 format!("{}{{ {} }}", strct.name, all_fields_wrapped.join(", "))
+            }
+
+            (_, ast::CustomType::Enum(enm)) => {
+                format!("{}{{ {} }}", enm.name, cpp)
             }
         },
 
@@ -566,6 +593,8 @@ fn gen_cpp_to_rust<W: Write>(
                     all_fields_wrapped.join(", ")
                 )
             }
+
+            ast::CustomType::Enum(_) => format!("static_cast<ssize_t>({})", cpp),
         },
         ast::TypeName::Writeable => {
             if behind_ref {

@@ -71,6 +71,14 @@
 
         Whether creating the :js:class:`ICU4XFixedDecimalFormat` was successful.
 
+.. js:class:: ICU4XFixedDecimalGroupingStrategy
+
+
+
+.. js:class:: ICU4XFixedDecimalSignDisplay
+
+
+
 .. js:class:: ICU4XLocale
 
 

@@ -1,0 +1,16 @@
+---
+source: core/src/ast/enums.rs
+expression: "Enum::from(&syn::parse2(quote! {\n                            /// Some docs.\n                            enum MyLocalEnum\n                            {\n                                Abc, /// Some more docs.\n                                Def\n                            }\n                        }).unwrap())"
+
+---
+name: MyLocalEnum
+doc_lines: Some docs.
+variants:
+  - - Abc
+    - 0
+    - ""
+  - - Def
+    - 1
+    - Some more docs.
+methods: []
+

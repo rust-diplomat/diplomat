@@ -31,9 +31,27 @@ pub fn gen_bindings(
     all_types.sort_by_key(|t| t.1.name());
 
     for (in_path, custom_type) in &all_types {
-        if let ast::CustomType::Opaque(_) = custom_type {
-            writeln!(out)?;
-            gen_struct(custom_type, in_path, env, out)?;
+        match custom_type {
+            ast::CustomType::Opaque(_) => {
+                writeln!(out)?;
+                gen_struct(custom_type, in_path, env, out)?;
+            }
+
+            ast::CustomType::Enum(enm) => {
+                writeln!(out)?;
+                writeln!(out, "enum {} {{", enm.name)?;
+                let mut enum_body_out = indented(out).with_str("  ");
+                for (name, discriminant, _) in enm.variants.iter() {
+                    writeln!(
+                        &mut enum_body_out,
+                        "{}_{} = {},",
+                        enm.name, name, discriminant
+                    )?;
+                }
+                writeln!(out, "}};")?;
+            }
+
+            ast::CustomType::Struct(_) => {}
         }
     }
 
@@ -64,12 +82,18 @@ pub fn gen_bindings(
             gen_method(method, in_path, env, out)?;
         }
 
-        writeln!(
+        write!(out, "void {}_destroy(", custom_type.name())?;
+
+        gen_type(
+            &ast::TypeName::Box(Box::new(ast::TypeName::Named(
+                ast::Path::empty().sub_path(custom_type.name().clone()),
+            ))),
+            in_path,
+            env,
             out,
-            "void {}_destroy({}* self);",
-            custom_type.name(),
-            custom_type.name()
         )?;
+
+        writeln!(out, " self);")?;
     }
 
     writeln!(out, "#ifdef __cplusplus")?;
@@ -100,6 +124,8 @@ fn gen_struct<W: fmt::Write>(
             writeln!(out)?;
             writeln!(out, "}} {};", strct.name)?;
         }
+
+        ast::CustomType::Enum(_) => {}
     }
 
     Ok(())
@@ -169,9 +195,16 @@ fn gen_type<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => {
-            write!(out, "{}", typ.resolve(in_path, env).name())?;
-        }
+        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+            r @ ast::CustomType::Struct(_) | r @ ast::CustomType::Opaque(_) => {
+                write!(out, "{}", r.name())?;
+            }
+
+            ast::CustomType::Enum(_) => {
+                // repr(C) fieldless enums use the default platform representation: isize
+                write!(out, "ssize_t")?;
+            }
+        },
 
         ast::TypeName::Box(underlying) => {
             gen_type(underlying.as_ref(), in_path, env, out)?;
@@ -242,7 +275,7 @@ pub fn topological_sort_structs<'a>(
                         topological_sort_structs(strct, path, seen, order, env);
                     }
                 }
-                (_, ast::CustomType::Opaque(_)) => {}
+                (_, ast::CustomType::Opaque(_) | ast::CustomType::Enum(_)) => {}
             }
         }
     }

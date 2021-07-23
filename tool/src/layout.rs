@@ -45,6 +45,11 @@ pub fn type_size_alignment(
                 (size, max_align)
             }
 
+            ast::CustomType::Enum(_) => {
+                // repr(C) fieldless enums use the default platform representation: isize
+                (4, 4)
+            }
+
             ast::CustomType::Opaque(_) => {
                 panic!("Size of opaque types is unknown")
             }
