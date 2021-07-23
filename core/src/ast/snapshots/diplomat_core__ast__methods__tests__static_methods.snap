@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/methods.rs
-expression: "Method::from_syn(&syn::parse2(quote! {\n                                  /// Some docs.\n                                  fn foo(x : u64, y : MyCustomStruct) { }\n                              }).unwrap(),\n                 &syn::parse2(quote! { MyStructContainingMethod }).unwrap())"
+expression: "Method::from_syn(&syn::parse2(quote! {\n                                  /// Some docs.\n                                  fn foo(x : u64, y : MyCustomStruct) { }\n                              }).unwrap(),\n                 &Path::empty().sub_path(\"MyStructContainingMethod\".to_string()))"
 
 ---
 name: foo
@@ -13,6 +13,8 @@ params:
       Primitive: u64
   - name: y
     ty:
-      Named: MyCustomStruct
+      Named:
+        elements:
+          - MyCustomStruct
 return_type: ~
 

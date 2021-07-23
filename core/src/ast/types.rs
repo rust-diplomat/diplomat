@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use super::{Method, OpaqueStruct, Struct};
+use super::{Method, OpaqueStruct, Path, Struct};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -50,22 +50,35 @@ impl CustomType {
     /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
     pub fn check_opaque<'a>(
         &'a self,
-        env: &HashMap<String, CustomType>,
+        in_path: &Path,
+        env: &HashMap<Path, HashMap<String, ModSymbol>>,
         errors: &mut Vec<&'a TypeName>,
     ) {
         match self {
             CustomType::Struct(strct) => {
                 for (_, field, _) in strct.fields.iter() {
-                    field.check_opaque(env, errors);
+                    field.check_opaque(in_path, env, errors);
                 }
             }
             CustomType::Opaque(_) => {}
         }
 
         for method in self.methods().iter() {
-            method.check_opaque(env, errors);
+            method.check_opaque(in_path, env, errors);
         }
     }
+}
+
+/// A symbol declared in a module, which can either be a pointer to another path,
+/// or a custom type defined directly inside that module
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum ModSymbol {
+    /// A symbol that is a pointer to another path.
+    Alias(Path),
+    /// A symbol that is a submodule.
+    SubModule(String),
+    /// A symbol that is a custom type.
+    CustomType(CustomType),
 }
 
 /// A local type reference, such as the type of a field, parameter, or return value.
@@ -77,7 +90,7 @@ pub enum TypeName {
     Primitive(PrimitiveType),
     /// An unresolved path to a custom type, which can be resolved after all types
     /// are collected with [`TypeName::resolve()`].
-    Named(String),
+    Named(Path),
     /// An optionally mutable reference to another type.
     Reference(Box<TypeName>, /* mutable */ bool),
     /// A `Box<T>` type.
@@ -97,7 +110,10 @@ impl TypeName {
             TypeName::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
-            TypeName::Named(name) => syn::Type::Path(syn::parse_str(name.as_str()).unwrap()),
+            TypeName::Named(name) => syn::Type::Path(syn::TypePath {
+                qself: None,
+                path: name.to_syn(),
+            }),
             TypeName::Reference(underlying, mutable) => syn::Type::Reference(TypeReference {
                 and_token: syn::token::And(Span::call_site()),
                 lifetime: None,
@@ -110,7 +126,7 @@ impl TypeName {
             }),
             TypeName::Box(underlying) => syn::Type::Path(TypePath {
                 qself: None,
-                path: Path {
+                path: syn::Path {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![PathSegment {
                         ident: Ident::new("Box", Span::call_site()),
@@ -127,7 +143,7 @@ impl TypeName {
             }),
             TypeName::Option(underlying) => syn::Type::Path(TypePath {
                 qself: None,
-                path: Path {
+                path: syn::Path {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![PathSegment {
                         ident: Ident::new("Option", Span::call_site()),
@@ -155,28 +171,92 @@ impl TypeName {
 
     /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
-    pub fn resolve<'a>(&self, env: &'a HashMap<String, CustomType>) -> &'a CustomType {
+    pub fn resolve_with_path<'a>(
+        &self,
+        in_path: &Path,
+        env: &'a HashMap<Path, HashMap<String, ModSymbol>>,
+    ) -> (Path, &'a CustomType) {
         match self {
-            TypeName::Named(name) => env.get(name).unwrap(),
+            TypeName::Named(local_path) => {
+                let mut cur_path = in_path.clone();
+                for (i, elem) in local_path.elements.iter().enumerate() {
+                    match elem.as_ref() {
+                        "crate" => {
+                            // TODO(shadaj): get the enclosing trate from env when we support multiple crates
+                            cur_path = Path::empty()
+                        }
+
+                        "super" => cur_path = cur_path.get_super(),
+
+                        o => match env.get(&cur_path).and_then(|env| env.get(o)) {
+                            Some(ModSymbol::Alias(p)) => {
+                                let mut remaining_elements: Vec<String> =
+                                    local_path.elements.iter().skip(i + 1).cloned().collect();
+                                let mut new_path = p.elements.clone();
+                                new_path.append(&mut remaining_elements);
+                                return TypeName::Named(Path { elements: new_path })
+                                    .resolve_with_path(&cur_path.clone(), env);
+                            }
+                            Some(ModSymbol::SubModule(name)) => {
+                                cur_path.elements.push(name.clone());
+                            }
+                            Some(ModSymbol::CustomType(t)) => {
+                                if i == local_path.elements.len() - 1 {
+                                    return (cur_path, t);
+                                } else {
+                                    panic!(
+                                        "Unexpected custom type when resolving symbol {} in {}",
+                                        o,
+                                        cur_path.elements.join("::")
+                                    )
+                                }
+                            }
+                            None => panic!(
+                                "Could not resolve symbol {} in {}",
+                                o,
+                                cur_path.elements.join("::")
+                            ),
+                        },
+                    }
+                }
+
+                panic!(
+                    "Path {} does not point to a custom type",
+                    in_path.elements.join("::")
+                )
+            }
             _ => panic!(),
         }
     }
 
+    pub fn resolve<'a>(
+        &self,
+        in_path: &Path,
+        env: &'a HashMap<Path, HashMap<String, ModSymbol>>,
+    ) -> &'a CustomType {
+        self.resolve_with_path(in_path, env).1
+    }
+
     fn check_opaque_internal<'a>(
         &'a self,
-        env: &HashMap<String, CustomType>,
+        in_path: &Path,
+        env: &HashMap<Path, HashMap<String, ModSymbol>>,
         behind_reference: bool,
         errors: &mut Vec<&'a TypeName>,
     ) {
         match self {
             TypeName::Reference(underlying, _) => {
-                underlying.check_opaque_internal(env, true, errors)
+                underlying.check_opaque_internal(in_path, env, true, errors)
             }
-            TypeName::Box(underlying) => underlying.check_opaque_internal(env, true, errors),
-            TypeName::Option(underlying) => underlying.check_opaque_internal(env, false, errors),
+            TypeName::Box(underlying) => {
+                underlying.check_opaque_internal(in_path, env, true, errors)
+            }
+            TypeName::Option(underlying) => {
+                underlying.check_opaque_internal(in_path, env, false, errors)
+            }
             TypeName::Primitive(_) => {}
             TypeName::Named(_) => {
-                if let CustomType::Opaque(_) = self.resolve(env) {
+                if let CustomType::Opaque(_) = self.resolve(in_path, env) {
                     if !behind_reference {
                         errors.push(self)
                     }
@@ -193,10 +273,11 @@ impl TypeName {
     /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
     pub fn check_opaque<'a>(
         &'a self,
-        env: &HashMap<String, CustomType>,
+        in_path: &Path,
+        env: &HashMap<Path, HashMap<String, ModSymbol>>,
         errors: &mut Vec<&'a TypeName>,
     ) {
-        self.check_opaque_internal(env, false, errors);
+        self.check_opaque_internal(in_path, env, false, errors);
     }
 }
 
@@ -252,7 +333,7 @@ impl From<&syn::Type> for TypeName {
                 {
                     TypeName::Writeable
                 } else {
-                    TypeName::Named(p.path.to_token_stream().to_string())
+                    TypeName::Named(Path::from_syn(&p.path))
                 }
             }
             _ => panic!(),

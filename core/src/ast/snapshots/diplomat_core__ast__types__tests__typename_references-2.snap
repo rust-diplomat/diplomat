@@ -4,6 +4,8 @@ expression: "TypeName::from(&syn::parse2(quote! { & mut MyLocalStruct }).unwrap(
 
 ---
 Reference:
-  - Named: MyLocalStruct
+  - Named:
+      elements:
+        - MyLocalStruct
   - true
 

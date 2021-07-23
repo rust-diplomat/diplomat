@@ -8,14 +8,15 @@ use diplomat_core::ast;
 
 pub fn struct_size_offsets_max_align(
     strct: &ast::Struct,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) -> (usize, Vec<usize>, usize) {
     let mut max_align = 0;
     let mut next_offset = 0;
     let mut offsets = vec![];
 
     for (_, typ, _) in &strct.fields {
-        let (size, align) = type_size_alignment(typ, env);
+        let (size, align) = type_size_alignment(typ, in_path, env);
         max_align = max(max_align, align);
         let padding = (align - (next_offset % align)) % align;
         next_offset += padding;
@@ -28,18 +29,19 @@ pub fn struct_size_offsets_max_align(
 
 pub fn type_size_alignment(
     typ: &ast::TypeName,
-    env: &HashMap<String, ast::CustomType>,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) -> (usize, usize) {
     match typ {
         ast::TypeName::Box(_) => (4, 4),
         ast::TypeName::Reference(_, _) => (4, 4),
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
-            ast::TypeName::Box(_) => type_size_alignment(underlying.as_ref(), env),
+            ast::TypeName::Box(_) => type_size_alignment(underlying.as_ref(), in_path, env),
             _ => todo!(),
         },
-        ast::TypeName::Named(_) => match typ.resolve(env) {
+        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {
-                let (size, _, max_align) = struct_size_offsets_max_align(strct, env);
+                let (size, _, max_align) = struct_size_offsets_max_align(strct, in_path, env);
                 (size, max_align)
             }
 

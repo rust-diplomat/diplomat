@@ -12,6 +12,9 @@ mod structs;
 pub use structs::{OpaqueStruct, Struct};
 
 mod types;
-pub use types::{CustomType, PrimitiveType, TypeName};
+pub use types::{CustomType, ModSymbol, PrimitiveType, TypeName};
+
+mod paths;
+pub use paths::Path;
 
 mod utils;
