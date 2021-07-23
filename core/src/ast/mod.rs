@@ -11,6 +11,9 @@ pub use modules::{File, Module};
 mod structs;
 pub use structs::{OpaqueStruct, Struct};
 
+mod enums;
+pub use enums::Enum;
+
 mod types;
 pub use types::{CustomType, ModSymbol, PrimitiveType, TypeName};
 

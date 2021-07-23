@@ -7,16 +7,17 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use super::{Method, OpaqueStruct, Path, Struct};
+use super::{Enum, Method, OpaqueStruct, Path, Struct};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum CustomType {
     /// A non-opaque struct whose fields will be visible across the FFI boundary.
     Struct(Struct),
-    // TODO(shadaj): Enum
     /// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
     Opaque(OpaqueStruct),
+    /// A fieldless enum.
+    Enum(Enum),
 }
 
 impl CustomType {
@@ -25,6 +26,7 @@ impl CustomType {
         match self {
             CustomType::Struct(strct) => &strct.name,
             CustomType::Opaque(strct) => &strct.name,
+            CustomType::Enum(enm) => &enm.name,
         }
     }
 
@@ -33,6 +35,7 @@ impl CustomType {
         match self {
             CustomType::Struct(strct) => &strct.methods,
             CustomType::Opaque(strct) => &strct.methods,
+            CustomType::Enum(enm) => &enm.methods,
         }
     }
 
@@ -41,6 +44,7 @@ impl CustomType {
         match self {
             CustomType::Struct(strct) => &strct.doc_lines,
             CustomType::Opaque(strct) => &strct.doc_lines,
+            CustomType::Enum(enm) => &enm.doc_lines,
         }
     }
 
@@ -61,6 +65,7 @@ impl CustomType {
                 }
             }
             CustomType::Opaque(_) => {}
+            CustomType::Enum(_) => {}
         }
 
         for method in self.methods().iter() {

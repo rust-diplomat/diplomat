@@ -23,16 +23,31 @@ pub mod ffi {
         pub success: bool,
     }
 
+    pub enum ICU4XFixedDecimalGroupingStrategy {
+        Auto,
+        Never,
+        Always,
+        Min2,
+    }
+
+    pub enum ICU4XFixedDecimalSignDisplay {
+        Auto,
+        Never,
+        Always,
+        ExceptZero,
+        Negative,
+    }
+
     pub struct ICU4XFixedDecimalFormatOptions {
-        pub grouping_strategy: u8,
-        pub sign_display: u8,
+        pub grouping_strategy: ICU4XFixedDecimalGroupingStrategy,
+        pub sign_display: ICU4XFixedDecimalSignDisplay,
     }
 
     impl ICU4XFixedDecimalFormatOptions {
         pub fn default() -> ICU4XFixedDecimalFormatOptions {
             ICU4XFixedDecimalFormatOptions {
-                grouping_strategy: 0,
-                sign_display: 0,
+                grouping_strategy: ICU4XFixedDecimalGroupingStrategy::Auto,
+                sign_display: ICU4XFixedDecimalSignDisplay::Auto,
             }
         }
     }
@@ -52,19 +67,17 @@ pub mod ffi {
                 provider,
                 FixedDecimalFormatOptions {
                     grouping_strategy: match options.grouping_strategy {
-                        0 => GroupingStrategy::Auto,
-                        1 => GroupingStrategy::Never,
-                        2 => GroupingStrategy::Always,
-                        3 => GroupingStrategy::Min2,
-                        _ => panic!(),
+                        ICU4XFixedDecimalGroupingStrategy::Auto => GroupingStrategy::Auto,
+                        ICU4XFixedDecimalGroupingStrategy::Never => GroupingStrategy::Never,
+                        ICU4XFixedDecimalGroupingStrategy::Always => GroupingStrategy::Always,
+                        ICU4XFixedDecimalGroupingStrategy::Min2 => GroupingStrategy::Min2,
                     },
                     sign_display: match options.sign_display {
-                        0 => SignDisplay::Auto,
-                        1 => SignDisplay::Never,
-                        2 => SignDisplay::Always,
-                        3 => SignDisplay::ExceptZero,
-                        4 => SignDisplay::Negative,
-                        _ => panic!(),
+                        ICU4XFixedDecimalSignDisplay::Auto => SignDisplay::Auto,
+                        ICU4XFixedDecimalSignDisplay::Never => SignDisplay::Never,
+                        ICU4XFixedDecimalSignDisplay::Always => SignDisplay::Always,
+                        ICU4XFixedDecimalSignDisplay::ExceptZero => SignDisplay::ExceptZero,
+                        ICU4XFixedDecimalSignDisplay::Negative => SignDisplay::Negative,
                     },
                 },
             ) {

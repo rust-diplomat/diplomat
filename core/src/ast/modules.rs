@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod, UseTree};
 
-use super::{CustomType, Method, ModSymbol, OpaqueStruct, Path, Struct, TypeName};
+use super::{CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, Struct, TypeName};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
@@ -99,6 +99,14 @@ impl Module {
                         }
                     }
                 }
+
+                Item::Enum(enm) => {
+                    if analyze_types {
+                        custom_types_by_name
+                            .insert(enm.ident.to_string(), CustomType::Enum(Enum::from(enm)));
+                    }
+                }
+
                 Item::Impl(ipl) => {
                     if analyze_types {
                         assert!(ipl.trait_.is_none());
@@ -125,6 +133,9 @@ impl Module {
                             }
                             CustomType::Opaque(strct) => {
                                 strct.methods.append(&mut new_methods);
+                            }
+                            CustomType::Enum(enm) => {
+                                enm.methods.append(&mut new_methods);
                             }
                         }
                     }

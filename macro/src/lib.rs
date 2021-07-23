@@ -172,8 +172,8 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     let module = ast::Module::from_syn(&input, true);
     let (brace, mut new_contents) = input.content.unwrap();
 
-    new_contents.iter_mut().for_each(|c| {
-        if let Item::Struct(s) = c {
+    new_contents.iter_mut().for_each(|c| match c {
+        Item::Struct(s) => {
             if !s.attrs.iter().any(|a| {
                 let string_path = a.path.to_token_stream().to_string();
                 string_path == "repr" || string_path == "diplomat :: opaque"
@@ -185,6 +185,16 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
                 .unwrap();
             }
         }
+
+        Item::Enum(e) => {
+            *e = syn::parse2(quote! {
+                #[repr(C)]
+                #e
+            })
+            .unwrap();
+        }
+
+        _ => {}
     });
 
     for custom_type in module.declared_types.values() {
@@ -289,6 +299,28 @@ mod tests {
 
                     impl Foo {
                         fn from_str(s: &str) {
+                            todo!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn mod_with_enum() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    enum Abc {
+                        A,
+                        B = 123,
+                    }
+
+                    impl Abc {
+                        fn do_something(&self) {
                             todo!()
                         }
                     }

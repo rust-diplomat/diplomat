@@ -75,7 +75,7 @@ export class ICU4XFixedDecimalFormat {
     const diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display = options["sign_display"];
     const diplomat_out = (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5);
-      wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying, diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy, diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display);
+      wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying, ICU4XFixedDecimalGroupingStrategy_js_to_rust[diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy], ICU4XFixedDecimalSignDisplay_js_to_rust[diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display]);
       const out = new ICU4XFixedDecimalFormatResult(diplomat_receive_buffer);
       const out_fdf_value = out.fdf;
       ICU4XFixedDecimalFormat_box_destroy_registry.register(out_fdf_value, out_fdf_value.underlying);
@@ -106,12 +106,12 @@ export class ICU4XFixedDecimalFormatOptions {
 
   static default() {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(2);
+      const diplomat_receive_buffer = wasm.diplomat_alloc(8);
       wasm.ICU4XFixedDecimalFormatOptions_default(diplomat_receive_buffer);
       const out = new ICU4XFixedDecimalFormatOptions(diplomat_receive_buffer);
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
-        size: 2
+        size: 8
       });
       return out;
     })();
@@ -119,11 +119,11 @@ export class ICU4XFixedDecimalFormatOptions {
   }
 
   get grouping_strategy() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
+    return ICU4XFixedDecimalGroupingStrategy_rust_to_js[(new Int32Array(wasm.memory.buffer, this.underlying + 0, 1))[0]];
   }
 
   get sign_display() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 1, 1))[0];
+    return ICU4XFixedDecimalSignDisplay_rust_to_js[(new Int32Array(wasm.memory.buffer, this.underlying + 4, 1))[0]];
   }
 }
 
@@ -147,6 +147,34 @@ export class ICU4XFixedDecimalFormatResult {
     return (new Uint8Array(wasm.memory.buffer, this.underlying + 4, 1))[0] == 1;
   }
 }
+
+const ICU4XFixedDecimalGroupingStrategy_js_to_rust = {
+  "Auto": 0,
+  "Never": 1,
+  "Always": 2,
+  "Min2": 3,
+};
+const ICU4XFixedDecimalGroupingStrategy_rust_to_js = {
+  0: "Auto",
+  1: "Never",
+  2: "Always",
+  3: "Min2",
+};
+
+const ICU4XFixedDecimalSignDisplay_js_to_rust = {
+  "Auto": 0,
+  "Never": 1,
+  "Always": 2,
+  "ExceptZero": 3,
+  "Negative": 4,
+};
+const ICU4XFixedDecimalSignDisplay_rust_to_js = {
+  0: "Auto",
+  1: "Never",
+  2: "Always",
+  3: "ExceptZero",
+  4: "Negative",
+};
 
 const ICU4XLocale_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XLocale_destroy(underlying);

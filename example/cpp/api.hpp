@@ -17,6 +17,21 @@ struct ICU4XFixedDecimalFormatOptions;
 
 struct ICU4XFixedDecimalFormatResult;
 
+enum struct ICU4XFixedDecimalGroupingStrategy : ssize_t {
+  Auto = 0,
+  Never = 1,
+  Always = 2,
+  Min2 = 3,
+};
+
+enum struct ICU4XFixedDecimalSignDisplay : ssize_t {
+  Auto = 0,
+  Never = 1,
+  Always = 2,
+  ExceptZero = 3,
+  Negative = 4,
+};
+
 class ICU4XLocale;
 
 struct ICU4XDataProviderDeleter {
@@ -86,8 +101,8 @@ struct ICU4XFixedDecimalFormatOptionsDeleter {
 };
 struct ICU4XFixedDecimalFormatOptions {
  public:
-  uint8_t grouping_strategy;
-  uint8_t sign_display;
+  ICU4XFixedDecimalGroupingStrategy grouping_strategy;
+  ICU4XFixedDecimalSignDisplay sign_display;
   static ICU4XFixedDecimalFormatOptions default_();
 };
 
@@ -124,7 +139,7 @@ std::string ICU4XFixedDecimal::to_string() {
 
 ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {
   ICU4XFixedDecimalFormatOptions diplomat_wrapped_struct_options = options;
-  capi::ICU4XFixedDecimalFormatResult diplomat_raw_struct_out_value = capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatOptions{ .grouping_strategy = diplomat_wrapped_struct_options.grouping_strategy, .sign_display = diplomat_wrapped_struct_options.sign_display });
+  capi::ICU4XFixedDecimalFormatResult diplomat_raw_struct_out_value = capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatOptions{ .grouping_strategy = static_cast<ssize_t>(diplomat_wrapped_struct_options.grouping_strategy), .sign_display = static_cast<ssize_t>(diplomat_wrapped_struct_options.sign_display) });
   auto diplomat_optional_raw_out_value_fdf = diplomat_raw_struct_out_value.fdf;
   std::optional<ICU4XFixedDecimalFormat> diplomat_optional_out_value_fdf;
   if (diplomat_optional_raw_out_value_fdf != nullptr) {
@@ -143,8 +158,10 @@ std::string ICU4XFixedDecimalFormat::format_write(const ICU4XFixedDecimal& value
 
 ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions::default_() {
   capi::ICU4XFixedDecimalFormatOptions diplomat_raw_struct_out_value = capi::ICU4XFixedDecimalFormatOptions_default();
-  return ICU4XFixedDecimalFormatOptions{ .grouping_strategy = std::move(diplomat_raw_struct_out_value.grouping_strategy), .sign_display = std::move(diplomat_raw_struct_out_value.sign_display) };
+  return ICU4XFixedDecimalFormatOptions{ .grouping_strategy = std::move(ICU4XFixedDecimalGroupingStrategy{ diplomat_raw_struct_out_value.grouping_strategy }), .sign_display = std::move(ICU4XFixedDecimalSignDisplay{ diplomat_raw_struct_out_value.sign_display }) };
 }
+
+
 
 
 ICU4XLocale ICU4XLocale::new_(const std::string name) {
