@@ -18,6 +18,7 @@ pub fn gen_bindings(
     write!(diplomat_runtime_out, "{}", RUNTIME_H)?;
 
     let out = outs.entry("api.h").or_insert_with(String::new);
+    writeln!(out, "#include <stdio.h>")?;
     writeln!(out, "#include <stdint.h>")?;
     writeln!(out, "#include <stddef.h>")?;
     writeln!(out, "#include <stdbool.h>")?;
@@ -39,7 +40,7 @@ pub fn gen_bindings(
 
             ast::CustomType::Enum(enm) => {
                 writeln!(out)?;
-                writeln!(out, "enum {} {{", enm.name)?;
+                writeln!(out, "typedef enum {} {{", enm.name)?;
                 let mut enum_body_out = indented(out).with_str("  ");
                 for (name, discriminant, _) in enm.variants.iter() {
                     writeln!(
@@ -48,7 +49,7 @@ pub fn gen_bindings(
                         enm.name, name, discriminant
                     )?;
                 }
-                writeln!(out, "}};")?;
+                writeln!(out, "}} {};", enm.name)?;
             }
 
             ast::CustomType::Struct(_) => {}
