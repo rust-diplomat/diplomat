@@ -80,7 +80,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
             // TODO(shadaj): don't just unwrap? or should we assume that the other side gives us a good value?
             expanded_params.push(parse2(quote! {
                 unsafe {
-                    std::str::from_utf8(std::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
+                    core::str::from_utf8(core::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
                 }
             }).unwrap());
         }
