@@ -64,7 +64,6 @@ impl From<&syn::ItemStruct> for OpaqueStruct {
 mod tests {
     use insta::{self, Settings};
 
-    use quote::quote;
     use syn;
 
     use super::Struct;
@@ -75,16 +74,13 @@ mod tests {
         settings.set_sort_maps(true);
 
         settings.bind(|| {
-            insta::assert_yaml_snapshot!(Struct::from(
-                &syn::parse2(quote! {
-                    /// Some docs.
-                    struct MyLocalStruct {
-                        a: i32,
-                        b: Box<MyLocalStruct>
-                    }
-                })
-                .unwrap()
-            ));
+            insta::assert_yaml_snapshot!(Struct::from(&syn::parse_quote! {
+                /// Some docs.
+                struct MyLocalStruct {
+                    a: i32,
+                    b: Box<MyLocalStruct>
+                }
+            }));
         });
     }
 }

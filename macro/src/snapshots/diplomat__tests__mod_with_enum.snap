@@ -1,6 +1,6 @@
 ---
 source: macro/src/lib.rs
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                             mod ffi\n                             {\n                                 enum Abc { A, B = 123, } impl Abc\n                                 { fn do_something(& self) { todo ! () } }\n                             }\n                         }).to_token_stream().to_string())"
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                             mod ffi\n                             {\n                                 enum Abc { A, B = 123, } impl Abc\n                                 {\n                                     fn do_something(& self)\n                                     { unimplemented ! () }\n                                 }\n                             }\n                         }).to_token_stream().to_string())"
 
 ---
 mod ffi {
@@ -11,7 +11,7 @@ mod ffi {
     }
     impl Abc {
         fn do_something(&self) {
-            todo!()
+            unimplemented!()
         }
     }
     #[no_mangle]

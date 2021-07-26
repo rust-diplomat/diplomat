@@ -1,5 +1,5 @@
 use proc_macro2::Span;
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
 
@@ -102,10 +102,14 @@ pub enum TypeName {
     Box(Box<TypeName>),
     /// A `Option<T>` type.
     Option(Box<TypeName>),
+    /// A `Result<T, E>` type.
+    Result(Box<TypeName>, Box<TypeName>),
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
     /// A `&str` type.
     StrReference,
+    /// The `()` type.
+    Void,
 }
 
 impl TypeName {
@@ -163,14 +167,33 @@ impl TypeName {
                     }]),
                 },
             }),
-            TypeName::Writeable => syn::parse2(quote! {
+            TypeName::Result(ok, err) => syn::Type::Path(TypePath {
+                qself: None,
+                path: syn::Path {
+                    leading_colon: None,
+                    segments: Punctuated::from_iter(vec![PathSegment {
+                        ident: Ident::new("Result", Span::call_site()),
+                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                            colon2_token: None,
+                            lt_token: syn::token::Lt(Span::call_site()),
+                            args: Punctuated::from_iter(vec![
+                                GenericArgument::Type(ok.to_syn()),
+                                GenericArgument::Type(err.to_syn()),
+                            ]),
+                            gt_token: syn::token::Gt(Span::call_site()),
+                        }),
+                    }]),
+                },
+            }),
+            TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
-            })
-            .unwrap(),
-            TypeName::StrReference => syn::parse2(quote! {
+            },
+            TypeName::StrReference => syn::parse_quote! {
                 &str
-            })
-            .unwrap(),
+            },
+            TypeName::Void => syn::parse_quote! {
+                ()
+            },
         }
     }
 
@@ -259,6 +282,10 @@ impl TypeName {
             TypeName::Option(underlying) => {
                 underlying.check_opaque_internal(in_path, env, false, errors)
             }
+            TypeName::Result(ok, err) => {
+                ok.check_opaque_internal(in_path, env, false, errors);
+                err.check_opaque_internal(in_path, env, false, errors);
+            }
             TypeName::Primitive(_) => {}
             TypeName::Named(_) => {
                 if let CustomType::Opaque(_) = self.resolve(in_path, env) {
@@ -269,6 +296,7 @@ impl TypeName {
             }
             TypeName::Writeable => {}
             TypeName::StrReference => {}
+            TypeName::Void => {}
         }
     }
 
@@ -333,12 +361,32 @@ impl From<&syn::Type> for TypeName {
                     } else {
                         panic!("Expected angle brackets for Option type")
                     }
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Result" {
+                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    {
+                        if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
+                            (&type_args.args[0], &type_args.args[1])
+                        {
+                            TypeName::Result(Box::new(ok.into()), Box::new(err.into()))
+                        } else {
+                            panic!("Expected both type arguments for Result to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Result type")
+                    }
                 } else if p.path.to_token_stream().to_string()
                     == "diplomat_runtime :: DiplomatWriteable"
                 {
                     TypeName::Writeable
                 } else {
                     TypeName::Named(Path::from_syn(&p.path))
+                }
+            }
+            syn::Type::Tuple(tup) => {
+                if tup.elems.is_empty() {
+                    TypeName::Void
+                } else {
+                    todo!("Tuples are not currently supported")
                 }
             }
             _ => panic!(),
@@ -399,76 +447,73 @@ lazy_static! {
 mod tests {
     use insta;
 
-    use quote::quote;
     use syn;
 
     use super::TypeName;
 
     #[test]
     fn typename_primitives() {
-        insta::assert_yaml_snapshot!(TypeName::from(
-            &syn::parse2(quote! {
-                i32
-            })
-            .unwrap()
-        ));
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            i32
+        }));
 
-        insta::assert_yaml_snapshot!(TypeName::from(
-            &syn::parse2(quote! {
-                usize
-            })
-            .unwrap()
-        ));
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            usize
+        }));
 
-        insta::assert_yaml_snapshot!(TypeName::from(
-            &syn::parse2(quote! {
-                bool
-            })
-            .unwrap()
-        ));
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            bool
+        }));
     }
 
     #[test]
     fn typename_named() {
-        insta::assert_yaml_snapshot!(TypeName::from(
-            &syn::parse2(quote! {
-                MyLocalStruct
-            })
-            .unwrap()
-        ));
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            MyLocalStruct
+        }));
     }
 
     #[test]
     fn typename_references() {
-        insta::assert_yaml_snapshot!(TypeName::from(
-            &syn::parse2(quote! {
-                &i32
-            })
-            .unwrap()
-        ));
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            &i32
+        }));
 
-        insta::assert_yaml_snapshot!(TypeName::from(
-            &syn::parse2(quote! {
-                &mut MyLocalStruct
-            })
-            .unwrap()
-        ));
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            &mut MyLocalStruct
+        }));
     }
 
     #[test]
     fn typename_boxes() {
-        insta::assert_yaml_snapshot!(TypeName::from(
-            &syn::parse2(quote! {
-                Box<i32>
-            })
-            .unwrap()
-        ));
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Box<i32>
+        }));
 
-        insta::assert_yaml_snapshot!(TypeName::from(
-            &syn::parse2(quote! {
-                Box<MyLocalStruct>
-            })
-            .unwrap()
-        ));
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Box<MyLocalStruct>
+        }));
+    }
+
+    #[test]
+    fn typename_option() {
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Option<i32>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Option<MyLocalStruct>
+        }));
+    }
+
+    #[test]
+    fn typename_result() {
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Result<MyLocalStruct, i32>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Result<(), MyLocalStruct>
+        }));
     }
 }

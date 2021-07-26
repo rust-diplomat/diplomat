@@ -148,7 +148,6 @@ impl From<&syn::PatType> for Param {
 mod tests {
     use insta;
 
-    use quote::quote;
     use syn;
 
     use super::{Method, Path};
@@ -156,18 +155,17 @@ mod tests {
     #[test]
     fn static_methods() {
         insta::assert_yaml_snapshot!(Method::from_syn(
-            &syn::parse2(quote! {
+            &syn::parse_quote! {
                 /// Some docs.
                 fn foo(x: u64, y: MyCustomStruct) {
 
                 }
-            })
-            .unwrap(),
+            },
             &Path::empty().sub_path("MyStructContainingMethod".to_string())
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
-            &syn::parse2(quote! {
+            &syn::parse_quote! {
                 /// Some docs.
                 /// Some more docs.
                 ///
@@ -175,8 +173,7 @@ mod tests {
                 fn foo(x: u64, y: MyCustomStruct) -> u64 {
                     x
                 }
-            })
-            .unwrap(),
+            },
             &Path::empty().sub_path("MyStructContainingMethod".to_string())
         ));
     }
@@ -184,22 +181,20 @@ mod tests {
     #[test]
     fn nonstatic_methods() {
         insta::assert_yaml_snapshot!(Method::from_syn(
-            &syn::parse2(quote! {
+            &syn::parse_quote! {
                 fn foo(&self, x: u64, y: MyCustomStruct) {
 
                 }
-            })
-            .unwrap(),
+            },
             &Path::empty().sub_path("MyStructContainingMethod".to_string())
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
-            &syn::parse2(quote! {
+            &syn::parse_quote! {
                 fn foo(&mut self, x: u64, y: MyCustomStruct) -> u64 {
                     x
                 }
-            })
-            .unwrap(),
+            },
             &Path::empty().sub_path("MyStructContainingMethod".to_string())
         ));
     }

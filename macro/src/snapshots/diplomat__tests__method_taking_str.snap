@@ -1,6 +1,6 @@
 ---
 source: macro/src/lib.rs
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                             mod ffi\n                             {\n                                 struct Foo { } impl Foo\n                                 { fn from_str(s : & str) { todo ! () } }\n                             }\n                         }).to_token_stream().to_string())"
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                             mod ffi\n                             {\n                                 struct Foo { } impl Foo\n                                 {\n                                     fn from_str(s : & str)\n                                     { unimplemented ! () }\n                                 }\n                             }\n                         }).to_token_stream().to_string())"
 
 ---
 mod ffi {
@@ -8,7 +8,7 @@ mod ffi {
     struct Foo {}
     impl Foo {
         fn from_str(s: &str) {
-            todo!()
+            unimplemented!()
         }
     }
     #[no_mangle]

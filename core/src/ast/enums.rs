@@ -58,7 +58,6 @@ impl From<&syn::ItemEnum> for Enum {
 mod tests {
     use insta::{self, Settings};
 
-    use quote::quote;
     use syn;
 
     use super::Enum;
@@ -69,17 +68,14 @@ mod tests {
         settings.set_sort_maps(true);
 
         settings.bind(|| {
-            insta::assert_yaml_snapshot!(Enum::from(
-                &syn::parse2(quote! {
-                    /// Some docs.
-                    enum MyLocalEnum {
-                        Abc,
-                        /// Some more docs.
-                        Def
-                    }
-                })
-                .unwrap()
-            ));
+            insta::assert_yaml_snapshot!(Enum::from(&syn::parse_quote! {
+                /// Some docs.
+                enum MyLocalEnum {
+                    Abc,
+                    /// Some more docs.
+                    Def
+                }
+            }));
         });
     }
 }

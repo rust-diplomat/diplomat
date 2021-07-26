@@ -1,0 +1,11 @@
+---
+source: core/src/ast/types.rs
+expression: "TypeName::from(&syn::parse_quote! {\n                                Result < MyLocalStruct, i32 >\n                            }).unwrap())"
+
+---
+Result:
+  - Named:
+      elements:
+        - MyLocalStruct
+  - Primitive: i32
+

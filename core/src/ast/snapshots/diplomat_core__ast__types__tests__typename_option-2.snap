@@ -1,0 +1,10 @@
+---
+source: core/src/ast/types.rs
+expression: "TypeName::from(&syn::parse_quote! { Option < MyLocalStruct > })"
+
+---
+Option:
+  Named:
+    elements:
+      - MyLocalStruct
+
