@@ -402,7 +402,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Option(underlying) => {
-            // TODO(shadaj): handle properly
+            // TODO(shadaj): actually return `null` if the option is `None`
             gen_value_rust_to_js(value_expr, underlying.as_ref(), in_path, env, out)?;
         }
 
