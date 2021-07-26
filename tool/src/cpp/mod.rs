@@ -568,7 +568,7 @@ fn gen_rust_to_cpp<W: Write>(
 #[derive(Eq, PartialEq)]
 struct ReferenceMeta {
     owned: bool,
-    mutable: bool
+    mutable: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -588,7 +588,7 @@ fn gen_cpp_to_rust<W: Write>(
             path,
             Some(ReferenceMeta {
                 owned: false,
-                mutable: *mutability
+                mutable: *mutability,
             }),
             underlying.as_ref(),
             in_path,
@@ -601,12 +601,10 @@ fn gen_cpp_to_rust<W: Write>(
                 if let Some(reference) = behind_ref {
                     if is_self {
                         format!("{}->inner.get()", cpp)
+                    } else if reference.mutable {
+                        format!("{}.AsFFIMut()", cpp)
                     } else {
-                        if reference.mutable {
-                            format!("{}.AsFFIMut()", cpp)
-                        } else {
-                            format!("{}.AsFFI()", cpp)
-                        }
+                        format!("{}.AsFFI()", cpp)
                     }
                 } else {
                     panic!("Cannot handle opaque types by value");
@@ -616,17 +614,9 @@ fn gen_cpp_to_rust<W: Write>(
             ast::CustomType::Struct(strct) => {
                 if let Some(reference) = behind_ref {
                     if reference.owned {
-                        format!(
-                            "(capi::{}*) {}",
-                            strct.name,
-                            cpp
-                        )
+                        format!("(capi::{}*) {}", strct.name, cpp)
                     } else {
-                        format!(
-                            "(capi::{}*) &{}",
-                            strct.name,
-                            cpp
-                        )
+                        format!("(capi::{}*) &{}", strct.name, cpp)
                     }
                 } else {
                     let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", path);
@@ -660,10 +650,12 @@ fn gen_cpp_to_rust<W: Write>(
             ast::CustomType::Enum(_) => format!("static_cast<ssize_t>({})", cpp),
         },
         ast::TypeName::Writeable => {
-            if behind_ref == Some(ReferenceMeta {
-                owned: false,
-                mutable: true
-            }) {
+            if behind_ref
+                == Some(ReferenceMeta {
+                    owned: false,
+                    mutable: true,
+                })
+            {
                 format!("&{}", cpp)
             } else {
                 panic!("Cannot send Writeable to Rust as a value");
