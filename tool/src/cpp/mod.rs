@@ -156,6 +156,12 @@ fn gen_struct<W: fmt::Write>(
 
                 writeln!(
                     &mut public_body,
+                    "inline capi::{}* AsFFIMut() {{ return this->inner.get(); }}",
+                    opaque.name
+                )?;
+
+                writeln!(
+                    &mut public_body,
                     "{}(capi::{}* i) : inner(i) {{}}",
                     opaque.name, opaque.name
                 )?;
@@ -185,7 +191,7 @@ fn gen_struct<W: fmt::Write>(
 
             if is_header {
                 for (name, typ, _) in &strct.fields {
-                    gen_type(typ, in_path, false, env, &mut public_body)?;
+                    gen_type(typ, in_path, None, env, &mut public_body)?;
                     writeln!(&mut public_body, " {};", name)?;
                 }
             }
@@ -231,7 +237,7 @@ fn gen_method<W: fmt::Write>(
     } else {
         match &method.return_type {
             Some(ret_type) => {
-                gen_type(ret_type, in_path, false, env, out)?;
+                gen_type(ret_type, in_path, None, env, out)?;
             }
 
             None => {
@@ -264,7 +270,7 @@ fn gen_method<W: fmt::Write>(
             write!(out, ", ")?;
         }
 
-        gen_type(&param.ty, in_path, false, env, out)?;
+        gen_type(&param.ty, in_path, None, env, out)?;
         write!(out, " {}", param.name)?;
     }
 
@@ -281,7 +287,7 @@ fn gen_method<W: fmt::Write>(
             let invocation_expr = gen_cpp_to_rust(
                 "this",
                 "this",
-                false,
+                None,
                 &param.ty,
                 in_path,
                 env,
@@ -299,7 +305,7 @@ fn gen_method<W: fmt::Write>(
                 let invocation_expr = gen_cpp_to_rust(
                     &param.name,
                     &param.name,
-                    false,
+                    None,
                     &param.ty,
                     in_path,
                     env,
@@ -357,15 +363,19 @@ fn gen_method<W: fmt::Write>(
 fn gen_type<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    behind_ref: bool,
+    behind_ref: Option<bool>, // owned?
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Opaque(opaque) => {
-                if behind_ref {
-                    write!(out, "{}", opaque.name)?;
+                if let Some(owned) = behind_ref {
+                    if owned {
+                        write!(out, "{}", opaque.name)?;
+                    } else {
+                        write!(out, "{}&", opaque.name)?;
+                    }
                 } else {
                     panic!("Cannot pass opaque structs as values");
                 }
@@ -373,23 +383,35 @@ fn gen_type<W: fmt::Write>(
 
             ast::CustomType::Struct(strct) => {
                 write!(out, "{}", strct.name)?;
-                if behind_ref {
-                    write!(out, "*")?;
+                if let Some(owned) = behind_ref {
+                    if owned {
+                        write!(out, "*")?;
+                    } else {
+                        write!(out, "&")?;
+                    }
                 }
             }
 
             ast::CustomType::Enum(enm) => {
                 write!(out, "{}", enm.name)?;
-                if behind_ref {
-                    write!(out, "*")?;
+                if let Some(owned) = behind_ref {
+                    if owned {
+                        write!(out, "*")?;
+                    } else {
+                        write!(out, "&")?;
+                    }
                 }
             }
         },
 
         ast::TypeName::Box(underlying) => {
-            gen_type(underlying.as_ref(), in_path, true, env, out)?;
-            if behind_ref {
-                write!(out, "*")?;
+            gen_type(underlying.as_ref(), in_path, Some(true), env, out)?;
+            if let Some(owned) = behind_ref {
+                if owned {
+                    write!(out, "*")?;
+                } else {
+                    write!(out, "&")?;
+                }
             }
         }
 
@@ -397,10 +419,13 @@ fn gen_type<W: fmt::Write>(
             if !mutable {
                 write!(out, "const ")?;
             }
-            gen_type(underlying.as_ref(), in_path, true, env, out)?;
-            write!(out, "&")?;
-            if behind_ref {
-                write!(out, "*")?;
+            gen_type(underlying.as_ref(), in_path, Some(false), env, out)?;
+            if let Some(owned) = behind_ref {
+                if owned {
+                    write!(out, "*")?;
+                } else {
+                    write!(out, "&")?;
+                }
             }
         }
 
@@ -416,25 +441,34 @@ fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Primitive(prim) => {
             write!(out, "{}", super::c::c_type_for_prim(prim))?;
-
-            if behind_ref {
-                write!(out, "*")?;
+            if let Some(owned) = behind_ref {
+                if owned {
+                    write!(out, "*")?;
+                } else {
+                    write!(out, "&")?;
+                }
             }
         }
 
         ast::TypeName::Writeable => {
             write!(out, "capi::DiplomatWriteable")?;
-
-            if behind_ref {
-                write!(out, "*")?;
+            if let Some(owned) = behind_ref {
+                if owned {
+                    write!(out, "*")?;
+                } else {
+                    write!(out, "&")?;
+                }
             }
         }
 
         ast::TypeName::StrReference => {
-            write!(out, "const std::string")?;
-
-            if behind_ref {
-                write!(out, "*")?;
+            write!(out, "const std::string_view")?;
+            if let Some(owned) = behind_ref {
+                if owned {
+                    write!(out, "*")?;
+                } else {
+                    write!(out, "&")?;
+                }
             }
         }
     }
@@ -507,7 +541,7 @@ fn gen_rust_to_cpp<W: Write>(
                 writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
 
                 let wrapped_value_id = format!("diplomat_optional_{}", path);
-                gen_type(typ, in_path, false, env, out).unwrap();
+                gen_type(typ, in_path, None, env, out).unwrap();
                 writeln!(out, " {};", wrapped_value_id).unwrap();
 
                 writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
@@ -531,11 +565,17 @@ fn gen_rust_to_cpp<W: Write>(
     }
 }
 
+#[derive(Eq, PartialEq)]
+struct ReferenceMeta {
+    owned: bool,
+    mutable: bool,
+}
+
 #[allow(clippy::too_many_arguments)]
 fn gen_cpp_to_rust<W: Write>(
     cpp: &str,
     path: &str,
-    behind_ref: bool,
+    behind_ref: Option<ReferenceMeta>,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
@@ -543,10 +583,13 @@ fn gen_cpp_to_rust<W: Write>(
     out: &mut W,
 ) -> String {
     match typ {
-        ast::TypeName::Reference(underlying, _) => gen_cpp_to_rust(
+        ast::TypeName::Reference(underlying, mutability) => gen_cpp_to_rust(
             cpp,
             path,
-            true,
+            Some(ReferenceMeta {
+                owned: false,
+                mutable: *mutability,
+            }),
             underlying.as_ref(),
             in_path,
             env,
@@ -555,9 +598,11 @@ fn gen_cpp_to_rust<W: Write>(
         ),
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Opaque(_opaque) => {
-                if behind_ref {
+                if let Some(reference) = behind_ref {
                     if is_self {
                         format!("{}->inner.get()", cpp)
+                    } else if reference.mutable {
+                        format!("{}.AsFFIMut()", cpp)
                     } else {
                         format!("{}.AsFFI()", cpp)
                     }
@@ -567,37 +612,50 @@ fn gen_cpp_to_rust<W: Write>(
             }
 
             ast::CustomType::Struct(strct) => {
-                let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", path);
-                writeln!(out, "{} {} = {};", strct.name, wrapped_struct_id, cpp).unwrap();
-                let mut all_fields_wrapped = vec![];
-                for (name, typ, _) in &strct.fields {
-                    all_fields_wrapped.push(format!(
-                        ".{} = {}",
-                        name,
-                        gen_cpp_to_rust(
-                            &format!("{}.{}", wrapped_struct_id, name),
-                            &format!("{}_{}", path, name),
-                            false,
-                            typ,
-                            in_path,
-                            env,
-                            false,
-                            out
-                        )
-                    ));
-                }
+                if let Some(reference) = behind_ref {
+                    if reference.owned {
+                        format!("(capi::{}*) {}", strct.name, cpp)
+                    } else {
+                        format!("(capi::{}*) &{}", strct.name, cpp)
+                    }
+                } else {
+                    let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", path);
+                    writeln!(out, "{} {} = {};", strct.name, wrapped_struct_id, cpp).unwrap();
+                    let mut all_fields_wrapped = vec![];
+                    for (name, typ, _) in &strct.fields {
+                        all_fields_wrapped.push(format!(
+                            ".{} = {}",
+                            name,
+                            gen_cpp_to_rust(
+                                &format!("{}.{}", wrapped_struct_id, name),
+                                &format!("{}_{}", path, name),
+                                None,
+                                typ,
+                                in_path,
+                                env,
+                                false,
+                                out
+                            )
+                        ));
+                    }
 
-                format!(
-                    "capi::{}{{ {} }}",
-                    strct.name,
-                    all_fields_wrapped.join(", ")
-                )
+                    format!(
+                        "capi::{}{{ {} }}",
+                        strct.name,
+                        all_fields_wrapped.join(", ")
+                    )
+                }
             }
 
             ast::CustomType::Enum(_) => format!("static_cast<ssize_t>({})", cpp),
         },
         ast::TypeName::Writeable => {
-            if behind_ref {
+            if behind_ref
+                == Some(ReferenceMeta {
+                    owned: false,
+                    mutable: true,
+                })
+            {
                 format!("&{}", cpp)
             } else {
                 panic!("Cannot send Writeable to Rust as a value");
