@@ -1,5 +1,11 @@
-use std::ffi::c_void;
-use std::{fmt, ptr};
+#![no_std]
+
+extern crate alloc;
+
+use core::ffi::c_void;
+use core::{fmt, ptr};
+use alloc::vec::Vec;
+use alloc::boxed::Box;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_glue;
@@ -12,7 +18,7 @@ mod wasm_glue;
 pub unsafe extern "C" fn diplomat_alloc(size: usize) -> *mut u8 {
     let mut vec = Vec::<u8>::with_capacity(size);
     let ret = vec.as_mut_ptr();
-    std::mem::forget(vec);
+    core::mem::forget(vec);
     ret
 }
 
@@ -152,7 +158,7 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
             vec.reserve(new_cap);
             this.cap = vec.capacity();
             this.buf = vec.as_mut_ptr();
-            std::mem::forget(vec);
+            core::mem::forget(vec);
         }
         true
     }
@@ -169,7 +175,7 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
         grow,
     };
 
-    std::mem::forget(vec);
+    core::mem::forget(vec);
     Box::into_raw(Box::new(ret))
 }
 
