@@ -2,10 +2,10 @@
 
 extern crate alloc;
 
+use alloc::boxed::Box;
+use alloc::vec::Vec;
 use core::ffi::c_void;
 use core::{fmt, ptr};
-use alloc::vec::Vec;
-use alloc::boxed::Box;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_glue;
