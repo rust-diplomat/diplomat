@@ -89,6 +89,7 @@ pub fn gen_bindings(
             &ast::TypeName::Box(Box::new(ast::TypeName::Named(
                 ast::Path::empty().sub_path(custom_type.name().clone()),
             ))),
+            "",
             in_path,
             env,
             out,
@@ -139,7 +140,7 @@ fn gen_field<W: fmt::Write>(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
-    gen_type(typ, in_path, env, out)?;
+    gen_type(typ, name, in_path, env, out)?;
     write!(out, " {};", name)?;
 
     Ok(())
@@ -153,7 +154,7 @@ fn gen_method<W: fmt::Write>(
 ) -> fmt::Result {
     match &method.return_type {
         Some(ret_type) => {
-            gen_type(ret_type, in_path, env, out)?;
+            gen_type(ret_type, "out", in_path, env, out)?;
         }
 
         None => {
@@ -179,7 +180,7 @@ fn gen_method<W: fmt::Write>(
                 param.name, param.name
             )?;
         } else {
-            gen_type(&param.ty, in_path, env, out)?;
+            gen_type(&param.ty, &param.name, in_path, env, out)?;
             write!(out, " {}", param.name)?;
         }
     }
@@ -191,6 +192,7 @@ fn gen_method<W: fmt::Write>(
 
 fn gen_type<W: fmt::Write>(
     typ: &ast::TypeName,
+    field_path: &str,
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
@@ -208,7 +210,7 @@ fn gen_type<W: fmt::Write>(
         },
 
         ast::TypeName::Box(underlying) => {
-            gen_type(underlying.as_ref(), in_path, env, out)?;
+            gen_type(underlying.as_ref(), field_path, in_path, env, out)?;
             write!(out, "*")?;
         }
 
@@ -216,7 +218,7 @@ fn gen_type<W: fmt::Write>(
             if !mutable {
                 write!(out, "const ")?;
             }
-            gen_type(underlying.as_ref(), in_path, env, out)?;
+            gen_type(underlying.as_ref(), field_path, in_path, env, out)?;
             write!(out, "*")?;
         }
 
@@ -226,14 +228,46 @@ fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
-                gen_type(underlying.as_ref(), in_path, env, out)?;
+                gen_type(underlying.as_ref(), field_path, in_path, env, out)?;
             }
 
             _ => todo!(),
         },
 
-        ast::TypeName::Result(ok, _err) => {
-            gen_type(ok, in_path, env, out)?;
+        ast::TypeName::Result(ok, err) => {
+            writeln!(out, "struct {} {{", field_path)?;
+            let mut result_indent = indented(out).with_str("    ");
+            writeln!(&mut result_indent, "union {{")?;
+            let mut union_indent = indented(&mut result_indent).with_str("    ");
+
+            if let ast::TypeName::Void = ok.as_ref() {
+                writeln!(&mut union_indent, "uint8_t ok[0];")?;
+            } else {
+                gen_type(
+                    ok,
+                    (field_path.to_string() + "_ok").as_str(),
+                    in_path,
+                    env,
+                    &mut ((&mut union_indent) as &mut dyn fmt::Write),
+                )?;
+                writeln!(&mut union_indent, " ok;")?;
+            }
+
+            if let ast::TypeName::Void = err.as_ref() {
+                writeln!(&mut union_indent, "uint8_t err[0];")?;
+            } else {
+                gen_type(
+                    err,
+                    (field_path.to_string() + "_ok").as_str(),
+                    in_path,
+                    env,
+                    &mut ((&mut union_indent) as &mut dyn fmt::Write),
+                )?;
+                writeln!(&mut union_indent, " err;")?;
+            }
+            writeln!(&mut result_indent, "}};")?;
+            writeln!(&mut result_indent, "bool is_ok;")?;
+            write!(out, "}}")?;
         }
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,

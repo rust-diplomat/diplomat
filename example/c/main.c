@@ -1,10 +1,11 @@
 #include <stdio.h>
+#include <assert.h>
 #include "api.h"
 
 void print_decimal(ICU4XFixedDecimal* fd) {
     char output[40];
     DiplomatWriteable out = diplomat_simple_writeable(output, 40);
-    ICU4XFixedDecimal_to_string(fd, &out);
+    assert(ICU4XFixedDecimal_to_string(fd, &out).is_ok == true);
     output[out.len] = '\0';
     printf("%s\n", output);
 }

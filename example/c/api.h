@@ -50,7 +50,13 @@ void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);
 
 void ICU4XFixedDecimal_negate(ICU4XFixedDecimal* self);
 
-void ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWriteable* to);
+struct out {
+    union {
+        uint8_t ok[0];
+        uint8_t err[0];
+    };
+    bool is_ok;
+} ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWriteable* to);
 void ICU4XFixedDecimal_destroy(ICU4XFixedDecimal* self);
 
 ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat_try_new(const ICU4XLocale* locale, const ICU4XDataProvider* provider, ICU4XFixedDecimalFormatOptions options);

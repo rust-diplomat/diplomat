@@ -55,8 +55,8 @@ export class ICU4XFixedDecimal {
     wasm.ICU4XFixedDecimal_negate(this.underlying)
   }
 
-  to_string() {
-    const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable));
+  to_string(to) {
+    const diplomat_out = undefined;
     return diplomat_out;
   }
 }
