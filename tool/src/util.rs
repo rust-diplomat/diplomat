@@ -10,7 +10,7 @@ pub fn get_all_custom_types(
     for (path, mod_symbols) in env {
         for symbol in mod_symbols.values() {
             if let ast::ModSymbol::CustomType(c) = symbol {
-                all_types.push((&path, &c));
+                all_types.push((path, c));
             }
         }
     }

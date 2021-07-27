@@ -439,6 +439,10 @@ fn gen_type<W: fmt::Write>(
             _ => todo!(),
         },
 
+        ast::TypeName::Result(ok, _err) => {
+            gen_type(ok.as_ref(), in_path, behind_ref, env, out)?;
+        }
+
         ast::TypeName::Primitive(prim) => {
             write!(out, "{}", super::c::c_type_for_prim(prim))?;
             if let Some(owned) = behind_ref {
@@ -470,6 +474,10 @@ fn gen_type<W: fmt::Write>(
                     write!(out, "&")?;
                 }
             }
+        }
+
+        ast::TypeName::Void => {
+            write!(out, "void")?;
         }
     }
 
@@ -560,8 +568,19 @@ fn gen_rust_to_cpp<W: Write>(
             _ => todo!(),
         },
 
+        ast::TypeName::Result(ok, _err) => {
+            gen_rust_to_cpp(cpp, path, ok.as_ref(), in_path, env, out)
+        }
+
         ast::TypeName::Primitive(_) => cpp.to_string(),
-        o => todo!("{:?}", o),
+        ast::TypeName::Reference(_, _) => {
+            todo!("Returning references from Rust to C++ is not currently supported")
+        }
+        ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
+        ast::TypeName::StrReference => {
+            todo!("Returning &str from Rust to C++ is not currently supported")
+        }
+        ast::TypeName::Void => todo!(),
     }
 }
 

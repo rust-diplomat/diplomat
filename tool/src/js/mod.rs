@@ -406,6 +406,10 @@ fn gen_value_rust_to_js<W: fmt::Write>(
             gen_value_rust_to_js(value_expr, underlying.as_ref(), in_path, env, out)?;
         }
 
+        ast::TypeName::Result(ok, _err) => {
+            gen_value_rust_to_js(value_expr, ok.as_ref(), in_path, env, out)?;
+        }
+
         ast::TypeName::Primitive(_prim) => {
             // TODO(shadaj): wrap with appropriate types for large widths
             value_expr(out)?;
@@ -416,6 +420,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
+        ast::TypeName::Void => write!(out, "undefined")?,
     }
 
     Ok(())

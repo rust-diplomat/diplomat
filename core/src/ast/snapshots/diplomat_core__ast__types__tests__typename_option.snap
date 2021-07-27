@@ -1,0 +1,8 @@
+---
+source: core/src/ast/types.rs
+expression: "TypeName::from(&syn::parse_quote! { Option < i32 > })"
+
+---
+Option:
+  Primitive: i32
+

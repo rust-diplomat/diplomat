@@ -169,7 +169,7 @@ fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, St
             group
                 .items
                 .iter()
-                .for_each(|i| extract_imports(base_path, &i, out));
+                .for_each(|i| extract_imports(base_path, i, out));
         }
         UseTree::Rename(rename) => out.push((
             base_path.sub_path(rename.ident.to_string()),
@@ -235,7 +235,6 @@ impl From<&syn::File> for File {
 mod tests {
     use insta::{self, Settings};
 
-    use quote::quote;
     use syn;
 
     use crate::ast::Path;
@@ -249,7 +248,7 @@ mod tests {
 
         settings.bind(|| {
             insta::assert_yaml_snapshot!(Module::from_syn(
-                &syn::parse2(quote! {
+                &syn::parse_quote! {
                     mod ffi {
                         struct NonOpaqueStruct {
                             a: i32,
@@ -281,8 +280,7 @@ mod tests {
                             }
                         }
                     }
-                })
-                .unwrap(),
+                },
                 true
             ));
         });
@@ -290,34 +288,31 @@ mod tests {
 
     #[test]
     fn opaque_checks_with_safe_use() {
-        let file_with_safe_opaque = File::from(
-            &syn::parse2(quote! {
-                #[diplomat::bridge]
-                mod ffi {
-                    struct NonOpaqueStruct {}
+        let file_with_safe_opaque = File::from(&syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct NonOpaqueStruct {}
 
-                    impl NonOpaqueStruct {
-                        fn new(x: i32) -> NonOpaqueStruct {
-                            unimplemented!();
-                        }
-                    }
-
-                    #[diplomat::opaque]
-                    struct OpaqueStruct {}
-
-                    impl OpaqueStruct {
-                        fn new() -> Box<OpaqueStruct> {
-                            unimplemented!();
-                        }
-
-                        fn get_i32(&self) -> i32 {
-                            unimplemented!()
-                        }
+                impl NonOpaqueStruct {
+                    fn new(x: i32) -> NonOpaqueStruct {
+                        unimplemented!();
                     }
                 }
-            })
-            .unwrap(),
-        );
+
+                #[diplomat::opaque]
+                struct OpaqueStruct {}
+
+                impl OpaqueStruct {
+                    fn new() -> Box<OpaqueStruct> {
+                        unimplemented!();
+                    }
+
+                    fn get_i32(&self) -> i32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
 
         let mut errors = Vec::new();
         file_with_safe_opaque.check_opaque(&file_with_safe_opaque.all_types(), &mut errors);
@@ -326,26 +321,23 @@ mod tests {
 
     #[test]
     fn opaque_checks_with_error() {
-        let file_with_error_opaque = File::from(
-            &syn::parse2(quote! {
-                #[diplomat::bridge]
-                mod ffi {
-                    #[diplomat::opaque]
-                    struct OpaqueStruct {}
+        let file_with_error_opaque = File::from(&syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct OpaqueStruct {}
 
-                    impl OpaqueStruct {
-                        fn new() -> OpaqueStruct {
-                            unimplemented!();
-                        }
+                impl OpaqueStruct {
+                    fn new() -> OpaqueStruct {
+                        unimplemented!();
+                    }
 
-                        fn get_i32(self) -> i32 {
-                            unimplemented!()
-                        }
+                    fn get_i32(self) -> i32 {
+                        unimplemented!()
                     }
                 }
-            })
-            .unwrap(),
-        );
+            }
+        });
 
         let mut errors = Vec::new();
         file_with_error_opaque.check_opaque(&file_with_error_opaque.all_types(), &mut errors);

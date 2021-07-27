@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -13,20 +14,20 @@ typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
 
 typedef struct ICU4XFixedDecimalFormat ICU4XFixedDecimalFormat;
 
-enum ICU4XFixedDecimalGroupingStrategy {
+typedef enum ICU4XFixedDecimalGroupingStrategy {
   ICU4XFixedDecimalGroupingStrategy_Auto = 0,
   ICU4XFixedDecimalGroupingStrategy_Never = 1,
   ICU4XFixedDecimalGroupingStrategy_Always = 2,
   ICU4XFixedDecimalGroupingStrategy_Min2 = 3,
-};
+} ICU4XFixedDecimalGroupingStrategy;
 
-enum ICU4XFixedDecimalSignDisplay {
+typedef enum ICU4XFixedDecimalSignDisplay {
   ICU4XFixedDecimalSignDisplay_Auto = 0,
   ICU4XFixedDecimalSignDisplay_Never = 1,
   ICU4XFixedDecimalSignDisplay_Always = 2,
   ICU4XFixedDecimalSignDisplay_ExceptZero = 3,
   ICU4XFixedDecimalSignDisplay_Negative = 4,
-};
+} ICU4XFixedDecimalSignDisplay;
 
 typedef struct ICU4XLocale ICU4XLocale;
 

@@ -43,6 +43,7 @@ class ICU4XDataProvider {
  public:
   static ICU4XDataProvider new_static();
   inline const capi::ICU4XDataProvider* AsFFI() const { return this->inner.get(); }
+  inline capi::ICU4XDataProvider* AsFFIMut() { return this->inner.get(); }
   ICU4XDataProvider(capi::ICU4XDataProvider* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XDataProvider, ICU4XDataProviderDeleter> inner;
@@ -60,6 +61,7 @@ class ICU4XFixedDecimal {
   void negate();
   std::string to_string();
   inline const capi::ICU4XFixedDecimal* AsFFI() const { return this->inner.get(); }
+  inline capi::ICU4XFixedDecimal* AsFFIMut() { return this->inner.get(); }
   ICU4XFixedDecimal(capi::ICU4XFixedDecimal* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XFixedDecimal, ICU4XFixedDecimalDeleter> inner;
@@ -75,6 +77,7 @@ class ICU4XFixedDecimalFormat {
   static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
   std::string format_write(const ICU4XFixedDecimal& value);
   inline const capi::ICU4XFixedDecimalFormat* AsFFI() const { return this->inner.get(); }
+  inline capi::ICU4XFixedDecimalFormat* AsFFIMut() { return this->inner.get(); }
   ICU4XFixedDecimalFormat(capi::ICU4XFixedDecimalFormat* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatDeleter> inner;
@@ -87,8 +90,9 @@ struct ICU4XLocaleDeleter {
 };
 class ICU4XLocale {
  public:
-  static ICU4XLocale new_(const std::string name);
+  static ICU4XLocale new_(const std::string_view name);
   inline const capi::ICU4XLocale* AsFFI() const { return this->inner.get(); }
+  inline capi::ICU4XLocale* AsFFIMut() { return this->inner.get(); }
   ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XLocale, ICU4XLocaleDeleter> inner;
@@ -164,6 +168,6 @@ ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions::default_() {
 
 
 
-ICU4XLocale ICU4XLocale::new_(const std::string name) {
+ICU4XLocale ICU4XLocale::new_(const std::string_view name) {
   return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.length()));
 }

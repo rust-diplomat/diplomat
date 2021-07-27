@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse2(quote! { Box < MyLocalStruct > }).unwrap())"
+expression: "TypeName::from(&syn::parse_quote! { Box < MyLocalStruct > }).unwrap())"
 
 ---
 Box:

@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse2(quote! { bool }).unwrap())"
+expression: "TypeName::from(&syn::parse_quote! { bool }).unwrap())"
 
 ---
 Primitive: bool

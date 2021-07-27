@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/enums.rs
-expression: "Enum::from(&syn::parse2(quote! {\n                            /// Some docs.\n                            enum MyLocalEnum\n                            {\n                                Abc, /// Some more docs.\n                                Def\n                            }\n                        }).unwrap())"
+expression: "Enum::from(&syn::parse_quote! {\n                            /// Some docs.\n                            enum MyLocalEnum\n                            {\n                                Abc, /// Some more docs.\n                                Def\n                            }\n                        }).unwrap())"
 
 ---
 name: MyLocalEnum

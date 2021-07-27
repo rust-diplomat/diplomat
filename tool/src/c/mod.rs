@@ -232,8 +232,13 @@ fn gen_type<W: fmt::Write>(
             _ => todo!(),
         },
 
+        ast::TypeName::Result(ok, _err) => {
+            gen_type(ok, in_path, env, out)?;
+        }
+
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
         ast::TypeName::StrReference => panic!(),
+        ast::TypeName::Void => write!(out, "void")?,
     }
 
     Ok(())

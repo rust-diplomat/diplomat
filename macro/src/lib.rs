@@ -143,27 +143,21 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     };
 
     match &m.return_type {
-        None => Item::Fn(
-            syn::parse2(quote! {
-                #[no_mangle]
-                extern "C" fn #extern_ident(#(#all_params),*) {
-                    #method_invocation(#(#all_params_invocation),*);
-                }
-            })
-            .unwrap(),
-        ),
+        None => Item::Fn(syn::parse_quote! {
+            #[no_mangle]
+            extern "C" fn #extern_ident(#(#all_params),*) {
+                #method_invocation(#(#all_params_invocation),*);
+            }
+        }),
         Some(return_typ) => {
             let return_typ_syn = return_typ.to_syn();
 
-            Item::Fn(
-                syn::parse2(quote! {
-                    #[no_mangle]
-                    extern "C" fn #extern_ident(#(#all_params),*) -> #return_typ_syn {
-                        #method_invocation(#(#all_params_invocation),*)
-                    }
-                })
-                .unwrap(),
-            )
+            Item::Fn(syn::parse_quote! {
+                #[no_mangle]
+                extern "C" fn #extern_ident(#(#all_params),*) -> #return_typ_syn {
+                    #method_invocation(#(#all_params_invocation),*)
+                }
+            })
         }
     }
 }
@@ -178,20 +172,18 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
                 let string_path = a.path.to_token_stream().to_string();
                 string_path == "repr" || string_path == "diplomat :: opaque"
             }) {
-                *s = syn::parse2(quote! {
+                *s = syn::parse_quote! {
                     #[repr(C)]
                     #s
-                })
-                .unwrap();
+                };
             }
         }
 
         Item::Enum(e) => {
-            *e = syn::parse2(quote! {
+            *e = syn::parse_quote! {
                 #[repr(C)]
                 #e
-            })
-            .unwrap();
+            };
         }
 
         _ => {}
@@ -211,13 +203,10 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
 
         // for now, body is empty since all we need to do is drop the box
         // TODO(shadaj): change to take a pointer and handle DST boxes appropriately
-        new_contents.push(Item::Fn(
-            syn::parse2(quote! {
-                #[no_mangle]
-                extern "C" fn #destroy_ident(this: Box<#type_ident>) {}
-            })
-            .unwrap(),
-        ));
+        new_contents.push(Item::Fn(syn::parse_quote! {
+            #[no_mangle]
+            extern "C" fn #destroy_ident(this: Box<#type_ident>) {}
+        }));
     }
 
     ItemMod {
@@ -299,7 +288,7 @@ mod tests {
 
                     impl Foo {
                         fn from_str(s: &str) {
-                            todo!()
+                            unimplemented!()
                         }
                     }
                 }
@@ -321,7 +310,26 @@ mod tests {
 
                     impl Abc {
                         fn do_something(&self) {
-                            todo!()
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn mod_with_writeable_result() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        fn to_string(&self, to: &mut diplomat_runtime::DiplomatWriteable) -> Result<(), ()> {
+                            unimplemented!()
                         }
                     }
                 }
