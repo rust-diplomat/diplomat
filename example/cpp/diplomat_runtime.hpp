@@ -35,15 +35,9 @@ inline capi::DiplomatWriteable WriteableFromString(std::string& string) {
 template<class T, class E>
 struct result
 {
-  union {
-    T ok;
-    E err;
-  };
+  T ok;
+  E err;
   bool is_ok;
-
-  ~result<T, E>() {
-    // TODO(shadaj)
-  }
 
   static result<T, E> new_ok(T x) {
     return {
