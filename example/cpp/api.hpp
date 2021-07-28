@@ -137,7 +137,7 @@ void ICU4XFixedDecimal::negate() {
 std::string ICU4XFixedDecimal::to_string() {
   std::string diplomat_writeable_string;
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
+  capi::fixed_decimal_ffi_result_void_void out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
   return diplomat_writeable_string;
 }
 

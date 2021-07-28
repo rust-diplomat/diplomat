@@ -89,7 +89,7 @@ pub enum ModSymbol {
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub enum TypeName {
     /// A built-in Rust scalar primitive.
     Primitive(PrimitiveType),
