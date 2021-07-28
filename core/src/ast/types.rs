@@ -320,31 +320,6 @@ impl TypeName {
     ) {
         self.check_opaque_internal(in_path, env, false, errors);
     }
-
-    /// Accumulates all `Result` types into the given vector.
-    pub fn collect_results<'a>(&'a self, results: &mut Vec<&'a TypeName>) {
-        match self {
-            TypeName::Reference(underlying, _) => {
-                underlying.collect_results(results);
-            }
-            TypeName::Box(underlying) => {
-                underlying.collect_results(results);
-            }
-            TypeName::Option(underlying) => {
-                underlying.collect_results(results);
-            }
-            TypeName::Result(ok, err) => {
-                results.push(self);
-                ok.collect_results(results);
-                err.collect_results(results);
-            }
-            TypeName::Primitive(_) => {}
-            TypeName::Named(_) => {}
-            TypeName::Writeable => {}
-            TypeName::StrReference => {}
-            TypeName::Void => {}
-        }
-    }
 }
 
 impl From<&syn::Type> for TypeName {
