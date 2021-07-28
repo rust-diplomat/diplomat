@@ -110,9 +110,15 @@ impl Method {
     /// method that doesn't take the writeable as an argument but instead creates
     /// one locally and just returns the final string.
     pub fn is_writeable_out(&self) -> bool {
-        // TODO(shadaj): support results with empty success value
+        let return_compatible = self.return_type.is_none()
+            || match self.return_type.as_ref().unwrap() {
+                TypeName::Void => true,
+                TypeName::Result(ok, _) => matches!(ok.as_ref(), TypeName::Void),
+                _ => false,
+            };
+
         // TODO(shadaj): reconsider if we should auto-detect writeables
-        self.return_type.is_none()
+        return_compatible
             && !self.params.is_empty()
             && self.params[self.params.len() - 1].ty
                 == TypeName::Reference(Box::new(TypeName::Writeable), true)

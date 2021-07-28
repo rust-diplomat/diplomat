@@ -330,28 +330,34 @@ fn gen_method<W: fmt::Write>(
                 all_params_invocation.join(", ")
             )?;
             writeln!(&mut method_body, "return diplomat_writeable_string;")?;
-        } else if let Some(ret_typ) = &method.return_type {
-            let out_expr = gen_rust_to_cpp(
-                &format!(
-                    "capi::{}({})",
-                    method.full_path_name,
-                    all_params_invocation.join(", ")
-                ),
-                "out_value",
-                ret_typ,
-                in_path,
-                env,
-                &mut method_body,
-            );
-
-            writeln!(&mut method_body, "return {};", out_expr)?;
         } else {
-            writeln!(
-                &mut method_body,
-                "capi::{}({});",
-                method.full_path_name,
-                all_params_invocation.join(", ")
-            )?;
+            match &method.return_type {
+                None | Some(ast::TypeName::Void) => {
+                    writeln!(
+                        &mut method_body,
+                        "capi::{}({});",
+                        method.full_path_name,
+                        all_params_invocation.join(", ")
+                    )?;
+                }
+
+                Some(ret_typ) => {
+                    let out_expr = gen_rust_to_cpp(
+                        &format!(
+                            "capi::{}({})",
+                            method.full_path_name,
+                            all_params_invocation.join(", ")
+                        ),
+                        "out_value",
+                        ret_typ,
+                        in_path,
+                        env,
+                        &mut method_body,
+                    );
+
+                    writeln!(&mut method_body, "return {};", out_expr)?;
+                }
+            }
         }
 
         writeln!(out, "}}")?;
@@ -569,7 +575,7 @@ fn gen_rust_to_cpp<W: Write>(
         },
 
         ast::TypeName::Result(ok, _err) => {
-            gen_rust_to_cpp(cpp, path, ok.as_ref(), in_path, env, out)
+            gen_rust_to_cpp(&format!("{}.ok", cpp), path, ok.as_ref(), in_path, env, out)
         }
 
         ast::TypeName::Primitive(_) => cpp.to_string(),
@@ -580,7 +586,7 @@ fn gen_rust_to_cpp<W: Write>(
         ast::TypeName::StrReference => {
             todo!("Returning &str from Rust to C++ is not currently supported")
         }
-        ast::TypeName::Void => todo!(),
+        ast::TypeName::Void => cpp.to_string(),
     }
 }
 

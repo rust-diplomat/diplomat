@@ -48,15 +48,21 @@ export class ICU4XFixedDecimal {
   }
 
   multiply_pow10(power) {
-    wasm.ICU4XFixedDecimal_multiply_pow10(this.underlying, power)
+    const diplomat_out = wasm.ICU4XFixedDecimal_multiply_pow10(this.underlying, power);
   }
 
   negate() {
-    wasm.ICU4XFixedDecimal_negate(this.underlying)
+    const diplomat_out = wasm.ICU4XFixedDecimal_negate(this.underlying);
   }
 
-  to_string(to) {
-    const diplomat_out = undefined;
+  to_string() {
+    const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
+      (() => {
+        const is_ok = wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable) == 1;
+        const out = { is_ok: is_ok };
+        return out;
+      })()
+    });
     return diplomat_out;
   }
 }
@@ -90,7 +96,9 @@ export class ICU4XFixedDecimalFormat {
   }
 
   format_write(value) {
-    const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => wasm.ICU4XFixedDecimalFormat_format_write(this.underlying, value.underlying, writeable));
+    const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
+      wasm.ICU4XFixedDecimalFormat_format_write(this.underlying, value.underlying, writeable)
+    });
     return diplomat_out;
   }
 }
