@@ -32,4 +32,44 @@ inline capi::DiplomatWriteable WriteableFromString(std::string& string) {
   return w;
 };
 
+template<class T, class E>
+struct result
+{
+  union {
+    T ok;
+    E err;
+  };
+  bool is_ok;
+
+  ~result<T, E>() {
+    // TODO(shadaj)
+  }
+
+  static result<T, E> new_ok(T x) {
+    return {
+      .ok = x,
+      .is_ok = true
+    };
+  }
+
+  static result<uint8_t[0], E> new_ok_void() {
+    return {
+      .is_ok = true
+    };
+  }
+
+  static result<T, E> new_err(E x) {
+    return {
+      .err = x,
+      .is_ok = false
+    };
+  }
+
+  static result<T, uint8_t[0]> new_err_void() {
+    return {
+      .is_ok = false
+    };
+  }
+};
+
 }

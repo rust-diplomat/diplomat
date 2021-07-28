@@ -236,7 +236,17 @@ fn gen_method<W: fmt::Write>(
     let is_writeable_out = method.is_writeable_out();
 
     if is_writeable_out {
-        write!(out, "std::string")?;
+        if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
+            write!(out, "diplomat::result<std::string, ")?;
+            if err.as_ref() == &ast::TypeName::Void {
+                write!(out, "uint8_t[0]")?;
+            } else {
+                gen_type(err, in_path, None, env, out)?;
+            }
+            write!(out, ">")?;
+        } else {
+            write!(out, "std::string")?;
+        }
     } else {
         match &method.return_type {
             Some(ret_type) => {
@@ -333,6 +343,10 @@ fn gen_method<W: fmt::Write>(
                     method.full_path_name,
                     all_params_invocation.join(", ")
                 )?;
+
+                if is_writeable_out {
+                    writeln!(&mut method_body, "return diplomat_writeable_string;")?;
+                }
             }
 
             Some(ret_typ) => {
@@ -350,17 +364,38 @@ fn gen_method<W: fmt::Write>(
                 );
 
                 if is_writeable_out {
-                    // TODO(shadaj): do something if not okay
-                    gen_type(ret_typ, in_path, None, env, &mut method_body)?;
-                    writeln!(&mut method_body, " out_value = {};", out_expr)?;
+                    if let ast::TypeName::Result(_, err) = ret_typ {
+                        // TODO(shadaj): do something if not okay
+                        gen_type(ret_typ, in_path, None, env, &mut method_body)?;
+                        writeln!(&mut method_body, " out_value = {};", out_expr)?;
+
+                        writeln!(&mut method_body, "if (out_value.is_ok) {{")?;
+
+                        write!(&mut method_body, "  return diplomat::result<std::string, ")?;
+                        if err.as_ref() == &ast::TypeName::Void {
+                            write!(&mut method_body, "uint8_t[0]")?;
+                        } else {
+                            gen_type(err, in_path, None, env, &mut method_body)?;
+                        }
+                        writeln!(&mut method_body, ">::new_ok(diplomat_writeable_string);")?;
+
+                        writeln!(&mut method_body, "}} else {{")?;
+                        write!(&mut method_body, "  return diplomat::result<std::string, ")?;
+                        if err.as_ref() == &ast::TypeName::Void {
+                            writeln!(&mut method_body, "uint8_t[0]>::new_err_void();")?;
+                        } else {
+                            gen_type(err, in_path, None, env, &mut method_body)?;
+                            writeln!(&mut method_body, ">::new_err(out_value.err);")?;
+                        }
+
+                        writeln!(&mut method_body, "}}")?;
+                    } else {
+                        panic!("Not in writeable out form")
+                    }
                 } else {
                     writeln!(&mut method_body, "return {};", out_expr)?;
                 }
             }
-        }
-
-        if is_writeable_out {
-            writeln!(&mut method_body, "return diplomat_writeable_string;")?;
         }
 
         writeln!(out, "}}")?;
@@ -423,10 +458,21 @@ fn gen_type<W: fmt::Write>(
             _ => todo!(),
         },
 
-        ast::TypeName::Result(_ok, _err) => {
-            // TODO(shadaj): wrap
-            write!(out, "capi::")?;
-            super::c::gen_type(typ, in_path, env, out)?;
+        ast::TypeName::Result(ok, err) => {
+            write!(out, "diplomat::result<")?;
+            if let ast::TypeName::Void = ok.as_ref() {
+                write!(out, "uint8_t[0]")?;
+            } else {
+                gen_type(ok, in_path, behind_ref, env, out)?;
+            }
+
+            write!(out, ", ")?;
+            if let ast::TypeName::Void = err.as_ref() {
+                write!(out, "uint8_t[0]")?;
+            } else {
+                gen_type(err, in_path, behind_ref, env, out)?;
+            }
+            write!(out, ">")?;
         }
 
         ast::TypeName::Primitive(prim) => {
@@ -543,9 +589,36 @@ fn gen_rust_to_cpp<W: Write>(
             _ => todo!(),
         },
 
-        ast::TypeName::Result(_ok, _err) => {
-            // TODO(shadaj): wrap
-            cpp.to_string()
+        ast::TypeName::Result(ok, err) => {
+            let raw_value_id = format!("diplomat_result_raw_{}", path);
+            writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
+
+            let wrapped_value_id = format!("diplomat_result_{}", path);
+            gen_type(typ, in_path, None, env, out).unwrap();
+            writeln!(out, " {};", wrapped_value_id).unwrap();
+
+            writeln!(out, "{}.is_ok = {}.is_ok;", wrapped_value_id, raw_value_id).unwrap();
+            writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
+            if ok.as_ref() != &ast::TypeName::Void {
+                let ok_expr =
+                    gen_rust_to_cpp(&format!("{}.ok", raw_value_id), path, ok, in_path, env, out);
+                writeln!(out, "  {}.ok = {};", wrapped_value_id, ok_expr).unwrap();
+            }
+            writeln!(out, "}} else {{").unwrap();
+            if err.as_ref() != &ast::TypeName::Void {
+                let err_expr = gen_rust_to_cpp(
+                    &format!("{}.err", raw_value_id),
+                    path,
+                    err,
+                    in_path,
+                    env,
+                    out,
+                );
+                writeln!(out, "  {}.err = {};", wrapped_value_id, err_expr).unwrap();
+            }
+            writeln!(out, "}}").unwrap();
+
+            wrapped_value_id
         }
 
         ast::TypeName::Primitive(_) => cpp.to_string(),
