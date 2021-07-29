@@ -9,7 +9,7 @@ use super::{Path, TypeName};
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
 /// by inspecting [`Method::self_param`].
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Method {
     /// The name of the method as initially declared.
     pub name: String,
@@ -110,9 +110,15 @@ impl Method {
     /// method that doesn't take the writeable as an argument but instead creates
     /// one locally and just returns the final string.
     pub fn is_writeable_out(&self) -> bool {
-        // TODO(shadaj): support results with empty success value
+        let return_compatible = self.return_type.is_none()
+            || match self.return_type.as_ref().unwrap() {
+                TypeName::Void => true,
+                TypeName::Result(ok, _) => matches!(ok.as_ref(), TypeName::Void),
+                _ => false,
+            };
+
         // TODO(shadaj): reconsider if we should auto-detect writeables
-        self.return_type.is_none()
+        return_compatible
             && !self.params.is_empty()
             && self.params[self.params.len() - 1].ty
                 == TypeName::Reference(Box::new(TypeName::Writeable), true)
@@ -120,7 +126,7 @@ impl Method {
 }
 
 /// A parameter taken by a [`Method`], including `self`.
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Param {
     /// The name of the parameter in the original method declaration.
     pub name: String,

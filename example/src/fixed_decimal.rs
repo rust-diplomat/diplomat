@@ -1,5 +1,6 @@
 #[diplomat::bridge]
 pub mod ffi {
+    use diplomat_runtime::DiplomatResult;
     use fixed_decimal::FixedDecimal;
     use writeable::Writeable;
 
@@ -27,8 +28,11 @@ pub mod ffi {
 
         /// Format the [`ICU4XFixedDecimal`] as a string.
         /// See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.write_to) for more information.
-        fn to_string(&self, to: &mut diplomat_runtime::DiplomatWriteable) {
-            self.0.write_to(to).unwrap();
+        fn to_string(
+            &self,
+            to: &mut diplomat_runtime::DiplomatWriteable,
+        ) -> DiplomatResult<(), ()> {
+            self.0.write_to(to).map_err(|_| ()).into()
         }
     }
 }

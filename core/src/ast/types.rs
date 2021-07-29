@@ -89,7 +89,7 @@ pub enum ModSymbol {
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub enum TypeName {
     /// A built-in Rust scalar primitive.
     Primitive(PrimitiveType),
@@ -171,18 +171,26 @@ impl TypeName {
                 qself: None,
                 path: syn::Path {
                     leading_colon: None,
-                    segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: Ident::new("Result", Span::call_site()),
-                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                            colon2_token: None,
-                            lt_token: syn::token::Lt(Span::call_site()),
-                            args: Punctuated::from_iter(vec![
-                                GenericArgument::Type(ok.to_syn()),
-                                GenericArgument::Type(err.to_syn()),
-                            ]),
-                            gt_token: syn::token::Gt(Span::call_site()),
-                        }),
-                    }]),
+                    segments: Punctuated::from_iter(vec![
+                        PathSegment {
+                            ident: Ident::new("diplomat_runtime", Span::call_site()),
+                            arguments: PathArguments::None,
+                        },
+                        PathSegment {
+                            ident: Ident::new("DiplomatResult", Span::call_site()),
+                            arguments: PathArguments::AngleBracketed(
+                                AngleBracketedGenericArguments {
+                                    colon2_token: None,
+                                    lt_token: syn::token::Lt(Span::call_site()),
+                                    args: Punctuated::from_iter(vec![
+                                        GenericArgument::Type(ok.to_syn()),
+                                        GenericArgument::Type(err.to_syn()),
+                                    ]),
+                                    gt_token: syn::token::Gt(Span::call_site()),
+                                },
+                            ),
+                        },
+                    ]),
                 },
             }),
             TypeName::Writeable => syn::parse_quote! {
@@ -361,7 +369,8 @@ impl From<&syn::Type> for TypeName {
                     } else {
                         panic!("Expected angle brackets for Option type")
                     }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Result" {
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "DiplomatResult"
+                {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
                         if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
@@ -509,11 +518,11 @@ mod tests {
     #[test]
     fn typename_result() {
         insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Result<MyLocalStruct, i32>
+            DiplomatResult<MyLocalStruct, i32>
         }));
 
         insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Result<(), MyLocalStruct>
+            DiplomatResult<(), MyLocalStruct>
         }));
     }
 }

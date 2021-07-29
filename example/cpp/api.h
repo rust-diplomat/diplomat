@@ -41,6 +41,14 @@ typedef struct ICU4XFixedDecimalFormatResult {
     bool success;
 } ICU4XFixedDecimalFormatResult;
 
+typedef struct fixed_decimal_ffi_result_void_void {
+    union {
+        uint8_t ok[0];
+        uint8_t err[0];
+    };
+    bool is_ok;
+} fixed_decimal_ffi_result_void_void;
+
 ICU4XDataProvider* ICU4XDataProvider_new_static();
 void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
 
@@ -50,7 +58,7 @@ void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);
 
 void ICU4XFixedDecimal_negate(ICU4XFixedDecimal* self);
 
-void ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWriteable* to);
+fixed_decimal_ffi_result_void_void ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWriteable* to);
 void ICU4XFixedDecimal_destroy(ICU4XFixedDecimal* self);
 
 ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat_try_new(const ICU4XLocale* locale, const ICU4XDataProvider* provider, ICU4XFixedDecimalFormatOptions options);
@@ -60,8 +68,11 @@ void ICU4XFixedDecimalFormat_destroy(ICU4XFixedDecimalFormat* self);
 
 ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions_default();
 void ICU4XFixedDecimalFormatOptions_destroy(ICU4XFixedDecimalFormatOptions* self);
+
 void ICU4XFixedDecimalFormatResult_destroy(ICU4XFixedDecimalFormatResult* self);
+
 void ICU4XFixedDecimalGroupingStrategy_destroy(ssize_t* self);
+
 void ICU4XFixedDecimalSignDisplay_destroy(ssize_t* self);
 
 ICU4XLocale* ICU4XLocale_new(const char* name_data, size_t name_len);

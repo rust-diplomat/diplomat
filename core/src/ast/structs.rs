@@ -4,7 +4,7 @@ use super::utils::get_doc_lines;
 use super::{Method, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Struct {
     pub name: String,
     pub doc_lines: String,

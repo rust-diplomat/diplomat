@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <memory>
 #include <optional>
+#include <variant>
 #include "diplomat_runtime.hpp"
 
 
@@ -59,7 +60,7 @@ class ICU4XFixedDecimal {
   static ICU4XFixedDecimal new_(int32_t v);
   void multiply_pow10(int16_t power);
   void negate();
-  std::string to_string();
+  diplomat::result<std::string, std::monostate> to_string();
   inline const capi::ICU4XFixedDecimal* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XFixedDecimal* AsFFIMut() { return this->inner.get(); }
   ICU4XFixedDecimal(capi::ICU4XFixedDecimal* i) : inner(i) {}
@@ -134,11 +135,21 @@ void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
 void ICU4XFixedDecimal::negate() {
   capi::ICU4XFixedDecimal_negate(this->inner.get());
 }
-std::string ICU4XFixedDecimal::to_string() {
+diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() {
   std::string diplomat_writeable_string;
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
-  return diplomat_writeable_string;
+  auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
+  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
+  diplomat_result_out_value.is_ok = diplomat_result_raw_out_value.is_ok;
+  if (diplomat_result_raw_out_value.is_ok) {
+  } else {
+  }
+  diplomat::result<std::monostate, std::monostate> out_value = diplomat_result_out_value;
+  if (out_value.is_ok) {
+    return diplomat::result<std::string, std::monostate>::new_ok(diplomat_writeable_string);
+  } else {
+    return diplomat::result<std::string, std::monostate>::new_err_void();
+  }
 }
 
 ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {

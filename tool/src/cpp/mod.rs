@@ -28,6 +28,7 @@ pub fn gen_bindings(
     writeln!(out, "#include <algorithm>")?;
     writeln!(out, "#include <memory>")?;
     writeln!(out, "#include <optional>")?;
+    writeln!(out, "#include <variant>")?;
     writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
     writeln!(out)?;
 
@@ -65,29 +66,32 @@ pub fn gen_bindings(
 
     let mut structs_seen = HashSet::new();
     let mut structs_order = Vec::new();
-    for custom_type in &all_types {
-        if let (in_path, ast::CustomType::Struct(strct)) = custom_type {
-            if !structs_seen.contains(&strct.name) {
-                super::c::topological_sort_structs(
-                    strct,
-                    (*in_path).clone(),
-                    &mut structs_seen,
-                    &mut structs_order,
-                    env,
-                );
-            }
+    for (in_path, custom_type) in &all_types {
+        if let ast::CustomType::Struct(strct) = custom_type {
+            super::c::topological_sort_structs(
+                super::c::StructOrType::Struct(strct),
+                ast::Path::clone(in_path),
+                &mut structs_seen,
+                &mut structs_order,
+                env,
+            );
         }
     }
 
     for (in_path, strct) in structs_order {
-        writeln!(out)?;
-        gen_struct(
-            &ast::CustomType::Struct(strct.clone()),
-            &in_path,
-            true,
-            env,
-            out,
-        )?;
+        match strct {
+            super::c::StructOrType::Struct(strct) => {
+                writeln!(out)?;
+                gen_struct(
+                    &ast::CustomType::Struct(strct.clone()),
+                    &in_path,
+                    true,
+                    env,
+                    out,
+                )?;
+            }
+            super::c::StructOrType::Type(_) => {}
+        }
     }
 
     for (in_path, custom_type) in all_types {
@@ -233,7 +237,17 @@ fn gen_method<W: fmt::Write>(
     let is_writeable_out = method.is_writeable_out();
 
     if is_writeable_out {
-        write!(out, "std::string")?;
+        if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
+            write!(out, "diplomat::result<std::string, ")?;
+            if err.as_ref() == &ast::TypeName::Void {
+                write!(out, "std::monostate")?;
+            } else {
+                gen_type(err, in_path, None, env, out)?;
+            }
+            write!(out, ">")?;
+        } else {
+            write!(out, "std::string")?;
+        }
     } else {
         match &method.return_type {
             Some(ret_type) => {
@@ -318,40 +332,71 @@ fn gen_method<W: fmt::Write>(
 
         if is_writeable_out {
             all_params_invocation.push("&diplomat_writeable_out".to_string());
-        }
-
-        if is_writeable_out {
             writeln!(&mut method_body, "std::string diplomat_writeable_string;")?;
             writeln!(&mut method_body, "capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);")?;
-            writeln!(
-                &mut method_body,
-                "capi::{}({});",
-                method.full_path_name,
-                all_params_invocation.join(", ")
-            )?;
-            writeln!(&mut method_body, "return diplomat_writeable_string;")?;
-        } else if let Some(ret_typ) = &method.return_type {
-            let out_expr = gen_rust_to_cpp(
-                &format!(
-                    "capi::{}({})",
+        }
+
+        match &method.return_type {
+            None | Some(ast::TypeName::Void) => {
+                writeln!(
+                    &mut method_body,
+                    "capi::{}({});",
                     method.full_path_name,
                     all_params_invocation.join(", ")
-                ),
-                "out_value",
-                ret_typ,
-                in_path,
-                env,
-                &mut method_body,
-            );
+                )?;
 
-            writeln!(&mut method_body, "return {};", out_expr)?;
-        } else {
-            writeln!(
-                &mut method_body,
-                "capi::{}({});",
-                method.full_path_name,
-                all_params_invocation.join(", ")
-            )?;
+                if is_writeable_out {
+                    writeln!(&mut method_body, "return diplomat_writeable_string;")?;
+                }
+            }
+
+            Some(ret_typ) => {
+                let out_expr = gen_rust_to_cpp(
+                    &format!(
+                        "capi::{}({})",
+                        method.full_path_name,
+                        all_params_invocation.join(", ")
+                    ),
+                    "out_value",
+                    ret_typ,
+                    in_path,
+                    env,
+                    &mut method_body,
+                );
+
+                if is_writeable_out {
+                    if let ast::TypeName::Result(_, err) = ret_typ {
+                        // TODO(shadaj): do something if not okay
+                        gen_type(ret_typ, in_path, None, env, &mut method_body)?;
+                        writeln!(&mut method_body, " out_value = {};", out_expr)?;
+
+                        writeln!(&mut method_body, "if (out_value.is_ok) {{")?;
+
+                        write!(&mut method_body, "  return diplomat::result<std::string, ")?;
+                        if err.as_ref() == &ast::TypeName::Void {
+                            write!(&mut method_body, "std::monostate")?;
+                        } else {
+                            gen_type(err, in_path, None, env, &mut method_body)?;
+                        }
+                        writeln!(&mut method_body, ">::new_ok(diplomat_writeable_string);")?;
+
+                        writeln!(&mut method_body, "}} else {{")?;
+                        write!(&mut method_body, "  return diplomat::result<std::string, ")?;
+                        if err.as_ref() == &ast::TypeName::Void {
+                            writeln!(&mut method_body, "std::monostate>::new_err_void();")?;
+                        } else {
+                            gen_type(err, in_path, None, env, &mut method_body)?;
+                            writeln!(&mut method_body, ">::new_err(out_value.err);")?;
+                        }
+
+                        writeln!(&mut method_body, "}}")?;
+                    } else {
+                        panic!("Not in writeable out form")
+                    }
+                } else {
+                    writeln!(&mut method_body, "return {};", out_expr)?;
+                }
+            }
         }
 
         writeln!(out, "}}")?;
@@ -367,6 +412,7 @@ fn gen_type<W: fmt::Write>(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
+    let mut handled_ref = false;
     match typ {
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Opaque(opaque) => {
@@ -376,6 +422,8 @@ fn gen_type<W: fmt::Write>(
                     } else {
                         write!(out, "{}&", opaque.name)?;
                     }
+
+                    handled_ref = true;
                 } else {
                     panic!("Cannot pass opaque structs as values");
                 }
@@ -383,36 +431,15 @@ fn gen_type<W: fmt::Write>(
 
             ast::CustomType::Struct(strct) => {
                 write!(out, "{}", strct.name)?;
-                if let Some(owned) = behind_ref {
-                    if owned {
-                        write!(out, "*")?;
-                    } else {
-                        write!(out, "&")?;
-                    }
-                }
             }
 
             ast::CustomType::Enum(enm) => {
                 write!(out, "{}", enm.name)?;
-                if let Some(owned) = behind_ref {
-                    if owned {
-                        write!(out, "*")?;
-                    } else {
-                        write!(out, "&")?;
-                    }
-                }
             }
         },
 
         ast::TypeName::Box(underlying) => {
             gen_type(underlying.as_ref(), in_path, Some(true), env, out)?;
-            if let Some(owned) = behind_ref {
-                if owned {
-                    write!(out, "*")?;
-                } else {
-                    write!(out, "&")?;
-                }
-            }
         }
 
         ast::TypeName::Reference(underlying, mutable) => {
@@ -420,13 +447,6 @@ fn gen_type<W: fmt::Write>(
                 write!(out, "const ")?;
             }
             gen_type(underlying.as_ref(), in_path, Some(false), env, out)?;
-            if let Some(owned) = behind_ref {
-                if owned {
-                    write!(out, "*")?;
-                } else {
-                    write!(out, "&")?;
-                }
-            }
         }
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
@@ -439,45 +459,47 @@ fn gen_type<W: fmt::Write>(
             _ => todo!(),
         },
 
-        ast::TypeName::Result(ok, _err) => {
-            gen_type(ok.as_ref(), in_path, behind_ref, env, out)?;
+        ast::TypeName::Result(ok, err) => {
+            write!(out, "diplomat::result<")?;
+            if let ast::TypeName::Void = ok.as_ref() {
+                write!(out, "std::monostate")?;
+            } else {
+                gen_type(ok, in_path, behind_ref, env, out)?;
+            }
+
+            write!(out, ", ")?;
+            if let ast::TypeName::Void = err.as_ref() {
+                write!(out, "std::monostate")?;
+            } else {
+                gen_type(err, in_path, behind_ref, env, out)?;
+            }
+            write!(out, ">")?;
         }
 
         ast::TypeName::Primitive(prim) => {
             write!(out, "{}", super::c::c_type_for_prim(prim))?;
-            if let Some(owned) = behind_ref {
-                if owned {
-                    write!(out, "*")?;
-                } else {
-                    write!(out, "&")?;
-                }
-            }
         }
 
         ast::TypeName::Writeable => {
             write!(out, "capi::DiplomatWriteable")?;
-            if let Some(owned) = behind_ref {
-                if owned {
-                    write!(out, "*")?;
-                } else {
-                    write!(out, "&")?;
-                }
-            }
         }
 
         ast::TypeName::StrReference => {
             write!(out, "const std::string_view")?;
-            if let Some(owned) = behind_ref {
-                if owned {
-                    write!(out, "*")?;
-                } else {
-                    write!(out, "&")?;
-                }
-            }
         }
 
         ast::TypeName::Void => {
             write!(out, "void")?;
+        }
+    }
+
+    if !handled_ref {
+        if let Some(owned) = behind_ref {
+            if owned {
+                write!(out, "*")?;
+            } else {
+                write!(out, "&")?;
+            }
         }
     }
 
@@ -568,8 +590,36 @@ fn gen_rust_to_cpp<W: Write>(
             _ => todo!(),
         },
 
-        ast::TypeName::Result(ok, _err) => {
-            gen_rust_to_cpp(cpp, path, ok.as_ref(), in_path, env, out)
+        ast::TypeName::Result(ok, err) => {
+            let raw_value_id = format!("diplomat_result_raw_{}", path);
+            writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
+
+            let wrapped_value_id = format!("diplomat_result_{}", path);
+            gen_type(typ, in_path, None, env, out).unwrap();
+            writeln!(out, " {};", wrapped_value_id).unwrap();
+
+            writeln!(out, "{}.is_ok = {}.is_ok;", wrapped_value_id, raw_value_id).unwrap();
+            writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
+            if ok.as_ref() != &ast::TypeName::Void {
+                let ok_expr =
+                    gen_rust_to_cpp(&format!("{}.ok", raw_value_id), path, ok, in_path, env, out);
+                writeln!(out, "  {}.ok = {};", wrapped_value_id, ok_expr).unwrap();
+            }
+            writeln!(out, "}} else {{").unwrap();
+            if err.as_ref() != &ast::TypeName::Void {
+                let err_expr = gen_rust_to_cpp(
+                    &format!("{}.err", raw_value_id),
+                    path,
+                    err,
+                    in_path,
+                    env,
+                    out,
+                );
+                writeln!(out, "  {}.err = {};", wrapped_value_id, err_expr).unwrap();
+            }
+            writeln!(out, "}}").unwrap();
+
+            wrapped_value_id
         }
 
         ast::TypeName::Primitive(_) => cpp.to_string(),
@@ -580,7 +630,7 @@ fn gen_rust_to_cpp<W: Write>(
         ast::TypeName::StrReference => {
             todo!("Returning &str from Rust to C++ is not currently supported")
         }
-        ast::TypeName::Void => todo!(),
+        ast::TypeName::Void => cpp.to_string(),
     }
 }
 

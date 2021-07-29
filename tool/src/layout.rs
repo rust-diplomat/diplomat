@@ -1,7 +1,7 @@
 use core::panic;
 use std::{cmp::max, collections::HashMap};
 
-use diplomat_core::ast;
+use diplomat_core::ast::{self, PrimitiveType, TypeName};
 
 // TODO(shadaj): support non-32-bit platforms
 // TODO(shadaj): consider special types instead of tuples
@@ -27,6 +27,38 @@ pub fn struct_size_offsets_max_align(
     (next_offset, offsets, max_align)
 }
 
+pub fn result_size_ok_offset_align(
+    ok: &TypeName,
+    err: &TypeName,
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+) -> (usize, usize, usize) {
+    let (ok_size, _) = type_size_alignment(ok, in_path, env);
+    let (err_size, _) = type_size_alignment(err, in_path, env);
+    let (size, offsets, max_align) = struct_size_offsets_max_align(
+        &ast::Struct {
+            name: "".to_string(),
+            doc_lines: "".to_string(),
+            fields: vec![
+                if ok_size > err_size {
+                    ("".to_string(), ok.clone(), "".to_string())
+                } else {
+                    ("".to_string(), err.clone(), "".to_string())
+                },
+                (
+                    "".to_string(),
+                    ast::TypeName::Primitive(PrimitiveType::bool),
+                    "".to_string(),
+                ),
+            ],
+            methods: vec![],
+        },
+        in_path,
+        env,
+    );
+    (size, offsets[1], max_align)
+}
+
 pub fn type_size_alignment(
     typ: &ast::TypeName,
     in_path: &ast::Path,
@@ -36,10 +68,13 @@ pub fn type_size_alignment(
         ast::TypeName::Box(_) => (4, 4),
         ast::TypeName::Reference(_, _) => (4, 4),
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
-            ast::TypeName::Box(_) => type_size_alignment(underlying.as_ref(), in_path, env),
+            ast::TypeName::Box(_) => type_size_alignment(underlying, in_path, env),
             _ => todo!(),
         },
-        ast::TypeName::Result(ok, _err) => type_size_alignment(ok.as_ref(), in_path, env),
+        ast::TypeName::Result(ok, err) => {
+            let (size, _, align) = result_size_ok_offset_align(ok, err, in_path, env);
+            (size, align)
+        }
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {
                 let (size, _, max_align) = struct_size_offsets_max_align(strct, in_path, env);
@@ -69,6 +104,6 @@ pub fn type_size_alignment(
         },
         ast::TypeName::StrReference => (4, 4),
         ast::TypeName::Writeable => panic!(),
-        ast::TypeName::Void => (0, 0),
+        ast::TypeName::Void => (0, 1),
     }
 }
