@@ -2,12 +2,12 @@ import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFor
 
 const my_decimal = ICU4XFixedDecimal.new(123);
 
-console.log(my_decimal.to_string());
+console.log(my_decimal.to_string().ok);
 
 my_decimal.multiply_pow10(-1);
 console.log("multiplied by 0.1");
 
-console.log(my_decimal.to_string());
+console.log(my_decimal.to_string().ok);
 
 const locale = ICU4XLocale.new("bn");
 

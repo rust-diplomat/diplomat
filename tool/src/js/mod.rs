@@ -295,6 +295,10 @@ fn gen_method<W: fmt::Write>(
         indented(&mut method_body_out).with_str("")
     };
 
+    if is_writeable {
+        write!(&mut maybe_writeable_indent, "return ")?;
+    }
+
     match &method.return_type {
         None | Some(ast::TypeName::Void) => {
             write!(&mut maybe_writeable_indent, "{}", invocation_expr)?;
@@ -311,11 +315,9 @@ fn gen_method<W: fmt::Write>(
         }
     }
 
+    writeln!(&mut method_body_out, ";")?;
     if is_writeable {
-        writeln!(&mut method_body_out)?;
         writeln!(&mut method_body_out, "}});")?;
-    } else {
-        writeln!(&mut method_body_out, ";")?;
     }
 
     for s in post_stmts.iter() {

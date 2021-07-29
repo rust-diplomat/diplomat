@@ -57,11 +57,11 @@ export class ICU4XFixedDecimal {
 
   to_string() {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
-      (() => {
+      return (() => {
         const is_ok = wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable) == 1;
         const out = { is_ok: is_ok };
         return out;
-      })()
+      })();
     });
     return diplomat_out;
   }
@@ -97,7 +97,7 @@ export class ICU4XFixedDecimalFormat {
 
   format_write(value) {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
-      wasm.ICU4XFixedDecimalFormat_format_write(this.underlying, value.underlying, writeable)
+      return wasm.ICU4XFixedDecimalFormat_format_write(this.underlying, value.underlying, writeable);
     });
     return diplomat_out;
   }
