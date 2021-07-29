@@ -112,8 +112,8 @@ impl Method {
     pub fn is_writeable_out(&self) -> bool {
         let return_compatible = self.return_type.is_none()
             || match self.return_type.as_ref().unwrap() {
-                TypeName::Void => true,
-                TypeName::Result(ok, _) => matches!(ok.as_ref(), TypeName::Void),
+                TypeName::Unit => true,
+                TypeName::Result(ok, _) => matches!(ok.as_ref(), TypeName::Unit),
                 _ => false,
             };
 

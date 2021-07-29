@@ -109,7 +109,7 @@ pub enum TypeName {
     /// A `&str` type.
     StrReference,
     /// The `()` type.
-    Void,
+    Unit,
 }
 
 impl TypeName {
@@ -199,7 +199,7 @@ impl TypeName {
             TypeName::StrReference => syn::parse_quote! {
                 &str
             },
-            TypeName::Void => syn::parse_quote! {
+            TypeName::Unit => syn::parse_quote! {
                 ()
             },
         }
@@ -304,7 +304,7 @@ impl TypeName {
             }
             TypeName::Writeable => {}
             TypeName::StrReference => {}
-            TypeName::Void => {}
+            TypeName::Unit => {}
         }
     }
 
@@ -393,7 +393,7 @@ impl From<&syn::Type> for TypeName {
             }
             syn::Type::Tuple(tup) => {
                 if tup.elems.is_empty() {
-                    TypeName::Void
+                    TypeName::Unit
                 } else {
                     todo!("Tuples are not currently supported")
                 }

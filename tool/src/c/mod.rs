@@ -227,7 +227,7 @@ fn collect_results<'a, 'b>(
         }
         ast::TypeName::Writeable => {}
         ast::TypeName::StrReference => {}
-        ast::TypeName::Void => {}
+        ast::TypeName::Unit => {}
     }
 }
 
@@ -244,7 +244,7 @@ fn gen_result<W: fmt::Write>(
         writeln!(&mut result_indent, "union {{")?;
         let mut union_indent = indented(&mut result_indent).with_str("    ");
 
-        if let ast::TypeName::Void = ok.as_ref() {
+        if let ast::TypeName::Unit = ok.as_ref() {
             writeln!(&mut union_indent, "uint8_t ok[0];")?;
         } else {
             gen_type(
@@ -256,7 +256,7 @@ fn gen_result<W: fmt::Write>(
             writeln!(&mut union_indent, " ok;")?;
         }
 
-        if let ast::TypeName::Void = err.as_ref() {
+        if let ast::TypeName::Unit = err.as_ref() {
             writeln!(&mut union_indent, "uint8_t err[0];")?;
         } else {
             gen_type(
@@ -369,7 +369,7 @@ pub fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
         ast::TypeName::StrReference => panic!(),
-        ast::TypeName::Void => write!(out, "void")?,
+        ast::TypeName::Unit => write!(out, "void")?,
     }
 
     Ok(())
@@ -397,7 +397,7 @@ fn name_for_type(typ: &ast::TypeName) -> String {
         }
         ast::TypeName::Writeable => "writeable".to_string(),
         ast::TypeName::StrReference => "str_ref".to_string(),
-        ast::TypeName::Void => "void".to_string(),
+        ast::TypeName::Unit => "void".to_string(),
     }
 }
 
