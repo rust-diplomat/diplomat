@@ -135,19 +135,82 @@ fn gen_field<W: fmt::Write>(
     Ok(())
 }
 
-fn type_requires_receive_buf(
+#[derive(PartialEq, Eq, Debug)]
+enum ReturnTypeForm {
+    /// A struct recursively containing no scalar fields.
+    Empty,
+
+    /// A single scalar or a struct recursively containing only a single scalar.
+    Scalar,
+
+    /// A struct recursively containing multiple scalar fields.
+    Complex,
+}
+
+/// Determines what return form the given return type will be translated to
+/// in the WASM ABI.
+///
+/// See https://github.com/WebAssembly/tool-conventions/blob/master/BasicCABI.md#function-signatures.
+fn return_type_form(
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-) -> bool {
-    if let ast::TypeName::Result(ok, err) = typ {
-        let (_, ok_offset, _) = layout::result_size_ok_offset_align(ok, err, in_path, env);
-        ok_offset > 0
-    } else if let ast::TypeName::Named(_) = typ {
-        // TODO(shadaj): verify if WASM ABI uses buffers for single-field structs
-        matches!(typ.resolve(in_path, env), ast::CustomType::Struct(_))
-    } else {
-        false
+) -> ReturnTypeForm {
+    match typ {
+        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+            ast::CustomType::Struct(strct) => {
+                let all_field_forms: Vec<ReturnTypeForm> = strct
+                    .fields
+                    .iter()
+                    .map(|f| return_type_form(&f.1, in_path, env))
+                    .collect();
+
+                let scalar_count = all_field_forms
+                    .iter()
+                    .filter(|v| v == &&ReturnTypeForm::Scalar)
+                    .count();
+                let complex_count = all_field_forms
+                    .iter()
+                    .filter(|v| v == &&ReturnTypeForm::Complex)
+                    .count();
+
+                if scalar_count == 0 && complex_count == 0 {
+                    ReturnTypeForm::Empty
+                } else if scalar_count == 1 && complex_count == 0 {
+                    ReturnTypeForm::Scalar
+                } else {
+                    ReturnTypeForm::Complex
+                }
+            }
+
+            ast::CustomType::Opaque(_) => ReturnTypeForm::Scalar,
+            ast::CustomType::Enum(_) => ReturnTypeForm::Scalar,
+        },
+
+        ast::TypeName::Result(ok, err) => {
+            let ok_form = return_type_form(ok, in_path, env);
+            let err_form = return_type_form(err, in_path, env);
+
+            if ok_form == ReturnTypeForm::Empty && err_form == ReturnTypeForm::Empty {
+                ReturnTypeForm::Scalar
+            } else {
+                ReturnTypeForm::Complex
+            }
+        }
+
+        ast::TypeName::Option(underlying) => return_type_form(underlying, in_path, env),
+
+        ast::TypeName::Void => ReturnTypeForm::Empty,
+
+        ast::TypeName::Box(_) => ReturnTypeForm::Scalar,
+
+        ast::TypeName::Reference(_, _) => ReturnTypeForm::Scalar,
+
+        ast::TypeName::StrReference => ReturnTypeForm::Scalar,
+
+        ast::TypeName::Primitive(_) => ReturnTypeForm::Scalar,
+
+        ast::TypeName::Writeable => panic!("Cannot return writeable"),
     }
 }
 
@@ -194,7 +257,8 @@ fn gen_method<W: fmt::Write>(
         }
 
         if method.return_type.is_some()
-            && type_requires_receive_buf(method.return_type.as_ref().unwrap(), in_path, env)
+            && return_type_form(method.return_type.as_ref().unwrap(), in_path, env)
+                == ReturnTypeForm::Complex
         {
             all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
         }
@@ -357,6 +421,11 @@ fn gen_value_rust_to_js<W: fmt::Write>(
             match custom_type {
                 ast::CustomType::Struct(strct) => {
                     let (strct_size, _) = layout::type_size_alignment(typ, in_path, env);
+                    let needs_buffer = return_type_form(typ, in_path, env);
+                    if needs_buffer != ReturnTypeForm::Complex {
+                        todo!("Receiving structs that don't need a buffer")
+                    }
+
                     writeln!(out, "(() => {{")?;
                     let mut iife_indent = indented(out).with_str("  ");
                     writeln!(
@@ -434,9 +503,10 @@ fn gen_value_rust_to_js<W: fmt::Write>(
         ast::TypeName::Result(ok, err) => {
             let (result_size, ok_offset, _) =
                 layout::result_size_ok_offset_align(ok, err, in_path, env);
+            let needs_buffer = return_type_form(typ, in_path, env) == ReturnTypeForm::Complex;
             writeln!(out, "(() => {{")?;
             let mut iife_indent = indented(out).with_str("  ");
-            if ok_offset > 0 {
+            if needs_buffer {
                 writeln!(
                     &mut iife_indent,
                     "const diplomat_receive_buffer = wasm.diplomat_alloc({});",
@@ -444,7 +514,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                 )?;
             }
 
-            if ok_offset == 0 {
+            if !needs_buffer {
                 write!(&mut iife_indent, "const is_ok = ")?;
                 value_expr(&mut iife_indent)?;
                 writeln!(&mut iife_indent, " == 1;")?;
@@ -464,7 +534,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
 
             writeln!(&mut iife_indent, "const out = {{ is_ok: is_ok }};")?;
 
-            if ok_offset > 0 {
+            if needs_buffer {
                 writeln!(&mut iife_indent, "if (is_ok) {{")?;
 
                 let mut ok_indent = indented(&mut iife_indent).with_str("  ");

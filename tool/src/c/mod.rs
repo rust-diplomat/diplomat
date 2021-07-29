@@ -376,6 +376,10 @@ pub fn gen_type<W: fmt::Write>(
     Ok(())
 }
 
+/// Generates a struct name that uniquely identifies the given type.
+///
+/// This is primarily used for generating structs for result types,
+/// which require one struct for each distinct instance.
 fn name_for_type(typ: &ast::TypeName) -> String {
     match typ {
         ast::TypeName::Named(name) => name.elements.join("_"),
