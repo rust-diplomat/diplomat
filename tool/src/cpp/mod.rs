@@ -239,7 +239,7 @@ fn gen_method<W: fmt::Write>(
     if is_writeable_out {
         if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
             write!(out, "diplomat::result<std::string, ")?;
-            if err.as_ref() == &ast::TypeName::Void {
+            if err.as_ref() == &ast::TypeName::Unit {
                 write!(out, "std::monostate")?;
             } else {
                 gen_type(err, in_path, None, env, out)?;
@@ -337,7 +337,7 @@ fn gen_method<W: fmt::Write>(
         }
 
         match &method.return_type {
-            None | Some(ast::TypeName::Void) => {
+            None | Some(ast::TypeName::Unit) => {
                 writeln!(
                     &mut method_body,
                     "capi::{}({});",
@@ -373,7 +373,7 @@ fn gen_method<W: fmt::Write>(
                         writeln!(&mut method_body, "if (out_value.is_ok) {{")?;
 
                         write!(&mut method_body, "  return diplomat::result<std::string, ")?;
-                        if err.as_ref() == &ast::TypeName::Void {
+                        if err.as_ref() == &ast::TypeName::Unit {
                             write!(&mut method_body, "std::monostate")?;
                         } else {
                             gen_type(err, in_path, None, env, &mut method_body)?;
@@ -382,7 +382,7 @@ fn gen_method<W: fmt::Write>(
 
                         writeln!(&mut method_body, "}} else {{")?;
                         write!(&mut method_body, "  return diplomat::result<std::string, ")?;
-                        if err.as_ref() == &ast::TypeName::Void {
+                        if err.as_ref() == &ast::TypeName::Unit {
                             writeln!(&mut method_body, "std::monostate>::new_err_void();")?;
                         } else {
                             gen_type(err, in_path, None, env, &mut method_body)?;
@@ -461,14 +461,14 @@ fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Result(ok, err) => {
             write!(out, "diplomat::result<")?;
-            if let ast::TypeName::Void = ok.as_ref() {
+            if let ast::TypeName::Unit = ok.as_ref() {
                 write!(out, "std::monostate")?;
             } else {
                 gen_type(ok, in_path, behind_ref, env, out)?;
             }
 
             write!(out, ", ")?;
-            if let ast::TypeName::Void = err.as_ref() {
+            if let ast::TypeName::Unit = err.as_ref() {
                 write!(out, "std::monostate")?;
             } else {
                 gen_type(err, in_path, behind_ref, env, out)?;
@@ -488,7 +488,7 @@ fn gen_type<W: fmt::Write>(
             write!(out, "const std::string_view")?;
         }
 
-        ast::TypeName::Void => {
+        ast::TypeName::Unit => {
             write!(out, "void")?;
         }
     }
@@ -600,13 +600,13 @@ fn gen_rust_to_cpp<W: Write>(
 
             writeln!(out, "{}.is_ok = {}.is_ok;", wrapped_value_id, raw_value_id).unwrap();
             writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
-            if ok.as_ref() != &ast::TypeName::Void {
+            if ok.as_ref() != &ast::TypeName::Unit {
                 let ok_expr =
                     gen_rust_to_cpp(&format!("{}.ok", raw_value_id), path, ok, in_path, env, out);
                 writeln!(out, "  {}.ok = {};", wrapped_value_id, ok_expr).unwrap();
             }
             writeln!(out, "}} else {{").unwrap();
-            if err.as_ref() != &ast::TypeName::Void {
+            if err.as_ref() != &ast::TypeName::Unit {
                 let err_expr = gen_rust_to_cpp(
                     &format!("{}.err", raw_value_id),
                     path,
@@ -630,7 +630,7 @@ fn gen_rust_to_cpp<W: Write>(
         ast::TypeName::StrReference => {
             todo!("Returning &str from Rust to C++ is not currently supported")
         }
-        ast::TypeName::Void => cpp.to_string(),
+        ast::TypeName::Unit => cpp.to_string(),
     }
 }
 

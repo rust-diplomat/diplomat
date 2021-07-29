@@ -200,7 +200,7 @@ fn return_type_form(
 
         ast::TypeName::Option(underlying) => return_type_form(underlying, in_path, env),
 
-        ast::TypeName::Void => ReturnTypeForm::Empty,
+        ast::TypeName::Unit => ReturnTypeForm::Empty,
 
         ast::TypeName::Box(_) => ReturnTypeForm::Scalar,
 
@@ -300,7 +300,7 @@ fn gen_method<W: fmt::Write>(
     }
 
     match &method.return_type {
-        None | Some(ast::TypeName::Void) => {
+        None | Some(ast::TypeName::Unit) => {
             write!(&mut maybe_writeable_indent, "{}", invocation_expr)?;
         }
 
@@ -584,7 +584,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
             } else {
                 writeln!(&mut iife_indent, "if (!is_ok) {{")?;
                 let mut err_indent = indented(&mut iife_indent).with_str("  ");
-                writeln!(&mut err_indent, "throw undefined;")?;
+                writeln!(&mut err_indent, "throw {{}};")?;
             }
 
             writeln!(&mut iife_indent, "}}")?;
@@ -603,7 +603,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
-        ast::TypeName::Void => value_expr(out)?,
+        ast::TypeName::Unit => value_expr(out)?,
     }
 
     Ok(())
@@ -770,8 +770,8 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             }
         }
 
-        ast::TypeName::Void => {
-            write!(out, "undefined")?;
+        ast::TypeName::Unit => {
+            write!(out, "{{}}")?;
         }
 
         _ => todo!(),

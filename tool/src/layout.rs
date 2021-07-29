@@ -104,6 +104,6 @@ pub fn type_size_alignment(
         },
         ast::TypeName::StrReference => (4, 4),
         ast::TypeName::Writeable => panic!(),
-        ast::TypeName::Void => (0, 1),
+        ast::TypeName::Unit => (0, 1),
     }
 }
