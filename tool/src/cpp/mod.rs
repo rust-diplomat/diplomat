@@ -28,6 +28,7 @@ pub fn gen_bindings(
     writeln!(out, "#include <algorithm>")?;
     writeln!(out, "#include <memory>")?;
     writeln!(out, "#include <optional>")?;
+    writeln!(out, "#include <variant>")?;
     writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
     writeln!(out)?;
 
@@ -239,7 +240,7 @@ fn gen_method<W: fmt::Write>(
         if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
             write!(out, "diplomat::result<std::string, ")?;
             if err.as_ref() == &ast::TypeName::Void {
-                write!(out, "uint8_t[0]")?;
+                write!(out, "std::monostate")?;
             } else {
                 gen_type(err, in_path, None, env, out)?;
             }
@@ -373,7 +374,7 @@ fn gen_method<W: fmt::Write>(
 
                         write!(&mut method_body, "  return diplomat::result<std::string, ")?;
                         if err.as_ref() == &ast::TypeName::Void {
-                            write!(&mut method_body, "uint8_t[0]")?;
+                            write!(&mut method_body, "std::monostate")?;
                         } else {
                             gen_type(err, in_path, None, env, &mut method_body)?;
                         }
@@ -382,7 +383,7 @@ fn gen_method<W: fmt::Write>(
                         writeln!(&mut method_body, "}} else {{")?;
                         write!(&mut method_body, "  return diplomat::result<std::string, ")?;
                         if err.as_ref() == &ast::TypeName::Void {
-                            writeln!(&mut method_body, "uint8_t[0]>::new_err_void();")?;
+                            writeln!(&mut method_body, "std::monostate>::new_err_void();")?;
                         } else {
                             gen_type(err, in_path, None, env, &mut method_body)?;
                             writeln!(&mut method_body, ">::new_err(out_value.err);")?;
@@ -461,14 +462,14 @@ fn gen_type<W: fmt::Write>(
         ast::TypeName::Result(ok, err) => {
             write!(out, "diplomat::result<")?;
             if let ast::TypeName::Void = ok.as_ref() {
-                write!(out, "uint8_t[0]")?;
+                write!(out, "std::monostate")?;
             } else {
                 gen_type(ok, in_path, behind_ref, env, out)?;
             }
 
             write!(out, ", ")?;
             if let ast::TypeName::Void = err.as_ref() {
-                write!(out, "uint8_t[0]")?;
+                write!(out, "std::monostate")?;
             } else {
                 gen_type(err, in_path, behind_ref, env, out)?;
             }
