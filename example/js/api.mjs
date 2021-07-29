@@ -17,6 +17,7 @@ export class ICU4XDataProvider {
     const diplomat_out = (() => {
       const out = (() => {
         const out = new ICU4XDataProvider(wasm.ICU4XDataProvider_new_static());
+        out.owner = null;
         return out;
       })();
       ICU4XDataProvider_box_destroy_registry.register(out, out.underlying)
@@ -39,6 +40,7 @@ export class ICU4XFixedDecimal {
     const diplomat_out = (() => {
       const out = (() => {
         const out = new ICU4XFixedDecimal(wasm.ICU4XFixedDecimal_new(v));
+        out.owner = null;
         return out;
       })();
       ICU4XFixedDecimal_box_destroy_registry.register(out, out.underlying)
@@ -59,8 +61,9 @@ export class ICU4XFixedDecimal {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
       return (() => {
         const is_ok = wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable) == 1;
-        const out = { is_ok: is_ok };
-        return out;
+        if (!is_ok) {
+          throw undefined;
+        }
       })();
     });
     return diplomat_out;
@@ -147,6 +150,7 @@ export class ICU4XFixedDecimalFormatResult {
   get fdf() {
     return (() => {
       const out = new ICU4XFixedDecimalFormat((new Uint32Array(wasm.memory.buffer, this.underlying + 0, 1))[0]);
+      out.owner = null;
       return out;
     })();
   }
@@ -201,6 +205,7 @@ export class ICU4XLocale {
     const diplomat_out = (() => {
       const out = (() => {
         const out = new ICU4XLocale(wasm.ICU4XLocale_new(name_diplomat_ptr, name_diplomat_bytes.length));
+        out.owner = null;
         return out;
       })();
       ICU4XLocale_box_destroy_registry.register(out, out.underlying)

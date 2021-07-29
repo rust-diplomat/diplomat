@@ -480,6 +480,7 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                 underlying.as_ref(),
                 in_path,
                 value_expr,
+                "null", // JS owns the box
                 env,
                 &mut iife_indent,
             )?;
@@ -516,6 +517,18 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                 )?;
             }
 
+            if needs_buffer {
+                writeln!(&mut iife_indent, "const result_tag = {{}};")?;
+                writeln!(
+                    &mut iife_indent,
+                    "diplomat_alloc_destroy_registry.register(result_tag, {{"
+                )?;
+                let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");
+                writeln!(&mut alloc_dict_indent, "ptr: diplomat_receive_buffer,")?;
+                writeln!(&mut alloc_dict_indent, "size: {}", result_size)?;
+                writeln!(&mut iife_indent, "}});")?;
+            }
+
             if !needs_buffer {
                 write!(&mut iife_indent, "const is_ok = ")?;
                 value_expr(&mut iife_indent)?;
@@ -528,51 +541,54 @@ fn gen_value_rust_to_js<W: fmt::Write>(
                     &ast::TypeName::Primitive(PrimitiveType::bool),
                     in_path,
                     &|out| write!(out, "diplomat_receive_buffer + {}", ok_offset),
+                    "result_tag",
                     env,
                     &mut ((&mut iife_indent) as &mut dyn fmt::Write),
                 )?;
                 writeln!(&mut iife_indent, ";")?;
             }
 
-            writeln!(&mut iife_indent, "const out = {{ is_ok: is_ok }};")?;
-
             if needs_buffer {
                 writeln!(&mut iife_indent, "if (is_ok) {{")?;
 
                 let mut ok_indent = indented(&mut iife_indent).with_str("  ");
-                write!(
-                    &mut ok_indent,
-                    "Object.defineProperty(out, \"ok\", {{ get() {{ return "
-                )?;
+
+                write!(&mut ok_indent, "const ok_value = ")?;
                 gen_rust_reference_to_js(
                     ok.as_ref(),
                     in_path,
                     &|out| write!(out, "diplomat_receive_buffer"),
+                    "result_tag",
                     env,
                     &mut ((&mut ok_indent) as &mut dyn fmt::Write),
                 )?;
-                writeln!(&mut ok_indent, "; }} }});")?;
+                writeln!(&mut ok_indent, ";")?;
+
+                writeln!(&mut ok_indent, "return ok_value;")?;
 
                 writeln!(&mut iife_indent, "}} else {{")?;
                 let mut err_indent = indented(&mut iife_indent).with_str("  ");
-                write!(
-                    &mut err_indent,
-                    "Object.defineProperty(out, \"err\", {{ get() {{ return "
-                )?;
+
+                write!(&mut err_indent, "const throw_value = ")?;
                 gen_rust_reference_to_js(
                     err.as_ref(),
                     in_path,
                     &|out| write!(out, "diplomat_receive_buffer"),
+                    "result_tag",
                     env,
                     &mut ((&mut err_indent) as &mut dyn fmt::Write),
                 )?;
-                writeln!(&mut err_indent, "; }} }});")?;
-                writeln!(&mut iife_indent, "}}")?;
+                writeln!(&mut err_indent, ";")?;
 
-                writeln!(&mut iife_indent, "diplomat_alloc_destroy_registry.register(out, {{ ptr: diplomat_receive_buffer, size: {} }});", result_size)?;
+                writeln!(&mut err_indent, "throw throw_value;")?;
+            } else {
+                writeln!(&mut iife_indent, "if (!is_ok) {{")?;
+                let mut err_indent = indented(&mut iife_indent).with_str("  ");
+                writeln!(&mut err_indent, "throw undefined;")?;
             }
 
-            writeln!(&mut iife_indent, "return out;")?;
+            writeln!(&mut iife_indent, "}}")?;
+
             write!(out, "}})()")?;
         }
 
@@ -582,7 +598,8 @@ fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Reference(underlying, _mutability) => {
-            gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, env, out)?;
+            // TODO(shadaj): pass in lifetime of the reference
+            gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, "null", env, out)?;
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
@@ -635,11 +652,12 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
     underlying: &ast::TypeName,
     in_path: &ast::Path,
     value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
+    owner: &str,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
     match underlying {
-        ast::TypeName::Box(typ) | ast::TypeName::Reference(typ, _) => {
+        ast::TypeName::Box(typ) => {
             gen_rust_reference_to_js(
                 typ.as_ref(),
                 in_path,
@@ -649,6 +667,23 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     write!(out, ", 1))[0]")?;
                     Ok(())
                 },
+                owner,
+                env,
+                out,
+            )?;
+        }
+
+        ast::TypeName::Reference(typ, _) => {
+            gen_rust_reference_to_js(
+                typ.as_ref(),
+                in_path,
+                &|out| {
+                    write!(out, "(new Uint32Array(wasm.memory.buffer, ")?;
+                    value_expr(out)?;
+                    write!(out, ", 1))[0]")?;
+                    Ok(())
+                },
+                "null", // TODO(shadaj): pass in lifetime of the reference
                 env,
                 out,
             )?;
@@ -657,7 +692,14 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
                 // TODO(shadaj): return null if pointer is 0
-                gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, env, out)?;
+                gen_rust_reference_to_js(
+                    underlying.as_ref(),
+                    in_path,
+                    value_expr,
+                    owner,
+                    env,
+                    out,
+                )?;
             }
             _ => todo!(),
         },
@@ -671,6 +713,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     &ast::TypeName::Primitive(PrimitiveType::isize),
                     in_path,
                     value_expr,
+                    owner,
                     env,
                     out,
                 )?;
@@ -682,7 +725,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                 value_expr(&mut iife_indent)?;
                 writeln!(&mut iife_indent, ");")?;
 
-                // TODO(shadaj): add lifetime references
+                writeln!(&mut iife_indent, "out.owner = {};", owner)?;
 
                 writeln!(&mut iife_indent, "return out;")?;
                 write!(out, "}})()")?;
