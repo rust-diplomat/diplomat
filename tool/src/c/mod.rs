@@ -333,9 +333,8 @@ pub fn gen_type<W: fmt::Write>(
                 write!(out, "{}", r.name())?;
             }
 
-            ast::CustomType::Enum(_) => {
-                // repr(C) fieldless enums use the default platform representation: isize
-                write!(out, "ssize_t")?;
+            ast::CustomType::Enum(enm) => {
+                write!(out, "{}", enm.name)?;
             }
         },
 
