@@ -18,14 +18,14 @@ struct ICU4XFixedDecimalFormatOptions;
 
 struct ICU4XFixedDecimalFormatResult;
 
-enum struct ICU4XFixedDecimalGroupingStrategy : ssize_t {
+enum struct ICU4XFixedDecimalGroupingStrategy {
   Auto = 0,
   Never = 1,
   Always = 2,
   Min2 = 3,
 };
 
-enum struct ICU4XFixedDecimalSignDisplay : ssize_t {
+enum struct ICU4XFixedDecimalSignDisplay {
   Auto = 0,
   Never = 1,
   Always = 2,
@@ -154,7 +154,7 @@ diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() {
 
 ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {
   ICU4XFixedDecimalFormatOptions diplomat_wrapped_struct_options = options;
-  capi::ICU4XFixedDecimalFormatResult diplomat_raw_struct_out_value = capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatOptions{ .grouping_strategy = static_cast<ssize_t>(diplomat_wrapped_struct_options.grouping_strategy), .sign_display = static_cast<ssize_t>(diplomat_wrapped_struct_options.sign_display) });
+  capi::ICU4XFixedDecimalFormatResult diplomat_raw_struct_out_value = capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatOptions{ .grouping_strategy = static_cast<capi::ICU4XFixedDecimalGroupingStrategy>(diplomat_wrapped_struct_options.grouping_strategy), .sign_display = static_cast<capi::ICU4XFixedDecimalSignDisplay>(diplomat_wrapped_struct_options.sign_display) });
   auto diplomat_optional_raw_out_value_fdf = diplomat_raw_struct_out_value.fdf;
   std::optional<ICU4XFixedDecimalFormat> diplomat_optional_out_value_fdf;
   if (diplomat_optional_raw_out_value_fdf != nullptr) {

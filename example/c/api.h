@@ -32,8 +32,8 @@ typedef enum ICU4XFixedDecimalSignDisplay {
 typedef struct ICU4XLocale ICU4XLocale;
 
 typedef struct ICU4XFixedDecimalFormatOptions {
-    ssize_t grouping_strategy;
-    ssize_t sign_display;
+    ICU4XFixedDecimalGroupingStrategy grouping_strategy;
+    ICU4XFixedDecimalSignDisplay sign_display;
 } ICU4XFixedDecimalFormatOptions;
 
 typedef struct ICU4XFixedDecimalFormatResult {
@@ -71,9 +71,9 @@ void ICU4XFixedDecimalFormatOptions_destroy(ICU4XFixedDecimalFormatOptions* self
 
 void ICU4XFixedDecimalFormatResult_destroy(ICU4XFixedDecimalFormatResult* self);
 
-void ICU4XFixedDecimalGroupingStrategy_destroy(ssize_t* self);
+void ICU4XFixedDecimalGroupingStrategy_destroy(ICU4XFixedDecimalGroupingStrategy* self);
 
-void ICU4XFixedDecimalSignDisplay_destroy(ssize_t* self);
+void ICU4XFixedDecimalSignDisplay_destroy(ICU4XFixedDecimalSignDisplay* self);
 
 ICU4XLocale* ICU4XLocale_new(const char* name_data, size_t name_len);
 void ICU4XLocale_destroy(ICU4XLocale* self);

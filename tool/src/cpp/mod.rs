@@ -43,7 +43,7 @@ pub fn gen_bindings(
             }
 
             ast::CustomType::Enum(enm) => {
-                writeln!(out, "enum struct {} : ssize_t {{", enm.name)?;
+                writeln!(out, "enum struct {} {{", enm.name)?;
                 let mut enm_indent = indented(out).with_str("  ");
                 for (name, discriminant, _) in enm.variants.iter() {
                     writeln!(&mut enm_indent, "{} = {},", name, discriminant)?;
@@ -716,7 +716,7 @@ fn gen_cpp_to_rust<W: Write>(
                 }
             }
 
-            ast::CustomType::Enum(_) => format!("static_cast<ssize_t>({})", cpp),
+            ast::CustomType::Enum(enm) => format!("static_cast<capi::{}>({})", enm.name, cpp),
         },
         ast::TypeName::Writeable => {
             if behind_ref
