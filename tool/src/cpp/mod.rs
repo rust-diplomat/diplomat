@@ -329,9 +329,29 @@ fn gen_includes<W: fmt::Write>(
                     }
                 }
 
-                ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => {
+                ast::CustomType::Struct(_) => {
                     if pre_struct && !for_field {
                         let decl = format!("struct {};", custom_typ.name());
+                        if !seen_includes.contains(&decl) {
+                            writeln!(out, "{}", decl)?;
+                            seen_includes.insert(decl);
+                        }
+                    } else {
+                        let include = format!(
+                            "#include \"{}_{}.hpp\"",
+                            path.elements.join("_"),
+                            custom_typ.name()
+                        );
+                        if !seen_includes.contains(&include) {
+                            writeln!(out, "{}", include)?;
+                            seen_includes.insert(include);
+                        }
+                    }
+                }
+
+                ast::CustomType::Enum(_) => {
+                    if pre_struct && !for_field {
+                        let decl = format!("enum struct {};", custom_typ.name());
                         if !seen_includes.contains(&decl) {
                             writeln!(out, "{}", decl)?;
                             seen_includes.insert(decl);
@@ -384,16 +404,26 @@ fn gen_includes<W: fmt::Write>(
                 out,
             )?;
         }
-        ast::TypeName::Result(_, _) => {
-            let include = format!(
-                "#include \"{}_{}.h\"",
-                in_path.elements.join("_"),
-                super::c::name_for_type(typ)
-            );
-            if !seen_includes.contains(&include) {
-                writeln!(out, "{}", include)?;
-                seen_includes.insert(include);
-            }
+        ast::TypeName::Result(ok, err) => {
+            gen_includes(
+                ok.as_ref(),
+                in_path,
+                pre_struct,
+                for_field,
+                env,
+                seen_includes,
+                out,
+            )?;
+
+            gen_includes(
+                err.as_ref(),
+                in_path,
+                pre_struct,
+                for_field,
+                env,
+                seen_includes,
+                out,
+            )?;
         }
         ast::TypeName::Writeable => {}
         ast::TypeName::StrReference => {}
