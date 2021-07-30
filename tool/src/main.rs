@@ -26,8 +26,6 @@ fn main() -> std::io::Result<()> {
         panic!();
     }
 
-    dbg!(&env);
-
     let args: Vec<String> = env::args().collect();
     let target = args[1].as_str();
 
