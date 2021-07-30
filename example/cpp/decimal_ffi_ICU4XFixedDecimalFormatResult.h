@@ -9,7 +9,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 typedef struct ICU4XFixedDecimalFormat ICU4XFixedDecimalFormat;
 
 typedef struct ICU4XFixedDecimalFormatResult {
@@ -18,6 +17,7 @@ typedef struct ICU4XFixedDecimalFormatResult {
 } ICU4XFixedDecimalFormatResult;
 
 void ICU4XFixedDecimalFormatResult_destroy(ICU4XFixedDecimalFormatResult* self);
+
 #ifdef __cplusplus
 }
 #endif

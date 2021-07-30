@@ -10,7 +10,6 @@
 extern "C" {
 #endif
 
-
 typedef enum ICU4XFixedDecimalGroupingStrategy {
   ICU4XFixedDecimalGroupingStrategy_Auto = 0,
   ICU4XFixedDecimalGroupingStrategy_Never = 1,
@@ -19,6 +18,7 @@ typedef enum ICU4XFixedDecimalGroupingStrategy {
 } ICU4XFixedDecimalGroupingStrategy;
 
 void ICU4XFixedDecimalGroupingStrategy_destroy(ICU4XFixedDecimalGroupingStrategy* self);
+
 #ifdef __cplusplus
 }
 #endif

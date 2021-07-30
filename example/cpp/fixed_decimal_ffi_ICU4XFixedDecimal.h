@@ -10,7 +10,6 @@
 extern "C" {
 #endif
 
-
 typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
 #include "fixed_decimal_ffi_result_void_void.h"
 
@@ -22,6 +21,7 @@ void ICU4XFixedDecimal_negate(ICU4XFixedDecimal* self);
 
 fixed_decimal_ffi_result_void_void ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWriteable* to);
 void ICU4XFixedDecimal_destroy(ICU4XFixedDecimal* self);
+
 #ifdef __cplusplus
 }
 #endif

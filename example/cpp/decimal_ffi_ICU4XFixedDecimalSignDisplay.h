@@ -10,7 +10,6 @@
 extern "C" {
 #endif
 
-
 typedef enum ICU4XFixedDecimalSignDisplay {
   ICU4XFixedDecimalSignDisplay_Auto = 0,
   ICU4XFixedDecimalSignDisplay_Never = 1,
@@ -20,6 +19,7 @@ typedef enum ICU4XFixedDecimalSignDisplay {
 } ICU4XFixedDecimalSignDisplay;
 
 void ICU4XFixedDecimalSignDisplay_destroy(ICU4XFixedDecimalSignDisplay* self);
+
 #ifdef __cplusplus
 }
 #endif

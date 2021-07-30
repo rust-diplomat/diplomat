@@ -22,7 +22,7 @@ pub fn gen_bindings(
     let all_types = util::get_all_custom_types(env);
     let mut seen_results = HashSet::new();
     let mut all_results = Vec::new();
-    // all_types.sort_by_key(|t| t.1.name());
+
     for (in_path, typ) in all_types {
         let out = outs
             .entry(format!("{}_{}.h", in_path.elements.join("_"), typ.name()))
@@ -50,8 +50,6 @@ pub fn gen_bindings(
         writeln!(out, "#ifdef __cplusplus")?;
         writeln!(out, "extern \"C\" {{")?;
         writeln!(out, "#endif")?;
-
-        writeln!(out)?;
 
         let mut seen_includes = HashSet::new();
         seen_includes.insert(format!(
@@ -130,6 +128,7 @@ pub fn gen_bindings(
 
         writeln!(out, " self);")?;
 
+        writeln!(out)?;
         writeln!(out, "#ifdef __cplusplus")?;
         writeln!(out, "}}")?;
         writeln!(out, "#endif")?;

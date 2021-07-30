@@ -10,11 +10,11 @@
 extern "C" {
 #endif
 
-
 typedef struct ICU4XDataProvider ICU4XDataProvider;
 
 ICU4XDataProvider* ICU4XDataProvider_new_static();
 void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
+
 #ifdef __cplusplus
 }
 #endif

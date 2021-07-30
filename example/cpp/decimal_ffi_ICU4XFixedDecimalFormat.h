@@ -10,7 +10,6 @@
 extern "C" {
 #endif
 
-
 typedef struct ICU4XFixedDecimalFormat ICU4XFixedDecimalFormat;
 #include "locale_ffi_ICU4XLocale.h"
 #include "data_provider_ffi_ICU4XDataProvider.h"
@@ -22,6 +21,7 @@ ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat_try_new(const ICU4XLocale*
 
 void ICU4XFixedDecimalFormat_format_write(const ICU4XFixedDecimalFormat* self, const ICU4XFixedDecimal* value, DiplomatWriteable* write);
 void ICU4XFixedDecimalFormat_destroy(ICU4XFixedDecimalFormat* self);
+
 #ifdef __cplusplus
 }
 #endif
