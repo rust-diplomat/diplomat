@@ -14,6 +14,7 @@ namespace capi {
 }
 
 class ICU4XFixedDecimalFormat;
+
 struct ICU4XFixedDecimalFormatResultDeleter {
   void operator()(capi::ICU4XFixedDecimalFormatResult* l) const noexcept {
     capi::ICU4XFixedDecimalFormatResult_destroy(l);
@@ -24,4 +25,6 @@ struct ICU4XFixedDecimalFormatResult {
   std::optional<ICU4XFixedDecimalFormat> fdf;
   bool success;
 };
+
+
 #endif

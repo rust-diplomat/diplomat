@@ -34,6 +34,7 @@ class ICU4XFixedDecimalFormat {
  private:
   std::unique_ptr<capi::ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatDeleter> inner;
 };
+
 #include "locale_ffi_ICU4XLocale.hpp"
 #include "data_provider_ffi_ICU4XDataProvider.hpp"
 #include "decimal_ffi_ICU4XFixedDecimalFormatOptions.hpp"

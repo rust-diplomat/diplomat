@@ -34,6 +34,7 @@ class ICU4XFixedDecimal {
   std::unique_ptr<capi::ICU4XFixedDecimal, ICU4XFixedDecimalDeleter> inner;
 };
 
+
 ICU4XFixedDecimal ICU4XFixedDecimal::new_(int32_t v) {
   return ICU4XFixedDecimal(capi::ICU4XFixedDecimal_new(v));
 }

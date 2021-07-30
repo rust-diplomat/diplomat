@@ -123,9 +123,12 @@ pub fn gen_bindings(
             ast::CustomType::Enum(_) => {}
 
             ast::CustomType::Struct(_) => {
+                writeln!(out)?;
                 gen_struct(typ, in_path, true, env, out)?;
             }
         }
+
+        writeln!(out)?;
 
         for method in typ.methods() {
             for param in &method.params {
@@ -162,6 +165,7 @@ pub fn gen_bindings(
             ast::CustomType::Enum(_) => {}
 
             ast::CustomType::Struct(_) => {
+                writeln!(out)?;
                 gen_struct(typ, in_path, false, env, out)?;
             }
         }

@@ -20,4 +20,5 @@ enum struct ICU4XFixedDecimalGroupingStrategy {
   Always = 2,
   Min2 = 3,
 };
+
 #endif

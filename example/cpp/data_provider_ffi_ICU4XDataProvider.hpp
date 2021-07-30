@@ -30,6 +30,7 @@ class ICU4XDataProvider {
   std::unique_ptr<capi::ICU4XDataProvider, ICU4XDataProviderDeleter> inner;
 };
 
+
 ICU4XDataProvider ICU4XDataProvider::new_static() {
   return ICU4XDataProvider(capi::ICU4XDataProvider_new_static());
 }

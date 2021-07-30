@@ -21,4 +21,5 @@ enum struct ICU4XFixedDecimalSignDisplay {
   ExceptZero = 3,
   Negative = 4,
 };
+
 #endif

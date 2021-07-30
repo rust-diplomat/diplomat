@@ -30,6 +30,7 @@ class ICU4XLocale {
   std::unique_ptr<capi::ICU4XLocale, ICU4XLocaleDeleter> inner;
 };
 
+
 ICU4XLocale ICU4XLocale::new_(const std::string_view name) {
   return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.length()));
 }
