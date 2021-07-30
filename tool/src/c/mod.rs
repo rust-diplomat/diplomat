@@ -10,38 +10,60 @@ use crate::util;
 
 static RUNTIME_H: &str = include_str!("runtime.h");
 
-#[derive(Hash, Eq, PartialEq, Clone, Debug)]
-pub enum StructOrType<'a> {
-    Struct(&'a ast::Struct),
-    Type(&'a ast::TypeName),
-}
-
 pub fn gen_bindings(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-    outs: &mut HashMap<&str, String>,
+    outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
-    let diplomat_runtime_out = outs.entry("diplomat_runtime.h").or_insert_with(String::new);
+    let diplomat_runtime_out = outs
+        .entry("diplomat_runtime.h".to_string())
+        .or_insert_with(String::new);
     write!(diplomat_runtime_out, "{}", RUNTIME_H)?;
 
-    let out = outs.entry("api.h").or_insert_with(String::new);
-    writeln!(out, "#include <stdio.h>")?;
-    writeln!(out, "#include <stdint.h>")?;
-    writeln!(out, "#include <stddef.h>")?;
-    writeln!(out, "#include <stdbool.h>")?;
-    writeln!(out, "#include \"diplomat_runtime.h\"")?;
-    writeln!(out)?;
-    writeln!(out, "#ifdef __cplusplus")?;
-    writeln!(out, "extern \"C\" {{")?;
-    writeln!(out, "#endif")?;
+    let all_types = util::get_all_custom_types(env);
+    let mut seen_results = HashSet::new();
+    let mut all_results = Vec::new();
+    // all_types.sort_by_key(|t| t.1.name());
+    for (in_path, typ) in all_types {
+        let out = outs
+            .entry(format!("{}_{}.h", in_path.elements.join("_"), typ.name()))
+            .or_insert_with(String::new);
 
-    let mut all_types = util::get_all_custom_types(env);
-    all_types.sort_by_key(|t| t.1.name());
+        writeln!(
+            out,
+            "#ifndef {}_{}_H",
+            in_path.elements.join("_"),
+            typ.name()
+        )?;
+        writeln!(
+            out,
+            "#define {}_{}_H",
+            in_path.elements.join("_"),
+            typ.name()
+        )?;
 
-    for (in_path, custom_type) in &all_types {
-        match custom_type {
+        writeln!(out, "#include <stdio.h>")?;
+        writeln!(out, "#include <stdint.h>")?;
+        writeln!(out, "#include <stddef.h>")?;
+        writeln!(out, "#include <stdbool.h>")?;
+        writeln!(out, "#include \"diplomat_runtime.h\"")?;
+        writeln!(out)?;
+        writeln!(out, "#ifdef __cplusplus")?;
+        writeln!(out, "extern \"C\" {{")?;
+        writeln!(out, "#endif")?;
+
+        writeln!(out)?;
+
+        let mut seen_includes = HashSet::new();
+        seen_includes.insert(format!(
+            "#include \"{}_{}.h\"",
+            in_path.elements.join("_"),
+            typ.name()
+        ));
+
+        match typ {
             ast::CustomType::Opaque(_) => {
                 writeln!(out)?;
-                gen_struct(custom_type, in_path, env, out)?;
+                gen_struct(typ, in_path, env, out)?;
             }
 
             ast::CustomType::Enum(enm) => {
@@ -58,89 +80,48 @@ pub fn gen_bindings(
                 writeln!(out, "}} {};", enm.name)?;
             }
 
-            ast::CustomType::Struct(_) => {}
-        }
-    }
-
-    let mut structs_seen = HashSet::new();
-    let mut structs_order = Vec::new();
-    for (in_path, custom_type) in &all_types {
-        if let ast::CustomType::Struct(strct) = custom_type {
-            topological_sort_structs(
-                StructOrType::Struct(strct),
-                ast::Path::clone(in_path),
-                &mut structs_seen,
-                &mut structs_order,
-                env,
-            );
-        }
-    }
-
-    let mut seen_additional_results: HashSet<(&ast::TypeName, &ast::Path)> = HashSet::new();
-
-    for (in_path, strct) in &structs_order {
-        writeln!(out)?;
-        match strct {
-            StructOrType::Struct(strct) => {
-                gen_struct(
-                    &ast::CustomType::Struct(ast::Struct::clone(strct)),
-                    &in_path,
-                    env,
-                    out,
-                )?;
-            }
-
-            StructOrType::Type(typ) => {
-                gen_result(typ, &in_path, env, out)?;
-                seen_additional_results.insert((typ, in_path));
+            ast::CustomType::Struct(strct) => {
+                for (_, typ, _) in &strct.fields {
+                    gen_includes(typ, in_path, true, env, &mut seen_includes, out)?;
+                    collect_results(typ, in_path, env, &mut seen_results, &mut all_results);
+                }
+                writeln!(out)?;
+                gen_struct(typ, in_path, env, out)?;
             }
         }
-    }
 
-    let mut additional_results = Vec::new();
-    for (in_path, custom_type) in &all_types {
-        for method in custom_type.methods() {
-            method.params.iter().for_each(|param| {
-                collect_results(
-                    &param.ty,
-                    in_path,
-                    env,
-                    &mut seen_additional_results,
-                    &mut additional_results,
-                )
-            });
+        for method in typ.methods() {
+            for param in &method.params {
+                gen_includes(&param.ty, in_path, false, env, &mut seen_includes, out)?;
+                collect_results(&param.ty, in_path, env, &mut seen_results, &mut all_results);
+            }
+
             if let Some(return_type) = method.return_type.as_ref() {
+                gen_includes(return_type, in_path, false, env, &mut seen_includes, out)?;
                 collect_results(
                     return_type,
                     in_path,
                     env,
-                    &mut seen_additional_results,
-                    &mut additional_results,
+                    &mut seen_results,
+                    &mut all_results,
                 );
             }
         }
-    }
 
-    for (typ, in_path) in additional_results.iter() {
-        writeln!(out)?;
-        gen_result(typ, in_path, env, out)?;
-    }
-
-    for (in_path, custom_type) in all_types {
-        for method in custom_type.methods() {
+        for method in typ.methods() {
             writeln!(out)?;
             gen_method(method, in_path, env, out)?;
         }
 
-        if custom_type.methods().is_empty() {
+        if typ.methods().is_empty() {
             writeln!(out)?;
         }
 
-        write!(out, "void {}_destroy(", custom_type.name())?;
+        write!(out, "void {}_destroy(", typ.name())?;
 
         gen_type(
             &ast::TypeName::Box(Box::new(ast::TypeName::Named(
-                ast::Path::empty().sub_path(custom_type.name().clone()),
+                ast::Path::empty().sub_path(typ.name().clone()),
             ))),
             in_path,
             env,
@@ -148,11 +129,59 @@ pub fn gen_bindings(
         )?;
 
         writeln!(out, " self);")?;
+
+        writeln!(out, "#ifdef __cplusplus")?;
+        writeln!(out, "}}")?;
+        writeln!(out, "#endif")?;
+        writeln!(out, "#endif")?;
     }
 
-    writeln!(out, "#ifdef __cplusplus")?;
-    writeln!(out, "}}")?;
-    writeln!(out, "#endif")?;
+    for (in_path, typ) in &all_results {
+        if let ast::TypeName::Result(ok, err) = typ {
+            let out = outs
+                .entry(format!(
+                    "{}_{}.h",
+                    in_path.elements.join("_"),
+                    name_for_type(typ)
+                ))
+                .or_insert_with(String::new);
+
+            writeln!(
+                out,
+                "#ifndef {}_{}_H",
+                in_path.elements.join("_"),
+                name_for_type(typ)
+            )?;
+            writeln!(
+                out,
+                "#define {}_{}_H",
+                in_path.elements.join("_"),
+                name_for_type(typ)
+            )?;
+            writeln!(out, "#include <stdio.h>")?;
+            writeln!(out, "#include <stdint.h>")?;
+            writeln!(out, "#include <stddef.h>")?;
+            writeln!(out, "#include <stdbool.h>")?;
+            writeln!(out, "#include \"diplomat_runtime.h\"")?;
+            writeln!(out)?;
+            writeln!(out, "#ifdef __cplusplus")?;
+            writeln!(out, "extern \"C\" {{")?;
+            writeln!(out, "#endif")?;
+
+            let mut seen_includes = HashSet::new();
+            gen_includes(ok.as_ref(), in_path, true, env, &mut seen_includes, out)?;
+            gen_includes(err.as_ref(), in_path, true, env, &mut seen_includes, out)?;
+
+            gen_result(typ, in_path, env, out)?;
+
+            writeln!(out, "#ifdef __cplusplus")?;
+            writeln!(out, "}}")?;
+            writeln!(out, "#endif")?;
+            writeln!(out, "#endif")?;
+        } else {
+            panic!()
+        }
+    }
 
     Ok(())
 }
@@ -198,12 +227,90 @@ fn gen_field<W: fmt::Write>(
     Ok(())
 }
 
+fn gen_includes<W: fmt::Write>(
+    typ: &ast::TypeName,
+    in_path: &ast::Path,
+    pre_struct: bool,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    seen_includes: &mut HashSet<String>,
+    out: &mut W,
+) -> fmt::Result {
+    match typ {
+        ast::TypeName::Named(_) => {
+            let (path, custom_typ) = typ.resolve_with_path(in_path, env);
+            match custom_typ {
+                ast::CustomType::Opaque(_) => {
+                    if pre_struct {
+                        let decl = format!(
+                            "typedef struct {} {};",
+                            custom_typ.name(),
+                            custom_typ.name()
+                        );
+                        if !seen_includes.contains(&decl) {
+                            writeln!(out, "{}", decl)?;
+                            seen_includes.insert(decl);
+                        }
+                    } else {
+                        let include = format!(
+                            "#include \"{}_{}.h\"",
+                            path.elements.join("_"),
+                            custom_typ.name()
+                        );
+                        if !seen_includes.contains(&include) {
+                            writeln!(out, "{}", include)?;
+                            seen_includes.insert(include);
+                        }
+                    }
+                }
+
+                ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => {
+                    let include = format!(
+                        "#include \"{}_{}.h\"",
+                        path.elements.join("_"),
+                        custom_typ.name()
+                    );
+                    if !seen_includes.contains(&include) {
+                        writeln!(out, "{}", include)?;
+                        seen_includes.insert(include);
+                    }
+                }
+            }
+        }
+        ast::TypeName::Box(underlying) => {
+            gen_includes(underlying, in_path, pre_struct, env, seen_includes, out)?;
+        }
+        ast::TypeName::Reference(underlying, _) => {
+            gen_includes(underlying, in_path, pre_struct, env, seen_includes, out)?;
+        }
+        ast::TypeName::Primitive(_) => {}
+        ast::TypeName::Option(underlying) => {
+            gen_includes(underlying, in_path, pre_struct, env, seen_includes, out)?;
+        }
+        ast::TypeName::Result(_, _) => {
+            let include = format!(
+                "#include \"{}_{}.h\"",
+                in_path.elements.join("_"),
+                name_for_type(typ)
+            );
+            if !seen_includes.contains(&include) {
+                writeln!(out, "{}", include)?;
+                seen_includes.insert(include);
+            }
+        }
+        ast::TypeName::Writeable => {}
+        ast::TypeName::StrReference => {}
+        ast::TypeName::Unit => {}
+    }
+
+    Ok(())
+}
+
 fn collect_results<'a, 'b>(
     typ: &'a ast::TypeName,
     in_path: &'b ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-    seen: &mut HashSet<(&'a ast::TypeName, &'b ast::Path)>,
-    results: &mut Vec<(&'a ast::TypeName, &'b ast::Path)>,
+    seen: &mut HashSet<(ast::Path, &'a ast::TypeName)>,
+    results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
 ) {
     match typ {
         ast::TypeName::Named(_) => {}
@@ -218,11 +325,12 @@ fn collect_results<'a, 'b>(
             collect_results(underlying, in_path, env, seen, results);
         }
         ast::TypeName::Result(ok, err) => {
-            if !seen.contains(&(typ, in_path)) {
-                seen.insert((typ, in_path));
+            let seen_key = (in_path.clone(), typ);
+            if !seen.contains(&seen_key) {
+                seen.insert(seen_key.clone());
                 collect_results(ok, in_path, env, seen, results);
                 collect_results(err, in_path, env, seen, results);
-                results.push((typ, in_path));
+                results.push(seen_key);
             }
         }
         ast::TypeName::Writeable => {}
@@ -379,7 +487,7 @@ pub fn gen_type<W: fmt::Write>(
 ///
 /// This is primarily used for generating structs for result types,
 /// which require one struct for each distinct instance.
-fn name_for_type(typ: &ast::TypeName) -> String {
+pub fn name_for_type(typ: &ast::TypeName) -> String {
     match typ {
         ast::TypeName::Named(name) => name.elements.join("_"),
         ast::TypeName::Box(underlying) => format!("box_{}", name_for_type(underlying)),
@@ -419,77 +527,5 @@ pub fn c_type_for_prim(prim: &PrimitiveType) -> &str {
         PrimitiveType::f64 => "double",
         PrimitiveType::bool => "bool",
         PrimitiveType::char => "char",
-    }
-}
-
-pub fn topological_sort_structs<'a>(
-    root: StructOrType<'a>,
-    in_path: ast::Path,
-    seen: &mut HashSet<(ast::Path, StructOrType<'a>)>,
-    order: &mut Vec<(ast::Path, StructOrType<'a>)>,
-    env: &'a HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-) {
-    if !seen.contains(&(in_path.clone(), root.clone())) {
-        seen.insert((in_path.clone(), root.clone()));
-        match &root {
-            StructOrType::Struct(strct) => {
-                for (_, typ, _) in &strct.fields {
-                    topological_sort_structs(
-                        StructOrType::Type(typ),
-                        in_path.clone(),
-                        seen,
-                        order,
-                        env,
-                    );
-                }
-
-                order.push((in_path, root));
-            }
-
-            StructOrType::Type(typ) => match typ {
-                ast::TypeName::Named(_) => match typ.resolve_with_path(&in_path, env) {
-                    (path, ast::CustomType::Struct(strct)) => {
-                        topological_sort_structs(
-                            StructOrType::Struct(strct),
-                            path,
-                            seen,
-                            order,
-                            env,
-                        );
-                    }
-                    (_, ast::CustomType::Opaque(_) | ast::CustomType::Enum(_)) => {}
-                },
-
-                ast::TypeName::Option(underlying) => {
-                    topological_sort_structs(
-                        StructOrType::Type(underlying.as_ref()),
-                        in_path,
-                        seen,
-                        order,
-                        env,
-                    );
-                }
-
-                ast::TypeName::Result(ok, err) => {
-                    topological_sort_structs(
-                        StructOrType::Type(ok.as_ref()),
-                        in_path.clone(),
-                        seen,
-                        order,
-                        env,
-                    );
-                    topological_sort_structs(
-                        StructOrType::Type(err.as_ref()),
-                        in_path.clone(),
-                        seen,
-                        order,
-                        env,
-                    );
-                    order.push((in_path, root));
-                }
-
-                _ => {}
-            },
-        }
     }
 }

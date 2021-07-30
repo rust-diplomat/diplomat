@@ -13,14 +13,16 @@ static RUNTIME_MJS: &str = include_str!("runtime.mjs");
 
 pub fn gen_bindings(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-    outs: &mut HashMap<&str, String>,
+    outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     let diplomat_runtime_out = outs
-        .entry("diplomat-runtime.mjs")
+        .entry("diplomat-runtime.mjs".to_string())
         .or_insert_with(String::new);
     write!(diplomat_runtime_out, "{}", RUNTIME_MJS)?;
 
-    let out = outs.entry("api.mjs").or_insert_with(String::new);
+    let out = outs
+        .entry("api.mjs".to_string())
+        .or_insert_with(String::new);
 
     writeln!(out, "import wasm from \"./wasm.mjs\"")?;
     writeln!(

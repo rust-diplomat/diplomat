@@ -31,7 +31,7 @@ fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let target = args[1].as_str();
 
-    let mut out_texts: HashMap<&str, String> = HashMap::new();
+    let mut out_texts: HashMap<String, String> = HashMap::new();
 
     match target {
         "js" => js::gen_bindings(&env, &mut out_texts).unwrap(),
