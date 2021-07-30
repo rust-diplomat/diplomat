@@ -1,5 +1,5 @@
-#ifndef decimal_ffi_ICU4XFixedDecimalFormatOptions_HPP
-#define decimal_ffi_ICU4XFixedDecimalFormatOptions_HPP
+#ifndef ICU4XFixedDecimalFormatOptions_HPP
+#define ICU4XFixedDecimalFormatOptions_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -10,11 +10,11 @@
 #include "diplomat_runtime.hpp"
 
 namespace capi {
-#include "decimal_ffi_ICU4XFixedDecimalFormatOptions.h"
+#include "ICU4XFixedDecimalFormatOptions.h"
 }
 
-#include "decimal_ffi_ICU4XFixedDecimalGroupingStrategy.hpp"
-#include "decimal_ffi_ICU4XFixedDecimalSignDisplay.hpp"
+#include "ICU4XFixedDecimalGroupingStrategy.hpp"
+#include "ICU4XFixedDecimalSignDisplay.hpp"
 struct ICU4XFixedDecimalFormatOptions;
 
 struct ICU4XFixedDecimalFormatOptionsDeleter {

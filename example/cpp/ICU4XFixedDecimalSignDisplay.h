@@ -1,5 +1,5 @@
-#ifndef decimal_ffi_ICU4XFixedDecimalSignDisplay_H
-#define decimal_ffi_ICU4XFixedDecimalSignDisplay_H
+#ifndef ICU4XFixedDecimalSignDisplay_H
+#define ICU4XFixedDecimalSignDisplay_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>

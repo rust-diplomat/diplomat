@@ -1,5 +1,5 @@
-#ifndef fixed_decimal_ffi_ICU4XFixedDecimal_HPP
-#define fixed_decimal_ffi_ICU4XFixedDecimal_HPP
+#ifndef ICU4XFixedDecimal_HPP
+#define ICU4XFixedDecimal_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -10,11 +10,10 @@
 #include "diplomat_runtime.hpp"
 
 namespace capi {
-#include "fixed_decimal_ffi_ICU4XFixedDecimal.h"
+#include "ICU4XFixedDecimal.h"
 }
 
 class ICU4XFixedDecimal;
-#include "fixed_decimal_ffi_result_void_void.h"
 
 struct ICU4XFixedDecimalDeleter {
   void operator()(capi::ICU4XFixedDecimal* l) const noexcept {

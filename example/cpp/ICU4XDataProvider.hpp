@@ -1,5 +1,5 @@
-#ifndef data_provider_ffi_ICU4XDataProvider_HPP
-#define data_provider_ffi_ICU4XDataProvider_HPP
+#ifndef ICU4XDataProvider_HPP
+#define ICU4XDataProvider_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -10,7 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 namespace capi {
-#include "data_provider_ffi_ICU4XDataProvider.h"
+#include "ICU4XDataProvider.h"
 }
 
 class ICU4XDataProvider;

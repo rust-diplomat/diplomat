@@ -1,5 +1,5 @@
-#ifndef fixed_decimal_ffi_result_void_void_H
-#define fixed_decimal_ffi_result_void_void_H
+#ifndef result_void_void_H
+#define result_void_void_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>

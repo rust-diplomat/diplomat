@@ -1,5 +1,5 @@
-#ifndef locale_ffi_ICU4XLocale_H
-#define locale_ffi_ICU4XLocale_H
+#ifndef ICU4XLocale_H
+#define ICU4XLocale_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>

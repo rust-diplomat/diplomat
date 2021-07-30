@@ -25,21 +25,11 @@ pub fn gen_bindings(
 
     for (in_path, typ) in all_types {
         let out = outs
-            .entry(format!("{}_{}.h", in_path.elements.join("_"), typ.name()))
+            .entry(format!("{}.h", typ.name()))
             .or_insert_with(String::new);
 
-        writeln!(
-            out,
-            "#ifndef {}_{}_H",
-            in_path.elements.join("_"),
-            typ.name()
-        )?;
-        writeln!(
-            out,
-            "#define {}_{}_H",
-            in_path.elements.join("_"),
-            typ.name()
-        )?;
+        writeln!(out, "#ifndef {}_H", typ.name())?;
+        writeln!(out, "#define {}_H", typ.name())?;
 
         writeln!(out, "#include <stdio.h>")?;
         writeln!(out, "#include <stdint.h>")?;
@@ -52,11 +42,7 @@ pub fn gen_bindings(
         writeln!(out, "#endif")?;
 
         let mut seen_includes = HashSet::new();
-        seen_includes.insert(format!(
-            "#include \"{}_{}.h\"",
-            in_path.elements.join("_"),
-            typ.name()
-        ));
+        seen_includes.insert(format!("#include \"{}.h\"", typ.name()));
 
         match typ {
             ast::CustomType::Opaque(_) => {
@@ -138,25 +124,11 @@ pub fn gen_bindings(
     for (in_path, typ) in &all_results {
         if let ast::TypeName::Result(ok, err) = typ {
             let out = outs
-                .entry(format!(
-                    "{}_{}.h",
-                    in_path.elements.join("_"),
-                    name_for_type(typ)
-                ))
+                .entry(format!("{}.h", name_for_type(typ)))
                 .or_insert_with(String::new);
 
-            writeln!(
-                out,
-                "#ifndef {}_{}_H",
-                in_path.elements.join("_"),
-                name_for_type(typ)
-            )?;
-            writeln!(
-                out,
-                "#define {}_{}_H",
-                in_path.elements.join("_"),
-                name_for_type(typ)
-            )?;
+            writeln!(out, "#ifndef {}_H", name_for_type(typ))?;
+            writeln!(out, "#define {}_H", name_for_type(typ))?;
             writeln!(out, "#include <stdio.h>")?;
             writeln!(out, "#include <stdint.h>")?;
             writeln!(out, "#include <stddef.h>")?;
@@ -236,7 +208,7 @@ fn gen_includes<W: fmt::Write>(
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Named(_) => {
-            let (path, custom_typ) = typ.resolve_with_path(in_path, env);
+            let (_, custom_typ) = typ.resolve_with_path(in_path, env);
             match custom_typ {
                 ast::CustomType::Opaque(_) => {
                     if pre_struct {
@@ -250,11 +222,7 @@ fn gen_includes<W: fmt::Write>(
                             seen_includes.insert(decl);
                         }
                     } else {
-                        let include = format!(
-                            "#include \"{}_{}.h\"",
-                            path.elements.join("_"),
-                            custom_typ.name()
-                        );
+                        let include = format!("#include \"{}.h\"", custom_typ.name());
                         if !seen_includes.contains(&include) {
                             writeln!(out, "{}", include)?;
                             seen_includes.insert(include);
@@ -263,11 +231,7 @@ fn gen_includes<W: fmt::Write>(
                 }
 
                 ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => {
-                    let include = format!(
-                        "#include \"{}_{}.h\"",
-                        path.elements.join("_"),
-                        custom_typ.name()
-                    );
+                    let include = format!("#include \"{}.h\"", custom_typ.name());
                     if !seen_includes.contains(&include) {
                         writeln!(out, "{}", include)?;
                         seen_includes.insert(include);
@@ -286,11 +250,7 @@ fn gen_includes<W: fmt::Write>(
             gen_includes(underlying, in_path, pre_struct, env, seen_includes, out)?;
         }
         ast::TypeName::Result(_, _) => {
-            let include = format!(
-                "#include \"{}_{}.h\"",
-                in_path.elements.join("_"),
-                name_for_type(typ)
-            );
+            let include = format!("#include \"{}.h\"", name_for_type(typ));
             if !seen_includes.contains(&include) {
                 writeln!(out, "{}", include)?;
                 seen_includes.insert(include);
@@ -488,7 +448,7 @@ pub fn gen_type<W: fmt::Write>(
 /// which require one struct for each distinct instance.
 pub fn name_for_type(typ: &ast::TypeName) -> String {
     match typ {
-        ast::TypeName::Named(name) => name.elements.join("_"),
+        ast::TypeName::Named(name) => name.elements.last().unwrap().clone(),
         ast::TypeName::Box(underlying) => format!("box_{}", name_for_type(underlying)),
         ast::TypeName::Reference(underlying, mutable) => {
             if *mutable {

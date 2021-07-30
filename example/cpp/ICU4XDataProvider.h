@@ -1,5 +1,5 @@
-#ifndef data_provider_ffi_ICU4XDataProvider_H
-#define data_provider_ffi_ICU4XDataProvider_H
+#ifndef ICU4XDataProvider_H
+#define ICU4XDataProvider_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>

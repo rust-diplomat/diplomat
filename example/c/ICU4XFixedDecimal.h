@@ -1,5 +1,5 @@
-#ifndef fixed_decimal_ffi_ICU4XFixedDecimal_H
-#define fixed_decimal_ffi_ICU4XFixedDecimal_H
+#ifndef ICU4XFixedDecimal_H
+#define ICU4XFixedDecimal_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
-#include "fixed_decimal_ffi_result_void_void.h"
+#include "result_void_void.h"
 
 ICU4XFixedDecimal* ICU4XFixedDecimal_new(int32_t v);
 

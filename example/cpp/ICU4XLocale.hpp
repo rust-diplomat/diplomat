@@ -1,5 +1,5 @@
-#ifndef locale_ffi_ICU4XLocale_HPP
-#define locale_ffi_ICU4XLocale_HPP
+#ifndef ICU4XLocale_HPP
+#define ICU4XLocale_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -10,7 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 namespace capi {
-#include "locale_ffi_ICU4XLocale.h"
+#include "ICU4XLocale.h"
 }
 
 class ICU4XLocale;

@@ -1,5 +1,5 @@
-#ifndef decimal_ffi_ICU4XFixedDecimalGroupingStrategy_H
-#define decimal_ffi_ICU4XFixedDecimalGroupingStrategy_H
+#ifndef ICU4XFixedDecimalGroupingStrategy_H
+#define ICU4XFixedDecimalGroupingStrategy_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>

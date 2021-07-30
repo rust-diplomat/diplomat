@@ -1,5 +1,5 @@
-#ifndef decimal_ffi_ICU4XFixedDecimalFormatResult_HPP
-#define decimal_ffi_ICU4XFixedDecimalFormatResult_HPP
+#ifndef ICU4XFixedDecimalFormatResult_HPP
+#define ICU4XFixedDecimalFormatResult_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -10,7 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 namespace capi {
-#include "decimal_ffi_ICU4XFixedDecimalFormatResult.h"
+#include "ICU4XFixedDecimalFormatResult.h"
 }
 
 class ICU4XFixedDecimalFormat;

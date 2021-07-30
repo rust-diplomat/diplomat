@@ -1,5 +1,5 @@
-#ifndef decimal_ffi_ICU4XFixedDecimalFormat_HPP
-#define decimal_ffi_ICU4XFixedDecimalFormat_HPP
+#ifndef ICU4XFixedDecimalFormat_HPP
+#define ICU4XFixedDecimalFormat_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -10,7 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 namespace capi {
-#include "decimal_ffi_ICU4XFixedDecimalFormat.h"
+#include "ICU4XFixedDecimalFormat.h"
 }
 
 class ICU4XLocale;
@@ -35,11 +35,11 @@ class ICU4XFixedDecimalFormat {
   std::unique_ptr<capi::ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatDeleter> inner;
 };
 
-#include "locale_ffi_ICU4XLocale.hpp"
-#include "data_provider_ffi_ICU4XDataProvider.hpp"
-#include "decimal_ffi_ICU4XFixedDecimalFormatOptions.hpp"
-#include "decimal_ffi_ICU4XFixedDecimalFormatResult.hpp"
-#include "fixed_decimal_ffi_ICU4XFixedDecimal.hpp"
+#include "ICU4XLocale.hpp"
+#include "ICU4XDataProvider.hpp"
+#include "ICU4XFixedDecimalFormatOptions.hpp"
+#include "ICU4XFixedDecimalFormatResult.hpp"
+#include "ICU4XFixedDecimal.hpp"
 
 ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {
   ICU4XFixedDecimalFormatOptions diplomat_wrapped_struct_options = options;

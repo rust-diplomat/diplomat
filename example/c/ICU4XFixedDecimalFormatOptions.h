@@ -1,5 +1,5 @@
-#ifndef decimal_ffi_ICU4XFixedDecimalFormatOptions_H
-#define decimal_ffi_ICU4XFixedDecimalFormatOptions_H
+#ifndef ICU4XFixedDecimalFormatOptions_H
+#define ICU4XFixedDecimalFormatOptions_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +9,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "decimal_ffi_ICU4XFixedDecimalGroupingStrategy.h"
-#include "decimal_ffi_ICU4XFixedDecimalSignDisplay.h"
+#include "ICU4XFixedDecimalGroupingStrategy.h"
+#include "ICU4XFixedDecimalSignDisplay.h"
 
 typedef struct ICU4XFixedDecimalFormatOptions {
     ICU4XFixedDecimalGroupingStrategy grouping_strategy;

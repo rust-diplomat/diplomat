@@ -1,5 +1,5 @@
-#ifndef decimal_ffi_ICU4XFixedDecimalGroupingStrategy_HPP
-#define decimal_ffi_ICU4XFixedDecimalGroupingStrategy_HPP
+#ifndef ICU4XFixedDecimalGroupingStrategy_HPP
+#define ICU4XFixedDecimalGroupingStrategy_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -10,7 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 namespace capi {
-#include "decimal_ffi_ICU4XFixedDecimalGroupingStrategy.h"
+#include "ICU4XFixedDecimalGroupingStrategy.h"
 }
 
 

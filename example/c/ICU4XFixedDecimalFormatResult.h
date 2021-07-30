@@ -1,5 +1,5 @@
-#ifndef decimal_ffi_ICU4XFixedDecimalFormatResult_H
-#define decimal_ffi_ICU4XFixedDecimalFormatResult_H
+#ifndef ICU4XFixedDecimalFormatResult_H
+#define ICU4XFixedDecimalFormatResult_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
