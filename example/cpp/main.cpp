@@ -1,5 +1,5 @@
 #include <iostream>
-#include "api.hpp"
+#include "ICU4XFixedDecimalFormat.hpp"
 
 int main(int argc, char *argv[]) {
     ICU4XFixedDecimal fd = ICU4XFixedDecimal::new_(123);

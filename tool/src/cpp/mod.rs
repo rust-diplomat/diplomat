@@ -12,37 +12,48 @@ static RUNTIME_HPP: &str = include_str!("runtime.hpp");
 
 pub fn gen_bindings(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-    outs: &mut HashMap<&str, String>,
+    outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     super::c::gen_bindings(env, outs)?;
 
     let diplomat_runtime_out = outs
-        .entry("diplomat_runtime.hpp")
+        .entry("diplomat_runtime.hpp".to_string())
         .or_insert_with(String::new);
     write!(diplomat_runtime_out, "{}", RUNTIME_HPP)?;
 
-    let out = outs.entry("api.hpp").or_insert_with(String::new);
-    writeln!(out, "#include <stdint.h>")?;
-    writeln!(out, "#include <stddef.h>")?;
-    writeln!(out, "#include <stdbool.h>")?;
-    writeln!(out, "#include <algorithm>")?;
-    writeln!(out, "#include <memory>")?;
-    writeln!(out, "#include <optional>")?;
-    writeln!(out, "#include <variant>")?;
-    writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
-    writeln!(out)?;
+    let all_types = util::get_all_custom_types(env);
 
-    let mut all_types = util::get_all_custom_types(env);
-    all_types.sort_by_key(|t| t.1.name());
+    for (in_path, typ) in &all_types {
+        let out = outs
+            .entry(format!("{}.hpp", typ.name()))
+            .or_insert_with(String::new);
 
-    for (_, custom_type) in &all_types {
+        writeln!(out, "#ifndef {}_HPP", typ.name())?;
+        writeln!(out, "#define {}_HPP", typ.name())?;
+
+        writeln!(out, "#include <stdint.h>")?;
+        writeln!(out, "#include <stddef.h>")?;
+        writeln!(out, "#include <stdbool.h>")?;
+        writeln!(out, "#include <algorithm>")?;
+        writeln!(out, "#include <memory>")?;
+        writeln!(out, "#include <optional>")?;
+        writeln!(out, "#include <variant>")?;
+        writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
         writeln!(out)?;
-        match custom_type {
-            ast::CustomType::Opaque(_) => {
-                writeln!(out, "class {};", custom_type.name())?;
-            }
+        writeln!(out, "namespace capi {{")?;
+        writeln!(out, "#include \"{}.h\"", typ.name())?;
+        writeln!(out, "}}")?;
+
+        writeln!(out)?;
+
+        let mut seen_includes = HashSet::new();
+        seen_includes.insert(format!("#include \"{}.hpp\"", typ.name()));
+
+        match typ {
+            ast::CustomType::Opaque(_) => {}
 
             ast::CustomType::Enum(enm) => {
+                writeln!(out)?;
                 writeln!(out, "enum struct {} {{", enm.name)?;
                 let mut enm_indent = indented(out).with_str("  ");
                 for (name, discriminant, _) in enm.variants.iter() {
@@ -51,52 +62,96 @@ pub fn gen_bindings(
                 writeln!(out, "}};")?;
             }
 
-            ast::CustomType::Struct(_) => {
-                writeln!(out, "struct {};", custom_type.name())?;
+            ast::CustomType::Struct(strct) => {
+                for (_, typ, _) in &strct.fields {
+                    gen_includes(typ, in_path, true, true, env, &mut seen_includes, out)?;
+                }
             }
         }
-    }
 
-    for (in_path, custom_type) in &all_types {
-        if let ast::CustomType::Opaque(_) = custom_type {
-            writeln!(out)?;
-            gen_struct(custom_type, in_path, true, env, out)?;
-        }
-    }
-
-    let mut structs_seen = HashSet::new();
-    let mut structs_order = Vec::new();
-    for (in_path, custom_type) in &all_types {
-        if let ast::CustomType::Struct(strct) = custom_type {
-            super::c::topological_sort_structs(
-                super::c::StructOrType::Struct(strct),
-                ast::Path::clone(in_path),
-                &mut structs_seen,
-                &mut structs_order,
-                env,
-            );
-        }
-    }
-
-    for (in_path, strct) in structs_order {
-        match strct {
-            super::c::StructOrType::Struct(strct) => {
-                writeln!(out)?;
-                gen_struct(
-                    &ast::CustomType::Struct(strct.clone()),
-                    &in_path,
+        for method in typ.methods() {
+            for param in &method.params {
+                gen_includes(
+                    &param.ty,
+                    in_path,
                     true,
+                    false,
                     env,
+                    &mut seen_includes,
                     out,
                 )?;
             }
-            super::c::StructOrType::Type(_) => {}
-        }
-    }
 
-    for (in_path, custom_type) in all_types {
+            if let Some(return_type) = method.return_type.as_ref() {
+                gen_includes(
+                    return_type,
+                    in_path,
+                    true,
+                    false,
+                    env,
+                    &mut seen_includes,
+                    out,
+                )?;
+            }
+        }
+
+        match typ {
+            ast::CustomType::Opaque(_) => {
+                writeln!(out)?;
+                gen_struct(typ, in_path, true, env, out)?;
+            }
+
+            ast::CustomType::Enum(_) => {}
+
+            ast::CustomType::Struct(_) => {
+                writeln!(out)?;
+                gen_struct(typ, in_path, true, env, out)?;
+            }
+        }
+
         writeln!(out)?;
-        gen_struct(custom_type, in_path, false, env, out)?;
+
+        for method in typ.methods() {
+            for param in &method.params {
+                gen_includes(
+                    &param.ty,
+                    in_path,
+                    false,
+                    false,
+                    env,
+                    &mut seen_includes,
+                    out,
+                )?;
+            }
+
+            if let Some(return_type) = method.return_type.as_ref() {
+                gen_includes(
+                    return_type,
+                    in_path,
+                    false,
+                    false,
+                    env,
+                    &mut seen_includes,
+                    out,
+                )?;
+            }
+        }
+
+        match typ {
+            ast::CustomType::Opaque(_) => {
+                writeln!(out)?;
+                gen_struct(typ, in_path, false, env, out)?;
+            }
+
+            ast::CustomType::Enum(_) => {}
+
+            ast::CustomType::Struct(_) => {
+                writeln!(out)?;
+                gen_struct(typ, in_path, false, env, out)?;
+            }
+        }
+
+        writeln!(out, "#endif")?
     }
 
     Ok(())
@@ -217,6 +272,131 @@ fn gen_struct<W: fmt::Write>(
         }
 
         ast::CustomType::Enum(_) => {}
+    }
+
+    Ok(())
+}
+
+fn gen_includes<W: fmt::Write>(
+    typ: &ast::TypeName,
+    in_path: &ast::Path,
+    pre_struct: bool,
+    for_field: bool,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    seen_includes: &mut HashSet<String>,
+    out: &mut W,
+) -> fmt::Result {
+    match typ {
+        ast::TypeName::Named(_) => {
+            let (_, custom_typ) = typ.resolve_with_path(in_path, env);
+            match custom_typ {
+                ast::CustomType::Opaque(_) => {
+                    if pre_struct {
+                        let decl = format!("class {};", custom_typ.name());
+                        if !seen_includes.contains(&decl) {
+                            writeln!(out, "{}", decl)?;
+                            seen_includes.insert(decl);
+                        }
+                    } else {
+                        let include = format!("#include \"{}.hpp\"", custom_typ.name());
+                        if !seen_includes.contains(&include) {
+                            writeln!(out, "{}", include)?;
+                            seen_includes.insert(include);
+                        }
+                    }
+                }
+
+                ast::CustomType::Struct(_) => {
+                    if pre_struct && !for_field {
+                        let decl = format!("struct {};", custom_typ.name());
+                        if !seen_includes.contains(&decl) {
+                            writeln!(out, "{}", decl)?;
+                            seen_includes.insert(decl);
+                        }
+                    } else {
+                        let include = format!("#include \"{}.hpp\"", custom_typ.name());
+                        if !seen_includes.contains(&include) {
+                            writeln!(out, "{}", include)?;
+                            seen_includes.insert(include);
+                        }
+                    }
+                }
+
+                ast::CustomType::Enum(_) => {
+                    if pre_struct && !for_field {
+                        let decl = format!("enum struct {};", custom_typ.name());
+                        if !seen_includes.contains(&decl) {
+                            writeln!(out, "{}", decl)?;
+                            seen_includes.insert(decl);
+                        }
+                    } else {
+                        let include = format!("#include \"{}.hpp\"", custom_typ.name());
+                        if !seen_includes.contains(&include) {
+                            writeln!(out, "{}", include)?;
+                            seen_includes.insert(include);
+                        }
+                    }
+                }
+            }
+        }
+        ast::TypeName::Box(underlying) => {
+            gen_includes(
+                underlying,
+                in_path,
+                pre_struct,
+                for_field,
+                env,
+                seen_includes,
+                out,
+            )?;
+        }
+        ast::TypeName::Reference(underlying, _) => {
+            gen_includes(
+                underlying,
+                in_path,
+                pre_struct,
+                for_field,
+                env,
+                seen_includes,
+                out,
+            )?;
+        }
+        ast::TypeName::Primitive(_) => {}
+        ast::TypeName::Option(underlying) => {
+            gen_includes(
+                underlying,
+                in_path,
+                pre_struct,
+                for_field,
+                env,
+                seen_includes,
+                out,
+            )?;
+        }
+        ast::TypeName::Result(ok, err) => {
+            gen_includes(
+                ok.as_ref(),
+                in_path,
+                pre_struct,
+                for_field,
+                env,
+                seen_includes,
+                out,
+            )?;
+
+            gen_includes(
+                err.as_ref(),
+                in_path,
+                pre_struct,
+                for_field,
+                env,
+                seen_includes,
+                out,
+            )?;
+        }
+        ast::TypeName::Writeable => {}
+        ast::TypeName::StrReference => {}
+        ast::TypeName::Unit => {}
     }
 
     Ok(())
