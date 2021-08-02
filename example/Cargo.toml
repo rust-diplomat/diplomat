@@ -10,8 +10,8 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 [dependencies]
 diplomat = { path = "../macro" }
 diplomat-runtime = { path = "../runtime" }
-icu = { git = "https://github.com/unicode-org/icu4x", branch = "main" }
-writeable = { git = "https://github.com/unicode-org/icu4x", branch = "main" }
-fixed_decimal = { git = "https://github.com/unicode-org/icu4x", branch = "main" }
-icu_provider = { git = "https://github.com/unicode-org/icu4x", branch = "main", features = ["provider_serde"] }
-icu_testdata = { git = "https://github.com/unicode-org/icu4x", branch = "main" }
+icu = "0.3.0"
+writeable = "0.2.0"
+fixed_decimal = "0.2.1"
+icu_provider = { version = "0.3.0", features = ["provider_serde"] }
+icu_testdata = { version = "0.3.0", features = ["static"] }
