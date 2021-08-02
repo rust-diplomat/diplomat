@@ -27,6 +27,7 @@ struct ICU4XFixedDecimalFormatDeleter {
 class ICU4XFixedDecimalFormat {
  public:
   static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
+  template<typename W> void format_write_to_writeable(const ICU4XFixedDecimal& value, W& write);
   std::string format_write(const ICU4XFixedDecimal& value);
   inline const capi::ICU4XFixedDecimalFormat* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XFixedDecimalFormat* AsFFIMut() { return this->inner.get(); }
@@ -52,6 +53,10 @@ ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale
     diplomat_optional_out_value_fdf = std::nullopt;
   }
   return ICU4XFixedDecimalFormatResult{ .fdf = std::move(diplomat_optional_out_value_fdf), .success = std::move(diplomat_raw_struct_out_value.success) };
+}
+template<typename W> void ICU4XFixedDecimalFormat::format_write_to_writeable(const ICU4XFixedDecimal& value, W& write) {
+  capi::DiplomatWriteable write_writer = diplomat::WriteableTrait<W>::Construct(write);
+  capi::ICU4XFixedDecimalFormat_format_write(this->inner.get(), value.AsFFI(), &write_writer);
 }
 std::string ICU4XFixedDecimalFormat::format_write(const ICU4XFixedDecimal& value) {
   std::string diplomat_writeable_string;

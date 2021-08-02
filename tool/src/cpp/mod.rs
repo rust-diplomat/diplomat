@@ -201,6 +201,7 @@ fn gen_struct<W: fmt::Write>(
                     method,
                     in_path,
                     is_header,
+                    true,
                     env,
                     &mut public_body,
                 )?;
@@ -261,6 +262,7 @@ fn gen_struct<W: fmt::Write>(
                     method,
                     in_path,
                     is_header,
+                    true,
                     env,
                     &mut public_body,
                 )?;
@@ -407,6 +409,8 @@ fn gen_method<W: fmt::Write>(
     method: &ast::Method,
     in_path: &ast::Path,
     is_header: bool,
+    // should it convert writeables to string as an additional method?
+    writeable_to_string: bool,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
@@ -414,9 +418,22 @@ fn gen_method<W: fmt::Write>(
         write!(out, "static ")?;
     }
 
-    let is_writeable_out = method.is_writeable_out();
+    // This method should rearrange the writeable
+    let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
 
-    if is_writeable_out {
+    // This method has some writeable param that is preserved
+    let has_writeable_param = method.has_writeable_param() && !writeable_to_string;
+
+    if rearranged_writeable {
+        // generate the normal method too
+        gen_method(enclosing_type, method, in_path, is_header, false, env, out)?;
+    }
+
+    if has_writeable_param {
+        write!(out, "template<typename W> ")?;
+    }
+
+    if rearranged_writeable {
         if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
             write!(out, "diplomat::result<std::string, ")?;
             if err.as_ref() == &ast::TypeName::Unit {
@@ -449,13 +466,15 @@ fn gen_method<W: fmt::Write>(
     // TODO(shadaj): handle other keywords
     if method.name == "new" || method.name == "default" {
         write!(out, "{}_(", method.name)?;
+    } else if has_writeable_param {
+        write!(out, "{}_to_writeable(", method.name)?;
     } else {
         write!(out, "{}(", method.name)?;
     }
 
     let mut params_to_gen = method.params.clone();
 
-    if is_writeable_out {
+    if rearranged_writeable {
         params_to_gen.remove(params_to_gen.len() - 1);
     }
 
@@ -463,8 +482,11 @@ fn gen_method<W: fmt::Write>(
         if i != 0 {
             write!(out, ", ")?;
         }
-
-        gen_type(&param.ty, in_path, None, env, out)?;
+        if param.is_writeable() && !writeable_to_string {
+            write!(out, "W&")?;
+        } else {
+            gen_type(&param.ty, in_path, None, env, out)?;
+        }
         write!(out, " {}", param.name)?;
     }
 
@@ -510,7 +532,7 @@ fn gen_method<W: fmt::Write>(
             }
         }
 
-        if is_writeable_out {
+        if rearranged_writeable {
             all_params_invocation.push("&diplomat_writeable_out".to_string());
             writeln!(&mut method_body, "std::string diplomat_writeable_string;")?;
             writeln!(&mut method_body, "capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);")?;
@@ -525,7 +547,7 @@ fn gen_method<W: fmt::Write>(
                     all_params_invocation.join(", ")
                 )?;
 
-                if is_writeable_out {
+                if rearranged_writeable {
                     writeln!(&mut method_body, "return diplomat_writeable_string;")?;
                 }
             }
@@ -544,7 +566,7 @@ fn gen_method<W: fmt::Write>(
                     &mut method_body,
                 );
 
-                if is_writeable_out {
+                if rearranged_writeable {
                     if let ast::TypeName::Result(_, err) = ret_typ {
                         // TODO(shadaj): do something if not okay
                         gen_type(ret_typ, in_path, None, env, &mut method_body)?;
@@ -905,7 +927,8 @@ fn gen_cpp_to_rust<W: Write>(
                     mutable: true,
                 })
             {
-                format!("&{}", cpp)
+                writeln!(out, "capi::DiplomatWriteable {cpp}_writer = diplomat::WriteableTrait<W>::Construct({cpp});", cpp=cpp).unwrap();
+                format!("&{}_writer", cpp)
             } else {
                 panic!("Cannot send Writeable to Rust as a value");
             }

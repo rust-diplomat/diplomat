@@ -123,6 +123,11 @@ impl Method {
             && self.params[self.params.len() - 1].ty
                 == TypeName::Reference(Box::new(TypeName::Writeable), true)
     }
+
+    /// Checks if any parameters are writeable (regardless of other compatibilities for writeable output)
+    pub fn has_writeable_param(&self) -> bool {
+        self.params.iter().any(|p| p.is_writeable())
+    }
 }
 
 /// A parameter taken by a [`Method`], including `self`.
@@ -134,6 +139,13 @@ pub struct Param {
     /// The type of the parameter, which will be a named reference to
     /// the associated struct if this is the `self` parameter.
     pub ty: TypeName,
+}
+
+impl Param {
+    /// Check if this parameter is a Writeable
+    pub fn is_writeable(&self) -> bool {
+        self.ty == TypeName::Reference(Box::new(TypeName::Writeable), true)
+    }
 }
 
 impl From<&syn::PatType> for Param {
