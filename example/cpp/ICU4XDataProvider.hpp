@@ -25,13 +25,13 @@ class ICU4XDataProvider {
   static ICU4XDataProvider new_static();
   inline const capi::ICU4XDataProvider* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XDataProvider* AsFFIMut() { return this->inner.get(); }
-  ICU4XDataProvider(capi::ICU4XDataProvider* i) : inner(i) {}
+  inline ICU4XDataProvider(capi::ICU4XDataProvider* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XDataProvider, ICU4XDataProviderDeleter> inner;
 };
 
 
-ICU4XDataProvider ICU4XDataProvider::new_static() {
+inline ICU4XDataProvider ICU4XDataProvider::new_static() {
   return ICU4XDataProvider(capi::ICU4XDataProvider_new_static());
 }
 #endif
