@@ -657,7 +657,7 @@ fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::Primitive(prim) => {
-            write!(out, "{}", super::c::c_type_for_prim(prim))?;
+            write!(out, "{}", super::c::types::c_type_for_prim(prim))?;
         }
 
         ast::TypeName::Writeable => {
