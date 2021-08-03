@@ -26,3 +26,15 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Generate FFI examples
+      run: cd example && ./gen_all.sh
+    - name: Test example is fresh
+      run: git diff --exit-code
+  example:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: CPP
+      run: cd example/cpp && make
+    - name: C
+      run: cd example/c && make
