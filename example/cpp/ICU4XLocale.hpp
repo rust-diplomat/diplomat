@@ -25,13 +25,13 @@ class ICU4XLocale {
   static ICU4XLocale new_(const std::string_view name);
   inline const capi::ICU4XLocale* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XLocale* AsFFIMut() { return this->inner.get(); }
-  ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
+  inline ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XLocale, ICU4XLocaleDeleter> inner;
 };
 
 
-ICU4XLocale ICU4XLocale::new_(const std::string_view name) {
+inline ICU4XLocale ICU4XLocale::new_(const std::string_view name) {
   return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.length()));
 }
 #endif

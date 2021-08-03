@@ -29,22 +29,22 @@ class ICU4XFixedDecimal {
   diplomat::result<std::string, std::monostate> to_string();
   inline const capi::ICU4XFixedDecimal* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XFixedDecimal* AsFFIMut() { return this->inner.get(); }
-  ICU4XFixedDecimal(capi::ICU4XFixedDecimal* i) : inner(i) {}
+  inline ICU4XFixedDecimal(capi::ICU4XFixedDecimal* i) : inner(i) {}
  private:
   std::unique_ptr<capi::ICU4XFixedDecimal, ICU4XFixedDecimalDeleter> inner;
 };
 
 
-ICU4XFixedDecimal ICU4XFixedDecimal::new_(int32_t v) {
+inline ICU4XFixedDecimal ICU4XFixedDecimal::new_(int32_t v) {
   return ICU4XFixedDecimal(capi::ICU4XFixedDecimal_new(v));
 }
-void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
+inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
   capi::ICU4XFixedDecimal_multiply_pow10(this->inner.get(), power);
 }
-void ICU4XFixedDecimal::negate() {
+inline void ICU4XFixedDecimal::negate() {
   capi::ICU4XFixedDecimal_negate(this->inner.get());
 }
-template<typename W> diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_writeable(W& to) {
+template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_writeable(W& to) {
   capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &to_writer);
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
@@ -54,7 +54,7 @@ template<typename W> diplomat::result<std::monostate, std::monostate> ICU4XFixed
   }
   return diplomat_result_out_value;
 }
-diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() {
+inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() {
   std::string diplomat_writeable_string;
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
