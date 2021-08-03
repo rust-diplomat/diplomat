@@ -1,14 +1,17 @@
 use core::mem::ManuallyDrop;
 
 #[repr(C)]
-pub union DiplomatResultValue<T, E> {
+union DiplomatResultValue<T, E> {
     ok: ManuallyDrop<T>,
     err: ManuallyDrop<E>,
 }
 
+/// A `Result`-like type that can be passed across the FFI boundary
+/// as a value. Use this type when returning a result from an FFI
+/// function instead of `Result`.
 #[repr(C)]
 pub struct DiplomatResult<T, E> {
-    pub value: DiplomatResultValue<T, E>,
+    value: DiplomatResultValue<T, E>,
     pub is_ok: bool,
 }
 
