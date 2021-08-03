@@ -120,8 +120,7 @@ impl Method {
         // TODO(shadaj): reconsider if we should auto-detect writeables
         return_compatible
             && !self.params.is_empty()
-            && self.params[self.params.len() - 1].ty
-                == TypeName::Reference(Box::new(TypeName::Writeable), true)
+            && self.params[self.params.len() - 1].is_writeable()
     }
 
     /// Checks if any parameters are writeable (regardless of other compatibilities for writeable output)
