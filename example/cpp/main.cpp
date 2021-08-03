@@ -11,6 +11,12 @@ int main(int argc, char *argv[]) {
 
     std::cout << fd.to_string().ok << std::endl;
 
+    std::string out;
+
+    fd.to_string_to_writeable(out);
+
+    std::cout << "writeable: " << out << std::endl;
+
     ICU4XLocale locale = ICU4XLocale::new_("bn");
 
     ICU4XDataProvider data_provider = ICU4XDataProvider::new_static();
