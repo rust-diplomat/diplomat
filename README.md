@@ -1,6 +1,8 @@
 # Diplomat
 Diplomat is an experimental Rust tool for generating FFI definitions allowing many other languages to call Rust code. With Diplomat, you can simply define Rust APIs to be exposed over FFI and get high-level C, C++, and JavaScript bindings automatically!
 
+Diplomat supports languages through a plugin interface that makes it easy to add support for your favourite language. See `tool/src/{c, cpp, js}` for examples of existing language plugins.
+
 ## Installation
 First, install the CLI tool for generating bindings:
 ```bash
