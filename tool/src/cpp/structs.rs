@@ -139,7 +139,6 @@ fn gen_method<W: fmt::Write>(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     out: &mut W,
 ) -> fmt::Result {
-
     // This method should rearrange the writeable
     let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
 
@@ -309,7 +308,6 @@ fn gen_method<W: fmt::Write>(
 
     Ok(())
 }
-
 
 fn gen_writeable_out_value<W: fmt::Write>(
     out_expr: &str,
