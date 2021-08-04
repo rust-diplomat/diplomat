@@ -1,7 +1,0 @@
----
-source: macro/src/lib.rs
-expression: "gen_bridge(parse_quote! {\n               mod ffi\n               {\n                   struct Foo { a : u8, b : i32 } impl Foo\n                   {\n                       fn new() -> Foo { todo ! () ; } fn get_a(& self) -> u8\n                       { self . a } fn set_b(& mut self, new_b : i32)\n                       { self . b = new_b ; }\n                   }\n               }\n           }).to_token_stream().to_string()"
-
----
-"mod ffi { # [repr (C)] struct Foo { a : u8 , b : i32 } impl Foo { fn new () -> Foo { todo ! () ; } fn get_a (& self) -> u8 { self . a } fn set_b (& mut self , new_b : i32) { self . b = new_b ; } } # [no_mangle] pub extern \"C\" fn Foo_new () -> Foo { Foo :: new () } # [no_mangle] pub extern \"C\" fn Foo_get_a (this : & Foo) -> u8 { this . get_a () } # [no_mangle] pub extern \"C\" fn Foo_set_b (this : & mut Foo , new_b : i32) { this . set_b (new_b) ; } # [no_mangle] pub extern \"C\" fn Foo_destroy (this : Box < Foo >) { } # [no_mangle] pub unsafe extern \"C\" fn Foo_drop_ptr (this : * mut Foo) { std :: ptr :: drop_in_place (this) ; } }"
-

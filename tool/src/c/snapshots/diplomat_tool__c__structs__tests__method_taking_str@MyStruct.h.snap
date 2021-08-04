@@ -1,0 +1,29 @@
+---
+source: tool/src/c/structs.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyStruct_H
+#define MyStruct_H
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "diplomat_runtime.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct MyStruct MyStruct;
+
+MyStruct MyStruct_new_str(const char* v_data, size_t v_len);
+
+void MyStruct_set_str(MyStruct* self, const char* new_str_data, size_t new_str_len);
+void MyStruct_destroy(MyStruct* self);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+
