@@ -1,0 +1,29 @@
+---
+source: tool/src/c/mod.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef Bar_H
+#define Bar_H
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "diplomat_runtime.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct Foo Foo;
+
+typedef struct Bar {
+    Foo* y;
+} Bar;
+
+void Bar_destroy(Bar* self);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+

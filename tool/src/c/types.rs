@@ -102,3 +102,86 @@ pub fn c_type_for_prim(prim: &PrimitiveType) -> &str {
         PrimitiveType::char => "char",
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_pointer_types() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct {
+                    a: Box<MyStruct>,
+                }
+
+                impl MyStruct {
+                    fn new(foo: &MyStruct, bar: &mut MyStruct) -> MyStruct {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_option_types() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct {
+                    a: Option<Box<MyStruct>>,
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_result_types() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct {
+                    a: DiplomatResult<Box<MyStruct>, u8>,
+                }
+
+                impl MyStruct {
+                    fn new() -> DiplomatResult<MyStruct, u8> {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_writeable_out() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct;
+
+                impl MyStruct {
+                    fn write(&self, to: &mut diplomat_runtime::DiplomatWriteable) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_unit_type() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct;
+
+                impl MyStruct {
+                    fn something(&self) -> () {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+}
