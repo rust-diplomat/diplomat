@@ -192,7 +192,7 @@ fn gen_method<W: fmt::Write>(
         write!(out, " ")?;
     }
 
-    // TODO(shadaj): handle other keywords
+    // TODO(#60): handle other keywords
     if method.name == "new" || method.name == "default" {
         write!(out, "{}_(", method.name)?;
     } else if has_writeable_param {
@@ -317,7 +317,6 @@ fn gen_writeable_out_value<W: fmt::Write>(
     method_body: &mut W,
 ) -> fmt::Result {
     if let ast::TypeName::Result(_, err) = ret_typ {
-        // TODO(shadaj): do something if not okay
         gen_type(ret_typ, in_path, None, env, method_body)?;
         writeln!(method_body, " out_value = {};", out_expr)?;
 

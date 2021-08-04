@@ -3,8 +3,7 @@ use std::{cmp::max, collections::HashMap};
 
 use diplomat_core::ast::{self, PrimitiveType, TypeName};
 
-// TODO(shadaj): support non-32-bit platforms
-// TODO(shadaj): consider special types instead of tuples
+// TODO(#58): support non-32-bit platforms
 
 pub fn struct_size_offsets_max_align(
     strct: &ast::Struct,

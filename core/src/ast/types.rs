@@ -218,7 +218,7 @@ impl TypeName {
                 for (i, elem) in local_path.elements.iter().enumerate() {
                     match elem.as_ref() {
                         "crate" => {
-                            // TODO(shadaj): get the enclosing trate from env when we support multiple crates
+                            // TODO(#34): get the name of enclosing crate from env when we support multiple crates
                             cur_path = Path::empty()
                         }
 
