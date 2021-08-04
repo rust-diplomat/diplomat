@@ -1,0 +1,64 @@
+---
+source: tool/src/js/types.rs
+expression: out_texts.get(out).unwrap()
+
+---
+import wasm from "./wasm.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.mjs"
+const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
+  wasm.diplomat_free(obj["ptr"], obj["size"]);
+});
+
+const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.MyOpaqueStruct_destroy(underlying);
+});
+
+export class MyOpaqueStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+}
+
+const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.MyStruct_destroy(underlying);
+});
+
+export class MyStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new() {
+    const diplomat_out = (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(3);
+      const result_tag = {};
+      diplomat_alloc_destroy_registry.register(result_tag, {
+        ptr: diplomat_receive_buffer,
+        size: 3
+      });
+      wasm.MyStruct_new(diplomat_receive_buffer);
+      const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 2, 1))[0] == 1;
+      if (is_ok) {
+        const ok_value = (() => {
+          const out = new MyStruct(diplomat_receive_buffer);
+          out.owner = result_tag;
+          return out;
+        })();
+        return ok_value;
+      } else {
+        const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        throw throw_value;
+      }
+    })();
+    return diplomat_out;
+  }
+
+  get a() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
+  }
+
+  get b() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 1, 1))[0];
+  }
+}
+

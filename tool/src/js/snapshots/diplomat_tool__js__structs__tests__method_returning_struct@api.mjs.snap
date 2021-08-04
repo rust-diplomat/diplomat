@@ -1,0 +1,57 @@
+---
+source: tool/src/js/structs.rs
+expression: out_texts.get(out).unwrap()
+
+---
+import wasm from "./wasm.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.mjs"
+const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
+  wasm.diplomat_free(obj["ptr"], obj["size"]);
+});
+
+const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.MyStruct_destroy(underlying);
+});
+
+export class MyStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  get_non_opaque() {
+    const diplomat_out = (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(8);
+      wasm.MyStruct_get_non_opaque(diplomat_receive_buffer, this.underlying);
+      const out = new NonOpaqueStruct(diplomat_receive_buffer);
+      diplomat_alloc_destroy_registry.register(out, {
+        ptr: out.underlying,
+        size: 8
+      });
+      return out;
+    })();
+    return diplomat_out;
+  }
+}
+
+const NonOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.NonOpaqueStruct_destroy(underlying);
+});
+
+export class NonOpaqueStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  get a() {
+    return (new Uint16Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
+  }
+
+  get b() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 2, 1))[0];
+  }
+
+  get c() {
+    return (new Uint32Array(wasm.memory.buffer, this.underlying + 4, 1))[0];
+  }
+}
+

@@ -378,6 +378,10 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             _ => todo!(),
         },
 
+        ast::TypeName::Result(_, _) => {
+            todo!("Receiving references to results")
+        }
+
         ast::TypeName::Named(_) => {
             let custom_type = underlying.resolve(in_path, env);
 

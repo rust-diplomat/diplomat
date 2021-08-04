@@ -1,0 +1,43 @@
+---
+source: tool/src/js/structs.rs
+expression: out_texts.get(out).unwrap()
+
+---
+import wasm from "./wasm.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.mjs"
+const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
+  wasm.diplomat_free(obj["ptr"], obj["size"]);
+});
+
+const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.MyStruct_destroy(underlying);
+});
+
+export class MyStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new(a, b) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new MyStruct(wasm.MyStruct_new(a, b));
+        out.owner = null;
+        return out;
+      })();
+      MyStruct_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  get_a() {
+    const diplomat_out = wasm.MyStruct_get_a(this.underlying);
+    return diplomat_out;
+  }
+
+  set_b(b) {
+    const diplomat_out = wasm.MyStruct_set_b(this.underlying, b);
+  }
+}
+
