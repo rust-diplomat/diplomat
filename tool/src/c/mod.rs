@@ -104,12 +104,28 @@ fn gen_struct_header<'a>(
 
     for method in typ.methods() {
         for param in &method.params {
-            gen_includes(&param.ty, in_path, false, false, env, &mut seen_includes, out)?;
+            gen_includes(
+                &param.ty,
+                in_path,
+                false,
+                false,
+                env,
+                &mut seen_includes,
+                out,
+            )?;
             collect_results(&param.ty, in_path, env, seen_results, all_results);
         }
 
         if let Some(return_type) = method.return_type.as_ref() {
-            gen_includes(return_type, in_path, false, false, env, &mut seen_includes, out)?;
+            gen_includes(
+                return_type,
+                in_path,
+                false,
+                false,
+                env,
+                &mut seen_includes,
+                out,
+            )?;
             collect_results(return_type, in_path, env, seen_results, all_results);
         }
     }
@@ -167,8 +183,24 @@ fn gen_result_header(
         writeln!(out, "#endif")?;
 
         let mut seen_includes = HashSet::new();
-        gen_includes(ok.as_ref(), in_path, true, false, env, &mut seen_includes, out)?;
-        gen_includes(err.as_ref(), in_path, true, false, env, &mut seen_includes, out)?;
+        gen_includes(
+            ok.as_ref(),
+            in_path,
+            true,
+            false,
+            env,
+            &mut seen_includes,
+            out,
+        )?;
+        gen_includes(
+            err.as_ref(),
+            in_path,
+            true,
+            false,
+            env,
+            &mut seen_includes,
+            out,
+        )?;
 
         gen_result(typ, in_path, env, out)?;
 
@@ -230,14 +262,38 @@ pub fn gen_includes<W: fmt::Write>(
             }
         }
         ast::TypeName::Box(underlying) => {
-            gen_includes(underlying, in_path, pre_struct, true, env, seen_includes, out)?;
+            gen_includes(
+                underlying,
+                in_path,
+                pre_struct,
+                true,
+                env,
+                seen_includes,
+                out,
+            )?;
         }
         ast::TypeName::Reference(underlying, _) => {
-            gen_includes(underlying, in_path, pre_struct, true, env, seen_includes, out)?;
+            gen_includes(
+                underlying,
+                in_path,
+                pre_struct,
+                true,
+                env,
+                seen_includes,
+                out,
+            )?;
         }
         ast::TypeName::Primitive(_) => {}
         ast::TypeName::Option(underlying) => {
-            gen_includes(underlying, in_path, pre_struct, behind_ref, env, seen_includes, out)?;
+            gen_includes(
+                underlying,
+                in_path,
+                pre_struct,
+                behind_ref,
+                env,
+                seen_includes,
+                out,
+            )?;
         }
         ast::TypeName::Result(_, _) => {
             let include = format!("#include \"{}.h\"", name_for_type(typ));

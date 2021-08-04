@@ -115,7 +115,7 @@ mod tests {
                     fn set_b(&mut self, b: u8) {
                         unimplemented!()
                     }
-                }   
+                }
             }
         }
     }
@@ -140,7 +140,7 @@ mod tests {
                     fn set_b(&mut self, b: u8) {
                         unimplemented!()
                     }
-                }   
+                }
             }
         }
     }
@@ -161,7 +161,7 @@ mod tests {
                     fn set_str(&mut self, new_str: &str) {
                         unimplemented!()
                     }
-                }   
+                }
             }
         }
     }
