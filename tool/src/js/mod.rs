@@ -6,6 +6,10 @@ use indenter::indented;
 
 use crate::util;
 
+#[cfg(test)]
+#[macro_use]
+mod test_util;
+
 pub mod docs;
 
 pub mod types;

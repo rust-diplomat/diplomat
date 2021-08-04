@@ -1,0 +1,39 @@
+---
+source: tool/src/js/types.rs
+expression: out_texts.get(out).unwrap()
+
+---
+import wasm from "./wasm.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.mjs"
+const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
+  wasm.diplomat_free(obj["ptr"], obj["size"]);
+});
+
+const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.MyOpaqueStruct_destroy(underlying);
+});
+
+export class MyOpaqueStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+}
+
+const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.MyStruct_destroy(underlying);
+});
+
+export class MyStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  get a() {
+    return (() => {
+      const out = new MyOpaqueStruct((new Uint32Array(wasm.memory.buffer, this.underlying + 0, 1))[0]);
+      out.owner = null;
+      return out;
+    })();
+  }
+}
+
