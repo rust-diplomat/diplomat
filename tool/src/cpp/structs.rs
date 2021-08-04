@@ -347,3 +347,108 @@ fn gen_writeable_out_value<W: fmt::Write>(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_simple_non_opaque_struct() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct {
+                    a: u8,
+                    b: u8,
+                }
+
+                impl MyStruct {
+                    fn new(a: u8, b: u8) -> MyStruct {
+                        unimplemented!()
+                    }
+
+                    fn get_a(&self) -> u8 {
+                        unimplemented!()
+                    }
+
+                    fn set_b(&mut self, b: u8) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_simple_opaque_struct() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct(UnknownType);
+
+                impl MyStruct {
+                    fn new(a: u8, b: u8) -> Box<MyStruct> {
+                        unimplemented!()
+                    }
+
+                    fn get_a(&self) -> u8 {
+                        unimplemented!()
+                    }
+
+                    fn set_b(&mut self, b: u8) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_method_taking_str() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct(UnknownType);
+
+                impl MyStruct {
+                    fn new_str(v: &str) -> Box<MyStruct> {
+                        unimplemented!()
+                    }
+
+                    fn set_str(&mut self, new_str: &str) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_method_writeable_out() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct(UnknownType);
+
+                impl MyStruct {
+                    fn write(&self, out: &mut diplomat_runtime::DiplomatWriteable) {
+                        unimplemented!()
+                    }
+
+                    fn write_unit(&self, out: &mut diplomat_runtime::DiplomatWriteable) -> () {
+                        unimplemented!()
+                    }
+
+                    fn write_result(&self, out: &mut diplomat_runtime::DiplomatWriteable) -> DiplomatResult<(), u8> {
+                        unimplemented!()
+                    }
+
+                    fn write_no_rearrange(&self, out: &mut diplomat_runtime::DiplomatWriteable) -> u8 {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+}

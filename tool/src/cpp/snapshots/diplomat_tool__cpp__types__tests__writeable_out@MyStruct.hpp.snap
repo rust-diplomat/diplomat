@@ -1,0 +1,45 @@
+---
+source: tool/src/cpp/types.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyStruct_HPP
+#define MyStruct_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyStruct.h"
+}
+
+
+struct MyStructDeleter {
+  void operator()(capi::MyStruct* l) const noexcept {
+    capi::MyStruct_destroy(l);
+  }
+};
+struct MyStruct {
+ public:
+  template<typename W> void write_to_writeable(W& to);
+  std::string write();
+};
+
+
+template<typename W> inline void MyStruct::write_to_writeable(W& to) {
+  capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
+  capi::MyStruct_write((capi::MyStruct*) &this, &to_writer);
+}
+inline std::string MyStruct::write() {
+  std::string diplomat_writeable_string;
+  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
+  capi::MyStruct_write((capi::MyStruct*) &this, &diplomat_writeable_out);
+  return diplomat_writeable_string;
+}
+#endif
+

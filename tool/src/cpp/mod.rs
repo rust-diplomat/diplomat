@@ -7,6 +7,10 @@ use indenter::indented;
 
 use crate::util;
 
+#[cfg(test)]
+#[macro_use]
+mod test_util;
+
 mod types;
 
 mod structs;
@@ -70,7 +74,16 @@ pub fn gen_bindings(
 
             ast::CustomType::Struct(strct) => {
                 for (_, typ, _) in &strct.fields {
-                    gen_includes(typ, in_path, true, true, env, &mut seen_includes, out)?;
+                    gen_includes(
+                        typ,
+                        in_path,
+                        true,
+                        false,
+                        true,
+                        env,
+                        &mut seen_includes,
+                        out,
+                    )?;
                 }
             }
         }
@@ -81,6 +94,7 @@ pub fn gen_bindings(
                     &param.ty,
                     in_path,
                     true,
+                    false,
                     false,
                     env,
                     &mut seen_includes,
@@ -93,6 +107,7 @@ pub fn gen_bindings(
                     return_type,
                     in_path,
                     true,
+                    false,
                     false,
                     env,
                     &mut seen_includes,
@@ -124,6 +139,7 @@ pub fn gen_bindings(
                     in_path,
                     false,
                     false,
+                    false,
                     env,
                     &mut seen_includes,
                     out,
@@ -134,6 +150,7 @@ pub fn gen_bindings(
                 gen_includes(
                     return_type,
                     in_path,
+                    false,
                     false,
                     false,
                     env,
@@ -163,10 +180,12 @@ pub fn gen_bindings(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn gen_includes<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
     pre_struct: bool,
+    behind_ref: bool,
     for_field: bool,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     seen_includes: &mut HashSet<String>,
@@ -193,7 +212,7 @@ fn gen_includes<W: fmt::Write>(
                 }
 
                 ast::CustomType::Struct(_) => {
-                    if pre_struct && !for_field {
+                    if pre_struct && (!for_field || behind_ref) {
                         let decl = format!("struct {};", custom_typ.name());
                         if !seen_includes.contains(&decl) {
                             writeln!(out, "{}", decl)?;
@@ -209,18 +228,10 @@ fn gen_includes<W: fmt::Write>(
                 }
 
                 ast::CustomType::Enum(_) => {
-                    if pre_struct && !for_field {
-                        let decl = format!("enum struct {};", custom_typ.name());
-                        if !seen_includes.contains(&decl) {
-                            writeln!(out, "{}", decl)?;
-                            seen_includes.insert(decl);
-                        }
-                    } else {
-                        let include = format!("#include \"{}.hpp\"", custom_typ.name());
-                        if !seen_includes.contains(&include) {
-                            writeln!(out, "{}", include)?;
-                            seen_includes.insert(include);
-                        }
+                    let include = format!("#include \"{}.hpp\"", custom_typ.name());
+                    if !seen_includes.contains(&include) {
+                        writeln!(out, "{}", include)?;
+                        seen_includes.insert(include);
                     }
                 }
             }
@@ -230,6 +241,7 @@ fn gen_includes<W: fmt::Write>(
                 underlying,
                 in_path,
                 pre_struct,
+                true,
                 for_field,
                 env,
                 seen_includes,
@@ -241,6 +253,7 @@ fn gen_includes<W: fmt::Write>(
                 underlying,
                 in_path,
                 pre_struct,
+                true,
                 for_field,
                 env,
                 seen_includes,
@@ -253,6 +266,7 @@ fn gen_includes<W: fmt::Write>(
                 underlying,
                 in_path,
                 pre_struct,
+                behind_ref,
                 for_field,
                 env,
                 seen_includes,
@@ -264,6 +278,7 @@ fn gen_includes<W: fmt::Write>(
                 ok.as_ref(),
                 in_path,
                 pre_struct,
+                behind_ref,
                 for_field,
                 env,
                 seen_includes,
@@ -274,6 +289,7 @@ fn gen_includes<W: fmt::Write>(
                 err.as_ref(),
                 in_path,
                 pre_struct,
+                behind_ref,
                 for_field,
                 env,
                 seen_includes,
@@ -286,4 +302,58 @@ fn gen_includes<W: fmt::Write>(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_cross_module_struct_fields() {
+        test_file! {
+            #[diplomat::bridge]
+            mod mod1 {
+                use super::mod2::Bar;
+
+                struct Foo {
+                    x: Bar,
+                }
+            }
+
+            #[diplomat::bridge]
+            mod mod2 {
+                use super::mod1::Foo;
+
+                struct Bar {
+                    y: Box<Foo>,
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_cross_module_struct_methods() {
+        test_file! {
+            #[diplomat::bridge]
+            mod mod1 {
+                use super::mod2::Bar;
+
+                #[diplomat::opaque]
+                struct Foo;
+
+                impl Foo {
+                    fn to_bar(&self) -> Bar {
+                        unimplemented!()
+                    }
+                }
+            }
+
+            #[diplomat::bridge]
+            mod mod2 {
+                use super::mod1::Foo;
+
+                struct Bar {
+                    y: Box<Foo>,
+                }
+            }
+        }
+    }
 }

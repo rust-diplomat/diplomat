@@ -1,0 +1,37 @@
+---
+source: tool/src/cpp/types.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyStruct_HPP
+#define MyStruct_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyStruct.h"
+}
+
+
+struct MyStructDeleter {
+  void operator()(capi::MyStruct* l) const noexcept {
+    capi::MyStruct_destroy(l);
+  }
+};
+struct MyStruct {
+ public:
+  void something();
+};
+
+
+inline void MyStruct::something() {
+  capi::MyStruct_something((capi::MyStruct*) &this);
+}
+#endif
+
