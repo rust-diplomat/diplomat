@@ -77,7 +77,8 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                 (param.name.clone() + "_diplomat_len").as_str(),
                 Span::call_site(),
             );
-            // TODO(shadaj): don't just unwrap? or should we assume that the other side gives us a good value?
+
+            // TODO(#57): don't just unwrap? or should we assume that the other side gives us a good value?
             expanded_params.push(parse2(quote! {
                 unsafe {
                     core::str::from_utf8(core::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
@@ -202,7 +203,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         let type_ident = Ident::new(custom_type.name(), Span::call_site());
 
         // for now, body is empty since all we need to do is drop the box
-        // TODO(shadaj): change to take a pointer and handle DST boxes appropriately
+        // TODO(#13): change to take a `*mut` and handle DST boxes appropriately
         new_contents.push(Item::Fn(syn::parse_quote! {
             #[no_mangle]
             extern "C" fn #destroy_ident(this: Box<#type_ident>) {}

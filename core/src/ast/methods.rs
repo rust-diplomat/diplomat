@@ -117,7 +117,6 @@ impl Method {
                 _ => false,
             };
 
-        // TODO(shadaj): reconsider if we should auto-detect writeables
         return_compatible
             && !self.params.is_empty()
             && self.params[self.params.len() - 1].is_writeable()

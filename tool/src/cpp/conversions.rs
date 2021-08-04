@@ -18,12 +18,12 @@ pub fn gen_rust_to_cpp<W: Write>(
                 }
 
                 ast::CustomType::Struct(_strct) => {
-                    // TODO(shadaj): should emit a unique_ptr
+                    // TODO(#59): should emit a unique_ptr
                     todo!("Receiving boxes of structs is not yet supported")
                 }
 
                 ast::CustomType::Enum(_) => {
-                    // TODO(shadaj): should emit a unique_ptr
+                    // TODO(#59): should emit a unique_ptr
                     todo!("Receiving boxes of enums is not yet supported")
                 }
             },

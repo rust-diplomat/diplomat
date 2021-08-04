@@ -18,7 +18,7 @@ pub fn gen_value_js_to_rust(
 ) {
     match typ {
         ast::TypeName::StrReference => {
-            // TODO(shadaj): consider extracting into runtime function
+            // TODO(#61): consider extracting into runtime function
             pre_logic.push(format!(
                 "let {}_diplomat_bytes = (new TextEncoder()).encode({});",
                 param_name, param_name
@@ -47,39 +47,36 @@ pub fn gen_value_js_to_rust(
         ast::TypeName::Reference(_, _) => {
             invocation_params.push(format!("{}.underlying", param_name));
         }
-        ast::TypeName::Named(_) => {
-            match typ.resolve(in_path, env) {
-                ast::CustomType::Struct(struct_type) => {
-                    // TODO(shadaj): consider if we want to support copying data from a class instance
-                    for (field_name, field_type, _) in struct_type.fields.iter() {
-                        let field_extracted_name =
-                            format!("diplomat_{}_extracted_{}", struct_type.name, field_name);
-                        pre_logic.push(format!(
-                            "const {} = {}[\"{}\"];",
-                            field_extracted_name, param_name, field_name
-                        ));
+        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+            ast::CustomType::Struct(struct_type) => {
+                for (field_name, field_type, _) in struct_type.fields.iter() {
+                    let field_extracted_name =
+                        format!("diplomat_{}_extracted_{}", struct_type.name, field_name);
+                    pre_logic.push(format!(
+                        "const {} = {}[\"{}\"];",
+                        field_extracted_name, param_name, field_name
+                    ));
 
-                        gen_value_js_to_rust(
-                            field_extracted_name,
-                            field_type,
-                            in_path,
-                            env,
-                            pre_logic,
-                            invocation_params,
-                            post_logic,
-                        );
-                    }
-                }
-
-                ast::CustomType::Enum(enm) => {
-                    invocation_params.push(format!("{}_js_to_rust[{}]", enm.name, param_name));
-                }
-
-                ast::CustomType::Opaque(_) => {
-                    panic!("Opaque types cannot be sent as values");
+                    gen_value_js_to_rust(
+                        field_extracted_name,
+                        field_type,
+                        in_path,
+                        env,
+                        pre_logic,
+                        invocation_params,
+                        post_logic,
+                    );
                 }
             }
-        }
+
+            ast::CustomType::Enum(enm) => {
+                invocation_params.push(format!("{}_js_to_rust[{}]", enm.name, param_name));
+            }
+
+            ast::CustomType::Opaque(_) => {
+                panic!("Opaque types cannot be sent as values");
+            }
+        },
         _ => invocation_params.push(param_name),
     }
 }
@@ -173,7 +170,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Option(underlying) => {
-            // TODO(shadaj): actually return `null` if the option is `None`
+            // TODO(#62): actually return `null` if the option is `None`
             gen_value_rust_to_js(value_expr, underlying.as_ref(), in_path, env, out)?;
         }
 
@@ -267,12 +264,12 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Primitive(_prim) => {
-            // TODO(shadaj): wrap with appropriate types for large widths
+            // TODO(#63): wrap with appropriate types for large widths
             value_expr(out)?;
         }
 
         ast::TypeName::Reference(underlying, _mutability) => {
-            // TODO(shadaj): pass in lifetime of the reference
+            // TODO(#12): pass in lifetime of the reference
             gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, "null", env, out)?;
         }
         ast::TypeName::Writeable => todo!(),
@@ -293,8 +290,8 @@ fn gen_box_destructor<W: fmt::Write>(
     match typ {
         ast::TypeName::Box(underlying) => {
             writeln!(out, "const out_{}_value = out.{};", name, name)?;
-            // TODO(shadaj): delete back-references when we start generating them
-            // since the function is generated assuming that back references are needed
+            // TODO(#12): delete back-references when we start generating them
+            // since the out value getter returns a borrowed box
             if let ast::TypeName::Named(_) = underlying.as_ref() {
                 writeln!(
                     out,
@@ -312,7 +309,7 @@ fn gen_box_destructor<W: fmt::Write>(
         }
 
         ast::TypeName::Option(underlying) => {
-            // TODO(shadaj): don't generate destructor if null
+            // TODO(#62): don't generate destructor if null
             gen_box_destructor(name, underlying.as_ref(), in_path, env, out)?;
         }
 
@@ -357,7 +354,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     write!(out, ", 1))[0]")?;
                     Ok(())
                 },
-                "null", // TODO(shadaj): pass in lifetime of the reference
+                "null", // TODO(#12): pass in lifetime of the reference
                 env,
                 out,
             )?;
@@ -365,7 +362,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
-                // TODO(shadaj): return null if pointer is 0
+                // TODO(#62): return null if pointer is 0
                 gen_rust_reference_to_js(
                     underlying.as_ref(),
                     in_path,
