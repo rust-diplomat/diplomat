@@ -103,3 +103,111 @@ pub fn gen_type<W: fmt::Write>(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_pointer_types() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyOpaqueStruct(UnknownType);
+
+                struct MyStruct {
+                    a: Box<MyOpaqueStruct>,
+                }
+
+                impl MyStruct {
+                    fn new(foo: &MyStruct, bar: &mut MyStruct) -> MyStruct {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_option_types() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyOpaqueStruct(UnknownType);
+
+                struct MyStruct {
+                    a: Option<Box<MyOpaqueStruct>>,
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_result_types() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyOpaqueStruct(UnknownType);
+
+                struct MyStruct {
+                    a: DiplomatResult<Box<MyOpaqueStruct>, u8>,
+                }
+
+                impl MyStruct {
+                    fn new() -> DiplomatResult<MyStruct, u8> {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_string_reference() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct;
+
+                impl MyStruct {
+                    fn new(v: &str) -> MyStruct {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_writeable_out() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct;
+
+                impl MyStruct {
+                    fn write(&self, to: &mut diplomat_runtime::DiplomatWriteable) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_unit_type() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct;
+
+                impl MyStruct {
+                    fn something(&self) -> () {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+}

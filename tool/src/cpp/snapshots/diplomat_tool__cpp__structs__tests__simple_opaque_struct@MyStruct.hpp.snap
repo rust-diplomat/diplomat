@@ -1,0 +1,51 @@
+---
+source: tool/src/cpp/structs.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyStruct_HPP
+#define MyStruct_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyStruct.h"
+}
+
+class MyStruct;
+
+struct MyStructDeleter {
+  void operator()(capi::MyStruct* l) const noexcept {
+    capi::MyStruct_destroy(l);
+  }
+};
+class MyStruct {
+ public:
+  static MyStruct new_(uint8_t a, uint8_t b);
+  uint8_t get_a();
+  void set_b(uint8_t b);
+  inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
+  inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
+  inline MyStruct(capi::MyStruct* i) : inner(i) {}
+ private:
+  std::unique_ptr<capi::MyStruct, MyStructDeleter> inner;
+};
+
+
+inline MyStruct MyStruct::new_(uint8_t a, uint8_t b) {
+  return MyStruct(capi::MyStruct_new(a, b));
+}
+inline uint8_t MyStruct::get_a() {
+  return capi::MyStruct_get_a(this->inner.get());
+}
+inline void MyStruct::set_b(uint8_t b) {
+  capi::MyStruct_set_b(this->inner.get(), b);
+}
+#endif
+

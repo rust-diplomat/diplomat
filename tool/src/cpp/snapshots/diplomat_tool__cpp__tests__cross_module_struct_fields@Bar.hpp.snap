@@ -1,0 +1,35 @@
+---
+source: tool/src/cpp/mod.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef Bar_HPP
+#define Bar_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "Bar.h"
+}
+
+struct Foo;
+
+struct BarDeleter {
+  void operator()(capi::Bar* l) const noexcept {
+    capi::Bar_destroy(l);
+  }
+};
+struct Bar {
+ public:
+  Foo* y;
+};
+
+
+#endif
+

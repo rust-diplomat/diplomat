@@ -1,0 +1,38 @@
+---
+source: tool/src/cpp/types.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyOpaqueStruct_HPP
+#define MyOpaqueStruct_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyOpaqueStruct.h"
+}
+
+
+struct MyOpaqueStructDeleter {
+  void operator()(capi::MyOpaqueStruct* l) const noexcept {
+    capi::MyOpaqueStruct_destroy(l);
+  }
+};
+class MyOpaqueStruct {
+ public:
+  inline const capi::MyOpaqueStruct* AsFFI() const { return this->inner.get(); }
+  inline capi::MyOpaqueStruct* AsFFIMut() { return this->inner.get(); }
+  inline MyOpaqueStruct(capi::MyOpaqueStruct* i) : inner(i) {}
+ private:
+  std::unique_ptr<capi::MyOpaqueStruct, MyOpaqueStructDeleter> inner;
+};
+
+
+#endif
+

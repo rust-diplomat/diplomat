@@ -1,0 +1,49 @@
+---
+source: tool/src/cpp/structs.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyStruct_HPP
+#define MyStruct_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyStruct.h"
+}
+
+struct MyStruct;
+
+struct MyStructDeleter {
+  void operator()(capi::MyStruct* l) const noexcept {
+    capi::MyStruct_destroy(l);
+  }
+};
+struct MyStruct {
+ public:
+  uint8_t a;
+  uint8_t b;
+  static MyStruct new_(uint8_t a, uint8_t b);
+  uint8_t get_a();
+  void set_b(uint8_t b);
+};
+
+
+inline MyStruct MyStruct::new_(uint8_t a, uint8_t b) {
+  capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new(a, b);
+  return MyStruct{ .a = std::move(diplomat_raw_struct_out_value.a), .b = std::move(diplomat_raw_struct_out_value.b) };
+}
+inline uint8_t MyStruct::get_a() {
+  return capi::MyStruct_get_a((capi::MyStruct*) &this);
+}
+inline void MyStruct::set_b(uint8_t b) {
+  capi::MyStruct_set_b((capi::MyStruct*) &this, b);
+}
+#endif
+

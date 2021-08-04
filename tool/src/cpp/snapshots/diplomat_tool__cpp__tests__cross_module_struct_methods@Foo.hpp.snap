@@ -1,0 +1,45 @@
+---
+source: tool/src/cpp/mod.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef Foo_HPP
+#define Foo_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "Foo.h"
+}
+
+struct Bar;
+
+struct FooDeleter {
+  void operator()(capi::Foo* l) const noexcept {
+    capi::Foo_destroy(l);
+  }
+};
+class Foo {
+ public:
+  Bar to_bar();
+  inline const capi::Foo* AsFFI() const { return this->inner.get(); }
+  inline capi::Foo* AsFFIMut() { return this->inner.get(); }
+  inline Foo(capi::Foo* i) : inner(i) {}
+ private:
+  std::unique_ptr<capi::Foo, FooDeleter> inner;
+};
+
+#include "Bar.hpp"
+
+inline Bar Foo::to_bar() {
+  capi::Bar diplomat_raw_struct_out_value = capi::Foo_to_bar(this->inner.get());
+  return Bar{ .y = std::move(Foo(diplomat_raw_struct_out_value.y)) };
+}
+#endif
+

@@ -1,0 +1,41 @@
+---
+source: tool/src/cpp/types.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyStruct_HPP
+#define MyStruct_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyStruct.h"
+}
+
+class MyOpaqueStruct;
+struct MyStruct;
+
+struct MyStructDeleter {
+  void operator()(capi::MyStruct* l) const noexcept {
+    capi::MyStruct_destroy(l);
+  }
+};
+struct MyStruct {
+ public:
+  MyOpaqueStruct a;
+  static MyStruct new_(const MyStruct& foo, MyStruct& bar);
+};
+
+
+inline MyStruct MyStruct::new_(const MyStruct& foo, MyStruct& bar) {
+  capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new((capi::MyStruct*) &foo, (capi::MyStruct*) &bar);
+  return MyStruct{ .a = std::move(MyOpaqueStruct(diplomat_raw_struct_out_value.a)) };
+}
+#endif
+
