@@ -129,7 +129,7 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    fn new(a: u8, b: u8) -> MyStruct {
+                    fn new(a: u8, b: u8) -> Box<MyStruct> {
                         unimplemented!()
                     }
 
@@ -154,7 +154,7 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    fn new_str(v: &str) -> MyStruct {
+                    fn new_str(v: &str) -> Box<MyStruct> {
                         unimplemented!()
                     }
 

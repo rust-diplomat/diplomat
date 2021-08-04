@@ -17,7 +17,7 @@ extern "C" {
 
 typedef struct MyStruct MyStruct;
 
-MyStruct MyStruct_new(uint8_t a, uint8_t b);
+MyStruct* MyStruct_new(uint8_t a, uint8_t b);
 
 uint8_t MyStruct_get_a(const MyStruct* self);
 

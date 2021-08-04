@@ -17,7 +17,7 @@ extern "C" {
 
 typedef struct MyStruct MyStruct;
 
-MyStruct MyStruct_new_str(const char* v_data, size_t v_len);
+MyStruct* MyStruct_new_str(const char* v_data, size_t v_len);
 
 void MyStruct_set_str(MyStruct* self, const char* new_str_data, size_t new_str_len);
 void MyStruct_destroy(MyStruct* self);
