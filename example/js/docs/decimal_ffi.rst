@@ -1,7 +1,6 @@
 ``decimal::ffi``
 ================
 
-
 .. js:class:: ICU4XFixedDecimalFormat
 
     An ICU4X Fixed Decimal Format object, capable of formatting a :js:class:`ICU4XFixedDecimal` as a string. See `the Rust docs <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html>`__ for more information.

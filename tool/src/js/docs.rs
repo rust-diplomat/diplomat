@@ -53,7 +53,6 @@ pub fn gen_docs(
             let title = format!("``{}``", in_path.elements.join("::"));
             writeln!(out, "{}", title)?;
             writeln!(out, "{}", "=".repeat(title.len()))?;
-            writeln!(out)?;
 
             let mut sorted_symbols: Vec<&String> = mod_symbols.keys().collect();
             sorted_symbols.sort();
