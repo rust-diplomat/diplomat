@@ -431,19 +431,19 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    fn write(&self, out: &mut diplomat_runtime::DiplomatWriteable) {
+                    fn write(&self, out: &mut DiplomatWriteable) {
                         unimplemented!()
                     }
 
-                    fn write_unit(&self, out: &mut diplomat_runtime::DiplomatWriteable) -> () {
+                    fn write_unit(&self, out: &mut DiplomatWriteable) -> () {
                         unimplemented!()
                     }
 
-                    fn write_result(&self, out: &mut diplomat_runtime::DiplomatWriteable) -> DiplomatResult<(), u8> {
+                    fn write_result(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), u8> {
                         unimplemented!()
                     }
 
-                    fn write_no_rearrange(&self, out: &mut diplomat_runtime::DiplomatWriteable) -> u8 {
+                    fn write_no_rearrange(&self, out: &mut DiplomatWriteable) -> u8 {
                         unimplemented!()
                     }
                 }
