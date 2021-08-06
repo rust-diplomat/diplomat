@@ -161,7 +161,7 @@ mod tests {
                 struct MyStruct;
 
                 impl MyStruct {
-                    fn write(&self, to: &mut diplomat_runtime::DiplomatWriteable) {
+                    fn write(&self, to: &mut DiplomatWriteable) {
                         unimplemented!()
                     }
                 }

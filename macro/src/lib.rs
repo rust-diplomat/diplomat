@@ -329,7 +329,7 @@ mod tests {
                     struct Foo {}
 
                     impl Foo {
-                        fn to_string(&self, to: &mut diplomat_runtime::DiplomatWriteable) -> DiplomatResult<(), ()> {
+                        fn to_string(&self, to: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
                             unimplemented!()
                         }
                     }

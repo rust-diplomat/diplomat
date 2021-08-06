@@ -102,7 +102,7 @@ pub enum TypeName {
     Box(Box<TypeName>),
     /// A `Option<T>` type.
     Option(Box<TypeName>),
-    /// A `Result<T, E>` type.
+    /// A `diplomat_runtime::DiplomatResult<T, E>` type.
     Result(Box<TypeName>, Box<TypeName>),
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
@@ -326,7 +326,9 @@ impl From<&syn::Type> for TypeName {
     /// Extract a [`TypeName`] from a [`syn::Type`] AST node.
     /// The following rules are used to infer [`TypeName`] variants:
     /// - If the type is a path with a single element that is the name of a Rust primitive, returns a [`TypeName::Primitive`]
-    /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type paramter recursively converted
+    /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type parameter recursively converted
+    /// - If the type is a path with a single element [`Option`], returns a [`TypeName::Option`] with the type parameter recursively converted
+    /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::Result`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
     /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
@@ -369,9 +371,9 @@ impl From<&syn::Type> for TypeName {
                     } else {
                         panic!("Expected angle brackets for Option type")
                     }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "DiplomatResult"
-                {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                } else if is_runtime_type(p, "DiplomatResult") {
+                    if let PathArguments::AngleBracketed(type_args) =
+                        &p.path.segments.last().unwrap().arguments
                     {
                         if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
                             (&type_args.args[0], &type_args.args[1])
@@ -383,9 +385,7 @@ impl From<&syn::Type> for TypeName {
                     } else {
                         panic!("Expected angle brackets for Result type")
                     }
-                } else if p.path.to_token_stream().to_string()
-                    == "diplomat_runtime :: DiplomatWriteable"
-                {
+                } else if is_runtime_type(p, "DiplomatWriteable") {
                     TypeName::Writeable
                 } else {
                     TypeName::Named(Path::from_syn(&p.path))
@@ -401,6 +401,13 @@ impl From<&syn::Type> for TypeName {
             _ => panic!(),
         }
     }
+}
+
+fn is_runtime_type(p: &TypePath, name: &str) -> bool {
+    (p.path.segments.len() == 1 && p.path.segments[0].ident == name)
+        || (p.path.segments.len() == 2
+            && p.path.segments[0].ident == "diplomat_runtime"
+            && p.path.segments[1].ident == name)
 }
 
 /// A built-in Rust primitive scalar type.
