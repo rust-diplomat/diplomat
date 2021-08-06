@@ -152,77 +152,22 @@ fn gen_method<W: fmt::Write>(
         gen_method(enclosing_type, method, in_path, is_header, false, env, out)?;
     }
 
-    if has_writeable_param {
-        write!(out, "template<typename W> ")?;
-    }
-
-    if !is_header {
-        write!(out, "inline ")?;
-    }
-
-    if method.self_param.is_none() && is_header {
-        write!(out, "static ")?;
-    }
-
-    if rearranged_writeable {
-        if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
-            write!(out, "diplomat::result<std::string, ")?;
-            if err.as_ref() == &ast::TypeName::Unit {
-                write!(out, "std::monostate")?;
-            } else {
-                gen_type(err, in_path, None, env, out)?;
-            }
-            write!(out, ">")?;
-        } else {
-            write!(out, "std::string")?;
-        }
-    } else {
-        match &method.return_type {
-            Some(ret_type) => {
-                gen_type(ret_type, in_path, None, env, out)?;
-            }
-
-            None => {
-                write!(out, "void")?;
-            }
-        }
-    }
-
-    if !is_header {
-        write!(out, " {}::", enclosing_type.name())?;
-    } else {
-        write!(out, " ")?;
-    }
-
-    // TODO(#60): handle other keywords
-    if has_writeable_param {
-        write!(out, "{}_to_writeable(", method.name)?;
-    } else {
-        write!(out, "{}(", transform_keyword_ident(&method.name))?;
-    }
-
-    let mut params_to_gen = method.params.clone();
-
-    if rearranged_writeable {
-        params_to_gen.remove(params_to_gen.len() - 1);
-    }
-
-    for (i, param) in params_to_gen.iter().enumerate() {
-        if i != 0 {
-            write!(out, ", ")?;
-        }
-        if param.is_writeable() && !writeable_to_string {
-            write!(out, "W&")?;
-        } else {
-            gen_type(&param.ty, in_path, None, env, out)?;
-        }
-        write!(out, " {}", param.name)?;
-    }
+    let params_to_gen = gen_method_interface(
+        method,
+        enclosing_type,
+        in_path,
+        is_header,
+        has_writeable_param,
+        rearranged_writeable,
+        env,
+        out,
+        writeable_to_string,
+    )?;
 
     if is_header {
-        writeln!(out, ");")?;
+        writeln!(out, ";")?;
     } else {
-        writeln!(out, ") {{")?;
+        writeln!(out, " {{")?;
 
         let mut method_body = indented(out).with_str("  ");
 
@@ -307,6 +252,87 @@ fn gen_method<W: fmt::Write>(
     }
 
     Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn gen_method_interface<W: fmt::Write>(
+    method: &ast::Method,
+    enclosing_type: &ast::CustomType,
+    in_path: &ast::Path,
+    is_header: bool,
+    has_writeable_param: bool,
+    rearranged_writeable: bool,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    out: &mut W,
+    writeable_to_string: bool,
+) -> Result<Vec<ast::Param>, fmt::Error> {
+    if has_writeable_param {
+        write!(out, "template<typename W> ")?;
+    }
+
+    if !is_header {
+        write!(out, "inline ")?;
+    }
+
+    if method.self_param.is_none() && is_header {
+        write!(out, "static ")?;
+    }
+
+    if rearranged_writeable {
+        if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
+            write!(out, "diplomat::result<std::string, ")?;
+            if err.as_ref() == &ast::TypeName::Unit {
+                write!(out, "std::monostate")?;
+            } else {
+                gen_type(err, in_path, None, env, out)?;
+            }
+            write!(out, ">")?;
+        } else {
+            write!(out, "std::string")?;
+        }
+    } else {
+        match &method.return_type {
+            Some(ret_type) => {
+                gen_type(ret_type, in_path, None, env, out)?;
+            }
+
+            None => {
+                write!(out, "void")?;
+            }
+        }
+    }
+
+    if is_header {
+        write!(out, " ")?;
+    } else {
+        write!(out, " {}::", enclosing_type.name())?;
+    }
+
+    if has_writeable_param {
+        write!(out, "{}_to_writeable(", method.name)?;
+    } else {
+        write!(out, "{}(", transform_keyword_ident(&method.name))?;
+    }
+
+    let mut params_to_gen = method.params.clone();
+    if rearranged_writeable {
+        params_to_gen.remove(params_to_gen.len() - 1);
+    }
+
+    for (i, param) in params_to_gen.iter().enumerate() {
+        if i != 0 {
+            write!(out, ", ")?;
+        }
+        if param.is_writeable() && !writeable_to_string {
+            write!(out, "W&")?;
+        } else {
+            gen_type(&param.ty, in_path, None, env, out)?;
+        }
+        write!(out, " {}", param.name)?;
+    }
+
+    write!(out, ")")?;
+    Ok(params_to_gen)
 }
 
 fn gen_writeable_out_value<W: fmt::Write>(

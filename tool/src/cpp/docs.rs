@@ -1,11 +1,11 @@
 use std::fmt::Write;
 use std::{collections::HashMap, fmt};
 
-use diplomat_core::ast::{self, Param};
+use diplomat_core::ast;
 use indenter::indented;
 
 use crate::{
-    cpp::{types::gen_type, util::transform_keyword_ident},
+    cpp::{structs::gen_method_interface, types::gen_type},
     docs_util::markdown_to_rst,
 };
 
@@ -117,50 +117,46 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
 
     for method in typ.methods() {
         writeln!(&mut class_indented)?;
-        gen_method_docs(&mut class_indented, method, in_path, env)?;
+        gen_method_docs(method, typ, in_path, true, env, &mut class_indented)?;
     }
     Ok(())
 }
 
 pub fn gen_method_docs<W: fmt::Write>(
-    out: &mut W,
     method: &ast::Method,
+    enclosing_type: &ast::CustomType,
     in_path: &ast::Path,
+    writeable_to_string: bool,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    out: &mut W,
 ) -> fmt::Result {
-    let mut params: Vec<Param> = method.params.clone();
-    if method.is_writeable_out() {
-        params.remove(params.len() - 1);
+    // This method should rearrange the writeable
+    let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
+
+    // This method has some writeable param that is preserved
+    let has_writeable_param = method.has_writeable_param() && !writeable_to_string;
+
+    if rearranged_writeable {
+        // generate the normal method too
+        gen_method_docs(method, enclosing_type, in_path, false, env, out)?;
+        writeln!(out)?;
     }
 
-    if method.self_param.is_some() {
-        write!(out, ".. cpp:function:: ")?;
-    } else {
-        write!(out, ".. cpp:function:: static ")?;
-    }
+    write!(out, ".. cpp:function:: ")?;
 
-    match &method.return_type {
-        None | Some(ast::TypeName::Unit) => {
-            write!(out, "void")?;
-        }
+    let _ = gen_method_interface(
+        method,
+        enclosing_type,
+        in_path,
+        true,
+        has_writeable_param,
+        rearranged_writeable,
+        env,
+        out,
+        writeable_to_string,
+    )?;
 
-        Some(typ) => {
-            gen_type(typ, in_path, None, env, out)?;
-        }
-    }
-
-    write!(out, " {}(", transform_keyword_ident(&method.name))?;
-
-    for (i, param) in params.iter().enumerate() {
-        if i > 0 {
-            write!(out, ", ")?;
-        }
-
-        gen_type(&param.ty, in_path, None, env, out)?;
-        write!(out, " {}", param.name)?;
-    }
-
-    writeln!(out, ")")?;
+    writeln!(out)?;
 
     let mut method_indented = indented(out).with_str("    ");
     markdown_to_rst(
