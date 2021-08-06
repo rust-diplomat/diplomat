@@ -5,8 +5,6 @@ use std::fmt::Write;
 use diplomat_core::ast;
 use indenter::indented;
 
-use crate::util;
-
 #[cfg(test)]
 #[macro_use]
 mod test_util;
@@ -17,6 +15,10 @@ mod structs;
 use structs::*;
 
 mod conversions;
+
+pub mod docs;
+
+mod util;
 
 static RUNTIME_HPP: &str = include_str!("runtime.hpp");
 
@@ -31,7 +33,7 @@ pub fn gen_bindings(
         .or_insert_with(String::new);
     write!(diplomat_runtime_out, "{}", RUNTIME_HPP)?;
 
-    let all_types = util::get_all_custom_types(env);
+    let all_types = crate::util::get_all_custom_types(env);
 
     for (in_path, typ) in &all_types {
         let out = outs

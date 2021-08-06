@@ -1,12 +1,15 @@
 use std::fmt::Write;
 use std::{collections::HashMap, fmt};
 
-use diplomat_core::ast;
+use diplomat_core::ast::{self, Param};
 use indenter::indented;
 
-use crate::docs_util::markdown_to_rst;
+use crate::{
+    cpp::{types::gen_type, util::transform_keyword_ident},
+    docs_util::markdown_to_rst,
+};
 
-/// Generate RST-formatted Sphinx docs for all FFI types. Currently assumes a JS target.
+/// Generate RST-formatted Sphinx docs for all FFI types.
 pub fn gen_docs(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     outs: &mut HashMap<String, String>,
@@ -77,7 +80,12 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) -> fmt::Result {
-    writeln!(out, ".. js:class:: {}", typ.name())?;
+    match typ {
+        ast::CustomType::Struct(_) => writeln!(out, ".. cpp:struct:: {}", typ.name())?,
+        ast::CustomType::Enum(_) => writeln!(out, ".. cpp:enum-struct:: {}", typ.name())?,
+        ast::CustomType::Opaque(_) => writeln!(out, ".. cpp:class:: {}", typ.name())?,
+    }
+
     writeln!(out)?;
     let mut class_indented = indented(out).with_str("    ");
     markdown_to_rst(
@@ -85,7 +93,11 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
         typ.doc_lines(),
         &|shortcut_path, to| {
             let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-            write!(to, ":js:class:`{}`", resolved.name())?;
+            match resolved {
+                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
+                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+            }
             Ok(())
         },
     )?;
@@ -95,6 +107,11 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
         for field in strct.fields.iter() {
             writeln!(&mut class_indented)?;
             gen_field_docs(&mut class_indented, field, in_path, env)?;
+        }
+    } else if let ast::CustomType::Enum(enm) = typ {
+        for variant in &enm.variants {
+            writeln!(&mut class_indented)?;
+            gen_enum_variant_docs(&mut class_indented, variant, in_path, env)?;
         }
     }
 
@@ -111,26 +128,39 @@ pub fn gen_method_docs<W: fmt::Write>(
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) -> fmt::Result {
-    let mut param_names: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
+    let mut params: Vec<Param> = method.params.clone();
     if method.is_writeable_out() {
-        param_names.remove(param_names.len() - 1);
+        params.remove(params.len() - 1);
     }
 
     if method.self_param.is_some() {
-        writeln!(
-            out,
-            ".. js:function:: {}({})",
-            method.name,
-            param_names.join(", ")
-        )?;
+        write!(out, ".. cpp:function:: ")?;
     } else {
-        writeln!(
-            out,
-            ".. js:staticfunction:: {}({})",
-            method.name,
-            param_names.join(", ")
-        )?;
+        write!(out, ".. cpp:function:: static ")?;
     }
+
+    match &method.return_type {
+        None | Some(ast::TypeName::Unit) => {
+            write!(out, "void")?;
+        }
+
+        Some(typ) => {
+            gen_type(typ, in_path, None, env, out)?;
+        }
+    }
+
+    write!(out, " {}(", transform_keyword_ident(&method.name))?;
+
+    for (i, param) in params.iter().enumerate() {
+        if i > 0 {
+            write!(out, ", ")?;
+        }
+
+        gen_type(&param.ty, in_path, None, env, out)?;
+        write!(out, " {}", param.name)?;
+    }
+
+    writeln!(out, ")")?;
 
     let mut method_indented = indented(out).with_str("    ");
     markdown_to_rst(
@@ -138,7 +168,11 @@ pub fn gen_method_docs<W: fmt::Write>(
         &method.doc_lines,
         &|shortcut_path, to| {
             let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-            write!(to, ":js:class:`{}`", resolved.name())?;
+            match resolved {
+                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
+                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+            }
             Ok(())
         },
     )?;
@@ -153,16 +187,46 @@ pub fn gen_field_docs<W: fmt::Write>(
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) -> fmt::Result {
-    writeln!(out, ".. js:attribute:: {}", field.0)?;
+    write!(out, ".. cpp:member:: ")?;
+    gen_type(&field.1, in_path, None, env, out)?;
+    writeln!(out, " {}", field.0)?;
 
     writeln!(out)?;
     let mut field_indented = indented(out).with_str("    ");
     markdown_to_rst(&mut field_indented, &field.2, &|shortcut_path, to| {
         let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-        write!(to, ":js:class:`{}`", resolved.name())?;
+        match resolved {
+            ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+            ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
+            ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+        }
         Ok(())
     })?;
     writeln!(field_indented)?;
+
+    Ok(())
+}
+
+pub fn gen_enum_variant_docs<W: fmt::Write>(
+    out: &mut W,
+    variant: &(String, isize, String),
+    in_path: &ast::Path,
+    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+) -> fmt::Result {
+    write!(out, ".. cpp:enumerator:: {}", variant.0)?;
+
+    writeln!(out)?;
+    let mut enum_indented = indented(out).with_str("    ");
+    markdown_to_rst(&mut enum_indented, &variant.2, &|shortcut_path, to| {
+        let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+        match resolved {
+            ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+            ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
+            ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+        }
+        Ok(())
+    })?;
+    writeln!(enum_indented)?;
 
     Ok(())
 }

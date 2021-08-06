@@ -4,6 +4,8 @@ use std::{collections::HashMap, fmt};
 use diplomat_core::ast;
 use indenter::indented;
 
+use crate::cpp::util::transform_keyword_ident;
+
 use super::conversions::{gen_cpp_to_rust, gen_rust_to_cpp};
 use super::types::gen_type;
 
@@ -193,12 +195,10 @@ fn gen_method<W: fmt::Write>(
     }
 
     // TODO(#60): handle other keywords
-    if method.name == "new" || method.name == "default" {
-        write!(out, "{}_(", method.name)?;
-    } else if has_writeable_param {
+    if has_writeable_param {
         write!(out, "{}_to_writeable(", method.name)?;
     } else {
-        write!(out, "{}(", method.name)?;
+        write!(out, "{}(", transform_keyword_ident(&method.name))?;
     }
 
     let mut params_to_gen = method.params.clone();
