@@ -78,18 +78,20 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
 ) -> fmt::Result {
     writeln!(out, ".. js:class:: {}", typ.name())?;
-    writeln!(out)?;
+
     let mut class_indented = indented(out).with_str("    ");
-    markdown_to_rst(
-        &mut class_indented,
-        typ.doc_lines(),
-        &|shortcut_path, to| {
-            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-            write!(to, ":js:class:`{}`", resolved.name())?;
-            Ok(())
-        },
-    )?;
-    writeln!(class_indented)?;
+    if !typ.doc_lines().is_empty() {
+        markdown_to_rst(
+            &mut class_indented,
+            typ.doc_lines(),
+            &|shortcut_path, to| {
+                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                write!(to, ":js:class:`{}`", resolved.name())?;
+                Ok(())
+            },
+        )?;
+        writeln!(class_indented)?;
+    }
 
     if let ast::CustomType::Struct(strct) = typ {
         for field in strct.fields.iter() {
@@ -132,17 +134,19 @@ pub fn gen_method_docs<W: fmt::Write>(
         )?;
     }
 
-    let mut method_indented = indented(out).with_str("    ");
-    markdown_to_rst(
-        &mut method_indented,
-        &method.doc_lines,
-        &|shortcut_path, to| {
-            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-            write!(to, ":js:class:`{}`", resolved.name())?;
-            Ok(())
-        },
-    )?;
-    writeln!(method_indented)?;
+    if !method.doc_lines.is_empty() {
+        let mut method_indented = indented(out).with_str("    ");
+        markdown_to_rst(
+            &mut method_indented,
+            &method.doc_lines,
+            &|shortcut_path, to| {
+                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                write!(to, ":js:class:`{}`", resolved.name())?;
+                Ok(())
+            },
+        )?;
+        writeln!(method_indented)?;
+    }
 
     Ok(())
 }
@@ -155,14 +159,15 @@ pub fn gen_field_docs<W: fmt::Write>(
 ) -> fmt::Result {
     writeln!(out, ".. js:attribute:: {}", field.0)?;
 
-    writeln!(out)?;
-    let mut field_indented = indented(out).with_str("    ");
-    markdown_to_rst(&mut field_indented, &field.2, &|shortcut_path, to| {
-        let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-        write!(to, ":js:class:`{}`", resolved.name())?;
-        Ok(())
-    })?;
-    writeln!(field_indented)?;
+    if !field.2.is_empty() {
+        let mut field_indented = indented(out).with_str("    ");
+        markdown_to_rst(&mut field_indented, &field.2, &|shortcut_path, to| {
+            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+            write!(to, ":js:class:`{}`", resolved.name())?;
+            Ok(())
+        })?;
+        writeln!(field_indented)?;
+    }
 
     Ok(())
 }

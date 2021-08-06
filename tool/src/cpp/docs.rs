@@ -86,22 +86,25 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
         ast::CustomType::Opaque(_) => writeln!(out, ".. cpp:class:: {}", typ.name())?,
     }
 
-    writeln!(out)?;
     let mut class_indented = indented(out).with_str("    ");
-    markdown_to_rst(
-        &mut class_indented,
-        typ.doc_lines(),
-        &|shortcut_path, to| {
-            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-            match resolved {
-                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
-                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
-                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
-            }
-            Ok(())
-        },
-    )?;
-    writeln!(class_indented)?;
+    if !typ.doc_lines().is_empty() {
+        markdown_to_rst(
+            &mut class_indented,
+            typ.doc_lines(),
+            &|shortcut_path, to| {
+                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                match resolved {
+                    ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                    ast::CustomType::Enum(_) => {
+                        write!(to, ":cpp:enum-struct:`{}`", resolved.name())?
+                    }
+                    ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+                }
+                Ok(())
+            },
+        )?;
+        writeln!(class_indented)?;
+    }
 
     if let ast::CustomType::Struct(strct) = typ {
         for field in strct.fields.iter() {
@@ -119,6 +122,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
         writeln!(&mut class_indented)?;
         gen_method_docs(method, typ, in_path, true, env, &mut class_indented)?;
     }
+
     Ok(())
 }
 
@@ -158,21 +162,25 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     writeln!(out)?;
 
-    let mut method_indented = indented(out).with_str("    ");
-    markdown_to_rst(
-        &mut method_indented,
-        &method.doc_lines,
-        &|shortcut_path, to| {
-            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-            match resolved {
-                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
-                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
-                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
-            }
-            Ok(())
-        },
-    )?;
-    writeln!(method_indented)?;
+    if !method.doc_lines.is_empty() {
+        let mut method_indented = indented(out).with_str("    ");
+        markdown_to_rst(
+            &mut method_indented,
+            &method.doc_lines,
+            &|shortcut_path, to| {
+                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                match resolved {
+                    ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                    ast::CustomType::Enum(_) => {
+                        write!(to, ":cpp:enum-struct:`{}`", resolved.name())?
+                    }
+                    ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+                }
+                Ok(())
+            },
+        )?;
+        writeln!(method_indented)?;
+    }
 
     Ok(())
 }
@@ -187,18 +195,19 @@ pub fn gen_field_docs<W: fmt::Write>(
     gen_type(&field.1, in_path, None, env, out)?;
     writeln!(out, " {}", field.0)?;
 
-    writeln!(out)?;
-    let mut field_indented = indented(out).with_str("    ");
-    markdown_to_rst(&mut field_indented, &field.2, &|shortcut_path, to| {
-        let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-        match resolved {
-            ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
-            ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
-            ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
-        }
-        Ok(())
-    })?;
-    writeln!(field_indented)?;
+    if !field.2.is_empty() {
+        let mut field_indented = indented(out).with_str("    ");
+        markdown_to_rst(&mut field_indented, &field.2, &|shortcut_path, to| {
+            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+            match resolved {
+                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
+                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+            }
+            Ok(())
+        })?;
+        writeln!(field_indented)?;
+    }
 
     Ok(())
 }
@@ -212,17 +221,20 @@ pub fn gen_enum_variant_docs<W: fmt::Write>(
     write!(out, ".. cpp:enumerator:: {}", variant.0)?;
 
     writeln!(out)?;
-    let mut enum_indented = indented(out).with_str("    ");
-    markdown_to_rst(&mut enum_indented, &variant.2, &|shortcut_path, to| {
-        let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-        match resolved {
-            ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
-            ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
-            ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
-        }
-        Ok(())
-    })?;
-    writeln!(enum_indented)?;
+
+    if !variant.2.is_empty() {
+        let mut enum_indented = indented(out).with_str("    ");
+        markdown_to_rst(&mut enum_indented, &variant.2, &|shortcut_path, to| {
+            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+            match resolved {
+                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
+                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+            }
+            Ok(())
+        })?;
+        writeln!(enum_indented)?;
+    }
 
     Ok(())
 }

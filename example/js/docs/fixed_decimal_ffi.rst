@@ -4,7 +4,6 @@
 
 .. js:class:: ICU4XFixedDecimal
 
-
     A decimal number. See `the Rust docs <https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html>`__ for more information.
 
     .. js:staticfunction:: new(v)
