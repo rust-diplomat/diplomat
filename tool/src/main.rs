@@ -5,6 +5,7 @@ use diplomat_core::ast;
 
 mod c;
 mod cpp;
+mod docs_util;
 mod js;
 mod layout;
 mod util;
@@ -45,16 +46,20 @@ fn main() -> std::io::Result<()> {
     }
 
     if args.len() > 3 {
-        let mut docs_text = String::new();
+        let mut docs_out_texts: HashMap<String, String> = HashMap::new();
 
         match target {
-            "js" => js::docs::gen_docs(&env, &mut docs_text).unwrap(),
+            "js" => js::docs::gen_docs(&env, &mut docs_out_texts).unwrap(),
+            "cpp" => cpp::docs::gen_docs(&env, &mut docs_out_texts).unwrap(),
             "c" => todo!("Docs generation for C"),
             o => panic!("Unknown target: {}", o),
         }
 
-        let mut out_docs = File::create(args[3].clone())?;
-        out_docs.write_all(docs_text.as_bytes())?;
+        let docs_out_folder_path = Path::new(args[3].as_str());
+        for (subpath, text) in docs_out_texts {
+            let mut out_file = File::create(docs_out_folder_path.join(subpath))?;
+            out_file.write_all(text.as_bytes())?;
+        }
     }
 
     Ok(())
