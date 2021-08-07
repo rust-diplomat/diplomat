@@ -11,7 +11,16 @@ mod layout;
 mod util;
 
 fn main() -> std::io::Result<()> {
-    let lib_file = syn_inline_mod::parse_and_inline_modules(Path::new("./src/lib.rs"));
+    let path = Path::new("src/lib.rs");
+    if !path.exists() {
+        let current_dir = std::env::current_dir().expect("Could not find home directory.");
+        eprintln!(
+            "Could not find the lib.rs file to process: {:?}",
+            Path::new(&current_dir).join(path)
+        );
+        std::process::exit(1);
+    }
+    let lib_file = syn_inline_mod::parse_and_inline_modules(path);
     let custom_types = ast::File::from(&lib_file);
     let env = custom_types.all_types();
 
