@@ -22,12 +22,14 @@ When using Diplomat, you'll need to define Rust modules that contain the Rust AP
 mod ffi {
     pub struct MyFFIType {
         pub a: i32,
+        pub b: bool,
     }
     
     impl MyFFIType {
         pub fn new() -> MyFFIType {
             MyFFIType {
                 a: 42,
+                b: true
             }
         }
     }
@@ -41,6 +43,17 @@ extern "C" fn MyFFIType_new() -> MyFFIType {
     MyFFIType::new()
 }
 ```
+
+We can then generate the bindings for this API using the `diplomat-tool` CLI. For example, if we want to generate C++ bindings, we can create a folder `cpp` and generate bindings in it by running:
+```bash
+$ diplomat-tool cpp cpp/
+```
+
+If we want to generate Sphinx documentation to `cpp-docs`, we can run with that as an additional parameter:
+```bash
+$ diplomat-tool cpp cpp/ cpp-docs/
+```
+
 ## Core Concepts
 ### Opaque Structs
 By default, any struct exposed in a bridge module can be returned by value, which means that its size must be known so that the caller can allocate the space to receive it. However, Diplomat only analyzes the code declared within bridge modules, so regular structs cannot contain external types as fields.
