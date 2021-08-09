@@ -51,7 +51,7 @@ $ diplomat-tool cpp cpp/
 
 If we want to generate Sphinx documentation to `cpp-docs`, we can run with that as an additional parameter:
 ```bash
-$ diplomat-tool cpp cpp/ cpp-docs/
+$ diplomat-tool cpp cpp/ --docs cpp-docs/
 ```
 
 ## Core Concepts
