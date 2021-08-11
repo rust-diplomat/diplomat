@@ -3,7 +3,7 @@
 # Problem statement
 
 A common task in the world of Rust FFI is taking a self-contained Rust project and making it possible to call from other languages. This is typically done through a C API, requiring clients to write their own wrappers.
-Sometimes it is ideal if the team can maintain their own wrappers, and it would be ideal if these wrappers were auto generated over the same stable-ish C API.
+Sometimes a team will want to maintain their own wrappers using their particular flavor of C++ or whatever other language they need, and it would be ideal if these wrappers were auto generated over the same stable-ish C API.
 
 # Background
 
