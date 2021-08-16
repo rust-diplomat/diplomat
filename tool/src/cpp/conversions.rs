@@ -92,14 +92,13 @@ pub fn gen_rust_to_cpp<W: Write>(
 
             let wrapped_value_id = format!("diplomat_result_{}", path);
             super::types::gen_type(typ, in_path, None, env, out).unwrap();
-            writeln!(out, " {};", wrapped_value_id).unwrap();
+            writeln!(out, " {}({}.is_ok);", wrapped_value_id, raw_value_id).unwrap();
 
-            writeln!(out, "{}.is_ok = {}.is_ok;", wrapped_value_id, raw_value_id).unwrap();
             writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
             if ok.as_ref() != &ast::TypeName::Unit {
                 let ok_expr =
                     gen_rust_to_cpp(&format!("{}.ok", raw_value_id), path, ok, in_path, env, out);
-                writeln!(out, "  {}.ok = {};", wrapped_value_id, ok_expr).unwrap();
+                writeln!(out, "  {} = diplomat::Ok(std::move({}));", wrapped_value_id, ok_expr).unwrap();
             }
             writeln!(out, "}} else {{").unwrap();
             if err.as_ref() != &ast::TypeName::Unit {
@@ -111,7 +110,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                     env,
                     out,
                 );
-                writeln!(out, "  {}.err = {};", wrapped_value_id, err_expr).unwrap();
+                writeln!(out, "  {} = diplomat::Err(std::move({}));", wrapped_value_id, err_expr).unwrap();
             }
             writeln!(out, "}}").unwrap();
 
