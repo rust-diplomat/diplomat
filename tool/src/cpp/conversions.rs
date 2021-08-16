@@ -94,25 +94,27 @@ pub fn gen_rust_to_cpp<W: Write>(
             super::types::gen_type(typ, in_path, None, env, out).unwrap();
             writeln!(out, " {}({}.is_ok);", wrapped_value_id, raw_value_id).unwrap();
 
-            writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
-            if ok.as_ref() != &ast::TypeName::Unit {
-                let ok_expr =
-                    gen_rust_to_cpp(&format!("{}.ok", raw_value_id), path, ok, in_path, env, out);
-                writeln!(out, "  {} = diplomat::Ok(std::move({}));", wrapped_value_id, ok_expr).unwrap();
+            if ok.as_ref() != &ast::TypeName::Unit || err.as_ref() != &ast::TypeName::Unit {
+                writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
+                if ok.as_ref() != &ast::TypeName::Unit {
+                    let ok_expr =
+                        gen_rust_to_cpp(&format!("{}.ok", raw_value_id), path, ok, in_path, env, out);
+                    writeln!(out, "  {} = diplomat::Ok(std::move({}));", wrapped_value_id, ok_expr).unwrap();
+                }
+                writeln!(out, "}} else {{").unwrap();
+                if err.as_ref() != &ast::TypeName::Unit {
+                    let err_expr = gen_rust_to_cpp(
+                        &format!("{}.err", raw_value_id),
+                        path,
+                        err,
+                        in_path,
+                        env,
+                        out,
+                    );
+                    writeln!(out, "  {} = diplomat::Err(std::move({}));", wrapped_value_id, err_expr).unwrap();
+                }
+                writeln!(out, "}}").unwrap();
             }
-            writeln!(out, "}} else {{").unwrap();
-            if err.as_ref() != &ast::TypeName::Unit {
-                let err_expr = gen_rust_to_cpp(
-                    &format!("{}.err", raw_value_id),
-                    path,
-                    err,
-                    in_path,
-                    env,
-                    out,
-                );
-                writeln!(out, "  {} = diplomat::Err(std::move({}));", wrapped_value_id, err_expr).unwrap();
-            }
-            writeln!(out, "}}").unwrap();
 
             wrapped_value_id
         }
