@@ -96,6 +96,14 @@ public:
     return std::make_optional(std::get<Err<E>>(this->val).inner);
   }
 
+  void set_ok(T&& t) {
+    this->val = Ok<T>(std::move(t));
+  }
+
+  void set_err(E&& e) {
+    this->val = Err<E>(std::move(e));
+  }
+
   template<typename T2>
   result<T2, E> replace_ok(T2&& t) {
     if (this->is_err()) {

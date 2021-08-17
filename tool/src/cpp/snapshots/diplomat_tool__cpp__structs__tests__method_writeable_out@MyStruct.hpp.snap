@@ -67,7 +67,7 @@ template<typename W> inline diplomat::result<std::monostate, uint8_t> MyStruct::
   diplomat::result<std::monostate, uint8_t> diplomat_result_out_value(diplomat_result_raw_out_value.is_ok);
   if (diplomat_result_raw_out_value.is_ok) {
   } else {
-    diplomat_result_out_value = diplomat::Err(std::move(diplomat_result_raw_out_value.err));
+    diplomat_result_out_value.set_err((std::move(diplomat_result_raw_out_value.err)));
   }
   return diplomat_result_out_value;
 }
@@ -78,7 +78,7 @@ inline diplomat::result<std::string, uint8_t> MyStruct::write_result() {
   diplomat::result<std::monostate, uint8_t> diplomat_result_out_value(diplomat_result_raw_out_value.is_ok);
   if (diplomat_result_raw_out_value.is_ok) {
   } else {
-    diplomat_result_out_value = diplomat::Err(std::move(diplomat_result_raw_out_value.err));
+    diplomat_result_out_value.set_err((std::move(diplomat_result_raw_out_value.err)));
   }
   return diplomat_result_out_value.replace_ok(std::move(diplomat_writeable_string));
 }

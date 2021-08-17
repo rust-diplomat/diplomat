@@ -99,7 +99,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                 if ok.as_ref() != &ast::TypeName::Unit {
                     let ok_expr =
                         gen_rust_to_cpp(&format!("{}.ok", raw_value_id), path, ok, in_path, env, out);
-                    writeln!(out, "  {} = diplomat::Ok(std::move({}));", wrapped_value_id, ok_expr).unwrap();
+                    writeln!(out, "  {}.set_ok((std::move({})));", wrapped_value_id, ok_expr).unwrap();
                 }
                 writeln!(out, "}} else {{").unwrap();
                 if err.as_ref() != &ast::TypeName::Unit {
@@ -111,7 +111,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                         env,
                         out,
                     );
-                    writeln!(out, "  {} = diplomat::Err(std::move({}));", wrapped_value_id, err_expr).unwrap();
+                    writeln!(out, "  {}.set_err((std::move({})));", wrapped_value_id, err_expr).unwrap();
                 }
                 writeln!(out, "}}").unwrap();
             }

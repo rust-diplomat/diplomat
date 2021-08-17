@@ -41,13 +41,13 @@ inline diplomat::result<MyStruct, uint8_t> MyStruct::new_() {
   auto diplomat_result_raw_out_value_a = diplomat_raw_struct_out_value.a;
   diplomat::result<MyOpaqueStruct, uint8_t> diplomat_result_out_value_a(diplomat_result_raw_out_value_a.is_ok);
   if (diplomat_result_raw_out_value_a.is_ok) {
-    diplomat_result_out_value_a = diplomat::Ok(std::move(MyOpaqueStruct(diplomat_result_raw_out_value_a.ok)));
+    diplomat_result_out_value_a.set_ok((std::move(MyOpaqueStruct(diplomat_result_raw_out_value_a.ok))));
   } else {
-    diplomat_result_out_value_a = diplomat::Err(std::move(diplomat_result_raw_out_value_a.err));
+    diplomat_result_out_value_a.set_err((std::move(diplomat_result_raw_out_value_a.err)));
   }
-    diplomat_result_out_value = diplomat::Ok(std::move(MyStruct{ .a = std::move(diplomat_result_out_value_a) }));
+    diplomat_result_out_value.set_ok((std::move(MyStruct{ .a = std::move(diplomat_result_out_value_a) })));
   } else {
-    diplomat_result_out_value = diplomat::Err(std::move(diplomat_result_raw_out_value.err));
+    diplomat_result_out_value.set_err((std::move(diplomat_result_raw_out_value.err)));
   }
   return diplomat_result_out_value;
 }
