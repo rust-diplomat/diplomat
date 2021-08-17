@@ -341,7 +341,11 @@ fn gen_writeable_out_value<W: fmt::Write>(
     method_body: &mut W,
 ) -> fmt::Result {
     if let ast::TypeName::Result(_, _) = ret_typ {
-        writeln!(method_body, "return {}.replace_ok(std::move(diplomat_writeable_string));", out_expr)?;
+        writeln!(
+            method_body,
+            "return {}.replace_ok(std::move(diplomat_writeable_string));",
+            out_expr
+        )?;
     } else {
         panic!("Not in writeable out form")
     }
