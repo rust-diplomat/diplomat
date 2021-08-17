@@ -4,12 +4,17 @@
 int main(int argc, char *argv[]) {
     ICU4XFixedDecimal fd = ICU4XFixedDecimal::new_(123);
 
-    std::cout << fd.to_string().ok << std::endl;
+    std::cout << "ok" << fd.to_string().is_err() << std::endl;
+
+    std::string fd_out = fd.to_string().ok().value();
+
+    std::cout << fd_out << std::endl;
 
     fd.multiply_pow10(-1);
     std::cout << "multiplied by 0.1" << std::endl;
 
-    std::cout << fd.to_string().ok << std::endl;
+    fd_out = fd.to_string().ok().value();
+    std::cout << fd_out << std::endl;
 
     std::string out;
 

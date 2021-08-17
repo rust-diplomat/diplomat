@@ -47,27 +47,14 @@ inline void ICU4XFixedDecimal::negate() {
 template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_writeable(W& to) {
   capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &to_writer);
-  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
-  diplomat_result_out_value.is_ok = diplomat_result_raw_out_value.is_ok;
-  if (diplomat_result_raw_out_value.is_ok) {
-  } else {
-  }
+  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value(diplomat_result_raw_out_value.is_ok);
   return diplomat_result_out_value;
 }
 inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() {
   std::string diplomat_writeable_string;
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
-  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
-  diplomat_result_out_value.is_ok = diplomat_result_raw_out_value.is_ok;
-  if (diplomat_result_raw_out_value.is_ok) {
-  } else {
-  }
-  diplomat::result<std::monostate, std::monostate> out_value = diplomat_result_out_value;
-  if (out_value.is_ok) {
-    return diplomat::result<std::string, std::monostate>::new_ok(diplomat_writeable_string);
-  } else {
-    return diplomat::result<std::string, std::monostate>::new_err_void();
-  }
+  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value(diplomat_result_raw_out_value.is_ok);
+  return diplomat_result_out_value.replace_ok(std::move(diplomat_writeable_string));
 }
 #endif

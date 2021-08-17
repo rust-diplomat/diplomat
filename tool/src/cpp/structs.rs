@@ -241,7 +241,7 @@ fn gen_method<W: fmt::Write>(
                 );
 
                 if rearranged_writeable {
-                    gen_writeable_out_value(&out_expr, ret_typ, in_path, env, &mut method_body)?;
+                    gen_writeable_out_value(&out_expr, ret_typ, &mut method_body)?;
                 } else {
                     writeln!(&mut method_body, "return {};", out_expr)?;
                 }
@@ -338,34 +338,14 @@ pub fn gen_method_interface<W: fmt::Write>(
 fn gen_writeable_out_value<W: fmt::Write>(
     out_expr: &str,
     ret_typ: &ast::TypeName,
-    in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
     method_body: &mut W,
 ) -> fmt::Result {
-    if let ast::TypeName::Result(_, err) = ret_typ {
-        gen_type(ret_typ, in_path, None, env, method_body)?;
-        writeln!(method_body, " out_value = {};", out_expr)?;
-
-        writeln!(method_body, "if (out_value.is_ok) {{")?;
-
-        write!(method_body, "  return diplomat::result<std::string, ")?;
-        if err.as_ref() == &ast::TypeName::Unit {
-            write!(method_body, "std::monostate")?;
-        } else {
-            gen_type(err, in_path, None, env, method_body)?;
-        }
-        writeln!(method_body, ">::new_ok(diplomat_writeable_string);")?;
-
-        writeln!(method_body, "}} else {{")?;
-        write!(method_body, "  return diplomat::result<std::string, ")?;
-        if err.as_ref() == &ast::TypeName::Unit {
-            writeln!(method_body, "std::monostate>::new_err_void();")?;
-        } else {
-            gen_type(err, in_path, None, env, method_body)?;
-            writeln!(method_body, ">::new_err(out_value.err);")?;
-        }
-
-        writeln!(method_body, "}}")?;
+    if let ast::TypeName::Result(_, _) = ret_typ {
+        writeln!(
+            method_body,
+            "return {}.replace_ok(std::move(diplomat_writeable_string));",
+            out_expr
+        )?;
     } else {
         panic!("Not in writeable out form")
     }
