@@ -73,12 +73,14 @@ impl Module {
         input
             .content
             .as_ref()
-            .unwrap()
-            .1
+            .map(|t| &t.1)
+            .unwrap_or(&vec![])
             .iter()
             .for_each(|a| match a {
                 Item::Use(u) => {
-                    extract_imports(&Path::empty(), &u.tree, &mut imports);
+                    if analyze_types {
+                        extract_imports(&Path::empty(), &u.tree, &mut imports);
+                    }
                 }
                 Item::Struct(strct) => {
                     if analyze_types {
@@ -180,7 +182,7 @@ fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, St
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct File {
     pub modules: HashMap<String, Module>,
 }
@@ -382,6 +384,25 @@ mod tests {
                 },
                 true
             ));
+        });
+    }
+
+    #[test]
+    fn import_in_non_diplomat_not_analyzed() {
+        let mut settings = Settings::new();
+        settings.set_sort_maps(true);
+
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(File::from(&syn::parse_quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    struct Foo {}
+                }
+
+                mod other {
+                    use something::*;
+                }
+            }));
         });
     }
 }

@@ -1,0 +1,23 @@
+---
+source: core/src/ast/modules.rs
+expression: "File::from(&syn::parse_quote! {\n                #[diplomat :: bridge] mod ffi { struct Foo { } } mod other\n                { use something :: * ; }\n            })"
+
+---
+modules:
+  ffi:
+    name: ffi
+    imports: []
+    declared_types:
+      Foo:
+        Struct:
+          name: Foo
+          doc_lines: ""
+          fields: []
+          methods: []
+    sub_modules: []
+  other:
+    name: other
+    imports: []
+    declared_types: {}
+    sub_modules: []
+
