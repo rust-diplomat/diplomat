@@ -57,7 +57,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             }
 
             (_, ast::CustomType::Enum(enm)) => {
-                format!("{}{{ {} }}", enm.name, cpp)
+                format!("static_cast<{}>({})", enm.name, cpp)
             }
         },
 
@@ -246,5 +246,33 @@ pub fn gen_cpp_to_rust<W: Write>(
         }
         ast::TypeName::Primitive(_) => cpp.to_string(),
         o => todo!("{:?}", o),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_enum_conversion() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                enum MyEnum {
+                    A, B, C
+                }
+                struct MyStruct {
+                    a: u8,
+                    b: MyEnum,
+                }
+
+                #[diplomat::opaque]
+                struct Foo(Box<u8>);
+
+                impl Foo {
+                    pub fn get_struct(&self) -> MyStruct {
+                        MyStruct { a: 1, b: MyEnum::A }
+                    }
+                }
+            }
+        }
     }
 }

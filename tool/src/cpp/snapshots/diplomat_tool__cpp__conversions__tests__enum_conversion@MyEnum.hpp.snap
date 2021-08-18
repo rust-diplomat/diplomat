@@ -1,0 +1,29 @@
+---
+source: tool/src/cpp/conversions.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyEnum_HPP
+#define MyEnum_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyEnum.h"
+}
+
+
+enum struct MyEnum {
+  A = 0,
+  B = 1,
+  C = 2,
+};
+
+#endif
+
