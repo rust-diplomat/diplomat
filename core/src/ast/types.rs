@@ -48,6 +48,10 @@ impl CustomType {
         }
     }
 
+    pub fn self_path(&self, in_path: &Path) -> Path {
+        in_path.sub_path(self.name().clone())
+    }
+
     /// Checks that any references to opaque structs in parameters or return values
     /// are always behind a box or reference.
     ///
@@ -70,6 +74,23 @@ impl CustomType {
 
         for method in self.methods().iter() {
             method.check_opaque(in_path, env, errors);
+        }
+    }
+
+    /// Ensures that we are not exporting any non-opaque zero-sized types
+    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<Path>) {
+        match self {
+            CustomType::Struct(strct) => {
+                if !strct.fields.iter().any(|f| !f.1.is_zst()) {
+                    errors.push(self.self_path(in_path))
+                }
+            }
+            CustomType::Opaque(_) => {}
+            CustomType::Enum(e) => {
+                if e.variants.is_empty() {
+                    errors.push(self.self_path(in_path))
+                }
+            }
         }
     }
 }
@@ -319,6 +340,11 @@ impl TypeName {
         errors: &mut Vec<&'a TypeName>,
     ) {
         self.check_opaque_internal(in_path, env, false, errors);
+    }
+
+    pub fn is_zst(&self) -> bool {
+        // check_zst() prevents non-unit types from being ZSTs
+        matches!(*self, TypeName::Unit)
     }
 }
 

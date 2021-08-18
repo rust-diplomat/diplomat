@@ -34,6 +34,17 @@ impl Module {
             .for_each(|m| m.check_opaque(&in_path.sub_path(self.name.clone()), env, errors));
     }
 
+    /// Ensures that we are not exporting any non-opaque zero-sized types
+    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<Path>) {
+        self.declared_types
+            .values()
+            .for_each(|t| t.check_zst(&in_path.sub_path(self.name.clone()), errors));
+
+        self.sub_modules
+            .iter()
+            .for_each(|m| m.check_zst(&in_path.sub_path(self.name.clone()), errors));
+    }
+
     fn insert_all_types(&self, in_path: Path, out: &mut HashMap<Path, HashMap<String, ModSymbol>>) {
         let mut mod_symbols = HashMap::new();
 
@@ -198,6 +209,13 @@ impl File {
         self.modules
             .values()
             .for_each(|t| t.check_opaque(&Path::empty(), env, errors));
+    }
+
+    /// Ensures that we are not exporting any non-opaque zero-sized types
+    pub fn check_zst(&self, errors: &mut Vec<Path>) {
+        self.modules
+            .values()
+            .for_each(|t| t.check_zst(&Path::empty(), errors));
     }
 
     /// Fuses all declared types into a single environment `HashMap`.
