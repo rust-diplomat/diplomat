@@ -154,6 +154,26 @@ mod tests {
     }
 
     #[test]
+    fn test_empty_result_types() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct MyStruct {
+                    a: DiplomatResult<(), u8>,
+                    b: DiplomatResult<(), ()>,
+                    c: DiplomatResult<u8, ()>,
+                }
+
+                impl MyStruct {
+                    pub fn new() -> MyStruct {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn test_writeable_out() {
         test_file! {
             #[diplomat::bridge]

@@ -81,11 +81,19 @@ fn main() -> std::io::Result<()> {
     let env = custom_types.all_types();
 
     let mut opaque_errors = vec![];
+    let mut zst_errors = vec![];
     custom_types.check_opaque(&env, &mut opaque_errors);
-    if !opaque_errors.is_empty() {
+    custom_types.check_zst(&mut zst_errors);
+    if !opaque_errors.is_empty() || !zst_errors.is_empty() {
         opaque_errors.iter().for_each(|e| {
             eprintln!(
                 "An opaque type crossed the FFI boundary as a value: {:?}",
+                e
+            )
+        });
+        zst_errors.iter().for_each(|e| {
+            eprintln!(
+                "A non-opaque zero-sized struct or enum has been defined: {:?}",
                 e
             )
         });

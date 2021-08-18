@@ -10,10 +10,6 @@
 extern "C" {
 #endif
 typedef struct fixed_decimal_ffi_result_void_void {
-    union {
-        uint8_t ok[0];
-        uint8_t err[0];
-    };
     bool is_ok;
 } fixed_decimal_ffi_result_void_void;
 #ifdef __cplusplus

@@ -281,7 +281,7 @@ pub fn gen_method_interface<W: fmt::Write>(
     if rearranged_writeable {
         if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
             write!(out, "diplomat::result<std::string, ")?;
-            if err.as_ref() == &ast::TypeName::Unit {
+            if err.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
                 gen_type(err, in_path, None, env, out)?;

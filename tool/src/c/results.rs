@@ -53,33 +53,35 @@ pub fn gen_result<W: fmt::Write>(
         let result_name = format!("{}_{}", in_path.elements.join("_"), name_for_type(typ));
         writeln!(out, "typedef struct {} {{", result_name)?;
         let mut result_indent = indented(out).with_str("    ");
-        writeln!(&mut result_indent, "union {{")?;
-        let mut union_indent = indented(&mut result_indent).with_str("    ");
+        // zero-sized types in C unions work differently across C and C++
+        // we avoid the problem by omitting variants or even the entire union
+        // if parts are zero-sized. This matches what rustc effectively does
+        // with zero-sized union variants
+        if !ok.is_zst() || !err.is_zst() {
+            writeln!(&mut result_indent, "union {{")?;
+            let mut union_indent = indented(&mut result_indent).with_str("    ");
 
-        if let ast::TypeName::Unit = ok.as_ref() {
-            writeln!(&mut union_indent, "uint8_t ok[0];")?;
-        } else {
-            gen_type(
-                ok,
-                in_path,
-                env,
-                &mut ((&mut union_indent) as &mut dyn fmt::Write),
-            )?;
-            writeln!(&mut union_indent, " ok;")?;
-        }
+            if !ok.is_zst() {
+                gen_type(
+                    ok,
+                    in_path,
+                    env,
+                    &mut ((&mut union_indent) as &mut dyn fmt::Write),
+                )?;
+                writeln!(&mut union_indent, " ok;")?;
+            }
 
-        if let ast::TypeName::Unit = err.as_ref() {
-            writeln!(&mut union_indent, "uint8_t err[0];")?;
-        } else {
-            gen_type(
-                err,
-                in_path,
-                env,
-                &mut ((&mut union_indent) as &mut dyn fmt::Write),
-            )?;
-            writeln!(&mut union_indent, " err;")?;
+            if !err.is_zst() {
+                gen_type(
+                    err,
+                    in_path,
+                    env,
+                    &mut ((&mut union_indent) as &mut dyn fmt::Write),
+                )?;
+                writeln!(&mut union_indent, " err;")?;
+            }
+            writeln!(&mut result_indent, "}};")?;
         }
-        writeln!(&mut result_indent, "}};")?;
         writeln!(&mut result_indent, "bool is_ok;")?;
         writeln!(out, "}} {};", result_name)?;
 
