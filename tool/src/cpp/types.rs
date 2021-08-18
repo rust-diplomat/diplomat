@@ -59,14 +59,14 @@ pub fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Result(ok, err) => {
             write!(out, "diplomat::result<")?;
-            if let ast::TypeName::Unit = ok.as_ref() {
+            if ok.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
                 gen_type(ok, in_path, behind_ref, env, out)?;
             }
 
             write!(out, ", ")?;
-            if let ast::TypeName::Unit = err.as_ref() {
+            if err.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
                 gen_type(err, in_path, behind_ref, env, out)?;

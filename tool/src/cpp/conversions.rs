@@ -94,9 +94,9 @@ pub fn gen_rust_to_cpp<W: Write>(
             super::types::gen_type(typ, in_path, None, env, out).unwrap();
             writeln!(out, " {}({}.is_ok);", wrapped_value_id, raw_value_id).unwrap();
 
-            if ok.as_ref() != &ast::TypeName::Unit || err.as_ref() != &ast::TypeName::Unit {
+            if !ok.is_zst() || !err.is_zst() {
                 writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
-                if ok.as_ref() != &ast::TypeName::Unit {
+                if !ok.is_zst() {
                     let ok_expr = gen_rust_to_cpp(
                         &format!("{}.ok", raw_value_id),
                         path,
@@ -113,7 +113,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                     .unwrap();
                 }
                 writeln!(out, "}} else {{").unwrap();
-                if err.as_ref() != &ast::TypeName::Unit {
+                if !err.is_zst() {
                     let err_expr = gen_rust_to_cpp(
                         &format!("{}.err", raw_value_id),
                         path,
