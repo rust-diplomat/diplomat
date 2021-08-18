@@ -342,7 +342,7 @@ mod tests {
                 struct Foo;
 
                 impl Foo {
-                    fn to_bar(&self) -> Bar {
+                    pub fn to_bar(&self) -> Bar {
                         unimplemented!()
                     }
                 }

@@ -9,7 +9,7 @@ pub mod ffi {
 
     impl ICU4XDataProvider {
         /// Construct a [StaticDataProvider](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html).
-        fn new_static() -> Box<ICU4XDataProvider> {
+        pub fn new_static() -> Box<ICU4XDataProvider> {
             let provider = icu_testdata::get_static_provider();
             Box::new(ICU4XDataProvider(Box::new(provider)))
         }

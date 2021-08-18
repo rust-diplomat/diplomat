@@ -366,15 +366,15 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    fn new(a: u8, b: u8) -> MyStruct {
+                    pub fn new(a: u8, b: u8) -> MyStruct {
                         unimplemented!()
                     }
 
-                    fn get_a(&self) -> u8 {
+                    pub fn get_a(&self) -> u8 {
                         unimplemented!()
                     }
 
-                    fn set_b(&mut self, b: u8) {
+                    pub fn set_b(&mut self, b: u8) {
                         unimplemented!()
                     }
                 }
@@ -391,15 +391,15 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    fn new(a: u8, b: u8) -> Box<MyStruct> {
+                    pub fn new(a: u8, b: u8) -> Box<MyStruct> {
                         unimplemented!()
                     }
 
-                    fn get_a(&self) -> u8 {
+                    pub fn get_a(&self) -> u8 {
                         unimplemented!()
                     }
 
-                    fn set_b(&mut self, b: u8) {
+                    pub fn set_b(&mut self, b: u8) {
                         unimplemented!()
                     }
                 }
@@ -416,11 +416,11 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    fn new_str(v: &str) -> Box<MyStruct> {
+                    pub fn new_str(v: &str) -> Box<MyStruct> {
                         unimplemented!()
                     }
 
-                    fn set_str(&mut self, new_str: &str) {
+                    pub fn set_str(&mut self, new_str: &str) {
                         unimplemented!()
                     }
                 }
@@ -437,19 +437,19 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    fn write(&self, out: &mut DiplomatWriteable) {
+                    pub fn write(&self, out: &mut DiplomatWriteable) {
                         unimplemented!()
                     }
 
-                    fn write_unit(&self, out: &mut DiplomatWriteable) -> () {
+                    pub fn write_unit(&self, out: &mut DiplomatWriteable) -> () {
                         unimplemented!()
                     }
 
-                    fn write_result(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), u8> {
+                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), u8> {
                         unimplemented!()
                     }
 
-                    fn write_no_rearrange(&self, out: &mut DiplomatWriteable) -> u8 {
+                    pub fn write_no_rearrange(&self, out: &mut DiplomatWriteable) -> u8 {
                         unimplemented!()
                     }
                 }
