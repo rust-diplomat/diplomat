@@ -1,13 +1,13 @@
 ---
 source: macro/src/lib.rs
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                             mod ffi\n                             {\n                                 struct Foo { } impl Foo\n                                 {\n                                     fn from_str(s : & str)\n                                     { unimplemented ! () }\n                                 }\n                             }\n                         }).to_token_stream().to_string())"
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                             mod ffi\n                             {\n                                 struct Foo { } impl Foo\n                                 {\n                                     pub fn from_str(s : & str)\n                                     { unimplemented! () }\n                                 }\n                             }\n                         }).to_token_stream().to_string())"
 
 ---
 mod ffi {
     #[repr(C)]
     struct Foo {}
     impl Foo {
-        fn from_str(s: &str) {
+        pub fn from_str(s: &str) {
             unimplemented!()
         }
     }

@@ -55,7 +55,7 @@ pub mod ffi {
 
     impl ICU4XFixedDecimalFormat {
         /// Creates a new [`ICU4XFixedDecimalFormat`] from locale data. See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.try_new) for more information.
-        fn try_new(
+        pub fn try_new(
             locale: &ICU4XLocale,
             provider: &ICU4XDataProvider,
             options: ICU4XFixedDecimalFormatOptions,
@@ -95,7 +95,7 @@ pub mod ffi {
         }
 
         /// Formats a [`ICU4XFixedDecimal`] to a string. See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.format) for more information.
-        fn format_write(&self, value: &ICU4XFixedDecimal, write: &mut DiplomatWriteable) {
+        pub fn format_write(&self, value: &ICU4XFixedDecimal, write: &mut DiplomatWriteable) {
             self.0.format(&value.0).write_to(write).unwrap();
             write.flush();
         }

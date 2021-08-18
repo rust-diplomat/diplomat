@@ -288,7 +288,7 @@ mod tests {
                     struct Foo {}
 
                     impl Foo {
-                        fn from_str(s: &str) {
+                        pub fn from_str(s: &str) {
                             unimplemented!()
                         }
                     }
@@ -310,7 +310,7 @@ mod tests {
                     }
 
                     impl Abc {
-                        fn do_something(&self) {
+                        pub fn do_something(&self) {
                             unimplemented!()
                         }
                     }
@@ -329,7 +329,7 @@ mod tests {
                     struct Foo {}
 
                     impl Foo {
-                        fn to_string(&self, to: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
+                        pub fn to_string(&self, to: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
                             unimplemented!()
                         }
                     }

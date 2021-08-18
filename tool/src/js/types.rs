@@ -97,7 +97,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    fn new(foo: &MyStruct, bar: &mut MyStruct) -> MyStruct {
+                    pub fn new(foo: &MyStruct, bar: &mut MyStruct) -> MyStruct {
                         unimplemented!()
                     }
                 }
@@ -134,7 +134,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    fn new() -> DiplomatResult<MyStruct, u8> {
+                    pub fn new() -> DiplomatResult<MyStruct, u8> {
                         unimplemented!()
                     }
                 }
@@ -153,7 +153,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    fn new(v: &str) -> MyStruct {
+                    pub fn new(v: &str) -> MyStruct {
                         unimplemented!()
                     }
                 }
@@ -172,7 +172,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    fn write(&self, to: &mut DiplomatWriteable) {
+                    pub fn write(&self, to: &mut DiplomatWriteable) {
                         unimplemented!()
                     }
                 }
@@ -191,7 +191,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    fn something(&self) -> () {
+                    pub fn something(&self) -> () {
                         unimplemented!()
                     }
                 }

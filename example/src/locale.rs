@@ -10,7 +10,7 @@ pub mod ffi {
 
     impl ICU4XLocale {
         /// Construct an [`ICU4XLocale`] from an locale identifier.
-        fn new(name: &str) -> Box<ICU4XLocale> {
+        pub fn new(name: &str) -> Box<ICU4XLocale> {
             Box::new(ICU4XLocale(Locale::from_str(name).unwrap()))
         }
     }

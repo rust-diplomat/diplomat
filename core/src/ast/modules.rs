@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use quote::ToTokens;
-use syn::{ImplItem, Item, ItemMod, UseTree};
+use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, Struct, TypeName};
 
@@ -120,9 +120,11 @@ impl Module {
                             .items
                             .iter()
                             .filter_map(|i| match i {
-                                ImplItem::Method(m) => Some(Method::from_syn(m, &self_typ)),
+                                ImplItem::Method(m) => Some(m),
                                 _ => None,
                             })
+                            .filter(|m| matches!(m.vis, Visibility::Public(_)))
+                            .map(|m| Method::from_syn(m, &self_typ))
                             .collect();
 
                         let self_ident = self_typ.elements.last().unwrap();
@@ -256,11 +258,11 @@ mod tests {
                         }
 
                         impl NonOpaqueStruct {
-                            fn new(x: i32) -> NonOpaqueStruct {
+                            pub fn new(x: i32) -> NonOpaqueStruct {
                                 unimplemented!();
                             }
 
-                            fn set_a(&mut self, new_a: i32) {
+                            pub fn set_a(&mut self, new_a: i32) {
                                 self.a = new_a;
                             }
                         }
@@ -271,11 +273,11 @@ mod tests {
                         }
 
                         impl OpaqueStruct {
-                            fn new() -> Box<OpaqueStruct> {
+                            pub fn new() -> Box<OpaqueStruct> {
                                 unimplemented!();
                             }
 
-                            fn get_string(&self) -> String {
+                            pub fn get_string(&self) -> String {
                                 unimplemented!()
                             }
                         }
@@ -303,11 +305,11 @@ mod tests {
                 struct OpaqueStruct {}
 
                 impl OpaqueStruct {
-                    fn new() -> Box<OpaqueStruct> {
+                    pub fn new() -> Box<OpaqueStruct> {
                         unimplemented!();
                     }
 
-                    fn get_i32(&self) -> i32 {
+                    pub fn get_i32(&self) -> i32 {
                         unimplemented!()
                     }
                 }
@@ -328,11 +330,11 @@ mod tests {
                 struct OpaqueStruct {}
 
                 impl OpaqueStruct {
-                    fn new() -> OpaqueStruct {
+                    pub fn new() -> OpaqueStruct {
                         unimplemented!();
                     }
 
-                    fn get_i32(self) -> i32 {
+                    pub fn get_i32(self) -> i32 {
                         unimplemented!()
                     }
                 }
@@ -348,5 +350,38 @@ mod tests {
                 &TypeName::Named(Path::empty().sub_path("OpaqueStruct".to_string()))
             ]
         );
+    }
+
+    #[test]
+    fn method_visibility() {
+        let mut settings = Settings::new();
+        settings.set_sort_maps(true);
+
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(Module::from_syn(
+                &syn::parse_quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        struct Foo {}
+
+                        impl Foo {
+                            pub fn pub_fn() {
+                                unimplemented!()
+                            }
+                            pub(crate) fn pub_crate_fn() {
+                                unimplemented!()
+                            }
+                            pub(super) fn pub_super_fn() {
+                                unimplemented!()
+                            }
+                            fn priv_fn() {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                true
+            ));
+        });
     }
 }
