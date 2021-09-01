@@ -1,0 +1,36 @@
+# Result types
+
+Result types are returned by using [`DiplomatResult<T, E>`](https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatResult.html)
+(see [#82](https://github.com/rust-diplomat/diplomat/issues/82) for support for returning `Result<T, E>` directly).
+
+For example, let's say we wish to define a fallible constructor:
+
+```rust
+#[diplomat::bridge]
+mod ffi {
+    use diplomat_runtime::DiplomatResult;
+
+    #[diplomat::opaque]
+    struct Thingy(u8);
+
+    impl Thingy {
+        pub fn try_create(string: &str) -> DiplomatResult<Box<Thingy>, ()> {
+            let parsed: Result<u8, ()> = string.parse().map_err(|_| ());
+            let boxed: Result<Box<Thingy>, ()> = parsed.map(Thingy).map(Box::new);
+            boxed.into()
+        }
+    }
+}
+```
+
+`DiplomatResult` can be created from a regular `Result` with a simple `.into()`.
+
+On the C++ side, this will generate a method on `Thingy` with the signature
+
+```cpp
+  static diplomat::result<Thingy, std::monostate> try_create(const std::string_view string);
+```
+
+`diplomat::result` is a type that can be found in the generated [`diplomat_runtime.hpp`](https://github.com/rust-diplomat/diplomat/blob/main/tool/src/cpp/runtime.hpp) file. The most basic APIs are `.is_ok()` and `.is_err()`, returning `bool`s, and `.ok()` and `.err()` returning `std::option`s. There are further APIs for constructing and manipulating these that can be found in the header file.
+
+On the JS side it will continue to return the `Thingy` class but it will `throw` the error (as an empty object in this case) in case of an error.
