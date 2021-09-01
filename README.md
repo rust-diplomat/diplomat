@@ -17,7 +17,7 @@ diplomat-runtime = "0.2.0"
 
 ## Getting Started
 
-Usage documentation for Diplomat can be found [in the book](https://rust-diplomat.github.io/book/)
+Documentation on how to use Diplomat can be found [in the book](https://rust-diplomat.github.io/book/).
 
 ### Architecture
 See the [design doc](docs/design_doc.md) for more details.
