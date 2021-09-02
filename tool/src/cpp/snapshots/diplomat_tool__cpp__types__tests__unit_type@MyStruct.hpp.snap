@@ -26,11 +26,11 @@ struct MyStructDeleter {
 };
 struct MyStruct {
  public:
-  void something();
+  void something() const;
 };
 
 
-inline void MyStruct::something() {
+inline void MyStruct::something() const {
   capi::MyStruct_something((capi::MyStruct*) &this);
 }
 #endif

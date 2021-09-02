@@ -26,16 +26,16 @@ struct MyStructDeleter {
 };
 struct MyStruct {
  public:
-  template<typename W> void write_to_writeable(W& to);
-  std::string write();
+  template<typename W> void write_to_writeable(W& to) const;
+  std::string write() const;
 };
 
 
-template<typename W> inline void MyStruct::write_to_writeable(W& to) {
+template<typename W> inline void MyStruct::write_to_writeable(W& to) const {
   capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
   capi::MyStruct_write((capi::MyStruct*) &this, &to_writer);
 }
-inline std::string MyStruct::write() {
+inline std::string MyStruct::write() const {
   std::string diplomat_writeable_string;
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
   capi::MyStruct_write((capi::MyStruct*) &this, &diplomat_writeable_out);
