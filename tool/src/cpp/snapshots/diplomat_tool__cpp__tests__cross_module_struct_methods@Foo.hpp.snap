@@ -27,7 +27,7 @@ struct FooDeleter {
 };
 class Foo {
  public:
-  Bar to_bar();
+  Bar to_bar() const;
   inline const capi::Foo* AsFFI() const { return this->inner.get(); }
   inline capi::Foo* AsFFIMut() { return this->inner.get(); }
   inline Foo(capi::Foo* i) : inner(i) {}
@@ -37,7 +37,7 @@ class Foo {
 
 #include "Bar.hpp"
 
-inline Bar Foo::to_bar() {
+inline Bar Foo::to_bar() const {
   capi::Bar diplomat_raw_struct_out_value = capi::Foo_to_bar(this->inner.get());
   return Bar{ .y = std::move(Foo(diplomat_raw_struct_out_value.y)) };
 }

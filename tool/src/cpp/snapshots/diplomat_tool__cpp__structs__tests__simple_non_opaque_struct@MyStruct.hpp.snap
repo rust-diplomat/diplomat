@@ -30,7 +30,7 @@ struct MyStruct {
   uint8_t a;
   uint8_t b;
   static MyStruct new_(uint8_t a, uint8_t b);
-  uint8_t get_a();
+  uint8_t get_a() const;
   void set_b(uint8_t b);
 };
 
@@ -39,7 +39,7 @@ inline MyStruct MyStruct::new_(uint8_t a, uint8_t b) {
   capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new(a, b);
   return MyStruct{ .a = std::move(diplomat_raw_struct_out_value.a), .b = std::move(diplomat_raw_struct_out_value.b) };
 }
-inline uint8_t MyStruct::get_a() {
+inline uint8_t MyStruct::get_a() const {
   return capi::MyStruct_get_a((capi::MyStruct*) &this);
 }
 inline void MyStruct::set_b(uint8_t b) {

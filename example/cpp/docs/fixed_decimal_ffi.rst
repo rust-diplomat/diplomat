@@ -17,10 +17,10 @@
 
         Invert the sign of the :cpp:class:`ICU4XFixedDecimal`. See `the Rust docs <https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.negate>`__ for more information.
 
-    .. cpp:function:: template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_writeable(W& to)
+    .. cpp:function:: template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_writeable(W& to) const
 
         Format the :cpp:class:`ICU4XFixedDecimal` as a string. See `the Rust docs <https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.write_to>`__ for more information.
 
-    .. cpp:function:: diplomat::result<std::string, std::monostate> to_string()
+    .. cpp:function:: diplomat::result<std::string, std::monostate> to_string() const
 
         Format the :cpp:class:`ICU4XFixedDecimal` as a string. See `the Rust docs <https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.write_to>`__ for more information.

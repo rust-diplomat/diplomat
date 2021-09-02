@@ -25,8 +25,8 @@ class ICU4XFixedDecimal {
   static ICU4XFixedDecimal new_(int32_t v);
   void multiply_pow10(int16_t power);
   void negate();
-  template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_writeable(W& to);
-  diplomat::result<std::string, std::monostate> to_string();
+  template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_writeable(W& to) const;
+  diplomat::result<std::string, std::monostate> to_string() const;
   inline const capi::ICU4XFixedDecimal* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XFixedDecimal* AsFFIMut() { return this->inner.get(); }
   inline ICU4XFixedDecimal(capi::ICU4XFixedDecimal* i) : inner(i) {}
@@ -44,13 +44,13 @@ inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
 inline void ICU4XFixedDecimal::negate() {
   capi::ICU4XFixedDecimal_negate(this->inner.get());
 }
-template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_writeable(W& to) {
+template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_writeable(W& to) const {
   capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &to_writer);
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value(diplomat_result_raw_out_value.is_ok);
   return diplomat_result_out_value;
 }
-inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() {
+inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
   std::string diplomat_writeable_string;
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);

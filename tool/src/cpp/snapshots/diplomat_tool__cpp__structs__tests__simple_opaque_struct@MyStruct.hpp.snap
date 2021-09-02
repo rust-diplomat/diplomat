@@ -28,7 +28,7 @@ struct MyStructDeleter {
 class MyStruct {
  public:
   static MyStruct new_(uint8_t a, uint8_t b);
-  uint8_t get_a();
+  uint8_t get_a() const;
   void set_b(uint8_t b);
   inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
   inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
@@ -41,7 +41,7 @@ class MyStruct {
 inline MyStruct MyStruct::new_(uint8_t a, uint8_t b) {
   return MyStruct(capi::MyStruct_new(a, b));
 }
-inline uint8_t MyStruct::get_a() {
+inline uint8_t MyStruct::get_a() const {
   return capi::MyStruct_get_a(this->inner.get());
 }
 inline void MyStruct::set_b(uint8_t b) {
