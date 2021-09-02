@@ -274,7 +274,12 @@ pub fn gen_method_interface<W: fmt::Write>(
         write!(out, "inline ")?;
     }
 
-    if method.self_param.is_none() && is_header {
+    let mut is_const = false;
+    if let Some(ref param) = method.self_param {
+        if let ast::TypeName::Reference(_, mutable) = param.ty {
+            is_const = !mutable;
+        }
+    } else if is_header {
         write!(out, "static ")?;
     }
 
@@ -332,6 +337,10 @@ pub fn gen_method_interface<W: fmt::Write>(
     }
 
     write!(out, ")")?;
+
+    if is_const {
+        write!(out, " const")?
+    }
     Ok(params_to_gen)
 }
 
