@@ -20,6 +20,9 @@ namespace capi {
 
 class Foo;
 
+/**
+ * A destruction policy for using Bar with std::unique_ptr.
+ */
 struct BarDeleter {
   void operator()(capi::Bar* l) const noexcept {
     capi::Bar_destroy(l);

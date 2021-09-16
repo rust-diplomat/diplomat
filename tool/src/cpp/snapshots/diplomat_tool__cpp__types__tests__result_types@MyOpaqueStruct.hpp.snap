@@ -19,6 +19,9 @@ namespace capi {
 }
 
 
+/**
+ * A destruction policy for using MyOpaqueStruct with std::unique_ptr.
+ */
 struct MyOpaqueStructDeleter {
   void operator()(capi::MyOpaqueStruct* l) const noexcept {
     capi::MyOpaqueStruct_destroy(l);
