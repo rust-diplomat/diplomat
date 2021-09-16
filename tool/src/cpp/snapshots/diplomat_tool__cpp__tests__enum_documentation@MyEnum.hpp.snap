@@ -1,0 +1,45 @@
+---
+source: tool/src/cpp/mod.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyEnum_HPP
+#define MyEnum_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyEnum.h"
+}
+
+
+
+/**
+ * Documentation for MyEnum.
+ */
+enum struct MyEnum {
+
+  /**
+   * All about A.
+   */
+  A = 0,
+
+  /**
+   * All about B.
+   */
+  B = 1,
+
+  /**
+   * All about C.
+   */
+  C = 2,
+};
+
+#endif
+

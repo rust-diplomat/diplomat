@@ -1,0 +1,53 @@
+---
+source: tool/src/cpp/structs.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef Foo_HPP
+#define Foo_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "Foo.h"
+}
+
+
+/**
+ * A destruction policy for using Foo with std::unique_ptr.
+ */
+struct FooDeleter {
+  void operator()(capi::Foo* l) const noexcept {
+    capi::Foo_destroy(l);
+  }
+};
+
+/**
+ * Documentation for Foo.
+ * Second line.
+ */
+struct Foo {
+ public:
+
+  /**
+   * Documentation for x.
+   */
+  uint8_t x;
+
+  /**
+   * Documentation for get_x.
+   */
+  uint8_t get_x() const;
+};
+
+
+inline uint8_t Foo::get_x() const {
+  return capi::Foo_get_x((capi::Foo*) &this);
+}
+#endif
