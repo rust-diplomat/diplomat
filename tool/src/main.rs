@@ -17,6 +17,7 @@ mod js;
 mod layout;
 mod util;
 
+/// diplomat-tool CLI options, as parsed by [structopt].
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "diplomat-tool",

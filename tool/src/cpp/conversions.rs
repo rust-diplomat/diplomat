@@ -147,9 +147,12 @@ pub fn gen_rust_to_cpp<W: Write>(
     }
 }
 
+/// Meta information about a [ast::TypeName::Reference].
 #[derive(Eq, PartialEq)]
 pub struct ReferenceMeta {
+    /// Whether or not the reference is owned.
     owned: bool,
+    /// Whether or not the reference is mutable.
     mutable: bool,
 }
 
