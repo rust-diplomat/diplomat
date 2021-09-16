@@ -14,6 +14,8 @@ mod types;
 mod structs;
 use structs::*;
 
+use crate::cpp::util::gen_comment_block;
+
 mod conversions;
 
 pub mod docs;
@@ -66,9 +68,11 @@ pub fn gen_bindings(
 
             ast::CustomType::Enum(enm) => {
                 writeln!(out)?;
+                gen_comment_block(out, &enm.doc_lines)?;
                 writeln!(out, "enum struct {} {{", enm.name)?;
                 let mut enm_indent = indented(out).with_str("  ");
-                for (name, discriminant, _) in enm.variants.iter() {
+                for (name, discriminant, doc_lines) in enm.variants.iter() {
+                    gen_comment_block(&mut enm_indent, doc_lines)?;
                     writeln!(&mut enm_indent, "{} = {},", name, discriminant)?;
                 }
                 writeln!(out, "}};")?;
@@ -354,6 +358,24 @@ mod tests {
 
                 struct Bar {
                     y: Box<Foo>,
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_enum_documentation() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                /// Documentation for MyEnum.
+                enum MyEnum {
+                    /// All about A.
+                    A,
+                    /// All about B.
+                    B,
+                    /// All about C.
+                    C
                 }
             }
         }

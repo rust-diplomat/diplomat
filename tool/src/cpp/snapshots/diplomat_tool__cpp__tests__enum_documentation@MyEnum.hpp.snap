@@ -3,8 +3,8 @@ source: tool/src/cpp/mod.rs
 expression: out_texts.get(out).unwrap()
 
 ---
-#ifndef Bar_HPP
-#define Bar_HPP
+#ifndef MyEnum_HPP
+#define MyEnum_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -15,24 +15,31 @@ expression: out_texts.get(out).unwrap()
 #include "diplomat_runtime.hpp"
 
 namespace capi {
-#include "Bar.h"
+#include "MyEnum.h"
 }
 
-struct Foo;
+
 
 /**
- * A destruction policy for using Bar with std::unique_ptr.
+ * Documentation for MyEnum.
  */
-struct BarDeleter {
-  void operator()(capi::Bar* l) const noexcept {
-    capi::Bar_destroy(l);
-  }
-};
-struct Bar {
- public:
-  Foo* y;
-};
+enum struct MyEnum {
 
+  /**
+   * All about A.
+   */
+  A = 0,
+
+  /**
+   * All about B.
+   */
+  B = 1,
+
+  /**
+   * All about C.
+   */
+  C = 2,
+};
 
 #endif
 

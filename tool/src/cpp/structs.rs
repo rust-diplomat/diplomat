@@ -4,7 +4,7 @@ use std::{collections::HashMap, fmt};
 use diplomat_core::ast;
 use indenter::indented;
 
-use crate::cpp::util::transform_keyword_ident;
+use crate::cpp::util::{gen_comment_block, transform_keyword_ident};
 
 use super::conversions::{gen_cpp_to_rust, gen_rust_to_cpp};
 use super::types::gen_type;
@@ -17,6 +17,11 @@ pub fn gen_struct<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     if is_header {
+        writeln!(
+            out,
+            "/**\n * A destruction policy for using {} with std::unique_ptr.\n */",
+            custom_type.name()
+        )?;
         writeln!(out, "struct {}Deleter {{", custom_type.name())?;
         let mut deleter_body = indented(out).with_str("  ");
         writeln!(
@@ -91,6 +96,7 @@ pub fn gen_struct<W: fmt::Write>(
 
         ast::CustomType::Struct(strct) => {
             if is_header {
+                gen_comment_block(out, &strct.doc_lines)?;
                 writeln!(out, "struct {} {{", strct.name)?;
                 writeln!(out, " public:")?;
             }
@@ -102,7 +108,8 @@ pub fn gen_struct<W: fmt::Write>(
             };
 
             if is_header {
-                for (name, typ, _) in &strct.fields {
+                for (name, typ, docs) in &strct.fields {
+                    gen_comment_block(&mut public_body, docs)?;
                     gen_type(typ, in_path, None, env, &mut public_body)?;
                     writeln!(&mut public_body, " {};", name)?;
                 }
@@ -152,6 +159,9 @@ fn gen_method<W: fmt::Write>(
         gen_method(enclosing_type, method, in_path, is_header, false, env, out)?;
     }
 
+    if is_header {
+        gen_comment_block(out, &method.doc_lines)?;
+    }
     let params_to_gen = gen_method_interface(
         method,
         enclosing_type,
@@ -460,6 +470,28 @@ mod tests {
 
                     pub fn write_no_rearrange(&self, out: &mut DiplomatWriteable) -> u8 {
                         unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_struct_documentation() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                /// Documentation for Foo.
+                /// Second line.
+                struct Foo {
+                    /// Documentation for x.
+                    x: u8,
+                }
+
+                impl Foo {
+                    /// Documentation for get_x.
+                    pub fn get_x(&self) -> u8 {
+                        x
                     }
                 }
             }

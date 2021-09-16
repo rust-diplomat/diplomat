@@ -1,5 +1,5 @@
 ---
-source: tool/src/cpp/mod.rs
+source: tool/src/cpp/structs.rs
 expression: out_texts.get(out).unwrap()
 
 ---
@@ -18,7 +18,6 @@ namespace capi {
 #include "Foo.h"
 }
 
-#include "Bar.hpp"
 
 /**
  * A destruction policy for using Foo with std::unique_ptr.
@@ -28,11 +27,27 @@ struct FooDeleter {
     capi::Foo_destroy(l);
   }
 };
+
+/**
+ * Documentation for Foo.
+ * Second line.
+ */
 struct Foo {
  public:
-  Bar x;
+
+  /**
+   * Documentation for x.
+   */
+  uint8_t x;
+
+  /**
+   * Documentation for get_x.
+   */
+  uint8_t get_x() const;
 };
 
 
+inline uint8_t Foo::get_x() const {
+  return capi::Foo_get_x((capi::Foo*) &this);
+}
 #endif
-

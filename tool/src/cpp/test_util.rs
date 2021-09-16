@@ -1,3 +1,17 @@
+/// A macro to test that a cpp file matches the output from diplomat. It checks the output
+/// against an [insta] snapshot.
+///
+/// # Usage
+/// ```
+/// test_file! {
+///     #[diplomat::bridge]
+///     mod ffi {
+///         enum MyEnum {
+///             A, B, C
+///         }
+///     }
+/// }
+/// ```
 macro_rules! test_file {
     ($($file:tt)*) => {
         let parsed: syn::File = syn::parse_quote! { $($file)* };
