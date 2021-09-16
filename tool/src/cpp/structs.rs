@@ -17,6 +17,11 @@ pub fn gen_struct<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     if is_header {
+        writeln!(
+            out,
+            "/**\n * A destruction policy for using {} with std::unique_ptr.\n */",
+            custom_type.name()
+        )?;
         writeln!(out, "struct {}Deleter {{", custom_type.name())?;
         let mut deleter_body = indented(out).with_str("  ");
         writeln!(
