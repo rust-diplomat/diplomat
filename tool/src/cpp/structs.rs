@@ -159,6 +159,9 @@ fn gen_method<W: fmt::Write>(
         gen_method(enclosing_type, method, in_path, is_header, false, env, out)?;
     }
 
+    if is_header {
+        gen_comment_block(out, &method.doc_lines)?;
+    }
     let params_to_gen = gen_method_interface(
         method,
         enclosing_type,
@@ -273,10 +276,6 @@ pub fn gen_method_interface<W: fmt::Write>(
     out: &mut W,
     writeable_to_string: bool,
 ) -> Result<Vec<ast::Param>, fmt::Error> {
-    if is_header {
-        gen_comment_block(out, &method.doc_lines)?;
-    }
-
     if has_writeable_param {
         write!(out, "template<typename W> ")?;
     }
