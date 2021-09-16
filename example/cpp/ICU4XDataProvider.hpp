@@ -15,6 +15,9 @@ namespace capi {
 
 class ICU4XDataProvider;
 
+/**
+ * A destruction policy for using ICU4XDataProvider with std::unique_ptr.
+ */
 struct ICU4XDataProviderDeleter {
   void operator()(capi::ICU4XDataProvider* l) const noexcept {
     capi::ICU4XDataProvider_destroy(l);
@@ -22,6 +25,10 @@ struct ICU4XDataProviderDeleter {
 };
 class ICU4XDataProvider {
  public:
+
+  /**
+   * Construct a [StaticDataProvider](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html).
+   */
   static ICU4XDataProvider new_static();
   inline const capi::ICU4XDataProvider* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XDataProvider* AsFFIMut() { return this->inner.get(); }

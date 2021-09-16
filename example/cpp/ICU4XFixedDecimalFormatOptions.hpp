@@ -17,6 +17,9 @@ namespace capi {
 #include "ICU4XFixedDecimalSignDisplay.hpp"
 struct ICU4XFixedDecimalFormatOptions;
 
+/**
+ * A destruction policy for using ICU4XFixedDecimalFormatOptions with std::unique_ptr.
+ */
 struct ICU4XFixedDecimalFormatOptionsDeleter {
   void operator()(capi::ICU4XFixedDecimalFormatOptions* l) const noexcept {
     capi::ICU4XFixedDecimalFormatOptions_destroy(l);
