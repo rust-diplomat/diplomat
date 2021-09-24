@@ -147,7 +147,11 @@ pub fn gen_method_docs<W: fmt::Write>(
         writeln!(method_indented)?;
     }
 
-    for p in method.params.iter().filter(|p| matches!(p.ty, ast::TypeName::PrimitiveSlice(_))) {
+    for p in method
+        .params
+        .iter()
+        .filter(|p| matches!(p.ty, ast::TypeName::PrimitiveSlice(_)))
+    {
         writeln!(out)?;
         writeln!(
             out,

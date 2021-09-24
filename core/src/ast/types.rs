@@ -497,10 +497,8 @@ lazy_static! {
     ];
     static ref STRING_TO_PRIMITIVE: HashMap<&'static str, PrimitiveType> =
         PRIMITIVES_MAPPING.iter().cloned().collect();
-    static ref PRIMITIVE_TO_STRING: HashMap<PrimitiveType, &'static str> = PRIMITIVES_MAPPING
-        .iter()
-        .map(|t| (t.1, t.0))
-        .collect();
+    static ref PRIMITIVE_TO_STRING: HashMap<PrimitiveType, &'static str> =
+        PRIMITIVES_MAPPING.iter().map(|t| (t.1, t.0)).collect();
 }
 
 #[cfg(test)]
