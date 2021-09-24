@@ -89,21 +89,25 @@ pub fn type_size_alignment(
                 panic!("Size of opaque types is unknown")
             }
         },
-        ast::TypeName::Primitive(p) => match p {
-            ast::PrimitiveType::bool => (1, 1),
-            ast::PrimitiveType::char => (1, 1),
-            ast::PrimitiveType::i8 | ast::PrimitiveType::u8 => (1, 1),
-            ast::PrimitiveType::i16 | ast::PrimitiveType::u16 => (2, 2),
-            ast::PrimitiveType::i32 | ast::PrimitiveType::u32 => (4, 4),
-            ast::PrimitiveType::i64 | ast::PrimitiveType::u64 => (4, 4),
-            ast::PrimitiveType::i128 | ast::PrimitiveType::u128 => (4, 4),
-            ast::PrimitiveType::isize | ast::PrimitiveType::usize => (4, 4),
-            ast::PrimitiveType::f32 => (4, 4),
-            ast::PrimitiveType::f64 => (4, 4),
-        },
+        ast::TypeName::Primitive(p) => primitive_size_alignment(*p),
         ast::TypeName::StrReference => (4, 4),
         ast::TypeName::PrimitiveSlice(_) => todo!(),
         ast::TypeName::Writeable => panic!(),
         ast::TypeName::Unit => (0, 1),
+    }
+}
+
+pub fn primitive_size_alignment(prim: PrimitiveType) -> (usize, usize) {
+    match prim {
+        ast::PrimitiveType::bool => (1, 1),
+        ast::PrimitiveType::char => (1, 1),
+        ast::PrimitiveType::i8 | ast::PrimitiveType::u8 => (1, 1),
+        ast::PrimitiveType::i16 | ast::PrimitiveType::u16 => (2, 2),
+        ast::PrimitiveType::i32 | ast::PrimitiveType::u32 => (4, 4),
+        ast::PrimitiveType::i64 | ast::PrimitiveType::u64 => (4, 4),
+        ast::PrimitiveType::i128 | ast::PrimitiveType::u128 => (4, 4),
+        ast::PrimitiveType::isize | ast::PrimitiveType::usize => (4, 4),
+        ast::PrimitiveType::f32 => (4, 4),
+        ast::PrimitiveType::f64 => (4, 4),
     }
 }

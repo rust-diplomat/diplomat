@@ -6,7 +6,7 @@ expression: out_texts.get(out).unwrap()
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
+  wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
 });
 
 const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
@@ -20,20 +20,21 @@ export class MyStruct {
 
   static new(v) {
     let v_diplomat_bytes = (new TextEncoder()).encode(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length);
+    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 1);
     let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
     v_diplomat_buf.set(v_diplomat_bytes, 0);
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(2);
+      const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
       wasm.MyStruct_new(diplomat_receive_buffer, v_diplomat_ptr, v_diplomat_bytes.length);
       const out = new MyStruct(diplomat_receive_buffer);
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
-        size: 2
+        size: 2,
+        align: 1,
       });
       return out;
     })();
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length);
+    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 1);
     return diplomat_out;
   }
 

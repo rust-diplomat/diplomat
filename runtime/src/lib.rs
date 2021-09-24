@@ -2,7 +2,7 @@
 
 extern crate alloc;
 
-use alloc::vec::Vec;
+use alloc::alloc::Layout;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_glue;
@@ -18,18 +18,14 @@ pub use result::DiplomatResult;
 /// # Safety
 /// - The allocated buffer must be freed with [`diplomat_free()`].
 #[no_mangle]
-pub unsafe extern "C" fn diplomat_alloc(size: usize) -> *mut u8 {
-    let mut vec = Vec::<u8>::with_capacity(size);
-    let ret = vec.as_mut_ptr();
-    core::mem::forget(vec);
-    ret
+pub unsafe extern "C" fn diplomat_alloc(size: usize, align: usize) -> *mut u8 {
+    alloc::alloc::alloc(Layout::from_size_align(size, align).unwrap())
 }
 
 /// Frees a buffer that was allocated in Rust's memory.
 /// # Safety
 /// - `ptr` must be a pointer to a valid buffer allocated by [`diplomat_alloc()`].
 #[no_mangle]
-pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize) {
-    let vec = Vec::from_raw_parts(ptr, size, size);
-    drop(vec);
+pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize, align: usize) {
+    alloc::alloc::dealloc(ptr, Layout::from_size_align(size, align).unwrap())
 }
