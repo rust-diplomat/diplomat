@@ -455,7 +455,7 @@ fn is_runtime_type(p: &TypePath, name: &str) -> bool {
 }
 
 /// A built-in Rust primitive scalar type.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 #[allow(non_camel_case_types)]
 pub enum PrimitiveType {
     i8,
