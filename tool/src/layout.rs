@@ -1,6 +1,6 @@
 use core::panic;
-use std::{cmp::max, collections::HashMap};
 use std::alloc::Layout;
+use std::{cmp::max, collections::HashMap};
 
 use diplomat_core::ast::{self, PrimitiveType, TypeName};
 
@@ -27,7 +27,10 @@ pub fn struct_offsets_size_max_align(
         next_offset += size;
     }
 
-    (offsets, Layout::from_size_align(next_offset, max_align).unwrap())
+    (
+        offsets,
+        Layout::from_size_align(next_offset, max_align).unwrap(),
+    )
 }
 
 pub fn result_ok_offset_size_align(

@@ -139,7 +139,11 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                     let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");
                     writeln!(&mut alloc_dict_indent, "ptr: out.underlying,")?;
                     writeln!(&mut alloc_dict_indent, "size: {},", strct_size_align.size())?;
-                    writeln!(&mut alloc_dict_indent, "align: {},", strct_size_align.align())?;
+                    writeln!(
+                        &mut alloc_dict_indent,
+                        "align: {},",
+                        strct_size_align.align()
+                    )?;
                     writeln!(&mut iife_indent, "}});")?;
                     writeln!(&mut iife_indent, "return out;")?;
                     write!(out, "}})()")?;
@@ -211,8 +215,16 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 )?;
                 let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");
                 writeln!(&mut alloc_dict_indent, "ptr: diplomat_receive_buffer,")?;
-                writeln!(&mut alloc_dict_indent, "size: {},", result_size_align.size())?;
-                writeln!(&mut alloc_dict_indent, "align: {},", result_size_align.align())?;
+                writeln!(
+                    &mut alloc_dict_indent,
+                    "size: {},",
+                    result_size_align.size()
+                )?;
+                writeln!(
+                    &mut alloc_dict_indent,
+                    "align: {},",
+                    result_size_align.align()
+                )?;
                 writeln!(&mut iife_indent, "}});")?;
             }
 
