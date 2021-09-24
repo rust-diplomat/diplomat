@@ -4,6 +4,8 @@
 ALL_HEADERS := $(wildcard *.h) $(wildcard *.hpp)
 ALL_RUST := $(wildcard ../src/*.rs)
 
+CXX=g++
+
 $(ALL_RUST):
 
 $(ALL_HEADERS):
@@ -13,7 +15,7 @@ $(ALL_HEADERS):
 	cargo build
 
 a.out: ../../target/debug/libexample.a $(ALL_HEADERS) main.cpp
-	g++ -std=c++20 main.cpp ../../target/debug/libexample.a -ldl -lpthread -lm -g
+	$(CXX) -std=c++20 main.cpp ../../target/debug/libexample.a -ldl -lpthread -lm -g
 
 build: a.out
 
