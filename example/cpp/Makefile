@@ -13,7 +13,7 @@ $(ALL_HEADERS):
 	cargo build
 
 a.out: ../../target/debug/libexample.a $(ALL_HEADERS) main.cpp
-	g++ -std=c++17 main.cpp ../../target/debug/libexample.a -ldl -lpthread -lm -g
+	g++ -std=c++20 main.cpp ../../target/debug/libexample.a -ldl -lpthread -lm -g
 
 build: a.out
 

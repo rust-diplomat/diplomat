@@ -51,6 +51,7 @@ pub fn gen_bindings(
         writeln!(out, "#include <algorithm>")?;
         writeln!(out, "#include <memory>")?;
         writeln!(out, "#include <optional>")?;
+        writeln!(out, "#include <span>")?;
         writeln!(out, "#include <variant>")?;
         writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
         writeln!(out)?;

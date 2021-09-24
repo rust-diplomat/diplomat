@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <memory>
 #include <optional>
+#include <span>
 #include <variant>
 #include "diplomat_runtime.hpp"
 
@@ -47,6 +48,6 @@ inline ICU4XLocale ICU4XLocale::new_(const std::string_view name) {
   return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.length()));
 }
 inline ICU4XLocale ICU4XLocale::new_from_bytes(const std::span<uint8_t> bytes) {
-  return ICU4XLocale(capi::ICU4XLocale_new_from_bytes(bytes.data(), bytes.length()));
+  return ICU4XLocale(capi::ICU4XLocale_new_from_bytes(bytes.data(), bytes.size()));
 }
 #endif
