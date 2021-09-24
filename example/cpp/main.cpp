@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "writeable: " << out << std::endl;
 
-    std::array<uint8_t, 2> bytes = {'h', 'i'};
+    std::array<uint8_t, 2> bytes = {'e', 'n'};
     ICU4XLocale locale = ICU4XLocale::new_from_bytes(bytes);
 
     locale = ICU4XLocale::new_("bn");

@@ -216,19 +216,20 @@ export class ICU4XLocale {
   }
 
   static new_from_bytes(bytes) {
-    let bytes_diplomat_ptr = wasm.diplomat_alloc(bytes.length);
-    let bytes_diplomat_buf = new Uint8Array(wasm.memory.buffer, bytes_diplomat_ptr, bytes.length);
-    bytes_diplomat_buf.set(bytes, 0);
+    let bytes_diplomat_bytes = new Uint8Array(bytes);
+    let bytes_diplomat_ptr = wasm.diplomat_alloc(bytes_diplomat_bytes.length);
+    let bytes_diplomat_buf = new Uint8Array(wasm.memory.buffer, bytes_diplomat_ptr, bytes_diplomat_bytes.length);
+    bytes_diplomat_buf.set(bytes_diplomat_bytes, 0);
     const diplomat_out = (() => {
       const out = (() => {
-        const out = new ICU4XLocale(wasm.ICU4XLocale_new_from_bytes(bytes_diplomat_ptr, bytes.length));
+        const out = new ICU4XLocale(wasm.ICU4XLocale_new_from_bytes(bytes_diplomat_ptr, bytes_diplomat_bytes.length));
         out.owner = null;
         return out;
       })();
       ICU4XLocale_box_destroy_registry.register(out, out.underlying)
       return out;
     })();
-    wasm.diplomat_free(bytes_diplomat_ptr, bytes.length);
+    wasm.diplomat_free(bytes_diplomat_ptr, bytes_diplomat_bytes.length);
     return diplomat_out;
   }
 }

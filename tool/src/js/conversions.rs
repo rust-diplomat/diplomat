@@ -17,12 +17,19 @@ pub fn gen_value_js_to_rust(
     post_logic: &mut Vec<String>,
 ) {
     match typ {
-        ast::TypeName::StrReference => {
+        ast::TypeName::StrReference | ast::TypeName::PrimitiveSlice(_) => {
             // TODO(#61): consider extracting into runtime function
-            pre_logic.push(format!(
-                "let {}_diplomat_bytes = (new TextEncoder()).encode({});",
-                param_name, param_name
-            ));
+            if *typ == ast::TypeName::StrReference {
+                pre_logic.push(format!(
+                    "let {}_diplomat_bytes = (new TextEncoder()).encode({});",
+                    param_name, param_name
+                ));
+            } else {
+                pre_logic.push(format!(
+                    "let {}_diplomat_bytes = new Uint8Array({});",
+                    param_name, param_name
+                ));
+            }
             pre_logic.push(format!(
                 "let {}_diplomat_ptr = wasm.diplomat_alloc({}_diplomat_bytes.length);",
                 param_name, param_name
@@ -38,29 +45,6 @@ pub fn gen_value_js_to_rust(
 
             post_logic.push(format!(
                 "wasm.diplomat_free({}_diplomat_ptr, {}_diplomat_bytes.length);",
-                param_name, param_name
-            ));
-        }
-        ast::TypeName::PrimitiveSlice(prim) => {
-            if prim != &ast::PrimitiveType::u8 {
-                todo!("WASM slices other than u8 are not yet supported")
-            }
-            // TODO(#61): consider extracting into runtime function
-            pre_logic.push(format!(
-                "let {}_diplomat_ptr = wasm.diplomat_alloc({}.length);",
-                param_name, param_name
-            ));
-            pre_logic.push(format!("let {}_diplomat_buf = new Uint8Array(wasm.memory.buffer, {}_diplomat_ptr, {}.length);", param_name, param_name, param_name));
-            pre_logic.push(format!(
-                "{}_diplomat_buf.set({}, 0);",
-                param_name, param_name
-            ));
-
-            invocation_params.push(format!("{}_diplomat_ptr", param_name));
-            invocation_params.push(format!("{}.length", param_name));
-
-            post_logic.push(format!(
-                "wasm.diplomat_free({}_diplomat_ptr, {}.length);",
                 param_name, param_name
             ));
         }
