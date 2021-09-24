@@ -11,6 +11,7 @@ expression: out_texts.get(out).unwrap()
 #include <algorithm>
 #include <memory>
 #include <optional>
+#include <span>
 #include <variant>
 #include "diplomat_runtime.hpp"
 

@@ -380,7 +380,7 @@ impl From<&syn::Type> for TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(primitive.clone());
+                            return TypeName::PrimitiveSlice(*primitive);
                         }
                     }
                 }
@@ -392,7 +392,7 @@ impl From<&syn::Type> for TypeName {
                     .get_ident()
                     .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                 {
-                    TypeName::Primitive(primitive.clone())
+                    TypeName::Primitive(*primitive)
                 } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
@@ -499,7 +499,7 @@ lazy_static! {
         PRIMITIVES_MAPPING.iter().cloned().collect();
     static ref PRIMITIVE_TO_STRING: HashMap<PrimitiveType, &'static str> = PRIMITIVES_MAPPING
         .iter()
-        .map(|t| (t.1.clone(), t.0))
+        .map(|t| (t.1, t.0))
         .collect();
 }
 
