@@ -49,7 +49,8 @@ pub fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
-        ast::TypeName::StrReference => panic!(),
+        ast::TypeName::StrReference => unreachable!("Strings handled in structs.rs"),
+        ast::TypeName::PrimitiveSlice(_) => unreachable!("Slices handled in structs.rs"),
         ast::TypeName::Unit => write!(out, "void")?,
     }
 
@@ -78,6 +79,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> String {
         }
         ast::TypeName::Writeable => "writeable".to_string(),
         ast::TypeName::StrReference => "str_ref".to_string(),
+        ast::TypeName::PrimitiveSlice(prim) => format!("ref_prim_slice_{}", c_type_for_prim(prim)),
         ast::TypeName::Unit => "void".to_string(),
     }
 }

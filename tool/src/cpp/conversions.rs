@@ -143,6 +143,9 @@ pub fn gen_rust_to_cpp<W: Write>(
         ast::TypeName::StrReference => {
             todo!("Returning &str from Rust to C++ is not currently supported")
         }
+        ast::TypeName::PrimitiveSlice(_) => {
+            todo!("Returning &[T] from Rust to C++ is not currently supported")
+        }
         ast::TypeName::Unit => cpp.to_string(),
     }
 }

@@ -7,4 +7,8 @@
 
     .. cpp:function:: static ICU4XLocale new_(const std::string_view name)
 
-        Construct an :cpp:class:`ICU4XLocale` from an locale identifier.
+        Construct an :cpp:class:`ICU4XLocale` from a locale identifier represented as a string.
+
+    .. cpp:function:: static ICU4XLocale new_from_bytes(const std::span<uint8_t> bytes)
+
+        Construct an :cpp:class:`ICU4XLocale` from a locale identifier represented as bytes.

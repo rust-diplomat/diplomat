@@ -201,6 +201,9 @@ fn gen_method<W: fmt::Write>(
             if param.ty == ast::TypeName::StrReference {
                 all_params_invocation.push(format!("{}.data()", param.name));
                 all_params_invocation.push(format!("{}.length()", param.name));
+            } else if let ast::TypeName::PrimitiveSlice(ref prim) = param.ty {
+                all_params_invocation.push(format!("{}.data()", param.name));
+                all_params_invocation.push(format!("{}.size()", param.name));
             } else {
                 let invocation_expr = gen_cpp_to_rust(
                     &param.name,

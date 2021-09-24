@@ -5,6 +5,7 @@ use diplomat_core::ast;
 use indenter::indented;
 
 use super::types::gen_type;
+use super::types::c_type_for_prim;
 
 pub fn gen_struct<W: fmt::Write>(
     custom_type: &ast::CustomType,
@@ -79,6 +80,12 @@ pub fn gen_method<W: fmt::Write>(
                 out,
                 "const char* {}_data, size_t {}_len",
                 param.name, param.name
+            )?;
+        } else if let ast::TypeName::PrimitiveSlice(ref prim) = param.ty {
+            write!(
+                out,
+                "const {}* {}_data, size_t {}_len",
+                c_type_for_prim(prim), param.name, param.name
             )?;
         } else {
             gen_type(&param.ty, in_path, env, out)?;

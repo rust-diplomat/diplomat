@@ -129,6 +129,8 @@ pub enum TypeName {
     Writeable,
     /// A `&str` type.
     StrReference,
+    /// A `&[T]` type, where `T` is a primitive.
+    PrimitiveSlice(PrimitiveType),
     /// The `()` type.
     Unit,
 }
@@ -219,6 +221,10 @@ impl TypeName {
             },
             TypeName::StrReference => syn::parse_quote! {
                 &str
+            },
+            TypeName::PrimitiveSlice(name) => {
+                let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
+                syn::parse_str(&format!("&[{}]", primitive_name)).unwrap()
             },
             TypeName::Unit => syn::parse_quote! {
                 ()
@@ -325,6 +331,7 @@ impl TypeName {
             }
             TypeName::Writeable => {}
             TypeName::StrReference => {}
+            TypeName::PrimitiveSlice(_) => {}
             TypeName::Unit => {}
         }
     }
@@ -357,16 +364,27 @@ impl From<&syn::Type> for TypeName {
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::Result`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
     /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
+    /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
     /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
     fn from(ty: &syn::Type) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
                 if r.elem.to_token_stream().to_string() == "str" {
-                    TypeName::StrReference
-                } else {
-                    TypeName::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
+                    return TypeName::StrReference;
                 }
+                if let syn::Type::Slice(slice) = &*r.elem {
+                    if let syn::Type::Path(p) = &*slice.elem {
+                        if let Some(primitive) = p
+                            .path
+                            .get_ident()
+                            .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                        {
+                            return TypeName::PrimitiveSlice(primitive.clone());
+                        }
+                    }
+                }
+                TypeName::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
             }
             syn::Type::Path(p) => {
                 if let Some(primitive) = p
@@ -424,7 +442,7 @@ impl From<&syn::Type> for TypeName {
                     todo!("Tuples are not currently supported")
                 }
             }
-            _ => panic!(),
+            other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
     }
 }

@@ -41,6 +41,29 @@ pub fn gen_value_js_to_rust(
                 param_name, param_name
             ));
         }
+        ast::TypeName::PrimitiveSlice(prim) => {
+            if prim != &ast::PrimitiveType::u8 {
+                todo!("WASM slices other than u8 are not yet supported")
+            }
+            // TODO(#61): consider extracting into runtime function
+            pre_logic.push(format!(
+                "let {}_diplomat_ptr = wasm.diplomat_alloc({}.length);",
+                param_name, param_name
+            ));
+            pre_logic.push(format!("let {}_diplomat_buf = new Uint8Array(wasm.memory.buffer, {}_diplomat_ptr, {}.length);", param_name, param_name, param_name));
+            pre_logic.push(format!(
+                "{}_diplomat_buf.set({}, 0);",
+                param_name, param_name
+            ));
+
+            invocation_params.push(format!("{}_diplomat_ptr", param_name));
+            invocation_params.push(format!("{}.length", param_name));
+
+            post_logic.push(format!(
+                "wasm.diplomat_free({}_diplomat_ptr, {}.length);",
+                param_name, param_name
+            ));
+        }
         ast::TypeName::Box(_) => {
             invocation_params.push(format!("{}.underlying", param_name));
         }
@@ -274,6 +297,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
+        ast::TypeName::PrimitiveSlice(_) => todo!(),
         ast::TypeName::Unit => value_expr(out)?,
     }
 

@@ -75,6 +75,8 @@ pub fn return_type_form(
 
         ast::TypeName::StrReference => ReturnTypeForm::Scalar,
 
+        ast::TypeName::PrimitiveSlice(_) => ReturnTypeForm::Scalar,
+
         ast::TypeName::Primitive(_) => ReturnTypeForm::Scalar,
 
         ast::TypeName::Writeable => panic!("Cannot return writeable"),

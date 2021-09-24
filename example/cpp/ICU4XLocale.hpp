@@ -27,9 +27,14 @@ class ICU4XLocale {
  public:
 
   /**
-   * Construct an [`ICU4XLocale`] from an locale identifier.
+   * Construct an [`ICU4XLocale`] from a locale identifier represented as a string.
    */
   static ICU4XLocale new_(const std::string_view name);
+
+  /**
+   * Construct an [`ICU4XLocale`] from a locale identifier represented as bytes.
+   */
+  static ICU4XLocale new_from_bytes(const std::span<uint8_t> bytes);
   inline const capi::ICU4XLocale* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XLocale* AsFFIMut() { return this->inner.get(); }
   inline ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
@@ -40,5 +45,8 @@ class ICU4XLocale {
 
 inline ICU4XLocale ICU4XLocale::new_(const std::string_view name) {
   return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.length()));
+}
+inline ICU4XLocale ICU4XLocale::new_from_bytes(const std::span<uint8_t> bytes) {
+  return ICU4XLocale(capi::ICU4XLocale_new_from_bytes(bytes.data(), bytes.length()));
 }
 #endif
