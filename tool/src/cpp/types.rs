@@ -87,7 +87,11 @@ pub fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::PrimitiveSlice(prim) => {
-            write!(out, "const std::span<{}>", crate::c::types::c_type_for_prim(prim))?;
+            write!(
+                out,
+                "const std::span<{}>",
+                crate::c::types::c_type_for_prim(prim)
+            )?;
         }
 
         ast::TypeName::Unit => {

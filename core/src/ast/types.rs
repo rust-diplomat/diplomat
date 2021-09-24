@@ -225,7 +225,7 @@ impl TypeName {
             TypeName::PrimitiveSlice(name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 syn::parse_str(&format!("&[{}]", primitive_name)).unwrap()
-            },
+            }
             TypeName::Unit => syn::parse_quote! {
                 ()
             },

@@ -4,8 +4,8 @@ use std::{collections::HashMap, fmt};
 use diplomat_core::ast;
 use indenter::indented;
 
-use super::types::gen_type;
 use super::types::c_type_for_prim;
+use super::types::gen_type;
 
 pub fn gen_struct<W: fmt::Write>(
     custom_type: &ast::CustomType,
@@ -85,7 +85,9 @@ pub fn gen_method<W: fmt::Write>(
             write!(
                 out,
                 "const {}* {}_data, size_t {}_len",
-                c_type_for_prim(prim), param.name, param.name
+                c_type_for_prim(prim),
+                param.name,
+                param.name
             )?;
         } else {
             gen_type(&param.ty, in_path, env, out)?;
