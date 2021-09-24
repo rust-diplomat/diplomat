@@ -31,7 +31,7 @@ pub fn gen_value_js_to_rust(
                 ));
             }
             let align = if let ast::TypeName::PrimitiveSlice(prim) = typ {
-                layout::primitive_size_alignment(*prim).1
+                layout::primitive_size_alignment(*prim).align()
             } else {
                 1
             };
@@ -105,7 +105,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
             let custom_type = typ.resolve(in_path, env);
             match custom_type {
                 ast::CustomType::Struct(strct) => {
-                    let (strct_size, align) = layout::type_size_alignment(typ, in_path, env);
+                    let strct_size_align = layout::type_size_alignment(typ, in_path, env);
                     let needs_buffer = return_type_form(typ, in_path, env);
                     if needs_buffer != ReturnTypeForm::Complex {
                         todo!("Receiving structs that don't need a buffer")
@@ -116,8 +116,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                     writeln!(
                         &mut iife_indent,
                         "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
-                        strct_size,
-                        align,
+                        strct_size_align.size(),
+                        strct_size_align.align(),
                     )?;
                     value_expr(&mut iife_indent)?;
                     writeln!(&mut iife_indent, ";")?;
@@ -138,8 +138,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
 
                     let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");
                     writeln!(&mut alloc_dict_indent, "ptr: out.underlying,")?;
-                    writeln!(&mut alloc_dict_indent, "size: {},", strct_size)?;
-                    writeln!(&mut alloc_dict_indent, "align: {},", align)?;
+                    writeln!(&mut alloc_dict_indent, "size: {},", strct_size_align.size())?;
+                    writeln!(&mut alloc_dict_indent, "align: {},", strct_size_align.align())?;
                     writeln!(&mut iife_indent, "}});")?;
                     writeln!(&mut iife_indent, "return out;")?;
                     write!(out, "}})()")?;
@@ -189,8 +189,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Result(ok, err) => {
-            let (result_size, ok_offset, align) =
-                layout::result_size_ok_offset_align(ok, err, in_path, env);
+            let (ok_offset, result_size_align) =
+                layout::result_ok_offset_size_align(ok, err, in_path, env);
             let needs_buffer = return_type_form(typ, in_path, env) == ReturnTypeForm::Complex;
             writeln!(out, "(() => {{")?;
             let mut iife_indent = indented(out).with_str("  ");
@@ -198,8 +198,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 writeln!(
                     &mut iife_indent,
                     "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
-                    result_size,
-                    align
+                    result_size_align.size(),
+                    result_size_align.align()
                 )?;
             }
 
@@ -211,8 +211,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 )?;
                 let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");
                 writeln!(&mut alloc_dict_indent, "ptr: diplomat_receive_buffer,")?;
-                writeln!(&mut alloc_dict_indent, "size: {},", result_size)?;
-                writeln!(&mut alloc_dict_indent, "align: {},", align)?;
+                writeln!(&mut alloc_dict_indent, "size: {},", result_size_align.size())?;
+                writeln!(&mut alloc_dict_indent, "align: {},", result_size_align.align())?;
                 writeln!(&mut iife_indent, "}});")?;
             }
 
