@@ -3,7 +3,8 @@
 Diplomat only supports a small set of types that can be passed over FFI. These are:
 
  - All integers, as well as `bool` and `char`
- - String slices
+ - `&[T]` where `T` is an integer, `bool`, or `char`
+ - `&str` (string slices)
  - References (mutable and immutable)
  - `Box<T>`
  - [Opaque types](./opaque.md)
