@@ -1,0 +1,50 @@
+---
+source: tool/src/cpp/structs.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyStruct_HPP
+#define MyStruct_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <variant>
+#include "diplomat_runtime.hpp"
+
+namespace capi {
+#include "MyStruct.h"
+}
+
+class MyStruct;
+
+/**
+ * A destruction policy for using MyStruct with std::unique_ptr.
+ */
+struct MyStructDeleter {
+  void operator()(capi::MyStruct* l) const noexcept {
+    capi::MyStruct_destroy(l);
+  }
+};
+class MyStruct {
+ public:
+  static MyStruct new_slice(const std::span<double> v);
+  void set_slice(const std::span<double> new_slice);
+  inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
+  inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
+  inline MyStruct(capi::MyStruct* i) : inner(i) {}
+ private:
+  std::unique_ptr<capi::MyStruct, MyStructDeleter> inner;
+};
+
+
+inline MyStruct MyStruct::new_slice(const std::span<double> v) {
+  return MyStruct(capi::MyStruct_new_slice(v.data(), v.size()));
+}
+inline void MyStruct::set_slice(const std::span<double> new_slice) {
+  capi::MyStruct_set_slice(this->inner.get(), new_slice.data(), new_slice.size());
+}
+#endif
+

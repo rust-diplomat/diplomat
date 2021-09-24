@@ -102,7 +102,7 @@ pub fn type_size_alignment(
             ast::PrimitiveType::f64 => (4, 4),
         },
         ast::TypeName::StrReference => (4, 4),
-        ast::TypeName::PrimitiveSlice(p) => todo!(),
+        ast::TypeName::PrimitiveSlice(_) => todo!(),
         ast::TypeName::Writeable => panic!(),
         ast::TypeName::Unit => (0, 1),
     }

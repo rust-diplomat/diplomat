@@ -172,4 +172,25 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_method_taking_slice() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct(UnknownType);
+
+                impl MyStruct {
+                    pub fn new_slice(v: &[f64]) -> Box<MyStruct> {
+                        unimplemented!()
+                    }
+
+                    pub fn set_slice(&mut self, new_slice: &[f64]) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
 }
