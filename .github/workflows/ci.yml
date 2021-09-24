@@ -35,8 +35,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cargo build
+      run: cd example && cargo build
     - name: CPP
-      run: cd example/cpp && CXX=g++-10 make
+      run: cd example/cpp && make CXX=g++-10
     - name: C
       run: cd example/c && make
