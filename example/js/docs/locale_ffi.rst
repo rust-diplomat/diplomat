@@ -12,3 +12,5 @@
     .. js:staticfunction:: new_from_bytes(bytes)
 
         Construct an :js:class:`ICU4XLocale` from a locale identifier represented as bytes.
+
+        - Note: ``bytes`` should be an ArrayBuffer or TypedArray corresponding to the slice type expected by Rust.
