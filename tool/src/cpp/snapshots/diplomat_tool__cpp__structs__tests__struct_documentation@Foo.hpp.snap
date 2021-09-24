@@ -11,6 +11,7 @@ expression: out_texts.get(out).unwrap()
 #include <algorithm>
 #include <memory>
 #include <optional>
+#include <span>
 #include <variant>
 #include "diplomat_runtime.hpp"
 
@@ -51,3 +52,4 @@ inline uint8_t Foo::get_x() const {
   return capi::Foo_get_x((capi::Foo*) &this);
 }
 #endif
+

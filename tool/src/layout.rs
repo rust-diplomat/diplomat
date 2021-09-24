@@ -1,21 +1,25 @@
 use core::panic;
+use std::alloc::Layout;
 use std::{cmp::max, collections::HashMap};
 
 use diplomat_core::ast::{self, PrimitiveType, TypeName};
 
 // TODO(#58): support non-32-bit platforms
+use u32 as usize_target;
 
-pub fn struct_size_offsets_max_align(
+pub fn struct_offsets_size_max_align(
     strct: &ast::Struct,
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-) -> (usize, Vec<usize>, usize) {
+) -> (Vec<usize>, Layout) {
     let mut max_align = 0;
     let mut next_offset = 0;
     let mut offsets = vec![];
 
     for (_, typ, _) in &strct.fields {
-        let (size, align) = type_size_alignment(typ, in_path, env);
+        let size_align = type_size_alignment(typ, in_path, env);
+        let size = size_align.size();
+        let align = size_align.align();
         max_align = max(max_align, align);
         let padding = (align - (next_offset % align)) % align;
         next_offset += padding;
@@ -23,23 +27,26 @@ pub fn struct_size_offsets_max_align(
         next_offset += size;
     }
 
-    (next_offset, offsets, max_align)
+    (
+        offsets,
+        Layout::from_size_align(next_offset, max_align).unwrap(),
+    )
 }
 
-pub fn result_size_ok_offset_align(
+pub fn result_ok_offset_size_align(
     ok: &TypeName,
     err: &TypeName,
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-) -> (usize, usize, usize) {
-    let (ok_size, _) = type_size_alignment(ok, in_path, env);
-    let (err_size, _) = type_size_alignment(err, in_path, env);
-    let (size, offsets, max_align) = struct_size_offsets_max_align(
+) -> (usize, Layout) {
+    let ok_size_align = type_size_alignment(ok, in_path, env);
+    let err_size_align = type_size_alignment(err, in_path, env);
+    let (offsets, size_max_align) = struct_offsets_size_max_align(
         &ast::Struct {
             name: "".to_string(),
             doc_lines: "".to_string(),
             fields: vec![
-                if ok_size > err_size {
+                if ok_size_align.size() > err_size_align.size() {
                     ("".to_string(), ok.clone(), "".to_string())
                 } else {
                     ("".to_string(), err.clone(), "".to_string())
@@ -55,54 +62,69 @@ pub fn result_size_ok_offset_align(
         in_path,
         env,
     );
-    (size, offsets[1], max_align)
+    (offsets[1], size_max_align)
 }
 
 pub fn type_size_alignment(
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-) -> (usize, usize) {
+) -> Layout {
     match typ {
-        ast::TypeName::Box(_) => (4, 4),
-        ast::TypeName::Reference(_, _) => (4, 4),
+        // TODO(#58): support non-32-bit platforms
+        // Actual:
+        // ast::TypeName::Box(_) => Layout::new::<Box<()>>(),
+        // ast::TypeName::Reference(_, _) => Layout::new::<&()>(),
+        // Temporary:
+        ast::TypeName::Box(_) => Layout::new::<usize_target>(),
+        ast::TypeName::Reference(_, _) => Layout::new::<usize_target>(),
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => type_size_alignment(underlying, in_path, env),
             _ => todo!(),
         },
         ast::TypeName::Result(ok, err) => {
-            let (size, _, align) = result_size_ok_offset_align(ok, err, in_path, env);
-            (size, align)
+            let (_, size_align) = result_ok_offset_size_align(ok, err, in_path, env);
+            size_align
         }
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {
-                let (size, _, max_align) = struct_size_offsets_max_align(strct, in_path, env);
-                (size, max_align)
+                let (_, size_max_align) = struct_offsets_size_max_align(strct, in_path, env);
+                size_max_align
             }
 
             ast::CustomType::Enum(_) => {
                 // repr(C) fieldless enums use the default platform representation: isize
-                (4, 4)
+                Layout::new::<usize_target>()
             }
 
             ast::CustomType::Opaque(_) => {
                 panic!("Size of opaque types is unknown")
             }
         },
-        ast::TypeName::Primitive(p) => match p {
-            ast::PrimitiveType::bool => (1, 1),
-            ast::PrimitiveType::char => (1, 1),
-            ast::PrimitiveType::i8 | ast::PrimitiveType::u8 => (1, 1),
-            ast::PrimitiveType::i16 | ast::PrimitiveType::u16 => (2, 2),
-            ast::PrimitiveType::i32 | ast::PrimitiveType::u32 => (4, 4),
-            ast::PrimitiveType::i64 | ast::PrimitiveType::u64 => (4, 4),
-            ast::PrimitiveType::i128 | ast::PrimitiveType::u128 => (4, 4),
-            ast::PrimitiveType::isize | ast::PrimitiveType::usize => (4, 4),
-            ast::PrimitiveType::f32 => (4, 4),
-            ast::PrimitiveType::f64 => (4, 4),
-        },
-        ast::TypeName::StrReference => (4, 4),
+        ast::TypeName::Primitive(p) => primitive_size_alignment(*p),
+        // TODO(#58): support non-32-bit platforms
+        // Actual:
+        // ast::TypeName::StrReference => Layout::new::<&str>(),
+        // ast::TypeName::PrimitiveSlice(_) => Layout::new::<&[u8]>(),
+        // Temporary:
+        ast::TypeName::StrReference => Layout::new::<(usize_target, usize_target)>(),
+        ast::TypeName::PrimitiveSlice(_) => Layout::new::<(usize_target, usize_target)>(),
         ast::TypeName::Writeable => panic!(),
-        ast::TypeName::Unit => (0, 1),
+        ast::TypeName::Unit => Layout::new::<()>(),
+    }
+}
+
+pub fn primitive_size_alignment(prim: PrimitiveType) -> Layout {
+    match prim {
+        ast::PrimitiveType::bool => Layout::new::<bool>(),
+        ast::PrimitiveType::char => Layout::new::<char>(),
+        ast::PrimitiveType::i8 | ast::PrimitiveType::u8 => Layout::new::<u8>(),
+        ast::PrimitiveType::i16 | ast::PrimitiveType::u16 => Layout::new::<u16>(),
+        ast::PrimitiveType::i32 | ast::PrimitiveType::u32 => Layout::new::<u32>(),
+        ast::PrimitiveType::i64 | ast::PrimitiveType::u64 => Layout::new::<u64>(),
+        ast::PrimitiveType::i128 | ast::PrimitiveType::u128 => Layout::new::<u128>(),
+        ast::PrimitiveType::isize | ast::PrimitiveType::usize => Layout::new::<usize_target>(),
+        ast::PrimitiveType::f32 => Layout::new::<f32>(),
+        ast::PrimitiveType::f64 => Layout::new::<f64>(),
     }
 }

@@ -39,6 +39,7 @@ pub fn collect_results<'a>(
         }
         ast::TypeName::Writeable => {}
         ast::TypeName::StrReference => {}
+        ast::TypeName::PrimitiveSlice(_) => {}
         ast::TypeName::Unit => {}
     }
 }

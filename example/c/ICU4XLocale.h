@@ -13,6 +13,8 @@ extern "C" {
 typedef struct ICU4XLocale ICU4XLocale;
 
 ICU4XLocale* ICU4XLocale_new(const char* name_data, size_t name_len);
+
+ICU4XLocale* ICU4XLocale_new_from_bytes(const uint8_t* bytes_data, size_t bytes_len);
 void ICU4XLocale_destroy(ICU4XLocale* self);
 
 #ifdef __cplusplus

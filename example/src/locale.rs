@@ -9,9 +9,14 @@ pub mod ffi {
     pub struct ICU4XLocale(pub Locale);
 
     impl ICU4XLocale {
-        /// Construct an [`ICU4XLocale`] from an locale identifier.
+        /// Construct an [`ICU4XLocale`] from a locale identifier represented as a string.
         pub fn new(name: &str) -> Box<ICU4XLocale> {
             Box::new(ICU4XLocale(Locale::from_str(name).unwrap()))
+        }
+
+        /// Construct an [`ICU4XLocale`] from a locale identifier represented as bytes.
+        pub fn new_from_bytes(bytes: &[u8]) -> Box<ICU4XLocale> {
+            Box::new(ICU4XLocale(Locale::from_bytes(bytes).unwrap()))
         }
     }
 }

@@ -9,7 +9,10 @@ console.log("multiplied by 0.1");
 
 console.log(my_decimal.to_string());
 
-const locale = ICU4XLocale.new("bn");
+const bytes = Uint8Array.from(["e".charCodeAt(0), "n".charCodeAt(0)]);
+let locale = ICU4XLocale.new_from_bytes(bytes);
+
+locale = ICU4XLocale.new("bn");
 
 const data_provider = ICU4XDataProvider.new_static();
 

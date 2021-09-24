@@ -4,6 +4,7 @@ use std::{collections::HashMap, fmt};
 use diplomat_core::ast;
 use indenter::indented;
 
+use super::types::c_type_for_prim;
 use super::types::gen_type;
 
 pub fn gen_struct<W: fmt::Write>(
@@ -79,6 +80,14 @@ pub fn gen_method<W: fmt::Write>(
                 out,
                 "const char* {}_data, size_t {}_len",
                 param.name, param.name
+            )?;
+        } else if let ast::TypeName::PrimitiveSlice(ref prim) = param.ty {
+            write!(
+                out,
+                "const {}* {}_data, size_t {}_len",
+                c_type_for_prim(prim),
+                param.name,
+                param.name
             )?;
         } else {
             gen_type(&param.ty, in_path, env, out)?;
@@ -159,6 +168,27 @@ mod tests {
                     }
 
                     pub fn set_str(&mut self, new_str: &str) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_method_taking_slice() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct(UnknownType);
+
+                impl MyStruct {
+                    pub fn new_slice(v: &[f64]) -> Box<MyStruct> {
+                        unimplemented!()
+                    }
+
+                    pub fn set_slice(&mut self, new_slice: &[f64]) {
                         unimplemented!()
                     }
                 }

@@ -34,7 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Build
+      run: cd example && cargo build
     - name: CPP
-      run: cd example/cpp && make
+      run: cd example/cpp && make CXX=g++-10
     - name: C
       run: cd example/c && make

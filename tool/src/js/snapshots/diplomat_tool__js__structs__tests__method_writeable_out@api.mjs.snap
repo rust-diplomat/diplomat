@@ -6,7 +6,7 @@ expression: out_texts.get(out).unwrap()
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
+  wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
 });
 
 const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
@@ -35,11 +35,12 @@ export class MyStruct {
   write_result() {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
       return (() => {
-        const diplomat_receive_buffer = wasm.diplomat_alloc(2);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
         const result_tag = {};
         diplomat_alloc_destroy_registry.register(result_tag, {
           ptr: diplomat_receive_buffer,
-          size: 2
+          size: 2,
+          align: 1,
         });
         wasm.MyStruct_write_result(diplomat_receive_buffer, this.underlying, writeable);
         const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 1, 1))[0] == 1;

@@ -201,6 +201,9 @@ fn gen_method<W: fmt::Write>(
             if param.ty == ast::TypeName::StrReference {
                 all_params_invocation.push(format!("{}.data()", param.name));
                 all_params_invocation.push(format!("{}.length()", param.name));
+            } else if let ast::TypeName::PrimitiveSlice(_) = param.ty {
+                all_params_invocation.push(format!("{}.data()", param.name));
+                all_params_invocation.push(format!("{}.size()", param.name));
             } else {
                 let invocation_expr = gen_cpp_to_rust(
                     &param.name,
@@ -440,6 +443,27 @@ mod tests {
                     }
 
                     pub fn set_str(&mut self, new_str: &str) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_method_taking_slice() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct(UnknownType);
+
+                impl MyStruct {
+                    pub fn new_slice(v: &[f64]) -> Box<MyStruct> {
+                        unimplemented!()
+                    }
+
+                    pub fn set_slice(&mut self, new_slice: &[f64]) {
                         unimplemented!()
                     }
                 }

@@ -4,6 +4,8 @@
 ALL_HEADERS := $(wildcard *.h)
 ALL_RUST := $(wildcard ../src/*.rs)
 
+CC=gcc
+
 $(ALL_RUST):
 
 $(ALL_HEADERS):
@@ -13,7 +15,7 @@ $(ALL_HEADERS):
 	cargo build
 
 a.out: ../../target/debug/libexample.a $(ALL_HEADERS) main.c
-	gcc main.c ../../target/debug/libexample.a -ldl -lpthread -lm -g
+	$(CC) main.c ../../target/debug/libexample.a -ldl -lpthread -lm -g
 
 build: a.out
 

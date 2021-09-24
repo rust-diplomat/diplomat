@@ -6,7 +6,7 @@ expression: out_texts.get(out).unwrap()
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
+  wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
 });
 
 const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
@@ -20,12 +20,13 @@ export class MyStruct {
 
   get_non_opaque() {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(8);
+      const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
       wasm.MyStruct_get_non_opaque(diplomat_receive_buffer, this.underlying);
       const out = new NonOpaqueStruct(diplomat_receive_buffer);
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
-        size: 8
+        size: 8,
+        align: 4,
       });
       return out;
     })();

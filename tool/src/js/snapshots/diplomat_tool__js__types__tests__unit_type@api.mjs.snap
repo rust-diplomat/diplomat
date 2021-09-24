@@ -6,7 +6,7 @@ expression: out_texts.get(out).unwrap()
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
-  wasm.diplomat_free(obj["ptr"], obj["size"]);
+  wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
 });
 
 const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {

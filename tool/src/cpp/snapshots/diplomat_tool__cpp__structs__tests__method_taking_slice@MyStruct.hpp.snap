@@ -31,8 +31,8 @@ struct MyStructDeleter {
 };
 class MyStruct {
  public:
-  static MyStruct new_str(const std::string_view v);
-  void set_str(const std::string_view new_str);
+  static MyStruct new_slice(const std::span<double> v);
+  void set_slice(const std::span<double> new_slice);
   inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
   inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
   inline MyStruct(capi::MyStruct* i) : inner(i) {}
@@ -41,11 +41,11 @@ class MyStruct {
 };
 
 
-inline MyStruct MyStruct::new_str(const std::string_view v) {
-  return MyStruct(capi::MyStruct_new_str(v.data(), v.length()));
+inline MyStruct MyStruct::new_slice(const std::span<double> v) {
+  return MyStruct(capi::MyStruct_new_slice(v.data(), v.size()));
 }
-inline void MyStruct::set_str(const std::string_view new_str) {
-  capi::MyStruct_set_str(this->inner.get(), new_str.data(), new_str.length());
+inline void MyStruct::set_slice(const std::span<double> new_slice) {
+  capi::MyStruct_set_slice(this->inner.get(), new_slice.data(), new_slice.size());
 }
 #endif
 

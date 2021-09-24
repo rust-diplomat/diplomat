@@ -46,7 +46,7 @@ pub fn gen_bindings(
     )?;
     writeln!(
         indented(out).with_str("  "),
-        "wasm.diplomat_free(obj[\"ptr\"], obj[\"size\"]);"
+        "wasm.diplomat_free(obj[\"ptr\"], obj[\"size\"], obj[\"align\"]);"
     )?;
     writeln!(out, "}});")?;
 
