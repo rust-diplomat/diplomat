@@ -1,0 +1,41 @@
+{
+  "name": "diplomat-wasm-example",
+  "version": "0.0.1",
+  "description": "Diplomat WASM example",
+  "main": "wasm.mjs",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "ava": {
+    "files": [
+      "test/*.mjs"
+    ],
+    "require": [
+      "esm"
+    ],
+    "nodeArguments": [
+      "--experimental-wasm-bigint"
+    ]
+  },
+  "scripts": {
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rust-diplomat/diplomat.git"
+  },
+  "keywords": [
+    "i18n"
+  ],
+  "author": "The ICU4X Project Developers",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/rust-diplomat/diplomat/issues"
+  },
+  "homepage": "https://github.com/rust-diplomat/diplomat#readme",
+  "devDependencies": {
+    "ava": "^3.15.0",
+    "esm": "^3.2.25"
+  }
+}
