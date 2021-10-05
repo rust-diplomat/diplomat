@@ -20,7 +20,7 @@ test("format a fixed decimal", t => {
 
     const fdf = ICU4XFixedDecimalFormat.try_new(locale, data_provider, ICU4XFixedDecimalFormatOptions.default());
     if (!fdf.success) {
-        
+        throw "Failed to format fixed decimal";
     }
     t.is(fdf.fdf.format_write(my_decimal), "১২.৩");
 });
