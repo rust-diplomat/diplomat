@@ -14,7 +14,10 @@ test("format a fixed decimal", t => {
 
     my_decimal.multiply_pow10(-1);
 
-    let locale = ICU4XLocale.new("bn");
+    const bytes = Uint8Array.from(["e".charCodeAt(0), "n".charCodeAt(0)]);
+    let locale = ICU4XLocale.new_from_bytes(bytes);
+    
+    locale = ICU4XLocale.new("bn");
 
     const data_provider = ICU4XDataProvider.new_static();
 
