@@ -14,4 +14,5 @@ int main(int argc, char *argv[]) {
     simple_assert_eq("struct values", s.c, 209);
     simple_assert_eq("struct values", s.d, 1234);
     simple_assert_eq("struct values", s.e, 5991);
+    simple_assert_eq("struct values", (uint32_t)s.f, (uint32_t)U'餐');
 }
