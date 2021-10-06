@@ -1,7 +1,6 @@
-
 #[diplomat::bridge]
 pub mod ffi {
-    
+
     #[diplomat::opaque]
     pub struct Opaque();
 
@@ -34,9 +33,9 @@ pub mod ffi {
         }
 
         fn assert_value(&self) {
-            assert_eq!(self.a,  17);
-            assert_eq!(self.b, true);
-            assert_eq!(self.c,  209);
+            assert_eq!(self.a, 17);
+            assert!(self.b);
+            assert_eq!(self.c, 209);
             assert_eq!(self.d, 1234);
             assert_eq!(self.e, 5991);
         }
