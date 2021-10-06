@@ -101,7 +101,7 @@ pub fn c_type_for_prim(prim: &PrimitiveType) -> &str {
         PrimitiveType::f32 => "float",
         PrimitiveType::f64 => "double",
         PrimitiveType::bool => "bool",
-        PrimitiveType::char => "char",
+        PrimitiveType::char => "char32_t",
     }
 }
 
