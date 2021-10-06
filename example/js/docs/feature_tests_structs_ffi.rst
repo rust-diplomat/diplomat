@@ -13,6 +13,8 @@
 
     .. js:attribute:: e
 
+    .. js:attribute:: f
+
     .. js:staticfunction:: new()
 
 .. js:class:: Opaque
