@@ -40,3 +40,19 @@ jobs:
       run: cd example/cpp && make CXX=g++-10
     - name: C
       run: cd example/c && make
+  example-wasm:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Load Rust toolchain for WASM.
+      run: rustup target add wasm32-unknown-unknown
+    - name: Build
+      run: cd example && cargo build --target wasm32-unknown-unknown
+    - name: Install Node.js v14.17.0
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.17.0
+    - name: install node deps
+      run: cd example/js && npm install
+    - name: test
+      run: cd example/js && npm run test
