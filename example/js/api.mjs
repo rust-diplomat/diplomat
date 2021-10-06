@@ -235,3 +235,80 @@ export class ICU4XLocale {
     return diplomat_out;
   }
 }
+
+const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.MyStruct_destroy(underlying);
+});
+
+export class MyStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new() {
+    const diplomat_out = (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(20, 8);
+      wasm.MyStruct_new(diplomat_receive_buffer);
+      const out = new MyStruct(diplomat_receive_buffer);
+      diplomat_alloc_destroy_registry.register(out, {
+        ptr: out.underlying,
+        size: 20,
+        align: 8,
+      });
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  get a() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
+  }
+
+  get b() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 1, 1))[0] == 1;
+  }
+
+  get c() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 2, 1))[0];
+  }
+
+  get d() {
+    return (new BigUint64Array(wasm.memory.buffer, this.underlying + 8, 1))[0];
+  }
+
+  get e() {
+    return (new Int32Array(wasm.memory.buffer, this.underlying + 16, 1))[0];
+  }
+}
+
+const Opaque_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Opaque_destroy(underlying);
+});
+
+export class Opaque {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new() {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new Opaque(wasm.Opaque_new());
+        out.owner = null;
+        return out;
+      })();
+      Opaque_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  assert_struct(s) {
+    const diplomat_MyStruct_extracted_a = s["a"];
+    const diplomat_MyStruct_extracted_b = s["b"];
+    const diplomat_MyStruct_extracted_c = s["c"];
+    const diplomat_MyStruct_extracted_d = s["d"];
+    const diplomat_MyStruct_extracted_e = s["e"];
+    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e);
+  }
+}
