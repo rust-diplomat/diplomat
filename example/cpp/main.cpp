@@ -4,23 +4,33 @@
 int main(int argc, char *argv[]) {
     ICU4XFixedDecimal fd = ICU4XFixedDecimal::new_(123);
 
-    std::cout << "ok" << fd.to_string().is_err() << std::endl;
+    if (fd.to_string().is_err()) {
+        std::cout<<"Failed to construct FixedDecimal"<<std::endl;
+        return 1;
+    }
 
     std::string fd_out = fd.to_string().ok().value();
 
-    std::cout << fd_out << std::endl;
-
+    if (fd_out != "123") {
+        std::cout << "Expected 123, found " << fd_out << std::endl;
+        return 1;
+    }
+    
     fd.multiply_pow10(-1);
-    std::cout << "multiplied by 0.1" << std::endl;
 
     fd_out = fd.to_string().ok().value();
-    std::cout << fd_out << std::endl;
-
+    if (fd_out != "12.3") {
+        std::cout << "Expected 12.3, found " << fd_out << std::endl;
+        return 1;
+    }
     std::string out;
 
     fd.to_string_to_writeable(out);
 
-    std::cout << "writeable: " << out << std::endl;
+    if (out != "12.3") {
+        std::cout << "Writeable: expected 12.3, found " << out << std::endl;
+        return 1;
+    }
 
     std::array<uint8_t, 2> bytes = {'e', 'n'};
     ICU4XLocale locale = ICU4XLocale::new_from_bytes(bytes);
@@ -30,6 +40,16 @@ int main(int argc, char *argv[]) {
     ICU4XDataProvider data_provider = ICU4XDataProvider::new_static();
 
     auto fdf = ICU4XFixedDecimalFormat::try_new(locale, data_provider, ICU4XFixedDecimalFormatOptions::default_());
-    std::cout << fdf.success << std::endl;
-    std::cout << fdf.fdf.value().format_write(fd) << std::endl;
+    if (!fdf.success) {
+        std::cout << "Failed to format fixed decimal" << std::endl;
+        return 1;
+    }
+
+    out = fdf.fdf.value().format_write(fd);
+
+    if (out != "১২.৩") {
+        std::cout << "Expected ১২.৩, found " << out << std::endl;
+        return 1;
+    }
+    std::cout << "Formatted value is " << out << std::endl;
 }
