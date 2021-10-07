@@ -36,7 +36,7 @@ struct MyStruct {
 
 
 inline MyStruct MyStruct::new_(const std::string_view v) {
-  capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new(v.data(), v.length());
+  capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new(v.data(), v.size());
   return MyStruct{  };
 }
 #endif

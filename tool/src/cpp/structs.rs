@@ -4,6 +4,7 @@ use std::{collections::HashMap, fmt};
 use diplomat_core::ast;
 use indenter::indented;
 
+use crate::cpp::config::LibraryConfig;
 use crate::cpp::util::{gen_comment_block, transform_keyword_ident};
 
 use super::conversions::{gen_cpp_to_rust, gen_rust_to_cpp};
@@ -14,13 +15,15 @@ pub fn gen_struct<W: fmt::Write>(
     in_path: &ast::Path,
     is_header: bool,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {
     if is_header {
         writeln!(
             out,
-            "/**\n * A destruction policy for using {} with std::unique_ptr.\n */",
-            custom_type.name()
+            "/**\n * A destruction policy for using {} with {}.\n */",
+            custom_type.name(),
+            library_config.unique_ptr.name,
         )?;
         writeln!(out, "struct {}Deleter {{", custom_type.name())?;
         let mut deleter_body = indented(out).with_str("  ");
@@ -60,6 +63,7 @@ pub fn gen_struct<W: fmt::Write>(
                     is_header,
                     true,
                     env,
+                    library_config,
                     &mut public_body,
                 )?;
             }
@@ -87,8 +91,8 @@ pub fn gen_struct<W: fmt::Write>(
                 let mut private_body = indented(out).with_str("  ");
                 writeln!(
                     &mut private_body,
-                    "std::unique_ptr<capi::{}, {}Deleter> inner;",
-                    opaque.name, opaque.name
+                    "{}<capi::{}, {}Deleter> inner;",
+                    library_config.unique_ptr.expr, opaque.name, opaque.name
                 )?;
                 writeln!(out, "}};")?;
             }
@@ -110,7 +114,7 @@ pub fn gen_struct<W: fmt::Write>(
             if is_header {
                 for (name, typ, docs) in &strct.fields {
                     gen_comment_block(&mut public_body, docs)?;
-                    gen_type(typ, in_path, None, env, &mut public_body)?;
+                    gen_type(typ, in_path, None, env, library_config, &mut public_body)?;
                     writeln!(&mut public_body, " {};", name)?;
                 }
             }
@@ -123,6 +127,7 @@ pub fn gen_struct<W: fmt::Write>(
                     is_header,
                     true,
                     env,
+                    library_config,
                     &mut public_body,
                 )?;
             }
@@ -146,6 +151,7 @@ fn gen_method<W: fmt::Write>(
     // should it convert writeables to string as an additional method?
     writeable_to_string: bool,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {
     // This method should rearrange the writeable
@@ -156,7 +162,7 @@ fn gen_method<W: fmt::Write>(
 
     if rearranged_writeable {
         // generate the normal method too
-        gen_method(enclosing_type, method, in_path, is_header, false, env, out)?;
+        gen_method(enclosing_type, method, in_path, is_header, false, env, library_config, out)?;
     }
 
     if is_header {
@@ -170,6 +176,7 @@ fn gen_method<W: fmt::Write>(
         has_writeable_param,
         rearranged_writeable,
         env,
+        library_config,
         out,
         writeable_to_string,
     )?;
@@ -200,7 +207,7 @@ fn gen_method<W: fmt::Write>(
         for param in params_to_gen.iter() {
             if param.ty == ast::TypeName::StrReference {
                 all_params_invocation.push(format!("{}.data()", param.name));
-                all_params_invocation.push(format!("{}.length()", param.name));
+                all_params_invocation.push(format!("{}.size()", param.name));
             } else if let ast::TypeName::PrimitiveSlice(_) = param.ty {
                 all_params_invocation.push(format!("{}.data()", param.name));
                 all_params_invocation.push(format!("{}.size()", param.name));
@@ -250,6 +257,7 @@ fn gen_method<W: fmt::Write>(
                     ret_typ,
                     in_path,
                     env,
+                    library_config,
                     &mut method_body,
                 );
 
@@ -276,6 +284,7 @@ pub fn gen_method_interface<W: fmt::Write>(
     has_writeable_param: bool,
     rearranged_writeable: bool,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config: &LibraryConfig,
     out: &mut W,
     writeable_to_string: bool,
 ) -> Result<Vec<ast::Param>, fmt::Error> {
@@ -302,7 +311,7 @@ pub fn gen_method_interface<W: fmt::Write>(
             if err.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type(err, in_path, None, env, out)?;
+                gen_type(err, in_path, None, env, library_config, out)?;
             }
             write!(out, ">")?;
         } else {
@@ -311,7 +320,7 @@ pub fn gen_method_interface<W: fmt::Write>(
     } else {
         match &method.return_type {
             Some(ret_type) => {
-                gen_type(ret_type, in_path, None, env, out)?;
+                gen_type(ret_type, in_path, None, env, library_config, out)?;
             }
 
             None => {
@@ -344,7 +353,7 @@ pub fn gen_method_interface<W: fmt::Write>(
         if param.is_writeable() && !writeable_to_string {
             write!(out, "W&")?;
         } else {
-            gen_type(&param.ty, in_path, None, env, out)?;
+            gen_type(&param.ty, in_path, None, env, library_config, out)?;
         }
         write!(out, " {}", param.name)?;
     }

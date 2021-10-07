@@ -20,7 +20,7 @@ macro_rules! test_file {
 
         let mut out_texts = std::collections::HashMap::new();
 
-        crate::cpp::gen_bindings(&env, &mut out_texts).unwrap();
+        crate::cpp::gen_bindings(&env, &None, &mut out_texts).unwrap();
 
         out_texts.retain(|k, _| !k.ends_with(".h"));
         out_texts.remove("diplomat_runtime.hpp");

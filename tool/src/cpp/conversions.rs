@@ -2,12 +2,15 @@ use std::{collections::HashMap, fmt::Write};
 
 use diplomat_core::ast;
 
+use crate::cpp::config::LibraryConfig;
+
 pub fn gen_rust_to_cpp<W: Write>(
     cpp: &str,
     path: &str,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config: &LibraryConfig,
     out: &mut W,
 ) -> String {
     match typ {
@@ -48,6 +51,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                             typ,
                             &in_path,
                             env,
+                            library_config,
                             out
                         )
                     ));
@@ -67,13 +71,13 @@ pub fn gen_rust_to_cpp<W: Write>(
                 writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
 
                 let wrapped_value_id = format!("diplomat_optional_{}", path);
-                super::types::gen_type(typ, in_path, None, env, out).unwrap();
+                super::types::gen_type(typ, in_path, None, env, library_config, out).unwrap();
                 writeln!(out, " {};", wrapped_value_id).unwrap();
 
                 writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
 
                 let some_expr =
-                    gen_rust_to_cpp(&raw_value_id, path, underlying.as_ref(), in_path, env, out);
+                    gen_rust_to_cpp(&raw_value_id, path, underlying.as_ref(), in_path, env, library_config, out);
                 writeln!(out, "  {} = {};", wrapped_value_id, some_expr).unwrap();
 
                 writeln!(out, "}} else {{").unwrap();
@@ -91,7 +95,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
 
             let wrapped_value_id = format!("diplomat_result_{}", path);
-            super::types::gen_type(typ, in_path, None, env, out).unwrap();
+            super::types::gen_type(typ, in_path, None, env, library_config, out).unwrap();
             writeln!(out, " {}({}.is_ok);", wrapped_value_id, raw_value_id).unwrap();
 
             if !ok.is_zst() || !err.is_zst() {
@@ -103,6 +107,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                         ok,
                         in_path,
                         env,
+                        library_config,
                         out,
                     );
                     writeln!(
@@ -120,6 +125,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                         err,
                         in_path,
                         env,
+                        library_config,
                         out,
                     );
                     writeln!(

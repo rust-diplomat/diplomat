@@ -1,0 +1,25 @@
+headers = [
+    "#include <stdint.h>",
+    "#include <stddef.h>",
+    "#include <stdbool.h>",
+    "#include <algorithm>",
+    "#include <memory>",
+    "#include <optional>",
+    "#include <variant>",
+    "",
+    "#include \"mozilla/UniquePtr.h\"",
+    "#include \"mozilla/Span.h\"",
+    "",
+]
+
+[span]
+name = "mozilla::Span"
+expr = "mozilla::Span"
+
+[string_view]
+name = "mozilla::Span"
+expr = "mozilla::Span<const char>"
+
+[unique_ptr]
+name = "mozilla::UniquePtr"
+expr = "mozilla::UniquePtr"
