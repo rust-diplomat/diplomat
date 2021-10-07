@@ -444,7 +444,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             } else if let PrimitiveType::char = prim {
                 write!(
                     out,
-                    "String.fromCharCode((new Uint8Array(wasm.memory.buffer, "
+                    "String.fromCharCode((new Uint32Array(wasm.memory.buffer, "
                 )?;
                 value_expr(out)?;
                 write!(out, ", 1))[0])")?;

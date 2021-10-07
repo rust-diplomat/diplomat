@@ -247,12 +247,12 @@ export class MyStruct {
 
   static new() {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(20, 8);
+      const diplomat_receive_buffer = wasm.diplomat_alloc(24, 8);
       wasm.MyStruct_new(diplomat_receive_buffer);
       const out = new MyStruct(diplomat_receive_buffer);
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
-        size: 20,
+        size: 24,
         align: 8,
       });
       return out;
@@ -278,6 +278,10 @@ export class MyStruct {
 
   get e() {
     return (new Int32Array(wasm.memory.buffer, this.underlying + 16, 1))[0];
+  }
+
+  get f() {
+    return String.fromCharCode((new Uint32Array(wasm.memory.buffer, this.underlying + 20, 1))[0]);
   }
 }
 
@@ -309,6 +313,7 @@ export class Opaque {
     const diplomat_MyStruct_extracted_c = s["c"];
     const diplomat_MyStruct_extracted_d = s["d"];
     const diplomat_MyStruct_extracted_e = s["e"];
-    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e);
+    const diplomat_MyStruct_extracted_f = s["f"];
+    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e, diplomat_MyStruct_extracted_f);
   }
 }

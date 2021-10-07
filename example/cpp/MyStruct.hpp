@@ -31,12 +31,13 @@ struct MyStruct {
   uint8_t c;
   uint64_t d;
   int32_t e;
+  char32_t f;
   static MyStruct new_();
 };
 
 
 inline MyStruct MyStruct::new_() {
   capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new();
-  return MyStruct{ .a = std::move(diplomat_raw_struct_out_value.a), .b = std::move(diplomat_raw_struct_out_value.b), .c = std::move(diplomat_raw_struct_out_value.c), .d = std::move(diplomat_raw_struct_out_value.d), .e = std::move(diplomat_raw_struct_out_value.e) };
+  return MyStruct{ .a = std::move(diplomat_raw_struct_out_value.a), .b = std::move(diplomat_raw_struct_out_value.b), .c = std::move(diplomat_raw_struct_out_value.c), .d = std::move(diplomat_raw_struct_out_value.d), .e = std::move(diplomat_raw_struct_out_value.e), .f = std::move(diplomat_raw_struct_out_value.f) };
 }
 #endif

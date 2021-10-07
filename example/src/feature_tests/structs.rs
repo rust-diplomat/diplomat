@@ -10,6 +10,7 @@ pub mod ffi {
         c: u8,
         d: u64,
         e: i32,
+        f: char,
     }
 
     impl Opaque {
@@ -29,6 +30,7 @@ pub mod ffi {
                 c: 209,
                 d: 1234,
                 e: 5991,
+                f: '餐',
             }
         }
 
@@ -38,6 +40,7 @@ pub mod ffi {
             assert_eq!(self.c, 209);
             assert_eq!(self.d, 1234);
             assert_eq!(self.e, 5991);
+            assert_eq!(self.f, '餐');
         }
     }
 }

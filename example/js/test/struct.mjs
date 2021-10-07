@@ -9,4 +9,5 @@ test("Verify invariants of struct", t => {
     t.is(s["c"], 209);
     t.is(s["d"], 1234n);
     t.is(s["e"], 5991);
+    t.is(s["f"], "餐");
 });
