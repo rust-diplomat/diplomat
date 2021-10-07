@@ -83,7 +83,10 @@ fn main() -> std::io::Result<()> {
         exit_if_path_missing(docs, "The docs folder specified by --docs does not exist.");
     }
     if let Some(ref library_config) = opt.library_config {
-        exit_if_path_missing(library_config, "The library configuration file specified by --library-config does not exist.");
+        exit_if_path_missing(
+            library_config,
+            "The library configuration file specified by --library-config does not exist.",
+        );
     }
 
     let lib_file = syn_inline_mod::parse_and_inline_modules(path.as_path());

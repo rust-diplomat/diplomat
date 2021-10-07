@@ -40,20 +40,41 @@ pub fn gen_type<W: fmt::Write>(
         },
 
         ast::TypeName::Box(underlying) => {
-            gen_type(underlying.as_ref(), in_path, Some(true), env, library_config, out)?;
+            gen_type(
+                underlying.as_ref(),
+                in_path,
+                Some(true),
+                env,
+                library_config,
+                out,
+            )?;
         }
 
         ast::TypeName::Reference(underlying, mutable) => {
             if !mutable {
                 write!(out, "const ")?;
             }
-            gen_type(underlying.as_ref(), in_path, Some(false), env, library_config, out)?;
+            gen_type(
+                underlying.as_ref(),
+                in_path,
+                Some(false),
+                env,
+                library_config,
+                out,
+            )?;
         }
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
                 write!(out, "std::optional<")?;
-                gen_type(underlying.as_ref(), in_path, behind_ref, env, library_config, out)?;
+                gen_type(
+                    underlying.as_ref(),
+                    in_path,
+                    behind_ref,
+                    env,
+                    library_config,
+                    out,
+                )?;
                 write!(out, ">")?;
             }
 

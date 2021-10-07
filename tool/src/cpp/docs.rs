@@ -1,6 +1,6 @@
-use std::{collections::HashMap, fmt};
 use std::fmt::Write;
 use std::path::PathBuf;
+use std::{collections::HashMap, fmt};
 
 use diplomat_core::ast;
 use indenter::indented;
@@ -16,7 +16,6 @@ pub fn gen_docs(
     _library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
-
     // TODO!
     let library_config = LibraryConfig::default();
 
@@ -126,7 +125,15 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
 
     for method in typ.methods() {
         writeln!(&mut class_indented)?;
-        gen_method_docs(method, typ, in_path, true, env, library_config, &mut class_indented)?;
+        gen_method_docs(
+            method,
+            typ,
+            in_path,
+            true,
+            env,
+            library_config,
+            &mut class_indented,
+        )?;
     }
 
     Ok(())
@@ -149,7 +156,15 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     if rearranged_writeable {
         // generate the normal method too
-        gen_method_docs(method, enclosing_type, in_path, false, env, library_config, out)?;
+        gen_method_docs(
+            method,
+            enclosing_type,
+            in_path,
+            false,
+            env,
+            library_config,
+            out,
+        )?;
         writeln!(out)?;
     }
 

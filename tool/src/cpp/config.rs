@@ -11,13 +11,13 @@ pub struct LibraryConfig {
     pub headers: Vec<String>,
     pub span: LibraryType,
     pub string_view: LibraryType,
-    pub unique_ptr : LibraryType,
+    pub unique_ptr: LibraryType,
 }
 
 impl LibraryConfig {
     pub fn default() -> LibraryConfig {
-        return LibraryConfig {
-            headers : vec![
+        LibraryConfig {
+            headers: vec![
                 "#include <stdint.h>".into(),
                 "#include <stddef.h>".into(),
                 "#include <stdbool.h>".into(),
@@ -27,17 +27,17 @@ impl LibraryConfig {
                 "#include <span>".into(),
                 "#include <variant>".into(),
             ],
-            span : LibraryType {
-                name : "std::span".into(),
-                expr : "std::span".into(),
+            span: LibraryType {
+                name: "std::span".into(),
+                expr: "std::span".into(),
             },
-            string_view : LibraryType {
-                name : "std::string_view".into(),
-                expr : "std::string_view".into(),
+            string_view: LibraryType {
+                name: "std::string_view".into(),
+                expr: "std::string_view".into(),
             },
-            unique_ptr : LibraryType {
-                name : "std::unique_ptr".into(),
-                expr : "std::unique_ptr".into(),
+            unique_ptr: LibraryType {
+                name: "std::unique_ptr".into(),
+                expr: "std::unique_ptr".into(),
             },
         }
     }

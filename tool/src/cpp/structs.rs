@@ -162,7 +162,16 @@ fn gen_method<W: fmt::Write>(
 
     if rearranged_writeable {
         // generate the normal method too
-        gen_method(enclosing_type, method, in_path, is_header, false, env, library_config, out)?;
+        gen_method(
+            enclosing_type,
+            method,
+            in_path,
+            is_header,
+            false,
+            env,
+            library_config,
+            out,
+        )?;
     }
 
     if is_header {

@@ -76,8 +76,15 @@ pub fn gen_rust_to_cpp<W: Write>(
 
                 writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
 
-                let some_expr =
-                    gen_rust_to_cpp(&raw_value_id, path, underlying.as_ref(), in_path, env, library_config, out);
+                let some_expr = gen_rust_to_cpp(
+                    &raw_value_id,
+                    path,
+                    underlying.as_ref(),
+                    in_path,
+                    env,
+                    library_config,
+                    out,
+                );
                 writeln!(out, "  {} = {};", wrapped_value_id, some_expr).unwrap();
 
                 writeln!(out, "}} else {{").unwrap();
