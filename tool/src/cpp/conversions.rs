@@ -322,4 +322,42 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_option_conversion() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct {
+                    a: u8,
+                }
+
+                impl MyStruct {
+                    pub fn create(&self) -> Option<Box<MyStruct>> {
+                        unimplemented!();
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_option_conversion_using_library_config() {
+        test_file_using_library_config! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct {
+                    a: u8,
+                }
+
+                impl MyStruct {
+                    pub fn create(&self) -> Option<Box<MyStruct>> {
+                        unimplemented!();
+                    }
+                }
+            }
+        }
+    }
 }

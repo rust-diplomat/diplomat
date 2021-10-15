@@ -176,6 +176,21 @@ mod tests {
     }
 
     #[test]
+    fn test_option_types_using_library_config() {
+        test_file_using_library_config! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyOpaqueStruct(UnknownType);
+
+                struct MyStruct {
+                    a: Option<Box<MyOpaqueStruct>>,
+                }
+            }
+        }
+    }
+
+    #[test]
     fn test_result_types() {
         test_file! {
             #[diplomat::bridge]

@@ -490,6 +490,27 @@ mod tests {
     }
 
     #[test]
+    fn test_method_taking_slice_using_library_config() {
+        test_file_using_library_config! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyStruct(UnknownType);
+
+                impl MyStruct {
+                    pub fn new_slice(v: &[f64]) -> Box<MyStruct> {
+                        unimplemented!()
+                    }
+
+                    pub fn set_slice(&mut self, new_slice: &[f64]) {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn test_method_writeable_out() {
         test_file! {
             #[diplomat::bridge]
