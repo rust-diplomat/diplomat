@@ -85,10 +85,38 @@ pub fn gen_rust_to_cpp<W: Write>(
                     library_config,
                     out,
                 );
-                writeln!(out, "  {} = {};", wrapped_value_id, some_expr).unwrap();
+                if library_config.someopt.is_call {
+                    writeln!(
+                        out,
+                        "  {} = {}({});",
+                        wrapped_value_id, library_config.someopt.expr, some_expr
+                    )
+                    .unwrap();
+                } else {
+                    writeln!(
+                        out,
+                        "  {} = {}{};",
+                        wrapped_value_id, library_config.someopt.expr, some_expr
+                    )
+                    .unwrap();
+                }
 
                 writeln!(out, "}} else {{").unwrap();
-                writeln!(out, "  {} = std::nullopt;", wrapped_value_id).unwrap();
+                if library_config.nullopt.is_call {
+                    writeln!(
+                        out,
+                        "  {} = {}();",
+                        wrapped_value_id, library_config.nullopt.expr
+                    )
+                    .unwrap();
+                } else {
+                    writeln!(
+                        out,
+                        "  {} = {};",
+                        wrapped_value_id, library_config.nullopt.expr
+                    )
+                    .unwrap();
+                }
                 writeln!(out, "}}").unwrap();
 
                 wrapped_value_id

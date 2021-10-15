@@ -66,7 +66,7 @@ pub fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
-                write!(out, "std::optional<")?;
+                write!(out, "{}<", library_config.optional.expr)?;
                 gen_type(
                     underlying.as_ref(),
                     in_path,

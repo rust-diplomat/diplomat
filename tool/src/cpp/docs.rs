@@ -1,4 +1,6 @@
+use colored::*;
 use std::fmt::Write;
+use std::fs;
 use std::path::PathBuf;
 use std::{collections::HashMap, fmt};
 
@@ -13,11 +15,28 @@ use crate::{
 /// Generate RST-formatted Sphinx docs for all FFI types.
 pub fn gen_docs(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-    _library_config_path: &Option<PathBuf>,
+    library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
-    // TODO!
-    let library_config = LibraryConfig::default();
+
+    let mut library_config = LibraryConfig::default();
+    if let Some(path) = library_config_path {
+        // Should be fine, we've already verified the path
+        if let Ok(contents) = fs::read_to_string(path) {
+            match toml::from_str(&contents) {
+                Ok(config) => library_config = config,
+                Err(err) => {
+                    eprintln!(
+                        "{}{}\n{}",
+                        "Error: ".red().bold(),
+                        format!("Unable to parse library configuration file: {:?}", path),
+                        err,
+                    );
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
 
     let index_out = outs
         .entry("index.rst".to_string())

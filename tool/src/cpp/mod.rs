@@ -1,3 +1,4 @@
+use colored::*;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Write;
@@ -42,8 +43,13 @@ pub fn gen_bindings(
             match toml::from_str(&contents) {
                 Ok(config) => library_config = config,
                 Err(err) => {
-                    //TODO! handle error properly!
-                    println!("err {:?}", err);
+                    eprintln!(
+                        "{}{}\n{}",
+                        "Error: ".red().bold(),
+                        format!("Unable to parse library configuration file: {:?}", path),
+                        err,
+                    );
+                    std::process::exit(1);
                 }
             }
         }
@@ -63,6 +69,13 @@ pub fn gen_bindings(
 
         writeln!(out, "#ifndef {}_HPP", typ.name())?;
         writeln!(out, "#define {}_HPP", typ.name())?;
+
+        writeln!(out, "#include <stdint.h>")?;
+        writeln!(out, "#include <stddef.h>")?;
+        writeln!(out, "#include <stdbool.h>")?;
+        writeln!(out, "#include <algorithm>")?;
+        writeln!(out, "#include <memory>")?;
+        writeln!(out, "#include <variant>")?;
 
         for header in &library_config.headers {
             writeln!(out, "{}", header)?;

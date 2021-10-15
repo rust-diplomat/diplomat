@@ -1,6 +1,13 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
+pub struct CallableLibraryType {
+    pub name: String,
+    pub expr: String,
+    pub is_call: bool,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct LibraryType {
     pub name: String,
     pub expr: String,
@@ -9,6 +16,9 @@ pub struct LibraryType {
 #[derive(Debug, Deserialize)]
 pub struct LibraryConfig {
     pub headers: Vec<String>,
+    pub nullopt: CallableLibraryType,
+    pub optional: LibraryType,
+    pub someopt: CallableLibraryType,
     pub span: LibraryType,
     pub string_view: LibraryType,
     pub unique_ptr: LibraryType,
@@ -17,16 +27,21 @@ pub struct LibraryConfig {
 impl LibraryConfig {
     pub fn default() -> LibraryConfig {
         LibraryConfig {
-            headers: vec![
-                "#include <stdint.h>".into(),
-                "#include <stddef.h>".into(),
-                "#include <stdbool.h>".into(),
-                "#include <algorithm>".into(),
-                "#include <memory>".into(),
-                "#include <optional>".into(),
-                "#include <span>".into(),
-                "#include <variant>".into(),
-            ],
+            headers: vec!["#include <optional>".into(), "#include <span>".into()],
+            nullopt: CallableLibraryType {
+                name: "std::nullopt".into(),
+                expr: "std::nullopt".into(),
+                is_call: false,
+            },
+            optional: LibraryType {
+                name: "std::optional".into(),
+                expr: "std::optional".into(),
+            },
+            someopt: CallableLibraryType {
+                name: "".into(),
+                expr: "".into(),
+                is_call: false,
+            },
             span: LibraryType {
                 name: "std::span".into(),
                 expr: "std::span".into(),
