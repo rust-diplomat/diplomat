@@ -18,7 +18,6 @@ pub fn gen_docs(
     library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
-
     let mut library_config = LibraryConfig::default();
     if let Some(path) = library_config_path {
         // Should be fine, we've already verified the path

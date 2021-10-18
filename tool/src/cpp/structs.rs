@@ -143,6 +143,7 @@ pub fn gen_struct<W: fmt::Write>(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn gen_method<W: fmt::Write>(
     enclosing_type: &ast::CustomType,
     method: &ast::Method,
@@ -214,24 +215,24 @@ fn gen_method<W: fmt::Write>(
         }
 
         for param in params_to_gen.iter() {
-            if param.ty == ast::TypeName::StrReference {
-                all_params_invocation.push(format!("{}.data()", param.name));
-                all_params_invocation.push(format!("{}.size()", param.name));
-            } else if let ast::TypeName::PrimitiveSlice(_) = param.ty {
-                all_params_invocation.push(format!("{}.data()", param.name));
-                all_params_invocation.push(format!("{}.size()", param.name));
-            } else {
-                let invocation_expr = gen_cpp_to_rust(
-                    &param.name,
-                    &param.name,
-                    None,
-                    &param.ty,
-                    in_path,
-                    env,
-                    param.name == "self",
-                    &mut method_body,
-                );
-                all_params_invocation.push(invocation_expr);
+            match param.ty {
+                ast::TypeName::StrReference | ast::TypeName::PrimitiveSlice(_) => {
+                    all_params_invocation.push(format!("{}.data()", param.name));
+                    all_params_invocation.push(format!("{}.size()", param.name));
+                }
+                _ => {
+                    let invocation_expr = gen_cpp_to_rust(
+                        &param.name,
+                        &param.name,
+                        None,
+                        &param.ty,
+                        in_path,
+                        env,
+                        param.name == "self",
+                        &mut method_body,
+                    );
+                    all_params_invocation.push(invocation_expr);
+                }
             }
         }
 
