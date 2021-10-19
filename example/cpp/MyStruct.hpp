@@ -5,9 +5,9 @@
 #include <stdbool.h>
 #include <algorithm>
 #include <memory>
+#include <variant>
 #include <optional>
 #include <span>
-#include <variant>
 #include "diplomat_runtime.hpp"
 
 namespace capi {
@@ -31,7 +31,7 @@ struct MyStruct {
   uint8_t c;
   uint64_t d;
   int32_t e;
-  char32_t f;
+  char f;
   static MyStruct new_();
 };
 

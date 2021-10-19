@@ -16,7 +16,7 @@ typedef struct MyStruct {
     uint8_t c;
     uint64_t d;
     int32_t e;
-    char32_t f;
+    char f;
 } MyStruct;
 
 MyStruct MyStruct_new();

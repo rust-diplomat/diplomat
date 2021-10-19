@@ -13,7 +13,7 @@
 
     .. cpp:member:: int32_t e
 
-    .. cpp:member:: char32_t f
+    .. cpp:member:: char f
 
     .. cpp:function:: static MyStruct new_()
 

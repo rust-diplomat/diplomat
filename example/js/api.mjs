@@ -281,7 +281,7 @@ export class MyStruct {
   }
 
   get f() {
-    return String.fromCharCode((new Uint32Array(wasm.memory.buffer, this.underlying + 20, 1))[0]);
+    return String.fromCharCode((new Uint8Array(wasm.memory.buffer, this.underlying + 20, 1))[0]);
   }
 }
 
