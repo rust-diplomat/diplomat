@@ -11,17 +11,20 @@ expression: out_texts.get(out).unwrap()
 #include <algorithm>
 #include <memory>
 #include <variant>
-#include <optional>
-#include <span>
+
+#include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Span.h"
 #include "diplomat_runtime.hpp"
 
 namespace capi {
 #include "MyStruct.h"
 }
 
+class MyOpaqueStruct;
 
 /**
- * A destruction policy for using MyStruct with std::unique_ptr.
+ * A destruction policy for using MyStruct with mozilla::UniquePtr.
  */
 struct MyStructDeleter {
   void operator()(capi::MyStruct* l) const noexcept {
@@ -30,12 +33,9 @@ struct MyStructDeleter {
 };
 struct MyStruct {
  public:
-  void something() const;
+  mozilla::Maybe<MyOpaqueStruct> a;
 };
 
 
-inline void MyStruct::something() const {
-  capi::MyStruct_something((capi::MyStruct*) &this);
-}
 #endif
 

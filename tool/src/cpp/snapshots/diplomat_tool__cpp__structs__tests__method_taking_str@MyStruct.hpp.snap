@@ -10,9 +10,9 @@ expression: out_texts.get(out).unwrap()
 #include <stdbool.h>
 #include <algorithm>
 #include <memory>
+#include <variant>
 #include <optional>
 #include <span>
-#include <variant>
 #include "diplomat_runtime.hpp"
 
 namespace capi {
@@ -42,10 +42,10 @@ class MyStruct {
 
 
 inline MyStruct MyStruct::new_str(const std::string_view v) {
-  return MyStruct(capi::MyStruct_new_str(v.data(), v.length()));
+  return MyStruct(capi::MyStruct_new_str(v.data(), v.size()));
 }
 inline void MyStruct::set_str(const std::string_view new_str) {
-  capi::MyStruct_set_str(this->inner.get(), new_str.data(), new_str.length());
+  capi::MyStruct_set_str(this->inner.get(), new_str.data(), new_str.size());
 }
 #endif
 

@@ -1,6 +1,9 @@
+use colored::*;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Write;
+use std::fs;
+use std::path::PathBuf;
 
 use diplomat_core::ast;
 use indenter::indented;
@@ -20,15 +23,37 @@ mod conversions;
 
 pub mod docs;
 
+mod config;
+
 mod util;
 
 static RUNTIME_HPP: &str = include_str!("runtime.hpp");
 
 pub fn gen_bindings(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     super::c::gen_bindings(env, outs)?;
+
+    let mut library_config = config::LibraryConfig::default();
+    if let Some(path) = library_config_path {
+        // Should be fine, we've already verified the path
+        if let Ok(contents) = fs::read_to_string(path) {
+            match toml::from_str(&contents) {
+                Ok(config) => library_config = config,
+                Err(err) => {
+                    eprintln!(
+                        "{}{}\n{}",
+                        "Error: ".red().bold(),
+                        format!("Unable to parse library configuration file: {:?}", path),
+                        err,
+                    );
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
 
     let diplomat_runtime_out = outs
         .entry("diplomat_runtime.hpp".to_string())
@@ -50,9 +75,12 @@ pub fn gen_bindings(
         writeln!(out, "#include <stdbool.h>")?;
         writeln!(out, "#include <algorithm>")?;
         writeln!(out, "#include <memory>")?;
-        writeln!(out, "#include <optional>")?;
-        writeln!(out, "#include <span>")?;
         writeln!(out, "#include <variant>")?;
+
+        for header in &library_config.headers {
+            writeln!(out, "{}", header)?;
+        }
+
         writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
         writeln!(out)?;
         writeln!(out, "namespace capi {{")?;
@@ -126,14 +154,14 @@ pub fn gen_bindings(
         match typ {
             ast::CustomType::Opaque(_) => {
                 writeln!(out)?;
-                gen_struct(typ, in_path, true, env, out)?;
+                gen_struct(typ, in_path, true, env, &library_config, out)?;
             }
 
             ast::CustomType::Enum(_) => {}
 
             ast::CustomType::Struct(_) => {
                 writeln!(out)?;
-                gen_struct(typ, in_path, true, env, out)?;
+                gen_struct(typ, in_path, true, env, &library_config, out)?;
             }
         }
 
@@ -170,14 +198,14 @@ pub fn gen_bindings(
         match typ {
             ast::CustomType::Opaque(_) => {
                 writeln!(out)?;
-                gen_struct(typ, in_path, false, env, out)?;
+                gen_struct(typ, in_path, false, env, &library_config, out)?;
             }
 
             ast::CustomType::Enum(_) => {}
 
             ast::CustomType::Struct(_) => {
                 writeln!(out)?;
-                gen_struct(typ, in_path, false, env, out)?;
+                gen_struct(typ, in_path, false, env, &library_config, out)?;
             }
         }
 

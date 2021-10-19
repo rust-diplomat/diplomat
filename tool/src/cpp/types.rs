@@ -3,11 +3,14 @@ use std::collections::HashMap;
 
 use diplomat_core::ast;
 
+use crate::cpp::config::LibraryConfig;
+
 pub fn gen_type<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
     behind_ref: Option<bool>, // owned?
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {
     let mut handled_ref = false;
@@ -37,20 +40,41 @@ pub fn gen_type<W: fmt::Write>(
         },
 
         ast::TypeName::Box(underlying) => {
-            gen_type(underlying.as_ref(), in_path, Some(true), env, out)?;
+            gen_type(
+                underlying.as_ref(),
+                in_path,
+                Some(true),
+                env,
+                library_config,
+                out,
+            )?;
         }
 
         ast::TypeName::Reference(underlying, mutable) => {
             if !mutable {
                 write!(out, "const ")?;
             }
-            gen_type(underlying.as_ref(), in_path, Some(false), env, out)?;
+            gen_type(
+                underlying.as_ref(),
+                in_path,
+                Some(false),
+                env,
+                library_config,
+                out,
+            )?;
         }
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
-                write!(out, "std::optional<")?;
-                gen_type(underlying.as_ref(), in_path, behind_ref, env, out)?;
+                write!(out, "{}<", library_config.optional.expr)?;
+                gen_type(
+                    underlying.as_ref(),
+                    in_path,
+                    behind_ref,
+                    env,
+                    library_config,
+                    out,
+                )?;
                 write!(out, ">")?;
             }
 
@@ -62,14 +86,14 @@ pub fn gen_type<W: fmt::Write>(
             if ok.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type(ok, in_path, behind_ref, env, out)?;
+                gen_type(ok, in_path, behind_ref, env, library_config, out)?;
             }
 
             write!(out, ", ")?;
             if err.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type(err, in_path, behind_ref, env, out)?;
+                gen_type(err, in_path, behind_ref, env, library_config, out)?;
             }
             write!(out, ">")?;
         }
@@ -83,13 +107,14 @@ pub fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::StrReference => {
-            write!(out, "const std::string_view")?;
+            write!(out, "const {}", library_config.string_view.expr)?;
         }
 
         ast::TypeName::PrimitiveSlice(prim) => {
             write!(
                 out,
-                "const std::span<{}>",
+                "const {}<{}>",
+                library_config.span.expr,
                 crate::c::types::c_type_for_prim(prim)
             )?;
         }
@@ -138,6 +163,21 @@ mod tests {
     #[test]
     fn test_option_types() {
         test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyOpaqueStruct(UnknownType);
+
+                struct MyStruct {
+                    a: Option<Box<MyOpaqueStruct>>,
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_option_types_using_library_config() {
+        test_file_using_library_config! {
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::opaque]

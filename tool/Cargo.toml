@@ -18,6 +18,8 @@ indenter = "0.3.3"
 pulldown-cmark = "0.8.0"
 structopt = "0.3"
 colored = "2.0"
+serde = { features = ["derive"], version = "1.0.130" }
+toml = "0.5.8"
 
 [dev-dependencies]
 insta = { version = "1.7.1", features = [ "backtrace" ] }

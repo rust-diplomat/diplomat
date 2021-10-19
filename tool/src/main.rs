@@ -38,6 +38,12 @@ struct Opt {
     /// The path to the lib.rs file. Defaults to src/lib.rs
     #[structopt(short, long, parse(from_os_str))]
     entry: Option<PathBuf>,
+
+    /// The path to an optional config file to override code generation defaults.
+    /// This is currently used by the cpp generator to allow for code to be
+    /// different libraries.
+    #[structopt(short, long, parse(from_os_str))]
+    library_config: Option<PathBuf>,
 }
 
 /// Provide nice error messages if a folder doesn't exist.
@@ -76,6 +82,12 @@ fn main() -> std::io::Result<()> {
     if let Some(ref docs) = opt.docs {
         exit_if_path_missing(docs, "The docs folder specified by --docs does not exist.");
     }
+    if let Some(ref library_config) = opt.library_config {
+        exit_if_path_missing(
+            library_config,
+            "The library configuration file specified by --library-config does not exist.",
+        );
+    }
 
     let lib_file = syn_inline_mod::parse_and_inline_modules(path.as_path());
     let custom_types = ast::File::from(&lib_file);
@@ -106,7 +118,7 @@ fn main() -> std::io::Result<()> {
     match opt.target_language.as_str() {
         "js" => js::gen_bindings(&env, &mut out_texts).unwrap(),
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
-        "cpp" => cpp::gen_bindings(&env, &mut out_texts).unwrap(),
+        "cpp" => cpp::gen_bindings(&env, &opt.library_config, &mut out_texts).unwrap(),
         o => panic!("Unknown target: {}", o),
     }
 
@@ -135,7 +147,7 @@ fn main() -> std::io::Result<()> {
 
         match opt.target_language.as_str() {
             "js" => js::docs::gen_docs(&env, &mut docs_out_texts).unwrap(),
-            "cpp" => cpp::docs::gen_docs(&env, &mut docs_out_texts).unwrap(),
+            "cpp" => cpp::docs::gen_docs(&env, &opt.library_config, &mut docs_out_texts).unwrap(),
             "c" => todo!("Docs generation for C"),
             o => panic!("Unknown target: {}", o),
         }

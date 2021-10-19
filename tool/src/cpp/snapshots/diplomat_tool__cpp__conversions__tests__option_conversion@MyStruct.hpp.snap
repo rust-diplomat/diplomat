@@ -1,5 +1,5 @@
 ---
-source: tool/src/cpp/structs.rs
+source: tool/src/cpp/conversions.rs
 expression: out_texts.get(out).unwrap()
 
 ---
@@ -31,8 +31,7 @@ struct MyStructDeleter {
 };
 class MyStruct {
  public:
-  static MyStruct new_slice(const std::span<double> v);
-  void set_slice(const std::span<double> new_slice);
+  std::optional<MyStruct> create() const;
   inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
   inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
   inline MyStruct(capi::MyStruct* i) : inner(i) {}
@@ -41,11 +40,15 @@ class MyStruct {
 };
 
 
-inline MyStruct MyStruct::new_slice(const std::span<double> v) {
-  return MyStruct(capi::MyStruct_new_slice(v.data(), v.size()));
-}
-inline void MyStruct::set_slice(const std::span<double> new_slice) {
-  capi::MyStruct_set_slice(this->inner.get(), new_slice.data(), new_slice.size());
+inline std::optional<MyStruct> MyStruct::create() const {
+  auto diplomat_optional_raw_out_value = capi::MyStruct_create(this->inner.get());
+  std::optional<MyStruct> diplomat_optional_out_value;
+  if (diplomat_optional_raw_out_value != nullptr) {
+    diplomat_optional_out_value = MyStruct(diplomat_optional_raw_out_value);
+  } else {
+    diplomat_optional_out_value = std::nullopt;
+  }
+  return diplomat_optional_out_value;
 }
 #endif
 

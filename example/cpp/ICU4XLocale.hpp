@@ -5,9 +5,9 @@
 #include <stdbool.h>
 #include <algorithm>
 #include <memory>
+#include <variant>
 #include <optional>
 #include <span>
-#include <variant>
 #include "diplomat_runtime.hpp"
 
 namespace capi {
@@ -45,7 +45,7 @@ class ICU4XLocale {
 
 
 inline ICU4XLocale ICU4XLocale::new_(const std::string_view name) {
-  return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.length()));
+  return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.size()));
 }
 inline ICU4XLocale ICU4XLocale::new_from_bytes(const std::span<uint8_t> bytes) {
   return ICU4XLocale(capi::ICU4XLocale_new_from_bytes(bytes.data(), bytes.size()));

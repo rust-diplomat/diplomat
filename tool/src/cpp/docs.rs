@@ -1,19 +1,42 @@
+use colored::*;
 use std::fmt::Write;
+use std::fs;
+use std::path::PathBuf;
 use std::{collections::HashMap, fmt};
 
 use diplomat_core::ast;
 use indenter::indented;
 
 use crate::{
-    cpp::{structs::gen_method_interface, types::gen_type},
+    cpp::{config::LibraryConfig, structs::gen_method_interface, types::gen_type},
     docs_util::markdown_to_rst,
 };
 
 /// Generate RST-formatted Sphinx docs for all FFI types.
 pub fn gen_docs(
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
+    let mut library_config = LibraryConfig::default();
+    if let Some(path) = library_config_path {
+        // Should be fine, we've already verified the path
+        if let Ok(contents) = fs::read_to_string(path) {
+            match toml::from_str(&contents) {
+                Ok(config) => library_config = config,
+                Err(err) => {
+                    eprintln!(
+                        "{}{}\n{}",
+                        "Error: ".red().bold(),
+                        format!("Unable to parse library configuration file: {:?}", path),
+                        err,
+                    );
+                    std::process::exit(1);
+                }
+            }
+        }
+    }
+
     let index_out = outs
         .entry("index.rst".to_string())
         .or_insert_with(String::new);
@@ -64,7 +87,7 @@ pub fn gen_docs(
                 let custom_type = &mod_symbols[symbol_name];
                 if let ast::ModSymbol::CustomType(typ) = custom_type {
                     writeln!(out)?;
-                    gen_custom_type_docs(out, typ, in_path, env)?;
+                    gen_custom_type_docs(out, typ, in_path, env, &library_config)?;
                 }
             }
         }
@@ -78,6 +101,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     typ: &ast::CustomType,
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config: &LibraryConfig,
 ) -> fmt::Result {
     match typ {
         ast::CustomType::Struct(_) => writeln!(out, ".. cpp:struct:: {}", typ.name())?,
@@ -108,7 +132,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     if let ast::CustomType::Struct(strct) = typ {
         for field in strct.fields.iter() {
             writeln!(&mut class_indented)?;
-            gen_field_docs(&mut class_indented, field, in_path, env)?;
+            gen_field_docs(&mut class_indented, field, in_path, env, library_config)?;
         }
     } else if let ast::CustomType::Enum(enm) = typ {
         for variant in &enm.variants {
@@ -119,7 +143,15 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
 
     for method in typ.methods() {
         writeln!(&mut class_indented)?;
-        gen_method_docs(method, typ, in_path, true, env, &mut class_indented)?;
+        gen_method_docs(
+            method,
+            typ,
+            in_path,
+            true,
+            env,
+            library_config,
+            &mut class_indented,
+        )?;
     }
 
     Ok(())
@@ -131,6 +163,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     in_path: &ast::Path,
     writeable_to_string: bool,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {
     // This method should rearrange the writeable
@@ -141,7 +174,15 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     if rearranged_writeable {
         // generate the normal method too
-        gen_method_docs(method, enclosing_type, in_path, false, env, out)?;
+        gen_method_docs(
+            method,
+            enclosing_type,
+            in_path,
+            false,
+            env,
+            library_config,
+            out,
+        )?;
         writeln!(out)?;
     }
 
@@ -155,6 +196,7 @@ pub fn gen_method_docs<W: fmt::Write>(
         has_writeable_param,
         rearranged_writeable,
         env,
+        library_config,
         out,
         writeable_to_string,
     )?;
@@ -189,9 +231,10 @@ pub fn gen_field_docs<W: fmt::Write>(
     field: &(String, ast::TypeName, String),
     in_path: &ast::Path,
     env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    library_config: &LibraryConfig,
 ) -> fmt::Result {
     write!(out, ".. cpp:member:: ")?;
-    gen_type(&field.1, in_path, None, env, out)?;
+    gen_type(&field.1, in_path, None, env, library_config, out)?;
     writeln!(out, " {}", field.0)?;
 
     if !field.2.is_empty() {
