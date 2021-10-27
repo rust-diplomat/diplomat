@@ -44,7 +44,8 @@ impl LibraryConfig {
             },
             span: LibraryType {
                 // This is std::span compatible, and can be replaced with std::span
-                // if targeting C++20
+                // if targeting C++20. Internally the header will `using span = std::span`
+                // anyway
                 name: "diplomat::span".into(),
                 expr: "diplomat::span".into(),
             },

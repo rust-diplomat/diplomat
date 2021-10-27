@@ -114,6 +114,15 @@ public:
   }
 };
 
+
+// Use custom std::span on C++17, otherwise use std::span
+#if __cplusplus >= 202002L
+
+#include<span>
+using span = std::span;
+
+#else // __cplusplus >= 202002L
+
 // C++-17-compatible std::span
 template<class T>
 class span {
@@ -134,6 +143,8 @@ private:
   T* data_;
   size_t size_;
 };
+
+#endif // __cplusplus >= 202002L
 
 }
 
