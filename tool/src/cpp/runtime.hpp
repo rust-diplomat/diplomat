@@ -114,6 +114,26 @@ public:
   }
 };
 
+// C++-17-compatible std::span
+template<class T>
+class span {
+
+public:
+  constexpr span(T* data, size_t size)
+    : data_(data), size_(size) {}
+  template<size_t N>
+  constexpr span(std::array<T, N>& arr)
+    : data_(arr.data()), size_(N) {}
+  constexpr T* data() const noexcept {
+    return this->data_;
+  }
+  constexpr size_t size() const noexcept {
+    return this->size_;
+  }
+private:
+  T* data_;
+  size_t size_;
+};
 
 }
 

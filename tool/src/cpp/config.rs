@@ -43,8 +43,10 @@ impl LibraryConfig {
                 is_call: false,
             },
             span: LibraryType {
-                name: "std::span".into(),
-                expr: "std::span".into(),
+                // This is std::span compatible, and can be replaced with std::span
+                // if targeting C++20
+                name: "diplomat::span".into(),
+                expr: "diplomat::span".into(),
             },
             string_view: LibraryType {
                 name: "std::string_view".into(),
