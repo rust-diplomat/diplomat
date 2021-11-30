@@ -27,7 +27,7 @@ pub struct LibraryConfig {
 impl LibraryConfig {
     pub fn default() -> LibraryConfig {
         LibraryConfig {
-            headers: vec!["#include <optional>".into(), "#include <span>".into()],
+            headers: vec!["#include <optional>".into()],
             nullopt: CallableLibraryType {
                 name: "std::nullopt".into(),
                 expr: "std::nullopt".into(),
