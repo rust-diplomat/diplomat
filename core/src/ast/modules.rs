@@ -15,34 +15,20 @@ pub struct Module {
 }
 
 impl Module {
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference.
-    ///
-    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(
-        &'a self,
+    pub fn check_validity(
+        &self,
         in_path: &Path,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
         errors: &mut Vec<ValidityError>,
     ) {
-        self.declared_types
-            .values()
-            .for_each(|t| t.check_opaque(&in_path.sub_path(self.name.clone()), env, errors));
+        self.declared_types.values().for_each(|t| {
+            t.check_opaque(&in_path.sub_path(self.name.clone()), env, errors);
+            t.check_zst(&in_path.sub_path(self.name.clone()), errors);
+        });
 
-        self.sub_modules
-            .iter()
-            .for_each(|m| m.check_opaque(&in_path.sub_path(self.name.clone()), env, errors));
-    }
-
-    /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<ValidityError>) {
-        self.declared_types
-            .values()
-            .for_each(|t| t.check_zst(&in_path.sub_path(self.name.clone()), errors));
-
-        self.sub_modules
-            .iter()
-            .for_each(|m| m.check_zst(&in_path.sub_path(self.name.clone()), errors));
+        self.sub_modules.iter().for_each(|t| {
+            t.check_validity(&in_path.sub_path(self.name.clone()), env, errors);
+        });
     }
 
     fn insert_all_types(&self, in_path: Path, out: &mut HashMap<Path, HashMap<String, ModSymbol>>) {
@@ -199,25 +185,18 @@ pub struct File {
 }
 
 impl File {
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference.
+    /// Performs all necessary validity checks and returns any errors
     ///
-    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(
-        &'a self,
+    /// Environment should be passed in from `.all_types()`
+    pub fn check_validity(
+        &self,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<ValidityError>,
-    ) {
+    ) -> Vec<ValidityError> {
+        let mut errors = vec![];
         self.modules
             .values()
-            .for_each(|t| t.check_opaque(&Path::empty(), env, errors));
-    }
-
-    /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst(&self, errors: &mut Vec<ValidityError>) {
-        self.modules
-            .values()
-            .for_each(|t| t.check_zst(&Path::empty(), errors));
+            .for_each(|t| t.check_validity(&Path::empty(), env, &mut errors));
+        errors
     }
 
     /// Fuses all declared types into a single environment `HashMap`.
