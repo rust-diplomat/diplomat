@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
-use super::{CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, Struct, TypeName};
+use super::{CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, Struct, ValidityError};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
@@ -23,7 +23,7 @@ impl Module {
         &'a self,
         in_path: &Path,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<&'a TypeName>,
+        errors: &mut Vec<ValidityError>,
     ) {
         self.declared_types
             .values()
@@ -35,7 +35,7 @@ impl Module {
     }
 
     /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<Path>) {
+    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<ValidityError>) {
         self.declared_types
             .values()
             .for_each(|t| t.check_zst(&in_path.sub_path(self.name.clone()), errors));
@@ -206,7 +206,7 @@ impl File {
     pub fn check_opaque<'a>(
         &'a self,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<&'a TypeName>,
+        errors: &mut Vec<ValidityError>,
     ) {
         self.modules
             .values()
@@ -214,7 +214,7 @@ impl File {
     }
 
     /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst(&self, errors: &mut Vec<Path>) {
+    pub fn check_zst(&self, errors: &mut Vec<ValidityError>) {
         self.modules
             .values()
             .for_each(|t| t.check_zst(&Path::empty(), errors));

@@ -194,6 +194,7 @@ dependencies = [
 name = "diplomat_core"
 version = "0.2.0"
 dependencies = [
+ "displaydoc",
  "impls",
  "insta",
  "lazy_static",

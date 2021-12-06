@@ -7,7 +7,7 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::iter::FromIterator;
 
-use super::{Enum, Method, OpaqueStruct, Path, Struct};
+use super::{Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -60,7 +60,7 @@ impl CustomType {
         &'a self,
         in_path: &Path,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<&'a TypeName>,
+        errors: &mut Vec<ValidityError>,
     ) {
         match self {
             CustomType::Struct(strct) => {
@@ -78,17 +78,17 @@ impl CustomType {
     }
 
     /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<Path>) {
+    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<ValidityError>) {
         match self {
             CustomType::Struct(strct) => {
                 if !strct.fields.iter().any(|f| !f.1.is_zst()) {
-                    errors.push(self.self_path(in_path))
+                    errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
                 }
             }
             CustomType::Opaque(_) => {}
             CustomType::Enum(e) => {
                 if e.variants.is_empty() {
-                    errors.push(self.self_path(in_path))
+                    errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
                 }
             }
         }
@@ -305,7 +305,7 @@ impl TypeName {
         in_path: &Path,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
         behind_reference: bool,
-        errors: &mut Vec<&'a TypeName>,
+        errors: &mut Vec<ValidityError>,
     ) {
         match self {
             TypeName::Reference(underlying, _) => {
@@ -325,7 +325,7 @@ impl TypeName {
             TypeName::Named(_) => {
                 if let CustomType::Opaque(_) = self.resolve(in_path, env) {
                     if !behind_reference {
-                        errors.push(self)
+                        errors.push(ValidityError::OpaqueAsValue(self.clone()))
                     }
                 }
             }
@@ -344,7 +344,7 @@ impl TypeName {
         &'a self,
         in_path: &Path,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<&'a TypeName>,
+        errors: &mut Vec<ValidityError>,
     ) {
         self.check_opaque_internal(in_path, env, false, errors);
     }

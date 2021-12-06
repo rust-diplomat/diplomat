@@ -21,3 +21,6 @@ mod paths;
 pub use paths::Path;
 
 mod utils;
+
+mod validity;
+pub use validity::ValidityError;

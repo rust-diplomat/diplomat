@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use syn::*;
 
 use super::{utils::get_doc_lines, ModSymbol};
-use super::{Path, TypeName};
+use super::{Path, TypeName, ValidityError};
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
@@ -88,7 +88,7 @@ impl Method {
         &'a self,
         in_path: &Path,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<&'a TypeName>,
+        errors: &mut Vec<ValidityError>,
     ) {
         self.self_param
             .iter()

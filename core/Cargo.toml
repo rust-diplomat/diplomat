@@ -19,6 +19,7 @@ impls = "1"
 proc-macro2 = "1.0.27"
 lazy_static = "1.4.0"
 serde = { version = "1.0", features = ["derive"] }
+displaydoc = { version = "0.2", optional = true }
 
 [dev-dependencies]
 insta = "1.7.1"
