@@ -3,6 +3,6 @@ source: core/src/ast/validity.rs
 expression: output
 
 ---
-An opaque type crossed the FFI boundary as a value: Named(Path { elements: ["MyOpaqueStruct"] })
-An opaque type crossed the FFI boundary as a value: Named(Path { elements: ["MyOpaqueStruct"] })
+An opaque type crossed the FFI boundary as a value: MyOpaqueStruct
+An opaque type crossed the FFI boundary as a value: MyOpaqueStruct
 

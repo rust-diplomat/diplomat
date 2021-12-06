@@ -6,6 +6,7 @@ use syn::{punctuated::Punctuated, *};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use std::fmt;
 
 use super::{Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
 
@@ -454,6 +455,26 @@ fn is_runtime_type(p: &TypePath, name: &str) -> bool {
             && p.path.segments[1].ident == name)
 }
 
+
+impl fmt::Display for TypeName {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            TypeName::Primitive(p) => p.fmt(f),
+            TypeName::Named(p) => p.fmt(f),
+            TypeName::Reference(ty, mutable) if *mutable => write!(f, "&mut {}", ty),
+            TypeName::Reference(ty, _) => write!(f, "&{}", ty),
+            TypeName::Box(ty) => write!(f, "Box<{}>", ty),
+            TypeName::Option(ty) => write!(f, "Option<{}>", ty),
+            TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
+            TypeName::Writeable => f.write_str("DiplomatWriteable"),
+            TypeName::StrReference => f.write_str("&str"),
+            TypeName::PrimitiveSlice(ty) => write!(f, "[{}]", ty),
+            TypeName::Unit => f.write_str("()"),
+        }
+    }
+}
+
+
 /// A built-in Rust primitive scalar type.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 #[allow(non_camel_case_types)]
@@ -474,6 +495,29 @@ pub enum PrimitiveType {
     f64,
     bool,
     char,
+}
+
+impl fmt::Display for PrimitiveType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            PrimitiveType::i8 => f.write_str("i8"),
+            PrimitiveType::u8 => f.write_str("u8"),
+            PrimitiveType::i16 => f.write_str("i16"),
+            PrimitiveType::u16 => f.write_str("u16"),
+            PrimitiveType::i32 => f.write_str("i32"),
+            PrimitiveType::u32 => f.write_str("u32"),
+            PrimitiveType::i64 => f.write_str("i64"),
+            PrimitiveType::u64 => f.write_str("u64"),
+            PrimitiveType::i128 => f.write_str("i128"),
+            PrimitiveType::u128 => f.write_str("u128"),
+            PrimitiveType::isize => f.write_str("isize"),
+            PrimitiveType::usize => f.write_str("usize"),
+            PrimitiveType::f32 => f.write_str("f32"),
+            PrimitiveType::f64 => f.write_str("f64"),
+            PrimitiveType::bool => f.write_str("bool"),
+            PrimitiveType::char => f.write_str("char"),
+        }
+    }
 }
 
 lazy_static! {
