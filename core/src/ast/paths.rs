@@ -57,4 +57,3 @@ impl fmt::Display for Path {
         f.write_str(&self.elements.join("::"))
     }
 }
-

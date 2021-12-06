@@ -15,7 +15,6 @@ pub enum ValidityError {
     NonOpaqueZST(Path),
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::fmt::Write;

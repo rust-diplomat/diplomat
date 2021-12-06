@@ -5,8 +5,8 @@ use syn::{punctuated::Punctuated, *};
 
 use lazy_static::lazy_static;
 use std::collections::HashMap;
-use std::iter::FromIterator;
 use std::fmt;
+use std::iter::FromIterator;
 
 use super::{Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
 
@@ -455,7 +455,6 @@ fn is_runtime_type(p: &TypePath, name: &str) -> bool {
             && p.path.segments[1].ident == name)
 }
 
-
 impl fmt::Display for TypeName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -473,7 +472,6 @@ impl fmt::Display for TypeName {
         }
     }
 }
-
 
 /// A built-in Rust primitive scalar type.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
