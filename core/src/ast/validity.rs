@@ -105,4 +105,16 @@ mod tests {
             }
         };
     }
+
+    #[test]
+    fn zst_non_opaque() {
+        uitest_validity! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct OpaqueStruct;
+
+                enum OpaqueEnum {}
+            }
+        };
+    }
 }
