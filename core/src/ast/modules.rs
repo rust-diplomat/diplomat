@@ -238,9 +238,7 @@ mod tests {
 
     use syn;
 
-    use crate::ast::Path;
-
-    use super::{File, Module, TypeName};
+    use crate::ast::{File, Module};
 
     #[test]
     fn simple_mod() {
@@ -285,70 +283,6 @@ mod tests {
                 true
             ));
         });
-    }
-
-    #[test]
-    fn opaque_checks_with_safe_use() {
-        let file_with_safe_opaque = File::from(&syn::parse_quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                struct NonOpaqueStruct {}
-
-                impl NonOpaqueStruct {
-                    fn new(x: i32) -> NonOpaqueStruct {
-                        unimplemented!();
-                    }
-                }
-
-                #[diplomat::opaque]
-                struct OpaqueStruct {}
-
-                impl OpaqueStruct {
-                    pub fn new() -> Box<OpaqueStruct> {
-                        unimplemented!();
-                    }
-
-                    pub fn get_i32(&self) -> i32 {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-
-        let mut errors = Vec::new();
-        file_with_safe_opaque.check_opaque(&file_with_safe_opaque.all_types(), &mut errors);
-        assert_eq!(errors.len(), 0);
-    }
-
-    #[test]
-    fn opaque_checks_with_error() {
-        let file_with_error_opaque = File::from(&syn::parse_quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque]
-                struct OpaqueStruct {}
-
-                impl OpaqueStruct {
-                    pub fn new() -> OpaqueStruct {
-                        unimplemented!();
-                    }
-
-                    pub fn get_i32(self) -> i32 {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-
-        let mut errors = Vec::new();
-        file_with_error_opaque.check_opaque(&file_with_error_opaque.all_types(), &mut errors);
-        assert_eq!(
-            errors,
-            vec![
-                &TypeName::Named(Path::empty().sub_path("OpaqueStruct".to_string())),
-                &TypeName::Named(Path::empty().sub_path("OpaqueStruct".to_string()))
-            ]
-        );
     }
 
     #[test]
