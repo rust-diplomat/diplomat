@@ -1,5 +1,5 @@
 use crate::ast::*;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::ops::Index;
 
 /// The type resolution environment
@@ -7,13 +7,13 @@ use std::ops::Index;
 /// Also contains the entire module structure
 #[derive(Default, Clone)]
 pub struct Env {
-    pub(crate) env: HashMap<Path, ModuleEnv>,
+    pub(crate) env: BTreeMap<Path, ModuleEnv>,
 }
 
 /// The type resolution environment within a specific module
 #[derive(Default, Clone)]
 pub struct ModuleEnv {
-    pub(crate) module: HashMap<String, ModSymbol>,
+    pub(crate) module: BTreeMap<String, ModSymbol>,
 }
 
 impl Env {

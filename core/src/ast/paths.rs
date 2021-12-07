@@ -2,7 +2,7 @@ use proc_macro2::Span;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-#[derive(Hash, Eq, PartialEq, Deserialize, Serialize, Clone, Debug)]
+#[derive(Hash, Eq, PartialEq, Deserialize, Serialize, Clone, Debug, Ord, PartialOrd)]
 pub struct Path {
     pub elements: Vec<String>,
 }
