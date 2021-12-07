@@ -1,3 +1,4 @@
+use diplomat_core::Env;
 use std::fmt::Write;
 use std::{collections::HashMap, fmt};
 

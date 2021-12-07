@@ -6,6 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use diplomat_core::ast;
+use diplomat_core::Env;
 use indenter::indented;
 
 #[cfg(test)]

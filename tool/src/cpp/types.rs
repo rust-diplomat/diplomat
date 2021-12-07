@@ -1,4 +1,5 @@
 use core::fmt;
+use diplomat_core::Env;
 use std::collections::HashMap;
 
 use diplomat_core::ast;

@@ -1,3 +1,4 @@
+use diplomat_core::Env;
 use std::fmt::Write;
 use std::{collections::HashMap, fmt};
 
@@ -21,10 +22,7 @@ pub mod conversions;
 
 static RUNTIME_MJS: &str = include_str!("runtime.mjs");
 
-pub fn gen_bindings(
-    env: &Env,
-    outs: &mut HashMap<String, String>,
-) -> fmt::Result {
+pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
     let diplomat_runtime_out = outs
         .entry("diplomat-runtime.mjs".to_string())
         .or_insert_with(String::new);

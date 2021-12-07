@@ -1,3 +1,4 @@
+use diplomat_core::Env;
 use std::fmt::Write;
 use std::{collections::HashMap, fmt};
 
@@ -7,10 +8,7 @@ use indenter::indented;
 use crate::docs_util::markdown_to_rst;
 
 /// Generate RST-formatted Sphinx docs for all FFI types. Currently assumes a JS target.
-pub fn gen_docs(
-    env: &Env,
-    outs: &mut HashMap<String, String>,
-) -> fmt::Result {
+pub fn gen_docs(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
     let index_out = outs
         .entry("index.rst".to_string())
         .or_insert_with(String::new);

@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fmt::Write};
 
 use diplomat_core::ast;
+use diplomat_core::Env;
 
 use crate::cpp::config::LibraryConfig;
 

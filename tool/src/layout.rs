@@ -3,6 +3,7 @@ use std::alloc::Layout;
 use std::{cmp::max, collections::HashMap};
 
 use diplomat_core::ast::{self, PrimitiveType, TypeName};
+use diplomat_core::Env;
 
 // TODO(#58): support non-32-bit platforms
 use u32 as usize_target;
@@ -65,11 +66,7 @@ pub fn result_ok_offset_size_align(
     (offsets[1], size_max_align)
 }
 
-pub fn type_size_alignment(
-    typ: &ast::TypeName,
-    in_path: &ast::Path,
-    env: &Env,
-) -> Layout {
+pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> Layout {
     match typ {
         // TODO(#58): support non-32-bit platforms
         // Actual:

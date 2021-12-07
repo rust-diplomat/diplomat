@@ -5,6 +5,7 @@ use std::{
 };
 
 use diplomat_core::ast;
+use diplomat_core::Env;
 use indenter::indented;
 
 use super::types::{gen_type, name_for_type};

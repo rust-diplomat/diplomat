@@ -4,6 +4,7 @@ use std::fmt;
 use std::fmt::Write;
 
 use diplomat_core::ast;
+use diplomat_core::Env;
 use indenter::indented;
 
 use crate::util;
@@ -23,10 +24,7 @@ use results::*;
 
 static RUNTIME_H: &str = include_str!("runtime.h");
 
-pub fn gen_bindings(
-    env: &Env,
-    outs: &mut HashMap<String, String>,
-) -> fmt::Result {
+pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
     let diplomat_runtime_out = outs
         .entry("diplomat_runtime.h".to_string())
         .or_insert_with(String::new);
