@@ -20,17 +20,13 @@ pub fn gen_docs(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
     writeln!(&mut toctree_indent, ":maxdepth: 3")?;
     writeln!(&mut toctree_indent, ":caption: Modules:")?;
     writeln!(&mut toctree_indent)?;
-    let mut sorted_keys: Vec<String> = env
-        .iter_modules()
-        .filter(|(_, s)| {
-            s.items()
-                .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
-        })
-        .map(|(p, _)| p.elements.join("_"))
-        .collect();
-    sorted_keys.sort();
-    for in_path in sorted_keys {
-        writeln!(&mut toctree_indent, "{}", in_path)?;
+    for (in_path, module) in env.iter_modules() {
+        if module
+            .items()
+            .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
+        {
+            writeln!(&mut toctree_indent, "{}", in_path.elements.join("_"))?;
+        }
     }
     writeln!(index_out)?;
     writeln!(index_out, "Indices and tables")?;
@@ -55,9 +51,8 @@ pub fn gen_docs(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
             let mut sorted_symbols: Vec<&String> = module.names().collect();
             sorted_symbols.sort();
 
-            for symbol_name in sorted_symbols {
-                let custom_type = &module[symbol_name];
-                if let ast::ModSymbol::CustomType(ref typ) = custom_type {
+            for item in module.items() {
+                if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
                     gen_custom_type_docs(out, typ, in_path, env)?;
                 }
