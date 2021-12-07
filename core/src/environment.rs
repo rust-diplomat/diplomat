@@ -32,7 +32,7 @@ impl Env {
     pub fn iter_items(&self) -> impl Iterator<Item = (&Path, &String, &ModSymbol)> + '_ {
         self.env
             .iter()
-            .flat_map(|(k, ref v)| v.module.iter().map(move |v2| (k, v2.0, v2.1)))
+            .flat_map(|(k, v)| v.module.iter().map(move |v2| (k, v2.0, v2.1)))
     }
 
     /// Iterate over all modules
