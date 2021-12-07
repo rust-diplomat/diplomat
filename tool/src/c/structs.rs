@@ -1,6 +1,6 @@
 use diplomat_core::Env;
+use std::fmt;
 use std::fmt::Write;
-use std::{collections::HashMap, fmt};
 
 use diplomat_core::ast;
 use indenter::indented;

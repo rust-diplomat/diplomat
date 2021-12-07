@@ -1,8 +1,5 @@
 use std::fmt::Write;
-use std::{
-    collections::{HashMap, HashSet},
-    fmt,
-};
+use std::{collections::HashSet, fmt};
 
 use diplomat_core::ast;
 use diplomat_core::Env;

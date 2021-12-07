@@ -1,6 +1,6 @@
 use core::panic;
 use std::alloc::Layout;
-use std::{cmp::max, collections::HashMap};
+use std::cmp::max;
 
 use diplomat_core::ast::{self, PrimitiveType, TypeName};
 use diplomat_core::Env;

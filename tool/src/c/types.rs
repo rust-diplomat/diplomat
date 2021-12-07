@@ -1,5 +1,5 @@
 use diplomat_core::Env;
-use std::{collections::HashMap, fmt};
+use std::fmt;
 
 use diplomat_core::ast::{self, PrimitiveType};
 
