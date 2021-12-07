@@ -50,9 +50,9 @@ pub fn gen_docs(
     writeln!(&mut toctree_indent, ":caption: Modules:")?;
     writeln!(&mut toctree_indent)?;
     let mut sorted_keys: Vec<String> = env
-        .iter()
+        .iter_modules()
         .filter(|(_, s)| {
-            s.values()
+            s.items()
                 .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
         })
         .map(|(p, _)| p.elements.join("_"))
@@ -68,9 +68,9 @@ pub fn gen_docs(
     writeln!(index_out, "* :ref:`genindex`")?;
     writeln!(index_out, "* :ref:`search`")?;
 
-    for (in_path, mod_symbols) in env.iter() {
-        if mod_symbols
-            .values()
+    for (in_path, module) in env.iter_modules() {
+        if module
+            .items()
             .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
         {
             let out = outs
@@ -81,12 +81,12 @@ pub fn gen_docs(
             writeln!(out, "{}", title)?;
             writeln!(out, "{}", "=".repeat(title.len()))?;
 
-            let mut sorted_symbols: Vec<&String> = mod_symbols.keys().collect();
+            let mut sorted_symbols: Vec<&String> = module.names().collect();
             sorted_symbols.sort();
 
             for symbol_name in sorted_symbols {
-                let custom_type = &mod_symbols[symbol_name];
-                if let ast::ModSymbol::CustomType(typ) = custom_type {
+                let custom_type = &module[symbol_name];
+                if let ast::ModSymbol::CustomType(ref typ) = custom_type {
                     writeln!(out)?;
                     gen_custom_type_docs(out, typ, in_path, env, &library_config)?;
                 }
