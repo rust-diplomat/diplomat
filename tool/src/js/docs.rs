@@ -8,7 +8,7 @@ use crate::docs_util::markdown_to_rst;
 
 /// Generate RST-formatted Sphinx docs for all FFI types. Currently assumes a JS target.
 pub fn gen_docs(
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     let index_out = outs
@@ -74,7 +74,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     out: &mut W,
     typ: &ast::CustomType,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     writeln!(out, ".. js:class:: {}", typ.name())?;
 
@@ -110,7 +110,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     out: &mut W,
     method: &ast::Method,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     let mut param_names: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
     if method.is_writeable_out() {
@@ -167,7 +167,7 @@ pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
     field: &(String, ast::TypeName, String),
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     writeln!(out, ".. js:attribute:: {}", field.0)?;
 

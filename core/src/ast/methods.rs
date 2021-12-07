@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 use syn::*;
 
-use super::{utils::get_doc_lines, ModSymbol};
+use super::utils::get_doc_lines;
 use super::{Path, TypeName, ValidityError};
+use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
@@ -85,12 +84,7 @@ impl Method {
     /// references or boxes.
     ///
     /// Errors are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<ValidityError>,
-    ) {
+    pub fn check_opaque<'a>(&'a self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
         self.self_param
             .iter()
             .for_each(|m| m.ty.check_opaque(in_path, env, errors));

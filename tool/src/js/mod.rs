@@ -22,7 +22,7 @@ pub mod conversions;
 static RUNTIME_MJS: &str = include_str!("runtime.mjs");
 
 pub fn gen_bindings(
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     let diplomat_runtime_out = outs

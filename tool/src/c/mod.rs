@@ -24,7 +24,7 @@ use results::*;
 static RUNTIME_H: &str = include_str!("runtime.h");
 
 pub fn gen_bindings(
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     let diplomat_runtime_out = outs
@@ -53,7 +53,7 @@ fn gen_struct_header<'a>(
     seen_results: &mut HashSet<(ast::Path, &'a ast::TypeName)>,
     all_results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
     outs: &mut HashMap<String, String>,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> Result<(), fmt::Error> {
     let out = outs
         .entry(format!("{}.h", typ.name()))
@@ -163,7 +163,7 @@ fn gen_result_header(
     typ: &ast::TypeName,
     in_path: &ast::Path,
     outs: &mut HashMap<String, String>,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     if let ast::TypeName::Result(ok, err) = typ {
         let out = outs
@@ -220,7 +220,7 @@ pub fn gen_includes<W: fmt::Write>(
     in_path: &ast::Path,
     pre_struct: bool,
     behind_ref: bool,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     seen_includes: &mut HashSet<String>,
     out: &mut W,
 ) -> fmt::Result {

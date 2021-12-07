@@ -10,7 +10,7 @@ use u32 as usize_target;
 pub fn struct_offsets_size_max_align(
     strct: &ast::Struct,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> (Vec<usize>, Layout) {
     let mut max_align = 0;
     let mut next_offset = 0;
@@ -37,7 +37,7 @@ pub fn result_ok_offset_size_align(
     ok: &TypeName,
     err: &TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> (usize, Layout) {
     let ok_size_align = type_size_alignment(ok, in_path, env);
     let err_size_align = type_size_alignment(err, in_path, env);
@@ -68,7 +68,7 @@ pub fn result_ok_offset_size_align(
 pub fn type_size_alignment(
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> Layout {
     match typ {
         // TODO(#58): support non-32-bit platforms

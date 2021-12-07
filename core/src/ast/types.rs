@@ -1,14 +1,16 @@
+use std::collections::HashMap;
+
 use proc_macro2::Span;
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
 
 use lazy_static::lazy_static;
-use std::collections::HashMap;
 use std::fmt;
 use std::iter::FromIterator;
 
 use super::{Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
+use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -59,12 +61,7 @@ impl CustomType {
     /// *converted* at the FFI boundary.
     ///
     /// Errors are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<ValidityError>,
-    ) {
+    pub fn check_opaque<'a>(&'a self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
         match self {
             CustomType::Struct(strct) => {
                 for (_, field, _) in strct.fields.iter() {
@@ -237,11 +234,7 @@ impl TypeName {
 
     /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
-    pub fn resolve_with_path<'a>(
-        &self,
-        in_path: &Path,
-        env: &'a HashMap<Path, HashMap<String, ModSymbol>>,
-    ) -> (Path, &'a CustomType) {
+    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
         match self {
             TypeName::Named(local_path) => {
                 let mut cur_path = in_path.clone();
@@ -254,7 +247,7 @@ impl TypeName {
 
                         "super" => cur_path = cur_path.get_super(),
 
-                        o => match env.get(&cur_path).and_then(|env| env.get(o)) {
+                        o => match env.get(&cur_path, o) {
                             Some(ModSymbol::Alias(p)) => {
                                 let mut remaining_elements: Vec<String> =
                                     local_path.elements.iter().skip(i + 1).cloned().collect();
@@ -295,18 +288,14 @@ impl TypeName {
         }
     }
 
-    pub fn resolve<'a>(
-        &self,
-        in_path: &Path,
-        env: &'a HashMap<Path, HashMap<String, ModSymbol>>,
-    ) -> &'a CustomType {
+    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
         self.resolve_with_path(in_path, env).1
     }
 
     fn check_opaque_internal<'a>(
         &'a self,
         in_path: &Path,
-        env: &HashMap<Path, HashMap<String, ModSymbol>>,
+        env: &Env,
         behind_reference: bool,
         errors: &mut Vec<ValidityError>,
     ) {
@@ -346,12 +335,7 @@ impl TypeName {
     /// references or boxes.
     ///
     /// Errors are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<ValidityError>,
-    ) {
+    pub fn check_opaque<'a>(&'a self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
         self.check_opaque_internal(in_path, env, false, errors);
     }
 

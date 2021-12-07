@@ -10,7 +10,7 @@ use super::types::gen_type;
 pub fn gen_struct<W: fmt::Write>(
     custom_type: &ast::CustomType,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     match custom_type {
@@ -39,7 +39,7 @@ pub fn gen_field<W: fmt::Write>(
     name: &str,
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     gen_type(typ, in_path, env, out)?;
@@ -51,7 +51,7 @@ pub fn gen_field<W: fmt::Write>(
 pub fn gen_method<W: fmt::Write>(
     method: &ast::Method,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     match &method.return_type {

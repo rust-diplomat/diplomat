@@ -14,7 +14,7 @@ use crate::{
 
 /// Generate RST-formatted Sphinx docs for all FFI types.
 pub fn gen_docs(
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
@@ -100,7 +100,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     out: &mut W,
     typ: &ast::CustomType,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
 ) -> fmt::Result {
     match typ {
@@ -162,7 +162,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     enclosing_type: &ast::CustomType,
     in_path: &ast::Path,
     writeable_to_string: bool,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {
@@ -230,7 +230,7 @@ pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
     field: &(String, ast::TypeName, String),
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
 ) -> fmt::Result {
     write!(out, ".. cpp:member:: ")?;
@@ -258,7 +258,7 @@ pub fn gen_enum_variant_docs<W: fmt::Write>(
     out: &mut W,
     variant: &(String, isize, String),
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     write!(out, ".. cpp:enumerator:: {}", variant.0)?;
 

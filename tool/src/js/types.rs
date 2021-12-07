@@ -21,7 +21,7 @@ pub enum ReturnTypeForm {
 pub fn return_type_form(
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> ReturnTypeForm {
     match typ {
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {

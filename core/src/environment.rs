@@ -44,8 +44,8 @@ impl Env {
 }
 
 impl ModuleEnv {
-    pub(crate) fn insert(&mut self, name: String, symbol: ModSymbol) {
-        self.module.insert(name, symbol);
+    pub(crate) fn insert(&mut self, name: String, symbol: ModSymbol) -> Option<ModSymbol> {
+        self.module.insert(name, symbol)
     }
 
     /// Given an item name, fetch it

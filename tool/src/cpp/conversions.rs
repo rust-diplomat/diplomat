@@ -9,7 +9,7 @@ pub fn gen_rust_to_cpp<W: Write>(
     path: &str,
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
     out: &mut W,
 ) -> String {
@@ -207,7 +207,7 @@ pub fn gen_cpp_to_rust<W: Write>(
     behind_ref: Option<ReferenceMeta>,
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     is_self: bool,
     out: &mut W,
 ) -> String {

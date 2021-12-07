@@ -12,7 +12,7 @@ pub fn gen_struct<W: fmt::Write>(
     out: &mut W,
     custom_type: &ast::CustomType,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     if let ast::CustomType::Enum(enm) = custom_type {
         writeln!(out, "const {}_js_to_rust = {{", enm.name)?;
@@ -77,7 +77,7 @@ fn gen_field<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
     offset: usize,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     writeln!(out, "get {}() {{", name)?;
@@ -98,7 +98,7 @@ fn gen_field<W: fmt::Write>(
 fn gen_method<W: fmt::Write>(
     method: &ast::Method,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     let is_writeable = method.is_writeable_out();
