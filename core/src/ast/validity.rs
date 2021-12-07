@@ -13,6 +13,11 @@ pub enum ValidityError {
         doc = "A non-opaque zero-sized struct or enum has been defined: {0}"
     )]
     NonOpaqueZST(Path),
+    #[cfg_attr(
+        feature = "displaydoc",
+        doc = "A non-opaque type was found behind a Box or reference, these can only be handled by-move: {0}"
+    )]
+    NonOpaqueBehindRef(TypeName),
 }
 
 #[cfg(test)]
