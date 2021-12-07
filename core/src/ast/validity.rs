@@ -15,7 +15,8 @@ pub enum ValidityError {
     NonOpaqueZST(Path),
     #[cfg_attr(
         feature = "displaydoc",
-        doc = "A non-opaque type was found behind a Box or reference, these can only be handled by-move: {0}"
+        doc = "A non-opaque type was found behind a Box or reference, these can \
+               only be handled by-move as they get converted at the FFI boundary: {0}"
     )]
     NonOpaqueBehindRef(TypeName),
 }
@@ -119,6 +120,29 @@ mod tests {
                 struct OpaqueStruct;
 
                 enum OpaqueEnum {}
+            }
+        };
+    }
+
+    #[test]
+    fn non_opaque_move() {
+        uitest_validity! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct NonOpaque(u8);
+
+                impl NonOpaque {
+                    pub fn foo(&self) {}
+                }
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                impl Opaque {
+                    pub fn bar(&self) -> &NonOpaque {}
+                    pub fn baz(&self, x: &NonOpaque) {}
+                    pub fn quux(&self) -> Box<NonOpaque> {}
+                }
             }
         };
     }

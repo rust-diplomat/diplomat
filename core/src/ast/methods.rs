@@ -102,7 +102,6 @@ impl Method {
             .for_each(|t| t.check_opaque(in_path, env, errors));
     }
 
-
     /// Checks whether the method qualifies for special writeable handling.
     /// To qualify, a method must:
     ///  - not return any value
