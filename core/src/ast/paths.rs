@@ -1,5 +1,6 @@
 use proc_macro2::Span;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Hash, Eq, PartialEq, Deserialize, Serialize, Clone, Debug)]
 pub struct Path {
@@ -48,5 +49,11 @@ impl Path {
 
     pub fn empty() -> Path {
         Path { elements: vec![] }
+    }
+}
+
+impl fmt::Display for Path {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.elements.join("::"))
     }
 }

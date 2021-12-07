@@ -90,26 +90,14 @@ fn main() -> std::io::Result<()> {
     }
 
     let lib_file = syn_inline_mod::parse_and_inline_modules(path.as_path());
-    let custom_types = ast::File::from(&lib_file);
-    let env = custom_types.all_types();
+    let diplomat_file = ast::File::from(&lib_file);
+    let env = diplomat_file.all_types();
 
-    let mut opaque_errors = vec![];
-    let mut zst_errors = vec![];
-    custom_types.check_opaque(&env, &mut opaque_errors);
-    custom_types.check_zst(&mut zst_errors);
-    if !opaque_errors.is_empty() || !zst_errors.is_empty() {
-        opaque_errors.iter().for_each(|e| {
-            eprintln!(
-                "An opaque type crossed the FFI boundary as a value: {:?}",
-                e
-            )
-        });
-        zst_errors.iter().for_each(|e| {
-            eprintln!(
-                "A non-opaque zero-sized struct or enum has been defined: {:?}",
-                e
-            )
-        });
+    let errors = diplomat_file.check_validity(&env);
+    if !errors.is_empty() {
+        for e in errors {
+            eprintln!("{}", e);
+        }
         panic!();
     }
 

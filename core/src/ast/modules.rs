@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
-use super::{CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, Struct, TypeName};
+use super::{CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, Struct, ValidityError};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
@@ -15,34 +15,20 @@ pub struct Module {
 }
 
 impl Module {
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference.
-    ///
-    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(
-        &'a self,
+    pub fn check_validity(
+        &self,
         in_path: &Path,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<&'a TypeName>,
+        errors: &mut Vec<ValidityError>,
     ) {
-        self.declared_types
-            .values()
-            .for_each(|t| t.check_opaque(&in_path.sub_path(self.name.clone()), env, errors));
+        self.declared_types.values().for_each(|t| {
+            t.check_opaque(&in_path.sub_path(self.name.clone()), env, errors);
+            t.check_zst(&in_path.sub_path(self.name.clone()), errors);
+        });
 
-        self.sub_modules
-            .iter()
-            .for_each(|m| m.check_opaque(&in_path.sub_path(self.name.clone()), env, errors));
-    }
-
-    /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<Path>) {
-        self.declared_types
-            .values()
-            .for_each(|t| t.check_zst(&in_path.sub_path(self.name.clone()), errors));
-
-        self.sub_modules
-            .iter()
-            .for_each(|m| m.check_zst(&in_path.sub_path(self.name.clone()), errors));
+        self.sub_modules.iter().for_each(|t| {
+            t.check_validity(&in_path.sub_path(self.name.clone()), env, errors);
+        });
     }
 
     fn insert_all_types(&self, in_path: Path, out: &mut HashMap<Path, HashMap<String, ModSymbol>>) {
@@ -199,25 +185,18 @@ pub struct File {
 }
 
 impl File {
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference.
+    /// Performs all necessary validity checks and returns any errors
     ///
-    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(
-        &'a self,
+    /// Environment should be passed in from `.all_types()`
+    pub fn check_validity(
+        &self,
         env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<&'a TypeName>,
-    ) {
+    ) -> Vec<ValidityError> {
+        let mut errors = vec![];
         self.modules
             .values()
-            .for_each(|t| t.check_opaque(&Path::empty(), env, errors));
-    }
-
-    /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst(&self, errors: &mut Vec<Path>) {
-        self.modules
-            .values()
-            .for_each(|t| t.check_zst(&Path::empty(), errors));
+            .for_each(|t| t.check_validity(&Path::empty(), env, &mut errors));
+        errors
     }
 
     /// Fuses all declared types into a single environment `HashMap`.
@@ -259,9 +238,7 @@ mod tests {
 
     use syn;
 
-    use crate::ast::Path;
-
-    use super::{File, Module, TypeName};
+    use crate::ast::{File, Module};
 
     #[test]
     fn simple_mod() {
@@ -306,70 +283,6 @@ mod tests {
                 true
             ));
         });
-    }
-
-    #[test]
-    fn opaque_checks_with_safe_use() {
-        let file_with_safe_opaque = File::from(&syn::parse_quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                struct NonOpaqueStruct {}
-
-                impl NonOpaqueStruct {
-                    fn new(x: i32) -> NonOpaqueStruct {
-                        unimplemented!();
-                    }
-                }
-
-                #[diplomat::opaque]
-                struct OpaqueStruct {}
-
-                impl OpaqueStruct {
-                    pub fn new() -> Box<OpaqueStruct> {
-                        unimplemented!();
-                    }
-
-                    pub fn get_i32(&self) -> i32 {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-
-        let mut errors = Vec::new();
-        file_with_safe_opaque.check_opaque(&file_with_safe_opaque.all_types(), &mut errors);
-        assert_eq!(errors.len(), 0);
-    }
-
-    #[test]
-    fn opaque_checks_with_error() {
-        let file_with_error_opaque = File::from(&syn::parse_quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque]
-                struct OpaqueStruct {}
-
-                impl OpaqueStruct {
-                    pub fn new() -> OpaqueStruct {
-                        unimplemented!();
-                    }
-
-                    pub fn get_i32(self) -> i32 {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-
-        let mut errors = Vec::new();
-        file_with_error_opaque.check_opaque(&file_with_error_opaque.all_types(), &mut errors);
-        assert_eq!(
-            errors,
-            vec![
-                &TypeName::Named(Path::empty().sub_path("OpaqueStruct".to_string())),
-                &TypeName::Named(Path::empty().sub_path("OpaqueStruct".to_string()))
-            ]
-        );
     }
 
     #[test]
