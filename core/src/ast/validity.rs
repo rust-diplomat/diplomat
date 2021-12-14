@@ -13,6 +13,12 @@ pub enum ValidityError {
         doc = "A non-opaque zero-sized struct or enum has been defined: {0}"
     )]
     NonOpaqueZST(Path),
+    #[cfg_attr(
+        feature = "displaydoc",
+        doc = "A non-opaque type was found behind a Box or reference, these can \
+               only be handled by-move as they get converted at the FFI boundary: {0}"
+    )]
+    NonOpaqueBehindRef(TypeName),
 }
 
 #[cfg(test)]
@@ -114,6 +120,29 @@ mod tests {
                 struct OpaqueStruct;
 
                 enum OpaqueEnum {}
+            }
+        };
+    }
+
+    #[test]
+    fn non_opaque_move() {
+        uitest_validity! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct NonOpaque(u8);
+
+                impl NonOpaque {
+                    pub fn foo(&self) {}
+                }
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                impl Opaque {
+                    pub fn bar(&self) -> &NonOpaque {}
+                    pub fn baz(&self, x: &NonOpaque) {}
+                    pub fn quux(&self) -> Box<NonOpaque> {}
+                }
             }
         };
     }

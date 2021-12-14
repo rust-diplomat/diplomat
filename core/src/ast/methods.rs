@@ -81,9 +81,10 @@ impl Method {
     }
 
     /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference.
+    /// are always behind a box or reference, and that non-opaque custom types are *never* behind
+    /// references or boxes.
     ///
-    /// Any references to opaque structs that are invalid are pushed into the `errors` vector.
+    /// Errors are pushed into the `errors` vector.
     pub fn check_opaque<'a>(
         &'a self,
         in_path: &Path,
