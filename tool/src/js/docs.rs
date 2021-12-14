@@ -1,3 +1,4 @@
+use diplomat_core::Env;
 use std::fmt::Write;
 use std::{collections::HashMap, fmt};
 
@@ -7,10 +8,7 @@ use indenter::indented;
 use crate::docs_util::markdown_to_rst;
 
 /// Generate RST-formatted Sphinx docs for all FFI types. Currently assumes a JS target.
-pub fn gen_docs(
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-    outs: &mut HashMap<String, String>,
-) -> fmt::Result {
+pub fn gen_docs(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
     let index_out = outs
         .entry("index.rst".to_string())
         .or_insert_with(String::new);
@@ -22,17 +20,13 @@ pub fn gen_docs(
     writeln!(&mut toctree_indent, ":maxdepth: 3")?;
     writeln!(&mut toctree_indent, ":caption: Modules:")?;
     writeln!(&mut toctree_indent)?;
-    let mut sorted_keys: Vec<String> = env
-        .iter()
-        .filter(|(_, s)| {
-            s.values()
-                .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
-        })
-        .map(|(p, _)| p.elements.join("_"))
-        .collect();
-    sorted_keys.sort();
-    for in_path in sorted_keys {
-        writeln!(&mut toctree_indent, "{}", in_path)?;
+    for (in_path, module) in env.iter_modules() {
+        if module
+            .items()
+            .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
+        {
+            writeln!(&mut toctree_indent, "{}", in_path.elements.join("_"))?;
+        }
     }
     writeln!(index_out)?;
     writeln!(index_out, "Indices and tables")?;
@@ -41,9 +35,9 @@ pub fn gen_docs(
     writeln!(index_out, "* :ref:`genindex`")?;
     writeln!(index_out, "* :ref:`search`")?;
 
-    for (in_path, mod_symbols) in env.iter() {
-        if mod_symbols
-            .values()
+    for (in_path, module) in env.iter_modules() {
+        if module
+            .items()
             .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
         {
             let out = outs
@@ -54,12 +48,11 @@ pub fn gen_docs(
             writeln!(out, "{}", title)?;
             writeln!(out, "{}", "=".repeat(title.len()))?;
 
-            let mut sorted_symbols: Vec<&String> = mod_symbols.keys().collect();
+            let mut sorted_symbols: Vec<&String> = module.names().collect();
             sorted_symbols.sort();
 
-            for symbol_name in sorted_symbols {
-                let custom_type = &mod_symbols[symbol_name];
-                if let ast::ModSymbol::CustomType(typ) = custom_type {
+            for item in module.items() {
+                if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
                     gen_custom_type_docs(out, typ, in_path, env)?;
                 }
@@ -74,7 +67,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     out: &mut W,
     typ: &ast::CustomType,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     writeln!(out, ".. js:class:: {}", typ.name())?;
 
@@ -110,7 +103,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     out: &mut W,
     method: &ast::Method,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     let mut param_names: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
     if method.is_writeable_out() {
@@ -167,7 +160,7 @@ pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
     field: &(String, ast::TypeName, String),
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     writeln!(out, ".. js:attribute:: {}", field.0)?;
 

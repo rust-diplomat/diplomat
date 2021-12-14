@@ -1,4 +1,5 @@
 use colored::*;
+use diplomat_core::Env;
 use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
@@ -14,7 +15,7 @@ use crate::{
 
 /// Generate RST-formatted Sphinx docs for all FFI types.
 pub fn gen_docs(
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
@@ -48,17 +49,14 @@ pub fn gen_docs(
     writeln!(&mut toctree_indent, ":maxdepth: 3")?;
     writeln!(&mut toctree_indent, ":caption: Modules:")?;
     writeln!(&mut toctree_indent)?;
-    let mut sorted_keys: Vec<String> = env
-        .iter()
-        .filter(|(_, s)| {
-            s.values()
-                .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
-        })
-        .map(|(p, _)| p.elements.join("_"))
-        .collect();
-    sorted_keys.sort();
-    for in_path in sorted_keys {
-        writeln!(&mut toctree_indent, "{}", in_path)?;
+
+    for (in_path, module) in env.iter_modules() {
+        if module
+            .items()
+            .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
+        {
+            writeln!(&mut toctree_indent, "{}", in_path.elements.join("_"))?;
+        }
     }
     writeln!(index_out)?;
     writeln!(index_out, "Indices and tables")?;
@@ -67,9 +65,9 @@ pub fn gen_docs(
     writeln!(index_out, "* :ref:`genindex`")?;
     writeln!(index_out, "* :ref:`search`")?;
 
-    for (in_path, mod_symbols) in env.iter() {
-        if mod_symbols
-            .values()
+    for (in_path, module) in env.iter_modules() {
+        if module
+            .items()
             .any(|k| matches!(k, ast::ModSymbol::CustomType(_)))
         {
             let out = outs
@@ -80,12 +78,8 @@ pub fn gen_docs(
             writeln!(out, "{}", title)?;
             writeln!(out, "{}", "=".repeat(title.len()))?;
 
-            let mut sorted_symbols: Vec<&String> = mod_symbols.keys().collect();
-            sorted_symbols.sort();
-
-            for symbol_name in sorted_symbols {
-                let custom_type = &mod_symbols[symbol_name];
-                if let ast::ModSymbol::CustomType(typ) = custom_type {
+            for item in module.items() {
+                if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
                     gen_custom_type_docs(out, typ, in_path, env, &library_config)?;
                 }
@@ -100,7 +94,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     out: &mut W,
     typ: &ast::CustomType,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
 ) -> fmt::Result {
     match typ {
@@ -162,7 +156,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     enclosing_type: &ast::CustomType,
     in_path: &ast::Path,
     writeable_to_string: bool,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {
@@ -230,7 +224,7 @@ pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
     field: &(String, ast::TypeName, String),
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
 ) -> fmt::Result {
     write!(out, ".. cpp:member:: ")?;
@@ -258,7 +252,7 @@ pub fn gen_enum_variant_docs<W: fmt::Write>(
     out: &mut W,
     variant: &(String, isize, String),
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
 ) -> fmt::Result {
     write!(out, ".. cpp:enumerator:: {}", variant.0)?;
 

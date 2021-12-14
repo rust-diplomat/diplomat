@@ -1,10 +1,8 @@
 use std::fmt::Write;
-use std::{
-    collections::{HashMap, HashSet},
-    fmt,
-};
+use std::{collections::HashSet, fmt};
 
 use diplomat_core::ast;
+use diplomat_core::Env;
 use indenter::indented;
 
 use super::types::{gen_type, name_for_type};
@@ -12,7 +10,7 @@ use super::types::{gen_type, name_for_type};
 pub fn collect_results<'a>(
     typ: &'a ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     seen: &mut HashSet<(ast::Path, &'a ast::TypeName)>,
     results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
 ) {
@@ -47,7 +45,7 @@ pub fn collect_results<'a>(
 pub fn gen_result<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     if let ast::TypeName::Result(ok, err) = typ {

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use diplomat_core::Env;
 
 use diplomat_core::ast;
 
@@ -18,11 +18,7 @@ pub enum ReturnTypeForm {
 /// in the WASM ABI.
 ///
 /// See https://github.com/WebAssembly/tool-conventions/blob/master/BasicCABI.md#function-signatures.
-pub fn return_type_form(
-    typ: &ast::TypeName,
-    in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
-) -> ReturnTypeForm {
+pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> ReturnTypeForm {
     match typ {
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {

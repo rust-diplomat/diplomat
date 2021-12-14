@@ -1,11 +1,12 @@
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 
 use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, Struct, ValidityError};
-
+use crate::environment::*;
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
     pub name: String,
@@ -15,12 +16,7 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn check_validity(
-        &self,
-        in_path: &Path,
-        env: &HashMap<Path, HashMap<String, ModSymbol>>,
-        errors: &mut Vec<ValidityError>,
-    ) {
+    pub fn check_validity(&self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
         self.declared_types.values().for_each(|t| {
             t.check_opaque(&in_path.sub_path(self.name.clone()), env, errors);
             t.check_zst(&in_path.sub_path(self.name.clone()), errors);
@@ -31,8 +27,8 @@ impl Module {
         });
     }
 
-    fn insert_all_types(&self, in_path: Path, out: &mut HashMap<Path, HashMap<String, ModSymbol>>) {
-        let mut mod_symbols = HashMap::new();
+    fn insert_all_types(&self, in_path: Path, out: &mut Env) {
+        let mut mod_symbols = ModuleEnv::default();
 
         self.imports.iter().for_each(|(path, name)| {
             mod_symbols.insert(name.clone(), ModSymbol::Alias(path.clone()));
@@ -188,10 +184,7 @@ impl File {
     /// Performs all necessary validity checks and returns any errors
     ///
     /// Environment should be passed in from `.all_types()`
-    pub fn check_validity(
-        &self,
-        env: &HashMap<Path, HashMap<String, ModSymbol>>,
-    ) -> Vec<ValidityError> {
+    pub fn check_validity(&self, env: &Env) -> Vec<ValidityError> {
         let mut errors = vec![];
         self.modules
             .values()
@@ -200,9 +193,9 @@ impl File {
     }
 
     /// Fuses all declared types into a single environment `HashMap`.
-    pub fn all_types(&self) -> HashMap<Path, HashMap<String, ModSymbol>> {
-        let mut out = HashMap::new();
-        let mut top_symbols = HashMap::new();
+    pub fn all_types(&self) -> Env {
+        let mut out = Env::default();
+        let mut top_symbols = ModuleEnv::default();
 
         self.modules.values().for_each(|m| {
             m.insert_all_types(Path::empty(), &mut out);

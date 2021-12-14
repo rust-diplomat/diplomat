@@ -1,11 +1,12 @@
-use std::{collections::HashMap, fmt};
+use diplomat_core::Env;
+use std::fmt;
 
 use diplomat_core::ast::{self, PrimitiveType};
 
 pub fn gen_type<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     match typ {

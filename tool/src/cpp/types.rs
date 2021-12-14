@@ -1,5 +1,5 @@
 use core::fmt;
-use std::collections::HashMap;
+use diplomat_core::Env;
 
 use diplomat_core::ast;
 
@@ -9,7 +9,7 @@ pub fn gen_type<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
     behind_ref: Option<bool>, // owned?
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {

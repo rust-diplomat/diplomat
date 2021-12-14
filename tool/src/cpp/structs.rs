@@ -1,5 +1,6 @@
+use diplomat_core::Env;
+use std::fmt;
 use std::fmt::Write;
-use std::{collections::HashMap, fmt};
 
 use diplomat_core::ast;
 use indenter::indented;
@@ -14,7 +15,7 @@ pub fn gen_struct<W: fmt::Write>(
     custom_type: &ast::CustomType,
     in_path: &ast::Path,
     is_header: bool,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {
@@ -151,7 +152,7 @@ fn gen_method<W: fmt::Write>(
     is_header: bool,
     // should it convert writeables to string as an additional method?
     writeable_to_string: bool,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
     out: &mut W,
 ) -> fmt::Result {
@@ -293,7 +294,7 @@ pub fn gen_method_interface<W: fmt::Write>(
     is_header: bool,
     has_writeable_param: bool,
     rearranged_writeable: bool,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config: &LibraryConfig,
     out: &mut W,
     writeable_to_string: bool,

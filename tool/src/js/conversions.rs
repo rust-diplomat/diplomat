@@ -1,5 +1,6 @@
+use diplomat_core::Env;
+use std::fmt;
 use std::fmt::Write;
-use std::{collections::HashMap, fmt};
 
 use diplomat_core::ast::{self, PrimitiveType};
 use indenter::indented;
@@ -11,7 +12,7 @@ pub fn gen_value_js_to_rust(
     param_name: String,
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     pre_logic: &mut Vec<String>,
     invocation_params: &mut Vec<String>,
     post_logic: &mut Vec<String>,
@@ -97,7 +98,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
     value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     match typ {
@@ -313,7 +314,7 @@ fn gen_box_destructor<W: fmt::Write>(
     name: &str,
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> Result<(), fmt::Error> {
     match typ {
@@ -353,7 +354,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
     in_path: &ast::Path,
     value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
     owner: &str,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     out: &mut W,
 ) -> fmt::Result {
     match underlying {

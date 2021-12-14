@@ -6,6 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use diplomat_core::ast;
+use diplomat_core::Env;
 use indenter::indented;
 
 #[cfg(test)]
@@ -30,7 +31,7 @@ mod util;
 static RUNTIME_HPP: &str = include_str!("runtime.hpp");
 
 pub fn gen_bindings(
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
@@ -222,7 +223,7 @@ fn gen_includes<W: fmt::Write>(
     pre_struct: bool,
     behind_ref: bool,
     for_field: bool,
-    env: &HashMap<ast::Path, HashMap<String, ast::ModSymbol>>,
+    env: &Env,
     seen_includes: &mut HashSet<String>,
     out: &mut W,
 ) -> fmt::Result {
