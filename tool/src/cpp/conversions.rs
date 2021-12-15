@@ -71,9 +71,11 @@ pub fn gen_rust_to_cpp<W: Write>(
                 let raw_value_id = format!("diplomat_optional_raw_{}", path);
                 writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
 
+                let ty_name =
+                    super::types::gen_type(typ, in_path, None, env, library_config).unwrap();
+
                 let wrapped_value_id = format!("diplomat_optional_{}", path);
-                super::types::gen_type(typ, in_path, None, env, library_config, out).unwrap();
-                writeln!(out, " {};", wrapped_value_id).unwrap();
+                writeln!(out, "{} {};", ty_name, wrapped_value_id).unwrap();
 
                 writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
 
@@ -158,10 +160,10 @@ pub fn gen_rust_to_cpp<W: Write>(
             };
 
             let wrapped_value_id = format!("diplomat_result_{}", path);
-            super::types::gen_type(typ, in_path, None, env, library_config, out).unwrap();
-            let mut s = String::new();
-            super::types::gen_type(typ, in_path, None, env, library_config, &mut s).unwrap();
-            writeln!(out, " {} = {}.is_ok ?\n   {re}(diplomat::Ok(std::move({}))) :\n   {re}(diplomat::Err(std::move({})));", wrapped_value_id, raw_value_id, ok_expr, err_expr, re=s).unwrap();
+            let result_ty =
+                super::types::gen_type(typ, in_path, None, env, library_config).unwrap();
+            writeln!(out, "{ty} {} = {}.is_ok ?\n   {ty}(diplomat::Ok(std::move({}))) :\n   {ty}(diplomat::Err(std::move({})));",
+                     wrapped_value_id, raw_value_id, ok_expr, err_expr, ty=result_ty).unwrap();
 
             wrapped_value_id
         }
