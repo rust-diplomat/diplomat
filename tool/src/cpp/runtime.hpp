@@ -72,13 +72,6 @@ class result {
 private:
     std::variant<Ok<T>, Err<E>> val;
 public:
-  result(bool is_ok) {
-    if (is_ok) {
-      this->val = std::variant<Ok<T>, Err<E>>(Ok<T>());
-    } else {
-      this->val = std::variant<Ok<T>, Err<E>>(Err<E>());
-    }
-  }
   result(Ok<T>&& v): val(std::move(v)) {}
   result(Err<E>&& v): val(std::move(v)) {}
   result() = default;
@@ -94,17 +87,17 @@ public:
     return std::holds_alternative<Err<E>>(this->val);
   };
 
-  std::optional<T> ok() const {
+  std::optional<T> ok() {
     if (!this->is_ok()) {
       return std::nullopt;
     }
-    return std::make_optional(std::get<Ok<T>>(this->val).inner);
+    return std::make_optional(std::move(std::get<Ok<T>>(std::move(this->val)).inner));
   };
-  std::optional<E> err() const {
+  std::optional<E> err() {
     if (!this->is_err()) {
       return std::nullopt;
     }
-    return std::make_optional(std::get<Err<E>>(this->val).inner);
+    return std::make_optional(std::move(std::get<Err<E>>(std::move(this->val)).inner));
   }
 
   void set_ok(T&& t) {
@@ -118,7 +111,7 @@ public:
   template<typename T2>
   result<T2, E> replace_ok(T2&& t) {
     if (this->is_err()) {
-      return result<T2, E>(Err<E>(std::get<Err<E>>(this->val)));
+      return result<T2, E>(Err<E>(std::get<Err<E>>(std::move(this->val))));
     } else {
       return result<T2, E>(Ok<T2>(std::move(t)));
     }

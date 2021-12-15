@@ -131,10 +131,13 @@ pub fn gen_rust_to_cpp<W: Write>(
         ast::TypeName::Result(ok, err) => {
             let raw_value_id = format!("diplomat_result_raw_{}", path);
             writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
+            let wrapped_value_id = format!("diplomat_result_{}", path);
+            let result_ty =
+                super::types::gen_type(typ, in_path, None, env, library_config).unwrap();
+            writeln!(out, "{} {};", result_ty, wrapped_value_id).unwrap();
 
-            let ok_expr = if ok.is_zst() {
-                "std::monostate()".into()
-            } else {
+            writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
+            let ok_expr = if !ok.is_zst() {
                 gen_rust_to_cpp(
                     &format!("{}.ok", raw_value_id),
                     path,
@@ -144,10 +147,13 @@ pub fn gen_rust_to_cpp<W: Write>(
                     library_config,
                     out,
                 )
-            };
-            let err_expr = if err.is_zst() {
-                "std::monostate()".into()
             } else {
+                "std::monostate()".into()
+            };
+            writeln!(out, "  {} = diplomat::Ok({});", wrapped_value_id, ok_expr).unwrap();
+            writeln!(out, "}} else {{").unwrap();
+
+            let err_expr = if !err.is_zst() {
                 gen_rust_to_cpp(
                     &format!("{}.err", raw_value_id),
                     path,
@@ -157,13 +163,11 @@ pub fn gen_rust_to_cpp<W: Write>(
                     library_config,
                     out,
                 )
+            } else {
+                "std::monostate()".into()
             };
-
-            let wrapped_value_id = format!("diplomat_result_{}", path);
-            let result_ty =
-                super::types::gen_type(typ, in_path, None, env, library_config).unwrap();
-            writeln!(out, "{ty} {} = {}.is_ok ?\n   {ty}(diplomat::Ok(std::move({}))) :\n   {ty}(diplomat::Err(std::move({})));",
-                     wrapped_value_id, raw_value_id, ok_expr, err_expr, ty=result_ty).unwrap();
+            writeln!(out, "  {} = diplomat::Err({});", wrapped_value_id, err_expr).unwrap();
+            writeln!(out, "}}").unwrap();
 
             wrapped_value_id
         }

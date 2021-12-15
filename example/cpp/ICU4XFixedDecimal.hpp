@@ -77,18 +77,24 @@ inline void ICU4XFixedDecimal::negate() {
 template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_writeable(W& to) const {
   capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &to_writer);
-  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value = diplomat_result_raw_out_value.is_ok ?
-     diplomat::result<std::monostate, std::monostate>(diplomat::Ok(std::move(std::monostate()))) :
-     diplomat::result<std::monostate, std::monostate>(diplomat::Err(std::move(std::monostate())));
+  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok(std::monostate());
+  } else {
+    diplomat_result_out_value = diplomat::Err(std::monostate());
+  }
   return diplomat_result_out_value;
 }
 inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
   std::string diplomat_writeable_string;
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
-  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value = diplomat_result_raw_out_value.is_ok ?
-     diplomat::result<std::monostate, std::monostate>(diplomat::Ok(std::move(std::monostate()))) :
-     diplomat::result<std::monostate, std::monostate>(diplomat::Err(std::move(std::monostate())));
+  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok(std::monostate());
+  } else {
+    diplomat_result_out_value = diplomat::Err(std::monostate());
+  }
   return diplomat_result_out_value.replace_ok(std::move(diplomat_writeable_string));
 }
 #endif

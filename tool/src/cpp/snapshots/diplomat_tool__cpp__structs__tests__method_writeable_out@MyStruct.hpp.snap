@@ -39,6 +39,9 @@ class MyStruct {
   inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
   inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
   inline MyStruct(capi::MyStruct* i) : inner(i) {}
+  MyStruct() = default;
+  MyStruct(MyStruct&&) noexcept = default;
+  MyStruct& operator=(MyStruct&& other) noexcept = default;
  private:
   std::unique_ptr<capi::MyStruct, MyStructDeleter> inner;
 };
@@ -67,10 +70,11 @@ inline std::string MyStruct::write_unit() const {
 template<typename W> inline diplomat::result<std::monostate, uint8_t> MyStruct::write_result_to_writeable(W& out) const {
   capi::DiplomatWriteable out_writer = diplomat::WriteableTrait<W>::Construct(out);
   auto diplomat_result_raw_out_value = capi::MyStruct_write_result(this->inner.get(), &out_writer);
-  diplomat::result<std::monostate, uint8_t> diplomat_result_out_value(diplomat_result_raw_out_value.is_ok);
+  diplomat::result<std::monostate, uint8_t> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok(std::monostate());
   } else {
-    diplomat_result_out_value.set_err((std::move(diplomat_result_raw_out_value.err)));
+    diplomat_result_out_value = diplomat::Err(diplomat_result_raw_out_value.err);
   }
   return diplomat_result_out_value;
 }
@@ -78,10 +82,11 @@ inline diplomat::result<std::string, uint8_t> MyStruct::write_result() const {
   std::string diplomat_writeable_string;
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
   auto diplomat_result_raw_out_value = capi::MyStruct_write_result(this->inner.get(), &diplomat_writeable_out);
-  diplomat::result<std::monostate, uint8_t> diplomat_result_out_value(diplomat_result_raw_out_value.is_ok);
+  diplomat::result<std::monostate, uint8_t> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok(std::monostate());
   } else {
-    diplomat_result_out_value.set_err((std::move(diplomat_result_raw_out_value.err)));
+    diplomat_result_out_value = diplomat::Err(diplomat_result_raw_out_value.err);
   }
   return diplomat_result_out_value.replace_ok(std::move(diplomat_writeable_string));
 }
