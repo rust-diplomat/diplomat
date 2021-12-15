@@ -4,7 +4,7 @@
 ALL_HEADERS := $(wildcard *.h) $(wildcard *.hpp) $(wildcard tests/*.hpp)
 ALL_RUST := $(wildcard ../src/*.rs)
 
-CXX=g++
+CXX=g++-10
 
 $(ALL_RUST):
 
