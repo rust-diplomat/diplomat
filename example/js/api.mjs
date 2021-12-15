@@ -85,7 +85,7 @@ export class ICU4XFixedDecimal {
       return (() => {
         const is_ok = wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable) == 1;
         if (!is_ok) {
-          throw {};
+          throw new diplomatRuntime.FFIError({});
         }
       })();
     });
@@ -370,7 +370,7 @@ export class ResultOpaque {
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
-        throw throw_value;
+        throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
     return diplomat_out;
@@ -396,7 +396,7 @@ export class ResultOpaque {
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
-        throw throw_value;
+        throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
     return diplomat_out;
@@ -422,7 +422,7 @@ export class ResultOpaque {
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
-        throw throw_value;
+        throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
     return diplomat_out;
@@ -448,7 +448,7 @@ export class ResultOpaque {
         return ok_value;
       } else {
         const throw_value = {};
-        throw throw_value;
+        throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
     return diplomat_out;
@@ -478,7 +478,7 @@ export class ResultOpaque {
           out.owner = result_tag;
           return out;
         })();
-        throw throw_value;
+        throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
     return diplomat_out;
@@ -504,7 +504,7 @@ export class ResultOpaque {
           out.owner = result_tag;
           return out;
         })();
-        throw throw_value;
+        throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
     return diplomat_out;
@@ -530,7 +530,7 @@ export class ResultOpaque {
           out.owner = result_tag;
           return out;
         })();
-        throw throw_value;
+        throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
     return diplomat_out;
