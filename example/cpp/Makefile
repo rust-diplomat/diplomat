@@ -27,7 +27,7 @@ $(ALL_HEADERS):
 	$(CXX) -std=c++17 ./tests/result.cpp ../../target/debug/libexample.a -ldl -lpthread -lm -g -o ./tests/result.out
 
 
-test: ./tests/fixeddecimal.out ./tests/fixeddecimal-20.out ./tests/result.out
+test: ./tests/fixeddecimal.out ./tests/fixeddecimal-20.out ./tests/structs.out ./tests/result.out
 	./tests/fixeddecimal.out
 	./tests/fixeddecimal-20.out
 	./tests/structs.out

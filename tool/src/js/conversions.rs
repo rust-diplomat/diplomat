@@ -280,7 +280,10 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 )?;
                 writeln!(&mut err_indent, ";")?;
 
-                writeln!(&mut err_indent, "throw new diplomatRuntime.FFIError(throw_value);")?;
+                writeln!(
+                    &mut err_indent,
+                    "throw new diplomatRuntime.FFIError(throw_value);"
+                )?;
             } else {
                 writeln!(&mut iife_indent, "if (!is_ok) {{")?;
                 let mut err_indent = indented(&mut iife_indent).with_str("  ");
