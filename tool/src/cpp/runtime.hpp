@@ -50,13 +50,21 @@ template<> struct WriteableTrait<std::string> {
 template<class T> struct Ok {
   T inner;
   Ok(T&& i): inner(std::move(i)) {}
-  explicit Ok() {}
+  Ok() = default;
+  Ok(Ok&&) noexcept = default;
+  Ok(const Ok &) = default;
+  Ok& operator=(const Ok&) = default;
+  Ok& operator=(Ok&&) noexcept = default;
 };
 
 template<class T> struct Err {
   T inner;
   Err(T&& i): inner(std::move(i)) {}
-  explicit Err() {}
+  Err() = default;
+  Err(Err&&) noexcept = default;
+  Err(const Err &) = default;
+  Err& operator=(const Err&) = default;
+  Err& operator=(Err&&) noexcept = default;
 };
 
 template<class T, class E>
@@ -73,7 +81,10 @@ public:
   }
   result(Ok<T>&& v): val(std::move(v)) {}
   result(Err<E>&& v): val(std::move(v)) {}
+  result() = default;
   result(const result &) = default;
+  result& operator=(const result&) = default;
+  result& operator=(result&&) noexcept = default;
   result(result &&) noexcept = default;
   ~result() = default;
   bool is_ok() const {
