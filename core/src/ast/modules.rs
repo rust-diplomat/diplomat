@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -11,7 +11,7 @@ use crate::environment::*;
 pub struct Module {
     pub name: String,
     pub imports: Vec<(Path, String)>,
-    pub declared_types: HashMap<String, CustomType>,
+    pub declared_types: BTreeMap<String, CustomType>,
     pub sub_modules: Vec<Module>,
 }
 
@@ -53,7 +53,7 @@ impl Module {
     }
 
     pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
-        let mut custom_types_by_name = HashMap::new();
+        let mut custom_types_by_name = BTreeMap::new();
         let mut sub_modules = Vec::new();
         let mut imports = Vec::new();
 
@@ -177,7 +177,7 @@ fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, St
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct File {
-    pub modules: HashMap<String, Module>,
+    pub modules: BTreeMap<String, Module>,
 }
 
 impl File {
@@ -211,7 +211,7 @@ impl File {
 impl From<&syn::File> for File {
     /// Get all custom types across all modules defined in a given file.
     fn from(file: &syn::File) -> File {
-        let mut out = HashMap::new();
+        let mut out = BTreeMap::new();
         file.items.iter().for_each(|i| {
             if let Item::Mod(item_mod) = i {
                 out.insert(
