@@ -87,7 +87,11 @@ pub fn gen_struct<W: fmt::Write>(
                     "inline {}(capi::{}* i) : inner(i) {{}}",
                     opaque.name, opaque.name
                 )?;
-
+                writeln!(
+                    &mut public_body,
+                    "{0}() = default;\n{0}({0}&&) noexcept = default;\n{0}& operator=({0}&& other) noexcept = default;",
+                    opaque.name
+                )?;
                 writeln!(out, " private:")?;
                 let mut private_body = indented(out).with_str("  ");
                 writeln!(
