@@ -49,13 +49,13 @@ template<> struct WriteableTrait<std::string> {
 
 template<class T> struct Ok {
   T inner;
-  Ok(T&& i): inner(i) {}
+  Ok(T&& i): inner(std::move(i)) {}
   explicit Ok() {}
 };
 
 template<class T> struct Err {
   T inner;
-  Err(T&& i): inner(i) {}
+  Err(T&& i): inner(std::move(i)) {}
   explicit Err() {}
 };
 
