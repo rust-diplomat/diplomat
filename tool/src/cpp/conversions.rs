@@ -130,49 +130,38 @@ pub fn gen_rust_to_cpp<W: Write>(
             let raw_value_id = format!("diplomat_result_raw_{}", path);
             writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
 
+            let ok_expr = if ok.is_zst() {
+                "std::monostate()".into()
+            } else {
+                gen_rust_to_cpp(
+                    &format!("{}.ok", raw_value_id),
+                    path,
+                    ok,
+                    in_path,
+                    env,
+                    library_config,
+                    out,
+                )
+            };
+            let err_expr = if err.is_zst() {
+                "std::monostate()".into()
+            } else {
+                gen_rust_to_cpp(
+                    &format!("{}.err", raw_value_id),
+                    path,
+                    err,
+                    in_path,
+                    env,
+                    library_config,
+                    out,
+                )
+            };
+
             let wrapped_value_id = format!("diplomat_result_{}", path);
             super::types::gen_type(typ, in_path, None, env, library_config, out).unwrap();
-            writeln!(out, " {}({}.is_ok);", wrapped_value_id, raw_value_id).unwrap();
-
-            if !ok.is_zst() || !err.is_zst() {
-                writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
-                if !ok.is_zst() {
-                    let ok_expr = gen_rust_to_cpp(
-                        &format!("{}.ok", raw_value_id),
-                        path,
-                        ok,
-                        in_path,
-                        env,
-                        library_config,
-                        out,
-                    );
-                    writeln!(
-                        out,
-                        "  {}.set_ok((std::move({})));",
-                        wrapped_value_id, ok_expr
-                    )
-                    .unwrap();
-                }
-                writeln!(out, "}} else {{").unwrap();
-                if !err.is_zst() {
-                    let err_expr = gen_rust_to_cpp(
-                        &format!("{}.err", raw_value_id),
-                        path,
-                        err,
-                        in_path,
-                        env,
-                        library_config,
-                        out,
-                    );
-                    writeln!(
-                        out,
-                        "  {}.set_err((std::move({})));",
-                        wrapped_value_id, err_expr
-                    )
-                    .unwrap();
-                }
-                writeln!(out, "}}").unwrap();
-            }
+            let mut s = String::new();
+            super::types::gen_type(typ, in_path, None, env, library_config, &mut s).unwrap();
+            writeln!(out, " {} = {}.is_ok ?\n   {re}(diplomat::Ok(std::move({}))) :\n   {re}(diplomat::Err(std::move({})));", wrapped_value_id, raw_value_id, ok_expr, err_expr, re=s).unwrap();
 
             wrapped_value_id
         }
