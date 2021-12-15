@@ -33,6 +33,9 @@ class ICU4XDataProvider {
   inline const capi::ICU4XDataProvider* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XDataProvider* AsFFIMut() { return this->inner.get(); }
   inline ICU4XDataProvider(capi::ICU4XDataProvider* i) : inner(i) {}
+  ICU4XDataProvider() = default;
+  ICU4XDataProvider(ICU4XDataProvider&&) noexcept = default;
+  ICU4XDataProvider& operator=(ICU4XDataProvider&& other) noexcept = default;
  private:
   std::unique_ptr<capi::ICU4XDataProvider, ICU4XDataProviderDeleter> inner;
 };

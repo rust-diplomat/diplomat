@@ -31,6 +31,9 @@ class Opaque {
   inline const capi::Opaque* AsFFI() const { return this->inner.get(); }
   inline capi::Opaque* AsFFIMut() { return this->inner.get(); }
   inline Opaque(capi::Opaque* i) : inner(i) {}
+  Opaque() = default;
+  Opaque(Opaque&&) noexcept = default;
+  Opaque& operator=(Opaque&& other) noexcept = default;
  private:
   std::unique_ptr<capi::Opaque, OpaqueDeleter> inner;
 };

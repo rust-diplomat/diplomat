@@ -57,6 +57,9 @@ class ICU4XFixedDecimal {
   inline const capi::ICU4XFixedDecimal* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XFixedDecimal* AsFFIMut() { return this->inner.get(); }
   inline ICU4XFixedDecimal(capi::ICU4XFixedDecimal* i) : inner(i) {}
+  ICU4XFixedDecimal() = default;
+  ICU4XFixedDecimal(ICU4XFixedDecimal&&) noexcept = default;
+  ICU4XFixedDecimal& operator=(ICU4XFixedDecimal&& other) noexcept = default;
  private:
   std::unique_ptr<capi::ICU4XFixedDecimal, ICU4XFixedDecimalDeleter> inner;
 };
