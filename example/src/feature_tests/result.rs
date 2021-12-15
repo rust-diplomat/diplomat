@@ -34,7 +34,7 @@ pub mod ffi {
         }
 
         pub fn new_failing_struct(i: i32) -> DiplomatResult<Box<ResultOpaque>, ErrorStruct> {
-            Err(ErrorStruct {i}).into()
+            Err(ErrorStruct { i }).into()
         }
 
         pub fn new_in_err(i: i32) -> DiplomatResult<(), Box<ResultOpaque>> {
@@ -48,6 +48,5 @@ pub mod ffi {
         pub fn assert_integer(&self, i: i32) {
             assert_eq!(i, self.0);
         }
-
     }
 }
