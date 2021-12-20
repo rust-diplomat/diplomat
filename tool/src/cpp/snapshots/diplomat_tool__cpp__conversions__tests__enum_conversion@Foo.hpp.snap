@@ -34,6 +34,9 @@ class Foo {
   inline const capi::Foo* AsFFI() const { return this->inner.get(); }
   inline capi::Foo* AsFFIMut() { return this->inner.get(); }
   inline Foo(capi::Foo* i) : inner(i) {}
+  Foo() = default;
+  Foo(Foo&&) noexcept = default;
+  Foo& operator=(Foo&& other) noexcept = default;
  private:
   std::unique_ptr<capi::Foo, FooDeleter> inner;
 };

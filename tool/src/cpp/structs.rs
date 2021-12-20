@@ -87,7 +87,11 @@ pub fn gen_struct<W: fmt::Write>(
                     "inline {}(capi::{}* i) : inner(i) {{}}",
                     opaque.name, opaque.name
                 )?;
-
+                writeln!(
+                    &mut public_body,
+                    "{0}() = default;\n{0}({0}&&) noexcept = default;\n{0}& operator=({0}&& other) noexcept = default;",
+                    opaque.name
+                )?;
                 writeln!(out, " private:")?;
                 let mut private_body = indented(out).with_str("  ");
                 writeln!(
@@ -114,9 +118,9 @@ pub fn gen_struct<W: fmt::Write>(
 
             if is_header {
                 for (name, typ, docs) in &strct.fields {
+                    let ty_name = gen_type(typ, in_path, None, env, library_config)?;
                     gen_comment_block(&mut public_body, docs)?;
-                    gen_type(typ, in_path, None, env, library_config, &mut public_body)?;
-                    writeln!(&mut public_body, " {};", name)?;
+                    writeln!(&mut public_body, "{} {};", ty_name, name)?;
                 }
             }
 
@@ -318,26 +322,22 @@ pub fn gen_method_interface<W: fmt::Write>(
 
     if rearranged_writeable {
         if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
-            write!(out, "diplomat::result<std::string, ")?;
-            if err.is_zst() {
-                write!(out, "std::monostate")?;
+            let err_ty = if err.is_zst() {
+                "std::monostate".into()
             } else {
-                gen_type(err, in_path, None, env, library_config, out)?;
-            }
-            write!(out, ">")?;
+                gen_type(err, in_path, None, env, library_config)?
+            };
+            write!(out, "diplomat::result<std::string, {}>", err_ty)?;
         } else {
             write!(out, "std::string")?;
         }
     } else {
-        match &method.return_type {
-            Some(ret_type) => {
-                gen_type(ret_type, in_path, None, env, library_config, out)?;
-            }
+        let ty_name = match &method.return_type {
+            Some(ret_type) => gen_type(ret_type, in_path, None, env, library_config)?,
 
-            None => {
-                write!(out, "void")?;
-            }
-        }
+            None => "void".into(),
+        };
+        write!(out, "{}", ty_name)?;
     }
 
     if is_header {
@@ -361,12 +361,12 @@ pub fn gen_method_interface<W: fmt::Write>(
         if i != 0 {
             write!(out, ", ")?;
         }
-        if param.is_writeable() && !writeable_to_string {
-            write!(out, "W&")?;
+        let ty_name = if param.is_writeable() && !writeable_to_string {
+            "W&".into()
         } else {
-            gen_type(&param.ty, in_path, None, env, library_config, out)?;
-        }
-        write!(out, " {}", param.name)?;
+            gen_type(&param.ty, in_path, None, env, library_config)?
+        };
+        write!(out, "{} {}", ty_name, param.name)?;
     }
 
     write!(out, ")")?;

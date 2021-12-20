@@ -47,6 +47,9 @@ class ICU4XFixedDecimalFormat {
   inline const capi::ICU4XFixedDecimalFormat* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XFixedDecimalFormat* AsFFIMut() { return this->inner.get(); }
   inline ICU4XFixedDecimalFormat(capi::ICU4XFixedDecimalFormat* i) : inner(i) {}
+  ICU4XFixedDecimalFormat() = default;
+  ICU4XFixedDecimalFormat(ICU4XFixedDecimalFormat&&) noexcept = default;
+  ICU4XFixedDecimalFormat& operator=(ICU4XFixedDecimalFormat&& other) noexcept = default;
  private:
   std::unique_ptr<capi::ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatDeleter> inner;
 };

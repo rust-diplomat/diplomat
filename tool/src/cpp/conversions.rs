@@ -71,9 +71,11 @@ pub fn gen_rust_to_cpp<W: Write>(
                 let raw_value_id = format!("diplomat_optional_raw_{}", path);
                 writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
 
+                let ty_name =
+                    super::types::gen_type(typ, in_path, None, env, library_config).unwrap();
+
                 let wrapped_value_id = format!("diplomat_optional_{}", path);
-                super::types::gen_type(typ, in_path, None, env, library_config, out).unwrap();
-                writeln!(out, " {};", wrapped_value_id).unwrap();
+                writeln!(out, "{} {};", ty_name, wrapped_value_id).unwrap();
 
                 writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
 
@@ -129,50 +131,43 @@ pub fn gen_rust_to_cpp<W: Write>(
         ast::TypeName::Result(ok, err) => {
             let raw_value_id = format!("diplomat_result_raw_{}", path);
             writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
-
             let wrapped_value_id = format!("diplomat_result_{}", path);
-            super::types::gen_type(typ, in_path, None, env, library_config, out).unwrap();
-            writeln!(out, " {}({}.is_ok);", wrapped_value_id, raw_value_id).unwrap();
+            let result_ty =
+                super::types::gen_type(typ, in_path, None, env, library_config).unwrap();
+            writeln!(out, "{} {};", result_ty, wrapped_value_id).unwrap();
 
-            if !ok.is_zst() || !err.is_zst() {
-                writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
-                if !ok.is_zst() {
-                    let ok_expr = gen_rust_to_cpp(
-                        &format!("{}.ok", raw_value_id),
-                        path,
-                        ok,
-                        in_path,
-                        env,
-                        library_config,
-                        out,
-                    );
-                    writeln!(
-                        out,
-                        "  {}.set_ok((std::move({})));",
-                        wrapped_value_id, ok_expr
-                    )
-                    .unwrap();
-                }
-                writeln!(out, "}} else {{").unwrap();
-                if !err.is_zst() {
-                    let err_expr = gen_rust_to_cpp(
-                        &format!("{}.err", raw_value_id),
-                        path,
-                        err,
-                        in_path,
-                        env,
-                        library_config,
-                        out,
-                    );
-                    writeln!(
-                        out,
-                        "  {}.set_err((std::move({})));",
-                        wrapped_value_id, err_expr
-                    )
-                    .unwrap();
-                }
-                writeln!(out, "}}").unwrap();
-            }
+            writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
+            let ok_expr = if !ok.is_zst() {
+                gen_rust_to_cpp(
+                    &format!("{}.ok", raw_value_id),
+                    path,
+                    ok,
+                    in_path,
+                    env,
+                    library_config,
+                    out,
+                )
+            } else {
+                "std::monostate()".into()
+            };
+            writeln!(out, "  {} = diplomat::Ok({});", wrapped_value_id, ok_expr).unwrap();
+            writeln!(out, "}} else {{").unwrap();
+
+            let err_expr = if !err.is_zst() {
+                gen_rust_to_cpp(
+                    &format!("{}.err", raw_value_id),
+                    path,
+                    err,
+                    in_path,
+                    env,
+                    library_config,
+                    out,
+                )
+            } else {
+                "std::monostate()".into()
+            };
+            writeln!(out, "  {} = diplomat::Err({});", wrapped_value_id, err_expr).unwrap();
+            writeln!(out, "}}").unwrap();
 
             wrapped_value_id
         }

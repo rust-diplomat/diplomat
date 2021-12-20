@@ -227,9 +227,8 @@ pub fn gen_field_docs<W: fmt::Write>(
     env: &Env,
     library_config: &LibraryConfig,
 ) -> fmt::Result {
-    write!(out, ".. cpp:member:: ")?;
-    gen_type(&field.1, in_path, None, env, library_config, out)?;
-    writeln!(out, " {}", field.0)?;
+    let ty_name = gen_type(&field.1, in_path, None, env, library_config)?;
+    writeln!(out, ".. cpp:member:: {} {}", ty_name, field.0)?;
 
     if !field.2.is_empty() {
         let mut field_indented = indented(out).with_str("    ");

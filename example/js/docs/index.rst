@@ -7,6 +7,7 @@ Documentation
 
    data_provider_ffi
    decimal_ffi
+   feature_tests_result_ffi
    feature_tests_structs_ffi
    fixed_decimal_ffi
    locale_ffi

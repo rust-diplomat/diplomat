@@ -5,7 +5,19 @@ use diplomat_core::ast;
 
 use crate::cpp::config::LibraryConfig;
 
-pub fn gen_type<W: fmt::Write>(
+pub fn gen_type(
+    typ: &ast::TypeName,
+    in_path: &ast::Path,
+    behind_ref: Option<bool>, // owned?
+    env: &Env,
+    library_config: &LibraryConfig,
+) -> Result<String, fmt::Error> {
+    let mut s = String::new();
+    gen_type_inner(typ, in_path, behind_ref, env, library_config, &mut s)?;
+    Ok(s)
+}
+
+fn gen_type_inner<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
     behind_ref: Option<bool>, // owned?
@@ -40,7 +52,7 @@ pub fn gen_type<W: fmt::Write>(
         },
 
         ast::TypeName::Box(underlying) => {
-            gen_type(
+            gen_type_inner(
                 underlying.as_ref(),
                 in_path,
                 Some(true),
@@ -54,7 +66,7 @@ pub fn gen_type<W: fmt::Write>(
             if !mutable {
                 write!(out, "const ")?;
             }
-            gen_type(
+            gen_type_inner(
                 underlying.as_ref(),
                 in_path,
                 Some(false),
@@ -67,7 +79,7 @@ pub fn gen_type<W: fmt::Write>(
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
                 write!(out, "{}<", library_config.optional.expr)?;
-                gen_type(
+                gen_type_inner(
                     underlying.as_ref(),
                     in_path,
                     behind_ref,
@@ -86,14 +98,14 @@ pub fn gen_type<W: fmt::Write>(
             if ok.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type(ok, in_path, behind_ref, env, library_config, out)?;
+                gen_type_inner(ok, in_path, behind_ref, env, library_config, out)?;
             }
 
             write!(out, ", ")?;
             if err.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type(err, in_path, behind_ref, env, library_config, out)?;
+                gen_type_inner(err, in_path, behind_ref, env, library_config, out)?;
             }
             write!(out, ">")?;
         }
