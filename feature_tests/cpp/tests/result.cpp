@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../ResultOpaque.hpp"
+#include "../include/ResultOpaque.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
