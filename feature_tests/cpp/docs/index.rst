@@ -5,10 +5,8 @@ Documentation
    :maxdepth: 3
    :caption: Modules:
 
-   data_provider_ffi
-   decimal_ffi
-   fixed_decimal_ffi
-   locale_ffi
+   result_ffi
+   structs_ffi
 
 Indices and tables
 ==================
