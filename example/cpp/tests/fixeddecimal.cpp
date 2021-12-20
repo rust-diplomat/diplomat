@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../ICU4XFixedDecimalFormat.hpp"
+#include "../include/ICU4XFixedDecimalFormat.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
