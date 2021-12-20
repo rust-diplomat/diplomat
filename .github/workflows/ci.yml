@@ -30,29 +30,39 @@ jobs:
       run: cd example && ./gen_all.sh
     - name: Test example is fresh
       run: git diff --exit-code
-  example:
+  tests-and-example:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Build
+    - name: Build tests
+      run: cd feature_tests && cargo build
+    - name: CPP tests
+      run: cd feature_tests/cpp && make CXX=g++-10
+    - name: Build examples
       run: cd example && cargo build
-    - name: CPP
+    - name: CPP examples
       run: cd example/cpp && make CXX=g++-10
-    - name: C
+    - name: C examples
       run: cd example/c && make
-  example-wasm:
+  tests-and-example-wasm:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Load Rust toolchain for WASM.
       run: rustup target add wasm32-unknown-unknown
-    - name: Build
-      run: cd example && cargo build --target wasm32-unknown-unknown
     - name: Install Node.js v14.17.0
       uses: actions/setup-node@v1
       with:
         node-version: 14.17.0
-    - name: install node deps
+    - name: Build feature tests
+      run: cd feature_tests && cargo build --target wasm32-unknown-unknown
+    - name: install node deps for feature_tests
+      run: cd feature_tests/js && npm install
+    - name: test feature_tests
+      run: cd feature_tests/js && npm run test
+    - name: Build examples
+      run: cd example && cargo build --target wasm32-unknown-unknown
+    - name: install node deps for example
       run: cd example/js && npm install
-    - name: test
+    - name: test example
       run: cd example/js && npm run test
