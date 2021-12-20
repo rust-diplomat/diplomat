@@ -87,13 +87,13 @@ public:
     return std::holds_alternative<Err<E>>(this->val);
   };
 
-  std::optional<T> ok() {
+  std::optional<T> ok() && {
     if (!this->is_ok()) {
       return std::nullopt;
     }
     return std::make_optional(std::move(std::get<Ok<T>>(std::move(this->val)).inner));
   };
-  std::optional<E> err() {
+  std::optional<E> err() && {
     if (!this->is_err()) {
       return std::nullopt;
     }
