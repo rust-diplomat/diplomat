@@ -170,6 +170,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "diplomat-example"
+version = "0.2.0"
+dependencies = [
+ "diplomat",
+ "diplomat-runtime",
+ "fixed_decimal",
+ "icu",
+ "icu_provider",
+ "icu_testdata",
+ "writeable",
+]
+
+[[package]]
+name = "diplomat-feature-tests"
+version = "0.2.0"
+dependencies = [
+ "diplomat",
+ "diplomat-runtime",
+]
+
+[[package]]
 name = "diplomat-runtime"
 version = "0.2.0"
 
@@ -244,19 +265,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3de9ad4541d99dc22b59134e7ff8dc3d6c988c89ecd7324bf10a8362b07a2afa"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "example"
-version = "0.2.0"
-dependencies = [
- "diplomat",
- "diplomat-runtime",
- "fixed_decimal",
- "icu",
- "icu_provider",
- "icu_testdata",
- "writeable",
 ]
 
 [[package]]

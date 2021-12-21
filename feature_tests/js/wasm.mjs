@@ -19,11 +19,11 @@ const imports = {
 if (typeof fetch === 'undefined') {
   const fs = await import("fs");
   const path = await import("path");
-  const wasmFile = new Uint8Array(fs.readFileSync(path.resolve('../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm')));
+  const wasmFile = new Uint8Array(fs.readFileSync(path.resolve('../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm')));
   const loadedWasm = await WebAssembly.instantiate(wasmFile, imports);
   wasm = loadedWasm.instance.exports;
 } else {
-  const loadedWasm = await WebAssembly.instantiateStreaming(fetch('../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm'), imports);
+  const loadedWasm = await WebAssembly.instantiateStreaming(fetch('../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm'), imports);
   wasm = loadedWasm.instance.exports;
 }
 

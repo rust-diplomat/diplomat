@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../MyStruct.hpp"
-#include "../Opaque.hpp"
+#include "../include/MyStruct.hpp"
+#include "../include/Opaque.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {

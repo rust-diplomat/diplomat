@@ -4,5 +4,6 @@ members = [
   "macro",
   "runtime",
   "tool",
-  "example"
+  "example",
+  "feature_tests",
 ]

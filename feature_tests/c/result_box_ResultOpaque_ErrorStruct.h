@@ -11,13 +11,13 @@ extern "C" {
 #endif
 typedef struct ResultOpaque ResultOpaque;
 #include "ErrorStruct.h"
-typedef struct feature_tests_result_ffi_result_box_ResultOpaque_ErrorStruct {
+typedef struct result_ffi_result_box_ResultOpaque_ErrorStruct {
     union {
         ResultOpaque* ok;
         ErrorStruct err;
     };
     bool is_ok;
-} feature_tests_result_ffi_result_box_ResultOpaque_ErrorStruct;
+} result_ffi_result_box_ResultOpaque_ErrorStruct;
 #ifdef __cplusplus
 }
 #endif

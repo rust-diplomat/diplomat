@@ -1,5 +1,5 @@
-#ifndef result_box_ResultOpaque_ErrorEnum_H
-#define result_box_ResultOpaque_ErrorEnum_H
+#ifndef result_box_ResultOpaque_ErrorStruct_H
+#define result_box_ResultOpaque_ErrorStruct_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,14 +10,14 @@
 extern "C" {
 #endif
 typedef struct ResultOpaque ResultOpaque;
-#include "ErrorEnum.h"
-typedef struct feature_tests_result_ffi_result_box_ResultOpaque_ErrorEnum {
+#include "ErrorStruct.h"
+typedef struct result_ffi_result_box_ResultOpaque_ErrorStruct {
     union {
         ResultOpaque* ok;
-        ErrorEnum err;
+        ErrorStruct err;
     };
     bool is_ok;
-} feature_tests_result_ffi_result_box_ResultOpaque_ErrorEnum;
+} result_ffi_result_box_ResultOpaque_ErrorStruct;
 #ifdef __cplusplus
 }
 #endif

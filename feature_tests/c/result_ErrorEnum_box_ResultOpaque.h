@@ -11,13 +11,13 @@ extern "C" {
 #endif
 #include "ErrorEnum.h"
 typedef struct ResultOpaque ResultOpaque;
-typedef struct feature_tests_result_ffi_result_ErrorEnum_box_ResultOpaque {
+typedef struct result_ffi_result_ErrorEnum_box_ResultOpaque {
     union {
         ErrorEnum ok;
         ResultOpaque* err;
     };
     bool is_ok;
-} feature_tests_result_ffi_result_ErrorEnum_box_ResultOpaque;
+} result_ffi_result_ErrorEnum_box_ResultOpaque;
 #ifdef __cplusplus
 }
 #endif
