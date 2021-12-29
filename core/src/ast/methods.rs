@@ -79,21 +79,22 @@ impl Method {
         }
     }
 
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference, and that non-opaque custom types are *never* behind
-    /// references or boxes.
-    ///
-    /// Errors are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(&'a self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
+    /// Performs type-specific validity checks (see [TypeName::check_validity()])
+    pub fn check_validity<'a>(
+        &'a self,
+        in_path: &Path,
+        env: &Env,
+        errors: &mut Vec<ValidityError>,
+    ) {
         self.self_param
             .iter()
-            .for_each(|m| m.ty.check_opaque(in_path, env, errors));
+            .for_each(|m| m.ty.check_validity(in_path, env, errors));
         self.params
             .iter()
-            .for_each(|m| m.ty.check_opaque(in_path, env, errors));
+            .for_each(|m| m.ty.check_validity(in_path, env, errors));
         self.return_type
             .iter()
-            .for_each(|t| t.check_opaque(in_path, env, errors));
+            .for_each(|t| t.check_validity(in_path, env, errors));
     }
 
     /// Checks whether the method qualifies for special writeable handling.

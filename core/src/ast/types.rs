@@ -55,42 +55,43 @@ impl CustomType {
         in_path.sub_path(self.name().clone())
     }
 
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference, and that non-opaque custom types are *never* behind
-    /// references or boxes. The latter check is needed because non-opaque custom types typically get
-    /// *converted* at the FFI boundary.
+    /// Performs various validity checks:
+    ///
+    /// - Checks that any references to opaque structs in parameters or return values
+    ///   are always behind a box or reference, and that non-opaque custom types are *never* behind
+    ///   references or boxes. The latter check is needed because non-opaque custom types typically get
+    ///   *converted* at the FFI boundary.
+    /// - Ensures that we are not exporting any non-opaque zero-sized types
     ///
     /// Errors are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(&'a self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
+    pub fn check_validity<'a>(
+        &'a self,
+        in_path: &Path,
+        env: &Env,
+        errors: &mut Vec<ValidityError>,
+    ) {
         match self {
             CustomType::Struct(strct) => {
                 for (_, field, _) in strct.fields.iter() {
-                    field.check_opaque(in_path, env, errors);
+                    field.check_validity(in_path, env, errors);
                 }
-            }
-            CustomType::Opaque(_) => {}
-            CustomType::Enum(_) => {}
-        }
 
-        for method in self.methods().iter() {
-            method.check_opaque(in_path, env, errors);
-        }
-    }
-
-    /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<ValidityError>) {
-        match self {
-            CustomType::Struct(strct) => {
+                // check for ZSTs
                 if !strct.fields.iter().any(|f| !f.1.is_zst()) {
                     errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
                 }
             }
             CustomType::Opaque(_) => {}
             CustomType::Enum(e) => {
+                // check for ZSTs
                 if e.variants.is_empty() {
                     errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
                 }
             }
+        }
+
+        for method in self.methods().iter() {
+            method.check_validity(in_path, env, errors);
         }
     }
 }
@@ -335,7 +336,12 @@ impl TypeName {
     /// references or boxes.
     ///
     /// Errors are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(&'a self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
+    pub fn check_validity<'a>(
+        &'a self,
+        in_path: &Path,
+        env: &Env,
+        errors: &mut Vec<ValidityError>,
+    ) {
         self.check_opaque_internal(in_path, env, false, errors);
     }
 

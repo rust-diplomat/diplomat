@@ -18,8 +18,7 @@ pub struct Module {
 impl Module {
     pub fn check_validity(&self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
         self.declared_types.values().for_each(|t| {
-            t.check_opaque(&in_path.sub_path(self.name.clone()), env, errors);
-            t.check_zst(&in_path.sub_path(self.name.clone()), errors);
+            t.check_validity(&in_path.sub_path(self.name.clone()), env, errors);
         });
 
         self.sub_modules.iter().for_each(|t| {
