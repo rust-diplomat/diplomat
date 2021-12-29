@@ -55,7 +55,9 @@ pub fn gen_value_js_to_rust(
             ));
         }
         ast::TypeName::Primitive(PrimitiveType::char) => {
-            pre_logic.push(format!("if (!{p}.length || !{p}.codePointAt || {p}.length != 1) {{ throw new TypeError(\"Expected single-character string for `char` parameter {p}, found \" + {p}); }}", p=param_name));
+            // we use the spread operator here to count codepoints
+            // codePointAt() does not return surrogate pairs if there are multiple
+            pre_logic.push(format!("if (!{p}.length || !{p}.codePointAt || [...{p}].length != 1) {{ throw new TypeError(\"Expected single-character string for `char` parameter {p}, found \" + {p}); }}", p=param_name));
             invocation_params.push(format!("{}.codePointAt(0)", param_name));
         }
         ast::TypeName::Box(_) => {
