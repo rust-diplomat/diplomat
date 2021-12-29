@@ -168,6 +168,9 @@ mod tests {
                     pub fn do_thing(opt: Option<Box<u32>>) {
 
                     }
+                    pub fn do_thing2(opt: Option<&u32>) {
+
+                    }
                 }
             }
         };
