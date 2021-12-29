@@ -76,7 +76,9 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
         ast::TypeName::Box(_) => Layout::new::<usize_target>(),
         ast::TypeName::Reference(_, _) => Layout::new::<usize_target>(),
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
-            ast::TypeName::Box(_) | ast::TypeName::Reference(..) => type_size_alignment(underlying, in_path, env),
+            ast::TypeName::Box(_) | ast::TypeName::Reference(..) => {
+                type_size_alignment(underlying, in_path, env)
+            }
             _ => unreachable!("Cannot have non-pointer types inside Option"),
         },
         ast::TypeName::Result(ok, err) => {
