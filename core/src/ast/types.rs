@@ -293,7 +293,7 @@ impl TypeName {
         self.resolve_with_path(in_path, env).1
     }
 
-    fn check_opaque_internal<'a>(
+    fn check_opaque<'a>(
         &'a self,
         in_path: &Path,
         env: &Env,
@@ -302,17 +302,17 @@ impl TypeName {
     ) {
         match self {
             TypeName::Reference(underlying, _) => {
-                underlying.check_opaque_internal(in_path, env, true, errors)
+                underlying.check_opaque(in_path, env, true, errors)
             }
             TypeName::Box(underlying) => {
-                underlying.check_opaque_internal(in_path, env, true, errors)
+                underlying.check_opaque(in_path, env, true, errors)
             }
             TypeName::Option(underlying) => {
-                underlying.check_opaque_internal(in_path, env, false, errors)
+                underlying.check_opaque(in_path, env, false, errors)
             }
             TypeName::Result(ok, err) => {
-                ok.check_opaque_internal(in_path, env, false, errors);
-                err.check_opaque_internal(in_path, env, false, errors);
+                ok.check_opaque(in_path, env, false, errors);
+                err.check_opaque(in_path, env, false, errors);
             }
             TypeName::Primitive(_) => {}
             TypeName::Named(_) => {
@@ -342,7 +342,7 @@ impl TypeName {
         env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
-        self.check_opaque_internal(in_path, env, false, errors);
+        self.check_opaque(in_path, env, false, errors);
     }
 
     pub fn is_zst(&self) -> bool {
