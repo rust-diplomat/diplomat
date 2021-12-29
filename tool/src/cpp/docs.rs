@@ -27,9 +27,9 @@ pub fn gen_docs(
                 Ok(config) => library_config = config,
                 Err(err) => {
                     eprintln!(
-                        "{}{}\n{}",
+                        "{}Unable to parse library configuration file: {:?}\n{}",
                         "Error: ".red().bold(),
-                        format!("Unable to parse library configuration file: {:?}", path),
+                        path,
                         err,
                     );
                     std::process::exit(1);

@@ -35,7 +35,7 @@ impl Method {
         let self_ident = self_path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
         let extern_ident = Ident::new(
-            format!("{}_{}", &self_ident.to_string(), method_ident.to_string()).as_str(),
+            format!("{}_{}", self_ident, method_ident).as_str(),
             m.sig.ident.span(),
         );
 

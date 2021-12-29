@@ -329,7 +329,7 @@ impl TypeName {
     }
 
     // Disallow non-pointer containing Option<T> inside struct fields and Result
-    fn check_option<'a>(&'a self, errors: &mut Vec<ValidityError>) {
+    fn check_option(&self, errors: &mut Vec<ValidityError>) {
         match self {
             TypeName::Reference(underlying, _) => underlying.check_option(errors),
             TypeName::Box(underlying) => underlying.check_option(errors),
