@@ -86,9 +86,13 @@ export class ICU4XFixedDecimalFormat {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
       wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying, ICU4XFixedDecimalGroupingStrategy_js_to_rust[diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy], ICU4XFixedDecimalSignDisplay_js_to_rust[diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display]);
       const out = new ICU4XFixedDecimalFormatResult(diplomat_receive_buffer);
-      const out_fdf_value = out.fdf;
-      ICU4XFixedDecimalFormat_box_destroy_registry.register(out_fdf_value, out_fdf_value.underlying);
-      Object.defineProperty(out, "fdf", { value: out_fdf_value });
+      if (out.fdf.underlying !== 0) {
+        const out_fdf_value = out.fdf;
+        ICU4XFixedDecimalFormat_box_destroy_registry.register(out_fdf_value, out_fdf_value.underlying);
+        Object.defineProperty(out, "fdf", { value: out_fdf_value });
+      } else {
+        Object.defineProperty(out, "fdf", { value: null });
+      }
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
         size: 5,
