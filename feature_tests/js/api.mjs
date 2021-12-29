@@ -121,10 +121,11 @@ export class OptionOpaque {
 
   static new(i) {
     const diplomat_out = (() => {
-      if (wasm.OptionOpaque_new(i) !== 0) {
+      const option_value = wasm.OptionOpaque_new(i)
+      if (option_value !== 0) {
         const inhabited_value = (() => {
           const out = (() => {
-            const out = new OptionOpaque(wasm.OptionOpaque_new(i));
+            const out = new OptionOpaque(option_value);
             out.owner = null;
             return out;
           })();
@@ -141,10 +142,11 @@ export class OptionOpaque {
 
   static new_none() {
     const diplomat_out = (() => {
-      if (wasm.OptionOpaque_new_none() !== 0) {
+      const option_value = wasm.OptionOpaque_new_none()
+      if (option_value !== 0) {
         const inhabited_value = (() => {
           const out = (() => {
-            const out = new OptionOpaque(wasm.OptionOpaque_new_none());
+            const out = new OptionOpaque(option_value);
             out.owner = null;
             return out;
           })();

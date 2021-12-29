@@ -198,14 +198,15 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
             );
             writeln!(out, "(() => {{")?;
             let mut iife_indent = indented(out).with_str("  ");
+            writeln!(&mut iife_indent, "const option_value = {}", value_expr)?;
 
-            writeln!(&mut iife_indent, "if ({} !== 0) {{", value_expr)?;
+            writeln!(&mut iife_indent, "if (option_value !== 0) {{")?;
 
             let mut if_indent = indented(&mut iife_indent).with_str("  ");
             write!(&mut if_indent, "const inhabited_value = ")?;
             // TODO(#62): actually return `null` if the option is `None`
             gen_value_rust_to_js(
-                value_expr,
+                "option_value",
                 underlying.as_ref(),
                 in_path,
                 env,
