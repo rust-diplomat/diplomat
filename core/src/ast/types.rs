@@ -62,6 +62,7 @@ impl CustomType {
     ///   references or boxes. The latter check is needed because non-opaque custom types typically get
     ///   *converted* at the FFI boundary.
     /// - Ensures that we are not exporting any non-opaque zero-sized types
+    /// - Ensures that Options only contain boxes and references
     ///
     /// Errors are pushed into the `errors` vector.
     pub fn check_validity<'a>(
@@ -304,12 +305,8 @@ impl TypeName {
             TypeName::Reference(underlying, _) => {
                 underlying.check_opaque(in_path, env, true, errors)
             }
-            TypeName::Box(underlying) => {
-                underlying.check_opaque(in_path, env, true, errors)
-            }
-            TypeName::Option(underlying) => {
-                underlying.check_opaque(in_path, env, false, errors)
-            }
+            TypeName::Box(underlying) => underlying.check_opaque(in_path, env, true, errors),
+            TypeName::Option(underlying) => underlying.check_opaque(in_path, env, false, errors),
             TypeName::Result(ok, err) => {
                 ok.check_opaque(in_path, env, false, errors);
                 err.check_opaque(in_path, env, false, errors);
@@ -331,6 +328,29 @@ impl TypeName {
         }
     }
 
+    // Disallow non-pointer containing Option<T> inside struct fields and Result
+    fn check_option<'a>(&'a self, errors: &mut Vec<ValidityError>) {
+        match self {
+            TypeName::Reference(underlying, _) => underlying.check_option(errors),
+            TypeName::Box(underlying) => underlying.check_option(errors),
+            TypeName::Option(underlying) => {
+                if !underlying.is_pointer() {
+                    errors.push(ValidityError::OptionNotContainingPointer(self.clone()))
+                }
+            }
+            TypeName::Result(ok, err) => {
+                ok.check_option(errors);
+                err.check_option(errors);
+            }
+            TypeName::Primitive(_) => {}
+            TypeName::Named(_) => {}
+            TypeName::Writeable => {}
+            TypeName::StrReference => {}
+            TypeName::PrimitiveSlice(_) => {}
+            TypeName::Unit => {}
+        }
+    }
+
     /// Checks that any references to opaque structs in parameters or return values
     /// are always behind a box or reference, and that non-opaque custom types are *never* behind
     /// references or boxes.
@@ -343,11 +363,16 @@ impl TypeName {
         errors: &mut Vec<ValidityError>,
     ) {
         self.check_opaque(in_path, env, false, errors);
+        self.check_option(errors);
     }
 
     pub fn is_zst(&self) -> bool {
         // check_zst() prevents non-unit types from being ZSTs
         matches!(*self, TypeName::Unit)
+    }
+
+    pub fn is_pointer(&self) -> bool {
+        matches!(*self, TypeName::Reference(..) | TypeName::Box(_))
     }
 }
 

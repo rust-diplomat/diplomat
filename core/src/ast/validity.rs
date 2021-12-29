@@ -19,6 +19,11 @@ pub enum ValidityError {
                only be handled by-move as they get converted at the FFI boundary: {0}"
     )]
     NonOpaqueBehindRef(TypeName),
+    #[cfg_attr(
+        feature = "displaydoc",
+        doc = "A non-reference type was found inside an Option<T>: {0}"
+    )]
+    OptionNotContainingPointer(TypeName),
 }
 
 #[cfg(test)]
@@ -120,6 +125,50 @@ mod tests {
                 struct OpaqueStruct;
 
                 enum OpaqueEnum {}
+            }
+        };
+    }
+
+    #[test]
+    fn option_invalid() {
+        uitest_validity! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatResult;
+                struct Foo {
+                    field: Option<u8>,
+                }
+
+                impl Foo {
+                    pub fn do_thing(opt: Option<Option<u16>>) {
+
+                    }
+
+                    pub fn do_thing2(opt: DiplomatResult<Option<char>, u8>) {
+
+                    }
+                    pub fn do_thing2(opt: Option<u16>) {
+
+                    }
+                }
+            }
+        };
+    }
+
+    #[test]
+    fn option_valid() {
+        uitest_validity! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct Foo {
+                    field: Option<Box<u8>>,
+                }
+
+                impl Foo {
+                    pub fn do_thing(opt: Option<Box<u32>>) {
+
+                    }
+                }
             }
         };
     }
