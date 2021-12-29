@@ -186,8 +186,34 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Option(underlying) => {
+            assert!(
+                underlying.is_pointer(),
+                "Options must contain pointer types"
+            );
+            writeln!(out, "(() => {{")?;
+            let mut iife_indent = indented(out).with_str("  ");
+
+            writeln!(&mut iife_indent, "if ({} !== 0) {{", value_expr)?;
+
+            let mut if_indent = indented(&mut iife_indent).with_str("  ");
+            write!(&mut if_indent, "const inhabited_value = ")?;
             // TODO(#62): actually return `null` if the option is `None`
-            gen_value_rust_to_js(value_expr, underlying.as_ref(), in_path, env, out)?;
+            gen_value_rust_to_js(
+                value_expr,
+                underlying.as_ref(),
+                in_path,
+                env,
+                &mut (&mut if_indent as &mut dyn fmt::Write),
+            )?;
+            writeln!(&mut if_indent, ";")?;
+
+            writeln!(&mut if_indent, "return inhabited_value;")?;
+
+            writeln!(&mut iife_indent, "}} else {{")?;
+            writeln!(&mut iife_indent, "  return null;")?;
+            writeln!(&mut iife_indent, "}}")?;
+
+            write!(out, "}})()")?;
         }
 
         ast::TypeName::Result(ok, err) => {
@@ -339,8 +365,32 @@ fn gen_box_destructor<W: fmt::Write>(
         }
 
         ast::TypeName::Option(underlying) => {
+            assert!(
+                underlying.is_pointer(),
+                "Options must contain pointer types"
+            );
+
+            writeln!(out, "if (out.{}.underlying !== 0) {{", name)?;
+
+            let mut if_indent = indented(out).with_str("  ");
+
+            gen_box_destructor(
+                name,
+                underlying.as_ref(),
+                in_path,
+                env,
+                &mut (&mut if_indent as &mut dyn fmt::Write),
+            )?;
+
+            writeln!(out, "}} else {{")?;
+            writeln!(
+                out,
+                "  Object.defineProperty(out, \"{}\", {{ value: null }});",
+                name
+            )?;
+            writeln!(out, "}}")?;
+
             // TODO(#62): don't generate destructor if null
-            gen_box_destructor(name, underlying.as_ref(), in_path, env, out)?;
         }
 
         _ => {}
