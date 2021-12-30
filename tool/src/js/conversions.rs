@@ -57,7 +57,10 @@ pub fn gen_value_js_to_rust(
         ast::TypeName::Primitive(PrimitiveType::char) => {
             // we use the spread operator here to count codepoints
             // codePointAt() does not return surrogate pairs if there are multiple
-            invocation_params.push(format!("diplomatRuntime.extractCodePoint({p}, '{p}')", p=param_name));
+            invocation_params.push(format!(
+                "diplomatRuntime.extractCodePoint({p}, '{p}')",
+                p = param_name
+            ));
         }
         ast::TypeName::Box(_) => {
             invocation_params.push(format!("{}.underlying", param_name));
