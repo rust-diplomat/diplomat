@@ -105,8 +105,7 @@ export class Opaque {
     const diplomat_MyStruct_extracted_d = s["d"];
     const diplomat_MyStruct_extracted_e = s["e"];
     const diplomat_MyStruct_extracted_f = s["f"];
-    if (!diplomat_MyStruct_extracted_f.length || !diplomat_MyStruct_extracted_f.codePointAt || [...diplomat_MyStruct_extracted_f].length != 1) { throw new TypeError("Expected single-character string for `char` parameter diplomat_MyStruct_extracted_f, found " + diplomat_MyStruct_extracted_f); }
-    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e, diplomat_MyStruct_extracted_f.codePointAt(0));
+    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e, diplomatRuntime.extractCodePoint(diplomat_MyStruct_extracted_f, 'diplomat_MyStruct_extracted_f'));
   }
 }
 
@@ -248,8 +247,7 @@ export class OptionOpaqueChar {
   }
 
   assert_char(ch) {
-    if (!ch.length || !ch.codePointAt || [...ch].length != 1) { throw new TypeError("Expected single-character string for `char` parameter ch, found " + ch); }
-    const diplomat_out = wasm.OptionOpaqueChar_assert_char(this.underlying, ch.codePointAt(0));
+    const diplomat_out = wasm.OptionOpaqueChar_assert_char(this.underlying, diplomatRuntime.extractCodePoint(ch, 'ch'));
   }
 }
 
