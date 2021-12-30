@@ -55,42 +55,44 @@ impl CustomType {
         in_path.sub_path(self.name().clone())
     }
 
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference, and that non-opaque custom types are *never* behind
-    /// references or boxes. The latter check is needed because non-opaque custom types typically get
-    /// *converted* at the FFI boundary.
+    /// Performs various validity checks:
+    ///
+    /// - Checks that any references to opaque structs in parameters or return values
+    ///   are always behind a box or reference, and that non-opaque custom types are *never* behind
+    ///   references or boxes. The latter check is needed because non-opaque custom types typically get
+    ///   *converted* at the FFI boundary.
+    /// - Ensures that we are not exporting any non-opaque zero-sized types
+    /// - Ensures that Options only contain boxes and references
     ///
     /// Errors are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(&'a self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
+    pub fn check_validity<'a>(
+        &'a self,
+        in_path: &Path,
+        env: &Env,
+        errors: &mut Vec<ValidityError>,
+    ) {
         match self {
             CustomType::Struct(strct) => {
                 for (_, field, _) in strct.fields.iter() {
-                    field.check_opaque(in_path, env, errors);
+                    field.check_validity(in_path, env, errors);
                 }
-            }
-            CustomType::Opaque(_) => {}
-            CustomType::Enum(_) => {}
-        }
 
-        for method in self.methods().iter() {
-            method.check_opaque(in_path, env, errors);
-        }
-    }
-
-    /// Ensures that we are not exporting any non-opaque zero-sized types
-    pub fn check_zst<'a>(&'a self, in_path: &Path, errors: &mut Vec<ValidityError>) {
-        match self {
-            CustomType::Struct(strct) => {
+                // check for ZSTs
                 if !strct.fields.iter().any(|f| !f.1.is_zst()) {
                     errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
                 }
             }
             CustomType::Opaque(_) => {}
             CustomType::Enum(e) => {
+                // check for ZSTs
                 if e.variants.is_empty() {
                     errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
                 }
             }
+        }
+
+        for method in self.methods().iter() {
+            method.check_validity(in_path, env, errors);
         }
     }
 }
@@ -292,7 +294,7 @@ impl TypeName {
         self.resolve_with_path(in_path, env).1
     }
 
-    fn check_opaque_internal<'a>(
+    fn check_opaque<'a>(
         &'a self,
         in_path: &Path,
         env: &Env,
@@ -301,17 +303,13 @@ impl TypeName {
     ) {
         match self {
             TypeName::Reference(underlying, _) => {
-                underlying.check_opaque_internal(in_path, env, true, errors)
+                underlying.check_opaque(in_path, env, true, errors)
             }
-            TypeName::Box(underlying) => {
-                underlying.check_opaque_internal(in_path, env, true, errors)
-            }
-            TypeName::Option(underlying) => {
-                underlying.check_opaque_internal(in_path, env, false, errors)
-            }
+            TypeName::Box(underlying) => underlying.check_opaque(in_path, env, true, errors),
+            TypeName::Option(underlying) => underlying.check_opaque(in_path, env, false, errors),
             TypeName::Result(ok, err) => {
-                ok.check_opaque_internal(in_path, env, false, errors);
-                err.check_opaque_internal(in_path, env, false, errors);
+                ok.check_opaque(in_path, env, false, errors);
+                err.check_opaque(in_path, env, false, errors);
             }
             TypeName::Primitive(_) => {}
             TypeName::Named(_) => {
@@ -330,18 +328,51 @@ impl TypeName {
         }
     }
 
+    // Disallow non-pointer containing Option<T> inside struct fields and Result
+    fn check_option(&self, errors: &mut Vec<ValidityError>) {
+        match self {
+            TypeName::Reference(underlying, _) => underlying.check_option(errors),
+            TypeName::Box(underlying) => underlying.check_option(errors),
+            TypeName::Option(underlying) => {
+                if !underlying.is_pointer() {
+                    errors.push(ValidityError::OptionNotContainingPointer(self.clone()))
+                }
+            }
+            TypeName::Result(ok, err) => {
+                ok.check_option(errors);
+                err.check_option(errors);
+            }
+            TypeName::Primitive(_) => {}
+            TypeName::Named(_) => {}
+            TypeName::Writeable => {}
+            TypeName::StrReference => {}
+            TypeName::PrimitiveSlice(_) => {}
+            TypeName::Unit => {}
+        }
+    }
+
     /// Checks that any references to opaque structs in parameters or return values
     /// are always behind a box or reference, and that non-opaque custom types are *never* behind
     /// references or boxes.
     ///
     /// Errors are pushed into the `errors` vector.
-    pub fn check_opaque<'a>(&'a self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
-        self.check_opaque_internal(in_path, env, false, errors);
+    pub fn check_validity<'a>(
+        &'a self,
+        in_path: &Path,
+        env: &Env,
+        errors: &mut Vec<ValidityError>,
+    ) {
+        self.check_opaque(in_path, env, false, errors);
+        self.check_option(errors);
     }
 
     pub fn is_zst(&self) -> bool {
         // check_zst() prevents non-unit types from being ZSTs
         matches!(*self, TypeName::Unit)
+    }
+
+    pub fn is_pointer(&self) -> bool {
+        matches!(*self, TypeName::Reference(..) | TypeName::Box(_))
     }
 }
 

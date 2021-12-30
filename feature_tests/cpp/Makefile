@@ -19,7 +19,10 @@ $(ALL_HEADERS):
 ./tests/result.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/result.cpp
 	$(CXX) -std=c++17 ./tests/result.cpp ../../target/debug/libdiplomat_feature_tests.a -ldl -lpthread -lm -g -o ./tests/result.out
 
+./tests/option.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/option.cpp
+	$(CXX) -std=c++17 ./tests/option.cpp ../../target/debug/libdiplomat_feature_tests.a -ldl -lpthread -lm -g -o ./tests/option.out
 
-test: ./tests/structs.out ./tests/result.out
+test: ./tests/structs.out ./tests/result.out ./tests/option.out
 	./tests/structs.out
 	./tests/result.out
+	./tests/option.out

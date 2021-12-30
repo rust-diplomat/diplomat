@@ -38,11 +38,11 @@ pub fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
-            ast::TypeName::Box(_) => {
+            ast::TypeName::Box(_) | ast::TypeName::Reference(..) => {
                 gen_type(underlying.as_ref(), in_path, env, out)?;
             }
 
-            _ => todo!(),
+            _ => unreachable!("Cannot have non-pointer types inside Option"),
         },
 
         ast::TypeName::Result(_, _) => {

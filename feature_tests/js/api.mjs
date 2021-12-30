@@ -105,7 +105,187 @@ export class Opaque {
     const diplomat_MyStruct_extracted_d = s["d"];
     const diplomat_MyStruct_extracted_e = s["e"];
     const diplomat_MyStruct_extracted_f = s["f"];
-    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e, diplomat_MyStruct_extracted_f);
+    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e, diplomatRuntime.extractCodePoint(diplomat_MyStruct_extracted_f, 'diplomat_MyStruct_extracted_f'));
+  }
+}
+
+const OptionOpaque_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.OptionOpaque_destroy(underlying);
+});
+
+export class OptionOpaque {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new(i) {
+    const diplomat_out = (() => {
+      const option_value = wasm.OptionOpaque_new(i)
+      if (option_value !== 0) {
+        const inhabited_value = (() => {
+          const out = (() => {
+            const out = new OptionOpaque(option_value);
+            out.owner = null;
+            return out;
+          })();
+          OptionOpaque_box_destroy_registry.register(out, out.underlying)
+          return out;
+        })();
+        return inhabited_value;
+      } else {
+        return null;
+      }
+    })();
+    return diplomat_out;
+  }
+
+  static new_none() {
+    const diplomat_out = (() => {
+      const option_value = wasm.OptionOpaque_new_none()
+      if (option_value !== 0) {
+        const inhabited_value = (() => {
+          const out = (() => {
+            const out = new OptionOpaque(option_value);
+            out.owner = null;
+            return out;
+          })();
+          OptionOpaque_box_destroy_registry.register(out, out.underlying)
+          return out;
+        })();
+        return inhabited_value;
+      } else {
+        return null;
+      }
+    })();
+    return diplomat_out;
+  }
+
+  static new_struct() {
+    const diplomat_out = (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);
+      wasm.OptionOpaque_new_struct(diplomat_receive_buffer);
+      const out = new OptionStruct(diplomat_receive_buffer);
+      if (out.a.underlying !== 0) {
+        const out_a_value = out.a;
+        OptionOpaque_box_destroy_registry.register(out_a_value, out_a_value.underlying);
+        Object.defineProperty(out, "a", { value: out_a_value });
+      } else {
+        Object.defineProperty(out, "a", { value: null });
+      }
+      if (out.b.underlying !== 0) {
+        const out_b_value = out.b;
+        OptionOpaqueChar_box_destroy_registry.register(out_b_value, out_b_value.underlying);
+        Object.defineProperty(out, "b", { value: out_b_value });
+      } else {
+        Object.defineProperty(out, "b", { value: null });
+      }
+      if (out.d.underlying !== 0) {
+        const out_d_value = out.d;
+        OptionOpaque_box_destroy_registry.register(out_d_value, out_d_value.underlying);
+        Object.defineProperty(out, "d", { value: out_d_value });
+      } else {
+        Object.defineProperty(out, "d", { value: null });
+      }
+      diplomat_alloc_destroy_registry.register(out, {
+        ptr: out.underlying,
+        size: 16,
+        align: 4,
+      });
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static new_struct_nones() {
+    const diplomat_out = (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);
+      wasm.OptionOpaque_new_struct_nones(diplomat_receive_buffer);
+      const out = new OptionStruct(diplomat_receive_buffer);
+      if (out.a.underlying !== 0) {
+        const out_a_value = out.a;
+        OptionOpaque_box_destroy_registry.register(out_a_value, out_a_value.underlying);
+        Object.defineProperty(out, "a", { value: out_a_value });
+      } else {
+        Object.defineProperty(out, "a", { value: null });
+      }
+      if (out.b.underlying !== 0) {
+        const out_b_value = out.b;
+        OptionOpaqueChar_box_destroy_registry.register(out_b_value, out_b_value.underlying);
+        Object.defineProperty(out, "b", { value: out_b_value });
+      } else {
+        Object.defineProperty(out, "b", { value: null });
+      }
+      if (out.d.underlying !== 0) {
+        const out_d_value = out.d;
+        OptionOpaque_box_destroy_registry.register(out_d_value, out_d_value.underlying);
+        Object.defineProperty(out, "d", { value: out_d_value });
+      } else {
+        Object.defineProperty(out, "d", { value: null });
+      }
+      diplomat_alloc_destroy_registry.register(out, {
+        ptr: out.underlying,
+        size: 16,
+        align: 4,
+      });
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  assert_integer(i) {
+    const diplomat_out = wasm.OptionOpaque_assert_integer(this.underlying, i);
+  }
+}
+
+const OptionOpaqueChar_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.OptionOpaqueChar_destroy(underlying);
+});
+
+export class OptionOpaqueChar {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  assert_char(ch) {
+    const diplomat_out = wasm.OptionOpaqueChar_assert_char(this.underlying, diplomatRuntime.extractCodePoint(ch, 'ch'));
+  }
+}
+
+const OptionStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.OptionStruct_destroy(underlying);
+});
+
+export class OptionStruct {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  get a() {
+    return (() => {
+      const out = new OptionOpaque((new Uint32Array(wasm.memory.buffer, this.underlying + 0, 1))[0]);
+      out.owner = null;
+      return out;
+    })();
+  }
+
+  get b() {
+    return (() => {
+      const out = new OptionOpaqueChar((new Uint32Array(wasm.memory.buffer, this.underlying + 4, 1))[0]);
+      out.owner = null;
+      return out;
+    })();
+  }
+
+  get c() {
+    return (new Uint32Array(wasm.memory.buffer, this.underlying + 8, 1))[0];
+  }
+
+  get d() {
+    return (() => {
+      const out = new OptionOpaque((new Uint32Array(wasm.memory.buffer, this.underlying + 12, 1))[0]);
+      out.owner = null;
+      return out;
+    })();
   }
 }
 

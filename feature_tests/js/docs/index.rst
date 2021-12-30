@@ -5,6 +5,7 @@ Documentation
    :maxdepth: 3
    :caption: Modules:
 
+   option_ffi
    result_ffi
    structs_ffi
 

@@ -54,6 +54,14 @@ pub fn gen_value_js_to_rust(
                 param_name, param_name, align
             ));
         }
+        ast::TypeName::Primitive(PrimitiveType::char) => {
+            // we use the spread operator here to count codepoints
+            // codePointAt() does not return surrogate pairs if there are multiple
+            invocation_params.push(format!(
+                "diplomatRuntime.extractCodePoint({p}, '{p}')",
+                p = param_name
+            ));
+        }
         ast::TypeName::Box(_) => {
             invocation_params.push(format!("{}.underlying", param_name));
         }
@@ -95,7 +103,7 @@ pub fn gen_value_js_to_rust(
 }
 
 pub fn gen_value_rust_to_js<W: fmt::Write>(
-    value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
+    value_expr: &str,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &Env,
@@ -120,8 +128,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                         strct_size_align.size(),
                         strct_size_align.align(),
                     )?;
-                    value_expr(&mut iife_indent)?;
-                    writeln!(&mut iife_indent, ";")?;
+                    writeln!(&mut iife_indent, "{};", value_expr)?;
                     writeln!(
                         &mut iife_indent,
                         "const out = new {}(diplomat_receive_buffer);",
@@ -151,9 +158,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 }
 
                 ast::CustomType::Enum(enm) => {
-                    write!(out, "{}_rust_to_js[", enm.name)?;
-                    value_expr(out)?;
-                    write!(out, "]")?;
+                    write!(out, "{}_rust_to_js[{}]", enm.name, value_expr)?;
                 }
 
                 ast::CustomType::Opaque(_) => {
@@ -189,8 +194,35 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Option(underlying) => {
+            assert!(
+                underlying.is_pointer(),
+                "Options must contain pointer types"
+            );
+            writeln!(out, "(() => {{")?;
+            let mut iife_indent = indented(out).with_str("  ");
+            writeln!(&mut iife_indent, "const option_value = {}", value_expr)?;
+
+            writeln!(&mut iife_indent, "if (option_value !== 0) {{")?;
+
+            let mut if_indent = indented(&mut iife_indent).with_str("  ");
+            write!(&mut if_indent, "const inhabited_value = ")?;
             // TODO(#62): actually return `null` if the option is `None`
-            gen_value_rust_to_js(value_expr, underlying.as_ref(), in_path, env, out)?;
+            gen_value_rust_to_js(
+                "option_value",
+                underlying.as_ref(),
+                in_path,
+                env,
+                &mut (&mut if_indent as &mut dyn fmt::Write),
+            )?;
+            writeln!(&mut if_indent, ";")?;
+
+            writeln!(&mut if_indent, "return inhabited_value;")?;
+
+            writeln!(&mut iife_indent, "}} else {{")?;
+            writeln!(&mut iife_indent, "  return null;")?;
+            writeln!(&mut iife_indent, "}}")?;
+
+            write!(out, "}})()")?;
         }
 
         ast::TypeName::Result(ok, err) => {
@@ -231,16 +263,16 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
 
             if !needs_buffer {
                 write!(&mut iife_indent, "const is_ok = ")?;
-                value_expr(&mut iife_indent)?;
+                write!(&mut iife_indent, "{}", value_expr)?;
                 writeln!(&mut iife_indent, " == 1;")?;
             } else {
-                value_expr(&mut iife_indent)?;
+                write!(&mut iife_indent, "{}", value_expr)?;
                 writeln!(&mut iife_indent, ";")?;
                 write!(&mut iife_indent, "const is_ok = ")?;
                 gen_rust_reference_to_js(
                     &ast::TypeName::Primitive(PrimitiveType::bool),
                     in_path,
-                    &|out| write!(out, "diplomat_receive_buffer + {}", ok_offset),
+                    &format!("diplomat_receive_buffer + {}", ok_offset),
                     "result_tag",
                     env,
                     &mut ((&mut iife_indent) as &mut dyn fmt::Write),
@@ -257,7 +289,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 gen_rust_reference_to_js(
                     ok.as_ref(),
                     in_path,
-                    &|out| write!(out, "diplomat_receive_buffer"),
+                    "diplomat_receive_buffer",
                     "result_tag",
                     env,
                     &mut ((&mut ok_indent) as &mut dyn fmt::Write),
@@ -273,7 +305,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 gen_rust_reference_to_js(
                     err.as_ref(),
                     in_path,
-                    &|out| write!(out, "diplomat_receive_buffer"),
+                    "diplomat_receive_buffer",
                     "result_tag",
                     env,
                     &mut ((&mut err_indent) as &mut dyn fmt::Write),
@@ -297,7 +329,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
 
         ast::TypeName::Primitive(_prim) => {
             // TODO(#63): wrap with appropriate types for large widths
-            value_expr(out)?;
+            write!(out, "{}", value_expr)?;
         }
 
         ast::TypeName::Reference(underlying, _mutability) => {
@@ -307,7 +339,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference => todo!(),
         ast::TypeName::PrimitiveSlice(_) => todo!(),
-        ast::TypeName::Unit => value_expr(out)?,
+        ast::TypeName::Unit => write!(out, "{}", value_expr)?,
     }
 
     Ok(())
@@ -342,8 +374,32 @@ fn gen_box_destructor<W: fmt::Write>(
         }
 
         ast::TypeName::Option(underlying) => {
+            assert!(
+                underlying.is_pointer(),
+                "Options must contain pointer types"
+            );
+
+            writeln!(out, "if (out.{}.underlying !== 0) {{", name)?;
+
+            let mut if_indent = indented(out).with_str("  ");
+
+            gen_box_destructor(
+                name,
+                underlying.as_ref(),
+                in_path,
+                env,
+                &mut (&mut if_indent as &mut dyn fmt::Write),
+            )?;
+
+            writeln!(out, "}} else {{")?;
+            writeln!(
+                out,
+                "  Object.defineProperty(out, \"{}\", {{ value: null }});",
+                name
+            )?;
+            writeln!(out, "}}")?;
+
             // TODO(#62): don't generate destructor if null
-            gen_box_destructor(name, underlying.as_ref(), in_path, env, out)?;
         }
 
         _ => {}
@@ -355,7 +411,7 @@ fn gen_box_destructor<W: fmt::Write>(
 fn gen_rust_reference_to_js<W: fmt::Write>(
     underlying: &ast::TypeName,
     in_path: &ast::Path,
-    value_expr: &dyn Fn(&mut dyn fmt::Write) -> fmt::Result,
+    value_expr: &str,
     owner: &str,
     env: &Env,
     out: &mut W,
@@ -365,12 +421,10 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             gen_rust_reference_to_js(
                 typ.as_ref(),
                 in_path,
-                &|out| {
-                    write!(out, "(new Uint32Array(wasm.memory.buffer, ")?;
-                    value_expr(out)?;
-                    write!(out, ", 1))[0]")?;
-                    Ok(())
-                },
+                &format!(
+                    "(new Uint32Array(wasm.memory.buffer, {}, 1))[0]",
+                    value_expr
+                ),
                 owner,
                 env,
                 out,
@@ -381,12 +435,10 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             gen_rust_reference_to_js(
                 typ.as_ref(),
                 in_path,
-                &|out| {
-                    write!(out, "(new Uint32Array(wasm.memory.buffer, ")?;
-                    value_expr(out)?;
-                    write!(out, ", 1))[0]")?;
-                    Ok(())
-                },
+                &format!(
+                    "(new Uint32Array(wasm.memory.buffer, {}, 1))[0]",
+                    value_expr
+                ),
                 "null", // TODO(#12): pass in lifetime of the reference
                 env,
                 out,
@@ -429,9 +481,12 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             } else {
                 writeln!(out, "(() => {{")?;
                 let mut iife_indent = indented(out).with_str("  ");
-                write!(&mut iife_indent, "const out = new {}(", custom_type.name())?;
-                value_expr(&mut iife_indent)?;
-                writeln!(&mut iife_indent, ");")?;
+                writeln!(
+                    &mut iife_indent,
+                    "const out = new {}({});",
+                    custom_type.name(),
+                    value_expr
+                )?;
 
                 writeln!(&mut iife_indent, "out.owner = {};", owner)?;
 
@@ -442,16 +497,17 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
 
         ast::TypeName::Primitive(prim) => {
             if let PrimitiveType::bool = prim {
-                write!(out, "(new Uint8Array(wasm.memory.buffer, ")?;
-                value_expr(out)?;
-                write!(out, ", 1))[0] == 1")?;
+                write!(
+                    out,
+                    "(new Uint8Array(wasm.memory.buffer, {}, 1))[0] == 1",
+                    value_expr
+                )?;
             } else if let PrimitiveType::char = prim {
                 write!(
                     out,
-                    "String.fromCharCode((new Uint32Array(wasm.memory.buffer, "
+                    "String.fromCharCode((new Uint32Array(wasm.memory.buffer, {}, 1))[0])",
+                    value_expr
                 )?;
-                value_expr(out)?;
-                write!(out, ", 1))[0])")?;
             } else {
                 let prim_type = match prim {
                     PrimitiveType::i8 => "Int8Array",
@@ -472,9 +528,11 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     PrimitiveType::char => panic!(),
                 };
 
-                write!(out, "(new {}(wasm.memory.buffer, ", prim_type)?;
-                value_expr(out)?;
-                write!(out, ", 1))[0]")?;
+                write!(
+                    out,
+                    "(new {}(wasm.memory.buffer, {}, 1))[0]",
+                    prim_type, value_expr
+                )?;
             }
         }
 
