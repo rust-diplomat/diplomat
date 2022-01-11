@@ -1,6 +1,7 @@
 #ifndef ResultOpaque_H
 #define ResultOpaque_H
 #include <stdio.h>
+#include <uchar.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
