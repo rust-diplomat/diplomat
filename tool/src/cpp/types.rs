@@ -62,7 +62,7 @@ fn gen_type_inner<W: fmt::Write>(
             )?;
         }
 
-        ast::TypeName::Reference(underlying, mutable) => {
+        ast::TypeName::Reference(underlying, mutable, _lt) => {
             if !mutable {
                 write!(out, "const ")?;
             }

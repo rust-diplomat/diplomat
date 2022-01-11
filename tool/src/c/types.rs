@@ -25,7 +25,7 @@ pub fn gen_type<W: fmt::Write>(
             write!(out, "*")?;
         }
 
-        ast::TypeName::Reference(underlying, mutable) => {
+        ast::TypeName::Reference(underlying, mutable, _lt) => {
             if !mutable {
                 write!(out, "const ")?;
             }
@@ -66,7 +66,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> String {
     match typ {
         ast::TypeName::Named(name) => name.elements.last().unwrap().clone(),
         ast::TypeName::Box(underlying) => format!("box_{}", name_for_type(underlying)),
-        ast::TypeName::Reference(underlying, mutable) => {
+        ast::TypeName::Reference(underlying, mutable, _lt) => {
             if *mutable {
                 return format!("ref_mut_{}", name_for_type(underlying));
             } else {
