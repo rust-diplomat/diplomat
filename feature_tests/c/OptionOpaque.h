@@ -1,6 +1,7 @@
 #ifndef OptionOpaque_H
 #define OptionOpaque_H
 #include <stdio.h>
+#include <uchar.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
