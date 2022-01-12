@@ -65,7 +65,7 @@ pub fn gen_value_js_to_rust(
         ast::TypeName::Box(_) => {
             invocation_params.push(format!("{}.underlying", param_name));
         }
-        ast::TypeName::Reference(_, _) => {
+        ast::TypeName::Reference(_, _mut, _lt) => {
             invocation_params.push(format!("{}.underlying", param_name));
         }
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
@@ -332,7 +332,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
             write!(out, "{}", value_expr)?;
         }
 
-        ast::TypeName::Reference(underlying, _mutability) => {
+        ast::TypeName::Reference(underlying, _mutability, _lt) => {
             // TODO(#12): pass in lifetime of the reference
             gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, "null", env, out)?;
         }
@@ -431,7 +431,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             )?;
         }
 
-        ast::TypeName::Reference(typ, _) => {
+        ast::TypeName::Reference(typ, _mut, _lt) => {
             gen_rust_reference_to_js(
                 typ.as_ref(),
                 in_path,

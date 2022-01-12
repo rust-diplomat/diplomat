@@ -271,7 +271,7 @@ pub fn gen_includes<W: fmt::Write>(
                 out,
             )?;
         }
-        ast::TypeName::Reference(underlying, _) => {
+        ast::TypeName::Reference(underlying, _, _lt) => {
             gen_includes(
                 underlying,
                 in_path,

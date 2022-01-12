@@ -19,7 +19,7 @@ pub fn collect_results<'a>(
         ast::TypeName::Box(underlying) => {
             collect_results(underlying, in_path, env, seen, results);
         }
-        ast::TypeName::Reference(underlying, _) => {
+        ast::TypeName::Reference(underlying, _, _lt) => {
             collect_results(underlying, in_path, env, seen, results);
         }
         ast::TypeName::Primitive(_) => {}

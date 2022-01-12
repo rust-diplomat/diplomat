@@ -173,7 +173,7 @@ pub fn gen_rust_to_cpp<W: Write>(
         }
 
         ast::TypeName::Primitive(_) => cpp.to_string(),
-        ast::TypeName::Reference(_, _) => {
+        ast::TypeName::Reference(_, _, _) => {
             todo!("Returning references from Rust to C++ is not currently supported")
         }
         ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
@@ -208,7 +208,7 @@ pub fn gen_cpp_to_rust<W: Write>(
     out: &mut W,
 ) -> String {
     match typ {
-        ast::TypeName::Reference(underlying, mutability) => gen_cpp_to_rust(
+        ast::TypeName::Reference(underlying, mutability, _lt) => gen_cpp_to_rust(
             cpp,
             path,
             Some(ReferenceMeta {

@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! { & mut MyLocalStruct }).unwrap())"
+expression: "TypeName::from(&syn::parse_quote! { & mut MyLocalStruct })"
 
 ---
 Reference:
@@ -8,4 +8,5 @@ Reference:
       elements:
         - MyLocalStruct
   - true
+  - Named
 

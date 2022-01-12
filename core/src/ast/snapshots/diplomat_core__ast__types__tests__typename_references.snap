@@ -1,9 +1,10 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! { & i32 }).unwrap())"
+expression: "TypeName::from(&syn::parse_quote! { & i32 })"
 
 ---
 Reference:
   - Primitive: i32
   - false
+  - Named
 

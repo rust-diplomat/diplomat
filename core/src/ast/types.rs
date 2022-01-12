@@ -120,7 +120,7 @@ pub enum TypeName {
     /// are collected with [`TypeName::resolve()`].
     Named(Path),
     /// An optionally mutable reference to another type.
-    Reference(Box<TypeName>, /* mutable */ bool),
+    Reference(Box<TypeName>, /* mutable */ bool, Lifetime),
     /// A `Box<T>` type.
     Box(Box<TypeName>),
     /// A `Option<T>` type.
@@ -148,16 +148,18 @@ impl TypeName {
                 qself: None,
                 path: name.to_syn(),
             }),
-            TypeName::Reference(underlying, mutable) => syn::Type::Reference(TypeReference {
-                and_token: syn::token::And(Span::call_site()),
-                lifetime: None,
-                mutability: if *mutable {
-                    Some(syn::token::Mut(Span::call_site()))
-                } else {
-                    None
-                },
-                elem: Box::new(underlying.to_syn()),
-            }),
+            TypeName::Reference(underlying, mutable, lifetime) => {
+                syn::Type::Reference(TypeReference {
+                    and_token: syn::token::And(Span::call_site()),
+                    lifetime: lifetime.to_syn(),
+                    mutability: if *mutable {
+                        Some(syn::token::Mut(Span::call_site()))
+                    } else {
+                        None
+                    },
+                    elem: Box::new(underlying.to_syn()),
+                })
+            }
             TypeName::Box(underlying) => syn::Type::Path(TypePath {
                 qself: None,
                 path: syn::Path {
@@ -302,7 +304,7 @@ impl TypeName {
         errors: &mut Vec<ValidityError>,
     ) {
         match self {
-            TypeName::Reference(underlying, _) => {
+            TypeName::Reference(underlying, _, _) => {
                 underlying.check_opaque(in_path, env, true, errors)
             }
             TypeName::Box(underlying) => underlying.check_opaque(in_path, env, true, errors),
@@ -331,7 +333,7 @@ impl TypeName {
     // Disallow non-pointer containing Option<T> inside struct fields and Result
     fn check_option(&self, errors: &mut Vec<ValidityError>) {
         match self {
-            TypeName::Reference(underlying, _) => underlying.check_option(errors),
+            TypeName::Reference(underlying, _mut, _lt) => underlying.check_option(errors),
             TypeName::Box(underlying) => underlying.check_option(errors),
             TypeName::Option(underlying) => {
                 if !underlying.is_pointer() {
@@ -405,7 +407,11 @@ impl From<&syn::Type> for TypeName {
                         }
                     }
                 }
-                TypeName::Reference(Box::new(r.elem.as_ref().into()), r.mutability.is_some())
+                TypeName::Reference(
+                    Box::new(r.elem.as_ref().into()),
+                    r.mutability.is_some(),
+                    Lifetime::from(&r.lifetime),
+                )
             }
             syn::Type::Path(p) => {
                 if let Some(primitive) = p
@@ -480,8 +486,10 @@ impl fmt::Display for TypeName {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
             TypeName::Named(p) => p.fmt(f),
-            TypeName::Reference(ty, mutable) if *mutable => write!(f, "&mut {}", ty),
-            TypeName::Reference(ty, _) => write!(f, "&{}", ty),
+            TypeName::Reference(ty, mutable, lifetime) if *mutable => {
+                write!(f, "&{} mut {}", lifetime, ty)
+            }
+            TypeName::Reference(ty, _, lifetime) => write!(f, "&{} {}", lifetime, ty),
             TypeName::Box(ty) => write!(f, "Box<{}>", ty),
             TypeName::Option(ty) => write!(f, "Option<{}>", ty),
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
@@ -489,6 +497,49 @@ impl fmt::Display for TypeName {
             TypeName::StrReference => f.write_str("&str"),
             TypeName::PrimitiveSlice(ty) => write!(f, "[{}]", ty),
             TypeName::Unit => f.write_str("()"),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
+pub enum Lifetime {
+    Static,
+    // This will get a field when we add GC lifetime tracking
+    // https://github.com/rust-diplomat/diplomat/issues/12
+    Named,
+}
+
+impl fmt::Display for Lifetime {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Self::Static => f.write_str("'static"),
+            Self::Named => f.write_str("'_"),
+        }
+    }
+}
+
+impl From<&syn::Lifetime> for Lifetime {
+    fn from(lt: &syn::Lifetime) -> Self {
+        if lt.ident == "static" {
+            Self::Static
+        } else {
+            Self::Named
+        }
+    }
+}
+
+impl From<&Option<syn::Lifetime>> for Lifetime {
+    fn from(lt: &Option<syn::Lifetime>) -> Self {
+        lt.as_ref().map(|lt| lt.into()).unwrap_or(Self::Named)
+    }
+}
+
+impl Lifetime {
+    /// Converts the [`Lifetime`] back into an AST node that can be spliced into a program.
+    pub fn to_syn(&self) -> Option<syn::Lifetime> {
+        match *self {
+            Self::Static => Some(syn::Lifetime::new("'static", Span::call_site())),
+            Self::Named => None,
         }
     }
 }

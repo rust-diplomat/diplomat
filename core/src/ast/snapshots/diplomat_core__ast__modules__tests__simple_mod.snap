@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/modules.rs
-expression: "Module::from_syn(&syn::parse_quote! {\n                                  mod ffi\n                                  {\n                                      struct NonOpaqueStruct\n                                      { a : i32, b : Box < NonOpaqueStruct > }\n                                      impl NonOpaqueStruct\n                                      {\n                                          fn new(x : i32) -> NonOpaqueStruct\n                                          { unimplemented ! () ; } fn\n                                          set_a(& mut self, new_a : i32)\n                                          { self . a = new_a ; }\n                                      } #[diplomat :: opaque] struct\n                                      OpaqueStruct { a : SomeExternalType }\n                                      impl OpaqueStruct\n                                      {\n                                          fn new() -> Box < OpaqueStruct >\n                                          { unimplemented ! () ; } fn\n                                          get_string(& self) -> String\n                                          { unimplemented ! () }\n                                      }\n                                  }\n                              }).unwrap(), true)"
+expression: "Module::from_syn(&syn::parse_quote! {\n                      mod ffi\n                      {\n                          struct NonOpaqueStruct\n                          { a : i32, b : Box < NonOpaqueStruct > } impl\n                          NonOpaqueStruct\n                          {\n                              pub fn new(x : i32) -> NonOpaqueStruct\n                              { unimplemented! () ; } pub fn\n                              set_a(& mut self, new_a : i32)\n                              { self.a = new_a ; }\n                          } #[diplomat :: opaque] struct OpaqueStruct\n                          { a : SomeExternalType } impl OpaqueStruct\n                          {\n                              pub fn new() -> Box < OpaqueStruct >\n                              { unimplemented! () ; } pub fn\n                              get_string(& self) -> String\n                              { unimplemented! () }\n                          }\n                      }\n                  }, true)"
 
 ---
 name: ffi
@@ -44,6 +44,7 @@ declared_types:
                     elements:
                       - NonOpaqueStruct
                 - true
+                - Named
           params:
             - name: new_a
               ty:
@@ -75,6 +76,7 @@ declared_types:
                     elements:
                       - OpaqueStruct
                 - false
+                - Named
           params: []
           return_type:
             Named:
