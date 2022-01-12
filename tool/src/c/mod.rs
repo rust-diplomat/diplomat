@@ -59,7 +59,6 @@ fn gen_struct_header<'a>(
     writeln!(out, "#ifndef {}_H", typ.name())?;
     writeln!(out, "#define {}_H", typ.name())?;
     writeln!(out, "#include <stdio.h>")?;
-    writeln!(out, "#include <uchar.h>")?;
     writeln!(out, "#include <stdint.h>")?;
     writeln!(out, "#include <stddef.h>")?;
     writeln!(out, "#include <stdbool.h>")?;
