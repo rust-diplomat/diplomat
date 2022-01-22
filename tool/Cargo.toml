@@ -23,3 +23,7 @@ toml = "0.5.8"
 
 [dev-dependencies]
 insta = { version = "1.7.1", features = [ "backtrace" ] }
+
+[dependencies.tera]
+version = "1"
+default-features = false
