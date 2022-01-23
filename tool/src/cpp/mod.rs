@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
-use tera::{Tera, Context};
+use tera::{Context, Tera};
 
 use diplomat_core::ast;
 use diplomat_core::Env;
@@ -43,7 +43,8 @@ pub fn gen_bindings(
 
     // Load header template for C++.
     let mut header_template = Tera::default();
-    header_template.add_raw_template(HEADER_TEMPLATE_NAME, HEADER_TEMPLATE)
+    header_template
+        .add_raw_template(HEADER_TEMPLATE_NAME, HEADER_TEMPLATE)
         .expect("Couldn't parse template");
 
     let mut library_config = config::LibraryConfig::default();
@@ -80,7 +81,8 @@ pub fn gen_bindings(
         let mut header_context = Context::new();
         header_context.insert("typ_name", typ.name());
         header_context.insert("headers", &library_config.headers);
-        let rendered = header_template.render(HEADER_TEMPLATE_NAME, &header_context)
+        let rendered = header_template
+            .render(HEADER_TEMPLATE_NAME, &header_context)
             .expect("Couldn't render template");
         writeln!(out, "{}", rendered).expect("Failed to write string.");
 
