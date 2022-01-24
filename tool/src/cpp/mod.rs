@@ -4,6 +4,7 @@ use std::fmt;
 use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
+use tera::{Context, Tera};
 
 use diplomat_core::ast;
 use diplomat_core::Env;
@@ -29,6 +30,9 @@ mod config;
 mod util;
 
 static RUNTIME_HPP: &str = include_str!("runtime.hpp");
+// It's easier to statically include than to package with the binary.
+static HEADER_TEMPLATE: &str = include_str!("templates/header.hpp");
+static HEADER_TEMPLATE_NAME: &str = "header.hpp";
 
 pub fn gen_bindings(
     env: &Env,
@@ -36,6 +40,12 @@ pub fn gen_bindings(
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     super::c::gen_bindings(env, outs)?;
+
+    // Load header template for C++.
+    let mut header_template = Tera::default();
+    header_template
+        .add_raw_template(HEADER_TEMPLATE_NAME, HEADER_TEMPLATE)
+        .expect("Couldn't parse template");
 
     let mut library_config = config::LibraryConfig::default();
     if let Some(path) = library_config_path {
@@ -68,27 +78,13 @@ pub fn gen_bindings(
             .entry(format!("{}.hpp", typ.name()))
             .or_insert_with(String::new);
 
-        writeln!(out, "#ifndef {}_HPP", typ.name())?;
-        writeln!(out, "#define {}_HPP", typ.name())?;
-
-        writeln!(out, "#include <stdint.h>")?;
-        writeln!(out, "#include <stddef.h>")?;
-        writeln!(out, "#include <stdbool.h>")?;
-        writeln!(out, "#include <algorithm>")?;
-        writeln!(out, "#include <memory>")?;
-        writeln!(out, "#include <variant>")?;
-
-        for header in &library_config.headers {
-            writeln!(out, "{}", header)?;
-        }
-
-        writeln!(out, "#include \"diplomat_runtime.hpp\"")?;
-        writeln!(out)?;
-        writeln!(out, "namespace capi {{")?;
-        writeln!(out, "#include \"{}.h\"", typ.name())?;
-        writeln!(out, "}}")?;
-
-        writeln!(out)?;
+        let mut header_context = Context::new();
+        header_context.insert("typ_name", typ.name());
+        header_context.insert("headers", &library_config.headers);
+        let rendered = header_template
+            .render(HEADER_TEMPLATE_NAME, &header_context)
+            .expect("Couldn't render template");
+        writeln!(out, "{}", rendered).expect("Failed to write string.");
 
         let mut seen_includes = HashSet::new();
         seen_includes.insert(format!("#include \"{}.hpp\"", typ.name()));
