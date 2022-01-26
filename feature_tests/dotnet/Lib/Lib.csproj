@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;net48;net6.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!-- custom properties -->
+  <PropertyGroup>
+    <NativeLibPath>lib/$(Configuration)</NativeLibPath>
+    <NativeLibPathLinux64>$(NativeLibPath)/linux-x64/libdiplomat_feature_tests.so</NativeLibPathLinux64>
+    <NativeLibPathWin64>$(NativeLibPath)/win-x64/diplomat_feature_tests.dll</NativeLibPathWin64>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(NativeLibPathLinux64)')">
+    <Content Include="$(NativeLibPathLinux64)">
+      <Link>%(Filename)%(Extension)</Link>
+      <PackagePath>runtimes/linux-x64/native/%(Filename)%(Extension)</PackagePath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(NativeLibPathWin64)')">
+    <Content Include="$(NativeLibPathWin64)">
+      <Link>%(Filename)%(Extension)</Link>
+      <PackagePath>runtimes/win-x64/native/%(Filename)%(Extension)</PackagePath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
