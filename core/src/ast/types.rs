@@ -130,7 +130,7 @@ pub enum TypeName {
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
     /// A `&str` type.
-    StrReference,
+    StrReference(/* mutable */ bool),
     /// A `&[T]` type, where `T` is a primitive.
     PrimitiveSlice(PrimitiveType, /* mutable */ bool),
     /// The `()` type.
@@ -223,7 +223,10 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference => syn::parse_quote! {
+            TypeName::StrReference(true) => syn::parse_quote! {
+                &mut str
+            },
+            TypeName::StrReference(false) => syn::parse_quote! {
                 &str
             },
             TypeName::PrimitiveSlice(name, mutable) => {
@@ -329,7 +332,7 @@ impl TypeName {
                 }
             }
             TypeName::Writeable => {}
-            TypeName::StrReference => {}
+            TypeName::StrReference(_mut) => {}
             TypeName::PrimitiveSlice(_, _mut) => {}
             TypeName::Unit => {}
         }
@@ -352,7 +355,7 @@ impl TypeName {
             TypeName::Primitive(_) => {}
             TypeName::Named(_) => {}
             TypeName::Writeable => {}
-            TypeName::StrReference => {}
+            TypeName::StrReference(_mut) => {}
             TypeName::PrimitiveSlice(_, _mut) => {}
             TypeName::Unit => {}
         }
@@ -399,7 +402,7 @@ impl From<&syn::Type> for TypeName {
         match ty {
             syn::Type::Reference(r) => {
                 if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference;
+                    return TypeName::StrReference(r.mutability.is_some());
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -499,7 +502,8 @@ impl fmt::Display for TypeName {
             TypeName::Option(ty) => write!(f, "Option<{}>", ty),
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
             TypeName::Writeable => f.write_str("DiplomatWriteable"),
-            TypeName::StrReference => f.write_str("&str"),
+            TypeName::StrReference(true) => f.write_str("&mut str"),
+            TypeName::StrReference(false) => f.write_str("&str"),
             TypeName::PrimitiveSlice(ty, true) => write!(f, "&mut [{}]", ty),
             TypeName::PrimitiveSlice(ty, false) => write!(f, "&[{}]", ty),
             TypeName::Unit => f.write_str("()"),

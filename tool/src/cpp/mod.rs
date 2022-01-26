@@ -329,7 +329,7 @@ fn gen_includes<W: fmt::Write>(
             )?;
         }
         ast::TypeName::Writeable => {}
-        ast::TypeName::StrReference => {}
+        ast::TypeName::StrReference(..) => {}
         ast::TypeName::PrimitiveSlice(..) => {}
         ast::TypeName::Unit => {}
     }

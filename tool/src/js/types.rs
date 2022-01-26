@@ -69,7 +69,7 @@ pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> 
 
         ast::TypeName::Reference(_, _mut, _lt) => ReturnTypeForm::Scalar,
 
-        ast::TypeName::StrReference => ReturnTypeForm::Scalar,
+        ast::TypeName::StrReference(..) => ReturnTypeForm::Scalar,
 
         ast::TypeName::PrimitiveSlice(..) => ReturnTypeForm::Scalar,
 

@@ -177,7 +177,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             todo!("Returning references from Rust to C++ is not currently supported")
         }
         ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
-        ast::TypeName::StrReference => {
+        ast::TypeName::StrReference(..) => {
             todo!("Returning &str from Rust to C++ is not currently supported")
         }
         ast::TypeName::PrimitiveSlice(..) => {
