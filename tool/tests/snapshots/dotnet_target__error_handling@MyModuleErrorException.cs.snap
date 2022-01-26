@@ -16,11 +16,11 @@ namespace Interop;
 
 #nullable enable
 
-public partial class MyModuleException : Exception
+public partial class MyModuleErrorException : Exception
 {
     private MyModuleError _inner;
 
-    public MyModuleException(MyModuleError inner) : base("MyModule error occurred")
+    public MyModuleErrorException(MyModuleError inner) : base("MyModuleError error occurred")
     {
         _inner = inner;
     }

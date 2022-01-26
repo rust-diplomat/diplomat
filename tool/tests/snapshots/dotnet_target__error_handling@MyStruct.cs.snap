@@ -35,7 +35,7 @@ public partial class MyStruct: IDisposable
         _inner = handle;
     }
 
-    /// <exception cref="MyModuleException"></exception>
+    /// <exception cref="MyModuleErrorException"></exception>
     public uint Foo()
     {
         unsafe
@@ -47,14 +47,14 @@ public partial class MyStruct: IDisposable
             Raw.FfiResultU32MyModuleError result = Raw.MyStruct.Foo(_inner);
             if (!result.isOk)
             {
-                throw new MyModuleException((MyModuleError)result.Err);
+                throw new MyModuleErrorException((MyModuleError)result.Err);
             }
             uint retVal = result.Ok;
             return retVal;
         }
     }
 
-    /// <exception cref="MyModuleOpaqueException"></exception>
+    /// <exception cref="MyModuleOpaqueErrorException"></exception>
     public uint Bar()
     {
         unsafe
@@ -66,7 +66,7 @@ public partial class MyStruct: IDisposable
             Raw.FfiResultCharMyModuleOpaqueError result = Raw.MyStruct.Bar(_inner);
             if (!result.isOk)
             {
-                throw new MyModuleOpaqueException(new MyModuleOpaqueError(result.Err));
+                throw new MyModuleOpaqueErrorException(new MyModuleOpaqueError(result.Err));
             }
             uint retVal = result.Ok;
             return retVal;

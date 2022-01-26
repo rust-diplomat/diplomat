@@ -9,25 +9,23 @@ expression: out_texts.get(out).unwrap()
 using System;
 using System.Runtime.InteropServices;
 
-using SomeOrg.SomeModule;
-using We.Also.Need.This;
-using OurOrg.OurRustLib.Diplomat;
+using Interop.Diplomat;
 #pragma warning restore 0105
 
-namespace OurOrg.OurRustLib;
+namespace Interop;
 
 #nullable enable
 
-public partial class MyLibErrorException : Exception
+public partial class MyModuleOpaqueErrorException : Exception
 {
-    private MyLibError _inner;
+    private MyModuleOpaqueError _inner;
 
-    public MyLibErrorException(MyLibError inner) : base(inner.ToDisplay())
+    public MyModuleOpaqueErrorException(MyModuleOpaqueError inner) : base("MyModuleOpaqueError error occurred")
     {
         _inner = inner;
     }
 
-    public MyLibError Inner
+    public MyModuleOpaqueError Inner
     {
         get
         {

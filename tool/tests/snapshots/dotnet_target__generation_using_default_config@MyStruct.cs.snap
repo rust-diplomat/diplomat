@@ -35,7 +35,7 @@ public partial class MyStruct: IDisposable
         _inner = handle;
     }
 
-    /// <exception cref="MyLibException"></exception>
+    /// <exception cref="MyLibErrorException"></exception>
     /// <returns>
     /// A <c>MyStruct</c> allocated on Rust side.
     /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
@@ -50,7 +50,7 @@ public partial class MyStruct: IDisposable
                 Raw.FfiResultBoxMyStructBoxMyLibError result = Raw.MyStruct.NewSlice(vPtr, vLength);
                 if (!result.isOk)
                 {
-                    throw new MyLibException(new MyLibError(result.Err));
+                    throw new MyLibErrorException(new MyLibError(result.Err));
                 }
                 Raw.MyStruct* retVal = result.Ok;
                 return new MyStruct(retVal);
@@ -58,7 +58,7 @@ public partial class MyStruct: IDisposable
         }
     }
 
-    /// <exception cref="MyLibException"></exception>
+    /// <exception cref="MyLibErrorException"></exception>
     public void SetSlice(double[] newSlice)
     {
         unsafe
@@ -73,7 +73,7 @@ public partial class MyStruct: IDisposable
                 Raw.FfiResultVoidBoxMyLibError result = Raw.MyStruct.SetSlice(_inner, newSlicePtr, newSliceLength);
                 if (!result.isOk)
                 {
-                    throw new MyLibException(new MyLibError(result.Err));
+                    throw new MyLibErrorException(new MyLibError(result.Err));
                 }
             }
         }

@@ -6,14 +6,10 @@ pub struct LibraryConfig {
     pub native_lib: String,
     #[serde(default)]
     pub usings: Vec<String>,
-    #[serde(default = "bool_true")]
-    pub rename_exceptions: bool,
     #[serde(default)]
-    pub error_message_method: Option<String>,
-}
-
-pub fn bool_true() -> bool {
-    true
+    pub exceptions: ExceptionsConfig,
+    #[serde(default)]
+    pub properties: PropertiesConfig,
 }
 
 impl LibraryConfig {
@@ -22,8 +18,24 @@ impl LibraryConfig {
             namespace: "Interop".to_owned(),
             native_lib: "rust".to_owned(),
             usings: Vec::new(),
-            rename_exceptions: true,
-            error_message_method: None,
+            exceptions: ExceptionsConfig::default(),
+            properties: PropertiesConfig::default(),
         }
     }
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct PropertiesConfig {
+    #[serde(default)]
+    pub setters_prefix: Option<String>,
+    #[serde(default)]
+    pub getters_prefix: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct ExceptionsConfig {
+    #[serde(default)]
+    pub trim_suffix: String,
+    #[serde(default)]
+    pub error_message_method: Option<String>,
 }

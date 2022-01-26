@@ -16,16 +16,16 @@ namespace Interop;
 
 #nullable enable
 
-public partial class MyModuleOpaqueException : Exception
+public partial class MyLibErrorException : Exception
 {
-    private MyModuleOpaqueError _inner;
+    private MyLibError _inner;
 
-    public MyModuleOpaqueException(MyModuleOpaqueError inner) : base("MyModuleOpaque error occurred")
+    public MyLibErrorException(MyLibError inner) : base("MyLibError error occurred")
     {
         _inner = inner;
     }
 
-    public MyModuleOpaqueError Inner
+    public MyLibError Inner
     {
         get
         {

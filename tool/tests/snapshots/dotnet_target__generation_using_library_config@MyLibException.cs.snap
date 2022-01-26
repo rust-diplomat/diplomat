@@ -9,10 +9,12 @@ expression: out_texts.get(out).unwrap()
 using System;
 using System.Runtime.InteropServices;
 
-using Interop.Diplomat;
+using SomeOrg.SomeModule;
+using We.Also.Need.This;
+using OurOrg.OurRustLib.Diplomat;
 #pragma warning restore 0105
 
-namespace Interop;
+namespace OurOrg.OurRustLib;
 
 #nullable enable
 
@@ -20,7 +22,7 @@ public partial class MyLibException : Exception
 {
     private MyLibError _inner;
 
-    public MyLibException(MyLibError inner) : base("MyLib error occurred")
+    public MyLibException(MyLibError inner) : base(inner.ToDisplay())
     {
         _inner = inner;
     }

@@ -627,7 +627,7 @@ fn gen_method(
 
 pub struct ExceptionCtx {
     pub error_name: String,
-    pub stripped_error_name: String,
+    pub trimmed_error_name: String,
     pub name: String,
 }
 
@@ -638,18 +638,14 @@ pub fn error_type_to_exception_name(
     in_path: &ast::Path,
 ) -> Result<ExceptionCtx, fmt::Error> {
     let error_name = gen_type_name_to_string(error_typ, in_path, env)?;
-
-    let stripped_error_name = if library_config.rename_exceptions {
-        error_name.trim_end_matches("Error").to_upper_camel_case()
-    } else {
-        error_name.to_upper_camel_case()
-    };
-
-    let exception_name = format!("{}Exception", stripped_error_name);
+    let trimmed_error_name = error_name
+        .trim_end_matches(&library_config.exceptions.trim_suffix)
+        .to_upper_camel_case();
+    let exception_name = format!("{}Exception", trimmed_error_name);
 
     Ok(ExceptionCtx {
         error_name,
-        stripped_error_name,
+        trimmed_error_name,
         name: exception_name,
     })
 }
@@ -663,11 +659,11 @@ pub fn gen_exception(
 ) -> fmt::Result {
     let ExceptionCtx {
         error_name,
-        stripped_error_name,
+        trimmed_error_name,
         name: exception_name,
     } = error_type_to_exception_name(env, library_config, error_typ, in_path)?;
 
-    let error_str = format!("{stripped_error_name} error occurred");
+    let error_str = format!("{trimmed_error_name} error occurred");
 
     writeln!(out)?;
     writeln!(out, "public partial class {exception_name} : Exception")?;
@@ -676,7 +672,7 @@ pub fn gen_exception(
 
         writeln!(out)?;
         write!(out, "public {exception_name}({error_name} inner) : base(")?;
-        if let Some(method) = &library_config.error_message_method {
+        if let Some(method) = &library_config.exceptions.error_message_method {
             writeln!(out, "inner.{}())", method)?;
         } else {
             writeln!(out, r#""{error_str}")"#)?;
