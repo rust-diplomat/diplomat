@@ -132,7 +132,7 @@ pub enum TypeName {
     /// A `&str` type.
     StrReference,
     /// A `&[T]` type, where `T` is a primitive.
-    PrimitiveSlice(PrimitiveType),
+    PrimitiveSlice(PrimitiveType, /* mutable */ bool),
     /// The `()` type.
     Unit,
 }
@@ -226,9 +226,14 @@ impl TypeName {
             TypeName::StrReference => syn::parse_quote! {
                 &str
             },
-            TypeName::PrimitiveSlice(name) => {
+            TypeName::PrimitiveSlice(name, mutable) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
-                syn::parse_str(&format!("&[{}]", primitive_name)).unwrap()
+                let formatted_str = format!(
+                    "&{}[{}]",
+                    if *mutable { "mut " } else { "" },
+                    primitive_name
+                );
+                syn::parse_str(&formatted_str).unwrap()
             }
             TypeName::Unit => syn::parse_quote! {
                 ()
@@ -325,7 +330,7 @@ impl TypeName {
             }
             TypeName::Writeable => {}
             TypeName::StrReference => {}
-            TypeName::PrimitiveSlice(_) => {}
+            TypeName::PrimitiveSlice(_, _mut) => {}
             TypeName::Unit => {}
         }
     }
@@ -348,7 +353,7 @@ impl TypeName {
             TypeName::Named(_) => {}
             TypeName::Writeable => {}
             TypeName::StrReference => {}
-            TypeName::PrimitiveSlice(_) => {}
+            TypeName::PrimitiveSlice(_, _mut) => {}
             TypeName::Unit => {}
         }
     }
@@ -403,7 +408,7 @@ impl From<&syn::Type> for TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(*primitive);
+                            return TypeName::PrimitiveSlice(*primitive, r.mutability.is_some());
                         }
                     }
                 }
@@ -495,7 +500,8 @@ impl fmt::Display for TypeName {
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
             TypeName::Writeable => f.write_str("DiplomatWriteable"),
             TypeName::StrReference => f.write_str("&str"),
-            TypeName::PrimitiveSlice(ty) => write!(f, "[{}]", ty),
+            TypeName::PrimitiveSlice(ty, true) => write!(f, "&mut [{}]", ty),
+            TypeName::PrimitiveSlice(ty, false) => write!(f, "&[{}]", ty),
             TypeName::Unit => f.write_str("()"),
         }
     }
