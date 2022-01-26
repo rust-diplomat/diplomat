@@ -22,6 +22,14 @@ public partial class MyStruct: IDisposable
 {
     private unsafe Raw.MyStruct* _inner;
 
+    public double[] Slice
+    {
+        set
+        {
+            SetSlice(value);
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>MyStruct</c> from a raw handle.
     /// </summary>

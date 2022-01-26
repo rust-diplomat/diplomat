@@ -102,6 +102,38 @@ fn generation_using_library_config() {
 }
 
 #[test]
+fn setters_getters_properties() {
+    test_file_using_library_config! {
+        #[diplomat::bridge]
+        mod ffi {
+            #[diplomat::opaque]
+            struct Foo;
+
+            #[diplomat::opaque]
+            struct Bar;
+
+            impl Bar {
+                pub fn get_foo(&self) -> DiplomatResult<Box<Foo>, ()> {
+                    unimplemented!()
+                }
+
+                pub fn set_foo(&mut self, foo: &Foo) -> DiplomatResult<(), ()> {
+                    unimplemented!()
+                }
+
+                pub fn get_name(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
+                    unimplemented!()
+                }
+
+                pub fn set_name(&mut self, new_name: &str) -> DiplomatResult<(), ()> {
+                    unimplemented!()
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn cross_module_struct_fields() {
     test_file! {
         #[diplomat::bridge]
