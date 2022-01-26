@@ -107,7 +107,7 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
         // ast::TypeName::PrimitiveSlice(_) => Layout::new::<&[u8]>(),
         // Temporary:
         ast::TypeName::StrReference => Layout::new::<(usize_target, usize_target)>(),
-        ast::TypeName::PrimitiveSlice(_) => Layout::new::<(usize_target, usize_target)>(),
+        ast::TypeName::PrimitiveSlice(_, _) => Layout::new::<(usize_target, usize_target)>(),
         ast::TypeName::Writeable => panic!(),
         ast::TypeName::Unit => Layout::new::<()>(),
     }

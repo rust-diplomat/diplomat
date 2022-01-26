@@ -82,10 +82,11 @@ pub fn gen_method<W: fmt::Write>(
                 "const char* {}_data, size_t {}_len",
                 param.name, param.name
             )?;
-        } else if let ast::TypeName::PrimitiveSlice(ref prim) = param.ty {
+        } else if let ast::TypeName::PrimitiveSlice(ref prim, mutable) = param.ty {
             write!(
                 out,
-                "const {}* {}_data, size_t {}_len",
+                "{}{}* {}_data, size_t {}_len",
+                if mutable { "" } else { "const " },
                 c_type_for_prim(prim),
                 param.name,
                 param.name
@@ -186,6 +187,10 @@ mod tests {
 
                 impl MyStruct {
                     pub fn new_slice(v: &[f64]) -> Box<MyStruct> {
+                        unimplemented!()
+                    }
+
+                    pub fn fill_slice(v: &mut [f64]) {
                         unimplemented!()
                     }
 

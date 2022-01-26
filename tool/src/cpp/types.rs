@@ -122,7 +122,16 @@ fn gen_type_inner<W: fmt::Write>(
             write!(out, "const {}", library_config.string_view.expr)?;
         }
 
-        ast::TypeName::PrimitiveSlice(prim) => {
+        ast::TypeName::PrimitiveSlice(prim, true) => {
+            write!(
+                out,
+                "{}<{}>",
+                library_config.span.expr,
+                crate::c::types::c_type_for_prim(prim)
+            )?;
+        }
+
+        ast::TypeName::PrimitiveSlice(prim, false) => {
             write!(
                 out,
                 "const {}<{}>",
