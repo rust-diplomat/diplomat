@@ -143,7 +143,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     for p in method
         .params
         .iter()
-        .filter(|p| matches!(p.ty, ast::TypeName::PrimitiveSlice(_)))
+        .filter(|p| matches!(p.ty, ast::TypeName::PrimitiveSlice(..)))
     {
         writeln!(out)?;
         writeln!(

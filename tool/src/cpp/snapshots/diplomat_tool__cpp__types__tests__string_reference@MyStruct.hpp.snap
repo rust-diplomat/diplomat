@@ -31,12 +31,16 @@ struct MyStructDeleter {
 struct MyStruct {
  public:
   static MyStruct new_(const std::string_view v);
+  static void make_uppercase(std::string_view v);
 };
 
 
 inline MyStruct MyStruct::new_(const std::string_view v) {
   capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new(v.data(), v.size());
   return MyStruct{  };
+}
+inline void MyStruct::make_uppercase(std::string_view v) {
+  capi::MyStruct_make_uppercase(v.data(), v.size());
 }
 #endif
 

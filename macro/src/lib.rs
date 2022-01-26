@@ -6,8 +6,8 @@ use diplomat_core::ast;
 
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
-        ast::TypeName::StrReference | ast::TypeName::PrimitiveSlice(_) => {
-            let data_type = if let ast::TypeName::PrimitiveSlice(ref prim) = param.ty {
+        ast::TypeName::StrReference(mutable) | ast::TypeName::PrimitiveSlice(_, mutable) => {
+            let data_type = if let ast::TypeName::PrimitiveSlice(prim, ..) = &param.ty {
                 ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
             } else {
                 quote! { u8 }
@@ -25,12 +25,21 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                     subpat: None,
                 })),
                 colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(
-                    parse2(quote! {
-                        *const #data_type
-                    })
-                    .unwrap(),
-                ),
+                ty: if *mutable {
+                    Box::new(
+                        parse2(quote! {
+                            *mut #data_type
+                        })
+                        .unwrap(),
+                    )
+                } else {
+                    Box::new(
+                        parse2(quote! {
+                            *const #data_type
+                        })
+                        .unwrap(),
+                    )
+                },
             }));
 
             expanded_params.push(FnArg::Typed(PatType {
@@ -73,7 +82,7 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
 
 fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
     match &param.ty {
-        ast::TypeName::StrReference | ast::TypeName::PrimitiveSlice(_) => {
+        ast::TypeName::StrReference(mutable) | ast::TypeName::PrimitiveSlice(_, mutable) => {
             let data_ident = Ident::new(
                 (param.name.clone() + "_diplomat_data").as_str(),
                 Span::call_site(),
@@ -83,17 +92,33 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                 Span::call_site(),
             );
 
-            let tokens = if param.ty == ast::TypeName::StrReference {
-                // TODO(#57): don't just unwrap? or should we assume that the other side gives us a good value?
-                quote! {
-                    unsafe {
-                        core::str::from_utf8(core::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
+            let tokens = if let ast::TypeName::PrimitiveSlice(..) = &param.ty {
+                if *mutable {
+                    quote! {
+                        unsafe {
+                            core::slice::from_raw_parts_mut(#data_ident, #len_ident)
+                        }
+                    }
+                } else {
+                    quote! {
+                        unsafe {
+                            core::slice::from_raw_parts(#data_ident, #len_ident)
+                        }
                     }
                 }
             } else {
-                quote! {
-                    unsafe {
-                        core::slice::from_raw_parts(#data_ident, #len_ident)
+                // TODO(#57): don't just unwrap? or should we assume that the other side gives us a good value?
+                if *mutable {
+                    quote! {
+                        unsafe {
+                            core::str::from_utf8_mut(core::slice::from_raw_parts_mut(#data_ident, #len_ident)).unwrap()
+                        }
+                    }
+                } else {
+                    quote! {
+                        unsafe {
+                            core::str::from_utf8(core::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
+                        }
                     }
                 }
             };
@@ -314,6 +339,25 @@ mod tests {
     }
 
     #[test]
+    fn method_taking_mutable_str() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        pub fn make_uppercase(s: &mut str) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
     fn method_taking_slice() {
         insta::assert_display_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
@@ -322,6 +366,25 @@ mod tests {
 
                     impl Foo {
                         pub fn from_slice(s: &[f64]) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn method_taking_mutable_slice() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        pub fn fill_slice(s: &mut [f64]) {
                             unimplemented!()
                         }
                     }

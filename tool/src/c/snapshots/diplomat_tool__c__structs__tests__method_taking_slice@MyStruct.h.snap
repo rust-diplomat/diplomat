@@ -19,6 +19,8 @@ typedef struct MyStruct MyStruct;
 
 MyStruct* MyStruct_new_slice(const double* v_data, size_t v_len);
 
+void MyStruct_fill_slice(double* v_data, size_t v_len);
+
 void MyStruct_set_slice(MyStruct* self, const double* new_slice_data, size_t new_slice_len);
 void MyStruct_destroy(MyStruct* self);
 
