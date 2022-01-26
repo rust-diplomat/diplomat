@@ -19,7 +19,7 @@ delegate bool WriteableGrow(IntPtr self, nuint capacity);
 
 [Serializable]
 [StructLayout(LayoutKind.Sequential)]
-public struct DiplomatWriteable
+public struct DiplomatWriteable : IDisposable
 {
     readonly IntPtr context;
     IntPtr buf;
@@ -66,7 +66,7 @@ public struct DiplomatWriteable
 #endif
     }
 
-    public void FreeBuffer()
+    public void Dispose()
     {
         if (buf != IntPtr.Zero)
         {
@@ -89,7 +89,7 @@ public struct DiplomatWriteable
         }
         DiplomatWriteable* self = (DiplomatWriteable*)writeable;
 
-        nuint newCap = self->cap * 2;
+        nuint newCap = capacity;
         if (newCap > int.MaxValue)
         {
             return false;

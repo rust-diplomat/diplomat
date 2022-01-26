@@ -11,12 +11,12 @@ namespace DiplomatFeatures;
 
 #nullable enable
 
-public partial class Opaque: IDisposable
+public partial class Float64Vec: IDisposable
 {
-    private unsafe Raw.Opaque* _inner;
+    private unsafe Raw.Float64Vec* _inner;
 
     /// <summary>
-    /// Creates a managed <c>Opaque</c> from a raw handle.
+    /// Creates a managed <c>Float64Vec</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may causes use-after-free and double-free).
@@ -25,46 +25,64 @@ public partial class Opaque: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    public unsafe Opaque(Raw.Opaque* handle)
+    public unsafe Float64Vec(Raw.Float64Vec* handle)
     {
         _inner = handle;
     }
 
     /// <returns>
-    /// A <c>Opaque</c> allocated on Rust side.
+    /// A <c>Float64Vec</c> allocated on Rust side.
     /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
-    public static Opaque New()
+    public static Float64Vec New(double[] v)
     {
         unsafe
         {
-            Raw.Opaque* retVal = Raw.Opaque.New();
-            return new Opaque(retVal);
+            nuint vLength = (nuint)v.Length;
+            fixed (double* vPtr = v)
+            {
+                Raw.Float64Vec* retVal = Raw.Float64Vec.New(vPtr, vLength);
+                return new Float64Vec(retVal);
+            }
         }
     }
 
-    public void AssertStruct(MyStruct s)
+    public void FillSlice(double[] v)
     {
         unsafe
         {
             if (_inner == null)
             {
-                throw new ObjectDisposedException("Opaque");
+                throw new ObjectDisposedException("Float64Vec");
             }
-            Raw.MyStruct* sRaw;
-            sRaw = s.AsFFI();
-            if (sRaw == null)
+            nuint vLength = (nuint)v.Length;
+            fixed (double* vPtr = v)
             {
-                throw new ObjectDisposedException("MyStruct");
+                Raw.Float64Vec.FillSlice(_inner, vPtr, vLength);
             }
-            Raw.Opaque.AssertStruct(_inner, *sRaw);
+        }
+    }
+
+    public void SetValue(double[] newSlice)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            nuint newSliceLength = (nuint)newSlice.Length;
+            fixed (double* newSlicePtr = newSlice)
+            {
+                Raw.Float64Vec.SetValue(_inner, newSlicePtr, newSliceLength);
+            }
         }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    public unsafe Raw.Opaque* AsFFI()
+    public unsafe Raw.Float64Vec* AsFFI()
     {
         return _inner;
     }
@@ -81,14 +99,14 @@ public partial class Opaque: IDisposable
                 return;
             }
 
-            Raw.Opaque.Destroy(_inner);
+            Raw.Float64Vec.Destroy(_inner);
             _inner = null;
 
             GC.SuppressFinalize(this);
         }
     }
 
-    ~Opaque()
+    ~Float64Vec()
     {
         Dispose();
     }

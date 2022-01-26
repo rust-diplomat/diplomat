@@ -27,6 +27,105 @@ export class ErrorStruct {
   }
 }
 
+const Float64Vec_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Float64Vec_destroy(underlying);
+});
+
+export class Float64Vec {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new(v) {
+    let v_diplomat_bytes = new Uint8Array(v);
+    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 8);
+    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
+    v_diplomat_buf.set(v_diplomat_bytes, 0);
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new Float64Vec(wasm.Float64Vec_new(v_diplomat_ptr, v_diplomat_bytes.length));
+        out.owner = null;
+        return out;
+      })();
+      Float64Vec_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 8);
+    return diplomat_out;
+  }
+
+  fill_slice(v) {
+    let v_diplomat_bytes = new Uint8Array(v);
+    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 8);
+    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
+    v_diplomat_buf.set(v_diplomat_bytes, 0);
+    const diplomat_out = wasm.Float64Vec_fill_slice(this.underlying, v_diplomat_ptr, v_diplomat_bytes.length);
+    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 8);
+  }
+
+  set_value(new_slice) {
+    let new_slice_diplomat_bytes = new Uint8Array(new_slice);
+    let new_slice_diplomat_ptr = wasm.diplomat_alloc(new_slice_diplomat_bytes.length, 8);
+    let new_slice_diplomat_buf = new Uint8Array(wasm.memory.buffer, new_slice_diplomat_ptr, new_slice_diplomat_bytes.length);
+    new_slice_diplomat_buf.set(new_slice_diplomat_bytes, 0);
+    const diplomat_out = wasm.Float64Vec_set_value(this.underlying, new_slice_diplomat_ptr, new_slice_diplomat_bytes.length);
+    wasm.diplomat_free(new_slice_diplomat_ptr, new_slice_diplomat_bytes.length, 8);
+  }
+}
+
+const MyString_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.MyString_destroy(underlying);
+});
+
+export class MyString {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new(v) {
+    let v_diplomat_bytes = (new TextEncoder()).encode(v);
+    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 1);
+    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
+    v_diplomat_buf.set(v_diplomat_bytes, 0);
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new MyString(wasm.MyString_new(v_diplomat_ptr, v_diplomat_bytes.length));
+        out.owner = null;
+        return out;
+      })();
+      MyString_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 1);
+    return diplomat_out;
+  }
+
+  set_str(new_str) {
+    let new_str_diplomat_bytes = (new TextEncoder()).encode(new_str);
+    let new_str_diplomat_ptr = wasm.diplomat_alloc(new_str_diplomat_bytes.length, 1);
+    let new_str_diplomat_buf = new Uint8Array(wasm.memory.buffer, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
+    new_str_diplomat_buf.set(new_str_diplomat_bytes, 0);
+    const diplomat_out = wasm.MyString_set_str(this.underlying, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
+    wasm.diplomat_free(new_str_diplomat_ptr, new_str_diplomat_bytes.length, 1);
+  }
+
+  get_str() {
+    const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
+      return wasm.MyString_get_str(this.underlying, writeable);
+    });
+    return diplomat_out;
+  }
+
+  static make_uppercase(v) {
+    let v_diplomat_bytes = (new TextEncoder()).encode(v);
+    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 1);
+    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
+    v_diplomat_buf.set(v_diplomat_bytes, 0);
+    const diplomat_out = wasm.MyString_make_uppercase(v_diplomat_ptr, v_diplomat_bytes.length);
+    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 1);
+  }
+}
+
 const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.MyStruct_destroy(underlying);
 });
