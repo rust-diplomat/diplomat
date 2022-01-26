@@ -21,6 +21,7 @@ colored = "2.0"
 serde = { features = ["derive"], version = "1.0.130" }
 toml = "0.5.8"
 tera = { version = "1", default-features = false }
+heck = "0.4" # conversion between naming convention
 
 [dev-dependencies]
 insta = { version = "1.7.1", features = [ "backtrace" ] }

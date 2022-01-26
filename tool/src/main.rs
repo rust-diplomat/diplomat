@@ -1,4 +1,3 @@
-use colored::*;
 use core::panic;
 use std::{
     collections::HashMap,
@@ -6,16 +5,11 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
 };
-use structopt::StructOpt;
 
+use colored::*;
 use diplomat_core::ast;
-
-mod c;
-mod cpp;
-mod docs_util;
-mod js;
-mod layout;
-mod util;
+use diplomat_tool::{c, cpp, dotnet, js};
+use structopt::StructOpt;
 
 /// diplomat-tool CLI options, as parsed by [structopt].
 #[derive(Debug, StructOpt)]
@@ -24,7 +18,7 @@ mod util;
     about = "Generate bindings to a target language"
 )]
 struct Opt {
-    /// The target language, "js", "c", or "cpp".
+    /// The target language, "js", "c", "cpp" or "dotnet" (C#).
     #[structopt()]
     target_language: String,
 
@@ -107,6 +101,7 @@ fn main() -> std::io::Result<()> {
         "js" => js::gen_bindings(&env, &mut out_texts).unwrap(),
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
         "cpp" => cpp::gen_bindings(&env, &opt.library_config, &mut out_texts).unwrap(),
+        "dotnet" => dotnet::gen_bindings(&env, &opt.library_config, &mut out_texts).unwrap(),
         o => panic!("Unknown target: {}", o),
     }
 
@@ -137,6 +132,7 @@ fn main() -> std::io::Result<()> {
             "js" => js::docs::gen_docs(&env, &mut docs_out_texts).unwrap(),
             "cpp" => cpp::docs::gen_docs(&env, &opt.library_config, &mut docs_out_texts).unwrap(),
             "c" => todo!("Docs generation for C"),
+            "dotnet" => todo!("Docs generation for .NET?"),
             o => panic!("Unknown target: {}", o),
         }
 

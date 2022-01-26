@@ -79,7 +79,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> String {
             format!("result_{}_{}", name_for_type(ok), name_for_type(err))
         }
         ast::TypeName::Writeable => "writeable".to_string(),
-        ast::TypeName::StrReference(true) => "str_mut_ref".to_string(),
+        ast::TypeName::StrReference(true) => "str_ref_mut".to_string(),
         ast::TypeName::StrReference(false) => "str_ref".to_string(),
         ast::TypeName::PrimitiveSlice(prim, true) => {
             format!("ref_mut_prim_slice_{}", c_type_for_prim(prim))

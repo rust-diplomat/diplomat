@@ -51,7 +51,7 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
     all_types.sort_by_key(|t| t.1.name());
     for (in_path, custom_type) in all_types {
         writeln!(out)?;
-        gen_struct(out, custom_type, in_path, env)?;
+        gen_struct(out, custom_type, &in_path, env)?;
     }
 
     Ok(())

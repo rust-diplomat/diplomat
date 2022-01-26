@@ -1,0 +1,8 @@
+usings = [
+    "SomeOrg.SomeModule",
+    "We.Also.Need.This",
+]
+namespace = "OurOrg.OurRustLib"
+native_lib = "mylib"
+rename_exceptions = false
+error_message_method = "ToDisplay"

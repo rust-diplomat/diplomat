@@ -4,7 +4,7 @@ use super::utils::get_doc_lines;
 use super::Method;
 
 /// A fieldless enum declaration in an FFI module.
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
 pub struct Enum {
     pub name: String,
     pub doc_lines: String,
