@@ -4,6 +4,57 @@ const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
   wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
 });
 
+const CountedOpaque_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.CountedOpaque_destroy(underlying);
+});
+
+export class CountedOpaque {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new(counter) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new CountedOpaque(wasm.CountedOpaque_new(counter.underlying));
+        out.owner = null;
+        return out;
+      })();
+      CountedOpaque_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+}
+
+const Counter_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Counter_destroy(underlying);
+});
+
+export class Counter {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new() {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new Counter(wasm.Counter_new());
+        out.owner = null;
+        return out;
+      })();
+      Counter_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  count() {
+    const diplomat_out = wasm.Counter_count(this.underlying);
+    return diplomat_out;
+  }
+}
+
 const ErrorEnum_js_to_rust = {
   "Foo": 0,
   "Bar": 1,
@@ -385,6 +436,29 @@ export class OptionStruct {
       out.owner = null;
       return out;
     })();
+  }
+}
+
+const OwnershipEater_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.OwnershipEater_destroy(underlying);
+});
+
+export class OwnershipEater {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new() {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new OwnershipEater(wasm.OwnershipEater_new());
+        out.owner = null;
+        return out;
+      })();
+      OwnershipEater_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
   }
 }
 

@@ -399,7 +399,45 @@ fn option_conversion() {
             struct MyStruct;
 
             impl MyStruct {
-                pub fn create(my_other_struct: Option<Box<MyOtherStruct>>) -> Option<Box<MyStruct>> {
+                pub fn create(my_other_struct: Option<&MyOtherStruct>) -> Option<Box<MyStruct>> {
+                    unimplemented!();
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn take_ownership() {
+    test_file! {
+        #[diplomat::bridge]
+        mod ffi {
+            #[diplomat::opaque]
+            struct MyOtherStruct;
+
+            struct NonOpaqueStruct {
+                a: u8,
+                b: u16,
+                c: char,
+            }
+
+            #[diplomat::opaque]
+            struct MyStruct;
+
+            impl MyStruct {
+                pub fn from_other(my_other_struct: Box<MyOtherStruct>) -> Box<MyStruct> {
+                    unimplemented!();
+                }
+
+                pub fn from_other_opt(my_other_struct: Option<Box<MyOtherStruct>>) -> Box<MyStruct> {
+                    unimplemented!();
+                }
+
+                pub fn from_non_opaque(non_opaque: Box<NonOpaqueStruct>) -> Box<MyStruct> {
+                    unimplemented!();
+                }
+
+                pub fn from_non_opaque_opt(non_opaque: Option<Box<NonOpaqueStruct>>) -> Box<MyStruct> {
                     unimplemented!();
                 }
             }
@@ -526,26 +564,6 @@ fn unit_type() {
 
             impl MyStruct {
                 pub fn something(&self) -> () {
-                    unimplemented!()
-                }
-            }
-        }
-    }
-}
-
-#[test]
-fn optional_param() {
-    test_file! {
-        #[diplomat::bridge]
-        mod ffi {
-            #[diplomat::opaque]
-            struct Bar;
-
-            #[diplomat::opaque]
-            struct Foo;
-
-            impl Bar {
-                pub fn something(&self, foo: Option<Box<Foo>>) {
                     unimplemented!()
                 }
             }

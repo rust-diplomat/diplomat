@@ -85,6 +85,23 @@ pub fn gen(
                 out.scope(|out| writeln!(out, "return _inner;"))?;
 
                 writeln!(out)?;
+                gen_doc_block(out, "Marks this object as moved into Rust side.")?;
+                writeln!(out, "public void MarkAsMoved()")?;
+                out.scope(|out| {
+                    writeln!(out, "unsafe")?;
+                    out.scope(|out| {
+                        writeln!(out, "if (_inner == null)")?;
+                        out.scope(|out| writeln!(out, r#"throw new ObjectDisposedException("{}");"#, opaque.name))?;
+                        writeln!(out, "_inner = null;")
+                    })
+                })?;
+
+                writeln!(out)?;
+                gen_doc_block(out, "Restores unmanaged ressource handle to this object.")?;
+                writeln!(out, "public unsafe void RestoreHandle(Raw.{}* handle)", opaque.name)?;
+                out.scope(|out| writeln!(out, "_inner = handle;"))?;
+
+                writeln!(out)?;
                 gen_doc_block(out, "Destroys the underlying object immediately.")?;
                 writeln!(out, "public void Dispose()")?;
                 out.scope(|out| {
@@ -173,6 +190,35 @@ pub fn gen(
                 gen_doc_block(out, "Returns the underlying raw handle.")?;
                 writeln!(out, "public unsafe Raw.{}* AsFFI()", strct.name)?;
                 out.scope(|out| writeln!(out, "return _inner;"))?;
+
+                writeln!(out)?;
+                gen_doc_block(out, "Marks this object as moved into Rust side.")?;
+                writeln!(out, "/// <remarks>")?;
+                writeln!(out, "/// Safety: this instance must be allocated on Rust side.")?;
+                writeln!(out, "/// </remarks>")?;
+                writeln!(
+                    out,
+                    r#"/// <exception cref="DiplomatUnmovableObject"></exception>"#
+                )?;
+                writeln!(out, "public void MarkAsMoved()")?;
+                out.scope(|out| {
+                    writeln!(out, "unsafe")?;
+                    out.scope(|out| {
+                        writeln!(out, "if (!_isAllocatedByRust)")?;
+                        out.scope(|out| writeln!(out, r#"throw new DiplomatUnmovableObject("{}", "not allocated by Rust");"#, strct.name))?;
+                        writeln!(out, "if (_inner == null)")?;
+                        out.scope(|out| writeln!(out, r#"throw new ObjectDisposedException("{}");"#, strct.name))?;
+                        writeln!(out, "_inner = null;")
+                    })
+                })?;
+
+                writeln!(out)?;
+                gen_doc_block(out, "Restores unmanaged ressource handle to this object.")?;
+                writeln!(out, "/// <remarks>")?;
+                writeln!(out, "/// Safety: the pointee must be allocated on Rust side.")?;
+                writeln!(out, "/// </remarks>")?;
+                writeln!(out, "public unsafe void RestoreHandle(Raw.{}* handle)", strct.name)?;
+                out.scope(|out| writeln!(out, "_inner = handle;"))?;
 
                 writeln!(out)?;
                 gen_doc_block(out, "Destroys the underlying object immediately.")?;
@@ -515,7 +561,9 @@ fn gen_method(
                 )?;
             }
 
-            for param in params_custom_types {
+            let mut some_param_requires_ownership = false;
+
+            for param in &params_custom_types {
                 let param_name = param.name.to_lower_camel_case();
                 let raw_var_name = format!("{}Raw", param_name);
                 let mut raw_type_name = String::new();
@@ -525,6 +573,8 @@ fn gen_method(
                     env,
                     &mut raw_type_name,
                 )?;
+
+                some_param_requires_ownership |= param_requires_ownership(&param.ty);
 
                 writeln!(out, "{raw_type_name} {raw_var_name};")?;
 
@@ -557,6 +607,44 @@ fn gen_method(
                     writeln!(out, ";")?;
                     insert_null_check(&raw_var_name, &param.ty, in_path, env, out)?;
                 }
+            }
+
+            if some_param_requires_ownership {
+                writeln!(out, "try")?;
+                out.scope(|out| {
+                    for param in params_custom_types
+                        .iter()
+                        .filter(|p| param_requires_ownership(&p.ty))
+                    {
+                        let param_name = param.name.to_lower_camel_case();
+                        if let ast::TypeName::Option(_) = &param.ty {
+                            writeln!(out, "if ({param_name} != null)")?;
+                            out.scope(|out| writeln!(out, "{param_name}.MarkAsMoved();"))?;
+                        } else {
+                            writeln!(out, "{param_name}.MarkAsMoved();")?;
+                        }
+                    }
+                    Ok(())
+                })?;
+                writeln!(out, "catch (DiplomatUnmovableObject e)")?;
+                out.scope(|out| {
+                    for param in params_custom_types
+                        .iter()
+                        .filter(|p| param_requires_ownership(&p.ty))
+                    {
+                        let param_name = param.name.to_lower_camel_case();
+                        let raw_var_name = format!("{}Raw", param_name);
+                        if let ast::TypeName::Option(_) = &param.ty {
+                            writeln!(out, "if ({param_name} != null)")?;
+                            out.scope(|out| {
+                                writeln!(out, "{param_name}.RestoreHandle({raw_var_name});")
+                            })?;
+                        } else {
+                            writeln!(out, "{param_name}.RestoreHandle({raw_var_name});")?;
+                        }
+                    }
+                    writeln!(out, "throw e;")
+                })?;
             }
 
             for param in &params_slice {
@@ -756,6 +844,14 @@ fn gen_type_name_decl_position(
     }
 }
 
+fn param_requires_ownership(typ: &ast::TypeName) -> bool {
+    match typ {
+        ast::TypeName::Option(opt) => param_requires_ownership(opt.as_ref()),
+        ast::TypeName::Box(_) => true,
+        _ => false,
+    }
+}
+
 fn gen_raw_type_name_decl_position(
     typ: &ast::TypeName,
     in_path: &ast::Path,
@@ -908,9 +1004,7 @@ fn extract_getter_metadata(
 
     let property_name = method.name.strip_prefix(prefix)?.to_upper_camel_case();
 
-    if method.self_param.is_none() {
-        return None;
-    }
+    method.self_param.as_ref()?;
 
     let return_type = if method.is_writeable_out() {
         "string".to_owned()
@@ -941,15 +1035,13 @@ fn extract_setter_metadata(
 
     let property_name = method.name.strip_prefix(prefix)?.to_upper_camel_case();
 
-    if method.self_param.is_none() {
-        return None;
-    }
+    method.self_param.as_ref()?;
 
     if method.params.len() > 1 {
         return None;
     }
 
-    let first_arg = method.params.iter().next()?;
+    let first_arg = method.params.get(0)?;
 
     let mut param_type = String::new();
     gen_type_name_decl_position(&first_arg.ty, in_path, env, &mut param_type).ok()?;

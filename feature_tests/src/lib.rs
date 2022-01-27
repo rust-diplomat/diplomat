@@ -4,6 +4,7 @@
 #![allow(clippy::style)]
 
 pub mod option;
+pub mod ownership;
 pub mod result;
 pub mod slices;
 pub mod structs;

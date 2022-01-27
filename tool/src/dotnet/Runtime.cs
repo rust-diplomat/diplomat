@@ -136,3 +136,20 @@ public class DiplomatOpaqueException : Exception
 {
     public DiplomatOpaqueException() : base("The FFI function failed with an opaque error") { }
 }
+
+public class DiplomatUnmovableObject : Exception
+{
+    private string _objectName;
+
+    public string ObjectName
+    {
+        get
+        {
+            return _objectName;
+        }
+    }
+
+    public DiplomatUnmovableObject(string objectName, string message) : base($"Can't move this instance of {objectName}: {message}") {
+        _objectName = objectName;
+    }
+}
