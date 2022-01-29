@@ -40,7 +40,7 @@ public class OwnershipTests
 
         // Move `counted` inside `eater`
         eater.TakeOpaque(counted);
-        // Do nothing because `counted` was moved above
+        // Does nothing because `counted` was moved above
         counted.Dispose();
         // Total count should be unchanged.
         Assert.Equal((nuint)1, counter.Count());
