@@ -122,12 +122,12 @@ mod tests {
                 #[diplomat::opaque]
                 struct MyOpaqueStruct(UnknownType);
 
-                struct MyStruct {
-                    a: Box<MyOpaqueStruct>,
+                struct MyStruct<'a> {
+                    a: &'a MyOpaqueStruct,
                 }
 
-                impl MyStruct {
-                    pub fn new(foo: &MyOpaqueStruct, bar: &mut MyOpaqueStruct) -> MyStruct {
+                impl<'a> MyStruct<'a> {
+                    pub fn new(foo: &'a MyOpaqueStruct, bar: &'a mut MyOpaqueStruct) -> MyStruct<'a> {
                         unimplemented!()
                     }
                 }

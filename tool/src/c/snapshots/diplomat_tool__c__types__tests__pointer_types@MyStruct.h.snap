@@ -17,7 +17,7 @@ extern "C" {
 typedef struct MyOpaqueStruct MyOpaqueStruct;
 
 typedef struct MyStruct {
-    MyOpaqueStruct* a;
+    const MyOpaqueStruct* a;
 } MyStruct;
 #include "MyOpaqueStruct.h"
 
