@@ -32,7 +32,6 @@ public partial class MyString: IDisposable
 
     /// <returns>
     /// A <c>MyString</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static MyString New(string v)
     {

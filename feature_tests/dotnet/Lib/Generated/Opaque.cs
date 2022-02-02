@@ -32,7 +32,6 @@ public partial class Opaque: IDisposable
 
     /// <returns>
     /// A <c>Opaque</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static Opaque New()
     {

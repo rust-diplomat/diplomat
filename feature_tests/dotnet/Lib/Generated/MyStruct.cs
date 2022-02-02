@@ -133,7 +133,6 @@ public partial class MyStruct
 
     /// <returns>
     /// A <c>MyStruct</c> allocated on C# side.
-    /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
     /// </returns>
     public static MyStruct New()
     {

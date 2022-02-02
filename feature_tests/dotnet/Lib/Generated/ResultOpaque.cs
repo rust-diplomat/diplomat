@@ -33,7 +33,6 @@ public partial class ResultOpaque: IDisposable
     /// <exception cref="ErrorEnumException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static ResultOpaque New(int i)
     {
@@ -52,7 +51,6 @@ public partial class ResultOpaque: IDisposable
     /// <exception cref="ErrorEnumException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static ResultOpaque NewFailingFoo()
     {
@@ -71,7 +69,6 @@ public partial class ResultOpaque: IDisposable
     /// <exception cref="ErrorEnumException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static ResultOpaque NewFailingBar()
     {
@@ -90,7 +87,6 @@ public partial class ResultOpaque: IDisposable
     /// <exception cref="DiplomatOpaqueException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static ResultOpaque NewFailingUnit()
     {
@@ -109,7 +105,6 @@ public partial class ResultOpaque: IDisposable
     /// <exception cref="ErrorStructException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static ResultOpaque NewFailingStruct(int i)
     {
@@ -141,7 +136,6 @@ public partial class ResultOpaque: IDisposable
     /// <exception cref="ResultOpaqueException"></exception>
     /// <returns>
     /// A <c>ErrorEnum</c> allocated on C# side.
-    /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
     /// </returns>
     public static ErrorEnum NewInEnumErr(int i)
     {

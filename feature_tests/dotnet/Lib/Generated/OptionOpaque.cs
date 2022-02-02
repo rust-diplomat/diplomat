@@ -32,7 +32,6 @@ public partial class OptionOpaque: IDisposable
 
     /// <returns>
     /// A <c>OptionOpaque</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static OptionOpaque? New(int i)
     {
@@ -49,7 +48,6 @@ public partial class OptionOpaque: IDisposable
 
     /// <returns>
     /// A <c>OptionOpaque</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static OptionOpaque? NewNone()
     {
@@ -66,7 +64,6 @@ public partial class OptionOpaque: IDisposable
 
     /// <returns>
     /// A <c>OptionStruct</c> allocated on C# side.
-    /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
     /// </returns>
     public static OptionStruct NewStruct()
     {
@@ -79,7 +76,6 @@ public partial class OptionOpaque: IDisposable
 
     /// <returns>
     /// A <c>OptionStruct</c> allocated on C# side.
-    /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
     /// </returns>
     public static OptionStruct NewStructNones()
     {
