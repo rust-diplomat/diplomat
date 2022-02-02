@@ -43,6 +43,11 @@ impl SliceParam {
     }
 }
 
+/// Writes the raw → idiomatic conversion code
+///
+/// Primitive type: nothing to do
+/// Struct/opaque custom type: wrap pointer into a managed class
+/// Enum: cast from raw enum
 pub fn to_idiomatic_object<W: fmt::Write>(
     env: &Env,
     typ: &ast::TypeName,
@@ -56,7 +61,7 @@ pub fn to_idiomatic_object<W: fmt::Write>(
             to_idiomatic_object(env, boxed.as_ref(), in_path, input_var_name, out)
         }
         ast::TypeName::Reference(reference, ..) => {
-            to_raw_object(env, reference.as_ref(), in_path, input_var_name, out)
+            to_idiomatic_object(env, reference.as_ref(), in_path, input_var_name, out)
         }
         ast::TypeName::Option(opt) => {
             to_idiomatic_object(env, opt.as_ref(), in_path, input_var_name, out)
@@ -75,6 +80,11 @@ pub fn to_idiomatic_object<W: fmt::Write>(
     }
 }
 
+/// Writes the idiomatic → raw conversion code
+///
+/// Primitive type: nothing to do
+/// Struct/opaque custom type: extract raw representation using `.AsFFI()`
+/// Enum: cast from idiomatic enum
 pub fn to_raw_object<W: fmt::Write>(
     env: &Env,
     typ: &ast::TypeName,
