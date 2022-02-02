@@ -14,12 +14,14 @@ expression: out_texts.get(out).unwrap()
 #ifdef __cplusplus
 extern "C" {
 #endif
+typedef struct MyOpaqueStruct MyOpaqueStruct;
 
 typedef struct MyStruct {
-    MyStruct* a;
+    const MyOpaqueStruct* a;
 } MyStruct;
+#include "MyOpaqueStruct.h"
 
-MyStruct MyStruct_new(const MyStruct* foo, MyStruct* bar);
+MyStruct MyStruct_new(const MyOpaqueStruct* foo, MyOpaqueStruct* bar);
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus

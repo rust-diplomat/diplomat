@@ -35,7 +35,14 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
     let mut all_results = Vec::new();
 
     for (in_path, typ) in all_types {
-        gen_struct_header(typ, in_path, &mut seen_results, &mut all_results, outs, env)?;
+        gen_struct_header(
+            typ,
+            &in_path,
+            &mut seen_results,
+            &mut all_results,
+            outs,
+            env,
+        )?;
     }
 
     for (in_path, typ) in &all_results {

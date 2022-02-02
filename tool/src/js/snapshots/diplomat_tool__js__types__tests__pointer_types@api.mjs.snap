@@ -33,9 +33,6 @@ export class MyStruct {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
       wasm.MyStruct_new(diplomat_receive_buffer, foo.underlying, bar.underlying);
       const out = new MyStruct(diplomat_receive_buffer);
-      const out_a_value = out.a;
-      MyOpaqueStruct_box_destroy_registry.register(out_a_value, out_a_value.underlying);
-      Object.defineProperty(out, "a", { value: out_a_value });
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
         size: 5,

@@ -7,6 +7,7 @@ Documentation
 
    option_ffi
    result_ffi
+   slices_ffi
    structs_ffi
 
 Indices and tables

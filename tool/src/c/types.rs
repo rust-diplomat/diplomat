@@ -79,7 +79,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> String {
             format!("result_{}_{}", name_for_type(ok), name_for_type(err))
         }
         ast::TypeName::Writeable => "writeable".to_string(),
-        ast::TypeName::StrReference(true) => "str_mut_ref".to_string(),
+        ast::TypeName::StrReference(true) => "str_ref_mut".to_string(),
         ast::TypeName::StrReference(false) => "str_ref".to_string(),
         ast::TypeName::PrimitiveSlice(prim, true) => {
             format!("ref_mut_prim_slice_{}", c_type_for_prim(prim))
@@ -119,12 +119,15 @@ mod tests {
         test_file! {
             #[diplomat::bridge]
             mod ffi {
-                struct MyStruct {
-                    a: Box<MyStruct>,
+                #[diplomat::opaque]
+                struct MyOpaqueStruct(UnknownType);
+
+                struct MyStruct<'a> {
+                    a: &'a MyOpaqueStruct,
                 }
 
-                impl MyStruct {
-                    pub fn new(foo: &MyStruct, bar: &mut MyStruct) -> MyStruct {
+                impl<'a> MyStruct<'a> {
+                    pub fn new(foo: &'a MyOpaqueStruct, bar: &'a mut MyOpaqueStruct) -> MyStruct<'a> {
                         unimplemented!()
                     }
                 }

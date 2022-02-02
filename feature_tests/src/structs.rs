@@ -17,6 +17,7 @@ pub mod ffi {
         pub fn new() -> Box<Opaque> {
             Box::new(Opaque())
         }
+
         pub fn assert_struct(&self, s: MyStruct) {
             s.assert_value();
         }

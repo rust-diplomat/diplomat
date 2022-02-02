@@ -13,7 +13,7 @@ use super::{Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
 use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
 pub enum CustomType {
     /// A non-opaque struct whose fields will be visible across the FFI boundary.
     Struct(Struct),
