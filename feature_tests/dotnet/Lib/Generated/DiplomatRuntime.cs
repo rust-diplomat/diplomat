@@ -21,6 +21,17 @@ delegate bool WriteableGrow(IntPtr self, nuint capacity);
 [StructLayout(LayoutKind.Sequential)]
 public struct DiplomatWriteable : IDisposable
 {
+    // About the current approach:
+    // Ideally DiplomatWriteable should wrap the native string type and grows/writes directly into the internal buffer.
+    // However, there is no native string type backed by UTF-8 in dotnet frameworks.
+    // Alternative could be to provide Diplomat's own `Utf8String` type, but this is not trivial and mostly useless
+    // on its own because all other dotnet/C# APIs are expecting the standard UTF-16 encoded string/String type.
+    // API is expected to become overall less ergonomic by forcing users to explicitly convert between UTF-16 and UTF-8 anyway in such case.
+    // It could be useful for copy-free interactions between Diplomat-generated API though.
+    // Also, there is no way to re-use the unmanaged buffer as-is to get a managed byte[]
+    // (hence `ToUtf8Bytes` is copying the internal buffer from unmanaged to managed memory).
+    // It's encouraged to enable memoization when applicable (#129).
+
     readonly IntPtr context;
     IntPtr buf;
     nuint len;

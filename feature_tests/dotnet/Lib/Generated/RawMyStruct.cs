@@ -31,7 +31,4 @@ public partial struct MyStruct
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_new", ExactSpelling = true)]
     public static unsafe extern MyStruct New();
-
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_destroy", ExactSpelling = true)]
-    public static unsafe extern void Destroy(MyStruct* self);
 }

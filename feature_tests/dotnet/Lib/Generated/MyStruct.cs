@@ -11,10 +11,9 @@ namespace DiplomatFeatures;
 
 #nullable enable
 
-public partial class MyStruct: IDisposable
+public partial class MyStruct
 {
-    private unsafe Raw.MyStruct* _inner;
-    private readonly bool _isAllocatedByRust;
+    private Raw.MyStruct _inner;
 
     public byte A
     {
@@ -22,14 +21,14 @@ public partial class MyStruct: IDisposable
         {
             unsafe
             {
-                return _inner->a;
+                return _inner.a;
             }
         }
         set
         {
             unsafe
             {
-                _inner->a = value;
+                _inner.a = value;
             }
         }
     }
@@ -40,14 +39,14 @@ public partial class MyStruct: IDisposable
         {
             unsafe
             {
-                return _inner->b;
+                return _inner.b;
             }
         }
         set
         {
             unsafe
             {
-                _inner->b = value;
+                _inner.b = value;
             }
         }
     }
@@ -58,14 +57,14 @@ public partial class MyStruct: IDisposable
         {
             unsafe
             {
-                return _inner->c;
+                return _inner.c;
             }
         }
         set
         {
             unsafe
             {
-                _inner->c = value;
+                _inner.c = value;
             }
         }
     }
@@ -76,14 +75,14 @@ public partial class MyStruct: IDisposable
         {
             unsafe
             {
-                return _inner->d;
+                return _inner.d;
             }
         }
         set
         {
             unsafe
             {
-                _inner->d = value;
+                _inner.d = value;
             }
         }
     }
@@ -94,14 +93,14 @@ public partial class MyStruct: IDisposable
         {
             unsafe
             {
-                return _inner->e;
+                return _inner.e;
             }
         }
         set
         {
             unsafe
             {
-                _inner->e = value;
+                _inner.e = value;
             }
         }
     }
@@ -112,49 +111,24 @@ public partial class MyStruct: IDisposable
         {
             unsafe
             {
-                return _inner->f;
+                return _inner.f;
             }
         }
         set
         {
             unsafe
             {
-                _inner->f = value;
+                _inner.f = value;
             }
         }
     }
 
     /// <summary>
-    /// Creates a managed <c>MyStruct</c> from a raw handle.
+    /// Creates a managed <c>MyStruct</c> from the raw representation.
     /// </summary>
-    /// <remarks>
-    /// Safety: you should not build two managed objects using the same raw handle (may causes use-after-free and double-free).
-    /// </remarks>
-    /// <remarks>
-    /// This constructor assumes the raw struct is allocated on Rust side.
-    /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
-    /// </remarks>
-    public unsafe MyStruct(Raw.MyStruct* handle)
+    public unsafe MyStruct(Raw.MyStruct data)
     {
-        _inner = handle;
-        _isAllocatedByRust = true;
-    }
-
-    /// <summary>
-    /// Creates a managed <c>MyStruct</c> from the raw struct.
-    /// </summary>
-    /// <remarks>
-    /// This constructor allocates the raw struct on C# side.
-    /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
-    /// </remarks>
-    public MyStruct(Raw.MyStruct handle)
-    {
-        unsafe
-        {
-            _inner = (Raw.MyStruct*)Marshal.AllocHGlobal(sizeof(Raw.MyStruct));
-            Buffer.MemoryCopy(&handle, _inner, sizeof(Raw.MyStruct), sizeof(Raw.MyStruct));
-            _isAllocatedByRust = false;
-        }
+        _inner = data;
     }
 
     /// <returns>
@@ -171,42 +145,10 @@ public partial class MyStruct: IDisposable
     }
 
     /// <summary>
-    /// Returns the underlying raw handle.
+    /// Returns a copy of the underlying raw representation.
     /// </summary>
-    public unsafe Raw.MyStruct* AsFFI()
+    public Raw.MyStruct AsFFI()
     {
         return _inner;
-    }
-
-    /// <summary>
-    /// Destroys the underlying object immediately.
-    /// </summary>
-    public void Dispose()
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            if (_isAllocatedByRust)
-            {
-                Raw.MyStruct.Destroy(_inner);
-            }
-            else
-            {
-                Marshal.FreeHGlobal((IntPtr)_inner);
-            }
-
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~MyStruct()
-    {
-        Dispose();
     }
 }

@@ -11,10 +11,9 @@ namespace DiplomatFeatures;
 
 #nullable enable
 
-public partial class OptionStruct: IDisposable
+public partial class OptionStruct
 {
-    private unsafe Raw.OptionStruct* _inner;
-    private readonly bool _isAllocatedByRust;
+    private Raw.OptionStruct _inner;
 
     public uint C
     {
@@ -22,88 +21,31 @@ public partial class OptionStruct: IDisposable
         {
             unsafe
             {
-                return _inner->c;
+                return _inner.c;
             }
         }
         set
         {
             unsafe
             {
-                _inner->c = value;
+                _inner.c = value;
             }
         }
     }
 
     /// <summary>
-    /// Creates a managed <c>OptionStruct</c> from a raw handle.
+    /// Creates a managed <c>OptionStruct</c> from the raw representation.
     /// </summary>
-    /// <remarks>
-    /// Safety: you should not build two managed objects using the same raw handle (may causes use-after-free and double-free).
-    /// </remarks>
-    /// <remarks>
-    /// This constructor assumes the raw struct is allocated on Rust side.
-    /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
-    /// </remarks>
-    public unsafe OptionStruct(Raw.OptionStruct* handle)
+    public unsafe OptionStruct(Raw.OptionStruct data)
     {
-        _inner = handle;
-        _isAllocatedByRust = true;
+        _inner = data;
     }
 
     /// <summary>
-    /// Creates a managed <c>OptionStruct</c> from the raw struct.
+    /// Returns a copy of the underlying raw representation.
     /// </summary>
-    /// <remarks>
-    /// This constructor allocates the raw struct on C# side.
-    /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
-    /// </remarks>
-    public OptionStruct(Raw.OptionStruct handle)
-    {
-        unsafe
-        {
-            _inner = (Raw.OptionStruct*)Marshal.AllocHGlobal(sizeof(Raw.OptionStruct));
-            Buffer.MemoryCopy(&handle, _inner, sizeof(Raw.OptionStruct), sizeof(Raw.OptionStruct));
-            _isAllocatedByRust = false;
-        }
-    }
-
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    public unsafe Raw.OptionStruct* AsFFI()
+    public Raw.OptionStruct AsFFI()
     {
         return _inner;
-    }
-
-    /// <summary>
-    /// Destroys the underlying object immediately.
-    /// </summary>
-    public void Dispose()
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            if (_isAllocatedByRust)
-            {
-                Raw.OptionStruct.Destroy(_inner);
-            }
-            else
-            {
-                Marshal.FreeHGlobal((IntPtr)_inner);
-            }
-
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~OptionStruct()
-    {
-        Dispose();
     }
 }

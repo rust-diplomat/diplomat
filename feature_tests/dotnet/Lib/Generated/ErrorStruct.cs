@@ -11,10 +11,9 @@ namespace DiplomatFeatures;
 
 #nullable enable
 
-public partial class ErrorStruct: IDisposable
+public partial class ErrorStruct
 {
-    private unsafe Raw.ErrorStruct* _inner;
-    private readonly bool _isAllocatedByRust;
+    private Raw.ErrorStruct _inner;
 
     public int I
     {
@@ -22,88 +21,31 @@ public partial class ErrorStruct: IDisposable
         {
             unsafe
             {
-                return _inner->i;
+                return _inner.i;
             }
         }
         set
         {
             unsafe
             {
-                _inner->i = value;
+                _inner.i = value;
             }
         }
     }
 
     /// <summary>
-    /// Creates a managed <c>ErrorStruct</c> from a raw handle.
+    /// Creates a managed <c>ErrorStruct</c> from the raw representation.
     /// </summary>
-    /// <remarks>
-    /// Safety: you should not build two managed objects using the same raw handle (may causes use-after-free and double-free).
-    /// </remarks>
-    /// <remarks>
-    /// This constructor assumes the raw struct is allocated on Rust side.
-    /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
-    /// </remarks>
-    public unsafe ErrorStruct(Raw.ErrorStruct* handle)
+    public unsafe ErrorStruct(Raw.ErrorStruct data)
     {
-        _inner = handle;
-        _isAllocatedByRust = true;
+        _inner = data;
     }
 
     /// <summary>
-    /// Creates a managed <c>ErrorStruct</c> from the raw struct.
+    /// Returns a copy of the underlying raw representation.
     /// </summary>
-    /// <remarks>
-    /// This constructor allocates the raw struct on C# side.
-    /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
-    /// </remarks>
-    public ErrorStruct(Raw.ErrorStruct handle)
-    {
-        unsafe
-        {
-            _inner = (Raw.ErrorStruct*)Marshal.AllocHGlobal(sizeof(Raw.ErrorStruct));
-            Buffer.MemoryCopy(&handle, _inner, sizeof(Raw.ErrorStruct), sizeof(Raw.ErrorStruct));
-            _isAllocatedByRust = false;
-        }
-    }
-
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    public unsafe Raw.ErrorStruct* AsFFI()
+    public Raw.ErrorStruct AsFFI()
     {
         return _inner;
-    }
-
-    /// <summary>
-    /// Destroys the underlying object immediately.
-    /// </summary>
-    public void Dispose()
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            if (_isAllocatedByRust)
-            {
-                Raw.ErrorStruct.Destroy(_inner);
-            }
-            else
-            {
-                Marshal.FreeHGlobal((IntPtr)_inner);
-            }
-
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~ErrorStruct()
-    {
-        Dispose();
     }
 }

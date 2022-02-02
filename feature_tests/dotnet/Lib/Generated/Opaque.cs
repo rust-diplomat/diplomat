@@ -51,13 +51,9 @@ public partial class Opaque: IDisposable
             {
                 throw new ObjectDisposedException("Opaque");
             }
-            Raw.MyStruct* sRaw;
+            Raw.MyStruct sRaw;
             sRaw = s.AsFFI();
-            if (sRaw == null)
-            {
-                throw new ObjectDisposedException("MyStruct");
-            }
-            Raw.Opaque.AssertStruct(_inner, *sRaw);
+            Raw.Opaque.AssertStruct(_inner, sRaw);
         }
     }
 

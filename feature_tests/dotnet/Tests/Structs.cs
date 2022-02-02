@@ -27,21 +27,10 @@ public class StructTests
     }
 
     [Fact]
-    public void DisposedExceptions()
+    public void DisposedException()
     {
         Opaque o = Opaque.New();
         MyStruct s = MyStruct.New();
-
-        s.Dispose();
-        try
-        {
-            o.AssertStruct(s);
-            Assert.True(false, "expected error didn't occur");
-        }
-        catch (ObjectDisposedException e)
-        {
-            Assert.Equal("MyStruct", e.ObjectName);
-        }
 
         o.Dispose();
         try

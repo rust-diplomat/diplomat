@@ -17,7 +17,4 @@ public partial struct ErrorStruct
     private const string NativeLib = "diplomat_feature_tests";
 
     public int i;
-
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "ErrorStruct_destroy", ExactSpelling = true)]
-    public static unsafe extern void Destroy(ErrorStruct* self);
 }

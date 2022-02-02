@@ -23,7 +23,4 @@ public partial struct OptionStruct
     public uint c;
 
     public unsafe OptionOpaque* d;
-
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionStruct_destroy", ExactSpelling = true)]
-    public static unsafe extern void Destroy(OptionStruct* self);
 }

@@ -16,82 +16,24 @@ namespace Interop;
 
 #nullable enable
 
-public partial class Foo: IDisposable
+public partial class Foo
 {
-    private unsafe Raw.Foo* _inner;
-    private readonly bool _isAllocatedByRust;
+    private Raw.Foo _inner;
 
     /// <summary>
-    /// Creates a managed <c>Foo</c> from a raw handle.
+    /// Creates a managed <c>Foo</c> from the raw representation.
     /// </summary>
-    /// <remarks>
-    /// Safety: you should not build two managed objects using the same raw handle (may causes use-after-free and double-free).
-    /// </remarks>
-    /// <remarks>
-    /// This constructor assumes the raw struct is allocated on Rust side.
-    /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
-    /// </remarks>
-    public unsafe Foo(Raw.Foo* handle)
+    public unsafe Foo(Raw.Foo data)
     {
-        _inner = handle;
-        _isAllocatedByRust = true;
+        _inner = data;
     }
 
     /// <summary>
-    /// Creates a managed <c>Foo</c> from the raw struct.
+    /// Returns a copy of the underlying raw representation.
     /// </summary>
-    /// <remarks>
-    /// This constructor allocates the raw struct on C# side.
-    /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
-    /// </remarks>
-    public Foo(Raw.Foo handle)
-    {
-        unsafe
-        {
-            _inner = (Raw.Foo*)Marshal.AllocHGlobal(sizeof(Raw.Foo));
-            Buffer.MemoryCopy(&handle, _inner, sizeof(Raw.Foo), sizeof(Raw.Foo));
-            _isAllocatedByRust = false;
-        }
-    }
-
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    public unsafe Raw.Foo* AsFFI()
+    public Raw.Foo AsFFI()
     {
         return _inner;
-    }
-
-    /// <summary>
-    /// Destroys the underlying object immediately.
-    /// </summary>
-    public void Dispose()
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            if (_isAllocatedByRust)
-            {
-                Raw.Foo.Destroy(_inner);
-            }
-            else
-            {
-                Marshal.FreeHGlobal((IntPtr)_inner);
-            }
-
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Foo()
-    {
-        Dispose();
     }
 }
 

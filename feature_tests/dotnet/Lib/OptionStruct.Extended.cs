@@ -9,7 +9,7 @@ public partial class OptionStruct
     {
         unsafe
         {
-            return AsFFI()->a == null;
+            return _inner.a == null;
         }
     }
 
@@ -17,7 +17,7 @@ public partial class OptionStruct
     {
         unsafe
         {
-            return AsFFI()->b == null;
+            return _inner.b == null;
         }
     }
 
@@ -25,7 +25,7 @@ public partial class OptionStruct
     {
         unsafe
         {
-            return AsFFI()->d == null;
+            return _inner.d == null;
         }
     }
 
@@ -33,7 +33,7 @@ public partial class OptionStruct
     {
         unsafe
         {
-            Raw.OptionOpaque.AssertInteger(AsFFI()->a, i);
+            Raw.OptionOpaque.AssertInteger(_inner.a, i);
         }
     }
 
@@ -41,7 +41,7 @@ public partial class OptionStruct
     {
         unsafe
         {
-            Raw.OptionOpaqueChar.AssertChar(AsFFI()->b, ch);
+            Raw.OptionOpaqueChar.AssertChar(_inner.b, ch);
         }
     }
 
@@ -49,7 +49,7 @@ public partial class OptionStruct
     {
         unsafe
         {
-            Raw.OptionOpaque.AssertInteger(AsFFI()->d, i);
+            Raw.OptionOpaque.AssertInteger(_inner.d, i);
         }
     }
 }

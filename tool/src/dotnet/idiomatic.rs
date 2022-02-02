@@ -111,15 +111,10 @@ pub fn gen(
 
         ast::CustomType::Struct(strct) => {
             gen_doc_block(out, &strct.doc_lines)?;
-            writeln!(
-                out,
-                "public partial class {}: IDisposable",
-                custom_type.name()
-            )?;
+            writeln!(out, "public partial class {}", custom_type.name())?;
 
             out.scope(|out| {
-                writeln!(out, "private unsafe Raw.{}* _inner;", strct.name)?;
-                writeln!(out, "private readonly bool _isAllocatedByRust;")?;
+                writeln!(out, "private Raw.{} _inner;", strct.name)?;
 
                 for (name, typ, doc) in strct.fields.iter() {
                     gen_property_for_field(name, doc, typ, in_path, env, out)?;
@@ -132,74 +127,23 @@ pub fn gen(
 
                 writeln!(out)?;
                 writeln!(out, "/// <summary>")?;
-                writeln!(out, "/// Creates a managed <c>{}</c> from a raw handle.", strct.name)?;
+                writeln!(
+                    out,
+                    "/// Creates a managed <c>{}</c> from the raw representation.",
+                    strct.name
+                )?;
                 writeln!(out, "/// </summary>")?;
-                writeln!(out, "/// <remarks>")?;
-                writeln!(out, "/// Safety: you should not build two managed objects using the same raw handle (may causes use-after-free and double-free).")?;
-                writeln!(out, "/// </remarks>")?;
-                writeln!(out, "/// <remarks>")?;
-                writeln!(out, "/// This constructor assumes the raw struct is allocated on Rust side.")?;
-                writeln!(out, "/// If implemented, the custom Drop implementation on Rust side WILL run on destruction.")?;
-                writeln!(out, "/// </remarks>")?;
-                writeln!(out, "public unsafe {0}(Raw.{0}* handle)", strct.name)?;
-                out.scope(|out| {
-                    writeln!(out, "_inner = handle;")?;
-                    writeln!(out, "_isAllocatedByRust = true;")
-                })?;
-
-                writeln!(out)?;
-                writeln!(out, "/// <summary>")?;
-                writeln!(out, "/// Creates a managed <c>{}</c> from the raw struct.", strct.name)?;
-                writeln!(out, "/// </summary>")?;
-                writeln!(out, "/// <remarks>")?;
-                writeln!(out, "/// This constructor allocates the raw struct on C# side.")?;
-                writeln!(out, "/// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.")?;
-                writeln!(out, "/// </remarks>")?;
-                writeln!(out, "public {0}(Raw.{0} handle)", strct.name)?;
-                out.scope(|out| {
-                    writeln!(out, "unsafe")?;
-                    out.scope(|out| {
-                        writeln!(out, "_inner = (Raw.{0}*)Marshal.AllocHGlobal(sizeof(Raw.{0}));", strct.name)?;
-                        writeln!(out, "Buffer.MemoryCopy(&handle, _inner, sizeof(Raw.{0}), sizeof(Raw.{0}));", strct.name)?;
-                        writeln!(out, "_isAllocatedByRust = false;")
-                    })
-                })?;
+                writeln!(out, "public unsafe {0}(Raw.{0} data)", strct.name)?;
+                out.scope(|out| writeln!(out, "_inner = data;"))?;
 
                 for method in &strct.methods {
                     gen_method(custom_type, method, in_path, true, env, library_config, out)?;
                 }
 
                 writeln!(out)?;
-                gen_doc_block(out, "Returns the underlying raw handle.")?;
-                writeln!(out, "public unsafe Raw.{}* AsFFI()", strct.name)?;
-                out.scope(|out| writeln!(out, "return _inner;"))?;
-
-                writeln!(out)?;
-                gen_doc_block(out, "Destroys the underlying object immediately.")?;
-                writeln!(out, "public void Dispose()")?;
-                out.scope(|out| {
-                    writeln!(out, "unsafe")?;
-                    out.scope(|out| {
-                        writeln!(out, "if (_inner == null)")?;
-                        out.scope(|out| writeln!(out, "return;"))?;
-
-                        writeln!(out)?;
-                        writeln!(out, "if (_isAllocatedByRust)")?;
-                        out.scope(|out| writeln!(out, "Raw.{}.Destroy(_inner);", strct.name))?;
-                        writeln!(out, "else")?;
-                        out.scope(|out| writeln!(out, "Marshal.FreeHGlobal((IntPtr)_inner);"))?;
-                        writeln!(out)?;
-                        writeln!(out, "_inner = null;")?;
-                        writeln!(out)?;
-                        writeln!(out, "GC.SuppressFinalize(this);")
-                    })
-                })?;
-
-                writeln!(out)?;
-                writeln!(out, "~{}()", strct.name)?;
-                out.scope(|out| {
-                    writeln!(out, "Dispose();")
-                })
+                gen_doc_block(out, "Returns a copy of the underlying raw representation.")?;
+                writeln!(out, "public Raw.{} AsFFI()", strct.name)?;
+                out.scope(|out| writeln!(out, "return _inner;"))
             })?;
         }
 
@@ -255,7 +199,7 @@ fn gen_property_for_field(
 
     let type_name = gen_type_name_to_string(typ, in_path, env)?;
     let property_name = name.to_upper_camel_case();
-    let var_to_raw = format!("_inner->{name}");
+    let var_to_raw = format!("_inner.{name}");
 
     writeln!(out, "public {type_name} {property_name}")?;
     out.scope(|out| {
@@ -463,16 +407,8 @@ fn gen_method(
         } else if let ast::TypeName::Primitive(_) = param.ty {
             all_params_invocation.push(name.clone());
         } else if let ast::TypeName::Named(_) = param.ty {
-            match param.ty.resolve(in_path, env) {
-                ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
-                    params_custom_types.push(param.clone());
-                    all_params_invocation.push(format!("*{}Raw", name));
-                }
-                ast::CustomType::Enum(_) => {
-                    params_custom_types.push(param.clone());
-                    all_params_invocation.push(format!("{}Raw", name));
-                }
-            }
+            params_custom_types.push(param.clone());
+            all_params_invocation.push(format!("{}Raw", name));
         } else {
             params_custom_types.push(param.clone());
             all_params_invocation.push(format!("{}Raw", name));
@@ -791,12 +727,14 @@ fn gen_raw_conversion_type_name_decl_position(
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
-            ast::CustomType::Opaque(_) | ast::CustomType::Struct(_) => {
+            ast::CustomType::Opaque(_) => {
                 write!(out, "Raw.")?;
                 gen_type_name(typ, in_path, env, out)?;
                 write!(out, "*")
             }
-            ast::CustomType::Enum(_) => gen_raw_type_name_decl_position(typ, in_path, env, out),
+            ast::CustomType::Enum(_) | ast::CustomType::Struct(_) => {
+                gen_raw_type_name_decl_position(typ, in_path, env, out)
+            }
         },
         _ => gen_raw_type_name_decl_position(typ, in_path, env, out),
     }
@@ -861,8 +799,8 @@ fn requires_null_check(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> b
         }
         ast::TypeName::Option(opt) => requires_null_check(opt.as_ref(), in_path, env),
         _ => match typ.resolve(in_path, env) {
-            ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => true,
-            ast::CustomType::Enum(_) => false,
+            ast::CustomType::Opaque(_) => true,
+            ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => false,
         },
     }
 }

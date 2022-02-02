@@ -35,8 +35,5 @@ public partial struct Foo
     /// </summary>
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_get_x", ExactSpelling = true)]
     public static unsafe extern byte GetX(Foo* self);
-
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_destroy", ExactSpelling = true)]
-    public static unsafe extern void Destroy(Foo* self);
 }
 
