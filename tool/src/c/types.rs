@@ -119,12 +119,15 @@ mod tests {
         test_file! {
             #[diplomat::bridge]
             mod ffi {
+                #[diplomat::opaque]
+                struct MyOpaqueStruct(UnknownType);
+
                 struct MyStruct {
-                    a: Box<MyStruct>,
+                    a: Box<MyOpaqueStruct>,
                 }
 
                 impl MyStruct {
-                    pub fn new(foo: &MyStruct, bar: &mut MyStruct) -> MyStruct {
+                    pub fn new(foo: &MyOpaqueStruct, bar: &mut MyOpaqueStruct) -> MyStruct {
                         unimplemented!()
                     }
                 }

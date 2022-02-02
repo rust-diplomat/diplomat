@@ -32,14 +32,22 @@ public partial class MyStruct
     /// A <c>MyStruct</c> allocated on C# side.
     /// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.
     /// </returns>
-    public static MyStruct New(MyStruct foo, MyStruct bar)
+    public static MyStruct New(MyOpaqueStruct foo, MyOpaqueStruct bar)
     {
         unsafe
         {
-            Raw.MyStruct* fooRaw;
+            Raw.MyOpaqueStruct* fooRaw;
             fooRaw = foo.AsFFI();
-            Raw.MyStruct* barRaw;
+            if (fooRaw == null)
+            {
+                throw new ObjectDisposedException("MyOpaqueStruct");
+            }
+            Raw.MyOpaqueStruct* barRaw;
             barRaw = bar.AsFFI();
+            if (barRaw == null)
+            {
+                throw new ObjectDisposedException("MyOpaqueStruct");
+            }
             Raw.MyStruct retVal = Raw.MyStruct.New(fooRaw, barRaw);
             return new MyStruct(retVal);
         }

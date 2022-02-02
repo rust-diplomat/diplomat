@@ -1,0 +1,26 @@
+---
+source: tool/src/c/types.rs
+expression: out_texts.get(out).unwrap()
+
+---
+#ifndef MyOpaqueStruct_H
+#define MyOpaqueStruct_H
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "diplomat_runtime.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct MyOpaqueStruct MyOpaqueStruct;
+
+void MyOpaqueStruct_destroy(MyOpaqueStruct* self);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+

@@ -24,6 +24,6 @@ public partial struct MyStruct
     public unsafe MyOpaqueStruct* a;
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_new", ExactSpelling = true)]
-    public static unsafe extern MyStruct New(MyStruct* foo, MyStruct* bar);
+    public static unsafe extern MyStruct New(MyOpaqueStruct* foo, MyOpaqueStruct* bar);
 }
 

@@ -420,7 +420,7 @@ fn pointer_types() {
             }
 
             impl MyStruct {
-                pub fn new(foo: &MyStruct, bar: &mut MyStruct) -> MyStruct {
+                pub fn new(foo: &MyOpaqueStruct, bar: &mut MyOpaqueStruct) -> MyStruct {
                     unimplemented!()
                 }
             }
