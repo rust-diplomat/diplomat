@@ -179,40 +179,6 @@ public partial class MyStruct: IDisposable
     }
 
     /// <summary>
-    /// Marks this object as moved into Rust side.
-    /// </summary>
-    /// <remarks>
-    /// Safety: this instance must be allocated on Rust side.
-    /// </remarks>
-    /// <exception cref="DiplomatUnmovableObject"></exception>
-    public void MarkAsMoved()
-    {
-        unsafe
-        {
-            if (!_isAllocatedByRust)
-            {
-                throw new DiplomatUnmovableObject("MyStruct", "not allocated by Rust");
-            }
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("MyStruct");
-            }
-            _inner = null;
-        }
-    }
-
-    /// <summary>
-    /// Restores unmanaged ressource handle to this object.
-    /// </summary>
-    /// <remarks>
-    /// Safety: the pointee must be allocated on Rust side.
-    /// </remarks>
-    public unsafe void RestoreHandle(Raw.MyStruct* handle)
-    {
-        _inner = handle;
-    }
-
-    /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()

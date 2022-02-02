@@ -111,29 +111,6 @@ public partial class OptionOpaque: IDisposable
     }
 
     /// <summary>
-    /// Marks this object as moved into Rust side.
-    /// </summary>
-    public void MarkAsMoved()
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("OptionOpaque");
-            }
-            _inner = null;
-        }
-    }
-
-    /// <summary>
-    /// Restores unmanaged ressource handle to this object.
-    /// </summary>
-    public unsafe void RestoreHandle(Raw.OptionOpaque* handle)
-    {
-        _inner = handle;
-    }
-
-    /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()

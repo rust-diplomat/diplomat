@@ -6,7 +6,6 @@ Documentation
    :caption: Modules:
 
    option_ffi
-   ownership_ffi
    result_ffi
    slices_ffi
    structs_ffi

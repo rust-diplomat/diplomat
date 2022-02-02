@@ -408,44 +408,6 @@ fn option_conversion() {
 }
 
 #[test]
-fn take_ownership() {
-    test_file! {
-        #[diplomat::bridge]
-        mod ffi {
-            #[diplomat::opaque]
-            struct MyOtherStruct;
-
-            struct NonOpaqueStruct {
-                a: u8,
-                b: u16,
-                c: char,
-            }
-
-            #[diplomat::opaque]
-            struct MyStruct;
-
-            impl MyStruct {
-                pub fn from_other(my_other_struct: Box<MyOtherStruct>) -> Box<MyStruct> {
-                    unimplemented!();
-                }
-
-                pub fn from_other_opt(my_other_struct: Option<Box<MyOtherStruct>>) -> Box<MyStruct> {
-                    unimplemented!();
-                }
-
-                pub fn from_non_opaque(non_opaque: Box<NonOpaqueStruct>) -> Box<MyStruct> {
-                    unimplemented!();
-                }
-
-                pub fn from_non_opaque_opt(non_opaque: Option<Box<NonOpaqueStruct>>) -> Box<MyStruct> {
-                    unimplemented!();
-                }
-            }
-        }
-    }
-}
-
-#[test]
 fn pointer_types() {
     test_file! {
         #[diplomat::bridge]
