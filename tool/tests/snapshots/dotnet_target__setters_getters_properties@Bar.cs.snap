@@ -64,7 +64,6 @@ public partial class Bar: IDisposable
     /// <exception cref="DiplomatOpaqueException"></exception>
     /// <returns>
     /// A <c>Foo</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public Foo GetFoo()
     {

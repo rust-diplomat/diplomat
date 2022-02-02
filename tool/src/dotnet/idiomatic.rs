@@ -765,7 +765,6 @@ fn gen_return_type_remark_about_drop(
             let type_name = gen_type_name_to_string(typ, in_path, env)?;
             writeln!(out, "/// <returns>")?;
             writeln!(out, "/// A <c>{type_name}</c> allocated on C# side.")?;
-            writeln!(out, "/// If a custom Drop implementation is implemented on Rust side, it will NOT run on destruction.")?;
             writeln!(out, "/// </returns>")
         }
         ast::TypeName::Box(underlying) | ast::TypeName::Reference(underlying, ..) => {
@@ -774,7 +773,6 @@ fn gen_return_type_remark_about_drop(
                     let type_name = gen_type_name_to_string(underlying, in_path, env)?;
                     writeln!(out, "/// <returns>")?;
                     writeln!(out, "/// A <c>{type_name}</c> allocated on Rust side.")?;
-                    writeln!(out, "/// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.")?;
                     writeln!(out, "/// </returns>")
                 }
                 _ => gen_return_type_remark_about_drop(underlying, in_path, env, out),

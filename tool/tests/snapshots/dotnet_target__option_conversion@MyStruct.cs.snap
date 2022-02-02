@@ -37,7 +37,6 @@ public partial class MyStruct: IDisposable
 
     /// <returns>
     /// A <c>MyStruct</c> allocated on Rust side.
-    /// If a custom Drop implementation is implemented on Rust side, it WILL run on destruction.
     /// </returns>
     public static MyStruct? Create(MyOtherStruct? myOtherStruct)
     {
