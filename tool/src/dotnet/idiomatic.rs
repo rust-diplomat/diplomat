@@ -406,9 +406,6 @@ fn gen_method(
             all_params_invocation.push(format!("&{}", name));
         } else if let ast::TypeName::Primitive(_) = param.ty {
             all_params_invocation.push(name.clone());
-        } else if let ast::TypeName::Named(_) = param.ty {
-            params_custom_types.push(param.clone());
-            all_params_invocation.push(format!("{}Raw", name));
         } else {
             params_custom_types.push(param.clone());
             all_params_invocation.push(format!("{}Raw", name));
