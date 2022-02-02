@@ -27,6 +27,26 @@ public class StructTests
     }
 
     [Fact]
+    public void MyStructMutate()
+    {
+        MyStruct s = MyStruct.New();
+
+        s.A = 0;
+        s.B = false;
+        s.C = 200;
+        s.D = 4321;
+        s.E = 1995;
+        s.F = 0x9911;
+
+        Assert.Equal(0, s.A);
+        Assert.False(s.B);
+        Assert.Equal(200, s.C);
+        Assert.Equal((ulong)4321, s.D);
+        Assert.Equal(1995, s.E);
+        Assert.Equal((uint)0x9911, s.F);
+    }
+
+    [Fact]
     public void DisposedException()
     {
         Opaque o = Opaque.New();
