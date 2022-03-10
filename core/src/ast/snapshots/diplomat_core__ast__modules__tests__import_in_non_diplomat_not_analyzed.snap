@@ -1,7 +1,6 @@
 ---
 source: core/src/ast/modules.rs
-expression: "File::from(&syn::parse_quote! {\n                #[diplomat :: bridge] mod ffi { struct Foo { } } mod other\n                { use something :: * ; }\n            })"
-
+expression: "File::from(&syn::parse_quote! {\n                #[diplomat :: bridge] mod ffi { struct Foo {} } mod other\n                { use something :: * ; }\n            })"
 ---
 modules:
   ffi:
@@ -12,6 +11,7 @@ modules:
         Struct:
           name: Foo
           doc_lines: ""
+          rust_link: ~
           fields: []
           methods: []
     sub_modules: []

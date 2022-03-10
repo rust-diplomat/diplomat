@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::utils::get_doc_lines;
+use super::utils::*;
 use super::{Method, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
@@ -8,6 +8,7 @@ use super::{Method, TypeName};
 pub struct Struct {
     pub name: String,
     pub doc_lines: String,
+    pub rust_link: Option<RustLink>,
     /// A list of fields in the struct. (name, type, doc_lines)
     pub fields: Vec<(String, TypeName, String)>,
     pub methods: Vec<Method>,
@@ -19,6 +20,7 @@ impl From<&syn::ItemStruct> for Struct {
         Struct {
             name: strct.ident.to_string(),
             doc_lines: get_doc_lines(&strct.attrs),
+            rust_link: get_rust_link(&strct.attrs),
             fields: strct
                 .fields
                 .iter()
@@ -46,6 +48,7 @@ impl From<&syn::ItemStruct> for Struct {
 pub struct OpaqueStruct {
     pub name: String,
     pub doc_lines: String,
+    pub rust_link: Option<RustLink>,
     pub methods: Vec<Method>,
 }
 
@@ -55,6 +58,7 @@ impl From<&syn::ItemStruct> for OpaqueStruct {
         OpaqueStruct {
             name: strct.ident.to_string(),
             doc_lines: get_doc_lines(&strct.attrs),
+            rust_link: get_rust_link(&strct.attrs),
             methods: vec![],
         }
     }

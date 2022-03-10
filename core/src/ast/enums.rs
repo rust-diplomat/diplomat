@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::utils::get_doc_lines;
+use super::utils::*;
 use super::Method;
 
 /// A fieldless enum declaration in an FFI module.
@@ -8,6 +8,7 @@ use super::Method;
 pub struct Enum {
     pub name: String,
     pub doc_lines: String,
+    pub rust_link: Option<RustLink>,
     /// A list of variants of the enum. (name, discriminant, doc_lines)
     pub variants: Vec<(String, isize, String)>,
     pub methods: Vec<Method>,
@@ -20,6 +21,7 @@ impl From<&syn::ItemEnum> for Enum {
         Enum {
             name: strct.ident.to_string(),
             doc_lines: get_doc_lines(&strct.attrs),
+            rust_link: get_rust_link(&strct.attrs),
             variants: strct
                 .variants
                 .iter()

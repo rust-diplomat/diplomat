@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use syn::*;
 
-use super::utils::get_doc_lines;
+use super::utils::*;
 use super::{Lifetime, Path, TypeName, ValidityError};
 use crate::Env;
 
@@ -15,6 +15,10 @@ pub struct Method {
 
     /// Lines of documentation for the method.
     pub doc_lines: String,
+
+    /// Information about the Rust function that is being wrapped.
+    /// This is optionally set with the `diplomat::rust_link` annotation.
+    pub rust_link: Option<RustLink>,
 
     /// The name of the FFI function wrapping around the method.
     pub full_path_name: String,
@@ -74,6 +78,7 @@ impl Method {
             name: method_ident.to_string(),
             doc_lines: get_doc_lines(&m.attrs),
             full_path_name: extern_ident.to_string(),
+            rust_link: get_rust_link(&m.attrs),
             self_param,
             params: all_params,
             return_type: return_ty,

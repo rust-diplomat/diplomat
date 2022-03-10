@@ -1,0 +1,15 @@
+---
+source: tool/src/js/structs.rs
+expression: out_docs.get(out).unwrap()
+---
+``ffi``
+=======
+
+.. js:class:: MyStruct
+
+    Use this.
+
+    .. js:staticfunction:: new_str(v)
+
+    .. js:function:: set_str(new_str)
+

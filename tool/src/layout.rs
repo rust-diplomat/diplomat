@@ -46,6 +46,7 @@ pub fn result_ok_offset_size_align(
         &ast::Struct {
             name: "".to_string(),
             doc_lines: "".to_string(),
+            rust_link: None,
             fields: vec![
                 if ok_size_align.size() > err_size_align.size() {
                     ("".to_string(), ok.clone(), "".to_string())

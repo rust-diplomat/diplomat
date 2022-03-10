@@ -8,7 +8,11 @@ use indenter::indented;
 use crate::docs_util::markdown_to_rst;
 
 /// Generate RST-formatted Sphinx docs for all FFI types. Currently assumes a JS target.
-pub fn gen_docs(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
+pub fn gen_docs(
+    env: &Env,
+    outs: &mut HashMap<String, String>,
+    base_urls: &HashMap<String, String>,
+) -> fmt::Result {
     let index_out = outs
         .entry("index.rst".to_string())
         .or_insert_with(String::new);
@@ -54,7 +58,7 @@ pub fn gen_docs(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
             for item in module.items() {
                 if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
-                    gen_custom_type_docs(out, typ, in_path, env)?;
+                    gen_custom_type_docs(out, typ, in_path, env, base_urls)?;
                 }
             }
         }
@@ -68,6 +72,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     typ: &ast::CustomType,
     in_path: &ast::Path,
     env: &Env,
+    base_urls: &HashMap<String, String>,
 ) -> fmt::Result {
     writeln!(out, ".. js:class:: {}", typ.name())?;
 
@@ -83,6 +88,14 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
             },
         )?;
         writeln!(class_indented)?;
+    }
+
+    if let Some(rustlink) = typ.rust_link() {
+        write!(
+            &mut class_indented,
+            "\nSee the `Rust doc<{}>`__ for more information\n",
+            rustlink.http(base_urls)
+        )?;
     }
 
     if let ast::CustomType::Struct(strct) = typ {

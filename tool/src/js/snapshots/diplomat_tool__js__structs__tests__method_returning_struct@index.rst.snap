@@ -1,0 +1,19 @@
+---
+source: tool/src/js/structs.rs
+expression: out_docs.get(out).unwrap()
+---
+Documentation
+=============
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Modules:
+
+   ffi
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`search`
+

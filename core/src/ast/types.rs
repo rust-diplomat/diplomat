@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use std::fmt;
 use std::iter::FromIterator;
 
-use super::{Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
+use super::{utils::RustLink, Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
 use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
@@ -48,6 +48,15 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.doc_lines,
             CustomType::Opaque(strct) => &strct.doc_lines,
             CustomType::Enum(enm) => &enm.doc_lines,
+        }
+    }
+
+    /// Get the doc lines of the custom type.
+    pub fn rust_link(&self) -> Option<&RustLink> {
+        match self {
+            CustomType::Struct(strct) => strct.rust_link.as_ref(),
+            CustomType::Opaque(strct) => strct.rust_link.as_ref(),
+            CustomType::Enum(enm) => enm.rust_link.as_ref(),
         }
     }
 

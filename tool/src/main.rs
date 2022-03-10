@@ -29,6 +29,9 @@ struct Opt {
     #[structopt(short, long, parse(from_os_str))]
     docs: Option<PathBuf>,
 
+    #[structopt(short, long)]
+    docs_base_urls: Vec<String>,
+
     /// The path to the lib.rs file. Defaults to src/lib.rs
     #[structopt(short, long, parse(from_os_str))]
     entry: Option<PathBuf>,
@@ -126,10 +129,22 @@ fn main() -> std::io::Result<()> {
                 .green()
                 .bold()
         );
+        let docs_base_urls = opt
+            .docs_base_urls
+            .iter()
+            .map(|entry| {
+                let mut parts = entry.splitn(2, ":");
+                (
+                    parts.next().unwrap().to_string(),
+                    parts.next().expect("Expected syntax <crate>:<url>").to_string(),
+                )
+            })
+            .collect();
+
         let mut docs_out_texts: HashMap<String, String> = HashMap::new();
 
         match opt.target_language.as_str() {
-            "js" => js::docs::gen_docs(&env, &mut docs_out_texts).unwrap(),
+            "js" => js::docs::gen_docs(&env, &mut docs_out_texts, &docs_base_urls).unwrap(),
             "cpp" => cpp::docs::gen_docs(&env, &opt.library_config, &mut docs_out_texts).unwrap(),
             "c" => todo!("Docs generation for C"),
             "dotnet" => todo!("Docs generation for .NET?"),

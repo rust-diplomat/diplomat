@@ -1,0 +1,18 @@
+---
+source: tool/src/js/structs.rs
+expression: out_docs.get(out).unwrap()
+
+---
+``ffi``
+=======
+
+.. js:class:: MyStruct
+
+    Use this.
+
+    See the `Rust doc<https://docs.rs/foo/latest/foo/bar/struct.Batz.html>`__ for more information
+
+    .. js:staticfunction:: new_str(v)
+
+    .. js:function:: set_str(new_str)
+
