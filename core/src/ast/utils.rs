@@ -84,10 +84,7 @@ pub fn get_rust_link(attrs: &[Attribute]) -> Option<RustLink> {
                     }
                 }
             }
-            panic!(
-                "Malformed attribute: {}",
-                attr.to_token_stream()
-            );
+            panic!("Malformed attribute: {}", attr.to_token_stream());
         }
     }
 
