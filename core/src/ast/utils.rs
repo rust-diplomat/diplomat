@@ -61,7 +61,7 @@ pub fn get_rust_link(attrs: &[Attribute]) -> Option<RustLink> {
                     {
                         if let Some(typ) = typ.get_ident() {
                             return Some(RustLink {
-                                path: Path::from_syn(&path),
+                                path: Path::from_syn(path),
                                 typ: match typ.to_token_stream().to_string().as_str() {
                                     "Struct" => DocType::Struct,
                                     "StructField" => DocType::StructField,
@@ -86,7 +86,7 @@ pub fn get_rust_link(attrs: &[Attribute]) -> Option<RustLink> {
             }
             panic!(
                 "Malformed attribute: {}",
-                attr.to_token_stream().to_string()
+                attr.to_token_stream()
             );
         }
     }
@@ -121,7 +121,7 @@ impl RustLink {
 
         for _ in 0..module_depth {
             r.push_str(elements.next().unwrap());
-            r.push_str("/");
+            r.push('/');
         }
 
         if elements.peek() == None {
@@ -168,7 +168,7 @@ impl RustLink {
             }
             _ => {}
         }
-        return r;
+        r
     }
 }
 
