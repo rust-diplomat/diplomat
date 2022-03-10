@@ -29,7 +29,7 @@ struct Opt {
     #[structopt(short, long, parse(from_os_str))]
     docs: Option<PathBuf>,
 
-    #[structopt(short, long)]
+    #[structopt(short = "-u", long)]
     docs_base_urls: Vec<String>,
 
     /// The path to the lib.rs file. Defaults to src/lib.rs
@@ -136,7 +136,10 @@ fn main() -> std::io::Result<()> {
                 let mut parts = entry.splitn(2, ":");
                 (
                     parts.next().unwrap().to_string(),
-                    parts.next().expect("Expected syntax <crate>:<url>").to_string(),
+                    parts
+                        .next()
+                        .expect("Expected syntax <crate>:<url>")
+                        .to_string(),
                 )
             })
             .collect();
