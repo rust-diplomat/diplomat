@@ -21,6 +21,7 @@ mod paths;
 pub use paths::Path;
 
 mod utils;
+pub use utils::DocsUrlGenerator;
 
 mod validity;
 pub use validity::ValidityError;

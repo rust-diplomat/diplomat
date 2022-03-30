@@ -11,7 +11,7 @@ use crate::docs_util::markdown_to_rst;
 pub fn gen_docs(
     env: &Env,
     outs: &mut HashMap<String, String>,
-    base_urls: &HashMap<String, String>,
+    docs_urls: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     let index_out = outs
         .entry("index.rst".to_string())
@@ -58,7 +58,7 @@ pub fn gen_docs(
             for item in module.items() {
                 if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
-                    gen_custom_type_docs(out, typ, in_path, env, base_urls)?;
+                    gen_custom_type_docs(out, typ, in_path, env, docs_urls)?;
                 }
             }
         }
@@ -72,7 +72,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     typ: &ast::CustomType,
     in_path: &ast::Path,
     env: &Env,
-    base_urls: &HashMap<String, String>,
+    docs_urls: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     writeln!(out, ".. js:class:: {}", typ.name())?;
 
@@ -90,11 +90,11 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
         writeln!(class_indented)?;
     }
 
-    if let Some(rustlink) = typ.rust_link() {
+    if let Some(rust_link) = typ.rust_link() {
         write!(
             &mut class_indented,
-            "\nSee the `Rust doc<{}>`__ for more information\n",
-            rustlink.http(base_urls)
+            "\nSee the `Rust documentation<{}>`__ for more information\n",
+            docs_urls.gen_for_rust_link(rust_link)
         )?;
     }
 

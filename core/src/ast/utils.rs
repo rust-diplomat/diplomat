@@ -91,24 +91,33 @@ pub fn get_rust_link(attrs: &[Attribute]) -> Option<RustLink> {
     None
 }
 
-impl RustLink {
-    pub fn http(&self, base_urls: &HashMap<String, String>) -> String {
+#[derive(Default)]
+pub struct DocsUrlGenerator {
+    base_urls: HashMap<String, String>,
+}
+
+impl DocsUrlGenerator {
+    pub fn with_base_urls(base_urls: HashMap<String, String>) -> Self {
+        Self { base_urls }
+    }
+
+    pub fn gen_for_rust_link(&self, rust_link: &RustLink) -> String {
         use DocType::*;
 
         let mut r = String::new();
 
-        if let Some(base) = base_urls.get(&self.path.elements[0]) {
+        if let Some(base) = self.base_urls.get(&rust_link.path.elements[0]) {
             r.push_str(base);
         } else {
             r.push_str("https://docs.rs/");
-            r.push_str(&self.path.elements[0]);
+            r.push_str(&rust_link.path.elements[0]);
             r.push_str("/latest/");
         }
 
-        let mut elements = self.path.elements.iter().peekable();
+        let mut elements = rust_link.path.elements.iter().peekable();
 
-        let module_depth = self.path.elements.len()
-            - match self.typ {
+        let module_depth = rust_link.path.elements.len()
+            - match rust_link.typ {
                 Mod => 0,
                 Struct | Enum | Trait | Fn | Macro | Constant => 1,
                 FnInEnum | FnInStruct | FnInTrait | DefaultFnInTrait | EnumVariant
@@ -126,7 +135,7 @@ impl RustLink {
             return r;
         }
 
-        r.push_str(match self.typ {
+        r.push_str(match rust_link.typ {
             Struct | StructField | FnInStruct => "struct.",
             Enum | EnumVariant | EnumVariantField | FnInEnum => "enum.",
             Trait | FnInTrait | DefaultFnInTrait => "trait.",
@@ -140,7 +149,7 @@ impl RustLink {
 
         r.push_str(".html");
 
-        match self.typ {
+        match rust_link.typ {
             FnInStruct | FnInEnum | DefaultFnInTrait => {
                 r.push_str("#method.");
                 r.push_str(elements.next().unwrap());
@@ -170,7 +179,7 @@ impl RustLink {
 }
 
 #[test]
-fn test_rust_link_http() {
+fn test_docs_url_generator() {
     let test_cases = [
         (
             syn::parse_quote! { #[diplomat::rust_link(std::foo::bar::batz, Struct)] },
@@ -230,18 +239,18 @@ fn test_rust_link_http() {
         ),
     ];
 
-    let mut base_urls = HashMap::new();
-
     for (attr, expected) in test_cases.clone() {
-        assert_eq!(get_rust_link(&[attr]).unwrap().http(&base_urls), expected,);
+        assert_eq!(
+            DocsUrlGenerator::default().gen_for_rust_link(&get_rust_link(&[attr]).unwrap()),
+            expected
+        );
     }
 
-    base_urls.insert("std".to_string(), "http://std-docs.biz/".to_string());
-
     assert_eq!(
-        get_rust_link(&[test_cases[0].0.clone()])
-            .unwrap()
-            .http(&base_urls),
+        DocsUrlGenerator::with_base_urls(
+            std::iter::once(("std".to_string(), "http://std-docs.biz/".to_string())).collect()
+        )
+        .gen_for_rust_link(&get_rust_link(&[test_cases[0].0.clone()]).unwrap()),
         "http://std-docs.biz/std/foo/bar/struct.batz.html"
     );
 }

@@ -9,7 +9,7 @@ macro_rules! test_file {
         crate::js::gen_bindings(&env, &mut out_texts).unwrap();
 
         let mut out_docs = std::collections::HashMap::new();
-        crate::js::docs::gen_docs(&env, &mut out_docs, &std::collections::HashMap::new()).unwrap();
+        crate::js::docs::gen_docs(&env, &mut out_docs, &Default::default()).unwrap();
 
         out_texts.remove("diplomat-runtime.mjs");
 
