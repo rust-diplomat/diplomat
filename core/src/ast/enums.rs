@@ -72,7 +72,7 @@ mod tests {
         settings.bind(|| {
             insta::assert_yaml_snapshot!(Enum::from(&syn::parse_quote! {
                 /// Some docs.
-                #[rust_link(foo::Bar, Enum)]
+                #[diplomat::rust_link(foo::Bar, Enum)]
                 enum MyLocalEnum {
                     Abc,
                     /// Some more docs.

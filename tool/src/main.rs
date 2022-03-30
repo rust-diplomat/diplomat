@@ -129,7 +129,7 @@ fn main() -> std::io::Result<()> {
                 .green()
                 .bold()
         );
-        let docs_base_urls = opt
+        let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(opt
             .docs_base_urls
             .iter()
             .map(|entry| {
@@ -142,8 +142,7 @@ fn main() -> std::io::Result<()> {
                         .to_string(),
                 )
             })
-            .collect();
-        let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(docs_base_urls);
+            .collect());
 
         let mut docs_out_texts: HashMap<String, String> = HashMap::new();
 

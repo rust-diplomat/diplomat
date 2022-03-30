@@ -80,6 +80,7 @@ mod tests {
         settings.bind(|| {
             insta::assert_yaml_snapshot!(Struct::from(&syn::parse_quote! {
                 /// Some docs.
+                #[diplomat::rust_link(foo::Bar, Struct)]
                 struct MyLocalStruct {
                     a: i32,
                     b: Box<MyLocalStruct>

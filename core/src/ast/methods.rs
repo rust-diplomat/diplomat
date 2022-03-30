@@ -178,6 +178,7 @@ mod tests {
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse_quote! {
                 /// Some docs.
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
                 fn foo(x: u64, y: MyCustomStruct) {
 
                 }
@@ -212,6 +213,7 @@ mod tests {
 
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse_quote! {
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
                 fn foo(&mut self, x: u64, y: MyCustomStruct) -> u64 {
                     x
                 }
