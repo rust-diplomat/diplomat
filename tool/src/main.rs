@@ -133,7 +133,7 @@ fn main() -> std::io::Result<()> {
             .docs_base_urls
             .iter()
             .map(|entry| {
-                let mut parts = entry.splitn(2, ":");
+                let mut parts = entry.splitn(2, ':');
                 (
                     parts.next().unwrap().to_string(),
                     parts
