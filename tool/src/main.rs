@@ -129,20 +129,21 @@ fn main() -> std::io::Result<()> {
                 .green()
                 .bold()
         );
-        let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(opt
-            .docs_base_urls
-            .iter()
-            .map(|entry| {
-                let mut parts = entry.splitn(2, ':');
-                (
-                    parts.next().unwrap().to_string(),
-                    parts
-                        .next()
-                        .expect("Expected syntax <crate>:<url>")
-                        .to_string(),
-                )
-            })
-            .collect());
+        let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(
+            opt.docs_base_urls
+                .iter()
+                .map(|entry| {
+                    let mut parts = entry.splitn(2, ':');
+                    (
+                        parts.next().unwrap().to_string(),
+                        parts
+                            .next()
+                            .expect("Expected syntax <crate>:<url>")
+                            .to_string(),
+                    )
+                })
+                .collect(),
+        );
 
         let mut docs_out_texts: HashMap<String, String> = HashMap::new();
 
