@@ -18,6 +18,7 @@ pub fn gen_docs(
     env: &Env,
     library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
+    docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     let mut library_config = LibraryConfig::default();
     if let Some(path) = library_config_path {
@@ -81,7 +82,7 @@ pub fn gen_docs(
             for item in module.items() {
                 if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
-                    gen_custom_type_docs(out, typ, in_path, env, &library_config)?;
+                    gen_custom_type_docs(out, typ, in_path, env, &library_config, docs_url_gen)?;
                 }
             }
         }
@@ -96,6 +97,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     in_path: &ast::Path,
     env: &Env,
     library_config: &LibraryConfig,
+    docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     match typ {
         ast::CustomType::Struct(_) => writeln!(out, ".. cpp:struct:: {}", typ.name())?,
@@ -104,22 +106,17 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     }
 
     let mut class_indented = indented(out).with_str("    ");
-    if !typ.doc_lines().is_empty() {
-        markdown_to_rst(
-            &mut class_indented,
-            typ.doc_lines(),
-            &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-                match resolved {
-                    ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
-                    ast::CustomType::Enum(_) => {
-                        write!(to, ":cpp:enum-struct:`{}`", resolved.name())?
-                    }
-                    ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
-                }
-                Ok(())
-            },
-        )?;
+    let d = typ.doc_lines(docs_url_gen);
+    if !d.is_empty() {
+        markdown_to_rst(&mut class_indented, &d, &|shortcut_path, to| {
+            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+            match resolved {
+                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
+                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+            }
+            Ok(())
+        })?;
         writeln!(class_indented)?;
     }
 

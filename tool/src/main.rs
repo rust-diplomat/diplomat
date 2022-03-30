@@ -143,13 +143,19 @@ fn main() -> std::io::Result<()> {
                 )
             })
             .collect();
-        let docs_urls = ast::DocsUrlGenerator::with_base_urls(docs_base_urls);
+        let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(docs_base_urls);
 
         let mut docs_out_texts: HashMap<String, String> = HashMap::new();
 
         match opt.target_language.as_str() {
-            "js" => js::docs::gen_docs(&env, &mut docs_out_texts, &docs_urls).unwrap(),
-            "cpp" => cpp::docs::gen_docs(&env, &opt.library_config, &mut docs_out_texts).unwrap(),
+            "js" => js::docs::gen_docs(&env, &mut docs_out_texts, &docs_url_gen).unwrap(),
+            "cpp" => cpp::docs::gen_docs(
+                &env,
+                &opt.library_config,
+                &mut docs_out_texts,
+                &docs_url_gen,
+            )
+            .unwrap(),
             "c" => todo!("Docs generation for C"),
             "dotnet" => todo!("Docs generation for .NET?"),
             o => panic!("Unknown target: {}", o),

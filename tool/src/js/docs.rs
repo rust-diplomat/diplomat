@@ -11,7 +11,7 @@ use crate::docs_util::markdown_to_rst;
 pub fn gen_docs(
     env: &Env,
     outs: &mut HashMap<String, String>,
-    docs_urls: &ast::DocsUrlGenerator,
+    docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     let index_out = outs
         .entry("index.rst".to_string())
@@ -58,7 +58,7 @@ pub fn gen_docs(
             for item in module.items() {
                 if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
-                    gen_custom_type_docs(out, typ, in_path, env, docs_urls)?;
+                    gen_custom_type_docs(out, typ, in_path, env, docs_url_gen)?;
                 }
             }
         }
@@ -72,30 +72,19 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     typ: &ast::CustomType,
     in_path: &ast::Path,
     env: &Env,
-    docs_urls: &ast::DocsUrlGenerator,
+    docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     writeln!(out, ".. js:class:: {}", typ.name())?;
 
     let mut class_indented = indented(out).with_str("    ");
-    if !typ.doc_lines().is_empty() {
-        markdown_to_rst(
-            &mut class_indented,
-            typ.doc_lines(),
-            &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-                write!(to, ":js:class:`{}`", resolved.name())?;
-                Ok(())
-            },
-        )?;
+    let d = typ.doc_lines(docs_url_gen);
+    if !d.is_empty() {
+        markdown_to_rst(&mut class_indented, &d, &|shortcut_path, to| {
+            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+            write!(to, ":js:class:`{}`", resolved.name())?;
+            Ok(())
+        })?;
         writeln!(class_indented)?;
-    }
-
-    if let Some(rust_link) = typ.rust_link() {
-        write!(
-            &mut class_indented,
-            "\nSee the `Rust documentation<{}>`__ for more information\n",
-            docs_urls.gen_for_rust_link(rust_link)
-        )?;
     }
 
     if let ast::CustomType::Struct(strct) = typ {

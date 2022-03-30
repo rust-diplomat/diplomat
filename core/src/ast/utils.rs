@@ -101,7 +101,7 @@ impl DocsUrlGenerator {
         Self { base_urls }
     }
 
-    pub fn gen_for_rust_link(&self, rust_link: &RustLink) -> String {
+    pub(crate) fn gen_for_rust_link(&self, rust_link: &RustLink) -> String {
         use DocType::*;
 
         let mut r = String::new();
