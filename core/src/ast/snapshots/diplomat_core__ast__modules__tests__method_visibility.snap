@@ -8,13 +8,15 @@ declared_types:
   Foo:
     Struct:
       name: Foo
-      doc_lines: ""
-      rust_link: ~
+      docs:
+        - ""
+        - ~
       fields: []
       methods:
         - name: pub_fn
-          doc_lines: ""
-          rust_link: ~
+          docs:
+            - ""
+            - ~
           full_path_name: Foo_pub_fn
           self_param: ~
           params: []

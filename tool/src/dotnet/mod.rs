@@ -27,6 +27,7 @@ const SCOPE_CLOSING: &str = "}";
 pub fn gen_bindings(
     env: &Env,
     library_config_path: &Option<PathBuf>,
+    docs_url_gen: &diplomat_core::ast::DocsUrlGenerator,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     let mut library_config = LibraryConfig::default();
@@ -73,6 +74,7 @@ pub fn gen_bindings(
                 &mut errors,
                 typ,
                 in_path,
+                docs_url_gen,
                 &mut out,
             )?;
             outs.insert(format!("Raw{}.cs", typ.name()), out_buf)
@@ -97,7 +99,7 @@ pub fn gen_bindings(
             let mut out_buf = String::new();
             let mut out = CodeWriter::new(&mut out_buf, INDENTATION, SCOPE_OPENING, SCOPE_CLOSING);
             idiomatic::gen_header(&library_config, &mut out)?;
-            idiomatic::gen(typ, in_path, env, &library_config, &mut out)?;
+            idiomatic::gen(typ, in_path, env, &library_config, docs_url_gen, &mut out)?;
             outs.insert(format!("{}.cs", typ.name()), out_buf)
                 .and_then::<String, _>(|_| panic!("file created twice: {}.cs", typ.name()));
         }

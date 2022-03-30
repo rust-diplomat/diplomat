@@ -3,14 +3,14 @@ source: core/src/ast/methods.rs
 expression: "Method::from_syn(&syn::parse_quote! {\n                      #[diplomat :: rust_link(foo :: Bar :: batz, FnInStruct)]\n                      fn foo(& mut self, x : u64, y : MyCustomStruct) -> u64\n                      { x }\n                  },\n                 &Path::empty().sub_path(\"MyStructContainingMethod\".to_string()))"
 ---
 name: foo
-doc_lines: ""
-rust_link:
-  path:
-    elements:
-      - foo
-      - Bar
-      - batz
-  typ: FnInStruct
+docs:
+  - ""
+  - path:
+      elements:
+        - foo
+        - Bar
+        - batz
+    typ: FnInStruct
 full_path_name: MyStructContainingMethod_foo
 self_param:
   name: self

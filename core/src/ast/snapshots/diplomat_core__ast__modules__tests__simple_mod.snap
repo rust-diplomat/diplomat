@@ -8,22 +8,26 @@ declared_types:
   NonOpaqueStruct:
     Struct:
       name: NonOpaqueStruct
-      doc_lines: ""
-      rust_link: ~
+      docs:
+        - ""
+        - ~
       fields:
         - - a
           - Primitive: i32
-          - ""
+          - - ""
+            - ~
         - - b
           - Box:
               Named:
                 elements:
                   - NonOpaqueStruct
-          - ""
+          - - ""
+            - ~
       methods:
         - name: new
-          doc_lines: ""
-          rust_link: ~
+          docs:
+            - ""
+            - ~
           full_path_name: NonOpaqueStruct_new
           self_param: ~
           params:
@@ -35,8 +39,9 @@ declared_types:
               elements:
                 - NonOpaqueStruct
         - name: set_a
-          doc_lines: ""
-          rust_link: ~
+          docs:
+            - ""
+            - ~
           full_path_name: NonOpaqueStruct_set_a
           self_param:
             name: self
@@ -55,12 +60,14 @@ declared_types:
   OpaqueStruct:
     Opaque:
       name: OpaqueStruct
-      doc_lines: ""
-      rust_link: ~
+      docs:
+        - ""
+        - ~
       methods:
         - name: new
-          doc_lines: ""
-          rust_link: ~
+          docs:
+            - ""
+            - ~
           full_path_name: OpaqueStruct_new
           self_param: ~
           params: []
@@ -70,8 +77,9 @@ declared_types:
                 elements:
                   - OpaqueStruct
         - name: get_string
-          doc_lines: ""
-          rust_link: ~
+          docs:
+            - ""
+            - ~
           full_path_name: OpaqueStruct_get_string
           self_param:
             name: self

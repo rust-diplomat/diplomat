@@ -98,13 +98,33 @@ fn main() -> std::io::Result<()> {
         panic!();
     }
 
+    let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(
+        opt.docs_base_urls
+            .iter()
+            .map(|entry| {
+                let mut parts = entry.splitn(2, ':');
+                (
+                    parts.next().unwrap().to_string(),
+                    parts
+                        .next()
+                        .expect("Expected syntax <crate>:<url>")
+                        .to_string(),
+                )
+            })
+            .collect(),
+    );
+
     let mut out_texts: HashMap<String, String> = HashMap::new();
 
     match opt.target_language.as_str() {
         "js" => js::gen_bindings(&env, &mut out_texts).unwrap(),
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
-        "cpp" => cpp::gen_bindings(&env, &opt.library_config, &mut out_texts).unwrap(),
-        "dotnet" => dotnet::gen_bindings(&env, &opt.library_config, &mut out_texts).unwrap(),
+        "cpp" => {
+            cpp::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
+        }
+        "dotnet" => {
+            dotnet::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
+        }
         o => panic!("Unknown target: {}", o),
     }
 
@@ -128,21 +148,6 @@ fn main() -> std::io::Result<()> {
             format!("Generating {} docs:", opt.target_language)
                 .green()
                 .bold()
-        );
-        let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(
-            opt.docs_base_urls
-                .iter()
-                .map(|entry| {
-                    let mut parts = entry.splitn(2, ':');
-                    (
-                        parts.next().unwrap().to_string(),
-                        parts
-                            .next()
-                            .expect("Expected syntax <crate>:<url>")
-                            .to_string(),
-                    )
-                })
-                .collect(),
         );
 
         let mut docs_out_texts: HashMap<String, String> = HashMap::new();

@@ -17,6 +17,7 @@ pub fn gen_struct<W: fmt::Write>(
     is_header: bool,
     env: &Env,
     library_config: &LibraryConfig,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
     if is_header {
@@ -65,6 +66,7 @@ pub fn gen_struct<W: fmt::Write>(
                     true,
                     env,
                     library_config,
+                    docs_url_gen,
                     &mut public_body,
                 )?;
             }
@@ -105,7 +107,7 @@ pub fn gen_struct<W: fmt::Write>(
 
         ast::CustomType::Struct(strct) => {
             if is_header {
-                gen_comment_block(out, &strct.doc_lines)?;
+                gen_comment_block(out, &strct.docs.to_markdown(docs_url_gen))?;
                 writeln!(out, "struct {} {{", strct.name)?;
                 writeln!(out, " public:")?;
             }
@@ -119,7 +121,7 @@ pub fn gen_struct<W: fmt::Write>(
             if is_header {
                 for (name, typ, docs) in &strct.fields {
                     let ty_name = gen_type(typ, in_path, None, env, library_config)?;
-                    gen_comment_block(&mut public_body, docs)?;
+                    gen_comment_block(&mut public_body, &docs.to_markdown(docs_url_gen))?;
                     writeln!(&mut public_body, "{} {};", ty_name, name)?;
                 }
             }
@@ -133,6 +135,7 @@ pub fn gen_struct<W: fmt::Write>(
                     true,
                     env,
                     library_config,
+                    docs_url_gen,
                     &mut public_body,
                 )?;
             }
@@ -158,6 +161,7 @@ fn gen_method<W: fmt::Write>(
     writeable_to_string: bool,
     env: &Env,
     library_config: &LibraryConfig,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
     // This method should rearrange the writeable
@@ -176,12 +180,13 @@ fn gen_method<W: fmt::Write>(
             false,
             env,
             library_config,
+            docs_url_gen,
             out,
         )?;
     }
 
     if is_header {
-        gen_comment_block(out, &method.doc_lines)?;
+        gen_comment_block(out, &method.docs.to_markdown(docs_url_gen))?;
     }
     let params_to_gen = gen_method_interface(
         method,
@@ -548,6 +553,7 @@ mod tests {
             mod ffi {
                 /// Documentation for Foo.
                 /// Second line.
+                #[diplomat::rust_link(foo::Bar, Struct)]
                 struct Foo {
                     /// Documentation for x.
                     x: u8,
@@ -555,6 +561,7 @@ mod tests {
 
                 impl Foo {
                     /// Documentation for get_x.
+                    #[diplomat::rust_link(foo::Bar::get, FnInStruct)]
                     pub fn get_x(&self) -> u8 {
                         x
                     }

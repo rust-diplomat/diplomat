@@ -3,19 +3,21 @@ source: core/src/ast/enums.rs
 expression: "Enum::from(&syn::parse_quote! {\n                /// Some docs.\n                #[diplomat :: rust_link(foo :: Bar, Enum)] enum MyLocalEnum\n                {\n                    Abc, /// Some more docs.\n                    Def\n                }\n            })"
 ---
 name: MyLocalEnum
-doc_lines: Some docs.
-rust_link:
-  path:
-    elements:
-      - foo
-      - Bar
-  typ: Enum
+docs:
+  - Some docs.
+  - path:
+      elements:
+        - foo
+        - Bar
+    typ: Enum
 variants:
   - - Abc
     - 0
-    - ""
+    - - ""
+      - ~
   - - Def
     - 1
-    - Some more docs.
+    - - Some more docs.
+      - ~
 methods: []
 

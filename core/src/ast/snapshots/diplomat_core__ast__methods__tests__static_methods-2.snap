@@ -1,10 +1,16 @@
 ---
 source: core/src/ast/methods.rs
-expression: "Method::from_syn(&syn::parse_quote! {\n                      /// Some docs.\n                      /// Some more docs.\n                      ///\n                      /// Even more docs.\n                      fn foo(x : u64, y : MyCustomStruct) -> u64 { x }\n                  },\n                 &Path::empty().sub_path(\"MyStructContainingMethod\".to_string()))"
+expression: "Method::from_syn(&syn::parse_quote! {\n                      /// Some docs.\n                      /// Some more docs.\n                      ///\n                      /// Even more docs.\n                      #[diplomat :: rust_link(foo :: Bar :: batz, FnInEnum)]\n                      fn foo(x : u64, y : MyCustomStruct) -> u64 { x }\n                  },\n                 &Path::empty().sub_path(\"MyStructContainingMethod\".to_string()))"
 ---
 name: foo
-doc_lines: "Some docs.\nSome more docs.\n\nEven more docs."
-rust_link: ~
+docs:
+  - "Some docs.\nSome more docs.\n\nEven more docs."
+  - path:
+      elements:
+        - foo
+        - Bar
+        - batz
+    typ: FnInEnum
 full_path_name: MyStructContainingMethod_foo
 self_param: ~
 params:

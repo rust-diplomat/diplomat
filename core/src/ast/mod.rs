@@ -20,8 +20,8 @@ pub use types::{CustomType, Lifetime, ModSymbol, PrimitiveType, TypeName};
 mod paths;
 pub use paths::Path;
 
-mod utils;
-pub use utils::DocsUrlGenerator;
+mod docs;
+pub use docs::{Docs, DocsUrlGenerator};
 
 mod validity;
 pub use validity::ValidityError;

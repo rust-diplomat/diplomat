@@ -40,13 +40,14 @@ pub fn gen(
     in_path: &ast::Path,
     env: &Env,
     library_config: &LibraryConfig,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
     writeln!(out)?;
 
     match custom_type {
         ast::CustomType::Opaque(opaque) => {
-            gen_doc_block(out, &opaque.doc_lines)?;
+            gen_doc_block(out, &opaque.docs.to_markdown(docs_url_gen))?;
             writeln!(
                 out,
                 "public partial class {}: IDisposable",
@@ -76,7 +77,7 @@ pub fn gen(
                 out.scope(|out| writeln!(out, "_inner = handle;"))?;
 
                 for method in &opaque.methods {
-                    gen_method(custom_type, method, in_path, true, env, library_config, out)?;
+                    gen_method(custom_type, method, in_path, true, env, library_config, docs_url_gen, out)?;
                 }
 
                 writeln!(out)?;
@@ -110,14 +111,14 @@ pub fn gen(
         }
 
         ast::CustomType::Struct(strct) => {
-            gen_doc_block(out, &strct.doc_lines)?;
+            gen_doc_block(out, &strct.docs.to_markdown(docs_url_gen))?;
             writeln!(out, "public partial class {}", custom_type.name())?;
 
             out.scope(|out| {
                 writeln!(out, "private Raw.{} _inner;", strct.name)?;
 
                 for (name, typ, doc) in strct.fields.iter() {
-                    gen_property_for_field(name, doc, typ, in_path, env, out)?;
+                    gen_property_for_field(name, &doc, typ, in_path, env, docs_url_gen, out)?;
                 }
 
                 let properties = collect_properties(&strct.methods, in_path, env, library_config);
@@ -137,7 +138,16 @@ pub fn gen(
                 out.scope(|out| writeln!(out, "_inner = data;"))?;
 
                 for method in &strct.methods {
-                    gen_method(custom_type, method, in_path, true, env, library_config, out)?;
+                    gen_method(
+                        custom_type,
+                        method,
+                        in_path,
+                        true,
+                        env,
+                        library_config,
+                        docs_url_gen,
+                        out,
+                    )?;
                 }
 
                 writeln!(out)?;
@@ -148,11 +158,11 @@ pub fn gen(
         }
 
         ast::CustomType::Enum(enm) => {
-            gen_doc_block(out, &enm.doc_lines)?;
+            gen_doc_block(out, &enm.docs.to_markdown(docs_url_gen))?;
             writeln!(out, "public enum {}", enm.name)?;
             out.scope(|out| {
-                for (name, discriminant, doc_lines) in enm.variants.iter() {
-                    gen_doc_block(out, doc_lines)?;
+                for (name, discriminant, docs) in enm.variants.iter() {
+                    gen_doc_block(out, &docs.to_markdown(docs_url_gen))?;
                     writeln!(out, "{} = {},", name, discriminant)?;
                 }
 
@@ -166,10 +176,11 @@ pub fn gen(
 
 fn gen_property_for_field(
     name: &str,
-    doc_lines: &str,
+    docs: &ast::Docs,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &Env,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
     match typ {
@@ -195,7 +206,7 @@ fn gen_property_for_field(
     }
 
     writeln!(out)?;
-    gen_doc_block(out, doc_lines)?;
+    gen_doc_block(out, &docs.to_markdown(docs_url_gen))?;
 
     let type_name = gen_type_name_to_string(typ, in_path, env)?;
     let property_name = name.to_upper_camel_case();
@@ -275,6 +286,7 @@ fn gen_method(
     writeable_to_string: bool,
     env: &Env,
     library_config: &LibraryConfig,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
     // This method should rearrange the writeable
@@ -289,6 +301,7 @@ fn gen_method(
             false,
             env,
             library_config,
+            docs_url_gen,
             out,
         )?;
     }
@@ -339,7 +352,7 @@ fn gen_method(
 
     writeln!(out)?;
 
-    gen_doc_block(out, &method.doc_lines)?;
+    gen_doc_block(out, &method.docs.to_markdown(docs_url_gen))?;
 
     let result_to_handle: Option<(&ast::TypeName, &ast::TypeName)> = match &method.return_type {
         Some(ast::TypeName::Result(ok_variant, err_variant)) => {

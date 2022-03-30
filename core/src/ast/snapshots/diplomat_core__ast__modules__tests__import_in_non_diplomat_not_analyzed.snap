@@ -10,8 +10,9 @@ modules:
       Foo:
         Struct:
           name: Foo
-          doc_lines: ""
-          rust_link: ~
+          docs:
+            - ""
+            - ~
           fields: []
           methods: []
     sub_modules: []

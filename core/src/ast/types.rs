@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use std::fmt;
 use std::iter::FromIterator;
 
-use super::{DocsUrlGenerator, Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
+use super::{Docs, Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
 use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
@@ -43,29 +43,12 @@ impl CustomType {
     }
 
     /// Get the doc lines of the custom type.
-    pub fn doc_lines(&self, docs_url_gen: &DocsUrlGenerator) -> String {
-        let mut lines = match self {
-            CustomType::Struct(strct) => &strct.doc_lines,
-            CustomType::Opaque(strct) => &strct.doc_lines,
-            CustomType::Enum(enm) => &enm.doc_lines,
+    pub fn docs(&self) -> &Docs {
+        match self {
+            CustomType::Struct(strct) => &strct.docs,
+            CustomType::Opaque(strct) => &strct.docs,
+            CustomType::Enum(enm) => &enm.docs,
         }
-        .to_string();
-
-        if let Some(rust_link) = match self {
-            CustomType::Struct(strct) => strct.rust_link.as_ref(),
-            CustomType::Opaque(strct) => strct.rust_link.as_ref(),
-            CustomType::Enum(enm) => enm.rust_link.as_ref(),
-        } {
-            use std::fmt::Write;
-            write!(
-                lines,
-                "\n\nSee the [Rust documentation]({}) for more information.",
-                docs_url_gen.gen_for_rust_link(rust_link)
-            )
-            .unwrap();
-        }
-
-        lines
     }
 
     pub fn self_path(&self, in_path: &Path) -> Path {
