@@ -118,7 +118,7 @@ pub fn gen(
                 writeln!(out, "private Raw.{} _inner;", strct.name)?;
 
                 for (name, typ, doc) in strct.fields.iter() {
-                    gen_property_for_field(name, &doc, typ, in_path, env, docs_url_gen, out)?;
+                    gen_property_for_field(name, doc, typ, in_path, env, docs_url_gen, out)?;
                 }
 
                 let properties = collect_properties(&strct.methods, in_path, env, library_config);
@@ -279,6 +279,7 @@ fn gen_property_for_getters_setters(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn gen_method(
     enclosing_type: &ast::CustomType,
     method: &ast::Method,

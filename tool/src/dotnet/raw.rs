@@ -34,6 +34,7 @@ pub fn gen_header(library_config: &LibraryConfig, out: &mut CodeWriter) -> fmt::
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn gen<'ast>(
     env: &Env,
     library_config: &LibraryConfig,

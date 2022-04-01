@@ -161,6 +161,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn gen_method_docs<W: fmt::Write>(
     method: &ast::Method,
     enclosing_type: &ast::CustomType,
