@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use std::fmt;
 use std::iter::FromIterator;
 
-use super::{Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
+use super::{Docs, Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
 use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
@@ -43,11 +43,11 @@ impl CustomType {
     }
 
     /// Get the doc lines of the custom type.
-    pub fn doc_lines(&self) -> &String {
+    pub fn docs(&self) -> &Docs {
         match self {
-            CustomType::Struct(strct) => &strct.doc_lines,
-            CustomType::Opaque(strct) => &strct.doc_lines,
-            CustomType::Enum(enm) => &enm.doc_lines,
+            CustomType::Struct(strct) => &strct.docs,
+            CustomType::Opaque(strct) => &strct.docs,
+            CustomType::Enum(enm) => &enm.docs,
         }
     }
 

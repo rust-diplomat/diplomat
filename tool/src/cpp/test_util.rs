@@ -20,7 +20,7 @@ macro_rules! test_file {
 
         let mut out_texts = std::collections::HashMap::new();
 
-        crate::cpp::gen_bindings(&env, &None, &mut out_texts).unwrap();
+        crate::cpp::gen_bindings(&env, &None, &Default::default(), &mut out_texts).unwrap();
 
         out_texts.retain(|k, _| !k.ends_with(".h"));
         out_texts.remove("diplomat_runtime.hpp");
@@ -58,7 +58,7 @@ macro_rules! test_file_using_library_config {
         use std::path::PathBuf;
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push("src/cpp/configs/mfbt.toml");
-        crate::cpp::gen_bindings(&env, &Some(path), &mut out_texts).unwrap();
+        crate::cpp::gen_bindings(&env, &Some(path), &Default::default(), &mut out_texts).unwrap();
 
         out_texts.retain(|k, _| !k.ends_with(".h"));
         out_texts.remove("diplomat_runtime.hpp");

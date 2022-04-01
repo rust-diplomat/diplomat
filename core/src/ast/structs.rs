@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 
-use super::utils::get_doc_lines;
+use super::docs::Docs;
 use super::{Method, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Struct {
     pub name: String,
-    pub doc_lines: String,
-    /// A list of fields in the struct. (name, type, doc_lines)
-    pub fields: Vec<(String, TypeName, String)>,
+    pub docs: Docs,
+    /// A list of fields in the struct. (name, type, docs)
+    pub fields: Vec<(String, TypeName, Docs)>,
     pub methods: Vec<Method>,
 }
 
@@ -18,7 +18,7 @@ impl From<&syn::ItemStruct> for Struct {
     fn from(strct: &syn::ItemStruct) -> Struct {
         Struct {
             name: strct.ident.to_string(),
-            doc_lines: get_doc_lines(&strct.attrs),
+            docs: Docs::from_attrs(&strct.attrs),
             fields: strct
                 .fields
                 .iter()
@@ -30,7 +30,7 @@ impl From<&syn::ItemStruct> for Struct {
                             .map(|i| i.to_string())
                             .unwrap_or(format!("{}", i)),
                         (&f.ty).into(),
-                        get_doc_lines(&f.attrs),
+                        Docs::from_attrs(&f.attrs),
                     )
                 })
                 .collect(),
@@ -45,7 +45,7 @@ impl From<&syn::ItemStruct> for Struct {
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
 pub struct OpaqueStruct {
     pub name: String,
-    pub doc_lines: String,
+    pub docs: Docs,
     pub methods: Vec<Method>,
 }
 
@@ -54,7 +54,7 @@ impl From<&syn::ItemStruct> for OpaqueStruct {
     fn from(strct: &syn::ItemStruct) -> OpaqueStruct {
         OpaqueStruct {
             name: strct.ident.to_string(),
-            doc_lines: get_doc_lines(&strct.attrs),
+            docs: Docs::from_attrs(&strct.attrs),
             methods: vec![],
         }
     }
@@ -76,6 +76,7 @@ mod tests {
         settings.bind(|| {
             insta::assert_yaml_snapshot!(Struct::from(&syn::parse_quote! {
                 /// Some docs.
+                #[diplomat::rust_link(foo::Bar, Struct)]
                 struct MyLocalStruct {
                     a: i32,
                     b: Box<MyLocalStruct>

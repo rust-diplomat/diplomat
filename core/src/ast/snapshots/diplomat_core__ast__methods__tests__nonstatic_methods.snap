@@ -1,10 +1,11 @@
 ---
 source: core/src/ast/methods.rs
 expression: "Method::from_syn(&syn::parse_quote! {\n                      fn foo(& self, x : u64, y : MyCustomStruct) {}\n                  },\n                 &Path::empty().sub_path(\"MyStructContainingMethod\".to_string()))"
-
 ---
 name: foo
-doc_lines: ""
+docs:
+  - ""
+  - ~
 full_path_name: MyStructContainingMethod_foo
 self_param:
   name: self

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use syn::*;
 
-use super::utils::get_doc_lines;
+use super::docs::Docs;
 use super::{Lifetime, Path, TypeName, ValidityError};
 use crate::Env;
 
@@ -14,7 +14,7 @@ pub struct Method {
     pub name: String,
 
     /// Lines of documentation for the method.
-    pub doc_lines: String,
+    pub docs: Docs,
 
     /// The name of the FFI function wrapping around the method.
     pub full_path_name: String,
@@ -72,7 +72,7 @@ impl Method {
 
         Method {
             name: method_ident.to_string(),
-            doc_lines: get_doc_lines(&m.attrs),
+            docs: Docs::from_attrs(&m.attrs),
             full_path_name: extern_ident.to_string(),
             self_param,
             params: all_params,
@@ -173,6 +173,7 @@ mod tests {
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse_quote! {
                 /// Some docs.
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
                 fn foo(x: u64, y: MyCustomStruct) {
 
                 }
@@ -186,6 +187,7 @@ mod tests {
                 /// Some more docs.
                 ///
                 /// Even more docs.
+                #[diplomat::rust_link(foo::Bar::batz, FnInEnum)]
                 fn foo(x: u64, y: MyCustomStruct) -> u64 {
                     x
                 }
@@ -207,6 +209,7 @@ mod tests {
 
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse_quote! {
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
                 fn foo(&mut self, x: u64, y: MyCustomStruct) -> u64 {
                     x
                 }

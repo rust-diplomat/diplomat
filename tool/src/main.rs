@@ -29,6 +29,9 @@ struct Opt {
     #[structopt(short, long, parse(from_os_str))]
     docs: Option<PathBuf>,
 
+    #[structopt(short = "-u", long)]
+    docs_base_urls: Vec<String>,
+
     /// The path to the lib.rs file. Defaults to src/lib.rs
     #[structopt(short, long, parse(from_os_str))]
     entry: Option<PathBuf>,
@@ -95,13 +98,33 @@ fn main() -> std::io::Result<()> {
         panic!();
     }
 
+    let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(
+        opt.docs_base_urls
+            .iter()
+            .map(|entry| {
+                let mut parts = entry.splitn(2, ':');
+                (
+                    parts.next().unwrap().to_string(),
+                    parts
+                        .next()
+                        .expect("Expected syntax <crate>:<url>")
+                        .to_string(),
+                )
+            })
+            .collect(),
+    );
+
     let mut out_texts: HashMap<String, String> = HashMap::new();
 
     match opt.target_language.as_str() {
         "js" => js::gen_bindings(&env, &mut out_texts).unwrap(),
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
-        "cpp" => cpp::gen_bindings(&env, &opt.library_config, &mut out_texts).unwrap(),
-        "dotnet" => dotnet::gen_bindings(&env, &opt.library_config, &mut out_texts).unwrap(),
+        "cpp" => {
+            cpp::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
+        }
+        "dotnet" => {
+            dotnet::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
+        }
         o => panic!("Unknown target: {}", o),
     }
 
@@ -126,11 +149,18 @@ fn main() -> std::io::Result<()> {
                 .green()
                 .bold()
         );
+
         let mut docs_out_texts: HashMap<String, String> = HashMap::new();
 
         match opt.target_language.as_str() {
-            "js" => js::docs::gen_docs(&env, &mut docs_out_texts).unwrap(),
-            "cpp" => cpp::docs::gen_docs(&env, &opt.library_config, &mut docs_out_texts).unwrap(),
+            "js" => js::docs::gen_docs(&env, &mut docs_out_texts, &docs_url_gen).unwrap(),
+            "cpp" => cpp::docs::gen_docs(
+                &env,
+                &opt.library_config,
+                &mut docs_out_texts,
+                &docs_url_gen,
+            )
+            .unwrap(),
             "c" => todo!("Docs generation for C"),
             "dotnet" => todo!("Docs generation for .NET?"),
             o => panic!("Unknown target: {}", o),

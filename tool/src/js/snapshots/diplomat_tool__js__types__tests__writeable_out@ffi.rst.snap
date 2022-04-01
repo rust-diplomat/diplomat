@@ -1,0 +1,15 @@
+---
+source: tool/src/js/types.rs
+expression: out_docs.get(out).unwrap()
+---
+``ffi``
+=======
+
+.. js:class:: MyStruct
+
+    .. js:attribute:: a
+
+    .. js:attribute:: b
+
+    .. js:function:: write()
+

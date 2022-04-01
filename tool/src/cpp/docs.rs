@@ -18,6 +18,7 @@ pub fn gen_docs(
     env: &Env,
     library_config_path: &Option<PathBuf>,
     outs: &mut HashMap<String, String>,
+    docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     let mut library_config = LibraryConfig::default();
     if let Some(path) = library_config_path {
@@ -81,7 +82,7 @@ pub fn gen_docs(
             for item in module.items() {
                 if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
-                    gen_custom_type_docs(out, typ, in_path, env, &library_config)?;
+                    gen_custom_type_docs(out, typ, in_path, env, &library_config, docs_url_gen)?;
                 }
             }
         }
@@ -96,6 +97,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     in_path: &ast::Path,
     env: &Env,
     library_config: &LibraryConfig,
+    docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     match typ {
         ast::CustomType::Struct(_) => writeln!(out, ".. cpp:struct:: {}", typ.name())?,
@@ -104,10 +106,10 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     }
 
     let mut class_indented = indented(out).with_str("    ");
-    if !typ.doc_lines().is_empty() {
+    if !typ.docs().is_empty() {
         markdown_to_rst(
             &mut class_indented,
-            typ.doc_lines(),
+            &typ.docs().to_markdown(docs_url_gen),
             &|shortcut_path, to| {
                 let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
                 match resolved {
@@ -126,12 +128,19 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     if let ast::CustomType::Struct(strct) = typ {
         for field in strct.fields.iter() {
             writeln!(&mut class_indented)?;
-            gen_field_docs(&mut class_indented, field, in_path, env, library_config)?;
+            gen_field_docs(
+                &mut class_indented,
+                field,
+                in_path,
+                env,
+                library_config,
+                docs_url_gen,
+            )?;
         }
     } else if let ast::CustomType::Enum(enm) = typ {
         for variant in &enm.variants {
             writeln!(&mut class_indented)?;
-            gen_enum_variant_docs(&mut class_indented, variant, in_path, env)?;
+            gen_enum_variant_docs(&mut class_indented, variant, in_path, env, docs_url_gen)?;
         }
     }
 
@@ -144,6 +153,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
             true,
             env,
             library_config,
+            docs_url_gen,
             &mut class_indented,
         )?;
     }
@@ -151,6 +161,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn gen_method_docs<W: fmt::Write>(
     method: &ast::Method,
     enclosing_type: &ast::CustomType,
@@ -158,6 +169,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     writeable_to_string: bool,
     env: &Env,
     library_config: &LibraryConfig,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
     // This method should rearrange the writeable
@@ -175,6 +187,7 @@ pub fn gen_method_docs<W: fmt::Write>(
             false,
             env,
             library_config,
+            docs_url_gen,
             out,
         )?;
         writeln!(out)?;
@@ -197,11 +210,11 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     writeln!(out)?;
 
-    if !method.doc_lines.is_empty() {
+    if !method.docs.is_empty() {
         let mut method_indented = indented(out).with_str("    ");
         markdown_to_rst(
             &mut method_indented,
-            &method.doc_lines,
+            &method.docs.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
                 let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
                 match resolved {
@@ -222,25 +235,32 @@ pub fn gen_method_docs<W: fmt::Write>(
 
 pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
-    field: &(String, ast::TypeName, String),
+    field: &(String, ast::TypeName, ast::Docs),
     in_path: &ast::Path,
     env: &Env,
     library_config: &LibraryConfig,
+    docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     let ty_name = gen_type(&field.1, in_path, None, env, library_config)?;
     writeln!(out, ".. cpp:member:: {} {}", ty_name, field.0)?;
 
     if !field.2.is_empty() {
         let mut field_indented = indented(out).with_str("    ");
-        markdown_to_rst(&mut field_indented, &field.2, &|shortcut_path, to| {
-            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-            match resolved {
-                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
-                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
-                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
-            }
-            Ok(())
-        })?;
+        markdown_to_rst(
+            &mut field_indented,
+            &field.2.to_markdown(docs_url_gen),
+            &|shortcut_path, to| {
+                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                match resolved {
+                    ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                    ast::CustomType::Enum(_) => {
+                        write!(to, ":cpp:enum-struct:`{}`", resolved.name())?
+                    }
+                    ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+                }
+                Ok(())
+            },
+        )?;
         writeln!(field_indented)?;
     }
 
@@ -249,9 +269,10 @@ pub fn gen_field_docs<W: fmt::Write>(
 
 pub fn gen_enum_variant_docs<W: fmt::Write>(
     out: &mut W,
-    variant: &(String, isize, String),
+    variant: &(String, isize, ast::Docs),
     in_path: &ast::Path,
     env: &Env,
+    docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
     write!(out, ".. cpp:enumerator:: {}", variant.0)?;
 
@@ -259,15 +280,21 @@ pub fn gen_enum_variant_docs<W: fmt::Write>(
 
     if !variant.2.is_empty() {
         let mut enum_indented = indented(out).with_str("    ");
-        markdown_to_rst(&mut enum_indented, &variant.2, &|shortcut_path, to| {
-            let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
-            match resolved {
-                ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
-                ast::CustomType::Enum(_) => write!(to, ":cpp:enum-struct:`{}`", resolved.name())?,
-                ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
-            }
-            Ok(())
-        })?;
+        markdown_to_rst(
+            &mut enum_indented,
+            &variant.2.to_markdown(docs_url_gen),
+            &|shortcut_path, to| {
+                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                match resolved {
+                    ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
+                    ast::CustomType::Enum(_) => {
+                        write!(to, ":cpp:enum-struct:`{}`", resolved.name())?
+                    }
+                    ast::CustomType::Opaque(_) => write!(to, ":cpp:class:`{}`", resolved.name())?,
+                }
+                Ok(())
+            },
+        )?;
         writeln!(enum_indented)?;
     }
 

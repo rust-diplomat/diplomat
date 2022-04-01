@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 
-use super::utils::get_doc_lines;
+use super::docs::Docs;
 use super::Method;
 
 /// A fieldless enum declaration in an FFI module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
 pub struct Enum {
     pub name: String,
-    pub doc_lines: String,
-    /// A list of variants of the enum. (name, discriminant, doc_lines)
-    pub variants: Vec<(String, isize, String)>,
+    pub docs: Docs,
+    /// A list of variants of the enum. (name, discriminant, docs)
+    pub variants: Vec<(String, isize, Docs)>,
     pub methods: Vec<Method>,
 }
 
@@ -19,7 +19,7 @@ impl From<&syn::ItemEnum> for Enum {
         let mut last_discriminant = -1;
         Enum {
             name: strct.ident.to_string(),
-            doc_lines: get_doc_lines(&strct.attrs),
+            docs: Docs::from_attrs(&strct.attrs),
             variants: strct
                 .variants
                 .iter()
@@ -45,7 +45,7 @@ impl From<&syn::ItemEnum> for Enum {
                     (
                         v.ident.to_string(),
                         new_discriminant,
-                        get_doc_lines(&v.attrs),
+                        Docs::from_attrs(&v.attrs),
                     )
                 })
                 .collect(),
@@ -70,6 +70,7 @@ mod tests {
         settings.bind(|| {
             insta::assert_yaml_snapshot!(Enum::from(&syn::parse_quote! {
                 /// Some docs.
+                #[diplomat::rust_link(foo::Bar, Enum)]
                 enum MyLocalEnum {
                     Abc,
                     /// Some more docs.

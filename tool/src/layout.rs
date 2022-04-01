@@ -45,17 +45,17 @@ pub fn result_ok_offset_size_align(
     let (offsets, size_max_align) = struct_offsets_size_max_align(
         &ast::Struct {
             name: "".to_string(),
-            doc_lines: "".to_string(),
+            docs: Default::default(),
             fields: vec![
                 if ok_size_align.size() > err_size_align.size() {
-                    ("".to_string(), ok.clone(), "".to_string())
+                    ("".to_string(), ok.clone(), Default::default())
                 } else {
-                    ("".to_string(), err.clone(), "".to_string())
+                    ("".to_string(), err.clone(), Default::default())
                 },
                 (
                     "".to_string(),
                     ast::TypeName::Primitive(PrimitiveType::bool),
-                    "".to_string(),
+                    Default::default(),
                 ),
             ],
             methods: vec![],

@@ -1,0 +1,19 @@
+---
+source: tool/src/js/structs.rs
+expression: out_docs.get(out).unwrap()
+---
+``ffi``
+=======
+
+.. js:class:: MyStruct
+
+    .. js:attribute:: a
+
+    .. js:attribute:: b
+
+    .. js:staticfunction:: new(a, b)
+
+    .. js:function:: get_a()
+
+    .. js:function:: set_b(b)
+

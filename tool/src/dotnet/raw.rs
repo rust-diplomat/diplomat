@@ -34,6 +34,7 @@ pub fn gen_header(library_config: &LibraryConfig, out: &mut CodeWriter) -> fmt::
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn gen<'ast>(
     env: &Env,
     library_config: &LibraryConfig,
@@ -41,6 +42,7 @@ pub fn gen<'ast>(
     errors: &mut SetOfAstTypes<&'ast ast::TypeName>,
     typ: &'ast ast::CustomType,
     in_path: &'ast ast::Path,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
     for method in typ.methods() {
@@ -64,7 +66,7 @@ pub fn gen<'ast>(
                 collect_errors(typ, in_path, env, errors);
             }
 
-            gen_doc_block(out, &strct.doc_lines)?;
+            gen_doc_block(out, &strct.docs.to_markdown(docs_url_gen))?;
             writeln!(out, "[StructLayout(LayoutKind.Sequential)]")?;
             writeln!(out, "public partial struct {}", typ.name())?;
 
@@ -76,11 +78,11 @@ pub fn gen<'ast>(
                 )?;
 
                 for (name, typ, doc) in strct.fields.iter() {
-                    gen_field(name, doc, typ, in_path, env, out)?;
+                    gen_field(name, doc, typ, in_path, env, docs_url_gen, out)?;
                 }
 
                 for method in typ.methods() {
-                    gen_method(typ, method, in_path, env, out)?;
+                    gen_method(typ, method, in_path, env, docs_url_gen, out)?;
                 }
 
                 Ok(())
@@ -88,7 +90,7 @@ pub fn gen<'ast>(
         }
 
         ast::CustomType::Opaque(opaque) => {
-            gen_doc_block(out, &opaque.doc_lines)?;
+            gen_doc_block(out, &opaque.docs.to_markdown(docs_url_gen))?;
             writeln!(out, "[StructLayout(LayoutKind.Sequential)]")?;
             writeln!(out, "public partial struct {}", typ.name())?;
 
@@ -100,7 +102,7 @@ pub fn gen<'ast>(
                 )?;
 
                 for method in typ.methods() {
-                    gen_method(typ, method, in_path, env, out)?;
+                    gen_method(typ, method, in_path, env, docs_url_gen, out)?;
                 }
 
                 writeln!(out)?;
@@ -114,11 +116,11 @@ pub fn gen<'ast>(
         }
 
         ast::CustomType::Enum(enm) => {
-            gen_doc_block(out, &enm.doc_lines)?;
+            gen_doc_block(out, &enm.docs.to_markdown(docs_url_gen))?;
             writeln!(out, "public enum {}", enm.name)?;
             out.scope(|out| {
-                for (name, discriminant, doc_lines) in enm.variants.iter() {
-                    gen_doc_block(out, doc_lines)?;
+                for (name, discriminant, docs) in enm.variants.iter() {
+                    gen_doc_block(out, &docs.to_markdown(docs_url_gen))?;
                     writeln!(out, "{} = {},", name, discriminant)?;
                 }
 
@@ -130,10 +132,11 @@ pub fn gen<'ast>(
 
 fn gen_field(
     name: &str,
-    doc_lines: &str,
+    docs: &ast::Docs,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &Env,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
     let mut type_declaration = String::new();
@@ -141,7 +144,7 @@ fn gen_field(
     let is_unsafe = type_declaration.ends_with('*');
 
     writeln!(out)?;
-    gen_doc_block(out, doc_lines)?;
+    gen_doc_block(out, &docs.to_markdown(docs_url_gen))?;
     gen_annotations_for_field(typ, out)?;
     write!(out, "public ")?;
     if is_unsafe {
@@ -155,11 +158,12 @@ fn gen_method(
     method: &ast::Method,
     in_path: &ast::Path,
     env: &Env,
+    docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
     writeln!(out)?;
 
-    gen_doc_block(out, &method.doc_lines)?;
+    gen_doc_block(out, &method.docs.to_markdown(docs_url_gen))?;
     gen_annotations_for_method(method, out)?;
     write!(out, "public static unsafe extern ")?;
     gen_type_name_return_position(method.return_type.as_ref(), in_path, env, out)?;

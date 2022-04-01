@@ -1,19 +1,26 @@
 ---
 source: core/src/ast/structs.rs
-expression: "Struct::from(&syn::parse_quote! {\n                              /// Some docs.\n                              struct MyLocalStruct\n                              { a : i32, b : Box < MyLocalStruct > }\n                          }).unwrap())"
-
+expression: "Struct::from(&syn::parse_quote! {\n                  /// Some docs.\n                  #[diplomat :: rust_link(foo :: Bar, Struct)] struct\n                  MyLocalStruct { a : i32, b : Box < MyLocalStruct > }\n              })"
 ---
 name: MyLocalStruct
-doc_lines: Some docs.
+docs:
+  - Some docs.
+  - path:
+      elements:
+        - foo
+        - Bar
+    typ: Struct
 fields:
   - - a
     - Primitive: i32
-    - ""
+    - - ""
+      - ~
   - - b
     - Box:
         Named:
           elements:
             - MyLocalStruct
-    - ""
+    - - ""
+      - ~
 methods: []
 

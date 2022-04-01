@@ -37,6 +37,7 @@ static HEADER_TEMPLATE_NAME: &str = "header.hpp";
 pub fn gen_bindings(
     env: &Env,
     library_config_path: &Option<PathBuf>,
+    docs_url_gen: &ast::DocsUrlGenerator,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
     super::c::gen_bindings(env, outs)?;
@@ -94,11 +95,11 @@ pub fn gen_bindings(
 
             ast::CustomType::Enum(enm) => {
                 writeln!(out)?;
-                gen_comment_block(out, &enm.doc_lines)?;
+                gen_comment_block(out, &enm.docs.to_markdown(docs_url_gen))?;
                 writeln!(out, "enum struct {} {{", enm.name)?;
                 let mut enm_indent = indented(out).with_str("  ");
-                for (name, discriminant, doc_lines) in enm.variants.iter() {
-                    gen_comment_block(&mut enm_indent, doc_lines)?;
+                for (name, discriminant, docs) in enm.variants.iter() {
+                    gen_comment_block(&mut enm_indent, &docs.to_markdown(docs_url_gen))?;
                     writeln!(&mut enm_indent, "{} = {},", name, discriminant)?;
                 }
                 writeln!(out, "}};")?;
@@ -151,14 +152,14 @@ pub fn gen_bindings(
         match typ {
             ast::CustomType::Opaque(_) => {
                 writeln!(out)?;
-                gen_struct(typ, in_path, true, env, &library_config, out)?;
+                gen_struct(typ, in_path, true, env, &library_config, docs_url_gen, out)?;
             }
 
             ast::CustomType::Enum(_) => {}
 
             ast::CustomType::Struct(_) => {
                 writeln!(out)?;
-                gen_struct(typ, in_path, true, env, &library_config, out)?;
+                gen_struct(typ, in_path, true, env, &library_config, docs_url_gen, out)?;
             }
         }
 
@@ -195,14 +196,14 @@ pub fn gen_bindings(
         match typ {
             ast::CustomType::Opaque(_) => {
                 writeln!(out)?;
-                gen_struct(typ, in_path, false, env, &library_config, out)?;
+                gen_struct(typ, in_path, false, env, &library_config, docs_url_gen, out)?;
             }
 
             ast::CustomType::Enum(_) => {}
 
             ast::CustomType::Struct(_) => {
                 writeln!(out)?;
-                gen_struct(typ, in_path, false, env, &library_config, out)?;
+                gen_struct(typ, in_path, false, env, &library_config, docs_url_gen, out)?;
             }
         }
 

@@ -298,6 +298,8 @@ mod tests {
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::opaque]
+                #[diplomat::rust_link(foo::bar::Batz, Struct)]
+                /// Use this.
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {

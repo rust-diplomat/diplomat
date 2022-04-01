@@ -8,11 +8,20 @@ macro_rules! test_file {
 
         crate::js::gen_bindings(&env, &mut out_texts).unwrap();
 
+        let mut out_docs = std::collections::HashMap::new();
+        crate::js::docs::gen_docs(&env, &mut out_docs, &Default::default()).unwrap();
+
         out_texts.remove("diplomat-runtime.mjs");
 
         for out in out_texts.keys() {
             insta::with_settings!({ snapshot_suffix => out.clone() }, {
                 insta::assert_display_snapshot!(out_texts.get(out).unwrap())
+            });
+        }
+
+        for out in out_docs.keys() {
+            insta::with_settings!({ snapshot_suffix => out.clone() }, {
+                insta::assert_display_snapshot!(out_docs.get(out).unwrap())
             });
         }
     }
