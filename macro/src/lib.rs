@@ -204,7 +204,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
 
 struct AttributeInfo {
     repr: bool,
-    opaque: bool
+    opaque: bool,
 }
 
 impl AttributeInfo {
@@ -212,10 +212,11 @@ impl AttributeInfo {
         let mut repr = false;
         let mut opaque = false;
         attrs.retain(|attr| {
-            let ident = &attr.path.segments.iter().nth(0).unwrap().ident;
+            let ident = &attr.path.segments.iter().next().unwrap().ident;
             if ident == "repr" {
                 repr = true;
-                return false;
+                // don't actually extract repr attrs, just detect them
+                return true;
             } else if ident == "diplomat" {
                 if attr.path.segments.len() == 2 {
                     let seg = &attr.path.segments.iter().nth(1).unwrap().ident;
@@ -234,7 +235,7 @@ impl AttributeInfo {
             true
         });
 
-        Self {repr, opaque}
+        Self { repr, opaque }
     }
 }
 
@@ -245,7 +246,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     new_contents.iter_mut().for_each(|c| match c {
         Item::Struct(s) => {
             let info = AttributeInfo::extract(&mut s.attrs);
-            if info.repr || info.opaque {
+            if info.opaque || !info.repr {
                 let repr = if info.opaque {
                     quote!(#[repr(transparent)])
                 } else {
@@ -255,7 +256,6 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
                     #repr
                     #s
                 }
-
             }
         }
 
@@ -280,7 +280,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
                 }
             }
         }
-        _ => ()
+        _ => (),
     });
 
     for custom_type in module.declared_types.values() {
