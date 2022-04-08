@@ -5,7 +5,7 @@ pub mod ffi {
 
     #[diplomat::opaque]
     /// An ICU4X Locale, capable of representing strings like `"en-US"`.
-    /// See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/locid/struct.Locale.html) for more information.
+    #[diplomat::rust_link(icu::locid::Locale, Struct)]
     pub struct ICU4XLocale(pub Locale);
 
     impl ICU4XLocale {

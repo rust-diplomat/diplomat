@@ -14,7 +14,7 @@ pub mod ffi {
 
     #[diplomat::opaque]
     /// An ICU4X Fixed Decimal Format object, capable of formatting a [`ICU4XFixedDecimal`] as a string.
-    /// See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html) for more information.
+    #[diplomat::rust_link(icu::decimal::FixedDecimalFormat, Struct)]
     pub struct ICU4XFixedDecimalFormat(pub FixedDecimalFormat<'static>);
 
     pub struct ICU4XFixedDecimalFormatResult {
@@ -54,7 +54,8 @@ pub mod ffi {
     }
 
     impl ICU4XFixedDecimalFormat {
-        /// Creates a new [`ICU4XFixedDecimalFormat`] from locale data. See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.try_new) for more information.
+        /// Creates a new [`ICU4XFixedDecimalFormat`] from locale data.
+        #[diplomat::rust_link(icu::decimal::FixedDecimalFormat::try_new, FnInStruct)]
         pub fn try_new(
             locale: &ICU4XLocale,
             provider: &ICU4XDataProvider,
@@ -94,7 +95,8 @@ pub mod ffi {
             }
         }
 
-        /// Formats a [`ICU4XFixedDecimal`] to a string. See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.format) for more information.
+        /// Formats a [`ICU4XFixedDecimal`] to a string.
+        #[diplomat::rust_link(icu::decimal::FixedDecimalFormat::format, FnInStruct)]
         pub fn format_write(&self, value: &ICU4XFixedDecimal, write: &mut DiplomatWriteable) {
             self.0.format(&value.0).write_to(write).unwrap();
             write.flush();

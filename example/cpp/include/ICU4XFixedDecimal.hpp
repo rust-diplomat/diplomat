@@ -23,6 +23,12 @@ struct ICU4XFixedDecimalDeleter {
     capi::ICU4XFixedDecimal_destroy(l);
   }
 };
+
+/**
+ * 
+ * 
+ * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html) for more information.
+ */
 class ICU4XFixedDecimal {
  public:
 
@@ -33,25 +39,29 @@ class ICU4XFixedDecimal {
 
   /**
    * Multiply the [`ICU4XFixedDecimal`] by a given power of ten.
-   * See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
+   * 
+   * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
    */
   void multiply_pow10(int16_t power);
 
   /**
    * Invert the sign of the [`ICU4XFixedDecimal`].
-   * See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.negate) for more information.
+   * 
+   * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.negate) for more information.
    */
   void negate();
 
   /**
    * Format the [`ICU4XFixedDecimal`] as a string.
-   * See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.write_to) for more information.
+   * 
+   * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
    */
   template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_writeable(W& to) const;
 
   /**
    * Format the [`ICU4XFixedDecimal`] as a string.
-   * See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.write_to) for more information.
+   * 
+   * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
    */
   diplomat::result<std::string, std::monostate> to_string() const;
   inline const capi::ICU4XFixedDecimal* AsFFI() const { return this->inner.get(); }

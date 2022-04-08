@@ -23,11 +23,19 @@ struct ICU4XDataProviderDeleter {
     capi::ICU4XDataProvider_destroy(l);
   }
 };
+
+/**
+ * An ICU4X data provider, capable of loading ICU4X data keys from some source.
+ * 
+ * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/icu_provider/index.html) for more information.
+ */
 class ICU4XDataProvider {
  public:
 
   /**
-   * Construct a [StaticDataProvider](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html).
+   * 
+   * 
+   * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html) for more information.
    */
   static ICU4XDataProvider new_static();
   inline const capi::ICU4XDataProvider* AsFFI() const { return this->inner.get(); }

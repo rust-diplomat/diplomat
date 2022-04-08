@@ -5,7 +5,7 @@ pub mod ffi {
     use writeable::Writeable;
 
     #[diplomat::opaque]
-    /// A decimal number. See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html) for more information.
+    #[diplomat::rust_link(fixed_decimal::FixedDecimal, Struct)]
     pub struct ICU4XFixedDecimal(pub FixedDecimal);
 
     impl ICU4XFixedDecimal {
@@ -15,19 +15,19 @@ pub mod ffi {
         }
 
         /// Multiply the [`ICU4XFixedDecimal`] by a given power of ten.
-        /// See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
+        #[diplomat::rust_link(fixed_decimal::FixedDecimal::multiply_pow10, FnInStruct)]
         pub fn multiply_pow10(&mut self, power: i16) {
             self.0.multiply_pow10(power).unwrap();
         }
 
         /// Invert the sign of the [`ICU4XFixedDecimal`].
-        /// See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.negate) for more information.
+        #[diplomat::rust_link(fixed_decimal::FixedDecimal::negate, FnInStruct)]
         pub fn negate(&mut self) {
             self.0.negate()
         }
 
         /// Format the [`ICU4XFixedDecimal`] as a string.
-        /// See [the Rust docs](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/decimal/struct.FixedDecimal.html#method.write_to) for more information.
+        #[diplomat::rust_link(fixed_decimal::FixedDecimal::write_to, FnInStruct)]
         pub fn to_string(&self, to: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
             self.0.write_to(to).map_err(|_| ()).into()
         }

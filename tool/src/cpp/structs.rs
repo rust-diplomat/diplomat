@@ -47,6 +47,7 @@ pub fn gen_struct<W: fmt::Write>(
     match custom_type {
         ast::CustomType::Opaque(opaque) => {
             if is_header {
+                gen_comment_block(out, &opaque.docs.to_markdown(docs_url_gen))?;
                 writeln!(out, "class {} {{", opaque.name)?;
                 writeln!(out, " public:")?;
             }
