@@ -23,6 +23,12 @@ struct ICU4XLocaleDeleter {
     capi::ICU4XLocale_destroy(l);
   }
 };
+
+/**
+ * An ICU4X Locale, capable of representing strings like `"en-US"`.
+ * 
+ * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/icu/locid/struct.Locale.html) for more information.
+ */
 class ICU4XLocale {
  public:
 
