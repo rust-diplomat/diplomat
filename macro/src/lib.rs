@@ -202,31 +202,85 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     }
 }
 
+struct AttributeInfo {
+    repr: bool,
+    opaque: bool
+}
+
+impl AttributeInfo {
+    fn extract(attrs: &mut Vec<Attribute>) -> Self {
+        let mut repr = false;
+        let mut opaque = false;
+        attrs.retain(|attr| {
+            let ident = &attr.path.segments.iter().nth(0).unwrap().ident;
+            if ident == "repr" {
+                repr = true;
+                return false;
+            } else if ident == "diplomat" {
+                if attr.path.segments.len() == 2 {
+                    let seg = &attr.path.segments.iter().nth(1).unwrap().ident;
+                    if seg == "opaque" {
+                        opaque = true;
+                        return false;
+                    } else if seg == "rust_link" {
+                        return false;
+                    } else {
+                        panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported")
+                    }
+                } else {
+                    panic!("#[diplomat::foo] attrs have a single-segment path name")
+                }
+            }
+            true
+        });
+
+        Self {repr, opaque}
+    }
+}
+
 fn gen_bridge(input: ItemMod) -> ItemMod {
     let module = ast::Module::from_syn(&input, true);
     let (brace, mut new_contents) = input.content.unwrap();
 
     new_contents.iter_mut().for_each(|c| match c {
         Item::Struct(s) => {
-            if !s.attrs.iter().any(|a| {
-                let string_path = a.path.to_token_stream().to_string();
-                string_path == "repr" || string_path == "diplomat :: opaque"
-            }) {
-                *s = syn::parse_quote! {
-                    #[repr(C)]
-                    #s
+            let info = AttributeInfo::extract(&mut s.attrs);
+            if info.repr || info.opaque {
+                let repr = if info.opaque {
+                    quote!(#[repr(transparent)])
+                } else {
+                    quote!(#[repr(C)])
                 };
+                *s = syn::parse_quote! {
+                    #repr
+                    #s
+                }
+
             }
         }
 
         Item::Enum(e) => {
+            let info = AttributeInfo::extract(&mut e.attrs);
+            if info.opaque {
+                panic!("#[diplomat::opaque] not allowed on enums")
+            }
             *e = syn::parse_quote! {
                 #[repr(C)]
                 #e
             };
         }
 
-        _ => {}
+        Item::Impl(i) => {
+            for item in &mut i.items {
+                if let syn::ImplItem::Method(ref mut m) = *item {
+                    let info = AttributeInfo::extract(&mut m.attrs);
+                    if info.opaque {
+                        panic!("#[diplomat::opaque] not allowed on methods")
+                    }
+                }
+            }
+        }
+        _ => ()
     });
 
     for custom_type in module.declared_types.values() {
@@ -267,21 +321,6 @@ pub fn bridge(
 ) -> proc_macro::TokenStream {
     let expanded = gen_bridge(parse_macro_input!(input));
     proc_macro::TokenStream::from(expanded.to_token_stream())
-}
-
-/// Mark a struct as opaque, which means that its field will not be
-/// visible across the FFI boundary and all instances of the struct
-/// must be passed as references.
-#[proc_macro_attribute]
-pub fn opaque(
-    _attr: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let strct: ItemStruct = parse_macro_input!(input);
-    proc_macro::TokenStream::from(quote! {
-        #[repr(transparent)]
-        #strct
-    })
 }
 
 #[cfg(test)]
