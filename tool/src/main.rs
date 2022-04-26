@@ -101,13 +101,18 @@ fn main() -> std::io::Result<()> {
     let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(
         opt.docs_base_urls
             .iter()
+            .filter_map(|entry| entry.strip_prefix("*:").map(ToString::to_string))
+            .next(),
+        opt.docs_base_urls
+            .iter()
+            .filter(|entry| !entry.starts_with("*"))
             .map(|entry| {
                 let mut parts = entry.splitn(2, ':');
                 (
                     parts.next().unwrap().to_string(),
                     parts
                         .next()
-                        .expect("Expected syntax <crate>:<url>")
+                        .expect("Expected syntax <crate>|*:<url>")
                         .to_string(),
                 )
             })

@@ -119,12 +119,16 @@ enum DocType {
 
 #[derive(Default)]
 pub struct DocsUrlGenerator {
+    default_url: Option<String>,
     base_urls: HashMap<String, String>,
 }
 
 impl DocsUrlGenerator {
-    pub fn with_base_urls(base_urls: HashMap<String, String>) -> Self {
-        Self { base_urls }
+    pub fn with_base_urls(default_url: Option<String>, base_urls: HashMap<String, String>) -> Self {
+        Self {
+            default_url,
+            base_urls,
+        }
     }
 
     fn gen_for_rust_link(&self, rust_link: &RustLink) -> String {
@@ -134,6 +138,8 @@ impl DocsUrlGenerator {
 
         if let Some(base) = self.base_urls.get(&rust_link.path.elements[0]) {
             r.push_str(base);
+        } else if let Some(default) = &self.default_url {
+            r.push_str(default);
         } else {
             r.push_str("https://docs.rs/");
             r.push_str(&rust_link.path.elements[0]);
@@ -274,7 +280,19 @@ fn test_docs_url_generator() {
 
     assert_eq!(
         DocsUrlGenerator::with_base_urls(
-            std::iter::once(("std".to_string(), "http://std-docs.biz/".to_string())).collect()
+            None,
+            [("std".to_string(), "http://std-docs.biz/".to_string())]
+                .into_iter()
+                .collect()
+        )
+        .gen_for_rust_link(&Docs::from_attrs(&[test_cases[0].0.clone()]).1.unwrap()),
+        "http://std-docs.biz/std/foo/bar/struct.batz.html"
+    );
+
+    assert_eq!(
+        DocsUrlGenerator::with_base_urls(
+            Some("http://std-docs.biz/".to_string()),
+            HashMap::new()
         )
         .gen_for_rust_link(&Docs::from_attrs(&[test_cases[0].0.clone()]).1.unwrap()),
         "http://std-docs.biz/std/foo/bar/struct.batz.html"
