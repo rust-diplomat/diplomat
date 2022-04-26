@@ -290,11 +290,8 @@ fn test_docs_url_generator() {
     );
 
     assert_eq!(
-        DocsUrlGenerator::with_base_urls(
-            Some("http://std-docs.biz/".to_string()),
-            HashMap::new()
-        )
-        .gen_for_rust_link(&Docs::from_attrs(&[test_cases[0].0.clone()]).1.unwrap()),
+        DocsUrlGenerator::with_base_urls(Some("http://std-docs.biz/".to_string()), HashMap::new())
+            .gen_for_rust_link(&Docs::from_attrs(&[test_cases[0].0.clone()]).1.unwrap()),
         "http://std-docs.biz/std/foo/bar/struct.batz.html"
     );
 }
