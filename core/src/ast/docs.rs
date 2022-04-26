@@ -136,12 +136,18 @@ impl DocsUrlGenerator {
 
         let mut r = String::new();
 
-        if let Some(base) = self.base_urls.get(&rust_link.path.elements[0]) {
-            r.push_str(base);
-        } else if let Some(default) = &self.default_url {
-            r.push_str(default);
-        } else {
-            r.push_str("https://docs.rs/");
+        let base = self
+            .base_urls
+            .get(&rust_link.path.elements[0])
+            .map(String::as_str)
+            .or(self.default_url.as_deref())
+            .unwrap_or("https://docs.rs/");
+
+        r.push_str(base);
+        if !base.ends_with('/') {
+            r.push('/');
+        }
+        if r == "https://docs.rs/" {
             r.push_str(&rust_link.path.elements[0]);
             r.push_str("/latest/");
         }
