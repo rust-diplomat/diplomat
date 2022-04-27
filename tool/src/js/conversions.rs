@@ -8,6 +8,7 @@ use indenter::indented;
 use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
 
+#[allow(clippy::ptr_arg)] // false positive, rust-clippy#8463, fixed in 1.61
 pub fn gen_value_js_to_rust(
     param_name: String,
     typ: &ast::TypeName,
