@@ -105,7 +105,7 @@ fn main() -> std::io::Result<()> {
             .next(),
         opt.docs_base_urls
             .iter()
-            .filter(|entry| !entry.starts_with("*"))
+            .filter(|entry| !entry.starts_with('*'))
             .map(|entry| {
                 let mut parts = entry.splitn(2, ':');
                 (
