@@ -223,7 +223,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "diplomat_core",
  "insta",
@@ -235,7 +235,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-example"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "diplomat",
  "diplomat-runtime",
@@ -248,7 +248,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-feature-tests"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "diplomat",
  "diplomat-runtime",
@@ -256,11 +256,11 @@ dependencies = [
 
 [[package]]
 name = "diplomat-runtime"
-version = "0.2.0"
+version = "0.3.0"
 
 [[package]]
 name = "diplomat-tool"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "colored",
  "diplomat_core",
@@ -279,7 +279,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat_core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "displaydoc",
  "impls",
