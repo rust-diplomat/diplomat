@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use syn::*;
 
 use super::docs::Docs;
-use super::{Lifetime, Path, TypeName, ValidityError};
+use super::{Lifetime, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -69,12 +69,12 @@ impl Method {
                 name: "self".to_string(),
                 ty: if let Some(ref reference) = rec.reference {
                     TypeName::Reference(
-                        Box::new(TypeName::Named(self_path.clone())),
+                        Box::new(TypeName::Named(PathType::new(self_path.clone()))),
                         rec.mutability.is_some(),
                         Lifetime::from(&reference.1),
                     )
                 } else {
-                    TypeName::Named(self_path.clone())
+                    TypeName::Named(PathType::new(self_path.clone()))
                 },
             },
             _ => panic!("Unexpected self param type"),

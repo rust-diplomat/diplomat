@@ -109,6 +109,33 @@ pub enum ModSymbol {
     CustomType(CustomType),
 }
 
+/// A named type that is just a path
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct PathType {
+    pub path: Path,
+}
+
+impl PathType {
+    pub fn to_syn(&self) -> syn::TypePath {
+        syn::TypePath {
+            qself: None,
+            path: self.path.to_syn(),
+        }
+    }
+
+    pub fn new(path: Path) -> Self {
+        Self { path }
+    }
+}
+
+impl From<&syn::TypePath> for PathType {
+    fn from(other: &syn::TypePath) -> Self {
+        Self {
+            path: Path::from_syn(&other.path),
+        }
+    }
+}
+
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
@@ -118,7 +145,7 @@ pub enum TypeName {
     Primitive(PrimitiveType),
     /// An unresolved path to a custom type, which can be resolved after all types
     /// are collected with [`TypeName::resolve()`].
-    Named(Path),
+    Named(PathType),
     /// An optionally mutable reference to another type.
     Reference(Box<TypeName>, /* mutable */ bool, Lifetime),
     /// A `Box<T>` type.
@@ -144,10 +171,7 @@ impl TypeName {
             TypeName::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
-            TypeName::Named(name) => syn::Type::Path(syn::TypePath {
-                qself: None,
-                path: name.to_syn(),
-            }),
+            TypeName::Named(name) => syn::Type::Path(name.to_syn()),
             TypeName::Reference(underlying, mutable, lifetime) => {
                 syn::Type::Reference(TypeReference {
                     and_token: syn::token::And(Span::call_site()),
@@ -249,6 +273,7 @@ impl TypeName {
     pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
         match self {
             TypeName::Named(local_path) => {
+                let local_path = &local_path.path;
                 let mut cur_path = in_path.clone();
                 for (i, elem) in local_path.elements.iter().enumerate() {
                     match elem.as_ref() {
@@ -265,7 +290,7 @@ impl TypeName {
                                     local_path.elements.iter().skip(i + 1).cloned().collect();
                                 let mut new_path = p.elements.clone();
                                 new_path.append(&mut remaining_elements);
-                                return TypeName::Named(Path { elements: new_path })
+                                return TypeName::Named(PathType::new(Path { elements: new_path }))
                                     .resolve_with_path(&cur_path.clone(), env);
                             }
                             Some(ModSymbol::SubModule(name)) => {
@@ -467,7 +492,7 @@ impl From<&syn::Type> for TypeName {
                 } else if is_runtime_type(p, "DiplomatWriteable") {
                     TypeName::Writeable
                 } else {
-                    TypeName::Named(Path::from_syn(&p.path))
+                    TypeName::Named(PathType::from(p))
                 }
             }
             syn::Type::Tuple(tup) => {
@@ -511,12 +536,17 @@ impl fmt::Display for TypeName {
     }
 }
 
+impl fmt::Display for PathType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.path.fmt(f)
+    }
+}
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Lifetime {
     Static,
     Named(String),
 
-    Anonymous
+    Anonymous,
 }
 
 impl fmt::Display for Lifetime {
