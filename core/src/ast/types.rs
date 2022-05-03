@@ -511,19 +511,20 @@ impl fmt::Display for TypeName {
     }
 }
 
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Lifetime {
     Static,
-    // This will get a field when we add GC lifetime tracking
-    // https://github.com/rust-diplomat/diplomat/issues/12
-    Named,
+    Named(String),
+
+    Anonymous
 }
 
 impl fmt::Display for Lifetime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::Static => f.write_str("'static"),
-            Self::Named => f.write_str("'_"),
+            Self::Named(ref s) => f.write_str(&s),
+            Self::Anonymous => f.write_str("_"),
         }
     }
 }
@@ -533,14 +534,14 @@ impl From<&syn::Lifetime> for Lifetime {
         if lt.ident == "static" {
             Self::Static
         } else {
-            Self::Named
+            Self::Named(lt.ident.to_string())
         }
     }
 }
 
 impl From<&Option<syn::Lifetime>> for Lifetime {
     fn from(lt: &Option<syn::Lifetime>) -> Self {
-        lt.as_ref().map(|lt| lt.into()).unwrap_or(Self::Named)
+        lt.as_ref().map(|lt| lt.into()).unwrap_or(Self::Anonymous)
     }
 }
 
@@ -549,7 +550,8 @@ impl Lifetime {
     pub fn to_syn(&self) -> Option<syn::Lifetime> {
         match *self {
             Self::Static => Some(syn::Lifetime::new("'static", Span::call_site())),
-            Self::Named => None,
+            Self::Anonymous => None,
+            Self::Named(ref s) => Some(syn::Lifetime::new(&s, Span::call_site())),
         }
     }
 }

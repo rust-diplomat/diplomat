@@ -56,7 +56,7 @@ impl Method {
                     TypeName::Reference(
                         Box::new(TypeName::Named(self_path.clone())),
                         rec.mutability.is_some(),
-                        Lifetime::Named,
+                        Lifetime::Anonymous,
                     )
                 } else {
                     TypeName::Named(self_path.clone())
@@ -140,7 +140,7 @@ impl Param {
     /// Check if this parameter is a Writeable
     pub fn is_writeable(&self) -> bool {
         match self.ty {
-            TypeName::Reference(ref w, true, _lt) => **w == TypeName::Writeable,
+            TypeName::Reference(ref w, true, ref _lt) => **w == TypeName::Writeable,
             _ => false,
         }
     }
