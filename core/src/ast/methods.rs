@@ -27,6 +27,8 @@ pub struct Method {
 
     /// The return type of the method, if any.
     pub return_type: Option<TypeName>,
+
+    pub introduced_lifetimes: Vec<Lifetime>,
 }
 
 impl Method {
@@ -38,6 +40,19 @@ impl Method {
             format!("{}_{}", self_ident, method_ident).as_str(),
             m.sig.ident.span(),
         );
+
+        let introduced_lifetimes = m
+            .sig
+            .generics
+            .lifetimes()
+            .map(|lt| {
+                if !lt.bounds.is_empty() {
+                    panic!("Bounds on lifetimes currently unsupported");
+                }
+
+                Lifetime::from(&lt.lifetime)
+            })
+            .collect();
 
         let all_params = m
             .sig
@@ -52,11 +67,11 @@ impl Method {
         let self_param = m.sig.receiver().map(|rec| match rec {
             FnArg::Receiver(rec) => Param {
                 name: "self".to_string(),
-                ty: if rec.reference.is_some() {
+                ty: if let Some(ref reference) = rec.reference {
                     TypeName::Reference(
                         Box::new(TypeName::Named(self_path.clone())),
                         rec.mutability.is_some(),
-                        Lifetime::Anonymous,
+                        Lifetime::from(&reference.1),
                     )
                 } else {
                     TypeName::Named(self_path.clone())
@@ -77,6 +92,7 @@ impl Method {
             self_param,
             params: all_params,
             return_type: return_ty,
+            introduced_lifetimes,
         }
     }
 
