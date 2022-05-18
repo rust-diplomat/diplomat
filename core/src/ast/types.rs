@@ -138,9 +138,7 @@ impl From<&syn::TypePath> for PathType {
 
 impl From<Path> for PathType {
     fn from(other: Path) -> Self {
-        Self {
-            path: other,
-        }
+        Self { path: other }
     }
 }
 
