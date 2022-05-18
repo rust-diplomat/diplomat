@@ -113,6 +113,7 @@ pub enum ModSymbol {
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct PathType {
     pub path: Path,
+    pub lifetimes: Vec<Lifetime>,
 }
 
 impl PathType {
@@ -124,21 +125,46 @@ impl PathType {
     }
 
     pub fn new(path: Path) -> Self {
-        Self { path }
+        Self {
+            path,
+            lifetimes: vec![],
+        }
     }
 }
 
 impl From<&syn::TypePath> for PathType {
     fn from(other: &syn::TypePath) -> Self {
+        // Do we care about the case where there's no segments?
+        let lifetimes = other
+            .path
+            .segments
+            .last()
+            .and_then(|last_segment| {
+                if let PathArguments::AngleBracketed(angle_generics) = &last_segment.arguments {
+                    Some(angle_generics
+                        .args
+                        .iter()
+                        .filter_map(|generic_arg| match generic_arg {
+                            GenericArgument::Lifetime(lt) => Some(lt.into()),
+                            _ => None,
+                        })
+                        .collect())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(Vec::new);
+
         Self {
             path: Path::from_syn(&other.path),
+            lifetimes,
         }
     }
 }
 
 impl From<Path> for PathType {
     fn from(other: Path) -> Self {
-        Self { path: other }
+        PathType::new(other)
     }
 }
 
