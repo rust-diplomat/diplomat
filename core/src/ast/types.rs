@@ -559,7 +559,7 @@ impl fmt::Display for Lifetime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::Static => f.write_str("'static"),
-            Self::Named(ref s) => f.write_str(&s),
+            Self::Named(ref s) => f.write_str(s),
             Self::Anonymous => f.write_str("_"),
         }
     }
@@ -587,7 +587,7 @@ impl Lifetime {
         match *self {
             Self::Static => Some(syn::Lifetime::new("'static", Span::call_site())),
             Self::Anonymous => None,
-            Self::Named(ref s) => Some(syn::Lifetime::new(&s, Span::call_site())),
+            Self::Named(ref s) => Some(syn::Lifetime::new(s, Span::call_site())),
         }
     }
 }
