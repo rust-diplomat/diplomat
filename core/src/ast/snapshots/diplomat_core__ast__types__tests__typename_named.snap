@@ -1,9 +1,9 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! { MyLocalStruct }).unwrap())"
-
+expression: "TypeName::from(&syn::parse_quote! { MyLocalStruct })"
 ---
 Named:
-  elements:
-    - MyLocalStruct
+  path:
+    elements:
+      - MyLocalStruct
 

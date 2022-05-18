@@ -1,11 +1,11 @@
 ---
 source: core/src/ast/types.rs
 expression: "TypeName::from(&syn::parse_quote! { DiplomatResult < (), MyLocalStruct > })"
-
 ---
 Result:
   - Unit
   - Named:
-      elements:
-        - MyLocalStruct
+      path:
+        elements:
+          - MyLocalStruct
 

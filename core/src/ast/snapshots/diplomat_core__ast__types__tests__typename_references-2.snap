@@ -1,12 +1,12 @@
 ---
 source: core/src/ast/types.rs
 expression: "TypeName::from(&syn::parse_quote! { & mut MyLocalStruct })"
-
 ---
 Reference:
   - Named:
-      elements:
-        - MyLocalStruct
+      path:
+        elements:
+          - MyLocalStruct
   - true
-  - Named
+  - Anonymous
 
