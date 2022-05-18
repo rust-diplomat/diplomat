@@ -136,6 +136,14 @@ impl From<&syn::TypePath> for PathType {
     }
 }
 
+impl From<Path> for PathType {
+    fn from(other: Path) -> Self {
+        Self {
+            path: other,
+        }
+    }
+}
+
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
