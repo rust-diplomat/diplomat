@@ -153,7 +153,8 @@ impl From<&syn::TypePath> for PathType {
                 } else {
                     None
                 }
-            }).unwrap_or_default();
+            })
+            .unwrap_or_default();
 
         Self {
             path: Path::from_syn(&other.path),
