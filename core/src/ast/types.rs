@@ -134,18 +134,17 @@ impl PathType {
 
 impl From<&syn::TypePath> for PathType {
     fn from(other: &syn::TypePath) -> Self {
-        // Do we care about the case where there's no segments?
         let lifetimes = other
             .path
             .segments
             .last()
-            .and_then(|last_segment| {
-                if let PathArguments::AngleBracketed(angle_generics) = &last_segment.arguments {
+            .and_then(|last| {
+                if let PathArguments::AngleBracketed(angle_generics) = &last.arguments {
                     Some(angle_generics
                         .args
                         .iter()
                         .filter_map(|generic_arg| match generic_arg {
-                            GenericArgument::Lifetime(lt) => Some(lt.into()),
+                            GenericArgument::Lifetime(lifetime) => Some(lifetime.into()),
                             _ => None,
                         })
                         .collect())
@@ -759,6 +758,37 @@ mod tests {
 
         insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
             DiplomatResult<(), MyLocalStruct>
+        }));
+    }
+
+    #[test]
+    fn lifetimes() {
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Foo<'a, 'b>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            ::core::my_type::Foo
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            ::core::my_type::Foo<'test>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Option<Ref<'object>>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Foo<'a, 'b, 'c, 'd>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            very::long::path::to::my::Type<'x, 'y, 'z>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            DiplomatResult<OkRef<'a, 'b>, ErrRef<'c>>
         }));
     }
 }
