@@ -140,14 +140,16 @@ impl From<&syn::TypePath> for PathType {
             .last()
             .and_then(|last| {
                 if let PathArguments::AngleBracketed(angle_generics) = &last.arguments {
-                    Some(angle_generics
-                        .args
-                        .iter()
-                        .filter_map(|generic_arg| match generic_arg {
-                            GenericArgument::Lifetime(lifetime) => Some(lifetime.into()),
-                            _ => None,
-                        })
-                        .collect())
+                    Some(
+                        angle_generics
+                            .args
+                            .iter()
+                            .filter_map(|generic_arg| match generic_arg {
+                                GenericArgument::Lifetime(lifetime) => Some(lifetime.into()),
+                                _ => None,
+                            })
+                            .collect(),
+                    )
                 } else {
                     None
                 }
