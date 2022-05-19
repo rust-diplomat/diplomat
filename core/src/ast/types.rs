@@ -604,7 +604,7 @@ impl From<&syn::Lifetime> for Lifetime {
 
 impl From<&Option<syn::Lifetime>> for Lifetime {
     fn from(lt: &Option<syn::Lifetime>) -> Self {
-        lt.as_ref().map(|lt| lt.into()).unwrap_or(Self::Anonymous)
+        lt.as_ref().map(Into::into).unwrap_or(Self::Anonymous)
     }
 }
 
