@@ -85,7 +85,7 @@ pub fn type_name_for_prim(prim: &ast::PrimitiveType) -> &str {
 /// Generates a struct name that uniquely identifies the given type.
 pub fn name_for_type(typ: &ast::TypeName) -> String {
     match typ {
-        ast::TypeName::Named(name) => name.elements.last().unwrap().clone(),
+        ast::TypeName::Named(name) => name.path.elements.last().unwrap().clone(),
         ast::TypeName::Box(underlying) => format!("Box{}", name_for_type(underlying)),
         ast::TypeName::Reference(underlying, mutable, _lt) => {
             if *mutable {

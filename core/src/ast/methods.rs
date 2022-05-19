@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use syn::*;
 
 use super::docs::Docs;
-use super::{Lifetime, Path, TypeName, ValidityError};
+use super::{Lifetime, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -27,6 +27,9 @@ pub struct Method {
 
     /// The return type of the method, if any.
     pub return_type: Option<TypeName>,
+
+    /// The lifetimes introduced in this method, e.g. `'a` in `fn make_foo<'a>(&self, x: &'a u8) -> Foo<'a>`
+    pub introduced_lifetimes: Vec<Lifetime>,
 }
 
 impl Method {
@@ -38,6 +41,19 @@ impl Method {
             format!("{}_{}", self_ident, method_ident).as_str(),
             m.sig.ident.span(),
         );
+
+        let introduced_lifetimes = m
+            .sig
+            .generics
+            .lifetimes()
+            .map(|lt| {
+                if !lt.bounds.is_empty() {
+                    panic!("Bounds on lifetimes currently unsupported");
+                }
+
+                Lifetime::from(&lt.lifetime)
+            })
+            .collect();
 
         let all_params = m
             .sig
@@ -52,14 +68,14 @@ impl Method {
         let self_param = m.sig.receiver().map(|rec| match rec {
             FnArg::Receiver(rec) => Param {
                 name: "self".to_string(),
-                ty: if rec.reference.is_some() {
+                ty: if let Some(ref reference) = rec.reference {
                     TypeName::Reference(
-                        Box::new(TypeName::Named(self_path.clone())),
+                        Box::new(TypeName::Named(PathType::new(self_path.clone()))),
                         rec.mutability.is_some(),
-                        Lifetime::Named,
+                        Lifetime::from(&reference.1),
                     )
                 } else {
-                    TypeName::Named(self_path.clone())
+                    TypeName::Named(PathType::new(self_path.clone()))
                 },
             },
             _ => panic!("Unexpected self param type"),
@@ -77,6 +93,7 @@ impl Method {
             self_param,
             params: all_params,
             return_type: return_ty,
+            introduced_lifetimes,
         }
     }
 
@@ -140,7 +157,7 @@ impl Param {
     /// Check if this parameter is a Writeable
     pub fn is_writeable(&self) -> bool {
         match self.ty {
-            TypeName::Reference(ref w, true, _lt) => **w == TypeName::Writeable,
+            TypeName::Reference(ref w, true, ref _lt) => **w == TypeName::Writeable,
             _ => false,
         }
     }

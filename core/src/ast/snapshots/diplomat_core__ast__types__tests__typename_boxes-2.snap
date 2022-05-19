@@ -1,10 +1,11 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! { Box < MyLocalStruct > }).unwrap())"
-
+expression: "TypeName::from(&syn::parse_quote! { Box < MyLocalStruct > })"
 ---
 Box:
   Named:
-    elements:
-      - MyLocalStruct
+    path:
+      elements:
+        - MyLocalStruct
+    lifetimes: []
 

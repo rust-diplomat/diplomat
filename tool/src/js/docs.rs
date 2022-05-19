@@ -82,7 +82,8 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
             &mut class_indented,
             &typ.docs().to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                let resolved =
+                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
                 write!(to, ":js:class:`{}`", resolved.name())?;
                 Ok(())
             },
@@ -138,7 +139,8 @@ pub fn gen_method_docs<W: fmt::Write>(
             &mut method_indented,
             &method.docs.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                let resolved =
+                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
                 write!(to, ":js:class:`{}`", resolved.name())?;
                 Ok(())
             },
@@ -177,7 +179,8 @@ pub fn gen_field_docs<W: fmt::Write>(
             &mut field_indented,
             &field.2.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                let resolved =
+                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
                 write!(to, ":js:class:`{}`", resolved.name())?;
                 Ok(())
             },

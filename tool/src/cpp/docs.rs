@@ -111,7 +111,8 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
             &mut class_indented,
             &typ.docs().to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                let resolved =
+                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
                 match resolved {
                     ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
                     ast::CustomType::Enum(_) => {
@@ -216,7 +217,8 @@ pub fn gen_method_docs<W: fmt::Write>(
             &mut method_indented,
             &method.docs.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                let resolved =
+                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
                 match resolved {
                     ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
                     ast::CustomType::Enum(_) => {
@@ -250,7 +252,8 @@ pub fn gen_field_docs<W: fmt::Write>(
             &mut field_indented,
             &field.2.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                let resolved =
+                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
                 match resolved {
                     ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
                     ast::CustomType::Enum(_) => {
@@ -284,7 +287,8 @@ pub fn gen_enum_variant_docs<W: fmt::Write>(
             &mut enum_indented,
             &variant.2.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved = ast::TypeName::Named(shortcut_path.clone()).resolve(in_path, env);
+                let resolved =
+                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
                 match resolved {
                     ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
                     ast::CustomType::Enum(_) => {

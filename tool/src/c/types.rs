@@ -64,7 +64,7 @@ pub fn gen_type<W: fmt::Write>(
 /// which require one struct for each distinct instance.
 pub fn name_for_type(typ: &ast::TypeName) -> String {
     match typ {
-        ast::TypeName::Named(name) => name.elements.last().unwrap().clone(),
+        ast::TypeName::Named(name) => name.path.elements.last().unwrap().clone(),
         ast::TypeName::Box(underlying) => format!("box_{}", name_for_type(underlying)),
         ast::TypeName::Reference(underlying, mutable, _lt) => {
             if *mutable {

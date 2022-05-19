@@ -109,6 +109,66 @@ pub enum ModSymbol {
     CustomType(CustomType),
 }
 
+/// A named type that is just a path
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct PathType {
+    pub path: Path,
+    pub lifetimes: Vec<Lifetime>,
+}
+
+impl PathType {
+    pub fn to_syn(&self) -> syn::TypePath {
+        syn::TypePath {
+            qself: None,
+            path: self.path.to_syn(),
+        }
+    }
+
+    pub fn new(path: Path) -> Self {
+        Self {
+            path,
+            lifetimes: vec![],
+        }
+    }
+}
+
+impl From<&syn::TypePath> for PathType {
+    fn from(other: &syn::TypePath) -> Self {
+        let lifetimes = other
+            .path
+            .segments
+            .last()
+            .and_then(|last| {
+                if let PathArguments::AngleBracketed(angle_generics) = &last.arguments {
+                    Some(
+                        angle_generics
+                            .args
+                            .iter()
+                            .filter_map(|generic_arg| match generic_arg {
+                                GenericArgument::Lifetime(lifetime) => Some(lifetime.into()),
+                                _ => None,
+                            })
+                            .collect(),
+                    )
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_default();
+
+        Self {
+            path: Path::from_syn(&other.path),
+            lifetimes,
+        }
+    }
+}
+
+impl From<Path> for PathType {
+    fn from(other: Path) -> Self {
+        PathType::new(other)
+    }
+}
+
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
@@ -118,7 +178,7 @@ pub enum TypeName {
     Primitive(PrimitiveType),
     /// An unresolved path to a custom type, which can be resolved after all types
     /// are collected with [`TypeName::resolve()`].
-    Named(Path),
+    Named(PathType),
     /// An optionally mutable reference to another type.
     Reference(Box<TypeName>, /* mutable */ bool, Lifetime),
     /// A `Box<T>` type.
@@ -144,10 +204,7 @@ impl TypeName {
             TypeName::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
-            TypeName::Named(name) => syn::Type::Path(syn::TypePath {
-                qself: None,
-                path: name.to_syn(),
-            }),
+            TypeName::Named(name) => syn::Type::Path(name.to_syn()),
             TypeName::Reference(underlying, mutable, lifetime) => {
                 syn::Type::Reference(TypeReference {
                     and_token: syn::token::And(Span::call_site()),
@@ -248,7 +305,8 @@ impl TypeName {
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
     pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
         match self {
-            TypeName::Named(local_path) => {
+            TypeName::Named(local_path_type) => {
+                let local_path = &local_path_type.path;
                 let mut cur_path = in_path.clone();
                 for (i, elem) in local_path.elements.iter().enumerate() {
                     match elem.as_ref() {
@@ -265,7 +323,7 @@ impl TypeName {
                                     local_path.elements.iter().skip(i + 1).cloned().collect();
                                 let mut new_path = p.elements.clone();
                                 new_path.append(&mut remaining_elements);
-                                return TypeName::Named(Path { elements: new_path })
+                                return TypeName::Named(PathType::new(Path { elements: new_path }))
                                     .resolve_with_path(&cur_path.clone(), env);
                             }
                             Some(ModSymbol::SubModule(name)) => {
@@ -467,7 +525,7 @@ impl From<&syn::Type> for TypeName {
                 } else if is_runtime_type(p, "DiplomatWriteable") {
                     TypeName::Writeable
                 } else {
-                    TypeName::Named(Path::from_syn(&p.path))
+                    TypeName::Named(PathType::from(p))
                 }
             }
             syn::Type::Tuple(tup) => {
@@ -511,19 +569,26 @@ impl fmt::Display for TypeName {
     }
 }
 
-#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
+impl fmt::Display for PathType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.path.fmt(f)
+    }
+}
+#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Lifetime {
+    /// Kept separate because it doesn't matter as much when tracking lifetimes but it'll still need
+    /// to be mentioned in the type during codegen
     Static,
-    // This will get a field when we add GC lifetime tracking
-    // https://github.com/rust-diplomat/diplomat/issues/12
-    Named,
+    Named(String),
+    Anonymous,
 }
 
 impl fmt::Display for Lifetime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::Static => f.write_str("'static"),
-            Self::Named => f.write_str("'_"),
+            Self::Named(ref s) => write!(f, "'{}", s),
+            Self::Anonymous => f.write_str("'_"),
         }
     }
 }
@@ -533,14 +598,14 @@ impl From<&syn::Lifetime> for Lifetime {
         if lt.ident == "static" {
             Self::Static
         } else {
-            Self::Named
+            Self::Named(lt.ident.to_string())
         }
     }
 }
 
 impl From<&Option<syn::Lifetime>> for Lifetime {
     fn from(lt: &Option<syn::Lifetime>) -> Self {
-        lt.as_ref().map(|lt| lt.into()).unwrap_or(Self::Named)
+        lt.as_ref().map(Into::into).unwrap_or(Self::Anonymous)
     }
 }
 
@@ -549,7 +614,8 @@ impl Lifetime {
     pub fn to_syn(&self) -> Option<syn::Lifetime> {
         match *self {
             Self::Static => Some(syn::Lifetime::new("'static", Span::call_site())),
-            Self::Named => None,
+            Self::Anonymous => None,
+            Self::Named(ref s) => Some(syn::Lifetime::new(s, Span::call_site())),
         }
     }
 }
@@ -695,6 +761,37 @@ mod tests {
 
         insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
             DiplomatResult<(), MyLocalStruct>
+        }));
+    }
+
+    #[test]
+    fn lifetimes() {
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Foo<'a, 'b>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            ::core::my_type::Foo
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            ::core::my_type::Foo<'test>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Option<Ref<'object>>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Foo<'a, 'b, 'c, 'd>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            very::long::path::to::my::Type<'x, 'y, 'z>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            DiplomatResult<OkRef<'a, 'b>, ErrRef<'c>>
         }));
     }
 }
