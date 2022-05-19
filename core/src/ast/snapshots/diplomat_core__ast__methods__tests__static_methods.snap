@@ -23,6 +23,7 @@ params:
         path:
           elements:
             - MyCustomStruct
+        lifetimes: []
 return_type: ~
 introduced_lifetimes: []
 

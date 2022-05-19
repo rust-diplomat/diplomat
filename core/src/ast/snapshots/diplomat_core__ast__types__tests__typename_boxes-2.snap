@@ -7,4 +7,5 @@ Box:
     path:
       elements:
         - MyLocalStruct
+    lifetimes: []
 

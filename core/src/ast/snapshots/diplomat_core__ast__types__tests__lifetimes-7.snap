@@ -1,0 +1,19 @@
+---
+source: core/src/ast/types.rs
+expression: "TypeName::from(&syn::parse_quote! {\n                DiplomatResult < OkRef < 'a, 'b >, ErrRef < 'c >>\n            })"
+---
+Result:
+  - Named:
+      path:
+        elements:
+          - OkRef
+      lifetimes:
+        - Named: a
+        - Named: b
+  - Named:
+      path:
+        elements:
+          - ErrRef
+      lifetimes:
+        - Named: c
+

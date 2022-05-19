@@ -1,0 +1,12 @@
+---
+source: core/src/ast/types.rs
+expression: "TypeName::from(&syn::parse_quote! { :: core :: my_type :: Foo })"
+---
+Named:
+  path:
+    elements:
+      - core
+      - my_type
+      - Foo
+  lifetimes: []
+

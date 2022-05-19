@@ -8,4 +8,5 @@ Result:
       path:
         elements:
           - MyLocalStruct
+      lifetimes: []
 
