@@ -6,4 +6,5 @@ Named:
   path:
     elements:
       - MyLocalStruct
+  lifetimes: []
 

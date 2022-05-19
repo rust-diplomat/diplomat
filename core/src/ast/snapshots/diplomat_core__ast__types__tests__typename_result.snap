@@ -7,5 +7,6 @@ Result:
       path:
         elements:
           - MyLocalStruct
+      lifetimes: []
   - Primitive: i32
 

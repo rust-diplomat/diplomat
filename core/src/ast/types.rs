@@ -113,6 +113,7 @@ pub enum ModSymbol {
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct PathType {
     pub path: Path,
+    pub lifetimes: Vec<Lifetime>,
 }
 
 impl PathType {
@@ -124,21 +125,47 @@ impl PathType {
     }
 
     pub fn new(path: Path) -> Self {
-        Self { path }
+        Self {
+            path,
+            lifetimes: vec![],
+        }
     }
 }
 
 impl From<&syn::TypePath> for PathType {
     fn from(other: &syn::TypePath) -> Self {
+        let lifetimes = other
+            .path
+            .segments
+            .last()
+            .and_then(|last| {
+                if let PathArguments::AngleBracketed(angle_generics) = &last.arguments {
+                    Some(
+                        angle_generics
+                            .args
+                            .iter()
+                            .filter_map(|generic_arg| match generic_arg {
+                                GenericArgument::Lifetime(lifetime) => Some(lifetime.into()),
+                                _ => None,
+                            })
+                            .collect(),
+                    )
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(Vec::new);
+
         Self {
             path: Path::from_syn(&other.path),
+            lifetimes,
         }
     }
 }
 
 impl From<Path> for PathType {
     fn from(other: Path) -> Self {
-        Self { path: other }
+        PathType::new(other)
     }
 }
 
@@ -733,6 +760,37 @@ mod tests {
 
         insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
             DiplomatResult<(), MyLocalStruct>
+        }));
+    }
+
+    #[test]
+    fn lifetimes() {
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Foo<'a, 'b>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            ::core::my_type::Foo
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            ::core::my_type::Foo<'test>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Option<Ref<'object>>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            Foo<'a, 'b, 'c, 'd>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            very::long::path::to::my::Type<'x, 'y, 'z>
+        }));
+
+        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
+            DiplomatResult<OkRef<'a, 'b>, ErrRef<'c>>
         }));
     }
 }

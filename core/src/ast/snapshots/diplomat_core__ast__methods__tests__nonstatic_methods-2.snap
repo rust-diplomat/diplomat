@@ -20,6 +20,7 @@ self_param:
           path:
             elements:
               - MyStructContainingMethod
+          lifetimes: []
       - true
       - Anonymous
 params:
@@ -32,6 +33,7 @@ params:
         path:
           elements:
             - MyCustomStruct
+        lifetimes: []
 return_type:
   Primitive: u64
 introduced_lifetimes: []

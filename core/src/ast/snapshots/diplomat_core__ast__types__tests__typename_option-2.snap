@@ -7,4 +7,5 @@ Option:
     path:
       elements:
         - MyLocalStruct
+    lifetimes: []
 

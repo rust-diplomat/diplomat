@@ -21,6 +21,7 @@ fields:
           path:
             elements:
               - MyLocalStruct
+          lifetimes: []
     - - ""
       - ~
 methods: []
