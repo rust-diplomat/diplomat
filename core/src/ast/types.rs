@@ -305,8 +305,8 @@ impl TypeName {
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
     pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
         match self {
-            TypeName::Named(local_path) => {
-                let local_path = &local_path.path;
+            TypeName::Named(local_path_type) => {
+                let local_path = &local_path_type.path;
                 let mut cur_path = in_path.clone();
                 for (i, elem) in local_path.elements.iter().enumerate() {
                     match elem.as_ref() {
@@ -576,9 +576,10 @@ impl fmt::Display for PathType {
 }
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Lifetime {
+    /// Kept separate because it doesn't matter as much when tracking lifetimes but it'll still need
+    /// to be mentioned in the type during codegen
     Static,
     Named(String),
-
     Anonymous,
 }
 
@@ -586,8 +587,8 @@ impl fmt::Display for Lifetime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::Static => f.write_str("'static"),
-            Self::Named(ref s) => f.write_str(s),
-            Self::Anonymous => f.write_str("_"),
+            Self::Named(ref s) => write!(f, "'{}", s),
+            Self::Anonymous => f.write_str("'_"),
         }
     }
 }

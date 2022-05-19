@@ -28,6 +28,7 @@ pub struct Method {
     /// The return type of the method, if any.
     pub return_type: Option<TypeName>,
 
+    /// The lifetimes introduced in this method, e.g. `'a` in `fn make_foo<'a>(&self, x: &'a u8) -> Foo<'a>`
     pub introduced_lifetimes: Vec<Lifetime>,
 }
 
