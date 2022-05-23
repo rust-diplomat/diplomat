@@ -37,7 +37,7 @@ impl Method {
     pub fn from_syn(
         m: &ImplItemMethod,
         self_path_type: PathType,
-        mut introduced_lifetimes: Vec<LifetimeDef>,
+        impl_introduced_lifetimes: Vec<LifetimeDef>,
     ) -> Method {
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
@@ -50,6 +50,7 @@ impl Method {
         // so we introduce every lifetime introduced in both the impl and the method to ensure we have everything.
         // This will look idiomatic in 99% of cases, and won't even break the wack cases where
         // a lifetime is introduced in the impl but not used in the method.
+        let mut introduced_lifetimes = impl_introduced_lifetimes;
         introduced_lifetimes.extend(m.sig.generics.lifetimes().map(Into::into));
 
         let all_params = m
