@@ -8,6 +8,6 @@ Reference:
         elements:
           - MyLocalStruct
       lifetimes: []
-  - Mut
+  - Mutable
   - Anonymous
 

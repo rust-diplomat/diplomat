@@ -157,7 +157,7 @@ impl Param {
     /// Check if this parameter is a Writeable
     pub fn is_writeable(&self) -> bool {
         match self.ty {
-            TypeName::Reference(ref w, Mutability::Mut, ref _lt) => **w == TypeName::Writeable,
+            TypeName::Reference(ref w, Mutability::Mutable, ref _lt) => **w == TypeName::Writeable,
             _ => false,
         }
     }

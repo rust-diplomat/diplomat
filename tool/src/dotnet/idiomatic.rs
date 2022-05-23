@@ -313,7 +313,12 @@ fn gen_method(
         let mut mut_str_list: Vec<String> = method
             .params
             .iter()
-            .filter(|param| matches!(param.ty, ast::TypeName::StrReference(ast::Mutability::Mut)))
+            .filter(|param| {
+                matches!(
+                    param.ty,
+                    ast::TypeName::StrReference(ast::Mutability::Mutable)
+                )
+            })
             .map(|param| format!("{}Buf", param.name.to_lower_camel_case()))
             .collect();
 

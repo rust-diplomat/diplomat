@@ -4,6 +4,6 @@ expression: "TypeName::from(&syn::parse_quote! { & i32 })"
 ---
 Reference:
   - Primitive: i32
-  - Const
+  - Immutable
   - Anonymous
 

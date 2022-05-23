@@ -87,10 +87,10 @@ pub fn name_for_type(typ: &ast::TypeName) -> String {
     match typ {
         ast::TypeName::Named(name) => name.path.elements.last().unwrap().clone(),
         ast::TypeName::Box(underlying) => format!("Box{}", name_for_type(underlying)),
-        ast::TypeName::Reference(underlying, ast::Mutability::Mut, _lt) => {
+        ast::TypeName::Reference(underlying, ast::Mutability::Mutable, _lt) => {
             format!("RefMut{}", name_for_type(underlying))
         }
-        ast::TypeName::Reference(underlying, ast::Mutability::Const, _lt) => {
+        ast::TypeName::Reference(underlying, ast::Mutability::Immutable, _lt) => {
             format!("Ref{}", name_for_type(underlying))
         }
         ast::TypeName::Primitive(prim) => prim.to_string().to_upper_camel_case(),
@@ -99,12 +99,12 @@ pub fn name_for_type(typ: &ast::TypeName) -> String {
             format!("Result{}{}", name_for_type(ok), name_for_type(err))
         }
         ast::TypeName::Writeable => "Writeable".to_owned(),
-        ast::TypeName::StrReference(ast::Mutability::Mut) => "StrRefMut".to_owned(),
-        ast::TypeName::StrReference(ast::Mutability::Const) => "StrRef".to_owned(),
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mut) => {
+        ast::TypeName::StrReference(ast::Mutability::Mutable) => "StrRefMut".to_owned(),
+        ast::TypeName::StrReference(ast::Mutability::Immutable) => "StrRef".to_owned(),
+        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mutable) => {
             format!("RefMutPrimSlice{}", prim.to_string().to_upper_camel_case())
         }
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Const) => {
+        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Immutable) => {
             format!("RefPrimSlice{}", prim.to_string().to_upper_camel_case())
         }
         ast::TypeName::Unit => "Void".to_owned(),

@@ -81,8 +81,8 @@ pub fn gen_method<W: fmt::Write>(
                 out,
                 "{0}char* {1}_data, size_t {1}_len",
                 match mutable {
-                    ast::Mutability::Mut => "",
-                    ast::Mutability::Const => "const ",
+                    ast::Mutability::Mutable => "",
+                    ast::Mutability::Immutable => "const ",
                 },
                 param.name
             )?;
@@ -91,8 +91,8 @@ pub fn gen_method<W: fmt::Write>(
                 out,
                 "{0}{1}* {2}_data, size_t {2}_len",
                 match mutable {
-                    ast::Mutability::Mut => "",
-                    ast::Mutability::Const => "const ",
+                    ast::Mutability::Mutable => "",
+                    ast::Mutability::Immutable => "const ",
                 },
                 c_type_for_prim(prim),
                 param.name,

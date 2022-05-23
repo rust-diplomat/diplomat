@@ -88,7 +88,7 @@ fn gen_field<W: fmt::Write>(
         &format!("this.underlying + {}", offset),
         &ast::TypeName::Reference(
             Box::new(typ.clone()),
-            ast::Mutability::Mut,
+            ast::Mutability::Mutable,
             ast::Lifetime::Anonymous,
         ),
         in_path,

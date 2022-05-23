@@ -171,22 +171,22 @@ impl From<Path> for PathType {
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub enum Mutability {
-    Mut,
-    Const,
+    Mutable,
+    Immutable,
 }
 
 impl Mutability {
     pub fn to_syn(&self) -> Option<Token![mut]> {
         match self {
-            Mutability::Mut => Some(syn::token::Mut(Span::call_site())),
-            Mutability::Const => None,
+            Mutability::Mutable => Some(syn::token::Mut(Span::call_site())),
+            Mutability::Immutable => None,
         }
     }
 
     pub fn from_syn(t: &Option<Token![mut]>) -> Self {
         match t {
-            Some(_) => Mutability::Mut,
-            None => Mutability::Const,
+            Some(_) => Mutability::Mutable,
+            None => Mutability::Immutable,
         }
     }
 }
@@ -298,10 +298,10 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference(Mutability::Mut) => syn::parse_quote! {
+            TypeName::StrReference(Mutability::Mutable) => syn::parse_quote! {
                 &mut str
             },
-            TypeName::StrReference(Mutability::Const) => syn::parse_quote! {
+            TypeName::StrReference(Mutability::Immutable) => syn::parse_quote! {
                 &str
             },
             TypeName::PrimitiveSlice(name, mutable) => {
@@ -309,8 +309,8 @@ impl TypeName {
                 let formatted_str = format!(
                     "&{}[{}]",
                     match mutable {
-                        Mutability::Mut => "mut ",
-                        Mutability::Const => "",
+                        Mutability::Mutable => "mut ",
+                        Mutability::Immutable => "",
                     },
                     primitive_name
                 );
@@ -576,20 +576,20 @@ impl fmt::Display for TypeName {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
             TypeName::Named(p) => p.fmt(f),
-            TypeName::Reference(ty, Mutability::Mut, lifetime) => {
+            TypeName::Reference(ty, Mutability::Mutable, lifetime) => {
                 write!(f, "&{} mut {}", lifetime, ty)
             }
-            TypeName::Reference(ty, Mutability::Const, lifetime) => {
+            TypeName::Reference(ty, Mutability::Immutable, lifetime) => {
                 write!(f, "&{} {}", lifetime, ty)
             }
             TypeName::Box(ty) => write!(f, "Box<{}>", ty),
             TypeName::Option(ty) => write!(f, "Option<{}>", ty),
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
             TypeName::Writeable => f.write_str("DiplomatWriteable"),
-            TypeName::StrReference(Mutability::Mut) => f.write_str("&mut str"),
-            TypeName::StrReference(Mutability::Const) => f.write_str("&str"),
-            TypeName::PrimitiveSlice(ty, Mutability::Mut) => write!(f, "&mut [{}]", ty),
-            TypeName::PrimitiveSlice(ty, Mutability::Const) => write!(f, "&[{}]", ty),
+            TypeName::StrReference(Mutability::Mutable) => f.write_str("&mut str"),
+            TypeName::StrReference(Mutability::Immutable) => f.write_str("&str"),
+            TypeName::PrimitiveSlice(ty, Mutability::Mutable) => write!(f, "&mut [{}]", ty),
+            TypeName::PrimitiveSlice(ty, Mutability::Immutable) => write!(f, "&[{}]", ty),
             TypeName::Unit => f.write_str("()"),
         }
     }

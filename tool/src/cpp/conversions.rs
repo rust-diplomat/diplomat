@@ -213,7 +213,7 @@ pub fn gen_cpp_to_rust<W: Write>(
             path,
             Some(ReferenceMeta {
                 owned: false,
-                mutable: matches!(mutability, ast::Mutability::Mut),
+                mutable: matches!(mutability, ast::Mutability::Mutable),
             }),
             underlying.as_ref(),
             in_path,
