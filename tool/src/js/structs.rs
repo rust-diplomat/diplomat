@@ -86,7 +86,11 @@ fn gen_field<W: fmt::Write>(
     write!(&mut method_body_out, "return ")?;
     gen_value_rust_to_js(
         &format!("this.underlying + {}", offset),
-        &ast::TypeName::Reference(Box::new(typ.clone()), true, ast::Lifetime::Anonymous),
+        &ast::TypeName::Reference(
+            Box::new(typ.clone()),
+            ast::Mutability::Mut,
+            ast::Lifetime::Anonymous,
+        ),
         in_path,
         env,
         &mut method_body_out,

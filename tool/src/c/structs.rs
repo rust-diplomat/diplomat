@@ -76,18 +76,24 @@ pub fn gen_method<W: fmt::Write>(
             write!(out, ", ")?;
         }
 
-        if let ast::TypeName::StrReference(mutable) = param.ty {
+        if let ast::TypeName::StrReference(mutable) = &param.ty {
             write!(
                 out,
                 "{0}char* {1}_data, size_t {1}_len",
-                if mutable { "" } else { "const " },
+                match mutable {
+                    ast::Mutability::Mut => "",
+                    ast::Mutability::Const => "const ",
+                },
                 param.name
             )?;
-        } else if let ast::TypeName::PrimitiveSlice(ref prim, mutable) = param.ty {
+        } else if let ast::TypeName::PrimitiveSlice(prim, mutable) = &param.ty {
             write!(
                 out,
                 "{0}{1}* {2}_data, size_t {2}_len",
-                if mutable { "" } else { "const " },
+                match mutable {
+                    ast::Mutability::Mut => "",
+                    ast::Mutability::Const => "const ",
+                },
                 c_type_for_prim(prim),
                 param.name,
             )?;
