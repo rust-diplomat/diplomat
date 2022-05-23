@@ -6,7 +6,7 @@ use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, Struct, ValidityError};
-use crate::environment::*;
+use crate::{ast::PathType, environment::*};
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
     pub name: String,
@@ -65,8 +65,8 @@ impl Module {
         input
             .content
             .as_ref()
-            .map(|t| &t.1)
-            .unwrap_or(&vec![])
+            .map(|t| &t.1[..])
+            .unwrap_or_default()
             .iter()
             .for_each(|a| match a {
                 Item::Use(u) => {
@@ -101,16 +101,19 @@ impl Module {
                     }
                 }
 
-                Item::Impl(ipl) => {
+                Item::Impl(imp) => {
                     if analyze_types {
-                        assert!(ipl.trait_.is_none());
+                        assert!(imp.trait_.is_none());
 
-                        let self_typ = match ipl.self_ty.as_ref() {
-                            syn::Type::Path(s) => Path::from_syn(&s.path),
+                        let self_path = match imp.self_ty.as_ref() {
+                            syn::Type::Path(s) => PathType::from(s),
                             _ => panic!("Self type not found"),
                         };
 
-                        let mut new_methods = ipl
+                        let impl_lifetimes =
+                            imp.generics.lifetimes().map(Into::into).collect::<Vec<_>>();
+
+                        let mut new_methods = imp
                             .items
                             .iter()
                             .filter_map(|i| match i {
@@ -118,10 +121,10 @@ impl Module {
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, &self_typ))
+                            .map(|m| Method::from_syn(m, self_path.clone(), impl_lifetimes.clone()))
                             .collect();
 
-                        let self_ident = self_typ.elements.last().unwrap();
+                        let self_ident = self_path.path.elements.last().unwrap();
 
                         match custom_types_by_name.get_mut(self_ident).unwrap() {
                             CustomType::Struct(strct) => {

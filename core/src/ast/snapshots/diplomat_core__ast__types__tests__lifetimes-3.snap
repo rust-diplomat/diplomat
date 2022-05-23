@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! {\n                :: core :: my_type :: Foo < 'test, MyType >\n            })"
+expression: "TypeName::from(&syn::parse_quote! { :: core :: my_type :: Foo < 'test > })"
 ---
 Named:
   path:
