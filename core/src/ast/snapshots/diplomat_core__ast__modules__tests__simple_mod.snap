@@ -57,7 +57,7 @@ declared_types:
                       elements:
                         - NonOpaqueStruct
                     lifetimes: []
-                - true
+                - Mut
                 - Anonymous
           params:
             - name: new_a
@@ -101,7 +101,7 @@ declared_types:
                       elements:
                         - OpaqueStruct
                     lifetimes: []
-                - false
+                - Const
                 - Anonymous
           params: []
           return_type:
