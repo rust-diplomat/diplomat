@@ -147,6 +147,23 @@ impl PathType {
         }
     }
 
+    /// Get the `Self` type from a struct declaration.
+    ///
+    /// Consider the following struct declaration:
+    /// ```
+    /// struct RefList<'a> {
+    ///     data: &'a i32,
+    ///     next: Option<Box<Self>>,
+    /// }
+    /// ```
+    /// When determining what type `Self` is in the `next` field, we would have to call
+    /// this method on the `syn::ItemStruct` that represents this struct declaration.
+    /// This method would then return a `PathType` representing `RefList<'a>`, so we
+    /// know that's what `Self` should refer to.
+    ///
+    /// The reason this function exists though is so when we convert the fields' types
+    /// to `PathType`s, we don't panic. We don't actually need to write the struct's
+    /// field types expanded in the macro, so this function is more for correctness,
     pub fn extract_self_type(strct: &syn::ItemStruct) -> Self {
         PathType {
             path: Path {
