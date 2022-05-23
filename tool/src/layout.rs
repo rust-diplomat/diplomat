@@ -46,7 +46,7 @@ pub fn result_ok_offset_size_align(
         &ast::Struct {
             name: "".to_string(),
             docs: Default::default(),
-            lifetimes: vec![], // I don't understand the context here, is `vec![]` correct?
+            lifetimes: vec![],
             fields: vec![
                 if ok_size_align.size() > err_size_align.size() {
                     ("".to_string(), ok.clone(), Default::default())
