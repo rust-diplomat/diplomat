@@ -6,7 +6,7 @@ use diplomat_core::ast;
 
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
-        ast::TypeName::StrReference(mutable) | ast::TypeName::PrimitiveSlice(_, mutable) => {
+        ast::TypeName::StrReference(mutability) | ast::TypeName::PrimitiveSlice(_, mutability) => {
             let data_type = if let ast::TypeName::PrimitiveSlice(prim, ..) = &param.ty {
                 ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
             } else {
@@ -26,9 +26,10 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 })),
                 colon_token: syn::token::Colon(Span::call_site()),
                 ty: Box::new(
-                    parse2(match mutable {
-                        ast::Mutability::Mutable => quote! { *mut #data_type },
-                        ast::Mutability::Immutable => quote! { *const #data_type },
+                    parse2(if mutability.is_mutable() {
+                        quote! { *mut #data_type }
+                    } else {
+                        quote! { *const #data_type }
                     })
                     .unwrap(),
                 ),
@@ -74,7 +75,7 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
 
 fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
     match &param.ty {
-        ast::TypeName::StrReference(mutable) | ast::TypeName::PrimitiveSlice(_, mutable) => {
+        ast::TypeName::StrReference(mutability) | ast::TypeName::PrimitiveSlice(_, mutability) => {
             let data_ident = Ident::new(
                 (param.name.clone() + "_diplomat_data").as_str(),
                 Span::call_site(),
@@ -85,7 +86,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
             );
 
             let tokens = if let ast::TypeName::PrimitiveSlice(..) = &param.ty {
-                match mutable {
+                match mutability {
                     ast::Mutability::Mutable => quote! {
                         unsafe { core::slice::from_raw_parts_mut(#data_ident, #len_ident) }
                     },
@@ -95,7 +96,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                 }
             } else {
                 // TODO(#57): don't just unwrap? or should we assume that the other side gives us a good value?
-                match mutable {
+                match mutability {
                     ast::Mutability::Mutable => quote! {
                         unsafe {
                             core::str::from_utf8_mut(core::slice::from_raw_parts_mut(#data_ident, #len_ident)).unwrap()

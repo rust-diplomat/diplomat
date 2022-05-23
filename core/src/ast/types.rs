@@ -189,6 +189,14 @@ impl Mutability {
             None => Mutability::Immutable,
         }
     }
+
+    pub fn is_mutable(&self) -> bool {
+        matches!(self, Mutability::Mutable)
+    }
+
+    pub fn is_immutable(&self) -> bool {
+        matches!(self, Mutability::Immutable)
+    }
 }
 
 /// A local type reference, such as the type of a field, parameter, or return value.
@@ -308,10 +316,7 @@ impl TypeName {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
                     "&{}[{}]",
-                    match mutable {
-                        Mutability::Mutable => "mut ",
-                        Mutability::Immutable => "",
-                    },
+                    if mutable.is_mutable() { "mut " } else { "" },
                     primitive_name
                 );
                 syn::parse_str(&formatted_str).unwrap()
