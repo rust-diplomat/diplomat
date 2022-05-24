@@ -11,6 +11,7 @@ declared_types:
       docs:
         - ""
         - ~
+      lifetimes: []
       fields:
         - - a
           - Primitive: i32
@@ -71,6 +72,7 @@ declared_types:
       docs:
         - ""
         - ~
+      lifetimes: []
       methods:
         - name: new
           docs:

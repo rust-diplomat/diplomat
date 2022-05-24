@@ -156,37 +156,34 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         );
     }
 
-    let method_invocation = match &m.self_param {
-        Some(_) => {
-            quote! {
-                #this_ident.#method_ident
-            }
-        }
-        None => {
-            quote! {
-                #self_ident::#method_ident
-            }
+    let lifetimes = {
+        let lifetimes = &m.introduced_lifetimes;
+        if lifetimes.is_empty() {
+            quote! {}
+        } else {
+            quote! { <#(#lifetimes),*> }
         }
     };
 
-    match &m.return_type {
-        None => Item::Fn(syn::parse_quote! {
-            #[no_mangle]
-            extern "C" fn #extern_ident(#(#all_params),*) {
-                #method_invocation(#(#all_params_invocation),*);
-            }
-        }),
-        Some(return_typ) => {
-            let return_typ_syn = return_typ.to_syn();
+    let method_invocation = if m.self_param.is_some() {
+        quote! { #this_ident.#method_ident }
+    } else {
+        quote! { #self_ident::#method_ident }
+    };
 
-            Item::Fn(syn::parse_quote! {
-                #[no_mangle]
-                extern "C" fn #extern_ident(#(#all_params),*) -> #return_typ_syn {
-                    #method_invocation(#(#all_params_invocation),*)
-                }
-            })
+    let return_tokens = if let Some(return_type) = &m.return_type {
+        let return_type_syn = return_type.to_syn();
+        quote! { -> #return_type_syn }
+    } else {
+        quote! {}
+    };
+
+    Item::Fn(syn::parse_quote! {
+        #[no_mangle]
+        extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
+            #method_invocation(#(#all_params_invocation),*)
         }
-    }
+    })
 }
 
 struct AttributeInfo {
@@ -277,16 +274,27 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             .for_each(|m| new_contents.push(gen_custom_type_method(custom_type, m)));
 
         let destroy_ident = Ident::new(
-            (custom_type.name().to_string() + "_destroy").as_str(),
+            format!("{}_destroy", custom_type.name()).as_str(),
             Span::call_site(),
         );
+
         let type_ident = Ident::new(custom_type.name(), Span::call_site());
+
+        let (lifetime_defs, lifetimes) = if let Some(lifetime_defs) = custom_type.lifetimes() {
+            let lifetimes = lifetime_defs.iter().map(|lt| &lt.lifetime);
+            (
+                quote! { <#(#lifetime_defs),*> }, // with bounds
+                quote! { <#(#lifetimes),*> },     // without bounds
+            )
+        } else {
+            (quote! {}, quote! {})
+        };
 
         // for now, body is empty since all we need to do is drop the box
         // TODO(#13): change to take a `*mut` and handle DST boxes appropriately
         new_contents.push(Item::Fn(syn::parse_quote! {
             #[no_mangle]
-            extern "C" fn #destroy_ident(this: Box<#type_ident>) {}
+            extern "C" fn #destroy_ident#lifetime_defs(this: Box<#type_ident#lifetimes>) {}
         }));
     }
 
@@ -452,6 +460,56 @@ mod tests {
 
                     impl Foo {
                         pub fn to_string(&self, to: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn multilevel_borrows() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    #[diplomat::opaque]
+                    struct Foo<'a>(&'a str);
+
+                    #[diplomat::opaque]
+                    struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
+
+                    impl<'a> Foo<'a> {
+                        pub fn new(x: &'a str) -> Box<Foo<'a>> {
+                            unimplemented!()
+                        }
+
+                        pub fn get_bar<'b>(&'b self) -> Box<Bar<'b, 'a>> {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn self_params() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    #[diplomat::opaque]
+                    struct RefList<'a> {
+                        data: &'a i32,
+                        next: Option<Box<Self>>,
+                    }
+
+                    impl<'b> RefList<'b> {
+                        pub fn extend(&mut self, other: &Self) -> Self {
                             unimplemented!()
                         }
                     }

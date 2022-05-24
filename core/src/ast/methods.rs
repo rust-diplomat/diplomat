@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use syn::*;
 
 use super::docs::Docs;
-use super::{Lifetime, Mutability, Path, PathType, TypeName, ValidityError};
+use super::{Lifetime, Mutability, LifetimeDef, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -28,32 +28,30 @@ pub struct Method {
     /// The return type of the method, if any.
     pub return_type: Option<TypeName>,
 
-    /// The lifetimes introduced in this method, e.g. `'a` in `fn make_foo<'a>(&self, x: &'a u8) -> Foo<'a>`
-    pub introduced_lifetimes: Vec<Lifetime>,
+    /// The lifetimes introduced in this method and surrounding impl block.
+    pub introduced_lifetimes: Vec<LifetimeDef>,
 }
 
 impl Method {
     /// Extracts a [`Method`] from an AST node inside an `impl`.
-    pub fn from_syn(m: &ImplItemMethod, self_path: &Path) -> Method {
-        let self_ident = self_path.elements.last().unwrap();
+    pub fn from_syn(
+        m: &ImplItemMethod,
+        self_path_type: PathType,
+        impl_introduced_lifetimes: Vec<LifetimeDef>,
+    ) -> Method {
+        let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
         let extern_ident = Ident::new(
             format!("{}_{}", self_ident, method_ident).as_str(),
             m.sig.ident.span(),
         );
 
-        let introduced_lifetimes = m
-            .sig
-            .generics
-            .lifetimes()
-            .map(|lt| {
-                if !lt.bounds.is_empty() {
-                    panic!("Bounds on lifetimes currently unsupported");
-                }
-
-                Lifetime::from(&lt.lifetime)
-            })
-            .collect();
+        // It doesn't matter if we introduce lifetimes in a method that doesn't use them,
+        // so we introduce every lifetime introduced in both the impl and the method to ensure we have everything.
+        // This will look idiomatic in 99% of cases, and won't even break the wack cases where
+        // a lifetime is introduced in the impl but not used in the method.
+        let mut introduced_lifetimes = impl_introduced_lifetimes;
+        introduced_lifetimes.extend(m.sig.generics.lifetimes().map(Into::into));
 
         let all_params = m
             .sig
@@ -61,7 +59,7 @@ impl Method {
             .iter()
             .filter_map(|a| match a {
                 FnArg::Receiver(_) => None,
-                FnArg::Typed(t) => Some(t.into()),
+                FnArg::Typed(t) => Some(Param::from_syn(t, self_path_type.clone())),
             })
             .collect::<Vec<_>>();
 
@@ -70,19 +68,22 @@ impl Method {
                 name: "self".to_string(),
                 ty: if let Some(ref reference) = rec.reference {
                     TypeName::Reference(
-                        Box::new(TypeName::Named(PathType::new(self_path.clone()))),
+                        Box::new(TypeName::Named(self_path_type.clone())),
                         Mutability::from_syn(&rec.mutability),
                         Lifetime::from(&reference.1),
                     )
                 } else {
-                    TypeName::Named(PathType::new(self_path.clone()))
+                    TypeName::Named(self_path_type.clone())
                 },
             },
             _ => panic!("Unexpected self param type"),
         });
 
         let return_ty = match &m.sig.output {
-            ReturnType::Type(_, return_typ) => Some(return_typ.as_ref().into()),
+            ReturnType::Type(_, return_typ) => Some(TypeName::from_syn(
+                return_typ.as_ref(),
+                Some(self_path_type),
+            )),
             ReturnType::Default => None,
         };
 
@@ -161,10 +162,8 @@ impl Param {
             _ => false,
         }
     }
-}
 
-impl From<&syn::PatType> for Param {
-    fn from(t: &PatType) -> Param {
+    pub fn from_syn(t: &PatType, self_path_type: PathType) -> Self {
         let ident = match t.pat.as_ref() {
             Pat::Ident(ident) => ident.clone(),
             _ => panic!("Unexpected param type"),
@@ -172,7 +171,7 @@ impl From<&syn::PatType> for Param {
 
         Param {
             name: ident.ident.to_string(),
-            ty: t.ty.as_ref().into(),
+            ty: TypeName::from_syn(&t.ty, Some(self_path_type)),
         }
     }
 }
@@ -183,7 +182,7 @@ mod tests {
 
     use syn;
 
-    use super::{Method, Path};
+    use super::{Method, Path, PathType};
 
     #[test]
     fn static_methods() {
@@ -195,7 +194,8 @@ mod tests {
 
                 }
             },
-            &Path::empty().sub_path("MyStructContainingMethod".to_string())
+            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            vec![]
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -209,7 +209,8 @@ mod tests {
                     x
                 }
             },
-            &Path::empty().sub_path("MyStructContainingMethod".to_string())
+            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            vec![]
         ));
     }
 
@@ -221,7 +222,8 @@ mod tests {
 
                 }
             },
-            &Path::empty().sub_path("MyStructContainingMethod".to_string())
+            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            vec![]
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -231,7 +233,8 @@ mod tests {
                     x
                 }
             },
-            &Path::empty().sub_path("MyStructContainingMethod".to_string())
+            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            vec![]
         ));
     }
 }

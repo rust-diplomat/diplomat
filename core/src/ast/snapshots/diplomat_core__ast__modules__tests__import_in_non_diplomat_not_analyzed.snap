@@ -13,6 +13,7 @@ modules:
           docs:
             - ""
             - ~
+          lifetimes: []
           fields: []
           methods: []
     sub_modules: []
