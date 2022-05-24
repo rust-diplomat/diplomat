@@ -401,7 +401,10 @@ impl TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(*primitive, Mutability::from_syn(&r.mutability));
+                            return TypeName::PrimitiveSlice(
+                                *primitive,
+                                Mutability::from_syn(&r.mutability),
+                            );
                         }
                     }
                 }

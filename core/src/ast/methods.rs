@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use syn::*;
 
 use super::docs::Docs;
-use super::{Lifetime, Mutability, LifetimeDef, Path, PathType, TypeName, ValidityError};
+use super::{Lifetime, LifetimeDef, Mutability, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
