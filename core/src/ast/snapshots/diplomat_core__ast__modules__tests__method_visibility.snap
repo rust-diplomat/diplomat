@@ -11,6 +11,7 @@ declared_types:
       docs:
         - ""
         - ~
+      lifetimes: []
       fields: []
       methods:
         - name: pub_fn

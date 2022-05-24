@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use proc_macro2::Span;
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
 
@@ -53,6 +53,15 @@ impl CustomType {
 
     pub fn self_path(&self, in_path: &Path) -> Path {
         in_path.sub_path(self.name().clone())
+    }
+
+    /// Get the lifetimes of the custom type.
+    pub fn lifetimes(&self) -> Option<&[LifetimeDef]> {
+        match self {
+            CustomType::Struct(strct) => Some(&strct.lifetimes[..]),
+            CustomType::Opaque(strct) => Some(&strct.lifetimes[..]),
+            CustomType::Enum(_) => None,
+        }
     }
 
     /// Performs various validity checks:
@@ -109,7 +118,7 @@ pub enum ModSymbol {
     CustomType(CustomType),
 }
 
-/// A named type that is just a path
+/// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct PathType {
     pub path: Path,
@@ -118,16 +127,53 @@ pub struct PathType {
 
 impl PathType {
     pub fn to_syn(&self) -> syn::TypePath {
-        syn::TypePath {
-            qself: None,
-            path: self.path.to_syn(),
+        let mut path = self.path.to_syn();
+
+        if !self.lifetimes.is_empty() {
+            if let Some(seg) = path.segments.last_mut() {
+                let lifetimes = &self.lifetimes;
+                seg.arguments =
+                    syn::PathArguments::AngleBracketed(syn::parse_quote! { <#(#lifetimes),*> });
+            }
         }
+
+        syn::TypePath { qself: None, path }
     }
 
     pub fn new(path: Path) -> Self {
         Self {
             path,
             lifetimes: vec![],
+        }
+    }
+
+    /// Get the `Self` type from a struct declaration.
+    ///
+    /// Consider the following struct declaration:
+    /// ```
+    /// struct RefList<'a> {
+    ///     data: &'a i32,
+    ///     next: Option<Box<Self>>,
+    /// }
+    /// ```
+    /// When determining what type `Self` is in the `next` field, we would have to call
+    /// this method on the `syn::ItemStruct` that represents this struct declaration.
+    /// This method would then return a `PathType` representing `RefList<'a>`, so we
+    /// know that's what `Self` should refer to.
+    ///
+    /// The reason this function exists though is so when we convert the fields' types
+    /// to `PathType`s, we don't panic. We don't actually need to write the struct's
+    /// field types expanded in the macro, so this function is more for correctness,
+    pub fn extract_self_type(strct: &syn::ItemStruct) -> Self {
+        PathType {
+            path: Path {
+                elements: vec![strct.ident.to_string()],
+            },
+            lifetimes: strct
+                .generics
+                .lifetimes()
+                .map(|lt_def| (&lt_def.lifetime).into())
+                .collect(),
         }
     }
 }
@@ -144,9 +190,9 @@ impl From<&syn::TypePath> for PathType {
                         angle_generics
                             .args
                             .iter()
-                            .filter_map(|generic_arg| match generic_arg {
-                                GenericArgument::Lifetime(lifetime) => Some(lifetime.into()),
-                                _ => None,
+                            .map(|generic_arg| match generic_arg {
+                                GenericArgument::Lifetime(lifetime) => lifetime.into(),
+                                _ => panic!("generic type arguments are unsupported"),
                             })
                             .collect(),
                     )
@@ -287,6 +333,9 @@ impl TypeName {
                 &str
             },
             TypeName::PrimitiveSlice(name, mutable) => {
+                // Do we need a lifetime here?
+                // What if we have `&'a [u8]`?
+                // I think this would involve a new field on `TypeName::PrimitiveSlice`
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
                     "&{}[{}]",
@@ -298,6 +347,109 @@ impl TypeName {
             TypeName::Unit => syn::parse_quote! {
                 ()
             },
+        }
+    }
+
+    /// Extract a [`TypeName`] from a [`syn::Type`] AST node.
+    /// The following rules are used to infer [`TypeName`] variants:
+    /// - If the type is a path with a single element that is the name of a Rust primitive, returns a [`TypeName::Primitive`]
+    /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type parameter recursively converted
+    /// - If the type is a path with a single element [`Option`], returns a [`TypeName::Option`] with the type parameter recursively converted
+    /// - If the type is a path with a single element `Self` and `self_path_type` is provided, returns a [`TypeName::Named`]
+    /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::Result`] with the type parameters recursively converted
+    /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
+    /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
+    /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
+    /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
+    /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
+    pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathType>) -> TypeName {
+        match ty {
+            syn::Type::Reference(r) => {
+                if r.elem.to_token_stream().to_string() == "str" {
+                    return TypeName::StrReference(r.mutability.is_some());
+                }
+                if let syn::Type::Slice(slice) = &*r.elem {
+                    if let syn::Type::Path(p) = &*slice.elem {
+                        if let Some(primitive) = p
+                            .path
+                            .get_ident()
+                            .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                        {
+                            return TypeName::PrimitiveSlice(*primitive, r.mutability.is_some());
+                        }
+                    }
+                }
+                TypeName::Reference(
+                    Box::new(TypeName::from_syn(r.elem.as_ref(), self_path_type)),
+                    r.mutability.is_some(),
+                    Lifetime::from(&r.lifetime),
+                )
+            }
+            syn::Type::Path(p) => {
+                if let Some(primitive) = p
+                    .path
+                    .get_ident()
+                    .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                {
+                    TypeName::Primitive(*primitive)
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
+                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    {
+                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                            TypeName::Box(Box::new(TypeName::from_syn(tpe, self_path_type)))
+                        } else {
+                            panic!("Expected first type argument for Box to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Box type")
+                    }
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Option" {
+                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    {
+                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                            TypeName::Option(Box::new(TypeName::from_syn(tpe, self_path_type)))
+                        } else {
+                            panic!("Expected first type argument for Option to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Option type")
+                    }
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Self" {
+                    if let Some(self_path_type) = self_path_type {
+                        TypeName::Named(self_path_type)
+                    } else {
+                        panic!("Cannot have `Self` type outside of a method");
+                    }
+                } else if is_runtime_type(p, "DiplomatResult") {
+                    if let PathArguments::AngleBracketed(type_args) =
+                        &p.path.segments.last().unwrap().arguments
+                    {
+                        if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
+                            (&type_args.args[0], &type_args.args[1])
+                        {
+                            let ok = TypeName::from_syn(ok, self_path_type.clone());
+                            let err = TypeName::from_syn(err, self_path_type);
+                            TypeName::Result(Box::new(ok), Box::new(err))
+                        } else {
+                            panic!("Expected both type arguments for Result to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Result type")
+                    }
+                } else if is_runtime_type(p, "DiplomatWriteable") {
+                    TypeName::Writeable
+                } else {
+                    TypeName::Named(PathType::from(p))
+                }
+            }
+            syn::Type::Tuple(tup) => {
+                if tup.elems.is_empty() {
+                    TypeName::Unit
+                } else {
+                    todo!("Tuples are not currently supported")
+                }
+            }
+            other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
     }
 
@@ -444,102 +596,6 @@ impl TypeName {
     }
 }
 
-impl From<&syn::Type> for TypeName {
-    /// Extract a [`TypeName`] from a [`syn::Type`] AST node.
-    /// The following rules are used to infer [`TypeName`] variants:
-    /// - If the type is a path with a single element that is the name of a Rust primitive, returns a [`TypeName::Primitive`]
-    /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type parameter recursively converted
-    /// - If the type is a path with a single element [`Option`], returns a [`TypeName::Option`] with the type parameter recursively converted
-    /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::Result`] with the type parameters recursively converted
-    /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
-    /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
-    /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
-    /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
-    /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
-    fn from(ty: &syn::Type) -> TypeName {
-        match ty {
-            syn::Type::Reference(r) => {
-                if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference(r.mutability.is_some());
-                }
-                if let syn::Type::Slice(slice) = &*r.elem {
-                    if let syn::Type::Path(p) = &*slice.elem {
-                        if let Some(primitive) = p
-                            .path
-                            .get_ident()
-                            .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
-                        {
-                            return TypeName::PrimitiveSlice(*primitive, r.mutability.is_some());
-                        }
-                    }
-                }
-                TypeName::Reference(
-                    Box::new(r.elem.as_ref().into()),
-                    r.mutability.is_some(),
-                    Lifetime::from(&r.lifetime),
-                )
-            }
-            syn::Type::Path(p) => {
-                if let Some(primitive) = p
-                    .path
-                    .get_ident()
-                    .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
-                {
-                    TypeName::Primitive(*primitive)
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
-                    {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
-                            TypeName::Box(Box::new(tpe.into()))
-                        } else {
-                            panic!("Expected first type argument for Box to be a type")
-                        }
-                    } else {
-                        panic!("Expected angle brackets for Box type")
-                    }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Option" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
-                    {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
-                            TypeName::Option(Box::new(tpe.into()))
-                        } else {
-                            panic!("Expected first type argument for Option to be a type")
-                        }
-                    } else {
-                        panic!("Expected angle brackets for Option type")
-                    }
-                } else if is_runtime_type(p, "DiplomatResult") {
-                    if let PathArguments::AngleBracketed(type_args) =
-                        &p.path.segments.last().unwrap().arguments
-                    {
-                        if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
-                            (&type_args.args[0], &type_args.args[1])
-                        {
-                            TypeName::Result(Box::new(ok.into()), Box::new(err.into()))
-                        } else {
-                            panic!("Expected both type arguments for Result to be a type")
-                        }
-                    } else {
-                        panic!("Expected angle brackets for Result type")
-                    }
-                } else if is_runtime_type(p, "DiplomatWriteable") {
-                    TypeName::Writeable
-                } else {
-                    TypeName::Named(PathType::from(p))
-                }
-            }
-            syn::Type::Tuple(tup) => {
-                if tup.elems.is_empty() {
-                    TypeName::Unit
-                } else {
-                    todo!("Tuples are not currently supported")
-                }
-            }
-            other => panic!("Unsupported type: {}", other.to_token_stream()),
-        }
-    }
-}
-
 fn is_runtime_type(p: &TypePath, name: &str) -> bool {
     (p.path.segments.len() == 1 && p.path.segments[0].ident == name)
         || (p.path.segments.len() == 2
@@ -552,10 +608,8 @@ impl fmt::Display for TypeName {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
             TypeName::Named(p) => p.fmt(f),
-            TypeName::Reference(ty, mutable, lifetime) if *mutable => {
-                write!(f, "&{} mut {}", lifetime, ty)
-            }
-            TypeName::Reference(ty, _, lifetime) => write!(f, "&{} {}", lifetime, ty),
+            TypeName::Reference(ty, true, lifetime) => write!(f, "&{} mut {}", lifetime, ty),
+            TypeName::Reference(ty, false, lifetime) => write!(f, "&{} {}", lifetime, ty),
             TypeName::Box(ty) => write!(f, "Box<{}>", ty),
             TypeName::Option(ty) => write!(f, "Option<{}>", ty),
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
@@ -571,9 +625,48 @@ impl fmt::Display for TypeName {
 
 impl fmt::Display for PathType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.path.fmt(f)
+        self.path.fmt(f)?;
+
+        if let Some((first, rest)) = self.lifetimes.split_first() {
+            write!(f, "<{}", first)?;
+            for lt in rest {
+                write!(f, ", {}", lt)?;
+            }
+            '>'.fmt(f)?;
+        }
+        Ok(())
     }
 }
+
+/// A lifetime as a generic parameter, potentially with bounds.
+///
+/// The `'a` and `'b: 'a` in `Foo<'a, 'b: 'a>`.
+#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
+pub struct LifetimeDef {
+    pub lifetime: Lifetime,
+    pub bounds: Vec<Lifetime>,
+}
+
+impl From<&syn::LifetimeDef> for LifetimeDef {
+    fn from(lifetime_def: &syn::LifetimeDef) -> Self {
+        Self {
+            lifetime: (&lifetime_def.lifetime).into(),
+            bounds: lifetime_def.bounds.iter().map(Into::into).collect(),
+        }
+    }
+}
+
+impl ToTokens for LifetimeDef {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let LifetimeDef { lifetime, bounds } = self;
+        tokens.extend(if bounds.is_empty() {
+            quote! { #lifetime }
+        } else {
+            quote! { #lifetime: #(#bounds)+* }
+        })
+    }
+}
+
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Lifetime {
     /// Kept separate because it doesn't matter as much when tracking lifetimes but it'll still need
@@ -585,11 +678,25 @@ pub enum Lifetime {
 
 impl fmt::Display for Lifetime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Self::Static => f.write_str("'static"),
-            Self::Named(ref s) => write!(f, "'{}", s),
-            Self::Anonymous => f.write_str("'_"),
+        match self {
+            Lifetime::Static => "'static".fmt(f),
+            Lifetime::Named(ref s) => write!(f, "'{}", s),
+            Lifetime::Anonymous => "'_".fmt(f),
         }
+    }
+}
+
+impl ToTokens for Lifetime {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let mut lt = |name| {
+            syn::Lifetime::new(name, Span::call_site()).to_tokens(tokens);
+        };
+
+        match self {
+            Lifetime::Static => lt("'static"),
+            Lifetime::Named(ref s) => lt(&format!("'{}", s)),
+            Lifetime::Anonymous => lt("'_"),
+        };
     }
 }
 
@@ -615,7 +722,7 @@ impl Lifetime {
         match *self {
             Self::Static => Some(syn::Lifetime::new("'static", Span::call_site())),
             Self::Anonymous => None,
-            Self::Named(ref s) => Some(syn::Lifetime::new(s, Span::call_site())),
+            Self::Named(ref s) => Some(syn::Lifetime::new(&format!("'{}", s), Span::call_site())),
         }
     }
 }
@@ -700,98 +807,155 @@ mod tests {
 
     #[test]
     fn typename_primitives() {
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            i32
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                i32
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            usize
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                usize
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            bool
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                bool
+            },
+            None
+        ));
     }
 
     #[test]
     fn typename_named() {
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            MyLocalStruct
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                MyLocalStruct
+            },
+            None
+        ));
     }
 
     #[test]
     fn typename_references() {
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            &i32
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                &i32
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            &mut MyLocalStruct
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                &mut MyLocalStruct
+            },
+            None
+        ));
     }
 
     #[test]
     fn typename_boxes() {
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Box<i32>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Box<i32>
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Box<MyLocalStruct>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Box<MyLocalStruct>
+            },
+            None
+        ));
     }
 
     #[test]
     fn typename_option() {
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Option<i32>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Option<i32>
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Option<MyLocalStruct>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Option<MyLocalStruct>
+            },
+            None
+        ));
     }
 
     #[test]
     fn typename_result() {
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            DiplomatResult<MyLocalStruct, i32>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatResult<MyLocalStruct, i32>
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            DiplomatResult<(), MyLocalStruct>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatResult<(), MyLocalStruct>
+            },
+            None
+        ));
     }
 
     #[test]
     fn lifetimes() {
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Foo<'a, 'b>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Foo<'a, 'b>
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            ::core::my_type::Foo
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                ::core::my_type::Foo
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            ::core::my_type::Foo<'test>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                ::core::my_type::Foo<'test>
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Option<Ref<'object>>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Option<Ref<'object>>
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            Foo<'a, 'b, 'c, 'd>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Foo<'a, 'b, 'c, 'd>
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            very::long::path::to::my::Type<'x, 'y, 'z>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                very::long::path::to::my::Type<'x, 'y, 'z>
+            },
+            None
+        ));
 
-        insta::assert_yaml_snapshot!(TypeName::from(&syn::parse_quote! {
-            DiplomatResult<OkRef<'a, 'b>, ErrRef<'c>>
-        }));
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatResult<OkRef<'a, 'b>, ErrRef<'c>>
+            },
+            None
+        ));
     }
 }
