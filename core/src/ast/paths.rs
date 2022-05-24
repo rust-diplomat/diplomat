@@ -59,3 +59,11 @@ impl fmt::Display for Path {
         f.write_str(&self.elements.join("::"))
     }
 }
+
+impl FromIterator<Ident> for Path {
+    fn from_iter<T: IntoIterator<Item = Ident>>(iter: T) -> Self {
+        Path {
+            elements: iter.into_iter().collect(),
+        }
+    }
+}
