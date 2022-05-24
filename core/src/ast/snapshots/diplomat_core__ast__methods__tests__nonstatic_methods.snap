@@ -16,7 +16,7 @@ self_param:
             elements:
               - MyStructContainingMethod
           lifetimes: []
-      - false
+      - Immutable
       - Anonymous
 params:
   - name: x

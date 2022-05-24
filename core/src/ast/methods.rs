@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use syn::*;
 
 use super::docs::Docs;
-use super::{Lifetime, LifetimeDef, Path, PathType, TypeName, ValidityError};
+use super::{Lifetime, LifetimeDef, Mutability, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -69,7 +69,7 @@ impl Method {
                 ty: if let Some(ref reference) = rec.reference {
                     TypeName::Reference(
                         Box::new(TypeName::Named(self_path_type.clone())),
-                        rec.mutability.is_some(),
+                        Mutability::from_syn(&rec.mutability),
                         Lifetime::from(&reference.1),
                     )
                 } else {
@@ -158,7 +158,7 @@ impl Param {
     /// Check if this parameter is a Writeable
     pub fn is_writeable(&self) -> bool {
         match self.ty {
-            TypeName::Reference(ref w, true, ref _lt) => **w == TypeName::Writeable,
+            TypeName::Reference(ref w, Mutability::Mutable, ref _lt) => **w == TypeName::Writeable,
             _ => false,
         }
     }

@@ -63,7 +63,7 @@ fn gen_type_inner<W: fmt::Write>(
         }
 
         ast::TypeName::Reference(underlying, mutable, _lt) => {
-            if !mutable {
+            if let ast::Mutability::Immutable = mutable {
                 write!(out, "const ")?;
             }
             gen_type_inner(
@@ -118,15 +118,15 @@ fn gen_type_inner<W: fmt::Write>(
             write!(out, "capi::DiplomatWriteable")?;
         }
 
-        ast::TypeName::StrReference(true) => {
+        ast::TypeName::StrReference(ast::Mutability::Mutable) => {
             write!(out, "{}", library_config.string_view.expr)?;
         }
 
-        ast::TypeName::StrReference(false) => {
+        ast::TypeName::StrReference(ast::Mutability::Immutable) => {
             write!(out, "const {}", library_config.string_view.expr)?;
         }
 
-        ast::TypeName::PrimitiveSlice(prim, true) => {
+        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mutable) => {
             write!(
                 out,
                 "{}<{}>",
@@ -135,7 +135,7 @@ fn gen_type_inner<W: fmt::Write>(
             )?;
         }
 
-        ast::TypeName::PrimitiveSlice(prim, false) => {
+        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Immutable) => {
             write!(
                 out,
                 "const {}<{}>",

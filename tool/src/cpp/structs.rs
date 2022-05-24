@@ -319,8 +319,8 @@ pub fn gen_method_interface<W: fmt::Write>(
 
     let mut is_const = false;
     if let Some(ref param) = method.self_param {
-        if let ast::TypeName::Reference(_, mutable, ref _lt) = param.ty {
-            is_const = !mutable;
+        if let ast::TypeName::Reference(_, mutable, _lt) = &param.ty {
+            is_const = mutable.is_immutable();
         }
     } else if is_header {
         write!(out, "static ")?;

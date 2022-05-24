@@ -313,7 +313,12 @@ fn gen_method(
         let mut mut_str_list: Vec<String> = method
             .params
             .iter()
-            .filter(|param| matches!(param.ty, ast::TypeName::StrReference(true)))
+            .filter(|param| {
+                matches!(
+                    param.ty,
+                    ast::TypeName::StrReference(ast::Mutability::Mutable)
+                )
+            })
             .map(|param| format!("{}Buf", param.name.to_lower_camel_case()))
             .collect();
 
@@ -408,11 +413,11 @@ fn gen_method(
 
         let name = param.name.to_lower_camel_case();
 
-        if let ast::TypeName::StrReference(_mut) = param.ty {
+        if let ast::TypeName::StrReference(..) = param.ty {
             params_str_ref.push(name.clone());
             all_params_invocation.push(format!("{}BufPtr", name));
             all_params_invocation.push(format!("{}BufLength", name));
-        } else if let ast::TypeName::PrimitiveSlice(prim, _mut) = param.ty {
+        } else if let ast::TypeName::PrimitiveSlice(prim, ..) = param.ty {
             params_slice.push(SliceParam::new(name.clone(), prim));
             all_params_invocation.push(format!("{}Ptr", name));
             all_params_invocation.push(format!("{}Length", name));

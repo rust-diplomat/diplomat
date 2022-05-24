@@ -215,6 +215,36 @@ impl From<Path> for PathType {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub enum Mutability {
+    Mutable,
+    Immutable,
+}
+
+impl Mutability {
+    pub fn to_syn(&self) -> Option<Token![mut]> {
+        match self {
+            Mutability::Mutable => Some(syn::token::Mut(Span::call_site())),
+            Mutability::Immutable => None,
+        }
+    }
+
+    pub fn from_syn(t: &Option<Token![mut]>) -> Self {
+        match t {
+            Some(_) => Mutability::Mutable,
+            None => Mutability::Immutable,
+        }
+    }
+
+    pub fn is_mutable(&self) -> bool {
+        matches!(self, Mutability::Mutable)
+    }
+
+    pub fn is_immutable(&self) -> bool {
+        matches!(self, Mutability::Immutable)
+    }
+}
+
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
@@ -226,7 +256,7 @@ pub enum TypeName {
     /// are collected with [`TypeName::resolve()`].
     Named(PathType),
     /// An optionally mutable reference to another type.
-    Reference(Box<TypeName>, /* mutable */ bool, Lifetime),
+    Reference(Box<TypeName>, Mutability, Lifetime),
     /// A `Box<T>` type.
     Box(Box<TypeName>),
     /// A `Option<T>` type.
@@ -236,9 +266,9 @@ pub enum TypeName {
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
     /// A `&str` type.
-    StrReference(/* mutable */ bool),
+    StrReference(Mutability),
     /// A `&[T]` type, where `T` is a primitive.
-    PrimitiveSlice(PrimitiveType, /* mutable */ bool),
+    PrimitiveSlice(PrimitiveType, Mutability),
     /// The `()` type.
     Unit,
 }
@@ -251,15 +281,11 @@ impl TypeName {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
             TypeName::Named(name) => syn::Type::Path(name.to_syn()),
-            TypeName::Reference(underlying, mutable, lifetime) => {
+            TypeName::Reference(underlying, mutability, lifetime) => {
                 syn::Type::Reference(TypeReference {
                     and_token: syn::token::And(Span::call_site()),
                     lifetime: lifetime.to_syn(),
-                    mutability: if *mutable {
-                        Some(syn::token::Mut(Span::call_site()))
-                    } else {
-                        None
-                    },
+                    mutability: mutability.to_syn(),
                     elem: Box::new(underlying.to_syn()),
                 })
             }
@@ -326,10 +352,10 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference(true) => syn::parse_quote! {
+            TypeName::StrReference(Mutability::Mutable) => syn::parse_quote! {
                 &mut str
             },
-            TypeName::StrReference(false) => syn::parse_quote! {
+            TypeName::StrReference(Mutability::Immutable) => syn::parse_quote! {
                 &str
             },
             TypeName::PrimitiveSlice(name, mutable) => {
@@ -339,7 +365,7 @@ impl TypeName {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
                     "&{}[{}]",
-                    if *mutable { "mut " } else { "" },
+                    if mutable.is_mutable() { "mut " } else { "" },
                     primitive_name
                 );
                 syn::parse_str(&formatted_str).unwrap()
@@ -366,7 +392,7 @@ impl TypeName {
         match ty {
             syn::Type::Reference(r) => {
                 if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference(r.mutability.is_some());
+                    return TypeName::StrReference(Mutability::from_syn(&r.mutability));
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -375,13 +401,16 @@ impl TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(*primitive, r.mutability.is_some());
+                            return TypeName::PrimitiveSlice(
+                                *primitive,
+                                Mutability::from_syn(&r.mutability),
+                            );
                         }
                     }
                 }
                 TypeName::Reference(
                     Box::new(TypeName::from_syn(r.elem.as_ref(), self_path_type)),
-                    r.mutability.is_some(),
+                    Mutability::from_syn(&r.mutability),
                     Lifetime::from(&r.lifetime),
                 )
             }
@@ -596,6 +625,105 @@ impl TypeName {
     }
 }
 
+impl From<&syn::Type> for TypeName {
+    /// Extract a [`TypeName`] from a [`syn::Type`] AST node.
+    /// The following rules are used to infer [`TypeName`] variants:
+    /// - If the type is a path with a single element that is the name of a Rust primitive, returns a [`TypeName::Primitive`]
+    /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type parameter recursively converted
+    /// - If the type is a path with a single element [`Option`], returns a [`TypeName::Option`] with the type parameter recursively converted
+    /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::Result`] with the type parameters recursively converted
+    /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
+    /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
+    /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
+    /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
+    /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
+    fn from(ty: &syn::Type) -> TypeName {
+        match ty {
+            syn::Type::Reference(r) => {
+                if r.elem.to_token_stream().to_string() == "str" {
+                    return TypeName::StrReference(Mutability::from_syn(&r.mutability));
+                }
+                if let syn::Type::Slice(slice) = &*r.elem {
+                    if let syn::Type::Path(p) = &*slice.elem {
+                        if let Some(primitive) = p
+                            .path
+                            .get_ident()
+                            .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                        {
+                            return TypeName::PrimitiveSlice(
+                                *primitive,
+                                Mutability::from_syn(&r.mutability),
+                            );
+                        }
+                    }
+                }
+                TypeName::Reference(
+                    Box::new(r.elem.as_ref().into()),
+                    Mutability::from_syn(&r.mutability),
+                    Lifetime::from(&r.lifetime),
+                )
+            }
+            syn::Type::Path(p) => {
+                if let Some(primitive) = p
+                    .path
+                    .get_ident()
+                    .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                {
+                    TypeName::Primitive(*primitive)
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
+                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    {
+                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                            TypeName::Box(Box::new(tpe.into()))
+                        } else {
+                            panic!("Expected first type argument for Box to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Box type")
+                    }
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Option" {
+                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    {
+                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                            TypeName::Option(Box::new(tpe.into()))
+                        } else {
+                            panic!("Expected first type argument for Option to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Option type")
+                    }
+                } else if is_runtime_type(p, "DiplomatResult") {
+                    if let PathArguments::AngleBracketed(type_args) =
+                        &p.path.segments.last().unwrap().arguments
+                    {
+                        if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
+                            (&type_args.args[0], &type_args.args[1])
+                        {
+                            TypeName::Result(Box::new(ok.into()), Box::new(err.into()))
+                        } else {
+                            panic!("Expected both type arguments for Result to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Result type")
+                    }
+                } else if is_runtime_type(p, "DiplomatWriteable") {
+                    TypeName::Writeable
+                } else {
+                    TypeName::Named(PathType::from(p))
+                }
+            }
+            syn::Type::Tuple(tup) => {
+                if tup.elems.is_empty() {
+                    TypeName::Unit
+                } else {
+                    todo!("Tuples are not currently supported")
+                }
+            }
+            other => panic!("Unsupported type: {}", other.to_token_stream()),
+        }
+    }
+}
+
 fn is_runtime_type(p: &TypePath, name: &str) -> bool {
     (p.path.segments.len() == 1 && p.path.segments[0].ident == name)
         || (p.path.segments.len() == 2
@@ -608,16 +736,20 @@ impl fmt::Display for TypeName {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
             TypeName::Named(p) => p.fmt(f),
-            TypeName::Reference(ty, true, lifetime) => write!(f, "&{} mut {}", lifetime, ty),
-            TypeName::Reference(ty, false, lifetime) => write!(f, "&{} {}", lifetime, ty),
+            TypeName::Reference(ty, Mutability::Mutable, lifetime) => {
+                write!(f, "&{} mut {}", lifetime, ty)
+            }
+            TypeName::Reference(ty, Mutability::Immutable, lifetime) => {
+                write!(f, "&{} {}", lifetime, ty)
+            }
             TypeName::Box(ty) => write!(f, "Box<{}>", ty),
             TypeName::Option(ty) => write!(f, "Option<{}>", ty),
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
             TypeName::Writeable => f.write_str("DiplomatWriteable"),
-            TypeName::StrReference(true) => f.write_str("&mut str"),
-            TypeName::StrReference(false) => f.write_str("&str"),
-            TypeName::PrimitiveSlice(ty, true) => write!(f, "&mut [{}]", ty),
-            TypeName::PrimitiveSlice(ty, false) => write!(f, "&[{}]", ty),
+            TypeName::StrReference(Mutability::Mutable) => f.write_str("&mut str"),
+            TypeName::StrReference(Mutability::Immutable) => f.write_str("&str"),
+            TypeName::PrimitiveSlice(ty, Mutability::Mutable) => write!(f, "&mut [{}]", ty),
+            TypeName::PrimitiveSlice(ty, Mutability::Immutable) => write!(f, "&[{}]", ty),
             TypeName::Unit => f.write_str("()"),
         }
     }
