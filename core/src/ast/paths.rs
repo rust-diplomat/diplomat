@@ -1,10 +1,11 @@
-use proc_macro2::Span;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+use super::Ident;
+
 #[derive(Hash, Eq, PartialEq, Deserialize, Serialize, Clone, Debug, Ord, PartialOrd)]
 pub struct Path {
-    pub elements: Vec<String>,
+    pub elements: Vec<Ident>,
 }
 
 impl Path {
@@ -16,7 +17,7 @@ impl Path {
         }
     }
 
-    pub fn sub_path(&self, ident: String) -> Path {
+    pub fn sub_path(&self, ident: Ident) -> Path {
         let mut new_elements = self.elements.clone();
         new_elements.push(ident);
         Path {
@@ -31,7 +32,7 @@ impl Path {
                 .elements
                 .iter()
                 .map(|s| syn::PathSegment {
-                    ident: syn::Ident::new(s, Span::call_site()),
+                    ident: s.to_syn(),
                     arguments: syn::PathArguments::None,
                 })
                 .collect(),
@@ -39,12 +40,13 @@ impl Path {
     }
 
     pub fn from_syn(path: &syn::Path) -> Path {
-        let mut out = vec![];
-        for elem in path.segments.iter() {
-            out.push(elem.ident.to_string())
+        Path {
+            elements: path
+                .segments
+                .iter()
+                .map(|seg| (&seg.ident).into())
+                .collect(),
         }
-
-        Path { elements: out }
     }
 
     pub fn empty() -> Path {

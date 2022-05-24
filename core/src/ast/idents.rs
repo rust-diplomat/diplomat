@@ -8,20 +8,37 @@ use std::{borrow::Borrow, fmt};
 pub struct Ident(String);
 
 impl Ident {
+    /// Create a new `Ident`.
+    ///
+    /// # Panics
+    ///
+    /// This method panics if the provided string isn't a valid identifier.
+    pub fn new(string: &str) -> Self {
+        Ident(syn::parse_str::<syn::Ident>(string).unwrap().to_string())
+    }
+
     pub fn to_syn(&self) -> syn::Ident {
-        syn::Ident::new(&self.0, Span::call_site())
+        syn::Ident::new(self.as_str(), Span::call_site())
+    }
+
+    pub fn to_proc_macro2(&self) -> proc_macro2::Ident {
+        proc_macro2::Ident::new(self.as_str(), Span::call_site())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
     }
 }
 
 impl Borrow<str> for Ident {
     fn borrow(&self) -> &str {
-        &self.0
+        self.as_str()
     }
 }
 
 impl fmt::Display for Ident {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.0.fmt(f)
+        self.as_str().fmt(f)
     }
 }
 
@@ -33,6 +50,6 @@ impl From<&syn::Ident> for Ident {
 
 impl ToTokens for Ident {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        tokens.append(proc_macro2::Ident::new(&self.0, Span::call_site()));
+        tokens.append(self.to_proc_macro2());
     }
 }

@@ -278,7 +278,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             Span::call_site(),
         );
 
-        let type_ident = Ident::new(custom_type.name(), Span::call_site());
+        let type_ident = custom_type.name().to_proc_macro2();
 
         let (lifetime_defs, lifetimes) = if let Some(lifetime_defs) = custom_type.lifetimes() {
             let lifetimes = lifetime_defs.iter().map(|lt| &lt.lifetime);

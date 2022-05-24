@@ -182,6 +182,8 @@ mod tests {
 
     use syn;
 
+    use crate::ast::Ident;
+
     use super::{Method, Path, PathType};
 
     #[test]
@@ -194,7 +196,7 @@ mod tests {
 
                 }
             },
-            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            PathType::new(Path::empty().sub_path(Ident::new("MyStructContainingMethod"))),
             vec![]
         ));
 
@@ -209,7 +211,7 @@ mod tests {
                     x
                 }
             },
-            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            PathType::new(Path::empty().sub_path(Ident::new("MyStructContainingMethod"))),
             vec![]
         ));
     }
@@ -222,7 +224,7 @@ mod tests {
 
                 }
             },
-            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            PathType::new(Path::empty().sub_path(Ident::new("MyStructContainingMethod"))),
             vec![]
         ));
 
@@ -233,7 +235,7 @@ mod tests {
                     x
                 }
             },
-            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            PathType::new(Path::empty().sub_path(Ident::new("MyStructContainingMethod"))),
             vec![]
         ));
     }
