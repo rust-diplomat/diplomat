@@ -1,32 +1,40 @@
 use proc_macro2::Span;
 use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
-use std::{borrow::Borrow, fmt};
+use std::borrow::{Borrow, Cow};
+use std::fmt;
 
 /// An identifier, analogous to `syn::Ident` and `proc_macro2::Ident`.
 #[derive(Hash, Eq, PartialEq, Serialize, Clone, Debug, Ord, PartialOrd)]
-pub struct Ident(String);
+pub struct Ident(Cow<'static, str>);
 
 impl Ident {
-    /// Create a new `Ident`.
-    ///
-    /// # Panics
-    ///
-    /// This method panics if the provided string isn't a valid identifier.
-    pub fn new(string: &str) -> Self {
-        Ident(syn::parse_str::<syn::Ident>(string).unwrap().to_string())
+    /// Validate a string
+    fn validate(string: &str) {
+        let _ = syn::parse_str::<syn::Ident>(string).expect("Invalid identifier");
     }
 
     pub fn to_syn(&self) -> syn::Ident {
         syn::Ident::new(self.as_str(), Span::call_site())
     }
 
-    pub fn to_proc_macro2(&self) -> proc_macro2::Ident {
-        proc_macro2::Ident::new(self.as_str(), Span::call_site())
-    }
-
+    /// Get the `&str` representation.
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl From<&'static str> for Ident {
+    fn from(string: &'static str) -> Self {
+        Self::validate(string);
+        Self(Cow::from(string))
+    }
+}
+
+impl From<String> for Ident {
+    fn from(string: String) -> Self {
+        Self::validate(&string);
+        Self(Cow::from(string))
     }
 }
 
@@ -37,7 +45,7 @@ impl<'de> Deserialize<'de> for Ident {
     where
         D: serde::Deserializer<'de>,
     {
-        Ok(Ident::new(Deserialize::deserialize(deserializer)?))
+        Ok(Ident::from(String::deserialize(deserializer)?))
     }
 }
 
@@ -55,12 +63,12 @@ impl fmt::Display for Ident {
 
 impl From<&syn::Ident> for Ident {
     fn from(ident: &syn::Ident) -> Self {
-        Ident(ident.to_string())
+        Self(Cow::from(ident.to_string()))
     }
 }
 
 impl ToTokens for Ident {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        tokens.append(self.to_proc_macro2());
+        tokens.append(self.to_syn());
     }
 }
