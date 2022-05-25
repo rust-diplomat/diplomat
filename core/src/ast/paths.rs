@@ -56,7 +56,14 @@ impl Path {
 
 impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(&self.elements.join("::"))
+        if let Some((head, tail)) = self.elements.split_first() {
+            head.fmt(f)?;
+            for seg in tail {
+                "::".fmt(f)?;
+                seg.fmt(f)?;
+            }
+        }
+        Ok(())
     }
 }
 
