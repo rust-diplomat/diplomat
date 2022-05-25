@@ -806,7 +806,7 @@ pub enum Lifetime {
     /// Kept separate because it doesn't matter as much when tracking lifetimes but it'll still need
     /// to be mentioned in the type during codegen
     Static,
-    Named(String),
+    Named(Ident),
     Anonymous,
 }
 
@@ -839,7 +839,7 @@ impl From<&syn::Lifetime> for Lifetime {
         if lt.ident == "static" {
             Self::Static
         } else {
-            Self::Named(lt.ident.to_string())
+            Self::Named(Ident::from(&lt.ident))
         }
     }
 }

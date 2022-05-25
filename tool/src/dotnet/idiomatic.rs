@@ -390,7 +390,7 @@ fn gen_method(
         gen_type_name_return_position(&method.return_type, in_path, env, out)?;
         write!(out, " ")?;
     }
-    write!(out, "{}(", method.name.to_upper_camel_case())?;
+    write!(out, "{}(", method.name.as_str().to_upper_camel_case())?;
 
     let mut params_to_gen = method.params.clone();
     if rearranged_writeable {
@@ -545,7 +545,7 @@ fn gen_method(
                 out,
                 "Raw.{}.{}(",
                 enclosing_type.name(),
-                method.name.to_upper_camel_case()
+                method.name.as_str().to_upper_camel_case()
             )?;
             for (i, param) in all_params_invocation.into_iter().enumerate() {
                 if i != 0 {
@@ -841,12 +841,12 @@ struct Property {
 }
 
 struct Getter {
-    name: String,
+    name: ast::Ident,
     return_type: String,
 }
 
 struct Setter {
-    name: String,
+    name: ast::Ident,
     param_type: String,
 }
 
@@ -858,7 +858,11 @@ fn extract_getter_metadata(
 ) -> Option<(Property, Getter)> {
     let prefix = library_config.properties.getters_prefix.as_deref()?;
 
-    let property_name = method.name.strip_prefix(prefix)?.to_upper_camel_case();
+    let property_name = method
+        .name
+        .as_str()
+        .strip_prefix(prefix)?
+        .to_upper_camel_case();
 
     method.self_param.as_ref()?;
 
@@ -875,7 +879,7 @@ fn extract_getter_metadata(
             name: property_name,
         },
         Getter {
-            name: method.name.to_upper_camel_case(),
+            name: ast::Ident::from(method.name.as_str().to_upper_camel_case()),
             return_type,
         },
     ))
@@ -889,7 +893,11 @@ fn extract_setter_metadata(
 ) -> Option<(Property, Setter)> {
     let prefix = library_config.properties.setters_prefix.as_deref()?;
 
-    let property_name = method.name.strip_prefix(prefix)?.to_upper_camel_case();
+    let property_name = method
+        .name
+        .as_str()
+        .strip_prefix(prefix)?
+        .to_upper_camel_case();
 
     method.self_param.as_ref()?;
 
@@ -907,7 +915,7 @@ fn extract_setter_metadata(
             name: property_name,
         },
         Setter {
-            name: method.name.to_upper_camel_case(),
+            name: ast::Ident::from(method.name.as_str().to_upper_camel_case()),
             param_type,
         },
     ))

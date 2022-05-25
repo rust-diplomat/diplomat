@@ -1,13 +1,13 @@
+use diplomat_core::ast;
 use std::fmt;
 
 /// Transforms the given identifier to one that does not clash
 /// with a keyword if it does.
-pub fn transform_keyword_ident(ident: &str) -> String {
+pub fn transform_keyword_ident(ident: &ast::Ident) -> ast::Ident {
     // TODO(#60): handle other keywords
-    if ident == "new" || ident == "default" {
-        format!("{}_", ident)
-    } else {
-        ident.to_string()
+    match ident.as_str() {
+        "new" | "default" => ast::Ident::from(format!("{}_", ident)),
+        _ => ident.clone(),
     }
 }
 

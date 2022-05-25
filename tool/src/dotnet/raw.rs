@@ -173,6 +173,7 @@ fn gen_method(
         " {}(",
         method
             .full_path_name
+            .as_str()
             .replace(&format!("{}_", typ.name()), "")
             .to_upper_camel_case()
     )?;
