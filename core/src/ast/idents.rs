@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::{borrow::Borrow, fmt};
 
 /// An identifier, analogous to `syn::Ident` and `proc_macro2::Ident`.
-#[derive(Hash, Eq, PartialEq, Deserialize, Serialize, Clone, Debug, Ord, PartialOrd)]
+#[derive(Hash, Eq, PartialEq, Serialize, Clone, Debug, Ord, PartialOrd)]
 pub struct Ident(String);
 
 impl Ident {
@@ -27,6 +27,17 @@ impl Ident {
 
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl<'de> Deserialize<'de> for Ident {
+    /// The derived `Deserialize` allows for creating `Ident`s that do not uphold
+    /// the proper invariants. This custom impl ensures that this cannot happen.
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Ok(Ident::new(Deserialize::deserialize(deserializer)?))
     }
 }
 
