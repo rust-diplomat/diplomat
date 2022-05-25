@@ -148,7 +148,7 @@ impl DocsUrlGenerator {
             r.push('/');
         }
         if r == "https://docs.rs/" {
-            r.push_str(&rust_link.path.elements[0].as_str());
+            r.push_str(rust_link.path.elements[0].as_str());
             r.push_str("/latest/");
         }
 

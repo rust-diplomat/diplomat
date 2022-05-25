@@ -131,7 +131,7 @@ pub fn gen<'ast>(
 }
 
 fn gen_field(
-    name: &str,
+    name: &ast::Ident,
     docs: &ast::Docs,
     typ: &ast::TypeName,
     in_path: &ast::Path,

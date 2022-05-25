@@ -237,7 +237,7 @@ pub fn gen_method_docs<W: fmt::Write>(
 
 pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
-    field: &(String, ast::TypeName, ast::Docs),
+    field: &(ast::Ident, ast::TypeName, ast::Docs),
     in_path: &ast::Path,
     env: &Env,
     library_config: &LibraryConfig,
@@ -272,7 +272,7 @@ pub fn gen_field_docs<W: fmt::Write>(
 
 pub fn gen_enum_variant_docs<W: fmt::Write>(
     out: &mut W,
-    variant: &(String, isize, ast::Docs),
+    variant: &(ast::Ident, isize, ast::Docs),
     in_path: &ast::Path,
     env: &Env,
     docs_url_gen: &ast::DocsUrlGenerator,

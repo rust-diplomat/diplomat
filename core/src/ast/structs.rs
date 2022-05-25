@@ -11,7 +11,7 @@ pub struct Struct {
     pub name: Ident,
     pub docs: Docs,
     pub lifetimes: Vec<LifetimeDef>,
-    pub fields: Vec<(Option<Ident>, TypeName, Docs)>,
+    pub fields: Vec<(Ident, TypeName, Docs)>,
     pub methods: Vec<Method>,
 }
 
@@ -28,7 +28,12 @@ impl From<&syn::ItemStruct> for Struct {
                 .fields
                 .iter()
                 .map(|field| {
-                    let name = field.ident.as_ref().map(Into::into);
+                    // Tuple structs will never be allowed
+                    let name = field
+                        .ident
+                        .as_ref()
+                        .map(Into::into)
+                        .expect("tuples structs are disallowed");
                     let type_name = TypeName::from_syn(&field.ty, Some(self_path_type.clone()));
                     let docs = Docs::from_attrs(&field.attrs);
 

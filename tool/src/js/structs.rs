@@ -60,7 +60,11 @@ pub fn gen_struct<W: fmt::Write>(
         }
 
         if let ast::CustomType::Struct(strct) = custom_type {
-            let (offsets, _) = layout::struct_offsets_size_max_align(strct, in_path, env);
+            let (offsets, _) = layout::struct_offsets_size_max_align(
+                strct.fields.iter().map(|(_, typ, _)| typ),
+                in_path,
+                env,
+            );
             for ((name, typ, _), offset) in strct.fields.iter().zip(offsets.iter()) {
                 writeln!(&mut class_body_out)?;
                 gen_field(name, typ, in_path, *offset, env, &mut class_body_out)?;
@@ -74,7 +78,7 @@ pub fn gen_struct<W: fmt::Write>(
 }
 
 fn gen_field<W: fmt::Write>(
-    name: &str,
+    name: &ast::Ident,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     offset: usize,

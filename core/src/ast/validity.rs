@@ -181,7 +181,9 @@ mod tests {
         uitest_validity! {
             #[diplomat::bridge]
             mod ffi {
-                struct NonOpaque(u8);
+                struct NonOpaque {
+                    num: u8,
+                }
 
                 impl NonOpaque {
                     pub fn foo(&self) {}

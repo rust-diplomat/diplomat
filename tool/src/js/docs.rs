@@ -52,9 +52,6 @@ pub fn gen_docs(
             writeln!(out, "{}", title)?;
             writeln!(out, "{}", "=".repeat(title.len()))?;
 
-            let mut sorted_symbols: Vec<&String> = module.names().collect();
-            sorted_symbols.sort();
-
             for item in module.items() {
                 if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
@@ -166,7 +163,7 @@ pub fn gen_method_docs<W: fmt::Write>(
 
 pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
-    field: &(String, ast::TypeName, ast::Docs),
+    field: &(ast::Ident, ast::TypeName, ast::Docs),
     in_path: &ast::Path,
     docs_url_gen: &ast::DocsUrlGenerator,
     env: &Env,

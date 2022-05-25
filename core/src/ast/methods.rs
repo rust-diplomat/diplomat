@@ -196,7 +196,7 @@ mod tests {
 
                 }
             },
-            PathType::new(Path::empty().sub_path(Ident::new("MyStructContainingMethod"))),
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
 
@@ -211,7 +211,7 @@ mod tests {
                     x
                 }
             },
-            PathType::new(Path::empty().sub_path(Ident::new("MyStructContainingMethod"))),
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
     }
@@ -224,7 +224,7 @@ mod tests {
 
                 }
             },
-            PathType::new(Path::empty().sub_path(Ident::new("MyStructContainingMethod"))),
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
 
@@ -235,7 +235,7 @@ mod tests {
                     x
                 }
             },
-            PathType::new(Path::empty().sub_path(Ident::new("MyStructContainingMethod"))),
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
     }

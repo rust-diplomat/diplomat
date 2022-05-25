@@ -175,7 +175,7 @@ pub fn gen(
 }
 
 fn gen_property_for_field(
-    name: &str,
+    name: &ast::Ident,
     docs: &ast::Docs,
     typ: &ast::TypeName,
     in_path: &ast::Path,
@@ -209,7 +209,7 @@ fn gen_property_for_field(
     gen_doc_block(out, &docs.to_markdown(docs_url_gen))?;
 
     let type_name = gen_type_name_to_string(typ, in_path, env)?;
-    let property_name = name.to_upper_camel_case();
+    let property_name = name.as_str().to_upper_camel_case();
     let var_to_raw = format!("_inner.{name}");
 
     writeln!(out, "public {type_name} {property_name}")?;

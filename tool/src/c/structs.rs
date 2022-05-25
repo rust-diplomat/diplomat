@@ -37,7 +37,7 @@ pub fn gen_struct<W: fmt::Write>(
 }
 
 pub fn gen_field<W: fmt::Write>(
-    name: &str,
+    name: &ast::Ident,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &Env,

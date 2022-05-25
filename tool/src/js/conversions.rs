@@ -347,7 +347,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
 }
 
 fn gen_box_destructor<W: fmt::Write>(
-    name: &str,
+    name: &ast::Ident,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &Env,
