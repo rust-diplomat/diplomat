@@ -23,7 +23,7 @@ mod paths;
 pub use paths::Path;
 
 mod docs;
-pub use docs::{Docs, DocsUrlGenerator};
+pub use docs::{Docs, DocsUrlGenerator, RustLink};
 
 mod validity;
 pub use validity::ValidityError;
