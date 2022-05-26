@@ -190,7 +190,7 @@ fn gen_result_header(
         let mut seen_includes = HashSet::new();
         gen_includes(
             ok.as_ref(),
-            &in_path,
+            in_path,
             true,
             false,
             env,
@@ -199,7 +199,7 @@ fn gen_result_header(
         )?;
         gen_includes(
             err.as_ref(),
-            &in_path,
+            in_path,
             true,
             false,
             env,

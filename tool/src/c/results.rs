@@ -62,7 +62,7 @@ pub fn gen_result<W: fmt::Write>(
             if !ok.is_zst() {
                 gen_type(
                     ok,
-                    &in_path,
+                    in_path,
                     env,
                     &mut ((&mut union_indent) as &mut dyn fmt::Write),
                 )?;
@@ -72,7 +72,7 @@ pub fn gen_result<W: fmt::Write>(
             if !err.is_zst() {
                 gen_type(
                     err,
-                    &in_path,
+                    in_path,
                     env,
                     &mut ((&mut union_indent) as &mut dyn fmt::Write),
                 )?;
