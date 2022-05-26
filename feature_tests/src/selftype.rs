@@ -1,7 +1,7 @@
 #[diplomat::bridge]
 mod ffi {
     #[diplomat::opaque]
-    struct RefList<'a>( (&'a i32, Option<Box<Self>>));
+    struct RefList<'a>((&'a i32, Option<Box<Self>>));
 
     impl<'b> RefList<'b> {
         pub fn node(data: &'b i32) -> Box<Self> {
