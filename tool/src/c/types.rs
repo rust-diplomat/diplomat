@@ -46,7 +46,7 @@ pub fn gen_type<W: fmt::Write>(
         },
 
         ast::TypeName::Result(_, _) => {
-            write!(out, "{}_{}", in_path.elements.join("_"), name_for_type(typ))?;
+            write!(out, "{}", name_for_type(typ))?;
         }
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
@@ -79,7 +79,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             ast::Ident::from(format!("opt_{}", name_for_type(underlying)))
         }
         ast::TypeName::Result(ok, err) => ast::Ident::from(format!(
-            "result_{}_{}",
+            "diplomat_result_{}_{}",
             name_for_type(ok),
             name_for_type(err)
         )),

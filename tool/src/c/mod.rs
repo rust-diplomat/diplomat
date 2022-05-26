@@ -45,7 +45,7 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
         )?;
     }
 
-    for (in_path, typ) in &all_results {
+    for (ref in_path, typ) in &all_results {
         gen_result_header(typ, in_path, outs, env)?;
     }
 
@@ -55,7 +55,7 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
 fn gen_struct_header<'a>(
     typ: &'a ast::CustomType,
     in_path: &ast::Path,
-    seen_results: &mut HashSet<(ast::Path, &'a ast::TypeName)>,
+    seen_results: &mut HashSet<&'a ast::TypeName>,
     all_results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
     outs: &mut HashMap<String, String>,
     env: &Env,

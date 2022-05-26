@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "ICU4XFixedDecimalFormat.h"
+#include "include/ICU4XFixedDecimalFormat.h"
 
 void print_decimal(ICU4XFixedDecimal* fd) {
     char output[40];

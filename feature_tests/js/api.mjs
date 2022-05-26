@@ -4,6 +4,16 @@ const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
   wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
 });
 
+const Bar_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Bar_destroy(underlying);
+});
+
+export class Bar {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+}
+
 const ErrorEnum_js_to_rust = {
   "Foo": 0,
   "Bar": 1,
@@ -70,6 +80,47 @@ export class Float64Vec {
     new_slice_diplomat_buf.set(new_slice_diplomat_bytes, 0);
     const diplomat_out = wasm.Float64Vec_set_value(this.underlying, new_slice_diplomat_ptr, new_slice_diplomat_bytes.length);
     wasm.diplomat_free(new_slice_diplomat_ptr, new_slice_diplomat_bytes.length, 8);
+  }
+}
+
+const Foo_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Foo_destroy(underlying);
+});
+
+export class Foo {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new(x) {
+    let x_diplomat_bytes = (new TextEncoder()).encode(x);
+    let x_diplomat_ptr = wasm.diplomat_alloc(x_diplomat_bytes.length, 1);
+    let x_diplomat_buf = new Uint8Array(wasm.memory.buffer, x_diplomat_ptr, x_diplomat_bytes.length);
+    x_diplomat_buf.set(x_diplomat_bytes, 0);
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new Foo(wasm.Foo_new(x_diplomat_ptr, x_diplomat_bytes.length));
+        out.owner = null;
+        return out;
+      })();
+      Foo_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    wasm.diplomat_free(x_diplomat_ptr, x_diplomat_bytes.length, 1);
+    return diplomat_out;
+  }
+
+  get_bar() {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new Bar(wasm.Foo_get_bar(this.underlying));
+        out.owner = null;
+        return out;
+      })();
+      Bar_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
   }
 }
 
@@ -385,6 +436,29 @@ export class OptionStruct {
       out.owner = null;
       return out;
     })();
+  }
+}
+
+const RefList_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.RefList_destroy(underlying);
+});
+
+export class RefList {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static node(data) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new RefList(wasm.RefList_node(data.underlying));
+        out.owner = null;
+        return out;
+      })();
+      RefList_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
   }
 }
 
