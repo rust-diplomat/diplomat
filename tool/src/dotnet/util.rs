@@ -42,7 +42,7 @@ pub fn collect_results<'ast>(
         ast::TypeName::Box(underlying) => {
             collect_results(underlying, in_path, env, results);
         }
-        ast::TypeName::Reference(underlying, _, _lt) => {
+        ast::TypeName::Reference(.., underlying) => {
             collect_results(underlying, in_path, env, results);
         }
         ast::TypeName::Option(underlying) => {
@@ -96,7 +96,7 @@ fn collect_errors_impl<'ast>(
         ast::TypeName::Box(underlying) => {
             collect_errors_impl(underlying, in_path, env, errors, is_err_variant);
         }
-        ast::TypeName::Reference(underlying, _, _lt) => {
+        ast::TypeName::Reference(.., underlying) => {
             collect_errors_impl(underlying, in_path, env, errors, is_err_variant);
         }
         ast::TypeName::Option(underlying) => {

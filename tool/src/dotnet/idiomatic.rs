@@ -316,7 +316,7 @@ fn gen_method(
             .filter(|param| {
                 matches!(
                     param.ty,
-                    ast::TypeName::StrReference(ast::Mutability::Mutable)
+                    ast::TypeName::StrReference(_, ast::Mutability::Mutable)
                 )
             })
             .map(|param| format!("{}Buf", param.name.to_lower_camel_case()))
@@ -417,7 +417,7 @@ fn gen_method(
             params_str_ref.push(name.clone());
             all_params_invocation.push(format!("{}BufPtr", name));
             all_params_invocation.push(format!("{}BufLength", name));
-        } else if let ast::TypeName::PrimitiveSlice(prim, ..) = param.ty {
+        } else if let ast::TypeName::PrimitiveSlice(.., prim) = param.ty {
             params_slice.push(SliceParam::new(name.clone(), prim));
             all_params_invocation.push(format!("{}Ptr", name));
             all_params_invocation.push(format!("{}Length", name));
@@ -717,13 +717,13 @@ fn gen_raw_type_name_decl_position(
     match typ {
         ast::TypeName::Primitive(_) => gen_type_name(typ, in_path, env, out),
         ast::TypeName::Option(opt) => match opt.as_ref() {
-            ast::TypeName::Box(ptr) | ast::TypeName::Reference(ptr, ..) => {
+            ast::TypeName::Box(ptr) | ast::TypeName::Reference(.., ptr) => {
                 gen_raw_type_name_decl_position(ptr.as_ref(), in_path, env, out)?;
                 write!(out, "*")
             }
             _ => panic!("Options without a pointer type are not yet supported"),
         },
-        ast::TypeName::Box(underlying) | ast::TypeName::Reference(underlying, ..) => {
+        ast::TypeName::Box(underlying) | ast::TypeName::Reference(.., underlying) => {
             gen_raw_type_name_decl_position(underlying.as_ref(), in_path, env, out)?;
             write!(out, "*")
         }
@@ -786,7 +786,7 @@ fn gen_return_type_remark_about_drop(
             writeln!(out, "/// A <c>{type_name}</c> allocated on C# side.")?;
             writeln!(out, "/// </returns>")
         }
-        ast::TypeName::Box(underlying) | ast::TypeName::Reference(underlying, ..) => {
+        ast::TypeName::Box(underlying) | ast::TypeName::Reference(.., underlying) => {
             match underlying.as_ref() {
                 ast::TypeName::Named(_) => {
                     let type_name = gen_type_name_to_string(underlying, in_path, env)?;
@@ -808,7 +808,7 @@ fn requires_null_check(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> b
     match typ {
         ast::TypeName::Primitive(_) => false,
         ast::TypeName::Box(boxed) => requires_null_check(boxed.as_ref(), in_path, env),
-        ast::TypeName::Reference(reference, ..) => {
+        ast::TypeName::Reference(.., reference) => {
             requires_null_check(reference.as_ref(), in_path, env)
         }
         ast::TypeName::Option(opt) => requires_null_check(opt.as_ref(), in_path, env),

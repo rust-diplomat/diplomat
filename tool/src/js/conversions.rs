@@ -19,9 +19,9 @@ pub fn gen_value_js_to_rust(
     post_logic: &mut Vec<String>,
 ) {
     match typ {
-        ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(_, _) => {
+        ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
             // TODO(#61): consider extracting into runtime function
-            if let ast::TypeName::StrReference(_) = typ {
+            if let ast::TypeName::StrReference(..) = typ {
                 pre_logic.push(format!(
                     "let {}_diplomat_bytes = (new TextEncoder()).encode({});",
                     param_name, param_name
@@ -32,7 +32,7 @@ pub fn gen_value_js_to_rust(
                     param_name, param_name
                 ));
             }
-            let align = if let ast::TypeName::PrimitiveSlice(prim, _) = typ {
+            let align = if let ast::TypeName::PrimitiveSlice(.., prim) = typ {
                 layout::primitive_size_alignment(*prim).align()
             } else {
                 1
@@ -333,12 +333,12 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
             write!(out, "{}", value_expr)?;
         }
 
-        ast::TypeName::Reference(underlying, _mutability, _lt) => {
+        ast::TypeName::Reference(.., underlying) => {
             // TODO(#12): pass in lifetime of the reference
             gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, "null", env, out)?;
         }
         ast::TypeName::Writeable => todo!(),
-        ast::TypeName::StrReference(_) => todo!(),
+        ast::TypeName::StrReference(..) => todo!(),
         ast::TypeName::PrimitiveSlice(..) => todo!(),
         ast::TypeName::Unit => write!(out, "{}", value_expr)?,
     }
@@ -432,7 +432,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             )?;
         }
 
-        ast::TypeName::Reference(typ, _mut, _lt) => {
+        ast::TypeName::Reference(.., typ) => {
             gen_rust_reference_to_js(
                 typ.as_ref(),
                 in_path,

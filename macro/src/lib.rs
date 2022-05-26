@@ -6,8 +6,9 @@ use diplomat_core::ast;
 
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
-        ast::TypeName::StrReference(mutability) | ast::TypeName::PrimitiveSlice(_, mutability) => {
-            let data_type = if let ast::TypeName::PrimitiveSlice(prim, ..) = &param.ty {
+        ast::TypeName::StrReference(_, mutability)
+        | ast::TypeName::PrimitiveSlice(_, mutability, _) => {
+            let data_type = if let ast::TypeName::PrimitiveSlice(_, _, prim) = &param.ty {
                 ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
             } else {
                 quote! { u8 }
@@ -75,7 +76,8 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
 
 fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
     match &param.ty {
-        ast::TypeName::StrReference(mutability) | ast::TypeName::PrimitiveSlice(_, mutability) => {
+        ast::TypeName::StrReference(_, mutability)
+        | ast::TypeName::PrimitiveSlice(_, mutability, _) => {
             let data_ident = Ident::new(
                 (param.name.clone() + "_diplomat_data").as_str(),
                 Span::call_site(),

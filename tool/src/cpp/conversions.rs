@@ -208,12 +208,12 @@ pub fn gen_cpp_to_rust<W: Write>(
     out: &mut W,
 ) -> String {
     match typ {
-        ast::TypeName::Reference(underlying, mutability, _lt) => gen_cpp_to_rust(
+        ast::TypeName::Reference(_, mutability, underlying) => gen_cpp_to_rust(
             cpp,
             path,
             Some(ReferenceMeta {
                 owned: false,
-                mutable: matches!(mutability, ast::Mutability::Mutable),
+                mutable: mutability.is_mutable(),
             }),
             underlying.as_ref(),
             in_path,
