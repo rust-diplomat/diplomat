@@ -11,7 +11,7 @@ pub fn collect_results<'a>(
     typ: &'a ast::TypeName,
     in_path: &ast::Path,
     env: &Env,
-    seen: &mut HashSet<(ast::Path, &'a ast::TypeName)>,
+    seen: &mut HashSet<&'a ast::TypeName>,
     results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
 ) {
     match typ {
@@ -27,12 +27,11 @@ pub fn collect_results<'a>(
             collect_results(underlying, in_path, env, seen, results);
         }
         ast::TypeName::Result(ok, err) => {
-            let seen_key = (in_path.clone(), typ);
-            if !seen.contains(&seen_key) {
-                seen.insert(seen_key.clone());
+            if !seen.contains(&typ) {
+                seen.insert(typ);
                 collect_results(ok, in_path, env, seen, results);
                 collect_results(err, in_path, env, seen, results);
-                results.push(seen_key);
+                results.push((in_path.clone(), typ));
             }
         }
         ast::TypeName::Writeable => {}
@@ -49,7 +48,7 @@ pub fn gen_result<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     if let ast::TypeName::Result(ok, err) = typ {
-        let result_name = format!("{}_{}", in_path.elements.join("_"), name_for_type(typ));
+        let result_name = name_for_type(typ);
         writeln!(out, "typedef struct {} {{", result_name)?;
         let mut result_indent = indented(out).with_str("    ");
         // zero-sized types in C unions work differently across C and C++

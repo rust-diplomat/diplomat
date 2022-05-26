@@ -25,6 +25,16 @@ export class ICU4XDataProvider {
     })();
     return diplomat_out;
   }
+
+  static returns_result() {
+    const diplomat_out = (() => {
+      const is_ok = wasm.ICU4XDataProvider_returns_result() == 1;
+      if (!is_ok) {
+        throw new diplomatRuntime.FFIError({});
+      }
+    })();
+    return diplomat_out;
+  }
 }
 
 const ICU4XFixedDecimal_box_destroy_registry = new FinalizationRegistry(underlying => {
