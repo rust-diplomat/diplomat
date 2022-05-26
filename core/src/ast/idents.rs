@@ -10,8 +10,8 @@ pub struct Ident(Cow<'static, str>);
 
 impl Ident {
     /// Validate a string
-    fn validate(string: &str) {
-        let _ = syn::parse_str::<syn::Ident>(string).expect("Invalid identifier");
+    fn validate(string: &str) -> syn::Result<()> {
+        syn::parse_str::<syn::Ident>(string).map(|_| {})
     }
 
     pub fn to_syn(&self) -> syn::Ident {
@@ -26,14 +26,14 @@ impl Ident {
 
 impl From<&'static str> for Ident {
     fn from(string: &'static str) -> Self {
-        Self::validate(string);
+        Self::validate(string).unwrap();
         Self(Cow::from(string))
     }
 }
 
 impl From<String> for Ident {
     fn from(string: String) -> Self {
-        Self::validate(&string);
+        Self::validate(&string).unwrap();
         Self(Cow::from(string))
     }
 }
