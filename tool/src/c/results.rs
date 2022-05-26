@@ -41,7 +41,12 @@ pub fn collect_results<'a>(
     }
 }
 
-pub fn gen_result<W: fmt::Write>(typ: &ast::TypeName, in_path: &ast::Path, env: &Env, out: &mut W) -> fmt::Result {
+pub fn gen_result<W: fmt::Write>(
+    typ: &ast::TypeName,
+    in_path: &ast::Path,
+    env: &Env,
+    out: &mut W,
+) -> fmt::Result {
     if let ast::TypeName::Result(ok, err) = typ {
         let result_name = name_for_type(typ);
         writeln!(out, "typedef struct {} {{", result_name)?;
