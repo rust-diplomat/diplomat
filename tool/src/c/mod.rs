@@ -45,8 +45,8 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
         )?;
     }
 
-    for typ in &all_results {
-        gen_result_header(typ, outs, env)?;
+    for (ref in_path, typ) in &all_results {
+        gen_result_header(typ, in_path, outs, env)?;
     }
 
     Ok(())
@@ -56,7 +56,7 @@ fn gen_struct_header<'a>(
     typ: &'a ast::CustomType,
     in_path: &ast::Path,
     seen_results: &mut HashSet<&'a ast::TypeName>,
-    all_results: &mut Vec<&'a ast::TypeName>,
+    all_results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
     outs: &mut HashMap<String, String>,
     env: &Env,
 ) -> Result<(), fmt::Error> {
@@ -166,11 +166,11 @@ fn gen_struct_header<'a>(
 
 fn gen_result_header(
     typ: &ast::TypeName,
+    in_path: &ast::Path,
     outs: &mut HashMap<String, String>,
     env: &Env,
 ) -> fmt::Result {
     if let ast::TypeName::Result(ok, err) = typ {
-        let empty = ast::Path::empty();
         let out = outs
             .entry(format!("{}.h", name_for_type(typ)))
             .or_insert_with(String::new);
@@ -190,7 +190,7 @@ fn gen_result_header(
         let mut seen_includes = HashSet::new();
         gen_includes(
             ok.as_ref(),
-            &empty,
+            &in_path,
             true,
             false,
             env,
@@ -199,7 +199,7 @@ fn gen_result_header(
         )?;
         gen_includes(
             err.as_ref(),
-            &empty,
+            &in_path,
             true,
             false,
             env,
@@ -207,7 +207,7 @@ fn gen_result_header(
             out,
         )?;
 
-        gen_result(typ, env, out)?;
+        gen_result(typ, in_path, env, out)?;
 
         writeln!(out, "#ifdef __cplusplus")?;
         writeln!(out, "}}")?;

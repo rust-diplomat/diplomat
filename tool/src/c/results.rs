@@ -12,7 +12,7 @@ pub fn collect_results<'a>(
     in_path: &ast::Path,
     env: &Env,
     seen: &mut HashSet<&'a ast::TypeName>,
-    results: &mut Vec<&'a ast::TypeName>,
+    results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
 ) {
     match typ {
         ast::TypeName::Named(_) => {}
@@ -31,7 +31,7 @@ pub fn collect_results<'a>(
                 seen.insert(typ);
                 collect_results(ok, in_path, env, seen, results);
                 collect_results(err, in_path, env, seen, results);
-                results.push(typ);
+                results.push((in_path.clone(), typ));
             }
         }
         ast::TypeName::Writeable => {}
@@ -41,7 +41,7 @@ pub fn collect_results<'a>(
     }
 }
 
-pub fn gen_result<W: fmt::Write>(typ: &ast::TypeName, env: &Env, out: &mut W) -> fmt::Result {
+pub fn gen_result<W: fmt::Write>(typ: &ast::TypeName, in_path: &ast::Path, env: &Env, out: &mut W) -> fmt::Result {
     if let ast::TypeName::Result(ok, err) = typ {
         let result_name = name_for_type(typ);
         writeln!(out, "typedef struct {} {{", result_name)?;
@@ -51,14 +51,13 @@ pub fn gen_result<W: fmt::Write>(typ: &ast::TypeName, env: &Env, out: &mut W) ->
         // if parts are zero-sized. This matches what rustc effectively does
         // with zero-sized union variants
         if !ok.is_zst() || !err.is_zst() {
-            let empty = ast::Path::empty();
             writeln!(&mut result_indent, "union {{")?;
             let mut union_indent = indented(&mut result_indent).with_str("    ");
 
             if !ok.is_zst() {
                 gen_type(
                     ok,
-                    &empty,
+                    &in_path,
                     env,
                     &mut ((&mut union_indent) as &mut dyn fmt::Write),
                 )?;
@@ -68,7 +67,7 @@ pub fn gen_result<W: fmt::Write>(typ: &ast::TypeName, env: &Env, out: &mut W) ->
             if !err.is_zst() {
                 gen_type(
                     err,
-                    &empty,
+                    &in_path,
                     env,
                     &mut ((&mut union_indent) as &mut dyn fmt::Write),
                 )?;
