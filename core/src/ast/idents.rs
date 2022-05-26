@@ -15,6 +15,14 @@ impl Ident {
         syn::parse_str::<syn::Ident>(string).map(|_| {})
     }
 
+    /// Attempt to create a new `Ident`.
+    ///
+    /// This function fails if the input isn't valid according to
+    /// `proc_macro2::Ident`'s invariants.
+    pub fn try_new(string: String) -> syn::Result<Self> {
+        Self::validate(&string).map(|_| Self(Cow::from(string)))
+    }
+
     pub fn to_syn(&self) -> syn::Ident {
         syn::Ident::new(self.as_str(), Span::call_site())
     }
