@@ -11,8 +11,8 @@ pub fn collect_results<'a>(
     typ: &'a ast::TypeName,
     in_path: &ast::Path,
     env: &Env,
-    seen: &mut HashSet<(ast::Path, &'a ast::TypeName)>,
-    results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
+    seen: &mut HashSet<&'a ast::TypeName>,
+    results: &mut Vec<&'a ast::TypeName>,
 ) {
     match typ {
         ast::TypeName::Named(_) => {}
@@ -27,12 +27,11 @@ pub fn collect_results<'a>(
             collect_results(underlying, in_path, env, seen, results);
         }
         ast::TypeName::Result(ok, err) => {
-            let seen_key = (in_path.clone(), typ);
-            if !seen.contains(&seen_key) {
-                seen.insert(seen_key.clone());
+            if !seen.contains(&typ) {
+                seen.insert(typ);
                 collect_results(ok, in_path, env, seen, results);
                 collect_results(err, in_path, env, seen, results);
-                results.push(seen_key);
+                results.push(typ);
             }
         }
         ast::TypeName::Writeable => {}
@@ -42,12 +41,7 @@ pub fn collect_results<'a>(
     }
 }
 
-pub fn gen_result<W: fmt::Write>(
-    typ: &ast::TypeName,
-    in_path: &ast::Path,
-    env: &Env,
-    out: &mut W,
-) -> fmt::Result {
+pub fn gen_result<W: fmt::Write>(typ: &ast::TypeName, env: &Env, out: &mut W) -> fmt::Result {
     if let ast::TypeName::Result(ok, err) = typ {
         let result_name = name_for_type(typ);
         writeln!(out, "typedef struct {} {{", result_name)?;
@@ -57,13 +51,14 @@ pub fn gen_result<W: fmt::Write>(
         // if parts are zero-sized. This matches what rustc effectively does
         // with zero-sized union variants
         if !ok.is_zst() || !err.is_zst() {
+            let empty = ast::Path::empty();
             writeln!(&mut result_indent, "union {{")?;
             let mut union_indent = indented(&mut result_indent).with_str("    ");
 
             if !ok.is_zst() {
                 gen_type(
                     ok,
-                    in_path,
+                    &empty,
                     env,
                     &mut ((&mut union_indent) as &mut dyn fmt::Write),
                 )?;
@@ -73,7 +68,7 @@ pub fn gen_result<W: fmt::Write>(
             if !err.is_zst() {
                 gen_type(
                     err,
-                    in_path,
+                    &empty,
                     env,
                     &mut ((&mut union_indent) as &mut dyn fmt::Write),
                 )?;
