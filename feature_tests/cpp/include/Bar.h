@@ -1,5 +1,5 @@
-#ifndef OwnershipEater_H
-#define OwnershipEater_H
+#ifndef Bar_H
+#define Bar_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,10 +10,9 @@
 extern "C" {
 #endif
 
-typedef struct OwnershipEater OwnershipEater;
+typedef struct Bar Bar;
 
-OwnershipEater* OwnershipEater_new();
-void OwnershipEater_destroy(OwnershipEater* self);
+void Bar_destroy(Bar* self);
 
 #ifdef __cplusplus
 }

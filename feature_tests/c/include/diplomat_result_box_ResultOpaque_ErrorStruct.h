@@ -1,5 +1,5 @@
-#ifndef result_box_ResultOpaque_void_H
-#define result_box_ResultOpaque_void_H
+#ifndef diplomat_result_box_ResultOpaque_ErrorStruct_H
+#define diplomat_result_box_ResultOpaque_ErrorStruct_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,12 +10,14 @@
 extern "C" {
 #endif
 typedef struct ResultOpaque ResultOpaque;
-typedef struct result_ffi_result_box_ResultOpaque_void {
+#include "ErrorStruct.h"
+typedef struct diplomat_result_box_ResultOpaque_ErrorStruct {
     union {
         ResultOpaque* ok;
+        ErrorStruct err;
     };
     bool is_ok;
-} result_ffi_result_box_ResultOpaque_void;
+} diplomat_result_box_ResultOpaque_ErrorStruct;
 #ifdef __cplusplus
 }
 #endif

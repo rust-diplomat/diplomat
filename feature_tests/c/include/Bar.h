@@ -1,5 +1,5 @@
-#ifndef Counter_H
-#define Counter_H
+#ifndef Bar_H
+#define Bar_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,12 +10,9 @@
 extern "C" {
 #endif
 
-typedef struct Counter Counter;
+typedef struct Bar Bar;
 
-Counter* Counter_new();
-
-size_t Counter_count(const Counter* self);
-void Counter_destroy(Counter* self);
+void Bar_destroy(Bar* self);
 
 #ifdef __cplusplus
 }
