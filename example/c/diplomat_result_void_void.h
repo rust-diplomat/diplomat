@@ -1,5 +1,5 @@
-#ifndef Counter_H
-#define Counter_H
+#ifndef diplomat_result_void_void_H
+#define diplomat_result_void_void_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,14 +9,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct Counter Counter;
-
-Counter* Counter_new();
-
-size_t Counter_count(const Counter* self);
-void Counter_destroy(Counter* self);
-
+typedef struct diplomat_result_void_void {
+    bool is_ok;
+} diplomat_result_void_void;
 #ifdef __cplusplus
 }
 #endif
