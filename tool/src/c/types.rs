@@ -46,7 +46,7 @@ pub fn gen_type<W: fmt::Write>(
         },
 
         ast::TypeName::Result(_, _) => {
-            write!(out, "{}_{}", in_path.elements.join("_"), name_for_type(typ))?;
+            write!(out, "{}", name_for_type(typ))?;
         }
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
@@ -75,7 +75,11 @@ pub fn name_for_type(typ: &ast::TypeName) -> String {
         ast::TypeName::Primitive(prim) => c_type_for_prim(prim).to_string(),
         ast::TypeName::Option(underlying) => format!("opt_{}", name_for_type(underlying)),
         ast::TypeName::Result(ok, err) => {
-            format!("result_{}_{}", name_for_type(ok), name_for_type(err))
+            format!(
+                "diplomat_result_{}_{}",
+                name_for_type(ok),
+                name_for_type(err)
+            )
         }
         ast::TypeName::Writeable => "writeable".to_string(),
         ast::TypeName::StrReference(ast::Mutability::Mutable) => "str_ref_mut".to_string(),
