@@ -6,6 +6,7 @@ use std::fmt;
 
 /// An identifier, analogous to `syn::Ident` and `proc_macro2::Ident`.
 #[derive(Hash, Eq, PartialEq, Serialize, Clone, Debug, Ord, PartialOrd)]
+#[serde(transparent)]
 pub struct Ident(Cow<'static, str>);
 
 impl Ident {
