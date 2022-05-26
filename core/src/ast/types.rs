@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use std::fmt;
 use std::iter::FromIterator;
 
-use super::{Docs, Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
+use super::{Docs, Enum, Ident, Method, OpaqueStruct, Path, Struct, ValidityError};
 use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
@@ -25,7 +25,7 @@ pub enum CustomType {
 
 impl CustomType {
     /// Get the name of the custom type, which is unique within a module.
-    pub fn name(&self) -> &String {
+    pub fn name(&self) -> &Ident {
         match self {
             CustomType::Struct(strct) => &strct.name,
             CustomType::Opaque(strct) => &strct.name,
@@ -113,7 +113,7 @@ pub enum ModSymbol {
     /// A symbol that is a pointer to another path.
     Alias(Path),
     /// A symbol that is a submodule.
-    SubModule(String),
+    SubModule(Ident),
     /// A symbol that is a custom type.
     CustomType(CustomType),
 }
@@ -165,9 +165,11 @@ impl PathType {
     /// to `PathType`s, we don't panic. We don't actually need to write the struct's
     /// field types expanded in the macro, so this function is more for correctness,
     pub fn extract_self_type(strct: &syn::ItemStruct) -> Self {
+        let self_name = (&strct.ident).into();
+
         PathType {
             path: Path {
-                elements: vec![strct.ident.to_string()],
+                elements: vec![self_name],
             },
             lifetimes: strct
                 .generics
@@ -294,7 +296,7 @@ impl TypeName {
                 path: syn::Path {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: Ident::new("Box", Span::call_site()),
+                        ident: syn::Ident::new("Box", Span::call_site()),
                         arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                             colon2_token: None,
                             lt_token: syn::token::Lt(Span::call_site()),
@@ -311,7 +313,7 @@ impl TypeName {
                 path: syn::Path {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: Ident::new("Option", Span::call_site()),
+                        ident: syn::Ident::new("Option", Span::call_site()),
                         arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                             colon2_token: None,
                             lt_token: syn::token::Lt(Span::call_site()),
@@ -329,11 +331,11 @@ impl TypeName {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![
                         PathSegment {
-                            ident: Ident::new("diplomat_runtime", Span::call_site()),
+                            ident: syn::Ident::new("diplomat_runtime", Span::call_site()),
                             arguments: PathArguments::None,
                         },
                         PathSegment {
-                            ident: Ident::new("DiplomatResult", Span::call_site()),
+                            ident: syn::Ident::new("DiplomatResult", Span::call_site()),
                             arguments: PathArguments::AngleBracketed(
                                 AngleBracketedGenericArguments {
                                     colon2_token: None,
@@ -490,7 +492,7 @@ impl TypeName {
                 let local_path = &local_path_type.path;
                 let mut cur_path = in_path.clone();
                 for (i, elem) in local_path.elements.iter().enumerate() {
-                    match elem.as_ref() {
+                    match elem.as_str() {
                         "crate" => {
                             // TODO(#34): get the name of enclosing crate from env when we support multiple crates
                             cur_path = Path::empty()
@@ -500,7 +502,7 @@ impl TypeName {
 
                         o => match env.get(&cur_path, o) {
                             Some(ModSymbol::Alias(p)) => {
-                                let mut remaining_elements: Vec<String> =
+                                let mut remaining_elements: Vec<Ident> =
                                     local_path.elements.iter().skip(i + 1).cloned().collect();
                                 let mut new_path = p.elements.clone();
                                 new_path.append(&mut remaining_elements);
@@ -804,7 +806,7 @@ pub enum Lifetime {
     /// Kept separate because it doesn't matter as much when tracking lifetimes but it'll still need
     /// to be mentioned in the type during codegen
     Static,
-    Named(String),
+    Named(Ident),
     Anonymous,
 }
 
@@ -837,7 +839,7 @@ impl From<&syn::Lifetime> for Lifetime {
         if lt.ident == "static" {
             Self::Static
         } else {
-            Self::Named(lt.ident.to_string())
+            Self::Named(Ident::from(&lt.ident))
         }
     }
 }

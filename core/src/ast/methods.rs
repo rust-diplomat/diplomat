@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use syn::*;
 
 use super::docs::Docs;
-use super::{Lifetime, LifetimeDef, Mutability, Path, PathType, TypeName, ValidityError};
+use super::{Ident, Lifetime, LifetimeDef, Mutability, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -11,13 +11,13 @@ use crate::Env;
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Method {
     /// The name of the method as initially declared.
-    pub name: String,
+    pub name: Ident,
 
     /// Lines of documentation for the method.
     pub docs: Docs,
 
     /// The name of the FFI function wrapping around the method.
-    pub full_path_name: String,
+    pub full_path_name: Ident,
 
     /// The `self` param of the method, if any.
     pub self_param: Option<Param>,
@@ -41,7 +41,7 @@ impl Method {
     ) -> Method {
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
-        let extern_ident = Ident::new(
+        let extern_ident = syn::Ident::new(
             format!("{}_{}", self_ident, method_ident).as_str(),
             m.sig.ident.span(),
         );
@@ -88,9 +88,9 @@ impl Method {
         };
 
         Method {
-            name: method_ident.to_string(),
+            name: Ident::from(method_ident),
             docs: Docs::from_attrs(&m.attrs),
-            full_path_name: extern_ident.to_string(),
+            full_path_name: Ident::from(&extern_ident),
             self_param,
             params: all_params,
             return_type: return_ty,
@@ -182,6 +182,8 @@ mod tests {
 
     use syn;
 
+    use crate::ast::Ident;
+
     use super::{Method, Path, PathType};
 
     #[test]
@@ -194,7 +196,7 @@ mod tests {
 
                 }
             },
-            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
 
@@ -209,7 +211,7 @@ mod tests {
                     x
                 }
             },
-            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
     }
@@ -222,7 +224,7 @@ mod tests {
 
                 }
             },
-            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
 
@@ -233,7 +235,7 @@ mod tests {
                     x
                 }
             },
-            PathType::new(Path::empty().sub_path("MyStructContainingMethod".to_string())),
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
     }

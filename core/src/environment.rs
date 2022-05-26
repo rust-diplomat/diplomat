@@ -13,7 +13,7 @@ pub struct Env {
 /// The type resolution environment within a specific module
 #[derive(Default, Clone)]
 pub struct ModuleEnv {
-    pub(crate) module: BTreeMap<String, ModSymbol>,
+    pub(crate) module: BTreeMap<Ident, ModSymbol>,
 }
 
 impl Env {
@@ -29,7 +29,7 @@ impl Env {
     /// Iterate over all items in the environment
     ///
     /// This will occur in a stable lexically sorted order by path and then name
-    pub fn iter_items(&self) -> impl Iterator<Item = (&Path, &String, &ModSymbol)> + '_ {
+    pub fn iter_items(&self) -> impl Iterator<Item = (&Path, &Ident, &ModSymbol)> + '_ {
         self.env
             .iter()
             .flat_map(|(k, v)| v.module.iter().map(move |v2| (k, v2.0, v2.1)))
@@ -44,7 +44,7 @@ impl Env {
 }
 
 impl ModuleEnv {
-    pub(crate) fn insert(&mut self, name: String, symbol: ModSymbol) -> Option<ModSymbol> {
+    pub(crate) fn insert(&mut self, name: Ident, symbol: ModSymbol) -> Option<ModSymbol> {
         self.module.insert(name, symbol)
     }
 
@@ -54,14 +54,14 @@ impl ModuleEnv {
     }
 
     /// Iterate over all name-item pairs in this module
-    pub fn iter(&self) -> impl Iterator<Item = (&String, &ModSymbol)> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = (&Ident, &ModSymbol)> + '_ {
         self.module.iter()
     }
 
     /// Iterate over all names in this module
     ///
     /// This will occur in a stable lexically sorted order by name
-    pub fn names(&self) -> impl Iterator<Item = &String> + '_ {
+    pub fn names(&self) -> impl Iterator<Item = &Ident> + '_ {
         self.module.keys()
     }
 

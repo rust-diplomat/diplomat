@@ -22,6 +22,9 @@ pub use types::{
 mod paths;
 pub use paths::Path;
 
+mod idents;
+pub use idents::Ident;
+
 mod docs;
 pub use docs::{Docs, DocsUrlGenerator};
 

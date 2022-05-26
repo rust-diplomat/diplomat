@@ -83,30 +83,35 @@ pub fn type_name_for_prim(prim: &ast::PrimitiveType) -> &str {
 }
 
 /// Generates a struct name that uniquely identifies the given type.
-pub fn name_for_type(typ: &ast::TypeName) -> String {
+pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
     match typ {
         ast::TypeName::Named(name) => name.path.elements.last().unwrap().clone(),
-        ast::TypeName::Box(underlying) => format!("Box{}", name_for_type(underlying)),
+        ast::TypeName::Box(underlying) => {
+            ast::Ident::from(format!("Box{}", name_for_type(underlying)))
+        }
         ast::TypeName::Reference(underlying, ast::Mutability::Mutable, _lt) => {
-            format!("RefMut{}", name_for_type(underlying))
+            ast::Ident::from(format!("RefMut{}", name_for_type(underlying)))
         }
         ast::TypeName::Reference(underlying, ast::Mutability::Immutable, _lt) => {
-            format!("Ref{}", name_for_type(underlying))
+            ast::Ident::from(format!("Ref{}", name_for_type(underlying)))
         }
-        ast::TypeName::Primitive(prim) => prim.to_string().to_upper_camel_case(),
-        ast::TypeName::Option(underlying) => format!("Opt{}", name_for_type(underlying)),
+        ast::TypeName::Primitive(prim) => ast::Ident::from(prim.to_string().to_upper_camel_case()),
+        ast::TypeName::Option(underlying) => {
+            ast::Ident::from(format!("Opt{}", name_for_type(underlying)))
+        }
         ast::TypeName::Result(ok, err) => {
-            format!("Result{}{}", name_for_type(ok), name_for_type(err))
+            ast::Ident::from(format!("Result{}{}", name_for_type(ok), name_for_type(err)))
         }
-        ast::TypeName::Writeable => "Writeable".to_owned(),
-        ast::TypeName::StrReference(ast::Mutability::Mutable) => "StrRefMut".to_owned(),
-        ast::TypeName::StrReference(ast::Mutability::Immutable) => "StrRef".to_owned(),
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mutable) => {
-            format!("RefMutPrimSlice{}", prim.to_string().to_upper_camel_case())
-        }
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Immutable) => {
-            format!("RefPrimSlice{}", prim.to_string().to_upper_camel_case())
-        }
-        ast::TypeName::Unit => "Void".to_owned(),
+        ast::TypeName::Writeable => ast::Ident::from("Writeable"),
+        ast::TypeName::StrReference(ast::Mutability::Mutable) => ast::Ident::from("StrRefMut"),
+        ast::TypeName::StrReference(ast::Mutability::Immutable) => ast::Ident::from("StrRef"),
+        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mutable) => ast::Ident::from(format!(
+            "RefMutPrimSlice{}",
+            prim.to_string().to_upper_camel_case()
+        )),
+        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Immutable) => ast::Ident::from(
+            format!("RefPrimSlice{}", prim.to_string().to_upper_camel_case()),
+        ),
+        ast::TypeName::Unit => ast::Ident::from("Void"),
     }
 }

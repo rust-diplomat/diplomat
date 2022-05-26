@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
-use super::Method;
+use super::{Ident, Method};
 
 /// A fieldless enum declaration in an FFI module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
 pub struct Enum {
-    pub name: String,
+    pub name: Ident,
     pub docs: Docs,
     /// A list of variants of the enum. (name, discriminant, docs)
-    pub variants: Vec<(String, isize, Docs)>,
+    pub variants: Vec<(Ident, isize, Docs)>,
     pub methods: Vec<Method>,
 }
 
@@ -18,7 +18,7 @@ impl From<&syn::ItemEnum> for Enum {
     fn from(strct: &syn::ItemEnum) -> Enum {
         let mut last_discriminant = -1;
         Enum {
-            name: strct.ident.to_string(),
+            name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
             variants: strct
                 .variants
@@ -43,7 +43,7 @@ impl From<&syn::ItemEnum> for Enum {
                     last_discriminant = new_discriminant;
 
                     (
-                        v.ident.to_string(),
+                        (&v.ident).into(),
                         new_discriminant,
                         Docs::from_attrs(&v.attrs),
                     )

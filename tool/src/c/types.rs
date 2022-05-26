@@ -62,39 +62,41 @@ pub fn gen_type<W: fmt::Write>(
 ///
 /// This is primarily used for generating structs for result types,
 /// which require one struct for each distinct instance.
-pub fn name_for_type(typ: &ast::TypeName) -> String {
+pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
     match typ {
         ast::TypeName::Named(name) => name.path.elements.last().unwrap().clone(),
-        ast::TypeName::Box(underlying) => format!("box_{}", name_for_type(underlying)),
+        ast::TypeName::Box(underlying) => {
+            ast::Ident::from(format!("box_{}", name_for_type(underlying)))
+        }
         ast::TypeName::Reference(underlying, ast::Mutability::Mutable, _lt) => {
-            format!("ref_mut_{}", name_for_type(underlying))
+            ast::Ident::from(format!("ref_mut_{}", name_for_type(underlying)))
         }
         ast::TypeName::Reference(underlying, ast::Mutability::Immutable, _lt) => {
-            format!("ref_{}", name_for_type(underlying))
+            ast::Ident::from(format!("ref_{}", name_for_type(underlying)))
         }
-        ast::TypeName::Primitive(prim) => c_type_for_prim(prim).to_string(),
-        ast::TypeName::Option(underlying) => format!("opt_{}", name_for_type(underlying)),
-        ast::TypeName::Result(ok, err) => {
-            format!(
-                "diplomat_result_{}_{}",
-                name_for_type(ok),
-                name_for_type(err)
-            )
+        ast::TypeName::Primitive(prim) => ast::Ident::from(c_type_for_prim(prim)),
+        ast::TypeName::Option(underlying) => {
+            ast::Ident::from(format!("opt_{}", name_for_type(underlying)))
         }
-        ast::TypeName::Writeable => "writeable".to_string(),
-        ast::TypeName::StrReference(ast::Mutability::Mutable) => "str_ref_mut".to_string(),
-        ast::TypeName::StrReference(ast::Mutability::Immutable) => "str_ref".to_string(),
+        ast::TypeName::Result(ok, err) => ast::Ident::from(format!(
+            "diplomat_result_{}_{}",
+            name_for_type(ok),
+            name_for_type(err)
+        )),
+        ast::TypeName::Writeable => ast::Ident::from("writeable"),
+        ast::TypeName::StrReference(ast::Mutability::Mutable) => ast::Ident::from("str_ref_mut"),
+        ast::TypeName::StrReference(ast::Mutability::Immutable) => ast::Ident::from("str_ref"),
         ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mutable) => {
-            format!("ref_mut_prim_slice_{}", c_type_for_prim(prim))
+            ast::Ident::from(format!("ref_mut_prim_slice_{}", c_type_for_prim(prim)))
         }
         ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Immutable) => {
-            format!("ref_prim_slice_{}", c_type_for_prim(prim))
+            ast::Ident::from(format!("ref_prim_slice_{}", c_type_for_prim(prim)))
         }
-        ast::TypeName::Unit => "void".to_string(),
+        ast::TypeName::Unit => ast::Ident::from("void"),
     }
 }
 
-pub fn c_type_for_prim(prim: &PrimitiveType) -> &str {
+pub fn c_type_for_prim(prim: &PrimitiveType) -> &'static str {
     match prim {
         PrimitiveType::i8 => "int8_t",
         PrimitiveType::u8 => "uint8_t",

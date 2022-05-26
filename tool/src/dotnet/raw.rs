@@ -131,7 +131,7 @@ pub fn gen<'ast>(
 }
 
 fn gen_field(
-    name: &str,
+    name: &ast::Ident,
     docs: &ast::Docs,
     typ: &ast::TypeName,
     in_path: &ast::Path,
@@ -173,6 +173,7 @@ fn gen_method(
         " {}(",
         method
             .full_path_name
+            .as_str()
             .replace(&format!("{}_", typ.name()), "")
             .to_upper_camel_case()
     )?;
