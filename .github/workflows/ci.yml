@@ -30,6 +30,10 @@ jobs:
       run: cd example && ./gen_all.sh
     - name: Test example is fresh
       run: git diff --exit-code
+    - name: Generate feature tests
+      run: cd feature_tests && ./gen_all.sh
+    - name: Test example is fresh
+      run: git diff --exit-code
   tests-and-example:
     runs-on: ubuntu-latest
     steps:
