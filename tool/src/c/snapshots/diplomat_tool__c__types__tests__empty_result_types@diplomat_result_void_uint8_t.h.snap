@@ -1,0 +1,26 @@
+---
+source: tool/src/c/types.rs
+expression: out_texts.get(out).unwrap()
+---
+#ifndef diplomat_result_void_uint8_t_H
+#define diplomat_result_void_uint8_t_H
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "diplomat_runtime.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef struct diplomat_result_void_uint8_t {
+    union {
+        uint8_t err;
+    };
+    bool is_ok;
+} diplomat_result_void_uint8_t;
+#ifdef __cplusplus
+}
+#endif
+#endif
+
