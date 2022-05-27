@@ -1,7 +1,6 @@
 ---
 source: tool/src/c/structs.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 #ifndef MyStruct_H
 #define MyStruct_H
@@ -20,8 +19,6 @@ typedef struct MyStruct MyStruct;
 MyStruct* MyStruct_new_str(const char* v_data, size_t v_len);
 
 void MyStruct_set_str(MyStruct* self, const char* new_str_data, size_t new_str_len);
-
-void MyStruct_make_uppercase(MyStruct* self, char* some_str_data, size_t some_str_len);
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus

@@ -53,13 +53,13 @@ declared_types:
             name: self
             ty:
               Reference:
+                - Anonymous
+                - Mutable
                 - Named:
                     path:
                       elements:
                         - NonOpaqueStruct
                     lifetimes: []
-                - Mutable
-                - Anonymous
           params:
             - name: new_a
               ty:
@@ -98,13 +98,13 @@ declared_types:
             name: self
             ty:
               Reference:
+                - Anonymous
+                - Immutable
                 - Named:
                     path:
                       elements:
                         - OpaqueStruct
                     lifetimes: []
-                - Immutable
-                - Anonymous
           params: []
           return_type:
             Named:

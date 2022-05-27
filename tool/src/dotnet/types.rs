@@ -24,7 +24,7 @@ pub fn gen_type_name(
 
         ast::TypeName::Box(underlying) => gen_type_name(underlying.as_ref(), in_path, env, out),
 
-        ast::TypeName::Reference(underlying, _mutable, _lt) => {
+        ast::TypeName::Reference(.., underlying) => {
             gen_type_name(underlying.as_ref(), in_path, env, out)
         }
 
@@ -47,11 +47,11 @@ pub fn gen_type_name(
             write!(out, "DiplomatWriteable")
         }
 
-        ast::TypeName::StrReference(_mut) => {
+        ast::TypeName::StrReference(..) => {
             write!(out, "string")
         }
 
-        ast::TypeName::PrimitiveSlice(prim, _mut) => {
+        ast::TypeName::PrimitiveSlice(.., prim) => {
             write!(out, "{}[]", type_name_for_prim(prim))
         }
 
@@ -89,10 +89,10 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
         ast::TypeName::Box(underlying) => {
             ast::Ident::from(format!("Box{}", name_for_type(underlying)))
         }
-        ast::TypeName::Reference(underlying, ast::Mutability::Mutable, _lt) => {
+        ast::TypeName::Reference(_, ast::Mutability::Mutable, underlying) => {
             ast::Ident::from(format!("RefMut{}", name_for_type(underlying)))
         }
-        ast::TypeName::Reference(underlying, ast::Mutability::Immutable, _lt) => {
+        ast::TypeName::Reference(_, ast::Mutability::Immutable, underlying) => {
             ast::Ident::from(format!("Ref{}", name_for_type(underlying)))
         }
         ast::TypeName::Primitive(prim) => ast::Ident::from(prim.to_string().to_upper_camel_case()),
@@ -103,13 +103,11 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             ast::Ident::from(format!("Result{}{}", name_for_type(ok), name_for_type(err)))
         }
         ast::TypeName::Writeable => ast::Ident::from("Writeable"),
-        ast::TypeName::StrReference(ast::Mutability::Mutable) => ast::Ident::from("StrRefMut"),
-        ast::TypeName::StrReference(ast::Mutability::Immutable) => ast::Ident::from("StrRef"),
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mutable) => ast::Ident::from(format!(
-            "RefMutPrimSlice{}",
-            prim.to_string().to_upper_camel_case()
-        )),
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Immutable) => ast::Ident::from(
+        ast::TypeName::StrReference(_) => ast::Ident::from("StrRef"),
+        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => ast::Ident::from(
+            format!("RefMutPrimSlice{}", prim.to_string().to_upper_camel_case()),
+        ),
+        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Immutable, prim) => ast::Ident::from(
             format!("RefPrimSlice{}", prim.to_string().to_upper_camel_case()),
         ),
         ast::TypeName::Unit => ast::Ident::from("Void"),
