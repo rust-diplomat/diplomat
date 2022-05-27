@@ -17,6 +17,13 @@ impl From<&syn::ItemEnum> for Enum {
     /// Extract an [`Enum`] metadata value from an AST node.
     fn from(strct: &syn::ItemEnum) -> Enum {
         let mut last_discriminant = -1;
+        if !strct.generics.params.is_empty() {
+            // Generic types are not allowed.
+            // Assuming all enums cannot have lifetimes? We don't even have a
+            // `lifetimes` field. If we change our minds we can adjust this later
+            // and update the `CustomType::lifetimes` API accordingly.
+            panic!("Enums cannot have generic parameters");
+        }
         Enum {
             name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
