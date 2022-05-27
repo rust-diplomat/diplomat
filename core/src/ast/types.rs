@@ -662,7 +662,13 @@ impl TypeName {
                 let name = path_type.path.elements.last().unwrap();
                 if let ModSymbol::CustomType(custom) = &env[name.as_str()] {
                     if let Some(lifetimes) = custom.lifetimes() {
-                        if path_type.lifetimes.len() != lifetimes.len() {
+                        let lifetimes_provided = path_type
+                            .lifetimes
+                            .iter()
+                            .filter(|lt| !matches!(lt, Lifetime::Anonymous))
+                            .count();
+
+                        if lifetimes_provided != lifetimes.len() {
                             // There's a discrepency between the number of declared
                             // lifetimes and the number of lifetimes provided in
                             // the return type, so there must have been elision.
