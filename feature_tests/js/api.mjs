@@ -166,15 +166,6 @@ export class MyString {
     });
     return diplomat_out;
   }
-
-  static make_uppercase(v) {
-    let v_diplomat_bytes = (new TextEncoder()).encode(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 1);
-    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
-    v_diplomat_buf.set(v_diplomat_bytes, 0);
-    const diplomat_out = wasm.MyString_make_uppercase(v_diplomat_ptr, v_diplomat_bytes.length);
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 1);
-  }
 }
 
 const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {

@@ -92,21 +92,6 @@ public partial class MyString: IDisposable
         }
     }
 
-    public static string MakeUppercase(string v)
-    {
-        unsafe
-        {
-            byte[] vBuf = DiplomatUtils.StringToUtf8(v);
-            nuint vBufLength = (nuint)vBuf.Length;
-            fixed (byte* vBufPtr = vBuf)
-            {
-                Raw.MyString.MakeUppercase(vBufPtr, vBufLength);
-                string retVal = DiplomatUtils.Utf8ToString(vBuf);
-                return retVal;
-            }
-        }
-    }
-
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

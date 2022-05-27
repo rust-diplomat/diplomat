@@ -22,5 +22,3 @@
     .. js:function:: set_str(new_str)
 
     .. js:function:: get_str()
-
-    .. js:staticfunction:: make_uppercase(v)

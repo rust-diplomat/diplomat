@@ -18,5 +18,3 @@
     .. cpp:function:: template<typename W> void get_str_to_writeable(W& writeable) const
 
     .. cpp:function:: std::string get_str() const
-
-    .. cpp:function:: static void make_uppercase(std::string_view v)
