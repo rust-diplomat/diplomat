@@ -10,7 +10,7 @@ use std::fmt;
 use std::iter::FromIterator;
 
 use super::{Docs, Enum, Ident, Method, OpaqueStruct, Path, Struct, ValidityError};
-use crate::Env;
+use crate::{Env, ModuleEnv};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
@@ -630,6 +630,8 @@ impl TypeName {
     /// are always behind a box or reference, and that non-opaque custom types are *never* behind
     /// references or boxes.
     ///
+    /// Also checks that there are no elided lifetimes in the return type.
+    ///
     /// Errors are pushed into the `errors` vector.
     pub fn check_validity<'a>(
         &'a self,
@@ -639,6 +641,74 @@ impl TypeName {
     ) {
         self.check_opaque(in_path, env, false, errors);
         self.check_option(errors);
+    }
+
+    /// Checks the validity of return types.
+    ///
+    /// This is equivalent to `TypeName::check_validity`, but it also ensures
+    /// that the type doesn't elide any lifetimes.
+    ///
+    /// Once we decide to support lifetime elision in return types, this function
+    /// will probably be removed.
+    pub fn check_return_type_validity(
+        &self,
+        in_path: &Path,
+        env: &Env,
+        errors: &mut Vec<ValidityError>,
+    ) {
+        self.check_validity(in_path, env, errors);
+        self.check_lifetime_elision(self, &env[in_path], errors);
+    }
+
+    /// Checks that there aren't any elided lifetimes.
+    fn check_lifetime_elision(
+        &self,
+        full_type: &Self,
+        env: &ModuleEnv,
+        errors: &mut Vec<ValidityError>,
+    ) {
+        match self {
+            TypeName::Named(path_type) => {
+                // I'm very iffy on this logic so please double check
+                let name = path_type.path.elements.last().unwrap();
+                if let ModSymbol::CustomType(custom) = &env[name.as_str()] {
+                    if let Some(lifetimes) = custom.lifetimes() {
+                        let expected = lifetimes.len();
+                        if path_type.lifetimes.len() != expected {
+                            // There's a discrepency between the number of declared
+                            // lifetimes and the number of lifetimes provided in
+                            // the return type, so there must have been elision.
+                            errors.push(ValidityError::LifetimeElisionInReturn {
+                                full_type: full_type.clone(),
+                                sub_type: self.clone(),
+                                expected,
+                            });
+                        } else {
+                            // The struct was written with the number of lifetimes
+                            // that it was declared with, so we're good.
+                        }
+                    } else {
+                        // `CustomType::Enum`, which doesn't have any lifetimes.
+                        // We already checked that enums don't have generics in
+                        // core.
+                    }
+                } else {
+                    // There was a `Alias`/`Submodule` that has the same name as
+                    // the type. Is this an error? Should we allow this?
+                }
+            }
+            TypeName::Reference(..) => todo!("add when #158 merges"),
+            TypeName::Box(ty) | TypeName::Option(ty) => {
+                ty.check_lifetime_elision(full_type, env, errors)
+            }
+            TypeName::Result(ok, err) => {
+                ok.check_lifetime_elision(full_type, env, errors);
+                err.check_lifetime_elision(full_type, env, errors);
+            }
+            TypeName::StrReference(..) => todo!("add when #158 merges"),
+            TypeName::PrimitiveSlice(..) => todo!("add when #158 merges"),
+            _ => {}
+        }
     }
 
     pub fn is_zst(&self) -> bool {

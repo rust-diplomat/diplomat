@@ -80,10 +80,14 @@ impl Method {
         });
 
         let return_ty = match &m.sig.output {
-            ReturnType::Type(_, return_typ) => Some(TypeName::from_syn(
-                return_typ.as_ref(),
-                Some(self_path_type),
-            )),
+            ReturnType::Type(_, return_typ) => {
+                // When we allow lifetime elision, this is where we would want to
+                // support it so we can insert the expanded explicit lifetimes.
+                Some(TypeName::from_syn(
+                    return_typ.as_ref(),
+                    Some(self_path_type),
+                ))
+            }
             ReturnType::Default => None,
         };
 
@@ -105,15 +109,15 @@ impl Method {
         env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
-        self.self_param
-            .iter()
-            .for_each(|m| m.ty.check_validity(in_path, env, errors));
-        self.params
-            .iter()
-            .for_each(|m| m.ty.check_validity(in_path, env, errors));
-        self.return_type
-            .iter()
-            .for_each(|t| t.check_validity(in_path, env, errors));
+        if let Some(ref m) = self.self_param {
+            m.ty.check_validity(in_path, env, errors);
+        }
+        for m in self.params.iter() {
+            m.ty.check_validity(in_path, env, errors);
+        }
+        if let Some(ref t) = self.return_type {
+            t.check_return_type_validity(in_path, env, errors);
+        }
     }
 
     /// Checks whether the method qualifies for special writeable handling.
