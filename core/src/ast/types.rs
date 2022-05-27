@@ -483,27 +483,28 @@ impl TypeName {
         }
     }
 
-    pub fn lifetimes<'a>(&'a self) -> Vec<&'a Lifetime> {
-        fn inner<'b>(this: &'b TypeName, lifetimes: &mut Vec<&'b Lifetime>) {
-            match this {
-                TypeName::Named(path_type) => lifetimes.extend(&path_type.lifetimes),
-                TypeName::Reference(lt, _, ty) => {
-                    lifetimes.push(lt);
-                    inner(ty, lifetimes);
-                }
-                TypeName::Box(ty) | TypeName::Option(ty) => inner(ty, lifetimes),
-                TypeName::Result(ok, err) => {
-                    inner(ok, lifetimes);
-                    inner(err, lifetimes);
-                }
-                TypeName::StrReference(lt) | TypeName::PrimitiveSlice(lt, ..) => lifetimes.push(lt),
-                _ => {}
+    /// Recurse down the type tree, visiting all lifetimes.
+    ///
+    /// Using this function, you can collect all the lifetimes into a collection,
+    /// or examine each one without having to make any additional allocations.
+    pub fn visit_lifetimes<'a, F>(&'a self, mut visit: F)
+    where
+        F: FnMut(&'a Lifetime),
+    {
+        match self {
+            TypeName::Named(path_type) => path_type.lifetimes.iter().for_each(visit),
+            TypeName::Reference(lt, _, ty) => {
+                visit(lt);
+                ty.visit_lifetimes(visit);
             }
+            TypeName::Box(ty) | TypeName::Option(ty) => ty.visit_lifetimes(visit),
+            TypeName::Result(ok, err) => {
+                ok.visit_lifetimes(&mut visit);
+                err.visit_lifetimes(visit);
+            }
+            TypeName::StrReference(lt) | TypeName::PrimitiveSlice(lt, ..) => visit(lt),
+            _ => {}
         }
-
-        let mut lifetimes = vec![];
-        inner(self, &mut lifetimes);
-        lifetimes
     }
 
     /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
