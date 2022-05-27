@@ -84,10 +84,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             name_for_type(err)
         )),
         ast::TypeName::Writeable => ast::Ident::from("writeable"),
-        ast::TypeName::StrReference(_lt, ast::Mutability::Mutable) => {
-            ast::Ident::from("str_ref_mut")
-        }
-        ast::TypeName::StrReference(_lt, ast::Mutability::Immutable) => ast::Ident::from("str_ref"),
+        ast::TypeName::StrReference(_) => ast::Ident::from("str_ref"),
         ast::TypeName::PrimitiveSlice(_lt, ast::Mutability::Mutable, prim) => {
             ast::Ident::from(format!("ref_mut_prim_slice_{}", c_type_for_prim(prim)))
         }

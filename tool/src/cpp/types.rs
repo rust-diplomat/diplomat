@@ -118,11 +118,7 @@ fn gen_type_inner<W: fmt::Write>(
             write!(out, "capi::DiplomatWriteable")?;
         }
 
-        ast::TypeName::StrReference(_, ast::Mutability::Mutable) => {
-            write!(out, "{}", library_config.string_view.expr)?;
-        }
-
-        ast::TypeName::StrReference(_, ast::Mutability::Immutable) => {
+        ast::TypeName::StrReference(_) => {
             write!(out, "const {}", library_config.string_view.expr)?;
         }
 
@@ -245,10 +241,6 @@ mod tests {
 
                 impl MyStruct {
                     pub fn new(v: &str) -> MyStruct {
-                        unimplemented!()
-                    }
-
-                    pub fn make_uppercase(v: &mut str) {
                         unimplemented!()
                     }
                 }

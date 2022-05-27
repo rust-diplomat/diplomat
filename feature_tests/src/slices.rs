@@ -19,10 +19,6 @@ mod ffi {
             let _ = write!(writeable, "{}", self.0);
             writeable.flush();
         }
-
-        pub fn make_uppercase(v: &mut str) {
-            v.make_ascii_uppercase();
-        }
     }
 
     #[diplomat::opaque]

@@ -76,17 +76,8 @@ pub fn gen_method<W: fmt::Write>(
             write!(out, ", ")?;
         }
 
-        if let ast::TypeName::StrReference(_, mutability) = &param.ty {
-            write!(
-                out,
-                "{0}char* {1}_data, size_t {1}_len",
-                if mutability.is_immutable() {
-                    "const "
-                } else {
-                    ""
-                },
-                param.name
-            )?;
+        if let ast::TypeName::StrReference(_) = &param.ty {
+            write!(out, "const char* {0}_data, size_t {0}_len", param.name)?;
         } else if let ast::TypeName::PrimitiveSlice(_, mutability, prim) = &param.ty {
             write!(
                 out,
@@ -178,10 +169,6 @@ mod tests {
                     }
 
                     pub fn set_str(&mut self, new_str: &str) {
-                        unimplemented!()
-                    }
-
-                    pub fn make_uppercase(&mut self, some_str: &mut str) {
                         unimplemented!()
                     }
                 }

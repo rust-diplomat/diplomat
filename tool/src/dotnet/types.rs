@@ -103,8 +103,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             ast::Ident::from(format!("Result{}{}", name_for_type(ok), name_for_type(err)))
         }
         ast::TypeName::Writeable => ast::Ident::from("Writeable"),
-        ast::TypeName::StrReference(_, ast::Mutability::Mutable) => ast::Ident::from("StrRefMut"),
-        ast::TypeName::StrReference(_, ast::Mutability::Immutable) => ast::Ident::from("StrRef"),
+        ast::TypeName::StrReference(_) => ast::Ident::from("StrRef"),
         ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => ast::Ident::from(
             format!("RefMutPrimSlice{}", prim.to_string().to_upper_camel_case()),
         ),

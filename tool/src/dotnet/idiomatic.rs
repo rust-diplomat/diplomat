@@ -307,55 +307,6 @@ fn gen_method(
         )?;
     }
 
-    // Builtin string type of C# is immutable.
-    // The idiomatic way is to return a new string with the modified content.
-    let rearranged_mutable_str = {
-        let mut mut_str_list: Vec<String> = method
-            .params
-            .iter()
-            .filter(|param| {
-                matches!(
-                    param.ty,
-                    ast::TypeName::StrReference(_, ast::Mutability::Mutable)
-                )
-            })
-            .map(|param| format!("{}Buf", param.name.to_lower_camel_case()))
-            .collect();
-
-        if mut_str_list.len() > 1 {
-            println!(
-                "{} ({})",
-                "[WARNING] idiomatic API generation for functions taking several mutable string slices is not supported".yellow(),
-                method.name,
-            );
-            return Ok(());
-        }
-
-        if let Some(mut_str_name) = mut_str_list.pop() {
-            let is_ret_type_compatible = match &method.return_type {
-                Some(ast::TypeName::Unit) => true,
-                Some(ast::TypeName::Result(ok_variant, _)) => {
-                    matches!(ok_variant.as_ref(), ast::TypeName::Unit)
-                }
-                Some(_) => false,
-                None => true,
-            };
-
-            if !is_ret_type_compatible {
-                println!(
-                "{} ({})",
-                "[WARNING] idiomatic API generation for functions taking a mutable string slice and returning a value is not supported".yellow(),
-                method.name,
-            );
-                return Ok(());
-            }
-
-            Some(mut_str_name)
-        } else {
-            None
-        }
-    };
-
     writeln!(out)?;
 
     gen_doc_block(out, &method.docs.to_markdown(docs_url_gen))?;
@@ -384,7 +335,7 @@ fn gen_method(
     if method.self_param.is_none() {
         write!(out, "static ")?;
     }
-    if rearranged_writeable || rearranged_mutable_str.is_some() {
+    if rearranged_writeable {
         write!(out, "string ")?;
     } else {
         gen_type_name_return_position(&method.return_type, in_path, env, out)?;
@@ -588,12 +539,6 @@ fn gen_method(
             if rearranged_writeable {
                 writeln!(out, "string retVal = writeable.ToUnicode();")?;
                 writeln!(out, "writeable.Dispose();")?;
-                writeln!(out, "return retVal;")?;
-            } else if let Some(var_name) = rearranged_mutable_str {
-                writeln!(
-                    out,
-                    "string retVal = DiplomatUtils.Utf8ToString({var_name});"
-                )?;
                 writeln!(out, "return retVal;")?;
             } else {
                 match ret_typ {

@@ -268,7 +268,7 @@ pub enum TypeName {
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
     /// A `&str` type.
-    StrReference(Lifetime, Mutability),
+    StrReference(Lifetime),
     /// A `&[T]` type, where `T` is a primitive.
     PrimitiveSlice(Lifetime, Mutability, PrimitiveType),
     /// The `()` type.
@@ -354,9 +354,11 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference(lifetime, mutability) => {
-                syn::parse_str(&format!("{}str", ReferenceDisplay(lifetime, mutability))).unwrap()
-            }
+            TypeName::StrReference(lifetime) => syn::parse_str(&format!(
+                "{}str",
+                ReferenceDisplay(lifetime, &Mutability::Immutable)
+            ))
+            .unwrap(),
             TypeName::PrimitiveSlice(lifetime, mutability, name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
@@ -391,7 +393,10 @@ impl TypeName {
                 let mutability = Mutability::from_syn(&r.mutability);
 
                 if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference(lifetime, mutability);
+                    if mutability.is_mutable() {
+                        panic!("mutable `str` references are disallowed");
+                    }
+                    return TypeName::StrReference(lifetime);
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -631,7 +636,10 @@ impl From<&syn::Type> for TypeName {
                 let mutability = Mutability::from_syn(&r.mutability);
 
                 if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference(lifetime, mutability);
+                    if mutability.is_mutable() {
+                        panic!("mutable `str` references are disallowed");
+                    }
+                    return TypeName::StrReference(lifetime);
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -729,8 +737,12 @@ impl fmt::Display for TypeName {
             TypeName::Option(ty) => write!(f, "Option<{}>", ty),
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
             TypeName::Writeable => f.write_str("DiplomatWriteable"),
-            TypeName::StrReference(lifetime, mutability) => {
-                write!(f, "{}str", ReferenceDisplay(lifetime, mutability))
+            TypeName::StrReference(lifetime) => {
+                write!(
+                    f,
+                    "{}str",
+                    ReferenceDisplay(lifetime, &Mutability::Immutable)
+                )
             }
             TypeName::PrimitiveSlice(lifetime, mutability, ty) => {
                 write!(f, "{}[{}]", ReferenceDisplay(lifetime, mutability), ty)
