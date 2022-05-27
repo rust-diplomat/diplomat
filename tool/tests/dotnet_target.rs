@@ -278,10 +278,6 @@ fn method_taking_str() {
                 pub fn set_str(&mut self, new_str: &str) {
                     unimplemented!()
                 }
-
-                pub fn make_uppercase(v: &mut str) {
-                    unimplemented!()
-                }
             }
         }
     }

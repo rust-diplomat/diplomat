@@ -15,14 +15,12 @@ pub fn collect_results<'a>(
     results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
 ) {
     match typ {
-        ast::TypeName::Named(_) => {}
         ast::TypeName::Box(underlying) => {
             collect_results(underlying, in_path, env, seen, results);
         }
-        ast::TypeName::Reference(underlying, _, _lt) => {
+        ast::TypeName::Reference(.., underlying) => {
             collect_results(underlying, in_path, env, seen, results);
         }
-        ast::TypeName::Primitive(_) => {}
         ast::TypeName::Option(underlying) => {
             collect_results(underlying, in_path, env, seen, results);
         }
@@ -34,10 +32,7 @@ pub fn collect_results<'a>(
                 results.push((in_path.clone(), typ));
             }
         }
-        ast::TypeName::Writeable => {}
-        ast::TypeName::StrReference(..) => {}
-        ast::TypeName::PrimitiveSlice(..) => {}
-        ast::TypeName::Unit => {}
+        _ => {}
     }
 }
 

@@ -314,13 +314,13 @@ fn gen_type_name_decl_position(
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Option(opt) => match opt.as_ref() {
-            ast::TypeName::Box(ptr) | ast::TypeName::Reference(ptr, ..) => {
+            ast::TypeName::Box(ptr) | ast::TypeName::Reference(.., ptr) => {
                 gen_type_name_decl_position(ptr.as_ref(), in_path, env, out)?;
                 write!(out, "*")
             }
             _ => panic!("Options without a pointer type are not yet supported"),
         },
-        ast::TypeName::Box(underlying) | ast::TypeName::Reference(underlying, ..) => {
+        ast::TypeName::Box(underlying) | ast::TypeName::Reference(.., underlying) => {
             gen_type_name_decl_position(underlying.as_ref(), in_path, env, out)?;
             write!(out, "*")
         }
@@ -353,10 +353,10 @@ fn gen_param(
         write!(out, "DiplomatWriteable* {name}")
     } else {
         match typ {
-            ast::TypeName::StrReference(_mut) => {
+            ast::TypeName::StrReference(..) => {
                 write!(out, "byte* {name}, nuint {name}Sz")
             }
-            ast::TypeName::PrimitiveSlice(prim, _mut) => {
+            ast::TypeName::PrimitiveSlice(.., prim) => {
                 write!(
                     out,
                     "{}* {name}, nuint {name}Sz",

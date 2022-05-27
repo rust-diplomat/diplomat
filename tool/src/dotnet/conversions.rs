@@ -60,7 +60,7 @@ pub fn to_idiomatic_object<W: fmt::Write>(
         ast::TypeName::Box(boxed) => {
             to_idiomatic_object(env, boxed.as_ref(), in_path, input_var_name, out)
         }
-        ast::TypeName::Reference(reference, ..) => {
+        ast::TypeName::Reference(.., reference) => {
             to_idiomatic_object(env, reference.as_ref(), in_path, input_var_name, out)
         }
         ast::TypeName::Option(opt) => {
@@ -97,7 +97,7 @@ pub fn to_raw_object<W: fmt::Write>(
         ast::TypeName::Box(boxed) => {
             to_raw_object(env, boxed.as_ref(), in_path, input_var_name, out)
         }
-        ast::TypeName::Reference(reference, ..) => {
+        ast::TypeName::Reference(.., reference) => {
             to_raw_object(env, reference.as_ref(), in_path, input_var_name, out)
         }
         ast::TypeName::Option(opt) => {

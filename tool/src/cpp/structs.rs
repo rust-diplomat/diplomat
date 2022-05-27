@@ -227,7 +227,7 @@ fn gen_method<W: fmt::Write>(
 
         for param in params_to_gen.iter() {
             match param.ty {
-                ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(_, _) => {
+                ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
                     all_params_invocation.push(format!("{}.data()", param.name));
                     all_params_invocation.push(format!("{}.size()", param.name));
                 }

@@ -91,9 +91,9 @@ fn gen_field<W: fmt::Write>(
     gen_value_rust_to_js(
         &format!("this.underlying + {}", offset),
         &ast::TypeName::Reference(
-            Box::new(typ.clone()),
-            ast::Mutability::Mutable,
             ast::Lifetime::Anonymous,
+            ast::Mutability::Mutable,
+            Box::new(typ.clone()),
         ),
         in_path,
         env,

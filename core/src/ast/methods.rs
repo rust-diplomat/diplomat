@@ -68,9 +68,9 @@ impl Method {
                 name: "self".to_string(),
                 ty: if let Some(ref reference) = rec.reference {
                     TypeName::Reference(
-                        Box::new(TypeName::Named(self_path_type.clone())),
-                        Mutability::from_syn(&rec.mutability),
                         Lifetime::from(&reference.1),
+                        Mutability::from_syn(&rec.mutability),
+                        Box::new(TypeName::Named(self_path_type.clone())),
                     )
                 } else {
                     TypeName::Named(self_path_type.clone())
@@ -158,7 +158,7 @@ impl Param {
     /// Check if this parameter is a Writeable
     pub fn is_writeable(&self) -> bool {
         match self.ty {
-            TypeName::Reference(ref w, Mutability::Mutable, ref _lt) => **w == TypeName::Writeable,
+            TypeName::Reference(_, Mutability::Mutable, ref w) => **w == TypeName::Writeable,
             _ => false,
         }
     }

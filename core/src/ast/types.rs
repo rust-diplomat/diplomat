@@ -258,7 +258,7 @@ pub enum TypeName {
     /// are collected with [`TypeName::resolve()`].
     Named(PathType),
     /// An optionally mutable reference to another type.
-    Reference(Box<TypeName>, Mutability, Lifetime),
+    Reference(Lifetime, Mutability, Box<TypeName>),
     /// A `Box<T>` type.
     Box(Box<TypeName>),
     /// A `Option<T>` type.
@@ -268,9 +268,9 @@ pub enum TypeName {
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
     /// A `&str` type.
-    StrReference(Mutability),
+    StrReference(Lifetime),
     /// A `&[T]` type, where `T` is a primitive.
-    PrimitiveSlice(PrimitiveType, Mutability),
+    PrimitiveSlice(Lifetime, Mutability, PrimitiveType),
     /// The `()` type.
     Unit,
 }
@@ -283,7 +283,7 @@ impl TypeName {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
             TypeName::Named(name) => syn::Type::Path(name.to_syn()),
-            TypeName::Reference(underlying, mutability, lifetime) => {
+            TypeName::Reference(lifetime, mutability, underlying) => {
                 syn::Type::Reference(TypeReference {
                     and_token: syn::token::And(Span::call_site()),
                     lifetime: lifetime.to_syn(),
@@ -354,20 +354,16 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference(Mutability::Mutable) => syn::parse_quote! {
-                &mut str
-            },
-            TypeName::StrReference(Mutability::Immutable) => syn::parse_quote! {
-                &str
-            },
-            TypeName::PrimitiveSlice(name, mutable) => {
-                // Do we need a lifetime here?
-                // What if we have `&'a [u8]`?
-                // I think this would involve a new field on `TypeName::PrimitiveSlice`
+            TypeName::StrReference(lifetime) => syn::parse_str(&format!(
+                "{}str",
+                ReferenceDisplay(lifetime, &Mutability::Immutable)
+            ))
+            .unwrap(),
+            TypeName::PrimitiveSlice(lifetime, mutability, name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
-                    "&{}[{}]",
-                    if mutable.is_mutable() { "mut " } else { "" },
+                    "{}[{}]",
+                    ReferenceDisplay(lifetime, mutability),
                     primitive_name
                 );
                 syn::parse_str(&formatted_str).unwrap()
@@ -393,8 +389,14 @@ impl TypeName {
     pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathType>) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
+                let lifetime = Lifetime::from(&r.lifetime);
+                let mutability = Mutability::from_syn(&r.mutability);
+
                 if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference(Mutability::from_syn(&r.mutability));
+                    if mutability.is_mutable() {
+                        panic!("mutable `str` references are disallowed");
+                    }
+                    return TypeName::StrReference(lifetime);
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -403,17 +405,14 @@ impl TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(
-                                *primitive,
-                                Mutability::from_syn(&r.mutability),
-                            );
+                            return TypeName::PrimitiveSlice(lifetime, mutability, *primitive);
                         }
                     }
                 }
                 TypeName::Reference(
+                    lifetime,
+                    mutability,
                     Box::new(TypeName::from_syn(r.elem.as_ref(), self_path_type)),
-                    Mutability::from_syn(&r.mutability),
-                    Lifetime::from(&r.lifetime),
                 )
             }
             syn::Type::Path(p) => {
@@ -553,7 +552,7 @@ impl TypeName {
         errors: &mut Vec<ValidityError>,
     ) {
         match self {
-            TypeName::Reference(underlying, _, _) => {
+            TypeName::Reference(.., underlying) => {
                 underlying.check_opaque(in_path, env, true, errors)
             }
             TypeName::Box(underlying) => underlying.check_opaque(in_path, env, true, errors),
@@ -562,7 +561,6 @@ impl TypeName {
                 ok.check_opaque(in_path, env, false, errors);
                 err.check_opaque(in_path, env, false, errors);
             }
-            TypeName::Primitive(_) => {}
             TypeName::Named(_) => {
                 if let CustomType::Opaque(_) = self.resolve(in_path, env) {
                     if !behind_reference {
@@ -572,17 +570,14 @@ impl TypeName {
                     errors.push(ValidityError::NonOpaqueBehindRef(self.clone()))
                 }
             }
-            TypeName::Writeable => {}
-            TypeName::StrReference(_mut) => {}
-            TypeName::PrimitiveSlice(_, _mut) => {}
-            TypeName::Unit => {}
+            _ => {}
         }
     }
 
     // Disallow non-pointer containing Option<T> inside struct fields and Result
     fn check_option(&self, errors: &mut Vec<ValidityError>) {
         match self {
-            TypeName::Reference(underlying, _mut, _lt) => underlying.check_option(errors),
+            TypeName::Reference(.., underlying) => underlying.check_option(errors),
             TypeName::Box(underlying) => underlying.check_option(errors),
             TypeName::Option(underlying) => {
                 if !underlying.is_pointer() {
@@ -593,12 +588,7 @@ impl TypeName {
                 ok.check_option(errors);
                 err.check_option(errors);
             }
-            TypeName::Primitive(_) => {}
-            TypeName::Named(_) => {}
-            TypeName::Writeable => {}
-            TypeName::StrReference(_mut) => {}
-            TypeName::PrimitiveSlice(_, _mut) => {}
-            TypeName::Unit => {}
+            _ => {}
         }
     }
 
@@ -642,8 +632,14 @@ impl From<&syn::Type> for TypeName {
     fn from(ty: &syn::Type) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
+                let lifetime = Lifetime::from(&r.lifetime);
+                let mutability = Mutability::from_syn(&r.mutability);
+
                 if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference(Mutability::from_syn(&r.mutability));
+                    if mutability.is_mutable() {
+                        panic!("mutable `str` references are disallowed");
+                    }
+                    return TypeName::StrReference(lifetime);
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -652,18 +648,11 @@ impl From<&syn::Type> for TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(
-                                *primitive,
-                                Mutability::from_syn(&r.mutability),
-                            );
+                            return TypeName::PrimitiveSlice(lifetime, mutability, *primitive);
                         }
                     }
                 }
-                TypeName::Reference(
-                    Box::new(r.elem.as_ref().into()),
-                    Mutability::from_syn(&r.mutability),
-                    Lifetime::from(&r.lifetime),
-                )
+                TypeName::Reference(lifetime, mutability, Box::new(r.elem.as_ref().into()))
             }
             syn::Type::Path(p) => {
                 if let Some(primitive) = p
@@ -748,12 +737,48 @@ impl fmt::Display for TypeName {
             TypeName::Option(ty) => write!(f, "Option<{}>", ty),
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
             TypeName::Writeable => f.write_str("DiplomatWriteable"),
-            TypeName::StrReference(Mutability::Mutable) => f.write_str("&mut str"),
-            TypeName::StrReference(Mutability::Immutable) => f.write_str("&str"),
-            TypeName::PrimitiveSlice(ty, Mutability::Mutable) => write!(f, "&mut [{}]", ty),
-            TypeName::PrimitiveSlice(ty, Mutability::Immutable) => write!(f, "&[{}]", ty),
+            TypeName::StrReference(lifetime) => {
+                write!(
+                    f,
+                    "{}str",
+                    ReferenceDisplay(lifetime, &Mutability::Immutable)
+                )
+            }
+            TypeName::PrimitiveSlice(lifetime, mutability, ty) => {
+                write!(f, "{}[{}]", ReferenceDisplay(lifetime, mutability), ty)
+            }
             TypeName::Unit => f.write_str("()"),
         }
+    }
+}
+
+/// A `fmt::Display` type makes formatting references easier.
+///
+/// # Examples
+///
+/// ```ignore
+/// let lifetime = Lifetime::from(&syn::parse_str::<syn::Lifetime>("'a"));
+/// let mutability = Mutability::Mutable;
+/// // ...
+/// let fmt = format!("{}[u8]", ReferenceDisplay(&lifetime, &mutability));
+///
+/// assert_eq!(fmt, "&'a mut [u8]");
+/// ```
+struct ReferenceDisplay<'a>(&'a Lifetime, &'a Mutability);
+
+impl<'a> fmt::Display for ReferenceDisplay<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.0 {
+            Lifetime::Static => "&'static ".fmt(f)?,
+            Lifetime::Named(lt) => write!(f, "&'{} ", lt)?,
+            Lifetime::Anonymous => '&'.fmt(f)?,
+        }
+
+        if self.1.is_mutable() {
+            "mut ".fmt(f)?;
+        }
+
+        Ok(())
     }
 }
 
