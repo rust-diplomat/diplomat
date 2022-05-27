@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
+use std::ops::ControlFlow;
 use syn::*;
 
 use super::docs::Docs;
@@ -100,6 +102,52 @@ impl Method {
             return_type: return_ty,
             introduced_lifetimes,
         }
+    }
+
+    /// Returns the parameters that the output type's lifetime is bound to.
+    ///
+    /// WARNING: This may produce incorrect results if the validity isn't checked
+    /// first, since the result type may contain elided lifetimes that we depend
+    /// on for this method. The validity checks ensure that the return type doesn't
+    /// elide any lifetimes, ensuring that this method will produce correct results.
+    pub fn output_lifetime_dependent_params(&self) -> Vec<&Param> {
+        // To determine which params the return type is bound to, we just have to
+        // find the params that contain a lifetime that's also in the return type.
+        self.return_type
+            .as_ref()
+            .map(|return_type| {
+                // Collect all lifetimes from return type into a `BTreeSet`.
+                let mut lifetimes = BTreeSet::new();
+                return_type.visit_lifetimes(&mut |lt| -> ControlFlow<()> {
+                    if let Lifetime::Named(name) = lt {
+                        lifetimes.insert(name);
+                    }
+                    ControlFlow::Continue(())
+                });
+
+                // Collect all the params that contain a named lifetime that's also
+                // in the return type.
+                self.params
+                    .iter()
+                    .filter(|param| {
+                        param
+                            .ty
+                            .visit_lifetimes(&mut |lt| {
+                                // Thanks to `TypeName::visit_lifetimes`, we can
+                                // traverse the lifetimes without allocations and
+                                // short-circuit if we find a match.
+                                if let Lifetime::Named(name) = lt {
+                                    if lifetimes.contains(name) {
+                                        return ControlFlow::Break(());
+                                    }
+                                }
+                                ControlFlow::Continue(())
+                            })
+                            .is_break()
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 
     /// Performs type-specific validity checks (see [TypeName::check_validity()])
