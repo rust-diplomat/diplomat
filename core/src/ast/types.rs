@@ -487,17 +487,16 @@ impl TypeName {
         fn inner<'b>(this: &'b TypeName, lifetimes: &mut Vec<&'b Lifetime>) {
             match this {
                 TypeName::Named(path_type) => lifetimes.extend(&path_type.lifetimes),
-                TypeName::Reference(typ, _, lt) => {
+                TypeName::Reference(lt, _, ty) => {
                     lifetimes.push(lt);
-                    inner(typ, lifetimes);
+                    inner(ty, lifetimes);
                 }
-                TypeName::Box(typ) | TypeName::Option(typ) => inner(typ, lifetimes),
+                TypeName::Box(ty) | TypeName::Option(ty) => inner(ty, lifetimes),
                 TypeName::Result(ok, err) => {
                     inner(ok, lifetimes);
                     inner(err, lifetimes);
                 }
-                TypeName::StrReference(..) => todo!("add when #158 merges"),
-                TypeName::PrimitiveSlice(..) => todo!("add when #158 merges"),
+                TypeName::StrReference(lt) | TypeName::PrimitiveSlice(lt, ..) => lifetimes.push(lt),
                 _ => {}
             }
         }
@@ -663,15 +662,13 @@ impl TypeName {
                 let name = path_type.path.elements.last().unwrap();
                 if let ModSymbol::CustomType(custom) = &env[name.as_str()] {
                     if let Some(lifetimes) = custom.lifetimes() {
-                        let expected = lifetimes.len();
-                        if path_type.lifetimes.len() != expected {
+                        if path_type.lifetimes.len() != lifetimes.len() {
                             // There's a discrepency between the number of declared
                             // lifetimes and the number of lifetimes provided in
                             // the return type, so there must have been elision.
                             errors.push(ValidityError::LifetimeElisionInReturn {
                                 full_type: full_type.clone(),
                                 sub_type: self.clone(),
-                                expected,
                             });
                         } else {
                             // The struct was written with the number of lifetimes
@@ -687,7 +684,16 @@ impl TypeName {
                     // the type. Is this an error? Should we allow this?
                 }
             }
-            TypeName::Reference(..) => todo!("add when #158 merges"),
+            TypeName::Reference(lifetime, _, ty) => {
+                if let Lifetime::Anonymous = lifetime {
+                    errors.push(ValidityError::LifetimeElisionInReturn {
+                        full_type: full_type.clone(),
+                        sub_type: self.clone(),
+                    });
+                }
+
+                ty.check_lifetime_elision(full_type, env, errors);
+            }
             TypeName::Box(ty) | TypeName::Option(ty) => {
                 ty.check_lifetime_elision(full_type, env, errors)
             }
@@ -695,8 +701,13 @@ impl TypeName {
                 ok.check_lifetime_elision(full_type, env, errors);
                 err.check_lifetime_elision(full_type, env, errors);
             }
-            TypeName::StrReference(..) => todo!("add when #158 merges"),
-            TypeName::PrimitiveSlice(..) => todo!("add when #158 merges"),
+            TypeName::StrReference(Lifetime::Anonymous)
+            | TypeName::PrimitiveSlice(Lifetime::Anonymous, ..) => {
+                errors.push(ValidityError::LifetimeElisionInReturn {
+                    full_type: full_type.clone(),
+                    sub_type: self.clone(),
+                });
+            }
             _ => {}
         }
     }

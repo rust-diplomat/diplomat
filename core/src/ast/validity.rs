@@ -26,12 +26,11 @@ pub enum ValidityError {
     OptionNotContainingPointer(TypeName),
     #[cfg_attr(
         feature = "displaydoc",
-        doc = "Return types cannot elide lifetimes, expected {expected} lifetimes: {sub_type} in {full_type}"
+        doc = "Return types cannot elide lifetimes: {sub_type} in {full_type}"
     )]
     LifetimeElisionInReturn {
         full_type: TypeName,
         sub_type: TypeName,
-        expected: usize,
     },
 }
 
