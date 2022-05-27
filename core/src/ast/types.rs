@@ -484,6 +484,30 @@ impl TypeName {
         }
     }
 
+    pub fn lifetimes<'a>(&'a self) -> Vec<&'a Lifetime> {
+        fn inner<'b>(this: &'b TypeName, lifetimes: &mut Vec<&'b Lifetime>) {
+            match this {
+                TypeName::Named(path_type) => lifetimes.extend(&path_type.lifetimes),
+                TypeName::Reference(typ, _, lt) => {
+                    lifetimes.push(lt);
+                    inner(typ, lifetimes);
+                }
+                TypeName::Box(typ) | TypeName::Option(typ) => inner(typ, lifetimes),
+                TypeName::Result(ok, err) => {
+                    inner(ok, lifetimes);
+                    inner(err, lifetimes);
+                }
+                TypeName::StrReference(..) => todo!("add when #158 merges"),
+                TypeName::PrimitiveSlice(..) => todo!("add when #158 merges"),
+                _ => {}
+            }
+        }
+
+        let mut lifetimes = vec![];
+        inner(self, &mut lifetimes);
+        lifetimes
+    }
+
     /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
     pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
