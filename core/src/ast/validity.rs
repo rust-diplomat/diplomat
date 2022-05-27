@@ -24,6 +24,15 @@ pub enum ValidityError {
         doc = "A non-reference type was found inside an Option<T>: {0}"
     )]
     OptionNotContainingPointer(TypeName),
+    #[cfg_attr(
+        feature = "displaydoc",
+        doc = "Return types cannot elide lifetimes, expected {expected} lifetimes: {sub_type} in {full_type}"
+    )]
+    LifetimeElisionInReturn {
+        full_type: TypeName,
+        sub_type: TypeName,
+        expected: usize,
+    },
 }
 
 #[cfg(test)]
