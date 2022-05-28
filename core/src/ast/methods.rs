@@ -126,6 +126,9 @@ impl Method {
                             lifetimes.insert(name);
                         }
                         Lifetime::Anonymous => {
+                            // This is also caught in the validity check, so this should
+                            // never happen. If we're guaranteed to always run the
+                            // check first, we can change this to `unreachable!()`.
                             panic!("Anonymous lifetimes not yet allowed in return types")
                         }
                         Lifetime::Static => {}
