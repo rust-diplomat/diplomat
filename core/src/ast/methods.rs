@@ -106,10 +106,12 @@ impl Method {
 
     /// Returns the parameters that the output type's lifetime is bound to.
     ///
-    /// WARNING: This may produce incorrect results if the validity isn't checked
-    /// first, since the result type may contain elided lifetimes that we depend
-    /// on for this method. The validity checks ensure that the return type doesn't
-    /// elide any lifetimes, ensuring that this method will produce correct results.
+    /// # Panics
+    ///
+    /// This method panics if the validity isn't checked first, since the result
+    /// type may contain elided lifetimes that we depend on for this method.
+    /// The validity checks ensure that the return type doesn't elide any lifetimes,
+    /// ensuring that this method will produce correct results.
     pub fn output_lifetime_dependent_params(&self) -> Vec<&Param> {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
@@ -119,8 +121,14 @@ impl Method {
                 // Collect all lifetimes from return type into a `BTreeSet`.
                 let mut lifetimes = BTreeSet::new();
                 return_type.visit_lifetimes(&mut |lt| -> ControlFlow<()> {
-                    if let Lifetime::Named(name) = lt {
-                        lifetimes.insert(name);
+                    match lt {
+                        Lifetime::Named(name) => {
+                            lifetimes.insert(name);
+                        }
+                        Lifetime::Anonymous => {
+                            panic!("Anonymous lifetimes not yet allowed in return types")
+                        }
+                        Lifetime::Static => {}
                     }
                     ControlFlow::Continue(())
                 });
