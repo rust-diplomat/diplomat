@@ -201,8 +201,8 @@ mod tests {
                 struct Opaque;
 
                 impl Opaque {
-                    pub fn bar(&self) -> &NonOpaque {}
-                    pub fn baz(&self, x: &NonOpaque) {}
+                    pub fn bar<'a>(&'a self) -> &'a NonOpaque {}
+                    pub fn baz<'a>(&'a self, x: &'a NonOpaque) {}
                     pub fn quux(&self) -> Box<NonOpaque> {}
                 }
             }
