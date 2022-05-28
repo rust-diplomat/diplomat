@@ -8,6 +8,7 @@ use indenter::indented;
 use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
 
+/// TODO: docs
 #[allow(clippy::ptr_arg)] // false positive, rust-clippy#8463, fixed in 1.61
 pub fn gen_value_js_to_rust(
     param_name: String,
@@ -103,6 +104,7 @@ pub fn gen_value_js_to_rust(
     }
 }
 
+/// TODO: docs
 pub fn gen_value_rust_to_js<W: fmt::Write>(
     value_expr: &str,
     typ: &ast::TypeName,
@@ -346,6 +348,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
     Ok(())
 }
 
+/// TODO: docs
 fn gen_box_destructor<W: fmt::Write>(
     name: &ast::Ident,
     typ: &ast::TypeName,
@@ -409,6 +412,7 @@ fn gen_box_destructor<W: fmt::Write>(
     Ok(())
 }
 
+/// TODO: docs
 fn gen_rust_reference_to_js<W: fmt::Write>(
     underlying: &ast::TypeName,
     in_path: &ast::Path,

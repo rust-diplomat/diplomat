@@ -9,6 +9,23 @@ use super::conversions::{gen_value_js_to_rust, gen_value_rust_to_js};
 use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
 
+/// Generates a JS class declaration
+/// 
+/// # Examples
+/// 
+/// ```js
+/// const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
+///   wasm.MyStruct_destroy(underlying);
+/// })
+/// 
+/// export class MyStruct {
+///   constructor(underlying) {
+///     this.underlying = underlying;
+///   }
+/// 
+///   // snip
+/// }
+/// ```
 pub fn gen_struct<W: fmt::Write>(
     out: &mut W,
     custom_type: &ast::CustomType,
@@ -77,6 +94,17 @@ pub fn gen_struct<W: fmt::Write>(
     Ok(())
 }
 
+/// Generates a getter function for a field.
+/// 
+/// # Examples
+/// 
+/// ```js
+/// get a() {
+///   return (() => {
+///     // snip
+///   })();
+/// }
+/// ```
 fn gen_field<W: fmt::Write>(
     name: &ast::Ident,
     typ: &ast::TypeName,
@@ -104,6 +132,18 @@ fn gen_field<W: fmt::Write>(
     Ok(())
 }
 
+/// Generates the contents of a JS method.
+/// 
+/// # Examples
+/// 
+/// It could generate something like this
+/// ```js
+/// static node(data) {
+///   const diplomat_out = (() => {
+///     // snip
+///   })
+/// }
+/// ```
 fn gen_method<W: fmt::Write>(
     method: &ast::Method,
     in_path: &ast::Path,
