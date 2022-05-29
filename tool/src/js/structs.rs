@@ -10,19 +10,19 @@ use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
 
 /// Generates a JS class declaration
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```js
 /// const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 ///   wasm.MyStruct_destroy(underlying);
 /// })
-/// 
+///
 /// export class MyStruct {
 ///   constructor(underlying) {
 ///     this.underlying = underlying;
 ///   }
-/// 
+///
 ///   // snip
 /// }
 /// ```
@@ -33,71 +33,98 @@ pub fn gen_struct<W: fmt::Write>(
     env: &Env,
 ) -> fmt::Result {
     if let ast::CustomType::Enum(enm) = custom_type {
-        writeln!(out, "const {}_js_to_rust = {{", enm.name)?;
-        let mut enm_body_out = indented(out).with_str("  ");
-        for (name, discriminant, _) in enm.variants.iter() {
-            writeln!(&mut enm_body_out, "\"{}\": {},", name, discriminant)?;
-        }
-        writeln!(out, "}};")?;
+        writeln!(
+            out,
+            "const {}_js_to_rust = {};",
+            enm.name,
+            BlockDisplay(|mut f| {
+                enm.variants.iter().try_for_each(|(name, discriminant, _)| {
+                    writeln!(f, "\"{}\": {},", name, discriminant)
+                })
+            })
+        )?;
 
-        writeln!(out, "const {}_rust_to_js = {{", enm.name)?;
-        let mut enm_reverse_body_out = indented(out).with_str("  ");
-        for (name, discriminant, _) in enm.variants.iter() {
-            writeln!(&mut enm_reverse_body_out, "{}: \"{}\",", discriminant, name)?;
-        }
-        writeln!(out, "}};")?;
+        writeln!(
+            out,
+            "const {}_rust_to_js = {};",
+            enm.name,
+            BlockDisplay(|mut f| {
+                enm.variants.iter().try_for_each(|(name, discriminant, _)| {
+                    writeln!(f, "{}: \"{}\"", discriminant, name)
+                })
+            })
+        )?;
     } else {
         writeln!(
             out,
-            "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {{",
-            custom_type.name()
+            "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {});",
+            custom_type.name(),
+            BlockDisplay(|mut f| {
+                writeln!(f, "wasm.{}_destroy(underlying);", custom_type.name())
+            })
         )?;
-        writeln!(
-            indented(out).with_str("  "),
-            "wasm.{}_destroy(underlying);",
-            custom_type.name()
-        )?;
-        writeln!(out, "}});")?;
+
         writeln!(out)?;
 
-        writeln!(out, "export class {} {{", custom_type.name())?;
-
-        let mut class_body_out = indented(out).with_str("  ");
-
-        writeln!(&mut class_body_out, "constructor(underlying) {{")?;
         writeln!(
-            indented(&mut class_body_out).with_str("  "),
-            "this.underlying = underlying;"
+            out,
+            "export class {} {}",
+            custom_type.name(),
+            BlockDisplay(|mut f| {
+                writeln!(
+                    &mut f,
+                    "constructor(underlying) {}",
+                    BlockDisplay(|mut f| { writeln!(f, "this.underlying = underlying;") })
+                )?;
+
+                for method in custom_type.methods().iter() {
+                    writeln!(f)?;
+                    gen_method(method, in_path, env, &mut f)?;
+                }
+
+                if let ast::CustomType::Struct(strct) = custom_type {
+                    let (offsets, _) = layout::struct_offsets_size_max_align(
+                        strct.fields.iter().map(|(_, typ, _)| typ),
+                        in_path,
+                        env,
+                    );
+                    for ((name, typ, _), offset) in strct.fields.iter().zip(offsets.iter()) {
+                        writeln!(f)?;
+                        gen_field(name, typ, in_path, *offset, env, &mut f)?;
+                    }
+                }
+                Ok(())
+            })
         )?;
-        writeln!(&mut class_body_out, "}}")?;
-
-        for method in custom_type.methods().iter() {
-            writeln!(&mut class_body_out)?;
-            gen_method(method, in_path, env, &mut class_body_out)?;
-        }
-
-        if let ast::CustomType::Struct(strct) = custom_type {
-            let (offsets, _) = layout::struct_offsets_size_max_align(
-                strct.fields.iter().map(|(_, typ, _)| typ),
-                in_path,
-                env,
-            );
-            for ((name, typ, _), offset) in strct.fields.iter().zip(offsets.iter()) {
-                writeln!(&mut class_body_out)?;
-                gen_field(name, typ, in_path, *offset, env, &mut class_body_out)?;
-            }
-        }
-
-        writeln!(out, "}}")?;
     }
 
     Ok(())
 }
 
+/// An `fmt::Display` object that accepts a writer function, and wraps everything
+/// that it writes in braces to form a block.
+///
+/// This allows for generating source code without having to manually insert
+/// opening/closing braces for blocks or worry about indentation.
+struct BlockDisplay<F>(F)
+where
+    F: Fn(indenter::Indented<fmt::Formatter>) -> fmt::Result;
+
+impl<F> fmt::Display for BlockDisplay<F>
+where
+    F: Fn(indenter::Indented<fmt::Formatter>) -> fmt::Result,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "{{")?;
+        self.0(indented(f).with_str("  "))?;
+        write!(f, "}}")
+    }
+}
+
 /// Generates a getter function for a field.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```js
 /// get a() {
 ///   return (() => {
@@ -113,29 +140,32 @@ fn gen_field<W: fmt::Write>(
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
-    writeln!(out, "get {}() {{", name)?;
-    let mut method_body_out = indented(out).with_str("  ");
-    write!(&mut method_body_out, "return ")?;
-    gen_value_rust_to_js(
-        &format!("this.underlying + {}", offset),
-        &ast::TypeName::Reference(
-            ast::Lifetime::Anonymous,
-            ast::Mutability::Mutable,
-            Box::new(typ.clone()),
-        ),
-        in_path,
-        env,
-        &mut method_body_out,
-    )?;
-    writeln!(&mut method_body_out, ";")?;
-    writeln!(out, "}}")?;
-    Ok(())
+    writeln!(
+        out,
+        "get {}() {}",
+        name,
+        BlockDisplay(|mut f| {
+            write!(f, "return ")?;
+            gen_value_rust_to_js(
+                &format!("this.underlying + {}", offset),
+                &ast::TypeName::Reference(
+                    ast::Lifetime::Anonymous,
+                    ast::Mutability::Mutable,
+                    Box::new(typ.clone()),
+                ),
+                in_path,
+                env,
+                &mut f,
+            )?;
+            writeln!(f, ";")
+        })
+    )
 }
 
 /// Generates the contents of a JS method.
-/// 
+///
 /// # Examples
-/// 
+///
 /// It could generate something like this
 /// ```js
 /// static node(data) {
@@ -196,71 +226,80 @@ fn gen_method<W: fmt::Write>(
         all_param_exprs.join(", ")
     };
 
-    if method.self_param.is_some() {
-        writeln!(out, "{}({}) {{", method.name, all_params.join(", "))?;
-    } else {
-        writeln!(out, "static {}({}) {{", method.name, all_params.join(", "))?;
+    if method.self_param.is_none() {
+        out.write_str("static ")?;
     }
 
-    let mut method_body_out = indented(out).with_str("  ");
+    writeln!(
+        out,
+        "{}({}) {}",
+        method.name,
+        all_params.join(", "),
+        BlockDisplay(|mut f| {
+            for s in pre_stmts.iter() {
+                writeln!(f, "{}", s)?;
+            }
 
-    for s in pre_stmts.iter() {
-        writeln!(&mut method_body_out, "{}", s)?
-    }
+            let invocation_expr =
+                format!("wasm.{}({})", method.full_path_name, all_params_invocation);
 
-    let invocation_expr = format!("wasm.{}({})", method.full_path_name, all_params_invocation);
+            write!(f, "const diplomat_out = ")?;
 
-    if is_writeable {
-        writeln!(
-            &mut method_body_out,
-            "const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {{"
-        )?;
-    } else {
-        write!(&mut method_body_out, "const diplomat_out = ")?;
-    }
+            if is_writeable {
+                writeln!(
+                    f,
+                    "diplomatRuntime.withWriteable(wasm, (writeable) => {});",
+                    BlockDisplay(|mut f| {
+                        write!(f, "return ")?;
 
-    let mut maybe_writeable_indent = if is_writeable {
-        indented(&mut method_body_out).with_str("  ")
-    } else {
-        indented(&mut method_body_out).with_str("")
-    };
+                        match &method.return_type {
+                            None | Some(ast::TypeName::Unit) => {
+                                write!(f, "{}", invocation_expr)?;
+                            }
+                            Some(ret_type) => {
+                                gen_value_rust_to_js(
+                                    &invocation_expr,
+                                    ret_type,
+                                    in_path,
+                                    env,
+                                    &mut f,
+                                )?;
+                            }
+                        }
 
-    if is_writeable {
-        write!(&mut maybe_writeable_indent, "return ")?;
-    }
+                        writeln!(f, ";")
+                    })
+                )?;
+            } else {
+                match &method.return_type {
+                    None | Some(ast::TypeName::Unit) => {
+                        write!(f, "{}", invocation_expr)?;
+                    }
 
-    match &method.return_type {
-        None | Some(ast::TypeName::Unit) => {
-            write!(&mut maybe_writeable_indent, "{}", invocation_expr)?;
-        }
+                    Some(ret_type) => {
+                        gen_value_rust_to_js(
+                            &invocation_expr,
+                            ret_type,
+                            in_path,
+                            env,
+                            &mut f,
+                        )?;
+                    }
+                }
 
-        Some(ret_type) => {
-            gen_value_rust_to_js(
-                &invocation_expr,
-                ret_type,
-                in_path,
-                env,
-                &mut maybe_writeable_indent,
-            )?;
-        }
-    }
+                writeln!(f, ";")?;
+            }
 
-    writeln!(&mut method_body_out, ";")?;
-    if is_writeable {
-        writeln!(&mut method_body_out, "}});")?;
-    }
+            for s in post_stmts.iter() {
+                writeln!(f, "{}", s)?;
+            }
 
-    for s in post_stmts.iter() {
-        writeln!(&mut method_body_out, "{}", s)?
-    }
-
-    if method.return_type.is_some() || is_writeable {
-        writeln!(&mut method_body_out, "return diplomat_out;")?;
-    }
-
-    writeln!(out, "}}")?;
-
-    Ok(())
+            if method.return_type.is_some() || is_writeable {
+                writeln!(f, "return diplomat_out;")?;
+            }
+            Ok(())
+        })
+    )
 }
 
 #[cfg(test)]
