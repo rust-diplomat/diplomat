@@ -3,9 +3,9 @@ use std::fmt;
 use std::fmt::Write;
 
 use diplomat_core::ast;
-use indenter::indented;
 
 use super::conversions::{gen_value_js_to_rust, gen_value_rust_to_js};
+use super::display;
 use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
 
@@ -37,7 +37,7 @@ pub fn gen_struct<W: fmt::Write>(
             out,
             "const {}_js_to_rust = {};",
             enm.name,
-            BlockDisplay(|mut f| {
+            display::block(|mut f| {
                 enm.variants.iter().try_for_each(|(name, discriminant, _)| {
                     writeln!(f, "\"{}\": {},", name, discriminant)
                 })
@@ -48,7 +48,7 @@ pub fn gen_struct<W: fmt::Write>(
             out,
             "const {}_rust_to_js = {};",
             enm.name,
-            BlockDisplay(|mut f| {
+            display::block(|mut f| {
                 enm.variants.iter().try_for_each(|(name, discriminant, _)| {
                     writeln!(f, "{}: \"{}\"", discriminant, name)
                 })
@@ -59,7 +59,7 @@ pub fn gen_struct<W: fmt::Write>(
             out,
             "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {});",
             custom_type.name(),
-            BlockDisplay(|mut f| {
+            display::block(|mut f| {
                 writeln!(f, "wasm.{}_destroy(underlying);", custom_type.name())
             })
         )?;
@@ -70,11 +70,11 @@ pub fn gen_struct<W: fmt::Write>(
             out,
             "export class {} {}",
             custom_type.name(),
-            BlockDisplay(|mut f| {
+            display::block(|mut f| {
                 writeln!(
                     &mut f,
                     "constructor(underlying) {}",
-                    BlockDisplay(|mut f| { writeln!(f, "this.underlying = underlying;") })
+                    display::block(|mut f| { writeln!(f, "this.underlying = underlying;") })
                 )?;
 
                 for method in custom_type.methods().iter() {
@@ -101,26 +101,6 @@ pub fn gen_struct<W: fmt::Write>(
     Ok(())
 }
 
-/// An `fmt::Display` object that accepts a writer function, and wraps everything
-/// that it writes in braces to form a block.
-///
-/// This allows for generating source code without having to manually insert
-/// opening/closing braces for blocks or worry about indentation.
-struct BlockDisplay<F>(F)
-where
-    F: Fn(indenter::Indented<fmt::Formatter>) -> fmt::Result;
-
-impl<F> fmt::Display for BlockDisplay<F>
-where
-    F: Fn(indenter::Indented<fmt::Formatter>) -> fmt::Result,
-{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "{{")?;
-        self.0(indented(f).with_str("  "))?;
-        write!(f, "}}")
-    }
-}
-
 /// Generates a getter function for a field.
 ///
 /// # Examples
@@ -144,7 +124,7 @@ fn gen_field<W: fmt::Write>(
         out,
         "get {}() {}",
         name,
-        BlockDisplay(|mut f| {
+        display::block(|mut f| {
             write!(f, "return ")?;
             gen_value_rust_to_js(
                 &format!("this.underlying + {}", offset),
@@ -205,10 +185,9 @@ fn gen_method<W: fmt::Write>(
         .collect::<Vec<String>>();
 
     if is_writeable {
-        let last_index_exprs = all_param_exprs.len() - 1;
-        all_param_exprs[last_index_exprs] = "writeable".to_string();
+        *all_param_exprs.last_mut().unwrap() = "writeable".to_string();
 
-        all_params.remove(all_params.len() - 1);
+        all_params.pop();
     }
 
     let all_params_invocation = {
@@ -216,11 +195,10 @@ fn gen_method<W: fmt::Write>(
             all_param_exprs.insert(0, "this.underlying".to_string());
         }
 
-        if method.return_type.is_some()
-            && return_type_form(method.return_type.as_ref().unwrap(), in_path, env)
-                == ReturnTypeForm::Complex
-        {
-            all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
+        if let Some(ref return_type) = method.return_type {
+            if let ReturnTypeForm::Complex = return_type_form(return_type, in_path, env) {
+                all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
+            }
         }
 
         all_param_exprs.join(", ")
@@ -235,7 +213,7 @@ fn gen_method<W: fmt::Write>(
         "{}({}) {}",
         method.name,
         all_params.join(", "),
-        BlockDisplay(|mut f| {
+        display::block(|mut f| {
             for s in pre_stmts.iter() {
                 writeln!(f, "{}", s)?;
             }
@@ -243,52 +221,30 @@ fn gen_method<W: fmt::Write>(
             let invocation_expr =
                 format!("wasm.{}({})", method.full_path_name, all_params_invocation);
 
-            write!(f, "const diplomat_out = ")?;
-
-            if is_writeable {
-                writeln!(
-                    f,
-                    "diplomatRuntime.withWriteable(wasm, (writeable) => {});",
-                    BlockDisplay(|mut f| {
-                        write!(f, "return ")?;
-
-                        match &method.return_type {
-                            None | Some(ast::TypeName::Unit) => {
-                                write!(f, "{}", invocation_expr)?;
-                            }
-                            Some(ret_type) => {
-                                gen_value_rust_to_js(
-                                    &invocation_expr,
-                                    ret_type,
-                                    in_path,
-                                    env,
-                                    &mut f,
-                                )?;
-                            }
+            writeln!(
+                f,
+                "const diplomat_out = {};",
+                display::expr(|f| {
+                    let display_return_type = display::expr(|mut f| match &method.return_type {
+                        None | Some(ast::TypeName::Unit) => {
+                            write!(f, "{}", invocation_expr)
                         }
+                        Some(ret_type) => {
+                            gen_value_rust_to_js(&invocation_expr, ret_type, in_path, env, &mut f)
+                        }
+                    });
 
-                        writeln!(f, ";")
-                    })
-                )?;
-            } else {
-                match &method.return_type {
-                    None | Some(ast::TypeName::Unit) => {
-                        write!(f, "{}", invocation_expr)?;
+                    if is_writeable {
+                        write!(
+                            f,
+                            "diplomatRuntime.withWriteable(wasm, (writeable) => {})",
+                            display::block(|mut f| writeln!(f, "return {};", display_return_type))
+                        )
+                    } else {
+                        write!(f, "{}", display_return_type)
                     }
-
-                    Some(ret_type) => {
-                        gen_value_rust_to_js(
-                            &invocation_expr,
-                            ret_type,
-                            in_path,
-                            env,
-                            &mut f,
-                        )?;
-                    }
-                }
-
-                writeln!(f, ";")?;
-            }
+                })
+            )?;
 
             for s in post_stmts.iter() {
                 writeln!(f, "{}", s)?;
