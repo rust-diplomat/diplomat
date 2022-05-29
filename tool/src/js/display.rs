@@ -4,9 +4,9 @@ use std::fmt::{Display, Formatter, Result};
 /// Print source code in a block.
 ///
 /// This function accepts a writing function, and returns a [`Block`]. When the `Block`
-/// is printed via the `fmt::Display` trait, it writes an open brace, indents the
-/// formatter, and calls the function to write the contents of the block. Then,
-/// it unindents the formatter and writes a close brace.
+/// is printed via the `fmt::Display` trait, it writes an open brace and new line,
+/// indents the formatter, and calls the function to write the contents of the block.
+/// Then, it unindents the formatter and writes a close brace.
 ///
 /// This allows for generating source code without having to manually insert
 /// opening/closing braces for blocks or worry about indentation.
