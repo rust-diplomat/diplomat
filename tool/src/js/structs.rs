@@ -74,7 +74,7 @@ pub fn gen_struct<W: fmt::Write>(
                 writeln!(
                     &mut f,
                     "constructor(underlying) {}",
-                    display::block(|mut f| { writeln!(f, "this.underlying = underlying;") })
+                    display::block(|mut f| writeln!(f, "this.underlying = underlying;"))
                 )?;
 
                 for method in custom_type.methods().iter() {
@@ -125,19 +125,23 @@ fn gen_field<W: fmt::Write>(
         "get {}() {}",
         name,
         display::block(|mut f| {
-            write!(f, "return ")?;
-            gen_value_rust_to_js(
-                &format!("this.underlying + {}", offset),
-                &ast::TypeName::Reference(
-                    ast::Lifetime::Anonymous,
-                    ast::Mutability::Mutable,
-                    Box::new(typ.clone()),
-                ),
-                in_path,
-                env,
-                &mut f,
-            )?;
-            writeln!(f, ";")
+            writeln!(
+                f,
+                "return {};",
+                display::expr(|mut f| {
+                    gen_value_rust_to_js(
+                        &format!("this.underlying + {}", offset),
+                        &ast::TypeName::Reference(
+                            ast::Lifetime::Anonymous,
+                            ast::Mutability::Mutable,
+                            Box::new(typ.clone()),
+                        ),
+                        in_path,
+                        env,
+                        &mut f,
+                    )
+                })
+            )
         })
     )
 }
@@ -166,7 +170,7 @@ fn gen_method<W: fmt::Write>(
     let mut all_param_exprs = vec![];
     let mut post_stmts = vec![];
 
-    method.params.iter().for_each(|p| {
+    for p in method.params.iter() {
         gen_value_js_to_rust(
             p.name.clone(),
             &p.ty,
@@ -175,8 +179,8 @@ fn gen_method<W: fmt::Write>(
             &mut pre_stmts,
             &mut all_param_exprs,
             &mut post_stmts,
-        )
-    });
+        );
+    }
 
     let mut all_params = method
         .params
