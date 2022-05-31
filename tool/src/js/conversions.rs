@@ -253,9 +253,6 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                             result_size_align.size(),
                             result_size_align.align()
                         )?;
-                    }
-
-                    if needs_buffer {
                         writeln!(f, "const result_tag = {{}};")?;
                         writeln!(
                             f,
@@ -266,11 +263,6 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                                 writeln!(f, "align: {},", result_size_align.align())
                             })
                         )?;
-                    }
-
-                    if !needs_buffer {
-                        writeln!(f, "const is_ok = {} == 1;", value_expr)?;
-                    } else {
                         writeln!(f, "{};", value_expr)?;
                         writeln!(
                             f,
@@ -286,11 +278,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                                 )
                             })
                         )?;
-                    }
-
-                    if needs_buffer {
                         writeln!(
-                            &mut f,
+                            f,
                             "if (is_ok) {is_true} else {is_false}",
                             is_true = display::block(|mut f| {
                                 writeln!(
@@ -328,6 +317,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                             })
                         )
                     } else {
+                        writeln!(f, "const is_ok = {} == 1;", value_expr)?;
                         writeln!(
                             f,
                             "if (!is_ok) {}",
