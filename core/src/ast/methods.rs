@@ -105,11 +105,11 @@ impl Method {
     }
 
     /// Returns the parameters that the output is lifetime-bound to.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// Given the following method:
-    /// ```
+    /// ```ignore
     /// fn foo<'a, 'b, 'c>(&'a self, bar: Bar<'b>, baz: Baz<'c>) -> FooBar<'a, 'b> { ... }
     /// ```
     /// Then this method would return the `&'a self` and `bar: Bar<'b>` params
@@ -315,57 +315,62 @@ mod tests {
         ));
     }
 
+    macro_rules! assert_params_held_by_output {
+        ([$($lt:expr),*] => $($tokens:tt)* ) => {{
+            let method = Method::from_syn(
+                &syn::parse_quote! { $($tokens)* },
+                PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
+                vec![],
+            );
+
+            let actual = method
+                .params_held_by_output()
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect::<Vec<_>>();
+            assert_eq!(actual, [$($lt),*]);
+        }};
+    }
+
     #[test]
     fn static_params_held_by_return_type() {
-        insta::assert_yaml_snapshot!(Method::from_syn(
-            &syn::parse_quote! {
-                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
-                fn foo<'a, 'b>(a: &'a A, b: &'b B, c: &C) -> Foo<'a, 'b> {
-                    Foo(a, b)
-                }
-            },
-            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-            vec![]
-        )
-        .params_held_by_output());
+        assert_params_held_by_output! { ["first", "second"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'a, 'b>(first: &'a First, second: &'b Second, third: &Third) -> Foo<'a, 'b> {
+                unimplemented!()
+            }
+        }
     }
 
     #[test]
     fn nonstatic_params_held_by_return_type() {
-        insta::assert_yaml_snapshot!(Method::from_syn(
-            &syn::parse_quote! {
-                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
-                fn foo<'a>(&'a self) -> Foo<'a> {
-                    Foo(self)
-                }
-            },
-            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-            vec![]
-        )
-        .params_held_by_output());
+        assert_params_held_by_output! { ["self"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'a>(&'a self) -> Foo<'a> {
+                unimplemented!()
+            }
+        }
 
-        insta::assert_yaml_snapshot!(Method::from_syn(
-            &syn::parse_quote! {
-                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
-                fn foo<'x, 'y>(&'x self, x: &'x X, y: &'y Y, z: &Z) -> Foo<'x, 'y> {
-                    Foo(self, x, y)
-                }
-            },
-            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-            vec![]
-        )
-        .params_held_by_output());
+        assert_params_held_by_output! { ["self", "foo", "bar"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'x, 'y>(&'x self, foo: &'x Foo, bar: &Bar<'y>, baz: &Baz) -> Foo<'x, 'y> {
+                unimplemented!()
+            }
+        }
 
-        insta::assert_yaml_snapshot!(Method::from_syn(
-            &syn::parse_quote! {
-                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
-                fn foo<'a, 'b>(&'a self, bar: Bar<'b>) -> Foo<'a, 'b> {
-                    Foo(self, bar)
-                }
-            },
-            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-            vec![]
-        )
-        .params_held_by_output());
+        assert_params_held_by_output! { ["self", "bar"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'a, 'b>(&'a self, bar: Bar<'b>) -> Foo<'a, 'b> {
+                unimplemented!()
+            }
+        }
+
+        // Test that being dependent on 'static doesn't make you dependent on 'static params.
+        assert_params_held_by_output! { ["self", "bar"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'a, 'b>(&'a self, bar: Bar<'b>, baz: &'static str) -> Foo<'a, 'b, 'static> {
+                unimplemented!()
+            }
+        }
     }
 }
