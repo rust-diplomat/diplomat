@@ -659,7 +659,6 @@ impl TypeName {
     ) {
         match self {
             TypeName::Named(path_type) => {
-                // I'm very iffy on this logic so please double check
                 let name = path_type.path.elements.last().unwrap();
                 if let ModSymbol::CustomType(custom) = &env[name.as_str()] {
                     if let Some(lifetimes) = custom.lifetimes() {
@@ -687,8 +686,9 @@ impl TypeName {
                         // core.
                     }
                 } else {
-                    // There was a `Alias`/`Submodule` that has the same name as
-                    // the type. Is this an error? Should we allow this?
+                    // We looked in the environment for a custom type with our
+                    // name, but we found an alias or submodule instead of a type.
+                    errors.push(ValidityError::PathTypeNameConflict(name.clone()))
                 }
             }
             TypeName::Reference(lifetime, _, ty) => {
