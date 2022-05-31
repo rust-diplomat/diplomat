@@ -1,0 +1,23 @@
+---
+source: core/src/ast/methods.rs
+expression: "Method::from_syn(&syn::parse_quote! {\n                    #[diplomat :: rust_link(foo :: Bar :: batz, FnInStruct)] fn\n                    foo < 'a, 'b > (& 'a self, bar : Bar < 'b >) -> Foo < 'a, 'b\n                    > { Foo(self, bar) }\n                },\n        PathType::new(Path::empty().sub_path(Ident::from(\"MyStructContainingMethod\"))),\n        vec![]).output_lifetime_dependent_params()"
+---
+- name: self
+  ty:
+    Reference:
+      - Named: a
+      - Immutable
+      - Named:
+          path:
+            elements:
+              - MyStructContainingMethod
+          lifetimes: []
+- name: bar
+  ty:
+    Named:
+      path:
+        elements:
+          - Bar
+      lifetimes:
+        - Named: b
+
