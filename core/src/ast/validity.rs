@@ -1,37 +1,50 @@
-use super::{Path, TypeName};
+use super::{Ident, Path, TypeName};
 
 #[cfg_attr(feature = "displaydoc", derive(displaydoc::Display))]
 #[derive(Debug, Clone)]
 pub enum ValidityError {
+    /// An oqaue type crosses the FFI boundary as a value.
     #[cfg_attr(
         feature = "displaydoc",
-        doc = "An opaque type crossed the FFI boundary as a value: {0}"
+        displaydoc("An opaque type crossed the FFI boundary as a value: {0}")
     )]
     OpaqueAsValue(TypeName),
+    /// A non-oquare zero-sized struct or enum has been defined.
     #[cfg_attr(
         feature = "displaydoc",
-        doc = "A non-opaque zero-sized struct or enum has been defined: {0}"
+        displaydoc("A non-opaque zero-sized struct or enum has been defined: {0}")
     )]
     NonOpaqueZST(Path),
+    /// A non-opaque type was found behind a `Box` or reference.
     #[cfg_attr(
         feature = "displaydoc",
-        doc = "A non-opaque type was found behind a Box or reference, these can \
+        displaydoc(
+            "A non-opaque type was found behind a Box or reference, these can \
                only be handled by-move as they get converted at the FFI boundary: {0}"
+        )
     )]
     NonOpaqueBehindRef(TypeName),
+    /// A non-reference type was found inside an `Option<T>`.
     #[cfg_attr(
         feature = "displaydoc",
-        doc = "A non-reference type was found inside an Option<T>: {0}"
+        displaydoc("A non-reference type was found inside an Option<T>: {0}")
     )]
     OptionNotContainingPointer(TypeName),
+    /// A return type contains elided lifetimes.
     #[cfg_attr(
         feature = "displaydoc",
-        doc = "Return types cannot elide lifetimes: {sub_type} in {full_type}"
+        displaydoc("A return type contains elided lifetimes, which aren't yet supported: {sub_type} in {full_type}")
     )]
     LifetimeElisionInReturn {
         full_type: TypeName,
         sub_type: TypeName,
     },
+    /// An alias or submodule was found instead of a custom type.
+    #[cfg_attr(
+        feature = "displaydoc",
+        displaydoc("An alias or submodule was found instead of a custom type with the name {0}.")
+    )]
+    PathTypeNameConflict(Ident),
 }
 
 #[cfg(test)]
