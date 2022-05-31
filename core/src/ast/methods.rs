@@ -138,8 +138,9 @@ impl Method {
 
                 // Collect all the params that contain a named lifetime that's also
                 // in the return type.
-                self.params
+                self.self_param
                     .iter()
+                    .chain(self.params.iter())
                     .filter(|param| {
                         param
                             .ty
@@ -301,5 +302,55 @@ mod tests {
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
+    }
+
+    #[test]
+    fn static_params_held_by_return_type() {
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse_quote! {
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+                fn foo<'a, 'b>(a: &'a A, b: &'b B, c: &C) -> Foo<'a, 'b> {
+                    Foo(a, b)
+                }
+            },
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
+            vec![]
+        ).output_lifetime_dependent_params());
+    }
+
+    #[test]
+    fn nonstatic_params_held_by_return_type() {
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse_quote! {
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+                fn foo<'a>(&'a self) -> Foo<'a> {
+                    Foo(self)
+                }
+            },
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
+            vec![]
+        ).output_lifetime_dependent_params());
+
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse_quote! {
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+                fn foo<'x, 'y>(&'x self, x: &'x X, y: &'y Y, z: &Z) -> Foo<'x, 'y> {
+                    Foo(self, x, y)
+                }
+            },
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
+            vec![]
+        ).output_lifetime_dependent_params());
+
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse_quote! {
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+                fn foo<'a, 'b>(&'a self, bar: Bar<'b>) -> Foo<'a, 'b> {
+                    Foo(self, bar)
+                }
+            },
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
+            vec![]
+        ).output_lifetime_dependent_params());
     }
 }
