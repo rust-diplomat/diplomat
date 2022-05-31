@@ -104,15 +104,26 @@ impl Method {
         }
     }
 
-    /// Returns the parameters that the output type's lifetime is bound to.
+    /// Returns the parameters that the output is lifetime-bound to.
+    /// 
+    /// # Examples
+    /// 
+    /// Given the following method:
+    /// ```
+    /// fn foo<'a, 'b, 'c>(&'a self, bar: Bar<'b>, baz: Baz<'c>) -> FooBar<'a, 'b> { ... }
+    /// ```
+    /// Then this method would return the `&'a self` and `bar: Bar<'b>` params
+    /// because they contain lifetimes that are in the return type. It wouldn't
+    /// include `baz: Baz<'c>` though, because the return type isn't bound by `'c`.
     ///
     /// # Panics
     ///
-    /// This method panics if the validity isn't checked first, since the result
-    /// type may contain elided lifetimes that we depend on for this method.
-    /// The validity checks ensure that the return type doesn't elide any lifetimes,
-    /// ensuring that this method will produce correct results.
-    pub fn output_lifetime_dependent_params(&self) -> Vec<&Param> {
+    /// This method may panic if `TypeName::check_result_type_validity` (called by
+    /// `Method::check_validity`) doesn't pass first, since the result type may
+    /// contain elided lifetimes that we depend on for this method. The validity
+    /// checks ensure that the return type doesn't elide any lifetimes, ensuring
+    /// that this method will produce correct results.
+    pub fn params_held_by_output(&self) -> Vec<&Param> {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
         self.return_type
@@ -316,7 +327,7 @@ mod tests {
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         )
-        .output_lifetime_dependent_params());
+        .params_held_by_output());
     }
 
     #[test]
@@ -331,7 +342,7 @@ mod tests {
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         )
-        .output_lifetime_dependent_params());
+        .params_held_by_output());
 
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse_quote! {
@@ -343,7 +354,7 @@ mod tests {
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         )
-        .output_lifetime_dependent_params());
+        .params_held_by_output());
 
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse_quote! {
@@ -355,6 +366,6 @@ mod tests {
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         )
-        .output_lifetime_dependent_params());
+        .params_held_by_output());
     }
 }
