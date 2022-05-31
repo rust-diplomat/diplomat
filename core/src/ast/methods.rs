@@ -125,16 +125,17 @@ impl Method {
     /// method that doesn't take the writeable as an argument but instead creates
     /// one locally and just returns the final string.
     pub fn is_writeable_out(&self) -> bool {
-        let return_compatible = self.return_type.is_none()
-            || match self.return_type.as_ref().unwrap() {
+        let return_compatible = self
+            .return_type
+            .as_ref()
+            .map(|return_type| match return_type {
                 TypeName::Unit => true,
                 TypeName::Result(ok, _) => matches!(ok.as_ref(), TypeName::Unit),
                 _ => false,
-            };
+            })
+            .unwrap_or(true);
 
-        return_compatible
-            && !self.params.is_empty()
-            && self.params[self.params.len() - 1].is_writeable()
+        return_compatible && self.params.last().map(Param::is_writeable).unwrap_or(false)
     }
 
     /// Checks if any parameters are writeable (regardless of other compatibilities for writeable output)
