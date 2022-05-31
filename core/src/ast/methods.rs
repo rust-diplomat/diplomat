@@ -315,7 +315,8 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
-        ).output_lifetime_dependent_params());
+        )
+        .output_lifetime_dependent_params());
     }
 
     #[test]
@@ -329,7 +330,8 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
-        ).output_lifetime_dependent_params());
+        )
+        .output_lifetime_dependent_params());
 
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse_quote! {
@@ -340,7 +342,8 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
-        ).output_lifetime_dependent_params());
+        )
+        .output_lifetime_dependent_params());
 
         insta::assert_yaml_snapshot!(Method::from_syn(
             &syn::parse_quote! {
@@ -351,6 +354,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
-        ).output_lifetime_dependent_params());
+        )
+        .output_lifetime_dependent_params());
     }
 }
