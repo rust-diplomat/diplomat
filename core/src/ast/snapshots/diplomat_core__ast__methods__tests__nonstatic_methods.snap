@@ -8,16 +8,13 @@ docs:
   - ~
 full_path_name: MyStructContainingMethod_foo
 self_param:
-  name: self
-  ty:
-    Reference:
-      - Anonymous
-      - Immutable
-      - Named:
-          path:
-            elements:
-              - MyStructContainingMethod
-          lifetimes: []
+  reference: Anonymous
+  mutability: Immutable
+  path_type:
+    path:
+      elements:
+        - MyStructContainingMethod
+    lifetimes: []
 params:
   - name: x
     ty:

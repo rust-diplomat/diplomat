@@ -13,16 +13,13 @@ docs:
     typ: FnInStruct
 full_path_name: MyStructContainingMethod_foo
 self_param:
-  name: self
-  ty:
-    Reference:
-      - Anonymous
-      - Mutable
-      - Named:
-          path:
-            elements:
-              - MyStructContainingMethod
-          lifetimes: []
+  reference: Anonymous
+  mutability: Mutable
+  path_type:
+    path:
+      elements:
+        - MyStructContainingMethod
+    lifetimes: []
 params:
   - name: x
     ty:
