@@ -22,7 +22,7 @@ pub struct Method {
     pub full_path_name: Ident,
 
     /// The `self` param of the method, if any.
-    pub self_param: Option<Param>,
+    pub self_param: Option<SelfParam>,
 
     /// All non-`self` params taken by the method.
     pub params: Vec<Param>,
@@ -66,18 +66,7 @@ impl Method {
             .collect::<Vec<_>>();
 
         let self_param = m.sig.receiver().map(|rec| match rec {
-            FnArg::Receiver(rec) => Param {
-                name: "self".to_string(),
-                ty: if let Some(ref reference) = rec.reference {
-                    TypeName::Reference(
-                        Lifetime::from(&reference.1),
-                        Mutability::from_syn(&rec.mutability),
-                        Box::new(TypeName::Named(self_path_type.clone())),
-                    )
-                } else {
-                    TypeName::Named(self_path_type.clone())
-                },
-            },
+            FnArg::Receiver(rec) => SelfParam::from_syn(rec, self_path_type.clone()),
             _ => panic!("Unexpected self param type"),
         });
 
@@ -123,7 +112,7 @@ impl Method {
     /// contain elided lifetimes that we depend on for this method. The validity
     /// checks ensure that the return type doesn't elide any lifetimes, ensuring
     /// that this method will produce correct results.
-    pub fn params_held_by_output(&self) -> Vec<&Param> {
+    pub fn params_held_by_output(&self) -> (Option<&SelfParam>, Vec<&Param>) {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
         self.return_type
@@ -147,11 +136,27 @@ impl Method {
                     ControlFlow::Continue(())
                 });
 
+                let held_self_param = self.self_param.as_ref().filter(|self_param| {
+                    // Check if `self` is a reference with a lifetime in the return type.
+                    if let Some((Lifetime::Named(ref name), _)) = self_param.reference {
+                        if lifetimes.contains(name) {
+                            return true;
+                        }
+                    }
+                    self_param.path_type.lifetimes.iter().any(|lt| {
+                        if let Lifetime::Named(name) = lt {
+                            lifetimes.contains(name)
+                        } else {
+                            false
+                        }
+                    })
+                });
+
                 // Collect all the params that contain a named lifetime that's also
                 // in the return type.
-                self.self_param
+                let held_params = self
+                    .params
                     .iter()
-                    .chain(self.params.iter())
                     .filter(|param| {
                         param
                             .ty
@@ -168,7 +173,9 @@ impl Method {
                             })
                             .is_break()
                     })
-                    .collect()
+                    .collect();
+
+                (held_self_param, held_params)
             })
             .unwrap_or_default()
     }
@@ -180,8 +187,12 @@ impl Method {
         env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
-        if let Some(ref m) = self.self_param {
-            m.ty.check_validity(in_path, env, errors);
+        // validity check that if the self type is nonopaque, that it is
+        // behind a reference
+        if let Some(ref self_param) = self.self_param {
+            self_param
+                .to_typename()
+                .check_validity(in_path, env, errors);
         }
         for m in self.params.iter() {
             m.ty.check_validity(in_path, env, errors);
@@ -218,14 +229,44 @@ impl Method {
     }
 }
 
-/// A parameter taken by a [`Method`], including `self`.
+/// The `self` parameter taken by a [`Method`].
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct SelfParam {
+    /// The lifetime and mutability of the `self` param, if it's a reference.
+    pub reference: Option<(Lifetime, Mutability)>,
+
+    /// The type of the parameter, which will be a named reference to
+    /// the associated struct,
+    pub path_type: PathType,
+}
+
+impl SelfParam {
+    pub fn to_typename(&self) -> TypeName {
+        let typ = TypeName::Named(self.path_type.clone());
+        if let Some((ref lifetime, ref mutability)) = self.reference {
+            return TypeName::Reference(lifetime.clone(), mutability.clone(), Box::new(typ));
+        }
+        typ
+    }
+
+    pub fn from_syn(rec: &syn::Receiver, path_type: PathType) -> Self {
+        SelfParam {
+            reference: rec
+                .reference
+                .as_ref()
+                .map(|(_, lt)| (lt.into(), Mutability::from_syn(&rec.mutability))),
+            path_type,
+        }
+    }
+}
+
+/// A parameter taken by a [`Method`], not including `self`.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Param {
     /// The name of the parameter in the original method declaration.
-    pub name: String,
+    pub name: Ident,
 
-    /// The type of the parameter, which will be a named reference to
-    /// the associated struct if this is the `self` parameter.
+    /// The type of the parameter.
     pub ty: TypeName,
 }
 
@@ -240,12 +281,12 @@ impl Param {
 
     pub fn from_syn(t: &PatType, self_path_type: PathType) -> Self {
         let ident = match t.pat.as_ref() {
-            Pat::Ident(ident) => ident.clone(),
+            Pat::Ident(ident) => ident,
             _ => panic!("Unexpected param type"),
         };
 
         Param {
-            name: ident.ident.to_string(),
+            name: (&ident.ident).into(),
             ty: TypeName::from_syn(&t.ty, Some(self_path_type)),
         }
     }
@@ -316,25 +357,47 @@ mod tests {
     }
 
     macro_rules! assert_params_held_by_output {
-        ([$($lt:expr),*] => $($tokens:tt)* ) => {{
+        ([self $(,$($param:ident),+)?] => $($tokens:tt)* ) => {{
             let method = Method::from_syn(
                 &syn::parse_quote! { $($tokens)* },
                 PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
                 vec![],
             );
 
-            let actual = method
-                .params_held_by_output()
+            let (self_param, params) = method.params_held_by_output();
+            assert!(self_param.is_some(), "expected `self` param to be held");
+
+            let actual: Vec<&str> = params
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect();
+
+            let expected: &[&str] = &[$($(stringify!($param)),*)?];
+
+            assert_eq!(actual, expected);
+        }};
+        ([$($param:ident),*] => $($tokens:tt)* ) => {{
+            let method = Method::from_syn(
+                &syn::parse_quote! { $($tokens)* },
+                PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
+                vec![],
+            );
+
+            let (self_param, params) = method.params_held_by_output();
+            assert!(self_param.is_none(), "didn't expect `self` param to be held");
+
+            let actual = params
                 .iter()
                 .map(|p| p.name.as_str())
                 .collect::<Vec<_>>();
-            assert_eq!(actual, [$($lt),*]);
+
+            assert_eq!(actual, [$(stringify!($param)),*]);
         }};
     }
 
     #[test]
     fn static_params_held_by_return_type() {
-        assert_params_held_by_output! { ["first", "second"] =>
+        assert_params_held_by_output! { [first, second] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(first: &'a First, second: &'b Second, third: &Third) -> Foo<'a, 'b> {
                 unimplemented!()
@@ -344,21 +407,21 @@ mod tests {
 
     #[test]
     fn nonstatic_params_held_by_return_type() {
-        assert_params_held_by_output! { ["self"] =>
+        assert_params_held_by_output! { [self] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a>(&'a self) -> Foo<'a> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { ["self", "foo", "bar"] =>
+        assert_params_held_by_output! { [self, foo, bar] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'x, 'y>(&'x self, foo: &'x Foo, bar: &Bar<'y>, baz: &Baz) -> Foo<'x, 'y> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { ["self", "bar"] =>
+        assert_params_held_by_output! { [self, bar] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(&'a self, bar: Bar<'b>) -> Foo<'a, 'b> {
                 unimplemented!()
@@ -366,7 +429,7 @@ mod tests {
         }
 
         // Test that being dependent on 'static doesn't make you dependent on 'static params.
-        assert_params_held_by_output! { ["self", "bar"] =>
+        assert_params_held_by_output! { [self, bar] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(&'a self, bar: Bar<'b>, baz: &'static str) -> Foo<'a, 'b, 'static> {
                 unimplemented!()

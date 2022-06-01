@@ -18,10 +18,7 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                     attrs: vec![],
                     by_ref: None,
                     mutability: None,
-                    ident: Ident::new(
-                        (param.name.clone() + "_diplomat_data").as_str(),
-                        Span::call_site(),
-                    ),
+                    ident: Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site()),
                     subpat: None,
                 })),
                 colon_token: syn::token::Colon(Span::call_site()),
@@ -45,10 +42,7 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                     attrs: vec![],
                     by_ref: None,
                     mutability: None,
-                    ident: Ident::new(
-                        (param.name.clone() + "_diplomat_len").as_str(),
-                        Span::call_site(),
-                    ),
+                    ident: Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site()),
                     subpat: None,
                 })),
                 colon_token: syn::token::Colon(Span::call_site()),
@@ -80,14 +74,9 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
 fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
     match &param.ty {
         ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(..) => {
-            let data_ident = Ident::new(
-                (param.name.clone() + "_diplomat_data").as_str(),
-                Span::call_site(),
-            );
-            let len_ident = Ident::new(
-                (param.name.clone() + "_diplomat_len").as_str(),
-                Span::call_site(),
-            );
+            let data_ident =
+                Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site());
+            let len_ident = Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site());
 
             let tokens = if let ast::TypeName::PrimitiveSlice(_, mutability, _) = &param.ty {
                 match mutability {
@@ -148,7 +137,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
                 attrs: vec![],
                 pat: Box::new(this_ident.clone()),
                 colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(self_param.ty.to_syn()),
+                ty: Box::new(self_param.to_typename().to_syn()),
             }),
         );
     }

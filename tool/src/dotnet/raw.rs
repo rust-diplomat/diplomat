@@ -177,16 +177,21 @@ fn gen_method(
             .replace(&format!("{}_", typ.name()), "")
             .to_upper_camel_case()
     )?;
-    let mut params_to_gen = method.params.clone();
-    if let Some(param) = &method.self_param {
-        params_to_gen.insert(0, param.clone());
+
+    let mut first = true;
+    if let Some(ref self_param) = method.self_param {
+        gen_param("self", &self_param.to_typename(), false, in_path, env, out)?;
+        first = false;
     }
 
-    for (i, param) in params_to_gen.iter().enumerate() {
-        if i != 0 {
+    for param in method.params.iter() {
+        if first {
+            first = false;
+        } else {
             write!(out, ", ")?;
         }
-        let name = param.name.to_lower_camel_case();
+
+        let name = param.name.as_str().to_lower_camel_case();
         gen_param(&name, &param.ty, param.is_writeable(), in_path, env, out)?;
     }
 

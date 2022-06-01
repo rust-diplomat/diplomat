@@ -10,7 +10,7 @@ use crate::layout;
 
 #[allow(clippy::ptr_arg)] // false positive, rust-clippy#8463, fixed in 1.61
 pub fn gen_value_js_to_rust(
-    param_name: String,
+    param_name: &ast::Ident,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &Env,
@@ -73,14 +73,14 @@ pub fn gen_value_js_to_rust(
             ast::CustomType::Struct(struct_type) => {
                 for (field_name, field_type, _) in struct_type.fields.iter() {
                     let field_extracted_name =
-                        format!("diplomat_{}_extracted_{}", struct_type.name, field_name);
+                        format!("diplomat_{}_extracted_{}", struct_type.name, field_name).into();
                     pre_logic.push(format!(
                         "const {} = {}[\"{}\"];",
                         field_extracted_name, param_name, field_name
                     ));
 
                     gen_value_js_to_rust(
-                        field_extracted_name,
+                        &field_extracted_name,
                         field_type,
                         in_path,
                         env,
@@ -99,7 +99,7 @@ pub fn gen_value_js_to_rust(
                 panic!("Opaque types cannot be sent as values");
             }
         },
-        _ => invocation_params.push(param_name),
+        _ => invocation_params.push(param_name.to_string()),
     }
 }
 

@@ -362,7 +362,7 @@ fn gen_method(
             write!(out, ", ")?;
         }
 
-        let name = param.name.to_lower_camel_case();
+        let name = param.name.as_str().to_lower_camel_case();
 
         if let ast::TypeName::StrReference(..) = param.ty {
             params_str_ref.push(name.clone());
@@ -419,7 +419,7 @@ fn gen_method(
             }
 
             for param in &params_custom_types {
-                let param_name = param.name.to_lower_camel_case();
+                let param_name = param.name.as_str().to_lower_camel_case();
                 let raw_var_name = format!("{}Raw", param_name);
                 let mut raw_type_name = String::new();
                 gen_raw_conversion_type_name_decl_position(

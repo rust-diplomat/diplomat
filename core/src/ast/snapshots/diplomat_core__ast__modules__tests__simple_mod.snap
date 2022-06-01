@@ -50,16 +50,14 @@ declared_types:
             - ~
           full_path_name: NonOpaqueStruct_set_a
           self_param:
-            name: self
-            ty:
-              Reference:
-                - Anonymous
-                - Mutable
-                - Named:
-                    path:
-                      elements:
-                        - NonOpaqueStruct
-                    lifetimes: []
+            reference:
+              - Anonymous
+              - Mutable
+            path_type:
+              path:
+                elements:
+                  - NonOpaqueStruct
+              lifetimes: []
           params:
             - name: new_a
               ty:
@@ -95,16 +93,14 @@ declared_types:
             - ~
           full_path_name: OpaqueStruct_get_string
           self_param:
-            name: self
-            ty:
-              Reference:
-                - Anonymous
-                - Immutable
-                - Named:
-                    path:
-                      elements:
-                        - OpaqueStruct
-                    lifetimes: []
+            reference:
+              - Anonymous
+              - Immutable
+            path_type:
+              path:
+                elements:
+                  - OpaqueStruct
+              lifetimes: []
           params: []
           return_type:
             Named:
