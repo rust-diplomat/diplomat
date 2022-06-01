@@ -118,7 +118,7 @@ fn gen_method<W: fmt::Write>(
 
     method.params.iter().for_each(|p| {
         gen_value_js_to_rust(
-            p.name.clone(),
+            &p.name,
             &p.ty,
             in_path,
             env,
@@ -131,8 +131,8 @@ fn gen_method<W: fmt::Write>(
     let mut all_params = method
         .params
         .iter()
-        .map(|p| p.name.clone())
-        .collect::<Vec<String>>();
+        .map(|p| p.name.as_str())
+        .collect::<Vec<_>>();
 
     if is_writeable {
         let last_index_exprs = all_param_exprs.len() - 1;

@@ -211,12 +211,12 @@ fn gen_method<W: fmt::Write>(
 
         let mut all_params_invocation = vec![];
 
-        if let Some(param) = &method.self_param {
+        if let Some(self_param) = &method.self_param {
             let invocation_expr = gen_cpp_to_rust(
                 "this",
                 "this",
                 None,
-                &param.ty,
+                &self_param.to_typename(),
                 in_path,
                 env,
                 true,
@@ -233,13 +233,13 @@ fn gen_method<W: fmt::Write>(
                 }
                 _ => {
                     let invocation_expr = gen_cpp_to_rust(
-                        &param.name,
-                        &param.name,
+                        param.name.as_str(),
+                        param.name.as_str(),
                         None,
                         &param.ty,
                         in_path,
                         env,
-                        param.name == "self",
+                        false,
                         &mut method_body,
                     );
                     all_params_invocation.push(invocation_expr);
@@ -318,9 +318,10 @@ pub fn gen_method_interface<W: fmt::Write>(
     }
 
     let mut is_const = false;
-    if let Some(ref param) = method.self_param {
-        if let ast::TypeName::Reference(_, mutable, _lt) = &param.ty {
-            is_const = mutable.is_immutable();
+    if let Some(ref self_param) = method.self_param {
+        // QUESTION: What if we have mutable pass-by-value?
+        if self_param.reference.is_some() {
+            is_const = self_param.mutability.is_immutable();
         }
     } else if is_header {
         write!(out, "static ")?;
