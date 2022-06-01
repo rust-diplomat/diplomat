@@ -138,7 +138,7 @@ impl Method {
 
                 let held_self_param = self.self_param.as_ref().filter(|self_param| {
                     // Check if `self` is a reference with a lifetime in the return type.
-                    if let Some(Lifetime::Named(ref name)) = self_param.reference {
+                    if let Some((Lifetime::Named(ref name), _)) = self_param.reference {
                         if lifetimes.contains(name) {
                             return true;
                         }
@@ -232,11 +232,8 @@ impl Method {
 /// The `self` parameter taken by a [`Method`].
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct SelfParam {
-    /// The lifetime of the `self` param, if it's a reference.
-    pub reference: Option<Lifetime>,
-
-    /// The mutability of the `self` param.
-    pub mutability: Mutability,
+    /// The lifetime and mutability of the `self` param, if it's a reference.
+    pub reference: Option<(Lifetime, Mutability)>,
 
     /// The type of the parameter, which will be a named reference to
     /// the associated struct,
@@ -246,16 +243,18 @@ pub struct SelfParam {
 impl SelfParam {
     pub fn to_typename(&self) -> TypeName {
         let typ = TypeName::Named(self.path_type.clone());
-        if let Some(ref lt) = self.reference {
-            return TypeName::Reference(lt.clone(), self.mutability.clone(), Box::new(typ));
+        if let Some((ref lifetime, ref mutability)) = self.reference {
+            return TypeName::Reference(lifetime.clone(), mutability.clone(), Box::new(typ));
         }
         typ
     }
 
     pub fn from_syn(rec: &syn::Receiver, path_type: PathType) -> Self {
         SelfParam {
-            reference: rec.reference.as_ref().map(|(_, lt)| lt.into()),
-            mutability: Mutability::from_syn(&rec.mutability),
+            reference: rec
+                .reference
+                .as_ref()
+                .map(|(_, lt)| (lt.into(), Mutability::from_syn(&rec.mutability))),
             path_type,
         }
     }

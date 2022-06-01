@@ -8,8 +8,9 @@ docs:
   - ~
 full_path_name: MyStructContainingMethod_foo
 self_param:
-  reference: Anonymous
-  mutability: Immutable
+  reference:
+    - Anonymous
+    - Immutable
   path_type:
     path:
       elements:

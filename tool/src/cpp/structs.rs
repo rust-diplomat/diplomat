@@ -319,9 +319,9 @@ pub fn gen_method_interface<W: fmt::Write>(
 
     let mut is_const = false;
     if let Some(ref self_param) = method.self_param {
-        // QUESTION: What if we have mutable pass-by-value?
-        if self_param.reference.is_some() {
-            is_const = self_param.mutability.is_immutable();
+        // If it's pass-by-value, we assume mutability.
+        if let Some((_, ref mutability)) = self_param.reference {
+            is_const = mutability.is_immutable();
         }
     } else if is_header {
         write!(out, "static ")?;

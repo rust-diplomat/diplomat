@@ -13,8 +13,9 @@ docs:
     typ: FnInStruct
 full_path_name: MyStructContainingMethod_foo
 self_param:
-  reference: Anonymous
-  mutability: Mutable
+  reference:
+    - Anonymous
+    - Mutable
   path_type:
     path:
       elements:
