@@ -109,7 +109,11 @@ pub fn gen_method_docs<W: fmt::Write>(
     docs_url_gen: &ast::DocsUrlGenerator,
     env: &Env,
 ) -> fmt::Result {
-    let mut param_names: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
+    let mut param_names = method
+        .params
+        .iter()
+        .map(|p| p.name.as_str())
+        .collect::<Vec<_>>();
     if method.is_writeable_out() {
         param_names.remove(param_names.len() - 1);
     }

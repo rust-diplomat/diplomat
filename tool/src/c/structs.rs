@@ -66,13 +66,18 @@ pub fn gen_method<W: fmt::Write>(
     }
 
     write!(out, " {}(", method.full_path_name)?;
-    let mut params_to_gen = method.params.clone();
-    if let Some(param) = &method.self_param {
-        params_to_gen.insert(0, param.clone());
+
+    let mut first = true;
+    if let Some(self_param) = &method.self_param {
+        gen_type(&self_param.to_typename(), in_path, env, out)?;
+        write!(out, " self")?;
+        first = false;
     }
 
-    for (i, param) in params_to_gen.iter().enumerate() {
-        if i != 0 {
+    for param in method.params.iter() {
+        if first {
+            first = false;
+        } else {
             write!(out, ", ")?;
         }
 
