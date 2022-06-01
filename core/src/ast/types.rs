@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::ControlFlow};
 
 use proc_macro2::Span;
 use quote::{quote, ToTokens};
@@ -10,7 +10,7 @@ use std::fmt;
 use std::iter::FromIterator;
 
 use super::{Docs, Enum, Ident, Method, OpaqueStruct, Path, Struct, ValidityError};
-use crate::Env;
+use crate::{Env, ModuleEnv};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
@@ -483,6 +483,30 @@ impl TypeName {
         }
     }
 
+    /// Recurse down the type tree, visiting all lifetimes.
+    ///
+    /// Using this function, you can collect all the lifetimes into a collection,
+    /// or examine each one without having to make any additional allocations.
+    pub fn visit_lifetimes<'a, F, B>(&'a self, visit: &mut F) -> ControlFlow<B>
+    where
+        F: FnMut(&'a Lifetime) -> ControlFlow<B>,
+    {
+        match self {
+            TypeName::Named(path_type) => path_type.lifetimes.iter().try_for_each(visit),
+            TypeName::Reference(lt, _, ty) => {
+                visit(lt)?;
+                ty.visit_lifetimes(visit)
+            }
+            TypeName::Box(ty) | TypeName::Option(ty) => ty.visit_lifetimes(visit),
+            TypeName::Result(ok, err) => {
+                ok.visit_lifetimes(visit)?;
+                err.visit_lifetimes(visit)
+            }
+            TypeName::StrReference(lt) | TypeName::PrimitiveSlice(lt, ..) => visit(lt),
+            _ => ControlFlow::Continue(()),
+        }
+    }
+
     /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
     pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
@@ -596,6 +620,8 @@ impl TypeName {
     /// are always behind a box or reference, and that non-opaque custom types are *never* behind
     /// references or boxes.
     ///
+    /// Also checks that there are no elided lifetimes in the return type.
+    ///
     /// Errors are pushed into the `errors` vector.
     pub fn check_validity<'a>(
         &'a self,
@@ -605,6 +631,92 @@ impl TypeName {
     ) {
         self.check_opaque(in_path, env, false, errors);
         self.check_option(errors);
+    }
+
+    /// Checks the validity of return types.
+    ///
+    /// This is equivalent to `TypeName::check_validity`, but it also ensures
+    /// that the type doesn't elide any lifetimes.
+    ///
+    /// Once we decide to support lifetime elision in return types, this function
+    /// will probably be removed.
+    pub fn check_return_type_validity(
+        &self,
+        in_path: &Path,
+        env: &Env,
+        errors: &mut Vec<ValidityError>,
+    ) {
+        self.check_validity(in_path, env, errors);
+        self.check_lifetime_elision(self, &env[in_path], errors);
+    }
+
+    /// Checks that there aren't any elided lifetimes.
+    fn check_lifetime_elision(
+        &self,
+        full_type: &Self,
+        env: &ModuleEnv,
+        errors: &mut Vec<ValidityError>,
+    ) {
+        match self {
+            TypeName::Named(path_type) => {
+                let name = path_type.path.elements.last().unwrap();
+                if let ModSymbol::CustomType(custom) = &env[name.as_str()] {
+                    if let Some(lifetimes) = custom.lifetimes() {
+                        let lifetimes_provided = path_type
+                            .lifetimes
+                            .iter()
+                            .filter(|lt| !matches!(lt, Lifetime::Anonymous))
+                            .count();
+
+                        if lifetimes_provided != lifetimes.len() {
+                            // There's a discrepency between the number of declared
+                            // lifetimes and the number of lifetimes provided in
+                            // the return type, so there must have been elision.
+                            errors.push(ValidityError::LifetimeElisionInReturn {
+                                full_type: full_type.clone(),
+                                sub_type: self.clone(),
+                            });
+                        } else {
+                            // The struct was written with the number of lifetimes
+                            // that it was declared with, so we're good.
+                        }
+                    } else {
+                        // `CustomType::Enum`, which doesn't have any lifetimes.
+                        // We already checked that enums don't have generics in
+                        // core.
+                    }
+                } else {
+                    // We looked in the environment for a custom type with our
+                    // name, but we found an alias or submodule instead of a type.
+                    errors.push(ValidityError::PathTypeNameConflict(name.clone()))
+                }
+            }
+            TypeName::Reference(lifetime, _, ty) => {
+                if let Lifetime::Anonymous = lifetime {
+                    errors.push(ValidityError::LifetimeElisionInReturn {
+                        full_type: full_type.clone(),
+                        sub_type: self.clone(),
+                    });
+                }
+
+                ty.check_lifetime_elision(full_type, env, errors);
+            }
+            TypeName::Box(ty) | TypeName::Option(ty) => {
+                ty.check_lifetime_elision(full_type, env, errors)
+            }
+            TypeName::Result(ok, err) => {
+                ok.check_lifetime_elision(full_type, env, errors);
+                err.check_lifetime_elision(full_type, env, errors);
+            }
+            TypeName::StrReference(Lifetime::Anonymous)
+            | TypeName::PrimitiveSlice(Lifetime::Anonymous, ..) => {
+                errors.push(ValidityError::LifetimeElisionInReturn {
+                    full_type: full_type.clone(),
+                    sub_type: self.clone(),
+                });
+            }
+            _ => {}
+        }
     }
 
     pub fn is_zst(&self) -> bool {

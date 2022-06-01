@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
+use std::ops::ControlFlow;
 use syn::*;
 
 use super::docs::Docs;
@@ -80,10 +82,14 @@ impl Method {
         });
 
         let return_ty = match &m.sig.output {
-            ReturnType::Type(_, return_typ) => Some(TypeName::from_syn(
-                return_typ.as_ref(),
-                Some(self_path_type),
-            )),
+            ReturnType::Type(_, return_typ) => {
+                // When we allow lifetime elision, this is where we would want to
+                // support it so we can insert the expanded explicit lifetimes.
+                Some(TypeName::from_syn(
+                    return_typ.as_ref(),
+                    Some(self_path_type),
+                ))
+            }
             ReturnType::Default => None,
         };
 
@@ -98,6 +104,75 @@ impl Method {
         }
     }
 
+    /// Returns the parameters that the output is lifetime-bound to.
+    ///
+    /// # Examples
+    ///
+    /// Given the following method:
+    /// ```ignore
+    /// fn foo<'a, 'b, 'c>(&'a self, bar: Bar<'b>, baz: Baz<'c>) -> FooBar<'a, 'b> { ... }
+    /// ```
+    /// Then this method would return the `&'a self` and `bar: Bar<'b>` params
+    /// because they contain lifetimes that are in the return type. It wouldn't
+    /// include `baz: Baz<'c>` though, because the return type isn't bound by `'c`.
+    ///
+    /// # Panics
+    ///
+    /// This method may panic if `TypeName::check_result_type_validity` (called by
+    /// `Method::check_validity`) doesn't pass first, since the result type may
+    /// contain elided lifetimes that we depend on for this method. The validity
+    /// checks ensure that the return type doesn't elide any lifetimes, ensuring
+    /// that this method will produce correct results.
+    pub fn params_held_by_output(&self) -> Vec<&Param> {
+        // To determine which params the return type is bound to, we just have to
+        // find the params that contain a lifetime that's also in the return type.
+        self.return_type
+            .as_ref()
+            .map(|return_type| {
+                // Collect all lifetimes from return type into a `BTreeSet`.
+                let mut lifetimes = BTreeSet::new();
+                return_type.visit_lifetimes(&mut |lt| -> ControlFlow<()> {
+                    match lt {
+                        Lifetime::Named(name) => {
+                            lifetimes.insert(name);
+                        }
+                        Lifetime::Anonymous => {
+                            // This is also caught in the validity check, so this should
+                            // never happen. If we're guaranteed to always run the
+                            // check first, we can change this to `unreachable!()`.
+                            panic!("Anonymous lifetimes not yet allowed in return types")
+                        }
+                        Lifetime::Static => {}
+                    }
+                    ControlFlow::Continue(())
+                });
+
+                // Collect all the params that contain a named lifetime that's also
+                // in the return type.
+                self.self_param
+                    .iter()
+                    .chain(self.params.iter())
+                    .filter(|param| {
+                        param
+                            .ty
+                            .visit_lifetimes(&mut |lt| {
+                                // Thanks to `TypeName::visit_lifetimes`, we can
+                                // traverse the lifetimes without allocations and
+                                // short-circuit if we find a match.
+                                if let Lifetime::Named(name) = lt {
+                                    if lifetimes.contains(name) {
+                                        return ControlFlow::Break(());
+                                    }
+                                }
+                                ControlFlow::Continue(())
+                            })
+                            .is_break()
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
     /// Performs type-specific validity checks (see [TypeName::check_validity()])
     pub fn check_validity<'a>(
         &'a self,
@@ -105,15 +180,15 @@ impl Method {
         env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
-        self.self_param
-            .iter()
-            .for_each(|m| m.ty.check_validity(in_path, env, errors));
-        self.params
-            .iter()
-            .for_each(|m| m.ty.check_validity(in_path, env, errors));
-        self.return_type
-            .iter()
-            .for_each(|t| t.check_validity(in_path, env, errors));
+        if let Some(ref m) = self.self_param {
+            m.ty.check_validity(in_path, env, errors);
+        }
+        for m in self.params.iter() {
+            m.ty.check_validity(in_path, env, errors);
+        }
+        if let Some(ref t) = self.return_type {
+            t.check_return_type_validity(in_path, env, errors);
+        }
     }
 
     /// Checks whether the method qualifies for special writeable handling.
@@ -239,5 +314,64 @@ mod tests {
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             vec![]
         ));
+    }
+
+    macro_rules! assert_params_held_by_output {
+        ([$($lt:expr),*] => $($tokens:tt)* ) => {{
+            let method = Method::from_syn(
+                &syn::parse_quote! { $($tokens)* },
+                PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
+                vec![],
+            );
+
+            let actual = method
+                .params_held_by_output()
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect::<Vec<_>>();
+            assert_eq!(actual, [$($lt),*]);
+        }};
+    }
+
+    #[test]
+    fn static_params_held_by_return_type() {
+        assert_params_held_by_output! { ["first", "second"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'a, 'b>(first: &'a First, second: &'b Second, third: &Third) -> Foo<'a, 'b> {
+                unimplemented!()
+            }
+        }
+    }
+
+    #[test]
+    fn nonstatic_params_held_by_return_type() {
+        assert_params_held_by_output! { ["self"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'a>(&'a self) -> Foo<'a> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { ["self", "foo", "bar"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'x, 'y>(&'x self, foo: &'x Foo, bar: &Bar<'y>, baz: &Baz) -> Foo<'x, 'y> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { ["self", "bar"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'a, 'b>(&'a self, bar: Bar<'b>) -> Foo<'a, 'b> {
+                unimplemented!()
+            }
+        }
+
+        // Test that being dependent on 'static doesn't make you dependent on 'static params.
+        assert_params_held_by_output! { ["self", "bar"] =>
+            #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+            fn foo<'a, 'b>(&'a self, bar: Bar<'b>, baz: &'static str) -> Foo<'a, 'b, 'static> {
+                unimplemented!()
+            }
+        }
     }
 }
