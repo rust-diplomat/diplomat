@@ -319,7 +319,7 @@ pub fn gen_method_interface<W: fmt::Write>(
 
     let mut is_const = false;
     if let Some(ref self_param) = method.self_param {
-        // If it's pass-by-value, we assume mutability.
+        // If it's pass-by-value, mutability doesn't matter.
         if let Some((_, ref mutability)) = self_param.reference {
             is_const = mutability.is_immutable();
         }
