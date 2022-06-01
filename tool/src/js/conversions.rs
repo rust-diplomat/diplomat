@@ -468,16 +468,21 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             let custom_type = underlying.resolve(in_path, env);
 
             if let ast::CustomType::Enum(enm) = custom_type {
-                write!(out, "{}_rust_to_js[", enm.name)?;
-                gen_rust_reference_to_js(
-                    &ast::TypeName::Primitive(PrimitiveType::isize),
-                    in_path,
-                    value_expr,
-                    owner,
-                    env,
+                write!(
                     out,
+                    "{}_rust_to_js[{}]",
+                    enm.name,
+                    display::expr(|mut f| {
+                        gen_rust_reference_to_js(
+                            &ast::TypeName::Primitive(PrimitiveType::isize),
+                            in_path,
+                            value_expr,
+                            owner,
+                            env,
+                            &mut f,
+                        )
+                    })
                 )?;
-                write!(out, "]")?;
             } else {
                 write!(
                     out,
