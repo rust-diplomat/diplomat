@@ -3,11 +3,12 @@ use std::fmt;
 use std::fmt::Write;
 
 use diplomat_core::ast::{self, PrimitiveType};
-use indenter::indented;
 
+use super::display;
 use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
 
+/// TODO: docs
 #[allow(clippy::ptr_arg)] // false positive, rust-clippy#8463, fixed in 1.61
 pub fn gen_value_js_to_rust(
     param_name: &ast::Ident,
@@ -103,6 +104,7 @@ pub fn gen_value_js_to_rust(
     }
 }
 
+/// TODO: docs
 pub fn gen_value_rust_to_js<W: fmt::Write>(
     value_expr: &str,
     typ: &ast::TypeName,
@@ -121,41 +123,40 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                         todo!("Receiving structs that don't need a buffer")
                     }
 
-                    writeln!(out, "(() => {{")?;
-                    let mut iife_indent = indented(out).with_str("  ");
-                    writeln!(
-                        &mut iife_indent,
-                        "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
-                        strct_size_align.size(),
-                        strct_size_align.align(),
-                    )?;
-                    writeln!(&mut iife_indent, "{};", value_expr)?;
-                    writeln!(
-                        &mut iife_indent,
-                        "const out = new {}(diplomat_receive_buffer);",
-                        strct.name
-                    )?;
+                    write!(
+                        out,
+                        "(() => {})()",
+                        display::block(|mut f| {
+                            writeln!(
+                                f,
+                                "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
+                                strct_size_align.size(),
+                                strct_size_align.align(),
+                            )?;
+                            writeln!(f, "{};", value_expr)?;
+                            writeln!(
+                                f,
+                                "const out = new {}(diplomat_receive_buffer);",
+                                strct.name
+                            )?;
 
-                    for (name, typ, _) in strct.fields.iter() {
-                        gen_box_destructor(name, typ, in_path, env, &mut iife_indent)?;
-                    }
+                            for (name, typ, _) in strct.fields.iter() {
+                                gen_box_destructor(name, typ, in_path, env, &mut f)?;
+                            }
 
-                    writeln!(
-                        &mut iife_indent,
-                        "diplomat_alloc_destroy_registry.register(out, {{"
-                    )?;
+                            writeln!(
+                                f,
+                                "diplomat_alloc_destroy_registry.register(out, {});",
+                                display::block(|mut f| {
+                                    writeln!(f, "ptr: out.underlying,")?;
+                                    writeln!(f, "size: {},", strct_size_align.size())?;
+                                    writeln!(f, "align: {},", strct_size_align.align())
+                                })
+                            )?;
 
-                    let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");
-                    writeln!(&mut alloc_dict_indent, "ptr: out.underlying,")?;
-                    writeln!(&mut alloc_dict_indent, "size: {},", strct_size_align.size())?;
-                    writeln!(
-                        &mut alloc_dict_indent,
-                        "align: {},",
-                        strct_size_align.align()
+                            writeln!(f, "return out;")
+                        })
                     )?;
-                    writeln!(&mut iife_indent, "}});")?;
-                    writeln!(&mut iife_indent, "return out;")?;
-                    write!(out, "}})()")?;
                 }
 
                 ast::CustomType::Enum(enm) => {
@@ -169,29 +170,36 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Box(underlying) => {
-            writeln!(out, "(() => {{")?;
-            let mut iife_indent = indented(out).with_str("  ");
-            write!(&mut iife_indent, "const out = ")?;
-            gen_rust_reference_to_js(
-                underlying.as_ref(),
-                in_path,
-                value_expr,
-                "null", // JS owns the box
-                env,
-                &mut iife_indent,
+            write!(
+                out,
+                "(() => {})()",
+                display::block(|mut f| {
+                    writeln!(
+                        f,
+                        "const out = {};",
+                        display::expr(|mut f| {
+                            gen_rust_reference_to_js(
+                                underlying.as_ref(),
+                                in_path,
+                                value_expr,
+                                "null", // JS owns the box
+                                env,
+                                &mut f,
+                            )
+                        })
+                    )?;
+
+                    if let ast::TypeName::Named(_) = underlying.as_ref() {
+                        writeln!(
+                            f,
+                            "{}_box_destroy_registry.register(out, out.underlying)",
+                            underlying.resolve(in_path, env).name()
+                        )?;
+                    }
+
+                    writeln!(f, "return out;")
+                })
             )?;
-            writeln!(&mut iife_indent, ";")?;
-
-            if let ast::TypeName::Named(_) = underlying.as_ref() {
-                writeln!(
-                    &mut iife_indent,
-                    "{}_box_destroy_registry.register(out, out.underlying)",
-                    underlying.resolve(in_path, env).name()
-                )?;
-            }
-
-            writeln!(&mut iife_indent, "return out;")?;
-            write!(out, "}})()")?;
         }
 
         ast::TypeName::Option(underlying) => {
@@ -199,133 +207,127 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 underlying.is_pointer(),
                 "Options must contain pointer types"
             );
-            writeln!(out, "(() => {{")?;
-            let mut iife_indent = indented(out).with_str("  ");
-            writeln!(&mut iife_indent, "const option_value = {}", value_expr)?;
-
-            writeln!(&mut iife_indent, "if (option_value !== 0) {{")?;
-
-            let mut if_indent = indented(&mut iife_indent).with_str("  ");
-            write!(&mut if_indent, "const inhabited_value = ")?;
-            // TODO(#62): actually return `null` if the option is `None`
-            gen_value_rust_to_js(
-                "option_value",
-                underlying.as_ref(),
-                in_path,
-                env,
-                &mut (&mut if_indent as &mut dyn fmt::Write),
+            write!(
+                out,
+                "(() => {})()",
+                display::block(|mut f| {
+                    writeln!(f, "const option_value = {}", value_expr)?;
+                    writeln!(
+                        f,
+                        "if (option_value !== 0) {if_true} else {if_false}",
+                        if_true = display::block(|mut f| {
+                            writeln!(
+                                f,
+                                "const inhabited_value = {};",
+                                display::expr(|mut f| {
+                                    // TODO(#62): actually return `null` if the option is `None`
+                                    gen_value_rust_to_js(
+                                        "option_value",
+                                        underlying.as_ref(),
+                                        in_path,
+                                        env,
+                                        &mut f,
+                                    )
+                                })
+                            )?;
+                            writeln!(f, "return inhabited_value;")
+                        }),
+                        if_false = display::block(|mut f| writeln!(f, "return null;"))
+                    )
+                })
             )?;
-            writeln!(&mut if_indent, ";")?;
-
-            writeln!(&mut if_indent, "return inhabited_value;")?;
-
-            writeln!(&mut iife_indent, "}} else {{")?;
-            writeln!(&mut iife_indent, "  return null;")?;
-            writeln!(&mut iife_indent, "}}")?;
-
-            write!(out, "}})()")?;
         }
 
         ast::TypeName::Result(ok, err) => {
             let (ok_offset, result_size_align) =
                 layout::result_ok_offset_size_align(ok, err, in_path, env);
             let needs_buffer = return_type_form(typ, in_path, env) == ReturnTypeForm::Complex;
-            writeln!(out, "(() => {{")?;
-            let mut iife_indent = indented(out).with_str("  ");
-            if needs_buffer {
-                writeln!(
-                    &mut iife_indent,
-                    "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
-                    result_size_align.size(),
-                    result_size_align.align()
-                )?;
-            }
-
-            if needs_buffer {
-                writeln!(&mut iife_indent, "const result_tag = {{}};")?;
-                writeln!(
-                    &mut iife_indent,
-                    "diplomat_alloc_destroy_registry.register(result_tag, {{"
-                )?;
-                let mut alloc_dict_indent = indented(&mut iife_indent).with_str("  ");
-                writeln!(&mut alloc_dict_indent, "ptr: diplomat_receive_buffer,")?;
-                writeln!(
-                    &mut alloc_dict_indent,
-                    "size: {},",
-                    result_size_align.size()
-                )?;
-                writeln!(
-                    &mut alloc_dict_indent,
-                    "align: {},",
-                    result_size_align.align()
-                )?;
-                writeln!(&mut iife_indent, "}});")?;
-            }
-
-            if !needs_buffer {
-                write!(&mut iife_indent, "const is_ok = ")?;
-                write!(&mut iife_indent, "{}", value_expr)?;
-                writeln!(&mut iife_indent, " == 1;")?;
-            } else {
-                write!(&mut iife_indent, "{}", value_expr)?;
-                writeln!(&mut iife_indent, ";")?;
-                write!(&mut iife_indent, "const is_ok = ")?;
-                gen_rust_reference_to_js(
-                    &ast::TypeName::Primitive(PrimitiveType::bool),
-                    in_path,
-                    &format!("diplomat_receive_buffer + {}", ok_offset),
-                    "result_tag",
-                    env,
-                    &mut ((&mut iife_indent) as &mut dyn fmt::Write),
-                )?;
-                writeln!(&mut iife_indent, ";")?;
-            }
-
-            if needs_buffer {
-                writeln!(&mut iife_indent, "if (is_ok) {{")?;
-
-                let mut ok_indent = indented(&mut iife_indent).with_str("  ");
-
-                write!(&mut ok_indent, "const ok_value = ")?;
-                gen_rust_reference_to_js(
-                    ok.as_ref(),
-                    in_path,
-                    "diplomat_receive_buffer",
-                    "result_tag",
-                    env,
-                    &mut ((&mut ok_indent) as &mut dyn fmt::Write),
-                )?;
-                writeln!(&mut ok_indent, ";")?;
-
-                writeln!(&mut ok_indent, "return ok_value;")?;
-
-                writeln!(&mut iife_indent, "}} else {{")?;
-                let mut err_indent = indented(&mut iife_indent).with_str("  ");
-
-                write!(&mut err_indent, "const throw_value = ")?;
-                gen_rust_reference_to_js(
-                    err.as_ref(),
-                    in_path,
-                    "diplomat_receive_buffer",
-                    "result_tag",
-                    env,
-                    &mut ((&mut err_indent) as &mut dyn fmt::Write),
-                )?;
-                writeln!(&mut err_indent, ";")?;
-
-                writeln!(
-                    &mut err_indent,
-                    "throw new diplomatRuntime.FFIError(throw_value);"
-                )?;
-            } else {
-                writeln!(&mut iife_indent, "if (!is_ok) {{")?;
-                let mut err_indent = indented(&mut iife_indent).with_str("  ");
-                writeln!(&mut err_indent, "throw new diplomatRuntime.FFIError({{}});")?;
-            }
-
-            writeln!(&mut iife_indent, "}}")?;
-
-            write!(out, "}})()")?;
+            write!(
+                out,
+                "(() => {})()",
+                display::block(|mut f| {
+                    if needs_buffer {
+                        writeln!(
+                            f,
+                            "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
+                            result_size_align.size(),
+                            result_size_align.align()
+                        )?;
+                        writeln!(f, "const result_tag = {{}};")?;
+                        writeln!(
+                            f,
+                            "diplomat_alloc_destroy_registry.register(result_tag, {});",
+                            display::block(|mut f| {
+                                writeln!(f, "ptr: diplomat_receive_buffer,")?;
+                                writeln!(f, "size: {},", result_size_align.size())?;
+                                writeln!(f, "align: {},", result_size_align.align())
+                            })
+                        )?;
+                        writeln!(f, "{};", value_expr)?;
+                        writeln!(
+                            f,
+                            "const is_ok = {};",
+                            display::expr(|mut f| {
+                                gen_rust_reference_to_js(
+                                    &ast::TypeName::Primitive(PrimitiveType::bool),
+                                    in_path,
+                                    &format!("diplomat_receive_buffer + {}", ok_offset),
+                                    "result_tag",
+                                    env,
+                                    &mut f,
+                                )
+                            })
+                        )?;
+                        writeln!(
+                            f,
+                            "if (is_ok) {is_true} else {is_false}",
+                            is_true = display::block(|mut f| {
+                                writeln!(
+                                    f,
+                                    "const ok_value = {};",
+                                    display::expr(|mut f| {
+                                        gen_rust_reference_to_js(
+                                            ok.as_ref(),
+                                            in_path,
+                                            "diplomat_receive_buffer",
+                                            "result_tag",
+                                            env,
+                                            &mut f,
+                                        )
+                                    })
+                                )?;
+                                writeln!(f, "return ok_value;")
+                            }),
+                            is_false = display::block(|mut f| {
+                                writeln!(
+                                    f,
+                                    "const throw_value = {};",
+                                    display::expr(|mut f| {
+                                        gen_rust_reference_to_js(
+                                            err.as_ref(),
+                                            in_path,
+                                            "diplomat_receive_buffer",
+                                            "result_tag",
+                                            env,
+                                            &mut f,
+                                        )
+                                    })
+                                )?;
+                                writeln!(f, "throw new diplomatRuntime.FFIError(throw_value);")
+                            })
+                        )
+                    } else {
+                        writeln!(f, "const is_ok = {} == 1;", value_expr)?;
+                        writeln!(
+                            f,
+                            "if (!is_ok) {}",
+                            display::block(|mut f| {
+                                writeln!(f, "throw new diplomatRuntime.FFIError({{}});")
+                            })
+                        )
+                    }
+                })
+            )?;
         }
 
         ast::TypeName::Primitive(_prim) => {
@@ -346,6 +348,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
     Ok(())
 }
 
+/// TODO: docs
 fn gen_box_destructor<W: fmt::Write>(
     name: &ast::Ident,
     typ: &ast::TypeName,
@@ -380,26 +383,21 @@ fn gen_box_destructor<W: fmt::Write>(
                 "Options must contain pointer types"
             );
 
-            writeln!(out, "if (out.{}.underlying !== 0) {{", name)?;
-
-            let mut if_indent = indented(out).with_str("  ");
-
-            gen_box_destructor(
-                name,
-                underlying.as_ref(),
-                in_path,
-                env,
-                &mut (&mut if_indent as &mut dyn fmt::Write),
-            )?;
-
-            writeln!(out, "}} else {{")?;
             writeln!(
                 out,
-                "  Object.defineProperty(out, \"{}\", {{ value: null }});",
-                name
+                "if (out.{}.underlying !== 0) {if_true} else {if_false}",
+                name,
+                if_true = display::block(|mut f| {
+                    gen_box_destructor(name, underlying.as_ref(), in_path, env, &mut f)
+                }),
+                if_false = display::block(|mut f| {
+                    writeln!(
+                        f,
+                        "Object.defineProperty(out, \"{}\", {{ value: null }});",
+                        name
+                    )
+                })
             )?;
-            writeln!(out, "}}")?;
-
             // TODO(#62): don't generate destructor if null
         }
 
@@ -409,6 +407,7 @@ fn gen_box_destructor<W: fmt::Write>(
     Ok(())
 }
 
+/// TODO: docs
 fn gen_rust_reference_to_js<W: fmt::Write>(
     underlying: &ast::TypeName,
     in_path: &ast::Path,
@@ -469,30 +468,31 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             let custom_type = underlying.resolve(in_path, env);
 
             if let ast::CustomType::Enum(enm) = custom_type {
-                write!(out, "{}_rust_to_js[", enm.name)?;
-                gen_rust_reference_to_js(
-                    &ast::TypeName::Primitive(PrimitiveType::isize),
-                    in_path,
-                    value_expr,
-                    owner,
-                    env,
+                write!(
                     out,
+                    "{}_rust_to_js[{}]",
+                    enm.name,
+                    display::expr(|mut f| {
+                        gen_rust_reference_to_js(
+                            &ast::TypeName::Primitive(PrimitiveType::isize),
+                            in_path,
+                            value_expr,
+                            owner,
+                            env,
+                            &mut f,
+                        )
+                    })
                 )?;
-                write!(out, "]")?;
             } else {
-                writeln!(out, "(() => {{")?;
-                let mut iife_indent = indented(out).with_str("  ");
-                writeln!(
-                    &mut iife_indent,
-                    "const out = new {}({});",
-                    custom_type.name(),
-                    value_expr
+                write!(
+                    out,
+                    "(() => {})()",
+                    display::block(|mut f| {
+                        writeln!(f, "const out = new {}({});", custom_type.name(), value_expr)?;
+                        writeln!(f, "out.owner = {};", owner)?;
+                        writeln!(f, "return out;")
+                    })
                 )?;
-
-                writeln!(&mut iife_indent, "out.owner = {};", owner)?;
-
-                writeln!(&mut iife_indent, "return out;")?;
-                write!(out, "}})()")?;
             }
         }
 

@@ -2,8 +2,6 @@ use diplomat_core::Env;
 use std::fmt::Write;
 use std::{collections::HashMap, fmt};
 
-use indenter::indented;
-
 use crate::util;
 
 #[cfg(test)]
@@ -18,6 +16,8 @@ pub mod structs;
 use structs::*;
 
 pub mod conversions;
+
+pub mod display;
 
 static RUNTIME_MJS: &str = include_str!("runtime.mjs");
 
@@ -39,13 +39,14 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
 
     writeln!(
         out,
-        "const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {{"
+        "const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {});",
+        display::block(|mut f| {
+            writeln!(
+                f,
+                "wasm.diplomat_free(obj[\"ptr\"], obj[\"size\"], obj[\"align\"]);"
+            )
+        })
     )?;
-    writeln!(
-        indented(out).with_str("  "),
-        "wasm.diplomat_free(obj[\"ptr\"], obj[\"size\"], obj[\"align\"]);"
-    )?;
-    writeln!(out, "}});")?;
 
     let mut all_types = util::get_all_custom_types(env);
     all_types.sort_by_key(|t| t.1.name());
