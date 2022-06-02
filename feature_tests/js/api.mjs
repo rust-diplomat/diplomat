@@ -101,6 +101,7 @@ export class Foo {
       const out = (() => {
         const out = new Foo(wasm.Foo_new(x_diplomat_ptr, x_diplomat_bytes.length));
         out.owner = null;
+        out.__x_lifetime_guard = x;
         return out;
       })();
       Foo_box_destroy_registry.register(out, out.underlying)
@@ -115,6 +116,7 @@ export class Foo {
       const out = (() => {
         const out = new Bar(wasm.Foo_get_bar(this.underlying));
         out.owner = null;
+        out.__this_lifetime_guard = this;
         return out;
       })();
       Bar_box_destroy_registry.register(out, out.underlying)
@@ -444,6 +446,7 @@ export class RefList {
       const out = (() => {
         const out = new RefList(wasm.RefList_node(data.underlying));
         out.owner = null;
+        out.__data_lifetime_guard = data;
         return out;
       })();
       RefList_box_destroy_registry.register(out, out.underlying)
