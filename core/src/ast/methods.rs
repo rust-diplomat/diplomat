@@ -120,7 +120,7 @@ impl Method {
             .map(|return_type| {
                 // Collect all lifetimes from return type into a `BTreeSet`.
                 let mut lifetimes = BTreeSet::new();
-                return_type.visit_lifetimes(&mut |lt| -> ControlFlow<()> {
+                return_type.visit_lifetimes(&mut |lt, _| -> ControlFlow<()> {
                     match lt {
                         Lifetime::Named(name) => {
                             lifetimes.insert(name);
@@ -160,7 +160,7 @@ impl Method {
                     .filter(|param| {
                         param
                             .ty
-                            .visit_lifetimes(&mut |lt| {
+                            .visit_lifetimes(&mut |lt, _| {
                                 // Thanks to `TypeName::visit_lifetimes`, we can
                                 // traverse the lifetimes without allocations and
                                 // short-circuit if we find a match.
@@ -195,6 +195,7 @@ impl Method {
                 .check_validity(in_path, env, errors);
         }
         for m in self.params.iter() {
+            // Do we need to check the validity of the input types?
             m.ty.check_validity(in_path, env, errors);
         }
         if let Some(ref t) = self.return_type {

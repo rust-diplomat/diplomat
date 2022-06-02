@@ -1,6 +1,7 @@
 use diplomat_core::Env;
 use std::fmt;
 use std::fmt::Write;
+use std::ops::ControlFlow;
 
 use diplomat_core::ast::{self, PrimitiveType};
 
@@ -514,7 +515,17 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                             writeln!(f, "out.__this_lifetime_guard = this;")?;
                         }
                         for param in params {
-                            writeln!(f, "out.__{0}_lifetime_guard = {0};", param.name)?;
+                            let str_base = param
+                                .ty
+                                .visit_lifetimes(&mut |_, origin| match origin {
+                                    ast::LifetimeOrigin::StrReference => ControlFlow::Break(()),
+                                    _ => ControlFlow::Continue(()),
+                                })
+                                .is_break();
+
+                            if !str_base {
+                                writeln!(f, "out.__{0}_lifetime_guard = {0};", param.name)?;
+                            }
                         }
                         writeln!(f, "return out;")
                     })

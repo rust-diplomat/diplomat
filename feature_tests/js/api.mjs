@@ -101,7 +101,6 @@ export class Foo {
       const out = (() => {
         const out = new Foo(wasm.Foo_new(x_diplomat_ptr, x_diplomat_bytes.length));
         out.owner = null;
-        out.__x_lifetime_guard = x;
         return out;
       })();
       Foo_box_destroy_registry.register(out, out.underlying)
