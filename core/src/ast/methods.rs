@@ -3,7 +3,6 @@ use std::collections::BTreeSet;
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
-use super::types::NamedLifetime;
 use super::{Ident, Lifetime, LifetimeDef, Mutability, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
@@ -124,9 +123,8 @@ impl Method {
                 // including the lifetimes it contains, as well as the lifetimes
                 // that must live as long as the lifetimes it contains.
                 let mut lifetimes = BTreeSet::new();
-                let mut sublifetimes: Vec<&NamedLifetime> = Vec::with_capacity(8);
-                let mut unused_rules: Vec<&LifetimeDef> =
-                    self.introduced_lifetimes.iter().collect();
+                let mut sublifetimes = Vec::with_capacity(8);
+
                 // Populate the initial lifetimes
                 return_type.visit_lifetimes(&mut |lifetime| -> ControlFlow<()> {
                     match lifetime {
@@ -139,10 +137,32 @@ impl Method {
                             // check first, we can change this to `unreachable!()`.
                             panic!("Anonymous lifetimes not yet allowed in return types")
                         }
-                        Lifetime::Static => {}
+                        Lifetime::Static => {
+                            // If the output depends on the static lifetime, this
+                            // tells us nothing about what params it might need,
+                            // so do nothing.
+                        }
                     }
                     ControlFlow::Continue(())
                 });
+
+                let mut unused_rules: Vec<&LifetimeDef> = self
+                    .introduced_lifetimes
+                    .iter()
+                    .filter(|lifetime_def| {
+                        lifetime_def.bounds.iter().all(|bound| match bound {
+                            Lifetime::Named(_) => true,
+                            Lifetime::Anonymous => {
+                                panic!("Cannot use an anonymous lifetime for a bound")
+                            }
+                            Lifetime::Static => {
+                                // If there's a static lifetime, the rule is
+                                // meaningless to us.
+                                false
+                            }
+                        })
+                    })
+                    .collect();
 
                 while let Some(sublifetime) = sublifetimes.pop() {
                     let is_entry_new = lifetimes.insert(sublifetime);
@@ -161,47 +181,17 @@ impl Method {
                         // then remove rules that we previously used for traversal
                         // to make our linear search through them faster each time.
                         unused_rules.retain(|rule| {
-                            rule.bounds
-                                .iter()
-                                .map(|bound: &Lifetime| match bound {
-                                    Lifetime::Named(named) => Ok(named),
-                                    Lifetime::Anonymous => {
-                                        unreachable!("Can't be bound by an anonymous lifetime")
-                                    }
-                                    Lifetime::Static => {
-                                        // If there's a static bound, then we don't
-                                        // care about this lifetime, so short circuit.
-                                        Err(())
-                                    }
-                                })
-                                .collect::<Result<_, _>>()
-                                .map(|named_bounds: Vec<&NamedLifetime>| {
-                                    // All the bounds were non-static
-                                    if named_bounds.contains(&sublifetime) {
+                            rule.bounds.iter().all(|bound: &Lifetime| match bound {
+                                Lifetime::Named(named) => {
+                                    if named == sublifetime {
                                         sublifetimes.push(&rule.lifetime);
-                                        // We just pushed this rule to the stack,
-                                        // so we don't need to visit it again.
-                                        // Thus, we can forget this rule.
                                         return false;
                                     }
-                                    // This rule wasn't used, retain it.
                                     true
-                                })
-                                .unwrap_or({
-                                    // One of the bounds was `'static`, which isn't
-                                    // useful to us. Anything that is dependent on
-                                    // this bound is also static, so it's not in our
-                                    // watchlist of lifetimes that we need to hold
-                                    // on to. To save time, do _not_ retain this rule.
-                                    false
-                                })
+                                }
+                                _ => unreachable!("Just checked that every bound was named"),
+                            })
                         });
-                    } else {
-                        // The same lifetime was put into the `sublifetimes` stack
-                        // more than once, which is only possible if the output
-                        // type contains a pair of lifetimes where one is a subtype
-                        // of the other. Since we're trying to check for dependents
-                        // on a lifetime we already checked, we do can skip instead.
                     }
                 }
 
