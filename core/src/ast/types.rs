@@ -909,19 +909,40 @@ impl fmt::Display for PathType {
     }
 }
 
+/// A named lifetime, e.g. `'a`.
+///
+/// Specifically, this cannot be `'static` or `'_`.
+#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize, PartialOrd, Ord)]
+pub struct NamedLifetime(Ident);
+
+impl fmt::Display for NamedLifetime {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "'{}", self.0)
+    }
+}
+
+impl ToTokens for NamedLifetime {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        use proc_macro2::{Punct, Spacing};
+        use quote::TokenStreamExt;
+        tokens.append(Punct::new('\'', Spacing::Joint));
+        self.0.to_tokens(tokens);
+    }
+}
+
 /// A lifetime as a generic parameter, potentially with bounds.
 ///
 /// The `'a` and `'b: 'a` in `Foo<'a, 'b: 'a>`.
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub struct LifetimeDef {
-    pub lifetime: Lifetime,
+    pub lifetime: NamedLifetime,
     pub bounds: Vec<Lifetime>,
 }
 
 impl From<&syn::LifetimeDef> for LifetimeDef {
     fn from(lifetime_def: &syn::LifetimeDef) -> Self {
         Self {
-            lifetime: (&lifetime_def.lifetime).into(),
+            lifetime: NamedLifetime((&lifetime_def.lifetime.ident).into()),
             bounds: lifetime_def.bounds.iter().map(Into::into).collect(),
         }
     }
@@ -943,7 +964,7 @@ pub enum Lifetime {
     /// Kept separate because it doesn't matter as much when tracking lifetimes but it'll still need
     /// to be mentioned in the type during codegen
     Static,
-    Named(Ident),
+    Named(NamedLifetime),
     Anonymous,
 }
 
@@ -951,7 +972,7 @@ impl fmt::Display for Lifetime {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Lifetime::Static => "'static".fmt(f),
-            Lifetime::Named(ref s) => write!(f, "'{}", s),
+            Lifetime::Named(ref named) => named.fmt(f),
             Lifetime::Anonymous => "'_".fmt(f),
         }
     }
@@ -959,14 +980,10 @@ impl fmt::Display for Lifetime {
 
 impl ToTokens for Lifetime {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        let mut lt = |name| {
-            syn::Lifetime::new(name, Span::call_site()).to_tokens(tokens);
-        };
-
         match self {
-            Lifetime::Static => lt("'static"),
-            Lifetime::Named(ref s) => lt(&format!("'{}", s)),
-            Lifetime::Anonymous => lt("'_"),
+            Lifetime::Static => syn::Lifetime::new("'static", Span::call_site()).to_tokens(tokens),
+            Lifetime::Named(ref s) => s.to_tokens(tokens),
+            Lifetime::Anonymous => syn::Lifetime::new("'_", Span::call_site()).to_tokens(tokens),
         };
     }
 }
@@ -976,7 +993,7 @@ impl From<&syn::Lifetime> for Lifetime {
         if lt.ident == "static" {
             Self::Static
         } else {
-            Self::Named(Ident::from(&lt.ident))
+            Self::Named(NamedLifetime(Ident::from(&lt.ident)))
         }
     }
 }
@@ -993,7 +1010,7 @@ impl Lifetime {
         match *self {
             Self::Static => Some(syn::Lifetime::new("'static", Span::call_site())),
             Self::Anonymous => None,
-            Self::Named(ref s) => Some(syn::Lifetime::new(&format!("'{}", s), Span::call_site())),
+            Self::Named(ref s) => Some(syn::Lifetime::new(&s.to_string(), Span::call_site())),
         }
     }
 }

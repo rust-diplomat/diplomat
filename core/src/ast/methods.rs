@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::ops::ControlFlow;
-use syn::*;
 
 use super::docs::Docs;
+use super::types::NamedLifetime;
 use super::{Ident, Lifetime, LifetimeDef, Mutability, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
@@ -37,7 +37,7 @@ pub struct Method {
 impl Method {
     /// Extracts a [`Method`] from an AST node inside an `impl`.
     pub fn from_syn(
-        m: &ImplItemMethod,
+        m: &syn::ImplItemMethod,
         self_path_type: PathType,
         impl_introduced_lifetimes: Vec<LifetimeDef>,
     ) -> Method {
@@ -60,18 +60,18 @@ impl Method {
             .inputs
             .iter()
             .filter_map(|a| match a {
-                FnArg::Receiver(_) => None,
-                FnArg::Typed(t) => Some(Param::from_syn(t, self_path_type.clone())),
+                syn::FnArg::Receiver(_) => None,
+                syn::FnArg::Typed(ref t) => Some(Param::from_syn(t, self_path_type.clone())),
             })
             .collect::<Vec<_>>();
 
         let self_param = m.sig.receiver().map(|rec| match rec {
-            FnArg::Receiver(rec) => SelfParam::from_syn(rec, self_path_type.clone()),
+            syn::FnArg::Receiver(ref rec) => SelfParam::from_syn(rec, self_path_type.clone()),
             _ => panic!("Unexpected self param type"),
         });
 
         let return_ty = match &m.sig.output {
-            ReturnType::Type(_, return_typ) => {
+            syn::ReturnType::Type(_, return_typ) => {
                 // When we allow lifetime elision, this is where we would want to
                 // support it so we can insert the expanded explicit lifetimes.
                 Some(TypeName::from_syn(
@@ -79,7 +79,7 @@ impl Method {
                     Some(self_path_type),
                 ))
             }
-            ReturnType::Default => None,
+            syn::ReturnType::Default => None,
         };
 
         Method {
@@ -118,12 +118,20 @@ impl Method {
         self.return_type
             .as_ref()
             .map(|return_type| {
-                // Collect all lifetimes from return type into a `BTreeSet`.
+                // if it's the static lifetime, is it even our responsibility to
+                // hold it? I don't really think so.
+                // Collect all lifetimes that the return type might care about,
+                // including the lifetimes it contains, as well as the lifetimes
+                // that must live as long as the lifetimes it contains.
                 let mut lifetimes = BTreeSet::new();
-                return_type.visit_lifetimes(&mut |lt| -> ControlFlow<()> {
-                    match lt {
-                        Lifetime::Named(name) => {
-                            lifetimes.insert(name);
+                let mut sublifetimes: Vec<&NamedLifetime> = Vec::with_capacity(8);
+                let mut unused_rules: Vec<&LifetimeDef> =
+                    self.introduced_lifetimes.iter().collect();
+                // Populate the initial lifetimes
+                return_type.visit_lifetimes(&mut |lifetime| -> ControlFlow<()> {
+                    match lifetime {
+                        Lifetime::Named(named) => {
+                            sublifetimes.push(named);
                         }
                         Lifetime::Anonymous => {
                             // This is also caught in the validity check, so this should
@@ -135,6 +143,67 @@ impl Method {
                     }
                     ControlFlow::Continue(())
                 });
+
+                while let Some(sublifetime) = sublifetimes.pop() {
+                    let is_entry_new = lifetimes.insert(sublifetime);
+
+                    if is_entry_new {
+                        // Let `'a` be the `sublifetime` lifetime.
+                        // We need to find every lifetime that promises to live
+                        // at least as long as `'a`- that is, we need all `'b`
+                        // such that `'b: 'a` is a rule. This can also occur via
+                        // transitivity, like if we have `'b: 'a` and `'c: 'b`,
+                        // then we also have `'c: 'a`, even if it's not explicitly
+                        // written.
+
+                        // To find all these subtypes, we perform DFS by searching
+                        // our rules for how we can traverse down the tree, and
+                        // then remove rules that we previously used for traversal
+                        // to make our linear search through them faster each time.
+                        unused_rules.retain(|rule| {
+                            rule.bounds
+                                .iter()
+                                .map(|bound: &Lifetime| match bound {
+                                    Lifetime::Named(named) => Ok(named),
+                                    Lifetime::Anonymous => {
+                                        unreachable!("Can't be bound by an anonymous lifetime")
+                                    }
+                                    Lifetime::Static => {
+                                        // If there's a static bound, then we don't
+                                        // care about this lifetime, so short circuit.
+                                        Err(())
+                                    }
+                                })
+                                .collect::<Result<_, _>>()
+                                .map(|named_bounds: Vec<&NamedLifetime>| {
+                                    // All the bounds were non-static
+                                    if named_bounds.contains(&sublifetime) {
+                                        sublifetimes.push(&rule.lifetime);
+                                        // We just pushed this rule to the stack,
+                                        // so we don't need to visit it again.
+                                        // Thus, we can forget this rule.
+                                        return false;
+                                    }
+                                    // This rule wasn't used, retain it.
+                                    true
+                                })
+                                .unwrap_or({
+                                    // One of the bounds was `'static`, which isn't
+                                    // useful to us. Anything that is dependent on
+                                    // this bound is also static, so it's not in our
+                                    // watchlist of lifetimes that we need to hold
+                                    // on to. To save time, do _not_ retain this rule.
+                                    false
+                                })
+                        });
+                    } else {
+                        // The same lifetime was put into the `sublifetimes` stack
+                        // more than once, which is only possible if the output
+                        // type contains a pair of lifetimes where one is a subtype
+                        // of the other. Since we're trying to check for dependents
+                        // on a lifetime we already checked, we do can skip instead.
+                    }
+                }
 
                 let held_self_param = self.self_param.as_ref().filter(|self_param| {
                     // Check if `self` is a reference with a lifetime in the return type.
@@ -280,9 +349,9 @@ impl Param {
         }
     }
 
-    pub fn from_syn(t: &PatType, self_path_type: PathType) -> Self {
+    pub fn from_syn(t: &syn::PatType, self_path_type: PathType) -> Self {
         let ident = match t.pat.as_ref() {
-            Pat::Ident(ident) => ident,
+            syn::Pat::Ident(ident) => ident,
             _ => panic!("Unexpected param type"),
         };
 
@@ -392,7 +461,9 @@ mod tests {
                 .map(|p| p.name.as_str())
                 .collect::<Vec<_>>();
 
-            assert_eq!(actual, [$(stringify!($param)),*]);
+            let expected: &[&str] = &[$(stringify!($param)),*];
+
+            assert_eq!(actual, expected);
         }};
     }
 
@@ -401,6 +472,63 @@ mod tests {
         assert_params_held_by_output! { [first, second] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(first: &'a First, second: &'b Second, third: &Third) -> Foo<'a, 'b> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn transitivity<'a, 'b: 'a, 'c: 'b, 'd>(hold: &'c Bar, nohold: &'d Bar) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
+        // `'c: 'static`, so we don't need to depend on it
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn dont_hold_statics<'a, 'b: 'a, 'c: 'b + 'static>(hold: &'b Bar, nohold: &'c Bar) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn a_le_b_and_b_le_a<'a: 'b, 'b: 'a>(hold: &'b Bar, nohold: &'c Bar) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn transitivity_long<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'e: 'd>(hold: &'e Bar, nohold: &'f Bar) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [a, b, c, d] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'a>(a: &'a A, b: &'b B, c: &'c C, d: &'d D, nohold: &'e Bar) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn other_way<'a, 'b: 'a>(hold: &'b Bar, nohold: &'a Bar) -> Box<Foo<'b>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn transitivity_but_deep<'a, 'b: 'a, 'c: 'b, 'd: 'c>(hold: Option<Box<Bar<'d>>>, nohold: &'a Box<Option<Baz<'a>>>) -> DiplomatResult<Box<Foo<'b>>, Error> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn transitivity_but_deep<'a, 'b: 'a, 'c: 'a>(hold: &'c Bar, nohold: &'d Bar) -> Foo<'a, 'b> {
                 unimplemented!()
             }
         }
