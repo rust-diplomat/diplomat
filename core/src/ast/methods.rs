@@ -98,11 +98,12 @@ impl Method {
     ///
     /// Given the following method:
     /// ```ignore
-    /// fn foo<'a, 'b, 'c>(&'a self, bar: Bar<'b>, baz: Baz<'c>) -> FooBar<'a, 'b> { ... }
+    /// fn foo<'a, 'b: 'a, 'c>(&'a self, bar: Bar<'b>, baz: Baz<'c>) -> FooBar<'a> { ... }
     /// ```
     /// Then this method would return the `&'a self` and `bar: Bar<'b>` params
-    /// because they contain lifetimes that are in the return type. It wouldn't
-    /// include `baz: Baz<'c>` though, because the return type isn't bound by `'c`.
+    /// because `'a` is in the return type, and `'b` must live at least as long
+    /// as `'a`. It wouldn't include `baz: Baz<'c>` though, because the return
+    /// type isn't bound by `'c` in any way.
     ///
     /// # Panics
     ///
@@ -117,8 +118,6 @@ impl Method {
         self.return_type
             .as_ref()
             .map(|return_type| {
-                // if it's the static lifetime, is it even our responsibility to
-                // hold it? I don't really think so.
                 // Collect all lifetimes that the return type might care about,
                 // including the lifetimes it contains, as well as the lifetimes
                 // that must live as long as the lifetimes it contains.
