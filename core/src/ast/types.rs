@@ -924,8 +924,7 @@ impl fmt::Display for NamedLifetime {
 impl ToTokens for NamedLifetime {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         use proc_macro2::{Punct, Spacing};
-        use quote::TokenStreamExt;
-        tokens.append(Punct::new('\'', Spacing::Joint));
+        Punct::new('\'', Spacing::Joint).to_tokens(tokens);
         self.0.to_tokens(tokens);
     }
 }
@@ -936,14 +935,24 @@ impl ToTokens for NamedLifetime {
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub struct LifetimeDef {
     pub lifetime: NamedLifetime,
-    pub bounds: Vec<Lifetime>,
+    pub bounds: Vec<NamedLifetime>,
 }
 
 impl From<&syn::LifetimeDef> for LifetimeDef {
     fn from(lifetime_def: &syn::LifetimeDef) -> Self {
         Self {
             lifetime: NamedLifetime((&lifetime_def.lifetime.ident).into()),
-            bounds: lifetime_def.bounds.iter().map(Into::into).collect(),
+            bounds: lifetime_def
+                .bounds
+                .iter()
+                .map(|lt| {
+                    assert_ne!(
+                        lt.ident, "static",
+                        "Use `'static` instead of bounding to it"
+                    );
+                    NamedLifetime((&lt.ident).into())
+                })
+                .collect(),
         }
     }
 }

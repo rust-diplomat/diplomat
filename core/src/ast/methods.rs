@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
@@ -115,21 +114,17 @@ impl Method {
     pub fn params_held_by_output(&self) -> (Option<&SelfParam>, Vec<&Param>) {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
-        self.return_type
-            .as_ref()
-            .map(|return_type| {
-                // Collect all lifetimes that the return type might care about,
-                // including the lifetimes it contains, as well as the lifetimes
-                // that must live as long as the lifetimes it contains.
-                let mut lifetimes = BTreeSet::new();
-                let mut sublifetimes = Vec::with_capacity(8);
+        if let Some(ref return_type) = self.return_type {
+            // Collect all lifetimes that the return type might care about,
+            // including the lifetimes it contains, as well as the lifetimes
+            // that must live as long as the lifetimes it contains.
+            let lifetimes = {
+                let mut stack = vec![];
 
                 // Populate the initial lifetimes
                 return_type.visit_lifetimes(&mut |lifetime| -> ControlFlow<()> {
                     match lifetime {
-                        Lifetime::Named(named) => {
-                            sublifetimes.push(named);
-                        }
+                        Lifetime::Named(named) => stack.push(named),
                         Lifetime::Anonymous => {
                             // This is also caught in the validity check, so this should
                             // never happen. If we're guaranteed to always run the
@@ -145,97 +140,74 @@ impl Method {
                     ControlFlow::Continue(())
                 });
 
-                let mut unused_rules: Vec<&LifetimeDef> = self
-                    .introduced_lifetimes
-                    .iter()
-                    .filter(|lifetime_def| {
-                        lifetime_def.bounds.iter().all(|bound| match bound {
-                            Lifetime::Named(_) => true,
-                            Lifetime::Anonymous => {
-                                panic!("Cannot use an anonymous lifetime for a bound")
+                let mut lifetimes = Vec::with_capacity(stack.len());
+
+                let mut unused_rules: Vec<&LifetimeDef> =
+                    self.introduced_lifetimes.iter().collect();
+
+                while let Some(sublifetime) = stack.pop() {
+                    // We expect `lifetimes` to be small
+                    if !lifetimes.contains(&sublifetime) {
+                        lifetimes.push(sublifetime);
+                        unused_rules.retain(|def| {
+                            if def.bounds.contains(sublifetime) {
+                                stack.push(&def.lifetime);
+                                return false;
                             }
-                            Lifetime::Static => {
-                                // If there's a static lifetime, the rule is
-                                // meaningless to us.
-                                false
-                            }
-                        })
-                    })
-                    .collect();
-
-                while let Some(sublifetime) = sublifetimes.pop() {
-                    let is_entry_new = lifetimes.insert(sublifetime);
-
-                    if is_entry_new {
-                        // Let `'a` be the `sublifetime` lifetime.
-                        // We need to find every lifetime that promises to live
-                        // at least as long as `'a`- that is, we need all `'b`
-                        // such that `'b: 'a` is a rule. This can also occur via
-                        // transitivity, like if we have `'b: 'a` and `'c: 'b`,
-                        // then we also have `'c: 'a`, even if it's not explicitly
-                        // written.
-
-                        // To find all these subtypes, we perform DFS by searching
-                        // our rules for how we can traverse down the tree, and
-                        // then remove rules that we previously used for traversal
-                        // to make our linear search through them faster each time.
-                        unused_rules.retain(|rule| {
-                            rule.bounds.iter().all(|bound: &Lifetime| match bound {
-                                Lifetime::Named(named) => {
-                                    if named == sublifetime {
-                                        sublifetimes.push(&rule.lifetime);
-                                        return false;
-                                    }
-                                    true
-                                }
-                                _ => unreachable!("Just checked that every bound was named"),
-                            })
+                            true
                         });
+                    } else {
+                        // This occurs when we try to visit the same lifetime
+                        // twice, which only happens when a type contains an
+                        // `'a` and `'b` where `'b: 'a`.
                     }
                 }
+                lifetimes
+            };
 
-                let held_self_param = self.self_param.as_ref().filter(|self_param| {
-                    // Check if `self` is a reference with a lifetime in the return type.
-                    if let Some((Lifetime::Named(ref name), _)) = self_param.reference {
-                        if lifetimes.contains(name) {
-                            return true;
-                        }
+            let held_self_param = self.self_param.as_ref().filter(|self_param| {
+                // Check if `self` is a reference with a lifetime in the return type.
+                if let Some((Lifetime::Named(ref name), _)) = self_param.reference {
+                    if lifetimes.contains(&name) {
+                        return true;
                     }
-                    self_param.path_type.lifetimes.iter().any(|lt| {
-                        if let Lifetime::Named(name) = lt {
-                            lifetimes.contains(name)
-                        } else {
-                            false
-                        }
-                    })
-                });
+                }
+                self_param.path_type.lifetimes.iter().any(|lt| {
+                    if let Lifetime::Named(name) = lt {
+                        lifetimes.contains(&name)
+                    } else {
+                        false
+                    }
+                })
+            });
 
-                // Collect all the params that contain a named lifetime that's also
-                // in the return type.
-                let held_params = self
-                    .params
-                    .iter()
-                    .filter(|param| {
-                        param
-                            .ty
-                            .visit_lifetimes(&mut |lt| {
-                                // Thanks to `TypeName::visit_lifetimes`, we can
-                                // traverse the lifetimes without allocations and
-                                // short-circuit if we find a match.
-                                if let Lifetime::Named(name) = lt {
-                                    if lifetimes.contains(name) {
-                                        return ControlFlow::Break(());
-                                    }
+            // Collect all the params that contain a named lifetime that's also
+            // in the return type.
+            let held_params = self
+                .params
+                .iter()
+                .filter(|param| {
+                    param
+                        .ty
+                        .visit_lifetimes(&mut |lt| {
+                            // Thanks to `TypeName::visit_lifetimes`, we can
+                            // traverse the lifetimes without allocations and
+                            // short-circuit if we find a match.
+                            if let Lifetime::Named(name) = lt {
+                                if lifetimes.contains(&name) {
+                                    return ControlFlow::Break(());
                                 }
-                                ControlFlow::Continue(())
-                            })
-                            .is_break()
-                    })
-                    .collect();
+                            }
+                            ControlFlow::Continue(())
+                        })
+                        .is_break()
+                })
+                .collect();
 
-                (held_self_param, held_params)
-            })
-            .unwrap_or_default()
+            (held_self_param, held_params)
+        } else {
+            Default::default()
+        }
     }
 
     /// Performs type-specific validity checks (see [TypeName::check_validity()])
@@ -468,14 +440,6 @@ mod tests {
         assert_params_held_by_output! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn transitivity<'a, 'b: 'a, 'c: 'b, 'd>(hold: &'c Bar, nohold: &'d Bar) -> Box<Foo<'a>> {
-                unimplemented!()
-            }
-        }
-
-        // `'c: 'static`, so we don't need to depend on it
-        assert_params_held_by_output! { [hold] =>
-            #[diplomat::rust_link(Foo, FnInStruct)]
-            fn dont_hold_statics<'a, 'b: 'a, 'c: 'b + 'static>(hold: &'b Bar, nohold: &'c Bar) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }
