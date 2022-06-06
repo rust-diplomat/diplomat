@@ -119,17 +119,38 @@ impl Method {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
         if let Some(ref return_type) = self.return_type {
-            // Collect all lifetimes that the return type might care about,
-            // including the lifetimes it contains, as well as the lifetimes
-            // that must live as long as the lifetimes it contains.
+            // The lifetimes that must outlive the return type
             let lifetimes = {
+                // We can think about each lifetime as a node in a directed acyclic
+                // graph (DAG), where each edge represents the "outlived by"
+                // relationship. For example, `'a` pointing to `'b` would represent
+                // `'a: 'b`, since `'a` is outlived by `'b`. Since this is a DAG,
+                // then for all `'a`, `'b`, there's a path of some length from
+                // `'a` to `'b` if and only if `'a` is outlived by `'b`.
+                //
+                // To determine which lifetimes outlive the return type, we can
+                // use this property by performing DFS to traverse all paths that
+                // start at each lifetime of the return type. In traditional DFS,
+                // you start with one root node in the stack, but the return type
+                // could have more than one lifetime that we want to explore.
+                // Since we only care about which lifetimes are reachable, the
+                // path is irrelevant. Therefore, we can use the _same stack_ to
+                // potentially DFS on multiple lifetime DAG(s) at the _same time_.
+                //
+                // Note: It's valid to have lifetime cycles, but this means they're
+                // all the same lifetime, and can thus be squashed into one lifetime,
+                // taking on the accumulated input and outputs of all the lifetimes
+                // in the cycled. This can be done recursively until a DAG is reached.
+                // In this implementation, we just remove edges we've already
+                // explored to avoid cycles.
                 let mut stack = vec![];
 
-                // Populate the initial lifetimes
+                // Push the root node(s) to the stack.
                 return_type.visit_lifetimes(&mut |lifetime| -> ControlFlow<()> {
                     match lifetime {
                         Lifetime::Named(named) => stack.push(named),
                         Lifetime::Anonymous => {
+                            // TODO(160): We can remove this once resolved.
                             // This is also caught in the validity check, so this should
                             // never happen. If we're guaranteed to always run the
                             // check first, we can change this to `unreachable!()`.
@@ -144,18 +165,31 @@ impl Method {
                     ControlFlow::Continue(())
                 });
 
+                // This is where we store all the lifetimes that are reachable
+                // in the DAG from the lifetimes in the return type.
+                // Each lifetime in the return type is trivially reachable
+                // from itself, so start with that capacity.
                 let mut lifetimes = Vec::with_capacity(stack.len());
 
-                let mut unused_rules: Vec<&LifetimeDef> =
+                // We aren't expecting many lifetimes or lifetime bounds.
+                // Thus, we just store all of the edges of the DAG in this list.
+                let mut unused_edges: Vec<&LifetimeDef> =
                     self.introduced_lifetimes.iter().collect();
 
+                // Perform DFS.
                 while let Some(sublifetime) = stack.pop() {
-                    // We expect `lifetimes` to be small
                     if !lifetimes.contains(&sublifetime) {
+                        // This lifetime is reachable in the DAG, meaning it
+                        // outlives the return type.
                         lifetimes.push(sublifetime);
-                        unused_rules.retain(|def| {
+
+                        // Linear search through the unused edges for edges we
+                        // can traverse.
+                        unused_edges.retain(|def| {
                             if def.bounds.contains(sublifetime) {
                                 stack.push(&def.lifetime);
+                                // Once we follow an edge, don't retain it to
+                                // speed up future iterations and avoid cycles.
                                 return false;
                             }
                             true
