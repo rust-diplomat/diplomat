@@ -439,7 +439,7 @@ mod tests {
 
         assert_params_held_by_output! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
-            fn transitivity<'a, 'b: 'a, 'c: 'b, 'd>(hold: &'c Bar, nohold: &'d Bar) -> Box<Foo<'a>> {
+            fn transitivity<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'e: 'd, 'x>(hold: &'x One<'e>, nohold: &One<'x>) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }
@@ -451,37 +451,68 @@ mod tests {
             }
         }
 
+        assert_params_held_by_output! { [a, b, c, d] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b, 'x, 'y>(a: &'x One<'a>, b: &'b One<'x>, c: &Two<'x, 'c>, d: &'x Two<'d, 'y>, nohold: &'x Two<'x, 'y>) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
         assert_params_held_by_output! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
-            fn transitivity_long<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'e: 'd>(hold: &'e Bar, nohold: &'f Bar) -> Box<Foo<'a>> {
+            fn return_outlives_param<'short, 'long: 'short>(hold: &Two<'long, 'short>, nohold: &'short One<'short>) -> Box<Foo<'long>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn transitivity_deep_types<'a, 'b: 'a, 'c: 'b, 'd: 'c>(hold: Option<Box<Bar<'d>>>, nohold: &'a Box<Option<Baz<'a>>>) -> DiplomatResult<Box<Foo<'b>>, Error> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [top, left, right, bottom] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_top<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'top>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [left, bottom] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_left<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'left>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [right, bottom] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_right<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'right>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [bottom] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_bottom<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'bottom>> {
                 unimplemented!()
             }
         }
 
         assert_params_held_by_output! { [a, b, c, d] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
-            fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'a>(a: &'a A, b: &'b B, c: &'c C, d: &'d D, nohold: &'e Bar) -> Box<Foo<'a>> {
+            fn diamond_and_nested_types<'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(a: &'x One<'a>, b: &'y One<'b>, c: &One<'c>, d: &One<'d>, nohold: &One<'x>) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }
 
         assert_params_held_by_output! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
-            fn other_way<'a, 'b: 'a>(hold: &'b Bar, nohold: &'a Bar) -> Box<Foo<'b>> {
-                unimplemented!()
-            }
-        }
-
-        assert_params_held_by_output! { [hold] =>
-            #[diplomat::rust_link(Foo, FnInStruct)]
-            fn transitivity_but_deep<'a, 'b: 'a, 'c: 'b, 'd: 'c>(hold: Option<Box<Bar<'d>>>, nohold: &'a Box<Option<Baz<'a>>>) -> DiplomatResult<Box<Foo<'b>>, Error> {
-                unimplemented!()
-            }
-        }
-
-        assert_params_held_by_output! { [hold] =>
-            #[diplomat::rust_link(Foo, FnInStruct)]
-            fn transitivity_but_deep<'a, 'b: 'a, 'c: 'a>(hold: &'c Bar, nohold: &'d Bar) -> Foo<'a, 'b> {
+            fn where_clause<'b>(hold: One<'b>) -> Box<Foo<'a>>
+            where
+                'b: 'a,
+            {
                 unimplemented!()
             }
         }
