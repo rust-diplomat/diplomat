@@ -52,6 +52,10 @@ impl Method {
         // a lifetime is introduced in the impl but not used in the method.
         let mut introduced_lifetimes = impl_introduced_lifetimes;
         introduced_lifetimes.extend(m.sig.generics.lifetimes().map(Into::into));
+        assert!(
+            m.sig.generics.where_clause.is_none(),
+            "where bounds aren't yet supported"
+        );
 
         let all_params = m
             .sig
@@ -503,16 +507,6 @@ mod tests {
         assert_params_held_by_output! { [a, b, c, d] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn diamond_and_nested_types<'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(a: &'x One<'a>, b: &'y One<'b>, c: &One<'c>, d: &One<'d>, nohold: &One<'x>) -> Box<Foo<'a>> {
-                unimplemented!()
-            }
-        }
-
-        assert_params_held_by_output! { [hold] =>
-            #[diplomat::rust_link(Foo, FnInStruct)]
-            fn where_clause<'b>(hold: One<'b>) -> Box<Foo<'a>>
-            where
-                'b: 'a,
-            {
                 unimplemented!()
             }
         }
