@@ -168,21 +168,22 @@ impl Method {
                 });
 
                 // This is where we store all the lifetimes that are reachable
-                // in the DAG from the lifetimes in the return type.
+                // in the graph from the lifetimes in the return type.
                 // Each lifetime in the return type is trivially reachable
                 // from itself, so start with that capacity.
                 let mut lifetimes = Vec::with_capacity(stack.len());
 
-                // We aren't expecting many lifetimes or lifetime bounds.
-                // Thus, we just store all of the edges of the DAG in this list.
+                // Edges that we haven't yet explored.
+                // We create a new list here so that we can remove explored edges
+                // later without modifying `self`.
                 let mut unused_edges: Vec<&LifetimeDef> =
                     self.introduced_lifetimes.iter().collect();
 
                 // Perform DFS.
                 while let Some(sublifetime) = stack.pop() {
                     if !lifetimes.contains(&sublifetime) {
-                        // This lifetime is reachable in the DAG, meaning it
-                        // outlives the return type.
+                        // This lifetime is reachable, meaning it lives _at least_
+                        // as long as the return type.
                         lifetimes.push(sublifetime);
 
                         // Linear search through the unused edges for edges we
@@ -191,7 +192,7 @@ impl Method {
                             if def.bounds.contains(sublifetime) {
                                 stack.push(&def.lifetime);
                                 // Once we follow an edge, don't retain it to
-                                // speed up future iterations and avoid cycles.
+                                // avoid cycles.
                                 return false;
                             }
                             true
