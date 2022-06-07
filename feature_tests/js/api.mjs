@@ -218,6 +218,153 @@ export class MyStruct {
   }
 }
 
+const One_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.One_destroy(underlying);
+});
+
+export class One {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static transitivity(hold, nohold) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_transitivity(hold.underlying, nohold.underlying));
+        out.owner = null;
+        out.__hold_lifetime_guard = hold;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static cycle(hold, nohold) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_cycle(hold.underlying, nohold.underlying));
+        out.owner = null;
+        out.__hold_lifetime_guard = hold;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static many_dependents(a, b, c, d, nohold) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_many_dependents(a.underlying, b.underlying, c.underlying, d.underlying, nohold.underlying));
+        out.owner = null;
+        out.__a_lifetime_guard = a;
+        out.__b_lifetime_guard = b;
+        out.__c_lifetime_guard = c;
+        out.__d_lifetime_guard = d;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static return_outlives_param(hold, nohold) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_return_outlives_param(hold.underlying, nohold.underlying));
+        out.owner = null;
+        out.__hold_lifetime_guard = hold;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static diamond_top(top, left, right, bottom) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_diamond_top(top.underlying, left.underlying, right.underlying, bottom.underlying));
+        out.owner = null;
+        out.__top_lifetime_guard = top;
+        out.__left_lifetime_guard = left;
+        out.__right_lifetime_guard = right;
+        out.__bottom_lifetime_guard = bottom;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static diamond_left(top, left, right, bottom) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_diamond_left(top.underlying, left.underlying, right.underlying, bottom.underlying));
+        out.owner = null;
+        out.__left_lifetime_guard = left;
+        out.__bottom_lifetime_guard = bottom;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static diamond_right(top, left, right, bottom) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_diamond_right(top.underlying, left.underlying, right.underlying, bottom.underlying));
+        out.owner = null;
+        out.__right_lifetime_guard = right;
+        out.__bottom_lifetime_guard = bottom;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static diamond_bottom(top, left, right, bottom) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_diamond_bottom(top.underlying, left.underlying, right.underlying, bottom.underlying));
+        out.owner = null;
+        out.__bottom_lifetime_guard = bottom;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+
+  static diamond_and_nested_types(a, b, c, d, nohold) {
+    const diplomat_out = (() => {
+      const out = (() => {
+        const out = new One(wasm.One_diamond_and_nested_types(a.underlying, b.underlying, c.underlying, d.underlying, nohold.underlying));
+        out.owner = null;
+        out.__a_lifetime_guard = a;
+        out.__b_lifetime_guard = b;
+        out.__c_lifetime_guard = c;
+        out.__d_lifetime_guard = d;
+        return out;
+      })();
+      One_box_destroy_registry.register(out, out.underlying)
+      return out;
+    })();
+    return diplomat_out;
+  }
+}
+
 const Opaque_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.Opaque_destroy(underlying);
 });
@@ -652,5 +799,15 @@ export class ResultOpaque {
 
   assert_integer(i) {
     const diplomat_out = wasm.ResultOpaque_assert_integer(this.underlying, i);
+  }
+}
+
+const Two_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Two_destroy(underlying);
+});
+
+export class Two {
+  constructor(underlying) {
+    this.underlying = underlying;
   }
 }
