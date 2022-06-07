@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
 use std::ops::ControlFlow;
-use syn::*;
 
 use super::docs::Docs;
 use super::{Ident, Lifetime, LifetimeDef, Mutability, Path, PathType, TypeName, ValidityError};
@@ -37,7 +35,7 @@ pub struct Method {
 impl Method {
     /// Extracts a [`Method`] from an AST node inside an `impl`.
     pub fn from_syn(
-        m: &ImplItemMethod,
+        m: &syn::ImplItemMethod,
         self_path_type: PathType,
         impl_introduced_lifetimes: Vec<LifetimeDef>,
     ) -> Method {
@@ -54,24 +52,28 @@ impl Method {
         // a lifetime is introduced in the impl but not used in the method.
         let mut introduced_lifetimes = impl_introduced_lifetimes;
         introduced_lifetimes.extend(m.sig.generics.lifetimes().map(Into::into));
+        assert!(
+            m.sig.generics.where_clause.is_none(),
+            "where bounds aren't yet supported"
+        );
 
         let all_params = m
             .sig
             .inputs
             .iter()
             .filter_map(|a| match a {
-                FnArg::Receiver(_) => None,
-                FnArg::Typed(t) => Some(Param::from_syn(t, self_path_type.clone())),
+                syn::FnArg::Receiver(_) => None,
+                syn::FnArg::Typed(ref t) => Some(Param::from_syn(t, self_path_type.clone())),
             })
             .collect::<Vec<_>>();
 
         let self_param = m.sig.receiver().map(|rec| match rec {
-            FnArg::Receiver(rec) => SelfParam::from_syn(rec, self_path_type.clone()),
+            syn::FnArg::Receiver(ref rec) => SelfParam::from_syn(rec, self_path_type.clone()),
             _ => panic!("Unexpected self param type"),
         });
 
         let return_ty = match &m.sig.output {
-            ReturnType::Type(_, return_typ) => {
+            syn::ReturnType::Type(_, return_typ) => {
                 // When we allow lifetime elision, this is where we would want to
                 // support it so we can insert the expanded explicit lifetimes.
                 Some(TypeName::from_syn(
@@ -79,7 +81,7 @@ impl Method {
                     Some(self_path_type),
                 ))
             }
-            ReturnType::Default => None,
+            syn::ReturnType::Default => None,
         };
 
         Method {
@@ -99,11 +101,12 @@ impl Method {
     ///
     /// Given the following method:
     /// ```ignore
-    /// fn foo<'a, 'b, 'c>(&'a self, bar: Bar<'b>, baz: Baz<'c>) -> FooBar<'a, 'b> { ... }
+    /// fn foo<'a, 'b: 'a, 'c>(&'a self, bar: Bar<'b>, baz: Baz<'c>) -> FooBar<'a> { ... }
     /// ```
     /// Then this method would return the `&'a self` and `bar: Bar<'b>` params
-    /// because they contain lifetimes that are in the return type. It wouldn't
-    /// include `baz: Baz<'c>` though, because the return type isn't bound by `'c`.
+    /// because `'a` is in the return type, and `'b` must live at least as long
+    /// as `'a`. It wouldn't include `baz: Baz<'c>` though, because the return
+    /// type isn't bound by `'c` in any way.
     ///
     /// # Panics
     ///
@@ -115,69 +118,137 @@ impl Method {
     pub fn params_held_by_output(&self) -> (Option<&SelfParam>, Vec<&Param>) {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
-        self.return_type
-            .as_ref()
-            .map(|return_type| {
-                // Collect all lifetimes from return type into a `BTreeSet`.
-                let mut lifetimes = BTreeSet::new();
-                return_type.visit_lifetimes(&mut |lt, _| -> ControlFlow<()> {
-                    match lt {
-                        Lifetime::Named(name) => {
-                            lifetimes.insert(name);
-                        }
+        if let Some(ref return_type) = self.return_type {
+            // The lifetimes that must outlive the return type
+            let lifetimes = {
+                // We can think about each lifetime as a node in a directed
+                // graph, where each edge represents the "doesn't outlive"
+                // relationship. Note that this doesn't strictly mean "outlived by",
+                // since you can write `'a: 'a`, which is perfectly valid. Typically,
+                // we can think about how `'a` pointing to `'b` would represent
+                // `'b: 'a`, since `'a` doesn't outlive `'b`. Since lifetimes are
+                // transitive, then for all `'a`, `'b`, there's a path of some
+                // length from `'a` to `'b` if and only if `'a` doesn't outlive `'b`.
+                //
+                // To determine which lifetimes outlive the return type, we can
+                // use this property by performing DFS to record all lifetimes
+                // reachable from some lifetime of the return type.
+                // In traditional DFS, you start with one root node in the stack,
+                // but the return type could have more than one lifetime that we
+                // want to explore. Since we only care about which lifetimes are
+                // reachable, the path is irrelevant. Therefore, we can use the
+                // _same stack_ to DFS on potentially multiple directed graphs
+                // at the _same time_.
+                //
+                // Since we want to traverse lifetimes that live at least as long
+                // as the return type, we just remove edges that we've already
+                // traversed, allowing us to break cycles before getting stuck in
+                // them forever, while still fully exploring all lifetimes that
+                // outlive the return type.
+                let mut stack = vec![];
+
+                // Push the root node(s) to the stack.
+                return_type.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
+                    match lifetime {
+                        Lifetime::Named(named) => stack.push(named),
                         Lifetime::Anonymous => {
+                            // TODO(160): We can remove this once resolved.
                             // This is also caught in the validity check, so this should
                             // never happen. If we're guaranteed to always run the
                             // check first, we can change this to `unreachable!()`.
                             panic!("Anonymous lifetimes not yet allowed in return types")
                         }
-                        Lifetime::Static => {}
+                        Lifetime::Static => {
+                            // If the output depends on the static lifetime, this
+                            // tells us nothing about what params it might need,
+                            // so do nothing.
+                        }
                     }
                     ControlFlow::Continue(())
                 });
 
-                let held_self_param = self.self_param.as_ref().filter(|self_param| {
-                    // Check if `self` is a reference with a lifetime in the return type.
-                    if let Some((Lifetime::Named(ref name), _)) = self_param.reference {
-                        if lifetimes.contains(name) {
-                            return true;
-                        }
+                // This is where we store all the lifetimes that are reachable
+                // in the graph from the lifetimes in the return type.
+                // Each lifetime in the return type is trivially reachable
+                // from itself, so start with that capacity.
+                let mut lifetimes = Vec::with_capacity(stack.len());
+
+                // Edges that we haven't yet explored.
+                // We create a new list here so that we can remove explored edges
+                // later without modifying `self`.
+                let mut unused_edges: Vec<&LifetimeDef> =
+                    self.introduced_lifetimes.iter().collect();
+
+                // Perform DFS.
+                while let Some(sublifetime) = stack.pop() {
+                    if !lifetimes.contains(&sublifetime) {
+                        // This lifetime is reachable, meaning it lives _at least_
+                        // as long as the return type.
+                        lifetimes.push(sublifetime);
+
+                        // Linear search through the unused edges for edges we
+                        // can traverse.
+                        unused_edges.retain(|def| {
+                            if def.bounds.contains(sublifetime) {
+                                stack.push(&def.lifetime);
+                                // Once we follow an edge, don't retain it to
+                                // avoid cycles.
+                                return false;
+                            }
+                            true
+                        });
+                    } else {
+                        // This occurs when we try to visit the same lifetime
+                        // twice, which only happens when a type contains an
+                        // `'a` and `'b` where `'b: 'a`.
                     }
-                    self_param.path_type.lifetimes.iter().any(|lt| {
-                        if let Lifetime::Named(name) = lt {
-                            lifetimes.contains(name)
-                        } else {
-                            false
-                        }
-                    })
-                });
+                }
+                lifetimes
+            };
 
-                // Collect all the params that contain a named lifetime that's also
-                // in the return type.
-                let held_params = self
-                    .params
-                    .iter()
-                    .filter(|param| {
-                        param
-                            .ty
-                            .visit_lifetimes(&mut |lt, _| {
-                                // Thanks to `TypeName::visit_lifetimes`, we can
-                                // traverse the lifetimes without allocations and
-                                // short-circuit if we find a match.
-                                if let Lifetime::Named(name) = lt {
-                                    if lifetimes.contains(name) {
-                                        return ControlFlow::Break(());
-                                    }
+            let held_self_param = self.self_param.as_ref().filter(|self_param| {
+                // Check if `self` is a reference with a lifetime in the return type.
+                if let Some((Lifetime::Named(ref name), _)) = self_param.reference {
+                    if lifetimes.contains(&name) {
+                        return true;
+                    }
+                }
+                self_param.path_type.lifetimes.iter().any(|lt| {
+                    if let Lifetime::Named(name) = lt {
+                        lifetimes.contains(&name)
+                    } else {
+                        false
+                    }
+                })
+            });
+
+            // Collect all the params that contain a named lifetime that's also
+            // in the return type.
+            let held_params = self
+                .params
+                .iter()
+                .filter(|param| {
+                    param
+                        .ty
+                        .visit_lifetimes(&mut |lt, _| {
+                            // Thanks to `TypeName::visit_lifetimes`, we can
+                            // traverse the lifetimes without allocations and
+                            // short-circuit if we find a match.
+                            if let Lifetime::Named(name) = lt {
+                                if lifetimes.contains(&name) {
+                                    return ControlFlow::Break(());
                                 }
-                                ControlFlow::Continue(())
-                            })
-                            .is_break()
-                    })
-                    .collect();
+                            }
+                            ControlFlow::Continue(())
+                        })
+                        .is_break()
+                })
+                .collect();
 
-                (held_self_param, held_params)
-            })
-            .unwrap_or_default()
+            (held_self_param, held_params)
+        } else {
+            Default::default()
+        }
     }
 
     /// Performs type-specific validity checks (see [TypeName::check_validity()])
@@ -281,9 +352,9 @@ impl Param {
         }
     }
 
-    pub fn from_syn(t: &PatType, self_path_type: PathType) -> Self {
+    pub fn from_syn(t: &syn::PatType, self_path_type: PathType) -> Self {
         let ident = match t.pat.as_ref() {
-            Pat::Ident(ident) => ident,
+            syn::Pat::Ident(ident) => ident,
             _ => panic!("Unexpected param type"),
         };
 
@@ -393,7 +464,9 @@ mod tests {
                 .map(|p| p.name.as_str())
                 .collect::<Vec<_>>();
 
-            assert_eq!(actual, [$(stringify!($param)),*]);
+            let expected: &[&str] = &[$(stringify!($param)),*];
+
+            assert_eq!(actual, expected);
         }};
     }
 
@@ -402,6 +475,76 @@ mod tests {
         assert_params_held_by_output! { [first, second] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(first: &'a First, second: &'b Second, third: &Third) -> Foo<'a, 'b> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn transitivity<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'e: 'd, 'x>(hold: &'x One<'e>, nohold: &One<'x>) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn a_le_b_and_b_le_a<'a: 'b, 'b: 'a>(hold: &'b Bar, nohold: &'c Bar) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [a, b, c, d] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b, 'x, 'y>(a: &'x One<'a>, b: &'b One<'x>, c: &Two<'x, 'c>, d: &'x Two<'d, 'y>, nohold: &'x Two<'x, 'y>) -> Box<Foo<'a>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn return_outlives_param<'short, 'long: 'short>(hold: &Two<'long, 'short>, nohold: &'short One<'short>) -> Box<Foo<'long>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [hold] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn transitivity_deep_types<'a, 'b: 'a, 'c: 'b, 'd: 'c>(hold: Option<Box<Bar<'d>>>, nohold: &'a Box<Option<Baz<'a>>>) -> DiplomatResult<Box<Foo<'b>>, Error> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [top, left, right, bottom] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_top<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'top>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [left, bottom] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_left<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'left>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [right, bottom] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_right<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'right>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [bottom] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_bottom<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'bottom>> {
+                unimplemented!()
+            }
+        }
+
+        assert_params_held_by_output! { [a, b, c, d] =>
+            #[diplomat::rust_link(Foo, FnInStruct)]
+            fn diamond_and_nested_types<'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(a: &'x One<'a>, b: &'y One<'b>, c: &One<'c>, d: &One<'d>, nohold: &One<'x>) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }
