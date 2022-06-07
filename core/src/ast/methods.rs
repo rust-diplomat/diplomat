@@ -121,28 +121,30 @@ impl Method {
         if let Some(ref return_type) = self.return_type {
             // The lifetimes that must outlive the return type
             let lifetimes = {
-                // We can think about each lifetime as a node in a directed acyclic
-                // graph (DAG), where each edge represents the "outlived by"
-                // relationship. For example, `'a` pointing to `'b` would represent
-                // `'a: 'b`, since `'a` is outlived by `'b`. Since this is a DAG,
-                // then for all `'a`, `'b`, there's a path of some length from
-                // `'a` to `'b` if and only if `'a` is outlived by `'b`.
+                // We can think about each lifetime as a node in a directed
+                // graph, where each edge represents the "doesn't outlive"
+                // relationship. Note that this doesn't strictly mean "outlived by",
+                // since you can write `'a: 'a`, which is perfectly valid. Typically,
+                // we can think about how `'a` pointing to `'b` would represent
+                // `'b: 'a`, since `'a` doesn't outlive `'b`. Since lifetimes are
+                // transitive, then for all `'a`, `'b`, there's a path of some
+                // length from `'a` to `'b` if and only if `'a` doesn't outlive `'b`.
                 //
                 // To determine which lifetimes outlive the return type, we can
-                // use this property by performing DFS to traverse all paths that
-                // start at each lifetime of the return type. In traditional DFS,
-                // you start with one root node in the stack, but the return type
-                // could have more than one lifetime that we want to explore.
-                // Since we only care about which lifetimes are reachable, the
-                // path is irrelevant. Therefore, we can use the _same stack_ to
-                // potentially DFS on multiple lifetime DAG(s) at the _same time_.
+                // use this property by performing DFS to record all lifetimes
+                // reachable from some lifetime of the return type.
+                // In traditional DFS, you start with one root node in the stack,
+                // but the return type could have more than one lifetime that we
+                // want to explore. Since we only care about which lifetimes are
+                // reachable, the path is irrelevant. Therefore, we can use the
+                // _same stack_ to DFS on potentially multiple directed graphs
+                // at the _same time_.
                 //
-                // Note: It's valid to have lifetime cycles, but this means they're
-                // all the same lifetime, and can thus be squashed into one lifetime,
-                // taking on the accumulated input and outputs of all the lifetimes
-                // in the cycled. This can be done recursively until a DAG is reached.
-                // In this implementation, we just remove edges we've already
-                // explored to avoid cycles.
+                // Since we want to traverse lifetimes that live at least as long
+                // as the return type, we just remove edges that we've already
+                // traversed, allowing us to break cycles before getting stuck in
+                // them forever, while still fully exploring all lifetimes that
+                // outlive the return type.
                 let mut stack = vec![];
 
                 // Push the root node(s) to the stack.
