@@ -2,7 +2,7 @@ use diplomat_core::Env;
 use std::fmt;
 use std::fmt::Write;
 
-use diplomat_core::ast::{self, BorrowedParams};
+use diplomat_core::ast;
 
 use super::conversions::{gen_value_js_to_rust, gen_value_rust_to_js};
 use super::display;
@@ -137,7 +137,7 @@ fn gen_field<W: fmt::Write>(
                             Box::new(typ.clone()),
                         ),
                         in_path,
-                        &BorrowedParams::default(),
+                        &ast::BorrowedParams::default(),
                         env,
                         &mut f,
                     )
