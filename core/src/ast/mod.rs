@@ -20,7 +20,7 @@ pub use types::{
 };
 
 mod lifetimes;
-pub use lifetimes::{Lifetime, LifetimeEnv};
+pub use lifetimes::{Lifetime, LifetimeEnv, NamedLifetime};
 
 mod paths;
 pub use paths::Path;

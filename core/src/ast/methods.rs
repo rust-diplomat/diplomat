@@ -2,8 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
-use super::lifetimes::{Lifetime, LifetimeEnv};
-use super::{Ident, Mutability, Path, PathType, TypeName, ValidityError};
+use super::{
+    Ident, Lifetime, LifetimeEnv, Mutability, NamedLifetime, Path, PathType, TypeName,
+    ValidityError,
+};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -120,53 +122,24 @@ impl Method {
         if let Some(ref return_type) = self.return_type {
             // The lifetimes that must outlive the return type
             let lifetimes = {
-                // We can think about each lifetime as a node in a directed
-                // graph, where each edge represents the "doesn't outlive"
-                // relationship. Note that this doesn't strictly mean "outlived by",
-                // since you can write `'a: 'a`, which is perfectly valid. Typically,
-                // we can think about how `'a` pointing to `'b` would represent
-                // `'b: 'a`, since `'a` doesn't outlive `'b`. Since lifetimes are
-                // transitive, then for all `'a`, `'b`, there's a path of some
-                // length from `'a` to `'b` if and only if `'a` doesn't outlive `'b`.
-                //
-                // To determine which lifetimes outlive the return type, we can
-                // use this property by performing DFS to record all lifetimes
-                // reachable from some lifetime of the return type.
-                // In traditional DFS, you start with one root node in the stack,
-                // but the return type could have more than one lifetime that we
-                // want to explore. Since we only care about which lifetimes are
-                // reachable, the path is irrelevant. Therefore, we can use the
-                // _same stack_ to DFS on potentially multiple directed graphs
-                // at the _same time_.
-                //
-                // Since we want to traverse lifetimes that live at least as long
-                // as the return type, we just remove edges that we've already
-                // traversed, allowing us to break cycles before getting stuck in
-                // them forever, while still fully exploring all lifetimes that
-                // outlive the return type.
-                let mut root_lifetimes = vec![];
+                let mut return_type_lifetimes: Vec<&NamedLifetime> = vec![];
 
-                // Push the root node(s) to the stack.
                 return_type.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
                     match lifetime {
-                        Lifetime::Named(named) => root_lifetimes.push(named),
+                        Lifetime::Named(named) => return_type_lifetimes.push(named),
                         Lifetime::Anonymous => {
-                            // TODO(160): We can remove this once resolved.
+                            // TODO(160): Once lifetime elision in return types
+                            // is allowed, we can remove this.
                             // This is also caught in the validity check, so this should
-                            // never happen. If we're guaranteed to always run the
-                            // check first, we can change this to `unreachable!()`.
+                            // never happen.
                             panic!("Anonymous lifetimes not yet allowed in return types")
                         }
-                        Lifetime::Static => {
-                            // If the output depends on the static lifetime, this
-                            // tells us nothing about what params it might need,
-                            // so do nothing.
-                        }
+                        Lifetime::Static => {}
                     }
                     ControlFlow::Continue(())
                 });
 
-                self.lifetime_env.outlives(root_lifetimes)
+                self.lifetime_env.outlives(return_type_lifetimes)
             };
 
             let held_self_param = self.self_param.as_ref().filter(|self_param| {
