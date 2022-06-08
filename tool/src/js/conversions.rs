@@ -1,8 +1,9 @@
 use diplomat_core::Env;
 use std::fmt;
 use std::fmt::Write;
+use std::ops::ControlFlow;
 
-use diplomat_core::ast::{self, PrimitiveType};
+use diplomat_core::ast::{self, BorrowedParams, PrimitiveType};
 
 use super::display;
 use super::types::{return_type_form, ReturnTypeForm};
@@ -109,6 +110,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
     value_expr: &str,
     typ: &ast::TypeName,
     in_path: &ast::Path,
+    borrowed_params: &BorrowedParams,
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
@@ -183,6 +185,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                                 in_path,
                                 value_expr,
                                 "null", // JS owns the box
+                                borrowed_params,
                                 env,
                                 &mut f,
                             )
@@ -225,6 +228,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                                         "option_value",
                                         underlying.as_ref(),
                                         in_path,
+                                        borrowed_params,
                                         env,
                                         &mut f,
                                     )
@@ -273,6 +277,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                                     in_path,
                                     &format!("diplomat_receive_buffer + {}", ok_offset),
                                     "result_tag",
+                                    borrowed_params,
                                     env,
                                     &mut f,
                                 )
@@ -291,6 +296,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                                             in_path,
                                             "diplomat_receive_buffer",
                                             "result_tag",
+                                            borrowed_params,
                                             env,
                                             &mut f,
                                         )
@@ -308,6 +314,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                                             in_path,
                                             "diplomat_receive_buffer",
                                             "result_tag",
+                                            borrowed_params,
                                             env,
                                             &mut f,
                                         )
@@ -337,7 +344,15 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
 
         ast::TypeName::Reference(.., underlying) => {
             // TODO(#12): pass in lifetime of the reference
-            gen_rust_reference_to_js(underlying.as_ref(), in_path, value_expr, "null", env, out)?;
+            gen_rust_reference_to_js(
+                underlying.as_ref(),
+                in_path,
+                value_expr,
+                "null",
+                borrowed_params,
+                env,
+                out,
+            )?;
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference(..) => todo!(),
@@ -413,6 +428,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
     in_path: &ast::Path,
     value_expr: &str,
     owner: &str,
+    borrowed_params: &BorrowedParams,
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
@@ -426,6 +442,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     value_expr
                 ),
                 owner,
+                borrowed_params,
                 env,
                 out,
             )?;
@@ -440,6 +457,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     value_expr
                 ),
                 "null", // TODO(#12): pass in lifetime of the reference
+                borrowed_params,
                 env,
                 out,
             )?;
@@ -453,6 +471,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     in_path,
                     value_expr,
                     owner,
+                    borrowed_params,
                     env,
                     out,
                 )?;
@@ -478,6 +497,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                             in_path,
                             value_expr,
                             owner,
+                            borrowed_params,
                             env,
                             &mut f,
                         )
@@ -490,6 +510,23 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     display::block(|mut f| {
                         writeln!(f, "const out = new {}({});", custom_type.name(), value_expr)?;
                         writeln!(f, "out.owner = {};", owner)?;
+                        let BorrowedParams(ref self_param, ref params) = borrowed_params;
+                        if self_param.is_some() {
+                            writeln!(f, "out.__this_lifetime_guard = this;")?;
+                        }
+                        for param in params {
+                            let str_base = param
+                                .ty
+                                .visit_lifetimes(&mut |_, origin| match origin {
+                                    ast::LifetimeOrigin::StrReference => ControlFlow::Break(()),
+                                    _ => ControlFlow::Continue(()),
+                                })
+                                .is_break();
+
+                            if !str_base {
+                                writeln!(f, "out.__{0}_lifetime_guard = {0};", param.name)?;
+                            }
+                        }
                         writeln!(f, "return out;")
                     })
                 )?;

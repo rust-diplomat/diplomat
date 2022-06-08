@@ -2,7 +2,7 @@ use diplomat_core::Env;
 use std::fmt;
 use std::fmt::Write;
 
-use diplomat_core::ast;
+use diplomat_core::ast::{self, BorrowedParams};
 
 use super::conversions::{gen_value_js_to_rust, gen_value_rust_to_js};
 use super::display;
@@ -137,6 +137,7 @@ fn gen_field<W: fmt::Write>(
                             Box::new(typ.clone()),
                         ),
                         in_path,
+                        &BorrowedParams::default(),
                         env,
                         &mut f,
                     )
@@ -233,9 +234,14 @@ fn gen_method<W: fmt::Write>(
                         None | Some(ast::TypeName::Unit) => {
                             write!(f, "{}", invocation_expr)
                         }
-                        Some(ret_type) => {
-                            gen_value_rust_to_js(&invocation_expr, ret_type, in_path, env, &mut f)
-                        }
+                        Some(ret_type) => gen_value_rust_to_js(
+                            &invocation_expr,
+                            ret_type,
+                            in_path,
+                            &method.borrowed_params(),
+                            env,
+                            &mut f,
+                        ),
                     });
 
                     if is_writeable {
