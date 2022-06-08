@@ -3,7 +3,7 @@
 /// types such as opaque structs, [`Box`], and [`Result`] with utilities
 /// for handling such types.
 mod methods;
-pub use methods::{Method, Param, SelfParam};
+pub use methods::{BorrowedParams, Method, Param, SelfParam};
 
 mod modules;
 pub use modules::{File, Module};

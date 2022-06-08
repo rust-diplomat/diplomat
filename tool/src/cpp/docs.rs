@@ -211,8 +211,8 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     writeln!(out)?;
 
+    let mut method_indented = indented(out).with_str("    ");
     if !method.docs.is_empty() {
-        let mut method_indented = indented(out).with_str("    ");
         markdown_to_rst(
             &mut method_indented,
             &method.docs.to_markdown(docs_url_gen),
@@ -230,6 +230,20 @@ pub fn gen_method_docs<W: fmt::Write>(
             },
         )?;
         writeln!(method_indented)?;
+    }
+    let borrowed_params = method.borrowed_params();
+    let mut names = borrowed_params.names("this");
+
+    if let Some(first) = names.next() {
+        write!(method_indented, "\nLifetimes: ``{}``", first).unwrap();
+        for param in names {
+            write!(method_indented, ", ``{}``", param).unwrap();
+        }
+        writeln!(
+            method_indented,
+            " must live at least as long as the output."
+        )
+        .unwrap();
     }
 
     Ok(())

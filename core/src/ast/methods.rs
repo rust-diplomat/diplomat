@@ -115,7 +115,7 @@ impl Method {
     /// contain elided lifetimes that we depend on for this method. The validity
     /// checks ensure that the return type doesn't elide any lifetimes, ensuring
     /// that this method will produce correct results.
-    pub fn params_held_by_output(&self) -> (Option<&SelfParam>, Vec<&Param>) {
+    pub fn borrowed_params(&self) -> BorrowedParams {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
         if let Some(ref return_type) = self.return_type {
@@ -245,9 +245,9 @@ impl Method {
                 })
                 .collect();
 
-            (held_self_param, held_params)
+            BorrowedParams(held_self_param, held_params)
         } else {
-            Default::default()
+            BorrowedParams(None, vec![])
         }
     }
 
@@ -365,6 +365,20 @@ impl Param {
     }
 }
 
+/// Parameters in a method that might be borrowed in the return type,
+/// and must live _at least_ as long as the returned object.
+#[derive(Default)]
+pub struct BorrowedParams<'a>(pub Option<&'a SelfParam>, pub Vec<&'a Param>);
+
+impl BorrowedParams<'_> {
+    pub fn names<'a>(&'a self, self_name: &'a str) -> impl Iterator<Item = &'a str> {
+        self.0
+            .iter()
+            .map(move |_| self_name)
+            .chain(self.1.iter().map(|param| param.name.as_str()))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use insta;
@@ -429,26 +443,7 @@ mod tests {
         ));
     }
 
-    macro_rules! assert_params_held_by_output {
-        ([self $(,$($param:ident),+)?] => $($tokens:tt)* ) => {{
-            let method = Method::from_syn(
-                &syn::parse_quote! { $($tokens)* },
-                PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-                vec![],
-            );
-
-            let (self_param, params) = method.params_held_by_output();
-            assert!(self_param.is_some(), "expected `self` param to be held");
-
-            let actual: Vec<&str> = params
-                .iter()
-                .map(|p| p.name.as_str())
-                .collect();
-
-            let expected: &[&str] = &[$($(stringify!($param)),*)?];
-
-            assert_eq!(actual, expected);
-        }};
+    macro_rules! assert_borrowed_params {
         ([$($param:ident),*] => $($tokens:tt)* ) => {{
             let method = Method::from_syn(
                 &syn::parse_quote! { $($tokens)* },
@@ -456,93 +451,86 @@ mod tests {
                 vec![],
             );
 
-            let (self_param, params) = method.params_held_by_output();
-            assert!(self_param.is_none(), "didn't expect `self` param to be held");
-
-            let actual = params
-                .iter()
-                .map(|p| p.name.as_str())
-                .collect::<Vec<_>>();
-
+            let borrowed_params = method.borrowed_params();
+            let actual: Vec<&str> = borrowed_params.names("self").collect();
             let expected: &[&str] = &[$(stringify!($param)),*];
-
             assert_eq!(actual, expected);
         }};
     }
 
     #[test]
     fn static_params_held_by_return_type() {
-        assert_params_held_by_output! { [first, second] =>
+        assert_borrowed_params! { [first, second] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(first: &'a First, second: &'b Second, third: &Third) -> Foo<'a, 'b> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [hold] =>
+        assert_borrowed_params! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn transitivity<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'e: 'd, 'x>(hold: &'x One<'e>, nohold: &One<'x>) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [hold] =>
+        assert_borrowed_params! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn a_le_b_and_b_le_a<'a: 'b, 'b: 'a>(hold: &'b Bar, nohold: &'c Bar) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [a, b, c, d] =>
+        assert_borrowed_params! { [a, b, c, d] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b, 'x, 'y>(a: &'x One<'a>, b: &'b One<'x>, c: &Two<'x, 'c>, d: &'x Two<'d, 'y>, nohold: &'x Two<'x, 'y>) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [hold] =>
+        assert_borrowed_params! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn return_outlives_param<'short, 'long: 'short>(hold: &Two<'long, 'short>, nohold: &'short One<'short>) -> Box<Foo<'long>> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [hold] =>
+        assert_borrowed_params! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn transitivity_deep_types<'a, 'b: 'a, 'c: 'b, 'd: 'c>(hold: Option<Box<Bar<'d>>>, nohold: &'a Box<Option<Baz<'a>>>) -> DiplomatResult<Box<Foo<'b>>, Error> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [top, left, right, bottom] =>
+        assert_borrowed_params! { [top, left, right, bottom] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn diamond_top<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'top>> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [left, bottom] =>
+        assert_borrowed_params! { [left, bottom] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn diamond_left<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'left>> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [right, bottom] =>
+        assert_borrowed_params! { [right, bottom] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn diamond_right<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'right>> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [bottom] =>
+        assert_borrowed_params! { [bottom] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn diamond_bottom<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(top: One<'top>, left: One<'left>, right: One<'right>, bottom: One<'bottom>) -> Box<Foo<'bottom>> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [a, b, c, d] =>
+        assert_borrowed_params! { [a, b, c, d] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
             fn diamond_and_nested_types<'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(a: &'x One<'a>, b: &'y One<'b>, c: &One<'c>, d: &One<'d>, nohold: &One<'x>) -> Box<Foo<'a>> {
                 unimplemented!()
@@ -552,21 +540,21 @@ mod tests {
 
     #[test]
     fn nonstatic_params_held_by_return_type() {
-        assert_params_held_by_output! { [self] =>
+        assert_borrowed_params! { [self] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a>(&'a self) -> Foo<'a> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [self, foo, bar] =>
+        assert_borrowed_params! { [self, foo, bar] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'x, 'y>(&'x self, foo: &'x Foo, bar: &Bar<'y>, baz: &Baz) -> Foo<'x, 'y> {
                 unimplemented!()
             }
         }
 
-        assert_params_held_by_output! { [self, bar] =>
+        assert_borrowed_params! { [self, bar] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(&'a self, bar: Bar<'b>) -> Foo<'a, 'b> {
                 unimplemented!()
@@ -574,7 +562,7 @@ mod tests {
         }
 
         // Test that being dependent on 'static doesn't make you dependent on 'static params.
-        assert_params_held_by_output! { [self, bar] =>
+        assert_borrowed_params! { [self, bar] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(&'a self, bar: Bar<'b>, baz: &'static str) -> Foo<'a, 'b, 'static> {
                 unimplemented!()

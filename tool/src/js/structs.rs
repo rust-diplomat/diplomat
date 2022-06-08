@@ -137,7 +137,7 @@ fn gen_field<W: fmt::Write>(
                             Box::new(typ.clone()),
                         ),
                         in_path,
-                        (None, &[]),
+                        &ast::BorrowedParams::default(),
                         env,
                         &mut f,
                     )
@@ -234,17 +234,14 @@ fn gen_method<W: fmt::Write>(
                         None | Some(ast::TypeName::Unit) => {
                             write!(f, "{}", invocation_expr)
                         }
-                        Some(ret_type) => {
-                            let (self_param, params) = method.params_held_by_output();
-                            gen_value_rust_to_js(
-                                &invocation_expr,
-                                ret_type,
-                                in_path,
-                                (self_param, &params[..]),
-                                env,
-                                &mut f,
-                            )
-                        }
+                        Some(ret_type) => gen_value_rust_to_js(
+                            &invocation_expr,
+                            ret_type,
+                            in_path,
+                            &method.borrowed_params(),
+                            env,
+                            &mut f,
+                        ),
                     });
 
                     if is_writeable {
