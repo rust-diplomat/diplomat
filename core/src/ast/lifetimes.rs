@@ -22,7 +22,6 @@ impl<'de> Deserialize<'de> for NamedLifetime {
         // Special `Deserialize` impl to ensure invariants.
         let named = Ident::deserialize(deserializer)?;
         if named.as_str() == "static" {
-            // fail somehow
             panic!("cannot be static");
         }
         Ok(NamedLifetime(named))
@@ -166,7 +165,10 @@ impl LifetimeEnv {
 
     /// Helper function for `LifetimeGraph::extend_from_parts`,
     /// which allows for getting the id of an `Edge` associated with a lifetime.
-    fn get_or_insert_id<L>(&mut self, lifetime: &L) -> usize
+    ///
+    /// Returns `Ok` if the lifetime was already in the graph, and `Err` if a
+    /// new lifetime had to be inserted.
+    fn id_or_insert<L>(&mut self, lifetime: &L) -> Result<usize, usize>
     where
         NamedLifetime: PartialEq<L> + for<'a> From<&'a L>,
     {
@@ -178,7 +180,7 @@ impl LifetimeEnv {
             .position(|edge| &edge.lifetime == lifetime)
         {
             // The edge for this lifetime already exists.
-            idx
+            Ok(idx)
         } else {
             // The edge doesn't exist yet, create it and return its id.
             let id = self.edges.len();
@@ -187,11 +189,17 @@ impl LifetimeEnv {
                 shorter: vec![],
                 longer: vec![],
             });
-            id
+            Err(id)
         }
     }
 
     /// Extends the `LifetimeEnv` from an iterator of parts found in lifetime bounds.
+    ///
+    /// # Panics
+    ///
+    /// This method panics if, by the time all the parts are read in, there are
+    /// any lifetimes that have been used as bounds but _not_ declared. This should
+    /// only be of concern during deserialization.
     // These trait bounds look intimidating, here's what they do:
     //  * L: A `NamedLifetime`-like type
     //  * B: An iterator of L's
@@ -205,18 +213,52 @@ impl LifetimeEnv {
         B: 'a + IntoIterator<Item = &'a L>,
         I: IntoIterator<Item = (&'a L, B)>,
     {
+        // Lifetimes that have been used as bounds, but not actually declared
+        let mut undeclared = vec![];
+
         for (lifetime, bounds) in iter {
             // Since all the indices come from me, we could theoretically
             // change these to `get_unchecked`. But unsafe is spooky :/
-            let long_id = self.get_or_insert_id(lifetime);
+            let long_id = match self.id_or_insert(lifetime) {
+                Ok(id) => {
+                    if let Some(undeclared_id) = undeclared
+                        .iter()
+                        .position(|undeclared_id| *undeclared_id == id)
+                    {
+                        // This lifetime was previously used as a bound, but now
+                        // we're declaring it.
+                        undeclared.swap_remove(undeclared_id);
+                    }
+                    id
+                }
+                Err(id) => id,
+            };
 
             for bound in bounds {
-                let short_id = self.get_or_insert_id(bound);
+                let short_id = self.id_or_insert(bound).unwrap_or_else(|id| {
+                    // A lifetime has been used as a bound but hasn't been declared yet.
+                    undeclared.push(id);
+                    id
+                });
                 // This doesn't catch repeats. But that doesn't break anything
                 // and it won't slow down the DFS, so...
                 self.edges[short_id].longer.push(long_id);
                 self.edges[long_id].shorter.push(short_id);
             }
+        }
+
+        if let Some((&first, rest)) = undeclared.split_first() {
+            // There's at least one lifetime that's undeclared.
+            use std::fmt::Write;
+            let mut msg = format!(
+                "used undeclared lifetimes in bounds: [{}",
+                self.edges[first].lifetime
+            );
+            for &id in rest {
+                write!(msg, ", {}", self.edges[id].lifetime).unwrap();
+            }
+            msg.write_char(']').unwrap();
+            panic!("{}", msg)
         }
     }
 }

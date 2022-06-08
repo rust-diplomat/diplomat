@@ -47,10 +47,14 @@ impl Method {
             m.sig.ident.span(),
         );
 
-        let mut lifetime_env = LifetimeEnv::from(&m.sig.generics);
+        let mut lifetime_env = LifetimeEnv::default();
+        // The impl generics _must_ be loaded into the env first, since the method
+        // generics might use lifetimes defined in the impl, and `extend_generics`
+        // panics if `'a: 'b` where `'b` isn't declared by the time it finishes.
         if let Some(generics) = impl_generics {
             lifetime_env.extend_generics(generics);
         }
+        lifetime_env.extend_generics(&m.sig.generics);
 
         let all_params = m
             .sig
@@ -503,7 +507,7 @@ mod tests {
 
         assert_params_held_by_output! { [a, b, c, d] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
-            fn diamond_and_nested_types<'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(a: &'x One<'a>, b: &'y One<'b>, c: &One<'c>, d: &One<'d>, nohold: &One<'x>) -> Box<Foo<'a>> {
+            fn diamond_and_nested_types<'a, 'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(a: &'x One<'a>, b: &'y One<'b>, c: &One<'c>, d: &One<'d>, nohold: &One<'x>) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }
