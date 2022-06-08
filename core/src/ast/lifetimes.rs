@@ -67,7 +67,7 @@ impl ToTokens for NamedLifetime {
 /// bounds defined in the `where` clause.
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
 pub struct LifetimeEnv {
-    edges: Vec<LifetimeEdges>,
+    nodes: Vec<LifetimeNode>,
 }
 
 impl LifetimeEnv {
@@ -89,35 +89,35 @@ impl LifetimeEnv {
         let mut outlives = Vec::with_capacity(iter.size_hint().1.unwrap_or(0));
 
         // Track visited lifetimes to avoid cycles.
-        let mut visited = vec![false; self.edges.len()];
+        let mut visited = vec![false; self.nodes.len()];
 
         iter.filter_map(|named| {
             // Lifetimes that don't have a position aren't in the graph,
             // and thus have no known lifetimes that outlive them.
-            self.edges.iter().position(|edge| edge.lifetime == *named)
+            self.nodes.iter().position(|node| node.lifetime == *named)
         })
         .for_each(|root_id| {
-            dfs(root_id, &self.edges[..], &mut outlives, &mut visited[..]);
+            dfs(root_id, &self.nodes[..], &mut outlives, &mut visited[..]);
         });
 
         /// Perform recursive DFS on a lifetime's sub-lifetimes.
         fn dfs<'a>(
             id: usize,
-            edges: &'a [LifetimeEdges],
+            nodes: &'a [LifetimeNode],
             outlives: &mut Vec<&'a NamedLifetime>,
             visited: &mut [bool],
         ) {
             // Note: all of these indexings SHOULD be valid because
-            // `visited.len() == edges.len()`, and the ids come from
-            // calling `Iterator::position` on `edges`, which never shrinks.
+            // `visited.len() == nodes.len()`, and the ids come from
+            // calling `Iterator::position` on `nodes`, which never shrinks.
             // So we should be able to change these to `get_unchecked`...
             if !visited[id] {
                 visited[id] = true;
 
-                let edge = &edges[id];
-                outlives.push(&edge.lifetime);
-                for &longer_id in edge.longer.iter() {
-                    dfs(longer_id, edges, outlives, visited);
+                let node = &nodes[id];
+                outlives.push(&node.lifetime);
+                for &longer_id in node.longer.iter() {
+                    dfs(longer_id, nodes, outlives, visited);
                 }
             }
         }
@@ -141,12 +141,12 @@ impl LifetimeEnv {
 
     /// Returns the number of lifetimes in the graph.
     pub fn len(&self) -> usize {
-        self.edges.len()
+        self.nodes.len()
     }
 
     /// Returns `true` if the graph contains no lifetimes.
     pub fn is_empty(&self) -> bool {
-        self.edges.is_empty()
+        self.nodes.is_empty()
     }
 
     /// `<'a, 'b, 'c>`
@@ -159,7 +159,7 @@ impl LifetimeEnv {
             return quote! {};
         }
 
-        let lifetimes = self.edges.iter().map(|edge| &edge.lifetime);
+        let lifetimes = self.nodes.iter().map(|node| &node.lifetime);
         quote! { <#(#lifetimes),*> }
     }
 
@@ -175,16 +175,16 @@ impl LifetimeEnv {
         // We have to index because we need to call this twice in the same scope
         // in `extend_from_parts`, otherwise I would've just returned `&mut Edge`.
         if let Some(idx) = self
-            .edges
+            .nodes
             .iter()
-            .position(|edge| &edge.lifetime == lifetime)
+            .position(|node| &node.lifetime == lifetime)
         {
-            // The edge for this lifetime already exists.
+            // The node for this lifetime already exists.
             Ok(idx)
         } else {
-            // The edge doesn't exist yet, create it and return its id.
-            let id = self.edges.len();
-            self.edges.push(LifetimeEdges {
+            // The node doesn't exist yet, create it and return its id.
+            let id = self.nodes.len();
+            self.nodes.push(LifetimeNode {
                 lifetime: lifetime.into(),
                 shorter: vec![],
                 longer: vec![],
@@ -242,8 +242,8 @@ impl LifetimeEnv {
                 });
                 // This doesn't catch repeats. But that doesn't break anything
                 // and it won't slow down the DFS, so...
-                self.edges[short_id].longer.push(long_id);
-                self.edges[long_id].shorter.push(short_id);
+                self.nodes[short_id].longer.push(long_id);
+                self.nodes[long_id].shorter.push(short_id);
             }
         }
 
@@ -252,10 +252,10 @@ impl LifetimeEnv {
             use std::fmt::Write;
             let mut msg = format!(
                 "used undeclared lifetimes in bounds: [{}",
-                self.edges[first].lifetime
+                self.nodes[first].lifetime
             );
             for &id in rest {
-                write!(msg, ", {}", self.edges[id].lifetime).unwrap();
+                write!(msg, ", {}", self.nodes[id].lifetime).unwrap();
             }
             msg.write_char(']').unwrap();
             panic!("{}", msg)
@@ -279,12 +279,12 @@ impl From<&syn::Generics> for LifetimeEnv {
 
 impl ToTokens for LifetimeEnv {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        for edge in self.edges.iter() {
-            let lifetime = &edge.lifetime;
-            if edge.shorter.is_empty() {
+        for node in self.nodes.iter() {
+            let lifetime = &node.lifetime;
+            if node.shorter.is_empty() {
                 tokens.extend(quote! { #lifetime, });
             } else {
-                let bounds = edge.shorter.iter().map(|&id| &self.edges[id].lifetime);
+                let bounds = node.shorter.iter().map(|&id| &self.nodes[id].lifetime);
                 tokens.extend(quote! { #lifetime: #(#bounds)+*, });
             }
         }
@@ -300,11 +300,11 @@ impl Serialize for LifetimeEnv {
         use serde::ser::SerializeMap;
         let mut seq = serializer.serialize_map(Some(self.len()))?;
 
-        for edge in self.edges.iter() {
+        for node in self.nodes.iter() {
             /// Helper type for serializing bounds.
             struct Bounds<'a> {
                 ids: &'a [usize],
-                edges: &'a [LifetimeEdges],
+                nodes: &'a [LifetimeNode],
             }
 
             impl<'a> Serialize for Bounds<'a> {
@@ -315,17 +315,17 @@ impl Serialize for LifetimeEnv {
                     use serde::ser::SerializeSeq;
                     let mut seq = serializer.serialize_seq(Some(self.ids.len()))?;
                     for &id in self.ids {
-                        seq.serialize_element(&self.edges[id].lifetime)?;
+                        seq.serialize_element(&self.nodes[id].lifetime)?;
                     }
                     seq.end()
                 }
             }
 
             seq.serialize_entry(
-                &edge.lifetime,
+                &node.lifetime,
                 &Bounds {
-                    ids: &edge.shorter[..],
-                    edges: &self.edges,
+                    ids: &node.shorter[..],
+                    nodes: &self.nodes,
                 },
             )?;
         }
@@ -356,7 +356,7 @@ impl<'de> Deserialize<'de> for LifetimeEnv {
 /// meaning that they may be invalid if a `LifetimeEdges` is created in one
 /// `LifetimeGraph` and then used in another.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-struct LifetimeEdges {
+struct LifetimeNode {
     /// The name of the lifetime.
     lifetime: NamedLifetime,
 
