@@ -113,9 +113,6 @@ impl Module {
                             _ => panic!("Self type not found"),
                         };
 
-                        let impl_lifetimes =
-                            imp.generics.lifetimes().map(Into::into).collect::<Vec<_>>();
-
                         let mut new_methods = imp
                             .items
                             .iter()
@@ -124,7 +121,7 @@ impl Module {
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, self_path.clone(), impl_lifetimes.clone()))
+                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics)))
                             .collect();
 
                         let self_ident = self_path.path.elements.last().unwrap();

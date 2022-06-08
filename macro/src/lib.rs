@@ -143,11 +143,11 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     }
 
     let lifetimes = {
-        let lifetimes = &m.introduced_lifetimes;
-        if lifetimes.is_empty() {
+        let lifetime_env = &m.lifetime_env;
+        if lifetime_env.is_empty() {
             quote! {}
         } else {
-            quote! { <#(#lifetimes),*> }
+            quote! { <#lifetime_env> }
         }
     };
 
@@ -254,10 +254,9 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     });
 
     for custom_type in module.declared_types.values() {
-        custom_type
-            .methods()
-            .iter()
-            .for_each(|m| new_contents.push(gen_custom_type_method(custom_type, m)));
+        custom_type.methods().iter().for_each(|m| {
+            new_contents.push(gen_custom_type_method(custom_type, m));
+        });
 
         let destroy_ident = Ident::new(
             format!("{}_destroy", custom_type.name()).as_str(),
@@ -266,11 +265,10 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
 
         let type_ident = custom_type.name().to_syn();
 
-        let (lifetime_defs, lifetimes) = if let Some(lifetime_defs) = custom_type.lifetimes() {
-            let lifetimes = lifetime_defs.iter().map(|lt| &lt.lifetime);
+        let (lifetime_defs, lifetimes) = if let Some(lifetime_env) = custom_type.lifetimes() {
             (
-                quote! { <#(#lifetime_defs),*> }, // with bounds
-                quote! { <#(#lifetimes),*> },     // without bounds
+                quote! { <#lifetime_env> },
+                lifetime_env.lifetimes_to_tokens(),
             )
         } else {
             (quote! {}, quote! {})

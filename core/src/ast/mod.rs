@@ -15,9 +15,10 @@ mod enums;
 pub use enums::Enum;
 
 mod types;
-pub use types::{
-    CustomType, Lifetime, LifetimeDef, ModSymbol, Mutability, PathType, PrimitiveType, TypeName,
-};
+pub use types::{CustomType, ModSymbol, Mutability, PathType, PrimitiveType, TypeName};
+
+mod lifetimes;
+pub use lifetimes::{Lifetime, LifetimeEnv};
 
 mod paths;
 pub use paths::Path;
