@@ -11,7 +11,7 @@ declared_types:
       docs:
         - ""
         - ~
-      lifetimes: []
+      lifetimes: {}
       fields:
         - - a
           - Primitive: i32
@@ -43,7 +43,7 @@ declared_types:
                 elements:
                   - NonOpaqueStruct
               lifetimes: []
-          introduced_lifetimes: []
+          introduced_lifetimes: {}
         - name: set_a
           docs:
             - ""
@@ -63,14 +63,14 @@ declared_types:
               ty:
                 Primitive: i32
           return_type: ~
-          introduced_lifetimes: []
+          introduced_lifetimes: {}
   OpaqueStruct:
     Opaque:
       name: OpaqueStruct
       docs:
         - ""
         - ~
-      lifetimes: []
+      lifetimes: {}
       methods:
         - name: new
           docs:
@@ -86,7 +86,7 @@ declared_types:
                   elements:
                     - OpaqueStruct
                 lifetimes: []
-          introduced_lifetimes: []
+          introduced_lifetimes: {}
         - name: get_string
           docs:
             - ""
@@ -108,6 +108,6 @@ declared_types:
                 elements:
                   - String
               lifetimes: []
-          introduced_lifetimes: []
+          introduced_lifetimes: {}
 sub_modules: []
 
