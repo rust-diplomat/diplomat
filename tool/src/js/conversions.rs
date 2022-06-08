@@ -3,7 +3,7 @@ use std::fmt;
 use std::fmt::Write;
 use std::ops::ControlFlow;
 
-use diplomat_core::ast::{self, BorrowedParams, PrimitiveType};
+use diplomat_core::ast;
 
 use super::display;
 use super::types::{return_type_form, ReturnTypeForm};
@@ -57,7 +57,7 @@ pub fn gen_value_js_to_rust(
                 param_name, param_name, align
             ));
         }
-        ast::TypeName::Primitive(PrimitiveType::char) => {
+        ast::TypeName::Primitive(ast::PrimitiveType::char) => {
             // we use the spread operator here to count codepoints
             // codePointAt() does not return surrogate pairs if there are multiple
             invocation_params.push(format!(
@@ -110,7 +110,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
     value_expr: &str,
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    borrowed_params: &BorrowedParams,
+    borrowed_params: &ast::BorrowedParams,
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
@@ -273,7 +273,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                             "const is_ok = {};",
                             display::expr(|mut f| {
                                 gen_rust_reference_to_js(
-                                    &ast::TypeName::Primitive(PrimitiveType::bool),
+                                    &ast::TypeName::Primitive(ast::PrimitiveType::bool),
                                     in_path,
                                     &format!("diplomat_receive_buffer + {}", ok_offset),
                                     "result_tag",
@@ -428,7 +428,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
     in_path: &ast::Path,
     value_expr: &str,
     owner: &str,
-    borrowed_params: &BorrowedParams,
+    borrowed_params: &ast::BorrowedParams,
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
@@ -493,7 +493,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     enm.name,
                     display::expr(|mut f| {
                         gen_rust_reference_to_js(
-                            &ast::TypeName::Primitive(PrimitiveType::isize),
+                            &ast::TypeName::Primitive(ast::PrimitiveType::isize),
                             in_path,
                             value_expr,
                             owner,
@@ -510,7 +510,7 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                     display::block(|mut f| {
                         writeln!(f, "const out = new {}({});", custom_type.name(), value_expr)?;
                         writeln!(f, "out.owner = {};", owner)?;
-                        let BorrowedParams(ref self_param, ref params) = borrowed_params;
+                        let ast::BorrowedParams(ref self_param, ref params) = borrowed_params;
                         if self_param.is_some() {
                             writeln!(f, "out.__this_lifetime_guard = this;")?;
                         }
@@ -534,13 +534,13 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
         }
 
         ast::TypeName::Primitive(prim) => {
-            if let PrimitiveType::bool = prim {
+            if let ast::PrimitiveType::bool = prim {
                 write!(
                     out,
                     "(new Uint8Array(wasm.memory.buffer, {}, 1))[0] == 1",
                     value_expr
                 )?;
-            } else if let PrimitiveType::char = prim {
+            } else if let ast::PrimitiveType::char = prim {
                 write!(
                     out,
                     "String.fromCharCode((new Uint32Array(wasm.memory.buffer, {}, 1))[0])",
@@ -548,22 +548,22 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                 )?;
             } else {
                 let prim_type = match prim {
-                    PrimitiveType::i8 => "Int8Array",
-                    PrimitiveType::u8 => "Uint8Array",
-                    PrimitiveType::i16 => "Int16Array",
-                    PrimitiveType::u16 => "Uint16Array",
-                    PrimitiveType::i32 => "Int32Array",
-                    PrimitiveType::u32 => "Uint32Array",
-                    PrimitiveType::i64 => "BigInt64Array",
-                    PrimitiveType::u64 => "BigUint64Array",
-                    PrimitiveType::i128 => panic!("i128 not supported on JS"),
-                    PrimitiveType::u128 => panic!("u128 not supported on JS"),
-                    PrimitiveType::isize => "Int32Array",
-                    PrimitiveType::usize => "Uint32Array",
-                    PrimitiveType::f32 => "Float32Array",
-                    PrimitiveType::f64 => "Float64Array",
-                    PrimitiveType::bool => panic!(),
-                    PrimitiveType::char => panic!(),
+                    ast::PrimitiveType::i8 => "Int8Array",
+                    ast::PrimitiveType::u8 => "Uint8Array",
+                    ast::PrimitiveType::i16 => "Int16Array",
+                    ast::PrimitiveType::u16 => "Uint16Array",
+                    ast::PrimitiveType::i32 => "Int32Array",
+                    ast::PrimitiveType::u32 => "Uint32Array",
+                    ast::PrimitiveType::i64 => "BigInt64Array",
+                    ast::PrimitiveType::u64 => "BigUint64Array",
+                    ast::PrimitiveType::i128 => panic!("i128 not supported on JS"),
+                    ast::PrimitiveType::u128 => panic!("u128 not supported on JS"),
+                    ast::PrimitiveType::isize => "Int32Array",
+                    ast::PrimitiveType::usize => "Uint32Array",
+                    ast::PrimitiveType::f32 => "Float32Array",
+                    ast::PrimitiveType::f64 => "Float64Array",
+                    ast::PrimitiveType::bool => panic!(),
+                    ast::PrimitiveType::char => panic!(),
                 };
 
                 write!(
