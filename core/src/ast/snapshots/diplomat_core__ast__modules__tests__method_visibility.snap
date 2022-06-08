@@ -22,6 +22,6 @@ declared_types:
           self_param: ~
           params: []
           return_type: ~
-          introduced_lifetimes: {}
+          lifetime_env: {}
 sub_modules: []
 

@@ -34,5 +34,5 @@ params:
         lifetimes: []
 return_type:
   Primitive: u64
-introduced_lifetimes: {}
+lifetime_env: {}
 

@@ -491,20 +491,24 @@ impl TypeName {
     /// or examine each one without having to make any additional allocations.
     pub fn visit_lifetimes<'a, F, B>(&'a self, visit: &mut F) -> ControlFlow<B>
     where
-        F: FnMut(&'a Lifetime) -> ControlFlow<B>,
+        F: FnMut(&'a Lifetime, LifetimeOrigin) -> ControlFlow<B>,
     {
         match self {
-            TypeName::Named(path_type) => path_type.lifetimes.iter().try_for_each(visit),
+            TypeName::Named(path_type) => path_type
+                .lifetimes
+                .iter()
+                .try_for_each(|lt| visit(lt, LifetimeOrigin::Named)),
             TypeName::Reference(lt, _, ty) => {
-                visit(lt)?;
-                ty.visit_lifetimes(visit)
+                ty.visit_lifetimes(visit)?;
+                visit(lt, LifetimeOrigin::Reference)
             }
             TypeName::Box(ty) | TypeName::Option(ty) => ty.visit_lifetimes(visit),
             TypeName::Result(ok, err) => {
                 ok.visit_lifetimes(visit)?;
                 err.visit_lifetimes(visit)
             }
-            TypeName::StrReference(lt) | TypeName::PrimitiveSlice(lt, ..) => visit(lt),
+            TypeName::StrReference(lt) => visit(lt, LifetimeOrigin::StrReference),
+            TypeName::PrimitiveSlice(lt, ..) => visit(lt, LifetimeOrigin::PrimitiveSlice),
             _ => ControlFlow::Continue(()),
         }
     }
@@ -827,6 +831,13 @@ impl From<&syn::Type> for TypeName {
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
     }
+}
+
+pub enum LifetimeOrigin {
+    Named,
+    Reference,
+    StrReference,
+    PrimitiveSlice,
 }
 
 fn is_runtime_type(p: &TypePath, name: &str) -> bool {

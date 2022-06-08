@@ -25,5 +25,5 @@ params:
             - MyCustomStruct
         lifetimes: []
 return_type: ~
-introduced_lifetimes: {}
+lifetime_env: {}
 
