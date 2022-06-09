@@ -65,12 +65,20 @@ impl ToTokens for NamedLifetime {
 ///
 /// It is similar to [`syn::LifetimeDef`], except it can also track lifetime
 /// bounds defined in the `where` clause.
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct LifetimeEnv {
     nodes: Vec<LifetimeNode>,
 }
 
 impl LifetimeEnv {
+    /// Construct an empty [`LifetimeEnv`].
+    ///
+    /// To create one outside of this module, use `LifetimeEnv::from_method_item`
+    /// or `LifetimeEnv::from` on `&syn::Generics`.
+    fn new() -> Self {
+        Self { nodes: vec![] }
+    }
+
     /// Collect all lifetimes that live _at least_ as long as _any_ of the
     /// provided `root_lifetimes`.
     ///
@@ -125,8 +133,25 @@ impl LifetimeEnv {
         outlives
     }
 
+    /// Constructs a new [`LifetimeEnv`] from a [`syn::ImplItemMethod`] and optional
+    /// generic lifetimes from the `impl` block.
+    pub fn from_method_item(
+        method: &syn::ImplItemMethod,
+        impl_generics: Option<&syn::Generics>,
+    ) -> Self {
+        let mut this = LifetimeEnv::new();
+        // The impl generics _must_ be loaded into the env first, since the method
+        // generics might use lifetimes defined in the impl, and `extend_generics`
+        // panics if `'a: 'b` where `'b` isn't declared by the time it finishes.
+        if let Some(generics) = impl_generics {
+            this.extend_generics(generics);
+        }
+        this.extend_generics(&method.sig.generics);
+        this
+    }
+
     /// Add the lifetimes from generic parameters and where bounds.
-    pub fn extend_generics(&mut self, generics: &syn::Generics) {
+    fn extend_generics(&mut self, generics: &syn::Generics) {
         let generic_bounds = generics.params.iter().map(|generic| match generic {
             syn::GenericParam::Type(_) => panic!("generic types are unsupported"),
             syn::GenericParam::Lifetime(def) => (&def.lifetime, &def.bounds),
@@ -243,7 +268,7 @@ impl fmt::Display for LifetimeEnv {
 
 impl From<&syn::Generics> for LifetimeEnv {
     fn from(generics: &syn::Generics) -> Self {
-        let mut this = Self::default();
+        let mut this = LifetimeEnv::new();
         this.extend_generics(generics);
         this
     }
@@ -315,7 +340,7 @@ impl<'de> Deserialize<'de> for LifetimeEnv {
         let m: BTreeMap<NamedLifetime, Vec<NamedLifetime>> =
             Deserialize::deserialize(deserializer)?;
 
-        let mut this = LifetimeEnv::default();
+        let mut this = LifetimeEnv::new();
         this.extend_lifetimes(m.keys());
         this.extend_bounds(m.iter());
         Ok(this)
