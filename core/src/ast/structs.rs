@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
-use super::{Ident, LifetimeEnv, Method, PathType, TypeName};
+use super::{Ident, LifetimeEnv, Method, NamedLifetime, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
@@ -11,6 +11,47 @@ pub struct Struct {
     pub lifetimes: LifetimeEnv,
     pub fields: Vec<(Ident, TypeName, Docs)>,
     pub methods: Vec<Method>,
+}
+
+impl Struct {
+    // WARNING: this could probably be made more optimized, but here's what I'm thinking:
+    // Take a predicate which accepts a `usize` denoting the position the lifetime
+    // occurred at in the struct definition, and return true if that lifetime
+    // should be kept. By working with indices instead of lifetime names, we're
+    // robust against renaming lifetimes in different blocks.
+    pub fn borrowed_fields<'a, F>(&'a self, mut pred: F) -> Vec<&(Ident, TypeName, Docs)>
+    where
+        F: FnMut(usize) -> bool,
+    {
+        // A mapping from def indices to env indices
+        // The index of each element corresponds to the index in the `syn::LifetimeDef`
+        // that it came from
+        // The value at each index corresponds to where that particular lifetime
+        // lives in the `LifetimeEnv`.
+        // This would have to be stored in `Self` before hand.
+        // let def_idx_to_env_idx: Vec<usize> = vec![];
+
+        // Since lifetime names can be totally different, we care about the indices,
+        // NOT the names.
+        // let _lts_we_care_about: Vec<&NamedLifetime> = def_idx_to_env_idx
+        //     .iter()
+        //     .enumerate()
+        //     .filter_map(|(idx, ptr)| {
+        //         if pred(idx) {
+        //             // pretend this works and is safe
+        //             Some(&self.lifetimes.nodes[ptr].lifetime)
+        //         } else {
+        //             None
+        //         }
+        //     })
+        //     .collect::<Vec<_>>();
+
+        // One strategy we could do to assign indices to lifetimes: Use the
+        // index of the lifetime in the `LifetimeEnv`, NOT the index at which
+        // it appears in the struct definition.
+        // This requires remembering the order that lifetimes are read in
+        todo!()
+    }
 }
 
 impl From<&syn::ItemStruct> for Struct {
