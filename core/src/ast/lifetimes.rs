@@ -127,11 +127,19 @@ impl LifetimeEnv {
 
     /// Add the lifetimes from generic parameters and where bounds.
     pub fn extend_generics(&mut self, generics: &syn::Generics) {
-        // It's the responsibility of the validity checks to ensure
-        // that all the generics are lifetime bounds, not generic types.
-        self.extend_from_parts(generics.lifetimes().map(|def| (&def.lifetime, &def.bounds)));
+        let generic_bounds = generics.params.iter().map(|generic| match generic {
+            syn::GenericParam::Type(_) => panic!("generic types are unsupported"),
+            syn::GenericParam::Lifetime(def) => (&def.lifetime, &def.bounds),
+            syn::GenericParam::Const(_) => panic!("const generics are unsupported"),
+        });
+
+        let generic_defs = generic_bounds.clone().map(|(lifetime, _)| lifetime);
+
+        self.extend_lifetimes(generic_defs);
+        self.extend_bounds(generic_bounds);
+
         if let Some(ref where_clause) = generics.where_clause {
-            self.extend_from_parts(where_clause.predicates.iter().map(|pred| match pred {
+            self.extend_bounds(where_clause.predicates.iter().map(|pred| match pred {
                 syn::WherePredicate::Type(_) => panic!("trait bounds are unsupported"),
                 syn::WherePredicate::Lifetime(pred) => (&pred.lifetime, &pred.bounds),
                 syn::WherePredicate::Eq(_) => panic!("eq bounds are unsupported"),
@@ -167,102 +175,66 @@ impl LifetimeEnv {
         self.nodes.iter().map(|node| &node.lifetime)
     }
 
-    /// Helper function for `LifetimeGraph::extend_from_parts`,
-    /// which allows for getting the id of an `Edge` associated with a lifetime.
-    ///
-    /// Returns `Ok` if the lifetime was already in the graph, and `Err` if a
-    /// new lifetime had to be inserted.
-    fn id_or_insert<L>(&mut self, lifetime: &L) -> Result<usize, usize>
+    /// Returns the index of a lifetime in the graph, or `None` if the lifetime
+    /// isn't in the graph.
+    fn id<L>(&mut self, lifetime: &L) -> Option<usize>
     where
-        NamedLifetime: PartialEq<L> + for<'a> From<&'a L>,
+        NamedLifetime: PartialEq<L>,
     {
-        // We have to index because we need to call this twice in the same scope
-        // in `extend_from_parts`, otherwise I would've just returned `&mut Edge`.
-        if let Some(idx) = self
-            .nodes
+        self.nodes
             .iter()
             .position(|node| &node.lifetime == lifetime)
-        {
-            // The node for this lifetime already exists.
-            Ok(idx)
-        } else {
-            // The node doesn't exist yet, create it and return its id.
-            let id = self.nodes.len();
+    }
+
+    /// Add isolated lifetimes to the graph.
+    fn extend_lifetimes<'a, L, I>(&mut self, iter: I)
+    where
+        NamedLifetime: PartialEq<L> + From<&'a L>,
+        L: 'a,
+        I: IntoIterator<Item = &'a L>,
+    {
+        for lifetime in iter {
+            if self.id(lifetime).is_some() {
+                panic!(
+                    "lifetime name `{}` declared twice in the same scope",
+                    NamedLifetime::from(lifetime)
+                );
+            }
+
             self.nodes.push(LifetimeNode {
                 lifetime: lifetime.into(),
                 shorter: vec![],
                 longer: vec![],
             });
-            Err(id)
         }
     }
 
-    /// Extends the `LifetimeEnv` from an iterator of parts found in lifetime bounds.
+    /// Add edges to the lifetime graph.
+    ///
+    /// This method is decoupled from [`LifetimeEnv::extend_lifetimes`] because
+    /// generics can define new lifetimes, while `where` clauses cannot.
     ///
     /// # Panics
     ///
-    /// This method panics if, by the time all the parts are read in, there are
-    /// any lifetimes that have been used as bounds but _not_ declared. This should
-    /// only be of concern during deserialization.
-    // These trait bounds look intimidating, here's what they do:
-    //  * L: A `NamedLifetime`-like type
-    //  * B: An iterator of L's
-    //  * I: An iterator of (L, B), basically just each lifetime and its bounds.
-    // The reason we have this is so we can extend from `syn` parts, or from
-    // `&NamedLifetime`s for when we're deserializing.
-    pub fn extend_from_parts<'a, I, L, B>(&mut self, iter: I)
+    /// This method panics if any of the lifetime bounds aren't already defined
+    /// in the graph. This isn't allowed by rustc in the first place, so it should
+    /// only ever occur when deserializing an invalid [`LifetimeEnv`].
+    fn extend_bounds<'a, L, B, I>(&mut self, iter: I)
     where
-        NamedLifetime: PartialEq<L> + for<'b> From<&'b L>,
+        NamedLifetime: PartialEq<L> + From<&'a L>,
         L: 'a,
-        B: 'a + IntoIterator<Item = &'a L>,
+        B: IntoIterator<Item = &'a L>,
         I: IntoIterator<Item = (&'a L, B)>,
     {
-        // Lifetimes that have been used as bounds, but not actually declared
-        let mut undeclared = vec![];
-
         for (lifetime, bounds) in iter {
-            // Since all the indices come from me, we could theoretically
-            // change these to `get_unchecked`. But unsafe is spooky :/
-            let long_id = match self.id_or_insert(lifetime) {
-                Ok(id) => {
-                    if let Some(undeclared_id) = undeclared
-                        .iter()
-                        .position(|undeclared_id| *undeclared_id == id)
-                    {
-                        // This lifetime was previously used as a bound, but now
-                        // we're declaring it.
-                        undeclared.swap_remove(undeclared_id);
-                    }
-                    id
-                }
-                Err(id) => id,
-            };
-
+            let long = self.id(lifetime).expect("use of undeclared lifetime, this is a bug: try calling `LifetimeEnv::extend_lifetimes` first");
             for bound in bounds {
-                let short_id = self.id_or_insert(bound).unwrap_or_else(|id| {
-                    // A lifetime has been used as a bound but hasn't been declared yet.
-                    undeclared.push(id);
-                    id
-                });
-                // This doesn't catch repeats. But that doesn't break anything
-                // and it won't slow down the DFS, so...
-                self.nodes[short_id].longer.push(long_id);
-                self.nodes[long_id].shorter.push(short_id);
+                let short = self
+                    .id(bound)
+                    .expect("cannot use undeclared lifetime as a bound");
+                self.nodes[short].longer.push(long);
+                self.nodes[long].shorter.push(short);
             }
-        }
-
-        if let Some((&first, rest)) = undeclared.split_first() {
-            // There's at least one lifetime that's undeclared.
-            use std::fmt::Write;
-            let mut msg = format!(
-                "used undeclared lifetimes in bounds: [{}",
-                self.nodes[first].lifetime
-            );
-            for &id in rest {
-                write!(msg, ", {}", self.nodes[id].lifetime).unwrap();
-            }
-            msg.write_char(']').unwrap();
-            panic!("{}", msg)
         }
     }
 }
@@ -348,7 +320,8 @@ impl<'de> Deserialize<'de> for LifetimeEnv {
             Deserialize::deserialize(deserializer)?;
 
         let mut this = LifetimeEnv::default();
-        this.extend_from_parts(m.iter());
+        this.extend_lifetimes(m.keys());
+        this.extend_bounds(m.iter());
         Ok(this)
     }
 }
