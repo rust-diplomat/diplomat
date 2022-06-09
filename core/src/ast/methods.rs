@@ -2,7 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
-use super::{Ident, Lifetime, LifetimeDef, Mutability, Path, PathType, TypeName, ValidityError};
+use super::{
+    Ident, Lifetime, LifetimeEnv, Mutability, NamedLifetime, Path, PathType, TypeName,
+    ValidityError,
+};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -29,7 +32,7 @@ pub struct Method {
     pub return_type: Option<TypeName>,
 
     /// The lifetimes introduced in this method and surrounding impl block.
-    pub introduced_lifetimes: Vec<LifetimeDef>,
+    pub lifetime_env: LifetimeEnv,
 }
 
 impl Method {
@@ -37,24 +40,13 @@ impl Method {
     pub fn from_syn(
         m: &syn::ImplItemMethod,
         self_path_type: PathType,
-        impl_introduced_lifetimes: Vec<LifetimeDef>,
+        impl_generics: Option<&syn::Generics>,
     ) -> Method {
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
         let extern_ident = syn::Ident::new(
             format!("{}_{}", self_ident, method_ident).as_str(),
             m.sig.ident.span(),
-        );
-
-        // It doesn't matter if we introduce lifetimes in a method that doesn't use them,
-        // so we introduce every lifetime introduced in both the impl and the method to ensure we have everything.
-        // This will look idiomatic in 99% of cases, and won't even break the wack cases where
-        // a lifetime is introduced in the impl but not used in the method.
-        let mut introduced_lifetimes = impl_introduced_lifetimes;
-        introduced_lifetimes.extend(m.sig.generics.lifetimes().map(Into::into));
-        assert!(
-            m.sig.generics.where_clause.is_none(),
-            "where bounds aren't yet supported"
         );
 
         let all_params = m
@@ -91,7 +83,7 @@ impl Method {
             self_param,
             params: all_params,
             return_type: return_ty,
-            introduced_lifetimes,
+            lifetime_env: LifetimeEnv::from_method_item(m, impl_generics),
         }
     }
 
@@ -121,89 +113,24 @@ impl Method {
         if let Some(ref return_type) = self.return_type {
             // The lifetimes that must outlive the return type
             let lifetimes = {
-                // We can think about each lifetime as a node in a directed
-                // graph, where each edge represents the "doesn't outlive"
-                // relationship. Note that this doesn't strictly mean "outlived by",
-                // since you can write `'a: 'a`, which is perfectly valid. Typically,
-                // we can think about how `'a` pointing to `'b` would represent
-                // `'b: 'a`, since `'a` doesn't outlive `'b`. Since lifetimes are
-                // transitive, then for all `'a`, `'b`, there's a path of some
-                // length from `'a` to `'b` if and only if `'a` doesn't outlive `'b`.
-                //
-                // To determine which lifetimes outlive the return type, we can
-                // use this property by performing DFS to record all lifetimes
-                // reachable from some lifetime of the return type.
-                // In traditional DFS, you start with one root node in the stack,
-                // but the return type could have more than one lifetime that we
-                // want to explore. Since we only care about which lifetimes are
-                // reachable, the path is irrelevant. Therefore, we can use the
-                // _same stack_ to DFS on potentially multiple directed graphs
-                // at the _same time_.
-                //
-                // Since we want to traverse lifetimes that live at least as long
-                // as the return type, we just remove edges that we've already
-                // traversed, allowing us to break cycles before getting stuck in
-                // them forever, while still fully exploring all lifetimes that
-                // outlive the return type.
-                let mut stack = vec![];
+                let mut return_type_lifetimes: Vec<&NamedLifetime> = vec![];
 
-                // Push the root node(s) to the stack.
                 return_type.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
                     match lifetime {
-                        Lifetime::Named(named) => stack.push(named),
+                        Lifetime::Named(named) => return_type_lifetimes.push(named),
                         Lifetime::Anonymous => {
-                            // TODO(160): We can remove this once resolved.
+                            // TODO(160): Once lifetime elision in return types
+                            // is allowed, we can remove this.
                             // This is also caught in the validity check, so this should
-                            // never happen. If we're guaranteed to always run the
-                            // check first, we can change this to `unreachable!()`.
+                            // never happen.
                             panic!("Anonymous lifetimes not yet allowed in return types")
                         }
-                        Lifetime::Static => {
-                            // If the output depends on the static lifetime, this
-                            // tells us nothing about what params it might need,
-                            // so do nothing.
-                        }
+                        Lifetime::Static => {}
                     }
                     ControlFlow::Continue(())
                 });
 
-                // This is where we store all the lifetimes that are reachable
-                // in the graph from the lifetimes in the return type.
-                // Each lifetime in the return type is trivially reachable
-                // from itself, so start with that capacity.
-                let mut lifetimes = Vec::with_capacity(stack.len());
-
-                // Edges that we haven't yet explored.
-                // We create a new list here so that we can remove explored edges
-                // later without modifying `self`.
-                let mut unused_edges: Vec<&LifetimeDef> =
-                    self.introduced_lifetimes.iter().collect();
-
-                // Perform DFS.
-                while let Some(sublifetime) = stack.pop() {
-                    if !lifetimes.contains(&sublifetime) {
-                        // This lifetime is reachable, meaning it lives _at least_
-                        // as long as the return type.
-                        lifetimes.push(sublifetime);
-
-                        // Linear search through the unused edges for edges we
-                        // can traverse.
-                        unused_edges.retain(|def| {
-                            if def.bounds.contains(sublifetime) {
-                                stack.push(&def.lifetime);
-                                // Once we follow an edge, don't retain it to
-                                // avoid cycles.
-                                return false;
-                            }
-                            true
-                        });
-                    } else {
-                        // This occurs when we try to visit the same lifetime
-                        // twice, which only happens when a type contains an
-                        // `'a` and `'b` where `'b: 'a`.
-                    }
-                }
-                lifetimes
+                self.lifetime_env.outlives(return_type_lifetimes)
             };
 
             let held_self_param = self.self_param.as_ref().filter(|self_param| {
@@ -400,7 +327,7 @@ mod tests {
                 }
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-            vec![]
+            None,
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -415,7 +342,7 @@ mod tests {
                 }
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-            vec![]
+            None,
         ));
     }
 
@@ -428,7 +355,7 @@ mod tests {
                 }
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-            vec![]
+            None,
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -439,7 +366,7 @@ mod tests {
                 }
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-            vec![]
+            None,
         ));
     }
 
@@ -448,7 +375,7 @@ mod tests {
             let method = Method::from_syn(
                 &syn::parse_quote! { $($tokens)* },
                 PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
-                vec![],
+                None,
             );
 
             let borrowed_params = method.borrowed_params();
@@ -532,7 +459,7 @@ mod tests {
 
         assert_borrowed_params! { [a, b, c, d] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
-            fn diamond_and_nested_types<'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(a: &'x One<'a>, b: &'y One<'b>, c: &One<'c>, d: &One<'d>, nohold: &One<'x>) -> Box<Foo<'a>> {
+            fn diamond_and_nested_types<'a, 'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(a: &'x One<'a>, b: &'y One<'b>, c: &One<'c>, d: &One<'d>, nohold: &One<'x>) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }

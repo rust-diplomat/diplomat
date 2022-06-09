@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/methods.rs
-expression: "Method::from_syn(&syn::parse_quote! {\n                /// Some docs.\n                #[diplomat :: rust_link(foo :: Bar :: batz, FnInStruct)] fn\n                foo(x : u64, y : MyCustomStruct) {}\n            },\n    &Path::empty().sub_path(\"MyStructContainingMethod\".to_string()))"
+expression: "Method::from_syn(&syn::parse_quote! {\n                /// Some docs.\n                #[diplomat :: rust_link(foo :: Bar :: batz, FnInStruct)] fn\n                foo(x : u64, y : MyCustomStruct) {}\n            },\n    PathType::new(Path::empty().sub_path(Ident::from(\"MyStructContainingMethod\"))),\n    None)"
 ---
 name: foo
 docs:
@@ -25,5 +25,5 @@ params:
             - MyCustomStruct
         lifetimes: []
 return_type: ~
-introduced_lifetimes: []
+lifetime_env: {}
 

@@ -1,16 +1,14 @@
 use serde::{Deserialize, Serialize};
-use syn::GenericParam;
 
 use super::docs::Docs;
-use super::types::LifetimeDef;
-use super::{Ident, Method, PathType, TypeName};
+use super::{Ident, LifetimeEnv, Method, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Struct {
     pub name: Ident,
     pub docs: Docs,
-    pub lifetimes: Vec<LifetimeDef>,
+    pub lifetimes: LifetimeEnv,
     pub fields: Vec<(Ident, TypeName, Docs)>,
     pub methods: Vec<Method>,
 }
@@ -23,7 +21,7 @@ impl From<&syn::ItemStruct> for Struct {
         Struct {
             name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: extract_lifetime_defs(strct),
+            lifetimes: LifetimeEnv::from(&strct.generics),
             fields: strct
                 .fields
                 .iter()
@@ -52,7 +50,7 @@ impl From<&syn::ItemStruct> for Struct {
 pub struct OpaqueStruct {
     pub name: Ident,
     pub docs: Docs,
-    pub lifetimes: Vec<LifetimeDef>,
+    pub lifetimes: LifetimeEnv,
     pub methods: Vec<Method>,
 }
 
@@ -62,26 +60,10 @@ impl From<&syn::ItemStruct> for OpaqueStruct {
         OpaqueStruct {
             name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: extract_lifetime_defs(strct),
+            lifetimes: LifetimeEnv::from(&strct.generics),
             methods: vec![],
         }
     }
-}
-
-/// Get any lifetimes that the struct uses.
-fn extract_lifetime_defs(strct: &syn::ItemStruct) -> Vec<LifetimeDef> {
-    strct
-        .generics
-        .params
-        .iter()
-        .map(|generic| {
-            if let GenericParam::Lifetime(lifetime_def) = generic {
-                lifetime_def.into()
-            } else {
-                panic!("struct types cannot have non-lifetime generic parameters");
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]

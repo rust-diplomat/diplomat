@@ -1,7 +1,7 @@
 use std::{collections::HashMap, ops::ControlFlow};
 
 use proc_macro2::Span;
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
 
@@ -9,7 +9,9 @@ use lazy_static::lazy_static;
 use std::fmt;
 use std::iter::FromIterator;
 
-use super::{Docs, Enum, Ident, Method, OpaqueStruct, Path, Struct, ValidityError};
+use super::{
+    Docs, Enum, Ident, Lifetime, LifetimeEnv, Method, OpaqueStruct, Path, Struct, ValidityError,
+};
 use crate::{Env, ModuleEnv};
 
 /// A type declared inside a Diplomat-annotated module.
@@ -56,10 +58,10 @@ impl CustomType {
     }
 
     /// Get the lifetimes of the custom type.
-    pub fn lifetimes(&self) -> Option<&[LifetimeDef]> {
+    pub fn lifetimes(&self) -> Option<&LifetimeEnv> {
         match self {
-            CustomType::Struct(strct) => Some(&strct.lifetimes[..]),
-            CustomType::Opaque(strct) => Some(&strct.lifetimes[..]),
+            CustomType::Struct(strct) => Some(&strct.lifetimes),
+            CustomType::Opaque(strct) => Some(&strct.lifetimes),
             CustomType::Enum(_) => None,
         }
     }
@@ -917,121 +919,6 @@ impl fmt::Display for PathType {
             '>'.fmt(f)?;
         }
         Ok(())
-    }
-}
-
-/// A named lifetime, e.g. `'a`.
-///
-/// Specifically, this cannot be `'static` or `'_`.
-#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize, PartialOrd, Ord)]
-pub struct NamedLifetime(Ident);
-
-impl fmt::Display for NamedLifetime {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "'{}", self.0)
-    }
-}
-
-impl ToTokens for NamedLifetime {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        use proc_macro2::{Punct, Spacing};
-        Punct::new('\'', Spacing::Joint).to_tokens(tokens);
-        self.0.to_tokens(tokens);
-    }
-}
-
-/// A lifetime as a generic parameter, potentially with bounds.
-///
-/// The `'a` and `'b: 'a` in `Foo<'a, 'b: 'a>`.
-#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
-pub struct LifetimeDef {
-    pub lifetime: NamedLifetime,
-    pub bounds: Vec<NamedLifetime>,
-}
-
-impl From<&syn::LifetimeDef> for LifetimeDef {
-    fn from(lifetime_def: &syn::LifetimeDef) -> Self {
-        Self {
-            lifetime: NamedLifetime((&lifetime_def.lifetime.ident).into()),
-            bounds: lifetime_def
-                .bounds
-                .iter()
-                .map(|lt| {
-                    assert_ne!(
-                        lt.ident, "static",
-                        "Use `'static` instead of bounding to it"
-                    );
-                    NamedLifetime((&lt.ident).into())
-                })
-                .collect(),
-        }
-    }
-}
-
-impl ToTokens for LifetimeDef {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        let LifetimeDef { lifetime, bounds } = self;
-        tokens.extend(if bounds.is_empty() {
-            quote! { #lifetime }
-        } else {
-            quote! { #lifetime: #(#bounds)+* }
-        })
-    }
-}
-
-#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
-pub enum Lifetime {
-    /// Kept separate because it doesn't matter as much when tracking lifetimes but it'll still need
-    /// to be mentioned in the type during codegen
-    Static,
-    Named(NamedLifetime),
-    Anonymous,
-}
-
-impl fmt::Display for Lifetime {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Lifetime::Static => "'static".fmt(f),
-            Lifetime::Named(ref named) => named.fmt(f),
-            Lifetime::Anonymous => "'_".fmt(f),
-        }
-    }
-}
-
-impl ToTokens for Lifetime {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        match self {
-            Lifetime::Static => syn::Lifetime::new("'static", Span::call_site()).to_tokens(tokens),
-            Lifetime::Named(ref s) => s.to_tokens(tokens),
-            Lifetime::Anonymous => syn::Lifetime::new("'_", Span::call_site()).to_tokens(tokens),
-        };
-    }
-}
-
-impl From<&syn::Lifetime> for Lifetime {
-    fn from(lt: &syn::Lifetime) -> Self {
-        if lt.ident == "static" {
-            Self::Static
-        } else {
-            Self::Named(NamedLifetime(Ident::from(&lt.ident)))
-        }
-    }
-}
-
-impl From<&Option<syn::Lifetime>> for Lifetime {
-    fn from(lt: &Option<syn::Lifetime>) -> Self {
-        lt.as_ref().map(Into::into).unwrap_or(Self::Anonymous)
-    }
-}
-
-impl Lifetime {
-    /// Converts the [`Lifetime`] back into an AST node that can be spliced into a program.
-    pub fn to_syn(&self) -> Option<syn::Lifetime> {
-        match *self {
-            Self::Static => Some(syn::Lifetime::new("'static", Span::call_site())),
-            Self::Anonymous => None,
-            Self::Named(ref s) => Some(syn::Lifetime::new(&s.to_string(), Span::call_site())),
-        }
     }
 }
 
