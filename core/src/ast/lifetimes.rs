@@ -94,7 +94,7 @@ impl LifetimeEnv {
         iter.filter_map(|named| {
             // Lifetimes that don't have a position aren't in the graph,
             // and thus have no known lifetimes that outlive them.
-            self.nodes.iter().position(|node| node.lifetime == *named)
+            self.iter().position(|graph_named| graph_named == named)
         })
         .for_each(|root_id| {
             dfs(root_id, &self.nodes[..], &mut outlives, &mut visited[..]);
@@ -159,8 +159,12 @@ impl LifetimeEnv {
             return quote! {};
         }
 
-        let lifetimes = self.nodes.iter().map(|node| &node.lifetime);
+        let lifetimes = self.iter();
         quote! { <#(#lifetimes),*> }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &NamedLifetime> {
+        self.nodes.iter().map(|node| &node.lifetime)
     }
 
     /// Helper function for `LifetimeGraph::extend_from_parts`,
