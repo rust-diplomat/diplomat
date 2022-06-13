@@ -185,8 +185,6 @@ impl LifetimeEnv {
     /// `<'a, 'b, 'c>`
     ///
     /// Write the existing lifetimes, excluding bounds, as generic parameters.
-    ///
-    /// To include lifetime bounds, use [`LifetimeEnv::lifetime_defs_to_tokens`].
     pub fn lifetimes_to_tokens(&self) -> proc_macro2::TokenStream {
         if self.is_empty() {
             return quote! {};
