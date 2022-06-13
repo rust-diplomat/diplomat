@@ -1,56 +1,66 @@
 use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
-use super::{Ident, LifetimeEnv, Method, PathType, TypeName};
+use super::{Ident, LifetimeEnv, Method, NamedLifetime, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Struct {
     pub name: Ident,
     pub docs: Docs,
-    pub lifetimes: LifetimeEnv,
+    pub lifetime_env: LifetimeEnv,
     pub fields: Vec<(Ident, TypeName, Docs)>,
     pub methods: Vec<Method>,
 }
 
 impl Struct {
-    // WARNING: this could probably be made more optimized, but here's what I'm thinking:
-    // Take a predicate which accepts a `usize` denoting the position the lifetime
-    // occurred at in the struct definition, and return true if that lifetime
-    // should be kept. By working with indices instead of lifetime names, we're
-    // robust against renaming lifetimes in different blocks.
-    pub fn borrowed_fields<'a, F>(&'a self, mut pred: F) -> Vec<&(Ident, TypeName, Docs)>
+    /// Accepts a filter determining which lifetimes to select based on indices,
+    /// and returns a `Vec<&NamedLifetime>` that contains all the lifetimes in the
+    /// scope of the `Struct` that must live at least as long as the selected
+    /// lifetimes.
+    ///
+    /// This is similar to [`LifetimeEnv::outlives`], except it takes a filter
+    /// of indices instead of a sequence of `&NamedLifetime`s.
+    ///
+    /// # Examples
+    ///
+    /// Say we have a struct defined as
+    /// ```ignore
+    /// struct Foo<'a, 'b, 'c: 'a> {
+    ///     first: &'a str,
+    ///     second: &'b str,
+    ///     third: &'c str,
+    /// }
+    /// ```
+    ///
+    /// Let `struct_type` be this `Foo` type parsed as a `Struct`.
+    /// Then we can call `Struct::borrowed_lifetimes`:
+    /// ```ignore
+    /// let lifetimes = struct_type.borrowed_lifetimes(|i| {
+    ///     // some bool predicate that determines if we care
+    ///     // about the i^th lifetime.
+    ///     // for simplicity, lets say we only want the first one.
+    ///     i == 0
+    /// });
+    /// ```
+    ///
+    /// Then `lifetimes` would contain `['a, 'c]`, since `'c` must live
+    /// at least as long as `'a`.
+    pub fn borrowed_lifetimes<F>(&self, mut pred: F) -> Vec<&NamedLifetime>
     where
         F: FnMut(usize) -> bool,
     {
-        // A mapping from def indices to env indices
-        // The index of each element corresponds to the index in the `syn::LifetimeDef`
-        // that it came from
-        // The value at each index corresponds to where that particular lifetime
-        // lives in the `LifetimeEnv`.
-        // This would have to be stored in `Self` before hand.
-        // let def_idx_to_env_idx: Vec<usize> = vec![];
+        // All the lifetimes that we selected to keep alive.
+        let selected_lifetimes = self
+            .lifetime_env
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, named)| if pred(idx) { Some(named) } else { None });
 
-        // Since lifetime names can be totally different, we care about the indices,
-        // NOT the names.
-        // let _lts_we_care_about: Vec<&NamedLifetime> = def_idx_to_env_idx
-        //     .iter()
-        //     .enumerate()
-        //     .filter_map(|(idx, ptr)| {
-        //         if pred(idx) {
-        //             // pretend this works and is safe
-        //             Some(&self.lifetimes.nodes[ptr].lifetime)
-        //         } else {
-        //             None
-        //         }
-        //     })
-        //     .collect::<Vec<_>>();
-
-        // One strategy we could do to assign indices to lifetimes: Use the
-        // index of the lifetime in the `LifetimeEnv`, NOT the index at which
-        // it appears in the struct definition.
-        // This requires remembering the order that lifetimes are read in
-        todo!()
+        // All the lifetimes that live at least as long as the lifetimes that we
+        // selected.
+        // !!! THIS CAN BE OPTIMIZED TO WORK WITH THE INDICES INSTEAD OF THE NAMES !!!
+        self.lifetime_env.outlives(selected_lifetimes)
     }
 }
 
@@ -62,7 +72,10 @@ impl From<&syn::ItemStruct> for Struct {
         Struct {
             name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: LifetimeEnv::from(&strct.generics),
+            // Invariant: The `LifetimeEnv` only contains lifetimes
+            // from `strct`'s generics, so the indices of lifetimes in the
+            // graph align with the order defined in `strct`'s generics.
+            lifetime_env: LifetimeEnv::from(&strct.generics),
             fields: strct
                 .fields
                 .iter()

@@ -10,7 +10,7 @@ docs:
         - foo
         - Bar
     typ: Struct
-lifetimes: {}
+lifetime_env: {}
 fields:
   - - a
     - Primitive: i32

@@ -11,7 +11,7 @@ declared_types:
       docs:
         - ""
         - ~
-      lifetimes: {}
+      lifetime_env: {}
       fields:
         - - a
           - Primitive: i32

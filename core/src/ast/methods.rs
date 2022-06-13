@@ -87,6 +87,30 @@ impl Method {
         }
     }
 
+    /// Return the lifetimes that the return type borrows, if one is present.
+    pub fn borrowed_lifetimes(&self) -> Option<Vec<&NamedLifetime>> {
+        self.return_type.as_ref().map(|return_type| {
+            let mut return_type_lifetimes: Vec<&NamedLifetime> = vec![];
+
+            return_type.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
+                match lifetime {
+                    Lifetime::Named(named) => return_type_lifetimes.push(named),
+                    Lifetime::Anonymous => {
+                        // TODO(160): Once lifetime elision in return types
+                        // is allowed, we can remove this.
+                        // This is also caught in the validity check, so this should
+                        // never happen.
+                        panic!("Anonymous lifetimes not yet allowed in return types")
+                    }
+                    Lifetime::Static => {}
+                }
+                ControlFlow::Continue(())
+            });
+
+            self.lifetime_env.outlives(return_type_lifetimes)
+        })
+    }
+
     /// Returns the parameters that the output is lifetime-bound to.
     ///
     /// # Examples
@@ -110,44 +134,22 @@ impl Method {
     pub fn borrowed_params(&self) -> BorrowedParams {
         // To determine which params the return type is bound to, we just have to
         // find the params that contain a lifetime that's also in the return type.
-        if let Some(ref return_type) = self.return_type {
-            // The lifetimes that must outlive the return type
-            let lifetimes = {
-                let mut return_type_lifetimes: Vec<&NamedLifetime> = vec![];
-
-                return_type.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
-                    match lifetime {
-                        Lifetime::Named(named) => return_type_lifetimes.push(named),
-                        Lifetime::Anonymous => {
-                            // TODO(160): Once lifetime elision in return types
-                            // is allowed, we can remove this.
-                            // This is also caught in the validity check, so this should
-                            // never happen.
-                            panic!("Anonymous lifetimes not yet allowed in return types")
+        if let Some(borrowed_lifetimes) = self.borrowed_lifetimes() {
+            let borrows_self = self
+                .self_param
+                .as_ref()
+                .map(|self_param| {
+                    // Check if `self` is a reference with a lifetime in the return type.
+                    if let Some((Lifetime::Named(ref name), _)) = self_param.reference {
+                        if borrowed_lifetimes.contains(&name) {
+                            return true;
                         }
-                        Lifetime::Static => {}
                     }
-                    ControlFlow::Continue(())
-                });
-
-                self.lifetime_env.outlives(return_type_lifetimes)
-            };
-
-            let held_self_param = self.self_param.as_ref().filter(|self_param| {
-                // Check if `self` is a reference with a lifetime in the return type.
-                if let Some((Lifetime::Named(ref name), _)) = self_param.reference {
-                    if lifetimes.contains(&name) {
-                        return true;
-                    }
-                }
-                self_param.path_type.lifetimes.iter().any(|lt| {
-                    if let Lifetime::Named(name) = lt {
-                        lifetimes.contains(&name)
-                    } else {
-                        false
-                    }
+                    self_param.path_type.lifetimes.iter().any(|lt| {
+                        matches!(lt, Lifetime::Named(name) if borrowed_lifetimes.contains(&name))
+                    })
                 })
-            });
+                .unwrap_or(false);
 
             // Collect all the params that contain a named lifetime that's also
             // in the return type.
@@ -162,7 +164,7 @@ impl Method {
                             // traverse the lifetimes without allocations and
                             // short-circuit if we find a match.
                             if let Lifetime::Named(name) = lt {
-                                if lifetimes.contains(&name) {
+                                if borrowed_lifetimes.contains(&name) {
                                     return ControlFlow::Break(());
                                 }
                             }
@@ -172,9 +174,15 @@ impl Method {
                 })
                 .collect();
 
-            BorrowedParams(held_self_param, held_params)
+            BorrowedParams {
+                borrows_self,
+                borrowed_params: held_params,
+            }
         } else {
-            BorrowedParams(None, vec![])
+            BorrowedParams {
+                borrows_self: false,
+                borrowed_params: vec![],
+            }
         }
     }
 
@@ -295,14 +303,20 @@ impl Param {
 /// Parameters in a method that might be borrowed in the return type,
 /// and must live _at least_ as long as the returned object.
 #[derive(Default)]
-pub struct BorrowedParams<'a>(pub Option<&'a SelfParam>, pub Vec<&'a Param>);
+pub struct BorrowedParams<'a> {
+    /// A `bool` indicating if the `self` param is borrowed.
+    pub borrows_self: bool,
+
+    /// A `Vec<&Param>` of all the params that are borrowed.
+    pub borrowed_params: Vec<&'a Param>,
+}
 
 impl BorrowedParams<'_> {
     pub fn names<'a>(&'a self, self_name: &'a str) -> impl Iterator<Item = &'a str> {
-        self.0
-            .iter()
-            .map(move |_| self_name)
-            .chain(self.1.iter().map(|param| param.name.as_str()))
+        self.borrows_self
+            .then(|| self_name)
+            .into_iter()
+            .chain(self.borrowed_params.iter().map(|param| param.name.as_str()))
     }
 }
 

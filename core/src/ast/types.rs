@@ -60,7 +60,7 @@ impl CustomType {
     /// Get the lifetimes of the custom type.
     pub fn lifetimes(&self) -> Option<&LifetimeEnv> {
         match self {
-            CustomType::Struct(strct) => Some(&strct.lifetimes),
+            CustomType::Struct(strct) => Some(&strct.lifetime_env),
             CustomType::Opaque(strct) => Some(&strct.lifetimes),
             CustomType::Enum(_) => None,
         }
@@ -895,7 +895,7 @@ impl<'a> fmt::Display for ReferenceDisplay<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.0 {
             Lifetime::Static => "&'static ".fmt(f)?,
-            Lifetime::Named(lt) => write!(f, "&'{} ", lt)?,
+            Lifetime::Named(lt) => write!(f, "&{} ", lt)?,
             Lifetime::Anonymous => '&'.fmt(f)?,
         }
 
