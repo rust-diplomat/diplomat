@@ -43,6 +43,8 @@ pub fn gen_value_js_to_rust(
 
             match lifetime {
                 ast::Lifetime::Named(ref named) if borrowed_lifetimes.contains(&named) => {
+                    // TODO: don't create an edge if this is a str/slice,
+                    // since they actually copy and thus don't rely on the buffer.
                     post_logic.push(format!(
                         "diplomat_out.__{param_name}_lifetime_guard = {js_param_name};",
                     ));

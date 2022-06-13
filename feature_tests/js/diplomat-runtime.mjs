@@ -30,7 +30,6 @@ export function extractCodePoint(str, param) {
   return cp;
 }
 
-// Fixes(61)
 export class RcAlloc {
 
   static str = (string) => {
