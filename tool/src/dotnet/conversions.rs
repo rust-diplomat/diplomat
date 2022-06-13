@@ -56,7 +56,9 @@ pub fn to_idiomatic_object<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Primitive(_) => out.write_str(input_var_name),
+        ast::TypeName::Primitive(_) | ast::TypeName::StrReference(_) => {
+            out.write_str(input_var_name)
+        }
         ast::TypeName::Box(boxed) => {
             to_idiomatic_object(env, boxed.as_ref(), in_path, input_var_name, out)
         }
@@ -66,20 +68,18 @@ pub fn to_idiomatic_object<W: fmt::Write>(
         ast::TypeName::Option(opt) => {
             to_idiomatic_object(env, opt.as_ref(), in_path, input_var_name, out)
         }
-        _ => {
+        ast::TypeName::Named(path_type) => {
             let name = gen_type_name_to_string(typ, in_path, env)?;
-            match typ {
-                ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-                    ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
-                        write!(out, "new {name}({input_var_name})")
-                    }
-                    ast::CustomType::Enum(_) => {
-                        write!(out, "({name}){input_var_name}")
-                    }
-                },
-                other => panic!("expected named type name, found `{}`", other),
+            match path_type.resolve(in_path, env) {
+                ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
+                    write!(out, "new {name}({input_var_name})")
+                }
+                ast::CustomType::Enum(_) => {
+                    write!(out, "({name}){input_var_name}")
+                }
             }
         }
+        other => panic!("expected named type name, found `{}`", other),
     }
 }
 
@@ -96,7 +96,9 @@ pub fn to_raw_object<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Primitive(_) => out.write_str(input_var_name),
+        ast::TypeName::Primitive(_) | ast::TypeName::StrReference(_) => {
+            out.write_str(input_var_name)
+        }
         ast::TypeName::Box(boxed) => {
             to_raw_object(env, boxed.as_ref(), in_path, input_var_name, out)
         }
@@ -106,19 +108,17 @@ pub fn to_raw_object<W: fmt::Write>(
         ast::TypeName::Option(opt) => {
             to_raw_object(env, opt.as_ref(), in_path, input_var_name, out)
         }
-        _ => {
+        ast::TypeName::Named(path_type) => {
             let name = gen_type_name_to_string(typ, in_path, env)?;
-            match typ {
-                ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-                    ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
-                        write!(out, "{input_var_name}.AsFFI()")
-                    }
-                    ast::CustomType::Enum(_) => {
-                        write!(out, "(Raw.{name}){input_var_name}")
-                    }
-                },
-                other => panic!("expected named type name, found `{}`", other),
+            match path_type.resolve(in_path, env) {
+                ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
+                    write!(out, "{input_var_name}.AsFFI()")
+                }
+                ast::CustomType::Enum(_) => {
+                    write!(out, "(Raw.{name}){input_var_name}")
+                }
             }
         }
+        other => panic!("expected named type name, found `{}`", other),
     }
 }

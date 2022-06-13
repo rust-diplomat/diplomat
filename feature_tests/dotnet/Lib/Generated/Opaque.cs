@@ -56,6 +56,21 @@ public partial class Opaque: IDisposable
         }
     }
 
+    public string ReadG(MyStruct s)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Opaque");
+            }
+            Raw.MyStruct sRaw;
+            sRaw = s.AsFFI();
+            Raw.string retVal = Raw.Opaque.ReadG(_inner, sRaw);
+            return retVal;
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

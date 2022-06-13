@@ -22,6 +22,9 @@ public partial struct Opaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_assert_struct", ExactSpelling = true)]
     public static unsafe extern void AssertStruct(Opaque* self, MyStruct s);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_read_g", ExactSpelling = true)]
+    public static unsafe extern string ReadG(Opaque* self, MyStruct s);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Opaque* self);
 }
