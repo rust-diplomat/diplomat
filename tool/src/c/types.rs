@@ -10,7 +10,7 @@ pub fn gen_type<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             r @ ast::CustomType::Struct(_) | r @ ast::CustomType::Opaque(_) => {
                 write!(out, "{}", r.name())?;
             }

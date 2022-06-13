@@ -77,7 +77,7 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
             let (_, size_align) = result_ok_offset_size_align(ok, err, in_path, env);
             size_align
         }
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {
                 let (_, size_max_align) = struct_offsets_size_max_align(
                     strct.fields.iter().map(|(_, typ, _)| typ),

@@ -20,7 +20,9 @@ pub fn gen_type_name(
     out: &mut dyn fmt::Write,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => write!(out, "{}", typ.resolve(in_path, env).name()),
+        ast::TypeName::Named(path_type) => {
+            write!(out, "{}", path_type.resolve(in_path, env).name())
+        }
 
         ast::TypeName::Box(underlying) => gen_type_name(underlying.as_ref(), in_path, env, out),
 

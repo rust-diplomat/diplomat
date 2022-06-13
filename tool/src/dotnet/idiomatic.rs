@@ -185,7 +185,7 @@ fn gen_property_for_field(
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Primitive(_) => {}
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
                 println!(
                     "{} ({name})",
@@ -434,8 +434,8 @@ fn gen_method(
                 if let ast::TypeName::Option(underlying_ty) = &param.ty {
                     // TODO: support optional primitive types and enums in arguments
                     match underlying_ty.as_ref() {
-                        ast::TypeName::Named(_) => {
-                            if let ast::CustomType::Enum(_) = underlying_ty.resolve(in_path, env) {
+                        ast::TypeName::Named(path_type) => {
+                            if let ast::CustomType::Enum(_) = path_type.resolve(in_path, env) {
                                 panic!("Optional enum types as parameters are not supported yet")
                             }
                         }
@@ -687,7 +687,7 @@ fn gen_raw_conversion_type_name_decl_position(
     out: &mut dyn fmt::Write,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Opaque(_) => {
                 write!(out, "Raw.")?;
                 gen_type_name(typ, in_path, env, out)?;
@@ -757,9 +757,12 @@ fn requires_null_check(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> b
             requires_null_check(reference.as_ref(), in_path, env)
         }
         ast::TypeName::Option(opt) => requires_null_check(opt.as_ref(), in_path, env),
-        _ => match typ.resolve(in_path, env) {
-            ast::CustomType::Opaque(_) => true,
-            ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => false,
+        _ => match typ {
+            ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+                ast::CustomType::Opaque(_) => true,
+                ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => false,
+            },
+            other => panic!("expected named type name, found `{}`", other),
         },
     }
 }
