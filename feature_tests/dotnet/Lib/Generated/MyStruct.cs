@@ -134,12 +134,17 @@ public partial class MyStruct
     /// <returns>
     /// A <c>MyStruct</c> allocated on C# side.
     /// </returns>
-    public static MyStruct New()
+    public static MyStruct New(string g)
     {
         unsafe
         {
-            Raw.MyStruct retVal = Raw.MyStruct.New();
-            return new MyStruct(retVal);
+            byte[] gBuf = DiplomatUtils.StringToUtf8(g);
+            nuint gBufLength = (nuint)gBuf.Length;
+            fixed (byte* gBufPtr = gBuf)
+            {
+                Raw.MyStruct retVal = Raw.MyStruct.New(gBufPtr, gBufLength);
+                return new MyStruct(retVal);
+            }
         }
     }
 

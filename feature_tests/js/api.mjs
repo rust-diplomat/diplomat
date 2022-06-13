@@ -4,6 +4,27 @@ const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
   wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
 });
 
+const Alpha_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Alpha_destroy(underlying);
+});
+
+export class Alpha {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  get alpha_field() {
+    return (() => {
+      const [ptr, len] = new Uint32Array(wasm.memory.buffer, this.underlying + 0, 2);
+      return diplomatRuntime.readString(wasm, ptr, len);
+    })();
+  }
+
+  get a() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 8, 1))[0];
+  }
+}
+
 const Bar_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.Bar_destroy(underlying);
 });
@@ -11,6 +32,46 @@ const Bar_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class Bar {
   constructor(underlying) {
     this.underlying = underlying;
+  }
+}
+
+const Beta_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Beta_destroy(underlying);
+});
+
+export class Beta {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+
+  static new(my_str) {
+    let my_str_diplomat_str = diplomatRuntime.RcAlloc.str(my_str);
+    const diplomat_out = (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(10, 4);
+      wasm.Beta_new(diplomat_receive_buffer, my_str_diplomat_str.ptr, my_str_diplomat_str.size);
+      const out = new Beta(diplomat_receive_buffer);
+      diplomat_alloc_destroy_registry.register(out, {
+        ptr: out.underlying,
+        size: 10,
+        align: 4,
+      });
+      return out;
+    })();
+    diplomat_out.__my_str_lifetime_guard = my_str_diplomat_str;
+    return diplomat_out;
+  }
+
+  get beta_field() {
+    return (() => {
+      const out = new Alpha(this.underlying + 0);
+      out.owner = null;
+      out.__this_lifetime_guard = this;
+      return out;
+    })();
+  }
+
+  get b() {
+    return (new Uint8Array(wasm.memory.buffer, this.underlying + 9, 1))[0];
   }
 }
 
@@ -47,39 +108,30 @@ export class Float64Vec {
   }
 
   static new(v) {
-    let v_diplomat_bytes = new Uint8Array(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 8);
-    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
-    v_diplomat_buf.set(v_diplomat_bytes, 0);
+    let v = diplomatRuntime.RcAlloc.slice(v, 8);
     const diplomat_out = (() => {
       const out = (() => {
-        const out = new Float64Vec(wasm.Float64Vec_new(v_diplomat_ptr, v_diplomat_bytes.length));
+        const out = new Float64Vec(wasm.Float64Vec_new(v_diplomat_slice.ptr, v_diplomat_slice.size));
         out.owner = null;
         return out;
       })();
       Float64Vec_box_destroy_registry.register(out, out.underlying)
       return out;
     })();
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 8);
+    v_diplomat_slice.free();
     return diplomat_out;
   }
 
   fill_slice(v) {
-    let v_diplomat_bytes = new Uint8Array(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 8);
-    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
-    v_diplomat_buf.set(v_diplomat_bytes, 0);
-    const diplomat_out = wasm.Float64Vec_fill_slice(this.underlying, v_diplomat_ptr, v_diplomat_bytes.length);
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 8);
+    let v = diplomatRuntime.RcAlloc.slice(v, 8);
+    const diplomat_out = wasm.Float64Vec_fill_slice(this.underlying, v_diplomat_slice.ptr, v_diplomat_slice.size);
+    v_diplomat_slice.free();
   }
 
   set_value(new_slice) {
-    let new_slice_diplomat_bytes = new Uint8Array(new_slice);
-    let new_slice_diplomat_ptr = wasm.diplomat_alloc(new_slice_diplomat_bytes.length, 8);
-    let new_slice_diplomat_buf = new Uint8Array(wasm.memory.buffer, new_slice_diplomat_ptr, new_slice_diplomat_bytes.length);
-    new_slice_diplomat_buf.set(new_slice_diplomat_bytes, 0);
-    const diplomat_out = wasm.Float64Vec_set_value(this.underlying, new_slice_diplomat_ptr, new_slice_diplomat_bytes.length);
-    wasm.diplomat_free(new_slice_diplomat_ptr, new_slice_diplomat_bytes.length, 8);
+    let new_slice = diplomatRuntime.RcAlloc.slice(new_slice, 8);
+    const diplomat_out = wasm.Float64Vec_set_value(this.underlying, new_slice_diplomat_slice.ptr, new_slice_diplomat_slice.size);
+    new_slice_diplomat_slice.free();
   }
 }
 
@@ -93,20 +145,17 @@ export class Foo {
   }
 
   static new(x) {
-    let x_diplomat_bytes = (new TextEncoder()).encode(x);
-    let x_diplomat_ptr = wasm.diplomat_alloc(x_diplomat_bytes.length, 1);
-    let x_diplomat_buf = new Uint8Array(wasm.memory.buffer, x_diplomat_ptr, x_diplomat_bytes.length);
-    x_diplomat_buf.set(x_diplomat_bytes, 0);
+    let x_diplomat_str = diplomatRuntime.RcAlloc.str(x);
     const diplomat_out = (() => {
       const out = (() => {
-        const out = new Foo(wasm.Foo_new(x_diplomat_ptr, x_diplomat_bytes.length));
+        const out = new Foo(wasm.Foo_new(x_diplomat_str.ptr, x_diplomat_str.size));
         out.owner = null;
         return out;
       })();
       Foo_box_destroy_registry.register(out, out.underlying)
       return out;
     })();
-    wasm.diplomat_free(x_diplomat_ptr, x_diplomat_bytes.length, 1);
+    diplomat_out.__x_lifetime_guard = x_diplomat_str;
     return diplomat_out;
   }
 
@@ -135,30 +184,24 @@ export class MyString {
   }
 
   static new(v) {
-    let v_diplomat_bytes = (new TextEncoder()).encode(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 1);
-    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
-    v_diplomat_buf.set(v_diplomat_bytes, 0);
+    let v_diplomat_str = diplomatRuntime.RcAlloc.str(v);
     const diplomat_out = (() => {
       const out = (() => {
-        const out = new MyString(wasm.MyString_new(v_diplomat_ptr, v_diplomat_bytes.length));
+        const out = new MyString(wasm.MyString_new(v_diplomat_str.ptr, v_diplomat_str.size));
         out.owner = null;
         return out;
       })();
       MyString_box_destroy_registry.register(out, out.underlying)
       return out;
     })();
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 1);
+    v_diplomat_str.free();
     return diplomat_out;
   }
 
   set_str(new_str) {
-    let new_str_diplomat_bytes = (new TextEncoder()).encode(new_str);
-    let new_str_diplomat_ptr = wasm.diplomat_alloc(new_str_diplomat_bytes.length, 1);
-    let new_str_diplomat_buf = new Uint8Array(wasm.memory.buffer, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
-    new_str_diplomat_buf.set(new_str_diplomat_bytes, 0);
-    const diplomat_out = wasm.MyString_set_str(this.underlying, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
-    wasm.diplomat_free(new_str_diplomat_ptr, new_str_diplomat_bytes.length, 1);
+    let new_str_diplomat_str = diplomatRuntime.RcAlloc.str(new_str);
+    const diplomat_out = wasm.MyString_set_str(this.underlying, new_str_diplomat_str.ptr, new_str_diplomat_str.size);
+    new_str_diplomat_str.free();
   }
 
   get_str() {
@@ -178,18 +221,20 @@ export class MyStruct {
     this.underlying = underlying;
   }
 
-  static new() {
+  static new(g) {
+    let g_diplomat_str = diplomatRuntime.RcAlloc.str(g);
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(24, 8);
-      wasm.MyStruct_new(diplomat_receive_buffer);
+      const diplomat_receive_buffer = wasm.diplomat_alloc(32, 8);
+      wasm.MyStruct_new(diplomat_receive_buffer, g_diplomat_str.ptr, g_diplomat_str.size);
       const out = new MyStruct(diplomat_receive_buffer);
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
-        size: 24,
+        size: 32,
         align: 8,
       });
       return out;
     })();
+    diplomat_out.__g_lifetime_guard = g_diplomat_str;
     return diplomat_out;
   }
 
@@ -215,6 +260,13 @@ export class MyStruct {
 
   get f() {
     return String.fromCharCode((new Uint32Array(wasm.memory.buffer, this.underlying + 20, 1))[0]);
+  }
+
+  get g() {
+    return (() => {
+      const [ptr, len] = new Uint32Array(wasm.memory.buffer, this.underlying + 24, 2);
+      return diplomatRuntime.readString(wasm, ptr, len);
+    })();
   }
 }
 
@@ -394,7 +446,27 @@ export class Opaque {
     const diplomat_MyStruct_extracted_d = s["d"];
     const diplomat_MyStruct_extracted_e = s["e"];
     const diplomat_MyStruct_extracted_f = s["f"];
-    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e, diplomatRuntime.extractCodePoint(diplomat_MyStruct_extracted_f, 'diplomat_MyStruct_extracted_f'));
+    const diplomat_MyStruct_extracted_g = s["g"];
+    let diplomat_MyStruct_extracted_g_diplomat_str = diplomatRuntime.RcAlloc.str(diplomat_MyStruct_extracted_g);
+    const diplomat_out = wasm.Opaque_assert_struct(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e, diplomatRuntime.extractCodePoint(diplomat_MyStruct_extracted_f, 'diplomat_MyStruct_extracted_f'), diplomat_MyStruct_extracted_g_diplomat_str.ptr, diplomat_MyStruct_extracted_g_diplomat_str.size);
+    diplomat_MyStruct_extracted_g_diplomat_str.free();
+  }
+
+  read_g(s) {
+    const diplomat_MyStruct_extracted_a = s["a"];
+    const diplomat_MyStruct_extracted_b = s["b"];
+    const diplomat_MyStruct_extracted_c = s["c"];
+    const diplomat_MyStruct_extracted_d = s["d"];
+    const diplomat_MyStruct_extracted_e = s["e"];
+    const diplomat_MyStruct_extracted_f = s["f"];
+    const diplomat_MyStruct_extracted_g = s["g"];
+    let diplomat_MyStruct_extracted_g_diplomat_str = diplomatRuntime.RcAlloc.str(diplomat_MyStruct_extracted_g);
+    const diplomat_out = (() => {
+      const [ptr, len] = new Uint32Array(wasm.memory.buffer, wasm.Opaque_read_g(this.underlying, diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, diplomat_MyStruct_extracted_c, diplomat_MyStruct_extracted_d, diplomat_MyStruct_extracted_e, diplomatRuntime.extractCodePoint(diplomat_MyStruct_extracted_f, 'diplomat_MyStruct_extracted_f'), diplomat_MyStruct_extracted_g_diplomat_str.ptr, diplomat_MyStruct_extracted_g_diplomat_str.size), 2);
+      return diplomatRuntime.readString(wasm, ptr, len);
+    })();
+    diplomat_out.__diplomat_MyStruct_extracted_g_lifetime_guard = diplomat_MyStruct_extracted_g_diplomat_str;
+    return diplomat_out;
   }
 }
 
@@ -613,24 +685,20 @@ export class ResultOpaque {
 
   static new(i) {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 5,
-        align: 4,
-      });
+      const rc_alloc = diplomatRuntime.RcAlloc.alloc(5, 4);
+      const diplomat_receive_buffer = rc_alloc.ptr;
       wasm.ResultOpaque_new(diplomat_receive_buffer, i);
       const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 4, 1))[0] == 1;
       if (is_ok) {
         const ok_value = (() => {
           const out = new ResultOpaque((new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
+        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -639,24 +707,20 @@ export class ResultOpaque {
 
   static new_failing_foo() {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 5,
-        align: 4,
-      });
+      const rc_alloc = diplomatRuntime.RcAlloc.alloc(5, 4);
+      const diplomat_receive_buffer = rc_alloc.ptr;
       wasm.ResultOpaque_new_failing_foo(diplomat_receive_buffer);
       const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 4, 1))[0] == 1;
       if (is_ok) {
         const ok_value = (() => {
           const out = new ResultOpaque((new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
+        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -665,24 +729,20 @@ export class ResultOpaque {
 
   static new_failing_bar() {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 5,
-        align: 4,
-      });
+      const rc_alloc = diplomatRuntime.RcAlloc.alloc(5, 4);
+      const diplomat_receive_buffer = rc_alloc.ptr;
       wasm.ResultOpaque_new_failing_bar(diplomat_receive_buffer);
       const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 4, 1))[0] == 1;
       if (is_ok) {
         const ok_value = (() => {
           const out = new ResultOpaque((new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
+        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -691,24 +751,20 @@ export class ResultOpaque {
 
   static new_failing_unit() {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 5,
-        align: 4,
-      });
+      const rc_alloc = diplomatRuntime.RcAlloc.alloc(5, 4);
+      const diplomat_receive_buffer = rc_alloc.ptr;
       wasm.ResultOpaque_new_failing_unit(diplomat_receive_buffer);
       const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 4, 1))[0] == 1;
       if (is_ok) {
         const ok_value = (() => {
           const out = new ResultOpaque((new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
         return ok_value;
       } else {
         const throw_value = {};
+        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -717,28 +773,24 @@ export class ResultOpaque {
 
   static new_failing_struct(i) {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 5,
-        align: 4,
-      });
+      const rc_alloc = diplomatRuntime.RcAlloc.alloc(5, 4);
+      const diplomat_receive_buffer = rc_alloc.ptr;
       wasm.ResultOpaque_new_failing_struct(diplomat_receive_buffer, i);
       const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 4, 1))[0] == 1;
       if (is_ok) {
         const ok_value = (() => {
           const out = new ResultOpaque((new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
         return ok_value;
       } else {
         const throw_value = (() => {
           const out = new ErrorStruct(diplomat_receive_buffer);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
+        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -747,13 +799,8 @@ export class ResultOpaque {
 
   static new_in_err(i) {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 5,
-        align: 4,
-      });
+      const rc_alloc = diplomatRuntime.RcAlloc.alloc(5, 4);
+      const diplomat_receive_buffer = rc_alloc.ptr;
       wasm.ResultOpaque_new_in_err(diplomat_receive_buffer, i);
       const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 4, 1))[0] == 1;
       if (is_ok) {
@@ -762,9 +809,10 @@ export class ResultOpaque {
       } else {
         const throw_value = (() => {
           const out = new ResultOpaque((new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
+        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -773,13 +821,8 @@ export class ResultOpaque {
 
   static new_in_enum_err(i) {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 5,
-        align: 4,
-      });
+      const rc_alloc = diplomatRuntime.RcAlloc.alloc(5, 4);
+      const diplomat_receive_buffer = rc_alloc.ptr;
       wasm.ResultOpaque_new_in_enum_err(diplomat_receive_buffer, i);
       const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 4, 1))[0] == 1;
       if (is_ok) {
@@ -788,9 +831,10 @@ export class ResultOpaque {
       } else {
         const throw_value = (() => {
           const out = new ResultOpaque((new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
+        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();

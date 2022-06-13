@@ -1,6 +1,20 @@
 ``structs::ffi``
 ================
 
+.. js:class:: Alpha
+
+    .. js:attribute:: alpha_field
+
+    .. js:attribute:: a
+
+.. js:class:: Beta
+
+    .. js:attribute:: beta_field
+
+    .. js:attribute:: b
+
+    .. js:staticfunction:: new(my_str)
+
 .. js:class:: MyStruct
 
     .. js:attribute:: a
@@ -15,10 +29,14 @@
 
     .. js:attribute:: f
 
-    .. js:staticfunction:: new()
+    .. js:attribute:: g
+
+    .. js:staticfunction:: new(g)
 
 .. js:class:: Opaque
 
     .. js:staticfunction:: new()
 
     .. js:function:: assert_struct(s)
+
+    .. js:function:: read_g(s)
