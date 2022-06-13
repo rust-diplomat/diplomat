@@ -1,7 +1,6 @@
 ---
 source: tool/src/js/types.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
@@ -30,24 +29,20 @@ export class MyStruct {
 
   static new() {
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(3, 1);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 3,
-        align: 1,
-      });
+      const rc_alloc = diplomatRuntime.RcAlloc.alloc(3, 1);
+      const diplomat_receive_buffer = rc_alloc.ptr;
       wasm.MyStruct_new(diplomat_receive_buffer);
       const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 2, 1))[0] == 1;
       if (is_ok) {
         const ok_value = (() => {
           const out = new MyStruct(diplomat_receive_buffer);
-          out.owner = result_tag;
+          out.owner = rc_alloc;
           return out;
         })();
         return ok_value;
       } else {
         const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();

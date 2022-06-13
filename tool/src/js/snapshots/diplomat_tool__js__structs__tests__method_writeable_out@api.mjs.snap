@@ -1,7 +1,6 @@
 ---
 source: tool/src/js/structs.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
@@ -35,13 +34,8 @@ export class MyStruct {
   write_result() {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
       return (() => {
-        const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
-        const result_tag = {};
-        diplomat_alloc_destroy_registry.register(result_tag, {
-          ptr: diplomat_receive_buffer,
-          size: 2,
-          align: 1,
-        });
+        const rc_alloc = diplomatRuntime.RcAlloc.alloc(2, 1);
+        const diplomat_receive_buffer = rc_alloc.ptr;
         wasm.MyStruct_write_result(diplomat_receive_buffer, this.underlying, writeable);
         const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 1, 1))[0] == 1;
         if (is_ok) {
@@ -49,6 +43,7 @@ export class MyStruct {
           return ok_value;
         } else {
           const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+          rc_alloc.free();
           throw new diplomatRuntime.FFIError(throw_value);
         }
       })();

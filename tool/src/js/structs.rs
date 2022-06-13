@@ -1,6 +1,7 @@
 use diplomat_core::Env;
 use std::fmt;
 use std::fmt::Write;
+use std::ops::ControlFlow;
 
 use diplomat_core::ast;
 
@@ -137,7 +138,18 @@ fn gen_field<W: fmt::Write>(
                             Box::new(typ.clone()),
                         ),
                         in_path,
-                        &ast::BorrowedParams::default(),
+                        &ast::BorrowedParams {
+                            borrows_self: typ
+                                .visit_lifetimes(&mut |lt, _| match lt {
+                                    ast::Lifetime::Static => ControlFlow::Continue(()),
+                                    ast::Lifetime::Named(_) => ControlFlow::Break(()),
+                                    ast::Lifetime::Anonymous => {
+                                        unreachable!("lifetimes can never be elided in field")
+                                    }
+                                })
+                                .is_break(),
+                            ..Default::default()
+                        },
                         env,
                         &mut f,
                     )
@@ -171,12 +183,15 @@ fn gen_method<W: fmt::Write>(
     let mut all_param_exprs = vec![];
     let mut post_stmts = vec![];
 
+    let borrowed_lifetimes = method.borrowed_lifetimes();
+
     for p in method.params.iter() {
         gen_value_js_to_rust(
             &p.name,
             &p.ty,
             in_path,
             env,
+            borrowed_lifetimes.as_deref().unwrap_or_default(),
             &mut pre_stmts,
             &mut all_param_exprs,
             &mut post_stmts,
