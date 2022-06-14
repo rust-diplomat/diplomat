@@ -18,8 +18,6 @@ public partial struct Beta
 
     public Alpha beta_field;
 
-    public byte b;
-
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Beta_new", ExactSpelling = true)]
     public static unsafe extern Beta New(byte* myStr, nuint myStrSz);
 }

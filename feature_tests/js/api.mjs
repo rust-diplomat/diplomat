@@ -19,10 +19,6 @@ export class Alpha {
       return diplomatRuntime.readString(wasm, ptr, len);
     })();
   }
-
-  get a() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 8, 1))[0];
-  }
 }
 
 const Bar_box_destroy_registry = new FinalizationRegistry(underlying => {
@@ -47,12 +43,12 @@ export class Beta {
   static new(my_str) {
     let my_str_diplomat_str = diplomatRuntime.RcAlloc.str(my_str);
     const diplomat_out = (() => {
-      const diplomat_receive_buffer = wasm.diplomat_alloc(10, 4);
-      wasm.Beta_new(diplomat_receive_buffer, my_str_diplomat_str.ptr, my_str_diplomat_str.size);
+      const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+      wasm.Beta_new(my_str_diplomat_str.ptr, my_str_diplomat_str.size);
       const out = new Beta(diplomat_receive_buffer);
       diplomat_alloc_destroy_registry.register(out, {
         ptr: out.underlying,
-        size: 10,
+        size: 8,
         align: 4,
       });
       return out;
@@ -68,10 +64,6 @@ export class Beta {
       out.__this_lifetime_guard = this;
       return out;
     })();
-  }
-
-  get b() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 9, 1))[0];
   }
 }
 

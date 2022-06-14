@@ -153,10 +153,11 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {
                 let strct_size_align = layout::type_size_alignment(typ, in_path, env);
-                let needs_buffer = return_type_form(typ, in_path, env);
-                if needs_buffer != ReturnTypeForm::Complex {
-                    todo!("Receiving structs that don't need a buffer: {}", strct.name)
-                }
+                // What was the point of this?
+                // let needs_buffer = return_type_form(typ, in_path, env);
+                // if needs_buffer != ReturnTypeForm::Complex {
+                //     todo!("Receiving structs that don't need a buffer: {}", strct.name)
+                // }
                 write!(
                     out,
                     "(() => {})()",

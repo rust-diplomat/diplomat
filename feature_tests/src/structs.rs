@@ -53,12 +53,10 @@ pub mod ffi {
 
     pub struct Alpha<'alpha> {
         alpha_field: &'alpha str,
-        a: u8,
     }
 
     pub struct Beta<'beta> {
         beta_field: Alpha<'beta>,
-        b: u8,
     }
 
     impl<'imp> Beta<'imp> {
@@ -66,9 +64,7 @@ pub mod ffi {
             Beta {
                 beta_field: Alpha {
                     alpha_field: my_str,
-                    a: 0,
                 },
-                b: 0,
             }
         }
     }

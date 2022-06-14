@@ -15,24 +15,6 @@ public partial class Beta
 {
     private Raw.Beta _inner;
 
-    public byte B
-    {
-        get
-        {
-            unsafe
-            {
-                return _inner.b;
-            }
-        }
-        set
-        {
-            unsafe
-            {
-                _inner.b = value;
-            }
-        }
-    }
-
     /// <summary>
     /// Creates a managed <c>Beta</c> from the raw representation.
     /// </summary>

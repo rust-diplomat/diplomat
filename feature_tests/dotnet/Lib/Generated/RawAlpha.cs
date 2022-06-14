@@ -17,6 +17,4 @@ public partial struct Alpha
     private const string NativeLib = "diplomat_feature_tests";
 
     public string alpha_field;
-
-    public byte a;
 }

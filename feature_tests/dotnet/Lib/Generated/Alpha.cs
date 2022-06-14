@@ -15,24 +15,6 @@ public partial class Alpha
 {
     private Raw.Alpha _inner;
 
-    public byte A
-    {
-        get
-        {
-            unsafe
-            {
-                return _inner.a;
-            }
-        }
-        set
-        {
-            unsafe
-            {
-                _inner.a = value;
-            }
-        }
-    }
-
     /// <summary>
     /// Creates a managed <c>Alpha</c> from the raw representation.
     /// </summary>

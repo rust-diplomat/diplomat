@@ -5,13 +5,9 @@
 
     .. js:attribute:: alpha_field
 
-    .. js:attribute:: a
-
 .. js:class:: Beta
 
     .. js:attribute:: beta_field
-
-    .. js:attribute:: b
 
     .. js:staticfunction:: new(my_str)
 
