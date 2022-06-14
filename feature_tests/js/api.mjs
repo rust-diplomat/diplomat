@@ -698,7 +698,6 @@ export class ResultOpaque {
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
-        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -720,7 +719,6 @@ export class ResultOpaque {
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
-        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -742,7 +740,6 @@ export class ResultOpaque {
         return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[(new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0]];
-        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -764,7 +761,6 @@ export class ResultOpaque {
         return ok_value;
       } else {
         const throw_value = {};
-        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -790,7 +786,6 @@ export class ResultOpaque {
           out.owner = rc_alloc;
           return out;
         })();
-        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -812,7 +807,6 @@ export class ResultOpaque {
           out.owner = rc_alloc;
           return out;
         })();
-        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
@@ -834,7 +828,6 @@ export class ResultOpaque {
           out.owner = rc_alloc;
           return out;
         })();
-        rc_alloc.free();
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();

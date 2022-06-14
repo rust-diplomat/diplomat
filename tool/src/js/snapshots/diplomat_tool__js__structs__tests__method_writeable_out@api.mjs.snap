@@ -43,7 +43,6 @@ export class MyStruct {
           return ok_value;
         } else {
           const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
-          rc_alloc.free();
           throw new diplomatRuntime.FFIError(throw_value);
         }
       })();

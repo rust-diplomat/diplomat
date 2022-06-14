@@ -342,17 +342,27 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                                         )
                                     })
                                 )?;
-                                let borrows = err.as_ref().visit_lifetimes(&mut |lt, _| match lt {
-                                    ast::Lifetime::Static => ControlFlow::Continue(()),
-                                    ast::Lifetime::Named(_) => ControlFlow::Break(()),
-                                    ast::Lifetime::Anonymous => {
-                                        unreachable!("Lifetime elision in return types isn't allowed yet")
-                                    }
-                                }).is_break();
+                                // TODO(#170): This code was my attempt to free
+                                // the buffer if the err type didn't depend on
+                                // the buffer (could be applied to the Ok type too ig).
+                                // However, I didn't realize that non-opaque structs
+                                // borrow the buffer to lazily read fields from,
+                                // even if they have no borrows in Rust semantics.
+                                // In #170, I think we're trying to eagerly convert
+                                // fields of non-opaques, meaning this code should
+                                // be correct after it gets resolved.
 
-                                if !borrows {
-                                    writeln!(f, "rc_alloc.free();")?;
-                                }
+                                // let borrows = err.as_ref().visit_lifetimes(&mut |lt, _| match lt {
+                                //     ast::Lifetime::Static => ControlFlow::Continue(()),
+                                //     ast::Lifetime::Named(_) => ControlFlow::Break(()),
+                                //     ast::Lifetime::Anonymous => {
+                                //         unreachable!("Lifetime elision in return types isn't allowed yet")
+                                //     }
+                                // }).is_break();
+                                // if !borrows {
+                                //     writeln!(f, "rc_alloc.free();")?;
+                                // }
+
                                 writeln!(f, "throw new diplomatRuntime.FFIError(throw_value);")
                             })
                         )
@@ -389,7 +399,7 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         }
         ast::TypeName::Writeable => todo!(),
         ast::TypeName::StrReference(..) => {
-            // So I just copied this from `gen_rust_reference_js` to make it work...
+            // So I just copied this from `gen_value_rust_to_js` to make it work...
             write!(
                 out,
                 "(() => {})()",
@@ -553,8 +563,8 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             } else {
                 write!(
                     out,
-                    "(() => {})()",
-                    display::block(|mut f| {
+                    "{}",
+                    display::iife(|mut f| {
                         writeln!(f, "const out = new {}({});", custom_type.name(), value_expr)?;
                         writeln!(f, "out.owner = {};", owner)?;
                         if borrowed_params.borrows_self {
@@ -563,8 +573,11 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
                         for param in borrowed_params.borrowed_params.iter() {
                             let str_base = param
                                 .ty
-                                .visit_lifetimes(&mut |_, origin| match origin {
-                                    ast::LifetimeOrigin::StrReference => ControlFlow::Break(()),
+                                .visit_lifetimes(&mut |lifetime, origin| match (lifetime, origin) {
+                                    (
+                                        ast::Lifetime::Named(_),
+                                        ast::LifetimeOrigin::StrReference,
+                                    ) => ControlFlow::Break(()),
                                     _ => ControlFlow::Continue(()),
                                 })
                                 .is_break();
