@@ -27,7 +27,7 @@ fn gen_type_inner<W: fmt::Write>(
 ) -> fmt::Result {
     let mut handled_ref = false;
     match typ {
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Opaque(opaque) => {
                 if let Some(owned) = behind_ref {
                     if owned {

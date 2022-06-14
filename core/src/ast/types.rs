@@ -180,6 +180,62 @@ impl PathType {
                 .collect(),
         }
     }
+
+    /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
+    /// the `env`, which contains all [`CustomType`]s across all FFI modules.
+    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
+        let local_path = &self.path;
+        let mut cur_path = in_path.clone();
+        for (i, elem) in local_path.elements.iter().enumerate() {
+            match elem.as_str() {
+                "crate" => {
+                    // TODO(#34): get the name of enclosing crate from env when we support multiple crates
+                    cur_path = Path::empty()
+                }
+
+                "super" => cur_path = cur_path.get_super(),
+
+                o => match env.get(&cur_path, o) {
+                    Some(ModSymbol::Alias(p)) => {
+                        let mut remaining_elements: Vec<Ident> =
+                            local_path.elements.iter().skip(i + 1).cloned().collect();
+                        let mut new_path = p.elements.clone();
+                        new_path.append(&mut remaining_elements);
+                        return PathType::new(Path { elements: new_path })
+                            .resolve_with_path(&cur_path.clone(), env);
+                    }
+                    Some(ModSymbol::SubModule(name)) => {
+                        cur_path.elements.push(name.clone());
+                    }
+                    Some(ModSymbol::CustomType(t)) => {
+                        if i == local_path.elements.len() - 1 {
+                            return (cur_path, t);
+                        } else {
+                            panic!(
+                                "Unexpected custom type when resolving symbol {} in {}",
+                                o,
+                                cur_path.elements.join("::")
+                            )
+                        }
+                    }
+                    None => panic!(
+                        "Could not resolve symbol {} in {}",
+                        o,
+                        cur_path.elements.join("::")
+                    ),
+                },
+            }
+        }
+
+        panic!(
+            "Path {} does not point to a custom type",
+            in_path.elements.join("::")
+        )
+    }
+
+    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
+        self.resolve_with_path(in_path, env).1
+    }
 }
 
 impl From<&syn::TypePath> for PathType {
@@ -513,67 +569,6 @@ impl TypeName {
         }
     }
 
-    /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
-    /// the `env`, which contains all [`CustomType`]s across all FFI modules.
-    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
-        match self {
-            TypeName::Named(local_path_type) => {
-                let local_path = &local_path_type.path;
-                let mut cur_path = in_path.clone();
-                for (i, elem) in local_path.elements.iter().enumerate() {
-                    match elem.as_str() {
-                        "crate" => {
-                            // TODO(#34): get the name of enclosing crate from env when we support multiple crates
-                            cur_path = Path::empty()
-                        }
-
-                        "super" => cur_path = cur_path.get_super(),
-
-                        o => match env.get(&cur_path, o) {
-                            Some(ModSymbol::Alias(p)) => {
-                                let mut remaining_elements: Vec<Ident> =
-                                    local_path.elements.iter().skip(i + 1).cloned().collect();
-                                let mut new_path = p.elements.clone();
-                                new_path.append(&mut remaining_elements);
-                                return TypeName::Named(PathType::new(Path { elements: new_path }))
-                                    .resolve_with_path(&cur_path.clone(), env);
-                            }
-                            Some(ModSymbol::SubModule(name)) => {
-                                cur_path.elements.push(name.clone());
-                            }
-                            Some(ModSymbol::CustomType(t)) => {
-                                if i == local_path.elements.len() - 1 {
-                                    return (cur_path, t);
-                                } else {
-                                    panic!(
-                                        "Unexpected custom type when resolving symbol {} in {}",
-                                        o,
-                                        cur_path.elements.join("::")
-                                    )
-                                }
-                            }
-                            None => panic!(
-                                "Could not resolve symbol {} in {}",
-                                o,
-                                cur_path.elements.join("::")
-                            ),
-                        },
-                    }
-                }
-
-                panic!(
-                    "Path {} does not point to a custom type",
-                    in_path.elements.join("::")
-                )
-            }
-            _ => panic!(),
-        }
-    }
-
-    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
-        self.resolve_with_path(in_path, env).1
-    }
-
     fn check_opaque<'a>(
         &'a self,
         in_path: &Path,
@@ -591,8 +586,8 @@ impl TypeName {
                 ok.check_opaque(in_path, env, false, errors);
                 err.check_opaque(in_path, env, false, errors);
             }
-            TypeName::Named(_) => {
-                if let CustomType::Opaque(_) = self.resolve(in_path, env) {
+            TypeName::Named(path_type) => {
+                if let CustomType::Opaque(_) = path_type.resolve(in_path, env) {
                     if !behind_reference {
                         errors.push(ValidityError::OpaqueAsValue(self.clone()))
                     }

@@ -102,9 +102,9 @@ fn collect_errors_impl<'ast>(
         ast::TypeName::Option(underlying) => {
             collect_errors_impl(underlying, in_path, env, errors, is_err_variant);
         }
-        ast::TypeName::Named(_) => {
+        ast::TypeName::Named(path_type) => {
             if is_err_variant {
-                let (custom_ty_path, _) = typ.resolve_with_path(in_path, env);
+                let (custom_ty_path, _) = path_type.resolve_with_path(in_path, env);
                 let key = (custom_ty_path, typ);
                 if !errors.contains(&key) {
                     errors.insert(key);

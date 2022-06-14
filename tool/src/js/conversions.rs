@@ -71,7 +71,7 @@ pub fn gen_value_js_to_rust(
         ast::TypeName::Reference(_, _mut, _lt) => {
             invocation_params.push(format!("{}.underlying", param_name));
         }
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(struct_type) => {
                 for (field_name, field_type, _) in struct_type.fields.iter() {
                     let field_extracted_name =
@@ -115,8 +115,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => {
-            let custom_type = typ.resolve(in_path, env);
+        ast::TypeName::Named(path_type) => {
+            let custom_type = path_type.resolve(in_path, env);
             match custom_type {
                 ast::CustomType::Struct(strct) => {
                     let strct_size_align = layout::type_size_alignment(typ, in_path, env);
@@ -192,11 +192,11 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                         })
                     )?;
 
-                    if let ast::TypeName::Named(_) = underlying.as_ref() {
+                    if let ast::TypeName::Named(path_type) = underlying.as_ref() {
                         writeln!(
                             f,
                             "{}_box_destroy_registry.register(out, out.underlying)",
-                            underlying.resolve(in_path, env).name()
+                            path_type.resolve(in_path, env).name()
                         )?;
                     }
 
@@ -376,11 +376,11 @@ fn gen_box_destructor<W: fmt::Write>(
             writeln!(out, "const out_{}_value = out.{};", name, name)?;
             // TODO(#12): delete back-references when we start generating them
             // since the out value getter returns a borrowed box
-            if let ast::TypeName::Named(_) = underlying.as_ref() {
+            if let ast::TypeName::Named(path_type) = underlying.as_ref() {
                 writeln!(
                     out,
                     "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying);",
-                    underlying.resolve(in_path, env).name(),
+                    path_type.resolve(in_path, env).name(),
                     name,
                     name
                 )?;
@@ -483,8 +483,8 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
             todo!("Receiving references to results")
         }
 
-        ast::TypeName::Named(_) => {
-            let custom_type = underlying.resolve(in_path, env);
+        ast::TypeName::Named(path_type) => {
+            let custom_type = path_type.resolve(in_path, env);
 
             if let ast::CustomType::Enum(enm) = custom_type {
                 write!(

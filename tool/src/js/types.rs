@@ -20,7 +20,7 @@ pub enum ReturnTypeForm {
 /// See https://github.com/WebAssembly/tool-conventions/blob/master/BasicCABI.md#function-signatures.
 pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> ReturnTypeForm {
     match typ {
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {
                 let all_field_forms: Vec<ReturnTypeForm> = strct
                     .fields
