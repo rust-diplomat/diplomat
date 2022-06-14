@@ -160,8 +160,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
                 // }
                 write!(
                     out,
-                    "(() => {})()",
-                    display::block(|mut f| {
+                    "{}",
+                    display::iife(|mut f| {
                         writeln!(
                             f,
                             "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
@@ -206,8 +206,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
         ast::TypeName::Box(underlying) => {
             write!(
                 out,
-                "(() => {})()",
-                display::block(|mut f| {
+                "{}",
+                display::iife(|mut f| {
                     writeln!(
                         f,
                         "const out = {};",
@@ -244,8 +244,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
             );
             write!(
                 out,
-                "(() => {})()",
-                display::block(|mut f| {
+                "{}",
+                display::iife(|mut f| {
                     writeln!(f, "const option_value = {}", value_expr)?;
                     writeln!(
                         f,
@@ -280,8 +280,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
             let needs_buffer = return_type_form(typ, in_path, env) == ReturnTypeForm::Complex;
             write!(
                 out,
-                "(() => {})()",
-                display::block(|mut f| {
+                "{}",
+                display::iife(|mut f| {
                     if needs_buffer {
                         writeln!(
                             f,
@@ -403,8 +403,8 @@ pub fn gen_value_rust_to_js<W: fmt::Write>(
             // So I just copied this from `gen_value_rust_to_js` to make it work...
             write!(
                 out,
-                "(() => {})()",
-                display::block(|mut f| {
+                "{}",
+                display::iife(|mut f| {
                     writeln!(
                         f,
                         "const [ptr, len] = new Uint32Array(wasm.memory.buffer, {}, 2);",
@@ -639,8 +639,8 @@ fn gen_rust_reference_to_js<W: fmt::Write>(
         ast::TypeName::StrReference(..) => {
             write!(
                 out,
-                "(() => {})()",
-                display::block(|mut f| {
+                "{}",
+                display::iife(|mut f| {
                     writeln!(
                         f,
                         "const [ptr, len] = new Uint32Array(wasm.memory.buffer, {}, 2);",
