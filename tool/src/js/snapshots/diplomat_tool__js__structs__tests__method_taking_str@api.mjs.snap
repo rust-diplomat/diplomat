@@ -15,25 +15,18 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class MyStruct {
   constructor(underlying) {
     this.underlying = underlying;
+    MyStruct_box_destroy_registry.register(this, underlying);
   }
 
   static new_str(v) {
-    let v_diplomat_str = diplomatRuntime.RcAlloc.str(v);
-    const diplomat_out = (() => {
-      const out = (() => {
-        const out = new MyStruct(wasm.MyStruct_new_str(v_diplomat_str.ptr, v_diplomat_str.size));
-        out.owner = null;
-        return out;
-      })();
-      MyStruct_box_destroy_registry.register(out, out.underlying)
-      return out;
-    })();
+    let v_diplomat_str = diplomatRuntime.DiplomatBuf.str(wasm, v);
+    const diplomat_out = new MyStruct(wasm.MyStruct_new_str(v_diplomat_str.ptr, v_diplomat_str.size));
     v_diplomat_str.free();
     return diplomat_out;
   }
 
   set_str(new_str) {
-    let new_str_diplomat_str = diplomatRuntime.RcAlloc.str(new_str);
+    let new_str_diplomat_str = diplomatRuntime.DiplomatBuf.str(wasm, new_str);
     const diplomat_out = wasm.MyStruct_set_str(this.underlying, new_str_diplomat_str.ptr, new_str_diplomat_str.size);
     new_str_diplomat_str.free();
   }

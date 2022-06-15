@@ -29,6 +29,10 @@
 
     .. js:staticfunction:: new(g)
 
+    .. js:staticfunction:: try_new(g)
+
+    .. js:function:: consume()
+
 .. js:class:: Opaque
 
     .. js:staticfunction:: new()

@@ -15,6 +15,7 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class MyStruct {
   constructor(underlying) {
     this.underlying = underlying;
+    MyStruct_box_destroy_registry.register(this, underlying);
   }
 
   write() {
@@ -34,15 +35,16 @@ export class MyStruct {
   write_result() {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
       return (() => {
-        const rc_alloc = diplomatRuntime.RcAlloc.alloc(2, 1);
-        const diplomat_receive_buffer = rc_alloc.ptr;
+        const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
         wasm.MyStruct_write_result(diplomat_receive_buffer, this.underlying, writeable);
         const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 1, 1))[0] == 1;
         if (is_ok) {
           const ok_value = {};
+          wasm.diplomat_free(diplomat_receive_buffer, 2, 1);
           return ok_value;
         } else {
           const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+          wasm.diplomat_free(diplomat_receive_buffer, 2, 1);
           throw new diplomatRuntime.FFIError(throw_value);
         }
       })();

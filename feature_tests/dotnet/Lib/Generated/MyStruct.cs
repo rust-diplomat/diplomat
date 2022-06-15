@@ -148,6 +148,41 @@ public partial class MyStruct
         }
     }
 
+    /// <exception cref="AlphaException"></exception>
+    /// <returns>
+    /// A <c>MyStruct</c> allocated on C# side.
+    /// </returns>
+    public static MyStruct TryNew(string g)
+    {
+        unsafe
+        {
+            byte[] gBuf = DiplomatUtils.StringToUtf8(g);
+            nuint gBufLength = (nuint)gBuf.Length;
+            fixed (byte* gBufPtr = gBuf)
+            {
+                Raw.StructsFfiResultMyStructAlpha result = Raw.MyStruct.TryNew(gBufPtr, gBufLength);
+                if (!result.isOk)
+                {
+                    throw new AlphaException(new Alpha(result.Err));
+                }
+                Raw.MyStruct retVal = result.Ok;
+                return new MyStruct(retVal);
+            }
+        }
+    }
+
+    public void Consume()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("MyStruct");
+            }
+            Raw.MyStruct.Consume(_inner);
+        }
+    }
+
     /// <summary>
     /// Returns a copy of the underlying raw representation.
     /// </summary>

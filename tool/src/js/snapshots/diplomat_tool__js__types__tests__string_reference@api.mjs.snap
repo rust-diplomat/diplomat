@@ -8,38 +8,23 @@ const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
   wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
 });
 
-const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
-  wasm.MyStruct_destroy(underlying);
-});
-
 export class MyStruct {
   constructor(underlying) {
-    this.underlying = underlying;
+    this.a = (new Uint8Array(wasm.memory.buffer, underlying + 0, 1))[0];
+    this.b = (new Uint8Array(wasm.memory.buffer, underlying + 1, 1))[0];
   }
 
   static new(v) {
-    let v_diplomat_str = diplomatRuntime.RcAlloc.str(v);
+    let v_diplomat_str = diplomatRuntime.DiplomatBuf.str(wasm, v);
     const diplomat_out = (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
       wasm.MyStruct_new(diplomat_receive_buffer, v_diplomat_str.ptr, v_diplomat_str.size);
       const out = new MyStruct(diplomat_receive_buffer);
-      diplomat_alloc_destroy_registry.register(out, {
-        ptr: out.underlying,
-        size: 2,
-        align: 1,
-      });
+      wasm.diplomat_free(diplomat_receive_buffer, 2, 1);
       return out;
     })();
     v_diplomat_str.free();
     return diplomat_out;
-  }
-
-  get a() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
-  }
-
-  get b() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 1, 1))[0];
   }
 }
 

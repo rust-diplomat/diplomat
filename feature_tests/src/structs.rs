@@ -19,6 +19,7 @@ pub mod ffi {
             Box::new(Opaque())
         }
 
+        #[allow(clippy::needless_lifetimes)] // macro doesn't support elision yet
         pub fn assert_struct<'b>(&self, s: MyStruct<'b>) {
             s.assert_value();
         }
@@ -41,6 +42,10 @@ pub mod ffi {
             }
         }
 
+        pub fn try_new(g: &'c str) -> diplomat_runtime::DiplomatResult<MyStruct<'c>, Alpha<'c>> {
+            Ok(Self::new(g)).into()
+        }
+
         fn assert_value(&self) {
             assert_eq!(self.a, 17);
             assert!(self.b);
@@ -49,6 +54,8 @@ pub mod ffi {
             assert_eq!(self.e, 5991);
             assert_eq!(self.f, '餐');
         }
+
+        pub fn consume(self) {}
     }
 
     pub struct Alpha<'alpha> {

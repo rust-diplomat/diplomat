@@ -15,16 +15,18 @@ const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying 
 export class MyOpaqueStruct {
   constructor(underlying) {
     this.underlying = underlying;
+    MyOpaqueStruct_box_destroy_registry.register(this, underlying);
   }
 }
 
-const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
-  wasm.MyStruct_destroy(underlying);
-});
-
 export class MyStruct {
   constructor(underlying) {
-    this.underlying = underlying;
+    this.a = (() => {
+      const out = new MyOpaqueStruct((new Uint32Array(wasm.memory.buffer, underlying + 0, 1))[0]);
+      out.__this_lifetime_guard = this;
+      return out;
+    })();
+    this.b = (new Uint8Array(wasm.memory.buffer, underlying + 4, 1))[0];
   }
 
   static new(foo, bar) {
@@ -32,27 +34,10 @@ export class MyStruct {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
       wasm.MyStruct_new(diplomat_receive_buffer, foo.underlying, bar.underlying);
       const out = new MyStruct(diplomat_receive_buffer);
-      diplomat_alloc_destroy_registry.register(out, {
-        ptr: out.underlying,
-        size: 5,
-        align: 4,
-      });
+      wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
       return out;
     })();
     return diplomat_out;
-  }
-
-  get a() {
-    return (() => {
-      const out = new MyOpaqueStruct((new Uint32Array(wasm.memory.buffer, this.underlying + 0, 1))[0]);
-      out.owner = null;
-      out.__this_lifetime_guard = this;
-      return out;
-    })();
-  }
-
-  get b() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 4, 1))[0];
   }
 }
 
