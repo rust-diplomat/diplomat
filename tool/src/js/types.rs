@@ -69,9 +69,9 @@ pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> 
 
         ast::TypeName::Reference(_, _mut, _lt) => ReturnTypeForm::Scalar,
 
-        ast::TypeName::StrReference(..) => ReturnTypeForm::Scalar,
+        ast::TypeName::StrReference(..) => ReturnTypeForm::Complex,
 
-        ast::TypeName::PrimitiveSlice(..) => ReturnTypeForm::Scalar,
+        ast::TypeName::PrimitiveSlice(..) => ReturnTypeForm::Complex,
 
         ast::TypeName::Primitive(_) => ReturnTypeForm::Scalar,
 
@@ -160,25 +160,6 @@ mod tests {
     }
 
     #[test]
-    fn test_writeable_out() {
-        test_file! {
-            #[diplomat::bridge]
-            mod ffi {
-                struct MyStruct {
-                    a: u8,
-                    b: u8,
-                }
-
-                impl MyStruct {
-                    pub fn write(&self, to: &mut DiplomatWriteable) {
-                        unimplemented!()
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
     fn test_unit_type() {
         test_file! {
             #[diplomat::bridge]
@@ -189,7 +170,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    pub fn something(&self) -> () {
+                    pub fn something(self) -> () {
                         unimplemented!()
                     }
                 }
