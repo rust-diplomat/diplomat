@@ -30,50 +30,43 @@ export function extractCodePoint(str, param) {
   return cp;
 }
 
-export class RcAlloc {
+export class DiplomatBuf {
 
-  static str = (string) => {
-    const align = 1;
+  static str = (wasm, string) => {
     const bytes = (new TextEncoder()).encode(string);
-    const size = bytes.length;
-    const ptr = wasm.diplomat_alloc(size, align);
-    (new Uint8Array(wasm.memory.buffer, ptr, size)).set(bytes, 0);
-    return new RcAlloc(ptr, size, align);
+    return new DiplomatBuf(wasm, bytes, 1);
   }
 
-  static slice = (slice, align) => {
+  static slice = (wasm, slice, align) => {
     const bytes = new Uint8Array(slice);
+    return new DiplomatBuf(wasm, bytes, align);
+  }
+
+  constructor(wasm, bytes, align) {
     const size = bytes.length;
     const ptr = wasm.diplomat_alloc(size, align);
-    // is there a way to write the slice directly into the view?
     (new Uint8Array(wasm.memory.buffer, ptr, size)).set(bytes, 0);
-    return new RcAlloc(ptr, size, align);
-  }
 
-  static alloc = (size, align) => {
-    const ptr = wasm.diplomat_alloc(size, align);
-    return new RcAlloc(ptr, size, align);
-  }
-
-  constructor(ptr, size, align) {
     this.ptr = ptr;
     this.size = size;
     this.align = align;
+    this.freed = false;
 
-    RcAlloc_finalizer.register(this, { ptr, size, align });
+    DiplomatBuf_finalizer.register(this, { ptr, size, align });
   }
 
   free() {
-    wasm.diplomat_free(this.ptr, this.size, this.align);
+    if (!freed) {
+      this.freed = true;
 
-    // Unregister to prevent the double free
-    RcAlloc_finalizer.unregister(this);
+      wasm.diplomat_free(this.ptr, this.size, this.align);
 
-    // No longer own the ptr, so make `free` fail if called again
-    delete this.ptr;
+      // Unregister to prevent the double free
+      DiplomatBuf_finalizer.unregister(this);
+    }
   }
 }
 
-const RcAlloc_finalizer = new FinalizationRegistry(({ ptr, size, align }) => {
+const DiplomatBuf_finalizer = new FinalizationRegistry(({ ptr, size, align }) => {
   wasm.diplomat_free(ptr, size, align);
 });
