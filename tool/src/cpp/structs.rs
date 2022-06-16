@@ -212,8 +212,15 @@ fn gen_method<W: fmt::Write>(
         let mut all_params_invocation = vec![];
 
         if let Some(self_param) = &method.self_param {
+            // non opaque structs are handled by-move, however
+            // their `this` will still be a reference!
+            let cpp_expr = if self_param.reference.is_some() {
+                "this"
+            } else {
+                "std::move(*this)"
+            };
             let invocation_expr = gen_cpp_to_rust(
-                "this",
+                cpp_expr,
                 "this",
                 None,
                 &self_param.to_typename(),
