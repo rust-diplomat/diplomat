@@ -60,13 +60,24 @@ impl ToTokens for NamedLifetime {
     }
 }
 
-/// A lifetime dependency graph used for tracking which lifetimes outlive,
-/// and are outlived by, other lifetimes.
+/// A immutable graph for tracking lifetimes and bounds in scope of an
+/// [`ast::Method`](super::Method) or [`ast::Struct`](super::Struct).
 ///
-/// It is similar to [`syn::LifetimeDef`], except it can also track lifetime
-/// bounds defined in the `where` clause.
+/// Aside from writing lifetimes and bounds back to token streams for the macro,
+/// this type provides [`LifetimeEnv::outlives`], which determines which lifetimes
+/// outlive a provided set of lifetimes.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct LifetimeEnv {
+    /// Nodes and edges in the graph.
+    ///
+    /// # Invariants
+    ///
+    /// The index of each [`LifetimeNode`] in the `Vec` is the order that
+    /// lifetime was declared when read in from the generic arguments. This
+    /// means that for [`ast::Struct`](super::Struct)s, the index of each item
+    /// is the index of the associated lifetime in the `Struct`s type definition.
+    /// This allows us to think about the lifetimes in a `Struct` as indices
+    /// instead of named lifetimes, which can change between declaration and usage.
     nodes: Vec<LifetimeNode>,
 }
 
@@ -185,6 +196,9 @@ impl LifetimeEnv {
     /// `<'a, 'b, 'c>`
     ///
     /// Write the existing lifetimes, excluding bounds, as generic parameters.
+    /// This is used for writing generic parameters in a type.
+    // TODO: Build this into `CustomType` with `LifetimeEnv::iter` because that's
+    // the only place this is used.
     pub fn lifetimes_to_tokens(&self) -> proc_macro2::TokenStream {
         if self.is_empty() {
             return quote! {};
@@ -194,6 +208,7 @@ impl LifetimeEnv {
         quote! { <#(#lifetimes),*> }
     }
 
+    /// Iterate through the [`NamedLifetime`]s in the scope of the graph.
     pub fn iter(&self) -> impl Iterator<Item = &NamedLifetime> {
         self.nodes.iter().map(|node| &node.lifetime)
     }
@@ -209,7 +224,16 @@ impl LifetimeEnv {
             .position(|node| &node.lifetime == lifetime)
     }
 
-    /// Add isolated lifetimes to the graph.
+    /// Add vertices (lifetimes) to the lifetime graph.
+    ///
+    /// In generic arguments, lifetimes can be introduced _and_ bounded in
+    /// angle-bracketed generics, while the `where` clause can only bound lifetimes,
+    /// but not introduce any new lifetimes.
+    ///
+    /// This method is intended to be called on the angle-bracketed generics
+    /// to declare all new lifetimes, and then [`LifetimeEnv::extend_bounds`]
+    /// can be called on both the angle-bracketed generics and lifetimes in the
+    /// `where` clause to add any additional bounds.
     fn extend_lifetimes<'a, L, I>(&mut self, iter: I)
     where
         NamedLifetime: PartialEq<L> + From<&'a L>,
@@ -232,10 +256,16 @@ impl LifetimeEnv {
         }
     }
 
-    /// Add edges to the lifetime graph.
+    /// Add edges (bounds) to the lifetime graph.
     ///
-    /// This method is decoupled from [`LifetimeEnv::extend_lifetimes`] because
-    /// generics can define new lifetimes, while `where` clauses cannot.
+    /// In generic arguments, lifetimes can be introduced _and_ bounded in
+    /// angle-bracketed generics, while the `where` clause can only bound lifetimes,
+    /// but not introduce any new lifetimes.
+    ///
+    /// This method is intended to be called on the angle-bracketed generics
+    /// and the `where` clause generics **after** [`LifetimeEnv::extend_lifetimes`]
+    /// has been called on the angle-bracketed generics, since all lifetimes must
+    /// be declared before getting bounded.
     ///
     /// # Panics
     ///
