@@ -60,7 +60,7 @@ impl ToTokens for NamedLifetime {
     }
 }
 
-/// A immutable graph for tracking lifetimes and bounds in scope of an
+/// An immutable graph for tracking lifetimes and bounds in scope of an
 /// [`ast::Method`](super::Method) or [`ast::Struct`](super::Struct).
 ///
 /// Aside from writing lifetimes and bounds back to token streams for the macro,
