@@ -178,7 +178,11 @@ pub fn gen_rust_to_cpp<W: Write>(
         }
         ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
         ast::TypeName::StrReference(..) => {
-            todo!("Returning &str from Rust to C++ is not currently supported")
+            let raw_value_id = format!("diplomat_str_raw_{}", path);
+            writeln!(out, "capi::DiplomatStringView {} = {};", raw_value_id, cpp).unwrap();
+
+            writeln!(out, "std::string_view str({raw_value_id}.data, {raw_value_id}.len);").unwrap();
+            "str".into()
         }
         ast::TypeName::PrimitiveSlice(..) => {
             todo!("Returning &[T] from Rust to C++ is not currently supported")
@@ -288,6 +292,9 @@ pub fn gen_cpp_to_rust<W: Write>(
             }
         }
         ast::TypeName::Primitive(_) => cpp.to_string(),
+        ast::TypeName::StrReference(_) => {
+            format!("{{ {cpp}.data(), {cpp}.size() }}")
+        }
         o => todo!("{:?}", o),
     }
 }

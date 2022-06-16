@@ -50,7 +50,7 @@ pub fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
-        ast::TypeName::StrReference(..) => unreachable!("Strings handled in structs.rs"),
+        ast::TypeName::StrReference(..) => write!(out, "DiplomatStringView")?,
         ast::TypeName::PrimitiveSlice(..) => unreachable!("Slices handled in structs.rs"),
         ast::TypeName::Unit => write!(out, "void")?,
     }
