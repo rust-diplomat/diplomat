@@ -43,6 +43,7 @@ export class DiplomatBuf {
   }
 
   constructor(wasm, bytes, align) {
+    // TODO(#174) Remove intermediate `Uint8Arrays` during slice conversion
     const size = bytes.length;
     const ptr = wasm.diplomat_alloc(size, align);
     (new Uint8Array(wasm.memory.buffer, ptr, size)).set(bytes, 0);
