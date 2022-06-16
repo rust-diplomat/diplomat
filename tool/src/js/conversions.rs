@@ -10,6 +10,7 @@ use crate::layout;
 
 /// TODO: docs
 #[allow(clippy::ptr_arg)] // false positive, rust-clippy#8463, fixed in 1.61
+#[allow(clippy::too_many_arguments)]
 pub fn gen_value_js_to_rust(
     param_name: &ast::Ident,
     typ: &ast::TypeName,
