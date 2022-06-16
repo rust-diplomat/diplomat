@@ -1,4 +1,4 @@
-function readString(wasm, ptr, len) {
+export function readString(wasm, ptr, len) {
   const buf = new Uint8Array(wasm.memory.buffer, ptr, len);
   return (new TextDecoder("utf-8")).decode(buf)
 }
@@ -29,3 +29,44 @@ export function extractCodePoint(str, param) {
   }
   return cp;
 }
+
+export class DiplomatBuf {
+
+  static str = (wasm, string) => {
+    const bytes = (new TextEncoder()).encode(string);
+    return new DiplomatBuf(wasm, bytes, 1);
+  }
+
+  static slice = (wasm, slice, align) => {
+    const bytes = new Uint8Array(slice);
+    return new DiplomatBuf(wasm, bytes, align);
+  }
+
+  constructor(wasm, bytes, align) {
+    const size = bytes.length;
+    const ptr = wasm.diplomat_alloc(size, align);
+    (new Uint8Array(wasm.memory.buffer, ptr, size)).set(bytes, 0);
+
+    this.ptr = ptr;
+    this.size = size;
+    this.align = align;
+    this.freed = false;
+
+    DiplomatBuf_finalizer.register(this, { ptr, size, align });
+  }
+
+  free() {
+    if (!freed) {
+      this.freed = true;
+
+      wasm.diplomat_free(this.ptr, this.size, this.align);
+
+      // Unregister to prevent the double free
+      DiplomatBuf_finalizer.unregister(this);
+    }
+  }
+}
+
+const DiplomatBuf_finalizer = new FinalizationRegistry(({ ptr, size, align }) => {
+  wasm.diplomat_free(ptr, size, align);
+});
