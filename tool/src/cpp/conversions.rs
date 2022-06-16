@@ -72,7 +72,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                 writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
 
                 let ty_name =
-                    super::types::gen_type(typ, in_path, None, env, library_config).unwrap();
+                    super::types::gen_type(typ, in_path, None, env, library_config, false).unwrap();
 
                 let wrapped_value_id = format!("diplomat_optional_{}", path);
                 writeln!(out, "{} {};", ty_name, wrapped_value_id).unwrap();
@@ -133,7 +133,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
             let wrapped_value_id = format!("diplomat_result_{}", path);
             let result_ty =
-                super::types::gen_type(typ, in_path, None, env, library_config).unwrap();
+                super::types::gen_type(typ, in_path, None, env, library_config, false).unwrap();
             writeln!(out, "{} {};", result_ty, wrapped_value_id).unwrap();
 
             writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
