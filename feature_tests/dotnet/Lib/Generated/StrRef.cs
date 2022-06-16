@@ -11,12 +11,12 @@ namespace DiplomatFeatures;
 
 #nullable enable
 
-public partial class Opaque: IDisposable
+public partial class StrRef: IDisposable
 {
-    private unsafe Raw.Opaque* _inner;
+    private unsafe Raw.StrRef* _inner;
 
     /// <summary>
-    /// Creates a managed <c>Opaque</c> from a raw handle.
+    /// Creates a managed <c>StrRef</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may causes use-after-free and double-free).
@@ -25,41 +25,15 @@ public partial class Opaque: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    public unsafe Opaque(Raw.Opaque* handle)
+    public unsafe StrRef(Raw.StrRef* handle)
     {
         _inner = handle;
-    }
-
-    /// <returns>
-    /// A <c>Opaque</c> allocated on Rust side.
-    /// </returns>
-    public static Opaque New()
-    {
-        unsafe
-        {
-            Raw.Opaque* retVal = Raw.Opaque.New();
-            return new Opaque(retVal);
-        }
-    }
-
-    public void AssertStruct(MyStruct s)
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("Opaque");
-            }
-            Raw.MyStruct sRaw;
-            sRaw = s.AsFFI();
-            Raw.Opaque.AssertStruct(_inner, sRaw);
-        }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    public unsafe Raw.Opaque* AsFFI()
+    public unsafe Raw.StrRef* AsFFI()
     {
         return _inner;
     }
@@ -76,14 +50,14 @@ public partial class Opaque: IDisposable
                 return;
             }
 
-            Raw.Opaque.Destroy(_inner);
+            Raw.StrRef.Destroy(_inner);
             _inner = null;
 
             GC.SuppressFinalize(this);
         }
     }
 
-    ~Opaque()
+    ~StrRef()
     {
         Dispose();
     }

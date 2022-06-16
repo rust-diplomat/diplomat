@@ -4,14 +4,13 @@ pub mod ffi {
     #[diplomat::opaque]
     pub struct Opaque();
 
-    pub struct MyStruct<'a> {
+    pub struct MyStruct {
         a: u8,
         b: bool,
         c: u8,
         d: u64,
         e: i32,
         f: char,
-        g: &'a str,
     }
 
     impl Opaque {
@@ -20,17 +19,13 @@ pub mod ffi {
         }
 
         #[allow(clippy::needless_lifetimes)] // macro doesn't support elision yet
-        pub fn assert_struct<'b>(&self, s: MyStruct<'b>) {
+        pub fn assert_struct(&self, s: MyStruct) {
             s.assert_value();
-        }
-
-        pub fn read_g<'a>(&self, s: MyStruct<'a>) -> &'a str {
-            s.g
         }
     }
 
-    impl<'c> MyStruct<'c> {
-        pub fn new(g: &'c str) -> MyStruct<'c> {
+    impl MyStruct {
+        pub fn new() -> MyStruct {
             MyStruct {
                 a: 17,
                 b: true,
@@ -38,12 +33,7 @@ pub mod ffi {
                 d: 1234,
                 e: 5991,
                 f: '餐',
-                g,
             }
-        }
-
-        pub fn try_new(g: &'c str) -> diplomat_runtime::DiplomatResult<MyStruct<'c>, Alpha<'c>> {
-            Ok(Self::new(g)).into()
         }
 
         fn assert_value(&self) {
@@ -58,20 +48,19 @@ pub mod ffi {
         pub fn consume(self) {}
     }
 
-    pub struct Alpha<'alpha> {
-        alpha_field: &'alpha str,
+    pub struct Alpha {
+        x: u32,
+        y: u32,
     }
 
-    pub struct Beta<'beta> {
-        beta_field: Alpha<'beta>,
+    pub struct Beta {
+        alpha_field: Alpha,
     }
 
-    impl<'imp> Beta<'imp> {
-        pub fn new(my_str: &'imp str) -> Self {
+    impl Beta {
+        pub fn new(x: u32, y: u32) -> Self {
             Beta {
-                beta_field: Alpha {
-                    alpha_field: my_str,
-                },
+                alpha_field: Alpha { x, y },
             }
         }
     }

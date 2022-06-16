@@ -3,13 +3,15 @@
 
 .. js:class:: Alpha
 
-    .. js:attribute:: alpha_field
+    .. js:attribute:: x
+
+    .. js:attribute:: y
 
 .. js:class:: Beta
 
-    .. js:attribute:: beta_field
+    .. js:attribute:: alpha_field
 
-    .. js:staticfunction:: new(my_str)
+    .. js:staticfunction:: new(x, y)
 
 .. js:class:: MyStruct
 
@@ -25,11 +27,7 @@
 
     .. js:attribute:: f
 
-    .. js:attribute:: g
-
-    .. js:staticfunction:: new(g)
-
-    .. js:staticfunction:: try_new(g)
+    .. js:staticfunction:: new()
 
     .. js:function:: consume()
 
@@ -38,5 +36,3 @@
     .. js:staticfunction:: new()
 
     .. js:function:: assert_struct(s)
-
-    .. js:function:: read_g(s)

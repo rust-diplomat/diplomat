@@ -26,17 +26,12 @@ public partial class Beta
     /// <returns>
     /// A <c>Beta</c> allocated on C# side.
     /// </returns>
-    public static Beta New(string myStr)
+    public static Beta New(uint x, uint y)
     {
         unsafe
         {
-            byte[] myStrBuf = DiplomatUtils.StringToUtf8(myStr);
-            nuint myStrBufLength = (nuint)myStrBuf.Length;
-            fixed (byte* myStrBufPtr = myStrBuf)
-            {
-                Raw.Beta retVal = Raw.Beta.New(myStrBufPtr, myStrBufLength);
-                return new Beta(retVal);
-            }
+            Raw.Beta retVal = Raw.Beta.New(x, y);
+            return new Beta(retVal);
         }
     }
 

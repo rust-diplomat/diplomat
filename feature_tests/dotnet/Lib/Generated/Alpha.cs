@@ -15,6 +15,42 @@ public partial class Alpha
 {
     private Raw.Alpha _inner;
 
+    public uint X
+    {
+        get
+        {
+            unsafe
+            {
+                return _inner.x;
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                _inner.x = value;
+            }
+        }
+    }
+
+    public uint Y
+    {
+        get
+        {
+            unsafe
+            {
+                return _inner.y;
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                _inner.y = value;
+            }
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>Alpha</c> from the raw representation.
     /// </summary>

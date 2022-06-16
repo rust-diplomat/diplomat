@@ -20,6 +20,8 @@ typedef struct MyStruct {
 } MyStruct;
 
 MyStruct MyStruct_new();
+
+void MyStruct_consume(MyStruct self);
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus

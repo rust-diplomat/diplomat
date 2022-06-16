@@ -16,8 +16,8 @@ public partial struct Beta
 {
     private const string NativeLib = "diplomat_feature_tests";
 
-    public Alpha beta_field;
+    public Alpha alpha_field;
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Beta_new", ExactSpelling = true)]
-    public static unsafe extern Beta New(byte* myStr, nuint myStrSz);
+    public static unsafe extern Beta New(uint x, uint y);
 }

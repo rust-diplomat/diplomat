@@ -29,13 +29,8 @@ public partial struct MyStruct
 
     public uint f;
 
-    public string g;
-
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_new", ExactSpelling = true)]
-    public static unsafe extern MyStruct New(byte* g, nuint gSz);
-
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_try_new", ExactSpelling = true)]
-    public static unsafe extern StructsFfiResultMyStructAlpha TryNew(byte* g, nuint gSz);
+    public static unsafe extern MyStruct New();
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_consume", ExactSpelling = true)]
     public static unsafe extern void Consume(MyStruct self);

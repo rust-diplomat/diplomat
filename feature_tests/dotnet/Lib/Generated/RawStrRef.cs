@@ -12,11 +12,10 @@ namespace DiplomatFeatures.Raw;
 #nullable enable
 
 [StructLayout(LayoutKind.Sequential)]
-public partial struct Alpha
+public partial struct StrRef
 {
     private const string NativeLib = "diplomat_feature_tests";
 
-    public uint x;
-
-    public uint y;
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "StrRef_destroy", ExactSpelling = true)]
+    public static unsafe extern void Destroy(StrRef* self);
 }

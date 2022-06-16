@@ -32,11 +32,16 @@ struct MyStruct {
   int32_t e;
   char32_t f;
   static MyStruct new_();
+  void consume();
 };
 
 
 inline MyStruct MyStruct::new_() {
   capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new();
   return MyStruct{ .a = std::move(diplomat_raw_struct_out_value.a), .b = std::move(diplomat_raw_struct_out_value.b), .c = std::move(diplomat_raw_struct_out_value.c), .d = std::move(diplomat_raw_struct_out_value.d), .e = std::move(diplomat_raw_struct_out_value.e), .f = std::move(diplomat_raw_struct_out_value.f) };
+}
+inline void MyStruct::consume() {
+  MyStruct diplomat_wrapped_struct_this = this;
+  capi::MyStruct_consume(capi::MyStruct{ .a = diplomat_wrapped_struct_this.a, .b = diplomat_wrapped_struct_this.b, .c = diplomat_wrapped_struct_this.c, .d = diplomat_wrapped_struct_this.d, .e = diplomat_wrapped_struct_this.e, .f = diplomat_wrapped_struct_this.f });
 }
 #endif

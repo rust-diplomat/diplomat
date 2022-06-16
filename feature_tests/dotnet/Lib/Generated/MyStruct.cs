@@ -134,40 +134,12 @@ public partial class MyStruct
     /// <returns>
     /// A <c>MyStruct</c> allocated on C# side.
     /// </returns>
-    public static MyStruct New(string g)
+    public static MyStruct New()
     {
         unsafe
         {
-            byte[] gBuf = DiplomatUtils.StringToUtf8(g);
-            nuint gBufLength = (nuint)gBuf.Length;
-            fixed (byte* gBufPtr = gBuf)
-            {
-                Raw.MyStruct retVal = Raw.MyStruct.New(gBufPtr, gBufLength);
-                return new MyStruct(retVal);
-            }
-        }
-    }
-
-    /// <exception cref="AlphaException"></exception>
-    /// <returns>
-    /// A <c>MyStruct</c> allocated on C# side.
-    /// </returns>
-    public static MyStruct TryNew(string g)
-    {
-        unsafe
-        {
-            byte[] gBuf = DiplomatUtils.StringToUtf8(g);
-            nuint gBufLength = (nuint)gBuf.Length;
-            fixed (byte* gBufPtr = gBuf)
-            {
-                Raw.StructsFfiResultMyStructAlpha result = Raw.MyStruct.TryNew(gBufPtr, gBufLength);
-                if (!result.isOk)
-                {
-                    throw new AlphaException(new Alpha(result.Err));
-                }
-                Raw.MyStruct retVal = result.Ok;
-                return new MyStruct(retVal);
-            }
+            Raw.MyStruct retVal = Raw.MyStruct.New();
+            return new MyStruct(retVal);
         }
     }
 
