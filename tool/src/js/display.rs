@@ -99,3 +99,46 @@ where
         self.0(f)
     }
 }
+
+/// Write an immediately invoked function expression (IIFE).
+///
+/// This function accepts a closure that writes the contents of the IIFE,
+/// and generates the proper wrapping and indentation.
+///
+/// # Examples
+///
+/// ```ignore
+/// writeln!(f, "const out = {};", iife(|mut f| {
+///     writeln!(f, "const out = {{}};")?;
+///     writeln!(f, "out.a = 7;")?;
+///     writeln!(f, "return out;")?;
+/// }))?;
+/// ```
+/// This generates
+/// ```js
+/// const out = (() => {
+///   const out = {};
+///   out.a = 7;
+///   return out;
+/// })();
+/// ```
+pub fn iife<F>(f: F) -> IIFE<F>
+where
+    F: Fn(Indented<Formatter>) -> Result,
+{
+    IIFE(f)
+}
+
+/// An `fmt::Display` type returned by [`iife`].
+pub struct IIFE<F>(F)
+where
+    F: Fn(Indented<Formatter>) -> Result;
+
+impl<F> Display for IIFE<F>
+where
+    F: Fn(Indented<Formatter>) -> Result,
+{
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "(() => {})()", block(&self.0))
+    }
+}
