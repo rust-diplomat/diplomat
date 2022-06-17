@@ -304,7 +304,7 @@ export class OptionOpaque {
 
   static new(i) {
     const diplomat_out = (() => {
-      const option_ptr = diplomatRuntime.ptrRead(wasm, wasm.OptionOpaque_new(i));
+      const option_ptr = wasm.OptionOpaque_new(i);
       return (option_ptr == 0) ? null : new OptionOpaque(option_ptr);
     })();
     return diplomat_out;
@@ -312,7 +312,7 @@ export class OptionOpaque {
 
   static new_none() {
     const diplomat_out = (() => {
-      const option_ptr = diplomatRuntime.ptrRead(wasm, wasm.OptionOpaque_new_none());
+      const option_ptr = wasm.OptionOpaque_new_none();
       return (option_ptr == 0) ? null : new OptionOpaque(option_ptr);
     })();
     return diplomat_out;

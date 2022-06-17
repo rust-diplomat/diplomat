@@ -170,7 +170,6 @@ impl<'a> fmt::Display for ValueIntoJs<'a> {
             }
             ast::TypeName::Box(typ) | ast::TypeName::Reference(.., typ) => {
                 ValueIntoJs {
-                    // value_expr: &format!("diplomatRuntime.ptrRead(wasm, {})", self.value_expr),
                     typ: typ.as_ref(),
                     ..*self
                 }
@@ -181,7 +180,7 @@ impl<'a> fmt::Display for ValueIntoJs<'a> {
                     display::iife(|mut f| {
                         writeln!(
                             f,
-                            "const option_ptr = diplomatRuntime.ptrRead(wasm, {});",
+                            "const option_ptr = {};",
                             self.value_expr
                         )?;
                         writeln!(
@@ -278,73 +277,93 @@ pub struct BufferedIntoJs<'a> {
     pub env: &'a Env,
 }
 
+impl<'a> BufferedIntoJs<'a> {
+    fn as_value(&'a self, value_expr: &'a str) -> ValueIntoJs<'a> {
+        ValueIntoJs {
+            value_expr,
+            typ: self.typ,
+            borrows_self: self.borrows_self,
+            borrowed_params: self.borrowed_params,
+            in_path: self.in_path,
+            env: self.env,
+        }
+    }
+}
+
 impl<'a> fmt::Display for BufferedIntoJs<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let value_expr = match self.typ {
+        match self.typ {
             ast::TypeName::Primitive(prim) => {
-                macro_rules! case {
+                macro_rules! read_prim {
                     ($array:expr) => {
-                        format!(
+                        self.as_value(&format!(
                             concat!("(new ", $array, "(wasm.memory.buffer, {} + {}, 1))[0]"),
                             self.buf_ptr, self.offset
-                        )
+                        ))
+                        .fmt(f)
                     };
                 }
                 match prim {
-                    ast::PrimitiveType::i8 => case!("Int8Array"),
-                    ast::PrimitiveType::u8 => case!("Uint8Array"),
-                    ast::PrimitiveType::i16 => case!("Int16Array"),
-                    ast::PrimitiveType::u16 => case!("Uint16Array"),
-                    ast::PrimitiveType::i32 => case!("Int32Array"),
-                    ast::PrimitiveType::u32 => case!("Uint32Array"),
-                    ast::PrimitiveType::i64 => case!("BigInt64Array"),
-                    ast::PrimitiveType::u64 => case!("BigUint64Array"),
+                    ast::PrimitiveType::i8 => read_prim!("Int8Array"),
+                    ast::PrimitiveType::u8 => read_prim!("Uint8Array"),
+                    ast::PrimitiveType::i16 => read_prim!("Int16Array"),
+                    ast::PrimitiveType::u16 => read_prim!("Uint16Array"),
+                    ast::PrimitiveType::i32 => read_prim!("Int32Array"),
+                    ast::PrimitiveType::u32 => read_prim!("Uint32Array"),
+                    ast::PrimitiveType::i64 => read_prim!("BigInt64Array"),
+                    ast::PrimitiveType::u64 => read_prim!("BigUint64Array"),
                     ast::PrimitiveType::i128 => panic!("i128 not supported on JS"),
                     ast::PrimitiveType::u128 => panic!("u128 not supported on JS"),
-                    ast::PrimitiveType::isize => case!("Int32Array"),
-                    ast::PrimitiveType::usize => case!("Uint32Array"),
-                    ast::PrimitiveType::f32 => case!("Float32Array"),
-                    ast::PrimitiveType::f64 => case!("Float64Array"),
-                    ast::PrimitiveType::bool => format!(
-                        "(new Uint8Array(wasm.memory.buffer, {} + {}, 1))[0] == 1",
-                        self.buf_ptr, self.offset
-                    ),
-                    ast::PrimitiveType::char => format!(
-                        "String.fromCharCode((new Uint32Array(wasm.memory.buffer, {} + {}, 1))[0])",
-                        self.buf_ptr, self.offset
-                    ),
+                    ast::PrimitiveType::isize => read_prim!("Int32Array"),
+                    ast::PrimitiveType::usize => read_prim!("Uint32Array"),
+                    ast::PrimitiveType::f32 => read_prim!("Float32Array"),
+                    ast::PrimitiveType::f64 => read_prim!("Float64Array"),
+                    ast::PrimitiveType::bool => self
+                        .as_value(&format!(
+                            "(new Uint8Array(wasm.memory.buffer, {} + {}, 1))[0] == 1",
+                            self.buf_ptr, self.offset
+                        ))
+                        .fmt(f),
+                    ast::PrimitiveType::char => self
+                        .as_value(&format!(
+                            "String.fromCharCode((new Uint32Array(wasm.memory.buffer, {} + {}, 1))[0])",
+                            self.buf_ptr, self.offset
+                        ))
+                        .fmt(f),
                 }
             }
-            ast::TypeName::Named(path_type) => {
-                return match path_type.resolve(self.in_path, self.env) {
-                    ast::CustomType::Struct(strct) => {
-                        write!(f, "new {}({})", strct.name, self.buf_ptr)
-                    }
-                    ast::CustomType::Opaque(opaque) => {
-                        write!(
-                            f,
-                            "new {}(diplomatRuntime.ptrRead(wasm, {} + {}))",
-                            opaque.name, self.buf_ptr, self.offset
-                        )
-                    }
-                    ast::CustomType::Enum(enm) => {
-                        write!(
-                            f,
-                            "new {}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {} + {})]",
-                            enm.name, self.buf_ptr, self.offset
-                        )
-                    }
+            ast::TypeName::Named(path_type) => match path_type.resolve(self.in_path, self.env) {
+                ast::CustomType::Struct(strct) => {
+                    write!(f, "new {}({})", strct.name, self.buf_ptr)
                 }
-            }
-            ast::TypeName::Box(..) | ast::TypeName::Reference(..) => format!(
-                "diplomatRuntime.ptrRead(wasm, {} + {})",
-                self.buf_ptr, self.offset
-            ),
-            ast::TypeName::Unit => return write!(f, "{{}}"),
+                ast::CustomType::Opaque(opaque) => {
+                    write!(
+                        f,
+                        "new {}(diplomatRuntime.ptrRead(wasm, {} + {}))",
+                        opaque.name, self.buf_ptr, self.offset
+                    )
+                }
+                ast::CustomType::Enum(enm) => {
+                    write!(
+                        f,
+                        "new {}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {} + {})]",
+                        enm.name, self.buf_ptr, self.offset
+                    )
+                }
+            },
+            ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
+                .as_value(&format!(
+                    "diplomatRuntime.ptrRead(wasm, {} + {})",
+                    self.buf_ptr, self.offset
+                ))
+                .fmt(f),
             ast::TypeName::Option(typ) => match typ.as_ref() {
-                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => {
-                    format!("{} + {}", self.buf_ptr, self.offset)
-                }
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
+                    .as_value(&format!(
+                        "diplomatRuntime.ptrRead(wasm, {} + {})",
+                        self.buf_ptr, self.offset
+                    ))
+                    .fmt(f),
                 slice @ (ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..)) => {
                     panic!(
                         "`{}` is a fat pointer (ptr, len), and cannot be held in an option",
@@ -356,17 +375,8 @@ impl<'a> fmt::Display for BufferedIntoJs<'a> {
                     other
                 ),
             },
+            ast::TypeName::Unit => write!(f, "{{}}"),
             other => todo!("Read `{other}` from a buffer"),
-        };
-
-        ValueIntoJs {
-            value_expr: value_expr.as_str(),
-            typ: self.typ,
-            in_path: self.in_path,
-            borrows_self: self.borrows_self,
-            borrowed_params: self.borrowed_params,
-            env: self.env,
         }
-        .fmt(f)
     }
 }
