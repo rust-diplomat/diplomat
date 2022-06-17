@@ -1,7 +1,6 @@
 ---
 source: tool/src/js/structs.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
@@ -16,6 +15,7 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class MyStruct {
   constructor(underlying) {
     this.underlying = underlying;
+    MyStruct_box_destroy_registry.register(this, underlying);
   }
 
   get_non_opaque() {
@@ -23,36 +23,18 @@ export class MyStruct {
       const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
       wasm.MyStruct_get_non_opaque(diplomat_receive_buffer, this.underlying);
       const out = new NonOpaqueStruct(diplomat_receive_buffer);
-      diplomat_alloc_destroy_registry.register(out, {
-        ptr: out.underlying,
-        size: 8,
-        align: 4,
-      });
+      wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
       return out;
     })();
     return diplomat_out;
   }
 }
 
-const NonOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
-  wasm.NonOpaqueStruct_destroy(underlying);
-});
-
 export class NonOpaqueStruct {
   constructor(underlying) {
-    this.underlying = underlying;
-  }
-
-  get a() {
-    return (new Uint16Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
-  }
-
-  get b() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 2, 1))[0];
-  }
-
-  get c() {
-    return (new Uint32Array(wasm.memory.buffer, this.underlying + 4, 1))[0];
+    this.a = (new Uint16Array(wasm.memory.buffer, underlying + 0, 1))[0];
+    this.b = (new Uint8Array(wasm.memory.buffer, underlying + 2, 1))[0];
+    this.c = (new Uint32Array(wasm.memory.buffer, underlying + 4, 1))[0];
   }
 }
 

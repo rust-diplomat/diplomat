@@ -1,7 +1,6 @@
 ---
 source: tool/src/js/structs.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
@@ -16,6 +15,7 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class MyStruct {
   constructor(underlying) {
     this.underlying = underlying;
+    MyStruct_box_destroy_registry.register(this, underlying);
   }
 
   write() {
@@ -36,19 +36,15 @@ export class MyStruct {
     const diplomat_out = diplomatRuntime.withWriteable(wasm, (writeable) => {
       return (() => {
         const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
-        const result_tag = {};
-        diplomat_alloc_destroy_registry.register(result_tag, {
-          ptr: diplomat_receive_buffer,
-          size: 2,
-          align: 1,
-        });
         wasm.MyStruct_write_result(diplomat_receive_buffer, this.underlying, writeable);
-        const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 1, 1))[0] == 1;
+        const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 1);
         if (is_ok) {
           const ok_value = {};
+          wasm.diplomat_free(diplomat_receive_buffer, 2, 1)
           return ok_value;
         } else {
-          const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+          const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 0, 1))[0];
+          wasm.diplomat_free(diplomat_receive_buffer, 2, 1)
           throw new diplomatRuntime.FFIError(throw_value);
         }
       })();

@@ -1,7 +1,6 @@
 ---
 source: tool/src/js/structs.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
@@ -16,18 +15,11 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class MyStruct {
   constructor(underlying) {
     this.underlying = underlying;
+    MyStruct_box_destroy_registry.register(this, underlying);
   }
 
   static new(a, b) {
-    const diplomat_out = (() => {
-      const out = (() => {
-        const out = new MyStruct(wasm.MyStruct_new(a, b));
-        out.owner = null;
-        return out;
-      })();
-      MyStruct_box_destroy_registry.register(out, out.underlying)
-      return out;
-    })();
+    const diplomat_out = new MyStruct(wasm.MyStruct_new(a, b));
     return diplomat_out;
   }
 
