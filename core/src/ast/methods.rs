@@ -298,11 +298,28 @@ impl Param {
 pub struct BorrowedParams<'a>(pub Option<&'a SelfParam>, pub Vec<&'a Param>);
 
 impl BorrowedParams<'_> {
+    /// Returns an [`Iterator`] through the names of the borrowed parameters,
+    /// accepting a `&str` that the `self` param will be called if present.
     pub fn names<'a>(&'a self, self_name: &'a str) -> impl Iterator<Item = &'a str> {
         self.0
             .iter()
             .map(move |_| self_name)
             .chain(self.1.iter().map(|param| param.name.as_str()))
+    }
+
+    /// Returns `true` if there are no borrowed parameters, otherwise `false`.
+    pub fn is_empty(&self) -> bool {
+        !self.borrows_self() && !self.borrows_params()
+    }
+
+    /// Returns `true` if the `self` param is borrowed, otherwise `false`.
+    pub fn borrows_self(&self) -> bool {
+        self.0.is_some()
+    }
+
+    /// Returns `true` if there are any borrowed params, otherwise `false`.
+    pub fn borrows_params(&self) -> bool {
+        !self.1.is_empty()
     }
 }
 
