@@ -1,9 +1,5 @@
-use diplomat_core::Env;
-use std::fmt;
-use std::fmt::Write;
-use std::ops::ControlFlow;
-
-use diplomat_core::ast;
+use diplomat_core::{ast, Env};
+use std::fmt::{self, Write as _};
 
 use super::display;
 use super::types::{return_type_form, ReturnTypeForm};
@@ -105,481 +101,272 @@ pub fn gen_value_js_to_rust(
     }
 }
 
-/// TODO: docs
-pub fn gen_value_rust_to_js<W: fmt::Write>(
-    value_expr: &str,
-    typ: &ast::TypeName,
-    in_path: &ast::Path,
-    borrowed_params: &ast::BorrowedParams,
-    env: &Env,
-    out: &mut W,
-) -> fmt::Result {
-    match typ {
-        ast::TypeName::Named(path_type) => {
-            let custom_type = path_type.resolve(in_path, env);
-            match custom_type {
+/// An [`fmt::Display`] type that writes the conversion from a Rust value into
+/// a JavaScript value.
+pub struct ValueIntoJs<'a> {
+    /// A JS expression that yields a Rust value through wasm.
+    pub value_expr: &'a str,
+
+    /// The type of the Rust value.
+    pub typ: &'a ast::TypeName,
+
+    /// A boolean determining if the value borrows from the object that created it.
+    pub borrows_self: bool,
+
+    /// A sequence of fields that the value borrows from.
+    pub borrowed_params: &'a [&'a ast::Param],
+
+    pub in_path: &'a ast::Path,
+    pub env: &'a Env,
+}
+
+impl<'a> fmt::Display for ValueIntoJs<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.typ {
+            ast::TypeName::Named(path_type) => match path_type.resolve(self.in_path, self.env) {
                 ast::CustomType::Struct(strct) => {
-                    let strct_size_align = layout::type_size_alignment(typ, in_path, env);
-                    let needs_buffer = return_type_form(typ, in_path, env);
-                    if needs_buffer != ReturnTypeForm::Complex {
-                        todo!("Receiving structs that don't need a buffer")
+                    match return_type_form(self.typ, self.in_path, self.env) {
+                        ReturnTypeForm::Scalar => {
+                            todo!("Recieving structs that don't need a buffer: {}", strct.name)
+                        }
+                        ReturnTypeForm::Complex => {
+                            let strct_layout = layout::type_size_alignment(self.typ, self.in_path, self.env);
+                            let (size, align) = (strct_layout.size(), strct_layout.align());
+                            display::iife(|mut f| {
+                                let buf_name = ast::Ident::from("diplomat_receive_buffer");
+                                writeln!(f, "const {buf_name} = wasm.diplomat_alloc({size}, {align});")?;
+                                writeln!(f, "{};", self.value_expr)?;
+                                writeln!(f, "const out = new {}({buf_name});", strct.name)?;
+                                writeln!(f, "wasm.diplomat_free({buf_name}, {size}, {align});")?;
+                                writeln!(f, "return out;")
+                            }).fmt(f)
+                        }
+                        ReturnTypeForm::Empty => panic!("How do we handle this case?"),
                     }
 
-                    write!(
-                        out,
-                        "(() => {})()",
-                        display::block(|mut f| {
-                            writeln!(
-                                f,
-                                "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
-                                strct_size_align.size(),
-                                strct_size_align.align(),
-                            )?;
-                            writeln!(f, "{};", value_expr)?;
-                            writeln!(
-                                f,
-                                "const out = new {}(diplomat_receive_buffer);",
-                                strct.name
-                            )?;
-
-                            for (name, typ, _) in strct.fields.iter() {
-                                gen_box_destructor(name, typ, in_path, env, &mut f)?;
+                }
+                ast::CustomType::Opaque(opaque) => {
+                    if !self.borrows_self && self.borrowed_params.is_empty() {
+                        write!(f, "new {}({})", opaque.name, self.value_expr)
+                    } else {
+                        display::iife(|mut f| {
+                            writeln!(f, "const out = new {}({});", opaque.name, self.value_expr)?;
+                            if self.borrows_self {
+                                writeln!(f, "out.__this_lifetime_guard = this;")?;
                             }
-
-                            writeln!(
-                                f,
-                                "diplomat_alloc_destroy_registry.register(out, {});",
-                                display::block(|mut f| {
-                                    writeln!(f, "ptr: out.underlying,")?;
-                                    writeln!(f, "size: {},", strct_size_align.size())?;
-                                    writeln!(f, "align: {},", strct_size_align.align())
-                                })
-                            )?;
-
+                            for param in self.borrowed_params {
+                                writeln!(f, "out.__{0}_lifetime_guard = {0};", param.name)?;
+                            }
                             writeln!(f, "return out;")
-                        })
-                    )?;
+                        }).fmt(f)
+                    }
                 }
-
                 ast::CustomType::Enum(enm) => {
-                    write!(out, "{}_rust_to_js[{}]", enm.name, value_expr)?;
-                }
-
-                ast::CustomType::Opaque(_) => {
-                    panic!("Opaque types cannot be used in value position")
+                    write!(f, "{}_rust_to_js[{}]", enm.name, ValueIntoJs {
+                        typ: &ast::TypeName::Primitive(ast::PrimitiveType::isize),
+                        ..*self
+                    })
                 }
             }
-        }
-
-        ast::TypeName::Box(underlying) => {
-            write!(
-                out,
-                "(() => {})()",
-                display::block(|mut f| {
-                    writeln!(
-                        f,
-                        "const out = {};",
-                        display::expr(|mut f| {
-                            gen_rust_reference_to_js(
-                                underlying.as_ref(),
-                                in_path,
-                                value_expr,
-                                "null", // JS owns the box
-                                borrowed_params,
-                                env,
-                                &mut f,
-                            )
-                        })
-                    )?;
-
-                    if let ast::TypeName::Named(path_type) = underlying.as_ref() {
+            ast::TypeName::Box(typ) | ast::TypeName::Reference(.., typ) => {
+                ValueIntoJs {
+                    // value_expr: &format!("diplomatRuntime.ptrRead(wasm, {})", self.value_expr),
+                    typ: typ.as_ref(),
+                    ..*self
+                }
+                .fmt(f)
+            }
+            ast::TypeName::Option(typ) => match typ.as_ref() {
+                ptr_type @ (ast::TypeName::Box(..) | ast::TypeName::Reference(..)) => {
+                    display::iife(|mut f| {
                         writeln!(
                             f,
-                            "{}_box_destroy_registry.register(out, out.underlying)",
-                            path_type.resolve(in_path, env).name()
+                            "const option_ptr = diplomatRuntime.ptrRead(wasm, {});",
+                            self.value_expr
                         )?;
-                    }
-
-                    writeln!(f, "return out;")
-                })
-            )?;
-        }
-
-        ast::TypeName::Option(underlying) => {
-            assert!(
-                underlying.is_pointer(),
-                "Options must contain pointer types"
-            );
-            write!(
-                out,
-                "(() => {})()",
-                display::block(|mut f| {
-                    writeln!(f, "const option_value = {}", value_expr)?;
-                    writeln!(
-                        f,
-                        "if (option_value !== 0) {if_true} else {if_false}",
-                        if_true = display::block(|mut f| {
-                            writeln!(
-                                f,
-                                "const inhabited_value = {};",
-                                display::expr(|mut f| {
-                                    // TODO(#62): actually return `null` if the option is `None`
-                                    gen_value_rust_to_js(
-                                        "option_value",
-                                        underlying.as_ref(),
-                                        in_path,
-                                        borrowed_params,
-                                        env,
-                                        &mut f,
-                                    )
-                                })
-                            )?;
-                            writeln!(f, "return inhabited_value;")
-                        }),
-                        if_false = display::block(|mut f| writeln!(f, "return null;"))
-                    )
-                })
-            )?;
-        }
-
-        ast::TypeName::Result(ok, err) => {
-            let (ok_offset, result_size_align) =
-                layout::result_ok_offset_size_align(ok, err, in_path, env);
-            let needs_buffer = return_type_form(typ, in_path, env) == ReturnTypeForm::Complex;
-            write!(
-                out,
-                "(() => {})()",
-                display::block(|mut f| {
+                        writeln!(
+                            f,
+                            "return (option_ptr == 0) ? null : {};",
+                            ValueIntoJs {
+                                value_expr: "option_ptr",
+                                typ: ptr_type,
+                                ..*self
+                            }
+                        )
+                    })
+                    .fmt(f)
+                }
+                other @ (ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..)) => panic!("`{}` is a fat pointer (ptr, len), so it can't be stored behind an option", other),
+                other => panic!("`{0}` doesn't have the same layout guarantees as a ptr, so `Option<{0}>` is unsupported", other),
+            },
+            ast::TypeName::Result(ok, err) => {
+                let (ok_offset, result_layout) = layout::result_ok_offset_size_align(ok, err, self.in_path, self.env);
+                let (size, align) = (result_layout.size(), result_layout.align());
+                let needs_buffer = matches!(return_type_form(self.typ, self.in_path, self.env), ReturnTypeForm::Complex);
+                display::iife(|mut f| {
                     if needs_buffer {
-                        writeln!(
-                            f,
-                            "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
-                            result_size_align.size(),
-                            result_size_align.align()
-                        )?;
-                        writeln!(f, "const result_tag = {{}};")?;
-                        writeln!(
-                            f,
-                            "diplomat_alloc_destroy_registry.register(result_tag, {});",
-                            display::block(|mut f| {
-                                writeln!(f, "ptr: diplomat_receive_buffer,")?;
-                                writeln!(f, "size: {},", result_size_align.size())?;
-                                writeln!(f, "align: {},", result_size_align.align())
-                            })
-                        )?;
-                        writeln!(f, "{};", value_expr)?;
-                        writeln!(
-                            f,
-                            "const is_ok = {};",
-                            display::expr(|mut f| {
-                                gen_rust_reference_to_js(
-                                    &ast::TypeName::Primitive(ast::PrimitiveType::bool),
-                                    in_path,
-                                    &format!("diplomat_receive_buffer + {}", ok_offset),
-                                    "result_tag",
-                                    borrowed_params,
-                                    env,
-                                    &mut f,
-                                )
-                            })
-                        )?;
-                        writeln!(
-                            f,
-                            "if (is_ok) {is_true} else {is_false}",
-                            is_true = display::block(|mut f| {
-                                writeln!(
-                                    f,
-                                    "const ok_value = {};",
-                                    display::expr(|mut f| {
-                                        gen_rust_reference_to_js(
-                                            ok.as_ref(),
-                                            in_path,
-                                            "diplomat_receive_buffer",
-                                            "result_tag",
-                                            borrowed_params,
-                                            env,
-                                            &mut f,
-                                        )
-                                    })
-                                )?;
+                        let buf_ident = ast::Ident::from("diplomat_receive_buffer");
+                        writeln!(f, "const {buf_ident} = wasm.diplomat_alloc({size}, {align});")?;
+                        writeln!(f, "{};", self.value_expr)?;
+                        writeln!(f, "const is_ok = diplomatRuntime.resultFlag(wasm, {buf_ident}, {ok_offset});")?;
+                        writeln!(f, "if (is_ok) {if_true} else {if_false}",
+                            if_true = display::block(|mut f| {
+                                writeln!(f, "const ok_value = {};", BufferedIntoJs {
+                                    buf_ptr: buf_ident.as_str(),
+                                    offset: 0,
+                                    typ: ok.as_ref(),
+                                    borrows_self: false,
+                                    borrowed_params: &[],
+                                    in_path: self.in_path,
+                                    env: self.env,
+                                })?;
+                                writeln!(f, "wasm.diplomat_free({buf_ident}, {size}, {align})")?;
                                 writeln!(f, "return ok_value;")
                             }),
-                            is_false = display::block(|mut f| {
-                                writeln!(
-                                    f,
-                                    "const throw_value = {};",
-                                    display::expr(|mut f| {
-                                        gen_rust_reference_to_js(
-                                            err.as_ref(),
-                                            in_path,
-                                            "diplomat_receive_buffer",
-                                            "result_tag",
-                                            borrowed_params,
-                                            env,
-                                            &mut f,
-                                        )
-                                    })
-                                )?;
+                            if_false = display::block(|mut f| {
+                                writeln!(f, "const throw_value = {};", BufferedIntoJs {
+                                    buf_ptr: buf_ident.as_str(),
+                                    offset: 0,
+                                    typ: err.as_ref(),
+                                    borrows_self: false,
+                                    borrowed_params: &[],
+                                    in_path: self.in_path,
+                                    env: self.env,
+                                })?;
+                                writeln!(f, "wasm.diplomat_free({buf_ident}, {size}, {align})")?;
                                 writeln!(f, "throw new diplomatRuntime.FFIError(throw_value);")
                             })
                         )
                     } else {
-                        writeln!(f, "const is_ok = {} == 1;", value_expr)?;
-                        writeln!(
-                            f,
-                            "if (!is_ok) {}",
-                            display::block(|mut f| {
-                                writeln!(f, "throw new diplomatRuntime.FFIError({{}});")
-                            })
-                        )
+                        writeln!(f, "const is_ok = {} == 1;", self.value_expr)?;
+                        writeln!(f, "if (!is_ok) {}", display::block(|mut f| {
+                            writeln!(f, "throw new diplomatRuntime.FFIError({{}});")
+                        }))
                     }
-                })
-            )?;
+                }).fmt(f)
+            }
+            ast::TypeName::Writeable => todo!("ast::TypeName::Writeable"),
+            ast::TypeName::StrReference(..) => todo!("ast::TypeName::StrReference(_)"),
+            ast::TypeName::PrimitiveSlice(..) => todo!("ast::TypeName::PrimitiveSlice(..)"),
+            ast::TypeName::Primitive(..) | ast::TypeName::Unit => self.value_expr.fmt(f),
         }
-
-        ast::TypeName::Primitive(_prim) => {
-            // TODO(#63): wrap with appropriate types for large widths
-            write!(out, "{}", value_expr)?;
-        }
-
-        ast::TypeName::Reference(.., underlying) => {
-            // TODO(#12): pass in lifetime of the reference
-            gen_rust_reference_to_js(
-                underlying.as_ref(),
-                in_path,
-                value_expr,
-                "null",
-                borrowed_params,
-                env,
-                out,
-            )?;
-        }
-        ast::TypeName::Writeable => todo!(),
-        ast::TypeName::StrReference(..) => todo!(),
-        ast::TypeName::PrimitiveSlice(..) => todo!(),
-        ast::TypeName::Unit => write!(out, "{}", value_expr)?,
     }
-
-    Ok(())
 }
 
-/// TODO: docs
-fn gen_box_destructor<W: fmt::Write>(
-    name: &ast::Ident,
-    typ: &ast::TypeName,
-    in_path: &ast::Path,
-    env: &Env,
-    out: &mut W,
-) -> Result<(), fmt::Error> {
-    match typ {
-        ast::TypeName::Box(underlying) => {
-            writeln!(out, "const out_{}_value = out.{};", name, name)?;
-            // TODO(#12): delete back-references when we start generating them
-            // since the out value getter returns a borrowed box
-            if let ast::TypeName::Named(path_type) = underlying.as_ref() {
-                writeln!(
-                    out,
-                    "{}_box_destroy_registry.register(out_{}_value, out_{}_value.underlying);",
-                    path_type.resolve(in_path, env).name(),
-                    name,
-                    name
-                )?;
-            }
-            writeln!(
-                out,
-                "Object.defineProperty(out, \"{}\", {{ value: out_{}_value }});",
-                name, name
-            )?;
-        }
+/// An [`fmt::Display`] type that writes the conversion from a Rust value in
+/// a buffer to a JavaScript value.
+///
+/// This method is useful for reading fields of a non-opaque struct from a buffer,
+/// and reading the `Ok` and `Err` values from a `DiplomatResult`.
+pub struct BufferedIntoJs<'a> {
+    /// The name of the buffer.
+    pub buf_ptr: &'a str,
 
-        ast::TypeName::Option(underlying) => {
-            assert!(
-                underlying.is_pointer(),
-                "Options must contain pointer types"
-            );
+    /// The offset within the buffer to read from.
+    pub offset: usize,
 
-            writeln!(
-                out,
-                "if (out.{}.underlying !== 0) {if_true} else {if_false}",
-                name,
-                if_true = display::block(|mut f| {
-                    gen_box_destructor(name, underlying.as_ref(), in_path, env, &mut f)
-                }),
-                if_false = display::block(|mut f| {
-                    writeln!(
-                        f,
-                        "Object.defineProperty(out, \"{}\", {{ value: null }});",
-                        name
-                    )
-                })
-            )?;
-            // TODO(#62): don't generate destructor if null
-        }
+    /// The type being read from the buffer.
+    pub typ: &'a ast::TypeName,
 
-        _ => {}
-    }
+    /// A boolean determining if the value borrows from the object that created it.
+    pub borrows_self: bool,
 
-    Ok(())
+    /// A sequence of fields that the value borrows from.
+    pub borrowed_params: &'a [&'a ast::Param],
+
+    pub in_path: &'a ast::Path,
+    pub env: &'a Env,
 }
 
-/// TODO: docs
-fn gen_rust_reference_to_js<W: fmt::Write>(
-    underlying: &ast::TypeName,
-    in_path: &ast::Path,
-    value_expr: &str,
-    owner: &str,
-    borrowed_params: &ast::BorrowedParams,
-    env: &Env,
-    out: &mut W,
-) -> fmt::Result {
-    match underlying {
-        ast::TypeName::Box(typ) => {
-            gen_rust_reference_to_js(
-                typ.as_ref(),
-                in_path,
-                &format!(
-                    "(new Uint32Array(wasm.memory.buffer, {}, 1))[0]",
-                    value_expr
-                ),
-                owner,
-                borrowed_params,
-                env,
-                out,
-            )?;
-        }
-
-        ast::TypeName::Reference(.., typ) => {
-            gen_rust_reference_to_js(
-                typ.as_ref(),
-                in_path,
-                &format!(
-                    "(new Uint32Array(wasm.memory.buffer, {}, 1))[0]",
-                    value_expr
-                ),
-                "null", // TODO(#12): pass in lifetime of the reference
-                borrowed_params,
-                env,
-                out,
-            )?;
-        }
-
-        ast::TypeName::Option(underlying) => match underlying.as_ref() {
-            ast::TypeName::Box(_) => {
-                // TODO(#62): return null if pointer is 0
-                gen_rust_reference_to_js(
-                    underlying.as_ref(),
-                    in_path,
-                    value_expr,
-                    owner,
-                    borrowed_params,
-                    env,
-                    out,
-                )?;
-            }
-            _ => todo!(),
-        },
-
-        ast::TypeName::Result(_, _) => {
-            todo!("Receiving references to results")
-        }
-
-        ast::TypeName::Named(path_type) => {
-            let custom_type = path_type.resolve(in_path, env);
-
-            if let ast::CustomType::Enum(enm) = custom_type {
-                write!(
-                    out,
-                    "{}_rust_to_js[{}]",
-                    enm.name,
-                    display::expr(|mut f| {
-                        gen_rust_reference_to_js(
-                            &ast::TypeName::Primitive(ast::PrimitiveType::isize),
-                            in_path,
-                            value_expr,
-                            owner,
-                            borrowed_params,
-                            env,
-                            &mut f,
+impl<'a> fmt::Display for BufferedIntoJs<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let value_expr = match self.typ {
+            ast::TypeName::Primitive(prim) => {
+                macro_rules! case {
+                    ($array:expr) => {
+                        format!(
+                            concat!("(new ", $array, "(wasm.memory.buffer, {} + {}, 1))[0]"),
+                            self.buf_ptr, self.offset
                         )
-                    })
-                )?;
-            } else {
-                write!(
-                    out,
-                    "(() => {})()",
-                    display::block(|mut f| {
-                        writeln!(f, "const out = new {}({});", custom_type.name(), value_expr)?;
-                        writeln!(f, "out.owner = {};", owner)?;
-                        let ast::BorrowedParams(ref self_param, ref params) = borrowed_params;
-                        if self_param.is_some() {
-                            writeln!(f, "out.__this_lifetime_guard = this;")?;
-                        }
-                        for param in params {
-                            let str_base = param
-                                .ty
-                                .visit_lifetimes(&mut |_, origin| match origin {
-                                    ast::LifetimeOrigin::StrReference => ControlFlow::Break(()),
-                                    _ => ControlFlow::Continue(()),
-                                })
-                                .is_break();
-
-                            if !str_base {
-                                writeln!(f, "out.__{0}_lifetime_guard = {0};", param.name)?;
-                            }
-                        }
-                        writeln!(f, "return out;")
-                    })
-                )?;
-            }
-        }
-
-        ast::TypeName::Primitive(prim) => {
-            if let ast::PrimitiveType::bool = prim {
-                write!(
-                    out,
-                    "(new Uint8Array(wasm.memory.buffer, {}, 1))[0] == 1",
-                    value_expr
-                )?;
-            } else if let ast::PrimitiveType::char = prim {
-                write!(
-                    out,
-                    "String.fromCharCode((new Uint32Array(wasm.memory.buffer, {}, 1))[0])",
-                    value_expr
-                )?;
-            } else {
-                let prim_type = match prim {
-                    ast::PrimitiveType::i8 => "Int8Array",
-                    ast::PrimitiveType::u8 => "Uint8Array",
-                    ast::PrimitiveType::i16 => "Int16Array",
-                    ast::PrimitiveType::u16 => "Uint16Array",
-                    ast::PrimitiveType::i32 => "Int32Array",
-                    ast::PrimitiveType::u32 => "Uint32Array",
-                    ast::PrimitiveType::i64 => "BigInt64Array",
-                    ast::PrimitiveType::u64 => "BigUint64Array",
+                    };
+                }
+                match prim {
+                    ast::PrimitiveType::i8 => case!("Int8Array"),
+                    ast::PrimitiveType::u8 => case!("Uint8Array"),
+                    ast::PrimitiveType::i16 => case!("Int16Array"),
+                    ast::PrimitiveType::u16 => case!("Uint16Array"),
+                    ast::PrimitiveType::i32 => case!("Int32Array"),
+                    ast::PrimitiveType::u32 => case!("Uint32Array"),
+                    ast::PrimitiveType::i64 => case!("BigInt64Array"),
+                    ast::PrimitiveType::u64 => case!("BigUint64Array"),
                     ast::PrimitiveType::i128 => panic!("i128 not supported on JS"),
                     ast::PrimitiveType::u128 => panic!("u128 not supported on JS"),
-                    ast::PrimitiveType::isize => "Int32Array",
-                    ast::PrimitiveType::usize => "Uint32Array",
-                    ast::PrimitiveType::f32 => "Float32Array",
-                    ast::PrimitiveType::f64 => "Float64Array",
-                    ast::PrimitiveType::bool => panic!(),
-                    ast::PrimitiveType::char => panic!(),
-                };
-
-                write!(
-                    out,
-                    "(new {}(wasm.memory.buffer, {}, 1))[0]",
-                    prim_type, value_expr
-                )?;
+                    ast::PrimitiveType::isize => case!("Int32Array"),
+                    ast::PrimitiveType::usize => case!("Uint32Array"),
+                    ast::PrimitiveType::f32 => case!("Float32Array"),
+                    ast::PrimitiveType::f64 => case!("Float64Array"),
+                    ast::PrimitiveType::bool => format!(
+                        "(new Uint8Array(wasm.memory.buffer, {} + {}, 1))[0] == 1",
+                        self.buf_ptr, self.offset
+                    ),
+                    ast::PrimitiveType::char => format!(
+                        "String.fromCharCode((new Uint32Array(wasm.memory.buffer, {} + {}, 1))[0])",
+                        self.buf_ptr, self.offset
+                    ),
+                }
             }
-        }
+            ast::TypeName::Named(path_type) => {
+                return match path_type.resolve(self.in_path, self.env) {
+                    ast::CustomType::Struct(strct) => {
+                        write!(f, "new {}({})", strct.name, self.buf_ptr)
+                    }
+                    ast::CustomType::Opaque(opaque) => {
+                        write!(
+                            f,
+                            "new {}(diplomatRuntime.ptrRead(wasm, {} + {}))",
+                            opaque.name, self.buf_ptr, self.offset
+                        )
+                    }
+                    ast::CustomType::Enum(enm) => {
+                        write!(
+                            f,
+                            "new {}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {} + {})]",
+                            enm.name, self.buf_ptr, self.offset
+                        )
+                    }
+                }
+            }
+            ast::TypeName::Box(..) | ast::TypeName::Reference(..) => format!(
+                "diplomatRuntime.ptrRead(wasm, {} + {})",
+                self.buf_ptr, self.offset
+            ),
+            ast::TypeName::Unit => return write!(f, "{{}}"),
+            ast::TypeName::Option(typ) => match typ.as_ref() {
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => {
+                    format!("{} + {}", self.buf_ptr, self.offset)
+                }
+                slice @ (ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..)) => {
+                    panic!(
+                        "`{}` is a fat pointer (ptr, len), and cannot be held in an option",
+                        slice
+                    )
+                }
+                other => panic!(
+                    "`{}` isn't a pointer type, and cannot be held in an option",
+                    other
+                ),
+            },
+            other => todo!("Read `{other}` from a buffer"),
+        };
 
-        ast::TypeName::Unit => {
-            write!(out, "{{}}")?;
+        ValueIntoJs {
+            value_expr: value_expr.as_str(),
+            typ: self.typ,
+            in_path: self.in_path,
+            borrows_self: self.borrows_self,
+            borrowed_params: self.borrowed_params,
+            env: self.env,
         }
-
-        _ => todo!(),
+        .fmt(f)
     }
-
-    Ok(())
 }
