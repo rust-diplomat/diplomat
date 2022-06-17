@@ -25,6 +25,7 @@ struct ErrorStructDeleter {
 struct ErrorStruct {
  public:
   int32_t i;
+  int32_t j;
 };
 
 

@@ -33,6 +33,24 @@ public partial class ErrorStruct
         }
     }
 
+    public int J
+    {
+        get
+        {
+            unsafe
+            {
+                return _inner.j;
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                _inner.j = value;
+            }
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>ErrorStruct</c> from the raw representation.
     /// </summary>

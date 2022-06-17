@@ -17,4 +17,6 @@ public partial struct ErrorStruct
     private const string NativeLib = "diplomat_feature_tests";
 
     public int i;
+
+    public int j;
 }
