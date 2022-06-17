@@ -29,3 +29,27 @@ export function extractCodePoint(str, param) {
   }
   return cp;
 }
+
+// Get the pointer returned by an FFI function
+//
+// It's tempting to call `(new Uint32Array(wasm.memory.buffer, FFI_func(), 1))[0]`.
+// However, there's a chance that `wasm.memory.buffer` will be resized between
+// the time it's accessed and the time it's used, invalidating the view.
+// This function ensures that the view into wasm memory is fresh.
+//
+// This is used for methods that return multiple types into a wasm buffer, where
+// one of those types is another ptr. Call this method to get access to the returned
+// ptr, so the return buffer can be freed.
+export function ptrRead(wasm, ptr) {
+  return (new Uint32Array(wasm.memory.buffer, ptr, 1))[0];
+}
+
+// Get the flag of a result type.
+export function resultFlag(wasm, ptr, offset) {
+  return (new Uint8Array(wasm.memory.buffer, ptr + offset, 1))[0];
+}
+
+// Get the discriminant of a Rust enum.
+export function enumDiscriminant(wasm, ptr) {
+  return (new Int32Array(wasm.memory.buffer, ptr, 1))[0]
+}
