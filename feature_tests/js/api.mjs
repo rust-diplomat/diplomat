@@ -418,7 +418,7 @@ export class ResultOpaque {
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4)
         return ok_value;
       } else {
-        const throw_value = new ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer + 0)];
+        const throw_value = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer + 0)];
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4)
         throw new diplomatRuntime.FFIError(throw_value);
       }
@@ -436,7 +436,7 @@ export class ResultOpaque {
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4)
         return ok_value;
       } else {
-        const throw_value = new ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer + 0)];
+        const throw_value = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer + 0)];
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4)
         throw new diplomatRuntime.FFIError(throw_value);
       }
@@ -454,7 +454,7 @@ export class ResultOpaque {
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4)
         return ok_value;
       } else {
-        const throw_value = new ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer + 0)];
+        const throw_value = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer + 0)];
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4)
         throw new diplomatRuntime.FFIError(throw_value);
       }
@@ -522,7 +522,7 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_in_enum_err(diplomat_receive_buffer, i);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const ok_value = new ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer + 0)];
+        const ok_value = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer + 0)];
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4)
         return ok_value;
       } else {

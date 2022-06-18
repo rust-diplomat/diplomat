@@ -99,8 +99,8 @@ export class ICU4XFixedDecimalFormat {
 
 export class ICU4XFixedDecimalFormatOptions {
   constructor(underlying) {
-    this.grouping_strategy = new ICU4XFixedDecimalGroupingStrategy_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, underlying + 0)];
-    this.sign_display = new ICU4XFixedDecimalSignDisplay_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, underlying + 4)];
+    this.grouping_strategy = ICU4XFixedDecimalGroupingStrategy_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, underlying + 0)];
+    this.sign_display = ICU4XFixedDecimalSignDisplay_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, underlying + 4)];
   }
 
   static default() {

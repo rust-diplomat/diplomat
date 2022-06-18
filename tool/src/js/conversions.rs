@@ -346,7 +346,7 @@ impl<'a> fmt::Display for BufferedIntoJs<'a> {
                 ast::CustomType::Enum(enm) => {
                     write!(
                         f,
-                        "new {}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {} + {})]",
+                        "{}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {} + {})]",
                         enm.name, self.buf_ptr, self.offset
                     )
                 }
