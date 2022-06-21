@@ -17,9 +17,10 @@ typedef struct MyStruct {
     uint64_t d;
     int32_t e;
     char32_t f;
+    DiplomatStringView g;
 } MyStruct;
 
-MyStruct MyStruct_new();
+MyStruct MyStruct_new(const char* s_data, size_t s_len);
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus
