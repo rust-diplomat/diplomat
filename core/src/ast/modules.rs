@@ -1,15 +1,15 @@
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use std::collections::HashSet;
 
 use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    CustomType, Enum, Ident, Method, ModSymbol, OpaqueStruct, Path, Struct, ValidityError,
+    CustomType, Enum, Ident, Method, ModSymbol, OpaqueStruct, Path, PathType, RustLink, Struct,
+    ValidityError,
 };
-use crate::{ast::PathType, environment::*};
-
+use crate::environment::*;
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
     pub name: Ident,
@@ -27,6 +27,19 @@ impl Module {
         self.sub_modules.iter().for_each(|t| {
             t.check_validity(&in_path.sub_path(self.name.clone()), env, errors);
         });
+    }
+
+    pub fn all_rust_links(&self) -> HashSet<&RustLink> {
+        let mut rust_links = self
+            .declared_types
+            .values()
+            .filter_map(|t| t.docs().rust_link())
+            .collect::<HashSet<_>>();
+
+        self.sub_modules.iter().for_each(|m| {
+            rust_links.extend(m.all_rust_links().iter());
+        });
+        rust_links
     }
 
     fn insert_all_types(&self, in_path: Path, out: &mut Env) {
@@ -207,6 +220,13 @@ impl File {
         out.insert(Path::empty(), top_symbols);
 
         out
+    }
+
+    pub fn all_rust_links(&self) -> HashSet<&RustLink> {
+        self.modules
+            .values()
+            .flat_map(|m| m.all_rust_links().into_iter())
+            .collect()
     }
 }
 
