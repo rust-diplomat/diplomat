@@ -17,7 +17,15 @@ pub fn gen_type(
     in_struct: bool,
 ) -> Result<String, fmt::Error> {
     let mut s = String::new();
-    gen_type_inner(typ, in_path, behind_ref, env, library_config, in_struct, &mut s)?;
+    gen_type_inner(
+        typ,
+        in_path,
+        behind_ref,
+        env,
+        library_config,
+        in_struct,
+        &mut s,
+    )?;
     Ok(s)
 }
 
@@ -113,7 +121,15 @@ fn gen_type_inner<W: fmt::Write>(
             if err.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type_inner(err, in_path, behind_ref, env, library_config, in_struct, out)?;
+                gen_type_inner(
+                    err,
+                    in_path,
+                    behind_ref,
+                    env,
+                    library_config,
+                    in_struct,
+                    out,
+                )?;
             }
             write!(out, ">")?;
         }
@@ -127,11 +143,7 @@ fn gen_type_inner<W: fmt::Write>(
         }
 
         ast::TypeName::StrReference(_) => {
-            let maybe_const = if in_struct {
-                ""
-            } else {
-                "const "
-            };
+            let maybe_const = if in_struct { "" } else { "const " };
             write!(out, "{maybe_const}{}", library_config.string_view.expr)?;
         }
 

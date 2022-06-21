@@ -181,7 +181,11 @@ pub fn gen_rust_to_cpp<W: Write>(
             let raw_value_id = format!("diplomat_str_raw_{}", path);
             writeln!(out, "capi::DiplomatStringView {} = {};", raw_value_id, cpp).unwrap();
 
-            writeln!(out, "std::string_view str({raw_value_id}.data, {raw_value_id}.len);").unwrap();
+            writeln!(
+                out,
+                "std::string_view str({raw_value_id}.data, {raw_value_id}.len);"
+            )
+            .unwrap();
             "str".into()
         }
         ast::TypeName::PrimitiveSlice(..) => {
