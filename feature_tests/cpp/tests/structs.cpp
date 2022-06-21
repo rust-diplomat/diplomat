@@ -5,8 +5,7 @@
 
 int main(int argc, char *argv[]) {
     Opaque o = Opaque::new_();
-    std::string str = "hello";
-    MyStruct s = MyStruct::new_(str);
+    MyStruct s = MyStruct::new_();
 
     o.assert_struct(s);
 
