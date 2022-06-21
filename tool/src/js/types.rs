@@ -170,7 +170,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    pub fn write(&self, to: &mut DiplomatWriteable) {
+                    pub fn write(self, to: &mut DiplomatWriteable) {
                         unimplemented!()
                     }
                 }
@@ -189,7 +189,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    pub fn something(&self) -> () {
+                    pub fn something(self) -> () {
                         unimplemented!()
                     }
                 }

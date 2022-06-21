@@ -1,7 +1,6 @@
 ---
 source: tool/src/js/types.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 import wasm from "./wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
@@ -16,50 +15,32 @@ const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying 
 export class MyOpaqueStruct {
   constructor(underlying) {
     this.underlying = underlying;
+    MyOpaqueStruct_box_destroy_registry.register(this, underlying);
   }
 }
 
-const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
-  wasm.MyStruct_destroy(underlying);
-});
-
 export class MyStruct {
   constructor(underlying) {
-    this.underlying = underlying;
+    this.a = (new Uint8Array(wasm.memory.buffer, underlying + 0, 1))[0];
+    this.b = (new Uint8Array(wasm.memory.buffer, underlying + 1, 1))[0];
   }
 
   static new() {
     const diplomat_out = (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(3, 1);
-      const result_tag = {};
-      diplomat_alloc_destroy_registry.register(result_tag, {
-        ptr: diplomat_receive_buffer,
-        size: 3,
-        align: 1,
-      });
       wasm.MyStruct_new(diplomat_receive_buffer);
-      const is_ok = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 2, 1))[0] == 1;
+      const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 2);
       if (is_ok) {
-        const ok_value = (() => {
-          const out = new MyStruct(diplomat_receive_buffer);
-          out.owner = result_tag;
-          return out;
-        })();
+        const ok_value = new MyStruct(diplomat_receive_buffer);
+        wasm.diplomat_free(diplomat_receive_buffer, 3, 1)
         return ok_value;
       } else {
-        const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        const throw_value = (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer + 0, 1))[0];
+        wasm.diplomat_free(diplomat_receive_buffer, 3, 1)
         throw new diplomatRuntime.FFIError(throw_value);
       }
     })();
     return diplomat_out;
-  }
-
-  get a() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 0, 1))[0];
-  }
-
-  get b() {
-    return (new Uint8Array(wasm.memory.buffer, this.underlying + 1, 1))[0];
   }
 }
 

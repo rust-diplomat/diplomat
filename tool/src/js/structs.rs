@@ -1,10 +1,9 @@
 use diplomat_core::Env;
-use std::fmt;
-use std::fmt::Write;
+use std::fmt::{self, Display as _, Write as _};
 
 use diplomat_core::ast;
 
-use super::conversions::{gen_value_js_to_rust, gen_value_rust_to_js};
+use super::conversions::{gen_value_js_to_rust, BufferedIntoJs, ValueIntoJs};
 use super::display;
 use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
@@ -32,119 +31,125 @@ pub fn gen_struct<W: fmt::Write>(
     in_path: &ast::Path,
     env: &Env,
 ) -> fmt::Result {
-    if let ast::CustomType::Enum(enm) = custom_type {
-        writeln!(
-            out,
-            "const {}_js_to_rust = {};",
-            enm.name,
-            display::block(|mut f| {
-                enm.variants.iter().try_for_each(|(name, discriminant, _)| {
-                    writeln!(f, "\"{}\": {},", name, discriminant)
-                })
-            })
-        )?;
-
-        writeln!(
-            out,
-            "const {}_rust_to_js = {};",
-            enm.name,
-            display::block(|mut f| {
-                enm.variants.iter().try_for_each(|(name, discriminant, _)| {
-                    writeln!(f, "{}: \"{}\",", discriminant, name)
-                })
-            })
-        )?;
-    } else {
-        writeln!(
-            out,
-            "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {});",
-            custom_type.name(),
-            display::block(|mut f| {
-                writeln!(f, "wasm.{}_destroy(underlying);", custom_type.name())
-            })
-        )?;
-
-        writeln!(out)?;
-
-        writeln!(
-            out,
-            "export class {} {}",
-            custom_type.name(),
-            display::block(|mut f| {
-                writeln!(
-                    &mut f,
-                    "constructor(underlying) {}",
-                    display::block(|mut f| writeln!(f, "this.underlying = underlying;"))
-                )?;
-
-                for method in custom_type.methods().iter() {
-                    writeln!(f)?;
-                    gen_method(method, in_path, env, &mut f)?;
-                }
-
-                if let ast::CustomType::Struct(strct) = custom_type {
-                    let (offsets, _) = layout::struct_offsets_size_max_align(
-                        strct.fields.iter().map(|(_, typ, _)| typ),
-                        in_path,
-                        env,
-                    );
-                    for ((name, typ, _), offset) in strct.fields.iter().zip(offsets.iter()) {
-                        writeln!(f)?;
-                        gen_field(name, typ, in_path, *offset, env, &mut f)?;
-                    }
-                }
-                Ok(())
-            })
-        )?;
-    }
-
-    Ok(())
-}
-
-/// Generates a getter function for a field.
-///
-/// # Examples
-///
-/// ```js
-/// get a() {
-///   return (() => {
-///     // snip
-///   })();
-/// }
-/// ```
-fn gen_field<W: fmt::Write>(
-    name: &ast::Ident,
-    typ: &ast::TypeName,
-    in_path: &ast::Path,
-    offset: usize,
-    env: &Env,
-    out: &mut W,
-) -> fmt::Result {
-    writeln!(
-        out,
-        "get {}() {}",
-        name,
-        display::block(|mut f| {
+    match custom_type {
+        ast::CustomType::Enum(enm) => {
             writeln!(
-                f,
-                "return {};",
-                display::expr(|mut f| {
-                    gen_value_rust_to_js(
-                        &format!("this.underlying + {}", offset),
-                        &ast::TypeName::Reference(
-                            ast::Lifetime::Anonymous,
-                            ast::Mutability::Mutable,
-                            Box::new(typ.clone()),
-                        ),
-                        in_path,
-                        &ast::BorrowedParams::default(),
-                        env,
-                        &mut f,
-                    )
+                out,
+                "const {}_js_to_rust = {};",
+                enm.name,
+                display::block(|mut f| {
+                    enm.variants.iter().try_for_each(|(name, discriminant, _)| {
+                        writeln!(f, "\"{}\": {},", name, discriminant)
+                    })
+                })
+            )?;
+
+            writeln!(
+                out,
+                "const {}_rust_to_js = {};",
+                enm.name,
+                display::block(|mut f| {
+                    enm.variants.iter().try_for_each(|(name, discriminant, _)| {
+                        writeln!(f, "{}: \"{}\",", discriminant, name)
+                    })
                 })
             )
-        })
-    )
+        }
+        ast::CustomType::Struct(strct) => {
+            writeln!(
+                out,
+                "export class {} {}",
+                strct.name,
+                display::block(|mut f| {
+                    writeln!(
+                        f,
+                        "constructor(underlying) {}",
+                        display::block(|mut f| {
+                            let (offsets, _) = layout::struct_offsets_size_max_align(
+                                strct.fields.iter().map(|(_, typ, _)| typ),
+                                in_path,
+                                env,
+                            );
+
+                            for ((name, typ, _), &offset) in strct.fields.iter().zip(offsets.iter())
+                            {
+                                // If the type of a field has any named lifetimes
+                                // (elision is impossible in fields), then it
+                                // borrows from self because the lifetime guard
+                                // is attached to self. In the future, we may
+                                // want to be more intelligent about this and
+                                // only attach lifetime guards to the exact object
+                                // that holds it, instead of the outermost struct.
+                                let borrows_self = typ.any_lifetime(|lifetime, _| {
+                                    matches!(lifetime, ast::Lifetime::Named(_))
+                                });
+
+                                writeln!(
+                                    f,
+                                    "this.{} = {};",
+                                    name,
+                                    BufferedIntoJs {
+                                        buf_ptr: "underlying",
+                                        offset,
+                                        typ,
+                                        in_path,
+                                        borrows_self,
+                                        borrowed_params: &[],
+                                        env,
+                                    }
+                                )?;
+                            }
+
+                            Ok(())
+                        })
+                    )?;
+
+                    for method in strct.methods.iter() {
+                        writeln!(f)?;
+                        gen_method(method, in_path, env, &mut f)?;
+                    }
+                    Ok(())
+                })
+            )
+        }
+        ast::CustomType::Opaque(opaque) => {
+            writeln!(
+                out,
+                "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {});",
+                opaque.name,
+                display::block(|mut f| {
+                    writeln!(f, "wasm.{}_destroy(underlying);", opaque.name)
+                })
+            )?;
+            writeln!(out)?;
+            writeln!(
+                out,
+                "export class {} {}",
+                opaque.name,
+                display::block(|mut f| {
+                    writeln!(
+                        f,
+                        "constructor(underlying) {}",
+                        display::block(|mut f| {
+                            writeln!(f, "this.underlying = underlying;")?;
+                            writeln!(
+                                f,
+                                "{}_box_destroy_registry.register(this, underlying);",
+                                opaque.name
+                            )
+                        })
+                    )?;
+
+                    for method in opaque.methods.iter() {
+                        writeln!(f)?;
+                        gen_method(method, in_path, env, &mut f)?;
+                    }
+
+                    Ok(())
+                })
+            )
+        }
+    }
 }
 
 /// Generates the contents of a JS method.
@@ -171,6 +176,18 @@ fn gen_method<W: fmt::Write>(
     let mut all_param_exprs = vec![];
     let mut post_stmts = vec![];
 
+    if let Some(ref self_param) = method.self_param {
+        gen_value_js_to_rust(
+            &ast::Ident::from("this"),
+            &self_param.to_typename(),
+            in_path,
+            env,
+            &mut pre_stmts,
+            &mut all_param_exprs,
+            &mut post_stmts,
+        );
+    }
+
     for p in method.params.iter() {
         gen_value_js_to_rust(
             &p.name,
@@ -196,10 +213,6 @@ fn gen_method<W: fmt::Write>(
     }
 
     let all_params_invocation = {
-        if method.self_param.is_some() {
-            all_param_exprs.insert(0, "this.underlying".to_string());
-        }
-
         if let Some(ref return_type) = method.return_type {
             if let ReturnTypeForm::Complex = return_type_form(return_type, in_path, env) {
                 all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
@@ -230,18 +243,20 @@ fn gen_method<W: fmt::Write>(
                 f,
                 "const diplomat_out = {};",
                 display::expr(|f| {
-                    let display_return_type = display::expr(|mut f| match &method.return_type {
-                        None | Some(ast::TypeName::Unit) => {
-                            write!(f, "{}", invocation_expr)
+                    let display_return_type = display::expr(|f| match &method.return_type {
+                        None | Some(ast::TypeName::Unit) => invocation_expr.fmt(f),
+                        Some(typ) => {
+                            let borrowed_params = method.borrowed_params();
+                            ValueIntoJs {
+                                value_expr: &invocation_expr,
+                                typ,
+                                borrows_self: borrowed_params.borrows_self(),
+                                borrowed_params: &borrowed_params.1[..],
+                                in_path,
+                                env,
+                            }
+                            .fmt(f)
                         }
-                        Some(ret_type) => gen_value_rust_to_js(
-                            &invocation_expr,
-                            ret_type,
-                            in_path,
-                            &method.borrowed_params(),
-                            env,
-                            &mut f,
-                        ),
                     });
 
                     if is_writeable {

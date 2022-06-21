@@ -569,6 +569,42 @@ impl TypeName {
         }
     }
 
+    /// Returns `true` if any lifetime satisfies a predicate, otherwise `false`.
+    ///
+    /// This method is short-circuiting, meaning that if the predicate ever succeeds,
+    /// it will return immediately.
+    pub fn any_lifetime<'a, F>(&'a self, mut f: F) -> bool
+    where
+        F: FnMut(&'a Lifetime, LifetimeOrigin) -> bool,
+    {
+        self.visit_lifetimes(&mut |lifetime, origin| {
+            if f(lifetime, origin) {
+                ControlFlow::Break(())
+            } else {
+                ControlFlow::Continue(())
+            }
+        })
+        .is_break()
+    }
+
+    /// Returns `true` if all lifetimes satisfy a predicate, otherwise `false`.
+    ///
+    /// This method is short-circuiting, meaning that if the predicate ever fails,
+    /// it will return immediately.
+    pub fn all_lifetimes<'a, F>(&'a self, mut f: F) -> bool
+    where
+        F: FnMut(&'a Lifetime, LifetimeOrigin) -> bool,
+    {
+        self.visit_lifetimes(&mut |lifetime, origin| {
+            if f(lifetime, origin) {
+                ControlFlow::Continue(())
+            } else {
+                ControlFlow::Break(())
+            }
+        })
+        .is_continue()
+    }
+
     fn check_opaque<'a>(
         &'a self,
         in_path: &Path,

@@ -7,6 +7,8 @@
 
     .. js:attribute:: i
 
+    .. js:attribute:: j
+
 .. js:class:: ResultOpaque
 
     .. js:staticfunction:: new(i)

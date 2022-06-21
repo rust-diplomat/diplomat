@@ -11,6 +11,8 @@
 
     .. cpp:member:: int32_t i
 
+    .. cpp:member:: int32_t j
+
 .. cpp:class:: ResultOpaque
 
     .. cpp:function:: static diplomat::result<ResultOpaque, ErrorEnum> new_(int32_t i)

@@ -15,6 +15,7 @@ pub mod ffi {
     #[derive(Debug)]
     pub struct ErrorStruct {
         i: i32,
+        j: i32,
     }
     impl ResultOpaque {
         pub fn new(i: i32) -> DiplomatResult<Box<ResultOpaque>, ErrorEnum> {
@@ -34,7 +35,7 @@ pub mod ffi {
         }
 
         pub fn new_failing_struct(i: i32) -> DiplomatResult<Box<ResultOpaque>, ErrorStruct> {
-            Err(ErrorStruct { i }).into()
+            Err(ErrorStruct { i, j: 12 }).into()
         }
 
         pub fn new_in_err(i: i32) -> DiplomatResult<(), Box<ResultOpaque>> {

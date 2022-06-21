@@ -12,6 +12,7 @@ extern "C" {
 
 typedef struct ErrorStruct {
     int32_t i;
+    int32_t j;
 } ErrorStruct;
 
 void ErrorStruct_destroy(ErrorStruct* self);

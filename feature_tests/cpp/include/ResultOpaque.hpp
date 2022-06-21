@@ -94,7 +94,7 @@ inline diplomat::result<ResultOpaque, ErrorStruct> ResultOpaque::new_failing_str
     diplomat_result_out_value = diplomat::Ok(ResultOpaque(diplomat_result_raw_out_value.ok));
   } else {
   capi::ErrorStruct diplomat_raw_struct_out_value = diplomat_result_raw_out_value.err;
-    diplomat_result_out_value = diplomat::Err(ErrorStruct{ .i = std::move(diplomat_raw_struct_out_value.i) });
+    diplomat_result_out_value = diplomat::Err(ErrorStruct{ .i = std::move(diplomat_raw_struct_out_value.i), .j = std::move(diplomat_raw_struct_out_value.j) });
   }
   return diplomat_result_out_value;
 }
