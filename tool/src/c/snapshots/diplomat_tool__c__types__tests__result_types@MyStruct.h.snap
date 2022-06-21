@@ -1,7 +1,6 @@
 ---
 source: tool/src/c/types.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 #ifndef MyStruct_H
 #define MyStruct_H
@@ -14,14 +13,14 @@ expression: out_texts.get(out).unwrap()
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "result_box_MyStruct_uint8_t.h"
+#include "diplomat_result_box_MyStruct_uint8_t.h"
 
 typedef struct MyStruct {
-    ffi_result_box_MyStruct_uint8_t a;
+    diplomat_result_box_MyStruct_uint8_t a;
 } MyStruct;
-#include "result_MyStruct_uint8_t.h"
+#include "diplomat_result_MyStruct_uint8_t.h"
 
-ffi_result_MyStruct_uint8_t MyStruct_new();
+diplomat_result_MyStruct_uint8_t MyStruct_new();
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus

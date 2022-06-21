@@ -175,7 +175,7 @@ pub fn gen(
 }
 
 fn gen_property_for_field(
-    name: &str,
+    name: &ast::Ident,
     docs: &ast::Docs,
     typ: &ast::TypeName,
     in_path: &ast::Path,
@@ -185,7 +185,7 @@ fn gen_property_for_field(
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Primitive(_) => {}
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
                 println!(
                     "{} ({name})",
@@ -209,7 +209,7 @@ fn gen_property_for_field(
     gen_doc_block(out, &docs.to_markdown(docs_url_gen))?;
 
     let type_name = gen_type_name_to_string(typ, in_path, env)?;
-    let property_name = name.to_upper_camel_case();
+    let property_name = name.as_str().to_upper_camel_case();
     let var_to_raw = format!("_inner.{name}");
 
     writeln!(out, "public {type_name} {property_name}")?;
@@ -307,55 +307,6 @@ fn gen_method(
         )?;
     }
 
-    // Builtin string type of C# is immutable.
-    // The idiomatic way is to return a new string with the modified content.
-    let rearranged_mutable_str = {
-        let mut mut_str_list: Vec<String> = method
-            .params
-            .iter()
-            .filter(|param| {
-                matches!(
-                    param.ty,
-                    ast::TypeName::StrReference(ast::Mutability::Mutable)
-                )
-            })
-            .map(|param| format!("{}Buf", param.name.to_lower_camel_case()))
-            .collect();
-
-        if mut_str_list.len() > 1 {
-            println!(
-                "{} ({})",
-                "[WARNING] idiomatic API generation for functions taking several mutable string slices is not supported".yellow(),
-                method.name,
-            );
-            return Ok(());
-        }
-
-        if let Some(mut_str_name) = mut_str_list.pop() {
-            let is_ret_type_compatible = match &method.return_type {
-                Some(ast::TypeName::Unit) => true,
-                Some(ast::TypeName::Result(ok_variant, _)) => {
-                    matches!(ok_variant.as_ref(), ast::TypeName::Unit)
-                }
-                Some(_) => false,
-                None => true,
-            };
-
-            if !is_ret_type_compatible {
-                println!(
-                "{} ({})",
-                "[WARNING] idiomatic API generation for functions taking a mutable string slice and returning a value is not supported".yellow(),
-                method.name,
-            );
-                return Ok(());
-            }
-
-            Some(mut_str_name)
-        } else {
-            None
-        }
-    };
-
     writeln!(out)?;
 
     gen_doc_block(out, &method.docs.to_markdown(docs_url_gen))?;
@@ -384,13 +335,13 @@ fn gen_method(
     if method.self_param.is_none() {
         write!(out, "static ")?;
     }
-    if rearranged_writeable || rearranged_mutable_str.is_some() {
+    if rearranged_writeable {
         write!(out, "string ")?;
     } else {
         gen_type_name_return_position(&method.return_type, in_path, env, out)?;
         write!(out, " ")?;
     }
-    write!(out, "{}(", method.name.to_upper_camel_case())?;
+    write!(out, "{}(", method.name.as_str().to_upper_camel_case())?;
 
     let mut params_to_gen = method.params.clone();
     if rearranged_writeable {
@@ -411,13 +362,13 @@ fn gen_method(
             write!(out, ", ")?;
         }
 
-        let name = param.name.to_lower_camel_case();
+        let name = param.name.as_str().to_lower_camel_case();
 
         if let ast::TypeName::StrReference(..) = param.ty {
             params_str_ref.push(name.clone());
             all_params_invocation.push(format!("{}BufPtr", name));
             all_params_invocation.push(format!("{}BufLength", name));
-        } else if let ast::TypeName::PrimitiveSlice(prim, ..) = param.ty {
+        } else if let ast::TypeName::PrimitiveSlice(.., prim) = param.ty {
             params_slice.push(SliceParam::new(name.clone(), prim));
             all_params_invocation.push(format!("{}Ptr", name));
             all_params_invocation.push(format!("{}Length", name));
@@ -468,7 +419,7 @@ fn gen_method(
             }
 
             for param in &params_custom_types {
-                let param_name = param.name.to_lower_camel_case();
+                let param_name = param.name.as_str().to_lower_camel_case();
                 let raw_var_name = format!("{}Raw", param_name);
                 let mut raw_type_name = String::new();
                 gen_raw_conversion_type_name_decl_position(
@@ -483,8 +434,8 @@ fn gen_method(
                 if let ast::TypeName::Option(underlying_ty) = &param.ty {
                     // TODO: support optional primitive types and enums in arguments
                     match underlying_ty.as_ref() {
-                        ast::TypeName::Named(_) => {
-                            if let ast::CustomType::Enum(_) = underlying_ty.resolve(in_path, env) {
+                        ast::TypeName::Named(path_type) => {
+                            if let ast::CustomType::Enum(_) = path_type.resolve(in_path, env) {
                                 panic!("Optional enum types as parameters are not supported yet")
                             }
                         }
@@ -545,7 +496,7 @@ fn gen_method(
                 out,
                 "Raw.{}.{}(",
                 enclosing_type.name(),
-                method.name.to_upper_camel_case()
+                method.name.as_str().to_upper_camel_case()
             )?;
             for (i, param) in all_params_invocation.into_iter().enumerate() {
                 if i != 0 {
@@ -588,12 +539,6 @@ fn gen_method(
             if rearranged_writeable {
                 writeln!(out, "string retVal = writeable.ToUnicode();")?;
                 writeln!(out, "writeable.Dispose();")?;
-                writeln!(out, "return retVal;")?;
-            } else if let Some(var_name) = rearranged_mutable_str {
-                writeln!(
-                    out,
-                    "string retVal = DiplomatUtils.Utf8ToString({var_name});"
-                )?;
                 writeln!(out, "return retVal;")?;
             } else {
                 match ret_typ {
@@ -717,13 +662,13 @@ fn gen_raw_type_name_decl_position(
     match typ {
         ast::TypeName::Primitive(_) => gen_type_name(typ, in_path, env, out),
         ast::TypeName::Option(opt) => match opt.as_ref() {
-            ast::TypeName::Box(ptr) | ast::TypeName::Reference(ptr, ..) => {
+            ast::TypeName::Box(ptr) | ast::TypeName::Reference(.., ptr) => {
                 gen_raw_type_name_decl_position(ptr.as_ref(), in_path, env, out)?;
                 write!(out, "*")
             }
             _ => panic!("Options without a pointer type are not yet supported"),
         },
-        ast::TypeName::Box(underlying) | ast::TypeName::Reference(underlying, ..) => {
+        ast::TypeName::Box(underlying) | ast::TypeName::Reference(.., underlying) => {
             gen_raw_type_name_decl_position(underlying.as_ref(), in_path, env, out)?;
             write!(out, "*")
         }
@@ -742,7 +687,7 @@ fn gen_raw_conversion_type_name_decl_position(
     out: &mut dyn fmt::Write,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Opaque(_) => {
                 write!(out, "Raw.")?;
                 gen_type_name(typ, in_path, env, out)?;
@@ -786,7 +731,7 @@ fn gen_return_type_remark_about_drop(
             writeln!(out, "/// A <c>{type_name}</c> allocated on C# side.")?;
             writeln!(out, "/// </returns>")
         }
-        ast::TypeName::Box(underlying) | ast::TypeName::Reference(underlying, ..) => {
+        ast::TypeName::Box(underlying) | ast::TypeName::Reference(.., underlying) => {
             match underlying.as_ref() {
                 ast::TypeName::Named(_) => {
                     let type_name = gen_type_name_to_string(underlying, in_path, env)?;
@@ -808,13 +753,16 @@ fn requires_null_check(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> b
     match typ {
         ast::TypeName::Primitive(_) => false,
         ast::TypeName::Box(boxed) => requires_null_check(boxed.as_ref(), in_path, env),
-        ast::TypeName::Reference(reference, ..) => {
+        ast::TypeName::Reference(.., reference) => {
             requires_null_check(reference.as_ref(), in_path, env)
         }
         ast::TypeName::Option(opt) => requires_null_check(opt.as_ref(), in_path, env),
-        _ => match typ.resolve(in_path, env) {
-            ast::CustomType::Opaque(_) => true,
-            ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => false,
+        _ => match typ {
+            ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+                ast::CustomType::Opaque(_) => true,
+                ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => false,
+            },
+            other => panic!("expected named type name, found `{}`", other),
         },
     }
 }
@@ -841,12 +789,12 @@ struct Property {
 }
 
 struct Getter {
-    name: String,
+    name: ast::Ident,
     return_type: String,
 }
 
 struct Setter {
-    name: String,
+    name: ast::Ident,
     param_type: String,
 }
 
@@ -858,7 +806,11 @@ fn extract_getter_metadata(
 ) -> Option<(Property, Getter)> {
     let prefix = library_config.properties.getters_prefix.as_deref()?;
 
-    let property_name = method.name.strip_prefix(prefix)?.to_upper_camel_case();
+    let property_name = method
+        .name
+        .as_str()
+        .strip_prefix(prefix)?
+        .to_upper_camel_case();
 
     method.self_param.as_ref()?;
 
@@ -875,7 +827,7 @@ fn extract_getter_metadata(
             name: property_name,
         },
         Getter {
-            name: method.name.to_upper_camel_case(),
+            name: ast::Ident::from(method.name.as_str().to_upper_camel_case()),
             return_type,
         },
     ))
@@ -889,7 +841,11 @@ fn extract_setter_metadata(
 ) -> Option<(Property, Setter)> {
     let prefix = library_config.properties.setters_prefix.as_deref()?;
 
-    let property_name = method.name.strip_prefix(prefix)?.to_upper_camel_case();
+    let property_name = method
+        .name
+        .as_str()
+        .strip_prefix(prefix)?
+        .to_upper_camel_case();
 
     method.self_param.as_ref()?;
 
@@ -907,7 +863,7 @@ fn extract_setter_metadata(
             name: property_name,
         },
         Setter {
-            name: method.name.to_upper_camel_case(),
+            name: ast::Ident::from(method.name.as_str().to_upper_camel_case()),
             param_type,
         },
     ))

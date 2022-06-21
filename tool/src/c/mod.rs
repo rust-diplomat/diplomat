@@ -45,7 +45,7 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
         )?;
     }
 
-    for (in_path, typ) in &all_results {
+    for (ref in_path, typ) in &all_results {
         gen_result_header(typ, in_path, outs, env)?;
     }
 
@@ -55,7 +55,7 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
 fn gen_struct_header<'a>(
     typ: &'a ast::CustomType,
     in_path: &ast::Path,
-    seen_results: &mut HashSet<(ast::Path, &'a ast::TypeName)>,
+    seen_results: &mut HashSet<&'a ast::TypeName>,
     all_results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
     outs: &mut HashMap<String, String>,
     env: &Env,
@@ -230,8 +230,8 @@ pub fn gen_includes<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => {
-            let (_, custom_typ) = typ.resolve_with_path(in_path, env);
+        ast::TypeName::Named(path_type) => {
+            let custom_typ = path_type.resolve(in_path, env);
             match (custom_typ, behind_ref) {
                 (ast::CustomType::Opaque(_) | ast::CustomType::Struct(_), true) => {
                     if pre_struct {
@@ -277,7 +277,7 @@ pub fn gen_includes<W: fmt::Write>(
                 out,
             )?;
         }
-        ast::TypeName::Reference(underlying, _, _lt) => {
+        ast::TypeName::Reference(.., underlying) => {
             gen_includes(
                 underlying,
                 in_path,

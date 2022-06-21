@@ -225,8 +225,8 @@ fn gen_includes<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => {
-            let (_, custom_typ) = typ.resolve_with_path(in_path, env);
+        ast::TypeName::Named(path_type) => {
+            let custom_typ = path_type.resolve(in_path, env);
             match custom_typ {
                 ast::CustomType::Opaque(_) => {
                     if pre_struct {
@@ -281,7 +281,7 @@ fn gen_includes<W: fmt::Write>(
                 out,
             )?;
         }
-        ast::TypeName::Reference(underlying, _mut, _lt) => {
+        ast::TypeName::Reference(.., underlying) => {
             gen_includes(
                 underlying,
                 in_path,

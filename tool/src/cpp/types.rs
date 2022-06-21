@@ -27,7 +27,7 @@ fn gen_type_inner<W: fmt::Write>(
 ) -> fmt::Result {
     let mut handled_ref = false;
     match typ {
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Opaque(opaque) => {
                 if let Some(owned) = behind_ref {
                     if owned {
@@ -62,8 +62,8 @@ fn gen_type_inner<W: fmt::Write>(
             )?;
         }
 
-        ast::TypeName::Reference(underlying, mutable, _lt) => {
-            if let ast::Mutability::Immutable = mutable {
+        ast::TypeName::Reference(_, mutability, underlying) => {
+            if mutability.is_immutable() {
                 write!(out, "const ")?;
             }
             gen_type_inner(
@@ -118,15 +118,11 @@ fn gen_type_inner<W: fmt::Write>(
             write!(out, "capi::DiplomatWriteable")?;
         }
 
-        ast::TypeName::StrReference(ast::Mutability::Mutable) => {
-            write!(out, "{}", library_config.string_view.expr)?;
-        }
-
-        ast::TypeName::StrReference(ast::Mutability::Immutable) => {
+        ast::TypeName::StrReference(_) => {
             write!(out, "const {}", library_config.string_view.expr)?;
         }
 
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mutable) => {
+        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => {
             write!(
                 out,
                 "{}<{}>",
@@ -135,7 +131,7 @@ fn gen_type_inner<W: fmt::Write>(
             )?;
         }
 
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Immutable) => {
+        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Immutable, prim) => {
             write!(
                 out,
                 "const {}<{}>",
@@ -245,10 +241,6 @@ mod tests {
 
                 impl MyStruct {
                     pub fn new(v: &str) -> MyStruct {
-                        unimplemented!()
-                    }
-
-                    pub fn make_uppercase(v: &mut str) {
                         unimplemented!()
                     }
                 }

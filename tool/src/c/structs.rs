@@ -37,7 +37,7 @@ pub fn gen_struct<W: fmt::Write>(
 }
 
 pub fn gen_field<W: fmt::Write>(
-    name: &str,
+    name: &ast::Ident,
     typ: &ast::TypeName,
     in_path: &ast::Path,
     env: &Env,
@@ -66,28 +66,24 @@ pub fn gen_method<W: fmt::Write>(
     }
 
     write!(out, " {}(", method.full_path_name)?;
-    let mut params_to_gen = method.params.clone();
-    if let Some(param) = &method.self_param {
-        params_to_gen.insert(0, param.clone());
+
+    let mut first = true;
+    if let Some(self_param) = &method.self_param {
+        gen_type(&self_param.to_typename(), in_path, env, out)?;
+        write!(out, " self")?;
+        first = false;
     }
 
-    for (i, param) in params_to_gen.iter().enumerate() {
-        if i != 0 {
+    for param in method.params.iter() {
+        if first {
+            first = false;
+        } else {
             write!(out, ", ")?;
         }
 
-        if let ast::TypeName::StrReference(mutability) = &param.ty {
-            write!(
-                out,
-                "{0}char* {1}_data, size_t {1}_len",
-                if mutability.is_immutable() {
-                    "const "
-                } else {
-                    ""
-                },
-                param.name
-            )?;
-        } else if let ast::TypeName::PrimitiveSlice(prim, mutability) = &param.ty {
+        if let ast::TypeName::StrReference(_) = &param.ty {
+            write!(out, "const char* {0}_data, size_t {0}_len", param.name)?;
+        } else if let ast::TypeName::PrimitiveSlice(_, mutability, prim) = &param.ty {
             write!(
                 out,
                 "{0}{1}* {2}_data, size_t {2}_len",
@@ -178,10 +174,6 @@ mod tests {
                     }
 
                     pub fn set_str(&mut self, new_str: &str) {
-                        unimplemented!()
-                    }
-
-                    pub fn make_uppercase(&mut self, some_str: &mut str) {
                         unimplemented!()
                     }
                 }

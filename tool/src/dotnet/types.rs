@@ -20,11 +20,13 @@ pub fn gen_type_name(
     out: &mut dyn fmt::Write,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => write!(out, "{}", typ.resolve(in_path, env).name()),
+        ast::TypeName::Named(path_type) => {
+            write!(out, "{}", path_type.resolve(in_path, env).name())
+        }
 
         ast::TypeName::Box(underlying) => gen_type_name(underlying.as_ref(), in_path, env, out),
 
-        ast::TypeName::Reference(underlying, _mutable, _lt) => {
+        ast::TypeName::Reference(.., underlying) => {
             gen_type_name(underlying.as_ref(), in_path, env, out)
         }
 
@@ -47,11 +49,11 @@ pub fn gen_type_name(
             write!(out, "DiplomatWriteable")
         }
 
-        ast::TypeName::StrReference(_mut) => {
+        ast::TypeName::StrReference(..) => {
             write!(out, "string")
         }
 
-        ast::TypeName::PrimitiveSlice(prim, _mut) => {
+        ast::TypeName::PrimitiveSlice(.., prim) => {
             write!(out, "{}[]", type_name_for_prim(prim))
         }
 
@@ -83,30 +85,33 @@ pub fn type_name_for_prim(prim: &ast::PrimitiveType) -> &str {
 }
 
 /// Generates a struct name that uniquely identifies the given type.
-pub fn name_for_type(typ: &ast::TypeName) -> String {
+pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
     match typ {
         ast::TypeName::Named(name) => name.path.elements.last().unwrap().clone(),
-        ast::TypeName::Box(underlying) => format!("Box{}", name_for_type(underlying)),
-        ast::TypeName::Reference(underlying, ast::Mutability::Mutable, _lt) => {
-            format!("RefMut{}", name_for_type(underlying))
+        ast::TypeName::Box(underlying) => {
+            ast::Ident::from(format!("Box{}", name_for_type(underlying)))
         }
-        ast::TypeName::Reference(underlying, ast::Mutability::Immutable, _lt) => {
-            format!("Ref{}", name_for_type(underlying))
+        ast::TypeName::Reference(_, ast::Mutability::Mutable, underlying) => {
+            ast::Ident::from(format!("RefMut{}", name_for_type(underlying)))
         }
-        ast::TypeName::Primitive(prim) => prim.to_string().to_upper_camel_case(),
-        ast::TypeName::Option(underlying) => format!("Opt{}", name_for_type(underlying)),
+        ast::TypeName::Reference(_, ast::Mutability::Immutable, underlying) => {
+            ast::Ident::from(format!("Ref{}", name_for_type(underlying)))
+        }
+        ast::TypeName::Primitive(prim) => ast::Ident::from(prim.to_string().to_upper_camel_case()),
+        ast::TypeName::Option(underlying) => {
+            ast::Ident::from(format!("Opt{}", name_for_type(underlying)))
+        }
         ast::TypeName::Result(ok, err) => {
-            format!("Result{}{}", name_for_type(ok), name_for_type(err))
+            ast::Ident::from(format!("Result{}{}", name_for_type(ok), name_for_type(err)))
         }
-        ast::TypeName::Writeable => "Writeable".to_owned(),
-        ast::TypeName::StrReference(ast::Mutability::Mutable) => "StrRefMut".to_owned(),
-        ast::TypeName::StrReference(ast::Mutability::Immutable) => "StrRef".to_owned(),
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Mutable) => {
-            format!("RefMutPrimSlice{}", prim.to_string().to_upper_camel_case())
-        }
-        ast::TypeName::PrimitiveSlice(prim, ast::Mutability::Immutable) => {
-            format!("RefPrimSlice{}", prim.to_string().to_upper_camel_case())
-        }
-        ast::TypeName::Unit => "Void".to_owned(),
+        ast::TypeName::Writeable => ast::Ident::from("Writeable"),
+        ast::TypeName::StrReference(_) => ast::Ident::from("StrRef"),
+        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => ast::Ident::from(
+            format!("RefMutPrimSlice{}", prim.to_string().to_upper_camel_case()),
+        ),
+        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Immutable, prim) => ast::Ident::from(
+            format!("RefPrimSlice{}", prim.to_string().to_upper_camel_case()),
+        ),
+        ast::TypeName::Unit => ast::Ident::from("Void"),
     }
 }

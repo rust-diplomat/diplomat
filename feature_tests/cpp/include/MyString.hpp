@@ -29,7 +29,6 @@ class MyString {
   void set_str(const std::string_view new_str);
   template<typename W> void get_str_to_writeable(W& writeable) const;
   std::string get_str() const;
-  static void make_uppercase(std::string_view v);
   inline const capi::MyString* AsFFI() const { return this->inner.get(); }
   inline capi::MyString* AsFFIMut() { return this->inner.get(); }
   inline MyString(capi::MyString* i) : inner(i) {}
@@ -56,8 +55,5 @@ inline std::string MyString::get_str() const {
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
   capi::MyString_get_str(this->inner.get(), &diplomat_writeable_out);
   return diplomat_writeable_string;
-}
-inline void MyString::make_uppercase(std::string_view v) {
-  capi::MyString_make_uppercase(v.data(), v.size());
 }
 #endif

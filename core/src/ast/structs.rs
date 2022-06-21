@@ -1,18 +1,15 @@
 use serde::{Deserialize, Serialize};
-use syn::GenericParam;
 
 use super::docs::Docs;
-use super::types::LifetimeDef;
-use super::{Method, PathType, TypeName};
+use super::{Ident, LifetimeEnv, Method, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct Struct {
-    pub name: String,
+    pub name: Ident,
     pub docs: Docs,
-    pub lifetimes: Vec<LifetimeDef>,
-    /// A list of fields in the struct. (name, type, docs)
-    pub fields: Vec<(String, TypeName, Docs)>,
+    pub lifetimes: LifetimeEnv,
+    pub fields: Vec<(Ident, TypeName, Docs)>,
     pub methods: Vec<Method>,
 }
 
@@ -22,25 +19,23 @@ impl From<&syn::ItemStruct> for Struct {
         let self_path_type = PathType::extract_self_type(strct);
 
         Struct {
-            name: strct.ident.to_string(),
+            name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: extract_lifetime_defs(strct),
+            lifetimes: LifetimeEnv::from(&strct.generics),
             fields: strct
                 .fields
                 .iter()
-                .enumerate()
-                .map(|(i, f)| {
-                    let name = f
+                .map(|field| {
+                    // Non-opaque tuple structs will never be allowed
+                    let name = field
                         .ident
                         .as_ref()
-                        .map(ToString::to_string)
-                        .unwrap_or_else(|| i.to_string());
+                        .map(Into::into)
+                        .expect("non-opaque tuples structs are disallowed");
+                    let type_name = TypeName::from_syn(&field.ty, Some(self_path_type.clone()));
+                    let docs = Docs::from_attrs(&field.attrs);
 
-                    let ty = TypeName::from_syn(&f.ty, Some(self_path_type.clone()));
-
-                    let docs = Docs::from_attrs(&f.attrs);
-
-                    (name, ty, docs)
+                    (name, type_name, docs)
                 })
                 .collect(),
             methods: vec![],
@@ -53,9 +48,9 @@ impl From<&syn::ItemStruct> for Struct {
 /// must be boxed or passed as references.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
 pub struct OpaqueStruct {
-    pub name: String,
+    pub name: Ident,
     pub docs: Docs,
-    pub lifetimes: Vec<LifetimeDef>,
+    pub lifetimes: LifetimeEnv,
     pub methods: Vec<Method>,
 }
 
@@ -63,28 +58,12 @@ impl From<&syn::ItemStruct> for OpaqueStruct {
     /// Extract a [`OpaqueStruct`] metadata value from an AST node.
     fn from(strct: &syn::ItemStruct) -> OpaqueStruct {
         OpaqueStruct {
-            name: strct.ident.to_string(),
+            name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: extract_lifetime_defs(strct),
+            lifetimes: LifetimeEnv::from(&strct.generics),
             methods: vec![],
         }
     }
-}
-
-/// Get any lifetimes that the struct uses.
-fn extract_lifetime_defs(strct: &syn::ItemStruct) -> Vec<LifetimeDef> {
-    strct
-        .generics
-        .params
-        .iter()
-        .map(|generic| {
-            if let GenericParam::Lifetime(lifetime_def) = generic {
-                lifetime_def.into()
-            } else {
-                panic!("struct types cannot have non-lifetime generic parameters");
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]

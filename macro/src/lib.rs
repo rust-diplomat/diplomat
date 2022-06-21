@@ -6,8 +6,8 @@ use diplomat_core::ast;
 
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
-        ast::TypeName::StrReference(mutability) | ast::TypeName::PrimitiveSlice(_, mutability) => {
-            let data_type = if let ast::TypeName::PrimitiveSlice(prim, ..) = &param.ty {
+        ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(..) => {
+            let data_type = if let ast::TypeName::PrimitiveSlice(.., prim) = &param.ty {
                 ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
             } else {
                 quote! { u8 }
@@ -18,18 +18,19 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                     attrs: vec![],
                     by_ref: None,
                     mutability: None,
-                    ident: Ident::new(
-                        (param.name.clone() + "_diplomat_data").as_str(),
-                        Span::call_site(),
-                    ),
+                    ident: Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site()),
                     subpat: None,
                 })),
                 colon_token: syn::token::Colon(Span::call_site()),
                 ty: Box::new(
-                    parse2(if mutability.is_mutable() {
-                        quote! { *mut #data_type }
-                    } else {
-                        quote! { *const #data_type }
+                    parse2({
+                        if let ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, _) =
+                            &param.ty
+                        {
+                            quote! { *mut #data_type }
+                        } else {
+                            quote! { *const #data_type }
+                        }
                     })
                     .unwrap(),
                 ),
@@ -41,10 +42,7 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                     attrs: vec![],
                     by_ref: None,
                     mutability: None,
-                    ident: Ident::new(
-                        (param.name.clone() + "_diplomat_len").as_str(),
-                        Span::call_site(),
-                    ),
+                    ident: Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site()),
                     subpat: None,
                 })),
                 colon_token: syn::token::Colon(Span::call_site()),
@@ -75,17 +73,12 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
 
 fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
     match &param.ty {
-        ast::TypeName::StrReference(mutability) | ast::TypeName::PrimitiveSlice(_, mutability) => {
-            let data_ident = Ident::new(
-                (param.name.clone() + "_diplomat_data").as_str(),
-                Span::call_site(),
-            );
-            let len_ident = Ident::new(
-                (param.name.clone() + "_diplomat_len").as_str(),
-                Span::call_site(),
-            );
+        ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(..) => {
+            let data_ident =
+                Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site());
+            let len_ident = Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site());
 
-            let tokens = if let ast::TypeName::PrimitiveSlice(..) = &param.ty {
+            let tokens = if let ast::TypeName::PrimitiveSlice(_, mutability, _) = &param.ty {
                 match mutability {
                     ast::Mutability::Mutable => quote! {
                         unsafe { core::slice::from_raw_parts_mut(#data_ident, #len_ident) }
@@ -96,17 +89,10 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                 }
             } else {
                 // TODO(#57): don't just unwrap? or should we assume that the other side gives us a good value?
-                match mutability {
-                    ast::Mutability::Mutable => quote! {
-                        unsafe {
-                            core::str::from_utf8_mut(core::slice::from_raw_parts_mut(#data_ident, #len_ident)).unwrap()
-                        }
-                    },
-                    ast::Mutability::Immutable => quote! {
-                        unsafe {
-                            core::str::from_utf8(core::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
-                        }
-                    },
+                quote! {
+                    unsafe {
+                        core::str::from_utf8(core::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
+                    }
                 }
             };
             expanded_params.push(parse2(tokens).unwrap());
@@ -151,17 +137,17 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
                 attrs: vec![],
                 pat: Box::new(this_ident.clone()),
                 colon_token: syn::token::Colon(Span::call_site()),
-                ty: Box::new(self_param.ty.to_syn()),
+                ty: Box::new(self_param.to_typename().to_syn()),
             }),
         );
     }
 
     let lifetimes = {
-        let lifetimes = &m.introduced_lifetimes;
-        if lifetimes.is_empty() {
+        let lifetime_env = &m.lifetime_env;
+        if lifetime_env.is_empty() {
             quote! {}
         } else {
-            quote! { <#(#lifetimes),*> }
+            quote! { <#lifetime_env> }
         }
     };
 
@@ -268,23 +254,21 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     });
 
     for custom_type in module.declared_types.values() {
-        custom_type
-            .methods()
-            .iter()
-            .for_each(|m| new_contents.push(gen_custom_type_method(custom_type, m)));
+        custom_type.methods().iter().for_each(|m| {
+            new_contents.push(gen_custom_type_method(custom_type, m));
+        });
 
         let destroy_ident = Ident::new(
             format!("{}_destroy", custom_type.name()).as_str(),
             Span::call_site(),
         );
 
-        let type_ident = Ident::new(custom_type.name(), Span::call_site());
+        let type_ident = custom_type.name().to_syn();
 
-        let (lifetime_defs, lifetimes) = if let Some(lifetime_defs) = custom_type.lifetimes() {
-            let lifetimes = lifetime_defs.iter().map(|lt| &lt.lifetime);
+        let (lifetime_defs, lifetimes) = if let Some(lifetime_env) = custom_type.lifetimes() {
             (
-                quote! { <#(#lifetime_defs),*> }, // with bounds
-                quote! { <#(#lifetimes),*> },     // without bounds
+                quote! { <#lifetime_env> },
+                lifetime_env.lifetimes_to_tokens(),
             )
         } else {
             (quote! {}, quote! {})
@@ -362,25 +346,6 @@ mod tests {
 
                     impl Foo {
                         pub fn from_str(s: &str) {
-                            unimplemented!()
-                        }
-                    }
-                }
-            })
-            .to_token_stream()
-            .to_string()
-        ));
-    }
-
-    #[test]
-    fn method_taking_mutable_str() {
-        insta::assert_display_snapshot!(rustfmt_code(
-            &gen_bridge(parse_quote! {
-                mod ffi {
-                    struct Foo {}
-
-                    impl Foo {
-                        pub fn make_uppercase(s: &mut str) {
                             unimplemented!()
                         }
                     }

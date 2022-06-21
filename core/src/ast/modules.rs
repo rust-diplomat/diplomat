@@ -6,15 +6,15 @@ use quote::ToTokens;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    CustomType, Enum, Method, ModSymbol, OpaqueStruct, Path, PathType, RustLink, Struct,
+    CustomType, Enum, Ident, Method, ModSymbol, OpaqueStruct, Path, PathType, RustLink, Struct,
     ValidityError,
 };
 use crate::environment::*;
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
-    pub name: String,
-    pub imports: Vec<(Path, String)>,
-    pub declared_types: BTreeMap<String, CustomType>,
+    pub name: Ident,
+    pub imports: Vec<(Path, Ident)>,
+    pub declared_types: BTreeMap<Ident, CustomType>,
     pub sub_modules: Vec<Module>,
 }
 
@@ -98,12 +98,12 @@ impl Module {
                             .any(|a| a.path.to_token_stream().to_string() == "diplomat :: opaque")
                         {
                             custom_types_by_name.insert(
-                                strct.ident.to_string(),
+                                (&strct.ident).into(),
                                 CustomType::Opaque(OpaqueStruct::from(strct)),
                             );
                         } else {
                             custom_types_by_name.insert(
-                                strct.ident.to_string(),
+                                (&strct.ident).into(),
                                 CustomType::Struct(Struct::from(strct)),
                             );
                         }
@@ -113,7 +113,7 @@ impl Module {
                 Item::Enum(enm) => {
                     if analyze_types {
                         custom_types_by_name
-                            .insert(enm.ident.to_string(), CustomType::Enum(Enum::from(enm)));
+                            .insert((&enm.ident).into(), CustomType::Enum(Enum::from(enm)));
                     }
                 }
 
@@ -126,9 +126,6 @@ impl Module {
                             _ => panic!("Self type not found"),
                         };
 
-                        let impl_lifetimes =
-                            imp.generics.lifetimes().map(Into::into).collect::<Vec<_>>();
-
                         let mut new_methods = imp
                             .items
                             .iter()
@@ -137,7 +134,7 @@ impl Module {
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, self_path.clone(), impl_lifetimes.clone()))
+                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics)))
                             .collect();
 
                         let self_ident = self_path.path.elements.last().unwrap();
@@ -162,7 +159,7 @@ impl Module {
             });
 
         Module {
-            name: input.ident.to_string(),
+            name: (&input.ident).into(),
             imports,
             declared_types: custom_types_by_name,
             sub_modules,
@@ -170,14 +167,14 @@ impl Module {
     }
 }
 
-fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, String)>) {
+fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, Ident)>) {
     match use_tree {
         UseTree::Name(name) => out.push((
-            base_path.sub_path(name.ident.to_string()),
-            name.ident.to_string(),
+            base_path.sub_path((&name.ident).into()),
+            (&name.ident).into(),
         )),
         UseTree::Path(path) => {
-            extract_imports(&base_path.sub_path(path.ident.to_string()), &path.tree, out)
+            extract_imports(&base_path.sub_path((&path.ident).into()), &path.tree, out)
         }
         UseTree::Glob(_) => todo!("Glob imports are not yet supported"),
         UseTree::Group(group) => {
@@ -187,8 +184,8 @@ fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, St
                 .for_each(|i| extract_imports(base_path, i, out));
         }
         UseTree::Rename(rename) => out.push((
-            base_path.sub_path(rename.ident.to_string()),
-            rename.rename.to_string(),
+            base_path.sub_path((&rename.ident).into()),
+            (&rename.rename).into(),
         )),
     }
 }

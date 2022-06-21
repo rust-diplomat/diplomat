@@ -1,6 +1,6 @@
 use std::fmt;
 
-use diplomat_core::ast;
+use diplomat_core::ast::{self, Ident};
 use pulldown_cmark::{BrokenLink, CowStr, Event, LinkType, Options, Parser, Tag};
 
 pub fn markdown_to_rst<W: fmt::Write>(
@@ -57,9 +57,10 @@ pub fn markdown_to_rst<W: fmt::Write>(
             Event::Code(text) => {
                 if in_shortcut {
                     write_reference(
-                        &ast::Path {
-                            elements: text.split("::").map(|s| s.to_string()).collect(),
-                        },
+                        &text
+                            .split("::")
+                            .map(|s| Ident::from(s.to_string()))
+                            .collect::<ast::Path>(),
                         out,
                     )?;
                 } else {

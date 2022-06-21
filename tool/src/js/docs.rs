@@ -52,9 +52,6 @@ pub fn gen_docs(
             writeln!(out, "{}", title)?;
             writeln!(out, "{}", "=".repeat(title.len()))?;
 
-            let mut sorted_symbols: Vec<&String> = module.names().collect();
-            sorted_symbols.sort();
-
             for item in module.items() {
                 if let ast::ModSymbol::CustomType(ref typ) = item {
                     writeln!(out)?;
@@ -82,8 +79,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
             &mut class_indented,
             &typ.docs().to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved =
-                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
+                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
                 write!(to, ":js:class:`{}`", resolved.name())?;
                 Ok(())
             },
@@ -112,7 +108,11 @@ pub fn gen_method_docs<W: fmt::Write>(
     docs_url_gen: &ast::DocsUrlGenerator,
     env: &Env,
 ) -> fmt::Result {
-    let mut param_names: Vec<String> = method.params.iter().map(|p| p.name.clone()).collect();
+    let mut param_names = method
+        .params
+        .iter()
+        .map(|p| p.name.as_str())
+        .collect::<Vec<_>>();
     if method.is_writeable_out() {
         param_names.remove(param_names.len() - 1);
     }
@@ -139,8 +139,7 @@ pub fn gen_method_docs<W: fmt::Write>(
             &mut method_indented,
             &method.docs.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved =
-                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
+                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
                 write!(to, ":js:class:`{}`", resolved.name())?;
                 Ok(())
             },
@@ -166,7 +165,7 @@ pub fn gen_method_docs<W: fmt::Write>(
 
 pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
-    field: &(String, ast::TypeName, ast::Docs),
+    field: &(ast::Ident, ast::TypeName, ast::Docs),
     in_path: &ast::Path,
     docs_url_gen: &ast::DocsUrlGenerator,
     env: &Env,
@@ -179,8 +178,7 @@ pub fn gen_field_docs<W: fmt::Write>(
             &mut field_indented,
             &field.2.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved =
-                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
+                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
                 write!(to, ":js:class:`{}`", resolved.name())?;
                 Ok(())
             },

@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::ControlFlow};
 
 use proc_macro2::Span;
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
 
@@ -9,8 +9,10 @@ use lazy_static::lazy_static;
 use std::fmt;
 use std::iter::FromIterator;
 
-use super::{Docs, Enum, Method, OpaqueStruct, Path, Struct, ValidityError};
-use crate::Env;
+use super::{
+    Docs, Enum, Ident, Lifetime, LifetimeEnv, Method, OpaqueStruct, Path, Struct, ValidityError,
+};
+use crate::{Env, ModuleEnv};
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
@@ -25,7 +27,7 @@ pub enum CustomType {
 
 impl CustomType {
     /// Get the name of the custom type, which is unique within a module.
-    pub fn name(&self) -> &String {
+    pub fn name(&self) -> &Ident {
         match self {
             CustomType::Struct(strct) => &strct.name,
             CustomType::Opaque(strct) => &strct.name,
@@ -56,10 +58,10 @@ impl CustomType {
     }
 
     /// Get the lifetimes of the custom type.
-    pub fn lifetimes(&self) -> Option<&[LifetimeDef]> {
+    pub fn lifetimes(&self) -> Option<&LifetimeEnv> {
         match self {
-            CustomType::Struct(strct) => Some(&strct.lifetimes[..]),
-            CustomType::Opaque(strct) => Some(&strct.lifetimes[..]),
+            CustomType::Struct(strct) => Some(&strct.lifetimes),
+            CustomType::Opaque(strct) => Some(&strct.lifetimes),
             CustomType::Enum(_) => None,
         }
     }
@@ -113,7 +115,7 @@ pub enum ModSymbol {
     /// A symbol that is a pointer to another path.
     Alias(Path),
     /// A symbol that is a submodule.
-    SubModule(String),
+    SubModule(Ident),
     /// A symbol that is a custom type.
     CustomType(CustomType),
 }
@@ -165,9 +167,11 @@ impl PathType {
     /// to `PathType`s, we don't panic. We don't actually need to write the struct's
     /// field types expanded in the macro, so this function is more for correctness,
     pub fn extract_self_type(strct: &syn::ItemStruct) -> Self {
+        let self_name = (&strct.ident).into();
+
         PathType {
             path: Path {
-                elements: vec![strct.ident.to_string()],
+                elements: vec![self_name],
             },
             lifetimes: strct
                 .generics
@@ -175,6 +179,62 @@ impl PathType {
                 .map(|lt_def| (&lt_def.lifetime).into())
                 .collect(),
         }
+    }
+
+    /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
+    /// the `env`, which contains all [`CustomType`]s across all FFI modules.
+    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
+        let local_path = &self.path;
+        let mut cur_path = in_path.clone();
+        for (i, elem) in local_path.elements.iter().enumerate() {
+            match elem.as_str() {
+                "crate" => {
+                    // TODO(#34): get the name of enclosing crate from env when we support multiple crates
+                    cur_path = Path::empty()
+                }
+
+                "super" => cur_path = cur_path.get_super(),
+
+                o => match env.get(&cur_path, o) {
+                    Some(ModSymbol::Alias(p)) => {
+                        let mut remaining_elements: Vec<Ident> =
+                            local_path.elements.iter().skip(i + 1).cloned().collect();
+                        let mut new_path = p.elements.clone();
+                        new_path.append(&mut remaining_elements);
+                        return PathType::new(Path { elements: new_path })
+                            .resolve_with_path(&cur_path.clone(), env);
+                    }
+                    Some(ModSymbol::SubModule(name)) => {
+                        cur_path.elements.push(name.clone());
+                    }
+                    Some(ModSymbol::CustomType(t)) => {
+                        if i == local_path.elements.len() - 1 {
+                            return (cur_path, t);
+                        } else {
+                            panic!(
+                                "Unexpected custom type when resolving symbol {} in {}",
+                                o,
+                                cur_path.elements.join("::")
+                            )
+                        }
+                    }
+                    None => panic!(
+                        "Could not resolve symbol {} in {}",
+                        o,
+                        cur_path.elements.join("::")
+                    ),
+                },
+            }
+        }
+
+        panic!(
+            "Path {} does not point to a custom type",
+            in_path.elements.join("::")
+        )
+    }
+
+    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
+        self.resolve_with_path(in_path, env).1
     }
 }
 
@@ -256,7 +316,7 @@ pub enum TypeName {
     /// are collected with [`TypeName::resolve()`].
     Named(PathType),
     /// An optionally mutable reference to another type.
-    Reference(Box<TypeName>, Mutability, Lifetime),
+    Reference(Lifetime, Mutability, Box<TypeName>),
     /// A `Box<T>` type.
     Box(Box<TypeName>),
     /// A `Option<T>` type.
@@ -266,9 +326,9 @@ pub enum TypeName {
     /// A `diplomat_runtime::DiplomatWriteable` type.
     Writeable,
     /// A `&str` type.
-    StrReference(Mutability),
+    StrReference(Lifetime),
     /// A `&[T]` type, where `T` is a primitive.
-    PrimitiveSlice(PrimitiveType, Mutability),
+    PrimitiveSlice(Lifetime, Mutability, PrimitiveType),
     /// The `()` type.
     Unit,
 }
@@ -281,7 +341,7 @@ impl TypeName {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
             TypeName::Named(name) => syn::Type::Path(name.to_syn()),
-            TypeName::Reference(underlying, mutability, lifetime) => {
+            TypeName::Reference(lifetime, mutability, underlying) => {
                 syn::Type::Reference(TypeReference {
                     and_token: syn::token::And(Span::call_site()),
                     lifetime: lifetime.to_syn(),
@@ -294,7 +354,7 @@ impl TypeName {
                 path: syn::Path {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: Ident::new("Box", Span::call_site()),
+                        ident: syn::Ident::new("Box", Span::call_site()),
                         arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                             colon2_token: None,
                             lt_token: syn::token::Lt(Span::call_site()),
@@ -311,7 +371,7 @@ impl TypeName {
                 path: syn::Path {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: Ident::new("Option", Span::call_site()),
+                        ident: syn::Ident::new("Option", Span::call_site()),
                         arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
                             colon2_token: None,
                             lt_token: syn::token::Lt(Span::call_site()),
@@ -329,11 +389,11 @@ impl TypeName {
                     leading_colon: None,
                     segments: Punctuated::from_iter(vec![
                         PathSegment {
-                            ident: Ident::new("diplomat_runtime", Span::call_site()),
+                            ident: syn::Ident::new("diplomat_runtime", Span::call_site()),
                             arguments: PathArguments::None,
                         },
                         PathSegment {
-                            ident: Ident::new("DiplomatResult", Span::call_site()),
+                            ident: syn::Ident::new("DiplomatResult", Span::call_site()),
                             arguments: PathArguments::AngleBracketed(
                                 AngleBracketedGenericArguments {
                                     colon2_token: None,
@@ -352,20 +412,16 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference(Mutability::Mutable) => syn::parse_quote! {
-                &mut str
-            },
-            TypeName::StrReference(Mutability::Immutable) => syn::parse_quote! {
-                &str
-            },
-            TypeName::PrimitiveSlice(name, mutable) => {
-                // Do we need a lifetime here?
-                // What if we have `&'a [u8]`?
-                // I think this would involve a new field on `TypeName::PrimitiveSlice`
+            TypeName::StrReference(lifetime) => syn::parse_str(&format!(
+                "{}str",
+                ReferenceDisplay(lifetime, &Mutability::Immutable)
+            ))
+            .unwrap(),
+            TypeName::PrimitiveSlice(lifetime, mutability, name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
-                    "&{}[{}]",
-                    if mutable.is_mutable() { "mut " } else { "" },
+                    "{}[{}]",
+                    ReferenceDisplay(lifetime, mutability),
                     primitive_name
                 );
                 syn::parse_str(&formatted_str).unwrap()
@@ -391,8 +447,14 @@ impl TypeName {
     pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathType>) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
+                let lifetime = Lifetime::from(&r.lifetime);
+                let mutability = Mutability::from_syn(&r.mutability);
+
                 if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference(Mutability::from_syn(&r.mutability));
+                    if mutability.is_mutable() {
+                        panic!("mutable `str` references are disallowed");
+                    }
+                    return TypeName::StrReference(lifetime);
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -401,17 +463,14 @@ impl TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(
-                                *primitive,
-                                Mutability::from_syn(&r.mutability),
-                            );
+                            return TypeName::PrimitiveSlice(lifetime, mutability, *primitive);
                         }
                     }
                 }
                 TypeName::Reference(
+                    lifetime,
+                    mutability,
                     Box::new(TypeName::from_syn(r.elem.as_ref(), self_path_type)),
-                    Mutability::from_syn(&r.mutability),
-                    Lifetime::from(&r.lifetime),
                 )
             }
             syn::Type::Path(p) => {
@@ -482,65 +541,32 @@ impl TypeName {
         }
     }
 
-    /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
-    /// the `env`, which contains all [`CustomType`]s across all FFI modules.
-    pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
+    /// Recurse down the type tree, visiting all lifetimes.
+    ///
+    /// Using this function, you can collect all the lifetimes into a collection,
+    /// or examine each one without having to make any additional allocations.
+    pub fn visit_lifetimes<'a, F, B>(&'a self, visit: &mut F) -> ControlFlow<B>
+    where
+        F: FnMut(&'a Lifetime, LifetimeOrigin) -> ControlFlow<B>,
+    {
         match self {
-            TypeName::Named(local_path_type) => {
-                let local_path = &local_path_type.path;
-                let mut cur_path = in_path.clone();
-                for (i, elem) in local_path.elements.iter().enumerate() {
-                    match elem.as_ref() {
-                        "crate" => {
-                            // TODO(#34): get the name of enclosing crate from env when we support multiple crates
-                            cur_path = Path::empty()
-                        }
-
-                        "super" => cur_path = cur_path.get_super(),
-
-                        o => match env.get(&cur_path, o) {
-                            Some(ModSymbol::Alias(p)) => {
-                                let mut remaining_elements: Vec<String> =
-                                    local_path.elements.iter().skip(i + 1).cloned().collect();
-                                let mut new_path = p.elements.clone();
-                                new_path.append(&mut remaining_elements);
-                                return TypeName::Named(PathType::new(Path { elements: new_path }))
-                                    .resolve_with_path(&cur_path.clone(), env);
-                            }
-                            Some(ModSymbol::SubModule(name)) => {
-                                cur_path.elements.push(name.clone());
-                            }
-                            Some(ModSymbol::CustomType(t)) => {
-                                if i == local_path.elements.len() - 1 {
-                                    return (cur_path, t);
-                                } else {
-                                    panic!(
-                                        "Unexpected custom type when resolving symbol {} in {}",
-                                        o,
-                                        cur_path.elements.join("::")
-                                    )
-                                }
-                            }
-                            None => panic!(
-                                "Could not resolve symbol {} in {}",
-                                o,
-                                cur_path.elements.join("::")
-                            ),
-                        },
-                    }
-                }
-
-                panic!(
-                    "Path {} does not point to a custom type",
-                    in_path.elements.join("::")
-                )
+            TypeName::Named(path_type) => path_type
+                .lifetimes
+                .iter()
+                .try_for_each(|lt| visit(lt, LifetimeOrigin::Named)),
+            TypeName::Reference(lt, _, ty) => {
+                ty.visit_lifetimes(visit)?;
+                visit(lt, LifetimeOrigin::Reference)
             }
-            _ => panic!(),
+            TypeName::Box(ty) | TypeName::Option(ty) => ty.visit_lifetimes(visit),
+            TypeName::Result(ok, err) => {
+                ok.visit_lifetimes(visit)?;
+                err.visit_lifetimes(visit)
+            }
+            TypeName::StrReference(lt) => visit(lt, LifetimeOrigin::StrReference),
+            TypeName::PrimitiveSlice(lt, ..) => visit(lt, LifetimeOrigin::PrimitiveSlice),
+            _ => ControlFlow::Continue(()),
         }
-    }
-
-    pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
-        self.resolve_with_path(in_path, env).1
     }
 
     fn check_opaque<'a>(
@@ -551,7 +577,7 @@ impl TypeName {
         errors: &mut Vec<ValidityError>,
     ) {
         match self {
-            TypeName::Reference(underlying, _, _) => {
+            TypeName::Reference(.., underlying) => {
                 underlying.check_opaque(in_path, env, true, errors)
             }
             TypeName::Box(underlying) => underlying.check_opaque(in_path, env, true, errors),
@@ -560,9 +586,8 @@ impl TypeName {
                 ok.check_opaque(in_path, env, false, errors);
                 err.check_opaque(in_path, env, false, errors);
             }
-            TypeName::Primitive(_) => {}
-            TypeName::Named(_) => {
-                if let CustomType::Opaque(_) = self.resolve(in_path, env) {
+            TypeName::Named(path_type) => {
+                if let CustomType::Opaque(_) = path_type.resolve(in_path, env) {
                     if !behind_reference {
                         errors.push(ValidityError::OpaqueAsValue(self.clone()))
                     }
@@ -570,17 +595,14 @@ impl TypeName {
                     errors.push(ValidityError::NonOpaqueBehindRef(self.clone()))
                 }
             }
-            TypeName::Writeable => {}
-            TypeName::StrReference(_mut) => {}
-            TypeName::PrimitiveSlice(_, _mut) => {}
-            TypeName::Unit => {}
+            _ => {}
         }
     }
 
     // Disallow non-pointer containing Option<T> inside struct fields and Result
     fn check_option(&self, errors: &mut Vec<ValidityError>) {
         match self {
-            TypeName::Reference(underlying, _mut, _lt) => underlying.check_option(errors),
+            TypeName::Reference(.., underlying) => underlying.check_option(errors),
             TypeName::Box(underlying) => underlying.check_option(errors),
             TypeName::Option(underlying) => {
                 if !underlying.is_pointer() {
@@ -591,18 +613,15 @@ impl TypeName {
                 ok.check_option(errors);
                 err.check_option(errors);
             }
-            TypeName::Primitive(_) => {}
-            TypeName::Named(_) => {}
-            TypeName::Writeable => {}
-            TypeName::StrReference(_mut) => {}
-            TypeName::PrimitiveSlice(_, _mut) => {}
-            TypeName::Unit => {}
+            _ => {}
         }
     }
 
     /// Checks that any references to opaque structs in parameters or return values
     /// are always behind a box or reference, and that non-opaque custom types are *never* behind
     /// references or boxes.
+    ///
+    /// Also checks that there are no elided lifetimes in the return type.
     ///
     /// Errors are pushed into the `errors` vector.
     pub fn check_validity<'a>(
@@ -613,6 +632,92 @@ impl TypeName {
     ) {
         self.check_opaque(in_path, env, false, errors);
         self.check_option(errors);
+    }
+
+    /// Checks the validity of return types.
+    ///
+    /// This is equivalent to `TypeName::check_validity`, but it also ensures
+    /// that the type doesn't elide any lifetimes.
+    ///
+    /// Once we decide to support lifetime elision in return types, this function
+    /// will probably be removed.
+    pub fn check_return_type_validity(
+        &self,
+        in_path: &Path,
+        env: &Env,
+        errors: &mut Vec<ValidityError>,
+    ) {
+        self.check_validity(in_path, env, errors);
+        self.check_lifetime_elision(self, &env[in_path], errors);
+    }
+
+    /// Checks that there aren't any elided lifetimes.
+    fn check_lifetime_elision(
+        &self,
+        full_type: &Self,
+        env: &ModuleEnv,
+        errors: &mut Vec<ValidityError>,
+    ) {
+        match self {
+            TypeName::Named(path_type) => {
+                let name = path_type.path.elements.last().unwrap();
+                if let ModSymbol::CustomType(custom) = &env[name.as_str()] {
+                    if let Some(lifetimes) = custom.lifetimes() {
+                        let lifetimes_provided = path_type
+                            .lifetimes
+                            .iter()
+                            .filter(|lt| !matches!(lt, Lifetime::Anonymous))
+                            .count();
+
+                        if lifetimes_provided != lifetimes.len() {
+                            // There's a discrepency between the number of declared
+                            // lifetimes and the number of lifetimes provided in
+                            // the return type, so there must have been elision.
+                            errors.push(ValidityError::LifetimeElisionInReturn {
+                                full_type: full_type.clone(),
+                                sub_type: self.clone(),
+                            });
+                        } else {
+                            // The struct was written with the number of lifetimes
+                            // that it was declared with, so we're good.
+                        }
+                    } else {
+                        // `CustomType::Enum`, which doesn't have any lifetimes.
+                        // We already checked that enums don't have generics in
+                        // core.
+                    }
+                } else {
+                    // We looked in the environment for a custom type with our
+                    // name, but we found an alias or submodule instead of a type.
+                    errors.push(ValidityError::PathTypeNameConflict(name.clone()))
+                }
+            }
+            TypeName::Reference(lifetime, _, ty) => {
+                if let Lifetime::Anonymous = lifetime {
+                    errors.push(ValidityError::LifetimeElisionInReturn {
+                        full_type: full_type.clone(),
+                        sub_type: self.clone(),
+                    });
+                }
+
+                ty.check_lifetime_elision(full_type, env, errors);
+            }
+            TypeName::Box(ty) | TypeName::Option(ty) => {
+                ty.check_lifetime_elision(full_type, env, errors)
+            }
+            TypeName::Result(ok, err) => {
+                ok.check_lifetime_elision(full_type, env, errors);
+                err.check_lifetime_elision(full_type, env, errors);
+            }
+            TypeName::StrReference(Lifetime::Anonymous)
+            | TypeName::PrimitiveSlice(Lifetime::Anonymous, ..) => {
+                errors.push(ValidityError::LifetimeElisionInReturn {
+                    full_type: full_type.clone(),
+                    sub_type: self.clone(),
+                });
+            }
+            _ => {}
+        }
     }
 
     pub fn is_zst(&self) -> bool {
@@ -640,8 +745,14 @@ impl From<&syn::Type> for TypeName {
     fn from(ty: &syn::Type) -> TypeName {
         match ty {
             syn::Type::Reference(r) => {
+                let lifetime = Lifetime::from(&r.lifetime);
+                let mutability = Mutability::from_syn(&r.mutability);
+
                 if r.elem.to_token_stream().to_string() == "str" {
-                    return TypeName::StrReference(Mutability::from_syn(&r.mutability));
+                    if mutability.is_mutable() {
+                        panic!("mutable `str` references are disallowed");
+                    }
+                    return TypeName::StrReference(lifetime);
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -650,18 +761,11 @@ impl From<&syn::Type> for TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(
-                                *primitive,
-                                Mutability::from_syn(&r.mutability),
-                            );
+                            return TypeName::PrimitiveSlice(lifetime, mutability, *primitive);
                         }
                     }
                 }
-                TypeName::Reference(
-                    Box::new(r.elem.as_ref().into()),
-                    Mutability::from_syn(&r.mutability),
-                    Lifetime::from(&r.lifetime),
-                )
+                TypeName::Reference(lifetime, mutability, Box::new(r.elem.as_ref().into()))
             }
             syn::Type::Path(p) => {
                 if let Some(primitive) = p
@@ -724,6 +828,13 @@ impl From<&syn::Type> for TypeName {
     }
 }
 
+pub enum LifetimeOrigin {
+    Named,
+    Reference,
+    StrReference,
+    PrimitiveSlice,
+}
+
 fn is_runtime_type(p: &TypePath, name: &str) -> bool {
     (p.path.segments.len() == 1 && p.path.segments[0].ident == name)
         || (p.path.segments.len() == 2
@@ -746,12 +857,48 @@ impl fmt::Display for TypeName {
             TypeName::Option(ty) => write!(f, "Option<{}>", ty),
             TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
             TypeName::Writeable => f.write_str("DiplomatWriteable"),
-            TypeName::StrReference(Mutability::Mutable) => f.write_str("&mut str"),
-            TypeName::StrReference(Mutability::Immutable) => f.write_str("&str"),
-            TypeName::PrimitiveSlice(ty, Mutability::Mutable) => write!(f, "&mut [{}]", ty),
-            TypeName::PrimitiveSlice(ty, Mutability::Immutable) => write!(f, "&[{}]", ty),
+            TypeName::StrReference(lifetime) => {
+                write!(
+                    f,
+                    "{}str",
+                    ReferenceDisplay(lifetime, &Mutability::Immutable)
+                )
+            }
+            TypeName::PrimitiveSlice(lifetime, mutability, ty) => {
+                write!(f, "{}[{}]", ReferenceDisplay(lifetime, mutability), ty)
+            }
             TypeName::Unit => f.write_str("()"),
         }
+    }
+}
+
+/// A `fmt::Display` type makes formatting references easier.
+///
+/// # Examples
+///
+/// ```ignore
+/// let lifetime = Lifetime::from(&syn::parse_str::<syn::Lifetime>("'a"));
+/// let mutability = Mutability::Mutable;
+/// // ...
+/// let fmt = format!("{}[u8]", ReferenceDisplay(&lifetime, &mutability));
+///
+/// assert_eq!(fmt, "&'a mut [u8]");
+/// ```
+struct ReferenceDisplay<'a>(&'a Lifetime, &'a Mutability);
+
+impl<'a> fmt::Display for ReferenceDisplay<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.0 {
+            Lifetime::Static => "&'static ".fmt(f)?,
+            Lifetime::Named(lt) => write!(f, "&'{} ", lt)?,
+            Lifetime::Anonymous => '&'.fmt(f)?,
+        }
+
+        if self.1.is_mutable() {
+            "mut ".fmt(f)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -767,95 +914,6 @@ impl fmt::Display for PathType {
             '>'.fmt(f)?;
         }
         Ok(())
-    }
-}
-
-/// A lifetime as a generic parameter, potentially with bounds.
-///
-/// The `'a` and `'b: 'a` in `Foo<'a, 'b: 'a>`.
-#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
-pub struct LifetimeDef {
-    pub lifetime: Lifetime,
-    pub bounds: Vec<Lifetime>,
-}
-
-impl From<&syn::LifetimeDef> for LifetimeDef {
-    fn from(lifetime_def: &syn::LifetimeDef) -> Self {
-        Self {
-            lifetime: (&lifetime_def.lifetime).into(),
-            bounds: lifetime_def.bounds.iter().map(Into::into).collect(),
-        }
-    }
-}
-
-impl ToTokens for LifetimeDef {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        let LifetimeDef { lifetime, bounds } = self;
-        tokens.extend(if bounds.is_empty() {
-            quote! { #lifetime }
-        } else {
-            quote! { #lifetime: #(#bounds)+* }
-        })
-    }
-}
-
-#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
-pub enum Lifetime {
-    /// Kept separate because it doesn't matter as much when tracking lifetimes but it'll still need
-    /// to be mentioned in the type during codegen
-    Static,
-    Named(String),
-    Anonymous,
-}
-
-impl fmt::Display for Lifetime {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Lifetime::Static => "'static".fmt(f),
-            Lifetime::Named(ref s) => write!(f, "'{}", s),
-            Lifetime::Anonymous => "'_".fmt(f),
-        }
-    }
-}
-
-impl ToTokens for Lifetime {
-    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        let mut lt = |name| {
-            syn::Lifetime::new(name, Span::call_site()).to_tokens(tokens);
-        };
-
-        match self {
-            Lifetime::Static => lt("'static"),
-            Lifetime::Named(ref s) => lt(&format!("'{}", s)),
-            Lifetime::Anonymous => lt("'_"),
-        };
-    }
-}
-
-impl From<&syn::Lifetime> for Lifetime {
-    fn from(lt: &syn::Lifetime) -> Self {
-        if lt.ident == "static" {
-            Self::Static
-        } else {
-            Self::Named(lt.ident.to_string())
-        }
-    }
-}
-
-impl From<&Option<syn::Lifetime>> for Lifetime {
-    fn from(lt: &Option<syn::Lifetime>) -> Self {
-        lt.as_ref().map(Into::into).unwrap_or(Self::Anonymous)
-    }
-}
-
-impl Lifetime {
-    /// Converts the [`Lifetime`] back into an AST node that can be spliced into a program.
-    pub fn to_syn(&self) -> Option<syn::Lifetime> {
-        match *self {
-            Self::Static => Some(syn::Lifetime::new("'static", Span::call_site())),
-            Self::Anonymous => None,
-            Self::Named(ref s) => Some(syn::Lifetime::new(&format!("'{}", s), Span::call_site())),
-        }
     }
 }
 

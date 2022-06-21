@@ -8,8 +8,8 @@ use diplomat_core::Env;
 // TODO(#58): support non-32-bit platforms
 use u32 as usize_target;
 
-pub fn struct_offsets_size_max_align(
-    strct: &ast::Struct,
+pub fn struct_offsets_size_max_align<'a>(
+    type_names: impl Iterator<Item = &'a ast::TypeName>,
     in_path: &ast::Path,
     env: &Env,
 ) -> (Vec<usize>, Layout) {
@@ -17,7 +17,7 @@ pub fn struct_offsets_size_max_align(
     let mut next_offset = 0;
     let mut offsets = vec![];
 
-    for (_, typ, _) in &strct.fields {
+    for typ in type_names {
         let size_align = type_size_alignment(typ, in_path, env);
         let size = size_align.size();
         let align = size_align.align();
@@ -43,24 +43,15 @@ pub fn result_ok_offset_size_align(
     let ok_size_align = type_size_alignment(ok, in_path, env);
     let err_size_align = type_size_alignment(err, in_path, env);
     let (offsets, size_max_align) = struct_offsets_size_max_align(
-        &ast::Struct {
-            name: "".to_string(),
-            docs: Default::default(),
-            lifetimes: vec![],
-            fields: vec![
-                if ok_size_align.size() > err_size_align.size() {
-                    ("".to_string(), ok.clone(), Default::default())
-                } else {
-                    ("".to_string(), err.clone(), Default::default())
-                },
-                (
-                    "".to_string(),
-                    ast::TypeName::Primitive(PrimitiveType::bool),
-                    Default::default(),
-                ),
-            ],
-            methods: vec![],
-        },
+        [
+            if ok_size_align.size() > err_size_align.size() {
+                ok.clone()
+            } else {
+                err.clone()
+            },
+            ast::TypeName::Primitive(PrimitiveType::bool),
+        ]
+        .iter(),
         in_path,
         env,
     );
@@ -86,9 +77,13 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
             let (_, size_align) = result_ok_offset_size_align(ok, err, in_path, env);
             size_align
         }
-        ast::TypeName::Named(_) => match typ.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {
-                let (_, size_max_align) = struct_offsets_size_max_align(strct, in_path, env);
+                let (_, size_max_align) = struct_offsets_size_max_align(
+                    strct.fields.iter().map(|(_, typ, _)| typ),
+                    in_path,
+                    env,
+                );
                 size_max_align
             }
 
@@ -107,8 +102,8 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
         // ast::TypeName::StrReference => Layout::new::<&str>(),
         // ast::TypeName::PrimitiveSlice(_) => Layout::new::<&[u8]>(),
         // Temporary:
-        ast::TypeName::StrReference(_) => Layout::new::<(usize_target, usize_target)>(),
-        ast::TypeName::PrimitiveSlice(_, _) => Layout::new::<(usize_target, usize_target)>(),
+        ast::TypeName::StrReference(..) => Layout::new::<(usize_target, usize_target)>(),
+        ast::TypeName::PrimitiveSlice(..) => Layout::new::<(usize_target, usize_target)>(),
         ast::TypeName::Writeable => panic!(),
         ast::TypeName::Unit => Layout::new::<()>(),
     }

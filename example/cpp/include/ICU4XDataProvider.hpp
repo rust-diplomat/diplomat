@@ -38,6 +38,11 @@ class ICU4XDataProvider {
    * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html) for more information.
    */
   static ICU4XDataProvider new_static();
+
+  /**
+   * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
+   */
+  static diplomat::result<std::monostate, std::monostate> returns_result();
   inline const capi::ICU4XDataProvider* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XDataProvider* AsFFIMut() { return this->inner.get(); }
   inline ICU4XDataProvider(capi::ICU4XDataProvider* i) : inner(i) {}
@@ -51,5 +56,15 @@ class ICU4XDataProvider {
 
 inline ICU4XDataProvider ICU4XDataProvider::new_static() {
   return ICU4XDataProvider(capi::ICU4XDataProvider_new_static());
+}
+inline diplomat::result<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
+  auto diplomat_result_raw_out_value = capi::ICU4XDataProvider_returns_result();
+  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok(std::monostate());
+  } else {
+    diplomat_result_out_value = diplomat::Err(std::monostate());
+  }
+  return diplomat_result_out_value;
 }
 #endif

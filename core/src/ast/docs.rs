@@ -1,4 +1,4 @@
-use super::Path;
+use super::{Ident, Path};
 use core::fmt;
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
@@ -109,7 +109,11 @@ impl RustLink {
         use rustdoc_types::ItemKind::*;
         Self {
             path: Path {
-                elements: item.path,
+                elements: item
+                    .path
+                    .into_iter()
+                    .map(|s| Ident::try_from(s).expect("item path is valid"))
+                    .collect(),
             },
             typ: match item.kind {
                 Module => DocType::Mod,
@@ -179,7 +183,7 @@ impl DocsUrlGenerator {
 
         let base = self
             .base_urls
-            .get(&rust_link.path.elements[0])
+            .get(rust_link.path.elements[0].as_str())
             .map(String::as_str)
             .or(self.default_url.as_deref())
             .unwrap_or("https://docs.rs/");
@@ -189,7 +193,7 @@ impl DocsUrlGenerator {
             r.push('/');
         }
         if r == "https://docs.rs/" {
-            r.push_str(&rust_link.path.elements[0]);
+            r.push_str(rust_link.path.elements[0].as_str());
             r.push_str("/latest/");
         }
 
@@ -205,7 +209,7 @@ impl DocsUrlGenerator {
             };
 
         for _ in 0..module_depth {
-            r.push_str(elements.next().unwrap());
+            r.push_str(elements.next().unwrap().as_str());
             r.push('/');
         }
 
@@ -224,32 +228,32 @@ impl DocsUrlGenerator {
             Mod => unreachable!(),
         });
 
-        r.push_str(elements.next().unwrap());
+        r.push_str(elements.next().unwrap().as_str());
 
         r.push_str(".html");
 
         match rust_link.typ {
             FnInStruct | FnInEnum | DefaultFnInTrait => {
                 r.push_str("#method.");
-                r.push_str(elements.next().unwrap());
+                r.push_str(elements.next().unwrap().as_str());
             }
             FnInTrait => {
                 r.push_str("#tymethod.");
-                r.push_str(elements.next().unwrap());
+                r.push_str(elements.next().unwrap().as_str());
             }
             EnumVariant => {
                 r.push_str("#variant.");
-                r.push_str(elements.next().unwrap());
+                r.push_str(elements.next().unwrap().as_str());
             }
             StructField => {
                 r.push_str("#structfield.");
-                r.push_str(elements.next().unwrap());
+                r.push_str(elements.next().unwrap().as_str());
             }
             EnumVariantField => {
                 r.push_str("#variant.");
-                r.push_str(elements.next().unwrap());
+                r.push_str(elements.next().unwrap().as_str());
                 r.push_str(".field.");
-                r.push_str(elements.next().unwrap());
+                r.push_str(elements.next().unwrap().as_str());
             }
             _ => {}
         }

@@ -111,8 +111,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
             &mut class_indented,
             &typ.docs().to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved =
-                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
+                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
                 match resolved {
                     ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
                     ast::CustomType::Enum(_) => {
@@ -211,14 +210,13 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     writeln!(out)?;
 
+    let mut method_indented = indented(out).with_str("    ");
     if !method.docs.is_empty() {
-        let mut method_indented = indented(out).with_str("    ");
         markdown_to_rst(
             &mut method_indented,
             &method.docs.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved =
-                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
+                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
                 match resolved {
                     ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
                     ast::CustomType::Enum(_) => {
@@ -231,13 +229,27 @@ pub fn gen_method_docs<W: fmt::Write>(
         )?;
         writeln!(method_indented)?;
     }
+    let borrowed_params = method.borrowed_params();
+    let mut names = borrowed_params.names("this");
+
+    if let Some(first) = names.next() {
+        write!(method_indented, "\nLifetimes: ``{}``", first).unwrap();
+        for param in names {
+            write!(method_indented, ", ``{}``", param).unwrap();
+        }
+        writeln!(
+            method_indented,
+            " must live at least as long as the output."
+        )
+        .unwrap();
+    }
 
     Ok(())
 }
 
 pub fn gen_field_docs<W: fmt::Write>(
     out: &mut W,
-    field: &(String, ast::TypeName, ast::Docs),
+    field: &(ast::Ident, ast::TypeName, ast::Docs),
     in_path: &ast::Path,
     env: &Env,
     library_config: &LibraryConfig,
@@ -252,8 +264,7 @@ pub fn gen_field_docs<W: fmt::Write>(
             &mut field_indented,
             &field.2.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved =
-                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
+                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
                 match resolved {
                     ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
                     ast::CustomType::Enum(_) => {
@@ -272,7 +283,7 @@ pub fn gen_field_docs<W: fmt::Write>(
 
 pub fn gen_enum_variant_docs<W: fmt::Write>(
     out: &mut W,
-    variant: &(String, isize, ast::Docs),
+    variant: &(ast::Ident, isize, ast::Docs),
     in_path: &ast::Path,
     env: &Env,
     docs_url_gen: &ast::DocsUrlGenerator,
@@ -287,8 +298,7 @@ pub fn gen_enum_variant_docs<W: fmt::Write>(
             &mut enum_indented,
             &variant.2.to_markdown(docs_url_gen),
             &|shortcut_path, to| {
-                let resolved =
-                    ast::TypeName::Named(shortcut_path.clone().into()).resolve(in_path, env);
+                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
                 match resolved {
                     ast::CustomType::Struct(_) => write!(to, ":cpp:struct:`{}`", resolved.name())?,
                     ast::CustomType::Enum(_) => {

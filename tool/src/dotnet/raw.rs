@@ -131,7 +131,7 @@ pub fn gen<'ast>(
 }
 
 fn gen_field(
-    name: &str,
+    name: &ast::Ident,
     docs: &ast::Docs,
     typ: &ast::TypeName,
     in_path: &ast::Path,
@@ -173,19 +173,25 @@ fn gen_method(
         " {}(",
         method
             .full_path_name
+            .as_str()
             .replace(&format!("{}_", typ.name()), "")
             .to_upper_camel_case()
     )?;
-    let mut params_to_gen = method.params.clone();
-    if let Some(param) = &method.self_param {
-        params_to_gen.insert(0, param.clone());
+
+    let mut first = true;
+    if let Some(ref self_param) = method.self_param {
+        gen_param("self", &self_param.to_typename(), false, in_path, env, out)?;
+        first = false;
     }
 
-    for (i, param) in params_to_gen.iter().enumerate() {
-        if i != 0 {
+    for param in method.params.iter() {
+        if first {
+            first = false;
+        } else {
             write!(out, ", ")?;
         }
-        let name = param.name.to_lower_camel_case();
+
+        let name = param.name.as_str().to_lower_camel_case();
         gen_param(&name, &param.ty, param.is_writeable(), in_path, env, out)?;
     }
 
@@ -313,13 +319,13 @@ fn gen_type_name_decl_position(
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Option(opt) => match opt.as_ref() {
-            ast::TypeName::Box(ptr) | ast::TypeName::Reference(ptr, ..) => {
+            ast::TypeName::Box(ptr) | ast::TypeName::Reference(.., ptr) => {
                 gen_type_name_decl_position(ptr.as_ref(), in_path, env, out)?;
                 write!(out, "*")
             }
             _ => panic!("Options without a pointer type are not yet supported"),
         },
-        ast::TypeName::Box(underlying) | ast::TypeName::Reference(underlying, ..) => {
+        ast::TypeName::Box(underlying) | ast::TypeName::Reference(.., underlying) => {
             gen_type_name_decl_position(underlying.as_ref(), in_path, env, out)?;
             write!(out, "*")
         }
@@ -352,10 +358,10 @@ fn gen_param(
         write!(out, "DiplomatWriteable* {name}")
     } else {
         match typ {
-            ast::TypeName::StrReference(_mut) => {
+            ast::TypeName::StrReference(..) => {
                 write!(out, "byte* {name}, nuint {name}Sz")
             }
-            ast::TypeName::PrimitiveSlice(prim, _mut) => {
+            ast::TypeName::PrimitiveSlice(.., prim) => {
                 write!(
                     out,
                     "{}* {name}, nuint {name}Sz",

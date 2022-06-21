@@ -1,26 +1,33 @@
 use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
-use super::Method;
+use super::{Ident, Method};
 
 /// A fieldless enum declaration in an FFI module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
 pub struct Enum {
-    pub name: String,
+    pub name: Ident,
     pub docs: Docs,
     /// A list of variants of the enum. (name, discriminant, docs)
-    pub variants: Vec<(String, isize, Docs)>,
+    pub variants: Vec<(Ident, isize, Docs)>,
     pub methods: Vec<Method>,
 }
 
 impl From<&syn::ItemEnum> for Enum {
     /// Extract an [`Enum`] metadata value from an AST node.
-    fn from(strct: &syn::ItemEnum) -> Enum {
+    fn from(enm: &syn::ItemEnum) -> Enum {
         let mut last_discriminant = -1;
+        if !enm.generics.params.is_empty() {
+            // Generic types are not allowed.
+            // Assuming all enums cannot have lifetimes? We don't even have a
+            // `lifetimes` field. If we change our minds we can adjust this later
+            // and update the `CustomType::lifetimes` API accordingly.
+            panic!("Enums cannot have generic parameters");
+        }
         Enum {
-            name: strct.ident.to_string(),
-            docs: Docs::from_attrs(&strct.attrs),
-            variants: strct
+            name: (&enm.ident).into(),
+            docs: Docs::from_attrs(&enm.attrs),
+            variants: enm
                 .variants
                 .iter()
                 .map(|v| {
@@ -43,7 +50,7 @@ impl From<&syn::ItemEnum> for Enum {
                     last_discriminant = new_discriminant;
 
                     (
-                        v.ident.to_string(),
+                        (&v.ident).into(),
                         new_discriminant,
                         Docs::from_attrs(&v.attrs),
                     )

@@ -25,9 +25,6 @@ public partial struct MyString
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyString_get_str", ExactSpelling = true)]
     public static unsafe extern void GetStr(MyString* self, DiplomatWriteable* writeable);
 
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyString_make_uppercase", ExactSpelling = true)]
-    public static unsafe extern void MakeUppercase(byte* v, nuint vSz);
-
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyString_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(MyString* self);
 }
