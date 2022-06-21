@@ -11,9 +11,21 @@ pub fn gen_type(
     behind_ref: Option<bool>, // owned?
     env: &Env,
     library_config: &LibraryConfig,
+    // whether we are generating a struct field.
+    // structs shouldn't have `const` fields, otherwise we lose
+    // our assignment operators
+    in_struct: bool,
 ) -> Result<String, fmt::Error> {
     let mut s = String::new();
-    gen_type_inner(typ, in_path, behind_ref, env, library_config, &mut s)?;
+    gen_type_inner(
+        typ,
+        in_path,
+        behind_ref,
+        env,
+        library_config,
+        in_struct,
+        &mut s,
+    )?;
     Ok(s)
 }
 
@@ -23,6 +35,7 @@ fn gen_type_inner<W: fmt::Write>(
     behind_ref: Option<bool>, // owned?
     env: &Env,
     library_config: &LibraryConfig,
+    in_struct: bool,
     out: &mut W,
 ) -> fmt::Result {
     let mut handled_ref = false;
@@ -58,12 +71,13 @@ fn gen_type_inner<W: fmt::Write>(
                 Some(true),
                 env,
                 library_config,
+                in_struct,
                 out,
             )?;
         }
 
         ast::TypeName::Reference(_, mutability, underlying) => {
-            if mutability.is_immutable() {
+            if mutability.is_immutable() && !in_struct {
                 write!(out, "const ")?;
             }
             gen_type_inner(
@@ -72,6 +86,7 @@ fn gen_type_inner<W: fmt::Write>(
                 Some(false),
                 env,
                 library_config,
+                in_struct,
                 out,
             )?;
         }
@@ -85,6 +100,7 @@ fn gen_type_inner<W: fmt::Write>(
                     behind_ref,
                     env,
                     library_config,
+                    in_struct,
                     out,
                 )?;
                 write!(out, ">")?;
@@ -98,14 +114,22 @@ fn gen_type_inner<W: fmt::Write>(
             if ok.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type_inner(ok, in_path, behind_ref, env, library_config, out)?;
+                gen_type_inner(ok, in_path, behind_ref, env, library_config, in_struct, out)?;
             }
 
             write!(out, ", ")?;
             if err.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type_inner(err, in_path, behind_ref, env, library_config, out)?;
+                gen_type_inner(
+                    err,
+                    in_path,
+                    behind_ref,
+                    env,
+                    library_config,
+                    in_struct,
+                    out,
+                )?;
             }
             write!(out, ">")?;
         }
@@ -119,7 +143,8 @@ fn gen_type_inner<W: fmt::Write>(
         }
 
         ast::TypeName::StrReference(_) => {
-            write!(out, "const {}", library_config.string_view.expr)?;
+            let maybe_const = if in_struct { "" } else { "const " };
+            write!(out, "{maybe_const}{}", library_config.string_view.expr)?;
         }
 
         ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => {

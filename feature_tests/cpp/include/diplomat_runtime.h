@@ -33,6 +33,10 @@ typedef struct DiplomatWriteable {
 
 DiplomatWriteable diplomat_simple_writeable(char* buf, size_t buf_size);
 
+typedef struct DiplomatStringView {
+    const char* data;
+    size_t len;
+} DiplomatStringView;
 #ifdef __cplusplus
 }
 #endif

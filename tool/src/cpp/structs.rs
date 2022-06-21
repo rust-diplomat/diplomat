@@ -121,7 +121,7 @@ pub fn gen_struct<W: fmt::Write>(
 
             if is_header {
                 for (name, typ, docs) in &strct.fields {
-                    let ty_name = gen_type(typ, in_path, None, env, library_config)?;
+                    let ty_name = gen_type(typ, in_path, None, env, library_config, true)?;
                     gen_comment_block(&mut public_body, &docs.to_markdown(docs_url_gen))?;
                     writeln!(&mut public_body, "{} {};", ty_name, name)?;
                 }
@@ -212,8 +212,15 @@ fn gen_method<W: fmt::Write>(
         let mut all_params_invocation = vec![];
 
         if let Some(self_param) = &method.self_param {
+            // non opaque structs are handled by-move, however
+            // their `this` will still be a reference!
+            let cpp_expr = if self_param.reference.is_some() {
+                "this"
+            } else {
+                "std::move(*this)"
+            };
             let invocation_expr = gen_cpp_to_rust(
-                "this",
+                cpp_expr,
                 "this",
                 None,
                 &self_param.to_typename(),
@@ -332,7 +339,7 @@ pub fn gen_method_interface<W: fmt::Write>(
             let err_ty = if err.is_zst() {
                 "std::monostate".into()
             } else {
-                gen_type(err, in_path, None, env, library_config)?
+                gen_type(err, in_path, None, env, library_config, false)?
             };
             write!(out, "diplomat::result<std::string, {}>", err_ty)?;
         } else {
@@ -340,7 +347,7 @@ pub fn gen_method_interface<W: fmt::Write>(
         }
     } else {
         let ty_name = match &method.return_type {
-            Some(ret_type) => gen_type(ret_type, in_path, None, env, library_config)?,
+            Some(ret_type) => gen_type(ret_type, in_path, None, env, library_config, false)?,
 
             None => "void".into(),
         };
@@ -371,7 +378,7 @@ pub fn gen_method_interface<W: fmt::Write>(
         let ty_name = if param.is_writeable() && !writeable_to_string {
             "W&".into()
         } else {
-            gen_type(&param.ty, in_path, None, env, library_config)?
+            gen_type(&param.ty, in_path, None, env, library_config, false)?
         };
         write!(out, "{} {}", ty_name, param.name)?;
     }

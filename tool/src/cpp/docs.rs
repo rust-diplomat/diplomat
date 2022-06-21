@@ -255,7 +255,7 @@ pub fn gen_field_docs<W: fmt::Write>(
     library_config: &LibraryConfig,
     docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {
-    let ty_name = gen_type(&field.1, in_path, None, env, library_config)?;
+    let ty_name = gen_type(&field.1, in_path, None, env, library_config, true)?;
     writeln!(out, ".. cpp:member:: {} {}", ty_name, field.0)?;
 
     if !field.2.is_empty() {

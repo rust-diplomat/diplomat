@@ -31,12 +31,15 @@ struct MyStruct {
   uint64_t d;
   int32_t e;
   char32_t f;
-  static MyStruct new_();
+  std::string_view g;
+  static MyStruct new_(const std::string_view s);
 };
 
 
-inline MyStruct MyStruct::new_() {
-  capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new();
-  return MyStruct{ .a = std::move(diplomat_raw_struct_out_value.a), .b = std::move(diplomat_raw_struct_out_value.b), .c = std::move(diplomat_raw_struct_out_value.c), .d = std::move(diplomat_raw_struct_out_value.d), .e = std::move(diplomat_raw_struct_out_value.e), .f = std::move(diplomat_raw_struct_out_value.f) };
+inline MyStruct MyStruct::new_(const std::string_view s) {
+  capi::MyStruct diplomat_raw_struct_out_value = capi::MyStruct_new(s.data(), s.size());
+  capi::DiplomatStringView diplomat_str_raw_out_value_g = diplomat_raw_struct_out_value.g;
+  std::string_view str(diplomat_str_raw_out_value_g.data, diplomat_str_raw_out_value_g.len);
+  return MyStruct{ .a = std::move(diplomat_raw_struct_out_value.a), .b = std::move(diplomat_raw_struct_out_value.b), .c = std::move(diplomat_raw_struct_out_value.c), .d = std::move(diplomat_raw_struct_out_value.d), .e = std::move(diplomat_raw_struct_out_value.e), .f = std::move(diplomat_raw_struct_out_value.f), .g = std::move(str) };
 }
 #endif
