@@ -15,7 +15,7 @@
 
     .. cpp:member:: char32_t f
 
-    .. cpp:member:: const std::string_view g
+    .. cpp:member:: std::string_view g
 
     .. cpp:function:: static MyStruct new_(const std::string_view s)
 

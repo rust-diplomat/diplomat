@@ -31,7 +31,7 @@ struct MyStruct {
   uint64_t d;
   int32_t e;
   char32_t f;
-  const std::string_view g;
+  std::string_view g;
   static MyStruct new_(const std::string_view s);
 };
 
