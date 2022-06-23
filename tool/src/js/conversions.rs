@@ -106,7 +106,7 @@ pub fn gen_value_js_to_rust(
 /// Type alias for readability.
 type Offset = Option<NonZeroUsize>;
 
-/// An [`fmt::Display`] type that represents an invocation of a WASM function.
+/// An [`fmt::Display`] type representing an invocation of a WASM function.
 pub struct Invocation {
     /// Name of the method in the WASM namespace.
     full_path_name: ast::Ident,
@@ -207,19 +207,24 @@ impl<'base> Base<'base> {
         }
     }
 
+    /// Returns the [`ast::CustomType`] associated with a given [`ast::PathType`].
     fn resolve_type<'custom>(&'custom self, path_type: &ast::PathType) -> &'custom ast::CustomType {
         path_type.resolve(self.in_path, self.env)
     }
 
+    /// Returns the [`ReturnTypeForm`] of a given [`ast::TypeName`].
     fn return_type_form(&self, typ: &ast::TypeName) -> ReturnTypeForm {
         return_type_form(typ, self.in_path, self.env)
     }
 
+    /// Returns the size and align of a given [`ast::TypeName`].
     fn size_align(&self, typ: &ast::TypeName) -> (usize, usize) {
         let layout = layout::type_size_alignment(typ, self.in_path, self.env);
         (layout.size(), layout.align())
     }
 
+    /// Returns the size, align, and ok-offset of a `DiplomatResult` containing
+    /// the two provided types.
     fn result_size_align(
         &self,
         ok: &ast::TypeName,
@@ -230,13 +235,14 @@ impl<'base> Base<'base> {
         (ok_offset, (layout.size(), layout.align()))
     }
 
+    /// Returns `true` if there are any borrows, otherwise `false`.
     fn borrows(&self) -> bool {
         self.borrows_self || !self.borrowed_params.is_empty()
     }
 }
 
-/// An [`fmt::Display`] type that represents a JS expression whose overall type
-/// is a pointer.
+/// An [`fmt::Display`] type representing a JS expression that evaluates to a
+/// pointer.
 #[derive(Copy, Clone)]
 pub enum Underlying<'base> {
     /// A WASM invocation that evaluates to a pointer.
@@ -267,7 +273,7 @@ impl fmt::Display for Underlying<'_> {
     }
 }
 
-/// An [`fmt::Display`] type for creating a JS value from a WASM invocation.
+/// An [`fmt::Display`] type representing a JS value created from a WASM invocation.
 pub struct InvocationIntoJs<'base> {
     /// The type of the created value.
     pub typ: &'base ast::TypeName,
@@ -387,7 +393,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
     }
 }
 
-/// An [`fmt::Display`] type for creating a JS value that's behind a pointer.
+/// An [`fmt::Display`] type representing a JS value behind a pointer.
 struct Pointer<'base> {
     /// The type behind the pointer.
     inner: &'base ast::TypeName,
@@ -432,10 +438,12 @@ impl fmt::Display for Pointer<'_> {
     }
 }
 
-/// An [`fmt::Display`] type for creating a JS value from an underlying buffer.
+/// An [`fmt::Display`] type representing a JS expression that builds a value
+/// from an underlying buffer.
 ///
-/// This is only used for types that can appear in non-opaque structs and
-/// `Result`s.
+/// WASM writes the contents of returned non-opaque structs and `Result`s into
+/// a buffer, and [`UnderlyingIntoJs`] allows for reading the contents of that
+/// buffer.
 pub struct UnderlyingIntoJs<'base> {
     /// The type inside the underlying buffer.
     pub inner: &'base ast::TypeName,
