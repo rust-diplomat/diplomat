@@ -53,3 +53,47 @@ export function resultFlag(wasm, ptr, offset) {
 export function enumDiscriminant(wasm, ptr) {
   return (new Int32Array(wasm.memory.buffer, ptr, 1))[0]
 }
+
+// A wrapper around a slice of WASM memory that can be freed manually or
+// automatically by the garbage collector.
+//
+// This type is necessary for Rust functions that take a `&str` or `&[T]`, since
+// they can create an edge to this object if they borrow from the str/slice,
+// or we can manually free the WASM memory if they don't.
+export class DiplomatBuf {
+  static str = (wasm, string) => {
+    const bytes = (new TextEncoder()).encode(string);
+    return new DiplomatBuf(wasm, bytes.length, 1, buf => buf.set(bytes, 0));
+  }
+
+  static slice = (wasm, slice, align) => {
+    const bytes = new Uint8Array(slice);
+    return new DiplomatBuf(wasm, bytes.length, align, buf => buf.set(bytes, 0));
+  }
+
+  constructor(wasm, size, align, encodeCallback) {
+    const ptr = wasm.diplomat_alloc(size, align);
+    // Do the writing with a callback here as a setup for when we
+    // resolve #174, which addresses removing the intermediate `Uint8Array`.
+    encodeCallback(new Uint8Array(wasm.memory.buffer, ptr, size));
+
+    this.ptr = ptr;
+    this.size = size;
+    this.align = align;
+    this.freed = false;
+
+    DiplomatBuf_finalizer.register(this, { ptr, size, align });
+  }
+
+  free() {
+    if (!freed) {
+      this.freed = true;
+      wasm.diplomat_free(this.ptr, this.size, this.align);
+      DiplomatBuf_finalizer.unregister(this);
+    }
+  }
+}
+
+const DiplomatBuf_finalizer = new FinalizationRegistry(({ ptr, size, align }) => {
+  wasm.diplomat_free(ptr, size, align);
+});
