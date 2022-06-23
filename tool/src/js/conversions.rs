@@ -18,8 +18,7 @@
 //! Return types like non-opaque structs and `Result`s with a non-unit value are
 //! returned into a pre-allocated buffer, which [`InvocationIntoJs`] manages.
 //! In order to get JS values out of this buffer, [`UnderlyingIntoJs`] is used.
-use diplomat_core::ast::{self, BorrowedParams};
-use diplomat_core::Env;
+use diplomat_core::{ast, Env};
 use std::fmt::{self, Write as _};
 use std::num::NonZeroUsize;
 
@@ -29,10 +28,11 @@ use crate::layout;
 
 /// Generate the necessary setup and tear down JS code to convert the parameters
 /// into a form that Rust/WASM can understand.
-#[allow(clippy::ptr_arg)] // false positive, rust-clippy#8463, fixed in 1.61
+#[allow(clippy::ptr_arg, clippy::too_many_arguments)] // false positive, rust-clippy#8463, fixed in 1.61
 pub fn gen_value_js_to_rust(
     param_name: &ast::Ident,
     typ: &ast::TypeName,
+    borrowed_params: &ast::BorrowedParams,
     in_path: &ast::Path,
     env: &Env,
     pre_logic: &mut Vec<String>,
@@ -41,40 +41,23 @@ pub fn gen_value_js_to_rust(
 ) {
     match typ {
         ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
-            // TODO(#61): consider extracting into runtime function
-            if let ast::TypeName::StrReference(..) = typ {
+            if let ast::TypeName::PrimitiveSlice(.., prim) = typ {
                 pre_logic.push(format!(
-                    "let {}_diplomat_bytes = (new TextEncoder()).encode({});",
-                    param_name, param_name
+                    "{param_name} = diplomatRuntime.DiplomatBuf.slice(wasm, {param_name}, {align});",
+                    align = layout::primitive_size_alignment(*prim).align()
                 ));
             } else {
                 pre_logic.push(format!(
-                    "let {}_diplomat_bytes = new Uint8Array({});",
-                    param_name, param_name
+                    "{param_name} = diplomatRuntime.DiplomatBuf.str(wasm, {param_name});"
                 ));
             }
-            let align = if let ast::TypeName::PrimitiveSlice(.., prim) = typ {
-                layout::primitive_size_alignment(*prim).align()
-            } else {
-                1
-            };
-            pre_logic.push(format!(
-                "let {}_diplomat_ptr = wasm.diplomat_alloc({}_diplomat_bytes.length, {});",
-                param_name, param_name, align
-            ));
-            pre_logic.push(format!("let {}_diplomat_buf = new Uint8Array(wasm.memory.buffer, {}_diplomat_ptr, {}_diplomat_bytes.length);", param_name, param_name, param_name));
-            pre_logic.push(format!(
-                "{}_diplomat_buf.set({}_diplomat_bytes, 0);",
-                param_name, param_name
-            ));
 
-            invocation_params.push(format!("{}_diplomat_ptr", param_name));
-            invocation_params.push(format!("{}_diplomat_bytes.length", param_name));
+            invocation_params.push(format!("{param_name}.ptr"));
+            invocation_params.push(format!("{param_name}.size"));
 
-            post_logic.push(format!(
-                "wasm.diplomat_free({}_diplomat_ptr, {}_diplomat_bytes.length, {});",
-                param_name, param_name, align
-            ));
+            if !borrowed_params.contains(param_name) {
+                post_logic.push(format!("{param_name}.free();"));
+            }
         }
         ast::TypeName::Primitive(ast::PrimitiveType::char) => {
             // we use the spread operator here to count codepoints
@@ -103,6 +86,7 @@ pub fn gen_value_js_to_rust(
                     gen_value_js_to_rust(
                         &field_extracted_name,
                         field_type,
+                        borrowed_params,
                         in_path,
                         env,
                         pre_logic,
@@ -218,7 +202,7 @@ impl<'base> Base<'base> {
     pub fn new_method(
         in_path: &'base ast::Path,
         env: &'base Env,
-        borrowed_params: &'base BorrowedParams,
+        borrowed_params: &'base ast::BorrowedParams,
     ) -> Self {
         Base {
             in_path,

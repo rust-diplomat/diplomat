@@ -19,22 +19,16 @@ export class MyStruct {
   }
 
   static new_str(v) {
-    let v_diplomat_bytes = (new TextEncoder()).encode(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 1);
-    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
-    v_diplomat_buf.set(v_diplomat_bytes, 0);
-    const diplomat_out = new MyStruct(wasm.MyStruct_new_str(v_diplomat_ptr, v_diplomat_bytes.length));
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 1);
+    v = diplomatRuntime.DiplomatBuf.str(wasm, v);
+    const diplomat_out = new MyStruct(wasm.MyStruct_new_str(v.ptr, v.size));
+    v.free();
     return diplomat_out;
   }
 
   set_str(new_str) {
-    let new_str_diplomat_bytes = (new TextEncoder()).encode(new_str);
-    let new_str_diplomat_ptr = wasm.diplomat_alloc(new_str_diplomat_bytes.length, 1);
-    let new_str_diplomat_buf = new Uint8Array(wasm.memory.buffer, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
-    new_str_diplomat_buf.set(new_str_diplomat_bytes, 0);
-    wasm.MyStruct_set_str(this.underlying, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
-    wasm.diplomat_free(new_str_diplomat_ptr, new_str_diplomat_bytes.length, 1);
+    new_str = diplomatRuntime.DiplomatBuf.str(wasm, new_str);
+    wasm.MyStruct_set_str(this.underlying, new_str.ptr, new_str.size);
+    new_str.free();
   }
 }
 

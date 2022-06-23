@@ -42,31 +42,22 @@ export class Float64Vec {
   }
 
   static new(v) {
-    let v_diplomat_bytes = new Uint8Array(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 8);
-    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
-    v_diplomat_buf.set(v_diplomat_bytes, 0);
-    const diplomat_out = new Float64Vec(wasm.Float64Vec_new(v_diplomat_ptr, v_diplomat_bytes.length));
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 8);
+    v = diplomatRuntime.DiplomatBuf.slice(wasm, v, 8);
+    const diplomat_out = new Float64Vec(wasm.Float64Vec_new(v.ptr, v.size));
+    v.free();
     return diplomat_out;
   }
 
   fill_slice(v) {
-    let v_diplomat_bytes = new Uint8Array(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 8);
-    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
-    v_diplomat_buf.set(v_diplomat_bytes, 0);
-    wasm.Float64Vec_fill_slice(this.underlying, v_diplomat_ptr, v_diplomat_bytes.length);
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 8);
+    v = diplomatRuntime.DiplomatBuf.slice(wasm, v, 8);
+    wasm.Float64Vec_fill_slice(this.underlying, v.ptr, v.size);
+    v.free();
   }
 
   set_value(new_slice) {
-    let new_slice_diplomat_bytes = new Uint8Array(new_slice);
-    let new_slice_diplomat_ptr = wasm.diplomat_alloc(new_slice_diplomat_bytes.length, 8);
-    let new_slice_diplomat_buf = new Uint8Array(wasm.memory.buffer, new_slice_diplomat_ptr, new_slice_diplomat_bytes.length);
-    new_slice_diplomat_buf.set(new_slice_diplomat_bytes, 0);
-    wasm.Float64Vec_set_value(this.underlying, new_slice_diplomat_ptr, new_slice_diplomat_bytes.length);
-    wasm.diplomat_free(new_slice_diplomat_ptr, new_slice_diplomat_bytes.length, 8);
+    new_slice = diplomatRuntime.DiplomatBuf.slice(wasm, new_slice, 8);
+    wasm.Float64Vec_set_value(this.underlying, new_slice.ptr, new_slice.size);
+    new_slice.free();
   }
 }
 
@@ -81,17 +72,12 @@ export class Foo {
   }
 
   static new(x) {
-    let x_diplomat_bytes = (new TextEncoder()).encode(x);
-    let x_diplomat_ptr = wasm.diplomat_alloc(x_diplomat_bytes.length, 1);
-    let x_diplomat_buf = new Uint8Array(wasm.memory.buffer, x_diplomat_ptr, x_diplomat_bytes.length);
-    x_diplomat_buf.set(x_diplomat_bytes, 0);
-    const diplomat_out = (() => {
-      const out = new Foo(wasm.Foo_new(x_diplomat_ptr, x_diplomat_bytes.length));
+    x = diplomatRuntime.DiplomatBuf.str(wasm, x);
+    return (() => {
+      const out = new Foo(wasm.Foo_new(x.ptr, x.size));
       out.__x_lifetime_guard = x;
       return out;
     })();
-    wasm.diplomat_free(x_diplomat_ptr, x_diplomat_bytes.length, 1);
-    return diplomat_out;
   }
 
   get_bar() {
@@ -114,22 +100,16 @@ export class MyString {
   }
 
   static new(v) {
-    let v_diplomat_bytes = (new TextEncoder()).encode(v);
-    let v_diplomat_ptr = wasm.diplomat_alloc(v_diplomat_bytes.length, 1);
-    let v_diplomat_buf = new Uint8Array(wasm.memory.buffer, v_diplomat_ptr, v_diplomat_bytes.length);
-    v_diplomat_buf.set(v_diplomat_bytes, 0);
-    const diplomat_out = new MyString(wasm.MyString_new(v_diplomat_ptr, v_diplomat_bytes.length));
-    wasm.diplomat_free(v_diplomat_ptr, v_diplomat_bytes.length, 1);
+    v = diplomatRuntime.DiplomatBuf.str(wasm, v);
+    const diplomat_out = new MyString(wasm.MyString_new(v.ptr, v.size));
+    v.free();
     return diplomat_out;
   }
 
   set_str(new_str) {
-    let new_str_diplomat_bytes = (new TextEncoder()).encode(new_str);
-    let new_str_diplomat_ptr = wasm.diplomat_alloc(new_str_diplomat_bytes.length, 1);
-    let new_str_diplomat_buf = new Uint8Array(wasm.memory.buffer, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
-    new_str_diplomat_buf.set(new_str_diplomat_bytes, 0);
-    wasm.MyString_set_str(this.underlying, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
-    wasm.diplomat_free(new_str_diplomat_ptr, new_str_diplomat_bytes.length, 1);
+    new_str = diplomatRuntime.DiplomatBuf.str(wasm, new_str);
+    wasm.MyString_set_str(this.underlying, new_str.ptr, new_str.size);
+    new_str.free();
   }
 
   get_str() {
