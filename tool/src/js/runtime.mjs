@@ -79,18 +79,12 @@ export class DiplomatBuf {
 
     this.ptr = ptr;
     this.size = size;
-    this.align = align;
-    this.freed = false;
-
-    DiplomatBuf_finalizer.register(this, { ptr, size, align });
-  }
-
-  free() {
-    if (!freed) {
-      this.freed = true;
-      wasm.diplomat_free(this.ptr, this.size, this.align);
+    this.free = () => {
+      wasm.diplomat_free(this.ptr, this.size, align);
       DiplomatBuf_finalizer.unregister(this);
     }
+
+    DiplomatBuf_finalizer.register(this, { ptr, size, align });
   }
 }
 
