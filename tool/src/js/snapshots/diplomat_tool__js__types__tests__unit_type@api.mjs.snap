@@ -10,15 +10,14 @@ const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
 
 export class MyStruct {
   constructor(underlying) {
-    this.a = (new Uint8Array(wasm.memory.buffer, underlying + 0, 1))[0];
+    this.a = (new Uint8Array(wasm.memory.buffer, underlying, 1))[0];
     this.b = (new Uint8Array(wasm.memory.buffer, underlying + 1, 1))[0];
   }
 
   something() {
     const diplomat_MyStruct_extracted_a = this["a"];
     const diplomat_MyStruct_extracted_b = this["b"];
-    const diplomat_out = wasm.MyStruct_something(diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b);
-    return diplomat_out;
+    return wasm.MyStruct_something(diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b);
   }
 }
 

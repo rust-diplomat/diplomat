@@ -29,8 +29,6 @@ public partial struct MyStruct
 
     public uint f;
 
-    public string g;
-
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_new", ExactSpelling = true)]
-    public static unsafe extern MyStruct New(byte* s, nuint sSz);
+    public static unsafe extern MyStruct New();
 }

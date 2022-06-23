@@ -4,14 +4,13 @@ pub mod ffi {
     #[diplomat::opaque]
     pub struct Opaque();
 
-    pub struct MyStruct<'a> {
+    pub struct MyStruct {
         a: u8,
         b: bool,
         c: u8,
         d: u64,
         e: i32,
         f: char,
-        g: &'a str,
     }
 
     impl Opaque {
@@ -24,8 +23,8 @@ pub mod ffi {
         }
     }
 
-    impl<'a> MyStruct<'a> {
-        pub fn new(s: &'a str) -> MyStruct<'a> {
+    impl MyStruct {
+        pub fn new() -> MyStruct {
             MyStruct {
                 a: 17,
                 b: true,
@@ -33,7 +32,6 @@ pub mod ffi {
                 d: 1234,
                 e: 5991,
                 f: '餐',
-                g: s,
             }
         }
 
@@ -44,7 +42,6 @@ pub mod ffi {
             assert_eq!(self.d, 1234);
             assert_eq!(self.e, 5991);
             assert_eq!(self.f, '餐');
-            assert_eq!(self.g, "hello");
         }
     }
 }

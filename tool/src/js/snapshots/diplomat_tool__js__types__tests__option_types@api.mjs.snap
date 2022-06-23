@@ -22,7 +22,7 @@ export class MyOpaqueStruct {
 export class MyStruct {
   constructor(underlying) {
     this.a = (() => {
-      const option_ptr = diplomatRuntime.ptrRead(wasm, underlying + 0);
+      const option_ptr = diplomatRuntime.ptrRead(wasm, underlying);
       return (option_ptr == 0) ? null : new MyOpaqueStruct(option_ptr);
     })();
   }

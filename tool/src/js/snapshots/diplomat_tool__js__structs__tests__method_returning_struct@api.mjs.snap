@@ -19,20 +19,19 @@ export class MyStruct {
   }
 
   get_non_opaque() {
-    const diplomat_out = (() => {
+    return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
       wasm.MyStruct_get_non_opaque(diplomat_receive_buffer, this.underlying);
       const out = new NonOpaqueStruct(diplomat_receive_buffer);
       wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
       return out;
     })();
-    return diplomat_out;
   }
 }
 
 export class NonOpaqueStruct {
   constructor(underlying) {
-    this.a = (new Uint16Array(wasm.memory.buffer, underlying + 0, 1))[0];
+    this.a = (new Uint16Array(wasm.memory.buffer, underlying, 1))[0];
     this.b = (new Uint8Array(wasm.memory.buffer, underlying + 2, 1))[0];
     this.c = (new Uint32Array(wasm.memory.buffer, underlying + 4, 1))[0];
   }

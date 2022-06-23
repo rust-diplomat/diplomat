@@ -22,7 +22,7 @@ export class MyOpaqueStruct {
 export class MyStruct {
   constructor(underlying) {
     this.a = (() => {
-      const out = new MyOpaqueStruct(diplomatRuntime.ptrRead(wasm, underlying + 0));
+      const out = new MyOpaqueStruct(diplomatRuntime.ptrRead(wasm, underlying));
       out.__this_lifetime_guard = this;
       return out;
     })();
@@ -30,14 +30,13 @@ export class MyStruct {
   }
 
   static new(foo, bar) {
-    const diplomat_out = (() => {
+    return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
       wasm.MyStruct_new(diplomat_receive_buffer, foo.underlying, bar.underlying);
       const out = new MyStruct(diplomat_receive_buffer);
       wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
       return out;
     })();
-    return diplomat_out;
   }
 }
 

@@ -1,11 +1,11 @@
-use diplomat_core::Env;
+use diplomat_core::{ast, Env};
 use std::fmt::{self, Display as _, Write as _};
+use std::num::NonZeroUsize;
 
-use diplomat_core::ast;
-
-use super::conversions::{gen_value_js_to_rust, BufferedIntoJs, ValueIntoJs};
+use super::conversions::{
+    gen_value_js_to_rust, Base, Invocation, InvocationIntoJs, Underlying, UnderlyingIntoJs,
+};
 use super::display;
-use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
 
 /// Generates a JS class declaration
@@ -61,9 +61,10 @@ pub fn gen_struct<W: fmt::Write>(
                 "export class {} {}",
                 strct.name,
                 display::block(|mut f| {
+                    let underlying: ast::Ident = "underlying".into();
                     writeln!(
                         f,
-                        "constructor(underlying) {}",
+                        "constructor({underlying}) {}",
                         display::block(|mut f| {
                             let (offsets, _) = layout::struct_offsets_size_max_align(
                                 strct.fields.iter().map(|(_, typ, _)| typ),
@@ -71,7 +72,8 @@ pub fn gen_struct<W: fmt::Write>(
                                 env,
                             );
 
-                            for ((name, typ, _), &offset) in strct.fields.iter().zip(offsets.iter())
+                            for ((name, inner, _), &offset) in
+                                strct.fields.iter().zip(offsets.iter())
                             {
                                 // If the type of a field has any named lifetimes
                                 // (elision is impossible in fields), then it
@@ -80,7 +82,7 @@ pub fn gen_struct<W: fmt::Write>(
                                 // want to be more intelligent about this and
                                 // only attach lifetime guards to the exact object
                                 // that holds it, instead of the outermost struct.
-                                let borrows_self = typ.any_lifetime(|lifetime, _| {
+                                let borrows_self = inner.any_lifetime(|lifetime, _| {
                                     matches!(lifetime, ast::Lifetime::Named(_))
                                 });
 
@@ -88,15 +90,14 @@ pub fn gen_struct<W: fmt::Write>(
                                     f,
                                     "this.{} = {};",
                                     name,
-                                    BufferedIntoJs {
-                                        buf_ptr: "underlying",
-                                        offset,
-                                        typ,
-                                        in_path,
-                                        borrows_self,
-                                        borrowed_params: &[],
-                                        env,
-                                    }
+                                    UnderlyingIntoJs {
+                                        inner,
+                                        underlying: Underlying::Binding(
+                                            &underlying,
+                                            NonZeroUsize::new(offset),
+                                        ),
+                                        base: Base::new_field(in_path, env, borrows_self),
+                                    },
                                 )?;
                             }
 
@@ -212,15 +213,15 @@ fn gen_method<W: fmt::Write>(
         all_params.pop();
     }
 
-    let all_params_invocation = {
-        if let Some(ref return_type) = method.return_type {
-            if let ReturnTypeForm::Complex = return_type_form(return_type, in_path, env) {
-                all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
-            }
-        }
+    // let all_params_invocation = {
+    //     if let Some(ref return_type) = method.return_type {
+    //         if let ReturnTypeForm::Complex = return_type_form(return_type, in_path, env) {
+    //             all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
+    //         }
+    //     }
 
-        all_param_exprs.join(", ")
-    };
+    //     all_param_exprs.join(", ")
+    // };
 
     if method.self_param.is_none() {
         out.write_str("static ")?;
@@ -236,49 +237,56 @@ fn gen_method<W: fmt::Write>(
                 writeln!(f, "{}", s)?;
             }
 
-            let invocation_expr =
-                format!("wasm.{}({})", method.full_path_name, all_params_invocation);
+            let diplomat_out = display::expr(|f| {
+                let display_return_type = display::expr(|f| {
+                    let invocation =
+                        Invocation::new(method.full_path_name.clone(), all_param_exprs.clone());
 
-            writeln!(
-                f,
-                "const diplomat_out = {};",
-                display::expr(|f| {
-                    let display_return_type = display::expr(|f| match &method.return_type {
-                        None | Some(ast::TypeName::Unit) => invocation_expr.fmt(f),
-                        Some(typ) => {
-                            let borrowed_params = method.borrowed_params();
-                            ValueIntoJs {
-                                value_expr: &invocation_expr,
-                                typ,
-                                borrows_self: borrowed_params.borrows_self(),
-                                borrowed_params: &borrowed_params.1[..],
-                                in_path,
-                                env,
-                            }
-                            .fmt(f)
+                    if let Some(ref typ) = method.return_type {
+                        let borrowed_params = method.borrowed_params();
+                        InvocationIntoJs {
+                            invocation,
+                            typ,
+                            base: Base::new_method(in_path, env, &borrowed_params),
                         }
-                    });
-
-                    if is_writeable {
-                        write!(
-                            f,
-                            "diplomatRuntime.withWriteable(wasm, (writeable) => {})",
-                            display::block(|mut f| writeln!(f, "return {};", display_return_type))
-                        )
+                        .fmt(f)
                     } else {
-                        write!(f, "{}", display_return_type)
+                        invocation.scalar().fmt(f)
                     }
-                })
-            )?;
+                });
 
-            for s in post_stmts.iter() {
-                writeln!(f, "{}", s)?;
-            }
+                if is_writeable {
+                    write!(
+                        f,
+                        "diplomatRuntime.withWriteable(wasm, (writeable) => {})",
+                        display::block(|mut f| writeln!(f, "return {};", display_return_type))
+                    )
+                } else {
+                    write!(f, "{}", display_return_type)
+                }
+            });
 
-            if method.return_type.is_some() || is_writeable {
-                writeln!(f, "return diplomat_out;")?;
+            let do_return = method.return_type.is_some() || is_writeable;
+
+            if post_stmts.is_empty() && do_return {
+                writeln!(f, "return {diplomat_out};")
+            } else {
+                if do_return {
+                    writeln!(f, "const diplomat_out = {diplomat_out};")?;
+                } else {
+                    writeln!(f, "{diplomat_out};")?;
+                }
+
+                for s in post_stmts.iter() {
+                    writeln!(f, "{}", s)?;
+                }
+
+                if do_return {
+                    writeln!(f, "return diplomat_out;")?;
+                }
+
+                Ok(())
             }
-            Ok(())
         })
     )
 }
