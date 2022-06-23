@@ -396,9 +396,9 @@ export class ResultOpaque {
       wasm.ResultOpaque_new(diplomat_receive_buffer, i);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const out = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        return out;
+        return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)];
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -413,9 +413,9 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_failing_foo(diplomat_receive_buffer);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const out = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        return out;
+        return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)];
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -430,9 +430,9 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_failing_bar(diplomat_receive_buffer);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const out = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        return out;
+        return ok_value;
       } else {
         const throw_value = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)];
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -447,9 +447,9 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_failing_unit(diplomat_receive_buffer);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const out = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        return out;
+        return ok_value;
       } else {
         const throw_value = {};
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -464,9 +464,9 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_failing_struct(diplomat_receive_buffer, i);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8);
       if (is_ok) {
-        const out = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
         wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
-        return out;
+        return ok_value;
       } else {
         const throw_value = new ErrorStruct(diplomat_receive_buffer);
         wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
@@ -481,9 +481,9 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_in_err(diplomat_receive_buffer, i);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const out = {};
+        const ok_value = {};
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        return out;
+        return ok_value;
       } else {
         const throw_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -498,9 +498,9 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_in_enum_err(diplomat_receive_buffer, i);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const out = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)];
+        const ok_value = ErrorEnum_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)];
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        return out;
+        return ok_value;
       } else {
         const throw_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
