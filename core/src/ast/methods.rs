@@ -307,6 +307,15 @@ impl BorrowedParams<'_> {
             .chain(self.1.iter().map(|param| param.name.as_str()))
     }
 
+    /// Returns `true` if a provided param name is included in the borrowed params,
+    /// otherwise `false`.
+    ///
+    /// This method doesn't check the `self` parameter. Use
+    /// [`BorrowedParams::borrows_self`] instead.
+    pub fn contains(&self, param_name: &Ident) -> bool {
+        self.1.iter().any(|param| &param.name == param_name)
+    }
+
     /// Returns `true` if there are no borrowed parameters, otherwise `false`.
     pub fn is_empty(&self) -> bool {
         !self.borrows_self() && !self.borrows_params()
