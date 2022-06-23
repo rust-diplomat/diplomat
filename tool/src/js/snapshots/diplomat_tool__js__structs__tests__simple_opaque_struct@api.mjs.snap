@@ -19,17 +19,15 @@ export class MyStruct {
   }
 
   static new(a, b) {
-    const diplomat_out = new MyStruct(wasm.MyStruct_new(a, b));
-    return diplomat_out;
+    return new MyStruct(wasm.MyStruct_new(a, b));
   }
 
   get_a() {
-    const diplomat_out = wasm.MyStruct_get_a(this.underlying);
-    return diplomat_out;
+    return wasm.MyStruct_get_a(this.underlying);
   }
 
   set_b(b) {
-    const diplomat_out = wasm.MyStruct_set_b(this.underlying, b);
+    wasm.MyStruct_set_b(this.underlying, b);
   }
 }
 

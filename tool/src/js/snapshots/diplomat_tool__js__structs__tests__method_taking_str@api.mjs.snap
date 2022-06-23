@@ -33,7 +33,7 @@ export class MyStruct {
     let new_str_diplomat_ptr = wasm.diplomat_alloc(new_str_diplomat_bytes.length, 1);
     let new_str_diplomat_buf = new Uint8Array(wasm.memory.buffer, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
     new_str_diplomat_buf.set(new_str_diplomat_bytes, 0);
-    const diplomat_out = wasm.MyStruct_set_str(this.underlying, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
+    wasm.MyStruct_set_str(this.underlying, new_str_diplomat_ptr, new_str_diplomat_bytes.length);
     wasm.diplomat_free(new_str_diplomat_ptr, new_str_diplomat_bytes.length, 1);
   }
 }

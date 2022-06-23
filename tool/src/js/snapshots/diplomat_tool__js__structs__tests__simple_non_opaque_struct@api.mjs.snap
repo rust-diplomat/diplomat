@@ -10,28 +10,26 @@ const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
 
 export class MyStruct {
   constructor(underlying) {
-    this.a = (new Uint8Array(wasm.memory.buffer, underlying + 0, 1))[0];
+    this.a = (new Uint8Array(wasm.memory.buffer, underlying, 1))[0];
     this.b = (new Uint8Array(wasm.memory.buffer, underlying + 1, 1))[0];
   }
 
   static new(a, b) {
-    const diplomat_out = (() => {
+    return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
       wasm.MyStruct_new(diplomat_receive_buffer, a, b);
       const out = new MyStruct(diplomat_receive_buffer);
       wasm.diplomat_free(diplomat_receive_buffer, 2, 1);
       return out;
     })();
-    return diplomat_out;
   }
 
   get_a() {
-    const diplomat_out = wasm.MyStruct_get_a(this.underlying);
-    return diplomat_out;
+    return wasm.MyStruct_get_a(this.underlying);
   }
 
   set_b(b) {
-    const diplomat_out = wasm.MyStruct_set_b(this.underlying, b);
+    wasm.MyStruct_set_b(this.underlying, b);
   }
 }
 
