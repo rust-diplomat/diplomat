@@ -125,7 +125,7 @@ impl Invocation {
     }
 
     /// Invoke the function without passing in a return buffer.
-    pub fn scalar<'invoke>(&'invoke self) -> impl fmt::Display + 'invoke {
+    pub fn scalar(&self) -> impl fmt::Display + '_ {
         display::expr(move |f| {
             write!(
                 f,
