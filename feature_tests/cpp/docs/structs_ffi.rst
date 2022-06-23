@@ -15,11 +15,7 @@
 
     .. cpp:member:: char32_t f
 
-    .. cpp:member:: std::string_view g
-
-    .. cpp:function:: static MyStruct new_(const std::string_view s)
-
-        Lifetimes: ``s`` must live at least as long as the output.
+    .. cpp:function:: static MyStruct new_()
 
 .. cpp:class:: Opaque
 
