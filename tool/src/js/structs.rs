@@ -177,10 +177,13 @@ fn gen_method<W: fmt::Write>(
     let mut all_param_exprs = vec![];
     let mut post_stmts = vec![];
 
+    let borrowed_params = method.borrowed_params();
+
     if let Some(ref self_param) = method.self_param {
         gen_value_js_to_rust(
             &ast::Ident::from("this"),
             &self_param.to_typename(),
+            &borrowed_params,
             in_path,
             env,
             &mut pre_stmts,
@@ -193,6 +196,7 @@ fn gen_method<W: fmt::Write>(
         gen_value_js_to_rust(
             &p.name,
             &p.ty,
+            &borrowed_params,
             in_path,
             env,
             &mut pre_stmts,

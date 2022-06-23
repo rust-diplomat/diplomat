@@ -157,22 +157,16 @@ export class ICU4XLocale {
   }
 
   static new(name) {
-    let name_diplomat_bytes = (new TextEncoder()).encode(name);
-    let name_diplomat_ptr = wasm.diplomat_alloc(name_diplomat_bytes.length, 1);
-    let name_diplomat_buf = new Uint8Array(wasm.memory.buffer, name_diplomat_ptr, name_diplomat_bytes.length);
-    name_diplomat_buf.set(name_diplomat_bytes, 0);
-    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new(name_diplomat_ptr, name_diplomat_bytes.length));
-    wasm.diplomat_free(name_diplomat_ptr, name_diplomat_bytes.length, 1);
+    name = diplomatRuntime.DiplomatBuf.str(wasm, name);
+    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new(name.ptr, name.size));
+    name.free();
     return diplomat_out;
   }
 
   static new_from_bytes(bytes) {
-    let bytes_diplomat_bytes = new Uint8Array(bytes);
-    let bytes_diplomat_ptr = wasm.diplomat_alloc(bytes_diplomat_bytes.length, 1);
-    let bytes_diplomat_buf = new Uint8Array(wasm.memory.buffer, bytes_diplomat_ptr, bytes_diplomat_bytes.length);
-    bytes_diplomat_buf.set(bytes_diplomat_bytes, 0);
-    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new_from_bytes(bytes_diplomat_ptr, bytes_diplomat_bytes.length));
-    wasm.diplomat_free(bytes_diplomat_ptr, bytes_diplomat_bytes.length, 1);
+    bytes = diplomatRuntime.DiplomatBuf.slice(wasm, bytes, 1);
+    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new_from_bytes(bytes.ptr, bytes.size));
+    bytes.free();
     return diplomat_out;
   }
 }
