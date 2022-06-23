@@ -227,8 +227,7 @@ impl<'base> Base<'base> {
     ) -> (usize, (usize, usize)) {
         let (ok_offset, layout) =
             layout::result_ok_offset_size_align(ok, err, self.in_path, self.env);
-        let (size, align) = (layout.size(), layout.align());
-        (ok_offset, (size, align))
+        (ok_offset, (layout.size(), layout.align()))
     }
 
     fn borrows(&self) -> bool {
@@ -244,26 +243,25 @@ pub enum Underlying<'base> {
     Invocation(&'base Invocation),
 
     /// A binding that holds a pointer.
-    Binding(&'base ast::Ident),
+    Binding(&'base ast::Ident, Offset),
 
     /// Dereference a double pointer once, yielding the inside pointer.
-    PtrRead(&'base Underlying<'base>, Offset),
+    PtrRead(&'base Underlying<'base>),
 }
 
 impl fmt::Display for Underlying<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Underlying::Invocation(invoke) => invoke.scalar().fmt(f),
-            Underlying::Binding(name) => name.fmt(f),
-            Underlying::PtrRead(name, offset) => {
-                write!(
-                    f,
-                    "diplomatRuntime.ptrRead(wasm, {})",
-                    display::expr(|f| match offset {
-                        Some(offset) => write!(f, "{name} + {offset}"),
-                        None => write!(f, "{name}"),
-                    })
-                )
+            Underlying::Binding(name, offset) => {
+                if let Some(offset) = offset {
+                    write!(f, "{name} + {offset}")
+                } else {
+                    name.fmt(f)
+                }
+            }
+            Underlying::PtrRead(underlying) => {
+                write!(f, "diplomatRuntime.ptrRead(wasm, {underlying})")
             }
         }
     }
@@ -328,7 +326,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                             "return ({option_ptr} == 0) ? null : {};",
                             Pointer {
                                 inner,
-                                underlying: Underlying::Binding(&option_ptr),
+                                underlying: Underlying::Binding(&option_ptr, None),
                                 base: self.base,
                             }
                         )
@@ -358,9 +356,8 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                 "if (is_ok) {if_true} else {if_false}",
                                 if_true = display::block(|mut f| {
                                     writeln!(f, "const ok_value = {};", UnderlyingIntoJs {
-                                        typ: ok.as_ref(),
-                                        underlying: Underlying::Binding(&diplomat_receive_buffer),
-                                        offset: None,
+                                        inner: ok.as_ref(),
+                                        underlying: Underlying::Binding(&diplomat_receive_buffer, None),
                                         base: self.base,
                                     })?;
                                     writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
@@ -368,9 +365,8 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                 }),
                                 if_false = display::block(|mut f| {
                                     writeln!(f, "const throw_value = {};", UnderlyingIntoJs {
-                                        typ: err.as_ref(),
-                                        underlying: Underlying::Binding(&diplomat_receive_buffer),
-                                        offset: None,
+                                        inner: err.as_ref(),
+                                        underlying: Underlying::Binding(&diplomat_receive_buffer, None),
                                         base: self.base,
                                     })?;
                                     writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
@@ -428,9 +424,8 @@ impl fmt::Display for Pointer<'_> {
         }
 
         UnderlyingIntoJs {
-            typ: self.inner,
+            inner: self.inner,
             underlying: self.underlying,
-            offset: None,
             base: self.base,
         }
         .fmt(f)
@@ -442,66 +437,26 @@ impl fmt::Display for Pointer<'_> {
 /// This is only used for types that can appear in non-opaque structs and
 /// `Result`s.
 pub struct UnderlyingIntoJs<'base> {
-    /// The type of the created value.
-    pub typ: &'base ast::TypeName,
+    /// The type inside the underlying buffer.
+    pub inner: &'base ast::TypeName,
 
     /// The underlying buffer to read the value from.
     pub underlying: Underlying<'base>,
-
-    /// An offset into the buffer.
-    pub offset: Offset,
 
     /// Base data.
     pub base: Base<'base>,
 }
 
-impl UnderlyingIntoJs<'_> {
-    /// Display the underlying pointer, including any additional offset.
-    fn display_offset<'display>(&'display self) -> impl fmt::Display + 'display {
-        display::expr(move |f| {
-            if let Some(offset) = self.offset {
-                write!(f, "{} + {offset}", self.underlying)
-            } else {
-                write!(f, "{}", self.underlying)
-            }
-        })
-    }
-
-    /// Display the result of reading a pointer from the underlying pointer with
-    /// any additional offset.
-    fn display_ptr_read<'display>(&'display self) -> impl fmt::Display + 'display {
-        display::expr(move |f| {
-            write!(
-                f,
-                "diplomatRuntime.ptrRead(wasm, {})",
-                self.display_offset()
-            )
-        })
-    }
-
-    /// Display the result of reading an enum discriminant from the underlying
-    /// pointer with any additional offset.
-    fn display_enum_discriminant<'display>(&'display self) -> impl fmt::Display + 'display {
-        display::expr(move |f| {
-            write!(
-                f,
-                "diplomatRuntime.enumDiscriminant(wasm, {})",
-                self.display_offset()
-            )
-        })
-    }
-}
-
 impl fmt::Display for UnderlyingIntoJs<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.typ {
+        match self.inner {
             ast::TypeName::Primitive(prim) => {
                 macro_rules! read_prim {
                     ($array:expr) => {
                         write!(
                             f,
                             concat!("(new ", $array, "(wasm.memory.buffer, {}, 1))[0]"),
-                            self.display_offset()
+                            self.underlying
                         )
                     };
                 }
@@ -523,24 +478,24 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                     ast::PrimitiveType::bool => write!(
                         f,
                         "(new Uint8Array(wasm.memory.buffer, {}, 1))[0] == 1",
-                        self.display_offset()
+                        self.underlying
                     ),
                     ast::PrimitiveType::char => write!(
                         f,
                         "String.fromCharCode((new Uint32Array(wasm.memory.buffer, {}, 1))[0])",
-                        self.display_offset()
+                        self.underlying
                     ),
                 }
             }
             ast::TypeName::Named(path_type) => match self.base.resolve_type(path_type) {
                 ast::CustomType::Struct(strct) => {
                     // TODO: optimize because we already know it's a non-opaque struct
-                    match self.base.return_type_form(self.typ) {
+                    match self.base.return_type_form(self.inner) {
                         ReturnTypeForm::Scalar => {
                             todo!("#173: constructing a scalar struct from a buffer")
                         }
                         ReturnTypeForm::Complex => {
-                            write!(f, "new {}({})", strct.name, self.display_offset())
+                            write!(f, "new {}({})", strct.name, self.underlying)
                         }
                         ReturnTypeForm::Empty => unreachable!(),
                     }
@@ -550,14 +505,13 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                 }
                 ast::CustomType::Enum(enm) => write!(
                     f,
-                    "{}_rust_to_js[{}]",
-                    enm.name,
-                    self.display_enum_discriminant()
+                    "{}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {})]",
+                    enm.name, self.underlying,
                 ),
             },
             ast::TypeName::Reference(.., typ) | ast::TypeName::Box(typ) => Pointer {
                 inner: typ,
-                underlying: Underlying::PtrRead(&self.underlying, self.offset),
+                underlying: Underlying::PtrRead(&self.underlying),
                 base: self.base,
             }
             .fmt(f),
@@ -565,13 +519,17 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                 ast::TypeName::Box(inner) | ast::TypeName::Reference(.., inner) => {
                     display::iife(|mut f| {
                         let option_ptr: ast::Ident = "option_ptr".into();
-                        writeln!(f, "const {option_ptr} = {};", self.display_ptr_read())?;
+                        writeln!(
+                            f,
+                            "const {option_ptr} = {};",
+                            Underlying::PtrRead(&self.underlying)
+                        )?;
                         writeln!(
                             f,
                             "return ({option_ptr} == 0) ? null : {};",
                             Pointer {
                                 inner,
-                                underlying: Underlying::Binding(&option_ptr),
+                                underlying: Underlying::Binding(&option_ptr, None),
                                 base: self.base,
                             }
                         )

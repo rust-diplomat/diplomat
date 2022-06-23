@@ -72,7 +72,8 @@ pub fn gen_struct<W: fmt::Write>(
                                 env,
                             );
 
-                            for ((name, typ, _), &offset) in strct.fields.iter().zip(offsets.iter())
+                            for ((name, inner, _), &offset) in
+                                strct.fields.iter().zip(offsets.iter())
                             {
                                 // If the type of a field has any named lifetimes
                                 // (elision is impossible in fields), then it
@@ -81,7 +82,7 @@ pub fn gen_struct<W: fmt::Write>(
                                 // want to be more intelligent about this and
                                 // only attach lifetime guards to the exact object
                                 // that holds it, instead of the outermost struct.
-                                let borrows_self = typ.any_lifetime(|lifetime, _| {
+                                let borrows_self = inner.any_lifetime(|lifetime, _| {
                                     matches!(lifetime, ast::Lifetime::Named(_))
                                 });
 
@@ -90,9 +91,11 @@ pub fn gen_struct<W: fmt::Write>(
                                     "this.{} = {};",
                                     name,
                                     UnderlyingIntoJs {
-                                        typ,
-                                        underlying: Underlying::Binding(&underlying),
-                                        offset: NonZeroUsize::new(offset),
+                                        inner,
+                                        underlying: Underlying::Binding(
+                                            &underlying,
+                                            NonZeroUsize::new(offset),
+                                        ),
                                         base: Base::new_field(in_path, env, borrows_self),
                                     },
                                 )?;
