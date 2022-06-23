@@ -1,3 +1,23 @@
+//! Utilities for generating JS code that convert between JS values and Rust values.
+//!
+//! When calling Rust from JS, there are two necessary conversions. First, the
+//! JS parameters must be converted into values that the WASM ABI understands.
+//! Then, the Rust function is invoked via WASM, which may return a Rust value,
+//! which then must be converted into a value that JS understands.
+//!
+//! For converting JS parameter values into a form that the WASM ABI understands,
+//! the [`gen_value_js_to_rust`] function is used. It generates the setup and
+//! tear down JS code for calling a function. This function will probably be
+//! rewritten into an [`fmt::Display`] type in the future.
+//!
+//! For converting the returned Rust value into a form that JS understand,
+//! the [`InvocationIntoJs`] type used. It's an [`fmt::Display`] type that, when
+//! `Display`ed, generates the WASM invocation and the conversion code that
+//! turns the returned Rust value into something that JS understand.
+//!
+//! Return types like non-opaque structs and `Result`s with a non-unit value are
+//! returned into a pre-allocated buffer, which [`InvocationIntoJs`] manages.
+//! In order to get JS values out of this buffer, [`UnderlyingIntoJs`] is used.
 use diplomat_core::ast::{self, BorrowedParams};
 use diplomat_core::Env;
 use std::fmt::{self, Write as _};
@@ -7,7 +27,8 @@ use super::display;
 use super::types::{return_type_form, ReturnTypeForm};
 use crate::layout;
 
-/// TODO: docs
+/// Generate the necessary setup and tear down JS code to convert the parameters
+/// into a form that Rust/WASM can understand.
 #[allow(clippy::ptr_arg)] // false positive, rust-clippy#8463, fixed in 1.61
 pub fn gen_value_js_to_rust(
     param_name: &ast::Ident,
