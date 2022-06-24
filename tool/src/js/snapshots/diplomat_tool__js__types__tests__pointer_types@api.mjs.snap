@@ -15,7 +15,6 @@ const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying 
 export class MyOpaqueStruct {
   constructor(underlying) {
     this.underlying = underlying;
-    MyOpaqueStruct_box_destroy_registry.register(this, underlying);
   }
 }
 

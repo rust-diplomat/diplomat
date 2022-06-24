@@ -15,12 +15,16 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class MyStruct {
   constructor(underlying) {
     this.underlying = underlying;
-    MyStruct_box_destroy_registry.register(this, underlying);
   }
 
   static new_str(v) {
     v = diplomatRuntime.DiplomatBuf.str(wasm, v);
-    const diplomat_out = new MyStruct(wasm.MyStruct_new_str(v.ptr, v.size));
+    const diplomat_out = (() => {
+      const underlying = wasm.MyStruct_new_str(v.ptr, v.size);
+      const out = new MyStruct(underlying);
+      MyStruct_box_destroy_registry.register(out, underlying);
+      return out;
+    })();
     v.free();
     return diplomat_out;
   }
