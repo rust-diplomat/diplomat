@@ -429,19 +429,21 @@ impl fmt::Display for Pointer<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let ast::TypeName::Named(path_type) = self.inner {
             if let ast::CustomType::Opaque(opaque) = self.base.resolve_type(path_type) {
-                if !self.base.borrows() {
-                    write!(
-                        f,
-                        "new {}({}, {})",
-                        opaque.name, self.underlying, self.owned
-                    )?;
+                if !self.base.borrows() && !self.owned {
+                    write!(f, "new {}({})", opaque.name, self.underlying)?;
                 } else {
                     display::iife(|mut f| {
-                        writeln!(
-                            f,
-                            "const out = new {}({}, {});",
-                            opaque.name, self.underlying, self.owned
-                        )?;
+                        if self.owned {
+                            writeln!(f, "const underlying = {};", self.underlying)?;
+                            writeln!(f, "const out = new {}(underlying);", opaque.name)?;
+                            writeln!(
+                                f,
+                                "{}_box_destroy_registry.register(out, underlying);",
+                                opaque.name
+                            )?;
+                        } else {
+                            writeln!(f, "const out = new {}({});", opaque.name, self.underlying)?;
+                        }
                         if self.base.borrows_self {
                             writeln!(f, "out.__this_lifetime_guard = this;")?;
                         }
