@@ -16,6 +16,12 @@ pub mod ffi {
         }
     }
 
+    impl<'b, 'a: 'b> Bar<'b, 'a> {
+        pub fn foo(&'b self) -> &'b Foo<'a> {
+            self.0
+        }
+    }
+
     #[diplomat::opaque]
     pub struct One<'a>(super::One<'a>);
 

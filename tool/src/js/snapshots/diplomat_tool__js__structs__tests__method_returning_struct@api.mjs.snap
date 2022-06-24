@@ -15,7 +15,6 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class MyStruct {
   constructor(underlying) {
     this.underlying = underlying;
-    MyStruct_box_destroy_registry.register(this, underlying);
   }
 
   get_non_opaque() {

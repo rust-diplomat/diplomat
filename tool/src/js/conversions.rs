@@ -321,31 +321,43 @@ impl fmt::Display for InvocationIntoJs<'_> {
                     write!(f, "{}_rust_to_js[{}]", enm.name, self.invocation.scalar())
                 }
             },
-            ast::TypeName::Reference(.., inner) | ast::TypeName::Box(inner) => Pointer {
+            ast::TypeName::Reference(.., inner) => Pointer {
                 inner,
                 underlying: Underlying::Invocation(&self.invocation),
+                owned: false,
                 base: self.base,
             }
             .fmt(f),
-            ast::TypeName::Option(inner) => match inner.as_ref() {
-                ast::TypeName::Box(inner) | ast::TypeName::Reference(.., inner) => {
-                    display::iife(|mut f| {
-                        let option_ptr: ast::Ident = "option_ptr".into();
-                        writeln!(f, "const {option_ptr} = {};", self.invocation.scalar())?;
-                        writeln!(
-                            f,
-                            "return ({option_ptr} == 0) ? null : {};",
-                            Pointer {
-                                inner,
-                                underlying: Underlying::Binding(&option_ptr, None),
-                                base: self.base,
-                            }
-                        )
-                    })
-                    .fmt(f)
-                }
-                _ => unreachable!(),
-            },
+            ast::TypeName::Box(inner) => Pointer {
+                inner,
+                underlying: Underlying::Invocation(&self.invocation),
+                owned: true,
+                base: self.base,
+            }
+            .fmt(f),
+            ast::TypeName::Option(inner) => {
+                let (inner, owned) = match inner.as_ref() {
+                    ast::TypeName::Reference(.., inner) => (inner, false),
+                    ast::TypeName::Box(inner) => (inner, true),
+                    _ => unreachable!("non-pointer type in an Option"),
+                };
+
+                display::iife(|mut f| {
+                    let option_ptr: ast::Ident = "option_ptr".into();
+                    writeln!(f, "const {option_ptr} = {};", self.invocation.scalar())?;
+                    writeln!(
+                        f,
+                        "return ({option_ptr} == 0) ? null : {};",
+                        Pointer {
+                            inner,
+                            underlying: Underlying::Binding(&option_ptr, None),
+                            owned,
+                            base: self.base,
+                        }
+                    )
+                })
+                .fmt(f)
+            }
             ast::TypeName::Result(ok, err) => {
                 match self.base.return_type_form(self.typ) {
                     ReturnTypeForm::Scalar => display::iife(|mut f| {
@@ -406,6 +418,9 @@ struct Pointer<'base> {
     /// An expression that evaluates into the pointer.
     underlying: Underlying<'base>,
 
+    /// Whether or not the pointer is owned.
+    owned: bool,
+
     /// Base data.
     base: Base<'base>,
 }
@@ -414,11 +429,21 @@ impl fmt::Display for Pointer<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let ast::TypeName::Named(path_type) = self.inner {
             if let ast::CustomType::Opaque(opaque) = self.base.resolve_type(path_type) {
-                if !self.base.borrows() {
+                if !self.base.borrows() && !self.owned {
                     write!(f, "new {}({})", opaque.name, self.underlying)?;
                 } else {
                     display::iife(|mut f| {
-                        writeln!(f, "const out = new {}({});", opaque.name, self.underlying)?;
+                        if self.owned {
+                            writeln!(f, "const underlying = {};", self.underlying)?;
+                            writeln!(f, "const out = new {}(underlying);", opaque.name)?;
+                            writeln!(
+                                f,
+                                "{}_box_destroy_registry.register(out, underlying);",
+                                opaque.name
+                            )?;
+                        } else {
+                            writeln!(f, "const out = new {}({});", opaque.name, self.underlying)?;
+                        }
                         if self.base.borrows_self {
                             writeln!(f, "out.__this_lifetime_guard = this;")?;
                         }
@@ -522,35 +547,47 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                     enm.name, self.underlying,
                 ),
             },
-            ast::TypeName::Reference(.., typ) | ast::TypeName::Box(typ) => Pointer {
+            ast::TypeName::Reference(.., typ) => Pointer {
                 inner: typ,
                 underlying: Underlying::PtrRead(&self.underlying),
+                owned: false,
                 base: self.base,
             }
             .fmt(f),
-            ast::TypeName::Option(inner) => match inner.as_ref() {
-                ast::TypeName::Box(inner) | ast::TypeName::Reference(.., inner) => {
-                    display::iife(|mut f| {
-                        let option_ptr: ast::Ident = "option_ptr".into();
-                        writeln!(
-                            f,
-                            "const {option_ptr} = {};",
-                            Underlying::PtrRead(&self.underlying)
-                        )?;
-                        writeln!(
-                            f,
-                            "return ({option_ptr} == 0) ? null : {};",
-                            Pointer {
-                                inner,
-                                underlying: Underlying::Binding(&option_ptr, None),
-                                base: self.base,
-                            }
-                        )
-                    })
-                    .fmt(f)
-                }
-                _ => unreachable!(),
-            },
+            ast::TypeName::Box(typ) => Pointer {
+                inner: typ,
+                underlying: Underlying::PtrRead(&self.underlying),
+                owned: true,
+                base: self.base,
+            }
+            .fmt(f),
+            ast::TypeName::Option(inner) => {
+                let (inner, owned) = match inner.as_ref() {
+                    ast::TypeName::Reference(.., inner) => (inner, false),
+                    ast::TypeName::Box(inner) => (inner, true),
+                    _ => unreachable!("non-pointer in an Option"),
+                };
+
+                display::iife(|mut f| {
+                    let option_ptr: ast::Ident = "option_ptr".into();
+                    writeln!(
+                        f,
+                        "const {option_ptr} = {};",
+                        Underlying::PtrRead(&self.underlying)
+                    )?;
+                    writeln!(
+                        f,
+                        "return ({option_ptr} == 0) ? null : {};",
+                        Pointer {
+                            inner,
+                            underlying: Underlying::Binding(&option_ptr, None),
+                            owned,
+                            base: self.base,
+                        }
+                    )
+                })
+                .fmt(f)
+            }
             ast::TypeName::Result(..) => todo!("Result in a buffer"),
             ast::TypeName::Writeable => todo!("Writeable in a buffer"),
             ast::TypeName::StrReference(..) => todo!("StrReference in a buffer"),

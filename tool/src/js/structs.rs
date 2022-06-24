@@ -131,14 +131,7 @@ pub fn gen_struct<W: fmt::Write>(
                     writeln!(
                         f,
                         "constructor(underlying) {}",
-                        display::block(|mut f| {
-                            writeln!(f, "this.underlying = underlying;")?;
-                            writeln!(
-                                f,
-                                "{}_box_destroy_registry.register(this, underlying);",
-                                opaque.name
-                            )
-                        })
+                        display::block(|mut f| writeln!(f, "this.underlying = underlying;"))
                     )?;
 
                     for method in opaque.methods.iter() {

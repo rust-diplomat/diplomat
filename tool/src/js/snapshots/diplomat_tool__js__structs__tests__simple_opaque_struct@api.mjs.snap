@@ -15,11 +15,15 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 export class MyStruct {
   constructor(underlying) {
     this.underlying = underlying;
-    MyStruct_box_destroy_registry.register(this, underlying);
   }
 
   static new(a, b) {
-    return new MyStruct(wasm.MyStruct_new(a, b));
+    return (() => {
+      const underlying = wasm.MyStruct_new(a, b);
+      const out = new MyStruct(underlying);
+      MyStruct_box_destroy_registry.register(out, underlying);
+      return out;
+    })();
   }
 
   get_a() {

@@ -15,7 +15,6 @@ const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying 
 export class MyOpaqueStruct {
   constructor(underlying) {
     this.underlying = underlying;
-    MyOpaqueStruct_box_destroy_registry.register(this, underlying);
   }
 }
 
@@ -23,7 +22,12 @@ export class MyStruct {
   constructor(underlying) {
     this.a = (() => {
       const option_ptr = diplomatRuntime.ptrRead(wasm, underlying);
-      return (option_ptr == 0) ? null : new MyOpaqueStruct(option_ptr);
+      return (option_ptr == 0) ? null : (() => {
+        const underlying = option_ptr;
+        const out = new MyOpaqueStruct(underlying);
+        MyOpaqueStruct_box_destroy_registry.register(out, underlying);
+        return out;
+      })();
     })();
   }
 }
