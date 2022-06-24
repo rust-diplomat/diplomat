@@ -9,9 +9,19 @@ const Bar_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class Bar {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    Bar_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      Bar_box_destroy_registry.register(this, underlying);
+    }
+  }
+
+  foo() {
+    return (() => {
+      const out = new Foo(wasm.Bar_foo(this.underlying), false);
+      out.__this_lifetime_guard = this;
+      return out;
+    })();
   }
 }
 
@@ -36,14 +46,16 @@ const Float64Vec_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class Float64Vec {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    Float64Vec_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      Float64Vec_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new(v) {
     v = diplomatRuntime.DiplomatBuf.slice(wasm, v, 8);
-    const diplomat_out = new Float64Vec(wasm.Float64Vec_new(v.ptr, v.size));
+    const diplomat_out = new Float64Vec(wasm.Float64Vec_new(v.ptr, v.size), true);
     v.free();
     return diplomat_out;
   }
@@ -66,15 +78,17 @@ const Foo_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class Foo {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    Foo_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      Foo_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new(x) {
     x = diplomatRuntime.DiplomatBuf.str(wasm, x);
     return (() => {
-      const out = new Foo(wasm.Foo_new(x.ptr, x.size));
+      const out = new Foo(wasm.Foo_new(x.ptr, x.size), true);
       out.__x_lifetime_guard = x;
       return out;
     })();
@@ -82,7 +96,7 @@ export class Foo {
 
   get_bar() {
     return (() => {
-      const out = new Bar(wasm.Foo_get_bar(this.underlying));
+      const out = new Bar(wasm.Foo_get_bar(this.underlying), true);
       out.__this_lifetime_guard = this;
       return out;
     })();
@@ -94,14 +108,16 @@ const MyString_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class MyString {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    MyString_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      MyString_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new(v) {
     v = diplomatRuntime.DiplomatBuf.str(wasm, v);
-    const diplomat_out = new MyString(wasm.MyString_new(v.ptr, v.size));
+    const diplomat_out = new MyString(wasm.MyString_new(v.ptr, v.size), true);
     v.free();
     return diplomat_out;
   }
@@ -145,14 +161,16 @@ const One_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class One {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    One_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      One_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static transitivity(hold, nohold) {
     return (() => {
-      const out = new One(wasm.One_transitivity(hold.underlying, nohold.underlying));
+      const out = new One(wasm.One_transitivity(hold.underlying, nohold.underlying), true);
       out.__hold_lifetime_guard = hold;
       return out;
     })();
@@ -160,7 +178,7 @@ export class One {
 
   static cycle(hold, nohold) {
     return (() => {
-      const out = new One(wasm.One_cycle(hold.underlying, nohold.underlying));
+      const out = new One(wasm.One_cycle(hold.underlying, nohold.underlying), true);
       out.__hold_lifetime_guard = hold;
       return out;
     })();
@@ -168,7 +186,7 @@ export class One {
 
   static many_dependents(a, b, c, d, nohold) {
     return (() => {
-      const out = new One(wasm.One_many_dependents(a.underlying, b.underlying, c.underlying, d.underlying, nohold.underlying));
+      const out = new One(wasm.One_many_dependents(a.underlying, b.underlying, c.underlying, d.underlying, nohold.underlying), true);
       out.__a_lifetime_guard = a;
       out.__b_lifetime_guard = b;
       out.__c_lifetime_guard = c;
@@ -179,7 +197,7 @@ export class One {
 
   static return_outlives_param(hold, nohold) {
     return (() => {
-      const out = new One(wasm.One_return_outlives_param(hold.underlying, nohold.underlying));
+      const out = new One(wasm.One_return_outlives_param(hold.underlying, nohold.underlying), true);
       out.__hold_lifetime_guard = hold;
       return out;
     })();
@@ -187,7 +205,7 @@ export class One {
 
   static diamond_top(top, left, right, bottom) {
     return (() => {
-      const out = new One(wasm.One_diamond_top(top.underlying, left.underlying, right.underlying, bottom.underlying));
+      const out = new One(wasm.One_diamond_top(top.underlying, left.underlying, right.underlying, bottom.underlying), true);
       out.__top_lifetime_guard = top;
       out.__left_lifetime_guard = left;
       out.__right_lifetime_guard = right;
@@ -198,7 +216,7 @@ export class One {
 
   static diamond_left(top, left, right, bottom) {
     return (() => {
-      const out = new One(wasm.One_diamond_left(top.underlying, left.underlying, right.underlying, bottom.underlying));
+      const out = new One(wasm.One_diamond_left(top.underlying, left.underlying, right.underlying, bottom.underlying), true);
       out.__left_lifetime_guard = left;
       out.__bottom_lifetime_guard = bottom;
       return out;
@@ -207,7 +225,7 @@ export class One {
 
   static diamond_right(top, left, right, bottom) {
     return (() => {
-      const out = new One(wasm.One_diamond_right(top.underlying, left.underlying, right.underlying, bottom.underlying));
+      const out = new One(wasm.One_diamond_right(top.underlying, left.underlying, right.underlying, bottom.underlying), true);
       out.__right_lifetime_guard = right;
       out.__bottom_lifetime_guard = bottom;
       return out;
@@ -216,7 +234,7 @@ export class One {
 
   static diamond_bottom(top, left, right, bottom) {
     return (() => {
-      const out = new One(wasm.One_diamond_bottom(top.underlying, left.underlying, right.underlying, bottom.underlying));
+      const out = new One(wasm.One_diamond_bottom(top.underlying, left.underlying, right.underlying, bottom.underlying), true);
       out.__bottom_lifetime_guard = bottom;
       return out;
     })();
@@ -224,7 +242,7 @@ export class One {
 
   static diamond_and_nested_types(a, b, c, d, nohold) {
     return (() => {
-      const out = new One(wasm.One_diamond_and_nested_types(a.underlying, b.underlying, c.underlying, d.underlying, nohold.underlying));
+      const out = new One(wasm.One_diamond_and_nested_types(a.underlying, b.underlying, c.underlying, d.underlying, nohold.underlying), true);
       out.__a_lifetime_guard = a;
       out.__b_lifetime_guard = b;
       out.__c_lifetime_guard = c;
@@ -239,13 +257,15 @@ const Opaque_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class Opaque {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    Opaque_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      Opaque_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new() {
-    return new Opaque(wasm.Opaque_new());
+    return new Opaque(wasm.Opaque_new(), true);
   }
 
   assert_struct(s) {
@@ -264,22 +284,24 @@ const OptionOpaque_box_destroy_registry = new FinalizationRegistry(underlying =>
 });
 
 export class OptionOpaque {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    OptionOpaque_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      OptionOpaque_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new(i) {
     return (() => {
       const option_ptr = wasm.OptionOpaque_new(i);
-      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr);
+      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr, true);
     })();
   }
 
   static new_none() {
     return (() => {
       const option_ptr = wasm.OptionOpaque_new_none();
-      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr);
+      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr, true);
     })();
   }
 
@@ -313,9 +335,11 @@ const OptionOpaqueChar_box_destroy_registry = new FinalizationRegistry(underlyin
 });
 
 export class OptionOpaqueChar {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    OptionOpaqueChar_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      OptionOpaqueChar_box_destroy_registry.register(this, underlying);
+    }
   }
 
   assert_char(ch) {
@@ -327,16 +351,16 @@ export class OptionStruct {
   constructor(underlying) {
     this.a = (() => {
       const option_ptr = diplomatRuntime.ptrRead(wasm, underlying);
-      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr);
+      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr, true);
     })();
     this.b = (() => {
       const option_ptr = diplomatRuntime.ptrRead(wasm, underlying + 4);
-      return (option_ptr == 0) ? null : new OptionOpaqueChar(option_ptr);
+      return (option_ptr == 0) ? null : new OptionOpaqueChar(option_ptr, true);
     })();
     this.c = (new Uint32Array(wasm.memory.buffer, underlying + 8, 1))[0];
     this.d = (() => {
       const option_ptr = diplomatRuntime.ptrRead(wasm, underlying + 12);
-      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr);
+      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr, true);
     })();
   }
 }
@@ -346,14 +370,16 @@ const RefList_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class RefList {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    RefList_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      RefList_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static node(data) {
     return (() => {
-      const out = new RefList(wasm.RefList_node(data.underlying));
+      const out = new RefList(wasm.RefList_node(data.underlying), true);
       out.__data_lifetime_guard = data;
       return out;
     })();
@@ -365,9 +391,11 @@ const ResultOpaque_box_destroy_registry = new FinalizationRegistry(underlying =>
 });
 
 export class ResultOpaque {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    ResultOpaque_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      ResultOpaque_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new(i) {
@@ -376,7 +404,7 @@ export class ResultOpaque {
       wasm.ResultOpaque_new(diplomat_receive_buffer, i);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), true);
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         return ok_value;
       } else {
@@ -393,7 +421,7 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_failing_foo(diplomat_receive_buffer);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), true);
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         return ok_value;
       } else {
@@ -410,7 +438,7 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_failing_bar(diplomat_receive_buffer);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), true);
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         return ok_value;
       } else {
@@ -427,7 +455,7 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_failing_unit(diplomat_receive_buffer);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
       if (is_ok) {
-        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), true);
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         return ok_value;
       } else {
@@ -444,7 +472,7 @@ export class ResultOpaque {
       wasm.ResultOpaque_new_failing_struct(diplomat_receive_buffer, i);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8);
       if (is_ok) {
-        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const ok_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), true);
         wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
         return ok_value;
       } else {
@@ -465,7 +493,7 @@ export class ResultOpaque {
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         return ok_value;
       } else {
-        const throw_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const throw_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), true);
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         throw new diplomatRuntime.FFIError(throw_value);
       }
@@ -482,7 +510,7 @@ export class ResultOpaque {
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         return ok_value;
       } else {
-        const throw_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+        const throw_value = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), true);
         wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         throw new diplomatRuntime.FFIError(throw_value);
       }
@@ -499,8 +527,10 @@ const Two_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class Two {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    Two_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      Two_box_destroy_registry.register(this, underlying);
+    }
   }
 }

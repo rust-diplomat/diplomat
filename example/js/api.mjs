@@ -9,13 +9,15 @@ const ICU4XDataProvider_box_destroy_registry = new FinalizationRegistry(underlyi
 });
 
 export class ICU4XDataProvider {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    ICU4XDataProvider_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      ICU4XDataProvider_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new_static() {
-    return new ICU4XDataProvider(wasm.ICU4XDataProvider_new_static());
+    return new ICU4XDataProvider(wasm.ICU4XDataProvider_new_static(), true);
   }
 
   static returns_result() {
@@ -33,13 +35,15 @@ const ICU4XFixedDecimal_box_destroy_registry = new FinalizationRegistry(underlyi
 });
 
 export class ICU4XFixedDecimal {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    ICU4XFixedDecimal_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      ICU4XFixedDecimal_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new(v) {
-    return new ICU4XFixedDecimal(wasm.ICU4XFixedDecimal_new(v));
+    return new ICU4XFixedDecimal(wasm.ICU4XFixedDecimal_new(v), true);
   }
 
   multiply_pow10(power) {
@@ -67,9 +71,11 @@ const ICU4XFixedDecimalFormat_box_destroy_registry = new FinalizationRegistry(un
 });
 
 export class ICU4XFixedDecimalFormat {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    ICU4XFixedDecimalFormat_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      ICU4XFixedDecimalFormat_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static try_new(locale, provider, options) {
@@ -112,7 +118,7 @@ export class ICU4XFixedDecimalFormatResult {
   constructor(underlying) {
     this.fdf = (() => {
       const option_ptr = diplomatRuntime.ptrRead(wasm, underlying);
-      return (option_ptr == 0) ? null : new ICU4XFixedDecimalFormat(option_ptr);
+      return (option_ptr == 0) ? null : new ICU4XFixedDecimalFormat(option_ptr, true);
     })();
     this.success = (new Uint8Array(wasm.memory.buffer, underlying + 4, 1))[0] == 1;
   }
@@ -151,21 +157,23 @@ const ICU4XLocale_box_destroy_registry = new FinalizationRegistry(underlying => 
 });
 
 export class ICU4XLocale {
-  constructor(underlying) {
+  constructor(underlying, owned) {
     this.underlying = underlying;
-    ICU4XLocale_box_destroy_registry.register(this, underlying);
+    if (owned) {
+      ICU4XLocale_box_destroy_registry.register(this, underlying);
+    }
   }
 
   static new(name) {
     name = diplomatRuntime.DiplomatBuf.str(wasm, name);
-    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new(name.ptr, name.size));
+    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new(name.ptr, name.size), true);
     name.free();
     return diplomat_out;
   }
 
   static new_from_bytes(bytes) {
     bytes = diplomatRuntime.DiplomatBuf.slice(wasm, bytes, 1);
-    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new_from_bytes(bytes.ptr, bytes.size));
+    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new_from_bytes(bytes.ptr, bytes.size), true);
     bytes.free();
     return diplomat_out;
   }

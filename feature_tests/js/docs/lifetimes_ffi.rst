@@ -3,6 +3,8 @@
 
 .. js:class:: Bar
 
+    .. js:function:: foo()
+
 .. js:class:: Foo
 
     .. js:staticfunction:: new(x)
