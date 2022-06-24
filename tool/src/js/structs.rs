@@ -130,13 +130,19 @@ pub fn gen_struct<W: fmt::Write>(
                 display::block(|mut f| {
                     writeln!(
                         f,
-                        "constructor(underlying) {}",
+                        "constructor(underlying, owned) {}",
                         display::block(|mut f| {
                             writeln!(f, "this.underlying = underlying;")?;
                             writeln!(
                                 f,
-                                "{}_box_destroy_registry.register(this, underlying);",
-                                opaque.name
+                                "if (owned) {}",
+                                display::block(|mut f| {
+                                    writeln!(
+                                        f,
+                                        "{}_box_destroy_registry.register(this, underlying);",
+                                        opaque.name
+                                    )
+                                })
                             )
                         })
                     )?;
