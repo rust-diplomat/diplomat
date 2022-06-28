@@ -427,16 +427,17 @@ impl<'env> Outlives<'env> {
         }
     }
 
-    /// Performs DFS to visit all longer lifetimes.
-    fn dfs(&mut self, id: usize) {
+    /// Recursively mark all lifetimes that live at least as long as the
+    /// lifetime at the provided index in the [`LifetimeEnv`] as reachable.
+    fn dfs(&mut self, index: usize) {
         // Note: all of these indexings SHOULD be valid because
         // `visited.len() == nodes.len()`, and the ids come from
         // calling `Iterator::position` on `nodes`, which never shrinks.
         // So we should be able to change these to `get_unchecked`...
-        if !self.visited[id] {
-            self.visited[id] = true;
+        if !self.visited[index] {
+            self.visited[index] = true;
 
-            let node = &self.env.nodes[id];
+            let node = &self.env.nodes[index];
             self.out.push(&node.lifetime);
             for &longer_id in node.longer.iter() {
                 self.dfs(longer_id);
@@ -444,7 +445,7 @@ impl<'env> Outlives<'env> {
         }
     }
 
-    /// Returns all lifetimes that must outlive any of the visited lifetimes.
+    /// Returns all lifetimes that outlive any of the visited lifetimes.
     pub fn finish(self) -> Vec<&'env NamedLifetime> {
         self.out
     }
