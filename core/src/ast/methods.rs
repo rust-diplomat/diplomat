@@ -277,12 +277,12 @@ pub struct BorrowedParams<'a>(pub Option<&'a SelfParam>, pub Vec<&'a Param>);
 
 impl BorrowedParams<'_> {
     /// Returns an [`Iterator`] through the names of the borrowed parameters,
-    /// accepting a `&str` that the `self` param will be called if present.
-    pub fn names<'a>(&'a self, self_name: &'a str) -> impl Iterator<Item = &'a str> {
+    /// accepting an `Ident` that the `self` param will be called if present.
+    pub fn names<'a>(&'a self, self_name: &'a Ident) -> impl Iterator<Item = &'a Ident> {
         self.0
             .iter()
             .map(move |_| self_name)
-            .chain(self.1.iter().map(|param| param.name.as_str()))
+            .chain(self.1.iter().map(|param| &param.name))
     }
 
     /// Returns `true` if a provided param name is included in the borrowed params,
@@ -383,8 +383,8 @@ mod tests {
             );
 
             let borrowed_params = method.borrowed_params();
-            let actual: Vec<&str> = borrowed_params.names("self").collect();
-            let expected: &[&str] = &[$(stringify!($param)),*];
+            let actual: Vec<&Ident> = borrowed_params.names(&Ident::THIS).collect();
+            let expected: &[&Ident] = &[$(&stringify!($param).into()),*];
             assert_eq!(actual, expected);
         }};
     }
