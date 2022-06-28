@@ -15,9 +15,9 @@ export class MyStruct {
   }
 
   something() {
-    const diplomat_MyStruct_extracted_a = this["a"];
-    const diplomat_MyStruct_extracted_b = this["b"];
-    return wasm.MyStruct_something(diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b);
+    const _this_a = this["a"];
+    const _this_b = this["b"];
+    return wasm.MyStruct_something(_this_a, _this_b);
   }
 }
 

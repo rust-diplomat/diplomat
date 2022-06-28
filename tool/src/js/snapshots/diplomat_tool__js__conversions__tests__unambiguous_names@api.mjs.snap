@@ -1,0 +1,34 @@
+---
+source: tool/src/js/conversions.rs
+expression: out_texts.get(out).unwrap()
+---
+import wasm from "./wasm.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.mjs"
+const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
+  wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
+});
+
+export class Line {
+  constructor(underlying) {
+    this.start = new Point(underlying);
+    this.end = new Point(underlying + 8);
+  }
+
+  do_stuff() {
+    const _this_start = this["start"];
+    const __this_start_x = _this_start["x"];
+    const __this_start_y = _this_start["y"];
+    const _this_end = this["end"];
+    const __this_end_x = _this_end["x"];
+    const __this_end_y = _this_end["y"];
+    wasm.Line_do_stuff(__this_start_x, __this_start_y, __this_end_x, __this_end_y);
+  }
+}
+
+export class Point {
+  constructor(underlying) {
+    this.x = (new Int32Array(wasm.memory.buffer, underlying, 1))[0];
+    this.y = (new Int32Array(wasm.memory.buffer, underlying + 4, 1))[0];
+  }
+}
+

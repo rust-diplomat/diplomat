@@ -80,11 +80,11 @@ export class ICU4XFixedDecimalFormat {
   }
 
   static try_new(locale, provider, options) {
-    const diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy = options["grouping_strategy"];
-    const diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display = options["sign_display"];
+    const _options_grouping_strategy = options["grouping_strategy"];
+    const _options_sign_display = options["sign_display"];
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying, ICU4XFixedDecimalGroupingStrategy_js_to_rust[diplomat_ICU4XFixedDecimalFormatOptions_extracted_grouping_strategy], ICU4XFixedDecimalSignDisplay_js_to_rust[diplomat_ICU4XFixedDecimalFormatOptions_extracted_sign_display]);
+      wasm.ICU4XFixedDecimalFormat_try_new(diplomat_receive_buffer, locale.underlying, provider.underlying, ICU4XFixedDecimalGroupingStrategy_js_to_rust[_options_grouping_strategy], ICU4XFixedDecimalSignDisplay_js_to_rust[_options_sign_display]);
       const out = new ICU4XFixedDecimalFormatResult(diplomat_receive_buffer);
       wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
       return out;

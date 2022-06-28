@@ -1,0 +1,21 @@
+---
+source: tool/src/js/conversions.rs
+expression: out_docs.get(out).unwrap()
+---
+``ffi``
+=======
+
+.. js:class:: Line
+
+    .. js:attribute:: start
+
+    .. js:attribute:: end
+
+    .. js:function:: do_stuff()
+
+.. js:class:: Point
+
+    .. js:attribute:: x
+
+    .. js:attribute:: y
+

@@ -15,10 +15,10 @@ export class MyStruct {
   }
 
   write() {
-    const diplomat_MyStruct_extracted_a = this["a"];
-    const diplomat_MyStruct_extracted_b = this["b"];
+    const _this_a = this["a"];
+    const _this_b = this["b"];
     return diplomatRuntime.withWriteable(wasm, (writeable) => {
-      return wasm.MyStruct_write(diplomat_MyStruct_extracted_a, diplomat_MyStruct_extracted_b, writeable);
+      return wasm.MyStruct_write(_this_a, _this_b, writeable);
     });
   }
 }

@@ -76,8 +76,7 @@ pub fn gen_value_js_to_rust(
         ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(struct_type) => {
                 for (field_name, field_type, _) in struct_type.fields.iter() {
-                    let field_extracted_name =
-                        format!("diplomat_{}_extracted_{}", struct_type.name, field_name).into();
+                    let field_extracted_name = format!("_{param_name}_{field_name}").into();
                     pre_logic.push(format!(
                         "const {} = {}[\"{}\"];",
                         field_extracted_name, param_name, field_name
@@ -593,6 +592,32 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
             ast::TypeName::StrReference(..) => todo!("StrReference in a buffer"),
             ast::TypeName::PrimitiveSlice(..) => todo!("PrimitiveSlice in a buffer"),
             ast::TypeName::Unit => "{}".fmt(f),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_unambiguous_names() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Point {
+                    x: i32,
+                    y: i32,
+                }
+
+                pub struct Line {
+                    start: Point,
+                    end: Point,
+                }
+
+                impl Line {
+                    pub fn do_stuff(self) {}
+                }
+            }
         }
     }
 }
