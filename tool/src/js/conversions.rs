@@ -19,6 +19,7 @@
 //! returned into a pre-allocated buffer, which [`InvocationIntoJs`] manages.
 //! In order to get JS values out of this buffer, [`UnderlyingIntoJs`] is used.
 use diplomat_core::{ast, Env};
+use std::collections::BTreeMap;
 use std::fmt::{self, Write as _};
 use std::num::NonZeroUsize;
 
@@ -171,7 +172,6 @@ impl Invocation {
 }
 
 /// Base information shared across the different conversion types.
-#[derive(Copy, Clone)]
 pub struct Base<'base> {
     /// Scope of the Diplomat type environment.
     pub in_path: &'base ast::Path,
@@ -179,38 +179,10 @@ pub struct Base<'base> {
     /// Diplomat type environment.
     pub env: &'base Env,
 
-    /// A boolean determining if the value borrows from the caller.
-    pub borrows_self: bool,
-
-    /// The params that the value borrows.
-    pub borrowed_params: &'base [&'base ast::Param],
+    pub borrows: &'base [ast::Ident],
 }
 
 impl<'base> Base<'base> {
-    /// Create a [`Base`] for a field.
-    pub fn new_field(in_path: &'base ast::Path, env: &'base Env, borrows_self: bool) -> Self {
-        Base {
-            in_path,
-            env,
-            borrows_self,
-            borrowed_params: &[],
-        }
-    }
-
-    /// Create a [`Base`] for a method.
-    pub fn new_method(
-        in_path: &'base ast::Path,
-        env: &'base Env,
-        borrowed_params: &'base ast::BorrowedParams,
-    ) -> Self {
-        Base {
-            in_path,
-            env,
-            borrows_self: borrowed_params.0.is_some(),
-            borrowed_params: &borrowed_params.1[..],
-        }
-    }
-
     /// Returns the [`ast::CustomType`] associated with a given [`ast::PathType`].
     fn resolve_type<'custom>(&'custom self, path_type: &ast::PathType) -> &'custom ast::CustomType {
         path_type.resolve(self.in_path, self.env)
@@ -237,11 +209,6 @@ impl<'base> Base<'base> {
         let (ok_offset, layout) =
             layout::result_ok_offset_size_align(ok, err, self.in_path, self.env);
         (ok_offset, (layout.size(), layout.align()))
-    }
-
-    /// Returns `true` if there are any borrows, otherwise `false`.
-    fn borrows(&self) -> bool {
-        self.borrows_self || !self.borrowed_params.is_empty()
     }
 }
 
@@ -285,6 +252,9 @@ pub struct InvocationIntoJs<'base> {
     /// The invocation that yields the value.
     pub invocation: Invocation,
 
+    /// A mapping from lifetimes to the inputs that must outlive them.
+    pub lifetimes: &'base BTreeMap<&'base ast::NamedLifetime, Vec<ast::Ident>>,
+
     /// Base data.
     pub base: Base<'base>,
 }
@@ -305,7 +275,26 @@ impl fmt::Display for InvocationIntoJs<'_> {
                             let diplomat_receive_buffer: ast::Ident = "diplomat_receive_buffer".into();
                             writeln!(f, "const {diplomat_receive_buffer} = wasm.diplomat_alloc({size}, {align});")?;
                             writeln!(f, "{};", self.invocation.complex(&diplomat_receive_buffer))?;
-                            writeln!(f, "const out = new {}({diplomat_receive_buffer});", strct.name)?;
+                            writeln!(
+                                f,
+                                "const out = new {}({});",
+                                strct.name,
+                                display::expr(|f| {
+                                    diplomat_receive_buffer.fmt(f)?;
+                                    for inputs in strct.lifetimes.names().map(|name| &self.lifetimes[name][..]) {
+                                        write!(f, ", [{}]", display::expr(|f| {
+                                            if let Some((first, rest)) = inputs.split_first() {
+                                                first.fmt(f)?;
+                                                for input in rest {
+                                                    write!(f, ", {input}")?;
+                                                }
+                                            }
+                                            Ok(())
+                                        }))?;
+                                    }
+                                    Ok(())
+                                }),
+                            )?;
                             writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
                             writeln!(f, "return out;")
                         })
@@ -324,14 +313,14 @@ impl fmt::Display for InvocationIntoJs<'_> {
                 inner,
                 underlying: Underlying::Invocation(&self.invocation),
                 owned: false,
-                base: self.base,
+                base: &self.base,
             }
             .fmt(f),
             ast::TypeName::Box(inner) => Pointer {
                 inner,
                 underlying: Underlying::Invocation(&self.invocation),
                 owned: true,
-                base: self.base,
+                base: &self.base,
             }
             .fmt(f),
             ast::TypeName::Option(inner) => {
@@ -351,7 +340,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                             inner,
                             underlying: Underlying::Binding(&option_ptr, None),
                             owned,
-                            base: self.base,
+                            base: &self.base,
                         }
                     )
                 })
@@ -380,7 +369,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                     writeln!(f, "const ok_value = {};", UnderlyingIntoJs {
                                         inner: ok.as_ref(),
                                         underlying: Underlying::Binding(&diplomat_receive_buffer, None),
-                                        base: self.base,
+                                        base: &self.base,
                                     })?;
                                     writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
                                     writeln!(f, "return ok_value;")
@@ -389,7 +378,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                     writeln!(f, "const throw_value = {};", UnderlyingIntoJs {
                                         inner: err.as_ref(),
                                         underlying: Underlying::Binding(&diplomat_receive_buffer, None),
-                                        base: self.base,
+                                        base: &self.base,
                                     })?;
                                     writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
                                     writeln!(f, "throw new diplomatRuntime.FFIError(throw_value);")
@@ -421,14 +410,14 @@ struct Pointer<'base> {
     owned: bool,
 
     /// Base data.
-    base: Base<'base>,
+    base: &'base Base<'base>,
 }
 
 impl fmt::Display for Pointer<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let ast::TypeName::Named(path_type) = self.inner {
             if let ast::CustomType::Opaque(opaque) = self.base.resolve_type(path_type) {
-                if !self.base.borrows() && !self.owned {
+                if self.base.borrows.is_empty() && !self.owned {
                     write!(f, "new {}({})", opaque.name, self.underlying)?;
                 } else {
                     display::iife(|mut f| {
@@ -443,11 +432,8 @@ impl fmt::Display for Pointer<'_> {
                         } else {
                             writeln!(f, "const out = new {}({});", opaque.name, self.underlying)?;
                         }
-                        if self.base.borrows_self {
-                            writeln!(f, "out.__this_lifetime_guard = this;")?;
-                        }
-                        for param in self.base.borrowed_params {
-                            writeln!(f, "out.__{0}_lifetime_guard = {0};", param.name)?;
+                        for param in self.base.borrows {
+                            writeln!(f, "out.__{param}_lifetime_guard = {param};")?;
                         }
                         writeln!(f, "return out;")
                     })
@@ -481,7 +467,7 @@ pub struct UnderlyingIntoJs<'base> {
     pub underlying: Underlying<'base>,
 
     /// Base data.
-    pub base: Base<'base>,
+    pub base: &'base Base<'base>,
 }
 
 impl fmt::Display for UnderlyingIntoJs<'_> {
@@ -531,9 +517,18 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                         ReturnTypeForm::Scalar => {
                             todo!("#173: constructing a scalar struct from a buffer")
                         }
-                        ReturnTypeForm::Complex => {
-                            write!(f, "new {}({})", strct.name, self.underlying)
-                        }
+                        ReturnTypeForm::Complex => write!(
+                            f,
+                            "new {}({})",
+                            strct.name,
+                            display::expr(|f| {
+                                self.underlying.fmt(f)?;
+                                for inputs in self.base.borrows.iter() {
+                                    write!(f, ", {inputs}")?;
+                                }
+                                Ok(())
+                            }),
+                        ),
                         ReturnTypeForm::Empty => unreachable!(),
                     }
                 }

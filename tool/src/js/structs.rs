@@ -1,4 +1,5 @@
 use diplomat_core::{ast, Env};
+use std::collections::BTreeMap;
 use std::fmt::{self, Display as _, Write as _};
 use std::num::NonZeroUsize;
 
@@ -64,8 +65,15 @@ pub fn gen_struct<W: fmt::Write>(
                     let underlying: ast::Ident = "underlying".into();
                     writeln!(
                         f,
-                        "constructor({underlying}) {}",
-                        display::block(|mut f| {
+                        "constructor({params}) {body}",
+                        params = display::expr(|f| {
+                            underlying.fmt(f)?;
+                            for lifetime in strct.lifetimes.names() {
+                                write!(f, ", {}_edges", lifetime.name())?;
+                            }
+                            Ok(())
+                        }),
+                        body = display::block(|mut f| {
                             let (offsets, _) = layout::struct_offsets_size_max_align(
                                 strct.fields.iter().map(|(_, typ, _)| typ),
                                 in_path,
@@ -75,16 +83,13 @@ pub fn gen_struct<W: fmt::Write>(
                             for ((name, inner, _), &offset) in
                                 strct.fields.iter().zip(offsets.iter())
                             {
-                                // If the type of a field has any named lifetimes
-                                // (elision is impossible in fields), then it
-                                // borrows from self because the lifetime guard
-                                // is attached to self. In the future, we may
-                                // want to be more intelligent about this and
-                                // only attach lifetime guards to the exact object
-                                // that holds it, instead of the outermost struct.
-                                let borrows_self = inner.any_lifetime(|lifetime, _| {
-                                    matches!(lifetime, ast::Lifetime::Named(_))
-                                });
+                                // there are a lot of allocations going on here
+                                // and it would be nice to remove some of them...
+                                let borrows: Vec<ast::Ident> = inner
+                                    .longer_lifetimes(&strct.lifetimes)
+                                    .iter()
+                                    .map(|lifetime| format!("{}_edges", lifetime.name()).into())
+                                    .collect();
 
                                 writeln!(
                                     f,
@@ -96,7 +101,11 @@ pub fn gen_struct<W: fmt::Write>(
                                             &underlying,
                                             NonZeroUsize::new(offset),
                                         ),
-                                        base: Base::new_field(in_path, env, borrows_self),
+                                        base: &Base {
+                                            in_path,
+                                            env,
+                                            borrows: &borrows[..],
+                                        },
                                     },
                                 )?;
                             }
@@ -107,7 +116,7 @@ pub fn gen_struct<W: fmt::Write>(
 
                     for method in strct.methods.iter() {
                         writeln!(f)?;
-                        gen_method(method, in_path, env, &mut f)?;
+                        gen_method(method, false, in_path, env, &mut f)?;
                     }
                     Ok(())
                 })
@@ -136,7 +145,7 @@ pub fn gen_struct<W: fmt::Write>(
 
                     for method in opaque.methods.iter() {
                         writeln!(f)?;
-                        gen_method(method, in_path, env, &mut f)?;
+                        gen_method(method, true, in_path, env, &mut f)?;
                     }
 
                     Ok(())
@@ -160,6 +169,7 @@ pub fn gen_struct<W: fmt::Write>(
 /// ```
 fn gen_method<W: fmt::Write>(
     method: &ast::Method,
+    is_opaque_struct: bool,
     in_path: &ast::Path,
     env: &Env,
     out: &mut W,
@@ -172,10 +182,14 @@ fn gen_method<W: fmt::Write>(
 
     let borrowed_params = method.borrowed_params();
 
+    let mut fields_for_each_lifetime: BTreeMap<&ast::NamedLifetime, Vec<ast::Ident>> =
+        BTreeMap::new();
+
     if let Some(ref self_param) = method.self_param {
+        let typ = self_param.to_typename();
         gen_value_js_to_rust(
-            &ast::Ident::from("this"),
-            &self_param.to_typename(),
+            &ast::Ident::THIS,
+            &typ,
             &borrowed_params,
             in_path,
             env,
@@ -183,6 +197,13 @@ fn gen_method<W: fmt::Write>(
             &mut all_param_exprs,
             &mut post_stmts,
         );
+
+        for lifetime in typ.longer_lifetimes(&method.lifetime_env) {
+            fields_for_each_lifetime
+                .entry(lifetime)
+                .or_default()
+                .push(ast::Ident::THIS)
+        }
     }
 
     for p in method.params.iter() {
@@ -196,6 +217,13 @@ fn gen_method<W: fmt::Write>(
             &mut all_param_exprs,
             &mut post_stmts,
         );
+
+        for lifetime in p.ty.longer_lifetimes(&method.lifetime_env) {
+            fields_for_each_lifetime
+                .entry(lifetime)
+                .or_default()
+                .push(p.name.clone());
+        }
     }
 
     let mut all_params = method
@@ -240,11 +268,27 @@ fn gen_method<W: fmt::Write>(
                         Invocation::new(method.full_path_name.clone(), all_param_exprs.clone());
 
                     if let Some(ref typ) = method.return_type {
-                        let borrowed_params = method.borrowed_params();
+                        let borrows = borrowed_params.1.iter().map(|p| p.name.clone());
+                        let borrows: Vec<ast::Ident> = if is_opaque_struct {
+                            borrowed_params
+                                .0
+                                .iter()
+                                .map(|_| ast::Ident::THIS)
+                                .chain(borrows)
+                                .collect()
+                        } else {
+                            borrows.collect()
+                        };
+
                         InvocationIntoJs {
                             invocation,
                             typ,
-                            base: Base::new_method(in_path, env, &borrowed_params),
+                            lifetimes: &fields_for_each_lifetime,
+                            base: Base {
+                                in_path,
+                                env,
+                                borrows: &borrows[..],
+                            },
                         }
                         .fmt(f)
                     } else {

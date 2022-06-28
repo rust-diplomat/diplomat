@@ -14,6 +14,12 @@ use super::Ident;
 #[serde(transparent)]
 pub struct NamedLifetime(Ident);
 
+impl NamedLifetime {
+    pub fn name(&self) -> &Ident {
+        &self.0
+    }
+}
+
 impl<'de> Deserialize<'de> for NamedLifetime {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -88,6 +94,11 @@ impl LifetimeEnv {
     /// to dedup at the end.
     pub fn outlives(&self) -> Outlives {
         Outlives::new(self)
+    }
+
+    /// Iterate through the names of the lifetimes in scope.
+    pub fn names(&self) -> impl Iterator<Item = &NamedLifetime> {
+        self.nodes.iter().map(|node| &node.lifetime)
     }
 
     /// Constructs a new [`LifetimeEnv`] from a [`syn::ImplItemMethod`] and optional
