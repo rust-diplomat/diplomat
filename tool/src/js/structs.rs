@@ -101,7 +101,7 @@ pub fn gen_struct<W: fmt::Write>(
                                             &underlying,
                                             NonZeroUsize::new(offset),
                                         ),
-                                        base: &Base {
+                                        base: Base {
                                             in_path,
                                             env,
                                             borrows: &borrows[..],

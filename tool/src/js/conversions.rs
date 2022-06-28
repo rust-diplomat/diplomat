@@ -172,6 +172,7 @@ impl Invocation {
 }
 
 /// Base information shared across the different conversion types.
+#[derive(Copy, Clone)]
 pub struct Base<'base> {
     /// Scope of the Diplomat type environment.
     pub in_path: &'base ast::Path,
@@ -313,14 +314,14 @@ impl fmt::Display for InvocationIntoJs<'_> {
                 inner,
                 underlying: Underlying::Invocation(&self.invocation),
                 owned: false,
-                base: &self.base,
+                base: self.base,
             }
             .fmt(f),
             ast::TypeName::Box(inner) => Pointer {
                 inner,
                 underlying: Underlying::Invocation(&self.invocation),
                 owned: true,
-                base: &self.base,
+                base: self.base,
             }
             .fmt(f),
             ast::TypeName::Option(inner) => {
@@ -340,7 +341,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                             inner,
                             underlying: Underlying::Binding(&option_ptr, None),
                             owned,
-                            base: &self.base,
+                            base: self.base,
                         }
                     )
                 })
@@ -369,7 +370,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                     writeln!(f, "const ok_value = {};", UnderlyingIntoJs {
                                         inner: ok.as_ref(),
                                         underlying: Underlying::Binding(&diplomat_receive_buffer, None),
-                                        base: &self.base,
+                                        base: self.base,
                                     })?;
                                     writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
                                     writeln!(f, "return ok_value;")
@@ -378,7 +379,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                     writeln!(f, "const throw_value = {};", UnderlyingIntoJs {
                                         inner: err.as_ref(),
                                         underlying: Underlying::Binding(&diplomat_receive_buffer, None),
-                                        base: &self.base,
+                                        base: self.base,
                                     })?;
                                     writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
                                     writeln!(f, "throw new diplomatRuntime.FFIError(throw_value);")
@@ -410,7 +411,7 @@ struct Pointer<'base> {
     owned: bool,
 
     /// Base data.
-    base: &'base Base<'base>,
+    base: Base<'base>,
 }
 
 impl fmt::Display for Pointer<'_> {
@@ -467,7 +468,7 @@ pub struct UnderlyingIntoJs<'base> {
     pub underlying: Underlying<'base>,
 
     /// Base data.
-    pub base: &'base Base<'base>,
+    pub base: Base<'base>,
 }
 
 impl fmt::Display for UnderlyingIntoJs<'_> {
