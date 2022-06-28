@@ -31,6 +31,9 @@ impl Ident {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// An [`Ident`] containing "this".
+    pub const THIS: Self = Ident(Cow::Borrowed("this"));
 }
 
 impl From<&'static str> for Ident {
