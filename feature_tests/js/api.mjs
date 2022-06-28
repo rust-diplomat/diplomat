@@ -288,13 +288,13 @@ export class Opaque {
   }
 
   assert_struct(s) {
-    const _s_a = s["a"];
-    const _s_b = s["b"];
-    const _s_c = s["c"];
-    const _s_d = s["d"];
-    const _s_e = s["e"];
-    const _s_f = s["f"];
-    wasm.Opaque_assert_struct(this.underlying, _s_a, _s_b, _s_c, _s_d, _s_e, diplomatRuntime.extractCodePoint(_s_f, '_s_f'));
+    const f_s_a = s["a"];
+    const f_s_b = s["b"];
+    const f_s_c = s["c"];
+    const f_s_d = s["d"];
+    const f_s_e = s["e"];
+    const f_s_f = s["f"];
+    wasm.Opaque_assert_struct(this.underlying, f_s_a, f_s_b, f_s_c, f_s_d, f_s_e, diplomatRuntime.extractCodePoint(f_s_f, 'f_s_f'));
   }
 }
 
