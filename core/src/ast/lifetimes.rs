@@ -80,7 +80,7 @@ impl LifetimeEnv {
     }
 
     /// Collect all lifetimes that live _at least_ as long as _any_ provided lifetimes.
-    /// 
+    ///
     /// This method returns a visitor type, [`Outlives`], which can be used to
     /// incrementally visit lifetimes and build up an internal list of which
     /// lifetimes are reachable after each new visited lifetime. This is useful
@@ -396,7 +396,7 @@ impl Lifetime {
 }
 
 /// Incrementally collect lifetimes that outlive a set of visited lifetimes.
-/// 
+///
 /// See [`LifetimeEnv::outlives`] for more information.
 pub struct Outlives<'env> {
     env: &'env LifetimeEnv,
