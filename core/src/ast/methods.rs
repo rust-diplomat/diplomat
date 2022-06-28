@@ -383,8 +383,11 @@ mod tests {
             );
 
             let borrowed_params = method.borrowed_params();
-            let actual: Vec<&Ident> = borrowed_params.names(&Ident::THIS).collect();
-            let expected: &[&Ident] = &[$(&stringify!($param).into()),*];
+            let mut actual: Vec<&str> = borrowed_params.names(&Ident::THIS).map(|ident| ident.as_str()).collect();
+            if let Some(first @ &mut "this") = actual.first_mut() {
+                *first = "self";
+            }
+            let expected: &[&str] = &[$(stringify!($param)),*];
             assert_eq!(actual, expected);
         }};
     }

@@ -19,10 +19,10 @@ export class MyOpaqueStruct {
 }
 
 export class MyStruct {
-  constructor(underlying) {
+  constructor(underlying, a_edges) {
     this.a = (() => {
       const out = new MyOpaqueStruct(diplomatRuntime.ptrRead(wasm, underlying));
-      out.__this_lifetime_guard = this;
+      out.__a_edges_lifetime_guard = a_edges;
       return out;
     })();
     this.b = (new Uint8Array(wasm.memory.buffer, underlying + 4, 1))[0];
@@ -32,7 +32,7 @@ export class MyStruct {
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
       wasm.MyStruct_new(diplomat_receive_buffer, foo.underlying, bar.underlying);
-      const out = new MyStruct(diplomat_receive_buffer);
+      const out = new MyStruct(diplomat_receive_buffer, [foo, bar]);
       wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
       return out;
     })();
