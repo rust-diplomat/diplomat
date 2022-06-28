@@ -10,7 +10,8 @@ use std::fmt;
 use std::iter::FromIterator;
 
 use super::{
-    Docs, Enum, Ident, Lifetime, LifetimeEnv, Method, OpaqueStruct, Path, Struct, ValidityError,
+    Docs, Enum, Ident, Lifetime, LifetimeEnv, Method, NamedLifetime, OpaqueStruct, Path, Struct,
+    ValidityError,
 };
 use crate::{Env, ModuleEnv};
 
@@ -603,6 +604,22 @@ impl TypeName {
             }
         })
         .is_continue()
+    }
+
+    /// Returns all lifetimes in a [`LifetimeEnv`] that must live at least as
+    /// long as the type.
+    pub fn longer_lifetimes<'env>(
+        &self,
+        lifetime_env: &'env LifetimeEnv,
+    ) -> Vec<&'env NamedLifetime> {
+        let mut outlives = lifetime_env.outlives();
+        self.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
+            if let Lifetime::Named(named) = lifetime {
+                outlives.visit(named);
+            }
+            ControlFlow::Continue(())
+        });
+        outlives.finish()
     }
 
     fn check_opaque<'a>(
