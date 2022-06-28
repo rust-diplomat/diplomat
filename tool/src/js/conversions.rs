@@ -616,4 +616,34 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_struct_borrowing() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Scalar;
+
+                pub struct Point<'x, 'y> {
+                    x: &'x Scalar,
+                    y: &'y Scalar,
+                }
+
+                pub struct PointReflection<'u, 'v> {
+                    point: Point<'u, 'v>,
+                    reflection: Point<'v, 'u>,
+                }
+
+                impl<'u, 'v> PointReflection<'u, 'v> {
+                    pub fn new(u: &'u Opaque, v: &'v Opaque) -> Self {
+                        SuperStruct {
+                            point: Point { u, v },
+                            reflection: Point { v, u },
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
