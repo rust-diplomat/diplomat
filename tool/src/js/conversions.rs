@@ -76,7 +76,7 @@ pub fn gen_value_js_to_rust(
         ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(struct_type) => {
                 for (field_name, field_type, _) in struct_type.fields.iter() {
-                    let field_extracted_name = format!("_{param_name}_{field_name}").into();
+                    let field_extracted_name = format!("f_{param_name}_{field_name}").into();
                     pre_logic.push(format!(
                         "const {} = {}[\"{}\"];",
                         field_extracted_name, param_name, field_name

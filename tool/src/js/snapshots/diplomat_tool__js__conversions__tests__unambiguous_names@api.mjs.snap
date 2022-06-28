@@ -15,13 +15,13 @@ export class Line {
   }
 
   do_stuff() {
-    const _this_start = this["start"];
-    const __this_start_x = _this_start["x"];
-    const __this_start_y = _this_start["y"];
-    const _this_end = this["end"];
-    const __this_end_x = _this_end["x"];
-    const __this_end_y = _this_end["y"];
-    wasm.Line_do_stuff(__this_start_x, __this_start_y, __this_end_x, __this_end_y);
+    const f_this_start = this["start"];
+    const f_f_this_start_x = f_this_start["x"];
+    const f_f_this_start_y = f_this_start["y"];
+    const f_this_end = this["end"];
+    const f_f_this_end_x = f_this_end["x"];
+    const f_f_this_end_y = f_this_end["y"];
+    wasm.Line_do_stuff(f_f_this_start_x, f_f_this_start_y, f_f_this_end_x, f_f_this_end_y);
   }
 }
 
