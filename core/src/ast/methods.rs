@@ -2,10 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
-use super::{
-    Ident, Lifetime, LifetimeEnv, Mutability, NamedLifetime, Path, PathType, TypeName,
-    ValidityError,
-};
+use super::{Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
@@ -112,26 +109,7 @@ impl Method {
         // find the params that contain a lifetime that's also in the return type.
         if let Some(ref return_type) = self.return_type {
             // The lifetimes that must outlive the return type
-            let lifetimes = {
-                let mut return_type_lifetimes: Vec<&NamedLifetime> = vec![];
-
-                return_type.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
-                    match lifetime {
-                        Lifetime::Named(named) => return_type_lifetimes.push(named),
-                        Lifetime::Anonymous => {
-                            // TODO(160): Once lifetime elision in return types
-                            // is allowed, we can remove this.
-                            // This is also caught in the validity check, so this should
-                            // never happen.
-                            panic!("Anonymous lifetimes not yet allowed in return types")
-                        }
-                        Lifetime::Static => {}
-                    }
-                    ControlFlow::Continue(())
-                });
-
-                self.lifetime_env.outlives(return_type_lifetimes)
-            };
+            let lifetimes = return_type.longer_lifetimes(&self.lifetime_env);
 
             let held_self_param = self.self_param.as_ref().filter(|self_param| {
                 // Check if `self` is a reference with a lifetime in the return type.

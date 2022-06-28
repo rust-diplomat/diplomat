@@ -79,58 +79,15 @@ impl LifetimeEnv {
         Self { nodes: vec![] }
     }
 
-    /// Collect all lifetimes that live _at least_ as long as _any_ of the
-    /// provided `root_lifetimes`.
-    ///
-    /// This method performs a depth-first search through the lifetime graph,
-    /// following edges from short lifetimes to longer lifetimes. Since lifetime
-    /// bounds are transitive, this traversal ensures that every visited lifetime
-    /// will outlive the root lifetime, and furthermore, DFS ensures that _all_
-    /// provably longer lifetimes than the root lifetime are visited. This method
-    /// also tracks which lifetimes have already been visited, making it robust
-    /// to cycles.
-    pub fn outlives<'i, 's, I>(&'s self, root_lifetimes: I) -> Vec<&'s NamedLifetime>
-    where
-        I: IntoIterator<Item = &'i NamedLifetime>,
-    {
-        let iter = root_lifetimes.into_iter();
-        let mut outlives = Vec::with_capacity(iter.size_hint().1.unwrap_or(0));
-
-        // Track visited lifetimes to avoid cycles.
-        let mut visited = vec![false; self.nodes.len()];
-
-        iter.filter_map(|named| {
-            // Lifetimes that don't have a position aren't in the graph,
-            // and thus have no known lifetimes that outlive them.
-            self.nodes.iter().position(|node| node.lifetime == *named)
-        })
-        .for_each(|root_id| {
-            dfs(root_id, &self.nodes[..], &mut outlives, &mut visited[..]);
-        });
-
-        /// Perform recursive DFS on a lifetime's sub-lifetimes.
-        fn dfs<'a>(
-            id: usize,
-            nodes: &'a [LifetimeNode],
-            outlives: &mut Vec<&'a NamedLifetime>,
-            visited: &mut [bool],
-        ) {
-            // Note: all of these indexings SHOULD be valid because
-            // `visited.len() == nodes.len()`, and the ids come from
-            // calling `Iterator::position` on `nodes`, which never shrinks.
-            // So we should be able to change these to `get_unchecked`...
-            if !visited[id] {
-                visited[id] = true;
-
-                let node = &nodes[id];
-                outlives.push(&node.lifetime);
-                for &longer_id in node.longer.iter() {
-                    dfs(longer_id, nodes, outlives, visited);
-                }
-            }
-        }
-
-        outlives
+    /// Collect all lifetimes that live _at least_ as long as _any_ provided lifetimes.
+    /// 
+    /// This method returns a visitor type, [`Outlives`], which can be used to
+    /// incrementally visit lifetimes and build up an internal list of which
+    /// lifetimes are reachable after each new visited lifetime. This is useful
+    /// for collecting lifetimes reachable by a set of lifetimes, without having
+    /// to dedup at the end.
+    pub fn outlives(&self) -> Outlives {
+        Outlives::new(self)
     }
 
     /// Constructs a new [`LifetimeEnv`] from a [`syn::ImplItemMethod`] and optional
@@ -435,5 +392,60 @@ impl Lifetime {
             Self::Anonymous => None,
             Self::Named(ref s) => Some(syn::Lifetime::new(&s.to_string(), Span::call_site())),
         }
+    }
+}
+
+/// Incrementally collect lifetimes that outlive a set of visited lifetimes.
+/// 
+/// See [`LifetimeEnv::outlives`] for more information.
+pub struct Outlives<'env> {
+    env: &'env LifetimeEnv,
+    visited: Vec<bool>,
+    out: Vec<&'env NamedLifetime>,
+}
+
+impl<'env> Outlives<'env> {
+    /// Returns a new [`Outlives`] based on a given [`LifetimeEnv`].
+    fn new(env: &'env LifetimeEnv) -> Self {
+        Outlives {
+            env,
+            visited: vec![false; env.len()],
+            out: vec![],
+        }
+    }
+
+    /// Visits a `&NamedLifetime`, updating the internal state to mark all lifetimes
+    /// that must outlive the given lifetime as reachable.
+    pub fn visit(&mut self, named: &NamedLifetime) {
+        if let Some(id) = self
+            .env
+            .nodes
+            .iter()
+            .position(|node| node.lifetime == *named)
+        {
+            self.dfs(id);
+        }
+    }
+
+    /// Performs DFS to visit all longer lifetimes.
+    fn dfs(&mut self, id: usize) {
+        // Note: all of these indexings SHOULD be valid because
+        // `visited.len() == nodes.len()`, and the ids come from
+        // calling `Iterator::position` on `nodes`, which never shrinks.
+        // So we should be able to change these to `get_unchecked`...
+        if !self.visited[id] {
+            self.visited[id] = true;
+
+            let node = &self.env.nodes[id];
+            self.out.push(&node.lifetime);
+            for &longer_id in node.longer.iter() {
+                self.dfs(longer_id);
+            }
+        }
+    }
+
+    /// Returns all lifetimes that must outlive any of the visited lifetimes.
+    pub fn finish(self) -> Vec<&'env NamedLifetime> {
+        self.out
     }
 }
