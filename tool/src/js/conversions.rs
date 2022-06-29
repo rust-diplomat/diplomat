@@ -131,22 +131,7 @@ impl Invocation {
 
     /// Invoke the function without passing in a return buffer.
     pub fn scalar(&self) -> impl fmt::Display + '_ {
-        display::expr(move |f| {
-            write!(
-                f,
-                "wasm.{}({})",
-                self.full_path_name,
-                display::expr(|f| {
-                    if let Some((first, rest)) = self.args.split_first() {
-                        write!(f, "{}", first)?;
-                        for param in rest {
-                            write!(f, ", {param}")?;
-                        }
-                    }
-                    Ok(())
-                })
-            )
-        })
+        display::expr(move |f| write!(f, "wasm.{}({})", self.full_path_name, Csv(&self.args[..])))
     }
 
     /// Invoke the function with a provided return buffer.
@@ -245,6 +230,22 @@ impl fmt::Display for Underlying<'_> {
     }
 }
 
+/// An [`fmt::Display`] type that writes a slice as a sequence of comma separated
+/// values.
+struct Csv<'a, T>(&'a [T]);
+
+impl<T: fmt::Display> fmt::Display for Csv<'_, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some((first, rest)) = self.0.split_first() {
+            first.fmt(f)?;
+            for item in rest {
+                write!(f, ", {item}")?;
+            }
+        }
+        Ok(())
+    }
+}
+
 /// An [`fmt::Display`] type representing a JS value created from a WASM invocation.
 pub struct InvocationIntoJs<'base> {
     /// The type of the created value.
@@ -283,15 +284,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                 display::expr(|f| {
                                     diplomat_receive_buffer.fmt(f)?;
                                     for inputs in strct.lifetimes.names().map(|name| &self.lifetimes[name][..]) {
-                                        write!(f, ", [{}]", display::expr(|f| {
-                                            if let Some((first, rest)) = inputs.split_first() {
-                                                first.fmt(f)?;
-                                                for input in rest {
-                                                    write!(f, ", {input}")?;
-                                                }
-                                            }
-                                            Ok(())
-                                        }))?;
+                                        write!(f, ", [{}]", Csv(inputs))?;
                                     }
                                     Ok(())
                                 }),
@@ -637,10 +630,7 @@ mod tests {
 
                 impl<'u, 'v> PointReflection<'u, 'v> {
                     pub fn new(u: &'u Opaque, v: &'v Opaque) -> Self {
-                        SuperStruct {
-                            point: Point { u, v },
-                            reflection: Point { v, u },
-                        }
+                        unimplemented!()
                     }
                 }
             }

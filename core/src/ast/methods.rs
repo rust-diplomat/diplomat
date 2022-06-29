@@ -383,9 +383,11 @@ mod tests {
             );
 
             let borrowed_params = method.borrowed_params();
+            // The ident parser in syn doesn't allow `self`, so we use "this" as a placeholder
+            // and then change it.
             let mut actual: Vec<&str> = borrowed_params.names(&Ident::THIS).map(|ident| ident.as_str()).collect();
-            if let Some(first @ &mut "this") = actual.first_mut() {
-                *first = "self";
+            if borrowed_params.0.is_some() {
+                actual[0] = "self";
             }
             let expected: &[&str] = &[$(stringify!($param)),*];
             assert_eq!(actual, expected);
