@@ -1,0 +1,52 @@
+---
+source: tool/src/js/conversions.rs
+expression: out_texts.get(out).unwrap()
+---
+import wasm from "./wasm.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.mjs"
+const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
+  wasm.diplomat_free(obj["ptr"], obj["size"], obj["align"]);
+});
+
+export class Point {
+  constructor(underlying, x_edges, y_edges) {
+    this.x = (() => {
+      const out = new Scalar(diplomatRuntime.ptrRead(wasm, underlying));
+      out.__x_edges_lifetime_guard = x_edges;
+      return out;
+    })();
+    this.y = (() => {
+      const out = new Scalar(diplomatRuntime.ptrRead(wasm, underlying + 4));
+      out.__y_edges_lifetime_guard = y_edges;
+      return out;
+    })();
+  }
+}
+
+export class PointReflection {
+  constructor(underlying, u_edges, v_edges) {
+    this.point = new Point(underlying, u_edges, v_edges);
+    this.reflection = new Point(underlying + 8, v_edges, u_edges);
+  }
+
+  static new(u, v) {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);
+      wasm.PointReflection_new(diplomat_receive_buffer, u.underlying, v.underlying);
+      const out = new PointReflection(diplomat_receive_buffer, [u], [v]);
+      wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
+      return out;
+    })();
+  }
+}
+
+const Scalar_box_destroy_registry = new FinalizationRegistry(underlying => {
+  wasm.Scalar_destroy(underlying);
+});
+
+export class Scalar {
+  constructor(underlying) {
+    this.underlying = underlying;
+  }
+}
+

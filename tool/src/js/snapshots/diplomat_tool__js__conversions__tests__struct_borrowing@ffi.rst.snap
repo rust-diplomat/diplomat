@@ -1,0 +1,23 @@
+---
+source: tool/src/js/conversions.rs
+expression: out_docs.get(out).unwrap()
+---
+``ffi``
+=======
+
+.. js:class:: Point
+
+    .. js:attribute:: x
+
+    .. js:attribute:: y
+
+.. js:class:: PointReflection
+
+    .. js:attribute:: point
+
+    .. js:attribute:: reflection
+
+    .. js:staticfunction:: new(u, v)
+
+.. js:class:: Scalar
+

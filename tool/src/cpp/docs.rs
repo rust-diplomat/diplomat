@@ -230,7 +230,7 @@ pub fn gen_method_docs<W: fmt::Write>(
         writeln!(method_indented)?;
     }
     let borrowed_params = method.borrowed_params();
-    let mut names = borrowed_params.names("this");
+    let mut names = borrowed_params.names(&ast::Ident::THIS);
 
     if let Some(first) = names.next() {
         write!(method_indented, "\nLifetimes: ``{}``", first).unwrap();

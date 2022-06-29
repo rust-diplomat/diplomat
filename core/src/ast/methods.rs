@@ -277,12 +277,12 @@ pub struct BorrowedParams<'a>(pub Option<&'a SelfParam>, pub Vec<&'a Param>);
 
 impl BorrowedParams<'_> {
     /// Returns an [`Iterator`] through the names of the borrowed parameters,
-    /// accepting a `&str` that the `self` param will be called if present.
-    pub fn names<'a>(&'a self, self_name: &'a str) -> impl Iterator<Item = &'a str> {
+    /// accepting an `Ident` that the `self` param will be called if present.
+    pub fn names<'a>(&'a self, self_name: &'a Ident) -> impl Iterator<Item = &'a Ident> {
         self.0
             .iter()
             .map(move |_| self_name)
-            .chain(self.1.iter().map(|param| param.name.as_str()))
+            .chain(self.1.iter().map(|param| &param.name))
     }
 
     /// Returns `true` if a provided param name is included in the borrowed params,
@@ -383,7 +383,12 @@ mod tests {
             );
 
             let borrowed_params = method.borrowed_params();
-            let actual: Vec<&str> = borrowed_params.names("self").collect();
+            // The ident parser in syn doesn't allow `self`, so we use "this" as a placeholder
+            // and then change it.
+            let mut actual: Vec<&str> = borrowed_params.names(&Ident::THIS).map(|ident| ident.as_str()).collect();
+            if borrowed_params.0.is_some() {
+                actual[0] = "self";
+            }
             let expected: &[&str] = &[$(stringify!($param)),*];
             assert_eq!(actual, expected);
         }};

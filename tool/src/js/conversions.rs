@@ -19,6 +19,7 @@
 //! returned into a pre-allocated buffer, which [`InvocationIntoJs`] manages.
 //! In order to get JS values out of this buffer, [`UnderlyingIntoJs`] is used.
 use diplomat_core::{ast, Env};
+use std::collections::BTreeMap;
 use std::fmt::{self, Write as _};
 use std::num::NonZeroUsize;
 
@@ -130,22 +131,7 @@ impl Invocation {
 
     /// Invoke the function without passing in a return buffer.
     pub fn scalar(&self) -> impl fmt::Display + '_ {
-        display::expr(move |f| {
-            write!(
-                f,
-                "wasm.{}({})",
-                self.full_path_name,
-                display::expr(|f| {
-                    if let Some((first, rest)) = self.args.split_first() {
-                        write!(f, "{}", first)?;
-                        for param in rest {
-                            write!(f, ", {param}")?;
-                        }
-                    }
-                    Ok(())
-                })
-            )
-        })
+        display::expr(move |f| write!(f, "wasm.{}({})", self.full_path_name, Csv(&self.args[..])))
     }
 
     /// Invoke the function with a provided return buffer.
@@ -179,38 +165,10 @@ pub struct Base<'base> {
     /// Diplomat type environment.
     pub env: &'base Env,
 
-    /// A boolean determining if the value borrows from the caller.
-    pub borrows_self: bool,
-
-    /// The params that the value borrows.
-    pub borrowed_params: &'base [&'base ast::Param],
+    pub borrows: &'base [ast::Ident],
 }
 
 impl<'base> Base<'base> {
-    /// Create a [`Base`] for a field.
-    pub fn new_field(in_path: &'base ast::Path, env: &'base Env, borrows_self: bool) -> Self {
-        Base {
-            in_path,
-            env,
-            borrows_self,
-            borrowed_params: &[],
-        }
-    }
-
-    /// Create a [`Base`] for a method.
-    pub fn new_method(
-        in_path: &'base ast::Path,
-        env: &'base Env,
-        borrowed_params: &'base ast::BorrowedParams,
-    ) -> Self {
-        Base {
-            in_path,
-            env,
-            borrows_self: borrowed_params.0.is_some(),
-            borrowed_params: &borrowed_params.1[..],
-        }
-    }
-
     /// Returns the [`ast::CustomType`] associated with a given [`ast::PathType`].
     fn resolve_type<'custom>(&'custom self, path_type: &ast::PathType) -> &'custom ast::CustomType {
         path_type.resolve(self.in_path, self.env)
@@ -237,11 +195,6 @@ impl<'base> Base<'base> {
         let (ok_offset, layout) =
             layout::result_ok_offset_size_align(ok, err, self.in_path, self.env);
         (ok_offset, (layout.size(), layout.align()))
-    }
-
-    /// Returns `true` if there are any borrows, otherwise `false`.
-    fn borrows(&self) -> bool {
-        self.borrows_self || !self.borrowed_params.is_empty()
     }
 }
 
@@ -277,6 +230,22 @@ impl fmt::Display for Underlying<'_> {
     }
 }
 
+/// An [`fmt::Display`] type that writes a slice as a sequence of comma separated
+/// values.
+struct Csv<'a, T>(&'a [T]);
+
+impl<T: fmt::Display> fmt::Display for Csv<'_, T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some((first, rest)) = self.0.split_first() {
+            first.fmt(f)?;
+            for item in rest {
+                write!(f, ", {item}")?;
+            }
+        }
+        Ok(())
+    }
+}
+
 /// An [`fmt::Display`] type representing a JS value created from a WASM invocation.
 pub struct InvocationIntoJs<'base> {
     /// The type of the created value.
@@ -284,6 +253,9 @@ pub struct InvocationIntoJs<'base> {
 
     /// The invocation that yields the value.
     pub invocation: Invocation,
+
+    /// A mapping from lifetimes to the inputs that must outlive them.
+    pub lifetimes: &'base BTreeMap<&'base ast::NamedLifetime, Vec<ast::Ident>>,
 
     /// Base data.
     pub base: Base<'base>,
@@ -305,7 +277,18 @@ impl fmt::Display for InvocationIntoJs<'_> {
                             let diplomat_receive_buffer: ast::Ident = "diplomat_receive_buffer".into();
                             writeln!(f, "const {diplomat_receive_buffer} = wasm.diplomat_alloc({size}, {align});")?;
                             writeln!(f, "{};", self.invocation.complex(&diplomat_receive_buffer))?;
-                            writeln!(f, "const out = new {}({diplomat_receive_buffer});", strct.name)?;
+                            writeln!(
+                                f,
+                                "const out = new {}({});",
+                                strct.name,
+                                display::expr(|f| {
+                                    diplomat_receive_buffer.fmt(f)?;
+                                    for inputs in strct.lifetimes.names().map(|name| &self.lifetimes[name][..]) {
+                                        write!(f, ", [{}]", Csv(inputs))?;
+                                    }
+                                    Ok(())
+                                }),
+                            )?;
                             writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
                             writeln!(f, "return out;")
                         })
@@ -428,7 +411,7 @@ impl fmt::Display for Pointer<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let ast::TypeName::Named(path_type) = self.inner {
             if let ast::CustomType::Opaque(opaque) = self.base.resolve_type(path_type) {
-                if !self.base.borrows() && !self.owned {
+                if self.base.borrows.is_empty() && !self.owned {
                     write!(f, "new {}({})", opaque.name, self.underlying)?;
                 } else {
                     display::iife(|mut f| {
@@ -443,11 +426,8 @@ impl fmt::Display for Pointer<'_> {
                         } else {
                             writeln!(f, "const out = new {}({});", opaque.name, self.underlying)?;
                         }
-                        if self.base.borrows_self {
-                            writeln!(f, "out.__this_lifetime_guard = this;")?;
-                        }
-                        for param in self.base.borrowed_params {
-                            writeln!(f, "out.__{0}_lifetime_guard = {0};", param.name)?;
+                        for param in self.base.borrows {
+                            writeln!(f, "out.__{param}_lifetime_guard = {param};")?;
                         }
                         writeln!(f, "return out;")
                     })
@@ -531,9 +511,18 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                         ReturnTypeForm::Scalar => {
                             todo!("#173: constructing a scalar struct from a buffer")
                         }
-                        ReturnTypeForm::Complex => {
-                            write!(f, "new {}({})", strct.name, self.underlying)
-                        }
+                        ReturnTypeForm::Complex => write!(
+                            f,
+                            "new {}({})",
+                            strct.name,
+                            display::expr(|f| {
+                                self.underlying.fmt(f)?;
+                                for inputs in self.base.borrows.iter() {
+                                    write!(f, ", {inputs}")?;
+                                }
+                                Ok(())
+                            }),
+                        ),
                         ReturnTypeForm::Empty => unreachable!(),
                     }
                 }
@@ -616,6 +605,33 @@ mod tests {
 
                 impl Line {
                     pub fn do_stuff(self) {}
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_struct_borrowing() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Scalar;
+
+                pub struct Point<'x, 'y> {
+                    x: &'x Scalar,
+                    y: &'y Scalar,
+                }
+
+                pub struct PointReflection<'u, 'v> {
+                    point: Point<'u, 'v>,
+                    reflection: Point<'v, 'u>,
+                }
+
+                impl<'u, 'v> PointReflection<'u, 'v> {
+                    pub fn new(u: &'u Opaque, v: &'v Opaque) -> Self {
+                        unimplemented!()
+                    }
                 }
             }
         }
