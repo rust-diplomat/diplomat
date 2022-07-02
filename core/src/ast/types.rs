@@ -1,13 +1,12 @@
-use std::{collections::HashMap, ops::ControlFlow};
-
 use proc_macro2::Span;
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 use syn::{punctuated::Punctuated, *};
 
 use lazy_static::lazy_static;
+use std::collections::HashMap;
 use std::fmt;
-use std::iter::FromIterator;
+use std::ops::ControlFlow;
 
 use super::{
     Docs, Enum, Ident, Lifetime, LifetimeEnv, Method, NamedLifetime, OpaqueStruct, Path, Struct,
@@ -900,16 +899,13 @@ impl fmt::Display for TypeName {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
             TypeName::Named(p) => p.fmt(f),
-            TypeName::Reference(ty, Mutability::Mutable, lifetime) => {
-                write!(f, "&{} mut {}", lifetime, ty)
+            TypeName::Reference(lifetime, mutability, typ) => {
+                write!(f, "{}{typ}", ReferenceDisplay(lifetime, mutability))
             }
-            TypeName::Reference(ty, Mutability::Immutable, lifetime) => {
-                write!(f, "&{} {}", lifetime, ty)
-            }
-            TypeName::Box(ty) => write!(f, "Box<{}>", ty),
-            TypeName::Option(ty) => write!(f, "Option<{}>", ty),
-            TypeName::Result(ty, ty2) => write!(f, "Result<{}, {}>", ty, ty2),
-            TypeName::Writeable => f.write_str("DiplomatWriteable"),
+            TypeName::Box(typ) => write!(f, "Box<{typ}>"),
+            TypeName::Option(typ) => write!(f, "Option<{typ}>"),
+            TypeName::Result(ok, err) => write!(f, "Result<{ok}, {err}>"),
+            TypeName::Writeable => "DiplomatWriteable".fmt(f),
             TypeName::StrReference(lifetime) => {
                 write!(
                     f,
@@ -917,15 +913,15 @@ impl fmt::Display for TypeName {
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }
-            TypeName::PrimitiveSlice(lifetime, mutability, ty) => {
-                write!(f, "{}[{}]", ReferenceDisplay(lifetime, mutability), ty)
+            TypeName::PrimitiveSlice(lifetime, mutability, typ) => {
+                write!(f, "{}[{typ}]", ReferenceDisplay(lifetime, mutability))
             }
-            TypeName::Unit => f.write_str("()"),
+            TypeName::Unit => "()".fmt(f),
         }
     }
 }
 
-/// A `fmt::Display` type makes formatting references easier.
+/// An [`fmt::Display`] type for formatting Rust references.
 ///
 /// # Examples
 ///
@@ -943,7 +939,7 @@ impl<'a> fmt::Display for ReferenceDisplay<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.0 {
             Lifetime::Static => "&'static ".fmt(f)?,
-            Lifetime::Named(lt) => write!(f, "&'{} ", lt)?,
+            Lifetime::Named(lifetime) => write!(f, "&{lifetime} ")?,
             Lifetime::Anonymous => '&'.fmt(f)?,
         }
 
@@ -960,9 +956,9 @@ impl fmt::Display for PathType {
         self.path.fmt(f)?;
 
         if let Some((first, rest)) = self.lifetimes.split_first() {
-            write!(f, "<{}", first)?;
-            for lt in rest {
-                write!(f, ", {}", lt)?;
+            write!(f, "<{first}")?;
+            for lifetime in rest {
+                write!(f, ", {lifetime}")?;
             }
             '>'.fmt(f)?;
         }
@@ -994,24 +990,25 @@ pub enum PrimitiveType {
 
 impl fmt::Display for PrimitiveType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            PrimitiveType::i8 => f.write_str("i8"),
-            PrimitiveType::u8 => f.write_str("u8"),
-            PrimitiveType::i16 => f.write_str("i16"),
-            PrimitiveType::u16 => f.write_str("u16"),
-            PrimitiveType::i32 => f.write_str("i32"),
-            PrimitiveType::u32 => f.write_str("u32"),
-            PrimitiveType::i64 => f.write_str("i64"),
-            PrimitiveType::u64 => f.write_str("u64"),
-            PrimitiveType::i128 => f.write_str("i128"),
-            PrimitiveType::u128 => f.write_str("u128"),
-            PrimitiveType::isize => f.write_str("isize"),
-            PrimitiveType::usize => f.write_str("usize"),
-            PrimitiveType::f32 => f.write_str("f32"),
-            PrimitiveType::f64 => f.write_str("f64"),
-            PrimitiveType::bool => f.write_str("bool"),
-            PrimitiveType::char => f.write_str("char"),
+        match self {
+            PrimitiveType::i8 => "i8",
+            PrimitiveType::u8 => "u8",
+            PrimitiveType::i16 => "i16",
+            PrimitiveType::u16 => "u16",
+            PrimitiveType::i32 => "i32",
+            PrimitiveType::u32 => "u32",
+            PrimitiveType::i64 => "i64",
+            PrimitiveType::u64 => "u64",
+            PrimitiveType::i128 => "i128",
+            PrimitiveType::u128 => "u128",
+            PrimitiveType::isize => "isize",
+            PrimitiveType::usize => "usize",
+            PrimitiveType::f32 => "f32",
+            PrimitiveType::f64 => "f64",
+            PrimitiveType::bool => "bool",
+            PrimitiveType::char => "char",
         }
+        .fmt(f)
     }
 }
 
