@@ -30,22 +30,6 @@ public partial class Bar: IDisposable
         _inner = handle;
     }
 
-    /// <returns>
-    /// A <c>Foo</c> allocated on Rust side.
-    /// </returns>
-    public Foo Foo()
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("Bar");
-            }
-            Raw.Foo* retVal = Raw.Bar.Foo(_inner);
-            return new Foo(retVal);
-        }
-    }
-
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
