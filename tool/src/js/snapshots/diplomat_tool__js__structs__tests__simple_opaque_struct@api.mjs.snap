@@ -13,25 +13,24 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class MyStruct {
-  constructor(underlying) {
+  constructor(underlying, edges, owned) {
     this.underlying = underlying;
+    this.__edges_lifetime_guard = edges;
+    if (owned) {
+      MyStruct_box_destroy_registry.register(this, underlying);
+    }
   }
 
-  static new(a, b) {
-    return (() => {
-      const underlying = wasm.MyStruct_new(a, b);
-      const out = new MyStruct(underlying);
-      MyStruct_box_destroy_registry.register(out, underlying);
-      return out;
-    })();
+  static new(arg_a, arg_b) {
+    return new MyStruct(wasm.MyStruct_new(arg_a, arg_b), [], true);
   }
 
   get_a() {
     return wasm.MyStruct_get_a(this.underlying);
   }
 
-  set_b(b) {
-    wasm.MyStruct_set_b(this.underlying, b);
+  set_b(arg_b) {
+    wasm.MyStruct_set_b(this.underlying, arg_b);
   }
 }
 

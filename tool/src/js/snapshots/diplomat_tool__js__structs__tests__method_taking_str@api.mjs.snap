@@ -13,26 +13,25 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class MyStruct {
-  constructor(underlying) {
+  constructor(underlying, edges, owned) {
     this.underlying = underlying;
+    this.__edges_lifetime_guard = edges;
+    if (owned) {
+      MyStruct_box_destroy_registry.register(this, underlying);
+    }
   }
 
-  static new_str(v) {
-    v = diplomatRuntime.DiplomatBuf.str(wasm, v);
-    const diplomat_out = (() => {
-      const underlying = wasm.MyStruct_new_str(v.ptr, v.size);
-      const out = new MyStruct(underlying);
-      MyStruct_box_destroy_registry.register(out, underlying);
-      return out;
-    })();
-    v.free();
+  static new_str(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.str(wasm, arg_v);
+    const diplomat_out = new MyStruct(wasm.MyStruct_new_str(buf_arg_v.ptr, buf_arg_v.size), [], true);
+    buf_arg_v.free();
     return diplomat_out;
   }
 
-  set_str(new_str) {
-    new_str = diplomatRuntime.DiplomatBuf.str(wasm, new_str);
-    wasm.MyStruct_set_str(this.underlying, new_str.ptr, new_str.size);
-    new_str.free();
+  set_str(arg_new_str) {
+    const buf_arg_new_str = diplomatRuntime.DiplomatBuf.str(wasm, arg_new_str);
+    wasm.MyStruct_set_str(this.underlying, buf_arg_new_str.ptr, buf_arg_new_str.size);
+    buf_arg_new_str.free();
   }
 }
 

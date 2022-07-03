@@ -13,8 +13,12 @@ const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying 
 });
 
 export class MyOpaqueStruct {
-  constructor(underlying) {
+  constructor(underlying, edges, owned) {
     this.underlying = underlying;
+    this.__edges_lifetime_guard = edges;
+    if (owned) {
+      MyOpaqueStruct_box_destroy_registry.register(this, underlying);
+    }
   }
 }
 

@@ -13,8 +13,12 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class MyStruct {
-  constructor(underlying) {
+  constructor(underlying, edges, owned) {
     this.underlying = underlying;
+    this.__edges_lifetime_guard = edges;
+    if (owned) {
+      MyStruct_box_destroy_registry.register(this, underlying);
+    }
   }
 
   write() {
