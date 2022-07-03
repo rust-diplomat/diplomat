@@ -296,7 +296,7 @@ impl BorrowedParams<'_> {
 
     /// Returns `true` if there are no borrowed parameters, otherwise `false`.
     pub fn is_empty(&self) -> bool {
-        !self.borrows_self() && !self.borrows_params()
+        self.len() == 0
     }
 
     /// Returns `true` if the `self` param is borrowed, otherwise `false`.
@@ -307,6 +307,11 @@ impl BorrowedParams<'_> {
     /// Returns `true` if there are any borrowed params, otherwise `false`.
     pub fn borrows_params(&self) -> bool {
         !self.1.is_empty()
+    }
+
+    /// Returns the number of borrowed params.
+    pub fn len(&self) -> usize {
+        self.1.len() + if self.0.is_some() { 1 } else { 0 }
     }
 }
 

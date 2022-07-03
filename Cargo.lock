@@ -264,6 +264,7 @@ version = "0.3.0"
 dependencies = [
  "colored",
  "diplomat_core",
+ "displaydoc",
  "heck 0.4.0",
  "indenter",
  "insta",
