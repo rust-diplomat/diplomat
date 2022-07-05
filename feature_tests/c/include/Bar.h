@@ -11,9 +11,7 @@ extern "C" {
 #endif
 
 typedef struct Bar Bar;
-#include "Foo.h"
 
-const Foo* Bar_foo(const Bar* self);
 void Bar_destroy(Bar* self);
 
 #ifdef __cplusplus

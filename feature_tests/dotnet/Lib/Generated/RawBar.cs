@@ -16,9 +16,6 @@ public partial struct Bar
 {
     private const string NativeLib = "diplomat_feature_tests";
 
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Bar_foo", ExactSpelling = true)]
-    public static unsafe extern Foo* Foo(Bar* self);
-
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Bar_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Bar* self);
 }

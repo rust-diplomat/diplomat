@@ -16,10 +16,6 @@ export class Bar {
       Bar_box_destroy_registry.register(this, underlying);
     }
   }
-
-  foo() {
-    return new Foo(wasm.Bar_foo(this.underlying), [this, this], false);
-  }
 }
 
 const ErrorEnum_js_to_rust = {
