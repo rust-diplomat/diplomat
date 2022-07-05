@@ -16,6 +16,7 @@ pub mod ffi {
         }
     }
 
+    // FIXME(#191): This test breaks the C++ codegen
     impl<'b, 'a: 'b> Bar<'b, 'a> {
         pub fn foo(&'b self) -> &'b Foo<'a> {
             self.0
