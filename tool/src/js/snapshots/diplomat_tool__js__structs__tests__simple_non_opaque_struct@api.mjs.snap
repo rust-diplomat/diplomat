@@ -14,10 +14,10 @@ export class MyStruct {
     this.b = (new Uint8Array(wasm.memory.buffer, underlying + 1, 1))[0];
   }
 
-  static new(a, b) {
+  static new(arg_a, arg_b) {
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
-      wasm.MyStruct_new(diplomat_receive_buffer, a, b);
+      wasm.MyStruct_new(diplomat_receive_buffer, arg_a, arg_b);
       const out = new MyStruct(diplomat_receive_buffer);
       wasm.diplomat_free(diplomat_receive_buffer, 2, 1);
       return out;
@@ -28,8 +28,8 @@ export class MyStruct {
     return wasm.MyStruct_get_a(this.underlying);
   }
 
-  set_b(b) {
-    wasm.MyStruct_set_b(this.underlying, b);
+  set_b(arg_b) {
+    wasm.MyStruct_set_b(this.underlying, arg_b);
   }
 }
 

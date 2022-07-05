@@ -4,7 +4,8 @@ use std::fmt::{self, Display as _, Write as _};
 use std::num::NonZeroUsize;
 
 use super::conversions::{
-    gen_value_js_to_rust, Base, Invocation, InvocationIntoJs, Underlying, UnderlyingIntoJs,
+    gen_value_js_to_rust, Argument, Base, Csv, Invocation, InvocationIntoJs, ReceivedEdges,
+    Underlying, UnderlyingIntoJs, UnpackedBinding,
 };
 use super::display;
 use crate::layout;
@@ -69,7 +70,7 @@ pub fn gen_struct<W: fmt::Write>(
                         params = display::expr(|f| {
                             underlying.fmt(f)?;
                             for lifetime in strct.lifetimes.names() {
-                                write!(f, ", {}_edges", lifetime.name())?;
+                                write!(f, ", {}", ReceivedEdges(lifetime))?;
                             }
                             Ok(())
                         }),
@@ -83,12 +84,10 @@ pub fn gen_struct<W: fmt::Write>(
                             for ((name, inner, _), &offset) in
                                 strct.fields.iter().zip(offsets.iter())
                             {
-                                // there are a lot of allocations going on here
-                                // and it would be nice to remove some of them...
-                                let borrows: Vec<ast::Ident> = inner
+                                let borrows: Vec<Argument> = inner
                                     .longer_lifetimes(&strct.lifetimes)
                                     .iter()
-                                    .map(|lifetime| format!("{}_edges", lifetime.name()).into())
+                                    .map(|lt| Argument::ReceivedEdges(ReceivedEdges(lt)))
                                     .collect();
 
                                 writeln!(
@@ -116,7 +115,7 @@ pub fn gen_struct<W: fmt::Write>(
 
                     for method in strct.methods.iter() {
                         writeln!(f)?;
-                        gen_method(method, false, in_path, env, &mut f)?;
+                        gen_method(method, in_path, env, &mut f)?;
                     }
                     Ok(())
                 })
@@ -139,13 +138,27 @@ pub fn gen_struct<W: fmt::Write>(
                 display::block(|mut f| {
                     writeln!(
                         f,
-                        "constructor(underlying) {}",
-                        display::block(|mut f| writeln!(f, "this.underlying = underlying;"))
+                        "constructor(underlying, edges, owned) {}",
+                        display::block(|mut f| {
+                            writeln!(f, "this.underlying = underlying;")?;
+                            writeln!(f, "this.__edges_lifetime_guard = edges;")?;
+                            writeln!(
+                                f,
+                                "if (owned) {}",
+                                display::block(|mut f| {
+                                    writeln!(
+                                        f,
+                                        "{}_box_destroy_registry.register(this, underlying);",
+                                        opaque.name
+                                    )
+                                })
+                            )
+                        }),
                     )?;
 
                     for method in opaque.methods.iter() {
                         writeln!(f)?;
-                        gen_method(method, true, in_path, env, &mut f)?;
+                        gen_method(method, in_path, env, &mut f)?;
                     }
 
                     Ok(())
@@ -169,7 +182,6 @@ pub fn gen_struct<W: fmt::Write>(
 /// ```
 fn gen_method<W: fmt::Write>(
     method: &ast::Method,
-    is_opaque_struct: bool,
     in_path: &ast::Path,
     env: &Env,
     out: &mut W,
@@ -180,73 +192,63 @@ fn gen_method<W: fmt::Write>(
     let mut all_param_exprs = vec![];
     let mut post_stmts = vec![];
 
-    let borrowed_params = method.borrowed_params();
+    let mut entries = BTreeMap::new();
 
-    let mut fields_for_each_lifetime: BTreeMap<&ast::NamedLifetime, Vec<ast::Ident>> =
-        BTreeMap::new();
+    let borrowed_current_to_root = method
+        .return_type
+        .as_ref()
+        .map(|return_type| {
+            return_type
+                .longer_lifetimes(&method.lifetime_env)
+                // TODO: optimize this so we don't have to double alloc
+                .into_iter()
+                .map(|name| (name, name))
+                .collect()
+        })
+        .unwrap_or_default();
 
     if let Some(ref self_param) = method.self_param {
-        let typ = self_param.to_typename();
+        let self_type = self_param.to_typename();
         gen_value_js_to_rust(
-            &ast::Ident::THIS,
-            &typ,
-            &borrowed_params,
+            UnpackedBinding::This,
+            &self_type,
             in_path,
             env,
             &mut pre_stmts,
             &mut all_param_exprs,
             &mut post_stmts,
+            &method.lifetime_env,
+            &borrowed_current_to_root,
+            &mut entries,
         );
-
-        for lifetime in typ.longer_lifetimes(&method.lifetime_env) {
-            fields_for_each_lifetime
-                .entry(lifetime)
-                .or_default()
-                .push(ast::Ident::THIS)
-        }
     }
 
     for p in method.params.iter() {
         gen_value_js_to_rust(
-            &p.name,
+            UnpackedBinding::MethodParam(&p.name),
             &p.ty,
-            &borrowed_params,
             in_path,
             env,
             &mut pre_stmts,
             &mut all_param_exprs,
             &mut post_stmts,
+            &method.lifetime_env,
+            &borrowed_current_to_root,
+            &mut entries,
         );
-
-        for lifetime in p.ty.longer_lifetimes(&method.lifetime_env) {
-            fields_for_each_lifetime
-                .entry(lifetime)
-                .or_default()
-                .push(p.name.clone());
-        }
     }
 
-    let mut all_params = method
+    let mut all_params: Vec<UnpackedBinding> = method
         .params
         .iter()
-        .map(|p| p.name.as_str())
-        .collect::<Vec<_>>();
+        .map(|p| UnpackedBinding::MethodParam(&p.name))
+        .collect();
 
     if is_writeable {
         *all_param_exprs.last_mut().unwrap() = "writeable".to_string();
 
         all_params.pop();
     }
-
-    // let all_params_invocation = {
-    //     if let Some(ref return_type) = method.return_type {
-    //         if let ReturnTypeForm::Complex = return_type_form(return_type, in_path, env) {
-    //             all_param_exprs.insert(0, "diplomat_receive_buffer".to_string());
-    //         }
-    //     }
-
-    //     all_param_exprs.join(", ")
-    // };
 
     if method.self_param.is_none() {
         out.write_str("static ")?;
@@ -256,7 +258,7 @@ fn gen_method<W: fmt::Write>(
         out,
         "{}({}) {}",
         method.name,
-        all_params.join(", "),
+        Csv(&all_params[..]),
         display::block(|mut f| {
             for s in pre_stmts.iter() {
                 writeln!(f, "{}", s)?;
@@ -268,22 +270,15 @@ fn gen_method<W: fmt::Write>(
                         Invocation::new(method.full_path_name.clone(), all_param_exprs.clone());
 
                     if let Some(ref typ) = method.return_type {
-                        let borrows = borrowed_params.1.iter().map(|p| p.name.clone());
-                        let borrows: Vec<ast::Ident> = if is_opaque_struct {
-                            borrowed_params
-                                .0
-                                .iter()
-                                .map(|_| ast::Ident::THIS)
-                                .chain(borrows)
-                                .collect()
-                        } else {
-                            borrows.collect()
-                        };
+                        let borrows: Vec<Argument> = entries
+                            .values()
+                            .flat_map(|bindings| bindings.iter().cloned())
+                            .collect();
 
                         InvocationIntoJs {
                             invocation,
                             typ,
-                            lifetimes: &fields_for_each_lifetime,
+                            lifetimes: &entries,
                             base: Base {
                                 in_path,
                                 env,

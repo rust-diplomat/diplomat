@@ -13,8 +13,12 @@ const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying 
 });
 
 export class MyOpaqueStruct {
-  constructor(underlying) {
+  constructor(underlying, edges, owned) {
     this.underlying = underlying;
+    this.__edges_lifetime_guard = edges;
+    if (owned) {
+      MyOpaqueStruct_box_destroy_registry.register(this, underlying);
+    }
   }
 }
 
@@ -22,12 +26,7 @@ export class MyStruct {
   constructor(underlying) {
     this.a = (() => {
       const option_ptr = diplomatRuntime.ptrRead(wasm, underlying);
-      return (option_ptr == 0) ? null : (() => {
-        const underlying = option_ptr;
-        const out = new MyOpaqueStruct(underlying);
-        MyOpaqueStruct_box_destroy_registry.register(out, underlying);
-        return out;
-      })();
+      return (option_ptr == 0) ? null : new MyOpaqueStruct(option_ptr, [], true);
     })();
   }
 }

@@ -97,7 +97,7 @@ impl LifetimeEnv {
     }
 
     /// Iterate through the names of the lifetimes in scope.
-    pub fn names(&self) -> impl Iterator<Item = &NamedLifetime> {
+    pub fn names(&self) -> impl Iterator<Item = &NamedLifetime> + Clone {
         self.nodes.iter().map(|node| &node.lifetime)
     }
 
@@ -351,7 +351,18 @@ pub enum Lifetime {
 }
 
 impl Lifetime {
+    /// Returns the inner `NamedLifetime` if the lifetime is the `Named` variant,
+    /// otherwise `None`.
     pub fn to_named(self) -> Option<NamedLifetime> {
+        if let Lifetime::Named(named) = self {
+            return Some(named);
+        }
+        None
+    }
+
+    /// Returns a reference to the inner `NamedLifetime` if the lifetime is the
+    /// `Named` variant, otherwise `None`.
+    pub fn as_named(&self) -> Option<&NamedLifetime> {
         if let Lifetime::Named(named) = self {
             return Some(named);
         }

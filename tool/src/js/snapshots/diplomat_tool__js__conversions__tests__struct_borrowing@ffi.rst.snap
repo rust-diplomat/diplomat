@@ -11,13 +11,17 @@ expression: out_docs.get(out).unwrap()
 
     .. js:attribute:: y
 
-.. js:class:: PointReflection
+    .. js:function:: get_x()
+
+.. js:class:: PointTranspose
 
     .. js:attribute:: point
 
-    .. js:attribute:: reflection
+    .. js:attribute:: transpose
 
     .. js:staticfunction:: new(u, v)
+
+    .. js:function:: transpose()
 
 .. js:class:: Scalar
 

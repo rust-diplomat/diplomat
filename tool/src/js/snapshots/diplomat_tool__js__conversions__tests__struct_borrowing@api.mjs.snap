@@ -9,31 +9,45 @@ const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
 });
 
 export class Point {
-  constructor(underlying, x_edges, y_edges) {
-    this.x = (() => {
-      const out = new Scalar(diplomatRuntime.ptrRead(wasm, underlying));
-      out.__x_edges_lifetime_guard = x_edges;
-      return out;
-    })();
-    this.y = (() => {
-      const out = new Scalar(diplomatRuntime.ptrRead(wasm, underlying + 4));
-      out.__y_edges_lifetime_guard = y_edges;
-      return out;
-    })();
+  constructor(underlying, edges_x, edges_y) {
+    this.x = new Scalar(diplomatRuntime.ptrRead(wasm, underlying), [...edges_x], false);
+    this.y = new Scalar(diplomatRuntime.ptrRead(wasm, underlying + 4), [...edges_y], false);
+  }
+
+  get_x() {
+    const field_x_this = this["x"];
+    const field_y_this = this["y"];
+    return new Scalar(wasm.Point_get_x(field_x_this.underlying, field_y_this.underlying), [field_x_this], false);
   }
 }
 
-export class PointReflection {
-  constructor(underlying, u_edges, v_edges) {
-    this.point = new Point(underlying, u_edges, v_edges);
-    this.reflection = new Point(underlying + 8, v_edges, u_edges);
+export class PointTranspose {
+  constructor(underlying, edges_u, edges_v) {
+    this.point = new Point(underlying, edges_u, edges_v);
+    this.transpose = new Point(underlying + 8, edges_v, edges_u);
   }
 
-  static new(u, v) {
+  static new(arg_u, arg_v) {
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);
-      wasm.PointReflection_new(diplomat_receive_buffer, u.underlying, v.underlying);
-      const out = new PointReflection(diplomat_receive_buffer, [u], [v]);
+      wasm.PointTranspose_new(diplomat_receive_buffer, arg_u.underlying, arg_v.underlying);
+      const out = new PointTranspose(diplomat_receive_buffer, [arg_u], [arg_v]);
+      wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
+      return out;
+    })();
+  }
+
+  transpose() {
+    const field_point_this = this["point"];
+    const field_x_field_point_this = field_point_this["x"];
+    const field_y_field_point_this = field_point_this["y"];
+    const field_transpose_this = this["transpose"];
+    const field_x_field_transpose_this = field_transpose_this["x"];
+    const field_y_field_transpose_this = field_transpose_this["y"];
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);
+      wasm.PointTranspose_transpose(diplomat_receive_buffer, field_x_field_point_this.underlying, field_y_field_point_this.underlying, field_x_field_transpose_this.underlying, field_y_field_transpose_this.underlying);
+      const out = new PointTranspose(diplomat_receive_buffer, [field_x_field_point_this, field_y_field_transpose_this], [field_y_field_point_this, field_x_field_transpose_this]);
       wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
       return out;
     })();
@@ -45,8 +59,12 @@ const Scalar_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class Scalar {
-  constructor(underlying) {
+  constructor(underlying, edges, owned) {
     this.underlying = underlying;
+    this.__edges_lifetime_guard = edges;
+    if (owned) {
+      Scalar_box_destroy_registry.register(this, underlying);
+    }
   }
 }
 
