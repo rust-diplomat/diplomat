@@ -12,7 +12,7 @@ use super::{
     Docs, Enum, Ident, Lifetime, LifetimeEnv, Method, NamedLifetime, OpaqueStruct, Path, Struct,
     ValidityError,
 };
-use crate::{Env};
+use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
