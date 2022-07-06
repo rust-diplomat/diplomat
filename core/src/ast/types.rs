@@ -12,7 +12,7 @@ use super::{
     Docs, Enum, Ident, Lifetime, LifetimeEnv, Method, NamedLifetime, OpaqueStruct, Path, Struct,
     ValidityError,
 };
-use crate::{Env, ModuleEnv};
+use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
@@ -700,48 +700,43 @@ impl TypeName {
         errors: &mut Vec<ValidityError>,
     ) {
         self.check_validity(in_path, env, errors);
-        self.check_lifetime_elision(self, &env[in_path], errors);
+        self.check_lifetime_elision(self, in_path, env, errors);
     }
 
     /// Checks that there aren't any elided lifetimes.
     fn check_lifetime_elision(
         &self,
         full_type: &Self,
-        env: &ModuleEnv,
+        in_path: &Path,
+        env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
         match self {
             TypeName::Named(path_type) => {
-                let name = path_type.path.elements.last().unwrap();
-                if let ModSymbol::CustomType(custom) = &env[name.as_str()] {
-                    if let Some(lifetimes) = custom.lifetimes() {
-                        let lifetimes_provided = path_type
-                            .lifetimes
-                            .iter()
-                            .filter(|lt| !matches!(lt, Lifetime::Anonymous))
-                            .count();
+                let (_path, custom) = path_type.resolve_with_path(in_path, env);
+                if let Some(lifetimes) = custom.lifetimes() {
+                    let lifetimes_provided = path_type
+                        .lifetimes
+                        .iter()
+                        .filter(|lt| !matches!(lt, Lifetime::Anonymous))
+                        .count();
 
-                        if lifetimes_provided != lifetimes.len() {
-                            // There's a discrepency between the number of declared
-                            // lifetimes and the number of lifetimes provided in
-                            // the return type, so there must have been elision.
-                            errors.push(ValidityError::LifetimeElisionInReturn {
-                                full_type: full_type.clone(),
-                                sub_type: self.clone(),
-                            });
-                        } else {
-                            // The struct was written with the number of lifetimes
-                            // that it was declared with, so we're good.
-                        }
+                    if lifetimes_provided != lifetimes.len() {
+                        // There's a discrepency between the number of declared
+                        // lifetimes and the number of lifetimes provided in
+                        // the return type, so there must have been elision.
+                        errors.push(ValidityError::LifetimeElisionInReturn {
+                            full_type: full_type.clone(),
+                            sub_type: self.clone(),
+                        });
                     } else {
-                        // `CustomType::Enum`, which doesn't have any lifetimes.
-                        // We already checked that enums don't have generics in
-                        // core.
+                        // The struct was written with the number of lifetimes
+                        // that it was declared with, so we're good.
                     }
                 } else {
-                    // We looked in the environment for a custom type with our
-                    // name, but we found an alias or submodule instead of a type.
-                    errors.push(ValidityError::PathTypeNameConflict(name.clone()))
+                    // `CustomType::Enum`, which doesn't have any lifetimes.
+                    // We already checked that enums don't have generics in
+                    // core.
                 }
             }
             TypeName::Reference(lifetime, _, ty) => {
@@ -752,14 +747,14 @@ impl TypeName {
                     });
                 }
 
-                ty.check_lifetime_elision(full_type, env, errors);
+                ty.check_lifetime_elision(full_type, in_path, env, errors);
             }
             TypeName::Box(ty) | TypeName::Option(ty) => {
-                ty.check_lifetime_elision(full_type, env, errors)
+                ty.check_lifetime_elision(full_type, in_path, env, errors)
             }
             TypeName::Result(ok, err) => {
-                ok.check_lifetime_elision(full_type, env, errors);
-                err.check_lifetime_elision(full_type, env, errors);
+                ok.check_lifetime_elision(full_type, in_path, env, errors);
+                err.check_lifetime_elision(full_type, in_path, env, errors);
             }
             TypeName::StrReference(Lifetime::Anonymous)
             | TypeName::PrimitiveSlice(Lifetime::Anonymous, ..) => {
