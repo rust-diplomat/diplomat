@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 ../target/debug/diplomat-tool js js --docs js/docs/
 ../target/debug/diplomat-tool c c/include
 ../target/debug/diplomat-tool cpp cpp/include --docs cpp/docs/
