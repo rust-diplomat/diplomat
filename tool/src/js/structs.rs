@@ -131,17 +131,30 @@ pub fn gen_struct<W: fmt::Write>(
                 })
             )?;
             writeln!(out)?;
+            let has_edges = !opaque.lifetimes.is_empty();
             writeln!(
                 out,
                 "export class {} {}",
                 opaque.name,
                 display::block(|mut f| {
+                    if has_edges {
+                        writeln!(f, "#lifetimeEdges = [];")?;
+                    }
                     writeln!(
                         f,
-                        "constructor(underlying, edges, owned) {}",
-                        display::block(|mut f| {
+                        "constructor(underlying, owned{edges}) {body}",
+                        edges = display::expr(|f| {
+                            if has_edges {
+                                write!(f, ", edges")?;
+                            }
+                            Ok(())
+                        }),
+                        body = display::block(|mut f| {
                             writeln!(f, "this.underlying = underlying;")?;
-                            writeln!(f, "this.__edges_lifetime_guard = edges;")?;
+                            if has_edges {
+                                writeln!(f, "this.#lifetimeEdges.push(...edges);")?;
+                                // writeln!(f, "this.__edges_lifetime_guard = edges;")?;
+                            }
                             writeln!(
                                 f,
                                 "if (owned) {}",

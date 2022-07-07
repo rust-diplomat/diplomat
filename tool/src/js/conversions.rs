@@ -574,11 +574,20 @@ impl fmt::Display for Pointer<'_> {
             if let ast::CustomType::Opaque(opaque) = self.base.resolve_type(path_type) {
                 write!(
                     f,
-                    "new {name}({underlying}, [{edges}], {owned})",
+                    "new {name}({underlying}, {owned}{edges})",
                     name = opaque.name,
                     underlying = self.underlying,
-                    edges = Csv(self.base.borrows.iter().map(ArgumentLifetimeEdge)),
                     owned = self.owned,
+                    edges = display::expr(|f| {
+                        if !opaque.lifetimes.is_empty() {
+                            write!(
+                                f,
+                                ", [{}]",
+                                Csv(self.base.borrows.iter().map(ArgumentLifetimeEdge))
+                            )?;
+                        }
+                        Ok(())
+                    }),
                 )?;
 
                 return Ok(());
