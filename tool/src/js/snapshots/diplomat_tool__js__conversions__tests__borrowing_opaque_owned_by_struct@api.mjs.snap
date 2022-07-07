@@ -13,9 +13,10 @@ const BorrowingOpaque_box_destroy_registry = new FinalizationRegistry(underlying
 });
 
 export class BorrowingOpaque {
-  constructor(underlying, edges, owned) {
+  #lifetimeEdges = [];
+  constructor(underlying, owned, edges) {
     this.underlying = underlying;
-    this.__edges_lifetime_guard = edges;
+    this.#lifetimeEdges.push(...edges);
     if (owned) {
       BorrowingOpaque_box_destroy_registry.register(this, underlying);
     }
@@ -24,7 +25,7 @@ export class BorrowingOpaque {
 
 export class BorrowingStruct {
   constructor(underlying, edges_a) {
-    this.opaque = new BorrowingOpaque(diplomatRuntime.ptrRead(wasm, underlying), [...edges_a], true);
+    this.opaque = new BorrowingOpaque(diplomatRuntime.ptrRead(wasm, underlying), true, [...edges_a]);
     this.x = (new Uint8Array(wasm.memory.buffer, underlying + 4, 1))[0];
   }
 

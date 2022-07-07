@@ -13,16 +13,17 @@ const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class MyStruct {
-  constructor(underlying, edges, owned) {
+  #lifetimeEdges = [];
+  constructor(underlying, owned, edges) {
     this.underlying = underlying;
-    this.__edges_lifetime_guard = edges;
+    this.#lifetimeEdges.push(...edges);
     if (owned) {
       MyStruct_box_destroy_registry.register(this, underlying);
     }
   }
 
   static new(arg_a, arg_b) {
-    return new MyStruct(wasm.MyStruct_new(arg_a, arg_b), [], true);
+    return new MyStruct(wasm.MyStruct_new(arg_a, arg_b), true, []);
   }
 
   get_a() {

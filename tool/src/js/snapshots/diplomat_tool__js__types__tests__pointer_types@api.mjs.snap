@@ -13,9 +13,10 @@ const MyOpaqueStruct_box_destroy_registry = new FinalizationRegistry(underlying 
 });
 
 export class MyOpaqueStruct {
-  constructor(underlying, edges, owned) {
+  #lifetimeEdges = [];
+  constructor(underlying, owned, edges) {
     this.underlying = underlying;
-    this.__edges_lifetime_guard = edges;
+    this.#lifetimeEdges.push(...edges);
     if (owned) {
       MyOpaqueStruct_box_destroy_registry.register(this, underlying);
     }
@@ -24,7 +25,7 @@ export class MyOpaqueStruct {
 
 export class MyStruct {
   constructor(underlying, edges_a) {
-    this.a = new MyOpaqueStruct(diplomatRuntime.ptrRead(wasm, underlying), [...edges_a], false);
+    this.a = new MyOpaqueStruct(diplomatRuntime.ptrRead(wasm, underlying), false, [...edges_a]);
     this.b = (new Uint8Array(wasm.memory.buffer, underlying + 4, 1))[0];
   }
 
