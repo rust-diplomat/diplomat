@@ -85,17 +85,6 @@ impl LifetimeEnv {
         Self { nodes: vec![] }
     }
 
-    /// Collect all lifetimes that live _at least_ as long as _any_ provided lifetimes.
-    ///
-    /// This method returns a visitor type, [`Outlives`], which can be used to
-    /// incrementally visit lifetimes and build up an internal list of which
-    /// lifetimes are reachable after each new visited lifetime. This is useful
-    /// for collecting lifetimes reachable by a set of lifetimes, without having
-    /// to dedup at the end.
-    pub fn outlives(&self) -> Outlives {
-        Outlives::new(self)
-    }
-
     /// Iterate through the names of the lifetimes in scope.
     pub fn names(&self) -> impl Iterator<Item = &NamedLifetime> + Clone {
         self.nodes.iter().map(|node| &node.lifetime)
@@ -417,27 +406,37 @@ impl Lifetime {
     }
 }
 
-/// Incrementally collect lifetimes that outlive a set of visited lifetimes.
-///
-/// See [`LifetimeEnv::outlives`] for more information.
-pub struct Outlives<'env> {
+/// Collect all lifetimes that are either longer_or_shorter
+pub struct LifetimeTransitivity<'env> {
     env: &'env LifetimeEnv,
     visited: Vec<bool>,
     out: Vec<&'env NamedLifetime>,
+    longer_or_shorter: LongerOrShorter,
 }
 
-impl<'env> Outlives<'env> {
-    /// Returns a new [`Outlives`] based on a given [`LifetimeEnv`].
-    fn new(env: &'env LifetimeEnv) -> Self {
-        Outlives {
+impl<'env> LifetimeTransitivity<'env> {
+    /// Returns a new [`LifetimeTransitivity`] that finds all longer lifetimes.
+    pub fn longer(env: &'env LifetimeEnv) -> Self {
+        Self::new(env, LongerOrShorter::Longer)
+    }
+
+    /// Returns a new [`LifetimeTransitivity`] that finds all shorter lifetimes.
+    pub fn shorter(env: &'env LifetimeEnv) -> Self {
+        Self::new(env, LongerOrShorter::Shorter)
+    }
+
+    /// Returns a new [`LifetimeTransitivity`].
+    fn new(env: &'env LifetimeEnv, longer_or_shorter: LongerOrShorter) -> Self {
+        LifetimeTransitivity {
             env,
             visited: vec![false; env.len()],
             out: vec![],
+            longer_or_shorter,
         }
     }
 
-    /// Visits a `&NamedLifetime`, updating the internal state to mark all lifetimes
-    /// that must outlive the given lifetime as reachable.
+    /// Visits a lifetime, as well as all the nodes it's transitively longer or
+    /// shorter than, depending on how the `LifetimeTransitivity` was constructed.
     pub fn visit(&mut self, named: &NamedLifetime) {
         if let Some(id) = self
             .env
@@ -449,8 +448,9 @@ impl<'env> Outlives<'env> {
         }
     }
 
-    /// Recursively mark all lifetimes that live at least as long as the
-    /// lifetime at the provided index in the [`LifetimeEnv`] as reachable.
+    /// Performs depth-first search through the `LifetimeEnv` created at construction
+    /// for all nodes longer or shorter than the node at the provided index,
+    /// depending on how the `LifetimeTransitivity` was constructed.
     fn dfs(&mut self, index: usize) {
         // Note: all of these indexings SHOULD be valid because
         // `visited.len() == nodes.len()`, and the ids come from
@@ -461,14 +461,32 @@ impl<'env> Outlives<'env> {
 
             let node = &self.env.nodes[index];
             self.out.push(&node.lifetime);
-            for &longer_id in node.longer.iter() {
-                self.dfs(longer_id);
+            for &edge_index in self.longer_or_shorter.edges(node).iter() {
+                self.dfs(edge_index);
             }
         }
     }
 
-    /// Returns all lifetimes that outlive any of the visited lifetimes.
+    /// Returns the transitively reachable lifetimes.
     pub fn finish(self) -> Vec<&'env NamedLifetime> {
         self.out
+    }
+}
+
+/// A helper type for [`LifetimeTransitivity`] determining whether to find the
+/// transitively longer or transitively shorter lifetimes.
+enum LongerOrShorter {
+    Longer,
+    Shorter,
+}
+
+impl LongerOrShorter {
+    /// Returns either the indices of the longer or shorter lifetimes, depending
+    /// on `self`.
+    fn edges<'node>(&self, node: &'node LifetimeNode) -> &'node [usize] {
+        match self {
+            LongerOrShorter::Longer => &node.longer[..],
+            LongerOrShorter::Shorter => &node.shorter[..],
+        }
     }
 }
