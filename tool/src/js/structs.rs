@@ -241,7 +241,7 @@ fn gen_method<W: fmt::Write>(
     // Rebuild the mapping from lifetimes to `Arguments`, but using the names of
     // lifetimes as declared in the returned struct, if the return type is a struct.
     // Otherwise return `None`.
-    let arguments_that_use_lifetimes =
+    let arguments_that_use_lifetimes: Option<BTreeMap<&ast::NamedLifetime, Vec<Argument>>> =
         if let Some(ast::TypeName::Named(path_type)) = &method.return_type {
             path_type
                 .resolve(in_path, env)
@@ -251,7 +251,8 @@ fn gen_method<W: fmt::Write>(
                     assert_eq!(
                         path_type.lifetimes.len(),
                         lifetime_env.len(),
-                        "doesn't have the same number of lifetimes as declared with"
+                        "{} doesn't have the same number of lifetimes as declared with",
+                        path_type.path
                     );
 
                     path_type
