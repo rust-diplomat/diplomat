@@ -23,5 +23,7 @@ expression: out_docs.get(out).unwrap()
 
     .. js:function:: transpose()
 
+    .. js:function:: point()
+
 .. js:class:: Scalar
 

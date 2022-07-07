@@ -47,8 +47,24 @@ export class PointTranspose {
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);
       wasm.PointTranspose_transpose(diplomat_receive_buffer, field_x_field_point_this.underlying, field_y_field_point_this.underlying, field_x_field_transpose_this.underlying, field_y_field_transpose_this.underlying);
-      const out = new PointTranspose(diplomat_receive_buffer, [field_x_field_point_this, field_y_field_transpose_this], [field_y_field_point_this, field_x_field_transpose_this]);
+      const out = new PointTranspose(diplomat_receive_buffer, [field_y_field_point_this, field_x_field_transpose_this], [field_x_field_point_this, field_y_field_transpose_this]);
       wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
+      return out;
+    })();
+  }
+
+  point() {
+    const field_point_this = this["point"];
+    const field_x_field_point_this = field_point_this["x"];
+    const field_y_field_point_this = field_point_this["y"];
+    const field_transpose_this = this["transpose"];
+    const field_x_field_transpose_this = field_transpose_this["x"];
+    const field_y_field_transpose_this = field_transpose_this["y"];
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+      wasm.PointTranspose_point(diplomat_receive_buffer, field_x_field_point_this.underlying, field_y_field_point_this.underlying, field_x_field_transpose_this.underlying, field_y_field_transpose_this.underlying);
+      const out = new Point(diplomat_receive_buffer, [field_x_field_point_this, field_y_field_transpose_this], [field_y_field_point_this, field_x_field_transpose_this]);
+      wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
       return out;
     })();
   }

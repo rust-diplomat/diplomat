@@ -23,9 +23,11 @@ pub mod ffi {
     //     }
     // }
 
+    #[derive(Copy, Clone)]
     #[diplomat::opaque]
     pub struct One<'a>(super::One<'a>);
 
+    #[derive(Copy, Clone)]
     #[diplomat::opaque]
     pub struct Two<'a, 'b>(super::Two<'a, 'b>);
 
@@ -78,8 +80,12 @@ pub mod ffi {
             right: &One<'right>,
             bottom: &One<'bottom>,
         ) -> Box<One<'top>> {
-            let _ = (top, left, right, bottom);
-            unimplemented!()
+            Box::new(match 0 {
+                0 => *bottom,
+                1 => *left,
+                2 => *right,
+                _ => *top,
+            })
         }
 
         // Holds: [left, bottom]
@@ -89,8 +95,11 @@ pub mod ffi {
             right: &One<'right>,
             bottom: &One<'bottom>,
         ) -> Box<One<'left>> {
-            let _ = (top, left, right, bottom);
-            unimplemented!()
+            let _ = (top, right);
+            Box::new(match 0 {
+                0 => *bottom,
+                _ => *left,
+            })
         }
 
         // Holds: [right, bottom]
@@ -100,8 +109,11 @@ pub mod ffi {
             right: &One<'right>,
             bottom: &One<'bottom>,
         ) -> Box<One<'right>> {
-            let _ = (top, left, right, bottom);
-            unimplemented!()
+            let _ = (top, left);
+            Box::new(match 0 {
+                0 => *bottom,
+                _ => *right,
+            })
         }
 
         // Holds: [bottom]
@@ -111,8 +123,8 @@ pub mod ffi {
             right: &One<'right>,
             bottom: &One<'bottom>,
         ) -> Box<One<'bottom>> {
-            let _ = (top, left, right, bottom);
-            unimplemented!()
+            let _ = (top, left, right);
+            Box::new(*bottom)
         }
 
         // Holds: [a, b, c, d]
@@ -123,12 +135,21 @@ pub mod ffi {
             d: &'d One<'x>,
             nohold: &One<'x>,
         ) -> Box<One<'a>> {
-            let _ = (a, b, c, d, nohold);
-            unimplemented!()
+            let _ = nohold;
+            Box::new(match 0 {
+                0 => *a,
+                1 => *b,
+                2 => *c,
+                3 => *d,
+                // FIXME(#198): this should be disallowed by our type universe
+                _ => *nohold,
+            })
         }
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct One<'a>(&'a ());
 
+#[derive(Copy, Clone)]
 pub struct Two<'a, 'b>(&'a (), &'b ());

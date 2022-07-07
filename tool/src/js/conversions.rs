@@ -43,8 +43,8 @@ pub enum UnpackedBinding<'env> {
     /// A field extracted from a struct.
     #[displaydoc("field_{field}_{value}")]
     Field {
-        value: Box<Self>,
         field: &'env ast::Ident,
+        value: Box<Self>,
     },
 
     /// The `this` binding.
@@ -54,7 +54,7 @@ pub enum UnpackedBinding<'env> {
 
 /// An [`fmt::Display`] type representing an argument for a constructor or
 /// WASM function.
-#[derive(Clone, Display, Debug)]
+#[derive(Clone, Display, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Argument<'env> {
     /// An unpacked binding.
     #[displaydoc("{0}")]
@@ -72,7 +72,7 @@ pub enum Argument<'env> {
 
 /// An [`fmt::Display`] type for disambiguating names of lifetime edges in
 /// constructor arguments.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ReceivedEdges<'env>(pub &'env ast::NamedLifetime);
 
 impl fmt::Display for ReceivedEdges<'_> {
@@ -154,7 +154,7 @@ pub fn gen_value_js_to_rust<'env>(
 
             let binding = Argument::UnpackedBinding(param_name);
 
-            for current in typ.longer_lifetimes(lifetime_env) {
+            for current in typ.shorter_lifetimes(lifetime_env) {
                 if let Some(root) = borrowed_current_to_root.get(current) {
                     entries.entry(root).or_default().push(binding.clone());
                 }
@@ -176,8 +176,8 @@ pub fn gen_value_js_to_rust<'env>(
 
                 for (field_name, field_type, _) in struct_type.fields.iter() {
                     let field_extracted_name = UnpackedBinding::Field {
-                        value: Box::new(param_name.clone()),
                         field: field_name,
+                        value: Box::new(param_name.clone()),
                     };
 
                     pre_logic.push(format!(
@@ -363,7 +363,9 @@ pub struct InvocationIntoJs<'base> {
     pub invocation: Invocation,
 
     /// A mapping from lifetimes to the inputs that must outlive them.
-    pub lifetimes: &'base BTreeMap<&'base ast::NamedLifetime, Vec<Argument<'base>>>,
+    ///
+    /// `Some` if `typ` is a named type otherwise `None`.
+    pub lifetimes: Option<&'base BTreeMap<&'base ast::NamedLifetime, Vec<Argument<'base>>>>,
 
     /// Base data.
     pub base: Base<'base>,
@@ -392,7 +394,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                 display::expr(|f| {
                                     diplomat_receive_buffer.fmt(f)?;
                                     for lifetime in strct.lifetimes.names() {
-                                        if let Some(inputs) = self.lifetimes.get(lifetime) {
+                                        if let Some(inputs) = self.lifetimes.expect("must be `Some` for named types").get(lifetime) {
                                             write!(f, ", [{}]", Csv(inputs.iter().map(ArgumentLifetimeEdge)))?;
                                         } else {
                                             unreachable!("if the struct has any lifetimes, then it has to borrow from something")
@@ -570,14 +572,16 @@ impl fmt::Display for Pointer<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let ast::TypeName::Named(path_type) = self.inner {
             if let ast::CustomType::Opaque(opaque) = self.base.resolve_type(path_type) {
-                return write!(
+                write!(
                     f,
                     "new {name}({underlying}, [{edges}], {owned})",
                     name = opaque.name,
                     underlying = self.underlying,
                     edges = Csv(self.base.borrows.iter().map(ArgumentLifetimeEdge)),
                     owned = self.owned,
-                );
+                )?;
+
+                return Ok(());
             }
         }
 
@@ -840,6 +844,10 @@ mod tests {
 
                     pub fn transpose(self) -> PointTranspose<'v, 'u> {
                         unimplemented!()
+                    }
+
+                    pub fn point(self) -> Point<'u, 'v> {
+                        self.point
                     }
                 }
             }

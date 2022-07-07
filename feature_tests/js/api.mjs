@@ -86,7 +86,7 @@ export class Foo {
   }
 
   get_bar() {
-    return new Bar(wasm.Foo_get_bar(this.underlying), [this, this], true);
+    return new Bar(wasm.Foo_get_bar(this.underlying), [this], true);
   }
 }
 
@@ -162,35 +162,35 @@ export class One {
   }
 
   static cycle(arg_hold, arg_nohold) {
-    return new One(wasm.One_cycle(arg_hold.underlying, arg_nohold.underlying), [arg_hold, arg_hold, arg_hold], true);
+    return new One(wasm.One_cycle(arg_hold.underlying, arg_nohold.underlying), [arg_hold], true);
   }
 
   static many_dependents(arg_a, arg_b, arg_c, arg_d, arg_nohold) {
-    return new One(wasm.One_many_dependents(arg_a.underlying, arg_b.underlying, arg_c.underlying, arg_d.underlying, arg_nohold.underlying), [arg_a, arg_a, arg_b, arg_a, arg_c, arg_a, arg_b, arg_d], true);
+    return new One(wasm.One_many_dependents(arg_a.underlying, arg_b.underlying, arg_c.underlying, arg_d.underlying, arg_nohold.underlying), [arg_a, arg_b, arg_c, arg_d], true);
   }
 
   static return_outlives_param(arg_hold, arg_nohold) {
-    return new One(wasm.One_return_outlives_param(arg_hold.underlying, arg_nohold.underlying), [arg_hold, arg_nohold], true);
+    return new One(wasm.One_return_outlives_param(arg_hold.underlying, arg_nohold.underlying), [arg_hold], true);
   }
 
   static diamond_top(arg_top, arg_left, arg_right, arg_bottom) {
-    return new One(wasm.One_diamond_top(arg_top.underlying, arg_left.underlying, arg_right.underlying, arg_bottom.underlying), [arg_top, arg_left, arg_right, arg_bottom, arg_top, arg_left, arg_top, arg_right, arg_top], true);
+    return new One(wasm.One_diamond_top(arg_top.underlying, arg_left.underlying, arg_right.underlying, arg_bottom.underlying), [arg_bottom, arg_left, arg_right, arg_top], true);
   }
 
   static diamond_left(arg_top, arg_left, arg_right, arg_bottom) {
-    return new One(wasm.One_diamond_left(arg_top.underlying, arg_left.underlying, arg_right.underlying, arg_bottom.underlying), [arg_top, arg_left, arg_right, arg_bottom, arg_top, arg_left], true);
+    return new One(wasm.One_diamond_left(arg_top.underlying, arg_left.underlying, arg_right.underlying, arg_bottom.underlying), [arg_bottom, arg_left], true);
   }
 
   static diamond_right(arg_top, arg_left, arg_right, arg_bottom) {
-    return new One(wasm.One_diamond_right(arg_top.underlying, arg_left.underlying, arg_right.underlying, arg_bottom.underlying), [arg_top, arg_left, arg_right, arg_bottom, arg_top, arg_right], true);
+    return new One(wasm.One_diamond_right(arg_top.underlying, arg_left.underlying, arg_right.underlying, arg_bottom.underlying), [arg_bottom, arg_right], true);
   }
 
   static diamond_bottom(arg_top, arg_left, arg_right, arg_bottom) {
-    return new One(wasm.One_diamond_bottom(arg_top.underlying, arg_left.underlying, arg_right.underlying, arg_bottom.underlying), [arg_top, arg_left, arg_right, arg_bottom], true);
+    return new One(wasm.One_diamond_bottom(arg_top.underlying, arg_left.underlying, arg_right.underlying, arg_bottom.underlying), [arg_bottom], true);
   }
 
   static diamond_and_nested_types(arg_a, arg_b, arg_c, arg_d, arg_nohold) {
-    return new One(wasm.One_diamond_and_nested_types(arg_a.underlying, arg_b.underlying, arg_c.underlying, arg_d.underlying, arg_nohold.underlying), [arg_a, arg_a, arg_b, arg_a, arg_b, arg_c, arg_a, arg_b, arg_c, arg_d], true);
+    return new One(wasm.One_diamond_and_nested_types(arg_a.underlying, arg_b.underlying, arg_c.underlying, arg_d.underlying, arg_nohold.underlying), [arg_a, arg_b, arg_c, arg_d], true);
   }
 }
 

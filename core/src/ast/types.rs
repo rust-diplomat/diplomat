@@ -9,8 +9,8 @@ use std::fmt;
 use std::ops::ControlFlow;
 
 use super::{
-    Docs, Enum, Ident, Lifetime, LifetimeEnv, Method, NamedLifetime, OpaqueStruct, Path, Struct,
-    ValidityError,
+    Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
+    OpaqueStruct, Path, Struct, ValidityError,
 };
 use crate::Env;
 
@@ -611,14 +611,30 @@ impl TypeName {
         &self,
         lifetime_env: &'env LifetimeEnv,
     ) -> Vec<&'env NamedLifetime> {
-        let mut outlives = lifetime_env.outlives();
+        self.transitive_lifetime_bounds(LifetimeTransitivity::longer(lifetime_env))
+    }
+
+    /// Returns all lifetimes in a [`LifetimeEnv`] that are outlived by the type.
+    pub fn shorter_lifetimes<'env>(
+        &self,
+        lifetime_env: &'env LifetimeEnv,
+    ) -> Vec<&'env NamedLifetime> {
+        self.transitive_lifetime_bounds(LifetimeTransitivity::shorter(lifetime_env))
+    }
+
+    /// Visits the provided [`LifetimeTransitivity`] value with all `NamedLifetime`s
+    /// in the type tree, and returns the transitively reachable lifetimes.
+    fn transitive_lifetime_bounds<'env>(
+        &self,
+        mut transitivity: LifetimeTransitivity<'env>,
+    ) -> Vec<&'env NamedLifetime> {
         self.visit_lifetimes(&mut |lifetime, _| -> ControlFlow<()> {
             if let Lifetime::Named(named) = lifetime {
-                outlives.visit(named);
+                transitivity.visit(named);
             }
             ControlFlow::Continue(())
         });
-        outlives.finish()
+        transitivity.finish()
     }
 
     fn check_opaque<'a>(

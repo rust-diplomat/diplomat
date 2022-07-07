@@ -192,7 +192,7 @@ fn gen_method<W: fmt::Write>(
     let mut all_param_exprs = vec![];
     let mut post_stmts = vec![];
 
-    let mut entries = BTreeMap::new();
+    let mut entries: BTreeMap<&ast::NamedLifetime, Vec<Argument>> = BTreeMap::new();
 
     let borrowed_current_to_root = method
         .return_type
@@ -238,6 +238,38 @@ fn gen_method<W: fmt::Write>(
         );
     }
 
+    // Rebuild the mapping from lifetimes to `Arguments`, but using the names of
+    // lifetimes as declared in the returned struct, if the return type is a struct.
+    // Otherwise return `None`.
+    let arguments_that_use_lifetimes =
+        if let Some(ast::TypeName::Named(path_type)) = &method.return_type {
+            path_type
+                .resolve(in_path, env)
+                .lifetimes()
+                .map(|lifetime_env| {
+                    // change names in entries from path_type names to lifetime_env names
+                    assert_eq!(
+                        path_type.lifetimes.len(),
+                        lifetime_env.len(),
+                        "doesn't have the same number of lifetimes as declared with"
+                    );
+
+                    path_type
+                        .lifetimes
+                        .iter()
+                        .zip(lifetime_env.names())
+                        .filter_map(|(path_lt, decl_lt)| {
+                            if let ast::Lifetime::Named(path_lt) = path_lt {
+                                return Some((decl_lt, entries[path_lt].clone()));
+                            }
+                            None
+                        })
+                        .collect()
+                })
+        } else {
+            None
+        };
+
     let mut all_params: Vec<UnpackedBinding> = method
         .params
         .iter()
@@ -270,15 +302,18 @@ fn gen_method<W: fmt::Write>(
                         Invocation::new(method.full_path_name.clone(), all_param_exprs.clone());
 
                     if let Some(ref typ) = method.return_type {
-                        let borrows: Vec<Argument> = entries
+                        let mut borrows: Vec<Argument> = entries
                             .values()
                             .flat_map(|bindings| bindings.iter().cloned())
                             .collect();
 
+                        borrows.sort_unstable();
+                        borrows.dedup();
+
                         InvocationIntoJs {
                             invocation,
                             typ,
-                            lifetimes: &entries,
+                            lifetimes: arguments_that_use_lifetimes.as_ref(),
                             base: Base {
                                 in_path,
                                 env,
