@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::collections::HashSet;
 
 use quote::ToTokens;
+use serde::{Deserialize, Serialize};
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
@@ -10,6 +10,7 @@ use super::{
     ValidityError,
 };
 use crate::environment::*;
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
     pub name: Ident,
