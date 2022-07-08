@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { MyStruct, Opaque } from "../api.mjs";
+import MyStruct from "../api/MyStruct.mjs"
 
 test("Verify invariants of struct", t => {
     const s = MyStruct.new("hello");

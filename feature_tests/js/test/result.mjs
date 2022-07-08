@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { ResultOpaque, ErrorStruct } from "../api.mjs";
+import ResultOpaque from "../api/ResultOpaque.mjs"
 
 test("Verify result methods", t => {
     const s = ResultOpaque.new(5);
