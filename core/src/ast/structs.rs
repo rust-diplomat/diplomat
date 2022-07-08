@@ -17,27 +17,30 @@ impl From<&syn::ItemStruct> for Struct {
     /// Extract a [`Struct`] metadata value from an AST node.
     fn from(strct: &syn::ItemStruct) -> Struct {
         let self_path_type = PathType::extract_self_type(strct);
+        let fields: Vec<_> = strct
+            .fields
+            .iter()
+            .map(|field| {
+                // Non-opaque tuple structs will never be allowed
+                let name = field
+                    .ident
+                    .as_ref()
+                    .map(Into::into)
+                    .expect("non-opaque tuples structs are disallowed");
+                let type_name = TypeName::from_syn(&field.ty, Some(self_path_type.clone()));
+                let docs = Docs::from_attrs(&field.attrs);
+
+                (name, type_name, docs)
+            })
+            .collect();
+
+        let lifetimes = LifetimeEnv::from_struct_item(strct, &fields[..]);
 
         Struct {
             name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: LifetimeEnv::from(&strct.generics),
-            fields: strct
-                .fields
-                .iter()
-                .map(|field| {
-                    // Non-opaque tuple structs will never be allowed
-                    let name = field
-                        .ident
-                        .as_ref()
-                        .map(Into::into)
-                        .expect("non-opaque tuples structs are disallowed");
-                    let type_name = TypeName::from_syn(&field.ty, Some(self_path_type.clone()));
-                    let docs = Docs::from_attrs(&field.attrs);
-
-                    (name, type_name, docs)
-                })
-                .collect(),
+            lifetimes,
+            fields,
             methods: vec![],
         }
     }
@@ -60,7 +63,7 @@ impl From<&syn::ItemStruct> for OpaqueStruct {
         OpaqueStruct {
             name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: LifetimeEnv::from(&strct.generics),
+            lifetimes: LifetimeEnv::from_struct_item(strct, &[]),
             methods: vec![],
         }
     }

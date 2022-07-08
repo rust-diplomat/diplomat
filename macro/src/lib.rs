@@ -446,6 +446,10 @@ mod tests {
                     #[diplomat::opaque]
                     struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
+                    struct Baz<'x, 'y> {
+                        foo: &'y Foo<'x>,
+                    }
+
                     impl<'a> Foo<'a> {
                         pub fn new(x: &'a str) -> Box<Foo<'a>> {
                             unimplemented!()
@@ -453,6 +457,10 @@ mod tests {
 
                         pub fn get_bar<'b>(&'b self) -> Box<Bar<'b, 'a>> {
                             unimplemented!()
+                        }
+
+                        pub fn get_baz<'b>(&'b self) -> Baz<'b, 'a> {
+                            Bax { foo: self }
                         }
                     }
                 }

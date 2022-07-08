@@ -3,7 +3,7 @@ use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use super::{Ident, TypeName};
+use super::{Docs, Ident, Param, SelfParam, TypeName};
 
 /// A named lifetime, e.g. `'a`.
 ///
@@ -90,14 +90,16 @@ impl LifetimeEnv {
         self.nodes.iter().map(|node| &node.lifetime)
     }
 
-    /// Constructs a new [`LifetimeEnv`] from a [`syn::ImplItemMethod`] and optional
-    /// generic lifetimes from the `impl` block.
+    /// Returns a [`LifetimeEnv`] for a method, accounting for lifetimes and bounds
+    /// defined in both the impl block and the method, as well as implicit lifetime
+    /// bounds in the optional `self` param, other param, and optional return type.
+    /// For example, the type `&'a Foo<'b>` implies `'b: 'a`.
     pub fn from_method_item(
         method: &syn::ImplItemMethod,
         impl_generics: Option<&syn::Generics>,
-        self_param: Option<&super::SelfParam>,
-        params: &[super::Param],
-        return_type: Option<&super::TypeName>,
+        self_param: Option<&SelfParam>,
+        params: &[Param],
+        return_type: Option<&TypeName>,
     ) -> Self {
         let mut this = LifetimeEnv::new();
         // The impl generics _must_ be loaded into the env first, since the method
@@ -121,6 +123,21 @@ impl LifetimeEnv {
         this
     }
 
+    /// Returns a [`LifetimeEnv`] for a struct, accounding for lifetimes and bounds
+    /// defined in the struct generics, as well as implicit lifetime bounds in
+    /// the struct's fields. For example, the field `&'a Foo<'b>` implies `'b: 'a`.
+    pub fn from_struct_item(strct: &syn::ItemStruct, fields: &[(Ident, TypeName, Docs)]) -> Self {
+        let mut this = LifetimeEnv::new();
+        this.extend_generics(&strct.generics);
+        for (_, typ, _) in fields {
+            this.extend_implicit_lifetime_bounds(typ, None);
+        }
+        this
+    }
+
+    /// Traverse a type, adding any implicit lifetime bounds that arise from
+    /// having a reference to an opaque containing a lifetime.
+    /// For example, the type `&'a Foo<'b>` implies `'b: 'a`.
     fn extend_implicit_lifetime_bounds(
         &mut self,
         typ: &TypeName,
@@ -278,14 +295,6 @@ impl LifetimeEnv {
 impl fmt::Display for LifetimeEnv {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.to_token_stream().fmt(f)
-    }
-}
-
-impl From<&syn::Generics> for LifetimeEnv {
-    fn from(generics: &syn::Generics) -> Self {
-        let mut this = LifetimeEnv::new();
-        this.extend_generics(generics);
-        this
     }
 }
 
