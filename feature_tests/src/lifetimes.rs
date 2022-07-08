@@ -55,7 +55,7 @@ pub mod ffi {
         // Holds: [a, b, c, d]
         pub fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b, 'x, 'y>(
             a: &'x One<'a>,
-            b: &'b One<'x>,
+            b: &'b One<'a>,
             c: &Two<'x, 'c>,
             d: &'x Two<'d, 'y>,
             nohold: &'x Two<'x, 'y>,
@@ -129,10 +129,10 @@ pub mod ffi {
 
         // Holds: [a, b, c, d]
         pub fn diamond_and_nested_types<'a, 'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(
-            a: &'x One<'a>,
+            a: &One<'a>,
             b: &'y One<'b>,
             c: &One<'c>,
-            d: &'d One<'x>,
+            d: &One<'d>,
             nohold: &One<'x>,
         ) -> Box<One<'a>> {
             let _ = nohold;
@@ -140,9 +140,36 @@ pub mod ffi {
                 0 => *a,
                 1 => *b,
                 2 => *c,
-                3 => *d,
-                // FIXME(#198): this should be disallowed by our type universe
-                _ => *nohold,
+                _ => *d,
+            })
+        }
+
+        // Holds: [implicit_hold, explicit_hold]
+        #[allow(clippy::extra_unused_lifetimes)]
+        pub fn implicit_bounds<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'x, 'y>(
+            explicit_hold: &'d One<'x>, // implies that 'x: 'd
+            implicit_hold: &One<'x>,
+            nohold: &One<'y>,
+        ) -> Box<One<'a>> {
+            let _ = nohold;
+            Box::new(match 0 {
+                0 => *explicit_hold,
+                _ => *implicit_hold,
+            })
+        }
+
+        // Holds: [a, b, c]
+        pub fn implicit_bounds_deep<'a, 'b, 'c, 'd, 'x>(
+            explicit: &'a One<'b>,
+            implicit_1: &'b One<'c>,
+            implicit_2: &'c One<'d>,
+            nohold: &'x One<'x>,
+        ) -> Box<One<'a>> {
+            let _ = nohold;
+            Box::new(match 0 {
+                0 => *explicit,
+                1 => *implicit_1,
+                _ => *implicit_2,
             })
         }
     }

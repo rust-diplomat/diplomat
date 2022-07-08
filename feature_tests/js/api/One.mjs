@@ -51,4 +51,12 @@ export default class One {
   static diamond_and_nested_types(arg_a, arg_b, arg_c, arg_d, arg_nohold) {
     return new One(wasm.One_diamond_and_nested_types(arg_a.underlying, arg_b.underlying, arg_c.underlying, arg_d.underlying, arg_nohold.underlying), true, [arg_a, arg_b, arg_c, arg_d]);
   }
+
+  static implicit_bounds(arg_explicit_hold, arg_implicit_hold, arg_nohold) {
+    return new One(wasm.One_implicit_bounds(arg_explicit_hold.underlying, arg_implicit_hold.underlying, arg_nohold.underlying), true, [arg_explicit_hold, arg_implicit_hold]);
+  }
+
+  static implicit_bounds_deep(arg_explicit, arg_implicit_1, arg_implicit_2, arg_nohold) {
+    return new One(wasm.One_implicit_bounds_deep(arg_explicit.underlying, arg_implicit_1.underlying, arg_implicit_2.underlying, arg_nohold.underlying), true, [arg_explicit, arg_implicit_1, arg_implicit_2]);
+  }
 }

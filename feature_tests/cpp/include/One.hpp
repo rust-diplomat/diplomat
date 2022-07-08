@@ -35,6 +35,8 @@ class One {
   static One diamond_right(const One& top, const One& left, const One& right, const One& bottom);
   static One diamond_bottom(const One& top, const One& left, const One& right, const One& bottom);
   static One diamond_and_nested_types(const One& a, const One& b, const One& c, const One& d, const One& nohold);
+  static One implicit_bounds(const One& explicit_hold, const One& implicit_hold, const One& nohold);
+  static One implicit_bounds_deep(const One& explicit, const One& implicit_1, const One& implicit_2, const One& nohold);
   inline const capi::One* AsFFI() const { return this->inner.get(); }
   inline capi::One* AsFFIMut() { return this->inner.get(); }
   inline One(capi::One* i) : inner(i) {}
@@ -73,5 +75,11 @@ inline One One::diamond_bottom(const One& top, const One& left, const One& right
 }
 inline One One::diamond_and_nested_types(const One& a, const One& b, const One& c, const One& d, const One& nohold) {
   return One(capi::One_diamond_and_nested_types(a.AsFFI(), b.AsFFI(), c.AsFFI(), d.AsFFI(), nohold.AsFFI()));
+}
+inline One One::implicit_bounds(const One& explicit_hold, const One& implicit_hold, const One& nohold) {
+  return One(capi::One_implicit_bounds(explicit_hold.AsFFI(), implicit_hold.AsFFI(), nohold.AsFFI()));
+}
+inline One One::implicit_bounds_deep(const One& explicit, const One& implicit_1, const One& implicit_2, const One& nohold) {
+  return One(capi::One_implicit_bounds_deep(explicit.AsFFI(), implicit_1.AsFFI(), implicit_2.AsFFI(), nohold.AsFFI()));
 }
 #endif

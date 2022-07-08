@@ -43,6 +43,12 @@ public partial struct One
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "One_diamond_and_nested_types", ExactSpelling = true)]
     public static unsafe extern One* DiamondAndNestedTypes(One* a, One* b, One* c, One* d, One* nohold);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "One_implicit_bounds", ExactSpelling = true)]
+    public static unsafe extern One* ImplicitBounds(One* explicitHold, One* implicitHold, One* nohold);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "One_implicit_bounds_deep", ExactSpelling = true)]
+    public static unsafe extern One* ImplicitBoundsDeep(One* explicit, One* implicit1, One* implicit2, One* nohold);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "One_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(One* self);
 }
