@@ -1,7 +1,7 @@
 import wasm from "../wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
-import ErrorStruct from "./ErrorStruct.mjs"
 import { ErrorEnum_js_to_rust, ErrorEnum_rust_to_js } from "./ErrorEnum.mjs"
+import ErrorStruct from "./ErrorStruct.mjs"
 
 const ResultOpaque_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ResultOpaque_destroy(underlying);

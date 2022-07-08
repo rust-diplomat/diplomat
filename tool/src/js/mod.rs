@@ -39,7 +39,11 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
             out,
             "import * as diplomatRuntime from \"./diplomat-runtime.mjs\""
         )?;
-        for custom_type in used_types(custom_type, &in_path, env) {
+        let mut imports: Vec<&ast::CustomType> =
+            used_types(custom_type, &in_path, env).into_iter().collect();
+        // Sort so that the ordering of imports is consistent every time.
+        imports.sort_by_key(|custom| custom.name());
+        for custom_type in imports {
             if let ast::CustomType::Enum(enm) = custom_type {
                 writeln!(
                     out,

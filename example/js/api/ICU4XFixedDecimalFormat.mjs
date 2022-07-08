@@ -1,12 +1,12 @@
 import wasm from "../wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 import ICU4XDataProvider from "./ICU4XDataProvider.mjs"
-import ICU4XFixedDecimalFormatResult from "./ICU4XFixedDecimalFormatResult.mjs"
-import ICU4XLocale from "./ICU4XLocale.mjs"
-import ICU4XFixedDecimalFormatOptions from "./ICU4XFixedDecimalFormatOptions.mjs"
-import { ICU4XFixedDecimalSignDisplay_js_to_rust, ICU4XFixedDecimalSignDisplay_rust_to_js } from "./ICU4XFixedDecimalSignDisplay.mjs"
 import ICU4XFixedDecimal from "./ICU4XFixedDecimal.mjs"
+import ICU4XFixedDecimalFormatOptions from "./ICU4XFixedDecimalFormatOptions.mjs"
+import ICU4XFixedDecimalFormatResult from "./ICU4XFixedDecimalFormatResult.mjs"
 import { ICU4XFixedDecimalGroupingStrategy_js_to_rust, ICU4XFixedDecimalGroupingStrategy_rust_to_js } from "./ICU4XFixedDecimalGroupingStrategy.mjs"
+import { ICU4XFixedDecimalSignDisplay_js_to_rust, ICU4XFixedDecimalSignDisplay_rust_to_js } from "./ICU4XFixedDecimalSignDisplay.mjs"
+import ICU4XLocale from "./ICU4XLocale.mjs"
 
 const ICU4XFixedDecimalFormat_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.ICU4XFixedDecimalFormat_destroy(underlying);
