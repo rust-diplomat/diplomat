@@ -37,7 +37,7 @@ pub fn gen_struct<W: fmt::Write>(
         ast::CustomType::Enum(enm) => {
             writeln!(
                 out,
-                "const {}_js_to_rust = {};",
+                "export const {}_js_to_rust = {};",
                 enm.name,
                 display::block(|mut f| {
                     enm.variants.iter().try_for_each(|(name, discriminant, _)| {
@@ -48,7 +48,7 @@ pub fn gen_struct<W: fmt::Write>(
 
             writeln!(
                 out,
-                "const {}_rust_to_js = {};",
+                "export const {}_rust_to_js = {};",
                 enm.name,
                 display::block(|mut f| {
                     enm.variants.iter().try_for_each(|(name, discriminant, _)| {
@@ -60,7 +60,7 @@ pub fn gen_struct<W: fmt::Write>(
         ast::CustomType::Struct(strct) => {
             writeln!(
                 out,
-                "export class {} {}",
+                "export default class {} {}",
                 strct.name,
                 display::block(|mut f| {
                     let underlying: ast::Ident = "underlying".into();
@@ -133,7 +133,7 @@ pub fn gen_struct<W: fmt::Write>(
             writeln!(out)?;
             writeln!(
                 out,
-                "export class {} {}",
+                "export default class {} {}",
                 opaque.name,
                 display::block(|mut f| {
                     writeln!(f, "#lifetimeEdges = [];")?;

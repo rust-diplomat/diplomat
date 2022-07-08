@@ -838,7 +838,7 @@ mod tests {
                 }
 
                 impl<'u, 'v> PointTranspose<'u, 'v> {
-                    pub fn new(u: &'u Opaque, v: &'v Opaque) -> Self {
+                    pub fn new(u: &'u Scalar, v: &'v Scalar) -> Self {
                         unimplemented!()
                     }
 
