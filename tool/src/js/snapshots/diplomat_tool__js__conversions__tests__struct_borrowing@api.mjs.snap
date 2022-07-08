@@ -10,14 +10,14 @@ const diplomat_alloc_destroy_registry = new FinalizationRegistry(obj => {
 
 export class Point {
   constructor(underlying, edges_x, edges_y) {
-    this.x = new Scalar(diplomatRuntime.ptrRead(wasm, underlying), [...edges_x], false);
-    this.y = new Scalar(diplomatRuntime.ptrRead(wasm, underlying + 4), [...edges_y], false);
+    this.x = new Scalar(diplomatRuntime.ptrRead(wasm, underlying), false, [...edges_x]);
+    this.y = new Scalar(diplomatRuntime.ptrRead(wasm, underlying + 4), false, [...edges_y]);
   }
 
   get_x() {
     const field_x_this = this["x"];
     const field_y_this = this["y"];
-    return new Scalar(wasm.Point_get_x(field_x_this.underlying, field_y_this.underlying), [field_x_this], false);
+    return new Scalar(wasm.Point_get_x(field_x_this.underlying, field_y_this.underlying), false, [field_x_this]);
   }
 }
 
@@ -75,9 +75,10 @@ const Scalar_box_destroy_registry = new FinalizationRegistry(underlying => {
 });
 
 export class Scalar {
-  constructor(underlying, edges, owned) {
+  #lifetimeEdges = [];
+  constructor(underlying, owned, edges) {
     this.underlying = underlying;
-    this.__edges_lifetime_guard = edges;
+    this.#lifetimeEdges.push(...edges);
     if (owned) {
       Scalar_box_destroy_registry.register(this, underlying);
     }

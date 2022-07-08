@@ -136,12 +136,13 @@ pub fn gen_struct<W: fmt::Write>(
                 "export class {} {}",
                 opaque.name,
                 display::block(|mut f| {
+                    writeln!(f, "#lifetimeEdges = [];")?;
                     writeln!(
                         f,
-                        "constructor(underlying, edges, owned) {}",
+                        "constructor(underlying, owned, edges) {}",
                         display::block(|mut f| {
                             writeln!(f, "this.underlying = underlying;")?;
-                            writeln!(f, "this.__edges_lifetime_guard = edges;")?;
+                            writeln!(f, "this.#lifetimeEdges.push(...edges);")?;
                             writeln!(
                                 f,
                                 "if (owned) {}",
