@@ -330,6 +330,72 @@ public partial class One: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>One</c> allocated on Rust side.
+    /// </returns>
+    public static One ImplicitBounds(One explicitHold, One implicitHold, One nohold)
+    {
+        unsafe
+        {
+            Raw.One* explicitHoldRaw;
+            explicitHoldRaw = explicitHold.AsFFI();
+            if (explicitHoldRaw == null)
+            {
+                throw new ObjectDisposedException("One");
+            }
+            Raw.One* implicitHoldRaw;
+            implicitHoldRaw = implicitHold.AsFFI();
+            if (implicitHoldRaw == null)
+            {
+                throw new ObjectDisposedException("One");
+            }
+            Raw.One* noholdRaw;
+            noholdRaw = nohold.AsFFI();
+            if (noholdRaw == null)
+            {
+                throw new ObjectDisposedException("One");
+            }
+            Raw.One* retVal = Raw.One.ImplicitBounds(explicitHoldRaw, implicitHoldRaw, noholdRaw);
+            return new One(retVal);
+        }
+    }
+
+    /// <returns>
+    /// A <c>One</c> allocated on Rust side.
+    /// </returns>
+    public static One ImplicitBoundsDeep(One explicit, One implicit1, One implicit2, One nohold)
+    {
+        unsafe
+        {
+            Raw.One* explicitRaw;
+            explicitRaw = explicit.AsFFI();
+            if (explicitRaw == null)
+            {
+                throw new ObjectDisposedException("One");
+            }
+            Raw.One* implicit1Raw;
+            implicit1Raw = implicit1.AsFFI();
+            if (implicit1Raw == null)
+            {
+                throw new ObjectDisposedException("One");
+            }
+            Raw.One* implicit2Raw;
+            implicit2Raw = implicit2.AsFFI();
+            if (implicit2Raw == null)
+            {
+                throw new ObjectDisposedException("One");
+            }
+            Raw.One* noholdRaw;
+            noholdRaw = nohold.AsFFI();
+            if (noholdRaw == null)
+            {
+                throw new ObjectDisposedException("One");
+            }
+            Raw.One* retVal = Raw.One.ImplicitBoundsDeep(explicitRaw, implicit1Raw, implicit2Raw, noholdRaw);
+            return new One(retVal);
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

@@ -73,6 +73,14 @@ impl Method {
             syn::ReturnType::Default => None,
         };
 
+        let lifetime_env = LifetimeEnv::from_method_item(
+            m,
+            impl_generics,
+            self_param.as_ref(),
+            &all_params[..],
+            return_ty.as_ref(),
+        );
+
         Method {
             name: Ident::from(method_ident),
             docs: Docs::from_attrs(&m.attrs),
@@ -80,7 +88,7 @@ impl Method {
             self_param,
             params: all_params,
             return_type: return_ty,
-            lifetime_env: LifetimeEnv::from_method_item(m, impl_generics),
+            lifetime_env,
         }
     }
 
@@ -424,7 +432,7 @@ mod tests {
 
         assert_borrowed_params! { [a, b, c, d] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
-            fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b, 'x, 'y>(a: &'x One<'a>, b: &'b One<'x>, c: &Two<'x, 'c>, d: &'x Two<'d, 'y>, nohold: &'x Two<'x, 'y>) -> Box<Foo<'a>> {
+            fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b, 'x, 'y>(a: &'x One<'a>, b: &'b One<'a>, c: &Two<'x, 'c>, d: &'x Two<'d, 'y>, nohold: &'x Two<'x, 'y>) -> Box<Foo<'a>> {
                 unimplemented!()
             }
         }

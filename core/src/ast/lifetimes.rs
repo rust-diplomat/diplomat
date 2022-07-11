@@ -3,7 +3,7 @@ use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use super::Ident;
+use super::{Docs, Ident, Param, SelfParam, TypeName};
 
 /// A named lifetime, e.g. `'a`.
 ///
@@ -90,11 +90,16 @@ impl LifetimeEnv {
         self.nodes.iter().map(|node| &node.lifetime)
     }
 
-    /// Constructs a new [`LifetimeEnv`] from a [`syn::ImplItemMethod`] and optional
-    /// generic lifetimes from the `impl` block.
+    /// Returns a [`LifetimeEnv`] for a method, accounting for lifetimes and bounds
+    /// defined in both the impl block and the method, as well as implicit lifetime
+    /// bounds in the optional `self` param, other param, and optional return type.
+    /// For example, the type `&'a Foo<'b>` implies `'b: 'a`.
     pub fn from_method_item(
         method: &syn::ImplItemMethod,
         impl_generics: Option<&syn::Generics>,
+        self_param: Option<&SelfParam>,
+        params: &[Param],
+        return_type: Option<&TypeName>,
     ) -> Self {
         let mut this = LifetimeEnv::new();
         // The impl generics _must_ be loaded into the env first, since the method
@@ -104,7 +109,77 @@ impl LifetimeEnv {
             this.extend_generics(generics);
         }
         this.extend_generics(&method.sig.generics);
+
+        if let Some(self_param) = self_param {
+            this.extend_implicit_lifetime_bounds(&self_param.to_typename(), None);
+        }
+        for param in params {
+            this.extend_implicit_lifetime_bounds(&param.ty, None);
+        }
+        if let Some(return_type) = return_type {
+            this.extend_implicit_lifetime_bounds(return_type, None);
+        }
+
         this
+    }
+
+    /// Returns a [`LifetimeEnv`] for a struct, accounding for lifetimes and bounds
+    /// defined in the struct generics, as well as implicit lifetime bounds in
+    /// the struct's fields. For example, the field `&'a Foo<'b>` implies `'b: 'a`.
+    pub fn from_struct_item(strct: &syn::ItemStruct, fields: &[(Ident, TypeName, Docs)]) -> Self {
+        let mut this = LifetimeEnv::new();
+        this.extend_generics(&strct.generics);
+        for (_, typ, _) in fields {
+            this.extend_implicit_lifetime_bounds(typ, None);
+        }
+        this
+    }
+
+    /// Traverse a type, adding any implicit lifetime bounds that arise from
+    /// having a reference to an opaque containing a lifetime.
+    /// For example, the type `&'a Foo<'b>` implies `'b: 'a`.
+    fn extend_implicit_lifetime_bounds(
+        &mut self,
+        typ: &TypeName,
+        behind_ref: Option<&NamedLifetime>,
+    ) {
+        match typ {
+            TypeName::Named(path_type) => {
+                if let Some(borrow_lifetime) = behind_ref {
+                    let explicit_longer_than_borrow =
+                        LifetimeTransitivity::longer_than(self, borrow_lifetime);
+                    let mut implicit_longer_than_borrow = vec![];
+
+                    for path_lifetime in path_type.lifetimes.iter() {
+                        if let Lifetime::Named(path_lifetime) = path_lifetime {
+                            if !explicit_longer_than_borrow.contains(&path_lifetime) {
+                                implicit_longer_than_borrow.push(path_lifetime);
+                            }
+                        }
+                    }
+
+                    self.extend_bounds(
+                        implicit_longer_than_borrow
+                            .into_iter()
+                            .map(|path_lifetime| (path_lifetime, Some(borrow_lifetime))),
+                    );
+                }
+            }
+            TypeName::Reference(lifetime, _, typ) => {
+                let behind_ref = if let Lifetime::Named(named) = lifetime {
+                    Some(named)
+                } else {
+                    None
+                };
+                self.extend_implicit_lifetime_bounds(typ, behind_ref);
+            }
+            TypeName::Option(typ) => self.extend_implicit_lifetime_bounds(typ, None),
+            TypeName::Result(ok, err) => {
+                self.extend_implicit_lifetime_bounds(ok, None);
+                self.extend_implicit_lifetime_bounds(err, None);
+            }
+            _ => {}
+        }
     }
 
     /// Add the lifetimes from generic parameters and where bounds.
@@ -220,14 +295,6 @@ impl LifetimeEnv {
 impl fmt::Display for LifetimeEnv {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.to_token_stream().fmt(f)
-    }
-}
-
-impl From<&syn::Generics> for LifetimeEnv {
-    fn from(generics: &syn::Generics) -> Self {
-        let mut this = LifetimeEnv::new();
-        this.extend_generics(generics);
-        this
     }
 }
 
@@ -423,6 +490,20 @@ impl<'env> LifetimeTransitivity<'env> {
     /// Returns a new [`LifetimeTransitivity`] that finds all shorter lifetimes.
     pub fn shorter(env: &'env LifetimeEnv) -> Self {
         Self::new(env, LongerOrShorter::Shorter)
+    }
+
+    /// Returns all the lifetimes longer than a provided `NamedLifetime`.
+    pub fn longer_than(env: &'env LifetimeEnv, named: &NamedLifetime) -> Vec<&'env NamedLifetime> {
+        let mut this = Self::new(env, LongerOrShorter::Longer);
+        this.visit(named);
+        this.finish()
+    }
+
+    /// Returns all the lifetimes shorter than the provided `NamedLifetime`.
+    pub fn shorter_than(env: &'env LifetimeEnv, named: &NamedLifetime) -> Vec<&'env NamedLifetime> {
+        let mut this = Self::new(env, LongerOrShorter::Shorter);
+        this.visit(named);
+        this.finish()
     }
 
     /// Returns a new [`LifetimeTransitivity`].

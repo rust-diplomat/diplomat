@@ -51,4 +51,12 @@
 
         Lifetimes: ``a``, ``b``, ``c``, ``d`` must live at least as long as the output.
 
+    .. cpp:function:: static One implicit_bounds(const One& explicit_hold, const One& implicit_hold, const One& nohold)
+
+        Lifetimes: ``explicit_hold``, ``implicit_hold`` must live at least as long as the output.
+
+    .. cpp:function:: static One implicit_bounds_deep(const One& explicit, const One& implicit_1, const One& implicit_2, const One& nohold)
+
+        Lifetimes: ``explicit``, ``implicit_1``, ``implicit_2`` must live at least as long as the output.
+
 .. cpp:class:: Two

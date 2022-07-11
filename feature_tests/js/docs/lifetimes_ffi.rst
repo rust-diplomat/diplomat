@@ -29,4 +29,8 @@
 
     .. js:staticfunction:: diamond_and_nested_types(a, b, c, d, nohold)
 
+    .. js:staticfunction:: implicit_bounds(explicit_hold, implicit_hold, nohold)
+
+    .. js:staticfunction:: implicit_bounds_deep(explicit, implicit_1, implicit_2, nohold)
+
 .. js:class:: Two
