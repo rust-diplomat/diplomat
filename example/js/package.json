@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Diplomat WASM example",
   "main": "wasm.mjs",
+  "type": "module",
   "directories": {
     "doc": "docs",
     "test": "test"

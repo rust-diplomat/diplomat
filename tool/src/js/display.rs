@@ -142,3 +142,26 @@ where
         write!(f, "(() => {})()", block(&self.0))
     }
 }
+
+pub fn ts_doc<F>(f: F) -> TsDoc<F>
+where
+    F: Fn(Indented<Formatter>) -> Result,
+{
+    TsDoc(f)
+}
+
+/// An `fmt::Display` type returned by [`ts_doc`].
+pub struct TsDoc<F>(F)
+where
+    F: Fn(Indented<Formatter>) -> Result;
+
+impl<F> Display for TsDoc<F>
+where
+    F: Fn(Indented<Formatter>) -> Result,
+{
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        writeln!(f, "/**")?;
+        self.0(indented(f).with_str(" * "))?;
+        writeln!(f, " */")
+    }
+}

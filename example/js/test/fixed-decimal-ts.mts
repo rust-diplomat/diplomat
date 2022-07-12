@@ -31,3 +31,4 @@ test("format a fixed decimal", t => {
     }
     t.is(fdf.fdf.format_write(my_decimal), "১২.৩");
 });
+

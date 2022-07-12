@@ -60,7 +60,7 @@ pub fn gen_struct<W: fmt::Write>(
         ast::CustomType::Struct(strct) => {
             writeln!(
                 out,
-                "export default class {} {}",
+                "export class {} {}",
                 strct.name,
                 display::block(|mut f| {
                     let underlying: ast::Ident = "underlying".into();
@@ -133,7 +133,7 @@ pub fn gen_struct<W: fmt::Write>(
             writeln!(out)?;
             writeln!(
                 out,
-                "export default class {} {}",
+                "export class {} {}",
                 opaque.name,
                 display::block(|mut f| {
                     writeln!(f, "#lifetimeEdges = [];")?;
@@ -359,6 +359,206 @@ fn gen_method<W: fmt::Write>(
                 }
 
                 Ok(())
+            }
+        })
+    )
+}
+
+/// Generate a struct's d.ts file.
+pub fn gen_struct_declaration<W: fmt::Write>(
+    out: &mut W,
+    custom_type: &ast::CustomType,
+    in_path: &ast::Path,
+    env: &Env,
+    docs_url_gen: Option<&ast::DocsUrlGenerator>,
+) -> fmt::Result {
+    if let Some(docs_url_gen) = docs_url_gen {
+        write!(
+            out,
+            "{}",
+            display::ts_doc(|mut f| {
+                let docs: String = custom_type.docs().to_markdown(docs_url_gen);
+                for line in docs.lines() {
+                    writeln!(f, "{line}")?;
+                }
+                Ok(())
+            })
+        )?;
+    }
+    if let ast::CustomType::Enum(enm) = custom_type {
+        write!(out, "export type {} = ", enm.name)?;
+        if let Some((first, rest)) = enm.variants.split_first() {
+            write!(out, "\"{}\"", first.0)?;
+            for item in rest {
+                write!(out, " | \"{}\"", item.0)?;
+            }
+        } else {
+            write!(out, "never")?;
+        }
+        writeln!(out, ";")?;
+    } else {
+        writeln!(
+            out,
+            "export class {name} {body}",
+            name = custom_type.name(),
+            body = display::block(|mut f| {
+                if let ast::CustomType::Struct(strct) = custom_type {
+                    let mut ty = String::new();
+                    for field in strct.fields.iter() {
+                        ty.clear();
+                        let optional = gen_ts_type(&mut ty, &field.1, in_path, env)?;
+                        if optional {
+                            writeln!(f, "{}?: {};", field.0, ty)?;
+                        } else {
+                            writeln!(f, "{}: {};", field.0, ty)?;
+                        }
+                    }
+                }
+
+                for method in custom_type.methods() {
+                    writeln!(f)?;
+                    gen_method_declaration(method, in_path, env, docs_url_gen, &mut f)?;
+                }
+                Ok(())
+            })
+        )?;
+    }
+    Ok(())
+}
+
+/// Generates the name of a Diplomat type as a TypeScript type.
+/// If no fmt errors occurred, returns whether or not the type is optional.
+pub fn gen_ts_type<W: fmt::Write>(
+    out: &mut W,
+    typ: &ast::TypeName,
+    in_path: &ast::Path,
+    env: &Env,
+) -> Result<bool, fmt::Error> {
+    match typ {
+        ast::TypeName::Primitive(prim) => match prim {
+            ast::PrimitiveType::bool => out.write_str("boolean")?,
+            ast::PrimitiveType::char => out.write_str("string")?,
+            ast::PrimitiveType::i64 | ast::PrimitiveType::u64 => out.write_str("bigint")?,
+            ast::PrimitiveType::i128 => panic!("i128 is unsupported"),
+            ast::PrimitiveType::u128 => panic!("u128 is unsupported"),
+            _ => out.write_str("number")?,
+        },
+        ast::TypeName::Named(path_type) => {
+            let name = path_type.resolve(in_path, env).name();
+            out.write_str(name.as_str())?;
+        }
+        ast::TypeName::Reference(.., typ) | ast::TypeName::Box(typ) => {
+            return gen_ts_type(out, typ, in_path, env)
+        }
+        ast::TypeName::Option(typ) => return gen_ts_type(out, typ, in_path, env).map(|_| true),
+        ast::TypeName::Result(ok, _err) => {
+            let opt = gen_ts_type(out, ok, in_path, env)?;
+            write!(out, " | never")?;
+            return Ok(opt);
+        }
+        ast::TypeName::Writeable => unreachable!(),
+        ast::TypeName::StrReference(_) => out.write_str("string")?,
+        ast::TypeName::PrimitiveSlice(.., prim) => match prim {
+            ast::PrimitiveType::i8 => write!(out, "Int8Array")?,
+            ast::PrimitiveType::u8 => write!(out, "Uint8Array")?,
+            ast::PrimitiveType::i16 => write!(out, "Int16Array")?,
+            ast::PrimitiveType::u16 => write!(out, "Uint16Array")?,
+            ast::PrimitiveType::i32 => write!(out, "Int32Array")?,
+            ast::PrimitiveType::u32 => write!(out, "Uint32Array")?,
+            ast::PrimitiveType::i64 => write!(out, "BigInt64Array")?,
+            ast::PrimitiveType::u64 => write!(out, "BigUint64Array")?,
+            ast::PrimitiveType::i128 => panic!("i128 is unsupported"),
+            ast::PrimitiveType::u128 => panic!("u128 is unsupported"),
+            ast::PrimitiveType::isize => write!(out, "Int32Array")?,
+            ast::PrimitiveType::usize => write!(out, "Uint32Array")?,
+            ast::PrimitiveType::f32 => write!(out, "Float32Array")?,
+            ast::PrimitiveType::f64 => write!(out, "Float64Array")?,
+            ast::PrimitiveType::bool => write!(out, "Uint8Array")?,
+            ast::PrimitiveType::char => write!(out, "Uint32Array")?,
+        },
+        ast::TypeName::Unit => out.write_str("void")?,
+    }
+    Ok(false)
+}
+
+fn gen_method_declaration<W: fmt::Write>(
+    method: &ast::Method,
+    in_path: &ast::Path,
+    env: &Env,
+    docs_url_gen: Option<&ast::DocsUrlGenerator>,
+    out: &mut W,
+) -> fmt::Result {
+    if let Some(docs_url_gen) = docs_url_gen {
+        write!(
+            out,
+            "{}",
+            display::ts_doc(|mut f| {
+                let docs: String = method.docs.to_markdown(docs_url_gen);
+                for line in docs.lines() {
+                    writeln!(f, "{line}")?;
+                }
+                Ok(())
+            })
+        )?;
+    }
+    if method.self_param.is_none() {
+        out.write_str("static ")?;
+    }
+    let is_writeable = method.is_writeable_out();
+    writeln!(
+        out,
+        "{name}({args}): {return_type};",
+        name = method.name,
+        args = display::expr(|f| {
+            let params = if is_writeable {
+                method.params.split_last().unwrap().1
+            } else {
+                &method.params[..]
+            };
+            if let Some((first, rest)) = params.split_first() {
+                let mut ty_name = String::new();
+                let optional = gen_ts_type(&mut ty_name, &first.ty, in_path, env)?;
+                if optional {
+                    write!(f, "{}?: {}", first.name, ty_name)?;
+                } else {
+                    write!(f, "{}: {}", first.name, ty_name)?;
+                }
+                for item in rest {
+                    ty_name.clear();
+                    let optional = gen_ts_type(&mut ty_name, &item.ty, in_path, env)?;
+                    if optional {
+                        write!(f, ", {}?: {}", item.name, ty_name)?;
+                    } else {
+                        write!(f, ", {}: {}", item.name, ty_name)?;
+                    }
+                }
+            }
+            Ok(())
+        }),
+        return_type = display::expr(|f| {
+            if is_writeable {
+                f.write_str("string")?;
+                if method.return_type.is_some() {
+                    // sanity check that the only return type is a result
+                    assert!(
+                        matches!(
+                            method.return_type,
+                            Some(ast::TypeName::Result(..) | ast::TypeName::Unit),
+                        ),
+                        "found {:?}",
+                        method.return_type
+                    );
+                    f.write_str(" | never")?;
+                }
+                Ok(())
+            } else if let Some(ref return_type) = method.return_type {
+                let optional = gen_ts_type(f, return_type, in_path, env)?;
+                if optional {
+                    f.write_str(" | undefined")?;
+                }
+                Ok(())
+            } else {
+                f.write_str("void")
             }
         })
     )
