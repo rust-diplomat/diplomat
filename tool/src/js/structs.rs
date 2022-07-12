@@ -365,7 +365,7 @@ fn gen_method<W: fmt::Write>(
 }
 
 /// Generate a struct's d.ts file.
-pub fn gen_struct_declaration<W: fmt::Write>(
+pub fn gen_ts_struct_declaration<W: fmt::Write>(
     out: &mut W,
     custom_type: &ast::CustomType,
     in_path: &ast::Path,
@@ -417,7 +417,7 @@ pub fn gen_struct_declaration<W: fmt::Write>(
 
                 for method in custom_type.methods() {
                     writeln!(f)?;
-                    gen_method_declaration(method, in_path, env, docs_url_gen, &mut f)?;
+                    gen_ts_method_declaration(method, in_path, env, docs_url_gen, &mut f)?;
                 }
                 Ok(())
             })
@@ -481,7 +481,7 @@ pub fn gen_ts_type<W: fmt::Write>(
     Ok(false)
 }
 
-fn gen_method_declaration<W: fmt::Write>(
+fn gen_ts_method_declaration<W: fmt::Write>(
     method: &ast::Method,
     in_path: &ast::Path,
     env: &Env,

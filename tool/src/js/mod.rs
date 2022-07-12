@@ -87,7 +87,7 @@ pub fn gen_bindings(
         }
         writeln!(out)?;
 
-        gen_struct_declaration(out, custom_type, &in_path, env, docs_url_gen)?;
+        gen_ts_struct_declaration(out, custom_type, &in_path, env, docs_url_gen)?;
     }
 
     Ok(())
