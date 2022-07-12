@@ -1,0 +1,18 @@
+---
+source: tool/src/js/conversions.rs
+expression: out_texts.get(out).unwrap()
+---
+import { Point } from "./Point";
+import { Scalar } from "./Scalar";
+
+export class PointTranspose {
+  point: Point;
+  transpose: Point;
+
+  static new(u: Scalar, v: Scalar): PointTranspose;
+
+  transpose(): PointTranspose;
+
+  point(): Point;
+}
+

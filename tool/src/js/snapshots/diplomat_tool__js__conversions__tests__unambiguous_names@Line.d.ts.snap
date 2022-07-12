@@ -1,0 +1,13 @@
+---
+source: tool/src/js/conversions.rs
+expression: out_texts.get(out).unwrap()
+---
+import { Point } from "./Point";
+
+export class Line {
+  start: Point;
+  end: Point;
+
+  do_stuff(): void;
+}
+
