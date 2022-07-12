@@ -8,6 +8,7 @@ use super::conversions::{
     Underlying, UnderlyingIntoJs, UnpackedBinding,
 };
 use super::display;
+use crate::docs_util::{FromMarkdown, TsDoc};
 use crate::layout;
 
 /// Generates a JS class declaration
@@ -377,11 +378,12 @@ pub fn gen_ts_struct_declaration<W: fmt::Write>(
             out,
             "{}",
             display::ts_doc(|mut f| {
-                let docs: String = custom_type.docs().to_markdown(docs_url_gen);
-                for line in docs.lines() {
-                    writeln!(f, "{line}")?;
-                }
-                Ok(())
+                TsDoc::from_markdown(
+                    &custom_type.docs().to_markdown(docs_url_gen),
+                    in_path,
+                    env,
+                    &mut f,
+                )
             })
         )?;
     }
@@ -493,11 +495,7 @@ fn gen_ts_method_declaration<W: fmt::Write>(
             out,
             "{}",
             display::ts_doc(|mut f| {
-                let docs: String = method.docs.to_markdown(docs_url_gen);
-                for line in docs.lines() {
-                    writeln!(f, "{line}")?;
-                }
-                Ok(())
+                TsDoc::from_markdown(&method.docs.to_markdown(docs_url_gen), in_path, env, &mut f)
             })
         )?;
     }

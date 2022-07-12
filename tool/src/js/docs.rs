@@ -5,7 +5,7 @@ use std::{collections::HashMap, fmt};
 use diplomat_core::ast;
 use indenter::indented;
 
-use crate::docs_util::markdown_to_rst;
+use crate::docs_util::{FromMarkdown, JsRst};
 
 /// Generate RST-formatted Sphinx docs for all FFI types. Currently assumes a JS target.
 pub fn gen_docs(
@@ -75,14 +75,11 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
 
     let mut class_indented = indented(out).with_str("    ");
     if !typ.docs().is_empty() {
-        markdown_to_rst(
-            &mut class_indented,
+        JsRst::from_markdown(
             &typ.docs().to_markdown(docs_url_gen),
-            &|shortcut_path, to| {
-                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
-                write!(to, ":js:class:`{}`", resolved.name())?;
-                Ok(())
-            },
+            in_path,
+            env,
+            &mut class_indented,
         )?;
         writeln!(class_indented)?;
     }
@@ -135,14 +132,11 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     if !method.docs.is_empty() {
         let mut method_indented = indented(out).with_str("    ");
-        markdown_to_rst(
-            &mut method_indented,
+        JsRst::from_markdown(
             &method.docs.to_markdown(docs_url_gen),
-            &|shortcut_path, to| {
-                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
-                write!(to, ":js:class:`{}`", resolved.name())?;
-                Ok(())
-            },
+            in_path,
+            env,
+            &mut method_indented,
         )?;
         writeln!(method_indented)?;
     }
@@ -174,14 +168,11 @@ pub fn gen_field_docs<W: fmt::Write>(
 
     if !field.2.is_empty() {
         let mut field_indented = indented(out).with_str("    ");
-        markdown_to_rst(
-            &mut field_indented,
+        JsRst::from_markdown(
             &field.2.to_markdown(docs_url_gen),
-            &|shortcut_path, to| {
-                let resolved = ast::PathType::new(shortcut_path.clone()).resolve(in_path, env);
-                write!(to, ":js:class:`{}`", resolved.name())?;
-                Ok(())
-            },
+            in_path,
+            env,
+            &mut field_indented,
         )?;
         writeln!(field_indented)?;
     }
