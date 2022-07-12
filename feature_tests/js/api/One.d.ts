@@ -39,4 +39,12 @@ export class One {
   /**
    */
   static diamond_and_nested_types(a: One, b: One, c: One, d: One, nohold: One): One;
+
+  /**
+   */
+  static implicit_bounds(explicit_hold: One, implicit_hold: One, nohold: One): One;
+
+  /**
+   */
+  static implicit_bounds_deep(explicit: One, implicit_1: One, implicit_2: One, nohold: One): One;
 }
