@@ -1,0 +1,12 @@
+---
+source: tool/src/js/structs.rs
+expression: out_texts.get(out).unwrap()
+---
+
+export class MyStruct {
+
+  static new_str(v: string): MyStruct;
+
+  set_str(new_str: string): void;
+}
+

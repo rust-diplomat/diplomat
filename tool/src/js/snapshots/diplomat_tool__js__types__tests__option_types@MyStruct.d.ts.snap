@@ -1,0 +1,10 @@
+---
+source: tool/src/js/types.rs
+expression: out_texts.get(out).unwrap()
+---
+import { MyOpaqueStruct } from "./MyOpaqueStruct";
+
+export class MyStruct {
+  a?: MyOpaqueStruct;
+}
+

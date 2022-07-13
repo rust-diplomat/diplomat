@@ -1,0 +1,14 @@
+---
+source: tool/src/js/structs.rs
+expression: out_texts.get(out).unwrap()
+---
+
+export class MyStruct {
+
+  write(): string;
+
+  write_unit(): string | never;
+
+  write_result(): string | never;
+}
+

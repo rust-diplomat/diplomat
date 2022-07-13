@@ -6,7 +6,7 @@ macro_rules! test_file {
 
         let mut out_texts = std::collections::HashMap::new();
 
-        crate::js::gen_bindings(&env, &mut out_texts).unwrap();
+        crate::js::gen_bindings(&env, &mut out_texts, None).unwrap();
 
         let mut out_docs = std::collections::HashMap::new();
         crate::js::docs::gen_docs(&env, &mut out_docs, &Default::default()).unwrap();

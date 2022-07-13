@@ -1,10 +1,10 @@
 import test from 'ava';
 
-import ICU4XFixedDecimal from "../api/ICU4XFixedDecimal.mjs"
-import ICU4XLocale from "../api/ICU4XLocale.mjs"
-import ICU4XDataProvider from "../api/ICU4XDataProvider.mjs"
-import ICU4XFixedDecimalFormat from "../api/ICU4XFixedDecimalFormat.mjs"
-import ICU4XFixedDecimalFormatOptions from "../api/ICU4XFixedDecimalFormatOptions.mjs"
+import { ICU4XFixedDecimal } from "../api/ICU4XFixedDecimal.js"
+import { ICU4XLocale } from "../api/ICU4XLocale.js"
+import { ICU4XDataProvider } from "../api/ICU4XDataProvider.js"
+import { ICU4XFixedDecimalFormat } from "../api/ICU4XFixedDecimalFormat.js"
+import { ICU4XFixedDecimalFormatOptions } from "../api/ICU4XFixedDecimalFormatOptions.js"
 
 test("multiply a fixed decimal by 0.1", t => {
     const my_decimal = ICU4XFixedDecimal.new(123);
