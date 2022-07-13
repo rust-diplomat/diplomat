@@ -2,7 +2,6 @@ import test from 'ava';
 import { FFIError } from '../api/diplomat-runtime.js';
 import { ErrorEnum } from '../api/ErrorEnum.js';
 import { ErrorStruct } from '../api/ErrorStruct.js';
-
 import { ResultOpaque } from "../api/ResultOpaque.js"
 
 test("Verify result methods", t => {

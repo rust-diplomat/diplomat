@@ -1,7 +1,6 @@
 use diplomat_core::{ast, Env};
-use std::collections::HashSet;
-use std::fmt::Write;
-use std::{collections::HashMap, fmt};
+use std::collections::HashMap;
+use std::fmt::{self, Write};
 
 use crate::util;
 
@@ -15,6 +14,8 @@ pub mod types;
 
 pub mod structs;
 use structs::*;
+
+use self::conversions::Csv;
 
 pub mod conversions;
 
@@ -37,11 +38,7 @@ pub fn gen_bindings(
     all_types.sort_by_key(|t| t.1.name());
 
     for (in_path, custom_type) in all_types {
-        let mut imports: Vec<&ast::CustomType> = used_types(custom_type, false, &in_path, env)
-            .into_iter()
-            .collect();
-        // Sort so that the ordering of imports is consistent every time.
-        imports.sort_by_key(|custom| custom.name());
+        let imports = Imports::new(custom_type, &in_path, env);
 
         let out = outs
             .entry(format!("{}.js", custom_type.name()))
@@ -52,7 +49,7 @@ pub fn gen_bindings(
             out,
             "import * as diplomatRuntime from \"./diplomat-runtime.mjs\""
         )?;
-        for custom_type in imports.iter() {
+        for custom_type in imports.js_imports.iter() {
             if let ast::CustomType::Enum(enm) = custom_type {
                 writeln!(
                     out,
@@ -73,129 +70,170 @@ pub fn gen_bindings(
 
         // == Declaration file ==
 
-        let mut imports: Vec<&ast::CustomType> = used_types(custom_type, true, &in_path, env)
-            .into_iter()
-            .collect();
-        // Sort so that the ordering of imports is consistent every time.
-        imports.sort_by_key(|custom| custom.name());
-
         let out = outs
             .entry(format!("{}.d.ts", custom_type.name()))
             .or_default();
-        for custom_type in imports.iter() {
+        if !imports.ts_primitives.is_empty() {
+            writeln!(
+                out,
+                "import {{ {} }} from \"./diplomat-runtime\"",
+                Csv(imports.ts_primitives.iter().map(|prim| match prim {
+                    ast::PrimitiveType::i8 => "i8",
+                    ast::PrimitiveType::u8 => "u8",
+                    ast::PrimitiveType::i16 => "i16",
+                    ast::PrimitiveType::u16 => "u16",
+                    ast::PrimitiveType::i32 => "i32",
+                    ast::PrimitiveType::u32 => "u32",
+                    ast::PrimitiveType::i64 => "i64",
+                    ast::PrimitiveType::u64 => "u64",
+                    ast::PrimitiveType::i128 => panic!("i128 is unsupported"),
+                    ast::PrimitiveType::u128 => panic!("u128 is unsupported"),
+                    ast::PrimitiveType::isize => "i32",
+                    ast::PrimitiveType::usize => "u32",
+                    ast::PrimitiveType::f32 => "f32",
+                    ast::PrimitiveType::f64 => "f64",
+                    ast::PrimitiveType::char => "char",
+                    ast::PrimitiveType::bool => unreachable!("bools aren't added because TypeScript has `boolean`"),
+                }))
+            )?;
+        }
+        if imports.ts_ffierror {
+            writeln!(out, "import {{ FFIError }} from \"./diplomat-runtime\"")?;
+        }
+        for custom_type in imports.ts_imports.iter() {
             writeln!(out, "import {{ {0} }} from \"./{0}\";", custom_type.name())?;
         }
         writeln!(out)?;
 
-        gen_ts_struct_declaration(out, custom_type, &in_path, env, docs_url_gen)?;
+        gen_ts_custom_type_declaration(out, custom_type, &in_path, env, docs_url_gen)?;
     }
 
     Ok(())
 }
 
-#[derive(Copy, Clone, PartialEq)]
-enum UsedTypesCfg {
-    DeclarationFile,
-    ImplAll,
-    ImplEnumOnly,
+/// A struct for detecting all the the imports required for .js and d.ts files.
+#[derive(Default)]
+struct Imports<'env> {
+    /// Type that show up in a type's fields, or as a parameter or return value.
+    /// Nested enums are also included since enums are converted at the boundary.
+    js_imports: Vec<&'env ast::CustomType>,
+
+    /// Types that show up in a type's fields, or as a parameter or return value
+    ts_imports: Vec<&'env ast::CustomType>,
+
+    /// Numeric primitive types and `char`, for more specific aliases to TypeScript's
+    /// `number` and `string` types.
+    ts_primitives: Vec<ast::PrimitiveType>,
+
+    /// Whether or not a method returns a `Result`, which translates to potentially
+    /// throwing an error in TypeScript/JavaScript.
+    ts_ffierror: bool,
 }
 
-/// Returns all the types that `custom_type` needs in scope.
+/// The context that a type appears in relation to a struct/opaque/enum.
 ///
-/// We define types as "in scope" if they appear in the arguments or return type
-/// of any method of `custom_type`, or if `custom_type` is a struct and the type
-/// appears in one of its fields.
-///
-/// Non-opaque structs construct their fields within their constructor, meaning
-/// we don't have to eagerly import every type recursively. However, we do have
-/// to recursively import all enum types. This is because we fully unpack structs
-/// at the boundary and have to convert all enums, including those unpacked from
-/// a struct, at the boundary as well.
-fn used_types<'env>(
-    custom_type: &'env ast::CustomType,
-    is_declaration: bool,
-    in_path: &ast::Path,
-    env: &'env Env,
-) -> HashSet<&'env ast::CustomType> {
-    let mut set = HashSet::new();
-    let cfg = if is_declaration {
-        UsedTypesCfg::DeclarationFile
-    } else {
-        UsedTypesCfg::ImplAll
-    };
-
-    if let ast::CustomType::Struct(strct) = custom_type {
-        for (_, typ, _) in strct.fields.iter() {
-            used_types_inner(typ, &mut set, in_path, env, cfg);
-        }
-    }
-
-    for method in custom_type.methods() {
-        if is_declaration {
-            for param in method.params.iter() {
-                used_types_inner(&param.ty, &mut set, in_path, env, cfg);
-            }
-        } else {
-            // We only want the enums because we have to convert those
-            for param in method.params.iter() {
-                used_types_inner(
-                    &param.ty,
-                    &mut set,
-                    in_path,
-                    env,
-                    UsedTypesCfg::ImplEnumOnly,
-                );
-            }
-        }
-
-        if let Some(ref return_type) = method.return_type {
-            used_types_inner(return_type, &mut set, in_path, env, cfg);
-        }
-    }
-
-    set.remove(custom_type);
-    set
+/// When determining what types to import via the [`Imports`] type, JavaScript
+/// and TypeScript care about different things. For example, JavaScript has to
+/// construct struct fields in the constructor (if the type is a struct),
+/// convert enums at the boundary in methods, and construct a return type, so it
+/// has to import those types. In TypeScript's `.d.ts` files, we want to import
+/// struct fields (if the type is a struct), parameter types, and return types
+/// that are of the `Ok` variant, but _not_ of the `Err` variant (which gets
+/// documented in TSDoc instead of the type signature).
+#[derive(Copy, Clone)]
+enum TypePosition {
+    Return,
+    Field,
+    Param,
+    Inner,
 }
 
-/// Traverse a type tree, adding all non-nested `TypeNamed::Named` types,
-/// as well as all nested enums.
-///
-/// See [`used_types`] for more details.
-fn used_types_inner<'env>(
-    typ: &'env ast::TypeName,
-    set: &mut HashSet<&'env ast::CustomType>,
-    in_path: &ast::Path,
-    env: &'env Env,
-    cfg: UsedTypesCfg,
-) {
-    match typ {
-        ast::TypeName::Named(path_type) => {
-            let custom = path_type.resolve(in_path, env);
-            if let ast::CustomType::Enum(_) = custom {
-                set.insert(custom);
-            } else if cfg != UsedTypesCfg::ImplEnumOnly {
-                set.insert(custom);
+impl<'env> Imports<'env> {
+    fn new(custom_type: &'env ast::CustomType, in_path: &ast::Path, env: &'env Env) -> Self {
+        let mut this = Imports::default();
+
+        if let ast::CustomType::Struct(strct) = custom_type {
+            for (_, typ, _) in strct.fields.iter() {
+                this.collect_usages(typ, in_path, env, TypePosition::Field);
+            }
+        }
+
+        for method in custom_type.methods() {
+            for param in method.params.iter() {
+                this.collect_usages(&param.ty, in_path, env, TypePosition::Param);
             }
 
-            if cfg != UsedTypesCfg::DeclarationFile {
-                // Always recurse deeper (if not decl file),
-                // there could be more nested enums.
-                if let ast::CustomType::Struct(strct) = custom {
-                    for (_, typ, _) in strct.fields.iter() {
-                        used_types_inner(typ, set, in_path, env, UsedTypesCfg::ImplEnumOnly)
+            if let Some(ref return_type) = method.return_type {
+                this.collect_usages(return_type, in_path, env, TypePosition::Return);
+            }
+        }
+
+        this.js_imports.retain(|t| *t != custom_type);
+        this.js_imports.sort_unstable_by_key(|t| t.name());
+        this.js_imports.dedup_by_key(|t| t.name());
+
+        this.ts_imports.retain(|t| *t != custom_type);
+        this.ts_imports.sort_unstable_by_key(|t| t.name());
+        this.ts_imports.dedup_by_key(|t| t.name());
+
+        this.ts_primitives.sort_by_key(|p| *p as u8);
+        this.ts_primitives.dedup_by_key(|p| *p as u8);
+
+        this
+    }
+
+    fn collect_usages(
+        &mut self,
+        typ: &'env ast::TypeName,
+        in_path: &ast::Path,
+        env: &'env Env,
+        state: TypePosition,
+    ) {
+        match typ {
+            ast::TypeName::Named(path_type) => {
+                let custom = path_type.resolve(in_path, env);
+                // JS wants: return type, fields, _all_ enums.
+                // TS wants: return type, fields, params.
+                match state {
+                    TypePosition::Return | TypePosition::Field => {
+                        self.ts_imports.push(custom);
+                        self.js_imports.push(custom);
+                    }
+                    TypePosition::Param => {
+                        self.ts_imports.push(custom);
+                    }
+                    TypePosition::Inner => {}
+                }
+
+                match custom {
+                    ast::CustomType::Opaque(_) => {}
+                    ast::CustomType::Enum(_) => {
+                        self.js_imports.push(custom);
+                    }
+                    ast::CustomType::Struct(strct) => {
+                        for (_, typ, _) in strct.fields.iter() {
+                            self.collect_usages(typ, in_path, env, TypePosition::Inner)
+                        }
                     }
                 }
             }
+            ast::TypeName::Reference(.., typ)
+            | ast::TypeName::Box(typ)
+            | ast::TypeName::Option(typ) => {
+                self.collect_usages(typ, in_path, env, state);
+            }
+            ast::TypeName::Result(ok, err) => {
+                self.collect_usages(ok, in_path, env, state);
+                self.collect_usages(err, in_path, env, state);
+                self.ts_ffierror = true;
+            }
+            ast::TypeName::Primitive(ast::PrimitiveType::bool) => {}
+            ast::TypeName::Primitive(prim) => {
+                if !matches!(state, TypePosition::Inner) {
+                    self.ts_primitives.push(*prim);
+                }
+            }
+            _ => {}
         }
-        ast::TypeName::Reference(.., typ)
-        | ast::TypeName::Box(typ)
-        | ast::TypeName::Option(typ) => {
-            used_types_inner(typ, set, in_path, env, cfg);
-        }
-        ast::TypeName::Result(ok, err) => {
-            used_types_inner(ok, set, in_path, env, cfg);
-            used_types_inner(err, set, in_path, env, cfg);
-        }
-        _ => {}
     }
 }
