@@ -473,9 +473,7 @@ pub fn gen_ts_type<W: fmt::Write>(
         ast::TypeName::Reference(.., typ) | ast::TypeName::Box(typ) => {
             return gen_ts_type(out, typ, in_path, env)
         }
-        ast::TypeName::Option(typ) => {
-            return gen_ts_type(out, typ, in_path, env).map(|_| true)
-        }
+        ast::TypeName::Option(typ) => return gen_ts_type(out, typ, in_path, env).map(|_| true),
         ast::TypeName::Result(ok, _err) => {
             let opt = gen_ts_type(out, ok, in_path, env)?;
             write!(out, " | never")?;
