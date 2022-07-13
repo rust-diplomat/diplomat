@@ -2,11 +2,12 @@
 source: tool/src/js/types.rs
 expression: out_texts.get(out).unwrap()
 ---
+import { u8 } from "./diplomat-runtime"
 import { MyOpaqueStruct } from "./MyOpaqueStruct";
 
 export class MyStruct {
   a: MyOpaqueStruct;
-  b: number;
+  b: u8;
 
   static new(foo: MyOpaqueStruct, bar: MyOpaqueStruct): MyStruct;
 }

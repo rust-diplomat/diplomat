@@ -2,10 +2,11 @@
 source: tool/src/js/structs.rs
 expression: out_texts.get(out).unwrap()
 ---
+import { u8, u16, u32 } from "./diplomat-runtime"
 
 export class NonOpaqueStruct {
-  a: number;
-  b: number;
-  c: number;
+  a: u16;
+  b: u8;
+  c: u32;
 }
 

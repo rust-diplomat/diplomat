@@ -1,7 +1,8 @@
+import { i32 } from "./diplomat-runtime"
 
 /**
  */
 export class ErrorStruct {
-  i: number;
-  j: number;
+  i: i32;
+  j: i32;
 }

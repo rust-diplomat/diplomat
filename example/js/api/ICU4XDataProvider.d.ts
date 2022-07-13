@@ -1,3 +1,4 @@
+import { FFIError } from "./diplomat-runtime"
 
 /**
 
@@ -16,6 +17,7 @@ export class ICU4XDataProvider {
   /**
 
    * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
+   * @throws {@link FFIError}<{}>
    */
-  static returns_result(): void | never;
+  static returns_result(): {} | never;
 }

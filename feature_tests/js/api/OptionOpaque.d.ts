@@ -1,3 +1,4 @@
+import { i32 } from "./diplomat-runtime"
 import { OptionStruct } from "./OptionStruct";
 
 /**
@@ -6,7 +7,7 @@ export class OptionOpaque {
 
   /**
    */
-  static new(i: number): OptionOpaque | undefined;
+  static new(i: i32): OptionOpaque | undefined;
 
   /**
    */
@@ -22,5 +23,5 @@ export class OptionOpaque {
 
   /**
    */
-  assert_integer(i: number): void;
+  assert_integer(i: i32): void;
 }
