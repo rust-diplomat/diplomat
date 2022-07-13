@@ -460,7 +460,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                     ReturnTypeForm::Scalar => display::iife(|mut f| {
                         writeln!(f, "const is_ok = {} == 1;", self.invocation.scalar())?;
                         writeln!(f, "if (!is_ok) {}", display::block(|mut f| {
-                            writeln!(f, "throw new diplomatRuntime.FFIError({{}});")
+                            writeln!(f, "throw new diplomatRuntime.FFIError(undefined);")
                         }))
                     })
                     .fmt(f),

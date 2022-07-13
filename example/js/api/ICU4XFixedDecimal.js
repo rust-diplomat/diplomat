@@ -32,7 +32,7 @@ export class ICU4XFixedDecimal {
       return (() => {
         const is_ok = wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable) == 1;
         if (!is_ok) {
-          throw new diplomatRuntime.FFIError({});
+          throw new diplomatRuntime.FFIError(undefined);
         }
       })();
     });

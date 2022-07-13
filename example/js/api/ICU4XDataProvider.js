@@ -23,7 +23,7 @@ export class ICU4XDataProvider {
     return (() => {
       const is_ok = wasm.ICU4XDataProvider_returns_result() == 1;
       if (!is_ok) {
-        throw new diplomatRuntime.FFIError({});
+        throw new diplomatRuntime.FFIError(undefined);
       }
     })();
   }

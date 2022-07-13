@@ -17,7 +17,7 @@ export class ICU4XDataProvider {
   /**
 
    * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
-   * @throws {@link FFIError}<{}>
+   * @throws {@link FFIError}<void>
    */
-  static returns_result(): {} | never;
+  static returns_result(): void | never;
 }

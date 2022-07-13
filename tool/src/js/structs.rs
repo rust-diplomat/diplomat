@@ -423,7 +423,7 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
                     let mut ty = String::new();
                     for field in strct.fields.iter() {
                         ty.clear();
-                        let optional = gen_ts_type(&mut ty, &field.1, false, in_path, env)?;
+                        let optional = gen_ts_type(&mut ty, &field.1, in_path, env)?;
                         if optional {
                             writeln!(f, "{}?: {};", field.0, ty)?;
                         } else {
@@ -452,7 +452,6 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
 pub fn gen_ts_type<W: fmt::Write>(
     out: &mut W,
     typ: &ast::TypeName,
-    is_return_type: bool,
     in_path: &ast::Path,
     env: &Env,
 ) -> Result<bool, fmt::Error> {
@@ -472,13 +471,13 @@ pub fn gen_ts_type<W: fmt::Write>(
             out.write_str(name.as_str())?;
         }
         ast::TypeName::Reference(.., typ) | ast::TypeName::Box(typ) => {
-            return gen_ts_type(out, typ, is_return_type, in_path, env)
+            return gen_ts_type(out, typ, in_path, env)
         }
         ast::TypeName::Option(typ) => {
-            return gen_ts_type(out, typ, is_return_type, in_path, env).map(|_| true)
+            return gen_ts_type(out, typ, in_path, env).map(|_| true)
         }
         ast::TypeName::Result(ok, _err) => {
-            let opt = gen_ts_type(out, ok, false, in_path, env)?;
+            let opt = gen_ts_type(out, ok, in_path, env)?;
             write!(out, " | never")?;
             return Ok(opt);
         }
@@ -503,11 +502,7 @@ pub fn gen_ts_type<W: fmt::Write>(
             ast::PrimitiveType::char => write!(out, "Uint32Array")?,
         },
         ast::TypeName::Unit => {
-            if is_return_type {
-                out.write_str("void")?;
-            } else {
-                out.write_str("{}")?;
-            }
+            out.write_str("void")?;
         }
     }
     Ok(false)
@@ -539,11 +534,11 @@ fn gen_ts_method_declaration<W: fmt::Write>(
                                     _ => write!(f, "{{@link {prim}}}")?,
                                 },
                                 ast::TypeName::Unit => {
-                                    f.write_str("{}")?;
+                                    f.write_str("void")?;
                                 }
                                 _ => {
                                     write!(f, "{{@link ")?;
-                                    let opt = gen_ts_type(&mut f, err, false, in_path, env)?;
+                                    let opt = gen_ts_type(&mut f, err, in_path, env)?;
                                     write!(f, "}}")?;
                                     if opt {
                                         write!(f, " | undefined")?;
@@ -574,7 +569,7 @@ fn gen_ts_method_declaration<W: fmt::Write>(
             };
             if let Some((first, rest)) = params.split_first() {
                 let mut ty_name = String::new();
-                let optional = gen_ts_type(&mut ty_name, &first.ty, false, in_path, env)?;
+                let optional = gen_ts_type(&mut ty_name, &first.ty, in_path, env)?;
                 if optional {
                     write!(f, "{}?: {}", first.name, ty_name)?;
                 } else {
@@ -582,7 +577,7 @@ fn gen_ts_method_declaration<W: fmt::Write>(
                 }
                 for item in rest {
                     ty_name.clear();
-                    let optional = gen_ts_type(&mut ty_name, &item.ty, false, in_path, env)?;
+                    let optional = gen_ts_type(&mut ty_name, &item.ty, in_path, env)?;
                     if optional {
                         write!(f, ", {}?: {}", item.name, ty_name)?;
                     } else {
@@ -609,7 +604,7 @@ fn gen_ts_method_declaration<W: fmt::Write>(
                 }
                 Ok(())
             } else if let Some(ref return_type) = method.return_type {
-                let optional = gen_ts_type(f, return_type, true, in_path, env)?;
+                let optional = gen_ts_type(f, return_type, in_path, env)?;
                 if optional {
                     f.write_str(" | undefined")?;
                 }

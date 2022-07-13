@@ -34,7 +34,7 @@ export class ICU4XFixedDecimal {
    * Format the {@link ICU4XFixedDecimal `ICU4XFixedDecimal`} as a string.
 
    * See the {@link https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to Rust documentation} for more information.
-   * @throws {@link FFIError}<{}>
+   * @throws {@link FFIError}<void>
    */
   to_string(): string | never;
 }

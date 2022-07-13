@@ -23,7 +23,7 @@ export class ResultOpaque {
   static new_failing_bar(): ResultOpaque | never;
 
   /**
-   * @throws {@link FFIError}<{}>
+   * @throws {@link FFIError}<void>
    */
   static new_failing_unit(): ResultOpaque | never;
 
@@ -35,7 +35,7 @@ export class ResultOpaque {
   /**
    * @throws {@link FFIError}<{@link ResultOpaque}>
    */
-  static new_in_err(i: i32): {} | never;
+  static new_in_err(i: i32): void | never;
 
   /**
    * @throws {@link FFIError}<{@link ResultOpaque}>
