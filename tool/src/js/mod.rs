@@ -93,7 +93,8 @@ pub fn gen_bindings(
                     ast::PrimitiveType::f32 => "f32",
                     ast::PrimitiveType::f64 => "f64",
                     ast::PrimitiveType::char => "char",
-                    ast::PrimitiveType::bool => unreachable!("bools aren't added because TypeScript has `boolean`"),
+                    ast::PrimitiveType::bool =>
+                        unreachable!("bools aren't added because TypeScript has `boolean`"),
                 }))
             )?;
         }
