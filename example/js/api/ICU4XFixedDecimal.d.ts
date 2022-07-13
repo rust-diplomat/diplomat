@@ -1,3 +1,5 @@
+import { i16, i32 } from "./diplomat-runtime"
+import { FFIError } from "./diplomat-runtime"
 
 /**
 
@@ -9,7 +11,7 @@ export class ICU4XFixedDecimal {
 
    * Construct an {@link ICU4XFixedDecimal `ICU4XFixedDecimal`} from an integer.
    */
-  static new(v: number): ICU4XFixedDecimal;
+  static new(v: i32): ICU4XFixedDecimal;
 
   /**
 
@@ -17,7 +19,7 @@ export class ICU4XFixedDecimal {
 
    * See the {@link https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10 Rust documentation} for more information.
    */
-  multiply_pow10(power: number): void;
+  multiply_pow10(power: i16): void;
 
   /**
 
@@ -32,6 +34,7 @@ export class ICU4XFixedDecimal {
    * Format the {@link ICU4XFixedDecimal `ICU4XFixedDecimal`} as a string.
 
    * See the {@link https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to Rust documentation} for more information.
+   * @throws {@link FFIError}<void>
    */
   to_string(): string | never;
 }

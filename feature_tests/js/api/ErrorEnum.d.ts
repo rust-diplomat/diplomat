@@ -1,4 +1,11 @@
 
 /**
  */
-export type ErrorEnum = "Foo" | "Bar";
+export enum ErrorEnum {
+  /**
+   */
+  Foo = 'Foo',
+  /**
+   */
+  Bar = 'Bar',
+}

@@ -1,4 +1,20 @@
 
 /**
  */
-export type ICU4XFixedDecimalSignDisplay = "Auto" | "Never" | "Always" | "ExceptZero" | "Negative";
+export enum ICU4XFixedDecimalSignDisplay {
+  /**
+   */
+  Auto = 'Auto',
+  /**
+   */
+  Never = 'Never',
+  /**
+   */
+  Always = 'Always',
+  /**
+   */
+  ExceptZero = 'ExceptZero',
+  /**
+   */
+  Negative = 'Negative',
+}

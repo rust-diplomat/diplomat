@@ -366,7 +366,7 @@ fn gen_method<W: fmt::Write>(
 }
 
 /// Generate a struct's d.ts file.
-pub fn gen_ts_struct_declaration<W: fmt::Write>(
+pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
     out: &mut W,
     custom_type: &ast::CustomType,
     in_path: &ast::Path,
@@ -388,16 +388,31 @@ pub fn gen_ts_struct_declaration<W: fmt::Write>(
         )?;
     }
     if let ast::CustomType::Enum(enm) = custom_type {
-        write!(out, "export type {} = ", enm.name)?;
-        if let Some((first, rest)) = enm.variants.split_first() {
-            write!(out, "\"{}\"", first.0)?;
-            for item in rest {
-                write!(out, " | \"{}\"", item.0)?;
-            }
-        } else {
-            write!(out, "never")?;
-        }
-        writeln!(out, ";")?;
+        write!(
+            out,
+            "export enum {} {}",
+            enm.name,
+            display::block(|mut f| {
+                for (name, _, docs) in enm.variants.iter() {
+                    if let Some(docs_url_gen) = docs_url_gen {
+                        write!(
+                            f,
+                            "{}",
+                            display::ts_doc(|mut f| {
+                                TsDoc::from_markdown(
+                                    &docs.to_markdown(docs_url_gen),
+                                    in_path,
+                                    env,
+                                    &mut f,
+                                )
+                            })
+                        )?;
+                    }
+                    writeln!(f, "{name} = '{name}',")?;
+                }
+                Ok(())
+            })
+        )?;
     } else {
         writeln!(
             out,
@@ -429,7 +444,11 @@ pub fn gen_ts_struct_declaration<W: fmt::Write>(
 }
 
 /// Generates the name of a Diplomat type as a TypeScript type.
+///
 /// If no fmt errors occurred, returns whether or not the type is optional.
+/// Although we could use `foo: number | undefined` to denote optional types,
+/// we use this strategy so we can use the sugared `foo?: number` syntax in order
+/// to make the header files more human readable.
 pub fn gen_ts_type<W: fmt::Write>(
     out: &mut W,
     typ: &ast::TypeName,
@@ -438,12 +457,14 @@ pub fn gen_ts_type<W: fmt::Write>(
 ) -> Result<bool, fmt::Error> {
     match typ {
         ast::TypeName::Primitive(prim) => match prim {
-            ast::PrimitiveType::bool => out.write_str("boolean")?,
-            ast::PrimitiveType::char => out.write_str("string")?,
-            ast::PrimitiveType::i64 | ast::PrimitiveType::u64 => out.write_str("bigint")?,
             ast::PrimitiveType::i128 => panic!("i128 is unsupported"),
             ast::PrimitiveType::u128 => panic!("u128 is unsupported"),
-            _ => out.write_str("number")?,
+            ast::PrimitiveType::bool => out.write_str("boolean")?,
+            _ => {
+                // Print the type name because we have type aliases for all the
+                // primitives (except bool) in `diplomatRuntime.ts`.
+                write!(out, "{}", prim)?;
+            }
         },
         ast::TypeName::Named(path_type) => {
             let name = path_type.resolve(in_path, env).name();
@@ -478,7 +499,9 @@ pub fn gen_ts_type<W: fmt::Write>(
             ast::PrimitiveType::bool => write!(out, "Uint8Array")?,
             ast::PrimitiveType::char => write!(out, "Uint32Array")?,
         },
-        ast::TypeName::Unit => out.write_str("void")?,
+        ast::TypeName::Unit => {
+            out.write_str("void")?;
+        }
     }
     Ok(false)
 }
@@ -495,7 +518,36 @@ fn gen_ts_method_declaration<W: fmt::Write>(
             out,
             "{}",
             display::ts_doc(|mut f| {
-                TsDoc::from_markdown(&method.docs.to_markdown(docs_url_gen), in_path, env, &mut f)
+                TsDoc::from_markdown(&method.docs.to_markdown(docs_url_gen), in_path, env, &mut f)?;
+                if let Some(ast::TypeName::Result(_, ref err)) = method.return_type {
+                    writeln!(
+                        f,
+                        "@throws {{@link FFIError}}<{}>",
+                        display::expr(|mut f| {
+                            match err.as_ref() {
+                                ast::TypeName::Primitive(prim) => match prim {
+                                    ast::PrimitiveType::i128 => panic!("i128 is unsupported"),
+                                    ast::PrimitiveType::u128 => panic!("u128 is unsupported"),
+                                    ast::PrimitiveType::bool => f.write_str("boolean")?,
+                                    _ => write!(f, "{{@link {prim}}}")?,
+                                },
+                                ast::TypeName::Unit => {
+                                    f.write_str("void")?;
+                                }
+                                _ => {
+                                    write!(f, "{{@link ")?;
+                                    let opt = gen_ts_type(&mut f, err, in_path, env)?;
+                                    write!(f, "}}")?;
+                                    if opt {
+                                        write!(f, " | undefined")?;
+                                    }
+                                }
+                            }
+                            Ok(())
+                        })
+                    )?;
+                }
+                Ok(())
             })
         )?;
     }

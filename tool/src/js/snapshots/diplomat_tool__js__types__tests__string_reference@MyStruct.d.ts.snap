@@ -2,10 +2,11 @@
 source: tool/src/js/types.rs
 expression: out_texts.get(out).unwrap()
 ---
+import { u8 } from "./diplomat-runtime"
 
 export class MyStruct {
-  a: number;
-  b: number;
+  a: u8;
+  b: u8;
 
   static new(v: string): MyStruct;
 }

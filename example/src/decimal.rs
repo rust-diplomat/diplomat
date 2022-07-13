@@ -24,10 +24,15 @@ pub mod ffi {
         pub success: bool,
     }
 
+    // Doc comments for testing TSDoc
     pub enum ICU4XFixedDecimalGroupingStrategy {
+        /// Auto grouping
         Auto,
+        /// No grouping
         Never,
+        /// Always group
         Always,
+        /// At least 2 groups
         Min2,
     }
 

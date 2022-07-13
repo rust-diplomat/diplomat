@@ -2,11 +2,12 @@
 source: tool/src/js/conversions.rs
 expression: out_texts.get(out).unwrap()
 ---
+import { u8 } from "./diplomat-runtime"
 import { BorrowingOpaque } from "./BorrowingOpaque";
 
 export class BorrowingStruct {
   opaque: BorrowingOpaque;
-  x: number;
+  x: u8;
 
   static new(opaque: BorrowingOpaque): BorrowingStruct;
 }

@@ -53,11 +53,23 @@
 
     .. cpp:enumerator:: Auto
 
+        Auto grouping
+
+
     .. cpp:enumerator:: Never
+
+        No grouping
+
 
     .. cpp:enumerator:: Always
 
+        Always group
+
+
     .. cpp:enumerator:: Min2
+
+        At least 2 groups
+
 
 .. cpp:enum-struct:: ICU4XFixedDecimalSignDisplay
 

@@ -15,9 +15,25 @@ namespace capi {
 
 
 enum struct ICU4XFixedDecimalGroupingStrategy {
+
+  /**
+   * Auto grouping
+   */
   Auto = 0,
+
+  /**
+   * No grouping
+   */
   Never = 1,
+
+  /**
+   * Always group
+   */
   Always = 2,
+
+  /**
+   * At least 2 groups
+   */
   Min2 = 3,
 };
 
