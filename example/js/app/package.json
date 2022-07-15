@@ -15,6 +15,7 @@
     ]
   },
   "scripts": {
+    "build": "tsc",
     "test": "ava"
   },
   "author": "",

@@ -15,7 +15,6 @@ const imports = {
   }
 }
 
-// Relative path from file: https://stackoverflow.com/a/62892482
 const path = await import('path');
 const url = await import('url');
 const dir = path.join(path.dirname(url.fileURLToPath(import.meta.url)), "diplomat_feature_tests.wasm");
