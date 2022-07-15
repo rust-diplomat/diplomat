@@ -1,5 +1,5 @@
 import wasm from "../wasm.mjs"
-import * as diplomatRuntime from "./diplomat-runtime.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.js"
 
 const Float64Vec_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.Float64Vec_destroy(underlying);
