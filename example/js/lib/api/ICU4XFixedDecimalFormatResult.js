@@ -1,5 +1,5 @@
 import wasm from "../wasm.mjs"
-import * as diplomatRuntime from "./diplomat-runtime.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.js"
 import { ICU4XFixedDecimalFormat } from "./ICU4XFixedDecimalFormat.js"
 
 export class ICU4XFixedDecimalFormatResult {

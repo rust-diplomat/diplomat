@@ -1,8 +1,7 @@
 {
-  "name": "diplomat-wasm-example",
+  "name": "demo",
   "version": "0.0.1",
   "description": "Diplomat WASM example",
-  "main": "wasm.mjs",
   "type": "module",
   "directories": {
     "doc": "docs",
@@ -38,5 +37,6 @@
   "devDependencies": {
     "ava": "^3.15.0",
     "esm": "^3.2.25"
-  }
+  },
+  "dependencies": {}
 }
