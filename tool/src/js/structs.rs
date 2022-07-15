@@ -46,7 +46,7 @@ pub fn gen_struct<W: fmt::Write>(
                     })
                 })
             )?;
-
+            writeln!(out)?;
             writeln!(
                 out,
                 "export const {}_rust_to_js = {};",
@@ -55,6 +55,17 @@ pub fn gen_struct<W: fmt::Write>(
                     enm.variants.iter().try_for_each(|(name, discriminant, _)| {
                         writeln!(f, "{}: \"{}\",", discriminant, name)
                     })
+                })
+            )?;
+            writeln!(out)?;
+            writeln!(
+                out,
+                "export const {} = {};",
+                enm.name,
+                display::block(|mut f| {
+                    enm.variants
+                        .iter()
+                        .try_for_each(|(name, ..)| writeln!(f, "\"{0}\": \"{0}\",", name))
                 })
             )
         }

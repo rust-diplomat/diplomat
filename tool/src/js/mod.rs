@@ -29,7 +29,7 @@ pub fn gen_bindings(
     outs: &mut HashMap<String, String>,
     docs_url_gen: Option<&ast::DocsUrlGenerator>,
 ) -> fmt::Result {
-    let diplomat_runtime_out = outs.entry("diplomat-runtime.mjs".to_string()).or_default();
+    let diplomat_runtime_out = outs.entry("diplomat-runtime.js".to_string()).or_default();
     write!(diplomat_runtime_out, "{}", RUNTIME_MJS)?;
     let diplomat_runtime_out = outs.entry("diplomat-runtime.d.ts".to_string()).or_default();
     write!(diplomat_runtime_out, "{}", RUNTIME_D_TS)?;
@@ -37,8 +37,27 @@ pub fn gen_bindings(
     let mut all_types = util::get_all_custom_types(env);
     all_types.sort_by_key(|t| t.1.name());
 
-    for (in_path, custom_type) in all_types {
-        let imports = Imports::new(custom_type, &in_path, env);
+    let header_exports: String = {
+        let mut buf = String::new();
+        for (_, custom_type) in &all_types {
+            writeln!(buf, "export {{ {0} }} from './{0}.js';", custom_type.name())?;
+        }
+        buf
+    };
+
+    let index_ts = outs.entry("index.d.ts".to_string()).or_default();
+    writeln!(index_ts, "export {{ FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char }} from './diplomat-runtime.js';")?;
+    index_ts.write_str(&header_exports)?;
+
+    let index_js = outs.entry("index.js".to_string()).or_default();
+    writeln!(
+        index_js,
+        "export {{ FFIError }} from './diplomat-runtime.js';"
+    )?;
+    index_js.write_str(&header_exports)?;
+
+    for (in_path, custom_type) in &all_types {
+        let imports = Imports::new(custom_type, in_path, env);
 
         let out = outs
             .entry(format!("{}.js", custom_type.name()))
@@ -47,7 +66,7 @@ pub fn gen_bindings(
         writeln!(out, "import wasm from \"../wasm.mjs\"")?;
         writeln!(
             out,
-            "import * as diplomatRuntime from \"./diplomat-runtime.mjs\""
+            "import * as diplomatRuntime from \"./diplomat-runtime.js\""
         )?;
         for custom_type in imports.js_imports.iter() {
             if let ast::CustomType::Enum(enm) = custom_type {
@@ -66,7 +85,7 @@ pub fn gen_bindings(
         }
         writeln!(out)?;
 
-        gen_struct(out, custom_type, &in_path, env)?;
+        gen_struct(out, custom_type, in_path, env)?;
 
         // == Declaration file ==
 
@@ -106,7 +125,7 @@ pub fn gen_bindings(
         }
         writeln!(out)?;
 
-        gen_ts_custom_type_declaration(out, custom_type, &in_path, env, docs_url_gen)?;
+        gen_ts_custom_type_declaration(out, custom_type, in_path, env, docs_url_gen)?;
     }
 
     Ok(())
