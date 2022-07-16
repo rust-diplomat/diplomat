@@ -1,5 +1,5 @@
 import wasm from "../wasm.mjs"
-import * as diplomatRuntime from "./diplomat-runtime.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.js"
 import { OptionOpaque } from "./OptionOpaque.js"
 import { OptionOpaqueChar } from "./OptionOpaqueChar.js"
 

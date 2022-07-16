@@ -1,5 +1,5 @@
 import wasm from "../wasm.mjs"
-import * as diplomatRuntime from "./diplomat-runtime.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.js"
 import { ErrorEnum_js_to_rust, ErrorEnum_rust_to_js } from "./ErrorEnum.js"
 import { ErrorStruct } from "./ErrorStruct.js"
 

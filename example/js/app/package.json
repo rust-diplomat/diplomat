@@ -1,0 +1,28 @@
+{
+  "name": "mytest",
+  "version": "1.0.0",
+  "description": "A test package for Diplomat",
+  "type": "module",
+  "ava": {
+    "files": [
+      "index.js"
+    ],
+    "require": [
+      "esm"
+    ],
+    "nodeArguments": [
+      "--experimental-wasm-bigint"
+    ]
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "ava"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ava": "^3.15.0",
+    "esm": "^3.2.25",
+    "demo": "file:../lib"
+  }
+}

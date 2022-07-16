@@ -1,5 +1,5 @@
 import wasm from "../wasm.mjs"
-import * as diplomatRuntime from "./diplomat-runtime.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.js"
 
 const RefList_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.RefList_destroy(underlying);

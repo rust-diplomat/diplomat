@@ -59,14 +59,18 @@ jobs:
       with:
         node-version: 14.17.0
     - name: Build feature tests
-      run: cd feature_tests && cargo build --target wasm32-unknown-unknown
+      run: cd feature_tests && cargo build --target wasm32-unknown-unknown && cp ../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm ./js
     - name: install node deps for feature_tests
       run: cd feature_tests/js && npm install
     - name: test feature_tests
       run: cd feature_tests/js && npm run test
     - name: Build examples
-      run: cd example && cargo build --target wasm32-unknown-unknown
-    - name: install node deps for example
-      run: cd example/js && npm install
-    - name: test example
-      run: cd example/js && npm run test
+      run: cd example && cargo build --target wasm32-unknown-unknown && cp ../target/wasm32-unknown-unknown/debug/diplomat_example.wasm ./js/lib
+    - name: install node deps for example lib
+      run: cd example/js/lib && npm install
+    - name: test example lib
+      run: cd example/js/lib && npm run test
+    - name: install node deps for example app
+      run: cd example/js/app && npm install
+    - name: test example app
+      run: cd example/js/app && npm run test
