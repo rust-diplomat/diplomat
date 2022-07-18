@@ -13,11 +13,11 @@ pub fn gen_doc_block(out: &mut CodeWriter, comment: &str) -> fmt::Result {
             if line.is_empty() {
                 if summary_is_open {
                     writeln!(out, "/// </summary>")?;
+                    writeln!(out, "/// <remarks>")?;
                     summary_is_open = false;
                 } else {
-                    writeln!(out, "/// </remarks>")?;
+                    writeln!(out, "/// <br/>")?;
                 }
-                writeln!(out, "/// <remarks>")?;
             } else {
                 writeln!(out, "/// {}", line)?;
             }
