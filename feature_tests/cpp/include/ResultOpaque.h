@@ -7,15 +7,22 @@
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
-extern "C" {
+namespace capi {
 #endif
 
 typedef struct ResultOpaque ResultOpaque;
+#ifdef __cplusplus
+} // namespace capi
+#endif
 #include "diplomat_result_box_ResultOpaque_ErrorEnum.h"
 #include "diplomat_result_box_ResultOpaque_void.h"
 #include "diplomat_result_box_ResultOpaque_ErrorStruct.h"
 #include "diplomat_result_void_box_ResultOpaque.h"
 #include "diplomat_result_ErrorEnum_box_ResultOpaque.h"
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 diplomat_result_box_ResultOpaque_ErrorEnum ResultOpaque_new(int32_t i);
 
@@ -35,6 +42,7 @@ void ResultOpaque_assert_integer(const ResultOpaque* self, int32_t i);
 void ResultOpaque_destroy(ResultOpaque* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

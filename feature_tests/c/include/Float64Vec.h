@@ -7,10 +7,17 @@
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
-extern "C" {
+namespace capi {
 #endif
 
 typedef struct Float64Vec Float64Vec;
+#ifdef __cplusplus
+} // namespace capi
+#endif
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 Float64Vec* Float64Vec_new(const double* v_data, size_t v_len);
 
@@ -20,6 +27,7 @@ void Float64Vec_set_value(Float64Vec* self, const double* new_slice_data, size_t
 void Float64Vec_destroy(Float64Vec* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

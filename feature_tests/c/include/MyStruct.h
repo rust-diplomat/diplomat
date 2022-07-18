@@ -7,7 +7,7 @@
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
-extern "C" {
+namespace capi {
 #endif
 
 typedef struct MyStruct {
@@ -18,11 +18,19 @@ typedef struct MyStruct {
     int32_t e;
     char32_t f;
 } MyStruct;
+#ifdef __cplusplus
+} // namespace capi
+#endif
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 MyStruct MyStruct_new();
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

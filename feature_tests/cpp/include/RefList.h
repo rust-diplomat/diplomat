@@ -7,15 +7,23 @@
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
-extern "C" {
+namespace capi {
 #endif
 
 typedef struct RefList RefList;
+#ifdef __cplusplus
+} // namespace capi
+#endif
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 RefList* RefList_node(const int32_t* data);
 void RefList_destroy(RefList* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

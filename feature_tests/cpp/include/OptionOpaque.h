@@ -7,11 +7,18 @@
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
-extern "C" {
+namespace capi {
 #endif
 
 typedef struct OptionOpaque OptionOpaque;
+#ifdef __cplusplus
+} // namespace capi
+#endif
 #include "OptionStruct.h"
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 OptionOpaque* OptionOpaque_new(int32_t i);
 
@@ -25,6 +32,7 @@ void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
 void OptionOpaque_destroy(OptionOpaque* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

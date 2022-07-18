@@ -19,6 +19,7 @@ typedef uint32_t char32_t;
 
 
 #ifdef __cplusplus
+namespace capi {
 extern "C" {
 #endif
 
@@ -38,7 +39,8 @@ typedef struct DiplomatStringView {
     size_t len;
 } DiplomatStringView;
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 
 #endif
