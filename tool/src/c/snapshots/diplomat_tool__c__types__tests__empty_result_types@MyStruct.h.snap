@@ -10,24 +10,35 @@ expression: out_texts.get(out).unwrap()
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "diplomat_result_void_uint8_t.h"
 #include "diplomat_result_void_void.h"
 #include "diplomat_result_uint8_t_void.h"
+#ifdef __cplusplus
+namespace capi {
+#endif
 
 typedef struct MyStruct {
     diplomat_result_void_uint8_t a;
     diplomat_result_void_void b;
     diplomat_result_uint8_t_void c;
 } MyStruct;
+#ifdef __cplusplus
+} // namespace capi
+#endif
+#include "diplomat_result_void_uint8_t.h"
+#include "diplomat_result_void_void.h"
+#include "diplomat_result_uint8_t_void.h"
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 MyStruct MyStruct_new();
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif
 

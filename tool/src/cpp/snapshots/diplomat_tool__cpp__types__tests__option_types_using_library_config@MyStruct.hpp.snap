@@ -1,7 +1,6 @@
 ---
 source: tool/src/cpp/types.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 #ifndef MyStruct_HPP
 #define MyStruct_HPP
@@ -17,9 +16,7 @@ expression: out_texts.get(out).unwrap()
 #include "mozilla/Span.h"
 #include "diplomat_runtime.hpp"
 
-namespace capi {
 #include "MyStruct.h"
-}
 
 class MyOpaqueStruct;
 

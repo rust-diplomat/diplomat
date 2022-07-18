@@ -6,10 +6,11 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+typedef struct ResultOpaque ResultOpaque;
 #ifdef __cplusplus
+namespace capi {
 extern "C" {
 #endif
-typedef struct ResultOpaque ResultOpaque;
 typedef struct diplomat_result_void_box_ResultOpaque {
     union {
         ResultOpaque* err;
@@ -17,6 +18,7 @@ typedef struct diplomat_result_void_box_ResultOpaque {
     bool is_ok;
 } diplomat_result_void_box_ResultOpaque;
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

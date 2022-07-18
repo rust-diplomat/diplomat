@@ -9,9 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {
 #include "Float64Vec.h"
-}
 
 class Float64Vec;
 

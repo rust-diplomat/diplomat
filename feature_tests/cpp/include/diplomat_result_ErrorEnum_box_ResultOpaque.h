@@ -6,11 +6,12 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "ErrorEnum.h"
 typedef struct ResultOpaque ResultOpaque;
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 typedef struct diplomat_result_ErrorEnum_box_ResultOpaque {
     union {
         ErrorEnum ok;
@@ -19,6 +20,7 @@ typedef struct diplomat_result_ErrorEnum_box_ResultOpaque {
     bool is_ok;
 } diplomat_result_ErrorEnum_box_ResultOpaque;
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

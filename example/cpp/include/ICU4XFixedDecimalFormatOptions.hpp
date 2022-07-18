@@ -9,9 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {
 #include "ICU4XFixedDecimalFormatOptions.h"
-}
 
 #include "ICU4XFixedDecimalGroupingStrategy.hpp"
 #include "ICU4XFixedDecimalSignDisplay.hpp"

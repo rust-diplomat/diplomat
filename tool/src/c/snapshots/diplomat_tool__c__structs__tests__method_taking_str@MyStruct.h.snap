@@ -11,10 +11,17 @@ expression: out_texts.get(out).unwrap()
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
-extern "C" {
+namespace capi {
 #endif
 
 typedef struct MyStruct MyStruct;
+#ifdef __cplusplus
+} // namespace capi
+#endif
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 MyStruct* MyStruct_new_str(const char* v_data, size_t v_len);
 
@@ -22,7 +29,8 @@ void MyStruct_set_str(MyStruct* self, const char* new_str_data, size_t new_str_l
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif
 

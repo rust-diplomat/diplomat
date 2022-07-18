@@ -7,11 +7,18 @@
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
-extern "C" {
+namespace capi {
 #endif
 
 typedef struct One One;
+#ifdef __cplusplus
+} // namespace capi
+#endif
 #include "Two.h"
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 One* One_transitivity(const One* hold, const One* nohold);
 
@@ -37,6 +44,7 @@ One* One_implicit_bounds_deep(const One* explicit, const One* implicit_1, const 
 void One_destroy(One* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

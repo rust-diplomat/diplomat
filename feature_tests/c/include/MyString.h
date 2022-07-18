@@ -7,10 +7,17 @@
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
-extern "C" {
+namespace capi {
 #endif
 
 typedef struct MyString MyString;
+#ifdef __cplusplus
+} // namespace capi
+#endif
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 MyString* MyString_new(const char* v_data, size_t v_len);
 
@@ -20,6 +27,7 @@ void MyString_get_str(const MyString* self, DiplomatWriteable* writeable);
 void MyString_destroy(MyString* self);
 
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif

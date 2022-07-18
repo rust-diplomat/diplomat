@@ -9,9 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {
 #include "OptionOpaque.h"
-}
 
 class OptionOpaque;
 struct OptionStruct;
