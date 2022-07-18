@@ -1,7 +1,6 @@
 ---
 source: tool/src/cpp/mod.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 #ifndef Bar_HPP
 #define Bar_HPP
@@ -14,9 +13,7 @@ expression: out_texts.get(out).unwrap()
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {
 #include "Bar.h"
-}
 
 class Foo;
 

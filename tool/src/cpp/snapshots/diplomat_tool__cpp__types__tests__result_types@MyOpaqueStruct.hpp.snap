@@ -1,7 +1,6 @@
 ---
 source: tool/src/cpp/types.rs
 expression: out_texts.get(out).unwrap()
-
 ---
 #ifndef MyOpaqueStruct_HPP
 #define MyOpaqueStruct_HPP
@@ -14,9 +13,7 @@ expression: out_texts.get(out).unwrap()
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {
 #include "MyOpaqueStruct.h"
-}
 
 
 /**

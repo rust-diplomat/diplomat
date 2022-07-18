@@ -11,6 +11,7 @@ expression: out_texts.get(out).unwrap()
 #include "diplomat_runtime.h"
 
 #ifdef __cplusplus
+namespace capi {
 extern "C" {
 #endif
 typedef struct diplomat_result_uint8_t_void {
@@ -20,7 +21,8 @@ typedef struct diplomat_result_uint8_t_void {
     bool is_ok;
 } diplomat_result_uint8_t_void;
 #ifdef __cplusplus
-}
+} // extern "C"
+} // namespace capi
 #endif
 #endif
 
