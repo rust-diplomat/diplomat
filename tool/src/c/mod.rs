@@ -63,6 +63,7 @@ fn gen_struct_header<'a>(
     let out = outs
         .entry(format!("{}.h", typ.name()))
         .or_insert_with(String::new);
+
     writeln!(out, "#ifndef {}_H", typ.name())?;
     writeln!(out, "#define {}_H", typ.name())?;
     writeln!(out, "#include <stdio.h>")?;
@@ -71,9 +72,6 @@ fn gen_struct_header<'a>(
     writeln!(out, "#include <stdbool.h>")?;
     writeln!(out, "#include \"diplomat_runtime.h\"")?;
     writeln!(out)?;
-    writeln!(out, "#ifdef __cplusplus")?;
-    writeln!(out, "extern \"C\" {{")?;
-    writeln!(out, "#endif")?;
 
     let mut seen_includes = HashSet::new();
     seen_includes.insert(format!("#include \"{}.h\"", typ.name()));
@@ -85,6 +83,10 @@ fn gen_struct_header<'a>(
             collect_results(typ, in_path, env, seen_results, all_results);
         }
     }
+
+    writeln!(out, "#ifdef __cplusplus")?;
+    writeln!(out, "namespace capi {{")?;
+    writeln!(out, "#endif")?;
 
     match typ {
         ast::CustomType::Opaque(_) | ast::CustomType::Struct(_) => {
@@ -107,6 +109,19 @@ fn gen_struct_header<'a>(
         }
     }
 
+    writeln!(out, "#ifdef __cplusplus")?;
+    writeln!(out, "}} // namespace capi")?;
+    writeln!(out, "#endif")?;
+
+    let mut seen_includes = HashSet::new();
+    seen_includes.insert(format!("#include \"{}.h\"", typ.name()));
+
+    if let ast::CustomType::Struct(strct) = typ {
+        for (_, typ, _) in &strct.fields {
+            gen_includes(typ, in_path, true, false, env, &mut seen_includes, out)?;
+            collect_results(typ, in_path, env, seen_results, all_results);
+        }
+    }
     for method in typ.methods() {
         for param in &method.params {
             gen_includes(
@@ -135,6 +150,11 @@ fn gen_struct_header<'a>(
         }
     }
 
+    writeln!(out, "#ifdef __cplusplus")?;
+    writeln!(out, "namespace capi {{")?;
+    writeln!(out, "extern \"C\" {{")?;
+    writeln!(out, "#endif")?;
+
     for method in typ.methods() {
         writeln!(out)?;
         gen_method(method, in_path, env, out)?;
@@ -158,7 +178,8 @@ fn gen_struct_header<'a>(
     writeln!(out)?;
 
     writeln!(out, "#ifdef __cplusplus")?;
-    writeln!(out, "}}")?;
+    writeln!(out, "}} // extern \"C\"")?;
+    writeln!(out, "}} // namespace capi")?;
     writeln!(out, "#endif")?;
     writeln!(out, "#endif")?;
     Ok(())
@@ -183,10 +204,6 @@ fn gen_result_header(
         writeln!(out, "#include <stdbool.h>")?;
         writeln!(out, "#include \"diplomat_runtime.h\"")?;
         writeln!(out)?;
-        writeln!(out, "#ifdef __cplusplus")?;
-        writeln!(out, "extern \"C\" {{")?;
-        writeln!(out, "#endif")?;
-
         let mut seen_includes = HashSet::new();
         gen_includes(
             ok.as_ref(),
@@ -206,11 +223,16 @@ fn gen_result_header(
             &mut seen_includes,
             out,
         )?;
+        writeln!(out, "#ifdef __cplusplus")?;
+        writeln!(out, "namespace capi {{")?;
+        writeln!(out, "extern \"C\" {{")?;
+        writeln!(out, "#endif")?;
 
         gen_result(typ, in_path, env, out)?;
 
         writeln!(out, "#ifdef __cplusplus")?;
-        writeln!(out, "}}")?;
+        writeln!(out, "}} // extern \"C\"")?;
+        writeln!(out, "}} // namespace capi")?;
         writeln!(out, "#endif")?;
         writeln!(out, "#endif")?;
     } else {

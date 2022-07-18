@@ -11,6 +11,4 @@
 {%- endfor %}
 #include "diplomat_runtime.hpp"
 
-namespace capi {
 #include "{{ typ_name }}.h"
-}
