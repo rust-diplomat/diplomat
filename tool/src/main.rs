@@ -116,7 +116,7 @@ fn main() -> std::io::Result<()> {
                     item.path[0] == crate_name && item.kind != rustdoc_types::ItemKind::Typedef
                 })
                 .map(ast::RustLink::from_rustdoc)
-                .collect::<Vec<_>>();
+                .collect::<Vec<ast::RustLink>>();
             items.sort();
             desireds.extend(items);
         }
