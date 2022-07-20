@@ -88,11 +88,11 @@ export class DiplomatBuf {
       DiplomatBuf_finalizer.unregister(this);
     }
 
-    DiplomatBuf_finalizer.register(this, { ptr, size, align });
+    DiplomatBuf_finalizer.register(this, { wasm, ptr, size, align });
   }
 }
 
-const DiplomatBuf_finalizer = new FinalizationRegistry(({ ptr, size, align }) => {
+const DiplomatBuf_finalizer = new FinalizationRegistry(({ wasm, ptr, size, align }) => {
   wasm.diplomat_free(ptr, size, align);
 });
 
