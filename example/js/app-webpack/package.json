@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "clean": "rm dist/*.js dist/*.wasm",
-    "build": "npx webpack"
+    "build": "webpack"
   },
   "author": "",
   "license": "ISC",
