@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyStruct } from "../api/MyStruct.js";
+import { MyStruct } from "../lib/MyStruct.js";
 test("Verify invariants of struct", t => {
     const s = MyStruct.new();
     t.is(s["a"], 17);

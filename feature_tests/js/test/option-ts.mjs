@@ -1,5 +1,5 @@
 import test from 'ava';
-import { OptionOpaque } from "../api/OptionOpaque.js";
+import { OptionOpaque } from "../lib/OptionOpaque.js";
 test("Verify option methods", t => {
     const o = OptionOpaque.new(5);
     o.assert_integer(5);

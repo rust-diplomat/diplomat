@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { ResultOpaque } from "../api/ResultOpaque.js"
+import { ResultOpaque } from "../lib/ResultOpaque.js"
 
 test("Verify result methods", t => {
     const s = ResultOpaque.new(5);
