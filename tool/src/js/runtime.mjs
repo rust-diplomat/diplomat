@@ -84,7 +84,7 @@ export class DiplomatBuf {
       DiplomatBuf_finalizer.unregister(this);
     }
 
-    DiplomatBuf_finalizer.register(this, { wasm, ptr, size, align });
+    DiplomatBuf_finalizer.register(this, { wasm, ptr, size, align }, this);
   }
 }
 
