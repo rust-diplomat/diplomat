@@ -30,7 +30,7 @@ This file documents how to test out the demos after cloning the repo. Details on
 4. Copy `diplomat_example.wasm` into `lib/`.
     ```sh
     # /diplomat
-    cp ./target/wasm32-unknown-unknown/debug/diplomat_example.wasm ./example/js/lib
+    cp ./target/wasm32-unknown-unknown/debug/diplomat_example.wasm ./example/js/lib/diplomat-lib.wasm
     ```
 
 All at once:
@@ -39,7 +39,7 @@ All at once:
 cargo build
 cargo build --target wasm32-unknown-unknown
 ./regen_integration_tests.sh
-cp ./target/wasm32-unknown-unknown/debug/diplomat_example.wasm ./example/js/lib
+cp ./target/wasm32-unknown-unknown/debug/diplomat_example.wasm ./example/js/lib/diplomat-lib.wasm
 ```
 
 Now the demo library can be published or otherwise consumed by other packages.

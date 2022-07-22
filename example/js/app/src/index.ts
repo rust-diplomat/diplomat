@@ -1,4 +1,4 @@
-import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormatOptions, ICU4XFixedDecimalFormat } from "../node_modules/demo/index.js";
+import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormatOptions, ICU4XFixedDecimalFormat } from "../node_modules/demo/api/index.js";
 
 const locale = ICU4XLocale.new("bn");
 

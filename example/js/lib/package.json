@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Diplomat WASM example",
   "type": "module",
+  "main": "./api/index.js",
   "directories": {
     "doc": "docs",
     "test": "test"
