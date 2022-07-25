@@ -1,5 +1,5 @@
 import test from 'ava';
-import { ResultOpaque } from "../lib/ResultOpaque.js";
+import { ResultOpaque } from "../api/ResultOpaque.js";
 test("Verify result methods", t => {
     const s = ResultOpaque.new(5);
     s.assert_integer(5);

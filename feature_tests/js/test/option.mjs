@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { OptionOpaque } from "../lib/OptionOpaque.js";
+import { OptionOpaque } from "../api/OptionOpaque.js";
 
 test("Verify option methods", t => {
     const o = OptionOpaque.new(5);
