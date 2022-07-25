@@ -1,3 +1,5 @@
+import cfg from '../diplomat.config.js';
+
 let wasm;
 
 function readString(ptr) {
@@ -21,17 +23,19 @@ const imports = {
   }
 }
 
-const url = new URL('./diplomat-lib.wasm', import.meta.url);
 if (typeof fetch === 'undefined') { // Node
   const fs = await import("fs");
-  const wasmFile = new Uint8Array(fs.readFileSync(url));
+  const wasmFile = new Uint8Array(fs.readFileSync(cfg['wasm_path']));
   const loadedWasm = await WebAssembly.instantiate(wasmFile, imports);
   wasm = loadedWasm.instance.exports;
 } else { // Browser
-  const loadedWasm = await WebAssembly.instantiateStreaming(fetch(url), imports);
+  const loadedWasm = await WebAssembly.instantiateStreaming(fetch(cfg['wasm_path']), imports);
   wasm = loadedWasm.instance.exports;
 }
 
 wasm.diplomat_init();
+if (cfg['init'] !== undefined) {
+  cfg['init'](wasm);
+}
 
 export default wasm;

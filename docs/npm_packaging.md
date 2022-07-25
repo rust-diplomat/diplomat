@@ -86,6 +86,19 @@ Then, add your `tsconfig.json` with the following configuration to transpile you
 }
 ```
 
+Lastly, create a `diplomat.config.js` file. There are currently two settings:
+1. `wasm_path`: URL path to the compiled `.wasm` binary. The reason a URL is required is so that if consumers choose to use Webpack, it can detect that the `wasm` file needs to be cached. It's recommended to put the binary in `my-bindings/lib/api/` for releases.
+2. `init` (optional): A function that takes a `wasm` object and gets run during initialization. This is particularly useful when initializing a global, such as a logger. When omitted, no additional initialization is run.
+
+An example config file for `my-bindings` could look like this:
+```js
+// my-bindings/lib/diplomat.config.js
+export default {
+    wasm_path: new URL('./api/my_bindings.wasm', import.meta.url),
+};
+```
+
+
 ## Step 3. Generate bindings and compile WebAssembly
 
 Since Diplomat provides JavaScript bindings to make the developer-facing API idiomatic in JS/TS, it requires a binding generation step in addition to the WASM compilation step.
@@ -104,14 +117,15 @@ diplomat-tool js lib/api --docs lib/docs
 To compile your bindings into a `.wasm` file, run:
 ```sh
 # my-bindings/
-cargo build --target wasm32-unknown-unknown --target-dir target
+cargo build --target wasm32-unknown-unknown
 ```
 
-Finally, copy the generated `wasm` binary into `my-bindings/lib/api/`:
-> ⚠️ Note that it must be renamed to `diplomat-lib.wasm` ⚠️
+Make sure that the generated `wasm` binary is in the location and has the name that `diplomat.config.js` expects it to be.
+
+For example, the above configuration expects it to be in `my-bindings/lib/api`, so we have to copy it over:
 ```sh
 # my-bindings/
-cp target/wasm32-unknown-unknown/debug/my_lib.wasm lib/api/diplomat-lib.wasm
+cp target/wasm32-unknown-unknown/debug/my_bindings.wasm lib/api
 ```
 
 ## Step 4. Publish to NPM
