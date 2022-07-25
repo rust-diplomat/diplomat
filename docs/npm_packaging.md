@@ -87,7 +87,7 @@ Then, add your `tsconfig.json` with the following configuration to transpile you
 ```
 
 Lastly, create a `diplomat.config.js` file. There are currently two settings:
-1. `wasm_path`: URL path to the compiled `.wasm` binary relative to the generated bindings in `api/`. The reason a URL is required is so that if consumers choose to use Webpack, it can detect that the `wasm` file needs to be stored. It's recommended to put the binary in `my-bindings/lib/api/` for releases.
+1. `wasm_path`: URL path to the compiled `.wasm` binary. The reason a URL is required is so that if consumers choose to use Webpack, it can detect that the `wasm` file needs to be cached. It's recommended to put the binary in `my-bindings/lib/api/` for releases.
 2. `init` (optional): A function that takes a `wasm` object and gets run during initialization. This is particularly useful when initializing a global, such as a logger. When omitted, no additional initialization is run.
 
 An example config file for `my-bindings` could look like this:
