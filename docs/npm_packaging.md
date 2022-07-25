@@ -10,30 +10,8 @@ To do this, begin by creating a new crate where your bindings will live:
 cargo new --lib my-bindings
 ```
 
-The first thing to do is edit your `Cargo.toml` file. In order to support compiling
-to WebAssembly and unit testing, add `"cdylib"` and `"rlib"` as the crate types.
-```toml
-[lib]
-crate-type = ["cdylib", "rlib"]
-```
+Before writing bindings, go to your `Cargo.toml` file and add the following configuration settings:
 
-Next, add `diplomat` and `diplomat-runtime` as dependencies.
-```sh
-# my-bindings/
-cargo add diplomat
-cargo add diplomat-runtime
-```
-Finally, you can tell `rustc` to optimize for space on release mode, in order to
-reduce the size of your generated `.wasm` file that has to be transmitted over
-the network when you webpage loads.
-```toml
-[profile.release]
-opt-level = "s"
-```
-
-Make sure to add your Rust library as a dependency as well.
-
-After these changes, you're `Cargo.toml` file should look something like this:
 ```toml
 # my-bindings/Cargo.toml
 
@@ -43,19 +21,21 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
+# Enable compilation to WebAssembly
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 diplomat = "*"
 diplomat-runtime = "*"
-# presumably your Rust library
+# your crate here
 
 [profile.release]
-# Tell `rustc` to optimize for small code size.
+# Optimize for small code size
 opt-level = "s"
 ```
 
-Now you can implement your bindings:
+Next, create the bindings to your crate.
+> Instructions for how to write bindings are in [The Book](https://rust-diplomat.github.io/book/types.html).
 ```rust
 // my-bindings/src/lib.rs
 #[diplomat::bridge]
@@ -64,13 +44,14 @@ mod ffi {
 }
 ```
 
-## Step 2. Create NPM package
+## Step 2. Setup file tree for NPM package
 
+Once you've written the bridge
 Next, we'll configure the NPM packaging. Start by setting up the file tree:
 
 ```sh
 # my-bindings/
-mkdir lib lib/api lib/docs
+mkdir lib lib/api lib/docs lib/tests
 ```
 
 Navigate to `my-bindings/lib` and initialize your `package.json`. The easiest method for this is with `npm init`, which gives a series of prompts to generate a `package.json` for you.
@@ -80,28 +61,21 @@ npm init
 ```
 
 Edit your `package.json` file to contain the following configuration:
-```json
+```js
 // my-bindings/lib/package.json
 {
-    // ...
+    // other config options...
     "main": "./api/index.js", // diplomat-tool is going to only write in `api/` later
     "type": "module",
     "directories": {
-        // ...
+        // other directories...
         "doc": "docs"
-    },
-    // ...
+    }
 }
 ```
 
-Since you're writing tests (right?), create a `tests/` folder:
-```sh
-# my-bindings/lib/
-mkdir tests
-```
-
 Then, add your `tsconfig.json` with the following configuration to transpile your TypeScript tests:
-```json
+```js
 // my-bindings/lib/tsconfig.json
 {
     "compilerOptions": {
@@ -112,26 +86,34 @@ Then, add your `tsconfig.json` with the following configuration to transpile you
 }
 ```
 
-To generate the JavaScript bindings and TypeScript headers, start by installing `diplomat-tool`:
+## Step 3. Generate bindings and compile WebAssembly
+
+Since Diplomat provides JavaScript bindings to make the developer-facing API idiomatic in JS/TS, it requires a binding generation step in addition to the WASM compilation step.
+
+Generating Diplomat bindings requires `diplomat-tool`. If you don't already have it installed, run:
 ```sh
 cargo install diplomat-tool
 ```
 
-Use `diplomat-tool` to generate bindings.
-> Note that additional flags, including the base doc URL.
+Next, generate the JavaScript bindings and TypeScript headers using `diplomat-tool`:
 ```sh
 # my-bindings/
 diplomat-tool js lib/api --docs lib/docs
 ```
 
-Run `cargo build` to compile your bindings into a `.wasm` file:
+To compile your bindings into a `.wasm` file, run:
 ```sh
 # my-bindings/
 cargo build --target wasm32-unknown-unknown --target-dir target
 ```
 
 Finally, copy the generated `wasm` binary into `my-bindings/lib/api/`:
+> ⚠️ Note that it must be renamed to `diplomat-lib.wasm` ⚠️
 ```sh
 # my-bindings/
 cp target/wasm32-unknown-unknown/debug/my_lib.wasm lib/api/diplomat-lib.wasm
 ```
+
+## Step 4. Publish to NPM
+
+Follow NPM's instructions [here](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
