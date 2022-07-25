@@ -9,6 +9,12 @@ function readString(ptr) {
 
 const imports = {
   env: {
+    log_js(ptr) {
+      console.log(readString(ptr));
+    },
+    warn_js(ptr) {
+      console.warn(readString(ptr));
+    },
     trace_js(ptr) {
       throw new Error(readString(ptr));
     }
