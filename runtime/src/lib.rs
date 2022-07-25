@@ -6,6 +6,8 @@ use alloc::alloc::Layout;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_glue;
+#[cfg(target_arch = "wasm32")]
+pub use wasm_glue::{console_log, console_trace, console_warn};
 
 mod writeable;
 pub use writeable::DiplomatWriteable;

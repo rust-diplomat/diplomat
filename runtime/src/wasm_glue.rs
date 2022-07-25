@@ -1,4 +1,5 @@
 use std::ffi::CString;
+use std::io;
 use std::os::raw::c_char;
 
 #[cfg(debug_assertions)]
@@ -8,6 +9,37 @@ use std::panic;
 extern "C" {
     #[allow(dead_code)] // we want a consistent set of externs
     fn trace_js(ptr: *const c_char);
+    #[allow(dead_code)]
+    fn warn_js(ptr: *const c_char);
+    #[allow(dead_code)]
+    fn log_js(ptr: *const c_char);
+}
+
+/// Throw an exception.
+#[allow(dead_code)]
+pub fn console_trace(msg: &str) -> io::Result<()> {
+    console(msg, trace_js)
+}
+
+/// Write a message to `console.warn`.
+#[allow(dead_code)]
+pub fn console_warn(msg: &str) -> io::Result<()> {
+    console(msg, warn_js)
+}
+
+/// Write a message to `console.log`.
+#[allow(dead_code)]
+pub fn console_log(msg: &str) -> io::Result<()> {
+    console(msg, log_js)
+}
+
+/// Call a JavaScript function that takes a string.
+fn console(msg: &str, f: unsafe extern "C" fn(*const c_char)) -> io::Result<()> {
+    let cstring = CString::new(msg)?;
+    unsafe {
+        f(cstring.as_ptr());
+    }
+    Ok(())
 }
 
 /// Sets a custom panic hook, uses your JavaScript `trace` function
@@ -27,11 +59,7 @@ fn set_panic_hook() {
         };
 
         let err_info = format!("Panicked at '{}', {}:{}:{}", msg, file, line, col);
-        let cstring = CString::new(err_info).unwrap();
-
-        unsafe {
-            trace_js(cstring.as_ptr());
-        }
+        console_trace(&err_info).unwrap();
     }));
 }
 
