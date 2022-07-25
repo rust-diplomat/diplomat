@@ -11,7 +11,9 @@ macro_rules! test_file {
         let mut out_docs = std::collections::HashMap::new();
         crate::js::docs::gen_docs(&env, &mut out_docs, &Default::default()).unwrap();
 
-        out_texts.remove("diplomat-runtime.mjs");
+        out_texts.remove("diplomat-runtime.js");
+        out_texts.remove("diplomat-runtime.d.ts");
+        out_texts.remove("diplomat-wasm.mjs");
 
         for out in out_texts.keys() {
             insta::with_settings!({ snapshot_suffix => out.clone() }, {

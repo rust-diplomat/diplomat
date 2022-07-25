@@ -21,18 +21,20 @@ pub mod conversions;
 
 pub mod display;
 
-static RUNTIME_MJS: &str = include_str!("runtime.mjs");
-static RUNTIME_D_TS: &str = include_str!("runtime.d.ts");
-
 pub fn gen_bindings(
     env: &Env,
     outs: &mut HashMap<String, String>,
     docs_url_gen: Option<&ast::DocsUrlGenerator>,
 ) -> fmt::Result {
-    let diplomat_runtime_out = outs.entry("diplomat-runtime.js".to_string()).or_default();
-    write!(diplomat_runtime_out, "{}", RUNTIME_MJS)?;
-    let diplomat_runtime_out = outs.entry("diplomat-runtime.d.ts".to_string()).or_default();
-    write!(diplomat_runtime_out, "{}", RUNTIME_D_TS)?;
+    outs.entry("diplomat-runtime.js".to_string())
+        .or_default()
+        .write_str(include_str!("runtime.mjs"))?;
+    outs.entry("diplomat-runtime.d.ts".to_string())
+        .or_default()
+        .write_str(include_str!("runtime.d.ts"))?;
+    outs.entry("diplomat-wasm.mjs".to_string())
+        .or_default()
+        .write_str(include_str!("wasm.mjs"))?;
 
     let mut all_types = util::get_all_custom_types(env);
     all_types.sort_by_key(|t| t.1.name());
@@ -63,7 +65,7 @@ pub fn gen_bindings(
             .entry(format!("{}.js", custom_type.name()))
             .or_default();
 
-        writeln!(out, "import wasm from \"../wasm.mjs\"")?;
+        writeln!(out, "import wasm from \"./diplomat-wasm.mjs\"")?;
         writeln!(
             out,
             "import * as diplomatRuntime from \"./diplomat-runtime.js\""

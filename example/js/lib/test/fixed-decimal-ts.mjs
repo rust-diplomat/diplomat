@@ -1,5 +1,5 @@
 import test from 'ava';
-import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatOptions } from "../index.js";
+import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatOptions } from "../api/index.js";
 test("multiply a fixed decimal by 1.1", t => {
     const my_decimal = ICU4XFixedDecimal.new(123);
     my_decimal.multiply_pow10(-1);

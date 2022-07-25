@@ -15,7 +15,7 @@ const imports = {
   }
 }
 
-const url = new URL('./diplomat_example.wasm', import.meta.url);
+const url = new URL('./diplomat-lib.wasm', import.meta.url);
 if (typeof fetch === 'undefined') { // Node
   const fs = await import("fs");
   const wasmFile = new Uint8Array(fs.readFileSync(url));

@@ -15,21 +15,17 @@ const imports = {
   }
 }
 
-const path = await import('path');
-const url = await import('url');
-const dir = path.join(path.dirname(url.fileURLToPath(import.meta.url)), "diplomat_feature_tests.wasm");
-
-if (typeof fetch === 'undefined') {
+const url = new URL('./diplomat-lib.wasm', import.meta.url);
+if (typeof fetch === 'undefined') { // Node
   const fs = await import("fs");
-  const wasmFile = new Uint8Array(fs.readFileSync(dir));
+  const wasmFile = new Uint8Array(fs.readFileSync(url));
   const loadedWasm = await WebAssembly.instantiate(wasmFile, imports);
   wasm = loadedWasm.instance.exports;
-} else {
-  const loadedWasm = await WebAssembly.instantiateStreaming(fetch(dir), imports);
+} else { // Browser
+  const loadedWasm = await WebAssembly.instantiateStreaming(fetch(url), imports);
   wasm = loadedWasm.instance.exports;
 }
 
 wasm.diplomat_init();
 
 export default wasm;
-

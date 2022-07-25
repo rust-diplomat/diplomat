@@ -1,4 +1,4 @@
 package-lock.json
 node_modules
 tsconfig.tsbuildinfo
-*.wasm
+api/*.wasm
