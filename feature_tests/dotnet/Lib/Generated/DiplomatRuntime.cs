@@ -32,7 +32,7 @@ public struct DiplomatWriteable : IDisposable
     // (hence `ToUtf8Bytes` is copying the internal buffer from unmanaged to managed memory).
     // It's encouraged to enable memoization when applicable (#129).
 
-    readonly IntPtr context;
+    IntPtr context;
     IntPtr buf;
     nuint len;
     nuint cap;
@@ -44,12 +44,23 @@ public struct DiplomatWriteable : IDisposable
         WriteableFlush flushFunc = Flush;
         WriteableGrow growFunc = Grow;
 
-        context = IntPtr.Zero; // We don't need to use context
+        IntPtr flushFuncPtr = Marshal.GetFunctionPointerForDelegate(flushFunc);
+        IntPtr growFuncPtr = Marshal.GetFunctionPointerForDelegate(growFunc);
+        
+        // flushFunc and growFunc are managed objects and might be disposed of by the garbage collector.
+        // To prevent this, we make the context hold the references and protect the context itself
+        // for automatic disposal by moving it behind a GCHandle.
+        DiplomatWriteableContext ctx = new DiplomatWriteableContext();        
+        ctx.flushFunc = flushFunc;
+        ctx.growFunc = growFunc;
+        GCHandle ctxHandle = GCHandle.Alloc(ctx);
+
+        context = GCHandle.ToIntPtr(ctxHandle);
         buf = Marshal.AllocHGlobal(64);
         len = 0;
         cap = 64;
-        flush = Marshal.GetFunctionPointerForDelegate(flushFunc);
-        grow = Marshal.GetFunctionPointerForDelegate(growFunc);
+        flush = flushFuncPtr;
+        grow = growFuncPtr;
     }
 
     public byte[] ToUtf8Bytes()
@@ -83,6 +94,12 @@ public struct DiplomatWriteable : IDisposable
         {
             Marshal.FreeHGlobal(buf);
             buf = IntPtr.Zero;
+        }
+
+        if (context != IntPtr.Zero)
+        {
+            GCHandle.FromIntPtr(context).Free();
+            context = IntPtr.Zero;
         }
     }
 
@@ -123,6 +140,12 @@ public struct DiplomatWriteable : IDisposable
 
         return true;
     }
+}
+
+internal struct DiplomatWriteableContext
+{
+    internal WriteableFlush flushFunc;
+    internal WriteableGrow growFunc;
 }
 
 internal static class DiplomatUtils
