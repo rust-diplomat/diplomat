@@ -814,8 +814,16 @@ fn extract_getter_metadata(
     method.self_param.as_ref()?;
 
     let return_type = if method.is_writeable_out() {
+        if method.params.len() > 1 {
+            return None;
+        }
+
         "string".to_owned()
     } else {
+        if !method.params.is_empty() {
+            return None;
+        }
+
         let mut out = String::new();
         gen_type_name_return_position(&method.return_type, in_path, env, &mut out).ok()?;
         out

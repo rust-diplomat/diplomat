@@ -563,3 +563,37 @@ fn error_handling() {
         }
     }
 }
+
+#[test]
+fn almost_properties() {
+    test_file_using_library_config! {
+        #[diplomat::bridge]
+        mod ffi {
+            /// This should not contain any property
+            #[diplomat::opaque]
+            struct MyStruct;
+
+            impl MyStruct {
+                /// This should not generate a property
+                pub fn get_foo_by_key(&self, key: &str) -> DiplomatResult<u64, ()> {
+                    unimplemented!()
+                }
+
+                /// This should not generate a property
+                pub fn set_foo_by_key(&self, key: &str, foo: i64) -> DiplomatResult<(), ()> {
+                    unimplemented!()
+                }
+
+                /// This should not generate a property
+                pub fn get_str_by_key(&self, key: &str, writer: &mut DiplomatWriteable) {
+                    unimplemented!()
+                }
+
+                /// This should not generate a property
+                pub fn set_str_by_key(&self, key: &str, s: &str) {
+                    unimplemented!()
+                }
+            }
+        }
+    }
+}
