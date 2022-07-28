@@ -29,7 +29,7 @@ mod idents;
 pub use idents::Ident;
 
 mod docs;
-pub use docs::{Docs, DocType, DocsUrlGenerator, RustLink};
+pub use docs::{DocType, Docs, DocsUrlGenerator, RustLink};
 
 mod validity;
 pub use validity::ValidityError;
