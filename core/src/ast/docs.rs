@@ -1,4 +1,4 @@
-use super::{Ident, Path};
+use super::Path;
 use core::fmt;
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
@@ -100,42 +100,8 @@ impl Docs {
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, PartialOrd, Ord)]
 pub struct RustLink {
-    path: Path,
-    typ: DocType,
-}
-
-impl RustLink {
-    pub fn from_rustdoc(item: rustdoc_types::ItemSummary) -> Self {
-        use rustdoc_types::ItemKind::*;
-        Self {
-            path: Path {
-                elements: item
-                    .path
-                    .into_iter()
-                    .map(|s| Ident::try_from(s).expect("item path is valid"))
-                    .collect(),
-            },
-            typ: match item.kind {
-                Module => DocType::Mod,
-                Struct => DocType::Struct,
-                StructField => DocType::StructField,
-                Enum => DocType::Enum,
-                Variant => DocType::EnumVariant,
-                Function => DocType::Fn,
-                Constant => DocType::Constant,
-                Trait => DocType::Trait,
-                Method => DocType::FnInStruct,
-                Macro => DocType::Macro,
-                ExternCrate | Import | Union | Typedef | OpaqueTy | TraitAlias | Impl | Static
-                | ForeignType | ProcAttribute | ProcDerive | AssocConst | AssocType | Primitive
-                | Keyword => todo!(),
-            },
-        }
-    }
-
-    pub fn is_ignored_from_completeness_check(&self) -> bool {
-        [DocType::EnumVariant, DocType::Mod].contains(&self.typ)
-    }
+    pub path: Path,
+    pub typ: DocType,
 }
 
 impl fmt::Display for RustLink {
@@ -145,7 +111,7 @@ impl fmt::Display for RustLink {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, PartialOrd, Ord)]
-enum DocType {
+pub enum DocType {
     Struct,
     StructField,
     Enum,
