@@ -41,13 +41,6 @@ struct Opt {
     /// different libraries.
     #[structopt(short, long, parse(from_os_str))]
     library_config: Option<PathBuf>,
-
-    /// Path to outputs of `cargo +nightly rustdoc -p mycrate -- --output-format
-    /// json -Zunstable-options`. If this is specified, the tool will report any
-    /// symbols that are public in `mycrate` but are not mentioned in any
-    /// #[diplomat::rust_link] annotation.
-    #[structopt(long, parse(from_os_str))]
-    check_completeness: Vec<PathBuf>,
 }
 
 /// Provide nice error messages if a folder doesn't exist.
@@ -103,36 +96,6 @@ fn main() -> std::io::Result<()> {
             eprintln!("{}", e);
         }
         panic!();
-    }
-
-    if !opt.check_completeness.is_empty() {
-        let mut desireds = Vec::new();
-        for path in opt.check_completeness {
-            let crate_name = path.file_stem().unwrap().to_string_lossy();
-            let mut items = serde_json::from_reader::<_, rustdoc_types::Crate>(File::open(&path)?)?
-                .paths
-                .into_values()
-                .filter(|item| {
-                    item.path[0] == crate_name && item.kind != rustdoc_types::ItemKind::Typedef
-                })
-                .map(ast::RustLink::from_rustdoc)
-                .collect::<Vec<ast::RustLink>>();
-            items.sort();
-            desireds.extend(items);
-        }
-        let actual = diplomat_file.all_rust_links();
-        for desired in desireds {
-            if !desired.is_ignored_from_completeness_check() {
-                println!(
-                    "{}",
-                    if !actual.contains(&desired) {
-                        format!("{} not mentioned in any #[rust_link]", desired).red()
-                    } else {
-                        format!("{} mentioned in #[rust_link]", desired).green()
-                    }
-                );
-            }
-        }
     }
 
     let docs_url_gen = ast::DocsUrlGenerator::with_base_urls(

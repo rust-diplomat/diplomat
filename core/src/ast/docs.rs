@@ -1,4 +1,4 @@
-use super::{Ident, Path};
+use super::Path;
 use core::fmt;
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
@@ -100,42 +100,8 @@ impl Docs {
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, PartialOrd, Ord)]
 pub struct RustLink {
-    path: Path,
-    typ: DocType,
-}
-
-impl RustLink {
-    pub fn from_rustdoc(item: rustdoc_types::ItemSummary) -> Self {
-        use rustdoc_types::ItemKind::*;
-        Self {
-            path: Path {
-                elements: item
-                    .path
-                    .into_iter()
-                    .map(|s| Ident::try_from(s).expect("item path is valid"))
-                    .collect(),
-            },
-            typ: match item.kind {
-                Module => DocType::Mod,
-                Struct => DocType::Struct,
-                StructField => DocType::StructField,
-                Enum => DocType::Enum,
-                Variant => DocType::EnumVariant,
-                Function => DocType::Fn,
-                Constant => DocType::Constant,
-                Trait => DocType::Trait,
-                Method => DocType::FnInStruct,
-                Macro => DocType::Macro,
-                ExternCrate | Import | Union | Typedef | OpaqueTy | TraitAlias | Impl | Static
-                | ForeignType | ProcAttribute | ProcDerive | AssocConst | AssocType | Primitive
-                | Keyword => todo!(),
-            },
-        }
-    }
-
-    pub fn is_ignored_from_completeness_check(&self) -> bool {
-        [DocType::EnumVariant, DocType::Mod].contains(&self.typ)
-    }
+    pub path: Path,
+    pub typ: DocType,
 }
 
 impl fmt::Display for RustLink {
@@ -145,7 +111,7 @@ impl fmt::Display for RustLink {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, PartialOrd, Ord)]
-enum DocType {
+pub enum DocType {
     Struct,
     StructField,
     Enum,
@@ -159,7 +125,14 @@ enum DocType {
     Fn,
     Mod,
     Constant,
+    AssociatedConstantInEnum,
+    AssociatedConstantInTrait,
+    AssociatedConstantInStruct,
     Macro,
+    AssociatedTypeInEnum,
+    AssociatedTypeInTrait,
+    AssociatedTypeInStruct,
+    Typedef,
 }
 
 #[derive(Default)]
@@ -202,9 +175,19 @@ impl DocsUrlGenerator {
         let module_depth = rust_link.path.elements.len()
             - match rust_link.typ {
                 Mod => 0,
-                Struct | Enum | Trait | Fn | Macro | Constant => 1,
-                FnInEnum | FnInStruct | FnInTrait | DefaultFnInTrait | EnumVariant
-                | StructField => 2,
+                Struct | Enum | Trait | Fn | Macro | Constant | Typedef => 1,
+                FnInEnum
+                | FnInStruct
+                | FnInTrait
+                | DefaultFnInTrait
+                | EnumVariant
+                | StructField
+                | AssociatedTypeInEnum
+                | AssociatedTypeInStruct
+                | AssociatedTypeInTrait
+                | AssociatedConstantInEnum
+                | AssociatedConstantInStruct
+                | AssociatedConstantInTrait => 2,
                 EnumVariantField => 3,
             };
 
@@ -219,9 +202,23 @@ impl DocsUrlGenerator {
         }
 
         r.push_str(match rust_link.typ {
-            Struct | StructField | FnInStruct => "struct.",
-            Enum | EnumVariant | EnumVariantField | FnInEnum => "enum.",
-            Trait | FnInTrait | DefaultFnInTrait => "trait.",
+            Typedef => "type.",
+            Struct
+            | StructField
+            | FnInStruct
+            | AssociatedTypeInStruct
+            | AssociatedConstantInStruct => "struct.",
+            Enum
+            | EnumVariant
+            | EnumVariantField
+            | FnInEnum
+            | AssociatedTypeInEnum
+            | AssociatedConstantInEnum => "enum.",
+            Trait
+            | FnInTrait
+            | DefaultFnInTrait
+            | AssociatedTypeInTrait
+            | AssociatedConstantInTrait => "trait.",
             Fn => "fn.",
             Constant => "constant.",
             Macro => "macro.",
@@ -235,6 +232,14 @@ impl DocsUrlGenerator {
         match rust_link.typ {
             FnInStruct | FnInEnum | DefaultFnInTrait => {
                 r.push_str("#method.");
+                r.push_str(elements.next().unwrap().as_str());
+            }
+            AssociatedTypeInStruct | AssociatedTypeInEnum | AssociatedTypeInTrait => {
+                r.push_str("#associatedtype.");
+                r.push_str(elements.next().unwrap().as_str());
+            }
+            AssociatedConstantInStruct | AssociatedConstantInEnum | AssociatedConstantInTrait => {
+                r.push_str("#associatedconstant.");
                 r.push_str(elements.next().unwrap().as_str());
             }
             FnInTrait => {
