@@ -21,6 +21,10 @@ pub mod ffi {
         pub fn assert_struct(&self, s: MyStruct) {
             s.assert_value();
         }
+
+        pub fn returns_usize() -> usize {
+            412
+        }
     }
 
     impl MyStruct {

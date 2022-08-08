@@ -28,4 +28,8 @@ export class Opaque {
     const field_f_arg_s = arg_s["f"];
     wasm.Opaque_assert_struct(this.underlying, field_a_arg_s, field_b_arg_s, field_c_arg_s, field_d_arg_s, field_e_arg_s, diplomatRuntime.extractCodePoint(field_f_arg_s, 'field_f_arg_s'));
   }
+
+  static returns_usize() {
+    return wasm.Opaque_returns_usize();
+  }
 }

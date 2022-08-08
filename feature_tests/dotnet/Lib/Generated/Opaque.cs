@@ -55,6 +55,15 @@ public partial class Opaque: IDisposable
         }
     }
 
+    public static nuint ReturnsUsize()
+    {
+        unsafe
+        {
+            nuint retVal = Raw.Opaque.ReturnsUsize();
+            return retVal;
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

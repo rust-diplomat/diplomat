@@ -22,3 +22,5 @@
     .. cpp:function:: static Opaque new_()
 
     .. cpp:function:: void assert_struct(MyStruct s) const
+
+    .. cpp:function:: static size_t returns_usize()
