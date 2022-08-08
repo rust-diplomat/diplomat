@@ -22,6 +22,9 @@ public partial struct Opaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_assert_struct", ExactSpelling = true)]
     public static unsafe extern void AssertStruct(Opaque* self, MyStruct s);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_returns_usize", ExactSpelling = true)]
+    public static unsafe extern nuint ReturnsUsize();
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Opaque* self);
 }

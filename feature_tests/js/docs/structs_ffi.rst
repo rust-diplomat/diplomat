@@ -22,3 +22,5 @@
     .. js:staticfunction:: new()
 
     .. js:function:: assert_struct(s)
+
+    .. js:staticfunction:: returns_usize()
