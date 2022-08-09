@@ -52,7 +52,7 @@ pub enum Optionality {
 }
 
 /// Determine whether a pointer to an opaque type is owned or borrowed.
-/// 
+///
 /// Since owned opaques cannot be used as inputs, this only appears in output types.
 #[derive(Copy, Clone)]
 pub enum Ownership {

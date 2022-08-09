@@ -191,7 +191,7 @@ impl<'m> LifetimeTree<'m> {
     }
 
     /// Returns a new [`LifetimeTree`] corresponding to the type of `self`.
-    /// 
+    ///
     /// This method takes an extra `self_name` argument, which dictates that the
     /// root of the returned [`LifetimeTree`] should be referred to as.
     fn from_param_self(
