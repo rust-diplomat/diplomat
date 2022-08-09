@@ -21,5 +21,8 @@ lazy_static = "1.4.0"
 serde = { version = "1.0", features = ["derive"] }
 displaydoc = { version = "0.2", optional = true }
 rustdoc-types = "0.11"
+smallvec = "1.9.0"
+strck_ident = { git = "https://github.com/QnnOkabayashi/strck", rev = "1abd1604e14bb9362571595412c8a90a7791e4d1", features = ["rust"] }
+
 [dev-dependencies]
 insta = "1.7.1"
