@@ -44,12 +44,16 @@ pub enum Mutability {
     Immutable,
 }
 
+/// Flag type determining whether or not a pointer to an opaque type is nullable.
 #[derive(Copy, Clone)]
 pub enum Optionality {
     Optional,
     NonOptional,
 }
 
+/// Determine whether a pointer to an opaque type is owned or borrowed.
+/// 
+/// Since owned opaques cannot be used as inputs, this only appears in output types.
 #[derive(Copy, Clone)]
 pub enum Ownership {
     Owned,

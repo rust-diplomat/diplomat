@@ -7,6 +7,7 @@ use super::{
     StructId, Type, TypeContext, TypeKind, TypeLifetime, TypeLifetimes,
 };
 
+/// A method exposed to Diplomat.
 pub struct Method {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -29,17 +30,20 @@ pub enum ReturnFallability {
     Fallible(ReturnOk, TypeKind),
 }
 
+/// The `self` parameter of a method.
 pub enum ParamSelf {
     Opaque(TypeLifetimes, TypeLifetime, OpaqueId),
     Struct(TypeLifetimes, StructId),
     Enum(EnumId),
 }
 
+/// A parameter in a method.
 pub struct Param {
     name: IdentBuf,
     ty: Type,
 }
 
+/// An id for indexing into a [`LifetimeTree`].
 #[derive(Copy, Clone)]
 pub struct ParentId(usize);
 
@@ -57,16 +61,23 @@ pub enum LifetimeTreeLeaf<'m> {
     Slice(ParentId, MethodLifetime<'m>),
 }
 
-pub struct UnpackedInputField<'m> {
+/// A leaf of a lifetime tree capable of tracking its parents.
+pub struct UnpackedField<'m> {
+    /// All inner nodes in the tree. When tracing from the root, we jump around
+    /// this slice based on indices, but don't necessarily use all of them.
     parents: &'m [(Option<ParentId>, &'m Ident)],
+
+    /// The unpacked field that is a leaf on the tree.
     leaf: &'m LifetimeTreeLeaf<'m>,
 }
 
 impl ReturnOk {
+    /// Returns `true` if it's writeable, otherwise `false`.
     pub fn is_writeable(&self) -> bool {
         matches!(self, ReturnOk::Writeable)
     }
 
+    /// Returns a return type, if it's not a writeable.
     pub fn as_type(&self) -> Option<&TypeKind> {
         match self {
             ReturnOk::Writeable => None,
@@ -76,10 +87,13 @@ impl ReturnOk {
 }
 
 impl ReturnFallability {
+    /// Returns `true` if it's writeable, otherwise `false`.
     pub fn is_writeable(&self) -> bool {
         self.return_type().is_writeable()
     }
 
+    /// Returns the [`ReturnOk`] value, whether it's the single return type or
+    /// the `Ok` variant of a result.
     pub fn return_type(&self) -> &ReturnOk {
         match self {
             ReturnFallability::Infallible(ret) | ReturnFallability::Fallible(ret, _) => ret,
@@ -126,6 +140,8 @@ impl Param {
 }
 
 impl Method {
+    /// Returns `true` if the method takes a writeable as an out parameter,
+    /// otherwise `false`.
     pub fn is_writeable(&self) -> bool {
         self.output
             .as_ref()
@@ -133,16 +149,18 @@ impl Method {
             .unwrap_or(false)
     }
 
+    /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> MethodLifetimes {
         self.lifetime_env.method_lifetimes()
     }
 }
 
 impl ParentId {
-    fn new<'arg>(
+    /// Pushes a new parent to the vec, returning the corresponding [`ParentId`].
+    fn new<'m>(
         parent: Option<ParentId>,
-        name: &'arg Ident,
-        parents: &mut SmallVec<[(Option<ParentId>, &'arg Ident); 4]>,
+        name: &'m Ident,
+        parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
     ) -> Self {
         let this = ParentId(parents.len());
         parents.push((parent, name));
@@ -151,6 +169,7 @@ impl ParentId {
 }
 
 impl<'m> LifetimeTree<'m> {
+    /// Returns a new [`LifetimeTree`] corresponding to the type of a [`Param`].
     fn from_param(
         param: &'m Param,
         tcx: &'m TypeContext,
@@ -171,6 +190,10 @@ impl<'m> LifetimeTree<'m> {
         Self { parents, leaves }
     }
 
+    /// Returns a new [`LifetimeTree`] corresponding to the type of `self`.
+    /// 
+    /// This method takes an extra `self_name` argument, which dictates that the
+    /// root of the returned [`LifetimeTree`] should be referred to as.
     fn from_param_self(
         param_self: &'m ParamSelf,
         self_name: &'m Ident,
@@ -207,6 +230,8 @@ impl<'m> LifetimeTree<'m> {
         Self { parents, leaves }
     }
 
+    /// Returns a new [`LifetimeTree`] corresponding to a type. This method is to
+    /// be used internally by [`LifetimeTree::from_param`] and [`LifetimeTree::from_param_self`].
     fn from_type(
         ty: &'m Type,
         tcx: &'m TypeContext,
@@ -243,6 +268,7 @@ impl<'m> LifetimeTree<'m> {
         }
     }
 
+    /// Add an opaque as a leaf during construction of a [`LifetimeTree`].
     fn visit_opaque(
         type_lifetimes: &'m TypeLifetimes,
         borrow_lifetime: &'m TypeLifetime,
@@ -259,6 +285,7 @@ impl<'m> LifetimeTree<'m> {
         ));
     }
 
+    /// Add a slice as a leaf during construction of a [`LifetimeTree`].
     fn visit_slice(
         slice: &Slice,
         parent: ParentId,
@@ -271,6 +298,8 @@ impl<'m> LifetimeTree<'m> {
         ));
     }
 
+    /// Add a struct as a parent an recurse down leaves during construction of a
+    /// [`LifetimeTree`].
     fn visit_struct(
         type_lifetimes: &TypeLifetimes,
         id: &StructId,
@@ -293,16 +322,17 @@ impl<'m> LifetimeTree<'m> {
         }
     }
 
-    /// Iterate through the leaves of a `LifetimeTree`.
-    pub fn unpacked_fields(&'m self) -> impl Iterator<Item = UnpackedInputField<'m>> {
-        self.leaves.iter().map(|leaf| UnpackedInputField {
+    /// Returns an iterator over the leaves of a [`LifetimeTree`], which correspond
+    /// to the unpacked fields that contain lifetimes within a type.
+    pub fn unpacked_fields(&'m self) -> impl Iterator<Item = UnpackedField<'m>> {
+        self.leaves.iter().map(|leaf| UnpackedField {
             parents: self.parents.as_slice(),
             leaf,
         })
     }
 }
 
-impl<'arg> UnpackedInputField<'arg> {
+impl<'m> UnpackedField<'m> {
     /// Iterate over the [`MethodLifetime`]s of an unpacked field.
     pub fn lifetimes(&self) -> impl Iterator<Item = MethodLifetime> + '_ {
         let (lifetime, lifetimes) = match self.leaf {
@@ -321,7 +351,7 @@ impl<'arg> UnpackedInputField<'arg> {
     /// will visit the following in order: `"param"`, `"first"`, `"second"`.
     pub fn trace<F>(&self, visit: &mut F)
     where
-        F: FnMut(&'arg Ident),
+        F: FnMut(&'m Ident),
     {
         let (parent, ident) = match self.leaf {
             LifetimeTreeLeaf::Opaque(id, ..) | LifetimeTreeLeaf::Slice(id, _) => self.parents[id.0],
@@ -332,9 +362,9 @@ impl<'arg> UnpackedInputField<'arg> {
 
     /// Recursively visits fields in order from root to leaf by building up the
     /// stack, and then visiting fields as it unwinds.
-    fn _trace<F>(&self, parent: Option<ParentId>, ident: &'arg Ident, visit: &mut F)
+    fn _trace<F>(&self, parent: Option<ParentId>, ident: &'m Ident, visit: &mut F)
     where
-        F: FnMut(&'arg Ident),
+        F: FnMut(&'m Ident),
     {
         if let Some(id) = parent {
             let (parent, ident) = self.parents[id.0];

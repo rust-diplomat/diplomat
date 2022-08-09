@@ -40,7 +40,7 @@ impl ops::Index<OutStructId> for TypeContext {
     type Output = OutStruct;
 
     fn index(&self, index: OutStructId) -> &Self::Output {
-        &self.out_structs[index.0]
+        self.out_structs.index(index.0)
     }
 }
 
@@ -48,7 +48,7 @@ impl ops::Index<StructId> for TypeContext {
     type Output = Struct;
 
     fn index(&self, index: StructId) -> &Self::Output {
-        &self.structs[index.0]
+        self.structs.index(index.0)
     }
 }
 
@@ -56,7 +56,7 @@ impl ops::Index<OpaqueId> for TypeContext {
     type Output = Opaque;
 
     fn index(&self, index: OpaqueId) -> &Self::Output {
-        &self.opaques[index.0]
+        self.opaques.index(index.0)
     }
 }
 
@@ -64,7 +64,7 @@ impl ops::Index<EnumId> for TypeContext {
     type Output = Enum;
 
     fn index(&self, index: EnumId) -> &Self::Output {
-        &self.enums[index.0]
+        self.enums.index(index.0)
     }
 }
 

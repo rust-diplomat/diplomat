@@ -29,7 +29,7 @@ pub enum FloatType {
     F64,
 }
 
-/// Primitive types.
+/// All primitive types.
 #[derive(Copy, Clone)]
 pub enum PrimitiveType {
     Bool,
@@ -41,6 +41,7 @@ pub enum PrimitiveType {
 }
 
 impl IntType {
+    /// Returns the string representation of `self`.
     pub fn as_str(&self) -> &'static str {
         match self {
             IntType::I8 => "i8",
@@ -58,6 +59,7 @@ impl IntType {
 }
 
 impl Int128Type {
+    /// Returns the string representation of `self`.
     pub fn as_str(&self) -> &'static str {
         match self {
             Int128Type::I128 => "i128",
@@ -67,6 +69,7 @@ impl Int128Type {
 }
 
 impl FloatType {
+    /// Returns the string representation of `self`.
     pub fn as_str(&self) -> &'static str {
         match self {
             FloatType::F32 => "f32",
@@ -76,6 +79,7 @@ impl FloatType {
 }
 
 impl PrimitiveType {
+    /// Returns the string representation of `self`.
     pub fn as_str(&self) -> &'static str {
         match self {
             PrimitiveType::Bool => "bool",

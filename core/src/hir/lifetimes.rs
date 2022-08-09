@@ -55,6 +55,7 @@ pub struct MethodLifetimes<'lt> {
 }
 
 impl LifetimeEnv {
+    /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> MethodLifetimes {
         MethodLifetimes {
             lifetime_env: self,
@@ -111,6 +112,7 @@ impl TypeLifetimes {
 }
 
 impl<'m> MethodLifetimes<'m> {
+    /// Returns an iterator over the contained [`MethodLifetime`]s.
     pub(super) fn iter(&self) -> impl Iterator<Item = MethodLifetime<'m>> + '_ {
         self.indices.iter().map(|&index| MethodLifetime {
             lifetime_env: self.lifetime_env,
