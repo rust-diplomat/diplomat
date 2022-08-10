@@ -206,7 +206,7 @@ impl<'m> LifetimeTree<'m> {
             SelfType::Opaque(ty) => {
                 Self::visit_opaque(
                     &ty.lifetimes,
-                    &ty.borrow().lifetime,
+                    &ty.borrowed().lifetime,
                     parent,
                     method_lifetimes,
                     &mut leaves,
@@ -234,7 +234,7 @@ impl<'m> LifetimeTree<'m> {
             Type::Opaque(path) => {
                 Self::visit_opaque(
                     &path.lifetimes,
-                    &path.borrow().lifetime,
+                    &path.borrowed().lifetime,
                     parent,
                     method_lifetimes,
                     leaves,

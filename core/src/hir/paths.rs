@@ -53,13 +53,13 @@ impl<Owner> OpaquePath<Optional, Owner> {
 }
 
 impl<Opt> OpaquePath<Opt, MaybeOwn> {
-    pub fn as_borrow(&self) -> Option<&Borrow> {
-        self.owner.as_borrow()
+    pub fn as_borrowed(&self) -> Option<&Borrow> {
+        self.owner.as_borrowed()
     }
 }
 
 impl<Opt> OpaquePath<Opt, Borrow> {
-    pub fn borrow(&self) -> &Borrow {
+    pub fn borrowed(&self) -> &Borrow {
         &self.owner
     }
 }
@@ -79,7 +79,7 @@ pub enum MaybeOwn {
 }
 
 impl MaybeOwn {
-    pub fn as_borrow(&self) -> Option<&Borrow> {
+    pub fn as_borrowed(&self) -> Option<&Borrow> {
         match self {
             MaybeOwn::Own => None,
             MaybeOwn::Borrow(borrow) => Some(borrow),
