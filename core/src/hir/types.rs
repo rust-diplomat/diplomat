@@ -1,6 +1,9 @@
 //! Types that can be exposed in Diplomat APIs.
 
-use super::{paths, PrimitiveType, TypeContext, TypeLifetime};
+use super::{
+    EnumPath, MaybeOwn, NonOptional, OpaquePath, Optional, PrimitiveType, ReturnableStructPath,
+    StructPath, TypeContext, TypeLifetime,
+};
 
 /// Type that may be used as an output.
 pub enum ReturnableType {
@@ -11,26 +14,26 @@ pub enum ReturnableType {
 /// Type that can only be used as an output.
 pub enum OutType {
     Primitive(PrimitiveType),
-    Opaque(paths::ReturnedOpaque),
-    Struct(paths::ReturnableStruct),
-    Enum(paths::Enum),
+    Opaque(OpaquePath<Optional, MaybeOwn>),
+    Struct(ReturnableStructPath),
+    Enum(EnumPath),
     Slice(Slice),
 }
 
 /// Type that may be used as input or output.
 pub enum Type {
     Primitive(PrimitiveType),
-    Opaque(paths::OpaqueRef),
-    Struct(paths::Struct),
-    Enum(paths::Enum),
+    Opaque(OpaquePath<Optional, Borrow>),
+    Struct(StructPath),
+    Enum(EnumPath),
     Slice(Slice),
 }
 
 /// Type that can appear in the `self` position.
 pub enum SelfType {
-    Opaque(paths::SelfOpaqueRef),
-    Struct(paths::Struct),
-    Enum(paths::Enum),
+    Opaque(OpaquePath<NonOptional, Borrow>),
+    Struct(StructPath),
+    Enum(EnumPath),
 }
 
 #[derive(Copy, Clone)]

@@ -3,13 +3,13 @@
 use super::{IdentBuf, Method, ReturnableType, Type, TypeLifetimes};
 use crate::ast::Docs;
 
-pub enum ReturnableStruct<'tcx> {
-    Struct(&'tcx Struct),
-    OutStruct(&'tcx OutStruct),
+pub enum ReturnableStructDef<'tcx> {
+    Struct(&'tcx StructDef),
+    OutStruct(&'tcx OutStructDef),
 }
 
 /// Structs that can only be returned from methods.
-pub struct OutStruct {
+pub struct OutStructDef {
     pub docs: Docs,
     pub name: IdentBuf,
     pub lifetimes: TypeLifetimes,
@@ -18,7 +18,7 @@ pub struct OutStruct {
 }
 
 /// Structs that can be either inputs or outputs in methods.
-pub struct Struct {
+pub struct StructDef {
     pub docs: Docs,
     pub name: IdentBuf,
     pub lifetimes: TypeLifetimes,
@@ -34,7 +34,7 @@ pub struct Struct {
 /// to give up ownership.
 ///
 /// A struct marked with `#[diplomat::opaque]`.
-pub struct Opaque {
+pub struct OpaqueDef {
     pub docs: Docs,
     pub name: IdentBuf,
     pub lifetimes: TypeLifetimes,
@@ -42,7 +42,7 @@ pub struct Opaque {
 }
 
 /// The enum type.
-pub struct Enum {
+pub struct EnumDef {
     pub docs: Docs,
     pub name: IdentBuf,
     pub variants: Vec<EnumVariant>,

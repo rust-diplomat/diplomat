@@ -1,16 +1,16 @@
 //! Store all the types contained in the HIR.
 
-use super::defs;
+use super::{EnumDef, OpaqueDef, OutStructDef, StructDef};
 use crate::{ast, Env};
 use std::collections::BTreeMap;
 use std::ops::Index;
 
 /// A context type owning all types exposed to Diplomat.
 pub struct TypeContext {
-    out_structs: Vec<defs::OutStruct>,
-    structs: Vec<defs::Struct>,
-    opaques: Vec<defs::Opaque>,
-    enums: Vec<defs::Enum>,
+    out_structs: Vec<OutStructDef>,
+    structs: Vec<StructDef>,
+    opaques: Vec<OpaqueDef>,
+    enums: Vec<EnumDef>,
 }
 
 /// Key used to index into a [`TypeContext`] representing a struct.
@@ -30,19 +30,19 @@ pub struct OpaqueId(usize);
 pub struct EnumId(usize);
 
 impl TypeContext {
-    pub(crate) fn resolve_out_struct(&self, id: OutStructId) -> &defs::OutStruct {
+    pub(crate) fn resolve_out_struct(&self, id: OutStructId) -> &OutStructDef {
         self.out_structs.index(id.0)
     }
 
-    pub(crate) fn resolve_struct(&self, id: StructId) -> &defs::Struct {
+    pub(crate) fn resolve_struct(&self, id: StructId) -> &StructDef {
         self.structs.index(id.0)
     }
 
-    pub(crate) fn resolve_opaque(&self, id: OpaqueId) -> &defs::Opaque {
+    pub(crate) fn resolve_opaque(&self, id: OpaqueId) -> &OpaqueDef {
         self.opaques.index(id.0)
     }
 
-    pub(crate) fn resolve_enum(&self, id: EnumId) -> &defs::Enum {
+    pub(crate) fn resolve_enum(&self, id: EnumId) -> &EnumDef {
         self.enums.index(id.0)
     }
 }
@@ -51,10 +51,10 @@ impl TypeContext {
     /// Lowers the AST to the HIR while simultaneously performing validation.
     pub fn from_ast(env: &Env) -> Result<Self, Vec<ast::ValidityError>> {
         // this function is very much in progress
-        let mut out_structs: Vec<defs::OutStruct> = Vec::with_capacity(0);
-        let mut structs: Vec<defs::Struct> = Vec::with_capacity(0);
-        let mut opaques: Vec<defs::Opaque> = Vec::with_capacity(0);
-        let mut enums: Vec<defs::Enum> = Vec::with_capacity(0);
+        let mut out_structs: Vec<OutStructDef> = Vec::with_capacity(0);
+        let mut structs: Vec<StructDef> = Vec::with_capacity(0);
+        let mut opaques: Vec<OpaqueDef> = Vec::with_capacity(0);
+        let mut enums: Vec<EnumDef> = Vec::with_capacity(0);
 
         let mut struct_map: BTreeMap<&ast::Struct, StructId> = BTreeMap::new();
         let mut out_struct_map: BTreeMap<&ast::Struct, OutStructId> = BTreeMap::new();
