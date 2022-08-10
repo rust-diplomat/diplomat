@@ -1,6 +1,6 @@
 //! Store all the types contained in the HIR.
 
-use super::{defs, paths};
+use super::defs;
 use crate::{ast, Env};
 use std::collections::BTreeMap;
 use std::ops::Index;
@@ -29,38 +29,21 @@ pub struct OpaqueId(usize);
 #[derive(Copy, Clone)]
 pub struct EnumId(usize);
 
-impl paths::ReturnableStruct {
-    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> defs::ReturnableStruct<'tcx> {
-        match self {
-            paths::ReturnableStruct::Struct(ty) => defs::ReturnableStruct::Struct(ty.resolve(tcx)),
-            paths::ReturnableStruct::OutStruct(ty) => {
-                defs::ReturnableStruct::OutStruct(ty.resolve(tcx))
-            }
-        }
+impl TypeContext {
+    pub(crate) fn resolve_out_struct(&self, id: OutStructId) -> &defs::OutStruct {
+        self.out_structs.index(id.0)
     }
-}
 
-impl paths::OutStruct {
-    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::OutStruct {
-        tcx.out_structs.index(self.tcx_id.0)
+    pub(crate) fn resolve_struct(&self, id: StructId) -> &defs::Struct {
+        self.structs.index(id.0)
     }
-}
 
-impl paths::Struct {
-    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::Struct {
-        tcx.structs.index(self.tcx_id.0)
+    pub(crate) fn resolve_opaque(&self, id: OpaqueId) -> &defs::Opaque {
+        self.opaques.index(id.0)
     }
-}
 
-impl paths::OpaqueRef {
-    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::Opaque {
-        tcx.opaques.index(self.tcx_id.0)
-    }
-}
-
-impl paths::Enum {
-    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::Enum {
-        tcx.enums.index(self.tcx_id.0)
+    pub(crate) fn resolve_enum(&self, id: EnumId) -> &defs::Enum {
+        self.enums.index(id.0)
     }
 }
 
