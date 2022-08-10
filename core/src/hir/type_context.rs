@@ -52,7 +52,7 @@ impl paths::Struct {
     }
 }
 
-impl paths::Opaque {
+impl paths::OpaqueRef {
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::Opaque {
         tcx.opaques.index(self.tcx_id.0)
     }

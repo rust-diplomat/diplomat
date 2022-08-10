@@ -1,4 +1,4 @@
-use super::{EnumId, OpaqueId, OutStructId, Ref, StructId, TypeLifetimes};
+use super::{Borrow, EnumId, OpaqueId, OutStructId, StructId, TypeLifetimes};
 
 /// Path to a struct that may appear as an output.
 pub enum ReturnableStruct {
@@ -20,27 +20,27 @@ pub struct Struct {
 
 /// Path to an opaque that may be owned (`Box<T>`) or borrowed (`&T`), and may
 /// also be nullable (`Option<Box<T>>`/`Option<&T>`).
-pub struct OutOpaque {
+pub struct ReturnedOpaque {
     pub lifetimes: TypeLifetimes,
     pub nullable: bool,
-    pub borrow: Ownership,
+    pub ownership: Ownership,
     pub(crate) tcx_id: OpaqueId,
 }
 
 /// Path to an opaque that is borrowed (`&T`), and may
 /// also be nullable (`Option<&T>`).
-pub struct Opaque {
+pub struct OpaqueRef {
     pub lifetimes: TypeLifetimes,
     pub nullable: bool,
-    pub borrow: Ref,
+    pub borrow: Borrow,
     pub(crate) tcx_id: OpaqueId,
 }
 
 /// Path to an opaque that can appear in the `&self` position and is always borrowed
 /// (`&T`), but not nullable.
-pub struct SelfOpaque {
+pub struct SelfOpaqueRef {
     pub lifetimes: TypeLifetimes,
-    pub borrow: Ref,
+    pub borrow: Borrow,
     pub(crate) tcx_id: OpaqueId,
 }
 
@@ -55,5 +55,5 @@ pub struct Enum {
 #[derive(Copy, Clone)]
 pub enum Ownership {
     Owned,
-    Borrowed(Ref),
+    Borrowed(Borrow),
 }
