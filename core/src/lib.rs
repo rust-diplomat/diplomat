@@ -3,6 +3,7 @@
 /// is primarily the AST types that Diplomat generates while
 /// extracting APIs.
 pub mod ast;
+pub mod hir;
 
 mod environment;
 
