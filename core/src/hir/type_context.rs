@@ -1,16 +1,16 @@
 //! Store all the types contained in the HIR.
 
-use crate::hir::{Enum, Opaque, OutStruct, Struct};
+use super::{defs, paths};
 use crate::{ast, Env};
 use std::collections::BTreeMap;
-use std::ops;
+use std::ops::Index;
 
 /// A context type owning all types exposed to Diplomat.
 pub struct TypeContext {
-    out_structs: Vec<OutStruct>,
-    structs: Vec<Struct>,
-    opaques: Vec<Opaque>,
-    enums: Vec<Enum>,
+    out_structs: Vec<defs::OutStruct>,
+    structs: Vec<defs::Struct>,
+    opaques: Vec<defs::Opaque>,
+    enums: Vec<defs::Enum>,
 }
 
 /// Key used to index into a [`TypeContext`] representing a struct.
@@ -29,42 +29,38 @@ pub struct OpaqueId(usize);
 #[derive(Copy, Clone)]
 pub struct EnumId(usize);
 
-/// Key used to index into a [`TypeContext`] representing either a struct or an
-/// out struct.
-pub enum StructIdKind {
-    Struct(StructId),
-    OutStruct(OutStructId),
-}
-
-impl ops::Index<OutStructId> for TypeContext {
-    type Output = OutStruct;
-
-    fn index(&self, index: OutStructId) -> &Self::Output {
-        self.out_structs.index(index.0)
+impl paths::ReturnableStruct {
+    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> defs::ReturnableStruct<'tcx> {
+        match self {
+            paths::ReturnableStruct::Struct(ty) => defs::ReturnableStruct::Struct(ty.resolve(tcx)),
+            paths::ReturnableStruct::OutStruct(ty) => {
+                defs::ReturnableStruct::OutStruct(ty.resolve(tcx))
+            }
+        }
     }
 }
 
-impl ops::Index<StructId> for TypeContext {
-    type Output = Struct;
-
-    fn index(&self, index: StructId) -> &Self::Output {
-        self.structs.index(index.0)
+impl paths::OutStruct {
+    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::OutStruct {
+        tcx.out_structs.index(self.tcx_id.0)
     }
 }
 
-impl ops::Index<OpaqueId> for TypeContext {
-    type Output = Opaque;
-
-    fn index(&self, index: OpaqueId) -> &Self::Output {
-        self.opaques.index(index.0)
+impl paths::Struct {
+    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::Struct {
+        tcx.structs.index(self.tcx_id.0)
     }
 }
 
-impl ops::Index<EnumId> for TypeContext {
-    type Output = Enum;
+impl paths::Opaque {
+    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::Opaque {
+        tcx.opaques.index(self.tcx_id.0)
+    }
+}
 
-    fn index(&self, index: EnumId) -> &Self::Output {
-        self.enums.index(index.0)
+impl paths::Enum {
+    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx defs::Enum {
+        tcx.enums.index(self.tcx_id.0)
     }
 }
 
@@ -72,10 +68,10 @@ impl TypeContext {
     /// Lowers the AST to the HIR while simultaneously performing validation.
     pub fn from_ast(env: &Env) -> Result<Self, Vec<ast::ValidityError>> {
         // this function is very much in progress
-        let mut out_structs: Vec<OutStruct> = Vec::with_capacity(0);
-        let mut structs: Vec<Struct> = Vec::with_capacity(0);
-        let mut opaques: Vec<Opaque> = Vec::with_capacity(0);
-        let mut enums: Vec<Enum> = Vec::with_capacity(0);
+        let mut out_structs: Vec<defs::OutStruct> = Vec::with_capacity(0);
+        let mut structs: Vec<defs::Struct> = Vec::with_capacity(0);
+        let mut opaques: Vec<defs::Opaque> = Vec::with_capacity(0);
+        let mut enums: Vec<defs::Enum> = Vec::with_capacity(0);
 
         let mut struct_map: BTreeMap<&ast::Struct, StructId> = BTreeMap::new();
         let mut out_struct_map: BTreeMap<&ast::Struct, OutStructId> = BTreeMap::new();

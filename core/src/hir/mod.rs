@@ -4,10 +4,10 @@
 mod defs;
 mod lifetimes;
 mod methods;
+mod paths;
 mod primitives;
 mod type_context;
 mod types;
-pub use defs::*;
 pub use lifetimes::*;
 pub use methods::*;
 pub use primitives::*;

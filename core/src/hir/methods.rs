@@ -3,8 +3,8 @@
 use smallvec::SmallVec;
 
 use super::{
-    Docs, EnumId, Ident, IdentBuf, LifetimeEnv, MethodLifetime, MethodLifetimes, OpaqueId, Slice,
-    StructId, Type, TypeContext, TypeKind, TypeLifetime, TypeLifetimes,
+    paths, Docs, Ident, IdentBuf, LifetimeEnv, MethodLifetime, MethodLifetimes, ReturnableType,
+    SelfType, Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
 };
 
 /// A method exposed to Diplomat.
@@ -18,23 +18,21 @@ pub struct Method {
     pub output: Option<ReturnFallability>,
 }
 
-/// Types that are returnable from a method.
-pub enum ReturnOk {
+/// Type that the method returns.
+pub enum ReturnType {
     Writeable,
-    Type(TypeKind),
+    Type(ReturnableType),
 }
 
 /// Whether or not the method returns a value or a result.
 pub enum ReturnFallability {
-    Infallible(ReturnOk),
-    Fallible(ReturnOk, TypeKind),
+    Infallible(ReturnType),
+    Fallible(ReturnType, ReturnableType),
 }
 
 /// The `self` parameter of a method.
-pub enum ParamSelf {
-    Opaque(TypeLifetimes, TypeLifetime, OpaqueId),
-    Struct(TypeLifetimes, StructId),
-    Enum(EnumId),
+pub struct ParamSelf {
+    ty: SelfType,
 }
 
 /// A parameter in a method.
@@ -71,17 +69,17 @@ pub struct UnpackedField<'m> {
     leaf: &'m LifetimeTreeLeaf<'m>,
 }
 
-impl ReturnOk {
+impl ReturnType {
     /// Returns `true` if it's writeable, otherwise `false`.
     pub fn is_writeable(&self) -> bool {
-        matches!(self, ReturnOk::Writeable)
+        matches!(self, ReturnType::Writeable)
     }
 
     /// Returns a return type, if it's not a writeable.
-    pub fn as_type(&self) -> Option<&TypeKind> {
+    pub fn as_type(&self) -> Option<&ReturnableType> {
         match self {
-            ReturnOk::Writeable => None,
-            ReturnOk::Type(ty) => Some(ty),
+            ReturnType::Writeable => None,
+            ReturnType::Type(ty) => Some(ty),
         }
     }
 }
@@ -94,7 +92,7 @@ impl ReturnFallability {
 
     /// Returns the [`ReturnOk`] value, whether it's the single return type or
     /// the `Ok` variant of a result.
-    pub fn return_type(&self) -> &ReturnOk {
+    pub fn return_type(&self) -> &ReturnType {
         match self {
             ReturnFallability::Infallible(ret) | ReturnFallability::Fallible(ret, _) => ret,
         }
@@ -117,13 +115,13 @@ impl ParamSelf {
     ///
     /// This method is used to calculate how much space to allocate upfront.
     fn field_leaf_lifetime_counts(&self, tcx: &TypeContext) -> (usize, usize) {
-        match self {
-            ParamSelf::Opaque(..) => (0, 1),
-            ParamSelf::Struct(_, id) => tcx[*id].fields.iter().fold((1, 0), |acc, field| {
+        match self.ty {
+            SelfType::Opaque(_) => (0, 1),
+            SelfType::Struct(ref ty) => ty.resolve(tcx).fields.iter().fold((1, 0), |acc, field| {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
-            ParamSelf::Enum(_) => (0, 0),
+            SelfType::Enum(_) => (0, 0),
         }
     }
 }
@@ -204,28 +202,20 @@ impl<'m> LifetimeTree<'m> {
         let mut parents = SmallVec::with_capacity(num_fields + 1);
         let mut leaves = SmallVec::with_capacity(num_leaves);
         let parent = ParentId::new(None, self_name, &mut parents);
-        match param_self {
-            ParamSelf::Opaque(type_lifetimes, borrow_lifetime, _) => {
+        match &param_self.ty {
+            SelfType::Opaque(ty) => {
                 Self::visit_opaque(
-                    type_lifetimes,
-                    borrow_lifetime,
+                    &ty.lifetimes,
+                    &ty.borrow.lifetime,
                     parent,
                     method_lifetimes,
                     &mut leaves,
                 );
             }
-            ParamSelf::Struct(type_lifetimes, id) => {
-                Self::visit_struct(
-                    type_lifetimes,
-                    id,
-                    tcx,
-                    parent,
-                    method_lifetimes,
-                    &mut parents,
-                    &mut leaves,
-                );
+            SelfType::Struct(ty) => {
+                Self::visit_struct(ty, tcx, parent, method_lifetimes, &mut parents, &mut leaves);
             }
-            ParamSelf::Enum(_) => {}
+            SelfType::Enum(_) => {}
         }
         Self { parents, leaves }
     }
@@ -241,10 +231,10 @@ impl<'m> LifetimeTree<'m> {
         leaves: &mut SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
     ) {
         match ty {
-            Type::Opaque(type_lifetimes, _, borrow_lifetime, _) => {
+            Type::Opaque(path) => {
                 Self::visit_opaque(
-                    type_lifetimes,
-                    borrow_lifetime,
+                    &path.lifetimes,
+                    &path.borrow.lifetime,
                     parent,
                     method_lifetimes,
                     leaves,
@@ -253,16 +243,8 @@ impl<'m> LifetimeTree<'m> {
             Type::Slice(slice) => {
                 Self::visit_slice(slice, parent, method_lifetimes, leaves);
             }
-            Type::Struct(type_lifetimes, id) => {
-                Self::visit_struct(
-                    type_lifetimes,
-                    id,
-                    tcx,
-                    parent,
-                    method_lifetimes,
-                    parents,
-                    leaves,
-                );
+            Type::Struct(path) => {
+                Self::visit_struct(path, tcx, parent, method_lifetimes, parents, leaves);
             }
             _ => {}
         }
@@ -270,14 +252,14 @@ impl<'m> LifetimeTree<'m> {
 
     /// Add an opaque as a leaf during construction of a [`LifetimeTree`].
     fn visit_opaque(
-        type_lifetimes: &'m TypeLifetimes,
-        borrow_lifetime: &'m TypeLifetime,
+        lifetimes: &'m TypeLifetimes,
+        borrow: &'m TypeLifetime,
         parent: ParentId,
         method_lifetimes: &MethodLifetimes<'m>,
         leaves: &mut SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
     ) {
-        let method_borrow_lifetime = borrow_lifetime.in_method(method_lifetimes);
-        let method_type_lifetimes = type_lifetimes.in_method(method_lifetimes);
+        let method_borrow_lifetime = borrow.in_method(method_lifetimes);
+        let method_type_lifetimes = lifetimes.in_method(method_lifetimes);
         leaves.push(LifetimeTreeLeaf::Opaque(
             parent,
             method_borrow_lifetime,
@@ -292,25 +274,22 @@ impl<'m> LifetimeTree<'m> {
         method_lifetimes: &MethodLifetimes<'m>,
         leaves: &mut SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
     ) {
-        leaves.push(LifetimeTreeLeaf::Slice(
-            parent,
-            slice.lifetime().in_method(method_lifetimes),
-        ));
+        let method_lifetime = slice.lifetime().in_method(method_lifetimes);
+        leaves.push(LifetimeTreeLeaf::Slice(parent, method_lifetime));
     }
 
     /// Add a struct as a parent an recurse down leaves during construction of a
     /// [`LifetimeTree`].
     fn visit_struct(
-        type_lifetimes: &TypeLifetimes,
-        id: &StructId,
+        ty: &paths::Struct,
         tcx: &'m TypeContext,
         parent: ParentId,
         method_lifetimes: &MethodLifetimes<'m>,
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
         leaves: &mut SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
     ) {
-        let method_type_lifetimes = type_lifetimes.in_method(method_lifetimes);
-        for field in tcx[*id].fields.iter() {
+        let method_type_lifetimes = ty.lifetimes.in_method(method_lifetimes);
+        for field in ty.resolve(tcx).fields.iter() {
             Self::from_type(
                 &field.ty,
                 tcx,

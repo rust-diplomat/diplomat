@@ -1,32 +1,36 @@
 //! Types that can be exposed in Diplomat APIs.
 
-use super::{
-    EnumId, OpaqueId, PrimitiveType, StructId, StructIdKind, TypeContext, TypeLifetime,
-    TypeLifetimes,
-};
+use super::{paths, PrimitiveType, TypeContext, TypeLifetime};
 
 /// Type that may be used as an output.
-pub enum TypeKind {
-    OutType(OutType),
+pub enum ReturnableType {
     Type(Type),
+    OutType(OutType),
 }
 
 /// Type that can only be used as an output.
 pub enum OutType {
     Primitive(PrimitiveType),
-    Opaque(TypeLifetimes, Optionality, Ownership, OpaqueId),
-    Struct(TypeLifetimes, StructIdKind),
-    Enum(EnumId),
+    Opaque(paths::OutOpaque),
+    Struct(paths::ReturnableStruct),
+    Enum(paths::Enum),
     Slice(Slice),
 }
 
 /// Type that may be used as input or output.
 pub enum Type {
     Primitive(PrimitiveType),
-    Opaque(TypeLifetimes, Optionality, TypeLifetime, OpaqueId),
-    Struct(TypeLifetimes, StructId),
-    Enum(EnumId),
+    Opaque(paths::Opaque),
+    Struct(paths::Struct),
+    Enum(paths::Enum),
     Slice(Slice),
+}
+
+/// Type that can appear in the `self` position.
+pub enum SelfType {
+    Opaque(paths::SelfOpaque),
+    Struct(paths::Struct),
+    Enum(paths::Enum),
 }
 
 #[derive(Copy, Clone)]
@@ -35,7 +39,7 @@ pub enum Slice {
     Str(TypeLifetime),
 
     /// A primitive slice, e.g. `&mut [u8]`.
-    Primitive(TypeLifetime, Mutability, PrimitiveType),
+    Primitive(Ref, PrimitiveType),
 }
 
 #[derive(Copy, Clone)]
@@ -44,20 +48,10 @@ pub enum Mutability {
     Immutable,
 }
 
-/// Flag type determining whether or not a pointer to an opaque type is nullable.
 #[derive(Copy, Clone)]
-pub enum Optionality {
-    Optional,
-    NonOptional,
-}
-
-/// Determine whether a pointer to an opaque type is owned or borrowed.
-///
-/// Since owned opaques cannot be used as inputs, this only appears in output types.
-#[derive(Copy, Clone)]
-pub enum Ownership {
-    Owned,
-    Borrowed(TypeLifetime),
+pub struct Ref {
+    pub lifetime: TypeLifetime,
+    pub mutability: Mutability,
 }
 
 impl Type {
@@ -67,11 +61,11 @@ impl Type {
     /// This method is used to calculate how much space to allocate upfront.
     pub(super) fn field_leaf_lifetime_counts(&self, tcx: &TypeContext) -> (usize, usize) {
         match self {
-            Type::Struct(_, id) => tcx[*id].fields.iter().fold((1, 0), |acc, field| {
+            Type::Struct(ty) => ty.resolve(tcx).fields.iter().fold((1, 0), |acc, field| {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
-            Type::Opaque(..) | Type::Slice(_) => (0, 1),
+            Type::Opaque(_) | Type::Slice(_) => (0, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
         }
     }
@@ -80,9 +74,10 @@ impl Type {
 impl Slice {
     /// Returns the [`TypeLifetime`] contained in either the `Str` or `Primitive`
     /// variant.
-    pub fn lifetime(&self) -> TypeLifetime {
+    pub fn lifetime(&self) -> &TypeLifetime {
         match self {
-            Slice::Str(lifetime) | Slice::Primitive(lifetime, ..) => *lifetime,
+            Slice::Str(lifetime) => lifetime,
+            Slice::Primitive(reference, _) => &reference.lifetime,
         }
     }
 }

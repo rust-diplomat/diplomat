@@ -1,7 +1,12 @@
 //! Type definitions for structs, output structs, opaque structs, and enums.
 
-use super::{IdentBuf, Method, Type, TypeKind, TypeLifetimes};
+use super::{IdentBuf, Method, ReturnableType, Type, TypeLifetimes};
 use crate::ast::Docs;
+
+pub enum ReturnableStruct<'tcx> {
+    Struct(&'tcx Struct),
+    OutStruct(&'tcx OutStruct),
+}
 
 /// Structs that can only be returned from methods.
 pub struct OutStruct {
@@ -48,7 +53,7 @@ pub struct Enum {
 pub struct OutStructField {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub ty: TypeKind,
+    pub ty: ReturnableType,
 }
 
 /// A field on a [`Struct`]s.
