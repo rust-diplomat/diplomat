@@ -1,4 +1,5 @@
 //! Primitives types that can cross the FFI boundary.
+use crate::ast;
 
 /// 8, 16, 32, and 64-bit signed and unsigned integers.
 #[derive(Copy, Clone)]
@@ -7,11 +8,16 @@ pub enum IntType {
     I16,
     I32,
     I64,
-    Isize,
     U8,
     U16,
     U32,
     U64,
+}
+
+/// Platform-dependent signed and unsigned size types.
+#[derive(Copy, Clone)]
+pub enum IntSizeType {
+    Isize,
     Usize,
 }
 
@@ -35,9 +41,9 @@ pub enum PrimitiveType {
     Bool,
     Char,
     Int(IntType),
+    IntSize(IntSizeType),
     Int128(Int128Type),
     Float(FloatType),
-    Unit,
 }
 
 impl IntType {
@@ -48,12 +54,20 @@ impl IntType {
             IntType::I16 => "i16",
             IntType::I32 => "i32",
             IntType::I64 => "i64",
-            IntType::Isize => "isize",
             IntType::U8 => "u8",
             IntType::U16 => "u16",
             IntType::U32 => "u32",
             IntType::U64 => "u64",
-            IntType::Usize => "usize",
+        }
+    }
+}
+
+impl IntSizeType {
+    /// Returns the string representation of `self`.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            IntSizeType::Isize => "isize",
+            IntSizeType::Usize => "usize",
         }
     }
 }
@@ -79,15 +93,36 @@ impl FloatType {
 }
 
 impl PrimitiveType {
+    pub(super) fn from_ast(prim: ast::PrimitiveType) -> Self {
+        match prim {
+            ast::PrimitiveType::i8 => PrimitiveType::Int(IntType::I8),
+            ast::PrimitiveType::u8 => PrimitiveType::Int(IntType::U8),
+            ast::PrimitiveType::i16 => PrimitiveType::Int(IntType::I16),
+            ast::PrimitiveType::u16 => PrimitiveType::Int(IntType::U16),
+            ast::PrimitiveType::i32 => PrimitiveType::Int(IntType::I32),
+            ast::PrimitiveType::u32 => PrimitiveType::Int(IntType::U32),
+            ast::PrimitiveType::i64 => PrimitiveType::Int(IntType::I64),
+            ast::PrimitiveType::u64 => PrimitiveType::Int(IntType::U64),
+            ast::PrimitiveType::isize => PrimitiveType::IntSize(IntSizeType::Isize),
+            ast::PrimitiveType::usize => PrimitiveType::IntSize(IntSizeType::Usize),
+            ast::PrimitiveType::i128 => PrimitiveType::Int128(Int128Type::I128),
+            ast::PrimitiveType::u128 => PrimitiveType::Int128(Int128Type::U128),
+            ast::PrimitiveType::f32 => PrimitiveType::Float(FloatType::F32),
+            ast::PrimitiveType::f64 => PrimitiveType::Float(FloatType::F64),
+            ast::PrimitiveType::bool => PrimitiveType::Bool,
+            ast::PrimitiveType::char => PrimitiveType::Char,
+        }
+    }
+
     /// Returns the string representation of `self`.
     pub fn as_str(&self) -> &'static str {
         match self {
             PrimitiveType::Bool => "bool",
             PrimitiveType::Char => "char",
             PrimitiveType::Int(ty) => ty.as_str(),
+            PrimitiveType::IntSize(ty) => ty.as_str(),
             PrimitiveType::Int128(ty) => ty.as_str(),
             PrimitiveType::Float(ty) => ty.as_str(),
-            PrimitiveType::Unit => "()",
         }
     }
 }

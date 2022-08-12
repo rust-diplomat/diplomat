@@ -1,6 +1,6 @@
 //! Type definitions for structs, output structs, opaque structs, and enums.
 
-use super::{IdentBuf, Method, ReturnableType, Type, TypeLifetimes};
+use super::{IdentBuf, Method, OutType, Type};
 use crate::ast::Docs;
 
 pub enum ReturnableStructDef<'tcx> {
@@ -12,7 +12,6 @@ pub enum ReturnableStructDef<'tcx> {
 pub struct OutStructDef {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub lifetimes: TypeLifetimes,
     pub fields: Vec<OutStructField>,
     pub methods: Vec<Method>,
 }
@@ -21,7 +20,6 @@ pub struct OutStructDef {
 pub struct StructDef {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub lifetimes: TypeLifetimes,
     pub fields: Vec<StructField>,
     pub methods: Vec<Method>,
 }
@@ -37,7 +35,6 @@ pub struct StructDef {
 pub struct OpaqueDef {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub lifetimes: TypeLifetimes,
     pub methods: Vec<Method>,
 }
 
@@ -53,7 +50,7 @@ pub struct EnumDef {
 pub struct OutStructField {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub ty: ReturnableType,
+    pub ty: OutType,
 }
 
 /// A field on a [`Struct`]s.

@@ -3,31 +3,31 @@
 use smallvec::SmallVec;
 
 use super::{
-    paths, Docs, Ident, IdentBuf, LifetimeEnv, MethodLifetime, MethodLifetimes, ReturnableType,
-    SelfType, Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
+    paths, Docs, Ident, IdentBuf, LifetimeEnv, MethodLifetime, MethodLifetimes, OutType, SelfType,
+    Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
 };
 
 /// A method exposed to Diplomat.
 pub struct Method {
     pub docs: Docs,
     pub name: IdentBuf,
-    lifetime_env: LifetimeEnv,
+    pub lifetime_env: LifetimeEnv,
 
     pub param_self: Option<ParamSelf>,
     pub params: Vec<Param>,
-    pub output: Option<ReturnFallability>,
+    pub output: ReturnFallability,
 }
 
 /// Type that the method returns.
 pub enum ReturnType {
     Writeable,
-    Type(ReturnableType),
+    OutType(OutType),
 }
 
 /// Whether or not the method returns a value or a result.
 pub enum ReturnFallability {
-    Infallible(ReturnType),
-    Fallible(ReturnType, ReturnableType),
+    Infallible(Option<ReturnType>),
+    Fallible(Option<ReturnType>, OutType),
 }
 
 /// The `self` parameter of a method.
@@ -76,10 +76,10 @@ impl ReturnType {
     }
 
     /// Returns a return type, if it's not a writeable.
-    pub fn as_type(&self) -> Option<&ReturnableType> {
+    pub fn as_type(&self) -> Option<&OutType> {
         match self {
             ReturnType::Writeable => None,
-            ReturnType::Type(ty) => Some(ty),
+            ReturnType::OutType(ty) => Some(ty),
         }
     }
 }
@@ -87,19 +87,27 @@ impl ReturnType {
 impl ReturnFallability {
     /// Returns `true` if it's writeable, otherwise `false`.
     pub fn is_writeable(&self) -> bool {
-        self.return_type().is_writeable()
+        self.return_type()
+            .map(ReturnType::is_writeable)
+            .unwrap_or(false)
     }
 
     /// Returns the [`ReturnOk`] value, whether it's the single return type or
     /// the `Ok` variant of a result.
-    pub fn return_type(&self) -> &ReturnType {
+    pub fn return_type(&self) -> Option<&ReturnType> {
         match self {
-            ReturnFallability::Infallible(ret) | ReturnFallability::Fallible(ret, _) => ret,
+            ReturnFallability::Infallible(ret) | ReturnFallability::Fallible(ret, _) => {
+                ret.as_ref()
+            }
         }
     }
 }
 
 impl ParamSelf {
+    pub(super) fn new(ty: SelfType) -> Self {
+        Self { ty }
+    }
+
     /// Returns a [`LifetimeTree`] corresponding to this self parameter.
     pub fn lifetime_tree<'m>(
         &'m self,
@@ -127,6 +135,10 @@ impl ParamSelf {
 }
 
 impl Param {
+    pub(super) fn new(name: IdentBuf, ty: Type) -> Self {
+        Self { name, ty }
+    }
+
     /// Returns a [`LifetimeTree`] corresponding to this parameter.
     pub fn lifetime_tree<'m>(
         &'m self,
@@ -141,10 +153,7 @@ impl Method {
     /// Returns `true` if the method takes a writeable as an out parameter,
     /// otherwise `false`.
     pub fn is_writeable(&self) -> bool {
-        self.output
-            .as_ref()
-            .map(ReturnFallability::is_writeable)
-            .unwrap_or(false)
+        self.output.is_writeable()
     }
 
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.

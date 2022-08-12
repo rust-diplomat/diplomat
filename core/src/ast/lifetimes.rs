@@ -73,7 +73,7 @@ impl ToTokens for NamedLifetime {
 /// bounds defined in the `where` clause.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct LifetimeEnv {
-    nodes: Vec<LifetimeNode>,
+    pub(crate) nodes: Vec<LifetimeNode>,
 }
 
 impl LifetimeEnv {
@@ -230,7 +230,7 @@ impl LifetimeEnv {
 
     /// Returns the index of a lifetime in the graph, or `None` if the lifetime
     /// isn't in the graph.
-    fn id<L>(&mut self, lifetime: &L) -> Option<usize>
+    pub(crate) fn id<L>(&self, lifetime: &L) -> Option<usize>
     where
         NamedLifetime: PartialEq<L>,
     {
@@ -378,19 +378,19 @@ impl<'de> Deserialize<'de> for LifetimeEnv {
 /// meaning that they may be invalid if a `LifetimeEdges` is created in one
 /// `LifetimeGraph` and then used in another.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-struct LifetimeNode {
+pub(crate) struct LifetimeNode {
     /// The name of the lifetime.
-    lifetime: NamedLifetime,
+    pub(crate) lifetime: NamedLifetime,
 
     /// Pointers to all lifetimes that this lives _at least_ as long as.
     ///
     /// Note: This doesn't account for transitivity.
-    shorter: Vec<usize>,
+    pub(crate) shorter: Vec<usize>,
 
     /// Pointers to all lifetimes that live _at least_ as long as this.
     ///
     /// Note: This doesn't account for transitivity.
-    longer: Vec<usize>,
+    pub(crate) longer: Vec<usize>,
 }
 
 /// A lifetime, analogous to [`syn::Lifetime`].

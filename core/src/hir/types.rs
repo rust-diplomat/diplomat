@@ -4,12 +4,7 @@ use super::{
     EnumPath, MaybeOwn, NonOptional, OpaquePath, Optional, PrimitiveType, ReturnableStructPath,
     StructPath, TypeContext, TypeLifetime,
 };
-
-/// Type that may be used as an output.
-pub enum ReturnableType {
-    Type(Type),
-    OutType(OutType),
-}
+use crate::ast;
 
 /// Type that can only be used as an output.
 pub enum OutType {
@@ -45,11 +40,7 @@ pub enum Slice {
     Primitive(Borrow, PrimitiveType),
 }
 
-#[derive(Copy, Clone)]
-pub enum Mutability {
-    Mutable,
-    Immutable,
-}
+pub use ast::Mutability;
 
 // For now, the lifetime in not optional. This is because when you have references
 // as fields of structs, the lifetime must always be present, and we want to uphold
@@ -89,6 +80,19 @@ impl Slice {
         match self {
             Slice::Str(lifetime) => lifetime,
             Slice::Primitive(reference, _) => &reference.lifetime,
+        }
+    }
+}
+
+impl Borrow {
+    pub(super) fn from_ast(
+        parent_lifetimes: &ast::LifetimeEnv,
+        lifetime: &ast::Lifetime,
+        mutability: Mutability,
+    ) -> Self {
+        Borrow {
+            lifetime: TypeLifetime::from_ast(parent_lifetimes, lifetime),
+            mutability,
         }
     }
 }
