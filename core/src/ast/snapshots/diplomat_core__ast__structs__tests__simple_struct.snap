@@ -26,4 +26,5 @@ fields:
     - - ""
       - ~
 methods: []
+output_only: false
 

@@ -1,3 +1,4 @@
+use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
@@ -11,11 +12,17 @@ pub struct Struct {
     pub lifetimes: LifetimeEnv,
     pub fields: Vec<(Ident, TypeName, Docs)>,
     pub methods: Vec<Method>,
+    pub output_only: bool,
 }
 
 impl From<&syn::ItemStruct> for Struct {
     /// Extract a [`Struct`] metadata value from an AST node.
     fn from(strct: &syn::ItemStruct) -> Struct {
+        let output_only = strct
+            .attrs
+            .iter()
+            .any(|a| a.path.to_token_stream().to_string() == "diplomat :: out");
+
         let self_path_type = PathType::extract_self_type(strct);
         let fields: Vec<_> = strct
             .fields
@@ -42,6 +49,7 @@ impl From<&syn::ItemStruct> for Struct {
             lifetimes,
             fields,
             methods: vec![],
+            output_only,
         }
     }
 }

@@ -1,6 +1,7 @@
 //! Lifetime information for types.
 
 use super::IdentBuf;
+use crate::ast;
 use smallvec::SmallVec;
 
 // TODO(Quinn): This type is going to mainly be recycled from `ast::LifetimeEnv`.
@@ -17,6 +18,26 @@ pub struct LifetimeNode {
     shorter: SmallVec<[usize; 2]>,
 }
 
+impl LifetimeEnv {
+    pub(super) fn new(nodes: SmallVec<[LifetimeNode; 2]>) -> Self {
+        Self { nodes }
+    }
+}
+
+impl LifetimeNode {
+    pub(super) fn new(
+        ident: IdentBuf,
+        longer: SmallVec<[usize; 2]>,
+        shorter: SmallVec<[usize; 2]>,
+    ) -> Self {
+        Self {
+            ident,
+            longer,
+            shorter,
+        }
+    }
+}
+
 /// A lifetime that exists as part of a type signature.
 ///
 /// This type can be mapped to a [`MethodLifetime`] by using the
@@ -28,7 +49,7 @@ pub struct TypeLifetime(usize);
 /// and [`Opaque`]s.
 ///
 /// By itself, `TypeLifetimes` isn't very useful. However, it can be combined with
-/// a [`MethodLifetimes`] using [`TypeLifetime::in_method`] to get the lifetimes
+/// a [`MethodLifetimes`] using [`TypeLifetimes::in_method`] to get the lifetimes
 /// in the scope of a method it appears in.
 ///
 /// [`Struct`]: super::Struct
@@ -65,6 +86,17 @@ impl LifetimeEnv {
 }
 
 impl TypeLifetime {
+    pub(crate) fn from_ast(parent_lifetimes: &ast::LifetimeEnv, lifetime: &ast::Lifetime) -> Self {
+        // NOTE: we need to figure out implicit lifetimes to allow more than just
+        // named lifetimes.
+        let named = lifetime.as_named().expect("named lifetime");
+        let index = parent_lifetimes
+            .id(named)
+            .expect("lifetime is in parent env");
+
+        TypeLifetime(index)
+    }
+
     /// Returns a new [`MethodLifetime`] representing `self` in the scope of the
     /// method that it appears in.
     pub fn in_method<'m>(&self, method_lifetimes: &MethodLifetimes<'m>) -> MethodLifetime<'m> {
@@ -76,6 +108,16 @@ impl TypeLifetime {
 }
 
 impl TypeLifetimes {
+    pub(crate) fn from_ast(parent_lifetimes: &ast::LifetimeEnv, path: &ast::PathType) -> Self {
+        Self {
+            indices: path
+                .lifetimes
+                .iter()
+                .map(|lifetime| TypeLifetime::from_ast(parent_lifetimes, lifetime))
+                .collect(),
+        }
+    }
+
     /// Returns a new [`MethodLifetimes`] representing the lifetimes in the scope
     /// of the method this type appears in.
     ///

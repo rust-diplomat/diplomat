@@ -1127,12 +1127,12 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "strck"
 version = "0.1.0"
-source = "git+https://github.com/QnnOkabayashi/strck?rev=1abd1604e14bb9362571595412c8a90a7791e4d1#1abd1604e14bb9362571595412c8a90a7791e4d1"
+source = "git+https://github.com/QnnOkabayashi/strck?rev=a57d391d8f028cca28fb51d1dd8cf49578fb6cd5#a57d391d8f028cca28fb51d1dd8cf49578fb6cd5"
 
 [[package]]
 name = "strck_ident"
 version = "0.1.0"
-source = "git+https://github.com/QnnOkabayashi/strck?rev=1abd1604e14bb9362571595412c8a90a7791e4d1#1abd1604e14bb9362571595412c8a90a7791e4d1"
+source = "git+https://github.com/QnnOkabayashi/strck?rev=a57d391d8f028cca28fb51d1dd8cf49578fb6cd5#a57d391d8f028cca28fb51d1dd8cf49578fb6cd5"
 dependencies = [
  "strck",
  "unicode-ident",

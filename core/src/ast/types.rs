@@ -275,7 +275,7 @@ impl From<Path> for PathType {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub enum Mutability {
     Mutable,
     Immutable,

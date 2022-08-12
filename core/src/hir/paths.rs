@@ -42,7 +42,7 @@ pub struct OpaquePath<Opt, Owner> {
     tcx_id: OpaqueId,
 }
 
-pub struct Optional(bool);
+pub struct Optional(pub(super) bool);
 
 pub struct NonOptional;
 
@@ -99,24 +99,58 @@ impl ReturnableStructPath {
 }
 
 impl OutStructPath {
+    /// Returns a new [`EnumPath`].
+    pub(super) fn new(lifetimes: TypeLifetimes, tcx_id: OutStructId) -> Self {
+        Self { lifetimes, tcx_id }
+    }
+
+    /// Returns the [`OutStructDef`] that this path references.
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx OutStructDef {
         tcx.resolve_out_struct(self.tcx_id)
     }
 }
 
 impl StructPath {
+    /// Returns a new [`EnumPath`].
+    pub(super) fn new(lifetimes: TypeLifetimes, tcx_id: StructId) -> Self {
+        Self { lifetimes, tcx_id }
+    }
+
+    /// Returns the [`StructDef`] that this path references.
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx StructDef {
         tcx.resolve_struct(self.tcx_id)
     }
 }
 
 impl<Opt, Owner> OpaquePath<Opt, Owner> {
+    /// Returns a new [`EnumPath`].
+    pub(super) fn new(
+        lifetimes: TypeLifetimes,
+        optional: Opt,
+        owner: Owner,
+        tcx_id: OpaqueId,
+    ) -> Self {
+        Self {
+            lifetimes,
+            optional,
+            owner,
+            tcx_id,
+        }
+    }
+
+    /// Returns the [`OpaqueDef`] that this path references.
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx OpaqueDef {
         tcx.resolve_opaque(self.tcx_id)
     }
 }
 
 impl EnumPath {
+    /// Returns a new [`EnumPath`].
+    pub(super) fn new(tcx_id: EnumId) -> Self {
+        Self { tcx_id }
+    }
+
+    /// Returns the [`EnumDef`] that this path references.
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx EnumDef {
         tcx.resolve_enum(self.tcx_id)
     }

@@ -230,7 +230,7 @@ impl SelfParam {
     pub fn to_typename(&self) -> TypeName {
         let typ = TypeName::Named(self.path_type.clone());
         if let Some((ref lifetime, ref mutability)) = self.reference {
-            return TypeName::Reference(lifetime.clone(), mutability.clone(), Box::new(typ));
+            return TypeName::Reference(lifetime.clone(), *mutability, Box::new(typ));
         }
         typ
     }

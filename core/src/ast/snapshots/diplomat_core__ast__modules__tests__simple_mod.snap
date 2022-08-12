@@ -64,6 +64,7 @@ declared_types:
                 Primitive: i32
           return_type: ~
           lifetime_env: {}
+      output_only: false
   OpaqueStruct:
     Opaque:
       name: OpaqueStruct
