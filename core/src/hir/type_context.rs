@@ -804,7 +804,7 @@ fn lower_self_param(
                 }
             } else if lookup_id.resolve_out_struct(strct).is_some() {
                 if self_param.reference.is_some() {
-                    errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed. Also, it's also behind a reference, but only opaques can be behind references")));
+                    errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed. Also, it's behind a reference, but only opaques can be behind references")));
                 } else {
                     errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed")));
                 }
