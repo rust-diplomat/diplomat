@@ -66,3 +66,61 @@ pub struct EnumVariant {
     pub name: IdentBuf,
     pub discriminant: isize,
 }
+
+impl OutStructDef {
+    pub(super) fn new(
+        docs: Docs,
+        name: IdentBuf,
+        fields: Vec<OutStructField>,
+        methods: Vec<Method>,
+    ) -> Self {
+        Self {
+            docs,
+            name,
+            fields,
+            methods,
+        }
+    }
+}
+
+impl StructDef {
+    pub(super) fn new(
+        docs: Docs,
+        name: IdentBuf,
+        fields: Vec<StructField>,
+        methods: Vec<Method>,
+    ) -> Self {
+        Self {
+            docs,
+            name,
+            fields,
+            methods,
+        }
+    }
+}
+
+impl OpaqueDef {
+    pub(super) fn new(docs: Docs, name: IdentBuf, methods: Vec<Method>) -> Self {
+        Self {
+            docs,
+            name,
+            methods,
+        }
+    }
+}
+
+impl EnumDef {
+    pub(super) fn new(
+        docs: Docs,
+        name: IdentBuf,
+        variants: Vec<EnumVariant>,
+        methods: Vec<Method>,
+    ) -> Self {
+        Self {
+            docs,
+            name,
+            variants,
+            methods,
+        }
+    }
+}
