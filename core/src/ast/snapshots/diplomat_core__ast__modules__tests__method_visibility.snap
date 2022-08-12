@@ -23,5 +23,6 @@ declared_types:
           params: []
           return_type: ~
           lifetime_env: {}
+      output_only: false
 sub_modules: []
 

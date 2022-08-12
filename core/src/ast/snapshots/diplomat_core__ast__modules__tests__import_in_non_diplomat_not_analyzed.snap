@@ -16,6 +16,7 @@ modules:
           lifetimes: {}
           fields: []
           methods: []
+          output_only: false
     sub_modules: []
   other:
     name: other
