@@ -4,6 +4,8 @@ use syn::*;
 
 use diplomat_core::ast;
 
+mod enum_convert;
+
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
         ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(..) => {
@@ -195,6 +197,10 @@ impl AttributeInfo {
                         return false;
                     } else if seg == "rust_link" {
                         return false;
+                    } else if seg == "enum_convert" {
+                        // diplomat::bridge doesn't read this, but it's handled separately
+                        // as an attribute
+                        return true;
                     } else {
                         panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported")
                     }
@@ -300,6 +306,34 @@ pub fn bridge(
 ) -> proc_macro::TokenStream {
     let expanded = gen_bridge(parse_macro_input!(input));
     proc_macro::TokenStream::from(expanded.to_token_stream())
+}
+
+/// Generate From and Into implementations for a Diplomat enum
+///
+/// This is invoked as `#[diplomat::enum_convert(OtherEnumName)]`
+/// on a Diplomat enum. It will assume the other enum has exactly the same variants
+/// and generate From and Into implementations using those. In case that enum is `#[non_exhaustive]`,
+/// you may use `#[diplomat::enum_convert(OtherEnumName, needs_wildcart)]` to generate a panicky wildcard
+/// branch. It is up to the library author to ensure the enums are kept in sync. You may use the `#[non_exhaustive_omitted_patterns]`
+/// lint to enforce this.
+#[proc_macro_attribute]
+pub fn enum_convert(
+    attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    // proc macros handle compile errors by using special error tokens.
+    // In case of an error, we don't want the original code to go away too
+    // (otherwise that will cause more errors) so we hold on to it and we tack it in
+    // with no modifications below
+    let input_cached: proc_macro2::TokenStream = input.clone().into();
+    let expanded =
+        enum_convert::gen_enum_convert(parse_macro_input!(attr), parse_macro_input!(input));
+
+    let full = quote! {
+        #expanded
+        #input_cached
+    };
+    proc_macro::TokenStream::from(full.to_token_stream())
 }
 
 #[cfg(test)]
