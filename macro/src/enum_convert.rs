@@ -57,7 +57,7 @@ pub fn gen_enum_convert(attr: EnumConvertAttribute, input: ItemEnum) -> proc_mac
 
         let variant_name = &variant.ident;
         from_arms.push(quote!(#other_name::#variant_name => Self::#variant_name));
-        into_arms.push(quote!(Self::#variant_name => #other_name::#variant_name));
+        into_arms.push(quote!(#this_name::#variant_name => Self::#variant_name));
     }
 
     if attr.needs_wildcard {
@@ -75,9 +75,9 @@ pub fn gen_enum_convert(attr: EnumConvertAttribute, input: ItemEnum) -> proc_mac
                 }
             }
         }
-        impl Into<#other_name> for #this_name {
-            fn into(self) -> #other_name {
-                match self {
+        impl From<#this_name> for #other_name {
+            fn from(this: #this_name) -> Self {
+                match this {
                     #(#into_arms,)*
                 }
             }
