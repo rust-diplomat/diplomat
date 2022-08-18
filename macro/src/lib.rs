@@ -313,7 +313,7 @@ pub fn bridge(
 /// This is invoked as `#[diplomat::enum_convert(OtherEnumName)]`
 /// on a Diplomat enum. It will assume the other enum has exactly the same variants
 /// and generate From and Into implementations using those. In case that enum is `#[non_exhaustive]`,
-/// you may use `#[diplomat::enum_convert(OtherEnumName, needs_wildcart)]` to generate a panicky wildcard
+/// you may use `#[diplomat::enum_convert(OtherEnumName, needs_wildcard)]` to generate a panicky wildcard
 /// branch. It is up to the library author to ensure the enums are kept in sync. You may use the `#[non_exhaustive_omitted_patterns]`
 /// lint to enforce this.
 #[proc_macro_attribute]
