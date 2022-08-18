@@ -25,6 +25,7 @@ pub mod ffi {
     }
 
     // Doc comments for testing TSDoc
+    #[diplomat::enum_convert(GroupingStrategy, needs_wildcard)]
     pub enum ICU4XFixedDecimalGroupingStrategy {
         /// Auto grouping
         Auto,
@@ -36,6 +37,7 @@ pub mod ffi {
         Min2,
     }
 
+    #[diplomat::enum_convert(SignDisplay, needs_wildcard)]
     pub enum ICU4XFixedDecimalSignDisplay {
         Auto,
         Never,
@@ -73,19 +75,8 @@ pub mod ffi {
                 langid,
                 provider,
                 FixedDecimalFormatOptions {
-                    grouping_strategy: match options.grouping_strategy {
-                        ICU4XFixedDecimalGroupingStrategy::Auto => GroupingStrategy::Auto,
-                        ICU4XFixedDecimalGroupingStrategy::Never => GroupingStrategy::Never,
-                        ICU4XFixedDecimalGroupingStrategy::Always => GroupingStrategy::Always,
-                        ICU4XFixedDecimalGroupingStrategy::Min2 => GroupingStrategy::Min2,
-                    },
-                    sign_display: match options.sign_display {
-                        ICU4XFixedDecimalSignDisplay::Auto => SignDisplay::Auto,
-                        ICU4XFixedDecimalSignDisplay::Never => SignDisplay::Never,
-                        ICU4XFixedDecimalSignDisplay::Always => SignDisplay::Always,
-                        ICU4XFixedDecimalSignDisplay::ExceptZero => SignDisplay::ExceptZero,
-                        ICU4XFixedDecimalSignDisplay::Negative => SignDisplay::Negative,
-                    },
+                    grouping_strategy: options.grouping_strategy.into(),
+                    sign_display: options.sign_display.into(),
                 },
             ) {
                 ICU4XFixedDecimalFormatResult {
