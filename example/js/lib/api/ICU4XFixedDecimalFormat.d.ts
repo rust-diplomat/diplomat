@@ -8,7 +8,7 @@ import { ICU4XLocale } from "./ICU4XLocale";
 
  * An ICU4X Fixed Decimal Format object, capable of formatting a {@link ICU4XFixedDecimal `ICU4XFixedDecimal`} as a string.
 
- * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html Rust documentation} for more information.
+ * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html Rust documentation for `FixedDecimalFormat`} for more information.
  */
 export class ICU4XFixedDecimalFormat {
 
@@ -16,7 +16,7 @@ export class ICU4XFixedDecimalFormat {
 
    * Creates a new {@link ICU4XFixedDecimalFormat `ICU4XFixedDecimalFormat`} from locale data.
 
-   * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.try_new Rust documentation} for more information.
+   * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.try_new Rust documentation for `try_new`} for more information.
    */
   static try_new(locale: ICU4XLocale, provider: ICU4XDataProvider, options: ICU4XFixedDecimalFormatOptions): ICU4XFixedDecimalFormatResult;
 
@@ -24,7 +24,7 @@ export class ICU4XFixedDecimalFormat {
 
    * Formats a {@link ICU4XFixedDecimal `ICU4XFixedDecimal`} to a string.
 
-   * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.format Rust documentation} for more information.
+   * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.format Rust documentation for `format`} for more information.
    */
   format_write(value: ICU4XFixedDecimal): string;
 }

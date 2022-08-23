@@ -5,28 +5,28 @@
 
     An ICU4X Fixed Decimal Format object, capable of formatting a :cpp:class:`ICU4XFixedDecimal` as a string.
 
-    See the `Rust documentation <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html>`__ for more information.
+    See the `Rust documentation for FixedDecimalFormat <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html>`__ for more information.
 
 
     .. cpp:function:: static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options)
 
         Creates a new :cpp:class:`ICU4XFixedDecimalFormat` from locale data.
 
-        See the `Rust documentation <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.try_new>`__ for more information.
+        See the `Rust documentation for try_new <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.try_new>`__ for more information.
 
 
     .. cpp:function:: template<typename W> void format_write_to_writeable(const ICU4XFixedDecimal& value, W& write) const
 
         Formats a :cpp:class:`ICU4XFixedDecimal` to a string.
 
-        See the `Rust documentation <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.format>`__ for more information.
+        See the `Rust documentation for format <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.format>`__ for more information.
 
 
     .. cpp:function:: std::string format_write(const ICU4XFixedDecimal& value) const
 
         Formats a :cpp:class:`ICU4XFixedDecimal` to a string.
 
-        See the `Rust documentation <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.format>`__ for more information.
+        See the `Rust documentation for format <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormat.html#method.format>`__ for more information.
 
 
 .. cpp:struct:: ICU4XFixedDecimalFormatOptions
