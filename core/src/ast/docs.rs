@@ -152,7 +152,7 @@ impl Docs {
                 }
                 write!(
                     lines,
-                    "`{}`]({})",
+                    "[{}]({})",
                     i + 1,
                     docs_url_gen.gen_for_rust_link(rust_link)
                 )
