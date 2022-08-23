@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use syn::Attribute;
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Default)]
-pub struct Docs(String, Option<RustLink>);
+pub struct Docs(String, Vec<RustLink>);
 
 impl Docs {
     pub fn from_attrs(attrs: &[Attribute]) -> Self {
@@ -34,7 +34,8 @@ impl Docs {
         lines
     }
 
-    fn get_rust_link(attrs: &[Attribute]) -> Option<RustLink> {
+    fn get_rust_link(attrs: &[Attribute]) -> Vec<RustLink> {
+        let mut vec = vec![];
         for attr in attrs {
             if attr.path.to_token_stream().to_string() == "diplomat :: rust_link" {
                 if let Ok(syn::Meta::List(syn::MetaList { nested, .. })) = attr.parse_meta() {
@@ -83,7 +84,7 @@ impl Docs {
                         } else {
                             RustLinkDisplay::Normal
                         };
-                        return Some(RustLink {
+                        vec.push(RustLink {
                             path: Path::from_syn(path),
                             typ: match typ.to_token_stream().to_string().as_str() {
                                 "Struct" => DocType::Struct,
@@ -104,34 +105,61 @@ impl Docs {
                             },
                             display,
                         });
+                        continue;
                     };
                 }
                 panic!("Malformed attribute: {}", attr.to_token_stream());
             }
         }
-        None
+        vec
     }
 
     pub fn is_empty(&self) -> bool {
-        self.0.is_empty() && self.1.is_none()
+        self.0.is_empty() && self.1.is_empty()
     }
 
     pub fn to_markdown(&self, docs_url_gen: &DocsUrlGenerator) -> String {
+        use std::fmt::Write;
         let mut lines = self.0.clone();
-        if let Some(rust_link) = self.1.as_ref() {
-            use std::fmt::Write;
-            write!(
-                lines,
-                "\n\nSee the [Rust documentation]({}) for more information.",
-                docs_url_gen.gen_for_rust_link(rust_link)
-            )
-            .unwrap();
+        let mut has_compact = false;
+        for rust_link in &self.1 {
+            if rust_link.display == RustLinkDisplay::Compact {
+                has_compact = true;
+            } else if rust_link.display == RustLinkDisplay::Normal {
+                write!(
+                    lines,
+                    "\n\nSee the [Rust documentation for {}]({}) for more information.",
+                    rust_link.path.elements.last().unwrap(),
+                    docs_url_gen.gen_for_rust_link(rust_link)
+                )
+                .unwrap();
+            }
+        }
+        if has_compact {
+            write!(lines, "\n\n Additional information: ").unwrap();
+            for (i, rust_link) in self
+                .1
+                .iter()
+                .filter(|r| r.display == RustLinkDisplay::Compact)
+                .enumerate()
+            {
+                if i != 0 {
+                    write!(lines, ", ").unwrap();
+                }
+                write!(
+                    lines,
+                    "`{}`]({})",
+                    i + 1,
+                    docs_url_gen.gen_for_rust_link(rust_link)
+                )
+                .unwrap();
+            }
         }
         lines
     }
 
-    pub fn rust_link(&self) -> Option<&RustLink> {
-        self.1.as_ref()
+    pub fn rust_link(&self) -> &[RustLink] {
+        &self.1
     }
 }
 
@@ -381,7 +409,7 @@ fn test_docs_url_generator() {
 
     for (attr, expected) in test_cases.clone() {
         assert_eq!(
-            DocsUrlGenerator::default().gen_for_rust_link(&Docs::from_attrs(&[attr]).1.unwrap()),
+            DocsUrlGenerator::default().gen_for_rust_link(&Docs::from_attrs(&[attr]).1[0]),
             expected
         );
     }
@@ -393,13 +421,13 @@ fn test_docs_url_generator() {
                 .into_iter()
                 .collect()
         )
-        .gen_for_rust_link(&Docs::from_attrs(&[test_cases[0].0.clone()]).1.unwrap()),
+        .gen_for_rust_link(&Docs::from_attrs(&[test_cases[0].0.clone()]).1[0]),
         "http://std-docs.biz/std/foo/bar/struct.batz.html"
     );
 
     assert_eq!(
         DocsUrlGenerator::with_base_urls(Some("http://std-docs.biz/".to_string()), HashMap::new())
-            .gen_for_rust_link(&Docs::from_attrs(&[test_cases[0].0.clone()]).1.unwrap()),
+            .gen_for_rust_link(&Docs::from_attrs(&[test_cases[0].0.clone()]).1[0]),
         "http://std-docs.biz/std/foo/bar/struct.batz.html"
     );
 }
