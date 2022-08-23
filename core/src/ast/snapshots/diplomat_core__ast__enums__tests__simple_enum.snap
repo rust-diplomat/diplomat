@@ -5,19 +5,20 @@ expression: "Enum::from(&syn::parse_quote! {\n                /// Some docs.\n  
 name: MyLocalEnum
 docs:
   - Some docs.
-  - path:
-      elements:
-        - foo
-        - Bar
-    typ: Enum
+  - - path:
+        elements:
+          - foo
+          - Bar
+      typ: Enum
+      display: Normal
 variants:
   - - Abc
     - 0
     - - ""
-      - ~
+      - []
   - - Def
     - 1
     - - Some more docs.
-      - ~
+      - []
 methods: []
 

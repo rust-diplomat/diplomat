@@ -12,7 +12,7 @@ modules:
           name: Foo
           docs:
             - ""
-            - ~
+            - []
           lifetimes: {}
           fields: []
           methods: []

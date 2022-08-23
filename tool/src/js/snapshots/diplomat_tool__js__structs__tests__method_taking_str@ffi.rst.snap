@@ -9,7 +9,7 @@ expression: out_docs.get(out).unwrap()
 
     Use this.
 
-    See the `Rust documentation <https://docs.rs/foo/latest/foo/bar/struct.Batz.html>`__ for more information.
+    See the `Rust documentation for Batz <https://docs.rs/foo/latest/foo/bar/struct.Batz.html>`__ for more information.
 
 
     .. js:staticfunction:: new_str(v)

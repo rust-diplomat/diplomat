@@ -5,17 +5,18 @@ expression: "Struct::from(&syn::parse_quote! {\n                /// Some docs.\n
 name: MyLocalStruct
 docs:
   - Some docs.
-  - path:
-      elements:
-        - foo
-        - Bar
-    typ: Struct
+  - - path:
+        elements:
+          - foo
+          - Bar
+      typ: Struct
+      display: Normal
 lifetimes: {}
 fields:
   - - a
     - Primitive: i32
     - - ""
-      - ~
+      - []
   - - b
     - Box:
         Named:
@@ -24,7 +25,7 @@ fields:
               - MyLocalStruct
           lifetimes: []
     - - ""
-      - ~
+      - []
 methods: []
 output_only: false
 

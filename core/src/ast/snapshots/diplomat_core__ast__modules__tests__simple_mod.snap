@@ -10,13 +10,13 @@ declared_types:
       name: NonOpaqueStruct
       docs:
         - ""
-        - ~
+        - []
       lifetimes: {}
       fields:
         - - a
           - Primitive: i32
           - - ""
-            - ~
+            - []
         - - b
           - Box:
               Named:
@@ -25,12 +25,12 @@ declared_types:
                     - NonOpaqueStruct
                 lifetimes: []
           - - ""
-            - ~
+            - []
       methods:
         - name: new
           docs:
             - ""
-            - ~
+            - []
           full_path_name: NonOpaqueStruct_new
           self_param: ~
           params:
@@ -47,7 +47,7 @@ declared_types:
         - name: set_a
           docs:
             - ""
-            - ~
+            - []
           full_path_name: NonOpaqueStruct_set_a
           self_param:
             reference:
@@ -70,13 +70,13 @@ declared_types:
       name: OpaqueStruct
       docs:
         - ""
-        - ~
+        - []
       lifetimes: {}
       methods:
         - name: new
           docs:
             - ""
-            - ~
+            - []
           full_path_name: OpaqueStruct_new
           self_param: ~
           params: []
@@ -91,7 +91,7 @@ declared_types:
         - name: get_string
           docs:
             - ""
-            - ~
+            - []
           full_path_name: OpaqueStruct_get_string
           self_param:
             reference:
