@@ -38,36 +38,73 @@ impl Docs {
         for attr in attrs {
             if attr.path.to_token_stream().to_string() == "diplomat :: rust_link" {
                 if let Ok(syn::Meta::List(syn::MetaList { nested, .. })) = attr.parse_meta() {
-                    if nested.len() == 2 {
+                    let (path, typ, maybe_display) = if nested.len() == 2 {
                         if let (
                             syn::NestedMeta::Meta(syn::Meta::Path(path)),
                             syn::NestedMeta::Meta(syn::Meta::Path(typ)),
                         ) = (&nested[0], &nested[1])
                         {
-                            if let Some(typ) = typ.get_ident() {
-                                return Some(RustLink {
-                                    path: Path::from_syn(path),
-                                    typ: match typ.to_token_stream().to_string().as_str() {
-                                        "Struct" => DocType::Struct,
-                                        "StructField" => DocType::StructField,
-                                        "Enum" => DocType::Enum,
-                                        "EnumVariant" => DocType::EnumVariant,
-                                        "EnumVariantField" => DocType::EnumVariantField,
-                                        "Trait" => DocType::Trait,
-                                        "FnInStruct" => DocType::FnInStruct,
-                                        "FnInEnum" => DocType::FnInEnum,
-                                        "FnInTrait" => DocType::FnInTrait,
-                                        "DefaultFnInTrait" => DocType::DefaultFnInTrait,
-                                        "Fn" => DocType::Fn,
-                                        "Mod" => DocType::Mod,
-                                        "Constant" => DocType::Constant,
-                                        "Macro" => DocType::Macro,
-                                        x => panic!("Invalid doc type {:?}", x),
-                                    },
-                                });
-                            }
+                            (path, typ, None)
+                        } else {
+                            panic!("Malformed attribute: {}", attr.to_token_stream());
                         }
-                    }
+                    } else if nested.len() == 3 {
+                        if let (
+                            syn::NestedMeta::Meta(syn::Meta::Path(path)),
+                            syn::NestedMeta::Meta(syn::Meta::Path(typ)),
+                            syn::NestedMeta::Meta(syn::Meta::Path(display)),
+                        ) = (&nested[0], &nested[1], &nested[2])
+                        {
+                            (path, typ, Some(display))
+                        } else {
+                            panic!("Malformed attribute: {}", attr.to_token_stream());
+                        }
+                    } else {
+                        panic!(
+                            "#[diplomat::rust_link()] can take two or three parameters, found: {}",
+                            attr.to_token_stream()
+                        );
+                    };
+
+                    if let Some(typ) = typ.get_ident() {
+                        let display = if let Some(display) = maybe_display {
+                            if let Some(ident) = display.get_ident() {
+                                let s = ident.to_string();
+                                match &*s {
+                                    "normal" => RustLinkDisplay::Normal,
+                                    "compact" => RustLinkDisplay::Compact,
+                                    "hidden" => RustLinkDisplay::Hidden,
+                                    _ => panic!("#[diplomat::rust_link()]'s third argument must be `normal`, `compact`, \
+                                                 or `hidden`, found: {}", display.to_token_stream()),
+                                }
+                            } else {
+                                panic!("#[diplomat::rust_link()]'s third argument must be a path, found: {}", display.to_token_stream());
+                            }
+                        } else {
+                            RustLinkDisplay::Normal
+                        };
+                        return Some(RustLink {
+                            path: Path::from_syn(path),
+                            typ: match typ.to_token_stream().to_string().as_str() {
+                                "Struct" => DocType::Struct,
+                                "StructField" => DocType::StructField,
+                                "Enum" => DocType::Enum,
+                                "EnumVariant" => DocType::EnumVariant,
+                                "EnumVariantField" => DocType::EnumVariantField,
+                                "Trait" => DocType::Trait,
+                                "FnInStruct" => DocType::FnInStruct,
+                                "FnInEnum" => DocType::FnInEnum,
+                                "FnInTrait" => DocType::FnInTrait,
+                                "DefaultFnInTrait" => DocType::DefaultFnInTrait,
+                                "Fn" => DocType::Fn,
+                                "Mod" => DocType::Mod,
+                                "Constant" => DocType::Constant,
+                                "Macro" => DocType::Macro,
+                                x => panic!("Invalid doc type {:?}", x),
+                            },
+                            display,
+                        });
+                    };
                 }
                 panic!("Malformed attribute: {}", attr.to_token_stream());
             }
@@ -98,10 +135,25 @@ impl Docs {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum RustLinkDisplay {
+    /// A nice expanded representation that includes the type name
+    ///
+    /// e.g. "See the \[link to Rust documentation\] for more details"
+    Normal,
+    /// A compact representation that will fit multiple rust_link entries in one line
+    ///
+    /// E.g. "For further information, see: 1, 2, 3, 4" (all links)
+    Compact,
+    /// Hidden. Useful for programmatically annotating an API as related without showing a link to the user
+    Hidden,
+}
+
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, PartialOrd, Ord)]
 pub struct RustLink {
     pub path: Path,
     pub typ: DocType,
+    pub display: RustLinkDisplay,
 }
 
 impl fmt::Display for RustLink {
