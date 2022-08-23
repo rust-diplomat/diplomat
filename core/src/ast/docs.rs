@@ -125,11 +125,7 @@ impl Docs {
         use std::fmt::Write;
         let mut lines = self.0.clone();
         let mut has_compact = false;
-        let backtick = if in_rst {
-            ""
-        } else {
-            "`"
-        };
+        let backtick = if in_rst { "" } else { "`" };
         for rust_link in &self.1 {
             if rust_link.display == RustLinkDisplay::Compact {
                 has_compact = true;
