@@ -66,7 +66,7 @@ pub fn gen<'ast>(
                 collect_errors(typ, in_path, env, errors);
             }
 
-            gen_doc_block(out, &strct.docs.to_markdown(docs_url_gen))?;
+            gen_doc_block(out, &strct.docs.to_markdown(docs_url_gen, false))?;
             writeln!(out, "[StructLayout(LayoutKind.Sequential)]")?;
             writeln!(out, "public partial struct {}", typ.name())?;
 
@@ -90,7 +90,7 @@ pub fn gen<'ast>(
         }
 
         ast::CustomType::Opaque(opaque) => {
-            gen_doc_block(out, &opaque.docs.to_markdown(docs_url_gen))?;
+            gen_doc_block(out, &opaque.docs.to_markdown(docs_url_gen, false))?;
             writeln!(out, "[StructLayout(LayoutKind.Sequential)]")?;
             writeln!(out, "public partial struct {}", typ.name())?;
 
@@ -116,11 +116,11 @@ pub fn gen<'ast>(
         }
 
         ast::CustomType::Enum(enm) => {
-            gen_doc_block(out, &enm.docs.to_markdown(docs_url_gen))?;
+            gen_doc_block(out, &enm.docs.to_markdown(docs_url_gen, false))?;
             writeln!(out, "public enum {}", enm.name)?;
             out.scope(|out| {
                 for (name, discriminant, docs) in enm.variants.iter() {
-                    gen_doc_block(out, &docs.to_markdown(docs_url_gen))?;
+                    gen_doc_block(out, &docs.to_markdown(docs_url_gen, false))?;
                     writeln!(out, "{} = {},", name, discriminant)?;
                 }
 
@@ -144,7 +144,7 @@ fn gen_field(
     let is_unsafe = type_declaration.ends_with('*');
 
     writeln!(out)?;
-    gen_doc_block(out, &docs.to_markdown(docs_url_gen))?;
+    gen_doc_block(out, &docs.to_markdown(docs_url_gen, false))?;
     gen_annotations_for_field(typ, out)?;
     write!(out, "public ")?;
     if is_unsafe {
@@ -163,7 +163,7 @@ fn gen_method(
 ) -> fmt::Result {
     writeln!(out)?;
 
-    gen_doc_block(out, &method.docs.to_markdown(docs_url_gen))?;
+    gen_doc_block(out, &method.docs.to_markdown(docs_url_gen, false))?;
     gen_annotations_for_method(method, out)?;
     write!(out, "public static unsafe extern ")?;
     gen_type_name_return_position(method.return_type.as_ref(), in_path, env, out)?;

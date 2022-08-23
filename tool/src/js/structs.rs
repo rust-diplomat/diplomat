@@ -390,7 +390,7 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
             "{}",
             display::ts_doc(|mut f| {
                 TsDoc::from_markdown(
-                    &custom_type.docs().to_markdown(docs_url_gen),
+                    &custom_type.docs().to_markdown(docs_url_gen, false),
                     in_path,
                     env,
                     &mut f,
@@ -411,7 +411,7 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
                             "{}",
                             display::ts_doc(|mut f| {
                                 TsDoc::from_markdown(
-                                    &docs.to_markdown(docs_url_gen),
+                                    &docs.to_markdown(docs_url_gen, false),
                                     in_path,
                                     env,
                                     &mut f,
@@ -529,7 +529,7 @@ fn gen_ts_method_declaration<W: fmt::Write>(
             out,
             "{}",
             display::ts_doc(|mut f| {
-                TsDoc::from_markdown(&method.docs.to_markdown(docs_url_gen), in_path, env, &mut f)?;
+                TsDoc::from_markdown(&method.docs.to_markdown(docs_url_gen, false), in_path, env, &mut f)?;
                 if let Some(ast::TypeName::Result(_, ref err)) = method.return_type {
                     writeln!(
                         f,

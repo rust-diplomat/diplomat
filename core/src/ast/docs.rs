@@ -118,19 +118,27 @@ impl Docs {
         self.0.is_empty() && self.1.is_empty()
     }
 
-    pub fn to_markdown(&self, docs_url_gen: &DocsUrlGenerator) -> String {
+    /// Convert to markdown
+    ///
+    /// `in_rst` will avoid using complicated formatting combinations disallowed in ReStructuredText
+    pub fn to_markdown(&self, docs_url_gen: &DocsUrlGenerator, in_rst: bool) -> String {
         use std::fmt::Write;
         let mut lines = self.0.clone();
         let mut has_compact = false;
+        let backtick = if in_rst {
+            ""
+        } else {
+            "`"
+        };
         for rust_link in &self.1 {
             if rust_link.display == RustLinkDisplay::Compact {
                 has_compact = true;
             } else if rust_link.display == RustLinkDisplay::Normal {
                 write!(
                     lines,
-                    "\n\nSee the [Rust documentation for {}]({}) for more information.",
-                    rust_link.path.elements.last().unwrap(),
-                    docs_url_gen.gen_for_rust_link(rust_link)
+                    "\n\nSee the [Rust documentation for {backtick}{name}{backtick}]({link}) for more information.",
+                    name = rust_link.path.elements.last().unwrap(),
+                    link = docs_url_gen.gen_for_rust_link(rust_link)
                 )
                 .unwrap();
             }
