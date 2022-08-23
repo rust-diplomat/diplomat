@@ -19,6 +19,16 @@ public partial struct Opaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_new", ExactSpelling = true)]
     public static unsafe extern Opaque* New();
 
+    /// <summary>
+    /// </summary>
+    /// <remarks>
+    /// <br/>
+    /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+    /// <br/>
+    /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+    /// <br/>
+    ///  Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
+    /// </remarks>
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_assert_struct", ExactSpelling = true)]
     public static unsafe extern void AssertStruct(Opaque* self, MyStruct s);
 
