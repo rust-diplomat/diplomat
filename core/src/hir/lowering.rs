@@ -670,9 +670,8 @@ fn lower_self_param<'ast>(
                     errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed")));
                     Err(())
                 } else {
-                    let mut param_ltl = self_param_ltl.no_self_lifetime();
-                    let type_lifetimes =
-                        TypeLifetimes::from_ast(&mut param_ltl, &self_param.path_type);
+                    let (type_lifetimes, param_ltl) =
+                        self_param_ltl.lower_owned_self(&self_param.path_type);
 
                     Ok((
                         ParamSelf::new(SelfType::Struct(StructPath::new(type_lifetimes, tcx_id))),
@@ -698,9 +697,9 @@ fn lower_self_param<'ast>(
             let tcx_id = lookup_id.resolve_opaque(opaque).expect("opaque is in env");
 
             if let Some((lifetime, mutability)) = &self_param.reference {
-                let (mut param_ltl, borrow_lifetime) = self_param_ltl.lower_self_lifetime(lifetime);
+                let (borrow_lifetime, lifetimes, param_ltl) =
+                    self_param_ltl.lower_borrowed_self(lifetime, &self_param.path_type);
                 let borrow = Borrow::new(borrow_lifetime, *mutability);
-                let lifetimes = TypeLifetimes::from_ast(&mut param_ltl, &self_param.path_type);
 
                 Ok((
                     ParamSelf::new(SelfType::Opaque(OpaquePath::new(
@@ -876,7 +875,7 @@ pub mod elision {
         }
     }
 
-    pub(super) struct InnerLifetimeLowerer<'ast> {
+    pub(super) struct BaseLifetimeLowerer<'ast> {
         elided_node_gen: ImplicitLifetimeGenerator,
         method_lifetime_env: &'ast ast::LifetimeEnv,
         nodes: SmallVec<[LifetimeNode; 2]>,
@@ -894,54 +893,42 @@ pub mod elision {
         MultipleBorrows,
     }
 
-    /// The second phase of elision inference.
+    /// The first phase of output elision inference.
     ///
-    /// In the second phase, the type signature of the `&self` or `&mut self` type
-    /// is lowered into its HIR representation, if present. Lifetime elision rules
-    /// only care about the reference to self, and not about the lifetimes in the
-    /// type that `self` expands to, so this phase only checks that single lifetime
-    /// by either calling [`SelfParamLifetimeLowerer::lower_self_lifetime`] if
-    /// `self` is borrowed, or [`SelfParamLifetimeLowerer::no_self_lifetime`] if
-    /// `self` is owned, or if there's no `self` parameter.
-    ///
-    /// Both of these methods transition to the next phase, [`ParamLifetimeLowerer`].
+    /// In the first phase, the type signature of the `&self` or `&mut self` type
+    /// is lowered into its HIR representation, if present. According to elision
+    /// rules, this reference has the highest precedence as the lifetime that
+    /// goes into elision in the output, and so it's checked first.
     pub(super) struct SelfParamLifetimeLowerer<'ast> {
-        inner: InnerLifetimeLowerer<'ast>,
+        base: BaseLifetimeLowerer<'ast>,
     }
 
-    /// The third and final phase of elision inference.
+    /// The second phase of output elision inference.
     ///
-    /// In the third phase, all lifetimes in the parameter type signatures
-    /// (besides the lifetime of self, if present) are lowered, and if there's
-    /// elision in the output, it is assigned if not already assigned to a
-    /// potential self parameter.
-    ///
-    /// Once all lifetimes in the parameter signatures have been lowered, call
-    /// [`ParamLifetimeLowerer::finish`] to get the resulting [`LifetimeEnv`].
+    /// In the second phase, all lifetimes in the parameter type signatures
+    /// (besides the lifetime of self, if present) are lowered. If a self param
+    /// didn't claim the potential output elided lifetime, then if there's a
+    /// single lifetime (named or anonymous) in the inputs, it will calim the
+    /// potential output elided lifetime.
     pub(super) struct ParamLifetimeLowerer<'ast> {
         elision_source: ElisionSource,
-        inner: InnerLifetimeLowerer<'ast>,
+        base: BaseLifetimeLowerer<'ast>,
     }
 
-    /// The first phase of elision inference.
+    /// The third and final phase of output elision inference.
     ///
-    /// In the first phase, the type signature of the output type is lowered into
-    /// its HIR representation. When a lifetime is encountered, this type can lower
-    /// the lifetime into a [`TypeLifetime`] via its implementation of
-    /// [`LifetimeLowerer`]. Named lifetimes are lowered into indices pointing into
-    /// the nodes list, and anonymous lifetimes are all assigned to the same
-    /// lifetime.
-    ///
-    /// Once the output type is fully lowered, [`ReturnLifetimeLowerer::finish`] is
-    /// called to transition to the next phase, [`SelfParamLifetimeLowerer`].
+    /// In the third phase, the type signature of the output type is lowered into
+    /// its HIR representation. If one of the input lifetimes were marked as
+    /// responsible for any elision in the output, then anonymous lifetimes get
+    /// that lifetime. If none did and there is elision in the output, then
+    /// rustc should have errored and said the elision was ambiguous, meaning
+    /// that state should be impossible so it panics.
     pub(super) struct ReturnLifetimeLowerer<'ast> {
-        /// When an anonymous lifetime is visited, it gets assigned the lifetime from
-        /// here, or generates a new one and returns that.
         elision_source: ElisionSource,
-        inner: InnerLifetimeLowerer<'ast>,
+        base: BaseLifetimeLowerer<'ast>,
     }
 
-    impl<'ast> InnerLifetimeLowerer<'ast> {
+    impl<'ast> BaseLifetimeLowerer<'ast> {
         /// Returns a [`TypeLifetime`] representing a new anonymous lifetime.
         fn new_elided(&mut self) -> TypeLifetime {
             TypeLifetime::new_elided(&mut self.elided_node_gen, &mut self.nodes)
@@ -971,7 +958,7 @@ pub mod elision {
             }
 
             Ok(Self {
-                inner: InnerLifetimeLowerer {
+                base: BaseLifetimeLowerer {
                     elided_node_gen: ImplicitLifetimeGenerator::new(),
                     method_lifetime_env: method_lt_env,
                     nodes: hir_nodes?,
@@ -979,33 +966,130 @@ pub mod elision {
             })
         }
 
-        /// Lowers the lifetime of `&self` or `&mut self`, marking it as the
-        /// potential lifetime for any elided lifetimes in the output.
-        pub(super) fn lower_self_lifetime(
+        /// Lowers the lifetimes in the `&self` or `&mut self` parameter, as well
+        /// as any lifetime generics in the type of the expanded self parameter.
+        ///
+        /// This method lowers all the lifetime of the self argument at once
+        /// to have symmetry with [`SelfParamLifetimeLowerer::lower_owned_self`],
+        /// which has to because elision inference in Rust... interesting.
+        pub(super) fn lower_borrowed_self(
             mut self,
             lifetime: &ast::Lifetime,
-        ) -> (ParamLifetimeLowerer<'ast>, TypeLifetime) {
-            let self_lt = match lifetime {
+            self_path_type: &ast::PathType,
+        ) -> (TypeLifetime, TypeLifetimes, ParamLifetimeLowerer<'ast>) {
+            let self_lifetime = match lifetime {
                 ast::Lifetime::Static => TypeLifetime::new_static(),
                 ast::Lifetime::Named(named) => {
-                    TypeLifetime::from_ast(named, self.inner.method_lifetime_env)
+                    TypeLifetime::from_ast(named, self.base.method_lifetime_env)
                 }
-                ast::Lifetime::Anonymous => self.inner.new_elided(),
+                ast::Lifetime::Anonymous => self.base.new_elided(),
             };
 
-            let param_ltl = ParamLifetimeLowerer {
-                elision_source: ElisionSource::SelfParam(self_lt),
-                inner: self.inner,
-            };
+            (
+                self_lifetime,
+                TypeLifetimes::from_ast(&mut self.base, self_path_type),
+                self.finish(ElisionSource::SelfParam(self_lifetime)),
+            )
+        }
 
-            (param_ltl, self_lt)
+        /// Lowers the lifetime generics of the expanded type in the `self` or
+        /// `mut self` parameter.
+        ///
+        /// Unlike other parameters, lifetimes in the generics of the type that
+        /// `self` expands to are not considered for lifetime elision. This can
+        /// lead to examples that should intuitively work, but don't.
+        ///
+        /// Consider the following code:
+        /// ```ignore
+        /// struct Foo<'a>(&'a str);
+        ///
+        /// impl<'a> Foo<'a> {
+        ///     // error[E0106]: this function's return type contains a borrowed value, but there is no value for it to be borrowed from
+        ///     fn bar(self) -> &str {
+        ///         self.0
+        ///     }
+        /// }
+        /// ```
+        /// For some reason, the compiler errors by saying "hey, there's nothing
+        /// to borrow from." But that's obviously not true. You can even
+        /// explicitly annotate the type of `self` and it still complains:
+        /// ```ignore
+        /// impl<'a> Foo<'a> {
+        ///     // error[E0106]: this function's return type contains a borrowed value, but there is no value for it to be borrowed from
+        ///     fn bar(self: Foo<'a>) -> &str {
+        ///         self.0
+        ///     }
+        /// }
+        /// ```
+        /// And it's not just for methods. Elision inferencing will never search
+        /// for a source in the generics of the type of `self` or in an argument
+        /// with the `Self` type:
+        /// ```ignore
+        /// impl<'a> Foo<'a> {
+        ///     // error[E0106]: this function's return type contains a borrowed value, but there is no value for it to be borrowed from
+        ///     fn bar(this: Self) -> &str {
+        ///         this.0
+        ///     }
+        /// }
+        /// ```
+        /// But once you get rid of self altogether, it works.
+        /// ```rust
+        /// # struct Foo<'a>(&'a str);
+        /// impl<'a> Foo<'a> {
+        ///     // works
+        ///     fn bar(this: Foo<'a>) -> &str {
+        ///         this.0
+        ///     }
+        /// }
+        /// ```
+        /// Thus, the purpose of this function is to lower the generics from the
+        /// expanded type of `self` or `mut self`, while ensuring that they
+        /// can't be marked as the source of lifetime elision. This is so that
+        /// programs like the following, which are accepted by rustc, work:
+        /// ```rust
+        /// # struct Foo<'a>(&'a str);
+        /// impl<'a> Foo<'a> {
+        ///     // rustc only sees the lifetime of `s`, so we need to make sure
+        ///     // to not look at the `'a` when considering an elision source.
+        ///     fn bar(self: Foo<'a>, s: &str) -> &str {
+        ///         s
+        ///     }
+        /// }
+        /// ```
+        /// There's currently a bug in our implementation though:
+        /// ```rust
+        /// # struct Foo<'a>(&'a str);
+        /// impl<'a> Foo<'a> {
+        ///     // rustc only sees the lifetime of `s`, but we will see the
+        ///     // lifetime `'a` in the `Foo<'a>` that `that` expands to, as well
+        ///     // as the lifetime of `s`, making us think that elision cannot
+        ///     // be inferred.
+        ///     fn bar(self: Foo<'a>, that: Self, s: &str) -> &str {
+        ///         s
+        ///     }
+        /// }
+        /// ```
+        /// The solution is to track `Self` types in the ast,
+        /// which is being worked on now.
+        pub(super) fn lower_owned_self(
+            mut self,
+            self_path_type: &ast::PathType,
+        ) -> (TypeLifetimes, ParamLifetimeLowerer<'ast>) {
+            (
+                TypeLifetimes::from_ast(&mut self.base, self_path_type),
+                self.finish(ElisionSource::NoBorrows),
+            )
         }
 
         /// Indicates that there is no `&self` or `&mut self`.
         pub(super) fn no_self_lifetime(self) -> ParamLifetimeLowerer<'ast> {
+            self.finish(ElisionSource::NoBorrows)
+        }
+
+        fn finish(self, elision_source: ElisionSource) -> ParamLifetimeLowerer<'ast> {
             ParamLifetimeLowerer {
                 elision_source: ElisionSource::NoBorrows,
-                inner: self.inner,
+                base: self.base,
             }
         }
     }
@@ -1014,14 +1098,14 @@ pub mod elision {
         pub fn finish(self) -> ReturnLifetimeLowerer<'ast> {
             ReturnLifetimeLowerer {
                 elision_source: self.elision_source,
-                inner: self.inner,
+                base: self.base,
             }
         }
     }
 
     impl<'ast> ReturnLifetimeLowerer<'ast> {
         pub fn finish(self) -> LifetimeEnv {
-            LifetimeEnv::new(self.inner.nodes)
+            LifetimeEnv::new(self.base.nodes)
         }
     }
 
@@ -1047,15 +1131,21 @@ pub mod elision {
         }
     }
 
-    impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
+    impl<'ast> LifetimeLowerer for BaseLifetimeLowerer<'ast> {
         fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> TypeLifetime {
-            let type_lifetime = match lifetime {
+            match lifetime {
                 ast::Lifetime::Static => TypeLifetime::new_static(),
                 ast::Lifetime::Named(named) => {
-                    TypeLifetime::from_ast(named, self.inner.method_lifetime_env)
+                    TypeLifetime::from_ast(named, self.method_lifetime_env)
                 }
-                ast::Lifetime::Anonymous => self.inner.new_elided(),
-            };
+                ast::Lifetime::Anonymous => self.new_elided(),
+            }
+        }
+    }
+
+    impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
+        fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> TypeLifetime {
+            let type_lifetime = self.base.lower_lifetime(lifetime);
 
             self.elision_source = match self.elision_source {
                 ElisionSource::NoBorrows => ElisionSource::OneParam(type_lifetime),
@@ -1072,7 +1162,7 @@ pub mod elision {
             match lifetime {
                 ast::Lifetime::Static => TypeLifetime::new_static(),
                 ast::Lifetime::Named(named) => {
-                    TypeLifetime::from_ast(named, self.inner.method_lifetime_env)
+                    TypeLifetime::from_ast(named, self.base.method_lifetime_env)
                 }
                 ast::Lifetime::Anonymous => match self.elision_source {
                     ElisionSource::SelfParam(lifetime) | ElisionSource::OneParam(lifetime) => {
