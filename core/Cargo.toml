@@ -22,7 +22,7 @@ serde = { version = "1.0", features = ["derive"] }
 displaydoc = { version = "0.2", optional = true }
 rustdoc-types = "0.11"
 smallvec = "1.9.0"
-strck_ident = { git = "https://github.com/QnnOkabayashi/strck", rev = "a57d391d8f028cca28fb51d1dd8cf49578fb6cd5", features = ["rust"] }
+strck_ident = { version = "0.1", features = ["rust"] }
 
 [dev-dependencies]
 insta = "1.7.1"
