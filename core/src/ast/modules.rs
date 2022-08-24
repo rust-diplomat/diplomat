@@ -34,7 +34,7 @@ impl Module {
         let mut rust_links = self
             .declared_types
             .values()
-            .filter_map(|t| t.docs().rust_link())
+            .flat_map(|t| t.docs().rust_link().iter())
             .collect::<HashSet<_>>();
 
         self.sub_modules.iter().for_each(|m| {

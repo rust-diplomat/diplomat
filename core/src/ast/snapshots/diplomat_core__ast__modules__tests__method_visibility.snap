@@ -10,14 +10,14 @@ declared_types:
       name: Foo
       docs:
         - ""
-        - ~
+        - []
       lifetimes: {}
       fields: []
       methods:
         - name: pub_fn
           docs:
             - ""
-            - ~
+            - []
           full_path_name: Foo_pub_fn
           self_param: ~
           params: []

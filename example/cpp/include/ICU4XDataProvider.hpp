@@ -25,7 +25,7 @@ struct ICU4XDataProviderDeleter {
 /**
  * An ICU4X data provider, capable of loading ICU4X data keys from some source.
  * 
- * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/icu_provider/index.html) for more information.
+ * See the [Rust documentation for `icu_provider`](https://unicode-org.github.io/icu4x-docs/doc/icu_provider/index.html) for more information.
  */
 class ICU4XDataProvider {
  public:
@@ -33,7 +33,7 @@ class ICU4XDataProvider {
   /**
    * 
    * 
-   * See the [Rust documentation](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html) for more information.
+   * See the [Rust documentation for `get_static_provider`](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html) for more information.
    */
   static ICU4XDataProvider new_static();
 

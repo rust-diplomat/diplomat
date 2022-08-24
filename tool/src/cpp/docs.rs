@@ -106,7 +106,8 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     let mut class_indented = indented(out).with_str("    ");
     if !typ.docs().is_empty() {
         CppRst::from_markdown(
-            &typ.docs().to_markdown(docs_url_gen),
+            &typ.docs()
+                .to_markdown(docs_url_gen, ast::MarkdownStyle::RstCompat),
             in_path,
             env,
             &mut class_indented,
@@ -202,7 +203,9 @@ pub fn gen_method_docs<W: fmt::Write>(
     let mut method_indented = indented(out).with_str("    ");
     if !method.docs.is_empty() {
         CppRst::from_markdown(
-            &method.docs.to_markdown(docs_url_gen),
+            &method
+                .docs
+                .to_markdown(docs_url_gen, ast::MarkdownStyle::RstCompat),
             in_path,
             env,
             &mut method_indented,
@@ -241,7 +244,9 @@ pub fn gen_field_docs<W: fmt::Write>(
     if !field.2.is_empty() {
         let mut field_indented = indented(out).with_str("    ");
         CppRst::from_markdown(
-            &field.2.to_markdown(docs_url_gen),
+            &field
+                .2
+                .to_markdown(docs_url_gen, ast::MarkdownStyle::RstCompat),
             in_path,
             env,
             &mut field_indented,
@@ -266,7 +271,9 @@ pub fn gen_enum_variant_docs<W: fmt::Write>(
     if !variant.2.is_empty() {
         let mut enum_indented = indented(out).with_str("    ");
         CppRst::from_markdown(
-            &variant.2.to_markdown(docs_url_gen),
+            &variant
+                .2
+                .to_markdown(docs_url_gen, ast::MarkdownStyle::RstCompat),
             in_path,
             env,
             &mut enum_indented,

@@ -4,13 +4,13 @@ import { FFIError } from "./diplomat-runtime"
 
  * An ICU4X data provider, capable of loading ICU4X data keys from some source.
 
- * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu_provider/index.html Rust documentation} for more information.
+ * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu_provider/index.html Rust documentation for `icu_provider`} for more information.
  */
 export class ICU4XDataProvider {
 
   /**
 
-   * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html Rust documentation} for more information.
+   * See the {@link https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html Rust documentation for `get_static_provider`} for more information.
    */
   static new_static(): ICU4XDataProvider;
 

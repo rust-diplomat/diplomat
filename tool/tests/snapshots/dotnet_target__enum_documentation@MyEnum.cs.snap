@@ -21,7 +21,7 @@ namespace Interop;
 /// <remarks>
 /// Some remarks about this struct.
 /// <br/>
-/// See the [Rust documentation](https://docs.rs/foo/latest/foo/enum.MyEnum.html) for more information.
+/// See the [Rust documentation for `MyEnum`](https://docs.rs/foo/latest/foo/enum.MyEnum.html) for more information.
 /// </remarks>
 public enum MyEnum
 {
@@ -33,7 +33,7 @@ public enum MyEnum
     /// All about B.
     /// </summary>
     /// <remarks>
-    /// See the [Rust documentation](https://docs.rs/foo/latest/foo/enum.MyEnum.html#variant.B) for more information.
+    /// See the [Rust documentation for `B`](https://docs.rs/foo/latest/foo/enum.MyEnum.html#variant.B) for more information.
     /// </remarks>
     B = 1,
     /// <summary>

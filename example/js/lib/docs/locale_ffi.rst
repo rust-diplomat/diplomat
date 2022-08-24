@@ -5,7 +5,7 @@
 
     An ICU4X Locale, capable of representing strings like ``"en-US"``.
 
-    See the `Rust documentation <https://unicode-org.github.io/icu4x-docs/doc/icu/locid/struct.Locale.html>`__ for more information.
+    See the `Rust documentation for Locale <https://unicode-org.github.io/icu4x-docs/doc/icu/locid/struct.Locale.html>`__ for more information.
 
 
     .. js:staticfunction:: new(name)

@@ -29,7 +29,7 @@ struct FooDeleter {
  * Documentation for Foo.
  * Second line.
  * 
- * See the [Rust documentation](https://docs.rs/foo/latest/foo/struct.Bar.html) for more information.
+ * See the [Rust documentation for `Bar`](https://docs.rs/foo/latest/foo/struct.Bar.html) for more information.
  */
 struct Foo {
  public:
@@ -42,7 +42,7 @@ struct Foo {
   /**
    * Documentation for get_x.
    * 
-   * See the [Rust documentation](https://docs.rs/foo/latest/foo/struct.Bar.html#method.get) for more information.
+   * See the [Rust documentation for `get`](https://docs.rs/foo/latest/foo/struct.Bar.html#method.get) for more information.
    */
   uint8_t get_x() const;
 };

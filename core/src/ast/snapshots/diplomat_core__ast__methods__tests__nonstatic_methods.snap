@@ -5,7 +5,7 @@ expression: "Method::from_syn(&syn::parse_quote! {\n                fn foo(& sel
 name: foo
 docs:
   - ""
-  - ~
+  - []
 full_path_name: MyStructContainingMethod_foo
 self_param:
   reference:

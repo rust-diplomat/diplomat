@@ -18,6 +18,11 @@ pub mod ffi {
             Box::new(Opaque())
         }
 
+        #[diplomat::rust_link(Something::something, FnInStruct)]
+        #[diplomat::rust_link(Something::something_else, FnInStruct)]
+        #[diplomat::rust_link(Something::something_small, FnInStruct, compact)]
+        #[diplomat::rust_link(SomethingElse::something, FnInStruct, compact)]
+        #[diplomat::rust_link(SomethingElse::something_else, FnInStruct, hidden)]
         pub fn assert_struct(&self, s: MyStruct) {
             s.assert_value();
         }

@@ -5,12 +5,13 @@ expression: "Method::from_syn(&syn::parse_quote! {\n                #[diplomat :
 name: foo
 docs:
   - ""
-  - path:
-      elements:
-        - foo
-        - Bar
-        - batz
-    typ: FnInStruct
+  - - path:
+        elements:
+          - foo
+          - Bar
+          - batz
+      typ: FnInStruct
+      display: Normal
 full_path_name: MyStructContainingMethod_foo
 self_param:
   reference:

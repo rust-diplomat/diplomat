@@ -47,7 +47,12 @@ pub fn gen_struct<W: fmt::Write>(
     match custom_type {
         ast::CustomType::Opaque(opaque) => {
             if is_header {
-                gen_comment_block(out, &opaque.docs.to_markdown(docs_url_gen))?;
+                gen_comment_block(
+                    out,
+                    &opaque
+                        .docs
+                        .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+                )?;
                 writeln!(out, "class {} {{", opaque.name)?;
                 writeln!(out, " public:")?;
             }
@@ -108,7 +113,12 @@ pub fn gen_struct<W: fmt::Write>(
 
         ast::CustomType::Struct(strct) => {
             if is_header {
-                gen_comment_block(out, &strct.docs.to_markdown(docs_url_gen))?;
+                gen_comment_block(
+                    out,
+                    &strct
+                        .docs
+                        .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+                )?;
                 writeln!(out, "struct {} {{", strct.name)?;
                 writeln!(out, " public:")?;
             }
@@ -122,7 +132,10 @@ pub fn gen_struct<W: fmt::Write>(
             if is_header {
                 for (name, typ, docs) in &strct.fields {
                     let ty_name = gen_type(typ, in_path, None, env, library_config, true)?;
-                    gen_comment_block(&mut public_body, &docs.to_markdown(docs_url_gen))?;
+                    gen_comment_block(
+                        &mut public_body,
+                        &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+                    )?;
                     writeln!(&mut public_body, "{} {};", ty_name, name)?;
                 }
             }
@@ -187,7 +200,12 @@ fn gen_method<W: fmt::Write>(
     }
 
     if is_header {
-        gen_comment_block(out, &method.docs.to_markdown(docs_url_gen))?;
+        gen_comment_block(
+            out,
+            &method
+                .docs
+                .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+        )?;
     }
     let params_to_gen = gen_method_interface(
         method,
