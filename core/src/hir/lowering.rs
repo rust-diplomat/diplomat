@@ -218,7 +218,7 @@ impl FromAstDef for OutStructDef {
                 let name = lower_ident(name, "out-struct field name", errors);
                 let ty = lower_out_type(
                     ty,
-                    &mut &ast_out_struct.lifetimes,
+                    Ok(&mut &ast_out_struct.lifetimes),
                     lookup_id,
                     in_path,
                     env,
@@ -268,19 +268,7 @@ fn lower_method(
         _ => (&method.params[..], false),
     };
 
-    let return_ltl = elision::ReturnLifetimeLowerer::new(&method.lifetime_env, errors)?;
-
-    let (output, self_param_ltl) = lower_return_type(
-        method.return_type.as_ref(),
-        takes_writeable,
-        return_ltl,
-        lookup_id,
-        in_path,
-        env,
-        errors,
-    )
-    .map(|(output, self_param_ltl)| (Ok(output), Ok(self_param_ltl)))
-    .unwrap_or((Err(()), Err(())));
+    let self_param_ltl = elision::SelfParamLifetimeLowerer::new(&method.lifetime_env, errors)?;
 
     let (param_self, param_ltl) = if let Some(self_param) = method.self_param.as_ref() {
         lower_self_param(
@@ -295,22 +283,31 @@ fn lower_method(
         .map(|(param_self, param_ltl)| (Ok(Some(param_self)), Ok(param_ltl)))
         .unwrap_or((Err(()), Err(())))
     } else {
-        (
-            Ok(None),
-            self_param_ltl.map(|self_param_ltl| self_param_ltl.no_self_lifetime()),
-        )
+        (Ok(None), Ok(self_param_ltl.no_self_lifetime()))
     };
 
-    let (params, lifetime_env) =
-        lower_many_params(ast_params, param_ltl, lookup_id, in_path, env, errors)?;
+    let (params, return_ltl) =
+        lower_many_params(ast_params, param_ltl, lookup_id, in_path, env, errors)
+            .map(|(params, return_ltl)| (Ok(params), Ok(return_ltl)))
+            .unwrap_or((Err(()), Err(())));
+
+    let (output, lifetime_env) = lower_return_type(
+        method.return_type.as_ref(),
+        takes_writeable,
+        return_ltl,
+        lookup_id,
+        in_path,
+        env,
+        errors,
+    )?;
 
     Ok(Method {
         docs: method.docs.clone(),
         name: name?,
         lifetime_env,
         param_self: param_self?,
-        params,
-        output: output?,
+        params: params?,
+        output,
     })
 }
 
@@ -489,7 +486,7 @@ fn lower_type<L: elision::LifetimeLowerer>(
 /// If there are any errors, they're pushed to `errors` and `Err(())` is returned.
 fn lower_out_type<L: elision::LifetimeLowerer>(
     ty: &ast::TypeName,
-    ltl: &mut L,
+    ltl: Result<&mut L, ()>,
     lookup_id: &LookupId,
     in_path: &ast::Path,
     env: &Env,
@@ -499,47 +496,62 @@ fn lower_out_type<L: elision::LifetimeLowerer>(
         ast::TypeName::Primitive(prim) => Ok(OutType::Primitive(PrimitiveType::from_ast(*prim))),
         ast::TypeName::Named(path) => match path.resolve(in_path, env) {
             ast::CustomType::Struct(strct) => {
-                let lifetimes = TypeLifetimes::from_ast(ltl, path);
+                let lifetimes = TypeLifetimes::from_ast(ltl?, path);
 
                 if let Some(tcx_id) = lookup_id.resolve_struct(strct) {
-                    Ok(OutType::Struct(ReturnableStructPath::Struct(StructPath::new(lifetimes, tcx_id))))
+                    Ok(OutType::Struct(ReturnableStructPath::Struct(
+                        StructPath::new(lifetimes, tcx_id),
+                    )))
                 } else if let Some(tcx_id) = lookup_id.resolve_out_struct(strct) {
-                    Ok(OutType::Struct(ReturnableStructPath::OutStruct(OutStructPath::new(lifetimes, tcx_id))))
+                    Ok(OutType::Struct(ReturnableStructPath::OutStruct(
+                        OutStructPath::new(lifetimes, tcx_id),
+                    )))
                 } else {
                     unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
                 }
             }
             ast::CustomType::Opaque(_) => {
-                errors.push(LoweringError::Other(format!("Opaque passed by value in input: {path}")));
+                errors.push(LoweringError::Other(format!(
+                    "Opaque passed by value in input: {path}"
+                )));
                 Err(())
             }
             ast::CustomType::Enum(enm) => {
-                let tcx_id = lookup_id.resolve_enum(enm).expect("can't find enum in lookup map, which contains all enums from env");
+                let tcx_id = lookup_id
+                    .resolve_enum(enm)
+                    .expect("can't find enum in lookup map, which contains all enums from env");
 
                 Ok(OutType::Enum(EnumPath::new(tcx_id)))
             }
         },
-        ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
-            ast::TypeName::Named(path) => match path.resolve(in_path, env) {
-                ast::CustomType::Opaque(opaque) => {
-                    let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                    let lifetimes = TypeLifetimes::from_ast(ltl, path);
-                    let tcx_id = lookup_id.resolve_opaque(opaque).expect(
-                        "can't find opaque in lookup map, which contains all opaques from env",
-                    );
+        ast::TypeName::Reference(lifetime, mutability, ref_ty) => {
+            match ref_ty.as_ref() {
+                ast::TypeName::Named(path) => match path.resolve(in_path, env) {
+                    ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
+                        let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                        let lifetimes = TypeLifetimes::from_ast(ltl, path);
+                        let tcx_id = lookup_id.resolve_opaque(opaque).expect(
+                            "can't find opaque in lookup map, which contains all opaques from env",
+                        );
 
-                    Ok(OutType::Opaque(OpaquePath::new(
-                        lifetimes,
-                        Optional(false),
-                        MaybeOwn::Borrow(borrow),
-                        tcx_id,
-                    )))
+                        OutType::Opaque(OpaquePath::new(
+                            lifetimes,
+                            Optional(false),
+                            MaybeOwn::Borrow(borrow),
+                            tcx_id,
+                        ))
+                    }),
+                    _ => {
+                        errors.push(LoweringError::Other(format!("found &T in output where T is a custom type, but not opaque. T = {ref_ty}")));
+                        Err(())
+                    }
+                },
+                _ => {
+                    errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                    Err(())
                 }
-                _ => Err(LoweringError::Other(format!("found &T in output where T is a custom type, but not opaque. T = {ref_ty}"))),
-            },
-            _ => Err(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}"))),
+            }
         }
-        .map_err(|e| errors.push(e)),
         ast::TypeName::Box(box_ty) => {
             errors.push(match box_ty.as_ref() {
                 ast::TypeName::Named(path) => {
@@ -552,74 +564,82 @@ fn lower_out_type<L: elision::LifetimeLowerer>(
             });
             Err(())
         }
-        ast::TypeName::Option(opt_ty) => {
-            match opt_ty.as_ref() {
-                ast::TypeName::Reference(lifetime, mutability, ref_ty) => {
-                    match ref_ty.as_ref() {
-                        ast::TypeName::Named(path) => match path.resolve(in_path, env) {
-                            ast::CustomType::Opaque(opaque) => {
-                                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                                let lifetimes = TypeLifetimes::from_ast(ltl, path);
-                                let tcx_id = lookup_id.resolve_opaque(opaque).expect(
-                                    "can't find opaque in lookup map, which contains all opaques from env",
-                                );
+        ast::TypeName::Option(opt_ty) => match opt_ty.as_ref() {
+            ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
+                ast::TypeName::Named(path) => match path.resolve(in_path, env) {
+                    ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
+                        let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                        let lifetimes = TypeLifetimes::from_ast(ltl, path);
+                        let tcx_id = lookup_id.resolve_opaque(opaque).expect(
+                            "can't find opaque in lookup map, which contains all opaques from env",
+                        );
 
-                                Ok(OutType::Opaque(OpaquePath::new(
-                                    lifetimes,
-                                    Optional(true),
-                                    MaybeOwn::Borrow(borrow),
-                                    tcx_id,
-                                )))
-                            }
-                            _ => Err(LoweringError::Other(format!("found Option<&T> where T is a custom type, but it's not opaque. T = {ref_ty}"))),
-                        },
-                        _ => Err(LoweringError::Other(format!("found Option<&T>, but T isn't a custom type and therefore not opaque. T = {ref_ty}"))),
+                        OutType::Opaque(OpaquePath::new(
+                            lifetimes,
+                            Optional(true),
+                            MaybeOwn::Borrow(borrow),
+                            tcx_id,
+                        ))
+                    }),
+                    _ => {
+                        errors.push(LoweringError::Other(format!("found Option<&T> where T is a custom type, but it's not opaque. T = {ref_ty}")));
+                        Err(())
                     }
-                    .map_err(|e| errors.push(e))
-                }
-                ast::TypeName::Box(box_ty) => {
-                    match box_ty.as_ref() {
-                        ast::TypeName::Named(path) => match path.resolve(in_path, env) {
-                            ast::CustomType::Opaque(opaque) => {
-                                let lifetimes = TypeLifetimes::from_ast(ltl, path);
-                                let tcx_id = lookup_id.resolve_opaque(opaque).expect(
-                                    "can't find opaque in lookup map, which contains all opaques from env",
-                                );
-
-                                Ok(OutType::Opaque(OpaquePath::new(
-                                    lifetimes,
-                                    Optional(true),
-                                    MaybeOwn::Own,
-                                    tcx_id,
-                                )))
-                            }
-                            _ => Err(LoweringError::Other(format!("found Option<Box<T>> where T is a custom type, but it's not opaque. T = {box_ty}"))),
-                        }
-                        _ => Err(LoweringError::Other(format!("found Option<Box<T>>, but T isn't a custom type and therefore not opaque. T = {box_ty}"))),
-                    }
-                    .map_err(|e| errors.push(e))
-                }
+                },
                 _ => {
-                    errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = {opt_ty}")));
+                    errors.push(LoweringError::Other(format!("found Option<&T>, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
                     Err(())
                 }
+            },
+            ast::TypeName::Box(box_ty) => match box_ty.as_ref() {
+                ast::TypeName::Named(path) => match path.resolve(in_path, env) {
+                    ast::CustomType::Opaque(opaque) => {
+                        let lifetimes = TypeLifetimes::from_ast(ltl?, path);
+                        let tcx_id = lookup_id.resolve_opaque(opaque).expect(
+                            "can't find opaque in lookup map, which contains all opaques from env",
+                        );
+
+                        Ok(OutType::Opaque(OpaquePath::new(
+                            lifetimes,
+                            Optional(true),
+                            MaybeOwn::Own,
+                            tcx_id,
+                        )))
+                    }
+                    _ => {
+                        errors.push(LoweringError::Other(format!("found Option<Box<T>> where T is a custom type, but it's not opaque. T = {box_ty}")));
+                        Err(())
+                    }
+                },
+                _ => {
+                    errors.push(LoweringError::Other(format!("found Option<Box<T>>, but T isn't a custom type and therefore not opaque. T = {box_ty}")));
+                    Err(())
+                }
+            },
+            _ => {
+                errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = {opt_ty}")));
+                Err(())
             }
-        }
+        },
         ast::TypeName::Result(_, _) => {
-            errors.push(LoweringError::Other("Results can only appear as the top-level return type of methods".into()));
+            errors.push(LoweringError::Other(
+                "Results can only appear as the top-level return type of methods".into(),
+            ));
             Err(())
         }
         ast::TypeName::Writeable => {
-            errors.push(LoweringError::Other("Writeables can only appear as the last parameter of a method".into()));
+            errors.push(LoweringError::Other(
+                "Writeables can only appear as the last parameter of a method".into(),
+            ));
             Err(())
         }
         ast::TypeName::StrReference(lifetime) => {
-            let type_lifetime = ltl.lower_lifetime(lifetime);
+            let type_lifetime = ltl?.lower_lifetime(lifetime);
 
             Ok(OutType::Slice(Slice::Str(type_lifetime)))
         }
         ast::TypeName::PrimitiveSlice(lifetime, mutability, prim) => {
-            let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+            let borrow = Borrow::new(ltl?.lower_lifetime(lifetime), *mutability);
             let prim = PrimitiveType::from_ast(*prim);
 
             Ok(OutType::Slice(Slice::Primitive(borrow, prim)))
@@ -636,7 +656,7 @@ fn lower_out_type<L: elision::LifetimeLowerer>(
 /// If there are any errors, they're pushed to `errors` and `Err(())` is returned.
 fn lower_self_param<'ast>(
     self_param: &ast::SelfParam,
-    self_param_ltl: Result<elision::SelfParamLifetimeLowerer<'ast>, ()>,
+    self_param_ltl: elision::SelfParamLifetimeLowerer<'ast>,
     lookup_id: &LookupId,
     method_full_path: &ast::Ident, // for better error msg
     in_path: &ast::Path,
@@ -650,19 +670,14 @@ fn lower_self_param<'ast>(
                     errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed")));
                     Err(())
                 } else {
-                    self_param_ltl.map(|self_param_ltl| {
-                        let mut param_ltl = self_param_ltl.no_self_lifetime();
-                        let type_lifetimes =
-                            TypeLifetimes::from_ast(&mut param_ltl, &self_param.path_type);
+                    let mut param_ltl = self_param_ltl.no_self_lifetime();
+                    let type_lifetimes =
+                        TypeLifetimes::from_ast(&mut param_ltl, &self_param.path_type);
 
-                        (
-                            ParamSelf::new(SelfType::Struct(StructPath::new(
-                                type_lifetimes,
-                                tcx_id,
-                            ))),
-                            param_ltl,
-                        )
-                    })
+                    Ok((
+                        ParamSelf::new(SelfType::Struct(StructPath::new(type_lifetimes, tcx_id))),
+                        param_ltl,
+                    ))
                 }
             } else if lookup_id.resolve_out_struct(strct).is_some() {
                 if let Some((lifetime, _)) = &self_param.reference {
@@ -683,35 +698,32 @@ fn lower_self_param<'ast>(
             let tcx_id = lookup_id.resolve_opaque(opaque).expect("opaque is in env");
 
             if let Some((lifetime, mutability)) = &self_param.reference {
-                self_param_ltl.map(|self_param_ltl| {
-                    let (mut param_ltl, borrow_lifetime) =
-                        self_param_ltl.lower_self_lifetime(lifetime);
-                    let borrow = Borrow::new(borrow_lifetime, *mutability);
-                    let lifetimes = TypeLifetimes::from_ast(&mut param_ltl, &self_param.path_type);
+                let (mut param_ltl, borrow_lifetime) = self_param_ltl.lower_self_lifetime(lifetime);
+                let borrow = Borrow::new(borrow_lifetime, *mutability);
+                let lifetimes = TypeLifetimes::from_ast(&mut param_ltl, &self_param.path_type);
 
-                    (
-                        ParamSelf::new(SelfType::Opaque(OpaquePath::new(
-                            lifetimes,
-                            NonOptional,
-                            borrow,
-                            tcx_id,
-                        ))),
-                        param_ltl,
-                    )
-                })
+                Ok((
+                    ParamSelf::new(SelfType::Opaque(OpaquePath::new(
+                        lifetimes,
+                        NonOptional,
+                        borrow,
+                        tcx_id,
+                    ))),
+                    param_ltl,
+                ))
             } else {
                 errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an opaque by value as the self parameter, but opaques as inputs must be behind refs")));
                 Err(())
             }
         }
-        ast::CustomType::Enum(enm) => self_param_ltl.map(|self_param_ltl| {
+        ast::CustomType::Enum(enm) => {
             let tcx_id = lookup_id.resolve_enum(enm).expect("enum is in env");
 
-            (
+            Ok((
                 ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id))),
                 self_param_ltl.no_self_lifetime(),
-            )
-        }),
+            ))
+        }
     }
 }
 
@@ -742,14 +754,14 @@ fn lower_param(
 /// Note that this expects that if there was a writeable param at the end in
 /// the method, `ast_params` was sliced to not include it. This happens in
 /// `lower_method`, the caller of this function.
-fn lower_many_params(
+fn lower_many_params<'ast>(
     ast_params: &[ast::Param],
-    mut param_ltl: Result<elision::ParamLifetimeLowerer, ()>,
+    mut param_ltl: Result<elision::ParamLifetimeLowerer<'ast>, ()>,
     lookup_id: &LookupId,
     in_path: &ast::Path,
     env: &Env,
     errors: &mut Vec<LoweringError>,
-) -> Result<(Vec<Param>, LifetimeEnv), ()> {
+) -> Result<(Vec<Param>, elision::ReturnLifetimeLowerer<'ast>), ()> {
     let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
     for param in ast_params {
@@ -776,19 +788,19 @@ fn lower_many_params(
 /// Lowers the return type of an [`ast::Method`] into a [`hir::ReturnFallability`].
 ///
 /// If there are any errors, they're pushed to `errors` and `Err(())` is returned.
-fn lower_return_type<'ast>(
+fn lower_return_type(
     return_type: Option<&ast::TypeName>,
     takes_writeable: bool,
-    mut return_ltl: elision::ReturnLifetimeLowerer<'ast>,
+    return_ltl: Result<elision::ReturnLifetimeLowerer<'_>, ()>,
     lookup_id: &LookupId,
     in_path: &ast::Path,
     env: &Env,
     errors: &mut Vec<LoweringError>,
-) -> Result<(ReturnFallability, elision::SelfParamLifetimeLowerer<'ast>), ()> {
+) -> Result<(ReturnFallability, LifetimeEnv), ()> {
     let return_type = return_type.unwrap_or(&ast::TypeName::Unit);
 
     match return_type {
-        ast::TypeName::Result(ok_ty, err_ty) => {
+        ast::TypeName::Result(ok_ty, err_ty) => return_ltl.and_then(|mut return_ltl| {
             let ok_ty = match ok_ty.as_ref() {
                 ast::TypeName::Unit => {
                     if takes_writeable {
@@ -797,35 +809,48 @@ fn lower_return_type<'ast>(
                         Ok(None)
                     }
                 }
-                ty => lower_out_type(ty, &mut return_ltl, lookup_id, in_path, env, errors)
+                ty => lower_out_type(ty, Ok(&mut return_ltl), lookup_id, in_path, env, errors)
                     .map(|ty| Some(ReturnType::OutType(ty))),
             };
 
-            let err_ty = lower_out_type(err_ty, &mut return_ltl, lookup_id, in_path, env, errors);
+            let err_ty =
+                lower_out_type(err_ty, Ok(&mut return_ltl), lookup_id, in_path, env, errors);
 
             match (ok_ty, err_ty) {
-                (Ok(ok_ty), Ok(err_ty)) => Ok(ReturnFallability::Fallible(ok_ty, err_ty)),
+                (Ok(ok_ty), Ok(err_ty)) => Ok((
+                    ReturnFallability::Fallible(ok_ty, err_ty),
+                    return_ltl.finish(),
+                )),
                 _ => Err(()),
             }
-        }
-        ast::TypeName::Unit => {
+        }),
+        ast::TypeName::Unit => return_ltl.map(|return_ltl| {
             if takes_writeable {
-                Ok(ReturnFallability::Infallible(Some(ReturnType::Writeable)))
+                (
+                    ReturnFallability::Infallible(Some(ReturnType::Writeable)),
+                    return_ltl.finish(),
+                )
             } else {
-                Ok(ReturnFallability::Infallible(None))
+                (ReturnFallability::Infallible(None), return_ltl.finish())
             }
-        }
-        _ => lower_out_type(
-            return_type,
-            &mut return_ltl,
-            lookup_id,
-            in_path,
-            env,
-            errors,
-        )
-        .map(|ty| ReturnFallability::Infallible(Some(ReturnType::OutType(ty)))),
+        }),
+        _ => return_ltl.and_then(|mut return_ltl| {
+            lower_out_type(
+                return_type,
+                Ok(&mut return_ltl),
+                lookup_id,
+                in_path,
+                env,
+                errors,
+            )
+            .map(|ty| {
+                (
+                    ReturnFallability::Infallible(Some(ReturnType::OutType(ty))),
+                    return_ltl.finish(),
+                )
+            })
+        }),
     }
-    .map(|return_fallability| (return_fallability, return_ltl.finish()))
 }
 
 pub mod elision {
@@ -853,8 +878,49 @@ pub mod elision {
 
     pub(super) struct InnerLifetimeLowerer<'ast> {
         elided_node_gen: ImplicitLifetimeGenerator,
-        method_lt_env: &'ast ast::LifetimeEnv,
+        method_lifetime_env: &'ast ast::LifetimeEnv,
         nodes: SmallVec<[LifetimeNode; 2]>,
+    }
+
+    #[derive(Copy, Clone)]
+    enum ElisionSource {
+        /// No borrows in the input, no elision.
+        NoBorrows,
+        /// `&self` or `&mut self`, elision allowed.
+        SelfParam(TypeLifetime),
+        /// One param contains a borrow, elision allowed.
+        OneParam(TypeLifetime),
+        /// Multiple borrows and no self borrow, no elision.
+        MultipleBorrows,
+    }
+
+    /// The second phase of elision inference.
+    ///
+    /// In the second phase, the type signature of the `&self` or `&mut self` type
+    /// is lowered into its HIR representation, if present. Lifetime elision rules
+    /// only care about the reference to self, and not about the lifetimes in the
+    /// type that `self` expands to, so this phase only checks that single lifetime
+    /// by either calling [`SelfParamLifetimeLowerer::lower_self_lifetime`] if
+    /// `self` is borrowed, or [`SelfParamLifetimeLowerer::no_self_lifetime`] if
+    /// `self` is owned, or if there's no `self` parameter.
+    ///
+    /// Both of these methods transition to the next phase, [`ParamLifetimeLowerer`].
+    pub(super) struct SelfParamLifetimeLowerer<'ast> {
+        inner: InnerLifetimeLowerer<'ast>,
+    }
+
+    /// The third and final phase of elision inference.
+    ///
+    /// In the third phase, all lifetimes in the parameter type signatures
+    /// (besides the lifetime of self, if present) are lowered, and if there's
+    /// elision in the output, it is assigned if not already assigned to a
+    /// potential self parameter.
+    ///
+    /// Once all lifetimes in the parameter signatures have been lowered, call
+    /// [`ParamLifetimeLowerer::finish`] to get the resulting [`LifetimeEnv`].
+    pub(super) struct ParamLifetimeLowerer<'ast> {
+        elision_source: ElisionSource,
+        inner: InnerLifetimeLowerer<'ast>,
     }
 
     /// The first phase of elision inference.
@@ -871,60 +937,8 @@ pub mod elision {
     pub(super) struct ReturnLifetimeLowerer<'ast> {
         /// When an anonymous lifetime is visited, it gets assigned the lifetime from
         /// here, or generates a new one and returns that.
-        output_elision: Option<TypeLifetime>,
+        elision_source: ElisionSource,
         inner: InnerLifetimeLowerer<'ast>,
-    }
-
-    /// The second phase of elision inference.
-    ///
-    /// In the second phase, the type signature of the `&self` or `&mut self` type
-    /// is lowered into its HIR representation, if present. Lifetime elision rules
-    /// only care about the reference to self, and not about the lifetimes in the
-    /// type that `self` expands to, so this phase only checks that single lifetime
-    /// by either calling [`SelfParamLifetimeLowerer::lower_self_lifetime`] if
-    /// `self` is borrowed, or [`SelfParamLifetimeLowerer::no_self_lifetime`] if
-    /// `self` is owned, or if there's no `self` parameter.
-    ///
-    /// Both of these methods transition to the next phase, [`ParamLifetimeLowerer`].
-    pub(super) struct SelfParamLifetimeLowerer<'ast> {
-        output_elision: Option<TypeLifetime>,
-        inner: InnerLifetimeLowerer<'ast>,
-    }
-
-    /// The third and final phase of elision inference.
-    ///
-    /// In the third phase, all lifetimes in the parameter type signatures
-    /// (besides the lifetime of self, if present) are lowered, and if there's
-    /// elision in the output, it is assigned if not already assigned to a
-    /// potential self parameter.
-    ///
-    /// Once all lifetimes in the parameter signatures have been lowered, call
-    /// [`ParamLifetimeLowerer::finish`] to get the resulting [`LifetimeEnv`].
-    pub(super) struct ParamLifetimeLowerer<'ast> {
-        elided_output_lt: Option<ElidedOutputLifetime>,
-        inner: InnerLifetimeLowerer<'ast>,
-    }
-
-    /// Mark which part of the input is connected to the elided lifetimes in the
-    /// output.
-    enum ElidedOutputLifetime {
-        /// The elided output lifetime currently has no source.
-        ///
-        /// It's an error for this variant to be the final state, since it means
-        /// that there were no elided lifetimes in the input, and this type only
-        /// exists when there's elision in the output. This isn't allowed by rustc,
-        /// and so should never happen.
-        Unassigned(TypeLifetime),
-        /// The elided output lifetime borrowed from `&self` or `&mut self`,
-        /// though there may be other elided lifetimes in the input.
-        SelfAssigned,
-        /// The elided output lifetime borrowed from the single elided lifetime in
-        /// the input, which wasn't `&self` or `&mut self`.
-        ///
-        /// Note that it's a bug for there to be more than one elided lifetime in
-        /// the input if the `&self` param doesn't elide the lifetime and there is
-        /// elision in the output.
-        ParamAssigned,
     }
 
     impl<'ast> InnerLifetimeLowerer<'ast> {
@@ -934,8 +948,9 @@ pub mod elision {
         }
     }
 
-    impl<'ast> ReturnLifetimeLowerer<'ast> {
-        pub fn new(
+    impl<'ast> SelfParamLifetimeLowerer<'ast> {
+        /// Returns a new [`SelfParamLifetimeLowerer`].
+        pub(super) fn new(
             method_lt_env: &'ast ast::LifetimeEnv,
             errors: &mut Vec<LoweringError>,
         ) -> Result<Self, ()> {
@@ -956,82 +971,56 @@ pub mod elision {
             }
 
             Ok(Self {
-                output_elision: None,
                 inner: InnerLifetimeLowerer {
                     elided_node_gen: ImplicitLifetimeGenerator::new(),
-                    method_lt_env,
+                    method_lifetime_env: method_lt_env,
                     nodes: hir_nodes?,
                 },
             })
         }
 
-        /// Transition to the next stage of elision inference.
-        pub fn finish(self) -> SelfParamLifetimeLowerer<'ast> {
-            SelfParamLifetimeLowerer {
-                output_elision: self.output_elision,
-                inner: self.inner,
-            }
-        }
-    }
-
-    impl<'ast> SelfParamLifetimeLowerer<'ast> {
-        /// The lifetime of `&self` / `&mut self`.
-        pub fn lower_self_lifetime(
+        /// Lowers the lifetime of `&self` or `&mut self`, marking it as the
+        /// potential lifetime for any elided lifetimes in the output.
+        pub(super) fn lower_self_lifetime(
             mut self,
             lifetime: &ast::Lifetime,
         ) -> (ParamLifetimeLowerer<'ast>, TypeLifetime) {
-            let (elided_output_lt, self_lt) = match lifetime {
-                ast::Lifetime::Static => {
-                    let elided_output_lt =
-                        self.output_elision.map(ElidedOutputLifetime::Unassigned);
-                    (elided_output_lt, TypeLifetime::new_static())
-                }
+            let self_lt = match lifetime {
+                ast::Lifetime::Static => TypeLifetime::new_static(),
                 ast::Lifetime::Named(named) => {
-                    let elided_output_lt =
-                        self.output_elision.map(ElidedOutputLifetime::Unassigned);
-                    (
-                        elided_output_lt,
-                        TypeLifetime::from_ast(named, self.inner.method_lt_env),
-                    )
+                    TypeLifetime::from_ast(named, self.inner.method_lifetime_env)
                 }
-                ast::Lifetime::Anonymous => {
-                    if let Some(elided_output_lt) = self.output_elision {
-                        // There is output elision, and there's `&self` or `&mut self`.
-                        // So the lifetime of `self` is assigned to _all_
-                        // elided output lifetimes.
-                        (Some(ElidedOutputLifetime::SelfAssigned), elided_output_lt)
-                    } else {
-                        // We have `&self` or `&mut self`, but there's no elision in
-                        // the output, so the anonymous lifetime just gets a new lifetime.
-                        (None, self.inner.new_elided())
-                    }
-                }
+                ast::Lifetime::Anonymous => self.inner.new_elided(),
             };
 
             let param_ltl = ParamLifetimeLowerer {
-                elided_output_lt,
+                elision_source: ElisionSource::SelfParam(self_lt),
                 inner: self.inner,
             };
 
             (param_ltl, self_lt)
         }
 
-        pub fn no_self_lifetime(self) -> ParamLifetimeLowerer<'ast> {
-            let elided_output_lt = self.output_elision.map(ElidedOutputLifetime::Unassigned);
-
+        /// Indicates that there is no `&self` or `&mut self`.
+        pub(super) fn no_self_lifetime(self) -> ParamLifetimeLowerer<'ast> {
             ParamLifetimeLowerer {
-                elided_output_lt,
+                elision_source: ElisionSource::NoBorrows,
                 inner: self.inner,
             }
         }
     }
 
     impl<'ast> ParamLifetimeLowerer<'ast> {
-        pub fn finish(self) -> LifetimeEnv {
-            if let Some(ElidedOutputLifetime::Unassigned(_)) = self.elided_output_lt {
-                panic!("elision in output but no elision in input, this is a bug");
+        pub fn finish(self) -> ReturnLifetimeLowerer<'ast> {
+            ReturnLifetimeLowerer {
+                elision_source: self.elision_source,
+                inner: self.inner,
             }
+        }
+    }
 
+    impl<'ast> ReturnLifetimeLowerer<'ast> {
+        pub fn finish(self) -> LifetimeEnv {
             LifetimeEnv::new(self.inner.nodes)
         }
     }
@@ -1051,8 +1040,30 @@ pub mod elision {
             match lifetime {
                 ast::Lifetime::Static => TypeLifetime::new_static(),
                 ast::Lifetime::Named(named) => TypeLifetime::from_ast(named, self),
-                ast::Lifetime::Anonymous => unreachable!("anonymous lifetime inside struct"),
+                ast::Lifetime::Anonymous => {
+                    panic!("anonymous lifetime inside struct, this shouldn't pass rustc's checks")
+                }
             }
+        }
+    }
+
+    impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
+        fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> TypeLifetime {
+            let type_lifetime = match lifetime {
+                ast::Lifetime::Static => TypeLifetime::new_static(),
+                ast::Lifetime::Named(named) => {
+                    TypeLifetime::from_ast(named, self.inner.method_lifetime_env)
+                }
+                ast::Lifetime::Anonymous => self.inner.new_elided(),
+            };
+
+            self.elision_source = match self.elision_source {
+                ElisionSource::NoBorrows => ElisionSource::OneParam(type_lifetime),
+                ElisionSource::OneParam(_) => ElisionSource::MultipleBorrows,
+                no_change => no_change,
+            };
+
+            type_lifetime
         }
     }
 
@@ -1061,33 +1072,18 @@ pub mod elision {
             match lifetime {
                 ast::Lifetime::Static => TypeLifetime::new_static(),
                 ast::Lifetime::Named(named) => {
-                    TypeLifetime::from_ast(named, self.inner.method_lt_env)
+                    TypeLifetime::from_ast(named, self.inner.method_lifetime_env)
                 }
-                ast::Lifetime::Anonymous => self.output_elision.unwrap_or_else(|| {
-                    let type_lifetime = self.inner.new_elided();
-                    self.output_elision = Some(type_lifetime);
-                    type_lifetime
-                }),
-            }
-        }
-    }
-
-    impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
-        fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> TypeLifetime {
-            match lifetime {
-                ast::Lifetime::Static => TypeLifetime::new_static(),
-                ast::Lifetime::Named(named) => {
-                    TypeLifetime::from_ast(named, self.inner.method_lt_env)
-                }
-                ast::Lifetime::Anonymous => match self.elided_output_lt {
-                    Some(ElidedOutputLifetime::Unassigned(elided_output_lt)) => {
-                        self.elided_output_lt = Some(ElidedOutputLifetime::ParamAssigned);
-                        elided_output_lt
+                ast::Lifetime::Anonymous => match self.elision_source {
+                    ElisionSource::SelfParam(lifetime) | ElisionSource::OneParam(lifetime) => {
+                        lifetime
                     }
-                    Some(ElidedOutputLifetime::ParamAssigned) => {
-                        unreachable!("Multiple params have elided lifetimes when there's no `&self` or `&mut self` param and the output includes an elided lifetime, this is a bug")
+                    ElisionSource::NoBorrows => {
+                        panic!("nothing to borrow from, this shouldn't pass rustc's checks")
                     }
-                    Some(ElidedOutputLifetime::SelfAssigned) | None => self.inner.new_elided(),
+                    ElisionSource::MultipleBorrows => {
+                        panic!("source of elision is ambiguous, this shouldn't pass rustc's checks")
+                    }
                 },
             }
         }
