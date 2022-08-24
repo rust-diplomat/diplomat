@@ -47,7 +47,12 @@ pub fn gen(
 
     match custom_type {
         ast::CustomType::Opaque(opaque) => {
-            gen_doc_block(out, &opaque.docs.to_markdown(docs_url_gen, false))?;
+            gen_doc_block(
+                out,
+                &opaque
+                    .docs
+                    .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+            )?;
             writeln!(
                 out,
                 "public partial class {}: IDisposable",
@@ -110,7 +115,12 @@ pub fn gen(
         }
 
         ast::CustomType::Struct(strct) => {
-            gen_doc_block(out, &strct.docs.to_markdown(docs_url_gen, false))?;
+            gen_doc_block(
+                out,
+                &strct
+                    .docs
+                    .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+            )?;
             writeln!(out, "public partial class {}", custom_type.name())?;
 
             out.scope(|out| {
@@ -157,11 +167,18 @@ pub fn gen(
         }
 
         ast::CustomType::Enum(enm) => {
-            gen_doc_block(out, &enm.docs.to_markdown(docs_url_gen, false))?;
+            gen_doc_block(
+                out,
+                &enm.docs
+                    .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+            )?;
             writeln!(out, "public enum {}", enm.name)?;
             out.scope(|out| {
                 for (name, discriminant, docs) in enm.variants.iter() {
-                    gen_doc_block(out, &docs.to_markdown(docs_url_gen, false))?;
+                    gen_doc_block(
+                        out,
+                        &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+                    )?;
                     writeln!(out, "{} = {},", name, discriminant)?;
                 }
 
@@ -205,7 +222,10 @@ fn gen_property_for_field(
     }
 
     writeln!(out)?;
-    gen_doc_block(out, &docs.to_markdown(docs_url_gen, false))?;
+    gen_doc_block(
+        out,
+        &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+    )?;
 
     let type_name = gen_type_name_to_string(typ, in_path, env)?;
     let property_name = name.as_str().to_upper_camel_case();
@@ -308,7 +328,12 @@ fn gen_method(
 
     writeln!(out)?;
 
-    gen_doc_block(out, &method.docs.to_markdown(docs_url_gen, false))?;
+    gen_doc_block(
+        out,
+        &method
+            .docs
+            .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+    )?;
 
     let result_to_handle: Option<(&ast::TypeName, &ast::TypeName)> = match &method.return_type {
         Some(ast::TypeName::Result(ok_variant, err_variant)) => {

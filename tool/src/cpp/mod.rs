@@ -95,11 +95,18 @@ pub fn gen_bindings(
 
             ast::CustomType::Enum(enm) => {
                 writeln!(out)?;
-                gen_comment_block(out, &enm.docs.to_markdown(docs_url_gen, false))?;
+                gen_comment_block(
+                    out,
+                    &enm.docs
+                        .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+                )?;
                 writeln!(out, "enum struct {} {{", enm.name)?;
                 let mut enm_indent = indented(out).with_str("  ");
                 for (name, discriminant, docs) in enm.variants.iter() {
-                    gen_comment_block(&mut enm_indent, &docs.to_markdown(docs_url_gen, false))?;
+                    gen_comment_block(
+                        &mut enm_indent,
+                        &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+                    )?;
                     writeln!(&mut enm_indent, "{} = {},", name, discriminant)?;
                 }
                 writeln!(out, "}};")?;

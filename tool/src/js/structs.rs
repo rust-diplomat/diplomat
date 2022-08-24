@@ -390,7 +390,9 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
             "{}",
             display::ts_doc(|mut f| {
                 TsDoc::from_markdown(
-                    &custom_type.docs().to_markdown(docs_url_gen, false),
+                    &custom_type
+                        .docs()
+                        .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
                     in_path,
                     env,
                     &mut f,
@@ -411,7 +413,7 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
                             "{}",
                             display::ts_doc(|mut f| {
                                 TsDoc::from_markdown(
-                                    &docs.to_markdown(docs_url_gen, false),
+                                    &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
                                     in_path,
                                     env,
                                     &mut f,
@@ -530,7 +532,9 @@ fn gen_ts_method_declaration<W: fmt::Write>(
             "{}",
             display::ts_doc(|mut f| {
                 TsDoc::from_markdown(
-                    &method.docs.to_markdown(docs_url_gen, false),
+                    &method
+                        .docs
+                        .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
                     in_path,
                     env,
                     &mut f,
