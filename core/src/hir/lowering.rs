@@ -1088,7 +1088,7 @@ pub mod elision {
 
         fn finish(self, elision_source: ElisionSource) -> ParamLifetimeLowerer<'ast> {
             ParamLifetimeLowerer {
-                elision_source: ElisionSource::NoBorrows,
+                elision_source,
                 base: self.base,
             }
         }
