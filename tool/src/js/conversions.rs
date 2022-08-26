@@ -160,52 +160,54 @@ pub fn gen_value_js_to_rust<'env>(
                 }
             }
         }
-        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => match path_type.resolve(in_path, env) {
-            ast::CustomType::Struct(struct_type) => {
-                let borrowed_current_to_root = path_type
-                    .lifetimes
-                    .iter()
-                    .zip(struct_type.lifetimes.names())
-                    .filter_map(|(current, inner)| {
-                        current
-                            .as_named()
-                            .and_then(|current| borrowed_current_to_root.get(current))
-                            .map(|&root| (inner, root))
-                    })
-                    .collect();
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve(in_path, env) {
+                ast::CustomType::Struct(struct_type) => {
+                    let borrowed_current_to_root = path_type
+                        .lifetimes
+                        .iter()
+                        .zip(struct_type.lifetimes.names())
+                        .filter_map(|(current, inner)| {
+                            current
+                                .as_named()
+                                .and_then(|current| borrowed_current_to_root.get(current))
+                                .map(|&root| (inner, root))
+                        })
+                        .collect();
 
-                for (field_name, field_type, _) in struct_type.fields.iter() {
-                    let field_extracted_name = UnpackedBinding::Field {
-                        field: field_name,
-                        value: Box::new(param_name.clone()),
-                    };
+                    for (field_name, field_type, _) in struct_type.fields.iter() {
+                        let field_extracted_name = UnpackedBinding::Field {
+                            field: field_name,
+                            value: Box::new(param_name.clone()),
+                        };
 
-                    pre_logic.push(format!(
-                        "const {} = {}[\"{}\"];",
-                        field_extracted_name, param_name, field_name
-                    ));
+                        pre_logic.push(format!(
+                            "const {} = {}[\"{}\"];",
+                            field_extracted_name, param_name, field_name
+                        ));
 
-                    gen_value_js_to_rust(
-                        field_extracted_name,
-                        field_type,
-                        in_path,
-                        env,
-                        pre_logic,
-                        invocation_params,
-                        post_logic,
-                        &struct_type.lifetimes,
-                        &borrowed_current_to_root,
-                        entries,
-                    );
+                        gen_value_js_to_rust(
+                            field_extracted_name,
+                            field_type,
+                            in_path,
+                            env,
+                            pre_logic,
+                            invocation_params,
+                            post_logic,
+                            &struct_type.lifetimes,
+                            &borrowed_current_to_root,
+                            entries,
+                        );
+                    }
+                }
+                ast::CustomType::Enum(enm) => {
+                    invocation_params.push(format!("{}_js_to_rust[{}]", enm.name, param_name));
+                }
+                ast::CustomType::Opaque(_) => {
+                    panic!("Opaque types cannot be sent as values");
                 }
             }
-            ast::CustomType::Enum(enm) => {
-                invocation_params.push(format!("{}_js_to_rust[{}]", enm.name, param_name));
-            }
-            ast::CustomType::Opaque(_) => {
-                panic!("Opaque types cannot be sent as values");
-            }
-        },
+        }
         _ => invocation_params.push(param_name.to_string()),
     }
 }
