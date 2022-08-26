@@ -8,6 +8,10 @@ pub fn gen_transparent_convert(s: ItemStruct) -> proc_macro2::TokenStream {
     } else {
         panic!("#[diplomat::transparent_convert] only allowed on structs with a single field")
     };
+
+    if fields.next().is_some() {
+        panic!("#[diplomat::transparent_convert] only allowed on structs with a single field")
+    }
     let struct_name = &s.ident;
     let (impl_generics, ty_generics, _) = s.generics.split_for_impl();
     let mut impl_generics: Generics = parse_quote!(#impl_generics);
