@@ -10,7 +10,7 @@ use std::ops::ControlFlow;
 
 use super::{
     Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
-    OpaqueStruct, Path, Struct, ValidityError,
+    OpaqueStruct, Path, RustLink, Struct, ValidityError,
 };
 use crate::Env;
 
@@ -51,6 +51,14 @@ impl CustomType {
             CustomType::Opaque(strct) => &strct.docs,
             CustomType::Enum(enm) => &enm.docs,
         }
+    }
+
+    /// Get all rust links on this type and its methods
+    pub fn all_rust_links(&self) -> impl Iterator<Item = &RustLink> + '_ {
+        [self.docs()]
+            .into_iter()
+            .chain(self.methods().iter().map(|m| m.docs()))
+            .flat_map(|d| d.rust_links().iter())
     }
 
     pub fn self_path(&self, in_path: &Path) -> Path {

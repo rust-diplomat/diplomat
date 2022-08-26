@@ -176,7 +176,7 @@ impl Docs {
         lines
     }
 
-    pub fn rust_link(&self) -> &[RustLink] {
+    pub fn rust_links(&self) -> &[RustLink] {
         &self.1
     }
 }
