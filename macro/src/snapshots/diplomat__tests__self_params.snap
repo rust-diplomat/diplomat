@@ -3,7 +3,6 @@ source: macro/src/lib.rs
 expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                #[diplomat :: opaque] struct RefList < 'a >\n                                { data : & 'a i32, next : Option < Box < Self >>, } impl <\n                                'b > RefList < 'b >\n                                {\n                                    pub fn extend(& mut self, other : & Self) -> Self\n                                    { unimplemented! () }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
-    #[repr(transparent)]
     struct RefList<'a> {
         data: &'a i32,
         next: Option<Box<Self>>,

@@ -3,9 +3,7 @@ source: macro/src/lib.rs
 expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                #[diplomat :: opaque] struct Foo < 'a > (& 'a str) ;\n                                #[diplomat :: opaque] struct Bar < 'b, 'a : 'b >\n                                (& 'b Foo < 'a >) ; struct Baz < 'x, 'y >\n                                { foo : & 'y Foo < 'x >, } impl < 'a > Foo < 'a >\n                                {\n                                    pub fn new(x : & 'a str) -> Box < Foo < 'a >>\n                                    { unimplemented! () } pub fn get_bar < 'b > (& 'b self) ->\n                                    Box < Bar < 'b, 'a >> { unimplemented! () } pub fn get_baz <\n                                    'b > (& 'b self) -> Baz < 'b, 'a > { Bax { foo : self } }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
-    #[repr(transparent)]
     struct Foo<'a>(&'a str);
-    #[repr(transparent)]
     struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
     #[repr(C)]
     struct Baz<'x, 'y> {
