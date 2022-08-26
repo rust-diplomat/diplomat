@@ -10,15 +10,17 @@ pub fn gen_type<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-            r @ ast::CustomType::Struct(_) | r @ ast::CustomType::Opaque(_) => {
-                write!(out, "{}", r.name())?;
-            }
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve(in_path, env) {
+                r @ ast::CustomType::Struct(_) | r @ ast::CustomType::Opaque(_) => {
+                    write!(out, "{}", r.name())?;
+                }
 
-            ast::CustomType::Enum(enm) => {
-                write!(out, "{}", enm.name)?;
+                ast::CustomType::Enum(enm) => {
+                    write!(out, "{}", enm.name)?;
+                }
             }
-        },
+        }
 
         ast::TypeName::Box(underlying) => {
             gen_type(underlying.as_ref(), in_path, env, out)?;
@@ -64,7 +66,9 @@ pub fn gen_type<W: fmt::Write>(
 /// which require one struct for each distinct instance.
 pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
     match typ {
-        ast::TypeName::Named(name) => name.path.elements.last().unwrap().clone(),
+        ast::TypeName::Named(name) | ast::TypeName::SelfType(name) => {
+            name.path.elements.last().unwrap().clone()
+        }
         ast::TypeName::Box(underlying) => {
             ast::Ident::from(format!("box_{}", name_for_type(underlying)))
         }

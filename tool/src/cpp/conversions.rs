@@ -16,55 +16,59 @@ pub fn gen_rust_to_cpp<W: Write>(
 ) -> String {
     match typ {
         ast::TypeName::Box(underlying) => match underlying.as_ref() {
-            ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-                ast::CustomType::Opaque(opaque) => {
-                    format!("{}({})", opaque.name, cpp)
-                }
+            ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+                match path_type.resolve(in_path, env) {
+                    ast::CustomType::Opaque(opaque) => {
+                        format!("{}({})", opaque.name, cpp)
+                    }
 
-                ast::CustomType::Struct(_strct) => {
-                    // TODO(#59): should emit a unique_ptr
-                    todo!("Receiving boxes of structs is not yet supported")
-                }
+                    ast::CustomType::Struct(_strct) => {
+                        // TODO(#59): should emit a unique_ptr
+                        todo!("Receiving boxes of structs is not yet supported")
+                    }
 
-                ast::CustomType::Enum(_) => {
-                    // TODO(#59): should emit a unique_ptr
-                    todo!("Receiving boxes of enums is not yet supported")
+                    ast::CustomType::Enum(_) => {
+                        // TODO(#59): should emit a unique_ptr
+                        todo!("Receiving boxes of enums is not yet supported")
+                    }
                 }
-            },
+            }
             _o => todo!(),
         },
-        ast::TypeName::Named(path_type) => match path_type.resolve_with_path(in_path, env) {
-            (_, ast::CustomType::Opaque(_)) => {
-                panic!("Cannot handle opaque structs by value");
-            }
-
-            (in_path, ast::CustomType::Struct(strct)) => {
-                let raw_struct_id = format!("diplomat_raw_struct_{}", path);
-                writeln!(out, "capi::{} {} = {};", strct.name, raw_struct_id, cpp).unwrap();
-                let mut all_fields_wrapped = vec![];
-                for (name, typ, _) in &strct.fields {
-                    all_fields_wrapped.push(format!(
-                        ".{} = std::move({})",
-                        name,
-                        gen_rust_to_cpp(
-                            &format!("{}.{}", raw_struct_id, name),
-                            &format!("{}_{}", path, name),
-                            typ,
-                            &in_path,
-                            env,
-                            library_config,
-                            out
-                        )
-                    ));
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve_with_path(in_path, env) {
+                (_, ast::CustomType::Opaque(_)) => {
+                    panic!("Cannot handle opaque structs by value");
                 }
 
-                format!("{}{{ {} }}", strct.name, all_fields_wrapped.join(", "))
-            }
+                (in_path, ast::CustomType::Struct(strct)) => {
+                    let raw_struct_id = format!("diplomat_raw_struct_{}", path);
+                    writeln!(out, "capi::{} {} = {};", strct.name, raw_struct_id, cpp).unwrap();
+                    let mut all_fields_wrapped = vec![];
+                    for (name, typ, _) in &strct.fields {
+                        all_fields_wrapped.push(format!(
+                            ".{} = std::move({})",
+                            name,
+                            gen_rust_to_cpp(
+                                &format!("{}.{}", raw_struct_id, name),
+                                &format!("{}_{}", path, name),
+                                typ,
+                                &in_path,
+                                env,
+                                library_config,
+                                out
+                            )
+                        ));
+                    }
 
-            (_, ast::CustomType::Enum(enm)) => {
-                format!("static_cast<{}>({})", enm.name, cpp)
+                    format!("{}{{ {} }}", strct.name, all_fields_wrapped.join(", "))
+                }
+
+                (_, ast::CustomType::Enum(enm)) => {
+                    format!("static_cast<{}>({})", enm.name, cpp)
+                }
             }
-        },
+        }
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
@@ -253,59 +257,61 @@ pub fn gen_cpp_to_rust<W: Write>(
             is_self,
             out,
         ),
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-            ast::CustomType::Opaque(_opaque) => {
-                if let Some(reference) = behind_ref {
-                    if is_self {
-                        format!("{}->inner.get()", cpp)
-                    } else if reference.mutable {
-                        format!("{}.AsFFIMut()", cpp)
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve(in_path, env) {
+                ast::CustomType::Opaque(_opaque) => {
+                    if let Some(reference) = behind_ref {
+                        if is_self {
+                            format!("{}->inner.get()", cpp)
+                        } else if reference.mutable {
+                            format!("{}.AsFFIMut()", cpp)
+                        } else {
+                            format!("{}.AsFFI()", cpp)
+                        }
                     } else {
-                        format!("{}.AsFFI()", cpp)
+                        panic!("Cannot handle opaque types by value");
                     }
-                } else {
-                    panic!("Cannot handle opaque types by value");
                 }
-            }
 
-            ast::CustomType::Struct(strct) => {
-                if let Some(reference) = behind_ref {
-                    if reference.owned {
-                        format!("(capi::{}*) {}", strct.name, cpp)
+                ast::CustomType::Struct(strct) => {
+                    if let Some(reference) = behind_ref {
+                        if reference.owned {
+                            format!("(capi::{}*) {}", strct.name, cpp)
+                        } else {
+                            format!("(capi::{}*) &{}", strct.name, cpp)
+                        }
                     } else {
-                        format!("(capi::{}*) &{}", strct.name, cpp)
-                    }
-                } else {
-                    let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", path);
-                    writeln!(out, "{} {} = {};", strct.name, wrapped_struct_id, cpp).unwrap();
-                    let mut all_fields_wrapped = vec![];
-                    for (name, typ, _) in &strct.fields {
-                        all_fields_wrapped.push(format!(
-                            ".{} = {}",
-                            name,
-                            gen_cpp_to_rust(
-                                &format!("{}.{}", wrapped_struct_id, name),
-                                &format!("{}_{}", path, name),
-                                None,
-                                typ,
-                                in_path,
-                                env,
-                                false,
-                                out
-                            )
-                        ));
-                    }
+                        let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", path);
+                        writeln!(out, "{} {} = {};", strct.name, wrapped_struct_id, cpp).unwrap();
+                        let mut all_fields_wrapped = vec![];
+                        for (name, typ, _) in &strct.fields {
+                            all_fields_wrapped.push(format!(
+                                ".{} = {}",
+                                name,
+                                gen_cpp_to_rust(
+                                    &format!("{}.{}", wrapped_struct_id, name),
+                                    &format!("{}_{}", path, name),
+                                    None,
+                                    typ,
+                                    in_path,
+                                    env,
+                                    false,
+                                    out
+                                )
+                            ));
+                        }
 
-                    format!(
-                        "capi::{}{{ {} }}",
-                        strct.name,
-                        all_fields_wrapped.join(", ")
-                    )
+                        format!(
+                            "capi::{}{{ {} }}",
+                            strct.name,
+                            all_fields_wrapped.join(", ")
+                        )
+                    }
                 }
-            }
 
-            ast::CustomType::Enum(enm) => format!("static_cast<capi::{}>({})", enm.name, cpp),
-        },
+                ast::CustomType::Enum(enm) => format!("static_cast<capi::{}>({})", enm.name, cpp),
+            }
+        }
         ast::TypeName::Writeable => {
             if behind_ref
                 == Some(ReferenceMeta {

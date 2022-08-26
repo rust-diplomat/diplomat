@@ -478,6 +478,9 @@ fn lower_type<L: elision::LifetimeLowerer>(
             errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
             Err(())
         }
+        ast::TypeName::SelfType(path) => {
+            todo!("Finalize lifetime elision")
+        }
     }
 }
 
@@ -647,6 +650,9 @@ fn lower_out_type<L: elision::LifetimeLowerer>(
         ast::TypeName::Unit => {
             errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
             Err(())
+        }
+        ast::TypeName::SelfType(path) => {
+            todo!("Finalize lifetime elision")
         }
     }
 }

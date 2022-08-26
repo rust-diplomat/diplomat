@@ -255,7 +255,9 @@ fn gen_method<W: fmt::Write>(
     // lifetimes as declared in the returned struct, if the return type is a struct.
     // Otherwise return `None`.
     let arguments_that_use_lifetimes: Option<BTreeMap<&ast::NamedLifetime, Vec<Argument>>> =
-        if let Some(ast::TypeName::Named(path_type)) = &method.return_type {
+        if let Some(ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type)) =
+            &method.return_type
+        {
             path_type
                 .resolve(in_path, env)
                 .lifetimes()
@@ -479,7 +481,7 @@ pub fn gen_ts_type<W: fmt::Write>(
                 write!(out, "{}", prim)?;
             }
         },
-        ast::TypeName::Named(path_type) => {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             let name = path_type.resolve(in_path, env).name();
             out.write_str(name.as_str())?;
         }

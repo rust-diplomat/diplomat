@@ -252,7 +252,7 @@ pub fn gen_includes<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(path_type) => {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             let custom_typ = path_type.resolve(in_path, env);
             match (custom_typ, behind_ref) {
                 (ast::CustomType::Opaque(_) | ast::CustomType::Struct(_), true) => {

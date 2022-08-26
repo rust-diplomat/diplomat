@@ -160,52 +160,54 @@ pub fn gen_value_js_to_rust<'env>(
                 }
             }
         }
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-            ast::CustomType::Struct(struct_type) => {
-                let borrowed_current_to_root = path_type
-                    .lifetimes
-                    .iter()
-                    .zip(struct_type.lifetimes.names())
-                    .filter_map(|(current, inner)| {
-                        current
-                            .as_named()
-                            .and_then(|current| borrowed_current_to_root.get(current))
-                            .map(|&root| (inner, root))
-                    })
-                    .collect();
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve(in_path, env) {
+                ast::CustomType::Struct(struct_type) => {
+                    let borrowed_current_to_root = path_type
+                        .lifetimes
+                        .iter()
+                        .zip(struct_type.lifetimes.names())
+                        .filter_map(|(current, inner)| {
+                            current
+                                .as_named()
+                                .and_then(|current| borrowed_current_to_root.get(current))
+                                .map(|&root| (inner, root))
+                        })
+                        .collect();
 
-                for (field_name, field_type, _) in struct_type.fields.iter() {
-                    let field_extracted_name = UnpackedBinding::Field {
-                        field: field_name,
-                        value: Box::new(param_name.clone()),
-                    };
+                    for (field_name, field_type, _) in struct_type.fields.iter() {
+                        let field_extracted_name = UnpackedBinding::Field {
+                            field: field_name,
+                            value: Box::new(param_name.clone()),
+                        };
 
-                    pre_logic.push(format!(
-                        "const {} = {}[\"{}\"];",
-                        field_extracted_name, param_name, field_name
-                    ));
+                        pre_logic.push(format!(
+                            "const {} = {}[\"{}\"];",
+                            field_extracted_name, param_name, field_name
+                        ));
 
-                    gen_value_js_to_rust(
-                        field_extracted_name,
-                        field_type,
-                        in_path,
-                        env,
-                        pre_logic,
-                        invocation_params,
-                        post_logic,
-                        &struct_type.lifetimes,
-                        &borrowed_current_to_root,
-                        entries,
-                    );
+                        gen_value_js_to_rust(
+                            field_extracted_name,
+                            field_type,
+                            in_path,
+                            env,
+                            pre_logic,
+                            invocation_params,
+                            post_logic,
+                            &struct_type.lifetimes,
+                            &borrowed_current_to_root,
+                            entries,
+                        );
+                    }
+                }
+                ast::CustomType::Enum(enm) => {
+                    invocation_params.push(format!("{}_js_to_rust[{}]", enm.name, param_name));
+                }
+                ast::CustomType::Opaque(_) => {
+                    panic!("Opaque types cannot be sent as values");
                 }
             }
-            ast::CustomType::Enum(enm) => {
-                invocation_params.push(format!("{}_js_to_rust[{}]", enm.name, param_name));
-            }
-            ast::CustomType::Opaque(_) => {
-                panic!("Opaque types cannot be sent as values");
-            }
-        },
+        }
         _ => invocation_params.push(param_name.to_string()),
     }
 }
@@ -375,7 +377,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.typ {
             ast::TypeName::Primitive(..) => self.invocation.scalar().fmt(f),
-            ast::TypeName::Named(path_type) => match self.base.resolve_type(path_type) {
+            ast::TypeName::Named(path_type) |ast::TypeName::SelfType(path_type)=> match self.base.resolve_type(path_type) {
                 ast::CustomType::Struct(strct) => {
                     // TODO: optimize `return_type_form` because we already know we're a non-opaque struct
                     match self.base.return_type_form(self.typ) {
@@ -570,7 +572,7 @@ struct Pointer<'base> {
 
 impl fmt::Display for Pointer<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let ast::TypeName::Named(path_type) = self.inner {
+        if let ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) = self.inner {
             if let ast::CustomType::Opaque(opaque) = self.base.resolve_type(path_type) {
                 write!(
                     f,
@@ -686,38 +688,43 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                     self.underlying
                 ),
             },
-            ast::TypeName::Named(path_type) => match self.base.resolve_type(path_type) {
-                ast::CustomType::Struct(strct) => {
-                    // TODO: optimize because we already know it's a non-opaque struct
-                    match self.base.return_type_form(self.inner) {
-                        ReturnTypeForm::Scalar => {
-                            todo!("#173: constructing a scalar struct from a buffer")
+            ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+                match self.base.resolve_type(path_type) {
+                    ast::CustomType::Struct(strct) => {
+                        // TODO: optimize because we already know it's a non-opaque struct
+                        match self.base.return_type_form(self.inner) {
+                            ReturnTypeForm::Scalar => {
+                                todo!("#173: constructing a scalar struct from a buffer")
+                            }
+                            ReturnTypeForm::Complex => write!(
+                                f,
+                                "new {}({})",
+                                strct.name,
+                                display::expr(|f| {
+                                    self.underlying.fmt(f)?;
+                                    for inputs in self.base.borrows {
+                                        write!(f, ", {inputs}")?;
+                                    }
+                                    Ok(())
+                                }),
+                            ),
+                            ReturnTypeForm::Empty => unreachable!(),
                         }
-                        ReturnTypeForm::Complex => write!(
-                            f,
-                            "new {}({})",
-                            strct.name,
-                            display::expr(|f| {
-                                self.underlying.fmt(f)?;
-                                for inputs in self.base.borrows {
-                                    write!(f, ", {inputs}")?;
-                                }
-                                Ok(())
-                            }),
-                        ),
-                        ReturnTypeForm::Empty => unreachable!(),
                     }
+                    ast::CustomType::Opaque(_opaque) => {
+                        // Codegen for opaque structs is in `Pointer`s `fmt::Display` impl
+                        if let ast::TypeName::SelfType(_) = self.inner {
+                            unreachable!("Self Opaque not behind a pointer: {}", self.inner);
+                        }
+                        unreachable!("Opaque not behind a pointer")
+                    }
+                    ast::CustomType::Enum(enm) => write!(
+                        f,
+                        "{}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {})]",
+                        enm.name, self.underlying,
+                    ),
                 }
-                ast::CustomType::Opaque(_opaque) => {
-                    // Codegen for opaque structs is in `Pointer`s `fmt::Display` impl
-                    unreachable!("Opaque not behind a pointer")
-                }
-                ast::CustomType::Enum(enm) => write!(
-                    f,
-                    "{}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {})]",
-                    enm.name, self.underlying,
-                ),
-            },
+            }
             ast::TypeName::Reference(.., typ) => Pointer {
                 inner: typ,
                 underlying: Underlying::PtrRead(&self.underlying),

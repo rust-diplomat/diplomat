@@ -20,7 +20,7 @@ pub fn gen_type_name(
     out: &mut dyn fmt::Write,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(path_type) => {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             write!(out, "{}", path_type.resolve(in_path, env).name())
         }
 
@@ -87,7 +87,9 @@ pub fn type_name_for_prim(prim: &ast::PrimitiveType) -> &str {
 /// Generates a struct name that uniquely identifies the given type.
 pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
     match typ {
-        ast::TypeName::Named(name) => name.path.elements.last().unwrap().clone(),
+        ast::TypeName::Named(name) | ast::TypeName::SelfType(name) => {
+            name.path.elements.last().unwrap().clone()
+        }
         ast::TypeName::Box(underlying) => {
             ast::Ident::from(format!("Box{}", name_for_type(underlying)))
         }
