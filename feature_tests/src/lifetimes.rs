@@ -4,6 +4,7 @@ pub mod ffi {
     pub struct Foo<'a>(&'a str);
 
     #[diplomat::opaque]
+    #[diplomat::transparent_convert]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
     impl<'a> Foo<'a> {

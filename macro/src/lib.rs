@@ -5,6 +5,7 @@ use syn::*;
 use diplomat_core::ast;
 
 mod enum_convert;
+mod transparent_convert;
 
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
@@ -197,7 +198,7 @@ impl AttributeInfo {
                         return false;
                     } else if seg == "rust_link" {
                         return false;
-                    } else if seg == "enum_convert" {
+                    } else if seg == "enum_convert" || seg == "transparent_convert" {
                         // diplomat::bridge doesn't read this, but it's handled separately
                         // as an attribute
                         return true;
@@ -224,7 +225,10 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             let info = AttributeInfo::extract(&mut s.attrs);
             if info.opaque || !info.repr {
                 let repr = if info.opaque {
-                    quote!(#[repr(transparent)])
+                    // Normal opaque types don't need repr(transparent) because the inner type is
+                    // never referenced. #[diplomat::transparent_convert] handles adding repr(transparent)
+                    // on its own
+                    quote!()
                 } else {
                     quote!(#[repr(C)])
                 };
@@ -328,6 +332,30 @@ pub fn enum_convert(
     let input_cached: proc_macro2::TokenStream = input.clone().into();
     let expanded =
         enum_convert::gen_enum_convert(parse_macro_input!(attr), parse_macro_input!(input));
+
+    let full = quote! {
+        #expanded
+        #input_cached
+    };
+    proc_macro::TokenStream::from(full.to_token_stream())
+}
+
+/// Generate conversions from inner types for opaque Diplomat types with a single field
+///
+/// This is invoked as `#[diplomat::transparent_convert]`
+/// on an opaque Diplomat type. It will add `#[repr(transparent)]` and implement `pub(crate) fn transparent_convert()`
+/// which allows constructing an `&Self` from a reference to the inner field.
+#[proc_macro_attribute]
+pub fn transparent_convert(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    // proc macros handle compile errors by using special error tokens.
+    // In case of an error, we don't want the original code to go away too
+    // (otherwise that will cause more errors) so we hold on to it and we tack it in
+    // with no modifications below
+    let input_cached: proc_macro2::TokenStream = input.clone().into();
+    let expanded = transparent_convert::gen_transparent_convert(parse_macro_input!(input));
 
     let full = quote! {
         #expanded

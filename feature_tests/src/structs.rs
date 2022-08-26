@@ -2,7 +2,8 @@
 pub mod ffi {
 
     #[diplomat::opaque]
-    pub struct Opaque();
+    #[diplomat::transparent_convert]
+    pub struct Opaque(String);
 
     pub struct MyStruct {
         a: u8,
@@ -15,7 +16,7 @@ pub mod ffi {
 
     impl Opaque {
         pub fn new() -> Box<Opaque> {
-            Box::new(Opaque())
+            Box::new(Opaque("".into()))
         }
 
         #[diplomat::rust_link(Something::something, FnInStruct)]
@@ -53,4 +54,9 @@ pub mod ffi {
             assert_eq!(self.f, '餐');
         }
     }
+}
+
+#[allow(unused)]
+fn test_transparent_convert_exists(s: &String) -> &ffi::Opaque {
+    ffi::Opaque::transparent_convert(s)
 }
