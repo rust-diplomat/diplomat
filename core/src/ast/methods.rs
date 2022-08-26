@@ -213,6 +213,11 @@ impl Method {
     pub fn has_writeable_param(&self) -> bool {
         self.params.iter().any(|p| p.is_writeable())
     }
+
+    /// Returns the documentation block
+    pub fn docs(&self) -> &Docs {
+        &self.docs
+    }
 }
 
 /// The `self` parameter taken by a [`Method`].
