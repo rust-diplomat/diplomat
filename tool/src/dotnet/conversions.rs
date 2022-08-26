@@ -69,7 +69,7 @@ pub fn to_idiomatic_object<W: fmt::Write>(
         _ => {
             let name = gen_type_name_to_string(typ, in_path, env)?;
             match typ {
-                ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+                ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type)=> match path_type.resolve(in_path, env) {
                     ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
                         write!(out, "new {name}({input_var_name})")
                     }
@@ -109,7 +109,7 @@ pub fn to_raw_object<W: fmt::Write>(
         _ => {
             let name = gen_type_name_to_string(typ, in_path, env)?;
             match typ {
-                ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+                ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type)=> match path_type.resolve(in_path, env) {
                     ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
                         write!(out, "{input_var_name}.AsFFI()")
                     }

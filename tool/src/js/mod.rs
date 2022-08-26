@@ -212,7 +212,7 @@ impl<'env> Imports<'env> {
         state: TypePosition,
     ) {
         match typ {
-            ast::TypeName::Named(path_type) => {
+            ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
                 let custom = path_type.resolve(in_path, env);
                 // JS wants: return type, fields, _all_ enums.
                 // TS wants: return type, fields, params.

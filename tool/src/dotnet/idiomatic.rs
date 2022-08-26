@@ -201,7 +201,7 @@ fn gen_property_for_field(
 ) -> fmt::Result {
     match typ {
         ast::TypeName::Primitive(_) => {}
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(_) | ast::CustomType::Opaque(_) => {
                 println!(
                     "{} ({name})",
@@ -458,7 +458,7 @@ fn gen_method(
                 if let ast::TypeName::Option(underlying_ty) = &param.ty {
                     // TODO: support optional primitive types and enums in arguments
                     match underlying_ty.as_ref() {
-                        ast::TypeName::Named(path_type) => {
+                        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
                             if let ast::CustomType::Enum(_) = path_type.resolve(in_path, env) {
                                 panic!("Optional enum types as parameters are not supported yet")
                             }
@@ -711,7 +711,7 @@ fn gen_raw_conversion_type_name_decl_position(
     out: &mut dyn fmt::Write,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Opaque(_) => {
                 write!(out, "Raw.")?;
                 gen_type_name(typ, in_path, env, out)?;
@@ -749,7 +749,7 @@ fn gen_return_type_remark_about_drop(
     out: &mut CodeWriter,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(_) => {
+        ast::TypeName::Named(_) | ast::TypeName::SelfType(_) => {
             let type_name = gen_type_name_to_string(typ, in_path, env)?;
             writeln!(out, "/// <returns>")?;
             writeln!(out, "/// A <c>{type_name}</c> allocated on C# side.")?;
@@ -757,7 +757,7 @@ fn gen_return_type_remark_about_drop(
         }
         ast::TypeName::Box(underlying) | ast::TypeName::Reference(.., underlying) => {
             match underlying.as_ref() {
-                ast::TypeName::Named(_) => {
+                ast::TypeName::Named(_) | ast::TypeName::SelfType(_) => {
                     let type_name = gen_type_name_to_string(underlying, in_path, env)?;
                     writeln!(out, "/// <returns>")?;
                     writeln!(out, "/// A <c>{type_name}</c> allocated on Rust side.")?;
@@ -782,7 +782,7 @@ fn requires_null_check(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> b
         }
         ast::TypeName::Option(opt) => requires_null_check(opt.as_ref(), in_path, env),
         _ => match typ {
-            ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+            ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => match path_type.resolve(in_path, env) {
                 ast::CustomType::Opaque(_) => true,
                 ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => false,
             },

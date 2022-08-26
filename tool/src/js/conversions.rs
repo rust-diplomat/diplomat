@@ -160,7 +160,7 @@ pub fn gen_value_js_to_rust<'env>(
                 }
             }
         }
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Struct(struct_type) => {
                 let borrowed_current_to_root = path_type
                     .lifetimes
@@ -570,7 +570,7 @@ struct Pointer<'base> {
 
 impl fmt::Display for Pointer<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let ast::TypeName::Named(path_type) = self.inner {
+        if let ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) = self.inner {
             if let ast::CustomType::Opaque(opaque) = self.base.resolve_type(path_type) {
                 write!(
                     f,
@@ -711,6 +711,9 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                     }
                     ast::CustomType::Opaque(_opaque) => {
                         // Codegen for opaque structs is in `Pointer`s `fmt::Display` impl
+                        if let ast::TypeName::SelfType(_) = self.inner {
+                            unreachable!("Self Opaque not behind a pointer: {}", self.inner);
+                        }
                         unreachable!("Opaque not behind a pointer")
                     }
                     ast::CustomType::Enum(enm) => write!(

@@ -16,7 +16,7 @@ pub fn gen_rust_to_cpp<W: Write>(
 ) -> String {
     match typ {
         ast::TypeName::Box(underlying) => match underlying.as_ref() {
-            ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+            ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => match path_type.resolve(in_path, env) {
                 ast::CustomType::Opaque(opaque) => {
                     format!("{}({})", opaque.name, cpp)
                 }
@@ -255,7 +255,7 @@ pub fn gen_cpp_to_rust<W: Write>(
             is_self,
             out,
         ),
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => match path_type.resolve(in_path, env) {
             ast::CustomType::Opaque(_opaque) => {
                 if let Some(reference) = behind_ref {
                     if is_self {
