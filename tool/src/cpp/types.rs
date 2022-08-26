@@ -40,29 +40,31 @@ fn gen_type_inner<W: fmt::Write>(
 ) -> fmt::Result {
     let mut handled_ref = false;
     match typ {
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-            ast::CustomType::Opaque(opaque) => {
-                if let Some(owned) = behind_ref {
-                    if owned {
-                        write!(out, "{}", opaque.name)?;
-                    } else {
-                        write!(out, "{}&", opaque.name)?;
-                    }
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve(in_path, env) {
+                ast::CustomType::Opaque(opaque) => {
+                    if let Some(owned) = behind_ref {
+                        if owned {
+                            write!(out, "{}", opaque.name)?;
+                        } else {
+                            write!(out, "{}&", opaque.name)?;
+                        }
 
-                    handled_ref = true;
-                } else {
-                    panic!("Cannot pass opaque structs as values");
+                        handled_ref = true;
+                    } else {
+                        panic!("Cannot pass opaque structs as values");
+                    }
+                }
+
+                ast::CustomType::Struct(strct) => {
+                    write!(out, "{}", strct.name)?;
+                }
+
+                ast::CustomType::Enum(enm) => {
+                    write!(out, "{}", enm.name)?;
                 }
             }
-
-            ast::CustomType::Struct(strct) => {
-                write!(out, "{}", strct.name)?;
-            }
-
-            ast::CustomType::Enum(enm) => {
-                write!(out, "{}", enm.name)?;
-            }
-        },
+        }
 
         ast::TypeName::Box(underlying) => {
             gen_type_inner(

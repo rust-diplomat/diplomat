@@ -77,25 +77,27 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
             let (_, size_align) = result_ok_offset_size_align(ok, err, in_path, env);
             size_align
         }
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-            ast::CustomType::Struct(strct) => {
-                let (_, size_max_align) = struct_offsets_size_max_align(
-                    strct.fields.iter().map(|(_, typ, _)| typ),
-                    in_path,
-                    env,
-                );
-                size_max_align
-            }
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve(in_path, env) {
+                ast::CustomType::Struct(strct) => {
+                    let (_, size_max_align) = struct_offsets_size_max_align(
+                        strct.fields.iter().map(|(_, typ, _)| typ),
+                        in_path,
+                        env,
+                    );
+                    size_max_align
+                }
 
-            ast::CustomType::Enum(_) => {
-                // repr(C) fieldless enums use the default platform representation: isize
-                Layout::new::<usize_target>()
-            }
+                ast::CustomType::Enum(_) => {
+                    // repr(C) fieldless enums use the default platform representation: isize
+                    Layout::new::<usize_target>()
+                }
 
-            ast::CustomType::Opaque(_) => {
-                panic!("Size of opaque types is unknown")
+                ast::CustomType::Opaque(_) => {
+                    panic!("Size of opaque types is unknown")
+                }
             }
-        },
+        }
         ast::TypeName::Primitive(p) => primitive_size_alignment(*p),
         // TODO(#58): support non-32-bit platforms
         // Actual:

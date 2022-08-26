@@ -375,7 +375,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.typ {
             ast::TypeName::Primitive(..) => self.invocation.scalar().fmt(f),
-            ast::TypeName::Named(path_type) => match self.base.resolve_type(path_type) {
+            ast::TypeName::Named(path_type) |ast::TypeName::SelfType(path_type)=> match self.base.resolve_type(path_type) {
                 ast::CustomType::Struct(strct) => {
                     // TODO: optimize `return_type_form` because we already know we're a non-opaque struct
                     match self.base.return_type_form(self.typ) {
@@ -686,38 +686,40 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                     self.underlying
                 ),
             },
-            ast::TypeName::Named(path_type) => match self.base.resolve_type(path_type) {
-                ast::CustomType::Struct(strct) => {
-                    // TODO: optimize because we already know it's a non-opaque struct
-                    match self.base.return_type_form(self.inner) {
-                        ReturnTypeForm::Scalar => {
-                            todo!("#173: constructing a scalar struct from a buffer")
+            ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+                match self.base.resolve_type(path_type) {
+                    ast::CustomType::Struct(strct) => {
+                        // TODO: optimize because we already know it's a non-opaque struct
+                        match self.base.return_type_form(self.inner) {
+                            ReturnTypeForm::Scalar => {
+                                todo!("#173: constructing a scalar struct from a buffer")
+                            }
+                            ReturnTypeForm::Complex => write!(
+                                f,
+                                "new {}({})",
+                                strct.name,
+                                display::expr(|f| {
+                                    self.underlying.fmt(f)?;
+                                    for inputs in self.base.borrows {
+                                        write!(f, ", {inputs}")?;
+                                    }
+                                    Ok(())
+                                }),
+                            ),
+                            ReturnTypeForm::Empty => unreachable!(),
                         }
-                        ReturnTypeForm::Complex => write!(
-                            f,
-                            "new {}({})",
-                            strct.name,
-                            display::expr(|f| {
-                                self.underlying.fmt(f)?;
-                                for inputs in self.base.borrows {
-                                    write!(f, ", {inputs}")?;
-                                }
-                                Ok(())
-                            }),
-                        ),
-                        ReturnTypeForm::Empty => unreachable!(),
                     }
+                    ast::CustomType::Opaque(_opaque) => {
+                        // Codegen for opaque structs is in `Pointer`s `fmt::Display` impl
+                        unreachable!("Opaque not behind a pointer")
+                    }
+                    ast::CustomType::Enum(enm) => write!(
+                        f,
+                        "{}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {})]",
+                        enm.name, self.underlying,
+                    ),
                 }
-                ast::CustomType::Opaque(_opaque) => {
-                    // Codegen for opaque structs is in `Pointer`s `fmt::Display` impl
-                    unreachable!("Opaque not behind a pointer")
-                }
-                ast::CustomType::Enum(enm) => write!(
-                    f,
-                    "{}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {})]",
-                    enm.name, self.underlying,
-                ),
-            },
+            }
             ast::TypeName::Reference(.., typ) => Pointer {
                 inner: typ,
                 underlying: Underlying::PtrRead(&self.underlying),

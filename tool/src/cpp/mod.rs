@@ -232,7 +232,7 @@ fn gen_includes<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     match typ {
-        ast::TypeName::Named(path_type) => {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             let custom_typ = path_type.resolve(in_path, env);
             match custom_typ {
                 ast::CustomType::Opaque(_) => {

@@ -61,6 +61,7 @@ pub fn collect_results<'ast>(
         | ast::TypeName::StrReference(..)
         | ast::TypeName::PrimitiveSlice(..)
         | ast::TypeName::Named(_)
+        | ast::TypeName::SelfType(_)
         | ast::TypeName::Primitive(_) => {}
     }
 }
@@ -102,7 +103,7 @@ fn collect_errors_impl<'ast>(
         ast::TypeName::Option(underlying) => {
             collect_errors_impl(underlying, in_path, env, errors, is_err_variant);
         }
-        ast::TypeName::Named(path_type) => {
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             if is_err_variant {
                 let (custom_ty_path, _) = path_type.resolve_with_path(in_path, env);
                 let key = (custom_ty_path, typ);

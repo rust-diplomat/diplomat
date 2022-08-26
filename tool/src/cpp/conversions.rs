@@ -33,38 +33,40 @@ pub fn gen_rust_to_cpp<W: Write>(
             },
             _o => todo!(),
         },
-        ast::TypeName::Named(path_type) => match path_type.resolve_with_path(in_path, env) {
-            (_, ast::CustomType::Opaque(_)) => {
-                panic!("Cannot handle opaque structs by value");
-            }
-
-            (in_path, ast::CustomType::Struct(strct)) => {
-                let raw_struct_id = format!("diplomat_raw_struct_{}", path);
-                writeln!(out, "capi::{} {} = {};", strct.name, raw_struct_id, cpp).unwrap();
-                let mut all_fields_wrapped = vec![];
-                for (name, typ, _) in &strct.fields {
-                    all_fields_wrapped.push(format!(
-                        ".{} = std::move({})",
-                        name,
-                        gen_rust_to_cpp(
-                            &format!("{}.{}", raw_struct_id, name),
-                            &format!("{}_{}", path, name),
-                            typ,
-                            &in_path,
-                            env,
-                            library_config,
-                            out
-                        )
-                    ));
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve_with_path(in_path, env) {
+                (_, ast::CustomType::Opaque(_)) => {
+                    panic!("Cannot handle opaque structs by value");
                 }
 
-                format!("{}{{ {} }}", strct.name, all_fields_wrapped.join(", "))
-            }
+                (in_path, ast::CustomType::Struct(strct)) => {
+                    let raw_struct_id = format!("diplomat_raw_struct_{}", path);
+                    writeln!(out, "capi::{} {} = {};", strct.name, raw_struct_id, cpp).unwrap();
+                    let mut all_fields_wrapped = vec![];
+                    for (name, typ, _) in &strct.fields {
+                        all_fields_wrapped.push(format!(
+                            ".{} = std::move({})",
+                            name,
+                            gen_rust_to_cpp(
+                                &format!("{}.{}", raw_struct_id, name),
+                                &format!("{}_{}", path, name),
+                                typ,
+                                &in_path,
+                                env,
+                                library_config,
+                                out
+                            )
+                        ));
+                    }
 
-            (_, ast::CustomType::Enum(enm)) => {
-                format!("static_cast<{}>({})", enm.name, cpp)
+                    format!("{}{{ {} }}", strct.name, all_fields_wrapped.join(", "))
+                }
+
+                (_, ast::CustomType::Enum(enm)) => {
+                    format!("static_cast<{}>({})", enm.name, cpp)
+                }
             }
-        },
+        }
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {

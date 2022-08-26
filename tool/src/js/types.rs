@@ -20,35 +20,37 @@ pub enum ReturnTypeForm {
 /// See https://github.com/WebAssembly/tool-conventions/blob/master/BasicCABI.md#function-signatures.
 pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> ReturnTypeForm {
     match typ {
-        ast::TypeName::Named(path_type) => match path_type.resolve(in_path, env) {
-            ast::CustomType::Struct(strct) => {
-                let all_field_forms: Vec<ReturnTypeForm> = strct
-                    .fields
-                    .iter()
-                    .map(|f| return_type_form(&f.1, in_path, env))
-                    .collect();
+        ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+            match path_type.resolve(in_path, env) {
+                ast::CustomType::Struct(strct) => {
+                    let all_field_forms: Vec<ReturnTypeForm> = strct
+                        .fields
+                        .iter()
+                        .map(|f| return_type_form(&f.1, in_path, env))
+                        .collect();
 
-                let scalar_count = all_field_forms
-                    .iter()
-                    .filter(|v| v == &&ReturnTypeForm::Scalar)
-                    .count();
-                let complex_count = all_field_forms
-                    .iter()
-                    .filter(|v| v == &&ReturnTypeForm::Complex)
-                    .count();
+                    let scalar_count = all_field_forms
+                        .iter()
+                        .filter(|v| v == &&ReturnTypeForm::Scalar)
+                        .count();
+                    let complex_count = all_field_forms
+                        .iter()
+                        .filter(|v| v == &&ReturnTypeForm::Complex)
+                        .count();
 
-                if scalar_count == 0 && complex_count == 0 {
-                    ReturnTypeForm::Empty
-                } else if scalar_count == 1 && complex_count == 0 {
-                    ReturnTypeForm::Scalar
-                } else {
-                    ReturnTypeForm::Complex
+                    if scalar_count == 0 && complex_count == 0 {
+                        ReturnTypeForm::Empty
+                    } else if scalar_count == 1 && complex_count == 0 {
+                        ReturnTypeForm::Scalar
+                    } else {
+                        ReturnTypeForm::Complex
+                    }
                 }
-            }
 
-            ast::CustomType::Opaque(_) => ReturnTypeForm::Scalar,
-            ast::CustomType::Enum(_) => ReturnTypeForm::Scalar,
-        },
+                ast::CustomType::Opaque(_) => ReturnTypeForm::Scalar,
+                ast::CustomType::Enum(_) => ReturnTypeForm::Scalar,
+            }
+        }
 
         ast::TypeName::Result(ok, err) => {
             let ok_form = return_type_form(ok, in_path, env);

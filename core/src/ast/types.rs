@@ -331,6 +331,8 @@ pub enum TypeName {
     PrimitiveSlice(Lifetime, Mutability, PrimitiveType),
     /// The `()` type.
     Unit,
+    /// The `Self` type.
+    SelfType(PathType),
 }
 
 impl TypeName {
@@ -340,7 +342,12 @@ impl TypeName {
             TypeName::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
-            TypeName::Named(name) => syn::Type::Path(name.to_syn()),
+            TypeName::Named(name) | TypeName::SelfType(name) => {
+                // Self also gets expanded instead of turning into `Self` because
+                // this code is used to generate the `extern "C"` functions, which
+                // aren't in an impl block.
+                syn::Type::Path(name.to_syn())
+            }
             TypeName::Reference(lifetime, mutability, underlying) => {
                 syn::Type::Reference(TypeReference {
                     and_token: syn::token::And(Span::call_site()),
@@ -504,7 +511,7 @@ impl TypeName {
                     }
                 } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Self" {
                     if let Some(self_path_type) = self_path_type {
-                        TypeName::Named(self_path_type)
+                        TypeName::SelfType(self_path_type)
                     } else {
                         panic!("Cannot have `Self` type outside of a method");
                     }
@@ -550,7 +557,7 @@ impl TypeName {
         F: FnMut(&'a Lifetime, LifetimeOrigin) -> ControlFlow<B>,
     {
         match self {
-            TypeName::Named(path_type) => path_type
+            TypeName::Named(path_type) | TypeName::SelfType(path_type) => path_type
                 .lifetimes
                 .iter()
                 .try_for_each(|lt| visit(lt, LifetimeOrigin::Named)),
@@ -728,7 +735,7 @@ impl TypeName {
         errors: &mut Vec<ValidityError>,
     ) {
         match self {
-            TypeName::Named(path_type) => {
+            TypeName::Named(path_type) | TypeName::SelfType(path_type) => {
                 let (_path, custom) = path_type.resolve_with_path(in_path, env);
                 if let Some(lifetimes) = custom.lifetimes() {
                     let lifetimes_provided = path_type
@@ -793,104 +800,6 @@ impl TypeName {
     }
 }
 
-impl From<&syn::Type> for TypeName {
-    /// Extract a [`TypeName`] from a [`syn::Type`] AST node.
-    /// The following rules are used to infer [`TypeName`] variants:
-    /// - If the type is a path with a single element that is the name of a Rust primitive, returns a [`TypeName::Primitive`]
-    /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type parameter recursively converted
-    /// - If the type is a path with a single element [`Option`], returns a [`TypeName::Option`] with the type parameter recursively converted
-    /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::Result`] with the type parameters recursively converted
-    /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
-    /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
-    /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
-    /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
-    /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
-    fn from(ty: &syn::Type) -> TypeName {
-        match ty {
-            syn::Type::Reference(r) => {
-                let lifetime = Lifetime::from(&r.lifetime);
-                let mutability = Mutability::from_syn(&r.mutability);
-
-                if r.elem.to_token_stream().to_string() == "str" {
-                    if mutability.is_mutable() {
-                        panic!("mutable `str` references are disallowed");
-                    }
-                    return TypeName::StrReference(lifetime);
-                }
-                if let syn::Type::Slice(slice) = &*r.elem {
-                    if let syn::Type::Path(p) = &*slice.elem {
-                        if let Some(primitive) = p
-                            .path
-                            .get_ident()
-                            .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
-                        {
-                            return TypeName::PrimitiveSlice(lifetime, mutability, *primitive);
-                        }
-                    }
-                }
-                TypeName::Reference(lifetime, mutability, Box::new(r.elem.as_ref().into()))
-            }
-            syn::Type::Path(p) => {
-                if let Some(primitive) = p
-                    .path
-                    .get_ident()
-                    .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
-                {
-                    TypeName::Primitive(*primitive)
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
-                    {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
-                            TypeName::Box(Box::new(tpe.into()))
-                        } else {
-                            panic!("Expected first type argument for Box to be a type")
-                        }
-                    } else {
-                        panic!("Expected angle brackets for Box type")
-                    }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Option" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
-                    {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
-                            TypeName::Option(Box::new(tpe.into()))
-                        } else {
-                            panic!("Expected first type argument for Option to be a type")
-                        }
-                    } else {
-                        panic!("Expected angle brackets for Option type")
-                    }
-                } else if is_runtime_type(p, "DiplomatResult") {
-                    if let PathArguments::AngleBracketed(type_args) =
-                        &p.path.segments.last().unwrap().arguments
-                    {
-                        if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
-                            (&type_args.args[0], &type_args.args[1])
-                        {
-                            TypeName::Result(Box::new(ok.into()), Box::new(err.into()))
-                        } else {
-                            panic!("Expected both type arguments for Result to be a type")
-                        }
-                    } else {
-                        panic!("Expected angle brackets for Result type")
-                    }
-                } else if is_runtime_type(p, "DiplomatWriteable") {
-                    TypeName::Writeable
-                } else {
-                    TypeName::Named(PathType::from(p))
-                }
-            }
-            syn::Type::Tuple(tup) => {
-                if tup.elems.is_empty() {
-                    TypeName::Unit
-                } else {
-                    todo!("Tuples are not currently supported")
-                }
-            }
-            other => panic!("Unsupported type: {}", other.to_token_stream()),
-        }
-    }
-}
-
 pub enum LifetimeOrigin {
     Named,
     Reference,
@@ -909,7 +818,7 @@ impl fmt::Display for TypeName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
-            TypeName::Named(p) => p.fmt(f),
+            TypeName::Named(p) | TypeName::SelfType(p) => p.fmt(f),
             TypeName::Reference(lifetime, mutability, typ) => {
                 write!(f, "{}{typ}", ReferenceDisplay(lifetime, mutability))
             }
