@@ -55,8 +55,8 @@ pub struct LifetimeTree<'m> {
 
 /// Non-recursive input-output types that contain lifetimes
 pub enum LifetimeTreeLeaf<'m> {
-    Opaque(ParentId, MethodLifetime<'m>, MethodLifetimes<'m>),
-    Slice(ParentId, MethodLifetime<'m>),
+    Opaque(ParentId, Option<MethodLifetime<'m>>, MethodLifetimes<'m>),
+    Slice(ParentId, Option<MethodLifetime<'m>>),
 }
 
 /// A leaf of a lifetime tree capable of tracking its parents.
@@ -324,12 +324,15 @@ impl<'m> UnpackedField<'m> {
     /// Iterate over the [`MethodLifetime`]s of an unpacked field.
     pub fn lifetimes(&self) -> impl Iterator<Item = MethodLifetime> + '_ {
         let (lifetime, lifetimes) = match self.leaf {
-            LifetimeTreeLeaf::Opaque(_, lifetime, lifetimes) => (lifetime, Some(lifetimes.iter())),
-            LifetimeTreeLeaf::Slice(_, lifetime) => (lifetime, None),
+            LifetimeTreeLeaf::Opaque(_, lifetime, lifetimes) => {
+                (lifetime.as_ref(), Some(lifetimes.iter()))
+            }
+            LifetimeTreeLeaf::Slice(_, lifetime) => (lifetime.as_ref(), None),
         };
 
-        Some(*lifetime)
+        lifetime
             .into_iter()
+            .copied()
             .chain(lifetimes.into_iter().flatten())
     }
 

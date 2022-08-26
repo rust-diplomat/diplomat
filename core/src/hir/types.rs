@@ -5,6 +5,7 @@ use super::{
     StructPath, TypeContext, TypeLifetime,
 };
 use crate::ast;
+pub use ast::Mutability;
 
 /// Type that can only be used as an output.
 pub enum OutType {
@@ -39,8 +40,6 @@ pub enum Slice {
     /// A primitive slice, e.g. `&mut [u8]`.
     Primitive(Borrow, PrimitiveType),
 }
-
-pub use ast::Mutability;
 
 // For now, the lifetime in not optional. This is because when you have references
 // as fields of structs, the lifetime must always be present, and we want to uphold
@@ -85,13 +84,9 @@ impl Slice {
 }
 
 impl Borrow {
-    pub(super) fn from_ast(
-        parent_lifetimes: &ast::LifetimeEnv,
-        lifetime: &ast::Lifetime,
-        mutability: Mutability,
-    ) -> Self {
-        Borrow {
-            lifetime: TypeLifetime::from_ast(parent_lifetimes, lifetime),
+    pub(super) fn new(lifetime: TypeLifetime, mutability: Mutability) -> Self {
+        Self {
+            lifetime,
             mutability,
         }
     }

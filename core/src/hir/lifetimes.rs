@@ -1,6 +1,6 @@
 //! Lifetime information for types.
 
-use super::IdentBuf;
+use super::{elision, IdentBuf};
 use crate::ast;
 use smallvec::SmallVec;
 
@@ -11,20 +11,20 @@ pub struct LifetimeEnv {
     nodes: SmallVec<[LifetimeNode; 2]>,
 }
 
-// TODO(Quinn): see above
-pub struct LifetimeNode {
+pub enum LifetimeNode {
+    Explicit(ExplicitLifetime),
+    Implicit(ImplicitLifetime),
+}
+
+/// A named, boundable lifetime.
+pub struct ExplicitLifetime {
     ident: IdentBuf,
     longer: SmallVec<[usize; 2]>,
     shorter: SmallVec<[usize; 2]>,
 }
 
-impl LifetimeEnv {
-    pub(super) fn new(nodes: SmallVec<[LifetimeNode; 2]>) -> Self {
-        Self { nodes }
-    }
-}
-
-impl LifetimeNode {
+impl ExplicitLifetime {
+    /// Returns a new [`ExplicitLifetime`].
     pub(super) fn new(
         ident: IdentBuf,
         longer: SmallVec<[usize; 2]>,
@@ -38,84 +38,129 @@ impl LifetimeNode {
     }
 }
 
+/// An anonymous lifetime.
+pub struct ImplicitLifetime(u32);
+
+impl ImplicitLifetime {
+    /// Returns a new [`ImplicitLifetime`].
+    pub(super) fn new(label: u32) -> Self {
+        Self(label)
+    }
+}
+
 /// A lifetime that exists as part of a type signature.
 ///
 /// This type can be mapped to a [`MethodLifetime`] by using the
 /// [`TypeLifetime::in_method`] method.
 #[derive(Copy, Clone)]
-pub struct TypeLifetime(usize);
+pub struct TypeLifetime {
+    /// The index of the lifetime in a type's generic arguments,
+    /// or `None` if `'static`.
+    index: Option<usize>,
+}
 
-/// A set of lifetimes that exist as generic arguments on [`Struct`]s, [`OutStruct`]s,
-/// and [`Opaque`]s.
+/// A set of lifetimes that exist as generic arguments on [`StructPath`]s,
+/// [`OutStructPath`]s, and [`OpaquePath`]s.
 ///
 /// By itself, `TypeLifetimes` isn't very useful. However, it can be combined with
 /// a [`MethodLifetimes`] using [`TypeLifetimes::in_method`] to get the lifetimes
 /// in the scope of a method it appears in.
 ///
-/// [`Struct`]: super::Struct
-/// [`OutStruct`]: super::OutStruct
-/// [`Opaque`]: super::Opaque
+/// [`StructPath`]: super::StructPath
+/// [`OutStructPath`]: super::OutStructPath
+/// [`OpaquePath`]: super::OpaquePath
 pub struct TypeLifetimes {
     indices: SmallVec<[TypeLifetime; 2]>,
 }
 
-/// A lifetime in the scope of a method.
-// The plan is for this type to be able to have functions like "get all
-// the shorter/longer lifetimes than me", since it has access to the `LifetimeEnv`.
+/// A lifetime that exists as part of a method signature.
 #[derive(Copy, Clone)]
-pub struct MethodLifetime<'lt> {
-    lifetime_env: &'lt LifetimeEnv,
+pub struct MethodLifetime<'m> {
+    lifetime_env: &'m LifetimeEnv,
     index: usize,
 }
 
 /// Map a lifetime in a nested struct to the original lifetime defined
 /// in the method that it refers to.
-pub struct MethodLifetimes<'lt> {
-    lifetime_env: &'lt LifetimeEnv,
-    indices: SmallVec<[usize; 2]>,
+pub struct MethodLifetimes<'m> {
+    lifetime_env: &'m LifetimeEnv,
+    indices: SmallVec<[Option<usize>; 2]>,
 }
 
 impl LifetimeEnv {
+    /// Returns a new [`LifetimeEnv`].
+    pub(super) fn new(nodes: SmallVec<[LifetimeNode; 2]>) -> Self {
+        Self { nodes }
+    }
+
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> MethodLifetimes {
         MethodLifetimes {
             lifetime_env: self,
-            indices: (0..self.nodes.len()).collect(),
+            indices: (0..self.nodes.len()).map(Some).collect(),
         }
     }
 }
 
 impl TypeLifetime {
-    pub(crate) fn from_ast(parent_lifetimes: &ast::LifetimeEnv, lifetime: &ast::Lifetime) -> Self {
-        // NOTE: we need to figure out implicit lifetimes to allow more than just
-        // named lifetimes.
-        let named = lifetime.as_named().expect("named lifetime");
-        let index = parent_lifetimes
+    /// Returns a [`TypeLifetime`] from its AST counterparts.
+    pub(super) fn from_ast(named: &ast::NamedLifetime, lifetime_env: &ast::LifetimeEnv) -> Self {
+        let index = lifetime_env
             .id(named)
-            .expect("lifetime is in parent env");
+            .expect("named lifetime in lifetime env");
+        Self::new(index)
+    }
 
-        TypeLifetime(index)
+    /// Returns a [`TypeLifetime`] representing a new anonymous lifetime.
+    pub(super) fn new_elided(
+        elided_node_gen: &mut elision::ImplicitLifetimeGenerator,
+        nodes: &mut SmallVec<[LifetimeNode; 2]>,
+    ) -> Self {
+        let index = nodes.len();
+        nodes.push(LifetimeNode::Implicit(elided_node_gen.gen()));
+        Self::new(index)
+    }
+
+    /// Returns a [`TypeLifetime`] representing the `'static` lifetime.
+    pub(super) fn new_static() -> Self {
+        Self { index: None }
+    }
+
+    /// Returns a [`TypeLifetime`] from an index.
+    ///
+    /// This method is used internally by [`TypeLifetime::from_ast`] and
+    /// [`TypeLifetime::new_elided`].
+    fn new(index: usize) -> Self {
+        Self { index: Some(index) }
+    }
+
+    /// Returns the index that `self` appears in a [`MethodLifetimes`],
+    /// or `None` if it is, or is substituted as, the `'static` lifetime.
+    fn as_method_index(self, method_lifetimes: &MethodLifetimes<'_>) -> Option<usize> {
+        self.index.and_then(|index| method_lifetimes.indices[index])
     }
 
     /// Returns a new [`MethodLifetime`] representing `self` in the scope of the
     /// method that it appears in.
-    pub fn in_method<'m>(&self, method_lifetimes: &MethodLifetimes<'m>) -> MethodLifetime<'m> {
-        MethodLifetime {
-            lifetime_env: method_lifetimes.lifetime_env,
-            index: method_lifetimes.indices[self.0],
-        }
+    pub fn in_method<'m>(
+        self,
+        method_lifetimes: &MethodLifetimes<'m>,
+    ) -> Option<MethodLifetime<'m>> {
+        self.as_method_index(method_lifetimes)
+            .map(|index| MethodLifetime::new(index, method_lifetimes.lifetime_env))
     }
 }
 
 impl TypeLifetimes {
-    pub(crate) fn from_ast(parent_lifetimes: &ast::LifetimeEnv, path: &ast::PathType) -> Self {
-        Self {
-            indices: path
-                .lifetimes
-                .iter()
-                .map(|lifetime| TypeLifetime::from_ast(parent_lifetimes, lifetime))
-                .collect(),
-        }
+    /// Returns a new [`TypeLifetimes`] from its AST counterparts.
+    pub(super) fn from_ast<L: elision::LifetimeLowerer>(ltl: &mut L, path: &ast::PathType) -> Self {
+        let indices = path
+            .lifetimes
+            .iter()
+            .map(|lifetime| ltl.lower_lifetime(lifetime))
+            .collect();
+
+        Self { indices }
     }
 
     /// Returns a new [`MethodLifetimes`] representing the lifetimes in the scope
@@ -146,9 +191,19 @@ impl TypeLifetimes {
             indices: self
                 .indices
                 .iter()
-                .map(|lifetime| method_lifetimes.indices[lifetime.0])
+                .map(|lifetime| lifetime.as_method_index(method_lifetimes))
                 .collect(),
             ..*method_lifetimes
+        }
+    }
+}
+
+impl<'m> MethodLifetime<'m> {
+    /// Returns a new [`MethodLifetime`].
+    fn new(index: usize, lifetime_env: &'m LifetimeEnv) -> Self {
+        Self {
+            lifetime_env,
+            index,
         }
     }
 }
@@ -156,9 +211,9 @@ impl TypeLifetimes {
 impl<'m> MethodLifetimes<'m> {
     /// Returns an iterator over the contained [`MethodLifetime`]s.
     pub(super) fn iter(&self) -> impl Iterator<Item = MethodLifetime<'m>> + '_ {
-        self.indices.iter().map(|&index| MethodLifetime {
-            lifetime_env: self.lifetime_env,
-            index,
-        })
+        self.indices
+            .iter()
+            .flatten()
+            .map(|&index| MethodLifetime::new(index, self.lifetime_env))
     }
 }
