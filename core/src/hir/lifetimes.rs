@@ -8,16 +8,19 @@ use smallvec::SmallVec;
 // TODO(Quinn): This type is going to mainly be recycled from `ast::LifetimeEnv`.
 // Not fully sure how that will look like yet, but the ideas of what this will do
 // is basically the same.
+#[derive(Debug)]
 pub struct LifetimeEnv {
     nodes: SmallVec<[LifetimeNode; 2]>,
 }
 
+#[derive(Debug)]
 pub enum LifetimeNode {
     Explicit(ExplicitLifetime),
     Implicit(ImplicitLifetime),
 }
 
 /// A named, boundable lifetime.
+#[derive(Debug)]
 pub struct ExplicitLifetime {
     ident: IdentBuf,
     longer: SmallVec<[usize; 2]>,
@@ -40,6 +43,7 @@ impl ExplicitLifetime {
 }
 
 /// An anonymous lifetime.
+#[derive(Debug)]
 pub struct ImplicitLifetime(u32);
 
 impl ImplicitLifetime {
@@ -53,7 +57,7 @@ impl ImplicitLifetime {
 ///
 /// This type can be mapped to a [`MethodLifetime`] by using the
 /// [`TypeLifetime::in_method`] method.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct TypeLifetime {
     /// The index of the lifetime in a type's generic arguments,
     /// or `None` if `'static`.
@@ -70,7 +74,7 @@ pub struct TypeLifetime {
 /// [`StructPath`]: super::StructPath
 /// [`OutStructPath`]: super::OutStructPath
 /// [`OpaquePath`]: super::OpaquePath
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TypeLifetimes {
     indices: SmallVec<[TypeLifetime; 2]>,
 }

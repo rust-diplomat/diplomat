@@ -17,19 +17,19 @@ pub struct TypeContext {
 }
 
 /// Key used to index into a [`TypeContext`] representing a struct.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct StructId(usize);
 
 /// Key used to index into a [`TypeContext`] representing an out struct.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct OutStructId(usize);
 
 /// Key used to index into a [`TypeContext`] representing a opaque.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct OpaqueId(usize);
 
 /// Key used to index into a [`TypeContext`] representing an enum.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct EnumId(usize);
 
 impl TypeContext {

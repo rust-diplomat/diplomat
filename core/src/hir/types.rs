@@ -8,6 +8,7 @@ use crate::ast;
 pub use ast::Mutability;
 
 /// Type that can only be used as an output.
+#[derive(Debug)]
 pub enum OutType {
     Primitive(PrimitiveType),
     Opaque(OpaquePath<Optional, MaybeOwn>),
@@ -17,6 +18,7 @@ pub enum OutType {
 }
 
 /// Type that may be used as input or output.
+#[derive(Debug)]
 pub enum Type {
     Primitive(PrimitiveType),
     Opaque(OpaquePath<Optional, Borrow>),
@@ -26,13 +28,14 @@ pub enum Type {
 }
 
 /// Type that can appear in the `self` position.
+#[derive(Debug)]
 pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
     Enum(EnumPath),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Slice {
     /// A string slice, e.g. `&str`.
     Str(TypeLifetime),
@@ -49,7 +52,7 @@ pub enum Slice {
 // where implicit lifetimes are allowed. Getting this to all fit together will
 // involve getting the implicit lifetime thing to be understood by Diplomat, but
 // should be doable.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Borrow {
     pub lifetime: TypeLifetime,
     pub mutability: Mutability,

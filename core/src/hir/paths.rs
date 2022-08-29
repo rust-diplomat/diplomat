@@ -4,18 +4,21 @@ use super::{
 };
 
 /// Path to a struct that may appear as an output.
+#[derive(Debug)]
 pub enum ReturnableStructPath {
     Struct(StructPath),
     OutStruct(OutStructPath),
 }
 
 /// Path to a struct that can only be used as an output.
+#[derive(Debug)]
 pub struct OutStructPath {
     pub lifetimes: TypeLifetimes,
     tcx_id: OutStructId,
 }
 
 /// Path to a struct that can be used in inputs and outputs.
+#[derive(Debug)]
 pub struct StructPath {
     pub lifetimes: TypeLifetimes,
     tcx_id: StructId,
@@ -35,6 +38,7 @@ pub struct StructPath {
 /// entirely give up ownership of a value.
 /// 3. `OpaquePath<NonOptional, Borrow>`: Opaques in the `&self` position, which
 /// cannot be optional and must be borrowed for the same reason as above.
+#[derive(Debug)]
 pub struct OpaquePath<Opt, Owner> {
     pub lifetimes: TypeLifetimes,
     optional: Opt,
@@ -42,8 +46,10 @@ pub struct OpaquePath<Opt, Owner> {
     tcx_id: OpaqueId,
 }
 
+#[derive(Debug)]
 pub struct Optional(pub(super) bool);
 
+#[derive(Debug)]
 pub struct NonOptional;
 
 impl<Owner> OpaquePath<Optional, Owner> {
@@ -65,6 +71,7 @@ impl<Opt> OpaquePath<Opt, Borrow> {
 }
 
 /// Path to an enum.
+#[derive(Debug)]
 pub struct EnumPath {
     tcx_id: EnumId,
 }
@@ -72,7 +79,7 @@ pub struct EnumPath {
 /// Determine whether a pointer to an opaque type is owned or borrowed.
 ///
 /// Since owned opaques cannot be used as inputs, this only appears in output types.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum MaybeOwn {
     Own,
     Borrow(Borrow),
