@@ -1,4 +1,5 @@
 //! Lifetime information for types.
+#![allow(dead_code)]
 
 use super::{IdentBuf, ImplicitLifetimeGenerator};
 use crate::ast;
