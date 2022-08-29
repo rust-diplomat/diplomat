@@ -1,6 +1,6 @@
 //! Store all the types contained in the HIR.
 
-use super::{EnumDef, FromAstDef, LoweringError, OpaqueDef, OutStructDef, StructDef};
+use super::{EnumDef, LoweringError, OpaqueDef, OutStructDef, StructDef, TypeLowerer};
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
 use crate::{ast, Env};
@@ -48,9 +48,7 @@ impl TypeContext {
     pub(crate) fn resolve_enum(&self, id: EnumId) -> &EnumDef {
         self.enums.index(id.0)
     }
-}
 
-impl TypeContext {
     /// Lower the AST to the HIR while simultaneously performing validation.
     pub fn from_ast(env: &Env) -> Result<Self, Vec<LoweringError>> {
         let mut ast_out_structs = SmallVec::<[_; 16]>::new();
@@ -90,7 +88,7 @@ impl TypeContext {
         let enums = EnumDef::lower_all(&ast_enums[..], &lookup_id, env, &mut errors);
 
         match (out_structs, structs, opaques, enums) {
-            (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums)) => {
+            (Some(out_structs), Some(structs), Some(opaques), Some(enums)) => {
                 assert!(
                     errors.is_empty(),
                     "All lowering succeeded but still found error messages: {errors:?}"

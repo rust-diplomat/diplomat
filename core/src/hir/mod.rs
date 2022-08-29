@@ -1,7 +1,7 @@
-//! Experiment high-level representation (HIR) for Diplomat.
+//! Experimental high-level representation (HIR) for Diplomat.
 
-#![allow(unused_mut, unused_variables, dead_code)]
 mod defs;
+mod elision;
 mod lifetimes;
 mod lowering;
 mod methods;
@@ -10,8 +10,9 @@ mod primitives;
 mod type_context;
 mod types;
 pub use defs::*;
+pub(super) use elision::*;
 pub use lifetimes::*;
-pub use lowering::*;
+pub(super) use lowering::*;
 pub use methods::*;
 pub use paths::*;
 pub use primitives::*;
