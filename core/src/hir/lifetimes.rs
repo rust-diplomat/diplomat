@@ -1,6 +1,7 @@
 //! Lifetime information for types.
+#![allow(dead_code)]
 
-use super::{elision, IdentBuf};
+use super::{IdentBuf, ImplicitLifetimeGenerator};
 use crate::ast;
 use smallvec::SmallVec;
 
@@ -69,6 +70,7 @@ pub struct TypeLifetime {
 /// [`StructPath`]: super::StructPath
 /// [`OutStructPath`]: super::OutStructPath
 /// [`OpaquePath`]: super::OpaquePath
+#[derive(Clone)]
 pub struct TypeLifetimes {
     indices: SmallVec<[TypeLifetime; 2]>,
 }
@@ -113,7 +115,7 @@ impl TypeLifetime {
 
     /// Returns a [`TypeLifetime`] representing a new anonymous lifetime.
     pub(super) fn new_elided(
-        elided_node_gen: &mut elision::ImplicitLifetimeGenerator,
+        elided_node_gen: &mut ImplicitLifetimeGenerator,
         nodes: &mut SmallVec<[LifetimeNode; 2]>,
     ) -> Self {
         let index = nodes.len();
@@ -152,13 +154,11 @@ impl TypeLifetime {
 }
 
 impl TypeLifetimes {
-    /// Returns a new [`TypeLifetimes`] from its AST counterparts.
-    pub(super) fn from_ast<L: elision::LifetimeLowerer>(ltl: &mut L, path: &ast::PathType) -> Self {
-        let indices = path
-            .lifetimes
-            .iter()
-            .map(|lifetime| ltl.lower_lifetime(lifetime))
-            .collect();
+    pub(super) fn from_fn<F>(lifetimes: &[ast::Lifetime], lower_fn: F) -> Self
+    where
+        F: FnMut(&ast::Lifetime) -> TypeLifetime,
+    {
+        let indices = lifetimes.iter().map(lower_fn).collect();
 
         Self { indices }
     }

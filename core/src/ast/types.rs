@@ -556,6 +556,12 @@ impl TypeName {
         }
     }
 
+    /// Returns `true` if `self` is the `TypeName::SelfType` variant, otherwise
+    /// `false`.
+    pub fn is_self(&self) -> bool {
+        matches!(self, TypeName::SelfType(_))
+    }
+
     /// Recurse down the type tree, visiting all lifetimes.
     ///
     /// Using this function, you can collect all the lifetimes into a collection,
