@@ -31,3 +31,5 @@
 
 
     .. cpp:function:: static size_t returns_usize()
+
+    .. cpp:function:: static ImportedStruct returns_imported()

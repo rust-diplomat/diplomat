@@ -1,5 +1,5 @@
-#ifndef Opaque_H
-#define Opaque_H
+#ifndef UnimportedEnum_H
+#define UnimportedEnum_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,25 +10,20 @@
 namespace capi {
 #endif
 
-typedef struct Opaque Opaque;
+typedef enum UnimportedEnum {
+  UnimportedEnum_A = 0,
+  UnimportedEnum_B = 1,
+  UnimportedEnum_C = 2,
+} UnimportedEnum;
 #ifdef __cplusplus
 } // namespace capi
 #endif
-#include "MyStruct.h"
-#include "ImportedStruct.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif
 
-Opaque* Opaque_new();
-
-void Opaque_assert_struct(const Opaque* self, MyStruct s);
-
-size_t Opaque_returns_usize();
-
-ImportedStruct Opaque_returns_imported();
-void Opaque_destroy(Opaque* self);
+void UnimportedEnum_destroy(UnimportedEnum* self);
 
 #ifdef __cplusplus
 } // extern "C"

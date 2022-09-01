@@ -15,6 +15,7 @@ typedef struct Opaque Opaque;
 } // namespace capi
 #endif
 #include "MyStruct.h"
+#include "ImportedStruct.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -25,6 +26,8 @@ Opaque* Opaque_new();
 void Opaque_assert_struct(const Opaque* self, MyStruct s);
 
 size_t Opaque_returns_usize();
+
+ImportedStruct Opaque_returns_imported();
 void Opaque_destroy(Opaque* self);
 
 #ifdef __cplusplus

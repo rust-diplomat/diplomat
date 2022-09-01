@@ -213,7 +213,7 @@ impl<'env> Imports<'env> {
     ) {
         match typ {
             ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
-                let custom = path_type.resolve(in_path, env);
+                let (ty_in_path, custom) = path_type.resolve_with_path(in_path, env);
                 // JS wants: return type, fields, _all_ enums.
                 // TS wants: return type, fields, params.
                 match state {
@@ -234,7 +234,7 @@ impl<'env> Imports<'env> {
                     }
                     ast::CustomType::Struct(strct) => {
                         for (_, typ, _) in strct.fields.iter() {
-                            self.collect_usages(typ, in_path, env, TypePosition::Inner)
+                            self.collect_usages(typ, &ty_in_path, env, TypePosition::Inner)
                         }
                     }
                 }

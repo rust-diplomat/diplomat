@@ -31,3 +31,5 @@
 
 
     .. js:staticfunction:: returns_usize()
+
+    .. js:staticfunction:: returns_imported()

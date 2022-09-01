@@ -74,6 +74,18 @@ public partial class Opaque: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>ImportedStruct</c> allocated on C# side.
+    /// </returns>
+    public static ImportedStruct ReturnsImported()
+    {
+        unsafe
+        {
+            Raw.ImportedStruct retVal = Raw.Opaque.ReturnsImported();
+            return new ImportedStruct(retVal);
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

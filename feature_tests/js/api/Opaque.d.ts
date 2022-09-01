@@ -1,4 +1,5 @@
 import { usize } from "./diplomat-runtime"
+import { ImportedStruct } from "./ImportedStruct";
 import { MyStruct } from "./MyStruct";
 
 /**
@@ -22,4 +23,8 @@ export class Opaque {
   /**
    */
   static returns_usize(): usize;
+
+  /**
+   */
+  static returns_imported(): ImportedStruct;
 }
