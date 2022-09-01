@@ -5,6 +5,6 @@
 
     .. js:attribute:: foo
 
-    .. js:attribute:: int
+    .. js:attribute:: count
 
 .. js:class:: UnimportedEnum

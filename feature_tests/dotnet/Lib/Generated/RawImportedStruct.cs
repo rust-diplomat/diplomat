@@ -18,5 +18,5 @@ public partial struct ImportedStruct
 
     public UnimportedEnum foo;
 
-    public byte int;
+    public byte count;
 }

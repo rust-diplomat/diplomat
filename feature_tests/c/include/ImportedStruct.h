@@ -13,7 +13,7 @@ namespace capi {
 
 typedef struct ImportedStruct {
     UnimportedEnum foo;
-    uint8_t int;
+    uint8_t count;
 } ImportedStruct;
 #ifdef __cplusplus
 } // namespace capi

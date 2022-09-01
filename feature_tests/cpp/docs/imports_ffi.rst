@@ -5,7 +5,7 @@
 
     .. cpp:member:: UnimportedEnum foo
 
-    .. cpp:member:: uint8_t int
+    .. cpp:member:: uint8_t count
 
 .. cpp:enum-struct:: UnimportedEnum
 

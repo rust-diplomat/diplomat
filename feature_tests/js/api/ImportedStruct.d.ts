@@ -5,5 +5,5 @@ import { UnimportedEnum } from "./UnimportedEnum";
  */
 export class ImportedStruct {
   foo: UnimportedEnum;
-  int: u8;
+  count: u8;
 }

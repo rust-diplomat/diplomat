@@ -64,6 +64,6 @@ inline size_t Opaque::returns_usize() {
 }
 inline ImportedStruct Opaque::returns_imported() {
   capi::ImportedStruct diplomat_raw_struct_out_value = capi::Opaque_returns_imported();
-  return ImportedStruct{ .foo = std::move(static_cast<UnimportedEnum>(diplomat_raw_struct_out_value.foo)), .int = std::move(diplomat_raw_struct_out_value.int) };
+  return ImportedStruct{ .foo = std::move(static_cast<UnimportedEnum>(diplomat_raw_struct_out_value.foo)), .count = std::move(diplomat_raw_struct_out_value.count) };
 }
 #endif

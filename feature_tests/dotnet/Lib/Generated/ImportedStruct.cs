@@ -33,20 +33,20 @@ public partial class ImportedStruct
         }
     }
 
-    public byte Int
+    public byte Count
     {
         get
         {
             unsafe
             {
-                return _inner.int;
+                return _inner.count;
             }
         }
         set
         {
             unsafe
             {
-                _inner.int = value;
+                _inner.count = value;
             }
         }
     }

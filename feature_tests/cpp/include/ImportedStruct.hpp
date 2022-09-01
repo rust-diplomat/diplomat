@@ -24,7 +24,7 @@ struct ImportedStructDeleter {
 struct ImportedStruct {
  public:
   UnimportedEnum foo;
-  uint8_t int;
+  uint8_t count;
 };
 
 
