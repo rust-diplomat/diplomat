@@ -191,6 +191,8 @@ impl PathType {
 
     /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
     /// the `env`, which contains all [`CustomType`]s across all FFI modules.
+    ///
+    /// Also returns the path the CustomType is in (useful for resolving fields)
     pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
         let local_path = &self.path;
         let mut cur_path = in_path.clone();
@@ -241,6 +243,11 @@ impl PathType {
         )
     }
 
+    /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
+    /// the `env`, which contains all [`CustomType`]s across all FFI modules.
+    ///
+    /// If you need to resolve struct fields later, call [`Self::resolve_with_path()`] instead
+    /// to get the path to resolve the fields in.
     pub fn resolve<'a>(&self, in_path: &Path, env: &'a Env) -> &'a CustomType {
         self.resolve_with_path(in_path, env).1
     }
