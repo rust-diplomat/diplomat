@@ -8,6 +8,6 @@ pub mod ffi {
 
     pub struct ImportedStruct {
         foo: UnimportedEnum,
-        int: u8,
+        count: u8,
     }
 }
