@@ -21,12 +21,12 @@ pub enum ReturnTypeForm {
 pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> ReturnTypeForm {
     match typ {
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
-            match path_type.resolve(in_path, env) {
-                ast::CustomType::Struct(strct) => {
+            match path_type.resolve_with_path(in_path, env) {
+                (struct_path, ast::CustomType::Struct(strct)) => {
                     let all_field_forms: Vec<ReturnTypeForm> = strct
                         .fields
                         .iter()
-                        .map(|f| return_type_form(&f.1, in_path, env))
+                        .map(|f| return_type_form(&f.1, &struct_path, env))
                         .collect();
 
                     let scalar_count = all_field_forms
@@ -47,8 +47,9 @@ pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> 
                     }
                 }
 
-                ast::CustomType::Opaque(_) => ReturnTypeForm::Scalar,
-                ast::CustomType::Enum(_) => ReturnTypeForm::Scalar,
+                (_, ast::CustomType::Opaque(_)) | (_, ast::CustomType::Enum(_)) => {
+                    ReturnTypeForm::Scalar
+                }
             }
         }
 

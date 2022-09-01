@@ -78,22 +78,22 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
             size_align
         }
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
-            match path_type.resolve(in_path, env) {
-                ast::CustomType::Struct(strct) => {
+            match path_type.resolve_with_path(in_path, env) {
+                (struct_path, ast::CustomType::Struct(strct)) => {
                     let (_, size_max_align) = struct_offsets_size_max_align(
                         strct.fields.iter().map(|(_, typ, _)| typ),
-                        in_path,
+                        &struct_path,
                         env,
                     );
                     size_max_align
                 }
 
-                ast::CustomType::Enum(_) => {
+                (_, ast::CustomType::Enum(_)) => {
                     // repr(C) fieldless enums use the default platform representation: isize
                     Layout::new::<usize_target>()
                 }
 
-                ast::CustomType::Opaque(_) => {
+                (_, ast::CustomType::Opaque(_)) => {
                     panic!("Size of opaque types is unknown")
                 }
             }
