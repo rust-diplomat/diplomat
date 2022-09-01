@@ -1,5 +1,6 @@
 #[diplomat::bridge]
 pub mod ffi {
+    use crate::imports::ffi::ImportedStruct;
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
@@ -30,6 +31,10 @@ pub mod ffi {
 
         pub fn returns_usize() -> usize {
             412
+        }
+
+        pub fn returns_imported() -> ImportedStruct {
+            unimplemented!()
         }
     }
 

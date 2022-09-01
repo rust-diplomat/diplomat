@@ -1,6 +1,5 @@
 #[diplomat::bridge]
 pub mod ffi {
-
     #[diplomat::opaque]
     pub struct OptionOpaque(i32);
 
