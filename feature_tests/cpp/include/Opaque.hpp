@@ -13,6 +13,7 @@
 
 class Opaque;
 struct MyStruct;
+struct ImportedStruct;
 
 /**
  * A destruction policy for using Opaque with std::unique_ptr.
@@ -37,6 +38,7 @@ class Opaque {
    */
   void assert_struct(MyStruct s) const;
   static size_t returns_usize();
+  static ImportedStruct returns_imported();
   inline const capi::Opaque* AsFFI() const { return this->inner.get(); }
   inline capi::Opaque* AsFFIMut() { return this->inner.get(); }
   inline Opaque(capi::Opaque* i) : inner(i) {}
@@ -48,6 +50,7 @@ class Opaque {
 };
 
 #include "MyStruct.hpp"
+#include "ImportedStruct.hpp"
 
 inline Opaque Opaque::new_() {
   return Opaque(capi::Opaque_new());
@@ -58,5 +61,9 @@ inline void Opaque::assert_struct(MyStruct s) const {
 }
 inline size_t Opaque::returns_usize() {
   return capi::Opaque_returns_usize();
+}
+inline ImportedStruct Opaque::returns_imported() {
+  capi::ImportedStruct diplomat_raw_struct_out_value = capi::Opaque_returns_imported();
+  return ImportedStruct{ .foo = std::move(static_cast<UnimportedEnum>(diplomat_raw_struct_out_value.foo)), .int = std::move(diplomat_raw_struct_out_value.int) };
 }
 #endif

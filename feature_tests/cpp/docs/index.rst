@@ -5,6 +5,7 @@ Documentation
    :maxdepth: 3
    :caption: Modules:
 
+   imports_ffi
    lifetimes_ffi
    option_ffi
    result_ffi

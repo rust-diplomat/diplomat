@@ -1,5 +1,7 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.js"
+import { ImportedStruct } from "./ImportedStruct.js"
+import { UnimportedEnum_js_to_rust, UnimportedEnum_rust_to_js } from "./UnimportedEnum.js"
 
 const Opaque_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.Opaque_destroy(underlying);
@@ -31,5 +33,15 @@ export class Opaque {
 
   static returns_usize() {
     return wasm.Opaque_returns_usize();
+  }
+
+  static returns_imported() {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+      wasm.Opaque_returns_imported(diplomat_receive_buffer);
+      const out = new ImportedStruct(diplomat_receive_buffer);
+      wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+      return out;
+    })();
   }
 }
