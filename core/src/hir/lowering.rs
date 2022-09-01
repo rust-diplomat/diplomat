@@ -799,10 +799,15 @@ fn lower_return_type(
     env: &Env,
     errors: &mut Vec<LoweringError>,
 ) -> Option<(ReturnFallability, LifetimeEnv)> {
+    let writeable_option = if takes_writeable {
+        Some(ReturnType::Writeable)
+    } else {
+        None
+    };
     match return_type.unwrap_or(&ast::TypeName::Unit) {
         ast::TypeName::Result(ok_ty, err_ty) => {
             let ok_ty = match ok_ty.as_ref() {
-                ast::TypeName::Unit => Some(takes_writeable.then_some(ReturnType::Writeable)),
+                ast::TypeName::Unit => Some(writeable_option),
                 ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)
                     .map(|ty| Some(ReturnType::OutType(ty))),
             };
@@ -815,9 +820,7 @@ fn lower_return_type(
                 _ => None,
             }
         }
-        ast::TypeName::Unit => Some(ReturnFallability::Infallible(
-            takes_writeable.then_some(ReturnType::Writeable),
-        )),
+        ast::TypeName::Unit => Some(ReturnFallability::Infallible(writeable_option)),
         ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)
             .map(|ty| ReturnFallability::Infallible(Some(ReturnType::OutType(ty)))),
     }
