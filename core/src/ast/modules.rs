@@ -43,7 +43,7 @@ impl Module {
         rust_links
     }
 
-    fn insert_all_types(&self, in_path: Path, out: &mut Env) {
+    pub fn insert_all_types(&self, in_path: Path, out: &mut Env) {
         let mut mod_symbols = ModuleEnv::default();
 
         self.imports.iter().for_each(|(path, name)| {

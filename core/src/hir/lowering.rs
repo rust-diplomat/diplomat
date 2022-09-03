@@ -555,18 +555,35 @@ fn lower_out_type<L: LifetimeLowerer>(
                 None
             }
         },
-        ast::TypeName::Box(box_ty) => {
-            errors.push(match box_ty.as_ref() {
-                ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                    match path.resolve(in_path, env) {
-                        ast::CustomType::Opaque(_) => LoweringError::Other(format!("found Box<T> in input where T is an opaque, but owned opaques aren't allowed in inputs. try &T instead? T = {path}")),
-                        _ => LoweringError::Other(format!("found Box<T> in input where T is a custom type but not opaque. non-opaques can't be behind pointers, and opaques in inputs can't be owned. T = {path}")),
+        ast::TypeName::Box(box_ty) => match box_ty.as_ref() {
+            ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                match path.resolve(in_path, env) {
+                    ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
+                        let lifetimes = ltl.lower_generics(&path.lifetimes, box_ty.is_self());
+                        let tcx_id = lookup_id.resolve_opaque(opaque).expect(
+                            "can't find opaque in lookup map, which contains all opaques from env",
+                        );
+
+                        OutType::Opaque(OpaquePath::new(
+                            lifetimes,
+                            Optional(true),
+                            MaybeOwn::Own,
+                            tcx_id,
+                        ))
+                    }),
+                    _ => {
+                        errors.push(LoweringError::Other(format!("found Box<T> in output where T is a custom type but not opaque. non-opaques can't be behind pointers. T = {path}")));
+                        None
                     }
                 }
-                _ => LoweringError::Other(format!("found Box<T> in input where T isn't a custom type. T = {box_ty}")),
-            });
-            None
-        }
+            }
+            _ => {
+                errors.push(LoweringError::Other(format!(
+                    "found Box<T> in output where T isn't a custom type. T = {box_ty}"
+                )));
+                None
+            }
+        },
         ast::TypeName::Option(opt_ty) => match opt_ty.as_ref() {
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {

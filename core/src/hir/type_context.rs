@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::ops::Index;
 
 /// A context type owning all types exposed to Diplomat.
+#[derive(Debug)]
 pub struct TypeContext {
     out_structs: Vec<OutStructDef>,
     structs: Vec<StructDef>,
@@ -100,7 +101,10 @@ impl TypeContext {
                     enums,
                 })
             }
-            _ => Err(errors),
+            _ => {
+                assert!(!errors.is_empty(), "Lowering failed without error messages");
+                Err(errors)
+            }
         }
     }
 }
