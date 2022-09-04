@@ -2,7 +2,7 @@
 use crate::ast;
 
 /// 8, 16, 32, and 64-bit signed and unsigned integers.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum IntType {
     I8,
     I16,
@@ -15,28 +15,28 @@ pub enum IntType {
 }
 
 /// Platform-dependent signed and unsigned size types.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum IntSizeType {
     Isize,
     Usize,
 }
 
 /// 128-bit signed and unsigned integers.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Int128Type {
     I128,
     U128,
 }
 
 /// 32 and 64-bit floating point numbers.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum FloatType {
     F32,
     F64,
 }
 
 /// All primitive types.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum PrimitiveType {
     Bool,
     Char,

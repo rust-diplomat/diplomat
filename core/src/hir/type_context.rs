@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::ops::Index;
 
 /// A context type owning all types exposed to Diplomat.
+#[derive(Debug)]
 pub struct TypeContext {
     out_structs: Vec<OutStructDef>,
     structs: Vec<StructDef>,
@@ -17,19 +18,19 @@ pub struct TypeContext {
 }
 
 /// Key used to index into a [`TypeContext`] representing a struct.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct StructId(usize);
 
 /// Key used to index into a [`TypeContext`] representing an out struct.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct OutStructId(usize);
 
 /// Key used to index into a [`TypeContext`] representing a opaque.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct OpaqueId(usize);
 
 /// Key used to index into a [`TypeContext`] representing an enum.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct EnumId(usize);
 
 impl TypeContext {
@@ -100,7 +101,10 @@ impl TypeContext {
                     enums,
                 })
             }
-            _ => Err(errors),
+            _ => {
+                assert!(!errors.is_empty(), "Lowering failed without error messages");
+                Err(errors)
+            }
         }
     }
 }

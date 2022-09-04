@@ -9,6 +9,7 @@ pub enum ReturnableStructDef<'tcx> {
 }
 
 /// Structs that can only be returned from methods.
+#[derive(Debug)]
 pub struct OutStructDef {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -17,6 +18,7 @@ pub struct OutStructDef {
 }
 
 /// Structs that can be either inputs or outputs in methods.
+#[derive(Debug)]
 pub struct StructDef {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -32,6 +34,7 @@ pub struct StructDef {
 /// to give up ownership.
 ///
 /// A struct marked with `#[diplomat::opaque]`.
+#[derive(Debug)]
 pub struct OpaqueDef {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -39,6 +42,7 @@ pub struct OpaqueDef {
 }
 
 /// The enum type.
+#[derive(Debug)]
 pub struct EnumDef {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -47,6 +51,7 @@ pub struct EnumDef {
 }
 
 /// A field on a [`OutStruct`]s.
+#[derive(Debug)]
 pub struct OutStructField {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -54,6 +59,7 @@ pub struct OutStructField {
 }
 
 /// A field on a [`Struct`]s.
+#[derive(Debug)]
 pub struct StructField {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -61,6 +67,7 @@ pub struct StructField {
 }
 
 /// A variant of an [`Enum`].
+#[derive(Debug)]
 pub struct EnumVariant {
     pub docs: Docs,
     pub name: IdentBuf,

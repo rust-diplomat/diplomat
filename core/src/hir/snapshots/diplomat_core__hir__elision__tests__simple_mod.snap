@@ -1,0 +1,248 @@
+---
+source: core/src/hir/elision.rs
+expression: "{\n    use crate::ast;\n    let m =\n        ast::Module::from_syn(&syn::parse_quote! {\n                        mod ffi\n                        {\n                            #[diplomat :: opaque] struct Opaque < 'a > { s : & 'a str, }\n                            struct Struct < 'a > { s : & 'a str, } #[diplomat :: out]\n                            struct OutStruct < 'a > { inner : Box < Opaque < 'a >>, }\n                            impl < 'a > OutStruct < 'a >\n                            {\n                                pub fn new(s : & 'a str) -> Self\n                                { Self { inner : Box :: new(Opaque { s }) } }\n                            } impl < 'a > Struct < 'a >\n                            { pub fn rustc_elision(self, s : & str) -> & str { s } }\n                        }\n                    }, true);\n    let mut env = crate::Env::default();\n    let mut top_symbols = crate::ModuleEnv::default();\n    m.insert_all_types(ast::Path::empty(), &mut env);\n    top_symbols.insert(m.name.clone(),\n        ast::ModSymbol::SubModule(m.name.clone()));\n    env.insert(ast::Path::empty(), top_symbols);\n    let tcx = crate::hir::TypeContext::from_ast(&env).unwrap();\n    tcx\n}"
+---
+TypeContext {
+    out_structs: [
+        OutStructDef {
+            docs: Docs(
+                "",
+                [],
+            ),
+            name: Check {
+                _marker: PhantomData,
+                buf: "OutStruct",
+            },
+            fields: [
+                OutStructField {
+                    docs: Docs(
+                        "",
+                        [],
+                    ),
+                    name: Check {
+                        _marker: PhantomData,
+                        buf: "inner",
+                    },
+                    ty: Opaque(
+                        OpaquePath {
+                            lifetimes: TypeLifetimes {
+                                indices: [
+                                    TypeLifetime {
+                                        index: Some(
+                                            0,
+                                        ),
+                                    },
+                                ],
+                            },
+                            optional: Optional(
+                                true,
+                            ),
+                            owner: Own,
+                            tcx_id: OpaqueId(
+                                0,
+                            ),
+                        },
+                    ),
+                },
+            ],
+            methods: [
+                Method {
+                    docs: Docs(
+                        "",
+                        [],
+                    ),
+                    name: Check {
+                        _marker: PhantomData,
+                        buf: "new",
+                    },
+                    lifetime_env: LifetimeEnv {
+                        nodes: [
+                            Explicit(
+                                ExplicitLifetime {
+                                    ident: Check {
+                                        _marker: PhantomData,
+                                        buf: "a",
+                                    },
+                                    longer: [],
+                                    shorter: [],
+                                },
+                            ),
+                        ],
+                    },
+                    param_self: None,
+                    params: [
+                        Param {
+                            name: Check {
+                                _marker: PhantomData,
+                                buf: "s",
+                            },
+                            ty: Slice(
+                                Str(
+                                    TypeLifetime {
+                                        index: Some(
+                                            0,
+                                        ),
+                                    },
+                                ),
+                            ),
+                        },
+                    ],
+                    output: Infallible(
+                        Some(
+                            OutType(
+                                Struct(
+                                    OutStruct(
+                                        OutStructPath {
+                                            lifetimes: TypeLifetimes {
+                                                indices: [
+                                                    TypeLifetime {
+                                                        index: Some(
+                                                            0,
+                                                        ),
+                                                    },
+                                                ],
+                                            },
+                                            tcx_id: OutStructId(
+                                                0,
+                                            ),
+                                        },
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                },
+            ],
+        },
+    ],
+    structs: [
+        StructDef {
+            docs: Docs(
+                "",
+                [],
+            ),
+            name: Check {
+                _marker: PhantomData,
+                buf: "Struct",
+            },
+            fields: [
+                StructField {
+                    docs: Docs(
+                        "",
+                        [],
+                    ),
+                    name: Check {
+                        _marker: PhantomData,
+                        buf: "s",
+                    },
+                    ty: Slice(
+                        Str(
+                            TypeLifetime {
+                                index: Some(
+                                    0,
+                                ),
+                            },
+                        ),
+                    ),
+                },
+            ],
+            methods: [
+                Method {
+                    docs: Docs(
+                        "",
+                        [],
+                    ),
+                    name: Check {
+                        _marker: PhantomData,
+                        buf: "rustc_elision",
+                    },
+                    lifetime_env: LifetimeEnv {
+                        nodes: [
+                            Explicit(
+                                ExplicitLifetime {
+                                    ident: Check {
+                                        _marker: PhantomData,
+                                        buf: "a",
+                                    },
+                                    longer: [],
+                                    shorter: [],
+                                },
+                            ),
+                            Implicit(
+                                ImplicitLifetime(
+                                    1,
+                                ),
+                            ),
+                        ],
+                    },
+                    param_self: Some(
+                        ParamSelf {
+                            ty: Struct(
+                                StructPath {
+                                    lifetimes: TypeLifetimes {
+                                        indices: [
+                                            TypeLifetime {
+                                                index: Some(
+                                                    0,
+                                                ),
+                                            },
+                                        ],
+                                    },
+                                    tcx_id: StructId(
+                                        0,
+                                    ),
+                                },
+                            ),
+                        },
+                    ),
+                    params: [
+                        Param {
+                            name: Check {
+                                _marker: PhantomData,
+                                buf: "s",
+                            },
+                            ty: Slice(
+                                Str(
+                                    TypeLifetime {
+                                        index: Some(
+                                            1,
+                                        ),
+                                    },
+                                ),
+                            ),
+                        },
+                    ],
+                    output: Infallible(
+                        Some(
+                            OutType(
+                                Slice(
+                                    Str(
+                                        TypeLifetime {
+                                            index: Some(
+                                                1,
+                                            ),
+                                        },
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                },
+            ],
+        },
+    ],
+    opaques: [
+        OpaqueDef {
+            docs: Docs(
+                "",
+                [],
+            ),
+            name: Check {
+                _marker: PhantomData,
+                buf: "Opaque",
+            },
+            methods: [],
+        },
+    ],
+    enums: [],
+}

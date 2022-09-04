@@ -405,5 +405,65 @@ impl LifetimeLowerer for &ast::LifetimeEnv {
 // Things to test:
 // 1. ensure that if there are multiple inputs that are `Self`, where `Self` has
 //    an elided lifetime, all expansions of `Self` have the same anonymous lifetimes.
-// 2. ensure that `fn foo(self, s: &str) -> &str` passes, where it infers that
-//    the output takes on the lifetime of `s`.
+
+#[cfg(test)]
+mod tests {
+    macro_rules! do_test {
+        ($($tokens:tt)*) => {{
+            let mut settings = insta::Settings::new();
+            settings.set_sort_maps(true);
+
+            settings.bind(|| {
+                insta::assert_debug_snapshot!({
+                    use crate::ast;
+                    let m = ast::Module::from_syn(&syn::parse_quote! { $($tokens)* }, true);
+
+                    let mut env = crate::Env::default();
+                    let mut top_symbols = crate::ModuleEnv::default();
+
+                    m.insert_all_types(ast::Path::empty(), &mut env);
+                    top_symbols.insert(m.name.clone(), ast::ModSymbol::SubModule(m.name.clone()));
+
+                    env.insert(ast::Path::empty(), top_symbols);
+
+                    let tcx = crate::hir::TypeContext::from_ast(&env).unwrap();
+                    tcx
+                })
+            })
+        }}
+    }
+
+    #[test]
+    fn simple_mod() {
+        do_test! {
+            mod ffi {
+                #[diplomat::opaque]
+                struct Opaque<'a> {
+                    s: &'a str,
+                }
+
+                struct Struct<'a> {
+                    s: &'a str,
+                }
+
+                #[diplomat::out]
+                struct OutStruct<'a> {
+                    inner: Box<Opaque<'a>>,
+                }
+
+                impl<'a> OutStruct<'a> {
+                    pub fn new(s: &'a str) -> Self {
+                        Self { inner: Box::new(Opaque { s }) }
+                    }
+
+                }
+
+                impl<'a> Struct<'a> {
+                    pub fn rustc_elision(self, s: &str) -> &str {
+                        s
+                    }
+                }
+            }
+        }
+    }
+}

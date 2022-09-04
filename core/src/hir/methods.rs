@@ -8,6 +8,7 @@ use super::{
 };
 
 /// A method exposed to Diplomat.
+#[derive(Debug)]
 pub struct Method {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -19,23 +20,27 @@ pub struct Method {
 }
 
 /// Type that the method returns.
+#[derive(Debug)]
 pub enum ReturnType {
     Writeable,
     OutType(OutType),
 }
 
 /// Whether or not the method returns a value or a result.
+#[derive(Debug)]
 pub enum ReturnFallability {
     Infallible(Option<ReturnType>),
     Fallible(Option<ReturnType>, OutType),
 }
 
 /// The `self` parameter of a method.
+#[derive(Debug)]
 pub struct ParamSelf {
     ty: SelfType,
 }
 
 /// A parameter in a method.
+#[derive(Debug)]
 pub struct Param {
     name: IdentBuf,
     ty: Type,
