@@ -39,8 +39,7 @@ impl From<&syn::ItemEnum> for Enum {
                             // Reparsing, signed literals are represented
                             // as a negation expression
                             let lit: Result<syn::Lit, _> = syn::parse2(d.1.to_token_stream());
-                            if let Ok(syn::Lit::Int(ref lit_int)) = lit
-                            {
+                            if let Ok(syn::Lit::Int(ref lit_int)) = lit {
                                 lit_int.base10_parse::<isize>().unwrap()
                             } else {
                                 panic!("Expected a discriminant to be a constant integer");
@@ -87,7 +86,6 @@ mod tests {
             }));
         });
     }
-
 
     #[test]
     fn enum_with_discr() {
