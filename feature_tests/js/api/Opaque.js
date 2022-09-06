@@ -1,6 +1,7 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.js"
 import { ImportedStruct } from "./ImportedStruct.js"
+import { MyEnum_js_to_rust, MyEnum_rust_to_js } from "./MyEnum.js"
 import { UnimportedEnum_js_to_rust, UnimportedEnum_rust_to_js } from "./UnimportedEnum.js"
 
 const Opaque_box_destroy_registry = new FinalizationRegistry(underlying => {
@@ -28,7 +29,8 @@ export class Opaque {
     const field_d_arg_s = arg_s["d"];
     const field_e_arg_s = arg_s["e"];
     const field_f_arg_s = arg_s["f"];
-    wasm.Opaque_assert_struct(this.underlying, field_a_arg_s, field_b_arg_s, field_c_arg_s, field_d_arg_s, field_e_arg_s, diplomatRuntime.extractCodePoint(field_f_arg_s, 'field_f_arg_s'));
+    const field_g_arg_s = arg_s["g"];
+    wasm.Opaque_assert_struct(this.underlying, field_a_arg_s, field_b_arg_s, field_c_arg_s, field_d_arg_s, field_e_arg_s, diplomatRuntime.extractCodePoint(field_f_arg_s, 'field_f_arg_s'), MyEnum_js_to_rust[field_g_arg_s]);
   }
 
   static returns_usize() {

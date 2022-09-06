@@ -57,7 +57,7 @@ inline Opaque Opaque::new_() {
 }
 inline void Opaque::assert_struct(MyStruct s) const {
   MyStruct diplomat_wrapped_struct_s = s;
-  capi::Opaque_assert_struct(this->inner.get(), capi::MyStruct{ .a = diplomat_wrapped_struct_s.a, .b = diplomat_wrapped_struct_s.b, .c = diplomat_wrapped_struct_s.c, .d = diplomat_wrapped_struct_s.d, .e = diplomat_wrapped_struct_s.e, .f = diplomat_wrapped_struct_s.f });
+  capi::Opaque_assert_struct(this->inner.get(), capi::MyStruct{ .a = diplomat_wrapped_struct_s.a, .b = diplomat_wrapped_struct_s.b, .c = diplomat_wrapped_struct_s.c, .d = diplomat_wrapped_struct_s.d, .e = diplomat_wrapped_struct_s.e, .f = diplomat_wrapped_struct_s.f, .g = static_cast<capi::MyEnum>(diplomat_wrapped_struct_s.g) });
 }
 inline size_t Opaque::returns_usize() {
   return capi::Opaque_returns_usize();

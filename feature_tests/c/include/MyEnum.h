@@ -1,36 +1,32 @@
-#ifndef MyStruct_H
-#define MyStruct_H
+#ifndef MyEnum_H
+#define MyEnum_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#include "MyEnum.h"
 #ifdef __cplusplus
 namespace capi {
 #endif
 
-typedef struct MyStruct {
-    uint8_t a;
-    bool b;
-    uint8_t c;
-    uint64_t d;
-    int32_t e;
-    char32_t f;
-    MyEnum g;
-} MyStruct;
+typedef enum MyEnum {
+  MyEnum_A = -2,
+  MyEnum_B = -1,
+  MyEnum_C = 0,
+  MyEnum_D = 1,
+  MyEnum_E = 2,
+  MyEnum_F = 3,
+} MyEnum;
 #ifdef __cplusplus
 } // namespace capi
 #endif
-#include "MyEnum.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif
 
-MyStruct MyStruct_new();
-void MyStruct_destroy(MyStruct* self);
+void MyEnum_destroy(MyEnum* self);
 
 #ifdef __cplusplus
 } // extern "C"

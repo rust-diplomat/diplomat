@@ -1,4 +1,5 @@
 import { u8, i32, u64, char } from "./diplomat-runtime"
+import { MyEnum } from "./MyEnum";
 
 /**
  */
@@ -9,6 +10,7 @@ export class MyStruct {
   d: u64;
   e: i32;
   f: char;
+  g: MyEnum;
 
   /**
    */

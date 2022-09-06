@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "MyEnum.h"
 #ifdef __cplusplus
 namespace capi {
 #endif
@@ -17,10 +18,12 @@ typedef struct MyStruct {
     uint64_t d;
     int32_t e;
     char32_t f;
+    MyEnum g;
 } MyStruct;
 #ifdef __cplusplus
 } // namespace capi
 #endif
+#include "MyEnum.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {

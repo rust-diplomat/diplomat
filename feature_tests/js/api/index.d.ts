@@ -5,6 +5,7 @@ export { ErrorStruct } from './ErrorStruct.js';
 export { Float64Vec } from './Float64Vec.js';
 export { Foo } from './Foo.js';
 export { ImportedStruct } from './ImportedStruct.js';
+export { MyEnum } from './MyEnum.js';
 export { MyString } from './MyString.js';
 export { MyStruct } from './MyStruct.js';
 export { One } from './One.js';

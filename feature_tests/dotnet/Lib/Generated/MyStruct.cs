@@ -123,6 +123,24 @@ public partial class MyStruct
         }
     }
 
+    public MyEnum G
+    {
+        get
+        {
+            unsafe
+            {
+                return (MyEnum)_inner.g;
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                _inner.g = (Raw.MyEnum)value;
+            }
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>MyStruct</c> from the raw representation.
     /// </summary>
