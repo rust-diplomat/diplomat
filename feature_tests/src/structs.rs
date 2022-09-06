@@ -6,6 +6,15 @@ pub mod ffi {
     #[diplomat::transparent_convert]
     pub struct Opaque(String);
 
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum MyEnum {
+        A = -2,
+        B = -1,
+        C = 0,
+        D = 1,
+        E = 2,
+        F = 3,
+    }
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -13,6 +22,7 @@ pub mod ffi {
         d: u64,
         e: i32,
         f: char,
+        g: MyEnum,
     }
 
     impl Opaque {
@@ -47,6 +57,7 @@ pub mod ffi {
                 d: 1234,
                 e: 5991,
                 f: '餐',
+                g: MyEnum::B,
             }
         }
 
@@ -57,6 +68,7 @@ pub mod ffi {
             assert_eq!(self.d, 1234);
             assert_eq!(self.e, 5991);
             assert_eq!(self.f, '餐');
+            assert_eq!(self.g, MyEnum::B);
         }
     }
 }

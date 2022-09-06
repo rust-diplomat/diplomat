@@ -1,6 +1,20 @@
 ``structs::ffi``
 ================
 
+.. cpp:enum-struct:: MyEnum
+
+    .. cpp:enumerator:: A
+
+    .. cpp:enumerator:: B
+
+    .. cpp:enumerator:: C
+
+    .. cpp:enumerator:: D
+
+    .. cpp:enumerator:: E
+
+    .. cpp:enumerator:: F
+
 .. cpp:struct:: MyStruct
 
     .. cpp:member:: uint8_t a
@@ -14,6 +28,8 @@
     .. cpp:member:: int32_t e
 
     .. cpp:member:: char32_t f
+
+    .. cpp:member:: MyEnum g
 
     .. cpp:function:: static MyStruct new_()
 

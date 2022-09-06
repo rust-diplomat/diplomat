@@ -8,9 +8,9 @@ export const UnimportedEnum_js_to_rust = {
 };
 
 export const UnimportedEnum_rust_to_js = {
-  0: "A",
-  1: "B",
-  2: "C",
+  [0]: "A",
+  [1]: "B",
+  [2]: "C",
 };
 
 export const UnimportedEnum = {

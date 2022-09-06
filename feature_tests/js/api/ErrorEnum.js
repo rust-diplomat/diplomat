@@ -7,8 +7,8 @@ export const ErrorEnum_js_to_rust = {
 };
 
 export const ErrorEnum_rust_to_js = {
-  0: "Foo",
-  1: "Bar",
+  [0]: "Foo",
+  [1]: "Bar",
 };
 
 export const ErrorEnum = {

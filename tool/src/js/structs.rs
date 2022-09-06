@@ -53,7 +53,7 @@ pub fn gen_struct<W: fmt::Write>(
                 enm.name,
                 display::block(|mut f| {
                     enm.variants.iter().try_for_each(|(name, discriminant, _)| {
-                        writeln!(f, "{}: \"{}\",", discriminant, name)
+                        writeln!(f, "[{}]: \"{}\",", discriminant, name)
                     })
                 })
             )?;

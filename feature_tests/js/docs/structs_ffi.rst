@@ -1,6 +1,8 @@
 ``structs::ffi``
 ================
 
+.. js:class:: MyEnum
+
 .. js:class:: MyStruct
 
     .. js:attribute:: a
@@ -14,6 +16,8 @@
     .. js:attribute:: e
 
     .. js:attribute:: f
+
+    .. js:attribute:: g
 
     .. js:staticfunction:: new()
 
