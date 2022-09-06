@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
 use super::{Ident, Method};
+use quote::ToTokens;
 
 /// A fieldless enum declaration in an FFI module.
 #[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
@@ -35,10 +36,10 @@ impl From<&syn::ItemEnum> for Enum {
                         .discriminant
                         .as_ref()
                         .map(|d| {
-                            if let syn::Expr::Lit(syn::ExprLit {
-                                attrs: _,
-                                lit: syn::Lit::Int(lit_int),
-                            }) = &d.1
+                            // Reparsing, signed literals are represented
+                            // as a negation expression
+                            let lit: Result<syn::Lit, _> = syn::parse2(d.1.to_token_stream());
+                            if let Ok(syn::Lit::Int(ref lit_int)) = lit
                             {
                                 lit_int.base10_parse::<isize>().unwrap()
                             } else {
@@ -82,6 +83,26 @@ mod tests {
                     Abc,
                     /// Some more docs.
                     Def
+                }
+            }));
+        });
+    }
+
+
+    #[test]
+    fn enum_with_discr() {
+        let mut settings = Settings::new();
+        settings.set_sort_maps(true);
+
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(Enum::from(&syn::parse_quote! {
+                /// Some docs.
+                #[diplomat::rust_link(foo::Bar, Enum)]
+                enum DiscriminantedEnum {
+                    Abc = -1,
+                    Def = 0,
+                    Ghi = 1,
+                    Jkl = 2,
                 }
             }));
         });
