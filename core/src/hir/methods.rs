@@ -53,25 +53,26 @@ pub struct ParentId(usize);
 /// A tree of lifetimes mapping onto a specific instantiation of a type tree.
 ///
 /// Each `LifetimeTree` corresponds to the type of an input of a method.
-pub struct LifetimeTree<'m> {
+pub struct BorrowingFieldVisitor<'m> {
     parents: SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
-    leaves: SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
+    leaves: SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
 }
 
 /// Non-recursive input-output types that contain lifetimes
-pub enum LifetimeTreeLeaf<'m> {
+pub enum BorrowingFieldVisitorLeaf<'m> {
     Opaque(ParentId, Option<MethodLifetime<'m>>, MethodLifetimes<'m>),
     Slice(ParentId, Option<MethodLifetime<'m>>),
 }
 
 /// A leaf of a lifetime tree capable of tracking its parents.
-pub struct UnpackedField<'m> {
+#[derive(Copy, Clone)]
+pub struct BorrowingField<'m> {
     /// All inner nodes in the tree. When tracing from the root, we jump around
     /// this slice based on indices, but don't necessarily use all of them.
     parents: &'m [(Option<ParentId>, &'m Ident)],
 
     /// The unpacked field that is a leaf on the tree.
-    leaf: &'m LifetimeTreeLeaf<'m>,
+    leaf: &'m BorrowingFieldVisitorLeaf<'m>,
 }
 
 impl ReturnType {
@@ -113,16 +114,6 @@ impl ParamSelf {
         Self { ty }
     }
 
-    /// Returns a [`LifetimeTree`] corresponding to this self parameter.
-    pub fn lifetime_tree<'m>(
-        &'m self,
-        self_name: &'m Ident,
-        method_lifetimes: &MethodLifetimes<'m>,
-        tcx: &'m TypeContext,
-    ) -> LifetimeTree<'m> {
-        LifetimeTree::from_param_self(self, self_name, tcx, method_lifetimes)
-    }
-
     /// Return the number of fields and leaves that will show up in the [`LifetimeTree`]
     /// returned by [`ParamSelf::lifetime_tree`].
     ///
@@ -143,15 +134,6 @@ impl Param {
     pub(super) fn new(name: IdentBuf, ty: Type) -> Self {
         Self { name, ty }
     }
-
-    /// Returns a [`LifetimeTree`] corresponding to this parameter.
-    pub fn lifetime_tree<'m>(
-        &'m self,
-        method_lifetimes: &MethodLifetimes<'m>,
-        tcx: &'m TypeContext,
-    ) -> LifetimeTree<'m> {
-        LifetimeTree::from_param(self, tcx, method_lifetimes)
-    }
 }
 
 impl Method {
@@ -162,8 +144,30 @@ impl Method {
     }
 
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
-    pub fn method_lifetimes(&self) -> MethodLifetimes {
+    pub fn method_lifetimes(&self) -> MethodLifetimes<'_> {
         self.lifetime_env.method_lifetimes()
+    }
+
+    /// Returns a new [`BorrowingFieldVisitor`], which allocates memory to
+    /// efficiently represent all fields (and their paths!) of the inputs that
+    /// have a lifetime.
+    /// ```ignore
+    /// # use std::collections::BTreeMap;
+    /// let visitor = method.borrowing_field_visitor(tcx, "this".ck().unwrap());
+    /// let mut map = BTreeMap::new();
+    /// visitor.visit_borrowing_fields(|lt, uf| {
+    ///     map.get(lt).or_default().push(uf);
+    /// })
+    /// ```
+    pub fn borrowing_field_visitor<'m, F>(
+        &'m self,
+        tcx: &'m TypeContext,
+        self_name: &'m Ident,
+    ) -> BorrowingFieldVisitor<'m>
+    where
+        F: FnMut(MethodLifetime<'m>, BorrowingField<'m>),
+    {
+        BorrowingFieldVisitor::new(self, tcx, self_name)
     }
 }
 
@@ -180,57 +184,122 @@ impl ParentId {
     }
 }
 
-impl<'m> LifetimeTree<'m> {
-    /// Returns a new [`LifetimeTree`] corresponding to the type of a [`Param`].
-    fn from_param(
-        param: &'m Param,
-        tcx: &'m TypeContext,
-        method_lifetimes: &MethodLifetimes<'m>,
-    ) -> Self {
-        let (num_fields, num_leaves) = param.ty.field_leaf_lifetime_counts(tcx);
-        let mut parents = SmallVec::with_capacity(num_fields + 1);
-        let mut leaves = SmallVec::with_capacity(num_leaves);
-        let parent = ParentId::new(None, param.name.as_ref(), &mut parents);
-        Self::from_type(
-            &param.ty,
-            tcx,
-            parent,
-            method_lifetimes,
-            &mut parents,
-            &mut leaves,
-        );
-        Self { parents, leaves }
+impl<'m> BorrowingFieldVisitor<'m> {
+    /// Visits every borrowing field and method lifetime that it uses.
+    /// 
+    /// The idea is that you could use this to construct a mapping from
+    /// `MethodLifetime`s to `BorrowingField`s. We choose to use a visitor
+    /// pattern to avoid having to
+    ///
+    /// This would be convenient in the JavaScript backend where if you're
+    /// returning an `NonOpaque<'a, 'b>` from Rust, you need to pass a
+    /// `[[all input borrowing fields with 'a], [all input borrowing fields with 'b]]`
+    /// array into `NonOpaque`'s constructor.
+    ///
+    /// Alternatively, you could use such a map in the C++ backend by recursing
+    /// down the return type and keeping track of which fields you've recursed
+    /// into so far, and when you hit some lifetime 'a, generate docs saying
+    /// "path.to.current.field must be outlived by {borrowing fields of input that
+    /// contain 'a}".
+    pub fn visit_borrowing_fields<F>(&'m self, mut visit: F)
+    where
+        F: FnMut(MethodLifetime<'m>, BorrowingField<'m>),
+    {
+        for leaf in self.leaves.iter() {
+            let borrowing_field = BorrowingField {
+                parents: self.parents.as_slice(),
+                leaf,
+            };
+
+            match leaf {
+                BorrowingFieldVisitorLeaf::Opaque(_, lt, lts) => {
+                    if let Some(lt) = lt {
+                        visit(*lt, borrowing_field);
+                    } else {
+                        // the opaque is borrowed with the 'static lifetime
+                    }
+                    for lt in lts.iter() {
+                        visit(lt, borrowing_field);
+                    }
+                }
+                BorrowingFieldVisitorLeaf::Slice(_, lt) => {
+                    if let Some(lt) = lt {
+                        visit(*lt, borrowing_field);
+                    } else {
+                        // the slice is borrowed with the 'static lifetime
+                    }
+                }
+            }
+        }
     }
 
-    /// Returns a new [`LifetimeTree`] corresponding to the type of `self`.
-    ///
-    /// This method takes an extra `self_name` argument, which dictates that the
-    /// root of the returned [`LifetimeTree`] should be referred to as.
-    fn from_param_self(
-        param_self: &'m ParamSelf,
-        self_name: &'m Ident,
-        tcx: &'m TypeContext,
-        method_lifetimes: &MethodLifetimes<'m>,
-    ) -> Self {
-        let (num_fields, num_leaves) = param_self.field_leaf_lifetime_counts(tcx);
-        let mut parents = SmallVec::with_capacity(num_fields + 1);
-        let mut leaves = SmallVec::with_capacity(num_leaves);
-        let parent = ParentId::new(None, self_name, &mut parents);
-        match &param_self.ty {
-            SelfType::Opaque(ty) => {
-                Self::visit_opaque(
-                    &ty.lifetimes,
-                    &ty.borrowed().lifetime,
-                    parent,
-                    method_lifetimes,
-                    &mut leaves,
-                );
-            }
-            SelfType::Struct(ty) => {
-                Self::visit_struct(ty, tcx, parent, method_lifetimes, &mut parents, &mut leaves);
-            }
-            SelfType::Enum(_) => {}
-        }
+    /// Returns a new `LifetimeTree` containing all the lifetime trees of the arguments
+    /// in only two allocations.
+    fn new(method: &'m Method, tcx: &'m TypeContext, self_name: &'m Ident) -> Self {
+        let (parents, leaves) = method
+            .param_self
+            .as_ref()
+            .map(|param_self| param_self.field_leaf_lifetime_counts(tcx))
+            .into_iter()
+            .chain(
+                method
+                    .params
+                    .iter()
+                    .map(|param| param.ty.field_leaf_lifetime_counts(tcx)),
+            )
+            .reduce(|acc, x| (acc.0 + x.0, acc.1 + x.1))
+            .map(|(num_fields, num_leaves)| {
+                let num_params =
+                    method.params.len() + if method.param_self.is_some() { 1 } else { 0 };
+                let mut parents = SmallVec::with_capacity(num_fields + num_params);
+                let mut leaves = SmallVec::with_capacity(num_leaves);
+                let method_lifetimes = method.method_lifetimes();
+
+                if let Some(param_self) = method.param_self.as_ref() {
+                    let parent = ParentId::new(None, self_name, &mut parents);
+                    match &param_self.ty {
+                        SelfType::Opaque(ty) => {
+                            Self::visit_opaque(
+                                &ty.lifetimes,
+                                &ty.borrowed().lifetime,
+                                parent,
+                                &method_lifetimes,
+                                &mut leaves,
+                            );
+                        }
+                        SelfType::Struct(ty) => {
+                            Self::visit_struct(
+                                ty,
+                                tcx,
+                                parent,
+                                &method_lifetimes,
+                                &mut parents,
+                                &mut leaves,
+                            );
+                        }
+                        SelfType::Enum(_) => {}
+                    }
+                }
+
+                for param in method.params.iter() {
+                    let parent = ParentId::new(None, param.name.as_ref(), &mut parents);
+                    Self::from_type(
+                        &param.ty,
+                        tcx,
+                        parent,
+                        &method_lifetimes,
+                        &mut parents,
+                        &mut leaves,
+                    );
+                }
+
+                // just confirm that we did things right
+                debug_assert_eq!(parents.capacity(), num_fields + num_params);
+                debug_assert_eq!(leaves.capacity(), num_leaves);
+                (parents, leaves)
+            })
+            .unwrap_or_default();
+
         Self { parents, leaves }
     }
 
@@ -242,7 +311,7 @@ impl<'m> LifetimeTree<'m> {
         parent: ParentId,
         method_lifetimes: &MethodLifetimes<'m>,
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
-        leaves: &mut SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
+        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
         match ty {
             Type::Opaque(path) => {
@@ -270,11 +339,11 @@ impl<'m> LifetimeTree<'m> {
         borrow: &'m TypeLifetime,
         parent: ParentId,
         method_lifetimes: &MethodLifetimes<'m>,
-        leaves: &mut SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
+        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_borrow_lifetime = borrow.in_method(method_lifetimes);
-        let method_type_lifetimes = lifetimes.in_method(method_lifetimes);
-        leaves.push(LifetimeTreeLeaf::Opaque(
+        let method_borrow_lifetime = borrow.in_method(&method_lifetimes);
+        let method_type_lifetimes = lifetimes.in_method(&method_lifetimes);
+        leaves.push(BorrowingFieldVisitorLeaf::Opaque(
             parent,
             method_borrow_lifetime,
             method_type_lifetimes,
@@ -286,10 +355,10 @@ impl<'m> LifetimeTree<'m> {
         slice: &Slice,
         parent: ParentId,
         method_lifetimes: &MethodLifetimes<'m>,
-        leaves: &mut SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
+        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_lifetime = slice.lifetime().in_method(method_lifetimes);
-        leaves.push(LifetimeTreeLeaf::Slice(parent, method_lifetime));
+        let method_lifetime = slice.lifetime().in_method(&method_lifetimes);
+        leaves.push(BorrowingFieldVisitorLeaf::Slice(parent, method_lifetime));
     }
 
     /// Add a struct as a parent an recurse down leaves during construction of a
@@ -300,9 +369,9 @@ impl<'m> LifetimeTree<'m> {
         parent: ParentId,
         method_lifetimes: &MethodLifetimes<'m>,
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
-        leaves: &mut SmallVec<[LifetimeTreeLeaf<'m>; 8]>,
+        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_type_lifetimes = ty.lifetimes.in_method(method_lifetimes);
+        let method_type_lifetimes = ty.lifetimes.in_method(&method_lifetimes);
         for field in ty.resolve(tcx).fields.iter() {
             Self::from_type(
                 &field.ty,
@@ -314,43 +383,21 @@ impl<'m> LifetimeTree<'m> {
             );
         }
     }
-
-    /// Returns an iterator over the leaves of a [`LifetimeTree`], which correspond
-    /// to the unpacked fields that contain lifetimes within a type.
-    pub fn unpacked_fields(&'m self) -> impl Iterator<Item = UnpackedField<'m>> {
-        self.leaves.iter().map(|leaf| UnpackedField {
-            parents: self.parents.as_slice(),
-            leaf,
-        })
-    }
 }
 
-impl<'m> UnpackedField<'m> {
-    /// Iterate over the [`MethodLifetime`]s of an unpacked field.
-    pub fn lifetimes(&self) -> impl Iterator<Item = MethodLifetime> + '_ {
-        let (lifetime, lifetimes) = match self.leaf {
-            LifetimeTreeLeaf::Opaque(_, lifetime, lifetimes) => {
-                (lifetime.as_ref(), Some(lifetimes.iter()))
-            }
-            LifetimeTreeLeaf::Slice(_, lifetime) => (lifetime.as_ref(), None),
-        };
-
-        lifetime
-            .into_iter()
-            .copied()
-            .chain(lifetimes.into_iter().flatten())
-    }
-
+impl<'m> BorrowingField<'m> {
     /// Visit fields in order.
     ///
-    /// If `self` represents the field `param.first.second`, then calling [`UnpackedField::trace`]
+    /// If `self` represents the field `param.first.second`, then calling [`BorrowingField::trace`]
     /// will visit the following in order: `"param"`, `"first"`, `"second"`.
     pub fn trace<F>(&self, visit: &mut F)
     where
         F: FnMut(&'m Ident),
     {
         let (parent, ident) = match self.leaf {
-            LifetimeTreeLeaf::Opaque(id, ..) | LifetimeTreeLeaf::Slice(id, _) => self.parents[id.0],
+            BorrowingFieldVisitorLeaf::Opaque(id, ..) | BorrowingFieldVisitorLeaf::Slice(id, _) => {
+                self.parents[id.0]
+            }
         };
 
         self._trace(parent, ident, visit);
