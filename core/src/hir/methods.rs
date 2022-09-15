@@ -186,7 +186,7 @@ impl ParentId {
 
 impl<'m> BorrowingFieldVisitor<'m> {
     /// Visits every borrowing field and method lifetime that it uses.
-    /// 
+    ///
     /// The idea is that you could use this to construct a mapping from
     /// `MethodLifetime`s to `BorrowingField`s. We choose to use a visitor
     /// pattern to avoid having to
