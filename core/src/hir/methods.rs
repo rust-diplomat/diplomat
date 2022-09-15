@@ -341,8 +341,8 @@ impl<'m> BorrowingFieldVisitor<'m> {
         method_lifetimes: &MethodLifetimes<'m>,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_borrow_lifetime = borrow.in_method(&method_lifetimes);
-        let method_type_lifetimes = lifetimes.in_method(&method_lifetimes);
+        let method_borrow_lifetime = borrow.in_method(method_lifetimes);
+        let method_type_lifetimes = lifetimes.in_method(method_lifetimes);
         leaves.push(BorrowingFieldVisitorLeaf::Opaque(
             parent,
             method_borrow_lifetime,
@@ -357,7 +357,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
         method_lifetimes: &MethodLifetimes<'m>,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_lifetime = slice.lifetime().in_method(&method_lifetimes);
+        let method_lifetime = slice.lifetime().in_method(method_lifetimes);
         leaves.push(BorrowingFieldVisitorLeaf::Slice(parent, method_lifetime));
     }
 
@@ -371,7 +371,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_type_lifetimes = ty.lifetimes.in_method(&method_lifetimes);
+        let method_type_lifetimes = ty.lifetimes.in_method(method_lifetimes);
         for field in ty.resolve(tcx).fields.iter() {
             Self::from_type(
                 &field.ty,
