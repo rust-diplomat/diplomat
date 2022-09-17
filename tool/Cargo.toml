@@ -16,7 +16,7 @@ syn-inline-mod = "0.4.0"
 quote = "1.0"
 indenter = "0.3.3"
 pulldown-cmark = "0.8.0"
-structopt = "0.3"
+clap = { features = ["color", "derive", "std", "suggestions"], version = "3.2.2" }
 colored = "2.0"
 serde = { features = ["derive"], version = "1.0.130" }
 toml = "0.5.8"
