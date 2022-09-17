@@ -1,8 +1,8 @@
 //! Types that can be exposed in Diplomat APIs.
 
 use super::{
-    EnumPath, MaybeOwn, NonOptional, OpaquePath, Optional, PrimitiveType, ReturnableStructPath,
-    StructPath, TypeContext, TypeLifetime,
+    EnumPath, MaybeOwn, MaybeStatic, NonOptional, OpaquePath, Optional, PrimitiveType,
+    ReturnableStructPath, StructPath, TypeContext, TypeLifetime,
 };
 use crate::ast;
 pub use ast::Mutability;
@@ -38,7 +38,7 @@ pub enum SelfType {
 #[derive(Copy, Clone, Debug)]
 pub enum Slice {
     /// A string slice, e.g. `&str`.
-    Str(TypeLifetime),
+    Str(MaybeStatic<TypeLifetime>),
 
     /// A primitive slice, e.g. `&mut [u8]`.
     Primitive(Borrow, PrimitiveType),
@@ -54,7 +54,7 @@ pub enum Slice {
 // should be doable.
 #[derive(Copy, Clone, Debug)]
 pub struct Borrow {
-    pub lifetime: TypeLifetime,
+    pub lifetime: MaybeStatic<TypeLifetime>,
     pub mutability: Mutability,
 }
 
@@ -78,7 +78,7 @@ impl Type {
 impl Slice {
     /// Returns the [`TypeLifetime`] contained in either the `Str` or `Primitive`
     /// variant.
-    pub fn lifetime(&self) -> &TypeLifetime {
+    pub fn lifetime(&self) -> &MaybeStatic<TypeLifetime> {
         match self {
             Slice::Str(lifetime) => lifetime,
             Slice::Primitive(reference, _) => &reference.lifetime,
@@ -87,7 +87,7 @@ impl Slice {
 }
 
 impl Borrow {
-    pub(super) fn new(lifetime: TypeLifetime, mutability: Mutability) -> Self {
+    pub(super) fn new(lifetime: MaybeStatic<TypeLifetime>, mutability: Mutability) -> Self {
         Self {
             lifetime,
             mutability,

@@ -3,8 +3,8 @@
 use smallvec::SmallVec;
 
 use super::{
-    paths, Docs, Ident, IdentBuf, LifetimeEnv, MethodLifetime, MethodLifetimes, OutType, SelfType,
-    Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
+    paths, Docs, Ident, IdentBuf, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes,
+    OutType, SelfType, Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
 };
 
 /// A method exposed to Diplomat.
@@ -46,13 +46,13 @@ pub struct Param {
     ty: Type,
 }
 
-/// An id for indexing into a [`LifetimeTree`].
+/// An id for indexing into a [`BorrowingFieldsVisitor`].
 #[derive(Copy, Clone)]
 pub struct ParentId(usize);
 
 /// A tree of lifetimes mapping onto a specific instantiation of a type tree.
 ///
-/// Each `LifetimeTree` corresponds to the type of an input of a method.
+/// Each `BorrowingFieldsVisitor` corresponds to the type of an input of a method.
 pub struct BorrowingFieldVisitor<'m> {
     parents: SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
     leaves: SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
@@ -60,8 +60,12 @@ pub struct BorrowingFieldVisitor<'m> {
 
 /// Non-recursive input-output types that contain lifetimes
 pub enum BorrowingFieldVisitorLeaf<'m> {
-    Opaque(ParentId, Option<MethodLifetime<'m>>, MethodLifetimes<'m>),
-    Slice(ParentId, Option<MethodLifetime<'m>>),
+    Opaque(
+        ParentId,
+        MaybeStatic<MethodLifetime<'m>>,
+        MethodLifetimes<'m>,
+    ),
+    Slice(ParentId, MaybeStatic<MethodLifetime<'m>>),
 }
 
 /// A leaf of a lifetime tree capable of tracking its parents.
@@ -114,7 +118,7 @@ impl ParamSelf {
         Self { ty }
     }
 
-    /// Return the number of fields and leaves that will show up in the [`LifetimeTree`]
+    /// Return the number of fields and leaves that will show up in the [`BorrowingFieldsVisitor`]
     /// returned by [`ParamSelf::lifetime_tree`].
     ///
     /// This method is used to calculate how much space to allocate upfront.
@@ -155,8 +159,8 @@ impl Method {
     /// # use std::collections::BTreeMap;
     /// let visitor = method.borrowing_field_visitor(tcx, "this".ck().unwrap());
     /// let mut map = BTreeMap::new();
-    /// visitor.visit_borrowing_fields(|lt, uf| {
-    ///     map.get(lt).or_default().push(uf);
+    /// visitor.visit_borrowing_fields(|lifetime, field| {
+    ///     map.entry(lifetime).or_default().push(field);
     /// })
     /// ```
     pub fn borrowing_field_visitor<'m, F>(
@@ -203,7 +207,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
     /// contain 'a}".
     pub fn visit_borrowing_fields<F>(&'m self, mut visit: F)
     where
-        F: FnMut(MethodLifetime<'m>, BorrowingField<'m>),
+        F: FnMut(MaybeStatic<MethodLifetime<'m>>, BorrowingField<'m>),
     {
         for leaf in self.leaves.iter() {
             let borrowing_field = BorrowingField {
@@ -212,28 +216,21 @@ impl<'m> BorrowingFieldVisitor<'m> {
             };
 
             match leaf {
-                BorrowingFieldVisitorLeaf::Opaque(_, lt, lts) => {
-                    if let Some(lt) = lt {
-                        visit(*lt, borrowing_field);
-                    } else {
-                        // the opaque is borrowed with the 'static lifetime
-                    }
-                    for lt in lts.iter() {
+                // todo: fix this
+                BorrowingFieldVisitorLeaf::Opaque(_, lt, method_lifetimes) => {
+                    visit(*lt, borrowing_field);
+                    for lt in method_lifetimes.lifetimes() {
                         visit(lt, borrowing_field);
                     }
                 }
                 BorrowingFieldVisitorLeaf::Slice(_, lt) => {
-                    if let Some(lt) = lt {
-                        visit(*lt, borrowing_field);
-                    } else {
-                        // the slice is borrowed with the 'static lifetime
-                    }
+                    visit(*lt, borrowing_field);
                 }
             }
         }
     }
 
-    /// Returns a new `LifetimeTree` containing all the lifetime trees of the arguments
+    /// Returns a new `BorrowingFieldsVisitor` containing all the lifetime trees of the arguments
     /// in only two allocations.
     fn new(method: &'m Method, tcx: &'m TypeContext, self_name: &'m Ident) -> Self {
         let (parents, leaves) = method
@@ -303,8 +300,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
         Self { parents, leaves }
     }
 
-    /// Returns a new [`LifetimeTree`] corresponding to a type. This method is to
-    /// be used internally by [`LifetimeTree::from_param`] and [`LifetimeTree::from_param_self`].
+    /// Returns a new [`BorrowingFieldsVisitor`] corresponding to a type.
     fn from_type(
         ty: &'m Type,
         tcx: &'m TypeContext,
@@ -333,16 +329,17 @@ impl<'m> BorrowingFieldVisitor<'m> {
         }
     }
 
-    /// Add an opaque as a leaf during construction of a [`LifetimeTree`].
+    /// Add an opaque as a leaf during construction of a [`BorrowingFieldsVisitor`].
     fn visit_opaque(
         lifetimes: &'m TypeLifetimes,
-        borrow: &'m TypeLifetime,
+        borrow: &'m MaybeStatic<TypeLifetime>,
         parent: ParentId,
         method_lifetimes: &MethodLifetimes<'m>,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_borrow_lifetime = borrow.in_method(method_lifetimes);
-        let method_type_lifetimes = lifetimes.in_method(method_lifetimes);
+        let method_borrow_lifetime =
+            borrow.flat_map_nonstatic(|lt| lt.as_method_lifetime(method_lifetimes));
+        let method_type_lifetimes = lifetimes.as_method_lifetimes(method_lifetimes);
         leaves.push(BorrowingFieldVisitorLeaf::Opaque(
             parent,
             method_borrow_lifetime,
@@ -350,19 +347,21 @@ impl<'m> BorrowingFieldVisitor<'m> {
         ));
     }
 
-    /// Add a slice as a leaf during construction of a [`LifetimeTree`].
+    /// Add a slice as a leaf during construction of a [`BorrowingFieldsVisitor`].
     fn visit_slice(
         slice: &Slice,
         parent: ParentId,
         method_lifetimes: &MethodLifetimes<'m>,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_lifetime = slice.lifetime().in_method(method_lifetimes);
+        let method_lifetime = slice
+            .lifetime()
+            .flat_map_nonstatic(|lt| lt.as_method_lifetime(method_lifetimes));
         leaves.push(BorrowingFieldVisitorLeaf::Slice(parent, method_lifetime));
     }
 
     /// Add a struct as a parent an recurse down leaves during construction of a
-    /// [`LifetimeTree`].
+    /// [`BorrowingFieldsVisitor`].
     fn visit_struct(
         ty: &paths::StructPath,
         tcx: &'m TypeContext,
@@ -371,7 +370,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
     ) {
-        let method_type_lifetimes = ty.lifetimes.in_method(method_lifetimes);
+        let method_type_lifetimes = ty.lifetimes.as_method_lifetimes(method_lifetimes);
         for field in ty.resolve(tcx).fields.iter() {
             Self::from_type(
                 &field.ty,
