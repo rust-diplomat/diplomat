@@ -6,40 +6,40 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use clap::Parser;
 use colored::*;
 use diplomat_core::ast;
 use diplomat_tool::{c, cpp, dotnet, js};
-use structopt::StructOpt;
 
-/// diplomat-tool CLI options, as parsed by [structopt].
-#[derive(Debug, StructOpt)]
-#[structopt(
+/// diplomat-tool CLI options, as parsed by [clap-derive].
+#[derive(Debug, Parser)]
+#[clap(
     name = "diplomat-tool",
     about = "Generate bindings to a target language"
 )]
 struct Opt {
     /// The target language, "js", "c", "cpp" or "dotnet" (C#).
-    #[structopt()]
+    #[clap()]
     target_language: String,
 
     /// The folder that stores the bindings.
-    #[structopt(parse(from_os_str))]
+    #[clap(value_parser)]
     out_folder: PathBuf,
 
-    #[structopt(short, long, parse(from_os_str))]
+    #[clap(short, long, value_parser)]
     docs: Option<PathBuf>,
 
-    #[structopt(short = "-u", long)]
+    #[clap(short = 'u', long)]
     docs_base_urls: Vec<String>,
 
     /// The path to the lib.rs file. Defaults to src/lib.rs
-    #[structopt(short, long, parse(from_os_str))]
+    #[clap(short, long, value_parser)]
     entry: Option<PathBuf>,
 
     /// The path to an optional config file to override code generation defaults.
     /// This is currently used by the cpp generator to allow for code to be
     /// different libraries.
-    #[structopt(short, long, parse(from_os_str))]
+    #[clap(short, long, value_parser)]
     library_config: Option<PathBuf>,
 }
 
