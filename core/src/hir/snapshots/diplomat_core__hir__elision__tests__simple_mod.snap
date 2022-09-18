@@ -27,11 +27,11 @@ TypeContext {
                         OpaquePath {
                             lifetimes: TypeLifetimes {
                                 indices: [
-                                    TypeLifetime {
-                                        index: Some(
-                                            0,
-                                        ),
-                                    },
+                                    NonStatic(
+                                        TypeLifetime {
+                                            index: 0,
+                                        },
+                                    ),
                                 ],
                             },
                             optional: Optional(
@@ -78,11 +78,11 @@ TypeContext {
                             },
                             ty: Slice(
                                 Str(
-                                    TypeLifetime {
-                                        index: Some(
-                                            0,
-                                        ),
-                                    },
+                                    NonStatic(
+                                        TypeLifetime {
+                                            index: 0,
+                                        },
+                                    ),
                                 ),
                             ),
                         },
@@ -95,11 +95,11 @@ TypeContext {
                                         OutStructPath {
                                             lifetimes: TypeLifetimes {
                                                 indices: [
-                                                    TypeLifetime {
-                                                        index: Some(
-                                                            0,
-                                                        ),
-                                                    },
+                                                    NonStatic(
+                                                        TypeLifetime {
+                                                            index: 0,
+                                                        },
+                                                    ),
                                                 ],
                                             },
                                             tcx_id: OutStructId(
@@ -137,11 +137,11 @@ TypeContext {
                     },
                     ty: Slice(
                         Str(
-                            TypeLifetime {
-                                index: Some(
-                                    0,
-                                ),
-                            },
+                            NonStatic(
+                                TypeLifetime {
+                                    index: 0,
+                                },
+                            ),
                         ),
                     ),
                 },
@@ -181,11 +181,11 @@ TypeContext {
                                 StructPath {
                                     lifetimes: TypeLifetimes {
                                         indices: [
-                                            TypeLifetime {
-                                                index: Some(
-                                                    0,
-                                                ),
-                                            },
+                                            NonStatic(
+                                                TypeLifetime {
+                                                    index: 0,
+                                                },
+                                            ),
                                         ],
                                     },
                                     tcx_id: StructId(
@@ -203,11 +203,11 @@ TypeContext {
                             },
                             ty: Slice(
                                 Str(
-                                    TypeLifetime {
-                                        index: Some(
-                                            1,
-                                        ),
-                                    },
+                                    NonStatic(
+                                        TypeLifetime {
+                                            index: 1,
+                                        },
+                                    ),
                                 ),
                             ),
                         },
@@ -217,11 +217,11 @@ TypeContext {
                             OutType(
                                 Slice(
                                     Str(
-                                        TypeLifetime {
-                                            index: Some(
-                                                1,
-                                            ),
-                                        },
+                                        NonStatic(
+                                            TypeLifetime {
+                                                index: 1,
+                                            },
+                                        ),
                                     ),
                                 ),
                             ),
