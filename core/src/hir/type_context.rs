@@ -34,6 +34,22 @@ pub struct OpaqueId(usize);
 pub struct EnumId(usize);
 
 impl TypeContext {
+    pub fn out_structs(&self) -> &[OutStructDef] {
+        &self.out_structs
+    }
+
+    pub fn structs(&self) -> &[StructDef] {
+        &self.structs
+    }
+
+    pub fn opaques(&self) -> &[OpaqueDef] {
+        &self.opaques
+    }
+
+    pub fn enums(&self) -> &[EnumDef] {
+        &self.enums
+    }
+
     pub(crate) fn resolve_out_struct(&self, id: OutStructId) -> &OutStructDef {
         self.out_structs.index(id.0)
     }

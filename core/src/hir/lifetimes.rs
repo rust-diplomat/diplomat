@@ -1,38 +1,36 @@
 //! Lifetime information for types.
 #![allow(dead_code)]
 
-use super::{IdentBuf, ImplicitLifetimeGenerator};
+use super::IdentBuf;
 use crate::ast;
-use smallvec::SmallVec;
+use smallvec::{smallvec, SmallVec};
+
+const EXPECTED_LIFETIMES: usize = 4;
 
 // TODO(Quinn): This type is going to mainly be recycled from `ast::LifetimeEnv`.
 // Not fully sure how that will look like yet, but the ideas of what this will do
 // is basically the same.
 #[derive(Debug)]
 pub struct LifetimeEnv {
-    nodes: SmallVec<[LifetimeNode; 2]>,
+    nodes: SmallVec<[Lifetime; EXPECTED_LIFETIMES]>,
+    num_lifetimes: usize,
 }
 
+/// A lifetime in a [`LifetimeEnv`], which keeps track of which lifetimes it's
+/// longer and shorter than.
 #[derive(Debug)]
-pub enum LifetimeNode {
-    Explicit(ExplicitLifetime),
-    Implicit(ImplicitLifetime),
-}
-
-/// A named, boundable lifetime.
-#[derive(Debug)]
-pub struct ExplicitLifetime {
+pub(super) struct Lifetime {
     ident: IdentBuf,
-    longer: SmallVec<[usize; 2]>,
-    shorter: SmallVec<[usize; 2]>,
+    longer: SmallVec<[MethodLifetime; 2]>,
+    shorter: SmallVec<[MethodLifetime; 2]>,
 }
 
-impl ExplicitLifetime {
+impl Lifetime {
     /// Returns a new [`ExplicitLifetime`].
     pub(super) fn new(
         ident: IdentBuf,
-        longer: SmallVec<[usize; 2]>,
-        shorter: SmallVec<[usize; 2]>,
+        longer: SmallVec<[MethodLifetime; 2]>,
+        shorter: SmallVec<[MethodLifetime; 2]>,
     ) -> Self {
         Self {
             ident,
@@ -42,20 +40,49 @@ impl ExplicitLifetime {
     }
 }
 
-/// An anonymous lifetime.
-#[derive(Debug)]
-pub struct ImplicitLifetime(u32);
+/// Visit subtype lifetimes recursively, keeping track of which have already
+/// been visited.
+pub struct SubtypeLifetimeVisitor<'lt, F> {
+    lifetime_env: &'lt LifetimeEnv,
+    visited: SmallVec<[bool; EXPECTED_LIFETIMES]>,
+    visit_fn: F,
+}
 
-impl ImplicitLifetime {
-    /// Returns a new [`ImplicitLifetime`].
-    pub(super) fn new(label: u32) -> Self {
-        Self(label)
+impl<'lt, F> SubtypeLifetimeVisitor<'lt, F>
+where
+    F: FnMut(MethodLifetime),
+{
+    fn new(lifetime_env: &'lt LifetimeEnv, visit_fn: F) -> Self {
+        Self {
+            lifetime_env,
+            visited: smallvec![false; lifetime_env.nodes.len()],
+            visit_fn,
+        }
+    }
+
+    /// Visit more sublifetimes. This method tracks which lifetimes have already
+    /// been visited, and uses this to not visit the same lifetime twice.
+    pub fn visit_subtypes(&mut self, method_lifetime: MethodLifetime) {
+        if let Some(visited @ false) = self.visited.get_mut(method_lifetime.0) {
+            *visited = true;
+
+            (self.visit_fn)(method_lifetime);
+
+            for longer in self.lifetime_env.nodes[method_lifetime.0].longer.iter() {
+                self.visit_subtypes(*longer)
+            }
+        } else {
+            debug_assert!(
+                method_lifetime.0 > self.lifetime_env.num_lifetimes,
+                "method lifetime has an internal index that's not in range of the lifetime env"
+            );
+        }
     }
 }
 
 /// Wrapper type for `TypeLifetime` and `MethodLifetime`, indicating that it may
 /// be the `'static` lifetime.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum MaybeStatic<T> {
     Static,
     NonStatic(T),
@@ -91,10 +118,8 @@ impl<T> MaybeStatic<T> {
 ///
 /// This type can be mapped to a [`MethodLifetime`] by using the
 /// [`TypeLifetime::as_method_lifetime`] method.
-#[derive(Copy, Clone, Debug)]
-pub struct TypeLifetime {
-    index: usize,
-}
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TypeLifetime(usize);
 
 /// A set of lifetimes that exist as generic arguments on [`StructPath`]s,
 /// [`OutStructPath`]s, and [`OpaquePath`]s.
@@ -111,32 +136,48 @@ pub struct TypeLifetimes {
     indices: SmallVec<[MaybeStatic<TypeLifetime>; 2]>,
 }
 
-/// A lifetime that exists as part of a method signature.
-#[derive(Copy, Clone)]
-pub struct MethodLifetime<'m> {
-    lifetime_env: &'m LifetimeEnv,
-    index: usize,
-}
+/// A lifetime that exists as part of a method signature, e.g. `'a` or an
+/// anonymous lifetime.
+/// 
+/// This type is intended to be used as a key into a map to keep track of which
+/// borrowed fields depend on which method lifetimes.
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct MethodLifetime(usize);
 
 /// Map a lifetime in a nested struct to the original lifetime defined
 /// in the method that it refers to.
-pub struct MethodLifetimes<'m> {
-    lifetime_env: &'m LifetimeEnv,
-    indices: SmallVec<[MaybeStatic<usize>; 2]>,
+pub struct MethodLifetimes {
+    indices: SmallVec<[MaybeStatic<MethodLifetime>; 2]>,
 }
 
 impl LifetimeEnv {
     /// Returns a new [`LifetimeEnv`].
-    pub(super) fn new(nodes: SmallVec<[LifetimeNode; 2]>) -> Self {
-        Self { nodes }
+    pub(super) fn new(
+        nodes: SmallVec<[Lifetime; EXPECTED_LIFETIMES]>,
+        num_lifetimes: usize,
+    ) -> Self {
+        Self {
+            nodes,
+            num_lifetimes,
+        }
     }
 
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> MethodLifetimes {
-        MethodLifetimes {
-            lifetime_env: self,
-            indices: (0..self.nodes.len()).map(MaybeStatic::NonStatic).collect(),
-        }
+        let indices = (0..self.nodes.len() + self.num_lifetimes)
+            .map(|index| MaybeStatic::NonStatic(MethodLifetime(index)))
+            .collect();
+
+        MethodLifetimes { indices }
+    }
+
+    /// Returns a new [`SubtypeLifetimeVisitor`], which can visit all reachable
+    /// lifetimes
+    pub fn subtype_lifetimes_visitor<F>(&self, visit_fn: F) -> SubtypeLifetimeVisitor<'_, F>
+    where
+        F: FnMut(MethodLifetime),
+    {
+        SubtypeLifetimeVisitor::new(self, visit_fn)
     }
 }
 
@@ -146,29 +187,11 @@ impl TypeLifetime {
         let index = lifetime_env
             .id(named)
             .unwrap_or_else(|| panic!("lifetime `{}` not found in lifetime env", named));
-        Self::new(index)
+        Self(index)
     }
 
-    /// Returns a [`TypeLifetime`] representing a new anonymous lifetime.
-    pub(super) fn new_elided(
-        elided_node_gen: &mut ImplicitLifetimeGenerator,
-        nodes: &mut SmallVec<[LifetimeNode; 2]>,
-    ) -> Self {
-        let index = nodes.len();
-        nodes.push(LifetimeNode::Implicit(elided_node_gen.gen()));
-        Self::new(index)
-    }
-
-    /// Returns a [`TypeLifetime`] from an index.
-    fn new(index: usize) -> Self {
-        Self { index }
-    }
-
-    /// Returns the index that `self` appears in a [`MethodLifetimes`] wrapped
-    /// in `MaybeStatic::NonStatic`, or `MaybeStatic::Static` if it's substituted
-    /// as `'static`.
-    fn as_method_index(self, method_lifetimes: &MethodLifetimes<'_>) -> MaybeStatic<usize> {
-        method_lifetimes.indices[self.index]
+    pub(super) fn new(index: usize) -> Self {
+        Self(index)
     }
 
     /// Returns a new [`MaybeStatic<MethodLifetime>`] representing `self` in the
@@ -179,12 +202,11 @@ impl TypeLifetime {
     /// in the method, then this will return `MaybeStatic::Static`. But if it
     /// was `Foo<'b>`, then this will return `MaybeStatic::NonStatic` containing
     /// the `MethodLifetime` corresponding to `'b`.
-    pub fn as_method_lifetime<'m>(
+    pub fn as_method_lifetime(
         self,
-        method_lifetimes: &MethodLifetimes<'m>,
-    ) -> MaybeStatic<MethodLifetime<'m>> {
-        self.as_method_index(method_lifetimes)
-            .map_nonstatic(|index| MethodLifetime::new(index, method_lifetimes.lifetime_env))
+        method_lifetimes: &MethodLifetimes,
+    ) -> MaybeStatic<MethodLifetime> {
+        method_lifetimes.indices[self.0]
     }
 }
 
@@ -221,38 +243,29 @@ impl TypeLifetimes {
     ///
     /// This tells us that `arg.alice` has lifetime `'x` in the method, and
     /// that `arg.bob` has lifetime `'y`.
-    pub fn as_method_lifetimes<'m>(
-        &self,
-        method_lifetimes: &MethodLifetimes<'m>,
-    ) -> MethodLifetimes<'m> {
-        MethodLifetimes {
-            indices: self
-                .indices
-                .iter()
-                .map(|maybe_static_lt| {
-                    maybe_static_lt.flat_map_nonstatic(|lt| lt.as_method_index(method_lifetimes))
-                })
-                .collect(),
-            lifetime_env: method_lifetimes.lifetime_env,
-        }
+    pub fn as_method_lifetimes(&self, method_lifetimes: &MethodLifetimes) -> MethodLifetimes {
+        let indices = self
+            .indices
+            .iter()
+            .map(|maybe_static_lt| {
+                maybe_static_lt.flat_map_nonstatic(|lt| lt.as_method_lifetime(method_lifetimes))
+            })
+            .collect();
+
+        MethodLifetimes { indices }
     }
 }
 
-impl<'m> MethodLifetime<'m> {
-    /// Returns a new [`MethodLifetime`].
-    fn new(index: usize, lifetime_env: &'m LifetimeEnv) -> Self {
-        Self {
-            lifetime_env,
-            index,
-        }
+impl MethodLifetime {
+    /// Returns a new `MethodLifetime` from an index into a `LifetimeEnv`.
+    pub(super) fn new(index: usize) -> Self {
+        Self(index)
     }
 }
 
-impl<'m> MethodLifetimes<'m> {
+impl MethodLifetimes {
     /// Returns an iterator over the contained [`MethodLifetime`]s.
-    pub(super) fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<MethodLifetime<'m>>> + '_ {
-        self.indices.iter().map(|maybe_static| {
-            maybe_static.map_nonstatic(|index| MethodLifetime::new(index, self.lifetime_env))
-        })
+    pub(super) fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<MethodLifetime>> + '_ {
+        self.indices.iter().copied()
     }
 }
