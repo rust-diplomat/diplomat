@@ -138,7 +138,7 @@ pub struct TypeLifetimes {
 
 /// A lifetime that exists as part of a method signature, e.g. `'a` or an
 /// anonymous lifetime.
-/// 
+///
 /// This type is intended to be used as a key into a map to keep track of which
 /// borrowed fields depend on which method lifetimes.
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
