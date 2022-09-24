@@ -5,14 +5,25 @@ use super::IdentBuf;
 use crate::ast;
 use smallvec::{smallvec, SmallVec};
 
-const EXPECTED_LIFETIMES: usize = 4;
+const INLINE_NUM_LIFETIMES: usize = 4;
 
 // TODO(Quinn): This type is going to mainly be recycled from `ast::LifetimeEnv`.
 // Not fully sure how that will look like yet, but the ideas of what this will do
 // is basically the same.
 #[derive(Debug)]
 pub struct LifetimeEnv {
-    nodes: SmallVec<[Lifetime; EXPECTED_LIFETIMES]>,
+    /// List of named lifetimes in scope of the method, in the form of an
+    /// adjacency matrix.
+    nodes: SmallVec<[Lifetime; INLINE_NUM_LIFETIMES]>,
+
+    /// The number of named _and_ anonymous lifetimes in the method.
+    /// We store the sum since it represents the upper bound on what indices
+    /// are in range of the graph. If we make a [`MethodLfetimes`] with
+    /// `num_lifetimes` entries, then `TypeLifetime`s that convert into
+    /// `MethodLifetime`s will fall into this range, and we'll know that it's
+    /// a named lifetime if it's < `nodes.len()`, or that it's an anonymous
+    /// lifetime if it's < `num_lifetimes`. Otherwise, we'd have to make a
+    /// distinction in `TypeLifetime` about which kind it refers to.
     num_lifetimes: usize,
 }
 
@@ -26,7 +37,7 @@ pub(super) struct Lifetime {
 }
 
 impl Lifetime {
-    /// Returns a new [`ExplicitLifetime`].
+    /// Returns a new [`Lifetime`].
     pub(super) fn new(
         ident: IdentBuf,
         longer: SmallVec<[MethodLifetime; 2]>,
@@ -44,7 +55,7 @@ impl Lifetime {
 /// been visited.
 pub struct SubtypeLifetimeVisitor<'lt, F> {
     lifetime_env: &'lt LifetimeEnv,
-    visited: SmallVec<[bool; EXPECTED_LIFETIMES]>,
+    visited: SmallVec<[bool; INLINE_NUM_LIFETIMES]>,
     visit_fn: F,
 }
 
@@ -153,7 +164,7 @@ pub struct MethodLifetimes {
 impl LifetimeEnv {
     /// Returns a new [`LifetimeEnv`].
     pub(super) fn new(
-        nodes: SmallVec<[Lifetime; EXPECTED_LIFETIMES]>,
+        nodes: SmallVec<[Lifetime; INLINE_NUM_LIFETIMES]>,
         num_lifetimes: usize,
     ) -> Self {
         Self {
@@ -164,7 +175,7 @@ impl LifetimeEnv {
 
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> MethodLifetimes {
-        let indices = (0..self.nodes.len() + self.num_lifetimes)
+        let indices = (0..self.num_lifetimes)
             .map(|index| MaybeStatic::NonStatic(MethodLifetime(index)))
             .collect();
 

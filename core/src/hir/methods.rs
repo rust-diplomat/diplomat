@@ -52,15 +52,15 @@ pub struct Param {
 #[derive(Copy, Clone, Debug)]
 pub struct ParentId(usize);
 
-const EXPECTED_NUM_PARENTS: usize = 4;
-const EXPECTED_NUM_LEAVES: usize = 8;
+const INLINE_NUM_PARENTS: usize = 4;
+const INLINE_NUM_LEAVES: usize = 8;
 
 /// A tree of lifetimes mapping onto a specific instantiation of a type tree.
 ///
 /// Each `BorrowingFieldsVisitor` corresponds to the type of an input of a method.
 pub struct BorrowingFieldVisitor<'m> {
-    parents: SmallVec<[(Option<ParentId>, &'m Ident); EXPECTED_NUM_PARENTS]>,
-    leaves: SmallVec<[BorrowingFieldVisitorLeaf; EXPECTED_NUM_LEAVES]>,
+    parents: SmallVec<[(Option<ParentId>, &'m Ident); INLINE_NUM_PARENTS]>,
+    leaves: SmallVec<[BorrowingFieldVisitorLeaf; INLINE_NUM_LEAVES]>,
 }
 
 /// Non-recursive input-output types that contain lifetimes
@@ -289,11 +289,11 @@ impl<'m> BorrowingFieldVisitor<'m> {
                 // sanity check that the preallocations were correct
                 debug_assert_eq!(
                     parents.capacity(),
-                    std::cmp::max(EXPECTED_NUM_PARENTS, num_fields + num_params)
+                    std::cmp::max(INLINE_NUM_PARENTS, num_fields + num_params)
                 );
                 debug_assert_eq!(
                     leaves.capacity(),
-                    std::cmp::max(EXPECTED_NUM_LEAVES, num_leaves)
+                    std::cmp::max(INLINE_NUM_LEAVES, num_leaves)
                 );
                 (parents, leaves)
             })
