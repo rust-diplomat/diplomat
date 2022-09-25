@@ -152,7 +152,7 @@ impl<'a, T> IntoIterator for &'a SetOfAstTypes<T> {
     type IntoIter = std::slice::Iter<'a, AstElement<T>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&self.order).iter()
+        self.order.iter()
     }
 }
 
