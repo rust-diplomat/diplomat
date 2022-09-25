@@ -5,6 +5,8 @@ use super::IdentBuf;
 use crate::ast;
 use smallvec::{smallvec, SmallVec};
 
+/// Convenience const representing the number of lifetimes a [`LifetimeEnv`]
+/// can hold inline before needing to dynamically allocate.
 const INLINE_NUM_LIFETIMES: usize = 4;
 
 // TODO(Quinn): This type is going to mainly be recycled from `ast::LifetimeEnv`.

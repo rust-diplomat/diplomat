@@ -50,9 +50,14 @@ pub struct Param {
 
 /// An id for indexing into a [`BorrowingFieldsVisitor`].
 #[derive(Copy, Clone, Debug)]
-pub struct ParentId(usize);
+struct ParentId(usize);
 
+/// Convenience const representing the number of nested structs a [`BorrowingFieldVisitor`]
+/// can hold inline before needing to dynamically allocate.
 const INLINE_NUM_PARENTS: usize = 4;
+
+/// Convenience const representing the number of borrowed fields a [`BorrowingFieldVisitor`]
+/// can hold inline before needing to dynamically allocate.
 const INLINE_NUM_LEAVES: usize = 8;
 
 /// A tree of lifetimes mapping onto a specific instantiation of a type tree.
@@ -64,7 +69,7 @@ pub struct BorrowingFieldVisitor<'m> {
 }
 
 /// Non-recursive input-output types that contain lifetimes
-pub enum BorrowingFieldVisitorLeaf {
+enum BorrowingFieldVisitorLeaf {
     Opaque(ParentId, MaybeStatic<MethodLifetime>, MethodLifetimes),
     Slice(ParentId, MaybeStatic<MethodLifetime>),
 }
