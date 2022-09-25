@@ -1,5 +1,7 @@
 //! Methods for types and navigating lifetimes within methods.
 
+use std::fmt::{self, Write};
+
 use smallvec::SmallVec;
 
 use super::{
@@ -47,25 +49,29 @@ pub struct Param {
 }
 
 /// An id for indexing into a [`BorrowingFieldsVisitor`].
-#[derive(Copy, Clone)]
-pub struct ParentId(usize);
+#[derive(Copy, Clone, Debug)]
+struct ParentId(usize);
+
+/// Convenience const representing the number of nested structs a [`BorrowingFieldVisitor`]
+/// can hold inline before needing to dynamically allocate.
+const INLINE_NUM_PARENTS: usize = 4;
+
+/// Convenience const representing the number of borrowed fields a [`BorrowingFieldVisitor`]
+/// can hold inline before needing to dynamically allocate.
+const INLINE_NUM_LEAVES: usize = 8;
 
 /// A tree of lifetimes mapping onto a specific instantiation of a type tree.
 ///
 /// Each `BorrowingFieldsVisitor` corresponds to the type of an input of a method.
 pub struct BorrowingFieldVisitor<'m> {
-    parents: SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
-    leaves: SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
+    parents: SmallVec<[(Option<ParentId>, &'m Ident); INLINE_NUM_PARENTS]>,
+    leaves: SmallVec<[BorrowingFieldVisitorLeaf; INLINE_NUM_LEAVES]>,
 }
 
 /// Non-recursive input-output types that contain lifetimes
-pub enum BorrowingFieldVisitorLeaf<'m> {
-    Opaque(
-        ParentId,
-        MaybeStatic<MethodLifetime<'m>>,
-        MethodLifetimes<'m>,
-    ),
-    Slice(ParentId, MaybeStatic<MethodLifetime<'m>>),
+enum BorrowingFieldVisitorLeaf {
+    Opaque(ParentId, MaybeStatic<MethodLifetime>, MethodLifetimes),
+    Slice(ParentId, MaybeStatic<MethodLifetime>),
 }
 
 /// A leaf of a lifetime tree capable of tracking its parents.
@@ -76,7 +82,7 @@ pub struct BorrowingField<'m> {
     parents: &'m [(Option<ParentId>, &'m Ident)],
 
     /// The unpacked field that is a leaf on the tree.
-    leaf: &'m BorrowingFieldVisitorLeaf<'m>,
+    leaf: &'m BorrowingFieldVisitorLeaf,
 }
 
 impl ReturnType {
@@ -118,13 +124,12 @@ impl ParamSelf {
         Self { ty }
     }
 
-    /// Return the number of fields and leaves that will show up in the [`BorrowingFieldsVisitor`]
-    /// returned by [`ParamSelf::lifetime_tree`].
+    /// Return the number of fields and leaves that will show up in the [`BorrowingFieldVisitor`].
     ///
     /// This method is used to calculate how much space to allocate upfront.
     fn field_leaf_lifetime_counts(&self, tcx: &TypeContext) -> (usize, usize) {
         match self.ty {
-            SelfType::Opaque(_) => (0, 1),
+            SelfType::Opaque(_) => (1, 1),
             SelfType::Struct(ref ty) => ty.resolve(tcx).fields.iter().fold((1, 0), |acc, field| {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
@@ -148,7 +153,7 @@ impl Method {
     }
 
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
-    pub fn method_lifetimes(&self) -> MethodLifetimes<'_> {
+    pub fn method_lifetimes(&self) -> MethodLifetimes {
         self.lifetime_env.method_lifetimes()
     }
 
@@ -157,20 +162,17 @@ impl Method {
     /// have a lifetime.
     /// ```ignore
     /// # use std::collections::BTreeMap;
-    /// let visitor = method.borrowing_field_visitor(tcx, "this".ck().unwrap());
+    /// let visitor = method.borrowing_field_visitor(&tcx, "this".ck().unwrap());
     /// let mut map = BTreeMap::new();
     /// visitor.visit_borrowing_fields(|lifetime, field| {
     ///     map.entry(lifetime).or_default().push(field);
     /// })
     /// ```
-    pub fn borrowing_field_visitor<'m, F>(
+    pub fn borrowing_field_visitor<'m>(
         &'m self,
         tcx: &'m TypeContext,
         self_name: &'m Ident,
-    ) -> BorrowingFieldVisitor<'m>
-    where
-        F: FnMut(MethodLifetime<'m>, BorrowingField<'m>),
-    {
+    ) -> BorrowingFieldVisitor<'m> {
         BorrowingFieldVisitor::new(self, tcx, self_name)
     }
 }
@@ -205,9 +207,9 @@ impl<'m> BorrowingFieldVisitor<'m> {
     /// into so far, and when you hit some lifetime 'a, generate docs saying
     /// "path.to.current.field must be outlived by {borrowing fields of input that
     /// contain 'a}".
-    pub fn visit_borrowing_fields<F>(&'m self, mut visit: F)
+    pub fn visit_borrowing_fields<'a, F>(&'a self, mut visit: F)
     where
-        F: FnMut(MaybeStatic<MethodLifetime<'m>>, BorrowingField<'m>),
+        F: FnMut(MaybeStatic<MethodLifetime>, BorrowingField<'a>),
     {
         for leaf in self.leaves.iter() {
             let borrowing_field = BorrowingField {
@@ -216,7 +218,6 @@ impl<'m> BorrowingFieldVisitor<'m> {
             };
 
             match leaf {
-                // todo: fix this
                 BorrowingFieldVisitorLeaf::Opaque(_, lt, method_lifetimes) => {
                     visit(*lt, borrowing_field);
                     for lt in method_lifetimes.lifetimes() {
@@ -290,9 +291,15 @@ impl<'m> BorrowingFieldVisitor<'m> {
                     );
                 }
 
-                // just confirm that we did things right
-                debug_assert_eq!(parents.capacity(), num_fields + num_params);
-                debug_assert_eq!(leaves.capacity(), num_leaves);
+                // sanity check that the preallocations were correct
+                debug_assert_eq!(
+                    parents.capacity(),
+                    std::cmp::max(INLINE_NUM_PARENTS, num_fields + num_params)
+                );
+                debug_assert_eq!(
+                    leaves.capacity(),
+                    std::cmp::max(INLINE_NUM_LEAVES, num_leaves)
+                );
                 (parents, leaves)
             })
             .unwrap_or_default();
@@ -305,9 +312,9 @@ impl<'m> BorrowingFieldVisitor<'m> {
         ty: &'m Type,
         tcx: &'m TypeContext,
         parent: ParentId,
-        method_lifetimes: &MethodLifetimes<'m>,
+        method_lifetimes: &MethodLifetimes,
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
-        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
+        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {
         match ty {
             Type::Opaque(path) => {
@@ -334,8 +341,8 @@ impl<'m> BorrowingFieldVisitor<'m> {
         lifetimes: &'m TypeLifetimes,
         borrow: &'m MaybeStatic<TypeLifetime>,
         parent: ParentId,
-        method_lifetimes: &MethodLifetimes<'m>,
-        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
+        method_lifetimes: &MethodLifetimes,
+        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {
         let method_borrow_lifetime =
             borrow.flat_map_nonstatic(|lt| lt.as_method_lifetime(method_lifetimes));
@@ -351,8 +358,8 @@ impl<'m> BorrowingFieldVisitor<'m> {
     fn visit_slice(
         slice: &Slice,
         parent: ParentId,
-        method_lifetimes: &MethodLifetimes<'m>,
-        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
+        method_lifetimes: &MethodLifetimes,
+        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {
         let method_lifetime = slice
             .lifetime()
@@ -360,15 +367,15 @@ impl<'m> BorrowingFieldVisitor<'m> {
         leaves.push(BorrowingFieldVisitorLeaf::Slice(parent, method_lifetime));
     }
 
-    /// Add a struct as a parent an recurse down leaves during construction of a
+    /// Add a struct as a parent and recurse down leaves during construction of a
     /// [`BorrowingFieldsVisitor`].
     fn visit_struct(
         ty: &paths::StructPath,
         tcx: &'m TypeContext,
         parent: ParentId,
-        method_lifetimes: &MethodLifetimes<'m>,
+        method_lifetimes: &MethodLifetimes,
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
-        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf<'m>; 8]>,
+        leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {
         let method_type_lifetimes = ty.lifetimes.as_method_lifetimes(method_lifetimes);
         for field in ty.resolve(tcx).fields.iter() {
@@ -389,9 +396,9 @@ impl<'m> BorrowingField<'m> {
     ///
     /// If `self` represents the field `param.first.second`, then calling [`BorrowingField::trace`]
     /// will visit the following in order: `"param"`, `"first"`, `"second"`.
-    pub fn trace<F>(&self, visit: &mut F)
+    pub fn backtrace<F>(&self, mut visit: F)
     where
-        F: FnMut(&'m Ident),
+        F: FnMut(usize, &'m Ident),
     {
         let (parent, ident) = match self.leaf {
             BorrowingFieldVisitorLeaf::Opaque(id, ..) | BorrowingFieldVisitorLeaf::Slice(id, _) => {
@@ -399,20 +406,77 @@ impl<'m> BorrowingField<'m> {
             }
         };
 
-        self._trace(parent, ident, visit);
+        self.backtrace_rec(parent, ident, &mut visit);
     }
 
     /// Recursively visits fields in order from root to leaf by building up the
     /// stack, and then visiting fields as it unwinds.
-    fn _trace<F>(&self, parent: Option<ParentId>, ident: &'m Ident, visit: &mut F)
+    fn backtrace_rec<F>(&self, parent: Option<ParentId>, ident: &'m Ident, visit: &mut F) -> usize
     where
-        F: FnMut(&'m Ident),
+        F: FnMut(usize, &'m Ident),
     {
-        if let Some(id) = parent {
+        let from_end = if let Some(id) = parent {
             let (parent, ident) = self.parents[id.0];
-            self._trace(parent, ident, visit);
-        }
+            self.backtrace_rec(parent, ident, visit)
+        } else {
+            0
+        };
 
-        visit(ident);
+        visit(from_end, ident);
+
+        from_end + 1
+    }
+
+    /// Fallibly visits fields in order.
+    ///
+    /// This method is similar to [`BorrowinfField::backtrace`], but short-circuits
+    /// when an `Err` is returned.
+    pub fn try_backtrace<F, E>(&self, mut visit: F) -> Result<(), E>
+    where
+        F: FnMut(usize, &'m Ident) -> Result<(), E>,
+    {
+        let (parent, ident) = match self.leaf {
+            BorrowingFieldVisitorLeaf::Opaque(id, ..) | BorrowingFieldVisitorLeaf::Slice(id, _) => {
+                self.parents[id.0]
+            }
+        };
+
+        self.try_backtrace_rec(parent, ident, &mut visit)?;
+
+        Ok(())
+    }
+
+    /// Recursively visits fields in order from root to leaf by building up the
+    /// stack, and then visiting fields as it unwinds.
+    fn try_backtrace_rec<F, E>(
+        &self,
+        parent: Option<ParentId>,
+        ident: &'m Ident,
+        visit: &mut F,
+    ) -> Result<usize, E>
+    where
+        F: FnMut(usize, &'m Ident) -> Result<(), E>,
+    {
+        let from_end = if let Some(id) = parent {
+            let (parent, ident) = self.parents[id.0];
+            self.try_backtrace_rec(parent, ident, visit)?
+        } else {
+            0
+        };
+
+        visit(from_end, ident)?;
+
+        Ok(from_end + 1)
+    }
+}
+
+impl<'m> fmt::Display for BorrowingField<'m> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.try_backtrace(|i, ident| {
+            if i != 0 {
+                f.write_char('.')?;
+            }
+            f.write_str(ident.as_str())
+        })
     }
 }

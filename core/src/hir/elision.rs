@@ -97,30 +97,11 @@
 //! [Nomicon]: https://doc.rust-lang.org/nomicon/lifetime-elision.html
 
 use super::{
-    lower_ident, ExplicitLifetime, ImplicitLifetime, LifetimeEnv, LifetimeNode, LoweringError,
-    MaybeStatic, TypeLifetime, TypeLifetimes,
+    lower_ident, Lifetime, LifetimeEnv, LoweringError, MaybeStatic, MethodLifetime, TypeLifetime,
+    TypeLifetimes,
 };
 use crate::ast;
 use smallvec::SmallVec;
-
-/// Generator for unique [`ImplicitLifetime`]s.
-pub struct ImplicitLifetimeGenerator {
-    next: u32,
-}
-
-impl ImplicitLifetimeGenerator {
-    /// Returns a new [`ImplicitLifetimeGenerator`].
-    pub fn new() -> Self {
-        Self { next: 1 }
-    }
-
-    /// Returns the next [`ImplicitLifetime`].
-    pub fn gen(&mut self) -> ImplicitLifetime {
-        let label = self.next;
-        self.next += 1;
-        ImplicitLifetime::new(label)
-    }
-}
 
 /// Lower [`ast::Lifetime`]s to [`TypeLifetime`]s.
 ///
@@ -187,11 +168,11 @@ impl ElisionSource {
 ///
 /// This contains data for generating fresh elided lifetimes, looking up named
 /// lifetimes, and caching lifetimes of `Self`.
-struct BaseLifetimeLowerer<'ast> {
-    elided_node_gen: ImplicitLifetimeGenerator,
+pub(super) struct BaseLifetimeLowerer<'ast> {
     lifetime_env: &'ast ast::LifetimeEnv,
     self_lifetimes: Option<TypeLifetimes>,
-    nodes: SmallVec<[LifetimeNode; 2]>,
+    nodes: SmallVec<[Lifetime; 4]>,
+    num_lifetimes: usize,
 }
 
 /// The first phase of output elision inference.
@@ -233,7 +214,9 @@ impl<'ast> BaseLifetimeLowerer<'ast> {
     /// Returns a [`TypeLifetime`] representing a new anonymous lifetime, and
     /// pushes it to the nodes vector.
     fn new_elided(&mut self) -> TypeLifetime {
-        TypeLifetime::new_elided(&mut self.elided_node_gen, &mut self.nodes)
+        let index = self.num_lifetimes;
+        self.num_lifetimes += 1;
+        TypeLifetime::new(index)
     }
 
     /// Lowers a single [`ast::Lifetime`]. If the lifetime is elided, then a fresh
@@ -273,22 +256,30 @@ impl<'ast> SelfParamLifetimeLowerer<'ast> {
             let lifetime = lower_ident(ast_node.lifetime.name(), "named lifetime", errors);
             match (lifetime, &mut hir_nodes) {
                 (Some(lifetime), Some(hir_nodes)) => {
-                    hir_nodes.push(LifetimeNode::Explicit(ExplicitLifetime::new(
+                    hir_nodes.push(Lifetime::new(
                         lifetime,
-                        ast_node.longer.iter().copied().collect(),
-                        ast_node.shorter.iter().copied().collect(),
-                    )));
+                        ast_node
+                            .longer
+                            .iter()
+                            .map(|i| MethodLifetime::new(*i))
+                            .collect(),
+                        ast_node
+                            .shorter
+                            .iter()
+                            .map(|i| MethodLifetime::new(*i))
+                            .collect(),
+                    ));
                 }
                 _ => hir_nodes = None,
             }
         }
 
-        Some(Self {
+        hir_nodes.map(|nodes| Self {
             base: BaseLifetimeLowerer {
-                elided_node_gen: ImplicitLifetimeGenerator::new(),
                 lifetime_env,
                 self_lifetimes: None,
-                nodes: hir_nodes?,
+                num_lifetimes: nodes.len(),
+                nodes,
             },
         })
     }
@@ -358,7 +349,7 @@ impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
 impl<'ast> ReturnLifetimeLowerer<'ast> {
     /// Finalize the lifetimes in the method, returning the resulting [`LifetimeEnv`].
     pub fn finish(self) -> LifetimeEnv {
-        LifetimeEnv::new(self.base.nodes)
+        LifetimeEnv::new(self.base.nodes, self.base.num_lifetimes)
     }
 }
 
@@ -414,27 +405,36 @@ impl LifetimeLowerer for &ast::LifetimeEnv {
 
 #[cfg(test)]
 mod tests {
+    use strck_ident::IntoCk;
+
+    /// Convert a syntax tree into a [`TypeContext`].
+    macro_rules! tcx {
+        ($($tokens:tt)*) => {{
+            let m = crate::ast::Module::from_syn(&syn::parse_quote! { $($tokens)* }, true);
+
+            let mut env = crate::Env::default();
+            let mut top_symbols = crate::ModuleEnv::default();
+
+            m.insert_all_types(crate::ast::Path::empty(), &mut env);
+            top_symbols.insert(m.name.clone(), crate::ast::ModSymbol::SubModule(m.name.clone()));
+
+            env.insert(crate::ast::Path::empty(), top_symbols);
+
+            let tcx = crate::hir::TypeContext::from_ast(&env).unwrap();
+
+            tcx
+        }}
+    }
+
     macro_rules! do_test {
         ($($tokens:tt)*) => {{
             let mut settings = insta::Settings::new();
             settings.set_sort_maps(true);
 
             settings.bind(|| {
-                insta::assert_debug_snapshot!({
-                    use crate::ast;
-                    let m = ast::Module::from_syn(&syn::parse_quote! { $($tokens)* }, true);
+                let tcx = tcx! { $($tokens)* };
 
-                    let mut env = crate::Env::default();
-                    let mut top_symbols = crate::ModuleEnv::default();
-
-                    m.insert_all_types(ast::Path::empty(), &mut env);
-                    top_symbols.insert(m.name.clone(), ast::ModSymbol::SubModule(m.name.clone()));
-
-                    env.insert(ast::Path::empty(), top_symbols);
-
-                    let tcx = crate::hir::TypeContext::from_ast(&env).unwrap();
-                    tcx
-                })
+                insta::assert_debug_snapshot!(tcx);
             })
         }}
     }
@@ -471,5 +471,79 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_borrowing_fields() {
+        use std::collections::BTreeMap;
+        use std::fmt;
+
+        let tcx = tcx! {
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Opaque;
+
+                struct Input<'p, 'q> {
+                    p_data: &'p Opaque,
+                    q_data: &'q Opaque,
+                    name: &'static str,
+                    inner: Inner<'q>,
+                }
+
+                struct Inner<'a> {
+                    more_data: &'a str,
+                }
+
+                struct Output<'p,'q> {
+                    p_data: &'p Opaque,
+                    q_data: &'q Opaque,
+                }
+
+                impl<'a, 'b> Input<'a, 'b> {
+                    pub fn as_output(self, _s: &'static str) -> Output<'b, 'a> {
+                        Output { data: self.data }
+                    }
+
+                }
+            }
+        };
+
+        let method = &tcx
+            .structs()
+            .iter()
+            .find(|def| def.name == "Input")
+            .unwrap()
+            .methods[0];
+
+        let visitor = method.borrowing_field_visitor(&tcx, "this".ck().unwrap());
+        let mut lt_to_borrowing_fields: BTreeMap<_, Vec<_>> = BTreeMap::new();
+        visitor.visit_borrowing_fields(|lt, bf| {
+            lt_to_borrowing_fields
+                .entry(lt)
+                .or_default()
+                .push(DebugBorrowingField(bf));
+        });
+
+        struct DebugBorrowingField<'m>(crate::hir::BorrowingField<'m>);
+
+        impl<'m> fmt::Debug for DebugBorrowingField<'m> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str("\"")?;
+                self.0.try_backtrace(|i, ident| {
+                    if i != 0 {
+                        f.write_str(".")?;
+                    }
+                    f.write_str(ident.as_str())
+                })?;
+                f.write_str("\"")
+            }
+        }
+
+        let mut settings = insta::Settings::new();
+        settings.set_sort_maps(true);
+
+        settings.bind(|| {
+            insta::assert_debug_snapshot!(lt_to_borrowing_fields);
+        })
     }
 }

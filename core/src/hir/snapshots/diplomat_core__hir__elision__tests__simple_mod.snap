@@ -1,6 +1,6 @@
 ---
 source: core/src/hir/elision.rs
-expression: "{\n    use crate::ast;\n    let m =\n        ast::Module::from_syn(&syn::parse_quote! {\n                        mod ffi\n                        {\n                            #[diplomat :: opaque] struct Opaque < 'a > { s : & 'a str, }\n                            struct Struct < 'a > { s : & 'a str, } #[diplomat :: out]\n                            struct OutStruct < 'a > { inner : Box < Opaque < 'a >>, }\n                            impl < 'a > OutStruct < 'a >\n                            {\n                                pub fn new(s : & 'a str) -> Self\n                                { Self { inner : Box :: new(Opaque { s }) } }\n                            } impl < 'a > Struct < 'a >\n                            { pub fn rustc_elision(self, s : & str) -> & str { s } }\n                        }\n                    }, true);\n    let mut env = crate::Env::default();\n    let mut top_symbols = crate::ModuleEnv::default();\n    m.insert_all_types(ast::Path::empty(), &mut env);\n    top_symbols.insert(m.name.clone(),\n        ast::ModSymbol::SubModule(m.name.clone()));\n    env.insert(ast::Path::empty(), top_symbols);\n    let tcx = crate::hir::TypeContext::from_ast(&env).unwrap();\n    tcx\n}"
+expression: tcx
 ---
 TypeContext {
     out_structs: [
@@ -28,9 +28,9 @@ TypeContext {
                             lifetimes: TypeLifetimes {
                                 indices: [
                                     NonStatic(
-                                        TypeLifetime {
-                                            index: 0,
-                                        },
+                                        TypeLifetime(
+                                            0,
+                                        ),
                                     ),
                                 ],
                             },
@@ -57,17 +57,16 @@ TypeContext {
                     },
                     lifetime_env: LifetimeEnv {
                         nodes: [
-                            Explicit(
-                                ExplicitLifetime {
-                                    ident: Check {
-                                        _marker: PhantomData,
-                                        buf: "a",
-                                    },
-                                    longer: [],
-                                    shorter: [],
+                            Lifetime {
+                                ident: Check {
+                                    _marker: PhantomData,
+                                    buf: "a",
                                 },
-                            ),
+                                longer: [],
+                                shorter: [],
+                            },
                         ],
+                        num_lifetimes: 1,
                     },
                     param_self: None,
                     params: [
@@ -79,9 +78,9 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        TypeLifetime {
-                                            index: 0,
-                                        },
+                                        TypeLifetime(
+                                            0,
+                                        ),
                                     ),
                                 ),
                             ),
@@ -96,9 +95,9 @@ TypeContext {
                                             lifetimes: TypeLifetimes {
                                                 indices: [
                                                     NonStatic(
-                                                        TypeLifetime {
-                                                            index: 0,
-                                                        },
+                                                        TypeLifetime(
+                                                            0,
+                                                        ),
                                                     ),
                                                 ],
                                             },
@@ -138,9 +137,9 @@ TypeContext {
                     ty: Slice(
                         Str(
                             NonStatic(
-                                TypeLifetime {
-                                    index: 0,
-                                },
+                                TypeLifetime(
+                                    0,
+                                ),
                             ),
                         ),
                     ),
@@ -158,22 +157,16 @@ TypeContext {
                     },
                     lifetime_env: LifetimeEnv {
                         nodes: [
-                            Explicit(
-                                ExplicitLifetime {
-                                    ident: Check {
-                                        _marker: PhantomData,
-                                        buf: "a",
-                                    },
-                                    longer: [],
-                                    shorter: [],
+                            Lifetime {
+                                ident: Check {
+                                    _marker: PhantomData,
+                                    buf: "a",
                                 },
-                            ),
-                            Implicit(
-                                ImplicitLifetime(
-                                    1,
-                                ),
-                            ),
+                                longer: [],
+                                shorter: [],
+                            },
                         ],
+                        num_lifetimes: 2,
                     },
                     param_self: Some(
                         ParamSelf {
@@ -182,9 +175,9 @@ TypeContext {
                                     lifetimes: TypeLifetimes {
                                         indices: [
                                             NonStatic(
-                                                TypeLifetime {
-                                                    index: 0,
-                                                },
+                                                TypeLifetime(
+                                                    0,
+                                                ),
                                             ),
                                         ],
                                     },
@@ -204,9 +197,9 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        TypeLifetime {
-                                            index: 1,
-                                        },
+                                        TypeLifetime(
+                                            1,
+                                        ),
                                     ),
                                 ),
                             ),
@@ -218,9 +211,9 @@ TypeContext {
                                 Slice(
                                     Str(
                                         NonStatic(
-                                            TypeLifetime {
-                                                index: 1,
-                                            },
+                                            TypeLifetime(
+                                                1,
+                                            ),
                                         ),
                                     ),
                                 ),

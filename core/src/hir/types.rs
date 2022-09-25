@@ -69,7 +69,7 @@ impl Type {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
-            Type::Opaque(_) | Type::Slice(_) => (0, 1),
+            Type::Opaque(_) | Type::Slice(_) => (1, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
         }
     }
