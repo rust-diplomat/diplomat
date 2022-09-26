@@ -2,7 +2,11 @@
 name = "diplomat-runtime"
 description = "Common runtime utilities used by diplomat codegen"
 version = "0.3.0"
-authors = ["Shadaj Laddad <shadaj@users.noreply.github.com>", "Manish Goregaokar <manishsmail@gmail.com>"]
+authors = [
+    "Shadaj Laddad <shadaj@users.noreply.github.com>",
+    "Manish Goregaokar <manishsmail@gmail.com>",
+    "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>"
+]
 edition = "2018"
 license = "MIT/Apache-2.0"
 documentation = "https://docs.rs/diplomat_core/"
