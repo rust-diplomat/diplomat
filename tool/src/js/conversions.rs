@@ -138,6 +138,8 @@ pub fn gen_value_js_to_rust<'env>(
                 .and_then(|current| borrowed_current_to_root.get(current))
             {
                 entries.entry(named).or_default().push(param_name_buf);
+            } else if lifetime == &ast::Lifetime::Static {
+                // leak
             } else {
                 post_logic.push(format!("{param_name_buf}.free();"));
             }
