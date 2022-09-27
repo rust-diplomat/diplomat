@@ -32,7 +32,7 @@ struct Opt {
     #[clap(short = 'u', long)]
     docs_base_urls: Vec<String>,
 
-    /// The path to the lib.rs file. Defaults to src/lib.rs
+    /// The path to the lib.rs file. Defaults to `src/lib.rs`.
     #[clap(short, long, value_parser)]
     entry: Option<PathBuf>,
 
@@ -58,7 +58,7 @@ fn exit_if_path_missing(path: &Path, message: &str) {
 }
 
 fn main() -> std::io::Result<()> {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
     let is_custom_entry = opt.entry.is_some();
     let path = opt.entry.unwrap_or_else(|| PathBuf::from("src/lib.rs"));
 
