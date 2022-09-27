@@ -32,7 +32,7 @@ struct Opt {
     #[clap(short = 'u', long)]
     docs_base_urls: Vec<String>,
 
-    /// The path to the lib.rs file. Defaults to 'src/lib.rs'.
+    /// The path to the lib.rs file. Defaults to `src/lib.rs`.
     #[clap(short, long, value_parser)]
     entry: Option<PathBuf>,
 
