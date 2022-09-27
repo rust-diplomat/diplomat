@@ -1,15 +1,63 @@
-use std::collections::BTreeMap;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
+use std::fmt::Write as _;
 
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    CustomType, Enum, Ident, Method, ModSymbol, OpaqueStruct, Path, PathType, RustLink, Struct,
-    ValidityError,
+    CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType, RustLink,
+    Struct, ValidityError,
 };
 use crate::environment::*;
+
+/// Custom Diplomat attribute that can be placed on a struct definition.
+#[derive(Debug)]
+enum DiplomatStructAttribute {
+    /// The `#[diplomat::out]` attribute, used for non-opaque structs that
+    /// contain an owned opaque in the form of a `Box`.
+    Out,
+    /// The `#[diplomat::opaque]` attribute, used for marking a struct as opaque.
+    /// Note that opaque structs can be borrowed in return types, but cannot
+    /// be passed into a function behind a mutable reference.
+    Opaque,
+    /// The `#[diplomat::opaque_mut]` attribute, used for marking a struct as
+    /// opaque and mutable.
+    /// Note that mutable opaque structs can never be borrowed in return types
+    /// (even immutably!), but can be passed into a function behind a mutable
+    /// reference.
+    OpaqueMut,
+}
+
+impl DiplomatStructAttribute {
+    /// Parses a [`DiplomatStructAttribute`] from an array of [`syn::Attribute`]s.
+    /// If more than one kind is found, an error is returned containing all the
+    /// ones encountered, since all the current attributes are disjoint.
+    fn parse(attrs: &[syn::Attribute]) -> Result<Option<Self>, Vec<Self>> {
+        let mut buf = String::with_capacity(32);
+        let mut res = Ok(None);
+        for attr in attrs {
+            buf.clear();
+            write!(&mut buf, "{}", attr.path.to_token_stream()).unwrap();
+            let parsed = match buf.as_str() {
+                "diplomat :: out" => Some(Self::Out),
+                "diplomat :: opaque" => Some(Self::Opaque),
+                "diplomat :: opaque_mut" => Some(Self::OpaqueMut),
+                _ => None,
+            };
+
+            if let Some(parsed) = parsed {
+                match res {
+                    Ok(None) => res = Ok(Some(parsed)),
+                    Ok(Some(first)) => res = Err(vec![first, parsed]),
+                    Err(ref mut errors) => errors.push(parsed),
+                }
+            }
+        }
+
+        res
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Module {
@@ -93,21 +141,23 @@ impl Module {
                 }
                 Item::Struct(strct) => {
                     if analyze_types {
-                        if strct
-                            .attrs
-                            .iter()
-                            .any(|a| a.path.to_token_stream().to_string() == "diplomat :: opaque")
-                        {
-                            custom_types_by_name.insert(
-                                (&strct.ident).into(),
-                                CustomType::Opaque(OpaqueStruct::from(strct)),
-                            );
-                        } else {
-                            custom_types_by_name.insert(
-                                (&strct.ident).into(),
-                                CustomType::Struct(Struct::from(strct)),
-                            );
-                        }
+                        let custom_type = match DiplomatStructAttribute::parse(&strct.attrs[..]) {
+                            Ok(None) => CustomType::Struct(Struct::new(strct, false)),
+                            Ok(Some(DiplomatStructAttribute::Out)) => {
+                                CustomType::Struct(Struct::new(strct, true))
+                            }
+                            Ok(Some(DiplomatStructAttribute::Opaque)) => {
+                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Immutable))
+                            }
+                            Ok(Some(DiplomatStructAttribute::OpaqueMut)) => {
+                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable))
+                            }
+                            Err(errors) => {
+                                panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {:?}", errors);
+                            }
+                        };
+
+                        custom_types_by_name.insert(Ident::from(&strct.ident), custom_type);
                     }
                 }
 

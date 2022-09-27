@@ -1,8 +1,7 @@
-use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
-use super::{Ident, LifetimeEnv, Method, PathType, TypeName};
+use super::{Ident, LifetimeEnv, Method, Mutability, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
@@ -15,14 +14,9 @@ pub struct Struct {
     pub output_only: bool,
 }
 
-impl From<&syn::ItemStruct> for Struct {
+impl Struct {
     /// Extract a [`Struct`] metadata value from an AST node.
-    fn from(strct: &syn::ItemStruct) -> Struct {
-        let output_only = strct
-            .attrs
-            .iter()
-            .any(|a| a.path.to_token_stream().to_string() == "diplomat :: out");
-
+    pub fn new(strct: &syn::ItemStruct, output_only: bool) -> Self {
         let self_path_type = PathType::extract_self_type(strct);
         let fields: Vec<_> = strct
             .fields
@@ -63,16 +57,18 @@ pub struct OpaqueStruct {
     pub docs: Docs,
     pub lifetimes: LifetimeEnv,
     pub methods: Vec<Method>,
+    pub mutability: Mutability,
 }
 
-impl From<&syn::ItemStruct> for OpaqueStruct {
+impl OpaqueStruct {
     /// Extract a [`OpaqueStruct`] metadata value from an AST node.
-    fn from(strct: &syn::ItemStruct) -> OpaqueStruct {
+    pub fn new(strct: &syn::ItemStruct, mutability: Mutability) -> Self {
         OpaqueStruct {
-            name: (&strct.ident).into(),
+            name: Ident::from(&strct.ident),
             docs: Docs::from_attrs(&strct.attrs),
             lifetimes: LifetimeEnv::from_struct_item(strct, &[]),
             methods: vec![],
+            mutability,
         }
     }
 }
@@ -91,14 +87,17 @@ mod tests {
         settings.set_sort_maps(true);
 
         settings.bind(|| {
-            insta::assert_yaml_snapshot!(Struct::from(&syn::parse_quote! {
-                /// Some docs.
-                #[diplomat::rust_link(foo::Bar, Struct)]
-                struct MyLocalStruct {
-                    a: i32,
-                    b: Box<MyLocalStruct>
-                }
-            }));
+            insta::assert_yaml_snapshot!(Struct::new(
+                &syn::parse_quote! {
+                    /// Some docs.
+                    #[diplomat::rust_link(foo::Bar, Struct)]
+                    struct MyLocalStruct {
+                        a: i32,
+                        b: Box<MyLocalStruct>
+                    }
+                },
+                true
+            ));
         });
     }
 }
