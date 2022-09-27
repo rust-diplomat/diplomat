@@ -30,9 +30,9 @@ enum DiplomatStructAttribute {
 }
 
 impl DiplomatStructAttribute {
-    /// Parses a [`DiplomatAttr`] from an array of [`syn::Attribute`]s.
+    /// Parses a [`DiplomatStructAttribute`] from an array of [`syn::Attribute`]s.
     /// If more than one kind is found, an error is returned containing all the
-    /// ones encountered.
+    /// ones encountered, since all the current attributes are disjoint.
     fn parse(attrs: &[syn::Attribute]) -> Result<Option<Self>, Vec<Self>> {
         let mut buf = String::with_capacity(32);
         let mut res = Ok(None);
