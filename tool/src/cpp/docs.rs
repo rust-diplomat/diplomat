@@ -200,34 +200,51 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     writeln!(out)?;
 
-    let mut method_indented = indented(out).with_str("    ");
-    if !method.docs.is_empty() {
-        CppRst::from_markdown(
-            &method
-                .docs
-                .to_markdown(docs_url_gen, ast::MarkdownStyle::RstCompat),
-            in_path,
-            env,
-            &mut method_indented,
-        )?;
-        writeln!(method_indented)?;
+    let docs =
+        gen_docs_and_lifetime_notes_markdown(&method, docs_url_gen, ast::MarkdownStyle::RstCompat);
+    if !docs.is_empty() {
+        CppRst::from_markdown(&docs, in_path, env, &mut indented(out).with_str("    "))?;
     }
+    writeln!(out)
+}
+
+pub fn gen_docs_and_lifetime_notes_markdown(
+    method: &ast::Method,
+    docs_url_gen: &ast::DocsUrlGenerator,
+    style: ast::MarkdownStyle,
+) -> String {
+    let mut docs = if !method.docs.is_empty() {
+        method.docs.to_markdown(docs_url_gen, style).to_string()
+    } else {
+        String::new()
+    };
+
     let borrowed_params = method.borrowed_params();
-    let mut names = borrowed_params.names(&ast::Ident::THIS);
-
-    if let Some(first) = names.next() {
-        write!(method_indented, "\nLifetimes: ``{}``", first).unwrap();
-        for param in names {
-            write!(method_indented, ", ``{}``", param).unwrap();
+    if !borrowed_params.is_empty() {
+        if !docs.is_empty() {
+            writeln!(docs).unwrap();
+            writeln!(docs).unwrap();
         }
-        writeln!(
-            method_indented,
-            " must live at least as long as the output."
-        )
-        .unwrap();
-    }
+        write!(docs, "Lifetimes:").unwrap();
+        let mut return_names = borrowed_params.return_names(&ast::Ident::THIS);
+        if let Some(first) = return_names.next() {
+            write!(docs, " `{}`", first).unwrap();
+            for param in return_names {
+                write!(docs, ", `{}`", param).unwrap();
+            }
+            writeln!(docs, " must live at least as long as the output.").unwrap();
+        }
 
-    Ok(())
+        let mut static_names = borrowed_params.static_names();
+        if let Some(first) = static_names.next() {
+            write!(docs, " `{}`", first).unwrap();
+            for param in static_names {
+                write!(docs, ", `{}`", param).unwrap();
+            }
+            writeln!(docs, " must live for the duration of the program.").unwrap();
+        }
+    }
+    docs
 }
 
 pub fn gen_field_docs<W: fmt::Write>(

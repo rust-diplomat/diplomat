@@ -140,21 +140,28 @@ impl Method {
             let held_params = self
                 .params
                 .iter()
-                .filter(|param| {
+                .filter_map(|param| {
+                    let mut lt_kind = LifetimeKind::ReturnValue;
                     param
                         .ty
                         .visit_lifetimes(&mut |lt, _| {
                             // Thanks to `TypeName::visit_lifetimes`, we can
                             // traverse the lifetimes without allocations and
                             // short-circuit if we find a match.
-                            if let Lifetime::Named(name) = lt {
-                                if lifetimes.contains(&name) {
+                            match lt {
+                                Lifetime::Named(name) if lifetimes.contains(&name) => {
                                     return ControlFlow::Break(());
                                 }
-                            }
+                                Lifetime::Static => {
+                                    lt_kind = LifetimeKind::Static;
+                                    return ControlFlow::Break(());
+                                }
+                                _ => {}
+                            };
                             ControlFlow::Continue(())
                         })
                         .is_break()
+                        .then_some((param, lt_kind))
                 })
                 .collect();
 
@@ -283,19 +290,39 @@ impl Param {
     }
 }
 
-/// Parameters in a method that might be borrowed in the return type,
-/// and must live _at least_ as long as the returned object.
-#[derive(Default)]
-pub struct BorrowedParams<'a>(pub Option<&'a SelfParam>, pub Vec<&'a Param>);
+/// The type of lifetime.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum LifetimeKind {
+    /// Param must live at least as long as the returned object.
+    ReturnValue,
+    /// Param must live for the duration of the program.
+    Static,
+}
+#[derive(Default, Debug)]
+/// Parameters in a method that might be borrowed in the return type.
+pub struct BorrowedParams<'a>(
+    pub Option<&'a SelfParam>,
+    pub Vec<(&'a Param, LifetimeKind)>,
+);
 
 impl BorrowedParams<'_> {
-    /// Returns an [`Iterator`] through the names of the borrowed parameters,
-    /// accepting an `Ident` that the `self` param will be called if present.
-    pub fn names<'a>(&'a self, self_name: &'a Ident) -> impl Iterator<Item = &'a Ident> {
-        self.0
+    /// Returns an [`Iterator`] through the names of the parameters that are borrowed
+    /// for the life time of the return value, accepting an `Ident` that the `self`
+    /// param will be called if present.
+    pub fn return_names<'a>(&'a self, self_name: &'a Ident) -> impl Iterator<Item = &'a Ident> {
+        self.0.iter().map(move |_| self_name).chain(
+            self.1.iter().filter_map(|&(param, ltk)| {
+                (ltk == LifetimeKind::ReturnValue).then_some(&param.name)
+            }),
+        )
+    }
+
+    /// Returns an [`Iterator`] through the names of the parameters that are borrowed for a
+    /// static lifetime.
+    pub fn static_names<'a>(&'a self) -> impl Iterator<Item = &'a Ident> {
+        self.1
             .iter()
-            .map(move |_| self_name)
-            .chain(self.1.iter().map(|param| &param.name))
+            .filter_map(|&(param, ltk)| (ltk == LifetimeKind::Static).then_some(&param.name))
     }
 
     /// Returns `true` if a provided param name is included in the borrowed params,
@@ -304,12 +331,12 @@ impl BorrowedParams<'_> {
     /// This method doesn't check the `self` parameter. Use
     /// [`BorrowedParams::borrows_self`] instead.
     pub fn contains(&self, param_name: &Ident) -> bool {
-        self.1.iter().any(|param| &param.name == param_name)
+        self.1.iter().any(|(param, _)| &param.name == param_name)
     }
 
     /// Returns `true` if there are no borrowed parameters, otherwise `false`.
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.0.is_none() && self.1.is_empty()
     }
 
     /// Returns `true` if the `self` param is borrowed, otherwise `false`.
@@ -393,7 +420,7 @@ mod tests {
     }
 
     macro_rules! assert_borrowed_params {
-        ([$($param:ident),*] => $($tokens:tt)* ) => {{
+        ([$($return_param:ident),*] $(, [$($static_param:ident),*])? => $($tokens:tt)* ) => {{
             let method = Method::from_syn(
                 &syn::parse_quote! { $($tokens)* },
                 PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
@@ -403,12 +430,15 @@ mod tests {
             let borrowed_params = method.borrowed_params();
             // The ident parser in syn doesn't allow `self`, so we use "this" as a placeholder
             // and then change it.
-            let mut actual: Vec<&str> = borrowed_params.names(&Ident::THIS).map(|ident| ident.as_str()).collect();
+            let mut actual_return: Vec<&str> = borrowed_params.return_names(&Ident::THIS).map(|ident| ident.as_str()).collect();
             if borrowed_params.0.is_some() {
-                actual[0] = "self";
+                actual_return[0] = "self";
             }
-            let expected: &[&str] = &[$(stringify!($param)),*];
-            assert_eq!(actual, expected);
+            let expected_return: &[&str] = &[$(stringify!($return_param)),*];
+            assert_eq!(actual_return, expected_return);
+            let actual_static: Vec<&str> = borrowed_params.static_names().map(|ident| ident.as_str()).collect();
+            let expected_static: &[&str] = &[$($(stringify!($static_param)),*)?];
+            assert_eq!(actual_static, expected_static);
         }};
     }
 
@@ -515,8 +545,7 @@ mod tests {
             }
         }
 
-        // Test that being dependent on 'static doesn't make you dependent on 'static params.
-        assert_borrowed_params! { [self, bar] =>
+        assert_borrowed_params! { [self, bar], [baz] =>
             #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
             fn foo<'a, 'b>(&'a self, bar: Bar<'b>, baz: &'static str) -> Foo<'a, 'b, 'static> {
                 unimplemented!()
