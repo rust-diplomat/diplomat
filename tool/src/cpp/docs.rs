@@ -201,7 +201,7 @@ pub fn gen_method_docs<W: fmt::Write>(
     writeln!(out)?;
 
     let docs =
-        gen_docs_and_lifetime_notes_markdown(&method, docs_url_gen, ast::MarkdownStyle::RstCompat);
+        gen_docs_and_lifetime_notes_markdown(method, docs_url_gen, ast::MarkdownStyle::RstCompat);
     if !docs.is_empty() {
         CppRst::from_markdown(&docs, in_path, env, &mut indented(out).with_str("    "))?;
     }
@@ -214,7 +214,7 @@ pub fn gen_docs_and_lifetime_notes_markdown(
     style: ast::MarkdownStyle,
 ) -> String {
     let mut docs = if !method.docs.is_empty() {
-        method.docs.to_markdown(docs_url_gen, style).to_string()
+        method.docs.to_markdown(docs_url_gen, style)
     } else {
         String::new()
     };

@@ -291,7 +291,7 @@ impl Param {
 }
 
 /// The type of lifetime.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum LifetimeKind {
     /// Param must live at least as long as the returned object.
     ReturnValue,
@@ -319,7 +319,7 @@ impl BorrowedParams<'_> {
 
     /// Returns an [`Iterator`] through the names of the parameters that are borrowed for a
     /// static lifetime.
-    pub fn static_names<'a>(&'a self) -> impl Iterator<Item = &'a Ident> {
+    pub fn static_names(&self) -> impl Iterator<Item = &'_ Ident> {
         self.1
             .iter()
             .filter_map(|&(param, ltk)| (ltk == LifetimeKind::Static).then_some(&param.name))
