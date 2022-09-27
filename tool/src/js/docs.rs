@@ -168,7 +168,10 @@ pub fn gen_method_docs<W: fmt::Write>(
             for name in static_borrows.iter().skip(1) {
                 write!(method_indented, ", {name}")?;
             }
-            writeln!(method_indented, " will not be freed as they are required to live for the duration of the program.")?;
+            writeln!(
+                method_indented,
+                " will not be freed as they are required to live for the duration of the program."
+            )?;
         }
         writeln!(method_indented)?;
     }
