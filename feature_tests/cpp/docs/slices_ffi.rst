@@ -5,16 +5,23 @@
 
     .. cpp:function:: static Float64Vec new_(const diplomat::span<double> v)
 
+
     .. cpp:function:: void fill_slice(diplomat::span<double> v) const
 
+
     .. cpp:function:: void set_value(const diplomat::span<double> new_slice)
+
 
 .. cpp:class:: MyString
 
     .. cpp:function:: static MyString new_(const std::string_view v)
 
+
     .. cpp:function:: void set_str(const std::string_view new_str)
+
 
     .. cpp:function:: template<typename W> void get_str_to_writeable(W& writeable) const
 
+
     .. cpp:function:: std::string get_str() const
+

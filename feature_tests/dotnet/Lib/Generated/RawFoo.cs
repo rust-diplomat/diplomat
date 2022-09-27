@@ -22,6 +22,9 @@ public partial struct Foo
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_get_bar", ExactSpelling = true)]
     public static unsafe extern Bar* GetBar(Foo* self);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_new_static", ExactSpelling = true)]
+    public static unsafe extern Foo* NewStatic(byte* x, nuint xSz);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Foo* self);
 }

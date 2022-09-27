@@ -9,6 +9,10 @@
 
     .. js:function:: get_bar()
 
+    .. js:staticfunction:: new_static(x)
+        - Warning: This method leaks memory. The parameter `x` will not be freed as it is required to live for the duration of the program.
+
+
 .. js:class:: One
 
     .. js:staticfunction:: transitivity(hold, nohold)

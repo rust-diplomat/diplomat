@@ -11,4 +11,8 @@ export class Foo {
   /**
    */
   get_bar(): Bar;
+
+  /**
+   */
+  static new_static(x: string): Foo;
 }

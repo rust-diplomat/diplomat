@@ -24,16 +24,60 @@ struct OneDeleter {
 };
 class One {
  public:
+
+  /**
+   * Lifetimes: `hold` must live at least as long as the output.
+   */
   static One transitivity(const One& hold, const One& nohold);
+
+  /**
+   * Lifetimes: `hold` must live at least as long as the output.
+   */
   static One cycle(const Two& hold, const One& nohold);
+
+  /**
+   * Lifetimes: `a`, `b`, `c`, `d` must live at least as long as the output.
+   */
   static One many_dependents(const One& a, const One& b, const Two& c, const Two& d, const Two& nohold);
+
+  /**
+   * Lifetimes: `hold` must live at least as long as the output.
+   */
   static One return_outlives_param(const Two& hold, const One& nohold);
+
+  /**
+   * Lifetimes: `top`, `left`, `right`, `bottom` must live at least as long as the output.
+   */
   static One diamond_top(const One& top, const One& left, const One& right, const One& bottom);
+
+  /**
+   * Lifetimes: `left`, `bottom` must live at least as long as the output.
+   */
   static One diamond_left(const One& top, const One& left, const One& right, const One& bottom);
+
+  /**
+   * Lifetimes: `right`, `bottom` must live at least as long as the output.
+   */
   static One diamond_right(const One& top, const One& left, const One& right, const One& bottom);
+
+  /**
+   * Lifetimes: `bottom` must live at least as long as the output.
+   */
   static One diamond_bottom(const One& top, const One& left, const One& right, const One& bottom);
+
+  /**
+   * Lifetimes: `a`, `b`, `c`, `d` must live at least as long as the output.
+   */
   static One diamond_and_nested_types(const One& a, const One& b, const One& c, const One& d, const One& nohold);
+
+  /**
+   * Lifetimes: `explicit_hold`, `implicit_hold` must live at least as long as the output.
+   */
   static One implicit_bounds(const One& explicit_hold, const One& implicit_hold, const One& nohold);
+
+  /**
+   * Lifetimes: `explicit`, `implicit_1`, `implicit_2` must live at least as long as the output.
+   */
   static One implicit_bounds_deep(const One& explicit, const One& implicit_1, const One& implicit_2, const One& nohold);
   inline const capi::One* AsFFI() const { return this->inner.get(); }
   inline capi::One* AsFFIMut() { return this->inner.get(); }

@@ -24,8 +24,21 @@ struct FooDeleter {
 };
 class Foo {
  public:
+
+  /**
+   * Lifetimes: `x` must live at least as long as the output.
+   */
   static Foo new_(const std::string_view x);
+
+  /**
+   * Lifetimes: `this` must live at least as long as the output.
+   */
   Bar get_bar() const;
+
+  /**
+   * Lifetimes: `x` must live for the duration of the program.
+   */
+  static Foo new_static(const std::string_view x);
   inline const capi::Foo* AsFFI() const { return this->inner.get(); }
   inline capi::Foo* AsFFIMut() { return this->inner.get(); }
   inline Foo(capi::Foo* i) : inner(i) {}
@@ -43,5 +56,8 @@ inline Foo Foo::new_(const std::string_view x) {
 }
 inline Bar Foo::get_bar() const {
   return Bar(capi::Foo_get_bar(this->inner.get()));
+}
+inline Foo Foo::new_static(const std::string_view x) {
+  return Foo(capi::Foo_new_static(x.data(), x.size()));
 }
 #endif

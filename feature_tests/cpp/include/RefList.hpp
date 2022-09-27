@@ -23,6 +23,10 @@ struct RefListDeleter {
 };
 class RefList {
  public:
+
+  /**
+   * Lifetimes: `data` must live at least as long as the output.
+   */
   static RefList node(const int32_t& data);
   inline const capi::RefList* AsFFI() const { return this->inner.get(); }
   inline capi::RefList* AsFFIMut() { return this->inner.get(); }

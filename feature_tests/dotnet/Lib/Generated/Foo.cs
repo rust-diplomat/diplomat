@@ -62,6 +62,23 @@ public partial class Foo: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>Foo</c> allocated on Rust side.
+    /// </returns>
+    public static Foo NewStatic(string x)
+    {
+        unsafe
+        {
+            byte[] xBuf = DiplomatUtils.StringToUtf8(x);
+            nuint xBufLength = (nuint)xBuf.Length;
+            fixed (byte* xBufPtr = xBuf)
+            {
+                Raw.Foo* retVal = Raw.Foo.NewStatic(xBufPtr, xBufLength);
+                return new Foo(retVal);
+            }
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

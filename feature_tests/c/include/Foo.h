@@ -23,6 +23,8 @@ extern "C" {
 Foo* Foo_new(const char* x_data, size_t x_len);
 
 Bar* Foo_get_bar(const Foo* self);
+
+Foo* Foo_new_static(const char* x_data, size_t x_len);
 void Foo_destroy(Foo* self);
 
 #ifdef __cplusplus
