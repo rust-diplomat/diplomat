@@ -298,6 +298,7 @@ pub enum LifetimeKind {
     /// Param must live for the duration of the program.
     Static,
 }
+
 #[derive(Default, Debug)]
 /// Parameters in a method that might be borrowed in the return type.
 pub struct BorrowedParams<'a>(
@@ -307,7 +308,7 @@ pub struct BorrowedParams<'a>(
 
 impl BorrowedParams<'_> {
     /// Returns an [`Iterator`] through the names of the parameters that are borrowed
-    /// for the life time of the return value, accepting an `Ident` that the `self`
+    /// for the lifetime of the return value, accepting an `Ident` that the `self`
     /// param will be called if present.
     pub fn return_names<'a>(&'a self, self_name: &'a Ident) -> impl Iterator<Item = &'a Ident> {
         self.0.iter().map(move |_| self_name).chain(
