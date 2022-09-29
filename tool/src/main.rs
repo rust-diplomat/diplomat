@@ -41,6 +41,9 @@ struct Opt {
     /// different libraries.
     #[clap(short, long, value_parser)]
     library_config: Option<PathBuf>,
+
+    #[clap(short = 's', long)]
+    silent: bool,
 }
 
 /// Provide nice error messages if a folder doesn't exist.
@@ -133,27 +136,33 @@ fn main() -> std::io::Result<()> {
         o => panic!("Unknown target: {}", o),
     }
 
-    println!(
-        "{}",
-        format!("Generating {} bindings:", opt.target_language)
-            .green()
-            .bold()
-    );
+    if !opt.silent {
+        println!(
+            "{}",
+            format!("Generating {} bindings:", opt.target_language)
+                .green()
+                .bold()
+        );
+    }
 
     for (subpath, text) in out_texts {
         let out_path = opt.out_folder.join(subpath);
         let mut out_file = File::create(&out_path)?;
         out_file.write_all(text.as_bytes())?;
-        println!("{}", format!("  {}", out_path.display()).dimmed());
+        if !opt.silent {
+            println!("{}", format!("  {}", out_path.display()).dimmed());
+        }
     }
 
     if let Some(docs) = opt.docs {
-        println!(
-            "{}",
-            format!("Generating {} docs:", opt.target_language)
-                .green()
-                .bold()
-        );
+        if !opt.silent {
+            println!(
+                "{}",
+                format!("Generating {} docs:", opt.target_language)
+                    .green()
+                    .bold()
+            );
+        }
 
         let mut docs_out_texts: HashMap<String, String> = HashMap::new();
 
@@ -175,7 +184,9 @@ fn main() -> std::io::Result<()> {
             let out_path = docs.join(subpath);
             let mut out_file = File::create(&out_path)?;
             out_file.write_all(text.as_bytes())?;
-            println!("{}", format!("  {}", out_path.display()).dimmed());
+            if !opt.silent {
+                println!("{}", format!("  {}", out_path.display()).dimmed());
+            }
         }
     }
 
