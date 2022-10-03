@@ -27,6 +27,8 @@ export class Foo {
 
   static new_static(arg_x) {
     const buf_arg_x = diplomatRuntime.DiplomatBuf.str(wasm, arg_x);
-    return new Foo(wasm.Foo_new_static(buf_arg_x.ptr, buf_arg_x.size), true, []);
+    const diplomat_out = new Foo(wasm.Foo_new_static(buf_arg_x.ptr, buf_arg_x.size), true, []);
+    buf_arg_x.leak();
+    return diplomat_out;
   }
 }

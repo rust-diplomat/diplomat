@@ -90,6 +90,15 @@ export class DiplomatBuf {
 
     DiplomatBuf_finalizer.register(this, { wasm, ptr, size, align }, this);
   }
+
+  leak = () => {
+    const successfully_unregistered = DiplomatBuf_finalizer.unregister(this);
+      if (successfully_unregistered) {
+        // leak
+      } else {
+        console.error(`Failed to unregister DiplomatBuf at ${ptr}, this is a bug. Either it was never registered (leak), it was already unregistered (failed attempt to double free), or the unregister token was unrecognized (fallback to GC).`);
+      }
+  }
 }
 
 const DiplomatBuf_finalizer = new FinalizationRegistry(({ wasm, ptr, size, align }) => {
