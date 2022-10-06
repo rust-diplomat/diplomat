@@ -64,6 +64,7 @@ export class DiplomatBuf {
   static str = (wasm, string) => {
     var utf8_len = 0;
     for (const codepoint of string) {
+      let codepoint = codepoint.codePointAt(0);
       if (codepoint < 0x80) {
         utf8_len += 1
       } else if (codepoint < 0x800) {
