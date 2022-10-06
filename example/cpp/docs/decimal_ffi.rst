@@ -37,6 +37,7 @@
 
     .. cpp:function:: static ICU4XFixedDecimalFormatOptions default_()
 
+
 .. cpp:struct:: ICU4XFixedDecimalFormatResult
 
     .. cpp:member:: std::optional<ICU4XFixedDecimalFormat> fdf

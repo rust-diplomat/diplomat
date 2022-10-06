@@ -15,6 +15,10 @@ pub mod ffi {
         pub fn get_bar<'b>(&'b self) -> Box<Bar<'b, 'a>> {
             Box::new(Bar(self))
         }
+
+        pub fn new_static(x: &'static str) -> Box<Self> {
+            Box::new(Foo(x))
+        }
     }
 
     // FIXME(#191): This test breaks the C++ codegen

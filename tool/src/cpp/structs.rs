@@ -202,9 +202,11 @@ fn gen_method<W: fmt::Write>(
     if is_header {
         gen_comment_block(
             out,
-            &method
-                .docs
-                .to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
+            &super::docs::gen_docs_and_lifetime_notes_markdown(
+                method,
+                docs_url_gen,
+                ast::MarkdownStyle::Normal,
+            ),
         )?;
     }
     let params_to_gen = gen_method_interface(
@@ -591,6 +593,25 @@ mod tests {
                     #[diplomat::rust_link(foo::Bar::get, FnInStruct)]
                     pub fn get_x(&self) -> u8 {
                         x
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_lifetimes() {
+        test_file! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct Foo<'a>;
+
+                impl Foo {
+                    pub fn foo<'a>(a: &'a [u8]) -> Foo<'a> {
+                        todo!()
+                    }
+                    pub fn bar<'a>(a: &'static [u8]) -> u32 {
+                        todo!()
                     }
                 }
             }

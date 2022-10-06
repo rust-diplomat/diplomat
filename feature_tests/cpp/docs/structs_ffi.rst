@@ -33,9 +33,11 @@
 
     .. cpp:function:: static MyStruct new_()
 
+
 .. cpp:class:: Opaque
 
     .. cpp:function:: static Opaque new_()
+
 
     .. cpp:function:: void assert_struct(MyStruct s) const
 
@@ -48,4 +50,6 @@
 
     .. cpp:function:: static size_t returns_usize()
 
+
     .. cpp:function:: static ImportedStruct returns_imported()
+

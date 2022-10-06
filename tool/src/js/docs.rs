@@ -131,8 +131,8 @@ pub fn gen_method_docs<W: fmt::Write>(
         )?;
     }
 
+    let mut method_indented = indented(out).with_str("    ");
     if !method.docs.is_empty() {
-        let mut method_indented = indented(out).with_str("    ");
         JsRst::from_markdown(
             &method
                 .docs
@@ -149,12 +149,31 @@ pub fn gen_method_docs<W: fmt::Write>(
         .iter()
         .filter(|p| matches!(p.ty, ast::TypeName::PrimitiveSlice(..)))
     {
-        writeln!(out)?;
         writeln!(
-            out,
-            "    - Note: ``{}`` should be an ArrayBuffer or TypedArray corresponding to the slice type expected by Rust.",
+            method_indented,
+            "- Note: ``{}`` should be an ArrayBuffer or TypedArray corresponding to the slice type expected by Rust.",
             p.name
         )?;
+        writeln!(method_indented)?;
+    }
+
+    let static_borrows = method.borrowed_params();
+    let static_borrows = static_borrows.static_names().collect::<Vec<_>>();
+    if !static_borrows.is_empty() {
+        write!(method_indented, "- Warning: This method leaks memory.")?;
+        if static_borrows.len() == 1 {
+            writeln!(method_indented, " The parameter `{}` will not be freed as it is required to live for the duration of the program.", static_borrows[0])?;
+        } else {
+            write!(method_indented, " The parameters `{}`", static_borrows[0])?;
+            for name in static_borrows.iter().skip(1) {
+                write!(method_indented, ", {name}")?;
+            }
+            writeln!(
+                method_indented,
+                " will not be freed as they are required to live for the duration of the program."
+            )?;
+        }
+        writeln!(method_indented)?;
     }
 
     Ok(())
