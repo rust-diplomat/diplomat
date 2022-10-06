@@ -7,17 +7,19 @@ extern "C" {
 
 /// Throw an exception.
 pub fn console_trace(msg: &str) {
-    trace_js(msg.as_ptr(), msg.len());
+    unsafe {
+        trace_js(msg.as_ptr(), msg.len());
+    }
 }
 
 /// Write a message to `console.warn`.
 pub fn console_warn(msg: &str) {
-    warn_js(msg.as_ptr(), msg.len())
+    unsafe { warn_js(msg.as_ptr(), msg.len()) }
 }
 
 /// Write a message to `console.log`.
 pub fn console_log(msg: &str) {
-    log_js(msg.as_ptr(), msg.len())
+    unsafe { log_js(msg.as_ptr(), msg.len()) }
 }
 
 #[no_mangle]
