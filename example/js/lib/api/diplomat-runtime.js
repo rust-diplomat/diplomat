@@ -62,19 +62,34 @@ export function enumDiscriminant(wasm, ptr) {
 // or we can manually free the WASM memory if they don't.
 export class DiplomatBuf {
   static str = (wasm, string) => {
-    const bytes = (new TextEncoder()).encode(string);
-    return new DiplomatBuf(wasm, bytes.length, 1, buf => buf.set(bytes, 0));
-  }
+    var utf8_len = 0;
+    for (const codepoint_string of string) {
+      let codepoint = codepoint_string.codePointAt(0);
+      if (codepoint < 0x80) {
+        utf8_len += 1
+      } else if (codepoint < 0x800) {
+        utf8_len += 2
+      } else if (codepoint < 0x10000) {
+        utf8_len += 3
+      } else {
+        utf8_len += 4
+      }
+    }
+    return new DiplomatBuf(wasm, utf8_len, 1, buf => {
+      const result = (new TextEncoder()).encodeInto(string, buf);
+      console.assert(string.length == result.read && utf8_len == result.written, "UTF-8 write error");
+  })
+}
 
   static slice = (wasm, slice, align) => {
-    const bytes = new Uint8Array(slice);
-    return new DiplomatBuf(wasm, bytes.length, align, buf => buf.set(bytes, 0));
+    // If the slice is not a Uint8Array, we have to convert to one, as that's the only
+    // thing we can write into the wasm buffer.
+    const bytes = slice.constructor.name == "Uint8Array" ? slice : new Uint8Array(slice);
+    return new DiplomatBuf(wasm, bytes.length, align, buf => buf.set(bytes));
   }
 
   constructor(wasm, size, align, encodeCallback) {
     const ptr = wasm.diplomat_alloc(size, align);
-    // Do the writing with a callback here as a setup for when we
-    // resolve #174, which addresses removing the intermediate `Uint8Array`.
     encodeCallback(new Uint8Array(wasm.memory.buffer, ptr, size));
 
     this.ptr = ptr;
