@@ -161,7 +161,7 @@ impl Method {
                             ControlFlow::Continue(())
                         })
                         .is_break()
-                        .then_some((param, lt_kind))
+                        .then(|| (param, lt_kind))
                 })
                 .collect();
 
@@ -313,7 +313,7 @@ impl BorrowedParams<'_> {
     pub fn return_names<'a>(&'a self, self_name: &'a Ident) -> impl Iterator<Item = &'a Ident> {
         self.0.iter().map(move |_| self_name).chain(
             self.1.iter().filter_map(|&(param, ltk)| {
-                (ltk == LifetimeKind::ReturnValue).then_some(&param.name)
+                (ltk == LifetimeKind::ReturnValue).then(|| &param.name)
             }),
         )
     }
@@ -323,7 +323,7 @@ impl BorrowedParams<'_> {
     pub fn static_names(&self) -> impl Iterator<Item = &'_ Ident> {
         self.1
             .iter()
-            .filter_map(|&(param, ltk)| (ltk == LifetimeKind::Static).then_some(&param.name))
+            .filter_map(|&(param, ltk)| (ltk == LifetimeKind::Static).then(|| &param.name))
     }
 
     /// Returns `true` if a provided param name is included in the borrowed params,
