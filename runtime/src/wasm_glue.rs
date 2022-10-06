@@ -7,23 +7,23 @@ extern "C" {
 
 /// Throw an exception.
 pub fn console_trace(msg: &str) {
-    trace_js(str.as_ptr(), str.len());
+    trace_js(msg.as_ptr(), msg.len());
 }
 
 /// Write a message to `console.warn`.
 pub fn console_warn(msg: &str) {
-    warn_js(str.as_ptr(), str.len())
+    warn_js(msg.as_ptr(), msg.len())
 }
 
 /// Write a message to `console.log`.
 pub fn console_log(msg: &str) {
-    log_js(str.as_ptr(), str.len())
+    log_js(msg.as_ptr(), msg.len())
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn diplomat_init() {
     #[cfg(debug_assertions)]
-    /// Sets a custom panic hook using `trace_js`, which by default crates a JS error
+    // Sets a custom panic hook using `trace_js`, which by default crates a JS error
     std::panic::set_hook(Box::new(|info| {
         let file = info.location().unwrap().file();
         let line = info.location().unwrap().line();
