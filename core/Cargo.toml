@@ -1,7 +1,7 @@
 [package]
 name = "diplomat_core"
 description = "Shared utilities between Diplomat macros and code generation"
-version = "0.4.1"
+version = "0.4.2"
 authors = [
     "Shadaj Laddad <shadaj@users.noreply.github.com>",
     "Manish Goregaokar <manishsmail@gmail.com>",
@@ -24,7 +24,6 @@ proc-macro2 = "1.0.27"
 lazy_static = "1.4.0"
 serde = { version = "1.0", features = ["derive"] }
 displaydoc = { version = "0.2", optional = true }
-rustdoc-types = "0.11"
 smallvec = "1.9.0"
 strck_ident = { version = "0.1", features = ["rust"] }
 

@@ -295,7 +295,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat_core"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "displaydoc",
  "impls",
@@ -303,7 +303,6 @@ dependencies = [
  "lazy_static",
  "proc-macro2",
  "quote",
- "rustdoc-types",
  "serde",
  "smallvec",
  "strck_ident",
@@ -1032,15 +1031,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
 dependencies = [
  "semver",
-]
-
-[[package]]
-name = "rustdoc-types"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa792ee5551052d6e577cedadec6f7eae744b26db967e8e9fb4c1b604a608c7f"
-dependencies = [
- "serde",
 ]
 
 [[package]]
