@@ -295,10 +295,9 @@ dependencies = [
 
 [[package]]
 name = "diplomat_core"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "displaydoc",
- "impls",
  "insta",
  "lazy_static",
  "proc-macro2",
@@ -668,12 +667,6 @@ dependencies = [
  "walkdir",
  "winapi-util",
 ]
-
-[[package]]
-name = "impls"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a46645bbd70538861a90d0f26c31537cdf1e44aae99a794fb75a664b70951bc"
 
 [[package]]
 name = "indenter"
