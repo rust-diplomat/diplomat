@@ -46,5 +46,5 @@ export class One {
 
   /**
    */
-  static implicit_bounds_deep(explicit: One, implicit_1: One, implicit_2: One, nohold: One): One;
+  static implicit_bounds_deep(explicit_: One, implicit_1: One, implicit_2: One, nohold: One): One;
 }
