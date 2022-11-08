@@ -61,11 +61,11 @@ fn gen_struct_header<'a>(
     env: &Env,
 ) -> Result<(), fmt::Error> {
     let out = outs
-        .entry(format!("{}.h", typ.name()))
+        .entry(format!("{}_type.h", typ.name()))
         .or_insert_with(String::new);
 
-    writeln!(out, "#ifndef {}_H", typ.name())?;
-    writeln!(out, "#define {}_H", typ.name())?;
+    writeln!(out, "#ifndef {}_type_H", typ.name())?;
+    writeln!(out, "#define {}_type_H", typ.name())?;
     writeln!(out, "#include <stdio.h>")?;
     writeln!(out, "#include <stdint.h>")?;
     writeln!(out, "#include <stddef.h>")?;
@@ -74,7 +74,7 @@ fn gen_struct_header<'a>(
     writeln!(out)?;
 
     let mut seen_includes = HashSet::new();
-    seen_includes.insert(format!("#include \"{}.h\"", typ.name()));
+    seen_includes.insert(format!("#include \"{}_type.h\"", typ.name()));
     seen_includes.insert(format!("typedef struct {} {};", typ.name(), typ.name()));
 
     if let ast::CustomType::Struct(strct) = typ {
@@ -86,7 +86,7 @@ fn gen_struct_header<'a>(
 
     writeln!(out, "#ifdef __cplusplus")?;
     writeln!(out, "namespace capi {{")?;
-    writeln!(out, "#endif")?;
+    writeln!(out, "#endif // __cplusplus")?;
 
     match typ {
         ast::CustomType::Opaque(_) | ast::CustomType::Struct(_) => {
@@ -111,10 +111,25 @@ fn gen_struct_header<'a>(
 
     writeln!(out, "#ifdef __cplusplus")?;
     writeln!(out, "}} // namespace capi")?;
-    writeln!(out, "#endif")?;
+    writeln!(out, "#endif // __cplusplus")?;
+    writeln!(out, "#endif // {}_type_H", typ.name())?;
+
+    // header file with methods
+    let out = outs
+        .entry(format!("{}.h", typ.name()))
+        .or_insert_with(String::new);
+    writeln!(out, "#ifndef {}_H", typ.name())?;
+    writeln!(out, "#define {}_H", typ.name())?;
+    writeln!(out, "#include <stdio.h>")?;
+    writeln!(out, "#include <stdint.h>")?;
+    writeln!(out, "#include <stddef.h>")?;
+    writeln!(out, "#include <stdbool.h>")?;
+    writeln!(out, "#include \"diplomat_runtime.h\"")?;
+    writeln!(out, "#include \"{}_type.h\"", typ.name())?;
 
     let mut seen_includes = HashSet::new();
-    seen_includes.insert(format!("#include \"{}.h\"", typ.name()));
+    seen_includes.insert(format!("#include \"{}_type.h\"", typ.name()));
+    seen_includes.insert(format!("#include \"{}\"", typ.name()));
 
     if let ast::CustomType::Struct(strct) = typ {
         for (_, typ, _) in &strct.fields {
@@ -122,6 +137,7 @@ fn gen_struct_header<'a>(
             collect_results(typ, in_path, env, seen_results, all_results);
         }
     }
+
     for method in typ.methods() {
         for param in &method.params {
             gen_includes(
@@ -180,8 +196,8 @@ fn gen_struct_header<'a>(
     writeln!(out, "#ifdef __cplusplus")?;
     writeln!(out, "}} // extern \"C\"")?;
     writeln!(out, "}} // namespace capi")?;
-    writeln!(out, "#endif")?;
-    writeln!(out, "#endif")?;
+    writeln!(out, "#endif // __cplusplus")?;
+    writeln!(out, "#endif // {}_H", typ.name())?;
     Ok(())
 }
 
@@ -267,7 +283,7 @@ pub fn gen_includes<W: fmt::Write>(
                             seen_includes.insert(decl);
                         }
                     } else {
-                        let include = format!("#include \"{}.h\"", custom_typ.name());
+                        let include = format!("#include \"{}_type.h\"", custom_typ.name());
                         if !seen_includes.contains(&include) {
                             writeln!(out, "{}", include)?;
                             seen_includes.insert(include);
@@ -276,7 +292,7 @@ pub fn gen_includes<W: fmt::Write>(
                 }
 
                 (ast::CustomType::Struct(_), false) | (ast::CustomType::Enum(_), _) => {
-                    let include = format!("#include \"{}.h\"", custom_typ.name());
+                    let include = format!("#include \"{}_type.h\"", custom_typ.name());
                     if !seen_includes.contains(&include) {
                         writeln!(out, "{}", include)?;
                         seen_includes.insert(include);
