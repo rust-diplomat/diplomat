@@ -5,15 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct ResultOpaque ResultOpaque;
-#ifdef __cplusplus
-} // namespace capi
-#endif
+#include "ResultOpaque_type.h"
 #include "diplomat_result_box_ResultOpaque_ErrorEnum.h"
 #include "diplomat_result_box_ResultOpaque_void.h"
 #include "diplomat_result_box_ResultOpaque_ErrorStruct.h"
@@ -44,5 +36,5 @@ void ResultOpaque_destroy(ResultOpaque* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // ResultOpaque_H

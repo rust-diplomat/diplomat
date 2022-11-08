@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#include "ErrorEnum.h"
+#include "ErrorEnum_type.h"
 typedef struct ResultOpaque ResultOpaque;
 #ifdef __cplusplus
 namespace capi {

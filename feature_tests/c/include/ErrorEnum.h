@@ -5,18 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef enum ErrorEnum {
-  ErrorEnum_Foo = 0,
-  ErrorEnum_Bar = 1,
-} ErrorEnum;
-#ifdef __cplusplus
-} // namespace capi
-#endif
+#include "ErrorEnum_type.h"
 #include "diplomat_result_ErrorEnum_void.h"
 #ifdef __cplusplus
 namespace capi {
@@ -29,5 +18,5 @@ void ErrorEnum_destroy(ErrorEnum* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // ErrorEnum_H

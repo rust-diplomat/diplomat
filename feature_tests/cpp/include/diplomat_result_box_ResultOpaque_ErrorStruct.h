@@ -7,7 +7,7 @@
 #include "diplomat_runtime.h"
 
 typedef struct ResultOpaque ResultOpaque;
-#include "ErrorStruct.h"
+#include "ErrorStruct_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {

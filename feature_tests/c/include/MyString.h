@@ -5,15 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct MyString MyString;
-#ifdef __cplusplus
-} // namespace capi
-#endif
+#include "MyString_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -29,5 +21,5 @@ void MyString_destroy(MyString* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // MyString_H

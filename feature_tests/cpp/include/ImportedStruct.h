@@ -5,20 +5,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#include "UnimportedEnum.h"
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct ImportedStruct {
-    UnimportedEnum foo;
-    uint8_t count;
-} ImportedStruct;
-#ifdef __cplusplus
-} // namespace capi
-#endif
-#include "UnimportedEnum.h"
+#include "ImportedStruct_type.h"
+#include "UnimportedEnum_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -29,5 +17,5 @@ void ImportedStruct_destroy(ImportedStruct* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // ImportedStruct_H

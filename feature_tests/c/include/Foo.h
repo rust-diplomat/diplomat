@@ -5,16 +5,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct Foo Foo;
-#ifdef __cplusplus
-} // namespace capi
-#endif
-#include "Bar.h"
+#include "Foo_type.h"
+#include "Bar_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -30,5 +22,5 @@ void Foo_destroy(Foo* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // Foo_H

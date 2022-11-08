@@ -5,15 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct Float64Vec Float64Vec;
-#ifdef __cplusplus
-} // namespace capi
-#endif
+#include "Float64Vec_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -29,5 +21,5 @@ void Float64Vec_destroy(Float64Vec* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // Float64Vec_H

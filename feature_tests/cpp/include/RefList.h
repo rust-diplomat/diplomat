@@ -5,15 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct RefList RefList;
-#ifdef __cplusplus
-} // namespace capi
-#endif
+#include "RefList_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -25,5 +17,5 @@ void RefList_destroy(RefList* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // RefList_H

@@ -5,15 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct ICU4XLocale ICU4XLocale;
-#ifdef __cplusplus
-} // namespace capi
-#endif
+#include "ICU4XLocale_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -27,5 +19,5 @@ void ICU4XLocale_destroy(ICU4XLocale* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // ICU4XLocale_H

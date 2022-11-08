@@ -5,16 +5,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct OptionOpaque OptionOpaque;
-#ifdef __cplusplus
-} // namespace capi
-#endif
-#include "OptionStruct.h"
+#include "OptionOpaque_type.h"
+#include "OptionStruct_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -34,5 +26,5 @@ void OptionOpaque_destroy(OptionOpaque* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // OptionOpaque_H

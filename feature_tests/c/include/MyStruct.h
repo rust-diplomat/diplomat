@@ -5,25 +5,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-
-#include "MyEnum.h"
-#ifdef __cplusplus
-namespace capi {
-#endif
-
-typedef struct MyStruct {
-    uint8_t a;
-    bool b;
-    uint8_t c;
-    uint64_t d;
-    int32_t e;
-    char32_t f;
-    MyEnum g;
-} MyStruct;
-#ifdef __cplusplus
-} // namespace capi
-#endif
-#include "MyEnum.h"
+#include "MyStruct_type.h"
+#include "MyEnum_type.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -35,5 +18,5 @@ void MyStruct_destroy(MyStruct* self);
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
-#endif
-#endif
+#endif // __cplusplus
+#endif // MyStruct_H
