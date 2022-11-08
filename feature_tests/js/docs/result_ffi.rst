@@ -3,6 +3,8 @@
 
 .. js:class:: ErrorEnum
 
+    .. js:staticfunction:: make_errorenum_for_string(s)
+
 .. js:class:: ErrorStruct
 
     .. js:attribute:: i

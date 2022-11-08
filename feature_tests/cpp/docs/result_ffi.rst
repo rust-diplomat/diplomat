@@ -7,6 +7,9 @@
 
     .. cpp:enumerator:: Bar
 
+    .. cpp:function:: static diplomat::result<ErrorEnum, std::monostate> make_errorenum_for_string(const std::string_view s)
+
+
 .. cpp:struct:: ErrorStruct
 
     .. cpp:member:: int32_t i

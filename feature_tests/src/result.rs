@@ -50,4 +50,15 @@ pub mod ffi {
             assert_eq!(i, self.0);
         }
     }
+
+    impl ErrorEnum {
+        // g++ diplomat_result_ErrorEnum_void.h should succeed
+        pub fn make_errorenum_for_string(s: &str) -> DiplomatResult<ErrorEnum, ()> {
+            match s {
+                "foo" => Ok(ErrorEnum::Foo).into(),
+                "bar" => Ok(ErrorEnum::Bar).into(),
+                _ => Err(()).into(),
+            }
+        }
+    }
 }

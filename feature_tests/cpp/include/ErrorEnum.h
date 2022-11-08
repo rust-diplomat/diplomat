@@ -17,11 +17,13 @@ typedef enum ErrorEnum {
 #ifdef __cplusplus
 } // namespace capi
 #endif
+#include "diplomat_result_ErrorEnum_void.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif
 
+diplomat_result_ErrorEnum_void ErrorEnum_make_errorenum_for_string(const char* s_data, size_t s_len);
 void ErrorEnum_destroy(ErrorEnum* self);
 
 #ifdef __cplusplus

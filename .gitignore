@@ -11,3 +11,6 @@ Cargo.lock
 
 # VIM swap files
 *.swp
+
+# compiled headers
+*.gch
