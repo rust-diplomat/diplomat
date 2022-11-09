@@ -1,26 +1,25 @@
 ---
-source: tool/src/c/types.rs
+source: tool/src/c/structs.rs
 expression: out_texts.get(out).unwrap()
 ---
-#ifndef MyStruct_H
-#define MyStruct_H
+#ifndef MyStruct_type_H
+#define MyStruct_type_H
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "MyStruct_type.h"
-typedef struct MyStruct MyStruct;
+
 #ifdef __cplusplus
 namespace capi {
-extern "C" {
-#endif
+#endif // __cplusplus
 
-void MyStruct_destroy(MyStruct* self);
-
+typedef struct MyStruct {
+    uint8_t a;
+    uint8_t b;
+} MyStruct;
 #ifdef __cplusplus
-} // extern "C"
 } // namespace capi
 #endif // __cplusplus
-#endif // MyStruct_H
+#endif // MyStruct_type_H
 
