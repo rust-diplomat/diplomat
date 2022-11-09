@@ -2,6 +2,10 @@
 #include <assert.h>
 
 #include "include/ICU4XFixedDecimalFormat.h"
+#include "include/ICU4XFixedDecimal.h"
+#include "include/ICU4XLocale.h"
+#include "include/ICU4XDataProvider.h"
+#include "include/ICU4XFixedDecimalFormatOptions.h"
 
 void print_decimal(ICU4XFixedDecimal* fd) {
     char output[40];
