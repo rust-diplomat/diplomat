@@ -74,3 +74,11 @@ jobs:
       run: cd example/js/app && npm install
     - name: test example app
       run: cd example/js/app && npm run test
+  self-contained:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check feature_tests C headers are self contained
+      run: cd feature_tests/c/include && ls *.h | xargs -I{} g++ {}
+    - name: Check example C headers are self contained
+      run: cd example/c/include && ls *.h | xargs -I{} g++ {}
