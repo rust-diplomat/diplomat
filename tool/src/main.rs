@@ -9,7 +9,7 @@ use std::{
 use clap::Parser;
 use colored::*;
 use diplomat_core::ast;
-use diplomat_tool::{c, cpp, dotnet, js};
+use diplomat_tool::{c, c2, cpp, dotnet, js};
 
 /// diplomat-tool CLI options, as parsed by [clap-derive].
 #[derive(Debug, Parser)]
@@ -132,6 +132,21 @@ fn main() -> std::io::Result<()> {
         }
         "dotnet" => {
             dotnet::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
+        }
+        "c2" => {
+            let files = c2::FileMap::default();
+            let mut context = match c2::CContext::new(&env, files) {
+                Ok(context) => context,
+                Err(e) => {
+                    for err in e {
+                        eprintln!("Lowering error: {}", err);
+                    }
+                    std::process::exit(1);
+                }
+            };
+            context.run().unwrap();
+
+            out_texts = context.files.take_files();
         }
         o => panic!("Unknown target: {}", o),
     }
