@@ -6,6 +6,7 @@ pub mod ffi {
     #[diplomat::opaque]
     pub struct OptionOpaqueChar(char);
 
+    #[diplomat::out]
     pub struct OptionStruct {
         a: Option<Box<OptionOpaque>>,
         b: Option<Box<OptionOpaqueChar>>,

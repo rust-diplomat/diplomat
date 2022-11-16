@@ -837,9 +837,11 @@ fn lower_return_type(
                 ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)
                     .map(|ty| Some(ReturnType::OutType(ty))),
             };
-
-            let err_ty =
-                lower_out_type(err_ty, return_ltl.as_mut(), lookup_id, in_path, env, errors);
+            let err_ty = match err_ty.as_ref() {
+                ast::TypeName::Unit => Some(None),
+                ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)
+                    .map(Some),
+            };
 
             match (ok_ty, err_ty) {
                 (Some(ok_ty), Some(err_ty)) => Some(ReturnFallability::Fallible(ok_ty, err_ty)),

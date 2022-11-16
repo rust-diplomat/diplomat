@@ -14,12 +14,13 @@ typedef struct RefList RefList;
 #ifdef __cplusplus
 } // namespace capi
 #endif
+#include "RefListParameter.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif
 
-RefList* RefList_node(const int32_t* data);
+RefList* RefList_node(const RefListParameter* data);
 void RefList_destroy(RefList* self);
 
 #ifdef __cplusplus
