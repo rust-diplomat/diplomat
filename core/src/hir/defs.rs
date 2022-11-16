@@ -8,6 +8,14 @@ pub enum ReturnableStructDef<'tcx> {
     OutStruct(&'tcx OutStructDef),
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum TypeDef<'tcx> {
+    Struct(&'tcx StructDef),
+    OutStruct(&'tcx OutStructDef),
+    Opaque(&'tcx OpaqueDef),
+    Enum(&'tcx EnumDef),
+}
+
 /// Structs that can only be returned from methods.
 #[derive(Debug)]
 pub struct OutStructDef {
@@ -128,6 +136,50 @@ impl EnumDef {
             name,
             variants,
             methods,
+        }
+    }
+}
+
+impl<'a> From<&'a StructDef> for TypeDef<'a> {
+    fn from(x: &'a StructDef) -> Self {
+        TypeDef::Struct(x)
+    }
+}
+
+impl<'a> From<&'a OutStructDef> for TypeDef<'a> {
+    fn from(x: &'a OutStructDef) -> Self {
+        TypeDef::OutStruct(x)
+    }
+}
+
+impl<'a> From<&'a OpaqueDef> for TypeDef<'a> {
+    fn from(x: &'a OpaqueDef) -> Self {
+        TypeDef::Opaque(x)
+    }
+}
+
+impl<'a> From<&'a EnumDef> for TypeDef<'a> {
+    fn from(x: &'a EnumDef) -> Self {
+        TypeDef::Enum(x)
+    }
+}
+
+impl<'tcx> TypeDef<'tcx> {
+    pub fn name(&self) -> &'tcx IdentBuf {
+        match *self {
+            Self::Struct(ty) => &ty.name,
+            Self::OutStruct(ty) => &ty.name,
+            Self::Opaque(ty) => &ty.name,
+            Self::Enum(ty) => &ty.name,
+        }
+    }
+
+    pub fn docs(&self) -> &'tcx Docs {
+        match *self {
+            Self::Struct(ty) => &ty.docs,
+            Self::OutStruct(ty) => &ty.docs,
+            Self::Opaque(ty) => &ty.docs,
+            Self::Enum(ty) => &ty.docs,
         }
     }
 }

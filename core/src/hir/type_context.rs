@@ -1,6 +1,6 @@
 //! Store all the types contained in the HIR.
 
-use super::{EnumDef, LoweringError, OpaqueDef, OutStructDef, StructDef, TypeLowerer};
+use super::{EnumDef, LoweringError, OpaqueDef, OutStructDef, StructDef, TypeDef, TypeLowerer};
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
 use crate::{ast, Env};
@@ -33,7 +33,40 @@ pub struct OpaqueId(usize);
 #[derive(Copy, Clone, Debug)]
 pub struct EnumId(usize);
 
+#[derive(Copy, Clone, Debug)]
+pub enum TypeId {
+    Struct(StructId),
+    OutStruct(OutStructId),
+    Opaque(OpaqueId),
+    Enum(EnumId),
+}
+
 impl TypeContext {
+    pub fn all_types<'tcx>(&'tcx self) -> impl Iterator<Item = (TypeId, TypeDef<'tcx>)> {
+        self.structs
+            .iter()
+            .enumerate()
+            .map(|(i, ty)| (TypeId::Struct(StructId(i)), TypeDef::Struct(ty)))
+            .chain(
+                self.out_structs
+                    .iter()
+                    .enumerate()
+                    .map(|(i, ty)| (TypeId::OutStruct(OutStructId(i)), TypeDef::OutStruct(ty))),
+            )
+            .chain(
+                self.opaques
+                    .iter()
+                    .enumerate()
+                    .map(|(i, ty)| (TypeId::Opaque(OpaqueId(i)), TypeDef::Opaque(ty))),
+            )
+            .chain(
+                self.enums
+                    .iter()
+                    .enumerate()
+                    .map(|(i, ty)| (TypeId::Enum(EnumId(i)), TypeDef::Enum(ty))),
+            )
+    }
+
     pub fn out_structs(&self) -> &[OutStructDef] {
         &self.out_structs
     }
@@ -48,6 +81,15 @@ impl TypeContext {
 
     pub fn enums(&self) -> &[EnumDef] {
         &self.enums
+    }
+
+    pub fn resolve_type<'tcx>(&'tcx self, id: TypeId) -> TypeDef<'tcx> {
+        match id {
+            TypeId::Struct(i) => TypeDef::Struct(self.resolve_struct(i)),
+            TypeId::OutStruct(i) => TypeDef::OutStruct(self.resolve_out_struct(i)),
+            TypeId::Opaque(i) => TypeDef::Opaque(self.resolve_opaque(i)),
+            TypeId::Enum(i) => TypeDef::Enum(self.resolve_enum(i)),
+        }
     }
 
     pub(crate) fn resolve_out_struct(&self, id: OutStructId) -> &OutStructDef {
@@ -184,5 +226,29 @@ impl<'ast> LookupId<'ast> {
 
     pub(super) fn resolve_enum(&self, enm: &ast::Enum) -> Option<EnumId> {
         self.enum_map.get(enm).copied()
+    }
+}
+
+impl From<StructId> for TypeId {
+    fn from(x: StructId) -> Self {
+        TypeId::Struct(x)
+    }
+}
+
+impl From<OutStructId> for TypeId {
+    fn from(x: OutStructId) -> Self {
+        TypeId::OutStruct(x)
+    }
+}
+
+impl From<OpaqueId> for TypeId {
+    fn from(x: OpaqueId) -> Self {
+        TypeId::Opaque(x)
+    }
+}
+
+impl From<EnumId> for TypeId {
+    fn from(x: EnumId) -> Self {
+        TypeId::Enum(x)
     }
 }

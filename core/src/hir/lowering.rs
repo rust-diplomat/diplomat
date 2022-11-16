@@ -6,8 +6,8 @@ use super::{
     SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, Type,
 };
 use crate::{ast, Env};
-use strck_ident::IntoCk;
 use core::fmt;
+use strck_ident::IntoCk;
 
 /// An error from lowering the AST to the HIR.
 #[derive(Debug)]
@@ -26,7 +26,7 @@ pub enum LoweringError {
 impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Other(ref s) => s.fmt(f)
+            Self::Other(ref s) => s.fmt(f),
         }
     }
 }
