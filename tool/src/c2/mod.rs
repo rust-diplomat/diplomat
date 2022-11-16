@@ -1,4 +1,5 @@
 mod formatter;
+mod header;
 
 use core::mem;
 use diplomat_core::hir::{self, TypeContext};
