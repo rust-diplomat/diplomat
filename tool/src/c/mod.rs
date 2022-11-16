@@ -22,7 +22,7 @@ use structs::*;
 mod results;
 use results::*;
 
-static RUNTIME_H: &str = include_str!("runtime.h");
+pub static RUNTIME_H: &str = include_str!("runtime.h");
 
 pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
     let diplomat_runtime_out = outs

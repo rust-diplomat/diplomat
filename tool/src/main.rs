@@ -144,7 +144,7 @@ fn main() -> std::io::Result<()> {
                     std::process::exit(1);
                 }
             };
-            context.run().unwrap();
+            context.run();
 
             out_texts = context.files.take_files();
         }

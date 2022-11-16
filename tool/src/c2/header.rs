@@ -1,4 +1,3 @@
-use core::fmt;
 use std::collections::BTreeSet;
 
 static BASE_INCLUDES: &'static str = r#"
@@ -9,11 +8,17 @@ static BASE_INCLUDES: &'static str = r#"
 #include "diplomat_runtime.h"
 "#;
 
+/// This abstraction allows us to build up headers piece by piece without needing
+/// to precalculate things like the list of dependent headers or forward declarations
 pub struct Header {
-    identifier: String,
-    includes: BTreeSet<String>,
-    forwards: BTreeSet<String>,
-    body: String,
+    /// The identifier used for the header file
+    pub identifier: String,
+    /// A list of includes
+    pub includes: BTreeSet<String>,
+    /// The struct forward decls necessary
+    pub forwards: BTreeSet<String>,
+    /// The actual meat of the header: usually will contain a type definition and methods
+    pub body: String,
 }
 
 impl Header {
