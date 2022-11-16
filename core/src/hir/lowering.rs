@@ -7,6 +7,7 @@ use super::{
 };
 use crate::{ast, Env};
 use strck_ident::IntoCk;
+use core::fmt;
 
 /// An error from lowering the AST to the HIR.
 #[derive(Debug)]
@@ -20,6 +21,14 @@ pub enum LoweringError {
     /// instance into an specialized enum variant, generalizing where possible
     /// without losing any information.
     Other(String),
+}
+
+impl fmt::Display for LoweringError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Self::Other(ref s) => s.fmt(f)
+        }
+    }
 }
 
 /// Lowers an [`ast::Ident`]s into an [`hir::IdentBuf`].

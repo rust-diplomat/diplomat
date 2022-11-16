@@ -19,5 +19,7 @@ pub use primitives::*;
 pub use type_context::*;
 pub use types::*;
 
+pub use lowering::LoweringError;
+
 pub use crate::ast::Docs;
 use strck_ident::rust::{Ident, IdentBuf};
