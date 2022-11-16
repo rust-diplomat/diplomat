@@ -8,6 +8,7 @@ impl super::CContext {
         let mut header = Header::new(header_name.into());
         match ty {
             TypeDef::Enum(e) => self.gen_enum_def(id, e, &mut header),
+            TypeDef::Opaque(o) => self.gen_opaque_def(id, o, &mut header),
             _ => {
                 eprintln!("Todo: handle other kinds of types");
             }
@@ -26,5 +27,10 @@ impl super::CContext {
             header.body += &format!("\t{enum_name}_{variant_name} = {discriminant},\n")
         }
         header.body += &format!("}} {enum_name};\n");
+    }
+
+    pub fn gen_opaque_def<'tcx>(&self, id: TypeId, def_: &'tcx hir::OpaqueDef, header: &mut Header) {
+        let opaque_name = self.fmt_type_name(id);
+        header.body += &format!("typedef struct {opaque_name} {opaque_name};\n");
     }
 }
