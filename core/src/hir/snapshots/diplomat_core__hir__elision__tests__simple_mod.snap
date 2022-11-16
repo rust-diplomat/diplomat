@@ -4,7 +4,7 @@ expression: tcx
 ---
 TypeContext {
     out_structs: [
-        OutStructDef {
+        StructDef {
             docs: Docs(
                 "",
                 [],
@@ -14,7 +14,7 @@ TypeContext {
                 buf: "OutStruct",
             },
             fields: [
-                OutStructField {
+                StructField {
                     docs: Docs(
                         "",
                         [],
@@ -91,7 +91,7 @@ TypeContext {
                             OutType(
                                 Struct(
                                     OutStruct(
-                                        OutStructPath {
+                                        StructPath {
                                             lifetimes: TypeLifetimes {
                                                 indices: [
                                                     NonStatic(

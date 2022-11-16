@@ -5,7 +5,6 @@
 
 #![allow(clippy::needless_lifetimes)] // we use named lifetimes for clarity
 
-
 pub mod ast;
 pub mod hir;
 

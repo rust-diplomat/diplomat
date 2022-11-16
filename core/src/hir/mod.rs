@@ -7,6 +7,7 @@ mod lowering;
 mod methods;
 mod paths;
 mod primitives;
+mod ty_position;
 mod type_context;
 mod types;
 pub use defs::*;
@@ -16,6 +17,7 @@ pub(super) use lowering::*;
 pub use methods::*;
 pub use paths::*;
 pub use primitives::*;
+pub use ty_position::*;
 pub use type_context::*;
 pub use types::*;
 
