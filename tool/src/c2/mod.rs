@@ -30,7 +30,7 @@ impl CContext {
         self.files
             .add_file("diplomat_runtime.h".into(), crate::c::RUNTIME_H.into());
         for (id, ty) in self.tcx.all_types() {
-            self.gen_ty(id, ty)
+            ty::gen_ty(self, id, ty)
         }
     }
 
