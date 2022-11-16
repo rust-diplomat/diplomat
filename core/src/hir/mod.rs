@@ -1,4 +1,6 @@
 //! Experimental high-level representation (HIR) for Diplomat.
+//!
+//! Enabled with the `"hir"` Cargo feature
 
 mod defs;
 mod elision;

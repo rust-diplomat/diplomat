@@ -6,6 +6,7 @@
 #![allow(clippy::needless_lifetimes)] // we use named lifetimes for clarity
 
 pub mod ast;
+#[cfg(feature = "hir")]
 pub mod hir;
 
 mod environment;

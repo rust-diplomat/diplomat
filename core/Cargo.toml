@@ -16,6 +16,13 @@ categories = ["development-tools"]
 [lib]
 path = "src/lib.rs"
 
+[features]
+# Enable the higher level IR
+hir = []
+
+[package.metadata.docs.rs]
+all-features = true
+
 [dependencies]
 syn = { version = "1.0", features = [ "full", "extra-traits" ] }
 quote = "1.0"
