@@ -301,7 +301,7 @@ impl DocsUrlGenerator {
             r.push('/');
         }
 
-        if elements.peek() == None {
+        if elements.peek().is_none() {
             r.push_str("index.html");
             return r;
         }

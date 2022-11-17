@@ -248,7 +248,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
             .reduce(|acc, x| (acc.0 + x.0, acc.1 + x.1))
             .map(|(num_fields, num_leaves)| {
                 let num_params =
-                    method.params.len() + if method.param_self.is_some() { 1 } else { 0 };
+                    method.params.len() + usize::from(method.param_self.is_some());
                 let mut parents = SmallVec::with_capacity(num_fields + num_params);
                 let mut leaves = SmallVec::with_capacity(num_leaves);
                 let method_lifetimes = method.method_lifetimes();

@@ -67,7 +67,7 @@ pub(super) trait TypeLowerer: Sized {
         let mut hir_types = Some(Vec::with_capacity(ast_defs.len()));
 
         for (in_path, ast_def) in ast_defs {
-            let hir_type = Self::lower(*ast_def, lookup_id, in_path, env, errors);
+            let hir_type = Self::lower(ast_def, lookup_id, in_path, env, errors);
 
             match (hir_type, &mut hir_types) {
                 (Some(hir_type), Some(hir_types)) => hir_types.push(hir_type),

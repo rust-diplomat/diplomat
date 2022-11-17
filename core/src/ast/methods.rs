@@ -352,7 +352,7 @@ impl BorrowedParams<'_> {
 
     /// Returns the number of borrowed params.
     pub fn len(&self) -> usize {
-        self.1.len() + if self.0.is_some() { 1 } else { 0 }
+        self.1.len() + usize::from(self.0.is_some())
     }
 }
 
