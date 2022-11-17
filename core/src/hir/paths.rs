@@ -17,7 +17,7 @@ pub type OutStructPath = StructPath<OutputOnly>;
 #[derive(Debug)]
 pub struct StructPath<P: TyPosition = Everywhere> {
     pub lifetimes: TypeLifetimes,
-    tcx_id: P::StructId,
+    pub tcx_id: P::StructId,
 }
 
 /// Path to an opaque.
@@ -37,9 +37,9 @@ pub struct StructPath<P: TyPosition = Everywhere> {
 #[derive(Debug)]
 pub struct OpaquePath<Opt, Owner> {
     pub lifetimes: TypeLifetimes,
-    optional: Opt,
-    owner: Owner,
-    tcx_id: OpaqueId,
+    pub optional: Opt,
+    pub owner: Owner,
+    pub tcx_id: OpaqueId,
 }
 
 #[derive(Debug)]
@@ -69,7 +69,7 @@ impl<Opt> OpaquePath<Opt, Borrow> {
 /// Path to an enum.
 #[derive(Debug)]
 pub struct EnumPath {
-    tcx_id: EnumId,
+    pub tcx_id: EnumId,
 }
 
 /// Determine whether a pointer to an opaque type is owned or borrowed.

@@ -1,4 +1,4 @@
-use super::{Borrow, MaybeOwn, OutStructId, ReturnableStructPath, StructId, StructPath};
+use super::{Borrow, MaybeOwn, OutStructId, ReturnableStructPath, StructId, StructPath, TypeId};
 use core::fmt::Debug;
 
 pub trait TyPosition: Debug + Copy {
@@ -6,6 +6,8 @@ pub trait TyPosition: Debug + Copy {
     type OpaqueOwnership: Debug;
     type StructId: Debug;
     type StructPath: Debug;
+
+    fn id_for_path(p: &Self::StructPath) -> TypeId;
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -18,6 +20,10 @@ impl TyPosition for Everywhere {
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
+
+    fn id_for_path(p: &Self::StructPath) -> TypeId {
+        p.tcx_id.into()
+    }
 }
 
 impl TyPosition for OutputOnly {
@@ -25,4 +31,10 @@ impl TyPosition for OutputOnly {
     type OpaqueOwnership = MaybeOwn;
     type StructId = OutStructId;
     type StructPath = ReturnableStructPath;
+    fn id_for_path(p: &Self::StructPath) -> TypeId {
+        match p {
+            ReturnableStructPath::Struct(p) => p.tcx_id.into(),
+            ReturnableStructPath::OutStruct(p) => p.tcx_id.into(),
+        }
+    }
 }

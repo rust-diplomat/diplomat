@@ -35,7 +35,7 @@ impl Header {
         let mut forwards = String::new();
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
-            includes += &format!(r#"#include "{}.h"\n"#, i);
+            includes += &format!("#include \"{}.h\"\n", i);
         }
         for f in &self.forwards {
             forwards += &format!("typedef struct {f} {f};\n");
