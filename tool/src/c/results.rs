@@ -10,25 +10,25 @@ use super::types::{gen_type, name_for_type};
 pub fn collect_results<'a>(
     typ: &'a ast::TypeName,
     in_path: &ast::Path,
-    env: &Env,
+    _env: &Env,
     seen: &mut HashSet<&'a ast::TypeName>,
     results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
 ) {
     match typ {
         ast::TypeName::Box(underlying) => {
-            collect_results(underlying, in_path, env, seen, results);
+            collect_results(underlying, in_path, _env, seen, results);
         }
         ast::TypeName::Reference(.., underlying) => {
-            collect_results(underlying, in_path, env, seen, results);
+            collect_results(underlying, in_path, _env, seen, results);
         }
         ast::TypeName::Option(underlying) => {
-            collect_results(underlying, in_path, env, seen, results);
+            collect_results(underlying, in_path, _env, seen, results);
         }
         ast::TypeName::Result(ok, err) => {
             if !seen.contains(&typ) {
                 seen.insert(typ);
-                collect_results(ok, in_path, env, seen, results);
-                collect_results(err, in_path, env, seen, results);
+                collect_results(ok, in_path, _env, seen, results);
+                collect_results(err, in_path, _env, seen, results);
                 results.push((in_path.clone(), typ));
             }
         }

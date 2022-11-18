@@ -35,25 +35,25 @@ pub fn gen_doc_block(out: &mut CodeWriter, comment: &str) -> fmt::Result {
 pub fn collect_results<'ast>(
     typ: &'ast ast::TypeName,
     in_path: &ast::Path,
-    env: &Env,
+    _env: &Env,
     results: &mut SetOfAstTypes<&'ast ast::TypeName>,
 ) {
     match typ {
         ast::TypeName::Box(underlying) => {
-            collect_results(underlying, in_path, env, results);
+            collect_results(underlying, in_path, _env, results);
         }
         ast::TypeName::Reference(.., underlying) => {
-            collect_results(underlying, in_path, env, results);
+            collect_results(underlying, in_path, _env, results);
         }
         ast::TypeName::Option(underlying) => {
-            collect_results(underlying, in_path, env, results);
+            collect_results(underlying, in_path, _env, results);
         }
         ast::TypeName::Result(ok, err) => {
             let key = (in_path.clone(), typ);
             if !results.contains(&key) {
                 results.insert(key);
-                collect_results(ok, in_path, env, results);
-                collect_results(err, in_path, env, results);
+                collect_results(ok, in_path, _env, results);
+                collect_results(err, in_path, _env, results);
             }
         }
         ast::TypeName::Unit
