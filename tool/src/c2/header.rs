@@ -10,6 +10,7 @@ static BASE_INCLUDES: &'static str = r#"
 
 /// This abstraction allows us to build up headers piece by piece without needing
 /// to precalculate things like the list of dependent headers or forward declarations
+#[derive(Default)]
 pub struct Header {
     /// The identifier used for the header file
     pub identifier: String,

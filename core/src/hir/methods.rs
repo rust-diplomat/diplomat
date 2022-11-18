@@ -38,14 +38,14 @@ pub enum ReturnFallability {
 /// The `self` parameter of a method.
 #[derive(Debug)]
 pub struct ParamSelf {
-    ty: SelfType,
+    pub ty: SelfType,
 }
 
 /// A parameter in a method.
 #[derive(Debug)]
 pub struct Param {
-    name: IdentBuf,
-    ty: Type,
+    pub name: IdentBuf,
+    pub ty: Type,
 }
 
 /// An id for indexing into a [`BorrowingFieldsVisitor`].

@@ -27,7 +27,24 @@ impl super::CContext {
     }
     /// Format a field name or parameter name
     // might need splitting in the future if we decide to support renames here
-    pub fn fmt_param_name<'a>(&self, ident: &'a hir::Ident) -> Cow<'a, str> {
-        ident.as_str().into()
+    pub fn fmt_param_name<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        ident.into()
+    }
+
+    /// Format a method
+    pub fn fmt_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
+        let ty_name = self.fmt_type_name(ty);
+        let method_name = method.name.as_str();
+        format!("{ty_name}_{method_name}")
+    }
+
+    /// Given a mutability, format a `const ` prefix for pointers if necessary,
+    /// including a space for prepending
+    pub fn fmt_constness(&self, mutability: hir::Mutability) -> &str {
+        if mutability.is_mutable() {
+            ""
+        } else {
+            "const "
+        }
     }
 }

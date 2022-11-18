@@ -1,10 +1,10 @@
 use super::{
-    Borrow, EnumDef, EnumId, Everywhere, OpaqueDef, OpaqueId, OutStructDef, OutputOnly,
-    ReturnableStructDef, StructDef, TyPosition, TypeContext, TypeLifetimes,
+    Borrow, EnumDef, EnumId, Everywhere, OpaqueDef, OpaqueId, OpaqueOwner, OutStructDef,
+    OutputOnly, ReturnableStructDef, StructDef, TyPosition, TypeContext, TypeLifetimes,
 };
 
 /// Path to a struct that may appear as an output.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ReturnableStructPath {
     Struct(StructPath),
     OutStruct(OutStructPath),
@@ -14,7 +14,7 @@ pub enum ReturnableStructPath {
 pub type OutStructPath = StructPath<OutputOnly>;
 
 /// Path to a struct that can be used in inputs and outputs.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StructPath<P: TyPosition = Everywhere> {
     pub lifetimes: TypeLifetimes,
     pub tcx_id: P::StructId,
@@ -34,7 +34,7 @@ pub struct StructPath<P: TyPosition = Everywhere> {
 /// entirely give up ownership of a value.
 /// 3. `OpaquePath<NonOptional, Borrow>`: Opaques in the `&self` position, which
 /// cannot be optional and must be borrowed for the same reason as above.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OpaquePath<Opt, Owner> {
     pub lifetimes: TypeLifetimes,
     pub optional: Opt,
@@ -42,15 +42,26 @@ pub struct OpaquePath<Opt, Owner> {
     pub tcx_id: OpaqueId,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Optional(pub(super) bool);
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct NonOptional;
 
-impl<Owner> OpaquePath<Optional, Owner> {
+impl<Owner: OpaqueOwner> OpaquePath<Optional, Owner> {
     pub fn is_optional(&self) -> bool {
         self.optional.0
+    }
+}
+
+impl<Owner: OpaqueOwner> OpaquePath<NonOptional, Owner> {
+    pub fn wrap_optional(self) -> OpaquePath<Optional, Owner> {
+        OpaquePath {
+            lifetimes: self.lifetimes,
+            optional: Optional(false),
+            owner: self.owner,
+            tcx_id: self.tcx_id,
+        }
     }
 }
 
@@ -67,7 +78,7 @@ impl<Opt> OpaquePath<Opt, Borrow> {
 }
 
 /// Path to an enum.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EnumPath {
     pub tcx_id: EnumId,
 }
