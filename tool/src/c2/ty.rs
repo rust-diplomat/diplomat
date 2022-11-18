@@ -233,9 +233,10 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let constness = self.cx.fmt_constness(mutability);
                 let ret = format!("{constness}{name}*");
-                // should not be necessary for opaques, might be necessary for import compat
-                // let header_name = self.cx.fmt_header_name(op_id);
-                // self.header.includes.insert(header_name.into());
+                // Todo(breaking): We can remove this requirement
+                // and users will be forced to import more types
+                let header_name = self.cx.fmt_header_name(op_id);
+                self.header.includes.insert(header_name.into());
                 self.header.forwards.insert(name.into());
                 ret.into()
             }
