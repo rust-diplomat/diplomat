@@ -22,6 +22,10 @@ pub fn gen_ty<'tcx>(cx: &CContext<'tcx>, id: TypeId, ty: TypeDef<'tcx>) {
         context.gen_method(id, method);
     }
 
+    if let TypeDef::Opaque(_) = ty {
+        context.gen_dtor(id);
+    }
+
     // In some cases like generating decls for `self` parameters,
     // a header will get its own forwards and includes. Instead of
     // trying to avoid pushing them, it's cleaner to just pull them out
@@ -159,6 +163,11 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
         }
 
         self.header.body += &format!("{return_ty} {method_name}({params});\n");
+    }
+
+    pub fn gen_dtor(&mut self, id: TypeId) {
+        let ty_name = self.cx.fmt_type_name(id);
+        self.header.body += &format!("void {ty_name}_destroy({ty_name}* self);\n");
     }
 
     pub fn gen_result(&mut self, name: &str, ty: ResultType) {
