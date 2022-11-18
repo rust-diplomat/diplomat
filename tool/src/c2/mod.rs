@@ -3,24 +3,20 @@ mod header;
 mod ty;
 
 use core::mem;
-use diplomat_core::hir::{self, TypeContext};
-use diplomat_core::Env;
+use diplomat_core::hir::TypeContext;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
 /// This is the main object that drives this backend. Most execution steps
 /// for this backend will be found as methods on this context
-pub struct CContext {
-    pub tcx: TypeContext,
+pub struct CContext<'tcx> {
+    pub tcx: &'tcx TypeContext,
     pub files: FileMap,
 }
 
-impl CContext {
-    pub fn new(env: &Env, files: FileMap) -> Result<Self, Vec<hir::LoweringError>> {
-        Ok(CContext {
-            tcx: TypeContext::from_ast(env)?,
-            files,
-        })
+impl<'tcx> CContext<'tcx> {
+    pub fn new(tcx: &'tcx TypeContext, files: FileMap) -> Self {
+        CContext { tcx, files }
     }
 
     /// Run file generation

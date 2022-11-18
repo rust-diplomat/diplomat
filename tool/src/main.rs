@@ -8,7 +8,7 @@ use std::{
 
 use clap::Parser;
 use colored::*;
-use diplomat_core::ast;
+use diplomat_core::{ast, hir};
 use diplomat_tool::{c, c2, cpp, dotnet, js};
 
 /// diplomat-tool CLI options, as parsed by [clap-derive].
@@ -135,7 +135,7 @@ fn main() -> std::io::Result<()> {
         }
         "c2" => {
             let files = c2::FileMap::default();
-            let mut context = match c2::CContext::new(&env, files) {
+            let tcx = match hir::TypeContext::from_ast(&env) {
                 Ok(context) => context,
                 Err(e) => {
                     for err in e {
@@ -144,6 +144,7 @@ fn main() -> std::io::Result<()> {
                     std::process::exit(1);
                 }
             };
+            let mut context = c2::CContext::new(&tcx, files);
             context.run();
 
             out_texts = context.files.take_files();

@@ -33,18 +33,18 @@ pub fn gen_ty(cx: &CContext, id: TypeId, ty: TypeDef) {
 }
 
 /// Context for generating a particular type's header
-pub struct TyGenContext<'cx, 'header> {
+pub struct TyGenContext<'cx, 'tcx, 'header> {
     id: TypeId,
-    ty_name: Cow<'cx, str>,
-    cx: &'cx CContext,
+    ty_name: Cow<'tcx, str>,
+    cx: &'cx CContext<'tcx>,
     header: &'header mut Header,
 }
 
-impl<'cx, 'header> TyGenContext<'cx, 'header> {
+impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
     pub fn new(
-        cx: &'cx CContext,
+        cx: &'cx CContext<'tcx>,
         id: TypeId,
-        ty_name: Cow<'cx, str>,
+        ty_name: Cow<'tcx, str>,
         header: &'header mut Header,
     ) -> Self {
         TyGenContext {
@@ -55,7 +55,7 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
         }
     }
 
-    pub fn gen_enum_def<'tcx>(&mut self, def: &'tcx hir::EnumDef) {
+    pub fn gen_enum_def(&mut self, def: &'tcx hir::EnumDef) {
         let enum_name = &self.ty_name;
         self.header.body += &format!("typedef enum {enum_name} {{\n");
         for variant in def.variants.iter() {
@@ -66,12 +66,12 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
         self.header.body += &format!("}} {enum_name};\n");
     }
 
-    pub fn gen_opaque_def<'tcx>(&mut self, _def: &'tcx hir::OpaqueDef) {
+    pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef) {
         let opaque_name = &self.ty_name;
         self.header.body += &format!("typedef struct {opaque_name} {opaque_name};\n");
     }
 
-    pub fn gen_struct_def<'tcx, P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>) {
+    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>) {
         let struct_name = &self.ty_name;
         self.header.body += &format!("typedef struct {struct_name} {{\n");
         for field in def.fields.iter() {
@@ -85,7 +85,7 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
         self.header.body += &format!("}} {struct_name};\n");
     }
 
-    pub fn gen_method(&mut self, method: &hir::Method) {
+    pub fn gen_method(&mut self, method: &'tcx hir::Method) {
         use diplomat_core::hir::{ReturnFallability, ReturnType};
         let method_name = self.cx.fmt_method_name(self.id, method);
         let mut param_decls = Vec::new();
