@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-static BASE_INCLUDES: &'static str = r#"
+static BASE_INCLUDES: &str = r#"
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -32,6 +32,8 @@ impl Header {
         }
     }
 
+    // the string model is nicer for this, no point using Display
+    #[allow(clippy::inherent_to_string)]
     pub fn to_string(&self) -> String {
         let mut forwards = String::new();
         let mut includes = String::from(BASE_INCLUDES);

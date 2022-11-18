@@ -6,7 +6,7 @@ use std::borrow::Cow;
 pub fn gen_ty<'tcx>(cx: &CContext<'tcx>, id: TypeId, ty: TypeDef<'tcx>) {
     let header_name = cx.fmt_header_name(id);
     let header_path = format!("{header_name}.h");
-    let mut header = Header::new(header_name.to_owned().into());
+    let mut header = Header::new(header_name.clone().into());
 
     let mut context = TyGenContext::new(cx, &mut header);
     match ty {
@@ -35,7 +35,7 @@ pub fn gen_ty<'tcx>(cx: &CContext<'tcx>, id: TypeId, ty: TypeDef<'tcx>) {
 
 pub fn gen_result<'tcx>(cx: &CContext<'tcx>, name: &str, ty: ResultType) {
     let header_path = format!("{name}.h");
-    let mut header = Header::new(name.to_owned().into());
+    let mut header = Header::new(name.to_owned());
     let mut context = TyGenContext::new(cx, &mut header);
     context.gen_result(name, ty);
     cx.files.add_file(header_path, header.to_string());
@@ -64,7 +64,7 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
         let enum_header_name = format!("{header_name}_enum");
         self.header.includes.insert(enum_header_name.to_string());
         let enum_header_path = format!("{enum_header_name}.h");
-        let mut enum_header = Header::new(enum_header_name.into());
+        let mut enum_header = Header::new(enum_header_name);
 
         let ty_name = self.cx.fmt_type_name(id);
         enum_header.body += &format!("typedef enum {ty_name} {{\n");
@@ -246,7 +246,7 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
                 let header_name = self.cx.fmt_header_name(st_id);
                 self.header.includes.insert(header_name.into());
                 self.header.forwards.insert(name.into());
-                ret.into()
+                ret
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
