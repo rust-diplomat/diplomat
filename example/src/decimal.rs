@@ -17,6 +17,7 @@ pub mod ffi {
     #[diplomat::rust_link(icu::decimal::FixedDecimalFormat, Struct)]
     pub struct ICU4XFixedDecimalFormat(pub FixedDecimalFormat<'static>);
 
+    #[diplomat::out]
     pub struct ICU4XFixedDecimalFormatResult {
         /// The [`ICU4XFixedDecimalFormat`], exists if creation was successful.
         pub fdf: Option<Box<ICU4XFixedDecimalFormat>>,
