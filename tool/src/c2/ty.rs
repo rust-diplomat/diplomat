@@ -86,6 +86,7 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
     }
 
     pub fn gen_method(&mut self, method: &hir::Method) {
+        use diplomat_core::hir::{ReturnFallability, ReturnType};
         let method_name = self.cx.fmt_method_name(self.id, method);
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
@@ -97,6 +98,33 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str(), false);
             param_decls.extend(decls);
         }
+
+        let return_ty: Cow<str> = match method.output {
+            ReturnFallability::Infallible(None) => "void".into(),
+            ReturnFallability::Infallible(Some(ref ty)) => match ty {
+                ReturnType::Writeable => {
+                    param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
+                    "void".into()
+                }
+                ReturnType::OutType(o) => self.gen_ty_name(o),
+            },
+            ReturnFallability::Fallible(ref ok, ref err) => {
+                let ok_ty = match ok {
+                    Some(ReturnType::Writeable) => {
+                        param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
+                        "void".into()
+                    }
+                    None => "void".into(),
+                    Some(ReturnType::OutType(o)) => self.cx.fmt_type_name_uniquely(o),
+                };
+                let err_ty = match err {
+                    Some(o) => self.cx.fmt_type_name_uniquely(o),
+                    None => "void".into(),
+                };
+                // todo push to results set
+                format!("diplomat_result_{ok_ty}_{err_ty}").into()
+            }
+        };
 
         let mut params = String::new();
         let mut first = true;
@@ -110,7 +138,7 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
             params += &format!("{comma}{decl_ty} {decl_name}");
         }
 
-        self.header.body += &format!("RETURN {method_name}({params});\n");
+        self.header.body += &format!("{return_ty} {method_name}({params});\n");
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)
@@ -133,7 +161,7 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let constness = self.cx.fmt_constness(b.mutability);
-                let prim = self.gen_primitive(*p);
+                let prim = self.cx.fmt_primitive_as_c(*p);
                 vec![
                     (
                         format!("{constness}{prim}*").into(),
@@ -153,7 +181,7 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
     // Handles adding imports and such as necessary
     fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self.gen_primitive(prim),
+            Type::Primitive(prim) => self.cx.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let name = self.cx.fmt_type_name(op_id);
@@ -189,27 +217,5 @@ impl<'cx, 'header> TyGenContext<'cx, 'header> {
                 hir::Slice::Primitive(_, p) => panic!("Attempted to gen_ty_name for slice of {}, should have been handled by gen_ty_decl", p.as_str())
             }
         }
-    }
-
-    fn gen_primitive(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
-        use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
-        let s = match prim {
-            PrimitiveType::Bool => "bool",
-            PrimitiveType::Char => "char32_t",
-            PrimitiveType::Int(IntType::I8) => "int8_t",
-            PrimitiveType::Int(IntType::U8) => "uint8_t",
-            PrimitiveType::Int(IntType::I16) => "int16_t",
-            PrimitiveType::Int(IntType::U16) => "uint16_t",
-            PrimitiveType::Int(IntType::I32) => "int32_t",
-            PrimitiveType::Int(IntType::U32) => "uint32_t",
-            PrimitiveType::Int(IntType::I64) => "int64_t",
-            PrimitiveType::Int(IntType::U64) => "uint64_t",
-            PrimitiveType::Int128(_) => panic!("i128 not supported in C"),
-            PrimitiveType::IntSize(IntSizeType::Isize) => "ssize_t",
-            PrimitiveType::IntSize(IntSizeType::Usize) => "size_t",
-            PrimitiveType::Float(FloatType::F32) => "float",
-            PrimitiveType::Float(FloatType::F64) => "double",
-        };
-        s.into()
     }
 }
