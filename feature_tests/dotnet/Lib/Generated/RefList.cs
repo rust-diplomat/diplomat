@@ -32,12 +32,16 @@ public partial class RefList: IDisposable
     /// <returns>
     /// A <c>RefList</c> allocated on Rust side.
     /// </returns>
-    public static RefList Node(int data)
+    public static RefList Node(RefListParameter data)
     {
         unsafe
         {
-            int* dataRaw;
-            dataRaw = data;
+            Raw.RefListParameter* dataRaw;
+            dataRaw = data.AsFFI();
+            if (dataRaw == null)
+            {
+                throw new ObjectDisposedException("RefListParameter");
+            }
             Raw.RefList* retVal = Raw.RefList.Node(dataRaw);
             return new RefList(retVal);
         }

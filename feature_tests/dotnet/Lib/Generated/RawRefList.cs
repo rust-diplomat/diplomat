@@ -17,7 +17,7 @@ public partial struct RefList
     private const string NativeLib = "diplomat_feature_tests";
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "RefList_node", ExactSpelling = true)]
-    public static unsafe extern RefList* Node(int* data);
+    public static unsafe extern RefList* Node(RefListParameter* data);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "RefList_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(RefList* self);

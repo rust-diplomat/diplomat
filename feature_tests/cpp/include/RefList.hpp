@@ -11,6 +11,7 @@
 
 #include "RefList.h"
 
+class RefListParameter;
 class RefList;
 
 /**
@@ -27,7 +28,7 @@ class RefList {
   /**
    * Lifetimes: `data` must live at least as long as the output.
    */
-  static RefList node(const int32_t& data);
+  static RefList node(const RefListParameter& data);
   inline const capi::RefList* AsFFI() const { return this->inner.get(); }
   inline capi::RefList* AsFFIMut() { return this->inner.get(); }
   inline RefList(capi::RefList* i) : inner(i) {}
@@ -38,8 +39,9 @@ class RefList {
   std::unique_ptr<capi::RefList, RefListDeleter> inner;
 };
 
+#include "RefListParameter.hpp"
 
-inline RefList RefList::node(const int32_t& data) {
-  return RefList(capi::RefList_node(data));
+inline RefList RefList::node(const RefListParameter& data) {
+  return RefList(capi::RefList_node(data.AsFFI()));
 }
 #endif

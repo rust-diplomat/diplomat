@@ -32,7 +32,7 @@ pub enum ReturnType {
 #[derive(Debug)]
 pub enum ReturnFallability {
     Infallible(Option<ReturnType>),
-    Fallible(Option<ReturnType>, OutType),
+    Fallible(Option<ReturnType>, Option<OutType>),
 }
 
 /// The `self` parameter of a method.

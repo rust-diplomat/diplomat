@@ -1,6 +1,6 @@
 //! Type definitions for structs, output structs, opaque structs, and enums.
 
-use super::{IdentBuf, Method, OutType, Type};
+use super::{Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
 use crate::ast::Docs;
 
 pub enum ReturnableStructDef<'tcx> {
@@ -8,21 +8,23 @@ pub enum ReturnableStructDef<'tcx> {
     OutStruct(&'tcx OutStructDef),
 }
 
-/// Structs that can only be returned from methods.
-#[derive(Debug)]
-pub struct OutStructDef {
-    pub docs: Docs,
-    pub name: IdentBuf,
-    pub fields: Vec<OutStructField>,
-    pub methods: Vec<Method>,
+#[derive(Copy, Clone, Debug)]
+pub enum TypeDef<'tcx> {
+    Struct(&'tcx StructDef),
+    OutStruct(&'tcx OutStructDef),
+    Opaque(&'tcx OpaqueDef),
+    Enum(&'tcx EnumDef),
 }
+
+/// Structs that can only be returned from methods.
+pub type OutStructDef = StructDef<OutputOnly>;
 
 /// Structs that can be either inputs or outputs in methods.
 #[derive(Debug)]
-pub struct StructDef {
+pub struct StructDef<P: TyPosition = Everywhere> {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub fields: Vec<StructField>,
+    pub fields: Vec<StructField<P>>,
     pub methods: Vec<Method>,
 }
 
@@ -51,19 +53,14 @@ pub struct EnumDef {
 }
 
 /// A field on a [`OutStruct`]s.
-#[derive(Debug)]
-pub struct OutStructField {
-    pub docs: Docs,
-    pub name: IdentBuf,
-    pub ty: OutType,
-}
+pub type OutStructField = StructField<OutputOnly>;
 
 /// A field on a [`Struct`]s.
 #[derive(Debug)]
-pub struct StructField {
+pub struct StructField<P: TyPosition = Everywhere> {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub ty: Type,
+    pub ty: Type<P>,
 }
 
 /// A variant of an [`Enum`].
@@ -74,27 +71,11 @@ pub struct EnumVariant {
     pub discriminant: isize,
 }
 
-impl OutStructDef {
+impl<P: TyPosition> StructDef<P> {
     pub(super) fn new(
         docs: Docs,
         name: IdentBuf,
-        fields: Vec<OutStructField>,
-        methods: Vec<Method>,
-    ) -> Self {
-        Self {
-            docs,
-            name,
-            fields,
-            methods,
-        }
-    }
-}
-
-impl StructDef {
-    pub(super) fn new(
-        docs: Docs,
-        name: IdentBuf,
-        fields: Vec<StructField>,
+        fields: Vec<StructField<P>>,
         methods: Vec<Method>,
     ) -> Self {
         Self {
@@ -128,6 +109,50 @@ impl EnumDef {
             name,
             variants,
             methods,
+        }
+    }
+}
+
+impl<'a> From<&'a StructDef> for TypeDef<'a> {
+    fn from(x: &'a StructDef) -> Self {
+        TypeDef::Struct(x)
+    }
+}
+
+impl<'a> From<&'a OutStructDef> for TypeDef<'a> {
+    fn from(x: &'a OutStructDef) -> Self {
+        TypeDef::OutStruct(x)
+    }
+}
+
+impl<'a> From<&'a OpaqueDef> for TypeDef<'a> {
+    fn from(x: &'a OpaqueDef) -> Self {
+        TypeDef::Opaque(x)
+    }
+}
+
+impl<'a> From<&'a EnumDef> for TypeDef<'a> {
+    fn from(x: &'a EnumDef) -> Self {
+        TypeDef::Enum(x)
+    }
+}
+
+impl<'tcx> TypeDef<'tcx> {
+    pub fn name(&self) -> &'tcx IdentBuf {
+        match *self {
+            Self::Struct(ty) => &ty.name,
+            Self::OutStruct(ty) => &ty.name,
+            Self::Opaque(ty) => &ty.name,
+            Self::Enum(ty) => &ty.name,
+        }
+    }
+
+    pub fn docs(&self) -> &'tcx Docs {
+        match *self {
+            Self::Struct(ty) => &ty.docs,
+            Self::OutStruct(ty) => &ty.docs,
+            Self::Opaque(ty) => &ty.docs,
+            Self::Enum(ty) => &ty.docs,
         }
     }
 }

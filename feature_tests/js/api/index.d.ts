@@ -14,6 +14,7 @@ export { OptionOpaque } from './OptionOpaque.js';
 export { OptionOpaqueChar } from './OptionOpaqueChar.js';
 export { OptionStruct } from './OptionStruct.js';
 export { RefList } from './RefList.js';
+export { RefListParameter } from './RefListParameter.js';
 export { ResultOpaque } from './ResultOpaque.js';
 export { Two } from './Two.js';
 export { UnimportedEnum } from './UnimportedEnum.js';

@@ -1,6 +1,6 @@
 use super::{
-    Borrow, EnumDef, EnumId, OpaqueDef, OpaqueId, OutStructDef, OutStructId, ReturnableStructDef,
-    StructDef, StructId, TypeContext, TypeLifetimes,
+    Borrow, EnumDef, EnumId, Everywhere, OpaqueDef, OpaqueId, OutStructDef, OutputOnly,
+    ReturnableStructDef, StructDef, TyPosition, TypeContext, TypeLifetimes,
 };
 
 /// Path to a struct that may appear as an output.
@@ -11,17 +11,13 @@ pub enum ReturnableStructPath {
 }
 
 /// Path to a struct that can only be used as an output.
-#[derive(Debug)]
-pub struct OutStructPath {
-    pub lifetimes: TypeLifetimes,
-    tcx_id: OutStructId,
-}
+pub type OutStructPath = StructPath<OutputOnly>;
 
 /// Path to a struct that can be used in inputs and outputs.
 #[derive(Debug)]
-pub struct StructPath {
+pub struct StructPath<P: TyPosition = Everywhere> {
     pub lifetimes: TypeLifetimes,
-    tcx_id: StructId,
+    tcx_id: P::StructId,
 }
 
 /// Path to an opaque.
@@ -105,27 +101,23 @@ impl ReturnableStructPath {
     }
 }
 
-impl OutStructPath {
+impl<P: TyPosition> StructPath<P> {
     /// Returns a new [`EnumPath`].
-    pub(super) fn new(lifetimes: TypeLifetimes, tcx_id: OutStructId) -> Self {
+    pub(super) fn new(lifetimes: TypeLifetimes, tcx_id: P::StructId) -> Self {
         Self { lifetimes, tcx_id }
-    }
-
-    /// Returns the [`OutStructDef`] that this path references.
-    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx OutStructDef {
-        tcx.resolve_out_struct(self.tcx_id)
     }
 }
-
 impl StructPath {
-    /// Returns a new [`EnumPath`].
-    pub(super) fn new(lifetimes: TypeLifetimes, tcx_id: StructId) -> Self {
-        Self { lifetimes, tcx_id }
-    }
-
     /// Returns the [`StructDef`] that this path references.
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx StructDef {
         tcx.resolve_struct(self.tcx_id)
+    }
+}
+
+impl OutStructPath {
+    /// Returns the [`OutStructDef`] that this path references.
+    pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx OutStructDef {
+        tcx.resolve_out_struct(self.tcx_id)
     }
 }
 

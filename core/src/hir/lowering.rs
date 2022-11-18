@@ -6,6 +6,7 @@ use super::{
     SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, Type,
 };
 use crate::{ast, Env};
+use core::fmt;
 use strck_ident::IntoCk;
 
 /// An error from lowering the AST to the HIR.
@@ -20,6 +21,14 @@ pub enum LoweringError {
     /// instance into an specialized enum variant, generalizing where possible
     /// without losing any information.
     Other(String),
+}
+
+impl fmt::Display for LoweringError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Self::Other(ref s) => s.fmt(f),
+        }
+    }
 }
 
 /// Lowers an [`ast::Ident`]s into an [`hir::IdentBuf`].
@@ -828,9 +837,11 @@ fn lower_return_type(
                 ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)
                     .map(|ty| Some(ReturnType::OutType(ty))),
             };
-
-            let err_ty =
-                lower_out_type(err_ty, return_ltl.as_mut(), lookup_id, in_path, env, errors);
+            let err_ty = match err_ty.as_ref() {
+                ast::TypeName::Unit => Some(None),
+                ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)
+                    .map(Some),
+            };
 
             match (ok_ty, err_ty) {
                 (Some(ok_ty), Some(err_ty)) => Some(ReturnFallability::Fallible(ok_ty, err_ty)),

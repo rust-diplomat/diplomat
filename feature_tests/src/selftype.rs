@@ -1,10 +1,13 @@
 #[diplomat::bridge]
 mod ffi {
     #[diplomat::opaque]
-    struct RefList<'a>((&'a i32, Option<Box<Self>>));
+    struct RefListParameter;
+
+    #[diplomat::opaque]
+    struct RefList<'a>((&'a RefListParameter, Option<Box<Self>>));
 
     impl<'b> RefList<'b> {
-        pub fn node(data: &'b i32) -> Box<Self> {
+        pub fn node(data: &'b RefListParameter) -> Box<Self> {
             Box::new(RefList((data, None)))
         }
 

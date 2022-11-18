@@ -1,28 +1,21 @@
 //! Types that can be exposed in Diplomat APIs.
 
 use super::{
-    EnumPath, MaybeOwn, MaybeStatic, NonOptional, OpaquePath, Optional, PrimitiveType,
-    ReturnableStructPath, StructPath, TypeContext, TypeLifetime,
+    EnumPath, Everywhere, MaybeStatic, NonOptional, OpaquePath, Optional, OutputOnly,
+    PrimitiveType, StructPath, TyPosition, TypeContext, TypeLifetime,
 };
 use crate::ast;
 pub use ast::Mutability;
 
 /// Type that can only be used as an output.
-#[derive(Debug)]
-pub enum OutType {
-    Primitive(PrimitiveType),
-    Opaque(OpaquePath<Optional, MaybeOwn>),
-    Struct(ReturnableStructPath),
-    Enum(EnumPath),
-    Slice(Slice),
-}
+pub type OutType = Type<OutputOnly>;
 
 /// Type that may be used as input or output.
 #[derive(Debug)]
-pub enum Type {
+pub enum Type<P: TyPosition = Everywhere> {
     Primitive(PrimitiveType),
-    Opaque(OpaquePath<Optional, Borrow>),
-    Struct(StructPath),
+    Opaque(OpaquePath<Optional, P::OpaqueOwnership>),
+    Struct(P::StructPath),
     Enum(EnumPath),
     Slice(Slice),
 }

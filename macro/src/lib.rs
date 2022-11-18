@@ -196,7 +196,9 @@ impl AttributeInfo {
                     if seg == "opaque" {
                         opaque = true;
                         return false;
-                    } else if seg == "rust_link" {
+                    } else if seg == "rust_link" || seg == "out" {
+                        // diplomat-tool reads these, not diplomat::bridge.
+                        // throw them away so rustc doesn't complain about unknown attributes
                         return false;
                     } else if seg == "enum_convert" || seg == "transparent_convert" {
                         // diplomat::bridge doesn't read this, but it's handled separately
