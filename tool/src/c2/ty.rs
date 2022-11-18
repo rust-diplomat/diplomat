@@ -55,14 +55,29 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
     }
 
     pub fn gen_enum_def(&mut self, def: &'tcx hir::EnumDef, id: TypeId) {
+        // Enums can't be forward-declared in C, but we do want enums to have methods,
+        // which may require additional #includes leading to potential cycles.
+        // To handle this, we make a separate header file called Foo_enum.h, that contains
+        // *just* the enum. It is included from Foo.h, and external users should not be importing
+        // it directly. (We can potentially add a #define guard that makes this actually private, if needed)
+        let header_name = &self.header.identifier;
+        let enum_header_name = format!("{header_name}_enum");
+        self.header.includes.insert(enum_header_name.to_string());
+        let enum_header_path = format!("{enum_header_name}.h");
+        let mut enum_header = Header::new(enum_header_name.into());
+
         let ty_name = self.cx.fmt_type_name(id);
-        self.header.body += &format!("typedef enum {ty_name} {{\n");
+        enum_header.body += &format!("typedef enum {ty_name} {{\n");
         for variant in def.variants.iter() {
             let variant_name = self.cx.fmt_enum_variant(variant);
             let discriminant = variant.discriminant;
-            self.header.body += &format!("\t{ty_name}_{variant_name} = {discriminant},\n")
+            enum_header.body += &format!("\t{ty_name}_{variant_name} = {discriminant},\n")
         }
-        self.header.body += &format!("}} {ty_name};\n");
+        enum_header.body += &format!("}} {ty_name};\n");
+
+        self.cx
+            .files
+            .add_file(enum_header_path, enum_header.to_string());
     }
 
     pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef, id: TypeId) {
