@@ -165,14 +165,14 @@ pub mod ffi {
 
         // Holds: [a, b, c]
         pub fn implicit_bounds_deep<'a, 'b, 'c, 'd, 'x>(
-            explicit: &'a One<'b>,
+            explicit_: &'a One<'b>,
             implicit_1: &'b One<'c>,
             implicit_2: &'c One<'d>,
             nohold: &'x One<'x>,
         ) -> Box<One<'a>> {
             let _ = nohold;
             Box::new(match 0 {
-                0 => *explicit,
+                0 => *explicit_,
                 1 => *implicit_1,
                 _ => *implicit_2,
             })

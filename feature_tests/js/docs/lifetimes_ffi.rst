@@ -35,6 +35,6 @@
 
     .. js:staticfunction:: implicit_bounds(explicit_hold, implicit_hold, nohold)
 
-    .. js:staticfunction:: implicit_bounds_deep(explicit, implicit_1, implicit_2, nohold)
+    .. js:staticfunction:: implicit_bounds_deep(explicit_, implicit_1, implicit_2, nohold)
 
 .. js:class:: Two

@@ -55,7 +55,7 @@ export class One {
     return new One(wasm.One_implicit_bounds(arg_explicit_hold.underlying, arg_implicit_hold.underlying, arg_nohold.underlying), true, [arg_explicit_hold, arg_implicit_hold]);
   }
 
-  static implicit_bounds_deep(arg_explicit, arg_implicit_1, arg_implicit_2, arg_nohold) {
-    return new One(wasm.One_implicit_bounds_deep(arg_explicit.underlying, arg_implicit_1.underlying, arg_implicit_2.underlying, arg_nohold.underlying), true, [arg_explicit, arg_implicit_1, arg_implicit_2]);
+  static implicit_bounds_deep(arg_explicit_, arg_implicit_1, arg_implicit_2, arg_nohold) {
+    return new One(wasm.One_implicit_bounds_deep(arg_explicit_.underlying, arg_implicit_1.underlying, arg_implicit_2.underlying, arg_nohold.underlying), true, [arg_explicit_, arg_implicit_1, arg_implicit_2]);
   }
 }
