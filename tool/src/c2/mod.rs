@@ -12,11 +12,17 @@ use std::collections::HashMap;
 pub struct CContext<'tcx> {
     pub tcx: &'tcx TypeContext,
     pub files: FileMap,
+    // The results needed by various methods
+    pub result_store: RefCell<HashMap<String, ty::ResultType<'tcx>>>,
 }
 
 impl<'tcx> CContext<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, files: FileMap) -> Self {
-        CContext { tcx, files }
+        CContext {
+            tcx,
+            files,
+            result_store: Default::default(),
+        }
     }
 
     /// Run file generation
@@ -27,6 +33,10 @@ impl<'tcx> CContext<'tcx> {
             .add_file("diplomat_runtime.h".into(), crate::c::RUNTIME_H.into());
         for (id, ty) in self.tcx.all_types() {
             ty::gen_ty(self, id, ty)
+        }
+
+        for (result_name, result_ty) in self.result_store.borrow().iter() {
+            ty::gen_result(self, result_name, *result_ty)
         }
     }
 

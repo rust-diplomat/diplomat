@@ -3,7 +3,7 @@ use super::CContext;
 use diplomat_core::hir::{self, OpaqueOwner, TyPosition, Type, TypeDef, TypeId};
 use std::borrow::Cow;
 
-pub fn gen_ty(cx: &CContext, id: TypeId, ty: TypeDef) {
+pub fn gen_ty<'tcx>(cx: &CContext<'tcx>, id: TypeId, ty: TypeDef<'tcx>) {
     let header_name = cx.fmt_header_name(id);
     let header_path = format!("{header_name}.h");
     let mut header = Header::new(header_name.to_owned().into());
@@ -32,6 +32,16 @@ pub fn gen_ty(cx: &CContext, id: TypeId, ty: TypeDef) {
 
     cx.files.add_file(header_path, header.to_string());
 }
+
+pub fn gen_result<'tcx>(cx: &CContext<'tcx>, name: &str, ty: ResultType) {
+    let header_path = format!("{name}.h");
+    let mut header = Header::new(name.to_owned().into());
+    let mut context = TyGenContext::new(cx, &mut header);
+    context.gen_result(name, ty);
+    cx.files.add_file(header_path, header.to_string());
+}
+
+pub type ResultType<'tcx> = (Option<&'tcx hir::OutType>, Option<&'tcx hir::OutType>);
 
 /// Context for generating a particular type's header
 pub struct TyGenContext<'cx, 'tcx, 'header> {
@@ -97,20 +107,27 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
                 ReturnType::OutType(o) => self.gen_ty_name(o),
             },
             ReturnFallability::Fallible(ref ok, ref err) => {
-                let ok_ty = match ok {
+                let (ok_ty_name, ok_ty) = match ok {
                     Some(ReturnType::Writeable) => {
                         param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
-                        "void".into()
+                        ("void".into(), None)
                     }
-                    None => "void".into(),
-                    Some(ReturnType::OutType(o)) => self.cx.fmt_type_name_uniquely(o),
+                    None => ("void".into(), None),
+                    Some(ReturnType::OutType(o)) => (self.cx.fmt_type_name_uniquely(o), Some(o)),
                 };
-                let err_ty = match err {
+                let err_ty_name = match err {
                     Some(o) => self.cx.fmt_type_name_uniquely(o),
                     None => "void".into(),
                 };
                 // todo push to results set
-                format!("diplomat_result_{ok_ty}_{err_ty}").into()
+                let ret: Cow<str> = format!("diplomat_result_{ok_ty_name}_{err_ty_name}").into();
+                self.header.forwards.insert(ret.to_string());
+                self.header.includes.insert(ret.to_string());
+                self.cx
+                    .result_store
+                    .borrow_mut()
+                    .insert(ret.to_string(), (ok_ty, err.as_ref()));
+                ret
             }
         };
 
@@ -127,6 +144,30 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
         }
 
         self.header.body += &format!("{return_ty} {method_name}({params});\n");
+    }
+
+    pub fn gen_result(&mut self, name: &str, ty: ResultType) {
+        let ok_line = if let Some(ok) = ty.0 {
+            let ok_name = self.gen_ty_name(ok);
+            format!("\t\t{ok_name} ok;\n")
+        } else {
+            "".into()
+        };
+        let err_line = if let Some(err) = ty.1 {
+            let err_name = self.gen_ty_name(err);
+            format!("\t\t{err_name} err;\n")
+        } else {
+            "".into()
+        };
+
+        let union_def = if ty.0.is_some() || ty.1.is_some() {
+            format!("\tunion {{\n{ok_line}{err_line}\t}};\n")
+        } else {
+            "".into()
+        };
+
+        self.header.body +=
+            &format!("typedef struct {name} {{\n{union_def}\tbool is_ok;\n}} {name};\n");
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)
