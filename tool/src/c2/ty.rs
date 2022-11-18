@@ -7,26 +7,27 @@ pub fn gen_ty(cx: &CContext, id: TypeId, ty: TypeDef) {
     let header_name = cx.fmt_header_name(id);
     let header_path = format!("{header_name}.h");
     let mut header = Header::new(header_name.to_owned().into());
-    let ty_name = cx.fmt_type_name(id);
-    let mut context = TyGenContext::new(cx, id, ty_name, &mut header);
+
+    let mut context = TyGenContext::new(cx, &mut header);
     match ty {
-        TypeDef::Enum(e) => context.gen_enum_def(e),
-        TypeDef::Opaque(o) => context.gen_opaque_def(o),
-        TypeDef::Struct(s) => context.gen_struct_def(s),
-        TypeDef::OutStruct(s) => context.gen_struct_def(s),
+        TypeDef::Enum(e) => context.gen_enum_def(e, id),
+        TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
+        TypeDef::Struct(s) => context.gen_struct_def(s, id),
+        TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
     }
 
     context.header.body += "\n\n\n";
 
     for method in ty.methods() {
-        context.gen_method(method);
+        context.gen_method(id, method);
     }
 
     // In some cases like generating decls for `self` parameters,
     // a header will get its own forwards and includes. Instead of
     // trying to avoid pushing them, it's cleaner to just pull them out
     // once done
-    context.header.forwards.remove(&*context.ty_name);
+    let ty_name = context.cx.fmt_type_name(id);
+    context.header.forwards.remove(&*ty_name);
     context.header.includes.remove(&*header_name);
 
     cx.files.add_file(header_path, header.to_string());
@@ -34,46 +35,34 @@ pub fn gen_ty(cx: &CContext, id: TypeId, ty: TypeDef) {
 
 /// Context for generating a particular type's header
 pub struct TyGenContext<'cx, 'tcx, 'header> {
-    id: TypeId,
-    ty_name: Cow<'tcx, str>,
     cx: &'cx CContext<'tcx>,
     header: &'header mut Header,
 }
 
 impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
-    pub fn new(
-        cx: &'cx CContext<'tcx>,
-        id: TypeId,
-        ty_name: Cow<'tcx, str>,
-        header: &'header mut Header,
-    ) -> Self {
-        TyGenContext {
-            cx,
-            id,
-            ty_name,
-            header,
-        }
+    pub fn new(cx: &'cx CContext<'tcx>, header: &'header mut Header) -> Self {
+        TyGenContext { cx, header }
     }
 
-    pub fn gen_enum_def(&mut self, def: &'tcx hir::EnumDef) {
-        let enum_name = &self.ty_name;
-        self.header.body += &format!("typedef enum {enum_name} {{\n");
+    pub fn gen_enum_def(&mut self, def: &'tcx hir::EnumDef, id: TypeId) {
+        let ty_name = self.cx.fmt_type_name(id);
+        self.header.body += &format!("typedef enum {ty_name} {{\n");
         for variant in def.variants.iter() {
             let variant_name = self.cx.fmt_enum_variant(variant);
             let discriminant = variant.discriminant;
-            self.header.body += &format!("\t{enum_name}_{variant_name} = {discriminant},\n")
+            self.header.body += &format!("\t{ty_name}_{variant_name} = {discriminant},\n")
         }
-        self.header.body += &format!("}} {enum_name};\n");
+        self.header.body += &format!("}} {ty_name};\n");
     }
 
-    pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef) {
-        let opaque_name = &self.ty_name;
-        self.header.body += &format!("typedef struct {opaque_name} {opaque_name};\n");
+    pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef, id: TypeId) {
+        let ty_name = self.cx.fmt_type_name(id);
+        self.header.body += &format!("typedef struct {ty_name} {ty_name};\n");
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>) {
-        let struct_name = &self.ty_name;
-        self.header.body += &format!("typedef struct {struct_name} {{\n");
+    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
+        let ty_name = self.cx.fmt_type_name(id);
+        self.header.body += &format!("typedef struct {ty_name} {{\n");
         for field in def.fields.iter() {
             let decls = self.gen_ty_decl(&field.ty, field.name.as_str(), true);
             for (decl_ty, decl_name) in decls {
@@ -81,13 +70,12 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
             }
         }
         // reborrow to avoid borrowing across mutation
-        let struct_name = &self.ty_name;
-        self.header.body += &format!("}} {struct_name};\n");
+        self.header.body += &format!("}} {ty_name};\n");
     }
 
-    pub fn gen_method(&mut self, method: &'tcx hir::Method) {
+    pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
         use diplomat_core::hir::{ReturnFallability, ReturnType};
-        let method_name = self.cx.fmt_method_name(self.id, method);
+        let method_name = self.cx.fmt_method_name(id, method);
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
