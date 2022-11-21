@@ -1,4 +1,5 @@
 use std::collections::BTreeSet;
+use std::fmt;
 
 static BASE_INCLUDES: &str = r#"
 #include <stdio.h>
@@ -31,10 +32,10 @@ impl Header {
             body: String::new(),
         }
     }
+}
 
-    // the string model is nicer for this, no point using Display
-    #[allow(clippy::inherent_to_string)]
-    pub fn to_string(&self) -> String {
+impl fmt::Display for Header {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut forwards = String::new();
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
@@ -46,7 +47,7 @@ impl Header {
         let identifier = &self.identifier;
         let body = &self.body;
 
-        format!(
+        write!(f,
             r#"#ifndef {identifier}_H
 #define {identifier}_H
 
