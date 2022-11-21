@@ -155,4 +155,12 @@ impl<'tcx> TypeDef<'tcx> {
             Self::Enum(ty) => &ty.docs,
         }
     }
+    pub fn methods(&self) -> &'tcx [Method] {
+        match *self {
+            Self::Struct(ty) => &ty.methods,
+            Self::OutStruct(ty) => &ty.methods,
+            Self::Opaque(ty) => &ty.methods,
+            Self::Enum(ty) => &ty.methods,
+        }
+    }
 }

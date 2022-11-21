@@ -76,9 +76,9 @@ class One {
   static One implicit_bounds(const One& explicit_hold, const One& implicit_hold, const One& nohold);
 
   /**
-   * Lifetimes: `explicit`, `implicit_1`, `implicit_2` must live at least as long as the output.
+   * Lifetimes: `explicit_`, `implicit_1`, `implicit_2` must live at least as long as the output.
    */
-  static One implicit_bounds_deep(const One& explicit, const One& implicit_1, const One& implicit_2, const One& nohold);
+  static One implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold);
   inline const capi::One* AsFFI() const { return this->inner.get(); }
   inline capi::One* AsFFIMut() { return this->inner.get(); }
   inline One(capi::One* i) : inner(i) {}
@@ -121,7 +121,7 @@ inline One One::diamond_and_nested_types(const One& a, const One& b, const One& 
 inline One One::implicit_bounds(const One& explicit_hold, const One& implicit_hold, const One& nohold) {
   return One(capi::One_implicit_bounds(explicit_hold.AsFFI(), implicit_hold.AsFFI(), nohold.AsFFI()));
 }
-inline One One::implicit_bounds_deep(const One& explicit, const One& implicit_1, const One& implicit_2, const One& nohold) {
-  return One(capi::One_implicit_bounds_deep(explicit.AsFFI(), implicit_1.AsFFI(), implicit_2.AsFFI(), nohold.AsFFI()));
+inline One One::implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold) {
+  return One(capi::One_implicit_bounds_deep(explicit_.AsFFI(), implicit_1.AsFFI(), implicit_2.AsFFI(), nohold.AsFFI()));
 }
 #endif

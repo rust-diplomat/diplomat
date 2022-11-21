@@ -21,7 +21,7 @@ pub enum Type<P: TyPosition = Everywhere> {
 }
 
 /// Type that can appear in the `self` position.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
@@ -84,6 +84,16 @@ impl Borrow {
         Self {
             lifetime,
             mutability,
+        }
+    }
+}
+
+impl From<SelfType> for Type {
+    fn from(s: SelfType) -> Type {
+        match s {
+            SelfType::Opaque(o) => Type::Opaque(o.wrap_optional()),
+            SelfType::Struct(s) => Type::Struct(s),
+            SelfType::Enum(e) => Type::Enum(e),
         }
     }
 }

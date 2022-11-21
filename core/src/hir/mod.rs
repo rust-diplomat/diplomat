@@ -26,4 +26,4 @@ pub use types::*;
 pub use lowering::LoweringError;
 
 pub use crate::ast::Docs;
-use strck_ident::rust::{Ident, IdentBuf};
+pub use strck_ident::rust::{Ident, IdentBuf};

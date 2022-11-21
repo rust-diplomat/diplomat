@@ -48,6 +48,12 @@ jobs:
       run: cd example/cpp && make CXX=g++-10
     - name: C examples
       run: cd example/c && make
+    - name: C2 examples
+      run: cd example/c2 && make
+    - name: C2 example self-contained
+      run: cd example/c2 && find . -name "*.h" | xargs -I{} g++ {} 
+    - name: C2 feature_tests self-contained
+      run: cd feature_tests/c2 && find . -name "*.h" | xargs -I{} g++ {} 
   tests-and-example-wasm:
     runs-on: ubuntu-latest
     steps:
