@@ -38,10 +38,10 @@ pub struct Header {
     ///
     /// Example:
     /// ```c
-    /// typeded struct Foo {
+    /// typedef struct Foo {
     ///   uint8_t field1;
     ///   bool field2;
-    /// }
+    /// } Foo;
     ///
     /// Foo make_foo(uint8_t field1, bool field2);
     /// ```
