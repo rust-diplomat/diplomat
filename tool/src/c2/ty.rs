@@ -72,13 +72,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let mut enum_header = Header::new(enum_header_name);
 
         let ty_name = self.cx.fmt_type_name(id);
-        enum_header.body += &format!("typedef enum {ty_name} {{\n");
+        writeln!(&mut enum_header.body, "typedef enum {ty_name} {{").unwrap();
         for variant in def.variants.iter() {
             let variant_name = self.cx.fmt_enum_variant(variant);
             let discriminant = variant.discriminant;
-            enum_header.body += &format!("\t{ty_name}_{variant_name} = {discriminant},\n")
+            writeln!(&mut enum_header.body, "\t{ty_name}_{variant_name} = {discriminant},").unwrap();
         }
-        enum_header.body += &format!("}} {ty_name};\n");
+        writeln!(&mut enum_header.body, "}} {ty_name};").unwrap();
 
         self.cx
             .files
@@ -87,20 +87,20 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef, id: TypeId) {
         let ty_name = self.cx.fmt_type_name(id);
-        self.header.body += &format!("typedef struct {ty_name} {ty_name};\n");
+        writeln!(&mut self.header.body, "typedef struct {ty_name} {ty_name};").unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let ty_name = self.cx.fmt_type_name(id);
-        self.header.body += &format!("typedef struct {ty_name} {{\n");
+        writeln!(&mut self.header.body, "typedef struct {ty_name} {{").unwrap();
         for field in def.fields.iter() {
             let decls = self.gen_ty_decl(&field.ty, field.name.as_str(), true);
             for (decl_ty, decl_name) in decls {
-                self.header.body += &format!("\t{decl_ty} {decl_name};\n")
+                writeln!(&mut self.header.body, "\t{decl_ty} {decl_name};").unwrap();
             }
         }
         // reborrow to avoid borrowing across mutation
-        self.header.body += &format!("}} {ty_name};\n");
+        writeln!(&mut self.header.body, "}} {ty_name};").unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
