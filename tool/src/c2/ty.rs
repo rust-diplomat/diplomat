@@ -2,6 +2,7 @@ use super::header::Header;
 use super::CContext;
 use diplomat_core::hir::{self, OpaqueOwner, TyPosition, Type, TypeDef, TypeId};
 use std::borrow::Cow;
+use std::fmt::Write;
 
 pub fn gen_ty<'tcx>(cx: &CContext<'tcx>, id: TypeId, ty: TypeDef<'tcx>) {
     let header_name = cx.fmt_header_name(id);
@@ -159,15 +160,15 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
             } else {
                 ", "
             };
-            params += &format!("{comma}{decl_ty} {decl_name}");
+            write!(&mut params,"{comma}{decl_ty} {decl_name}").unwrap();
         }
 
-        self.header.body += &format!("{return_ty} {method_name}({params});\n");
+        writeln!(self.header.body, "{return_ty} {method_name}({params});").unwrap();
     }
 
     pub fn gen_dtor(&mut self, id: TypeId) {
         let ty_name = self.cx.fmt_type_name(id);
-        self.header.body += &format!("void {ty_name}_destroy({ty_name}* self);\n");
+        writeln!(self.header.body, "void {ty_name}_destroy({ty_name}* self);").unwrap();
     }
 
     pub fn gen_result(&mut self, name: &str, ty: ResultType) {
