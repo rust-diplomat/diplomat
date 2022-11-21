@@ -32,11 +32,11 @@ impl<'tcx> CContext<'tcx> {
         self.files
             .add_file("diplomat_runtime.h".into(), crate::c::RUNTIME_H.into());
         for (id, ty) in self.tcx.all_types() {
-            ty::gen_ty(self, id, ty)
+            self.gen_ty(id, ty)
         }
 
         for (result_name, result_ty) in self.result_store.borrow().iter() {
-            ty::gen_result(self, result_name, *result_ty)
+            self.gen_result(result_name, *result_ty)
         }
     }
 

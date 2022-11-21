@@ -4,48 +4,49 @@ use diplomat_core::hir::{self, OpaqueOwner, TyPosition, Type, TypeDef, TypeId};
 use std::borrow::Cow;
 use std::fmt::Write;
 
-pub fn gen_ty<'tcx>(cx: &CContext<'tcx>, id: TypeId, ty: TypeDef<'tcx>) {
-    let header_name = cx.fmt_header_name(id);
-    let header_path = format!("{header_name}.h");
-    let mut header = Header::new(header_name.clone().into());
+impl<'tcx> super::CContext<'tcx> {
+    pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
+        let header_name = self.fmt_header_name(id);
+        let header_path = format!("{header_name}.h");
+        let mut header = Header::new(header_name.clone().into());
 
-    let mut context = TyGenContext::new(cx, &mut header);
-    match ty {
-        TypeDef::Enum(e) => context.gen_enum_def(e, id),
-        TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
-        TypeDef::Struct(s) => context.gen_struct_def(s, id),
-        TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
+        let mut context = TyGenContext::new(self, &mut header);
+        match ty {
+            TypeDef::Enum(e) => context.gen_enum_def(e, id),
+            TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
+            TypeDef::Struct(s) => context.gen_struct_def(s, id),
+            TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
+        }
+
+        context.header.body += "\n\n\n";
+
+        for method in ty.methods() {
+            context.gen_method(id, method);
+        }
+
+        if let TypeDef::Opaque(_) = ty {
+            context.gen_dtor(id);
+        }
+
+        // In some cases like generating decls for `self` parameters,
+        // a header will get its own forwards and includes. Instead of
+        // trying to avoid pushing them, it's cleaner to just pull them out
+        // once done
+        let ty_name = context.cx.fmt_type_name(id);
+        context.header.forwards.remove(&*ty_name);
+        context.header.includes.remove(&*header_name);
+
+        self.files.add_file(header_path, header.to_string());
     }
 
-    context.header.body += "\n\n\n";
-
-    for method in ty.methods() {
-        context.gen_method(id, method);
+    pub fn gen_result(&self, name: &str, ty: ResultType) {
+        let header_path = format!("{name}.h");
+        let mut header = Header::new(name.to_owned());
+        let mut context = TyGenContext::new(self, &mut header);
+        context.gen_result(name, ty);
+        self.files.add_file(header_path, header.to_string());
     }
-
-    if let TypeDef::Opaque(_) = ty {
-        context.gen_dtor(id);
-    }
-
-    // In some cases like generating decls for `self` parameters,
-    // a header will get its own forwards and includes. Instead of
-    // trying to avoid pushing them, it's cleaner to just pull them out
-    // once done
-    let ty_name = context.cx.fmt_type_name(id);
-    context.header.forwards.remove(&*ty_name);
-    context.header.includes.remove(&*header_name);
-
-    cx.files.add_file(header_path, header.to_string());
 }
-
-pub fn gen_result<'tcx>(cx: &CContext<'tcx>, name: &str, ty: ResultType) {
-    let header_path = format!("{name}.h");
-    let mut header = Header::new(name.to_owned());
-    let mut context = TyGenContext::new(cx, &mut header);
-    context.gen_result(name, ty);
-    cx.files.add_file(header_path, header.to_string());
-}
-
 /// Simple wrapper type representing the return type of a fallible function
 pub type ResultType<'tcx> = (Option<&'tcx hir::OutType>, Option<&'tcx hir::OutType>);
 
