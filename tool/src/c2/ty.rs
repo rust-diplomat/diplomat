@@ -49,13 +49,13 @@ pub fn gen_result<'tcx>(cx: &CContext<'tcx>, name: &str, ty: ResultType) {
 pub type ResultType<'tcx> = (Option<&'tcx hir::OutType>, Option<&'tcx hir::OutType>);
 
 /// Context for generating a particular type's header
-pub struct TyGenContext<'cx, 'tcx, 'header> {
-    cx: &'cx CContext<'tcx>,
+pub struct TyGenContext<'ccx, 'tcx, 'header> {
+    cx: &'ccx CContext<'tcx>,
     header: &'header mut Header,
 }
 
-impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
-    pub fn new(cx: &'cx CContext<'tcx>, header: &'header mut Header) -> Self {
+impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
+    pub fn new(cx: &'ccx CContext<'tcx>, header: &'header mut Header) -> Self {
         TyGenContext { cx, header }
     }
 
@@ -204,7 +204,7 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
         ty: &Type<P>,
         ident: &'a str,
         is_struct: bool,
-    ) -> Vec<(Cow<'cx, str>, Cow<'a, str>)> {
+    ) -> Vec<(Cow<'ccx, str>, Cow<'a, str>)> {
         let param_name = self.cx.fmt_param_name(ident);
         match ty {
             Type::Slice(hir::Slice::Str(..)) if !is_struct => {
@@ -233,7 +233,7 @@ impl<'cx, 'tcx: 'cx, 'header> TyGenContext<'cx, 'tcx, 'header> {
 
     // Generate the C code for referencing a particular type.
     // Handles adding imports and such as necessary
-    fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'cx, str> {
+    fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
         match *ty {
             Type::Primitive(prim) => self.cx.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
