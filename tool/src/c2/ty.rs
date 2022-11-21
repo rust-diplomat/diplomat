@@ -46,6 +46,7 @@ pub fn gen_result<'tcx>(cx: &CContext<'tcx>, name: &str, ty: ResultType) {
     cx.files.add_file(header_path, header.to_string());
 }
 
+/// Simple wrapper type representing the return type of a fallible function
 pub type ResultType<'tcx> = (Option<&'tcx hir::OutType>, Option<&'tcx hir::OutType>);
 
 /// Context for generating a particular type's header
