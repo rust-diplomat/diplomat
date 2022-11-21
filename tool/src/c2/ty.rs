@@ -78,7 +78,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         for variant in def.variants.iter() {
             let variant_name = self.cx.fmt_enum_variant(variant);
             let discriminant = variant.discriminant;
-            writeln!(&mut enum_header.body, "\t{ty_name}_{variant_name} = {discriminant},").unwrap();
+            writeln!(
+                &mut enum_header.body,
+                "\t{ty_name}_{variant_name} = {discriminant},"
+            )
+            .unwrap();
         }
         writeln!(&mut enum_header.body, "}} {ty_name};").unwrap();
 
@@ -162,7 +166,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             } else {
                 ", "
             };
-            write!(&mut params,"{comma}{decl_ty} {decl_name}").unwrap();
+            write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
         }
 
         writeln!(self.header.body, "{return_ty} {method_name}({params});").unwrap();
