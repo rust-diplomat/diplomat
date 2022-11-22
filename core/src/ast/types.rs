@@ -311,12 +311,41 @@ impl Mutability {
         }
     }
 
+    /// Returns `true` if `&self` is the mutable variant, otherwise `false`.
     pub fn is_mutable(&self) -> bool {
         matches!(self, Mutability::Mutable)
     }
 
+    /// Returns `true` if `&self` is the immutable variant, otherwise `false`.
     pub fn is_immutable(&self) -> bool {
         matches!(self, Mutability::Immutable)
+    }
+
+    /// Shorthand ternary operator for choosing a value based on whether
+    /// a `Mutability` is mutable or immutable.
+    ///
+    /// The following pattern (with very slight variations) shows up often in code gen:
+    /// ```ignore
+    /// if mutability.is_mutable() {
+    ///     ""
+    /// } else {
+    ///     "const "
+    /// }
+    /// ```
+    /// This is particularly annoying in `write!(...)` statements, where `cargo fmt`
+    /// expands it to take up 5 lines.
+    ///
+    /// This method offers a 1-line alternative:
+    /// ```ignore
+    /// mutability.if_mut_else("", "const ")
+    /// ```
+    /// For cases where lazy evaluation is desired, consider using a conditional
+    /// or a `match` statement.
+    pub fn if_mut_else<T>(&self, if_mut: T, if_immut: T) -> T {
+        match self {
+            Mutability::Mutable => if_mut,
+            Mutability::Immutable => if_immut,
+        }
     }
 }
 

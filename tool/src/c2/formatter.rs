@@ -41,11 +41,7 @@ impl<'tcx> super::CContext<'tcx> {
     /// Given a mutability, format a `const ` prefix for pointers if necessary,
     /// including a space for prepending
     pub fn fmt_constness(&self, mutability: hir::Mutability) -> &str {
-        if mutability.is_mutable() {
-            ""
-        } else {
-            "const "
-        }
+        mutability.if_mut_else("", "const ")
     }
 
     /// Generates an identifier that uniquely identifies the given *C* type.
@@ -71,11 +67,7 @@ impl<'tcx> super::CContext<'tcx> {
             Type::Enum(e) => self.fmt_type_name(e.tcx_id.into()),
             Type::Slice(hir::Slice::Str(_)) => "str_ref".into(),
             Type::Slice(hir::Slice::Primitive(borrow, p)) => {
-                let constness = if borrow.mutability.is_mutable() {
-                    ""
-                } else {
-                    "const_"
-                };
+                let constness = borrow.mutability.if_mut_else("", "const_");
                 let prim = self.fmt_primitive_as_c(*p);
                 format!("ref_{constness}prim_slice_{prim}").into()
             }
