@@ -323,7 +323,7 @@ impl Mutability {
 
     /// Shorthand ternary operator for choosing a value based on whether
     /// a `Mutability` is mutable or immutable.
-    /// 
+    ///
     /// The following pattern (with very slight variations) shows up often in code gen:
     /// ```ignore
     /// if mutability.is_mutable() {
@@ -334,7 +334,7 @@ impl Mutability {
     /// ```
     /// This is particularly annoying in `write!(...)` statements, where `cargo fmt`
     /// expands it to take up 5 lines.
-    /// 
+    ///
     /// This method offers a 1-line alternative:
     /// ```ignore
     /// mutability.if_mut_else("", "const ")
