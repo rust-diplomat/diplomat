@@ -29,7 +29,7 @@ use core::fmt::Debug;
 /// # How does abstraction help?
 ///
 /// The HIR was designed around the idea of making invalid states unrepresentable.
-/// Since "output only" types can contains values that "everywhere" types cannot,
+/// Since "output only" types can contain values that "everywhere" types cannot,
 /// it doesn't make sense for them to be represented in the same type, even if
 /// they're mostly the same. One of these differences is that opaques (which are
 /// always behind a pointer) can only be represented as a borrow in "everywhere"
