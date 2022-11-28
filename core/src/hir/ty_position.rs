@@ -15,7 +15,7 @@ use core::fmt::Debug;
 /// Therefore, we classify boxed opaques as "output only" types, since they can
 /// only be returned from Rust but not taken as inputs.
 ///
-/// Furthermore, Diplomat also supports bag 'o stuff structs where all fields get
+/// Furthermore, Diplomat also supports bag o' stuff structs where all fields get
 /// translated at the boundary. If one contains an "output only" type as a field,
 /// then the whole struct must also be "output only". In particular, this means
 /// that if a boxed opaque is nested in a bunch of bag 'o stuff structs, than
