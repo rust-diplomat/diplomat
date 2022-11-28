@@ -18,7 +18,7 @@ use core::fmt::Debug;
 /// Furthermore, Diplomat also supports "bag o' stuff" structs where all fields get
 /// translated at the boundary. If one contains an "output only" type as a field,
 /// then the whole struct must also be "output only". In particular, this means
-/// that if a boxed opaque is nested in a bunch of bag o' stuff structs, than
+/// that if a boxed opaque is nested in a bunch of "bag o' stuff" structs, than
 /// all of those structs must also be "output only".
 ///
 /// Currently, there are only two classes of structs: those that are "output only",
