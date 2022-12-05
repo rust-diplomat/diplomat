@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, OpaqueOwner, Type, TypeId, TypeContext};
+use diplomat_core::hir::{self, OpaqueOwner, Type, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -13,14 +13,12 @@ use std::borrow::Cow;
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub struct CFormatter<'tcx> {
-    tcx: &'tcx TypeContext
+    tcx: &'tcx TypeContext,
 }
 
 impl<'tcx> CFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext) -> Self {
-        Self {
-            tcx
-        }
+        Self { tcx }
     }
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {

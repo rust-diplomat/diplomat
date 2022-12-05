@@ -139,7 +139,9 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         ("void".into(), None)
                     }
                     None => ("void".into(), None),
-                    Some(ReturnType::OutType(o)) => (self.cx.formatter.fmt_type_name_uniquely(o), Some(o)),
+                    Some(ReturnType::OutType(o)) => {
+                        (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
+                    }
                 };
                 let err_ty_name = match err {
                     Some(o) => self.cx.formatter.fmt_type_name_uniquely(o),

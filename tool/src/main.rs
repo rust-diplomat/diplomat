@@ -9,7 +9,7 @@ use std::{
 use clap::Parser;
 use colored::*;
 use diplomat_core::{ast, hir};
-use diplomat_tool::{c, c2, cpp, dotnet, js};
+use diplomat_tool::{c, c2, common, cpp, dotnet, js};
 
 /// diplomat-tool CLI options, as parsed by [clap-derive].
 #[derive(Debug, Parser)]
@@ -134,7 +134,7 @@ fn main() -> std::io::Result<()> {
             dotnet::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
         }
         "c2" => {
-            let files = c2::FileMap::default();
+            let files = common::FileMap::default();
             let tcx = match hir::TypeContext::from_ast(&env) {
                 Ok(context) => context,
                 Err(e) => {
