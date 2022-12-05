@@ -18,14 +18,6 @@ expression: out_texts.get(out).unwrap()
 class MyOpaqueStruct;
 struct MyStruct;
 
-/**
- * A destruction policy for using MyStruct with std::unique_ptr.
- */
-struct MyStructDeleter {
-  void operator()(capi::MyStruct* l) const noexcept {
-    capi::MyStruct_destroy(l);
-  }
-};
 struct MyStruct {
  public:
   MyOpaqueStruct a;

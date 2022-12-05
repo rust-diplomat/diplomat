@@ -12,14 +12,6 @@
 #include "ErrorStruct.h"
 
 
-/**
- * A destruction policy for using ErrorStruct with std::unique_ptr.
- */
-struct ErrorStructDeleter {
-  void operator()(capi::ErrorStruct* l) const noexcept {
-    capi::ErrorStruct_destroy(l);
-  }
-};
 struct ErrorStruct {
  public:
   int32_t i;

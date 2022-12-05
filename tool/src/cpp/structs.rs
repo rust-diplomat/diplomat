@@ -20,33 +20,31 @@ pub fn gen_struct<W: fmt::Write>(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
-    if is_header {
-        writeln!(
-            out,
-            "/**\n * A destruction policy for using {} with {}.\n */",
-            custom_type.name(),
-            library_config.unique_ptr.name,
-        )?;
-        writeln!(out, "struct {}Deleter {{", custom_type.name())?;
-        let mut deleter_body = indented(out).with_str("  ");
-        writeln!(
-            &mut deleter_body,
-            "void operator()(capi::{}* l) const noexcept {{",
-            custom_type.name()
-        )?;
-        let mut deleter_operator_body = indented(&mut deleter_body).with_str("  ");
-        writeln!(
-            &mut deleter_operator_body,
-            "capi::{}_destroy(l);",
-            custom_type.name()
-        )?;
-        writeln!(&mut deleter_body, "}}")?;
-        writeln!(out, "}};")?;
-    }
-
     match custom_type {
         ast::CustomType::Opaque(opaque) => {
             if is_header {
+                writeln!(
+                    out,
+                    "/**\n * A destruction policy for using {} with {}.\n */",
+                    custom_type.name(),
+                    library_config.unique_ptr.name,
+                )?;
+                writeln!(out, "struct {}Deleter {{", custom_type.name())?;
+                let mut deleter_body = indented(out).with_str("  ");
+                writeln!(
+                    &mut deleter_body,
+                    "void operator()(capi::{}* l) const noexcept {{",
+                    custom_type.name()
+                )?;
+                let mut deleter_operator_body = indented(&mut deleter_body).with_str("  ");
+                writeln!(
+                    &mut deleter_operator_body,
+                    "capi::{}_destroy(l);",
+                    custom_type.name()
+                )?;
+                writeln!(&mut deleter_body, "}}")?;
+                writeln!(out, "}};")?;
+
                 gen_comment_block(
                     out,
                     &opaque

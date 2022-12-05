@@ -16,14 +16,6 @@ expression: out_texts.get(out).unwrap()
 #include "MyStruct.h"
 
 
-/**
- * A destruction policy for using MyStruct with std::unique_ptr.
- */
-struct MyStructDeleter {
-  void operator()(capi::MyStruct* l) const noexcept {
-    capi::MyStruct_destroy(l);
-  }
-};
 struct MyStruct {
  public:
   template<typename W> void write_to_writeable(W& to) const;
