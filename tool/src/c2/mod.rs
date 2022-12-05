@@ -6,11 +6,13 @@ use core::mem;
 use diplomat_core::hir::TypeContext;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use self::formatter::CFormatter;
 
 /// This is the main object that drives this backend. Most execution steps
 /// for this backend will be found as methods on this context
 pub struct CContext<'tcx> {
     pub tcx: &'tcx TypeContext,
+    pub formatter: CFormatter<'tcx>,
     pub files: FileMap,
     // The results needed by various methods
     pub result_store: RefCell<HashMap<String, ty::ResultType<'tcx>>>,
@@ -21,6 +23,7 @@ impl<'tcx> CContext<'tcx> {
         CContext {
             tcx,
             files,
+            formatter: CFormatter::new(tcx),
             result_store: Default::default(),
         }
     }
