@@ -40,7 +40,8 @@ pub fn gen_bindings(
     docs_url_gen: &ast::DocsUrlGenerator,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
-    super::c::gen_bindings(env, outs)?;
+    // Note: Assumes the existence of C bindings!
+    // This must be called alongside c::gen_bindings
 
     // Load header template for C++.
     let mut header_template = Tera::default();

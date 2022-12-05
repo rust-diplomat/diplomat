@@ -128,6 +128,8 @@ fn main() -> std::io::Result<()> {
         "js" => js::gen_bindings(&env, &mut out_texts, Some(&docs_url_gen)).unwrap(),
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
         "cpp" => {
+
+            c::gen_bindings(&env, &mut out_texts).unwrap();
             cpp::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
         }
         "dotnet" => {
