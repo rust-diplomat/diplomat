@@ -13,14 +13,6 @@
 
 #include "UnimportedEnum.hpp"
 
-/**
- * A destruction policy for using ImportedStruct with std::unique_ptr.
- */
-struct ImportedStructDeleter {
-  void operator()(capi::ImportedStruct* l) const noexcept {
-    capi::ImportedStruct_destroy(l);
-  }
-};
 struct ImportedStruct {
  public:
   UnimportedEnum foo;

@@ -14,14 +14,6 @@
 class OptionOpaque;
 class OptionOpaqueChar;
 
-/**
- * A destruction policy for using OptionStruct with std::unique_ptr.
- */
-struct OptionStructDeleter {
-  void operator()(capi::OptionStruct* l) const noexcept {
-    capi::OptionStruct_destroy(l);
-  }
-};
 struct OptionStruct {
  public:
   std::optional<OptionOpaque> a;

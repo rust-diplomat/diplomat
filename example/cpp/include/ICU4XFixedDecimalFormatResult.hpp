@@ -13,14 +13,6 @@
 
 class ICU4XFixedDecimalFormat;
 
-/**
- * A destruction policy for using ICU4XFixedDecimalFormatResult with std::unique_ptr.
- */
-struct ICU4XFixedDecimalFormatResultDeleter {
-  void operator()(capi::ICU4XFixedDecimalFormatResult* l) const noexcept {
-    capi::ICU4XFixedDecimalFormatResult_destroy(l);
-  }
-};
 struct ICU4XFixedDecimalFormatResult {
  public:
 

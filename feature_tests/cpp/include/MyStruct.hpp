@@ -14,14 +14,6 @@
 #include "MyEnum.hpp"
 struct MyStruct;
 
-/**
- * A destruction policy for using MyStruct with std::unique_ptr.
- */
-struct MyStructDeleter {
-  void operator()(capi::MyStruct* l) const noexcept {
-    capi::MyStruct_destroy(l);
-  }
-};
 struct MyStruct {
  public:
   uint8_t a;
