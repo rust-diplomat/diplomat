@@ -20,14 +20,6 @@ expression: out_texts.get(out).unwrap()
 
 class MyOpaqueStruct;
 
-/**
- * A destruction policy for using MyStruct with mozilla::UniquePtr.
- */
-struct MyStructDeleter {
-  void operator()(capi::MyStruct* l) const noexcept {
-    capi::MyStruct_destroy(l);
-  }
-};
 struct MyStruct {
  public:
   mozilla::Maybe<MyOpaqueStruct> a;
