@@ -124,18 +124,19 @@ fn main() -> std::io::Result<()> {
 
     let mut out_texts: HashMap<String, String> = HashMap::new();
 
-    match opt.target_language.as_str() {
+    let target_language = opt.target_language.as_str();
+
+    match target_language {
         "js" => js::gen_bindings(&env, &mut out_texts, Some(&docs_url_gen)).unwrap(),
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
         "cpp" => {
-
             c::gen_bindings(&env, &mut out_texts).unwrap();
             cpp::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
         }
         "dotnet" => {
             dotnet::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
         }
-        "c2" => {
+        "c2" | "cpp-c2" => {
             let files = common::FileMap::default();
             let tcx = match hir::TypeContext::from_ast(&env) {
                 Ok(context) => context,
@@ -150,6 +151,10 @@ fn main() -> std::io::Result<()> {
             context.run();
 
             out_texts = context.files.take_files();
+
+            if target_language == "cpp-c2" {
+                cpp::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
+            }
         }
         o => panic!("Unknown target: {}", o),
     }
@@ -186,7 +191,7 @@ fn main() -> std::io::Result<()> {
 
         match opt.target_language.as_str() {
             "js" => js::docs::gen_docs(&env, &mut docs_out_texts, &docs_url_gen).unwrap(),
-            "cpp" => cpp::docs::gen_docs(
+            "cpp" | "cpp-c2" => cpp::docs::gen_docs(
                 &env,
                 &opt.library_config,
                 &mut docs_out_texts,
