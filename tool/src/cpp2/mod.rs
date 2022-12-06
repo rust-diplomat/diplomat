@@ -30,6 +30,9 @@ impl<'tcx> Cpp2Context<'tcx> {
         for (id, ty) in self.tcx.all_types() {
             self.files.add_file(format!("{}.x", self.formatter.fmt_type_name(id)), format!("{:?}", ty));
         }
+        for (id, ty) in self.tcx.all_types() {
+            self.gen_ty(id, ty)
+        }
     }
 
     // further methods can be found in ty.rs and formatter.rs
