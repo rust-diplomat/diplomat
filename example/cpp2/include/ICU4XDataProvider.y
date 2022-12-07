@@ -1,5 +1,5 @@
 #ifndef ICU4XDataProvider_H
-#define ICU4XDataProvider_H
+#define ICU4XDataProvider_HPP
 
 
 #include <stdio.h>
@@ -10,12 +10,6 @@
 #include "diplomat_result_void_void.h"
 
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
-
-typedef struct diplomat_result_void_void diplomat_result_void_void;
 
 
 typedef struct ICU4XDataProvider ICU4XDataProvider;
@@ -27,9 +21,4 @@ diplomat_result_void_void ICU4XDataProvider_returns_result();
 void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
 
 
-#ifdef __cplusplus
-} // namespace capi
-} // extern "C"
-#endif // __cplusplus
-
-#endif // ICU4XDataProvider_H
+#endif // ICU4XDataProvider_HPP

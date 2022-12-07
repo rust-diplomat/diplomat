@@ -33,7 +33,8 @@ pub struct Header {
     /// typedef struct Foo Foo;
     /// typedef struct Bar Bar;
     /// ```
-    pub forwards: BTreeSet<String>,
+    pub forward_classes: BTreeSet<String>,
+    pub forward_structs: BTreeSet<String>,
     /// The actual meat of the header: usually will contain a type definition and methods
     ///
     /// Example:
@@ -53,7 +54,8 @@ impl Header {
         Header {
             identifier,
             includes: BTreeSet::new(),
-            forwards: BTreeSet::new(),
+            forward_classes: BTreeSet::new(),
+            forward_structs: BTreeSet::new(),
             body: String::new(),
         }
     }
@@ -66,8 +68,11 @@ impl fmt::Display for Header {
         for i in &self.includes {
             includes += &format!("#include \"{}.h\"\n", i);
         }
-        for f in &self.forwards {
-            forwards += &format!("typedef struct {f} {f};\n");
+        for f in &self.forward_classes {
+            forwards += &format!("class {f};\n");
+        }
+        for f in &self.forward_structs {
+            forwards += &format!("struct {f};\n");
         }
         let identifier = &self.identifier;
         let body = &self.body;
@@ -75,25 +80,15 @@ impl fmt::Display for Header {
         write!(
             f,
             r#"#ifndef {identifier}_H
-#define {identifier}_H
+#define {identifier}_HPP
 
 {includes}
-
-#ifdef __cplusplus
-namespace capi {{
-extern "C" {{
-#endif // __cplusplus
 
 {forwards}
 
 {body}
 
-#ifdef __cplusplus
-}} // namespace capi
-}} // extern "C"
-#endif // __cplusplus
-
-#endif // {identifier}_H
+#endif // {identifier}_HPP
 "#
         )
     }

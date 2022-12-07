@@ -1,5 +1,5 @@
 #ifndef ICU4XFixedDecimalFormatOptions_H
-#define ICU4XFixedDecimalFormatOptions_H
+#define ICU4XFixedDecimalFormatOptions_HPP
 
 
 #include <stdio.h>
@@ -10,11 +10,6 @@
 #include "ICU4XFixedDecimalGroupingStrategy.h"
 #include "ICU4XFixedDecimalSignDisplay.h"
 
-
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
 
 
 
@@ -28,9 +23,4 @@ typedef struct ICU4XFixedDecimalFormatOptions {
 ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions_default();
 
 
-#ifdef __cplusplus
-} // namespace capi
-} // extern "C"
-#endif // __cplusplus
-
-#endif // ICU4XFixedDecimalFormatOptions_H
+#endif // ICU4XFixedDecimalFormatOptions_HPP

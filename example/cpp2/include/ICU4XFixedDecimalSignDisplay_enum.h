@@ -1,5 +1,5 @@
 #ifndef ICU4XFixedDecimalSignDisplay_enum_H
-#define ICU4XFixedDecimalSignDisplay_enum_H
+#define ICU4XFixedDecimalSignDisplay_enum_HPP
 
 
 #include <stdio.h>
@@ -8,11 +8,6 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
 
 
 
@@ -25,9 +20,4 @@ typedef enum ICU4XFixedDecimalSignDisplay {
 } ICU4XFixedDecimalSignDisplay;
 
 
-#ifdef __cplusplus
-} // namespace capi
-} // extern "C"
-#endif // __cplusplus
-
-#endif // ICU4XFixedDecimalSignDisplay_enum_H
+#endif // ICU4XFixedDecimalSignDisplay_enum_HPP

@@ -33,7 +33,8 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
         let ty_name = context.cx.formatter.fmt_type_name(id);
-        context.header.forwards.remove(&*ty_name);
+        context.header.forward_classes.remove(&*ty_name);
+        context.header.forward_structs.remove(&*ty_name);
         context.header.includes.remove(&*header_name);
 
         self.files.add_file(header_path, header.to_string());
@@ -141,12 +142,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 };
                 // todo push to results set
                 let ret: Cow<str> = format!("diplomat_result_{ok_ty_name}_{err_ty_name}").into();
-                self.header.forwards.insert(ret.to_string());
+                // self.header.forwards.insert(ret.to_string());
                 self.header.includes.insert(ret.to_string());
-                // self.cx
-                //     .result_store
-                //     .borrow_mut()
-                //     .insert(ret.to_string(), (ok_ty, err.as_ref()));
                 ret
             }
         };
@@ -247,7 +244,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 // and users will be forced to import more types
                 let header_name = self.cx.formatter.fmt_header_name(op_id);
                 self.header.includes.insert(header_name.into());
-                self.header.forwards.insert(name.into());
+                self.header.forward_classes.insert(name.into());
                 ret.into()
             }
             Type::Struct(ref st) => {
@@ -256,7 +253,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ret = name.clone();
                 let header_name = self.cx.formatter.fmt_header_name(st_id);
                 self.header.includes.insert(header_name.into());
-                self.header.forwards.insert(name.into());
+                self.header.forward_structs.insert(name.into());
                 ret
             }
             Type::Enum(ref e) => {

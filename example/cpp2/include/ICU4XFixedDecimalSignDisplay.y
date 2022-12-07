@@ -1,5 +1,5 @@
 #ifndef ICU4XFixedDecimalSignDisplay_H
-#define ICU4XFixedDecimalSignDisplay_H
+#define ICU4XFixedDecimalSignDisplay_HPP
 
 
 #include <stdio.h>
@@ -10,10 +10,6 @@
 #include "ICU4XFixedDecimalSignDisplay_enum.h"
 
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
 
 
 
@@ -21,10 +17,4 @@ extern "C" {
 
 
 
-
-#ifdef __cplusplus
-} // namespace capi
-} // extern "C"
-#endif // __cplusplus
-
-#endif // ICU4XFixedDecimalSignDisplay_H
+#endif // ICU4XFixedDecimalSignDisplay_HPP

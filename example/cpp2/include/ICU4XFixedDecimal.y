@@ -1,5 +1,5 @@
 #ifndef ICU4XFixedDecimal_H
-#define ICU4XFixedDecimal_H
+#define ICU4XFixedDecimal_HPP
 
 
 #include <stdio.h>
@@ -10,12 +10,6 @@
 #include "diplomat_result_void_void.h"
 
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
-
-typedef struct diplomat_result_void_void diplomat_result_void_void;
 
 
 typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
@@ -29,9 +23,4 @@ diplomat_result_void_void ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* s
 void ICU4XFixedDecimal_destroy(ICU4XFixedDecimal* self);
 
 
-#ifdef __cplusplus
-} // namespace capi
-} // extern "C"
-#endif // __cplusplus
-
-#endif // ICU4XFixedDecimal_H
+#endif // ICU4XFixedDecimal_HPP

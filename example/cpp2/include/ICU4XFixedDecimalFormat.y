@@ -1,5 +1,5 @@
 #ifndef ICU4XFixedDecimalFormat_H
-#define ICU4XFixedDecimalFormat_H
+#define ICU4XFixedDecimalFormat_HPP
 
 
 #include <stdio.h>
@@ -14,16 +14,11 @@
 #include "ICU4XLocale.h"
 
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
-
-typedef struct ICU4XDataProvider ICU4XDataProvider;
-typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
-typedef struct ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions;
-typedef struct ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormatResult;
-typedef struct ICU4XLocale ICU4XLocale;
+class ICU4XDataProvider;
+class ICU4XFixedDecimal;
+class ICU4XLocale;
+struct ICU4XFixedDecimalFormatOptions;
+struct ICU4XFixedDecimalFormatResult;
 
 
 typedef struct ICU4XFixedDecimalFormat ICU4XFixedDecimalFormat;
@@ -35,9 +30,4 @@ void ICU4XFixedDecimalFormat_format_write(const ICU4XFixedDecimalFormat* self, c
 void ICU4XFixedDecimalFormat_destroy(ICU4XFixedDecimalFormat* self);
 
 
-#ifdef __cplusplus
-} // namespace capi
-} // extern "C"
-#endif // __cplusplus
-
-#endif // ICU4XFixedDecimalFormat_H
+#endif // ICU4XFixedDecimalFormat_HPP
