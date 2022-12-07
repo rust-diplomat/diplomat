@@ -17,9 +17,9 @@ typedef struct Foo Foo;
 
 
 
-Foo* Foo_new(const char* x_data, size_t x_len);
-Bar* Foo_get_bar(const Foo* self);
-Foo* Foo_new_static(const char* x_data, size_t x_len);
+std::unique_ptr<Foo> Foo_new(std::string_view x);
+std::unique_ptr<Bar> Foo_get_bar(const Foo& self);
+std::unique_ptr<Foo> Foo_new_static(std::string_view x);
 void Foo_destroy(Foo* self);
 
 

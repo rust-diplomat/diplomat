@@ -17,11 +17,11 @@ typedef struct OptionOpaque OptionOpaque;
 
 
 
-OptionOpaque* OptionOpaque_new(int32_t i);
-OptionOpaque* OptionOpaque_new_none();
+std::unique_ptr<OptionOpaque> OptionOpaque_new(int32_t i);
+std::unique_ptr<OptionOpaque> OptionOpaque_new_none();
 OptionStruct OptionOpaque_new_struct();
 OptionStruct OptionOpaque_new_struct_nones();
-void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
+void OptionOpaque_assert_integer(const OptionOpaque& self, int32_t i);
 void OptionOpaque_destroy(OptionOpaque* self);
 
 

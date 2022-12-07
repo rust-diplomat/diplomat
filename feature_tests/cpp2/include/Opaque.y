@@ -19,8 +19,8 @@ typedef struct Opaque Opaque;
 
 
 
-Opaque* Opaque_new();
-void Opaque_assert_struct(const Opaque* self, MyStruct s);
+std::unique_ptr<Opaque> Opaque_new();
+void Opaque_assert_struct(const Opaque& self, MyStruct s);
 size_t Opaque_returns_usize();
 ImportedStruct Opaque_returns_imported();
 void Opaque_destroy(Opaque* self);

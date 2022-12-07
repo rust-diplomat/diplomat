@@ -40,6 +40,26 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         ident.into()
     }
 
+    pub fn fmt_optional<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        format!("std::optional<{}>", ident).into()
+    }
+
+    pub fn fmt_borrowed<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        format!("{}&", ident).into()
+    }
+
+    pub fn fmt_owned<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        format!("std::unique_ptr<{}>", ident).into()
+    }
+
+    pub fn fmt_borrowed_slice<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        format!("std::span<{}>", ident).into()
+    }
+
+    pub fn fmt_borrowed_str(&self) -> Cow<'static, str> {
+        "std::string_view".into()
+    }
+
     /// Format a method
     pub fn fmt_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
         let ty_name = self.fmt_type_name(ty);
@@ -49,8 +69,8 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Given a mutability, format a `const ` prefix for pointers if necessary,
     /// including a space for prepending
-    pub fn fmt_constness(&self, mutability: hir::Mutability) -> &str {
-        mutability.if_mut_else("", "const ")
+    pub fn fmt_constness<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+        mutability.if_mut_else(ident.into(), format!("const {}", ident).into())
     }
 
     /// Generates an identifier that uniquely identifies the given *C* type.

@@ -15,9 +15,9 @@ typedef struct Float64Vec Float64Vec;
 
 
 
-Float64Vec* Float64Vec_new(const double* v_data, size_t v_len);
-void Float64Vec_fill_slice(const Float64Vec* self, double* v_data, size_t v_len);
-void Float64Vec_set_value(Float64Vec* self, const double* new_slice_data, size_t new_slice_len);
+std::unique_ptr<Float64Vec> Float64Vec_new(const std::span<double> v);
+void Float64Vec_fill_slice(const Float64Vec& self, std::span<double> v);
+void Float64Vec_set_value(Float64Vec& self, const std::span<double> new_slice);
 void Float64Vec_destroy(Float64Vec* self);
 
 

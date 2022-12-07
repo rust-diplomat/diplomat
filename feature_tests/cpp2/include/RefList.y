@@ -17,7 +17,7 @@ typedef struct RefList RefList;
 
 
 
-RefList* RefList_node(const RefListParameter* data);
+std::unique_ptr<RefList> RefList_node(const RefListParameter& data);
 void RefList_destroy(RefList* self);
 
 

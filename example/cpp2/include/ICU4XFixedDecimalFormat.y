@@ -25,8 +25,8 @@ typedef struct ICU4XFixedDecimalFormat ICU4XFixedDecimalFormat;
 
 
 
-ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat_try_new(const ICU4XLocale* locale, const ICU4XDataProvider* provider, ICU4XFixedDecimalFormatOptions options);
-void ICU4XFixedDecimalFormat_format_write(const ICU4XFixedDecimalFormat* self, const ICU4XFixedDecimal* value, DiplomatWriteable* writeable);
+ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat_try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
+void ICU4XFixedDecimalFormat_format_write(const ICU4XFixedDecimalFormat& self, const ICU4XFixedDecimal& value, DiplomatWriteable* writeable);
 void ICU4XFixedDecimalFormat_destroy(ICU4XFixedDecimalFormat* self);
 
 

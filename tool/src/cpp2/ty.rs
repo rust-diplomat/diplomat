@@ -205,21 +205,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let param_name = self.cx.formatter.fmt_param_name(ident);
         match ty {
             Type::Slice(hir::Slice::Str(..)) if !is_struct => {
-                vec![
-                    ("const char*".into(), format!("{param_name}_data").into()),
-                    ("size_t".into(), format!("{param_name}_len").into()),
-                ]
+                let ty = self.cx.formatter.fmt_borrowed_str();
+                vec![(ty, param_name)]
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
-                let constness = self.cx.formatter.fmt_constness(b.mutability);
-                let prim = self.cx.formatter.fmt_primitive_as_c(*p);
-                vec![
-                    (
-                        format!("{constness}{prim}*").into(),
-                        format!("{param_name}_data").into(),
-                    ),
-                    ("size_t".into(), format!("{param_name}_len").into()),
-                ]
+                let ty = self.cx.formatter.fmt_primitive_as_c(*p);
+                let ty = self.cx.formatter.fmt_borrowed_slice(&ty);
+                let ty = self.cx.formatter.fmt_constness(&ty, b.mutability);
+                vec![(ty.into_owned().into(), param_name)]
             }
             _ => {
                 let ty = self.gen_ty_name(ty);
@@ -236,16 +229,20 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let name = self.cx.formatter.fmt_type_name(op_id);
-                // unwrap_or(mut) since owned pointers need to not be const
+                let ret = if op.owner.is_owned() {
+                    self.cx.formatter.fmt_owned(&name)
+                } else {
+                    self.cx.formatter.fmt_borrowed(&name)
+                };
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let constness = self.cx.formatter.fmt_constness(mutability);
-                let ret = format!("{constness}{name}*");
+                let ret = self.cx.formatter.fmt_constness(&ret, mutability);
+
                 // Todo(breaking): We can remove this requirement
                 // and users will be forced to import more types
                 let header_name = self.cx.formatter.fmt_header_name(op_id);
                 self.header.includes.insert(header_name.into());
-                self.header.forward_classes.insert(name.into());
-                ret.into()
+                self.header.forward_classes.insert(name.to_string());
+                ret.to_string().into()
             }
             Type::Struct(ref st) => {
                 let st_id = P::id_for_path(st);
@@ -266,7 +263,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Slice(ref s) => match s {
                 // only reachable for structs, not methods
                 hir::Slice::Str(..) => "DiplomatStringView".into(),
-                hir::Slice::Primitive(_, p) => panic!("Attempted to gen_ty_name for slice of {}, should have been handled by gen_ty_decl", p.as_str())
+                hir::Slice::Primitive(_, p) => p.as_str().into(),
+                // hir::Slice::Primitive(_, p) => panic!("Attempted to gen_ty_name for slice of {}, should have been handled by gen_ty_decl", p.as_str())
             }
         }
     }

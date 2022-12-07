@@ -16,10 +16,10 @@ class OptionOpaqueChar;
 
 
 typedef struct OptionStruct {
-	OptionOpaque* a;
-	OptionOpaqueChar* b;
+	std::unique_ptr<OptionOpaque> a;
+	std::unique_ptr<OptionOpaqueChar> b;
 	uint32_t c;
-	OptionOpaque* d;
+	std::unique_ptr<OptionOpaque> d;
 } OptionStruct;
 
 

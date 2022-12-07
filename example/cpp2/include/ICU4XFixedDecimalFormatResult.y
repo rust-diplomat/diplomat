@@ -14,7 +14,7 @@ class ICU4XFixedDecimalFormat;
 
 
 typedef struct ICU4XFixedDecimalFormatResult {
-	ICU4XFixedDecimalFormat* fdf;
+	std::unique_ptr<ICU4XFixedDecimalFormat> fdf;
 	bool success;
 } ICU4XFixedDecimalFormatResult;
 

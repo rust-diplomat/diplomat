@@ -151,6 +151,8 @@ impl TyPosition for OutputOnly {
 pub trait OpaqueOwner {
     /// Return the mutability of this owner
     fn mutability(&self) -> Option<Mutability>;
+
+    fn is_owned(&self) -> bool;
 }
 
 impl OpaqueOwner for MaybeOwn {
@@ -160,10 +162,21 @@ impl OpaqueOwner for MaybeOwn {
             MaybeOwn::Borrow(b) => b.mutability(),
         }
     }
+
+    fn is_owned(&self) -> bool {
+        match self {
+            MaybeOwn::Own => true,
+            MaybeOwn::Borrow(_) => false,
+        }
+    }
 }
 
 impl OpaqueOwner for Borrow {
     fn mutability(&self) -> Option<Mutability> {
         Some(self.mutability)
+    }
+
+    fn is_owned(&self) -> bool {
+        false
     }
 }
