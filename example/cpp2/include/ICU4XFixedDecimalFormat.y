@@ -20,7 +20,7 @@ class ICU4XFixedDecimalFormat {
 public:
 	static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
 
-	std::string format_write(const ICU4XFixedDecimal& value);
+	std::string format_write(const ICU4XFixedDecimal& value) const;
 
 	inline capi::ICU4XFixedDecimalFormat AsFFI() {
 		return reinterpret_cast::<capi::ICU4XFixedDecimalFormat>(this);

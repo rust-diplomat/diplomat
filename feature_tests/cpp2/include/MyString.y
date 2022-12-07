@@ -17,7 +17,7 @@ public:
 
 	void set_str(std::string_view new_str);
 
-	std::string get_str();
+	std::string get_str() const;
 
 	inline capi::MyString AsFFI() {
 		return reinterpret_cast::<capi::MyString>(this);

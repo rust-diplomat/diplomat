@@ -15,7 +15,7 @@ class Float64Vec {
 public:
 	static std::unique_ptr<Float64Vec> new_(const std::span<double> v);
 
-	void fill_slice(std::span<double> v);
+	void fill_slice(std::span<double> v) const;
 
 	void set_value(const std::span<double> new_slice);
 

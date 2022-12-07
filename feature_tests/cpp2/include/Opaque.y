@@ -17,7 +17,7 @@ class Opaque {
 public:
 	static std::unique_ptr<Opaque> new_();
 
-	void assert_struct(MyStruct s);
+	void assert_struct(MyStruct s) const;
 
 	static size_t returns_usize();
 

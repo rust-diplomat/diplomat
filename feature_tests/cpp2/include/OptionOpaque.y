@@ -22,7 +22,7 @@ public:
 
 	static OptionStruct new_struct_nones();
 
-	void assert_integer(int32_t i);
+	void assert_integer(int32_t i) const;
 
 	static bool option_opaque_argument(const std::optional<OptionOpaque&> arg);
 

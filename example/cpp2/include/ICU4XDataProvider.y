@@ -15,7 +15,7 @@ class ICU4XDataProvider {
 public:
 	static std::unique_ptr<ICU4XDataProvider> new_static();
 
-	static DiplomatResult<void, void> returns_result();
+	static DiplomatResult<std::monostate, std::monostate> returns_result();
 
 	inline capi::ICU4XDataProvider AsFFI() {
 		return reinterpret_cast::<capi::ICU4XDataProvider>(this);

@@ -1,6 +1,8 @@
 use super::header::Header;
 use super::Cpp2Context;
-use diplomat_core::hir::{self, OpaqueOwner, TyPosition, Type, TypeDef, TypeId};
+use diplomat_core::hir::{
+    self, Mutability, OpaqueOwner, ParamSelf, SelfType, TyPosition, Type, TypeDef, TypeId,
+};
 use std::borrow::Cow;
 use std::fmt::Write;
 
@@ -14,8 +16,11 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         match ty {
             TypeDef::Enum(e) => {
                 // Use the C enums
-                context.header.includes_c.insert(header_name.clone().into_owned());
-            },
+                context
+                    .header
+                    .includes_c
+                    .insert(header_name.clone().into_owned());
+            }
             TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
             TypeDef::Struct(s) => context.gen_struct_def(s, id),
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
@@ -59,7 +64,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             writeln!(&mut self.header.body);
         }
         writeln!(&mut self.header.body, "\tinline {ctype} AsFFI() {{");
-        writeln!(&mut self.header.body, "\t\treturn reinterpret_cast::<{ctype}>(this);");
+        writeln!(
+            &mut self.header.body,
+            "\t\treturn reinterpret_cast::<{ctype}>(this);"
+        );
         writeln!(&mut self.header.body, "\t}}").unwrap();
         writeln!(&mut self.header.body);
         self.gen_dtor(id);
@@ -100,17 +108,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             },
             ReturnFallability::Fallible(ref ok, ref err) => {
                 let (ok_ty_name, ok_ty) = match ok {
-                    Some(ReturnType::Writeable) => {
-                        (self.cx.formatter.fmt_owned_str(), None)
-                    }
-                    None => ("void".into(), None),
-                    Some(ReturnType::OutType(o)) => {
-                        (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
-                    }
+                    Some(ReturnType::Writeable) => (self.cx.formatter.fmt_owned_str(), None),
+                    None => ("std::monostate".into(), None),
+                    Some(ReturnType::OutType(o)) => (self.gen_ty_name(o), Some(o)),
                 };
                 let err_ty_name = match err {
-                    Some(o) => self.cx.formatter.fmt_type_name_uniquely(o),
-                    None => "void".into(),
+                    Some(o) => self.gen_ty_name(o),
+                    None => "std::monostate".into(),
                 };
                 let ret: Cow<str> = format!("DiplomatResult<{ok_ty_name}, {err_ty_name}>").into();
                 ret
@@ -135,7 +139,19 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ""
         };
 
-        writeln!(self.header.body, "\t{maybe_static}{return_ty} {method_name}({params});").unwrap();
+        let qualifiers = match &method.param_self {
+            Some(ParamSelf {
+                ty: SelfType::Opaque(opaque_path),
+            }) if opaque_path.owner.mutability == Mutability::Immutable => " const",
+            Some(_) => "",
+            None => "",
+        };
+
+        writeln!(
+            self.header.body,
+            "\t{maybe_static}{return_ty} {method_name}({params}){qualifiers};"
+        )
+        .unwrap();
     }
 
     pub fn gen_dtor(&mut self, id: TypeId) {
@@ -174,7 +190,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         }
     }
 
-    // Generate the C code for referencing a particular type.
+    // Generate the C++ code for referencing a particular type.
     // Handles adding imports and such as necessary
     fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
         match *ty {

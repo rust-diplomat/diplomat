@@ -13,7 +13,7 @@
 
 class OptionOpaqueChar {
 public:
-	void assert_char(char32_t ch);
+	void assert_char(char32_t ch) const;
 
 	inline capi::OptionOpaqueChar AsFFI() {
 		return reinterpret_cast::<capi::OptionOpaqueChar>(this);

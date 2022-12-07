@@ -19,7 +19,7 @@ public:
 
 	void negate();
 
-	DiplomatResult<std::string, void> to_string();
+	DiplomatResult<std::string, std::monostate> to_string() const;
 
 	inline capi::ICU4XFixedDecimal AsFFI() {
 		return reinterpret_cast::<capi::ICU4XFixedDecimal>(this);

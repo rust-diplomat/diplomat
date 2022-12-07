@@ -16,7 +16,7 @@ class Foo {
 public:
 	static std::unique_ptr<Foo> new_(std::string_view x);
 
-	std::unique_ptr<Bar> get_bar();
+	std::unique_ptr<Bar> get_bar() const;
 
 	static std::unique_ptr<Foo> new_static(std::string_view x);
 
