@@ -11,14 +11,28 @@
 
 
 
-class MyString;
+class MyString {
+public:
+	static std::unique_ptr<MyString> new_(std::string_view v);
+
+	void set_str(std::string_view new_str);
+
+	std::string get_str();
+
+	inline capi::MyString AsFFI() {
+		return reinterpret_cast::<capi::MyString>(this);
+	}
+
+	~MyString() {
+		MyString_destroy(AsFFI());
+	}
+
+private:
+	MyString() = delete;
+}
 
 
 
-std::unique_ptr<MyString> MyString_new(std::string_view v);
-void MyString_set_str(MyString& self, std::string_view new_str);
-void MyString_get_str(const MyString& self, DiplomatWriteable* writeable);
-void MyString_destroy(MyString* self);
 
 
 #endif // MyString_HPP

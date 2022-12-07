@@ -40,6 +40,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         ident.into()
     }
 
+    pub fn fmt_c_name<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        format!("capi::{ident}").into()
+    }
+
     pub fn fmt_optional<'a>(&self, ident: &'a str) -> Cow<'a, str> {
         format!("std::optional<{}>", ident).into()
     }
@@ -64,11 +68,17 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         "std::string_view".into()
     }
 
+    pub fn fmt_owned_str(&self) -> Cow<'static, str> {
+        "std::string".into()
+    }
+
     /// Format a method
-    pub fn fmt_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
-        let ty_name = self.fmt_type_name(ty);
-        let method_name = method.name.as_str();
-        format!("{ty_name}_{method_name}")
+    pub fn fmt_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
+        if method.name == "new" {
+            "new_".into()
+        } else {
+            method.name.as_str().into()
+        }
     }
 
     /// Given a mutability, format a `const ` prefix for pointers if necessary,

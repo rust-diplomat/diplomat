@@ -11,14 +11,28 @@
 
 
 
-class Float64Vec;
+class Float64Vec {
+public:
+	static std::unique_ptr<Float64Vec> new_(const std::span<double> v);
+
+	void fill_slice(std::span<double> v);
+
+	void set_value(const std::span<double> new_slice);
+
+	inline capi::Float64Vec AsFFI() {
+		return reinterpret_cast::<capi::Float64Vec>(this);
+	}
+
+	~Float64Vec() {
+		Float64Vec_destroy(AsFFI());
+	}
+
+private:
+	Float64Vec() = delete;
+}
 
 
 
-std::unique_ptr<Float64Vec> Float64Vec_new(const std::span<double> v);
-void Float64Vec_fill_slice(const Float64Vec& self, std::span<double> v);
-void Float64Vec_set_value(Float64Vec& self, const std::span<double> new_slice);
-void Float64Vec_destroy(Float64Vec* self);
 
 
 #endif // Float64Vec_HPP

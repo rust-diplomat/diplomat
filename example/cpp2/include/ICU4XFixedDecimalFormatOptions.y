@@ -20,7 +20,6 @@ struct ICU4XFixedDecimalFormatOptions {
 
 
 
-ICU4XFixedDecimalFormatOptions ICU4XFixedDecimalFormatOptions_default();
 
 
 #endif // ICU4XFixedDecimalFormatOptions_HPP

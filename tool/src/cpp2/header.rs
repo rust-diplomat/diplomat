@@ -26,6 +26,7 @@ pub struct Header {
     /// #include "diplomat_runtime.h"
     /// ```
     pub includes: BTreeSet<String>,
+    pub includes_c: BTreeSet<String>,
     /// The struct forward decls necessary
     ///
     /// Example:
@@ -54,6 +55,7 @@ impl Header {
         Header {
             identifier,
             includes: BTreeSet::new(),
+            includes_c: BTreeSet::new(),
             forward_classes: BTreeSet::new(),
             forward_structs: BTreeSet::new(),
             body: String::new(),
@@ -67,6 +69,9 @@ impl fmt::Display for Header {
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
             includes += &format!("#include \"{}.hpp\"\n", i);
+        }
+        for i in &self.includes_c {
+            includes += &format!("#include \"{}.h\"\n", i);
         }
         for f in &self.forward_classes {
             forwards += &format!("class {f};\n");

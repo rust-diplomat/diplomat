@@ -11,12 +11,24 @@
 
 
 
-class OptionOpaqueChar;
+class OptionOpaqueChar {
+public:
+	void assert_char(char32_t ch);
+
+	inline capi::OptionOpaqueChar AsFFI() {
+		return reinterpret_cast::<capi::OptionOpaqueChar>(this);
+	}
+
+	~OptionOpaqueChar() {
+		OptionOpaqueChar_destroy(AsFFI());
+	}
+
+private:
+	OptionOpaqueChar() = delete;
+}
 
 
 
-void OptionOpaqueChar_assert_char(const OptionOpaqueChar& self, char32_t ch);
-void OptionOpaqueChar_destroy(OptionOpaqueChar* self);
 
 
 #endif // OptionOpaqueChar_HPP

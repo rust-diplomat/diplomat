@@ -11,13 +11,26 @@
 
 
 
-class ICU4XLocale;
+class ICU4XLocale {
+public:
+	static std::unique_ptr<ICU4XLocale> new_(std::string_view name);
+
+	static std::unique_ptr<ICU4XLocale> new_from_bytes(const std::span<uint8_t> bytes);
+
+	inline capi::ICU4XLocale AsFFI() {
+		return reinterpret_cast::<capi::ICU4XLocale>(this);
+	}
+
+	~ICU4XLocale() {
+		ICU4XLocale_destroy(AsFFI());
+	}
+
+private:
+	ICU4XLocale() = delete;
+}
 
 
 
-std::unique_ptr<ICU4XLocale> ICU4XLocale_new(std::string_view name);
-std::unique_ptr<ICU4XLocale> ICU4XLocale_new_from_bytes(const std::span<uint8_t> bytes);
-void ICU4XLocale_destroy(ICU4XLocale* self);
 
 
 #endif // ICU4XLocale_HPP

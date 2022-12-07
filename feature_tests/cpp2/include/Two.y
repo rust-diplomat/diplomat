@@ -11,11 +11,22 @@
 
 
 
-class Two;
+class Two {
+public:
+	inline capi::Two AsFFI() {
+		return reinterpret_cast::<capi::Two>(this);
+	}
+
+	~Two() {
+		Two_destroy(AsFFI());
+	}
+
+private:
+	Two() = delete;
+}
 
 
 
-void Two_destroy(Two* self);
 
 
 #endif // Two_HPP

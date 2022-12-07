@@ -11,11 +11,22 @@
 
 
 
-class RefListParameter;
+class RefListParameter {
+public:
+	inline capi::RefListParameter AsFFI() {
+		return reinterpret_cast::<capi::RefListParameter>(this);
+	}
+
+	~RefListParameter() {
+		RefListParameter_destroy(AsFFI());
+	}
+
+private:
+	RefListParameter() = delete;
+}
 
 
 
-void RefListParameter_destroy(RefListParameter* self);
 
 
 #endif // RefListParameter_HPP

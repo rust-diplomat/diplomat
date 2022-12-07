@@ -7,18 +7,30 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "diplomat_result_void_void.hpp"
 
 
 
 
-class ICU4XDataProvider;
+class ICU4XDataProvider {
+public:
+	static std::unique_ptr<ICU4XDataProvider> new_static();
+
+	static DiplomatResult<void, void> returns_result();
+
+	inline capi::ICU4XDataProvider AsFFI() {
+		return reinterpret_cast::<capi::ICU4XDataProvider>(this);
+	}
+
+	~ICU4XDataProvider() {
+		ICU4XDataProvider_destroy(AsFFI());
+	}
+
+private:
+	ICU4XDataProvider() = delete;
+}
 
 
 
-std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider_new_static();
-diplomat_result_void_void ICU4XDataProvider_returns_result();
-void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
 
 
 #endif // ICU4XDataProvider_HPP

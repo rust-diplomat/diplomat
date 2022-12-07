@@ -14,17 +14,28 @@
 class ICU4XDataProvider;
 class ICU4XFixedDecimal;
 class ICU4XLocale;
-struct ICU4XFixedDecimalFormatOptions;
-struct ICU4XFixedDecimalFormatResult;
 
 
-class ICU4XFixedDecimalFormat;
+class ICU4XFixedDecimalFormat {
+public:
+	static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
+
+	std::string format_write(const ICU4XFixedDecimal& value);
+
+	inline capi::ICU4XFixedDecimalFormat AsFFI() {
+		return reinterpret_cast::<capi::ICU4XFixedDecimalFormat>(this);
+	}
+
+	~ICU4XFixedDecimalFormat() {
+		ICU4XFixedDecimalFormat_destroy(AsFFI());
+	}
+
+private:
+	ICU4XFixedDecimalFormat() = delete;
+}
 
 
 
-ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat_try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
-void ICU4XFixedDecimalFormat_format_write(const ICU4XFixedDecimalFormat& self, const ICU4XFixedDecimal& value, DiplomatWriteable* writeable);
-void ICU4XFixedDecimalFormat_destroy(ICU4XFixedDecimalFormat* self);
 
 
 #endif // ICU4XFixedDecimalFormat_HPP

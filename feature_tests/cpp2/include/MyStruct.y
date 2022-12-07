@@ -24,7 +24,6 @@ struct MyStruct {
 
 
 
-MyStruct MyStruct_new();
 
 
 #endif // MyStruct_HPP

@@ -12,12 +12,24 @@
 class RefListParameter;
 
 
-class RefList;
+class RefList {
+public:
+	static std::unique_ptr<RefList> node(const RefListParameter& data);
+
+	inline capi::RefList AsFFI() {
+		return reinterpret_cast::<capi::RefList>(this);
+	}
+
+	~RefList() {
+		RefList_destroy(AsFFI());
+	}
+
+private:
+	RefList() = delete;
+}
 
 
 
-std::unique_ptr<RefList> RefList_node(const RefListParameter& data);
-void RefList_destroy(RefList* self);
 
 
 #endif // RefList_HPP

@@ -11,19 +11,32 @@
 #include "MyStruct.hpp"
 
 
-struct ImportedStruct;
-struct MyStruct;
 
 
-class Opaque;
+class Opaque {
+public:
+	static std::unique_ptr<Opaque> new_();
+
+	void assert_struct(MyStruct s);
+
+	static size_t returns_usize();
+
+	static ImportedStruct returns_imported();
+
+	inline capi::Opaque AsFFI() {
+		return reinterpret_cast::<capi::Opaque>(this);
+	}
+
+	~Opaque() {
+		Opaque_destroy(AsFFI());
+	}
+
+private:
+	Opaque() = delete;
+}
 
 
 
-std::unique_ptr<Opaque> Opaque_new();
-void Opaque_assert_struct(const Opaque& self, MyStruct s);
-size_t Opaque_returns_usize();
-ImportedStruct Opaque_returns_imported();
-void Opaque_destroy(Opaque* self);
 
 
 #endif // Opaque_HPP

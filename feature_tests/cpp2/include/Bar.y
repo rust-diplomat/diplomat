@@ -11,11 +11,22 @@
 
 
 
-class Bar;
+class Bar {
+public:
+	inline capi::Bar AsFFI() {
+		return reinterpret_cast::<capi::Bar>(this);
+	}
+
+	~Bar() {
+		Bar_destroy(AsFFI());
+	}
+
+private:
+	Bar() = delete;
+}
 
 
 
-void Bar_destroy(Bar* self);
 
 
 #endif // Bar_HPP

@@ -10,20 +10,36 @@
 #include "OptionStruct.hpp"
 
 
-struct OptionStruct;
 
 
-class OptionOpaque;
+class OptionOpaque {
+public:
+	static std::unique_ptr<OptionOpaque> new_(int32_t i);
+
+	static std::unique_ptr<OptionOpaque> new_none();
+
+	static OptionStruct new_struct();
+
+	static OptionStruct new_struct_nones();
+
+	void assert_integer(int32_t i);
+
+	static bool option_opaque_argument(const std::optional<OptionOpaque&> arg);
+
+	inline capi::OptionOpaque AsFFI() {
+		return reinterpret_cast::<capi::OptionOpaque>(this);
+	}
+
+	~OptionOpaque() {
+		OptionOpaque_destroy(AsFFI());
+	}
+
+private:
+	OptionOpaque() = delete;
+}
 
 
 
-std::unique_ptr<OptionOpaque> OptionOpaque_new(int32_t i);
-std::unique_ptr<OptionOpaque> OptionOpaque_new_none();
-OptionStruct OptionOpaque_new_struct();
-OptionStruct OptionOpaque_new_struct_nones();
-void OptionOpaque_assert_integer(const OptionOpaque& self, int32_t i);
-bool OptionOpaque_option_opaque_argument(const std::optional<OptionOpaque&> arg);
-void OptionOpaque_destroy(OptionOpaque* self);
 
 
 #endif // OptionOpaque_HPP

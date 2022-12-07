@@ -1,5 +1,5 @@
 #ifndef ICU4XFixedDecimalGroupingStrategy_enum_H
-#define ICU4XFixedDecimalGroupingStrategy_enum_HPP
+#define ICU4XFixedDecimalGroupingStrategy_enum_H
 
 
 #include <stdio.h>
@@ -8,6 +8,11 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif // __cplusplus
 
 
 
@@ -19,4 +24,9 @@ typedef enum ICU4XFixedDecimalGroupingStrategy {
 } ICU4XFixedDecimalGroupingStrategy;
 
 
-#endif // ICU4XFixedDecimalGroupingStrategy_enum_HPP
+#ifdef __cplusplus
+} // namespace capi
+} // extern "C"
+#endif // __cplusplus
+
+#endif // ICU4XFixedDecimalGroupingStrategy_enum_H

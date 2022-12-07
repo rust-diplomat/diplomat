@@ -1,5 +1,5 @@
 #ifndef ErrorEnum_enum_H
-#define ErrorEnum_enum_HPP
+#define ErrorEnum_enum_H
 
 
 #include <stdio.h>
@@ -9,6 +9,11 @@
 #include "diplomat_runtime.h"
 
 
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif // __cplusplus
+
 
 
 typedef enum ErrorEnum {
@@ -17,4 +22,9 @@ typedef enum ErrorEnum {
 } ErrorEnum;
 
 
-#endif // ErrorEnum_enum_HPP
+#ifdef __cplusplus
+} // namespace capi
+} // extern "C"
+#endif // __cplusplus
+
+#endif // ErrorEnum_enum_H

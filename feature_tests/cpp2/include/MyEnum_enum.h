@@ -1,5 +1,5 @@
 #ifndef MyEnum_enum_H
-#define MyEnum_enum_HPP
+#define MyEnum_enum_H
 
 
 #include <stdio.h>
@@ -8,6 +8,11 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif // __cplusplus
 
 
 
@@ -21,4 +26,9 @@ typedef enum MyEnum {
 } MyEnum;
 
 
-#endif // MyEnum_enum_HPP
+#ifdef __cplusplus
+} // namespace capi
+} // extern "C"
+#endif // __cplusplus
+
+#endif // MyEnum_enum_H
