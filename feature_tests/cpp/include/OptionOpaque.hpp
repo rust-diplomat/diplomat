@@ -29,6 +29,7 @@ class OptionOpaque {
   static OptionStruct new_struct();
   static OptionStruct new_struct_nones();
   void assert_integer(int32_t i) const;
+  static bool option_opaque_argument(const OptionOpaque* arg);
   inline const capi::OptionOpaque* AsFFI() const { return this->inner.get(); }
   inline capi::OptionOpaque* AsFFIMut() { return this->inner.get(); }
   inline OptionOpaque(capi::OptionOpaque* i) : inner(i) {}
@@ -113,5 +114,8 @@ inline OptionStruct OptionOpaque::new_struct_nones() {
 }
 inline void OptionOpaque::assert_integer(int32_t i) const {
   capi::OptionOpaque_assert_integer(this->inner.get(), i);
+}
+inline bool OptionOpaque::option_opaque_argument(const OptionOpaque* arg) {
+  return capi::OptionOpaque_option_opaque_argument((arg) ? arg->AsFFI() : nullptr);
 }
 #endif

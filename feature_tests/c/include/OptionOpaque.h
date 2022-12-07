@@ -29,6 +29,8 @@ OptionStruct OptionOpaque_new_struct();
 OptionStruct OptionOpaque_new_struct_nones();
 
 void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
+
+bool OptionOpaque_option_opaque_argument(const OptionOpaque* arg);
 void OptionOpaque_destroy(OptionOpaque* self);
 
 #ifdef __cplusplus

@@ -24,4 +24,8 @@ export class OptionOpaque {
   /**
    */
   assert_integer(i: i32): void;
+
+  /**
+   */
+  static option_opaque_argument(arg?: OptionOpaque): boolean;
 }

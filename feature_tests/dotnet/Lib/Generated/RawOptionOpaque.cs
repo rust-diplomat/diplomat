@@ -31,6 +31,10 @@ public partial struct OptionOpaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_assert_integer", ExactSpelling = true)]
     public static unsafe extern void AssertInteger(OptionOpaque* self, int i);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_option_opaque_argument", ExactSpelling = true)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    public static unsafe extern bool OptionOpaqueArgument(OptionOpaque* arg);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(OptionOpaque* self);
 }

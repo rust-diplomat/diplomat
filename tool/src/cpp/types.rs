@@ -5,10 +5,17 @@ use diplomat_core::ast;
 
 use crate::cpp::config::LibraryConfig;
 
+#[derive(Debug, Clone, Copy)]
+pub enum RefType {
+    Owned,
+    BorrowedNullable,
+    BorrowedNonNull,
+}
+
 pub fn gen_type(
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    behind_ref: Option<bool>, // owned?
+    ref_type: Option<RefType>,
     env: &Env,
     library_config: &LibraryConfig,
     // whether we are generating a struct field.
@@ -20,7 +27,7 @@ pub fn gen_type(
     gen_type_inner(
         typ,
         in_path,
-        behind_ref,
+        ref_type,
         env,
         library_config,
         in_struct,
@@ -32,7 +39,7 @@ pub fn gen_type(
 fn gen_type_inner<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    behind_ref: Option<bool>, // owned?
+    ref_type: Option<RefType>,
     env: &Env,
     library_config: &LibraryConfig,
     in_struct: bool,
@@ -43,17 +50,13 @@ fn gen_type_inner<W: fmt::Write>(
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             match path_type.resolve(in_path, env) {
                 ast::CustomType::Opaque(opaque) => {
-                    if let Some(owned) = behind_ref {
-                        if owned {
-                            write!(out, "{}", opaque.name)?;
-                        } else {
-                            write!(out, "{}&", opaque.name)?;
-                        }
-
-                        handled_ref = true;
-                    } else {
-                        panic!("Cannot pass opaque structs as values");
+                    match ref_type {
+                        None => panic!("Cannot pass opaque structs as values"),
+                        Some(RefType::Owned) => write!(out, "{}", opaque.name)?,
+                        Some(RefType::BorrowedNullable) => write!(out, "{}*", opaque.name)?,
+                        Some(RefType::BorrowedNonNull) => write!(out, "{}&", opaque.name)?,
                     }
+                    handled_ref = true;
                 }
 
                 ast::CustomType::Struct(strct) => {
@@ -70,7 +73,7 @@ fn gen_type_inner<W: fmt::Write>(
             gen_type_inner(
                 underlying.as_ref(),
                 in_path,
-                Some(true),
+                Some(RefType::Owned),
                 env,
                 library_config,
                 in_struct,
@@ -85,7 +88,7 @@ fn gen_type_inner<W: fmt::Write>(
             gen_type_inner(
                 underlying.as_ref(),
                 in_path,
-                Some(false),
+                Some(RefType::BorrowedNonNull),
                 env,
                 library_config,
                 in_struct,
@@ -99,13 +102,28 @@ fn gen_type_inner<W: fmt::Write>(
                 gen_type_inner(
                     underlying.as_ref(),
                     in_path,
-                    behind_ref,
+                    ref_type,
                     env,
                     library_config,
                     in_struct,
                     out,
                 )?;
                 write!(out, ">")?;
+            }
+
+            ast::TypeName::Reference(_, mutability, underlying) => {
+                if mutability.is_immutable() && !in_struct {
+                    write!(out, "const ")?;
+                }
+                gen_type_inner(
+                    underlying.as_ref(),
+                    in_path,
+                    Some(RefType::BorrowedNullable),
+                    env,
+                    library_config,
+                    in_struct,
+                    out,
+                )?;
             }
 
             _ => todo!(),
@@ -116,22 +134,14 @@ fn gen_type_inner<W: fmt::Write>(
             if ok.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type_inner(ok, in_path, behind_ref, env, library_config, in_struct, out)?;
+                gen_type_inner(ok, in_path, ref_type, env, library_config, in_struct, out)?;
             }
 
             write!(out, ", ")?;
             if err.is_zst() {
                 write!(out, "std::monostate")?;
             } else {
-                gen_type_inner(
-                    err,
-                    in_path,
-                    behind_ref,
-                    env,
-                    library_config,
-                    in_struct,
-                    out,
-                )?;
+                gen_type_inner(err, in_path, ref_type, env, library_config, in_struct, out)?;
             }
             write!(out, ">")?;
         }
@@ -173,12 +183,10 @@ fn gen_type_inner<W: fmt::Write>(
     }
 
     if !handled_ref {
-        if let Some(owned) = behind_ref {
-            if owned {
-                write!(out, "*")?;
-            } else {
-                write!(out, "&")?;
-            }
+        match ref_type {
+            None => (),
+            Some(RefType::Owned) | Some(RefType::BorrowedNullable) => write!(out, "*")?,
+            Some(RefType::BorrowedNonNull) => write!(out, "&")?,
         }
     }
 
