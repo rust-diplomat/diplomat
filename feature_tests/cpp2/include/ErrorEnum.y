@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ErrorEnum_enum.h"
+#include "ErrorEnum_enum.hpp"
 
 
 

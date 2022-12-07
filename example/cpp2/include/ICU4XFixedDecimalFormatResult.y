@@ -7,16 +7,15 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ICU4XFixedDecimalFormat.h"
 
 
 class ICU4XFixedDecimalFormat;
 
 
-typedef struct ICU4XFixedDecimalFormatResult {
+struct ICU4XFixedDecimalFormatResult {
 	std::unique_ptr<ICU4XFixedDecimalFormat> fdf;
 	bool success;
-} ICU4XFixedDecimalFormatResult;
+};
 
 
 

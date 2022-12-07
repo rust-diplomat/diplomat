@@ -7,11 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ICU4XDataProvider.h"
-#include "ICU4XFixedDecimal.h"
-#include "ICU4XFixedDecimalFormatOptions.h"
-#include "ICU4XFixedDecimalFormatResult.h"
-#include "ICU4XLocale.h"
+#include "ICU4XFixedDecimalFormatOptions.hpp"
+#include "ICU4XFixedDecimalFormatResult.hpp"
 
 
 class ICU4XDataProvider;
@@ -21,7 +18,7 @@ struct ICU4XFixedDecimalFormatOptions;
 struct ICU4XFixedDecimalFormatResult;
 
 
-typedef struct ICU4XFixedDecimalFormat ICU4XFixedDecimalFormat;
+class ICU4XFixedDecimalFormat;
 
 
 

@@ -11,7 +11,7 @@
 
 
 
-typedef struct ICU4XLocale ICU4XLocale;
+class ICU4XLocale;
 
 
 

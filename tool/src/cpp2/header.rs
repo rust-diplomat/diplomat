@@ -66,7 +66,7 @@ impl fmt::Display for Header {
         let mut forwards = String::new();
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
-            includes += &format!("#include \"{}.h\"\n", i);
+            includes += &format!("#include \"{}.hpp\"\n", i);
         }
         for f in &self.forward_classes {
             forwards += &format!("class {f};\n");

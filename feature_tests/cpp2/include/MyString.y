@@ -11,7 +11,7 @@
 
 
 
-typedef struct MyString MyString;
+class MyString;
 
 
 

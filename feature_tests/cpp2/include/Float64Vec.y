@@ -11,7 +11,7 @@
 
 
 
-typedef struct Float64Vec Float64Vec;
+class Float64Vec;
 
 
 

@@ -11,7 +11,7 @@
 
 
 
-typedef struct Bar Bar;
+class Bar;
 
 
 

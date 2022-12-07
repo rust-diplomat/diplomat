@@ -7,13 +7,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "OptionStruct.h"
+#include "OptionStruct.hpp"
 
 
 struct OptionStruct;
 
 
-typedef struct OptionOpaque OptionOpaque;
+class OptionOpaque;
 
 
 

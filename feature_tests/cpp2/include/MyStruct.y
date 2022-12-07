@@ -7,12 +7,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "MyEnum.h"
+#include "MyEnum.hpp"
 
 
 
 
-typedef struct MyStruct {
+struct MyStruct {
 	uint8_t a;
 	bool b;
 	uint8_t c;
@@ -20,7 +20,7 @@ typedef struct MyStruct {
 	int32_t e;
 	char32_t f;
 	MyEnum g;
-} MyStruct;
+};
 
 
 

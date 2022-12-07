@@ -7,16 +7,16 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "diplomat_result_ErrorEnum_box_ResultOpaque.h"
-#include "diplomat_result_box_ResultOpaque_ErrorEnum.h"
-#include "diplomat_result_box_ResultOpaque_ErrorStruct.h"
-#include "diplomat_result_box_ResultOpaque_void.h"
-#include "diplomat_result_void_box_ResultOpaque.h"
+#include "diplomat_result_ErrorEnum_box_ResultOpaque.hpp"
+#include "diplomat_result_box_ResultOpaque_ErrorEnum.hpp"
+#include "diplomat_result_box_ResultOpaque_ErrorStruct.hpp"
+#include "diplomat_result_box_ResultOpaque_void.hpp"
+#include "diplomat_result_void_box_ResultOpaque.hpp"
 
 
 
 
-typedef struct ResultOpaque ResultOpaque;
+class ResultOpaque;
 
 
 

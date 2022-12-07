@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ICU4XFixedDecimalGroupingStrategy_enum.h"
+#include "ICU4XFixedDecimalGroupingStrategy_enum.hpp"
 
 
 

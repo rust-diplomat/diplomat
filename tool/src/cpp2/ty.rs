@@ -86,12 +86,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(&mut self.header.body, "typedef struct {ty_name} {ty_name};").unwrap();
+        writeln!(&mut self.header.body, "class {ty_name};").unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(&mut self.header.body, "typedef struct {ty_name} {{").unwrap();
+        writeln!(&mut self.header.body, "struct {ty_name} {{").unwrap();
         for field in def.fields.iter() {
             let decls = self.gen_ty_decl(&field.ty, field.name.as_str(), true);
             for (decl_ty, decl_name) in decls {
@@ -99,7 +99,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
         }
         // reborrow to avoid borrowing across mutation
-        writeln!(&mut self.header.body, "}} {ty_name};").unwrap();
+        writeln!(&mut self.header.body, "}};").unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -239,10 +239,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = self.cx.formatter.fmt_constness(&ret, mutability);
 
-                // Todo(breaking): We can remove this requirement
-                // and users will be forced to import more types
-                let header_name = self.cx.formatter.fmt_header_name(op_id);
-                self.header.includes.insert(header_name.into());
                 self.header.forward_classes.insert(name.to_string());
                 ret.to_string().into()
             }

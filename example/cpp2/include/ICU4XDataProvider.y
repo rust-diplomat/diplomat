@@ -7,12 +7,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "diplomat_result_void_void.h"
+#include "diplomat_result_void_void.hpp"
 
 
 
 
-typedef struct ICU4XDataProvider ICU4XDataProvider;
+class ICU4XDataProvider;
 
 
 

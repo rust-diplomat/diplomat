@@ -7,15 +7,15 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "UnimportedEnum.h"
+#include "UnimportedEnum.hpp"
 
 
 
 
-typedef struct ImportedStruct {
+struct ImportedStruct {
 	UnimportedEnum foo;
 	uint8_t count;
-} ImportedStruct;
+};
 
 
 

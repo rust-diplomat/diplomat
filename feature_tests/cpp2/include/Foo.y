@@ -7,13 +7,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "Bar.h"
 
 
 class Bar;
 
 
-typedef struct Foo Foo;
+class Foo;
 
 
 

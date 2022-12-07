@@ -7,15 +7,15 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ImportedStruct.h"
-#include "MyStruct.h"
+#include "ImportedStruct.hpp"
+#include "MyStruct.hpp"
 
 
 struct ImportedStruct;
 struct MyStruct;
 
 
-typedef struct Opaque Opaque;
+class Opaque;
 
 
 

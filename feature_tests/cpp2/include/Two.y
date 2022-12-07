@@ -11,7 +11,7 @@
 
 
 
-typedef struct Two Two;
+class Two;
 
 
 

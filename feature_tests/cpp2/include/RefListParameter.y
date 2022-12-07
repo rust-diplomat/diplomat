@@ -11,7 +11,7 @@
 
 
 
-typedef struct RefListParameter RefListParameter;
+class RefListParameter;
 
 
 

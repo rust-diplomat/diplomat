@@ -7,13 +7,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "RefListParameter.h"
 
 
 class RefListParameter;
 
 
-typedef struct RefList RefList;
+class RefList;
 
 
 

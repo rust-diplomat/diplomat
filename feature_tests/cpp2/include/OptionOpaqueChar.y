@@ -11,7 +11,7 @@
 
 
 
-typedef struct OptionOpaqueChar OptionOpaqueChar;
+class OptionOpaqueChar;
 
 
 
