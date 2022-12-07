@@ -1,4 +1,4 @@
-#ifndef ErrorEnum_H
+#ifndef ErrorEnum_HPP
 #define ErrorEnum_HPP
 
 

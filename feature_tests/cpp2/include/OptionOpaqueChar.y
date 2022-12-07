@@ -1,4 +1,4 @@
-#ifndef OptionOpaqueChar_H
+#ifndef OptionOpaqueChar_HPP
 #define OptionOpaqueChar_HPP
 
 

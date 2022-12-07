@@ -1,4 +1,4 @@
-#ifndef UnimportedEnum_H
+#ifndef UnimportedEnum_HPP
 #define UnimportedEnum_HPP
 
 

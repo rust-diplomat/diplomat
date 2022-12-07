@@ -1,4 +1,4 @@
-#ifndef ICU4XDataProvider_H
+#ifndef ICU4XDataProvider_HPP
 #define ICU4XDataProvider_HPP
 
 

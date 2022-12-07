@@ -1,4 +1,4 @@
-#ifndef OptionStruct_H
+#ifndef OptionStruct_HPP
 #define OptionStruct_HPP
 
 

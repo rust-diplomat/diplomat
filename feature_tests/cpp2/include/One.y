@@ -1,4 +1,4 @@
-#ifndef One_H
+#ifndef One_HPP
 #define One_HPP
 
 

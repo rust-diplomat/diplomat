@@ -1,4 +1,4 @@
-#ifndef Foo_H
+#ifndef Foo_HPP
 #define Foo_HPP
 
 

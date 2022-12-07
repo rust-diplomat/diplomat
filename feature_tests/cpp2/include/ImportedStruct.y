@@ -1,4 +1,4 @@
-#ifndef ImportedStruct_H
+#ifndef ImportedStruct_HPP
 #define ImportedStruct_HPP
 
 

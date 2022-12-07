@@ -1,4 +1,4 @@
-#ifndef ResultOpaque_H
+#ifndef ResultOpaque_HPP
 #define ResultOpaque_HPP
 
 

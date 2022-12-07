@@ -1,4 +1,4 @@
-#ifndef MyStruct_H
+#ifndef MyStruct_HPP
 #define MyStruct_HPP
 
 

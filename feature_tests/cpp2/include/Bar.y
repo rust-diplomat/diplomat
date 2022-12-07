@@ -1,4 +1,4 @@
-#ifndef Bar_H
+#ifndef Bar_HPP
 #define Bar_HPP
 
 

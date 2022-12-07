@@ -1,4 +1,4 @@
-#ifndef Float64Vec_H
+#ifndef Float64Vec_HPP
 #define Float64Vec_HPP
 
 

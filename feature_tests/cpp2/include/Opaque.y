@@ -1,4 +1,4 @@
-#ifndef Opaque_H
+#ifndef Opaque_HPP
 #define Opaque_HPP
 
 

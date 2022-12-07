@@ -1,4 +1,4 @@
-#ifndef RefListParameter_H
+#ifndef RefListParameter_HPP
 #define RefListParameter_HPP
 
 

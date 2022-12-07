@@ -1,4 +1,4 @@
-#ifndef MyEnum_H
+#ifndef MyEnum_HPP
 #define MyEnum_HPP
 
 

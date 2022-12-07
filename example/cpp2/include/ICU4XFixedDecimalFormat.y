@@ -1,4 +1,4 @@
-#ifndef ICU4XFixedDecimalFormat_H
+#ifndef ICU4XFixedDecimalFormat_HPP
 #define ICU4XFixedDecimalFormat_HPP
 
 

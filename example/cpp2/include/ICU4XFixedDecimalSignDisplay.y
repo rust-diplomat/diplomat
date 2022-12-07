@@ -1,4 +1,4 @@
-#ifndef ICU4XFixedDecimalSignDisplay_H
+#ifndef ICU4XFixedDecimalSignDisplay_HPP
 #define ICU4XFixedDecimalSignDisplay_HPP
 
 

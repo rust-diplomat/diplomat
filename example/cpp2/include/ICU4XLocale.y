@@ -1,4 +1,4 @@
-#ifndef ICU4XLocale_H
+#ifndef ICU4XLocale_HPP
 #define ICU4XLocale_HPP
 
 

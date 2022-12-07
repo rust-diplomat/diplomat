@@ -1,4 +1,4 @@
-#ifndef ICU4XFixedDecimalGroupingStrategy_H
+#ifndef ICU4XFixedDecimalGroupingStrategy_HPP
 #define ICU4XFixedDecimalGroupingStrategy_HPP
 
 

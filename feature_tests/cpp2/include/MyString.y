@@ -1,4 +1,4 @@
-#ifndef MyString_H
+#ifndef MyString_HPP
 #define MyString_HPP
 
 

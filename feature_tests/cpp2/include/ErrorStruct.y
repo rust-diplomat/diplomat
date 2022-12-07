@@ -1,4 +1,4 @@
-#ifndef ErrorStruct_H
+#ifndef ErrorStruct_HPP
 #define ErrorStruct_HPP
 
 

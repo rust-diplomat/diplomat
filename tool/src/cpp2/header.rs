@@ -84,7 +84,7 @@ impl fmt::Display for Header {
 
         write!(
             f,
-            r#"#ifndef {identifier}_H
+            r#"#ifndef {identifier}_HPP
 #define {identifier}_HPP
 
 {includes}
