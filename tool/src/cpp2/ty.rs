@@ -14,13 +14,7 @@ impl<'tcx> super::Cpp2Context<'tcx> {
 
         let mut context = TyGenContext::new(self, &mut header);
         match ty {
-            TypeDef::Enum(e) => {
-                // Use the C enums
-                context
-                    .header
-                    .includes_c
-                    .insert(header_name.clone().into_owned());
-            }
+            TypeDef::Enum(o) => context.gen_enum_def(o, id),
             TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
             TypeDef::Struct(s) => context.gen_struct_def(s, id),
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
@@ -52,6 +46,15 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn new(cx: &'ccx Cpp2Context<'tcx>, header: &'header mut Header) -> Self {
         TyGenContext { cx, header }
+    }
+
+    pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
+        let ty_name = self.cx.formatter.fmt_type_name(id);
+        writeln!(&mut self.header.body, "enum struct {ty_name} {{");
+        for variant in ty.variants.iter() {
+            writeln!(&mut self.header.body, "\t{} = {},", variant.name.as_str(), variant.discriminant);
+        }
+        writeln!(&mut self.header.body, "}};");
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {

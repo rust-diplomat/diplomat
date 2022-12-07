@@ -7,11 +7,14 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ErrorEnum.h"
 
 
 
 
+enum struct ErrorEnum {
+	Foo = 0,
+	Bar = 1,
+};
 
 
 

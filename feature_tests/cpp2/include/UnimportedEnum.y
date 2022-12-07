@@ -7,11 +7,15 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "UnimportedEnum.h"
 
 
 
 
+enum struct UnimportedEnum {
+	A = 0,
+	B = 1,
+	C = 2,
+};
 
 
 

@@ -7,11 +7,16 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ICU4XFixedDecimalGroupingStrategy.h"
 
 
 
 
+enum struct ICU4XFixedDecimalGroupingStrategy {
+	Auto = 0,
+	Never = 1,
+	Always = 2,
+	Min2 = 3,
+};
 
 
 

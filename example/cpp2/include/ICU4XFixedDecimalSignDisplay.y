@@ -7,11 +7,17 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ICU4XFixedDecimalSignDisplay.h"
 
 
 
 
+enum struct ICU4XFixedDecimalSignDisplay {
+	Auto = 0,
+	Never = 1,
+	Always = 2,
+	ExceptZero = 3,
+	Negative = 4,
+};
 
 
 
