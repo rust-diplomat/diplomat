@@ -267,7 +267,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 hir::Slice::Str(..) => "DiplomatStringView".into(),
                 hir::Slice::Primitive(_, p) => p.as_str().into(),
                 // hir::Slice::Primitive(_, p) => panic!("Attempted to gen_ty_name for slice of {}, should have been handled by gen_ty_decl", p.as_str())
-            }
+            },
         }
     }
 }
