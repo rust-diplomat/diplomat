@@ -1,0 +1,21 @@
+#ifndef UnimportedEnum_enum_H
+#define UnimportedEnum_enum_HPP
+
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "diplomat_runtime.h"
+
+
+
+
+typedef enum UnimportedEnum {
+	UnimportedEnum_A = 0,
+	UnimportedEnum_B = 1,
+	UnimportedEnum_C = 2,
+} UnimportedEnum;
+
+
+#endif // UnimportedEnum_enum_HPP

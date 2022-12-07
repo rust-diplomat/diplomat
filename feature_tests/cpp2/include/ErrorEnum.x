@@ -1,0 +1,1 @@
+Enum(EnumDef { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "ErrorEnum" }, variants: [EnumVariant { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "Foo" }, discriminant: 0 }, EnumVariant { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "Bar" }, discriminant: 1 }], methods: [] })
