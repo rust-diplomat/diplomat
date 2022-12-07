@@ -231,6 +231,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let name = self.cx.formatter.fmt_type_name(op_id);
                 let ret = if op.owner.is_owned() {
                     self.cx.formatter.fmt_owned(&name)
+                } else if op.is_optional() {
+                    self.cx.formatter.fmt_optional_borrowed(&name)
                 } else {
                     self.cx.formatter.fmt_borrowed(&name)
                 };

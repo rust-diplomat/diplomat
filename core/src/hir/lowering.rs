@@ -437,7 +437,7 @@ fn lower_type<L: LifetimeLowerer>(
 
                             Type::Opaque(OpaquePath::new(
                                 lifetimes,
-                                Optional(false),
+                                Optional(true),
                                 borrow,
                                 tcx_id,
                             ))

@@ -48,6 +48,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         format!("{}&", ident).into()
     }
 
+    pub fn fmt_optional_borrowed<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        format!("std::optional<{}&>", ident).into()
+    }
+
     pub fn fmt_owned<'a>(&self, ident: &'a str) -> Cow<'a, str> {
         format!("std::unique_ptr<{}>", ident).into()
     }
