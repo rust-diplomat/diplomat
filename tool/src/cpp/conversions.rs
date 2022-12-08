@@ -378,7 +378,7 @@ pub fn gen_cpp_to_rust<W: Write>(
                     cpp,
                     path,
                     Some(behind_ref),
-                    &*boxed,
+                    boxed,
                     in_path,
                     env,
                     is_self,

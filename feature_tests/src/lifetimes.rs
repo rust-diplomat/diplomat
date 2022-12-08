@@ -13,7 +13,7 @@ pub mod ffi {
     }
 
     pub struct BorrowedFieldsReturning<'a> {
-        bytes: &'a [u8]
+        bytes: &'a [u8],
     }
     impl<'a> Foo<'a> {
         pub fn new(x: &'a str) -> Box<Self> {
@@ -30,7 +30,7 @@ pub mod ffi {
 
         pub fn as_returning(&self) -> BorrowedFieldsReturning<'a> {
             BorrowedFieldsReturning {
-                bytes: self.0.as_bytes()
+                bytes: self.0.as_bytes(),
             }
         }
 
