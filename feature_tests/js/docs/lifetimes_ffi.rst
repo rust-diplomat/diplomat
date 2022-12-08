@@ -19,6 +19,8 @@
         - Warning: This method leaks memory. The parameter `x` will not be freed as it is required to live for the duration of the program.
 
 
+    .. js:staticfunction:: extract_from_fields(fields)
+
 .. js:class:: One
 
     .. js:staticfunction:: transitivity(hold, nohold)

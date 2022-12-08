@@ -344,6 +344,9 @@ pub fn gen_cpp_to_rust<W: Write>(
         ast::TypeName::StrReference(_) => {
             format!("{{ {cpp}.data(), {cpp}.size() }}")
         }
+        ast::TypeName::PrimitiveSlice(..) => {
+            format!("{{ {cpp}.data(), {cpp}.size() }}")
+        }
         ast::TypeName::Option(boxed) => match &**boxed {
             ast::TypeName::Reference(_, mutability, _) => {
                 let behind_ref = match behind_ref {

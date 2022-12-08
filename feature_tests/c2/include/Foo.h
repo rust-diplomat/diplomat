@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 #include "Bar.h"
+#include "BorrowedFields.h"
 
 
 #ifdef __cplusplus
@@ -16,6 +17,7 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct Bar Bar;
+typedef struct BorrowedFields BorrowedFields;
 
 
 typedef struct Foo Foo;
@@ -25,6 +27,7 @@ typedef struct Foo Foo;
 Foo* Foo_new(const char* x_data, size_t x_len);
 Bar* Foo_get_bar(const Foo* self);
 Foo* Foo_new_static(const char* x_data, size_t x_len);
+Foo* Foo_extract_from_fields(BorrowedFields fields);
 void Foo_destroy(Foo* self);
 
 

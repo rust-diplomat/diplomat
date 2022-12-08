@@ -26,6 +26,11 @@
         Lifetimes: ``x`` must live for the duration of the program.
 
 
+    .. cpp:function:: static Foo extract_from_fields(BorrowedFields fields)
+
+        Lifetimes: ``fields`` must live at least as long as the output.
+
+
 .. cpp:class:: One
 
     .. cpp:function:: static One transitivity(const One& hold, const One& nohold)

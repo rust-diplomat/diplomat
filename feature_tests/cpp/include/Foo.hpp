@@ -13,6 +13,7 @@
 
 class Foo;
 class Bar;
+struct BorrowedFields;
 
 /**
  * A destruction policy for using Foo with std::unique_ptr.
@@ -39,6 +40,11 @@ class Foo {
    * Lifetimes: `x` must live for the duration of the program.
    */
   static Foo new_static(const std::string_view x);
+
+  /**
+   * Lifetimes: `fields` must live at least as long as the output.
+   */
+  static Foo extract_from_fields(BorrowedFields fields);
   inline const capi::Foo* AsFFI() const { return this->inner.get(); }
   inline capi::Foo* AsFFIMut() { return this->inner.get(); }
   inline Foo(capi::Foo* i) : inner(i) {}
@@ -50,6 +56,7 @@ class Foo {
 };
 
 #include "Bar.hpp"
+#include "BorrowedFields.hpp"
 
 inline Foo Foo::new_(const std::string_view x) {
   return Foo(capi::Foo_new(x.data(), x.size()));
@@ -59,5 +66,9 @@ inline Bar Foo::get_bar() const {
 }
 inline Foo Foo::new_static(const std::string_view x) {
   return Foo(capi::Foo_new_static(x.data(), x.size()));
+}
+inline Foo Foo::extract_from_fields(BorrowedFields fields) {
+  BorrowedFields diplomat_wrapped_struct_fields = fields;
+  return Foo(capi::Foo_extract_from_fields(capi::BorrowedFields{ .a = { diplomat_wrapped_struct_fields.a.data(), diplomat_wrapped_struct_fields.a.size() }, .b = { diplomat_wrapped_struct_fields.b.data(), diplomat_wrapped_struct_fields.b.size() } }));
 }
 #endif

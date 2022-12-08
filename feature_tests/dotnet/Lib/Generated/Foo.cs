@@ -79,6 +79,20 @@ public partial class Foo: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>Foo</c> allocated on Rust side.
+    /// </returns>
+    public static Foo ExtractFromFields(BorrowedFields fields)
+    {
+        unsafe
+        {
+            Raw.BorrowedFields fieldsRaw;
+            fieldsRaw = fields.AsFFI();
+            Raw.Foo* retVal = Raw.Foo.ExtractFromFields(fieldsRaw);
+            return new Foo(retVal);
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

@@ -31,4 +31,12 @@ export class Foo {
     buf_arg_x.leak();
     return diplomat_out;
   }
+
+  static extract_from_fields(arg_fields) {
+    const field_a_arg_fields = arg_fields["a"];
+    const buf_field_a_arg_fields = diplomatRuntime.DiplomatBuf.slice(wasm, field_a_arg_fields, 2);
+    const field_b_arg_fields = arg_fields["b"];
+    const buf_field_b_arg_fields = diplomatRuntime.DiplomatBuf.str(wasm, field_b_arg_fields);
+    return new Foo(wasm.Foo_extract_from_fields(buf_field_a_arg_fields.ptr, buf_field_a_arg_fields.size, buf_field_b_arg_fields.ptr, buf_field_b_arg_fields.size), true, [buf_field_a_arg_fields, buf_field_b_arg_fields]);
+  }
 }
