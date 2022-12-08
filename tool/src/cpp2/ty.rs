@@ -176,7 +176,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     ) -> Vec<(Cow<'ccx, str>, Cow<'a, str>)> {
         let param_name = self.cx.formatter.fmt_param_name(ident);
         match ty {
-            Type::Slice(hir::Slice::Str(..)) if !is_struct => {
+            Type::Slice(hir::Slice::Str(..)) => {
                 let ty = self.cx.formatter.fmt_borrowed_str();
                 vec![(ty, param_name)]
             }
@@ -230,9 +230,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
             Type::Slice(ref s) => match s {
                 // only reachable for structs, not methods
-                hir::Slice::Str(..) => "DiplomatStringView".into(),
-                hir::Slice::Primitive(_, p) => p.as_str().into(),
-                // hir::Slice::Primitive(_, p) => panic!("Attempted to gen_ty_name for slice of {}, should have been handled by gen_ty_decl", p.as_str())
+                hir::Slice::Str(..) => "sssssss".into(),
+                hir::Slice::Primitive(_, p) => panic!("Attempted to gen_ty_name for slice of {}, should have been handled by gen_ty_decl", p.as_str())
             },
         }
     }
