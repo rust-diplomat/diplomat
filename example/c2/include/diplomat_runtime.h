@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
 // uchar.h doesn't always exist, but char32_t is always available
 // in C++ anyway
