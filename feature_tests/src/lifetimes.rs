@@ -24,6 +24,10 @@ pub mod ffi {
         pub fn new_static(x: &'static str) -> Box<Self> {
             Box::new(Foo(x))
         }
+
+        pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
+            Box::new(Foo(fields.b))
+        }
     }
 
     // FIXME(#191): This test breaks the C++ codegen
