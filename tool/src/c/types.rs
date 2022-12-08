@@ -60,7 +60,7 @@ pub fn gen_type<W: fmt::Write>(
             let mut prim = prim.to_string();
             prim.get_mut(0..1).unwrap().make_ascii_uppercase();
             write!(out, "Diplomat{prim}View")?;
-        },
+        }
         ast::TypeName::Unit => write!(out, "void")?,
     }
 

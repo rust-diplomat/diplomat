@@ -256,7 +256,7 @@ pub fn gen_cpp_to_rust<W: Write>(
                     owned: false,
                     mutable: mutability.is_mutable(),
                     is_nullable: false,
-                }
+                },
             };
             gen_cpp_to_rust(
                 cpp,
@@ -268,7 +268,7 @@ pub fn gen_cpp_to_rust<W: Write>(
                 is_self,
                 out,
             )
-        },
+        }
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             match path_type.resolve(in_path, env) {
                 ast::CustomType::Opaque(_opaque) => {
@@ -356,9 +356,18 @@ pub fn gen_cpp_to_rust<W: Write>(
                         owned: false,
                         mutable: mutability.is_mutable(),
                         is_nullable: true,
-                    }
+                    },
                 };
-                gen_cpp_to_rust(cpp, path, Some(behind_ref), &*boxed, in_path, env, is_self, out)
+                gen_cpp_to_rust(
+                    cpp,
+                    path,
+                    Some(behind_ref),
+                    &*boxed,
+                    in_path,
+                    env,
+                    is_self,
+                    out,
+                )
             }
             o => todo!("{:?}", o),
         },
