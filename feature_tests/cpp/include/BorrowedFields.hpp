@@ -14,6 +14,7 @@
 
 struct BorrowedFields {
  public:
+  const diplomat::span<uint16_t> a;
   std::string_view b;
 };
 

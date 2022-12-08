@@ -1,5 +1,5 @@
-#ifndef BorrowedFields_H
-#define BorrowedFields_H
+#ifndef ErrorEnum_enum_H
+#define ErrorEnum_enum_H
 
 
 #include <stdio.h>
@@ -16,14 +16,10 @@ extern "C" {
 
 
 
-typedef struct BorrowedFields {
-	const uint16_t* a_data;
-	size_t a_len;
-	DiplomatStringView b;
-} BorrowedFields;
-
-
-
+typedef enum ErrorEnum {
+	ErrorEnum_Foo = 0,
+	ErrorEnum_Bar = 1,
+} ErrorEnum;
 
 
 #ifdef __cplusplus
@@ -31,4 +27,4 @@ typedef struct BorrowedFields {
 } // extern "C"
 #endif // __cplusplus
 
-#endif // BorrowedFields_H
+#endif // ErrorEnum_enum_H

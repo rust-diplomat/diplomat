@@ -5,6 +5,8 @@
 
 .. cpp:struct:: BorrowedFields
 
+    .. cpp:member:: const diplomat::span<uint16_t> a
+
     .. cpp:member:: std::string_view b
 
 .. cpp:class:: Foo

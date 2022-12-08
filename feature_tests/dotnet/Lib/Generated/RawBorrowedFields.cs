@@ -16,5 +16,7 @@ public partial struct BorrowedFields
 {
     private const string NativeLib = "diplomat_feature_tests";
 
+    public ushort[] a;
+
     public string b;
 }

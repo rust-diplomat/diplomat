@@ -53,7 +53,14 @@ pub fn gen_type<W: fmt::Write>(
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
         ast::TypeName::StrReference(..) => write!(out, "DiplomatStringView")?,
-        ast::TypeName::PrimitiveSlice(..) => unreachable!("Slices handled in structs.rs"),
+        ast::TypeName::PrimitiveSlice(_lt, mutability, prim) => {
+            if mutability.is_mutable() {
+                panic!("Mutable slices in structs not supported");
+            }
+            let mut prim = prim.to_string();
+            prim.get_mut(0..1).unwrap().make_ascii_uppercase();
+            write!(out, "Diplomat{prim}View")?;
+        },
         ast::TypeName::Unit => write!(out, "void")?,
     }
 

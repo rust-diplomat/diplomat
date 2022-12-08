@@ -5,6 +5,8 @@
 
 .. js:class:: BorrowedFields
 
+    .. js:attribute:: a
+
     .. js:attribute:: b
 
 .. js:class:: Foo

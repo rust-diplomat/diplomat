@@ -11,6 +11,7 @@ namespace capi {
 #endif
 
 typedef struct BorrowedFields {
+    DiplomatU16View a;
     DiplomatStringView b;
 } BorrowedFields;
 #ifdef __cplusplus
