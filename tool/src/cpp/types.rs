@@ -162,7 +162,7 @@ fn gen_type_inner<W: fmt::Write>(
         ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => {
             write!(
                 out,
-                "{}<{}>",
+                "{}<const {}>",
                 library_config.span.expr,
                 crate::c::types::c_type_for_prim(prim)
             )?;
@@ -171,7 +171,7 @@ fn gen_type_inner<W: fmt::Write>(
         ast::TypeName::PrimitiveSlice(_, ast::Mutability::Immutable, prim) => {
             write!(
                 out,
-                "const {}<{}>",
+                "const {}<const {}>",
                 library_config.span.expr,
                 crate::c::types::c_type_for_prim(prim)
             )?;

@@ -6,6 +6,10 @@
 #include <array>
 #include <optional>
 
+#if __cplusplus >= 202002L
+#include<span>
+#endif
+
 #include "diplomat_runtime.h"
 
 namespace diplomat {
@@ -122,8 +126,7 @@ public:
 // Use custom std::span on C++17, otherwise use std::span
 #if __cplusplus >= 202002L
 
-#include<span>
-using span = std::span;
+template<class T> using span = std::span<T>;
 
 #else // __cplusplus >= 202002L
 

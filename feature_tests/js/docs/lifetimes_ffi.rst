@@ -9,6 +9,10 @@
 
     .. js:attribute:: b
 
+.. js:class:: BorrowedFieldsReturning
+
+    .. js:attribute:: bytes
+
 .. js:class:: Foo
 
     .. js:staticfunction:: new(x)
@@ -18,6 +22,8 @@
     .. js:staticfunction:: new_static(x)
         - Warning: This method leaks memory. The parameter `x` will not be freed as it is required to live for the duration of the program.
 
+
+    .. js:function:: as_returning()
 
     .. js:staticfunction:: extract_from_fields(fields)
 

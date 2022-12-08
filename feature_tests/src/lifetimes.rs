@@ -12,6 +12,9 @@ pub mod ffi {
         b: &'a str,
     }
 
+    pub struct BorrowedFieldsReturning<'a> {
+        bytes: &'a [u8]
+    }
     impl<'a> Foo<'a> {
         pub fn new(x: &'a str) -> Box<Self> {
             Box::new(Foo(x))
@@ -23,6 +26,12 @@ pub mod ffi {
 
         pub fn new_static(x: &'static str) -> Box<Self> {
             Box::new(Foo(x))
+        }
+
+        pub fn as_returning(&self) -> BorrowedFieldsReturning<'a> {
+            BorrowedFieldsReturning {
+                bytes: self.0.as_bytes()
+            }
         }
 
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {

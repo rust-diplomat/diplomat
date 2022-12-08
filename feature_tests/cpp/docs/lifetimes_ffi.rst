@@ -5,9 +5,13 @@
 
 .. cpp:struct:: BorrowedFields
 
-    .. cpp:member:: const diplomat::span<uint16_t> a
+    .. cpp:member:: const diplomat::span<const uint16_t> a
 
     .. cpp:member:: std::string_view b
+
+.. cpp:struct:: BorrowedFieldsReturning
+
+    .. cpp:member:: const diplomat::span<const uint8_t> bytes
 
 .. cpp:class:: Foo
 
@@ -24,6 +28,11 @@
     .. cpp:function:: static Foo new_static(const std::string_view x)
 
         Lifetimes: ``x`` must live for the duration of the program.
+
+
+    .. cpp:function:: BorrowedFieldsReturning as_returning() const
+
+        Lifetimes: ``this`` must live at least as long as the output.
 
 
     .. cpp:function:: static Foo extract_from_fields(BorrowedFields fields)

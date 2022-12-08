@@ -1,6 +1,7 @@
 export { FFIError } from './diplomat-runtime.js';
 export { Bar } from './Bar.js';
 export { BorrowedFields } from './BorrowedFields.js';
+export { BorrowedFieldsReturning } from './BorrowedFieldsReturning.js';
 export { ErrorEnum } from './ErrorEnum.js';
 export { ErrorStruct } from './ErrorStruct.js';
 export { Float64Vec } from './Float64Vec.js';

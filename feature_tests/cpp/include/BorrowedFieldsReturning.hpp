@@ -1,5 +1,5 @@
-#ifndef BorrowedFields_HPP
-#define BorrowedFields_HPP
+#ifndef BorrowedFieldsReturning_HPP
+#define BorrowedFieldsReturning_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -9,13 +9,12 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-#include "BorrowedFields.h"
+#include "BorrowedFieldsReturning.h"
 
 
-struct BorrowedFields {
+struct BorrowedFieldsReturning {
  public:
-  const diplomat::span<const uint16_t> a;
-  std::string_view b;
+  const diplomat::span<const uint8_t> bytes;
 };
 
 

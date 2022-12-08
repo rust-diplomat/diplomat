@@ -25,6 +25,9 @@ public partial struct Foo
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_new_static", ExactSpelling = true)]
     public static unsafe extern Foo* NewStatic(byte* x, nuint xSz);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_as_returning", ExactSpelling = true)]
+    public static unsafe extern BorrowedFieldsReturning AsReturning(Foo* self);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_extract_from_fields", ExactSpelling = true)]
     public static unsafe extern Foo* ExtractFromFields(BorrowedFields fields);
 
