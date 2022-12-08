@@ -3,6 +3,10 @@
 
 .. js:class:: Bar
 
+.. js:class:: BorrowedFields
+
+    .. js:attribute:: b
+
 .. js:class:: Foo
 
     .. js:staticfunction:: new(x)

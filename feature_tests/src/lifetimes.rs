@@ -7,6 +7,12 @@ pub mod ffi {
     #[diplomat::transparent_convert]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
+    pub struct BorrowedFields<'a> {
+        // TODO(#295)
+        // a: &'a [u16],
+        b: &'a str,
+    }
+
     impl<'a> Foo<'a> {
         pub fn new(x: &'a str) -> Box<Self> {
             Box::new(Foo(x))

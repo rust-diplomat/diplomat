@@ -3,6 +3,10 @@
 
 .. cpp:class:: Bar
 
+.. cpp:struct:: BorrowedFields
+
+    .. cpp:member:: std::string_view b
+
 .. cpp:class:: Foo
 
     .. cpp:function:: static Foo new_(const std::string_view x)
