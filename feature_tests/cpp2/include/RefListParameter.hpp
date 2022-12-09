@@ -15,6 +15,9 @@
 
 
 
+inline const capi::RefListParameter* RefListParameter::AsFFI() const {
+	return reinterpret_cast<const capi::RefListParameter*>(this);
+}
 inline capi::RefListParameter* RefListParameter::AsFFI() {
 	return reinterpret_cast<capi::RefListParameter*>(this);
 }

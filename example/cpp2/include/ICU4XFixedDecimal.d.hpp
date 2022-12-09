@@ -24,6 +24,7 @@ public:
 
 	inline DiplomatResult<std::string, std::monostate> to_string() const;
 
+	inline const capi::ICU4XFixedDecimal* AsFFI() const;
 	inline capi::ICU4XFixedDecimal* AsFFI();
 
 	inline ~ICU4XFixedDecimal();

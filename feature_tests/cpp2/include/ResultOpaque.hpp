@@ -39,6 +39,9 @@ inline DiplomatResult<ErrorEnum, std::unique_ptr<ResultOpaque>> ResultOpaque::ne
 inline void ResultOpaque::assert_integer(int32_t i) const {
 	// TODO
 }
+inline const capi::ResultOpaque* ResultOpaque::AsFFI() const {
+	return reinterpret_cast<const capi::ResultOpaque*>(this);
+}
 inline capi::ResultOpaque* ResultOpaque::AsFFI() {
 	return reinterpret_cast<capi::ResultOpaque*>(this);
 }

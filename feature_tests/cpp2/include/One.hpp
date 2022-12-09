@@ -48,6 +48,9 @@ inline std::unique_ptr<One> One::implicit_bounds(const One& explicit_hold, const
 inline std::unique_ptr<One> One::implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold) {
 	// TODO
 }
+inline const capi::One* One::AsFFI() const {
+	return reinterpret_cast<const capi::One*>(this);
+}
 inline capi::One* One::AsFFI() {
 	return reinterpret_cast<capi::One*>(this);
 }

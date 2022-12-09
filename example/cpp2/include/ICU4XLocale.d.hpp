@@ -20,6 +20,7 @@ public:
 
 	inline static std::unique_ptr<ICU4XLocale> new_from_bytes(std::span<const uint8_t> bytes);
 
+	inline const capi::ICU4XLocale* AsFFI() const;
 	inline capi::ICU4XLocale* AsFFI();
 
 	inline ~ICU4XLocale();

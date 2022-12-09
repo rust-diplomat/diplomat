@@ -15,6 +15,9 @@
 
 
 
+inline const capi::Bar* Bar::AsFFI() const {
+	return reinterpret_cast<const capi::Bar*>(this);
+}
 inline capi::Bar* Bar::AsFFI() {
 	return reinterpret_cast<capi::Bar*>(this);
 }

@@ -27,6 +27,9 @@ inline size_t Opaque::returns_usize() {
 inline ImportedStruct Opaque::returns_imported() {
 	// TODO
 }
+inline const capi::Opaque* Opaque::AsFFI() const {
+	return reinterpret_cast<const capi::Opaque*>(this);
+}
 inline capi::Opaque* Opaque::AsFFI() {
 	return reinterpret_cast<capi::Opaque*>(this);
 }

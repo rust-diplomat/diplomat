@@ -29,6 +29,7 @@ public:
 
 	inline static bool option_opaque_argument(std::optional<const OptionOpaque&> arg);
 
+	inline const capi::OptionOpaque* AsFFI() const;
 	inline capi::OptionOpaque* AsFFI();
 
 	inline ~OptionOpaque();

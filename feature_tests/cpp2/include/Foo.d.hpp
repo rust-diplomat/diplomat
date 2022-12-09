@@ -29,6 +29,7 @@ public:
 
 	inline static std::unique_ptr<Foo> extract_from_fields(BorrowedFields fields);
 
+	inline const capi::Foo* AsFFI() const;
 	inline capi::Foo* AsFFI();
 
 	inline ~Foo();

@@ -25,6 +25,7 @@ public:
 
 	inline std::string format_write(const ICU4XFixedDecimal& value) const;
 
+	inline const capi::ICU4XFixedDecimalFormat* AsFFI() const;
 	inline capi::ICU4XFixedDecimalFormat* AsFFI();
 
 	inline ~ICU4XFixedDecimalFormat();

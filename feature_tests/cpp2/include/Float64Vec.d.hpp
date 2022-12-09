@@ -22,6 +22,7 @@ public:
 
 	inline void set_value(std::span<const double> new_slice);
 
+	inline const capi::Float64Vec* AsFFI() const;
 	inline capi::Float64Vec* AsFFI();
 
 	inline ~Float64Vec();

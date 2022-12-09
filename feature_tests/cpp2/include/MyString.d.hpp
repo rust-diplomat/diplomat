@@ -22,6 +22,7 @@ public:
 
 	inline std::string get_str() const;
 
+	inline const capi::MyString* AsFFI() const;
 	inline capi::MyString* AsFFI();
 
 	inline ~MyString();

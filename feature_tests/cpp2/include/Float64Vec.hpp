@@ -24,6 +24,9 @@ inline void Float64Vec::fill_slice(std::span<double> v) const {
 inline void Float64Vec::set_value(std::span<const double> new_slice) {
 	// TODO
 }
+inline const capi::Float64Vec* Float64Vec::AsFFI() const {
+	return reinterpret_cast<const capi::Float64Vec*>(this);
+}
 inline capi::Float64Vec* Float64Vec::AsFFI() {
 	return reinterpret_cast<capi::Float64Vec*>(this);
 }

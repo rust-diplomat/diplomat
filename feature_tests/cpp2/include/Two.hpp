@@ -15,6 +15,9 @@
 
 
 
+inline const capi::Two* Two::AsFFI() const {
+	return reinterpret_cast<const capi::Two*>(this);
+}
 inline capi::Two* Two::AsFFI() {
 	return reinterpret_cast<capi::Two*>(this);
 }

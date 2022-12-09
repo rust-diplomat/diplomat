@@ -26,6 +26,7 @@ public:
 
 	inline static ImportedStruct returns_imported();
 
+	inline const capi::Opaque* AsFFI() const;
 	inline capi::Opaque* AsFFI();
 
 	inline ~Opaque();

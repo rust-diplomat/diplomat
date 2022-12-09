@@ -34,6 +34,7 @@ public:
 
 	inline void assert_integer(int32_t i) const;
 
+	inline const capi::ResultOpaque* AsFFI() const;
 	inline capi::ResultOpaque* AsFFI();
 
 	inline ~ResultOpaque();

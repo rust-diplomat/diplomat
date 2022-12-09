@@ -68,7 +68,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
-        let cptr = self.cx.formatter.fmt_c_ptr(&ctype);
+        let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
+        let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
         self.decl_header.includes.insert(self.cx.formatter.fmt_c_decl_header_path(id));
         writeln!(&mut self.decl_header.body, "class {type_name} {{").unwrap();
         writeln!(&mut self.decl_header.body, "public:");
@@ -76,11 +77,18 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             self.gen_method(id, method);
             writeln!(&mut self.decl_header.body);
         }
-        writeln!(&mut self.decl_header.body, "\tinline {cptr} AsFFI();");
-        writeln!(&mut self.impl_header.body, "inline {cptr} {type_name}::AsFFI() {{");
+        writeln!(&mut self.decl_header.body, "\tinline {const_cptr} AsFFI() const;");
+        writeln!(&mut self.impl_header.body, "inline {const_cptr} {type_name}::AsFFI() const {{");
         writeln!(
             &mut self.impl_header.body,
-            "\treturn reinterpret_cast<{cptr}>(this);"
+            "\treturn reinterpret_cast<{const_cptr}>(this);"
+        );
+        writeln!(&mut self.impl_header.body, "}}").unwrap();
+        writeln!(&mut self.decl_header.body, "\tinline {mut_cptr} AsFFI();");
+        writeln!(&mut self.impl_header.body, "inline {mut_cptr} {type_name}::AsFFI() {{");
+        writeln!(
+            &mut self.impl_header.body,
+            "\treturn reinterpret_cast<{mut_cptr}>(this);"
         );
         writeln!(&mut self.impl_header.body, "}}").unwrap();
         writeln!(&mut self.decl_header.body);

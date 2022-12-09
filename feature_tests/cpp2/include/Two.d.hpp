@@ -16,6 +16,7 @@
 
 class Two {
 public:
+	inline const capi::Two* AsFFI() const;
 	inline capi::Two* AsFFI();
 
 	inline ~Two();

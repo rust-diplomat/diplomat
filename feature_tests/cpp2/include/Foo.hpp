@@ -30,6 +30,9 @@ inline BorrowedFieldsReturning Foo::as_returning() const {
 inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
 	// TODO
 }
+inline const capi::Foo* Foo::AsFFI() const {
+	return reinterpret_cast<const capi::Foo*>(this);
+}
 inline capi::Foo* Foo::AsFFI() {
 	return reinterpret_cast<capi::Foo*>(this);
 }

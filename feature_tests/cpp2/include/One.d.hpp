@@ -39,6 +39,7 @@ public:
 
 	inline static std::unique_ptr<One> implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold);
 
+	inline const capi::One* AsFFI() const;
 	inline capi::One* AsFFI();
 
 	inline ~One();

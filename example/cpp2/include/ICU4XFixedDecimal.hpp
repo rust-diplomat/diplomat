@@ -27,6 +27,9 @@ inline void ICU4XFixedDecimal::negate() {
 inline DiplomatResult<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
 	// TODO
 }
+inline const capi::ICU4XFixedDecimal* ICU4XFixedDecimal::AsFFI() const {
+	return reinterpret_cast<const capi::ICU4XFixedDecimal*>(this);
+}
 inline capi::ICU4XFixedDecimal* ICU4XFixedDecimal::AsFFI() {
 	return reinterpret_cast<capi::ICU4XFixedDecimal*>(this);
 }

@@ -33,6 +33,9 @@ inline void OptionOpaque::assert_integer(int32_t i) const {
 inline bool OptionOpaque::option_opaque_argument(std::optional<const OptionOpaque&> arg) {
 	// TODO
 }
+inline const capi::OptionOpaque* OptionOpaque::AsFFI() const {
+	return reinterpret_cast<const capi::OptionOpaque*>(this);
+}
 inline capi::OptionOpaque* OptionOpaque::AsFFI() {
 	return reinterpret_cast<capi::OptionOpaque*>(this);
 }

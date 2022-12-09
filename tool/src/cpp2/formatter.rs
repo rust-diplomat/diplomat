@@ -62,9 +62,8 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         format!("capi::{ident}").into()
     }
 
-    pub fn fmt_c_ptr<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        // TODO: Invoke a CFormatter function for this
-        format!("{ident}*").into()
+    pub fn fmt_c_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+        self.c.fmt_ptr(ident, mutability)
     }
 
     pub fn fmt_optional<'a>(&self, ident: &'a str) -> Cow<'a, str> {
