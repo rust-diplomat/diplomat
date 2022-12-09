@@ -221,7 +221,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     ("size_t".into(), format!("{param_name}_len").into()),
                 ]
             }
-            Type::Slice(hir::Slice::Primitive(b, p)) => {
+            Type::Slice(hir::Slice::Primitive(b, p)) if !is_struct => {
                 let constness = self.cx.formatter.fmt_constness(b.mutability);
                 let prim = self.cx.formatter.fmt_primitive_as_c(*p);
                 vec![
@@ -274,10 +274,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 self.header.includes.insert(header_name.into());
                 enum_name
             }
-            Type::Slice(ref s) => match s {
-                // only reachable for structs, not methods
-                hir::Slice::Str(..) => "DiplomatStringView".into(),
-                hir::Slice::Primitive(_, p) => panic!("Attempted to gen_ty_name for slice of {}, should have been handled by gen_ty_decl", p.as_str())
+            Type::Slice(ref s) => {
+                let ptr_ty = match s {
+                    hir::Slice::Str(..) => "char".into(),
+                    hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
+                };
+                format!("struct {{ const {ptr_ty}* data; size_t len; }}").into()
             }
         }
     }
