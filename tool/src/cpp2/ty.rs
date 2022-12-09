@@ -9,9 +9,9 @@ use std::fmt::Write;
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
         let ty_name = self.formatter.fmt_type_name(id);
-        let decl_header_path = self.formatter.fmt_decl_header_path(&ty_name);
+        let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
-        let impl_header_path = self.formatter.fmt_impl_header_path(&ty_name);
+        let impl_header_path = self.formatter.fmt_impl_header_path(id);
         let mut impl_header = Header::new(impl_header_path.clone());
 
         let mut context = TyGenContext {
@@ -38,7 +38,7 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         // TODO: Do this for impl_header too?
 
         context.impl_header.includes.insert(decl_header_path.clone());
-        let c_impl_header_path = self.formatter.fmt_c_impl_header_path(&ty_name);
+        let c_impl_header_path = self.formatter.fmt_c_impl_header_path(id);
         context.impl_header.includes.insert(c_impl_header_path);
 
         self.files.add_file(decl_header_path, decl_header.to_string());
@@ -69,7 +69,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let ty_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         let cptr = self.cx.formatter.fmt_c_ptr(&ctype);
-        self.decl_header.includes.insert(self.cx.formatter.fmt_c_decl_header_path(&ty_name));
+        self.decl_header.includes.insert(self.cx.formatter.fmt_c_decl_header_path(id));
         writeln!(&mut self.decl_header.body, "class {ty_name} {{").unwrap();
         writeln!(&mut self.decl_header.body, "public:");
         for method in ty.methods.iter() {
@@ -232,7 +232,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
                 let ret = self.cx.formatter.fmt_type_name(id);
-                let header_path = self.cx.formatter.fmt_decl_header_path(&ret);
+                let header_path = self.cx.formatter.fmt_decl_header_path(id);
                 // TODO: Make these forward declarations instead of includes
                 self.decl_header.includes.insert(header_path.into());
                 ret
@@ -240,7 +240,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let ret = self.cx.formatter.fmt_type_name(id);
-                let header_path = self.cx.formatter.fmt_decl_header_path(&ret);
+                let header_path = self.cx.formatter.fmt_decl_header_path(id);
                 // TODO: Make these forward declarations instead of includes
                 self.decl_header.includes.insert(header_path.into());
                 ret

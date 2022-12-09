@@ -37,11 +37,13 @@ impl<'tcx> CFormatter<'tcx> {
     /// To handle this, we make a separate header file called Foo_decl.h, that contains
     /// *just* the enum. It is included from Foo.h, and external users should not be importing
     /// it directly. (We can potentially add a #define guard that makes this actually private, if needed)
-    pub fn fmt_decl_header_path(&self, type_name: &str) -> String {
+    pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
+        let type_name = self.fmt_type_name(id);
         format!("{type_name}.d.h")
     }
     /// Resolve and format the name of a type for use in header names: impl version
-    pub fn fmt_impl_header_path(&self, type_name: &str) -> String {
+    pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
+        let type_name = self.fmt_type_name(id);
         format!("{type_name}.h")
     }
     /// Resolve and format the name of a type for use in header names: result version

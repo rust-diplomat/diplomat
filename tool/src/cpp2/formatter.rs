@@ -31,19 +31,21 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.c.tcx().resolve_type(id).name().as_str().into()
     }
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_decl_header_path(&self, type_name: &str) -> String {
-        format!("{}.d.hpp", type_name).into()
+    pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
+        let type_name = self.fmt_type_name(id);
+        format!("{type_name}.d.hpp").into()
     }
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_impl_header_path(&self, type_name: &str) -> String {
-        format!("{}.hpp", type_name).into()
+    pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
+        let type_name = self.fmt_type_name(id);
+        format!("{type_name}.hpp").into()
     }
 
-    pub fn fmt_c_decl_header_path(&self, type_name: &str) -> String {
-        self.c.fmt_decl_header_path(type_name)
+    pub fn fmt_c_decl_header_path(&self, id: TypeId) -> String {
+        self.c.fmt_decl_header_path(id)
     }
-    pub fn fmt_c_impl_header_path(&self, type_name: &str) -> String {
-        self.c.fmt_impl_header_path(type_name)
+    pub fn fmt_c_impl_header_path(&self, id: TypeId) -> String {
+        self.c.fmt_impl_header_path(id)
     }
 
     /// Format an enum variant.

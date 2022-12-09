@@ -7,9 +7,9 @@ use std::fmt::Write;
 impl<'tcx> super::CContext<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
         let type_name = self.formatter.fmt_type_name(id);
-        let decl_header_path = self.formatter.fmt_decl_header_path(&type_name);
+        let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone().into());
-        let impl_header_path = self.formatter.fmt_impl_header_path(&type_name);
+        let impl_header_path = self.formatter.fmt_impl_header_path(id);
         let mut impl_header = Header::new(impl_header_path.clone().into());
 
         let mut context = TyGenContext {
@@ -49,7 +49,7 @@ impl<'tcx> super::CContext<'tcx> {
     }
 
     pub fn gen_result(&self, name: &str, ty: ResultType) {
-        let header_path = self.formatter.fmt_decl_header_path(&name);
+        let header_path = self.formatter.fmt_result_header_path(name);
         let mut header = Header::new(header_path.clone());
         let mut dummy_header = Header::new("".to_string());
         let mut context = TyGenContext {
@@ -250,7 +250,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ret = format!("{constness}{name}*");
                 // Todo(breaking): We can remove this requirement
                 // and users will be forced to import more types
-                let header_path = self.cx.formatter.fmt_decl_header_path(&name);
+                let header_path = self.cx.formatter.fmt_decl_header_path(op_id);
                 header.includes.insert(header_path.into());
                 ret.into()
             }
@@ -258,14 +258,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let st_id = P::id_for_path(st);
                 let name = self.cx.formatter.fmt_type_name(st_id);
                 let ret = name.clone();
-                let header_path = self.cx.formatter.fmt_decl_header_path(&name);
+                let header_path = self.cx.formatter.fmt_decl_header_path(st_id);
                 header.includes.insert(header_path.into());
                 ret
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let enum_name = self.cx.formatter.fmt_type_name(id);
-                let header_path = self.cx.formatter.fmt_decl_header_path(&enum_name);
+                let header_path = self.cx.formatter.fmt_decl_header_path(id);
                 header.includes.insert(header_path.into());
                 enum_name
             }
