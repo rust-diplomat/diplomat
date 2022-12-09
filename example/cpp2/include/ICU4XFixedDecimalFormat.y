@@ -27,7 +27,7 @@ public:
 	}
 
 	~ICU4XFixedDecimalFormat() {
-		ICU4XFixedDecimalFormat_destroy(AsFFI());
+		capi::ICU4XFixedDecimalFormat_destroy(AsFFI());
 	}
 
 private:

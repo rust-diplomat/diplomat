@@ -18,7 +18,7 @@ public:
 	}
 
 	~Two() {
-		Two_destroy(AsFFI());
+		capi::Two_destroy(AsFFI());
 	}
 
 private:

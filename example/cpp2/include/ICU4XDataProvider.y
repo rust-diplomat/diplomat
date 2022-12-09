@@ -22,7 +22,7 @@ public:
 	}
 
 	~ICU4XDataProvider() {
-		ICU4XDataProvider_destroy(AsFFI());
+		capi::ICU4XDataProvider_destroy(AsFFI());
 	}
 
 private:

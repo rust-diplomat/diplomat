@@ -22,7 +22,7 @@ public:
 	}
 
 	~ICU4XLocale() {
-		ICU4XLocale_destroy(AsFFI());
+		capi::ICU4XLocale_destroy(AsFFI());
 	}
 
 private:

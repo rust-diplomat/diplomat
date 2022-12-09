@@ -31,7 +31,7 @@ public:
 	}
 
 	~Foo() {
-		Foo_destroy(AsFFI());
+		capi::Foo_destroy(AsFFI());
 	}
 
 private:

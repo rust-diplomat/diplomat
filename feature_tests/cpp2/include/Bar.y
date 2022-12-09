@@ -18,7 +18,7 @@ public:
 	}
 
 	~Bar() {
-		Bar_destroy(AsFFI());
+		capi::Bar_destroy(AsFFI());
 	}
 
 private:

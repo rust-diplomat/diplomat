@@ -24,7 +24,7 @@ public:
 	}
 
 	~MyString() {
-		MyString_destroy(AsFFI());
+		capi::MyString_destroy(AsFFI());
 	}
 
 private:

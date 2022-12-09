@@ -18,7 +18,7 @@ public:
 	}
 
 	~RefListParameter() {
-		RefListParameter_destroy(AsFFI());
+		capi::RefListParameter_destroy(AsFFI());
 	}
 
 private:

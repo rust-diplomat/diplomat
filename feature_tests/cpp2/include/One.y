@@ -41,7 +41,7 @@ public:
 	}
 
 	~One() {
-		One_destroy(AsFFI());
+		capi::One_destroy(AsFFI());
 	}
 
 private:

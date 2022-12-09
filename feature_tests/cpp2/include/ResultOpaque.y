@@ -36,7 +36,7 @@ public:
 	}
 
 	~ResultOpaque() {
-		ResultOpaque_destroy(AsFFI());
+		capi::ResultOpaque_destroy(AsFFI());
 	}
 
 private:

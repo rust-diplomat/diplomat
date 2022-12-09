@@ -31,7 +31,7 @@ public:
 	}
 
 	~OptionOpaque() {
-		OptionOpaque_destroy(AsFFI());
+		capi::OptionOpaque_destroy(AsFFI());
 	}
 
 private:

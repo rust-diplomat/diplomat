@@ -159,8 +159,9 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_dtor(&mut self, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
+        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         writeln!(self.header.body, "\t~{ty_name}() {{").unwrap();
-        writeln!(self.header.body, "\t\t{ty_name}_destroy(AsFFI());").unwrap();
+        writeln!(self.header.body, "\t\t{ctype}_destroy(AsFFI());").unwrap();
         writeln!(self.header.body, "\t}}").unwrap();
     }
 

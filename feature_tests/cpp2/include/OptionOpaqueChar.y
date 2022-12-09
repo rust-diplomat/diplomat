@@ -20,7 +20,7 @@ public:
 	}
 
 	~OptionOpaqueChar() {
-		OptionOpaqueChar_destroy(AsFFI());
+		capi::OptionOpaqueChar_destroy(AsFFI());
 	}
 
 private:

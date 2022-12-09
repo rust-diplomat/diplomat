@@ -28,7 +28,7 @@ public:
 	}
 
 	~Opaque() {
-		Opaque_destroy(AsFFI());
+		capi::Opaque_destroy(AsFFI());
 	}
 
 private:

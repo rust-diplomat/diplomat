@@ -21,7 +21,7 @@ public:
 	}
 
 	~RefList() {
-		RefList_destroy(AsFFI());
+		capi::RefList_destroy(AsFFI());
 	}
 
 private:

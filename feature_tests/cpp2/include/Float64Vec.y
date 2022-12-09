@@ -24,7 +24,7 @@ public:
 	}
 
 	~Float64Vec() {
-		Float64Vec_destroy(AsFFI());
+		capi::Float64Vec_destroy(AsFFI());
 	}
 
 private:
