@@ -1,5 +1,5 @@
-#ifndef BorrowedFields_H
-#define BorrowedFields_H
+#ifndef BorrowedFieldsReturning_H
+#define BorrowedFieldsReturning_H
 
 
 #include <stdio.h>
@@ -16,11 +16,10 @@ extern "C" {
 
 
 
-typedef struct BorrowedFields {
-	const uint16_t* a_data;
-	size_t a_len;
-	DiplomatStringView b;
-} BorrowedFields;
+typedef struct BorrowedFieldsReturning {
+	const uint8_t* bytes_data;
+	size_t bytes_len;
+} BorrowedFieldsReturning;
 
 
 
@@ -31,4 +30,4 @@ typedef struct BorrowedFields {
 } // extern "C"
 #endif // __cplusplus
 
-#endif // BorrowedFields_H
+#endif // BorrowedFieldsReturning_H

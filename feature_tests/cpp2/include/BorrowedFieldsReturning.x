@@ -1,0 +1,1 @@
+Struct(StructDef { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "BorrowedFieldsReturning" }, fields: [StructField { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "bytes" }, ty: Slice(Primitive(Borrow { lifetime: NonStatic(TypeLifetime(0)), mutability: Immutable }, Int(U8))) }], methods: [] })

@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "BorrowedFields.hpp"
+#include "BorrowedFieldsReturning.hpp"
 
 
 class Bar;
@@ -19,6 +21,10 @@ public:
 	std::unique_ptr<Bar> get_bar() const;
 
 	static std::unique_ptr<Foo> new_static(std::string_view x);
+
+	BorrowedFieldsReturning as_returning() const;
+
+	static std::unique_ptr<Foo> extract_from_fields(BorrowedFields fields);
 
 	inline capi::Foo AsFFI() {
 		return reinterpret_cast::<capi::Foo>(this);
