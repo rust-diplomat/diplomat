@@ -31,13 +31,21 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.c.tcx().resolve_type(id).name().as_str().into()
     }
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_decl_header_path(&self, id: TypeId) -> Cow<'tcx, str> {
-        format!("{}.y", self.fmt_type_name(id)).into()
+    pub fn fmt_decl_header_path(&self, type_name: &str) -> String {
+        format!("{}.d.hpp", type_name).into()
     }
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_impl_header_path(&self, id: TypeId) -> Cow<'tcx, str> {
-        format!("{}.z", self.fmt_type_name(id)).into()
+    pub fn fmt_impl_header_path(&self, type_name: &str) -> String {
+        format!("{}.hpp", type_name).into()
     }
+
+    pub fn fmt_c_decl_header_path(&self, type_name: &str) -> String {
+        self.c.fmt_decl_header_path(type_name)
+    }
+    pub fn fmt_c_impl_header_path(&self, type_name: &str) -> String {
+        self.c.fmt_impl_header_path(type_name)
+    }
+
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
         variant.name.as_str().into()
@@ -50,6 +58,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     pub fn fmt_c_name<'a>(&self, ident: &'a str) -> Cow<'a, str> {
         format!("capi::{ident}").into()
+    }
+
+    pub fn fmt_c_ptr<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        // TODO: Invoke a CFormatter function for this
+        format!("{ident}*").into()
     }
 
     pub fn fmt_optional<'a>(&self, ident: &'a str) -> Cow<'a, str> {
