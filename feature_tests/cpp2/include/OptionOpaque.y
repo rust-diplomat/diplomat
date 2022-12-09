@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "OptionStruct.hpp"
+#include "OptionStruct.y"
 
 
 

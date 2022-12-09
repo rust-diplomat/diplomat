@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ErrorEnum.hpp"
-#include "ErrorStruct.hpp"
+#include "ErrorEnum.y"
+#include "ErrorStruct.y"
 
 
 

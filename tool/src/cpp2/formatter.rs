@@ -31,8 +31,12 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.c.tcx().resolve_type(id).name().as_str().into()
     }
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_header_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.fmt_type_name(id)
+    pub fn fmt_decl_header_path(&self, id: TypeId) -> Cow<'tcx, str> {
+        format!("{}.y", self.fmt_type_name(id)).into()
+    }
+    /// Resolve and format the name of a type for use in header names
+    pub fn fmt_impl_header_path(&self, id: TypeId) -> Cow<'tcx, str> {
+        format!("{}.z", self.fmt_type_name(id)).into()
     }
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
@@ -83,6 +87,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         } else {
             method.name.as_str().into()
         }
+    }
+
+    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
+        format!("capi::{}", self.c.fmt_method_name(ty, method)).into()
     }
 
     /// Given a mutability, format a `const ` prefix for pointers if necessary,

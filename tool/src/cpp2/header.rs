@@ -13,10 +13,8 @@ static BASE_INCLUDES: &str = r#"
 /// to precalculate things like the list of dependent headers or forward declarations
 #[derive(Default)]
 pub struct Header {
-    /// The identifier used for the header file (without the .h)
-    ///
-    /// Example: the header for struct Foo is probably Foo, with the file named Foo.h
-    pub identifier: String,
+    /// The path name used for the header file (for example Foo.h)
+    pub path: String,
     /// A list of includes
     ///
     /// Example:
@@ -51,9 +49,9 @@ pub struct Header {
 }
 
 impl Header {
-    pub fn new(identifier: String) -> Self {
+    pub fn new(path: String) -> Self {
         Header {
-            identifier,
+            path,
             includes: BTreeSet::new(),
             includes_c: BTreeSet::new(),
             forward_classes: BTreeSet::new(),
@@ -68,10 +66,10 @@ impl fmt::Display for Header {
         let mut forwards = String::new();
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
-            includes += &format!("#include \"{}.hpp\"\n", i);
+            includes += &format!("#include \"{}\"\n", i);
         }
         for i in &self.includes_c {
-            includes += &format!("#include \"{}.h\"\n", i);
+            includes += &format!("#include \"{}\"\n", i);
         }
         for f in &self.forward_classes {
             forwards += &format!("class {f};\n");
@@ -79,13 +77,17 @@ impl fmt::Display for Header {
         for f in &self.forward_structs {
             forwards += &format!("struct {f};\n");
         }
-        let identifier = &self.identifier;
+        let header_guard = &self.path;
+        let header_guard = header_guard.replace(".hpp", "_HPP");
+        let header_guard = header_guard.replace(".h", "_H");
+        let header_guard = header_guard.replace(".y", "_HPP");
+        let header_guard = header_guard.replace(".z", "_HPP");
         let body = &self.body;
 
         write!(
             f,
-            r#"#ifndef {identifier}_HPP
-#define {identifier}_HPP
+            r#"#ifndef {header_guard}
+#define {header_guard}
 
 {includes}
 
@@ -93,7 +95,7 @@ impl fmt::Display for Header {
 
 {body}
 
-#endif // {identifier}_HPP
+#endif // {header_guard}
 "#
         )
     }

@@ -1,0 +1,16 @@
+#ifndef RefListParameter_HPP
+#define RefListParameter_HPP
+
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "diplomat_runtime.h"
+
+
+
+
+
+
+#endif // RefListParameter_HPP

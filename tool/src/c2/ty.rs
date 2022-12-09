@@ -6,9 +6,9 @@ use std::fmt::Write;
 
 impl<'tcx> super::CContext<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
-        let header_name = self.formatter.fmt_header_name(id);
-        let header_path = format!("{header_name}.h");
-        let mut header = Header::new(header_name.clone().into());
+        let type_name = self.formatter.fmt_type_name(id);
+        let header_path = self.formatter.fmt_header_path(&type_name);
+        let mut header = Header::new(header_path.clone().into());
 
         let mut context = TyGenContext::new(self, &mut header);
         match ty {
@@ -34,14 +34,14 @@ impl<'tcx> super::CContext<'tcx> {
         // once done
         let ty_name = context.cx.formatter.fmt_type_name(id);
         context.header.forwards.remove(&*ty_name);
-        context.header.includes.remove(&*header_name);
+        context.header.includes.remove(&*header_path);
 
         self.files.add_file(header_path, header.to_string());
     }
 
     pub fn gen_result(&self, name: &str, ty: ResultType) {
-        let header_path = format!("{name}.h");
-        let mut header = Header::new(name.to_owned());
+        let header_path = self.formatter.fmt_header_path(&name);
+        let mut header = Header::new(header_path.clone());
         let mut context = TyGenContext::new(self, &mut header);
         context.gen_result(name, ty);
         self.files.add_file(header_path, header.to_string());
@@ -67,13 +67,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         // To handle this, we make a separate header file called Foo_enum.h, that contains
         // *just* the enum. It is included from Foo.h, and external users should not be importing
         // it directly. (We can potentially add a #define guard that makes this actually private, if needed)
-        let header_name = &self.header.identifier;
-        let enum_header_name = format!("{header_name}_enum");
-        self.header.includes.insert(enum_header_name.to_string());
-        let enum_header_path = format!("{enum_header_name}.h");
-        let mut enum_header = Header::new(enum_header_name);
-
         let ty_name = self.cx.formatter.fmt_type_name(id);
+        let enum_header_name = format!("{ty_name}_enum");
+        let enum_header_path = self.cx.formatter.fmt_header_path(&enum_header_name);
+        self.header.includes.insert(enum_header_path.to_string());
+        let mut enum_header = Header::new(enum_header_path.clone());
+
         writeln!(&mut enum_header.body, "typedef enum {ty_name} {{").unwrap();
         for variant in def.variants.iter() {
             let variant_name = self.cx.formatter.fmt_enum_variant(variant);
@@ -148,14 +147,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     None => "void".into(),
                 };
                 // todo push to results set
-                let ret: Cow<str> = format!("diplomat_result_{ok_ty_name}_{err_ty_name}").into();
-                self.header.forwards.insert(ret.to_string());
-                self.header.includes.insert(ret.to_string());
+                let result_name = self.cx.formatter.fmt_result_name(&ok_ty_name, &err_ty_name);
+                self.header.forwards.insert(result_name.clone());
+                self.header.includes.insert(self.cx.formatter.fmt_header_path(&result_name));
                 self.cx
                     .result_store
                     .borrow_mut()
-                    .insert(ret.to_string(), (ok_ty, err.as_ref()));
-                ret
+                    .insert(result_name.clone(), (ok_ty, err.as_ref()));
+                result_name.into()
             }
         };
 
@@ -253,8 +252,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ret = format!("{constness}{name}*");
                 // Todo(breaking): We can remove this requirement
                 // and users will be forced to import more types
-                let header_name = self.cx.formatter.fmt_header_name(op_id);
-                self.header.includes.insert(header_name.into());
+                let header_path = self.cx.formatter.fmt_header_path(&name);
+                self.header.includes.insert(header_path.into());
                 self.header.forwards.insert(name.into());
                 ret.into()
             }
@@ -262,16 +261,16 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let st_id = P::id_for_path(st);
                 let name = self.cx.formatter.fmt_type_name(st_id);
                 let ret = name.clone();
-                let header_name = self.cx.formatter.fmt_header_name(st_id);
-                self.header.includes.insert(header_name.into());
+                let header_path = self.cx.formatter.fmt_header_path(&name);
+                self.header.includes.insert(header_path.into());
                 self.header.forwards.insert(name.into());
                 ret
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                let header_name = self.cx.formatter.fmt_header_name(id);
                 let enum_name = self.cx.formatter.fmt_type_name(id);
-                self.header.includes.insert(header_name.into());
+                let header_path = self.cx.formatter.fmt_header_path(&enum_name);
+                self.header.includes.insert(header_path.into());
                 enum_name
             }
             Type::Slice(ref s) => {

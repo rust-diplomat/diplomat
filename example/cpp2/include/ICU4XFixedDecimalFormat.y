@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ICU4XFixedDecimalFormatOptions.hpp"
-#include "ICU4XFixedDecimalFormatResult.hpp"
+#include "ICU4XFixedDecimalFormatOptions.y"
+#include "ICU4XFixedDecimalFormatResult.y"
 
 
 class ICU4XDataProvider;

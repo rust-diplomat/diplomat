@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "BorrowedFields.hpp"
-#include "BorrowedFieldsReturning.hpp"
+#include "BorrowedFields.y"
+#include "BorrowedFieldsReturning.y"
 
 
 class Bar;

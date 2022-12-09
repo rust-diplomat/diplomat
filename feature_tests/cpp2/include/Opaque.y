@@ -7,8 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ImportedStruct.hpp"
-#include "MyStruct.hpp"
+#include "ImportedStruct.y"
+#include "MyStruct.y"
 
 
 

@@ -1,0 +1,16 @@
+#ifndef ICU4XFixedDecimalFormat_HPP
+#define ICU4XFixedDecimalFormat_HPP
+
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include "diplomat_runtime.h"
+
+
+
+
+
+
+#endif // ICU4XFixedDecimalFormat_HPP

@@ -31,8 +31,8 @@ impl<'tcx> CFormatter<'tcx> {
         self.tcx.resolve_type(id).name().as_str().into()
     }
     /// Resolve and format the name of a type for use in header names
-    pub fn fmt_header_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.fmt_type_name(id)
+    pub fn fmt_header_path(&self, type_name: &str) -> String {
+        format!("{type_name}.h")
     }
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
@@ -85,6 +85,10 @@ impl<'tcx> CFormatter<'tcx> {
                 format!("ref_{constness}prim_slice_{prim}").into()
             }
         }
+    }
+
+    pub fn fmt_result_name(&self, ok_ty_name: &str, err_ty_name: &str) -> String {
+        format!("diplomat_result_{ok_ty_name}_{err_ty_name}")
     }
 
     /// Get the primitive type as a C type
