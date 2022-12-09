@@ -27,8 +27,8 @@ struct MyStructDeleter {
 };
 class MyStruct {
  public:
-  static MyStruct new_slice(const diplomat::span<double> v);
-  void set_slice(const diplomat::span<double> new_slice);
+  static MyStruct new_slice(const diplomat::span<const double> v);
+  void set_slice(const diplomat::span<const double> new_slice);
   inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
   inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
   inline MyStruct(capi::MyStruct* i) : inner(i) {}
@@ -40,10 +40,10 @@ class MyStruct {
 };
 
 
-inline MyStruct MyStruct::new_slice(const diplomat::span<double> v) {
+inline MyStruct MyStruct::new_slice(const diplomat::span<const double> v) {
   return MyStruct(capi::MyStruct_new_slice(v.data(), v.size()));
 }
-inline void MyStruct::set_slice(const diplomat::span<double> new_slice) {
+inline void MyStruct::set_slice(const diplomat::span<const double> new_slice) {
   capi::MyStruct_set_slice(this->inner.get(), new_slice.data(), new_slice.size());
 }
 #endif

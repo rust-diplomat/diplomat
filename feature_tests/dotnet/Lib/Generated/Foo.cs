@@ -79,6 +79,36 @@ public partial class Foo: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>BorrowedFieldsReturning</c> allocated on C# side.
+    /// </returns>
+    public BorrowedFieldsReturning AsReturning()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Foo");
+            }
+            Raw.BorrowedFieldsReturning retVal = Raw.Foo.AsReturning(_inner);
+            return new BorrowedFieldsReturning(retVal);
+        }
+    }
+
+    /// <returns>
+    /// A <c>Foo</c> allocated on Rust side.
+    /// </returns>
+    public static Foo ExtractFromFields(BorrowedFields fields)
+    {
+        unsafe
+        {
+            Raw.BorrowedFields fieldsRaw;
+            fieldsRaw = fields.AsFFI();
+            Raw.Foo* retVal = Raw.Foo.ExtractFromFields(fieldsRaw);
+            return new Foo(retVal);
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

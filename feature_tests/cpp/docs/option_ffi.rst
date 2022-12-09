@@ -18,6 +18,9 @@
     .. cpp:function:: void assert_integer(int32_t i) const
 
 
+    .. cpp:function:: static bool option_opaque_argument(const OptionOpaque* arg)
+
+
 .. cpp:class:: OptionOpaqueChar
 
     .. cpp:function:: void assert_char(char32_t ch) const

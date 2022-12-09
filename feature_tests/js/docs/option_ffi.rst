@@ -13,6 +13,8 @@
 
     .. js:function:: assert_integer(i)
 
+    .. js:staticfunction:: option_opaque_argument(arg)
+
 .. js:class:: OptionOpaqueChar
 
     .. js:function:: assert_char(ch)

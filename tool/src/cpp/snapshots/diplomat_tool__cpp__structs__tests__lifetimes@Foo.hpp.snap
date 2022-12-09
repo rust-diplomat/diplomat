@@ -23,20 +23,20 @@ struct Foo {
   /**
    * Lifetimes: `a` must live at least as long as the output.
    */
-  static Foo foo(const diplomat::span<uint8_t> a);
+  static Foo foo(const diplomat::span<const uint8_t> a);
 
   /**
    * Lifetimes: `a` must live for the duration of the program.
    */
-  static uint32_t bar(const diplomat::span<uint8_t> a);
+  static uint32_t bar(const diplomat::span<const uint8_t> a);
 };
 
 
-inline Foo Foo::foo(const diplomat::span<uint8_t> a) {
+inline Foo Foo::foo(const diplomat::span<const uint8_t> a) {
   capi::Foo diplomat_raw_struct_out_value = capi::Foo_foo(a.data(), a.size());
   return Foo{  };
 }
-inline uint32_t Foo::bar(const diplomat::span<uint8_t> a) {
+inline uint32_t Foo::bar(const diplomat::span<const uint8_t> a) {
   return capi::Foo_bar(a.data(), a.size());
 }
 #endif

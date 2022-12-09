@@ -216,8 +216,21 @@ pub fn gen_rust_to_cpp<W: Write>(
             .unwrap();
             "str".into()
         }
-        ast::TypeName::PrimitiveSlice(..) => {
-            todo!("Returning &[T] from Rust to C++ is not currently supported")
+        ast::TypeName::PrimitiveSlice(_lt, mutability, prim) => {
+            assert!(mutability.is_immutable());
+            let raw_value_id = format!("diplomat_slice_raw_{}", path);
+            let mut prim_caps = prim.to_string();
+            prim_caps.get_mut(0..1).unwrap().make_ascii_uppercase();
+            let span = &library_config.span.expr;
+            let prim = crate::c::types::c_type_for_prim(prim);
+            writeln!(out, "capi::Diplomat{prim_caps}View {raw_value_id} = {cpp};").unwrap();
+
+            writeln!(
+                out,
+                "{span}<const {prim}> slice({raw_value_id}.data, {raw_value_id}.len);"
+            )
+            .unwrap();
+            "slice".into()
         }
         ast::TypeName::Unit => cpp.to_string(),
     }
@@ -230,6 +243,8 @@ pub struct ReferenceMeta {
     owned: bool,
     /// Whether or not the reference is mutable.
     mutable: bool,
+    /// Whether the reference is nullable.
+    is_nullable: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -244,25 +259,37 @@ pub fn gen_cpp_to_rust<W: Write>(
     out: &mut W,
 ) -> String {
     match typ {
-        ast::TypeName::Reference(_, mutability, underlying) => gen_cpp_to_rust(
-            cpp,
-            path,
-            Some(ReferenceMeta {
-                owned: false,
-                mutable: mutability.is_mutable(),
-            }),
-            underlying.as_ref(),
-            in_path,
-            env,
-            is_self,
-            out,
-        ),
+        ast::TypeName::Reference(_, mutability, underlying) => {
+            let behind_ref = match behind_ref {
+                Some(mut br) => {
+                    br.mutable = mutability.is_mutable();
+                    br
+                }
+                None => ReferenceMeta {
+                    owned: false,
+                    mutable: mutability.is_mutable(),
+                    is_nullable: false,
+                },
+            };
+            gen_cpp_to_rust(
+                cpp,
+                path,
+                Some(behind_ref),
+                underlying.as_ref(),
+                in_path,
+                env,
+                is_self,
+                out,
+            )
+        }
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             match path_type.resolve(in_path, env) {
                 ast::CustomType::Opaque(_opaque) => {
                     if let Some(reference) = behind_ref {
                         if is_self {
                             format!("{}->inner.get()", cpp)
+                        } else if reference.is_nullable {
+                            format!("({}) ? {}->AsFFI() : nullptr", cpp, cpp)
                         } else if reference.mutable {
                             format!("{}.AsFFIMut()", cpp)
                         } else {
@@ -317,6 +344,7 @@ pub fn gen_cpp_to_rust<W: Write>(
                 == Some(ReferenceMeta {
                     owned: false,
                     mutable: true,
+                    is_nullable: false,
                 })
             {
                 writeln!(out, "capi::DiplomatWriteable {cpp}_writer = diplomat::WriteableTrait<W>::Construct({cpp});", cpp=cpp).unwrap();
@@ -329,6 +357,36 @@ pub fn gen_cpp_to_rust<W: Write>(
         ast::TypeName::StrReference(_) => {
             format!("{{ {cpp}.data(), {cpp}.size() }}")
         }
+        ast::TypeName::PrimitiveSlice(..) => {
+            format!("{{ {cpp}.data(), {cpp}.size() }}")
+        }
+        ast::TypeName::Option(boxed) => match &**boxed {
+            ast::TypeName::Reference(_, mutability, _) => {
+                let behind_ref = match behind_ref {
+                    Some(mut br) => {
+                        br.mutable = mutability.is_mutable();
+                        br.is_nullable = true;
+                        br
+                    }
+                    None => ReferenceMeta {
+                        owned: false,
+                        mutable: mutability.is_mutable(),
+                        is_nullable: true,
+                    },
+                };
+                gen_cpp_to_rust(
+                    cpp,
+                    path,
+                    Some(behind_ref),
+                    boxed,
+                    in_path,
+                    env,
+                    is_self,
+                    out,
+                )
+            }
+            o => todo!("{:?}", o),
+        },
         o => todo!("{:?}", o),
     }
 }

@@ -44,6 +44,10 @@ pub mod ffi {
         pub fn assert_integer(&self, i: i32) {
             assert_eq!(i, self.0);
         }
+
+        pub fn option_opaque_argument(arg: Option<&OptionOpaque>) -> bool {
+            arg.is_some()
+        }
     }
 
     impl OptionOpaqueChar {

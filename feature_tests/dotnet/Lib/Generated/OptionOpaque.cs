@@ -97,6 +97,28 @@ public partial class OptionOpaque: IDisposable
         }
     }
 
+    public static bool OptionOpaqueArgument(OptionOpaque? arg)
+    {
+        unsafe
+        {
+            Raw.OptionOpaque* argRaw;
+            if (arg == null)
+            {
+                argRaw = null;
+            }
+            else
+            {
+                argRaw = arg.AsFFI();
+                if (argRaw == null)
+                {
+                    throw new ObjectDisposedException("OptionOpaque");
+                }
+            }
+            bool retVal = Raw.OptionOpaque.OptionOpaqueArgument(argRaw);
+            return retVal;
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

@@ -15,6 +15,8 @@ typedef struct Foo Foo;
 } // namespace capi
 #endif
 #include "Bar.h"
+#include "BorrowedFieldsReturning.h"
+#include "BorrowedFields.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -25,6 +27,10 @@ Foo* Foo_new(const char* x_data, size_t x_len);
 Bar* Foo_get_bar(const Foo* self);
 
 Foo* Foo_new_static(const char* x_data, size_t x_len);
+
+BorrowedFieldsReturning Foo_as_returning(const Foo* self);
+
+Foo* Foo_extract_from_fields(BorrowedFields fields);
 void Foo_destroy(Foo* self);
 
 #ifdef __cplusplus

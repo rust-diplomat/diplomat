@@ -3,13 +3,13 @@
 
 .. cpp:class:: Float64Vec
 
-    .. cpp:function:: static Float64Vec new_(const diplomat::span<double> v)
+    .. cpp:function:: static Float64Vec new_(const diplomat::span<const double> v)
 
 
-    .. cpp:function:: void fill_slice(diplomat::span<double> v) const
+    .. cpp:function:: void fill_slice(diplomat::span<const double> v) const
 
 
-    .. cpp:function:: void set_value(const diplomat::span<double> new_slice)
+    .. cpp:function:: void set_value(const diplomat::span<const double> new_slice)
 
 
 .. cpp:class:: MyString

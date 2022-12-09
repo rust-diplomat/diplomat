@@ -53,4 +53,8 @@ export class OptionOpaque {
   assert_integer(arg_i) {
     wasm.OptionOpaque_assert_integer(this.underlying, arg_i);
   }
+
+  static option_opaque_argument(arg_arg) {
+    return wasm.OptionOpaque_option_opaque_argument(arg_arg);
+  }
 }
