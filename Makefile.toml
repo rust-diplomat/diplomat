@@ -71,7 +71,7 @@ rm -r "${backend}/${output_folder}"
 mv "tmp/${output_folder}" "${backend}/${output_folder}/.."
 if not ${docs_folder_is_empty}
     rm -r "${backend}/${docs_folder}"
-    mv "tmp/${docs_folder}" "${backend}/${output_folder}/.."
+    mv "tmp/${docs_folder}" "${backend}/${docs_folder}/.."
 end
 
 '''
@@ -141,7 +141,7 @@ args = [
     "feature_tests",
     "cpp",
     "include",
-    "docs"
+    "docs/source"
 ]
 [tasks.gen-examples-cpp]
 category = "Code generation"
@@ -152,7 +152,7 @@ args = [
     "example",
     "cpp",
     "include",
-    "docs",
+    "docs/source",
     "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
 ]
 [tasks.gen-tests-c]
@@ -204,7 +204,7 @@ args = [
     "feature_tests",
     "js",
     "api",
-    "docs",
+    "docs/source",
 ]
 [tasks.gen-examples-js]
 category = "Code generation"
@@ -215,7 +215,7 @@ args = [
     "example",
     "js",
     "lib/api",
-    "lib/docs",
+    "lib/docs/source",
     "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
 ]
 [tasks.gen-tests-dotnet]
