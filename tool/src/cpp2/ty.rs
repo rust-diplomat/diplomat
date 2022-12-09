@@ -175,22 +175,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         is_struct: bool,
     ) -> Vec<(Cow<'ccx, str>, Cow<'a, str>)> {
         let param_name = self.cx.formatter.fmt_param_name(ident);
-        match ty {
-            Type::Slice(hir::Slice::Str(..)) => {
-                let ty = self.cx.formatter.fmt_borrowed_str();
-                vec![(ty, param_name)]
-            }
-            Type::Slice(hir::Slice::Primitive(b, p)) => {
-                let ty = self.cx.formatter.fmt_primitive_as_c(*p);
-                let ty = self.cx.formatter.fmt_borrowed_slice(&ty);
-                let ty = self.cx.formatter.fmt_constness(&ty, b.mutability);
-                vec![(ty.into_owned().into(), param_name)]
-            }
-            _ => {
-                let ty = self.gen_ty_name(ty);
-                vec![(ty, param_name)]
-            }
-        }
+        let ty = self.gen_ty_name(ty);
+        vec![(ty, param_name)]
     }
 
     // Generate the C++ code for referencing a particular type.
@@ -228,11 +214,16 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 self.header.includes.insert(header_name.into());
                 ret
             }
-            Type::Slice(ref s) => match s {
-                // only reachable for structs, not methods
-                hir::Slice::Str(..) => "sssssss".into(),
-                hir::Slice::Primitive(_, p) => panic!("Attempted to gen_ty_name for slice of {}, should have been handled by gen_ty_decl", p.as_str())
-            },
+            Type::Slice(hir::Slice::Str(..)) => {
+                let ret = self.cx.formatter.fmt_borrowed_str();
+                ret.into_owned().into()
+            }
+            Type::Slice(hir::Slice::Primitive(b, p)) => {
+                let ret = self.cx.formatter.fmt_primitive_as_c(p);
+                let ret = self.cx.formatter.fmt_borrowed_slice(&ret);
+                let ret = self.cx.formatter.fmt_constness(&ret, b.mutability);
+                ret.into_owned().into()
+            }
         }
     }
 }
