@@ -18,7 +18,7 @@ class ICU4XLocale {
 public:
 	inline static std::unique_ptr<ICU4XLocale> new_(std::string_view name);
 
-	inline static std::unique_ptr<ICU4XLocale> new_from_bytes(const std::span<uint8_t> bytes);
+	inline static std::unique_ptr<ICU4XLocale> new_from_bytes(std::span<const uint8_t> bytes);
 
 	inline capi::ICU4XLocale* AsFFI();
 

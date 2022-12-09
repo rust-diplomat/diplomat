@@ -15,13 +15,13 @@
 
 
 
-inline std::unique_ptr<Float64Vec> Float64Vec::new_(const std::span<double> v) {
+inline std::unique_ptr<Float64Vec> Float64Vec::new_(std::span<const double> v) {
 	// TODO
 }
 inline void Float64Vec::fill_slice(std::span<double> v) const {
 	// TODO
 }
-inline void Float64Vec::set_value(const std::span<double> new_slice) {
+inline void Float64Vec::set_value(std::span<const double> new_slice) {
 	// TODO
 }
 inline capi::Float64Vec* Float64Vec::AsFFI() {

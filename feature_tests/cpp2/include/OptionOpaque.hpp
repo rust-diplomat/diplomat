@@ -30,7 +30,7 @@ inline OptionStruct OptionOpaque::new_struct_nones() {
 inline void OptionOpaque::assert_integer(int32_t i) const {
 	// TODO
 }
-inline bool OptionOpaque::option_opaque_argument(const std::optional<OptionOpaque&> arg) {
+inline bool OptionOpaque::option_opaque_argument(std::optional<const OptionOpaque&> arg) {
 	// TODO
 }
 inline capi::OptionOpaque* OptionOpaque::AsFFI() {

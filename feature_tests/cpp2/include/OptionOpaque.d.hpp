@@ -27,7 +27,7 @@ public:
 
 	inline void assert_integer(int32_t i) const;
 
-	inline static bool option_opaque_argument(const std::optional<OptionOpaque&> arg);
+	inline static bool option_opaque_argument(std::optional<const OptionOpaque&> arg);
 
 	inline capi::OptionOpaque* AsFFI();
 

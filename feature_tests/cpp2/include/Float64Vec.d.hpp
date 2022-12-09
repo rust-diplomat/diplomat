@@ -16,11 +16,11 @@
 
 class Float64Vec {
 public:
-	inline static std::unique_ptr<Float64Vec> new_(const std::span<double> v);
+	inline static std::unique_ptr<Float64Vec> new_(std::span<const double> v);
 
 	inline void fill_slice(std::span<double> v) const;
 
-	inline void set_value(const std::span<double> new_slice);
+	inline void set_value(std::span<const double> new_slice);
 
 	inline capi::Float64Vec* AsFFI();
 

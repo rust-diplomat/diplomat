@@ -215,15 +215,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(op_id);
+                let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = if op.owner.is_owned() {
                     self.cx.formatter.fmt_owned(&type_name)
                 } else if op.is_optional() {
-                    self.cx.formatter.fmt_optional_borrowed(&type_name)
+                    self.cx.formatter.fmt_optional_borrowed(&type_name, mutability)
                 } else {
-                    self.cx.formatter.fmt_borrowed(&type_name)
+                    self.cx.formatter.fmt_borrowed(&type_name, mutability)
                 };
-                let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let ret = self.cx.formatter.fmt_constness(&ret, mutability);
                 let ret = ret.into_owned().into();
 
                 self.decl_header.forward_classes.insert(type_name.into_owned());
@@ -241,13 +240,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 self.decl_header.includes.insert(self.cx.formatter.fmt_decl_header_path(id));
                 self.cx.formatter.fmt_type_name(id)
             }
-            Type::Slice(hir::Slice::Str(..)) => {
+            Type::Slice(hir::Slice::Str(_lifetime)) => {
                 self.cx.formatter.fmt_borrowed_str()
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.cx.formatter.fmt_primitive_as_c(p);
-                let ret = self.cx.formatter.fmt_borrowed_slice(&ret);
-                let ret = self.cx.formatter.fmt_constness(&ret, b.mutability);
+                let ret = self.cx.formatter.fmt_borrowed_slice(&ret, b.mutability);
                 ret.into_owned().into()
             }
         }

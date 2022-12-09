@@ -71,20 +71,35 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         format!("std::optional<{}>", ident).into()
     }
 
-    pub fn fmt_borrowed<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        format!("{}&", ident).into()
+    pub fn fmt_borrowed<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+        // TODO: Where is the right place to put `const` here?
+        if mutability.is_mutable() {
+            format!("{}&", ident).into()
+        } else {
+            format!("const {}&", ident).into()
+        }
     }
 
-    pub fn fmt_optional_borrowed<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        format!("std::optional<{}&>", ident).into()
+    pub fn fmt_optional_borrowed<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+        // TODO: Where is the right place to put `const` here?
+        if mutability.is_mutable() {
+            format!("std::optional<{}&>", ident).into()
+        } else {
+            format!("std::optional<const {}&>", ident).into()
+        }
     }
 
     pub fn fmt_owned<'a>(&self, ident: &'a str) -> Cow<'a, str> {
         format!("std::unique_ptr<{}>", ident).into()
     }
 
-    pub fn fmt_borrowed_slice<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        format!("std::span<{}>", ident).into()
+    pub fn fmt_borrowed_slice<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+        // TODO: Where is the right place to put `const` here?
+        if mutability.is_mutable() {
+            format!("std::span<{}>", ident).into()
+        } else {
+            format!("std::span<const {}>", ident).into()
+        }
     }
 
     pub fn fmt_borrowed_str(&self) -> Cow<'static, str> {
@@ -106,12 +121,6 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
         format!("capi::{}", self.c.fmt_method_name(ty, method)).into()
-    }
-
-    /// Given a mutability, format a `const ` prefix for pointers if necessary,
-    /// including a space for prepending
-    pub fn fmt_constness<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
-        mutability.if_mut_else(ident.into(), format!("const {}", ident).into())
     }
 
     /// Get the primitive type as a C type
