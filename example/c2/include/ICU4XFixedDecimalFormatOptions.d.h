@@ -17,8 +17,8 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ICU4XFixedDecimalFormatOptions {
-	ICU4XFixedDecimalGroupingStrategy grouping_strategy;
-	ICU4XFixedDecimalSignDisplay sign_display;
+  ICU4XFixedDecimalGroupingStrategy grouping_strategy;
+  ICU4XFixedDecimalSignDisplay sign_display;
 } ICU4XFixedDecimalFormatOptions;
 
 

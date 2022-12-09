@@ -16,17 +16,17 @@
 
 class ICU4XLocale {
 public:
-	inline static std::unique_ptr<ICU4XLocale> new_(std::string_view name);
+  inline static std::unique_ptr<ICU4XLocale> new_(std::string_view name);
 
-	inline static std::unique_ptr<ICU4XLocale> new_from_bytes(std::span<const uint8_t> bytes);
+  inline static std::unique_ptr<ICU4XLocale> new_from_bytes(std::span<const uint8_t> bytes);
 
-	inline const capi::ICU4XLocale* AsFFI() const;
-	inline capi::ICU4XLocale* AsFFI();
+  inline const capi::ICU4XLocale* AsFFI() const;
+  inline capi::ICU4XLocale* AsFFI();
 
-	inline ~ICU4XLocale();
+  inline ~ICU4XLocale();
 
 private:
-	ICU4XLocale() = delete;
+  ICU4XLocale() = delete;
 };
 
 

@@ -15,9 +15,9 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct BorrowedFields {
-	const uint16_t* a_data;
-	size_t a_len;
-	DiplomatStringView b;
+  const uint16_t* a_data;
+  size_t a_len;
+  DiplomatStringView b;
 } BorrowedFields;
 
 

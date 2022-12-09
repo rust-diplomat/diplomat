@@ -16,19 +16,19 @@
 
 class MyString {
 public:
-	inline static std::unique_ptr<MyString> new_(std::string_view v);
+  inline static std::unique_ptr<MyString> new_(std::string_view v);
 
-	inline void set_str(std::string_view new_str);
+  inline void set_str(std::string_view new_str);
 
-	inline std::string get_str() const;
+  inline std::string get_str() const;
 
-	inline const capi::MyString* AsFFI() const;
-	inline capi::MyString* AsFFI();
+  inline const capi::MyString* AsFFI() const;
+  inline capi::MyString* AsFFI();
 
-	inline ~MyString();
+  inline ~MyString();
 
 private:
-	MyString() = delete;
+  MyString() = delete;
 };
 
 

@@ -16,8 +16,8 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ImportedStruct {
-	UnimportedEnum foo;
-	uint8_t count;
+  UnimportedEnum foo;
+  uint8_t count;
 } ImportedStruct;
 
 

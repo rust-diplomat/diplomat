@@ -16,22 +16,22 @@
 
 
 inline std::unique_ptr<Float64Vec> Float64Vec::new_(std::span<const double> v) {
-	// TODO
+  // TODO
 }
 inline void Float64Vec::fill_slice(std::span<double> v) const {
-	// TODO
+  // TODO
 }
 inline void Float64Vec::set_value(std::span<const double> new_slice) {
-	// TODO
+  // TODO
 }
 inline const capi::Float64Vec* Float64Vec::AsFFI() const {
-	return reinterpret_cast<const capi::Float64Vec*>(this);
+  return reinterpret_cast<const capi::Float64Vec*>(this);
 }
 inline capi::Float64Vec* Float64Vec::AsFFI() {
-	return reinterpret_cast<capi::Float64Vec*>(this);
+  return reinterpret_cast<capi::Float64Vec*>(this);
 }
 inline Float64Vec::~Float64Vec() {
-	capi::Float64Vec_destroy(AsFFI());
+  capi::Float64Vec_destroy(AsFFI());
 }
 
 

@@ -15,8 +15,8 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct BorrowedFieldsReturning {
-	const uint8_t* bytes_data;
-	size_t bytes_len;
+  const uint8_t* bytes_data;
+  size_t bytes_len;
 } BorrowedFieldsReturning;
 
 

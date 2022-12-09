@@ -47,6 +47,8 @@ pub struct Header {
     /// Foo make_foo(uint8_t field1, bool field2);
     /// ```
     pub body: String,
+    /// What string to use for indentation.
+    pub indent_str: &'static str,
 }
 
 impl Header {
@@ -57,6 +59,7 @@ impl Header {
             forward_classes: BTreeSet::new(),
             forward_structs: BTreeSet::new(),
             body: String::new(),
+            indent_str: "  ",
         }
     }
 }
@@ -77,7 +80,7 @@ impl fmt::Display for Header {
         let header_guard = &self.path;
         let header_guard = header_guard.replace(".d.hpp", "_D_HPP");
         let header_guard = header_guard.replace(".hpp", "_HPP");
-        let body = &self.body;
+        let body = self.body.replace("\t", self.indent_str);
 
         write!(
             f,

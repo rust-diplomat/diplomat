@@ -16,22 +16,22 @@
 
 
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
-	// TODO
+  // TODO
 }
 inline void MyString::set_str(std::string_view new_str) {
-	// TODO
+  // TODO
 }
 inline std::string MyString::get_str() const {
-	// TODO
+  // TODO
 }
 inline const capi::MyString* MyString::AsFFI() const {
-	return reinterpret_cast<const capi::MyString*>(this);
+  return reinterpret_cast<const capi::MyString*>(this);
 }
 inline capi::MyString* MyString::AsFFI() {
-	return reinterpret_cast<capi::MyString*>(this);
+  return reinterpret_cast<capi::MyString*>(this);
 }
 inline MyString::~MyString() {
-	capi::MyString_destroy(AsFFI());
+  capi::MyString_destroy(AsFFI());
 }
 
 

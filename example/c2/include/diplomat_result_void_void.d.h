@@ -15,7 +15,7 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct diplomat_result_void_void {
-	bool is_ok;
+  bool is_ok;
 } diplomat_result_void_void;
 
 

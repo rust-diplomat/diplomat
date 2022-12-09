@@ -16,28 +16,28 @@
 
 
 inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
-	// TODO
+  // TODO
 }
 inline std::unique_ptr<Bar> Foo::get_bar() const {
-	// TODO
+  // TODO
 }
 inline std::unique_ptr<Foo> Foo::new_static(std::string_view x) {
-	// TODO
+  // TODO
 }
 inline BorrowedFieldsReturning Foo::as_returning() const {
-	// TODO
+  // TODO
 }
 inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
-	// TODO
+  // TODO
 }
 inline const capi::Foo* Foo::AsFFI() const {
-	return reinterpret_cast<const capi::Foo*>(this);
+  return reinterpret_cast<const capi::Foo*>(this);
 }
 inline capi::Foo* Foo::AsFFI() {
-	return reinterpret_cast<capi::Foo*>(this);
+  return reinterpret_cast<capi::Foo*>(this);
 }
 inline Foo::~Foo() {
-	capi::Foo_destroy(AsFFI());
+  capi::Foo_destroy(AsFFI());
 }
 
 

@@ -16,19 +16,19 @@
 
 
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {
-	// TODO
+  // TODO
 }
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_from_bytes(std::span<const uint8_t> bytes) {
-	// TODO
+  // TODO
 }
 inline const capi::ICU4XLocale* ICU4XLocale::AsFFI() const {
-	return reinterpret_cast<const capi::ICU4XLocale*>(this);
+  return reinterpret_cast<const capi::ICU4XLocale*>(this);
 }
 inline capi::ICU4XLocale* ICU4XLocale::AsFFI() {
-	return reinterpret_cast<capi::ICU4XLocale*>(this);
+  return reinterpret_cast<capi::ICU4XLocale*>(this);
 }
 inline ICU4XLocale::~ICU4XLocale() {
-	capi::ICU4XLocale_destroy(AsFFI());
+  capi::ICU4XLocale_destroy(AsFFI());
 }
 
 

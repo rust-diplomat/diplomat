@@ -16,25 +16,25 @@
 
 
 inline std::unique_ptr<Opaque> Opaque::new_() {
-	// TODO
+  // TODO
 }
 inline void Opaque::assert_struct(MyStruct s) const {
-	// TODO
+  // TODO
 }
 inline size_t Opaque::returns_usize() {
-	// TODO
+  // TODO
 }
 inline ImportedStruct Opaque::returns_imported() {
-	// TODO
+  // TODO
 }
 inline const capi::Opaque* Opaque::AsFFI() const {
-	return reinterpret_cast<const capi::Opaque*>(this);
+  return reinterpret_cast<const capi::Opaque*>(this);
 }
 inline capi::Opaque* Opaque::AsFFI() {
-	return reinterpret_cast<capi::Opaque*>(this);
+  return reinterpret_cast<capi::Opaque*>(this);
 }
 inline Opaque::~Opaque() {
-	capi::Opaque_destroy(AsFFI());
+  capi::Opaque_destroy(AsFFI());
 }
 
 

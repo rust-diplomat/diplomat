@@ -14,10 +14,10 @@
 
 
 enum struct ICU4XFixedDecimalGroupingStrategy {
-	Auto = 0,
-	Never = 1,
-	Always = 2,
-	Min2 = 3,
+  Auto = 0,
+  Never = 1,
+  Always = 2,
+  Min2 = 3,
 };
 
 

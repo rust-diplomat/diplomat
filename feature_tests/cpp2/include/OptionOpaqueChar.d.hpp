@@ -16,15 +16,15 @@
 
 class OptionOpaqueChar {
 public:
-	inline void assert_char(char32_t ch) const;
+  inline void assert_char(char32_t ch) const;
 
-	inline const capi::OptionOpaqueChar* AsFFI() const;
-	inline capi::OptionOpaqueChar* AsFFI();
+  inline const capi::OptionOpaqueChar* AsFFI() const;
+  inline capi::OptionOpaqueChar* AsFFI();
 
-	inline ~OptionOpaqueChar();
+  inline ~OptionOpaqueChar();
 
 private:
-	OptionOpaqueChar() = delete;
+  OptionOpaqueChar() = delete;
 };
 
 

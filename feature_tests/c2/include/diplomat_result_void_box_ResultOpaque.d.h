@@ -16,10 +16,10 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct diplomat_result_void_box_ResultOpaque {
-	union {
-		ResultOpaque* err;
-	};
-	bool is_ok;
+  union {
+    ResultOpaque* err;
+  };
+  bool is_ok;
 } diplomat_result_void_box_ResultOpaque;
 
 

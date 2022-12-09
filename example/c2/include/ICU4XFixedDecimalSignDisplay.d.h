@@ -15,11 +15,11 @@ extern "C" {
 #endif // __cplusplus
 
 typedef enum ICU4XFixedDecimalSignDisplay {
-	ICU4XFixedDecimalSignDisplay_Auto = 0,
-	ICU4XFixedDecimalSignDisplay_Never = 1,
-	ICU4XFixedDecimalSignDisplay_Always = 2,
-	ICU4XFixedDecimalSignDisplay_ExceptZero = 3,
-	ICU4XFixedDecimalSignDisplay_Negative = 4,
+  ICU4XFixedDecimalSignDisplay_Auto = 0,
+  ICU4XFixedDecimalSignDisplay_Never = 1,
+  ICU4XFixedDecimalSignDisplay_Always = 2,
+  ICU4XFixedDecimalSignDisplay_ExceptZero = 3,
+  ICU4XFixedDecimalSignDisplay_Negative = 4,
 } ICU4XFixedDecimalSignDisplay;
 
 

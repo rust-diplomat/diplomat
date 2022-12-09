@@ -14,8 +14,8 @@
 
 
 struct BorrowedFields {
-	std::span<const uint16_t> a;
-	std::string_view b;
+  std::span<const uint16_t> a;
+  std::string_view b;
 };
 
 

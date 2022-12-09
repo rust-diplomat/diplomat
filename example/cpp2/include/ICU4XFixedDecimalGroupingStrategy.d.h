@@ -15,10 +15,10 @@ extern "C" {
 #endif // __cplusplus
 
 typedef enum ICU4XFixedDecimalGroupingStrategy {
-	ICU4XFixedDecimalGroupingStrategy_Auto = 0,
-	ICU4XFixedDecimalGroupingStrategy_Never = 1,
-	ICU4XFixedDecimalGroupingStrategy_Always = 2,
-	ICU4XFixedDecimalGroupingStrategy_Min2 = 3,
+  ICU4XFixedDecimalGroupingStrategy_Auto = 0,
+  ICU4XFixedDecimalGroupingStrategy_Never = 1,
+  ICU4XFixedDecimalGroupingStrategy_Always = 2,
+  ICU4XFixedDecimalGroupingStrategy_Min2 = 3,
 } ICU4XFixedDecimalGroupingStrategy;
 
 

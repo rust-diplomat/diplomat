@@ -16,10 +16,10 @@ class OptionOpaqueChar;
 
 
 struct OptionStruct {
-	std::unique_ptr<OptionOpaque> a;
-	std::unique_ptr<OptionOpaqueChar> b;
-	uint32_t c;
-	std::unique_ptr<OptionOpaque> d;
+  std::unique_ptr<OptionOpaque> a;
+  std::unique_ptr<OptionOpaqueChar> b;
+  uint32_t c;
+  std::unique_ptr<OptionOpaque> d;
 };
 
 

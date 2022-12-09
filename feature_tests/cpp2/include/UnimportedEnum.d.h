@@ -15,9 +15,9 @@ extern "C" {
 #endif // __cplusplus
 
 typedef enum UnimportedEnum {
-	UnimportedEnum_A = 0,
-	UnimportedEnum_B = 1,
-	UnimportedEnum_C = 2,
+  UnimportedEnum_A = 0,
+  UnimportedEnum_B = 1,
+  UnimportedEnum_C = 2,
 } UnimportedEnum;
 
 

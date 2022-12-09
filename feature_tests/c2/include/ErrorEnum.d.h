@@ -15,8 +15,8 @@ extern "C" {
 #endif // __cplusplus
 
 typedef enum ErrorEnum {
-	ErrorEnum_Foo = 0,
-	ErrorEnum_Bar = 1,
+  ErrorEnum_Foo = 0,
+  ErrorEnum_Bar = 1,
 } ErrorEnum;
 
 

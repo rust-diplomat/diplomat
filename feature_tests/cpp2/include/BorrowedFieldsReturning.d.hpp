@@ -14,7 +14,7 @@
 
 
 struct BorrowedFieldsReturning {
-	std::span<const uint8_t> bytes;
+  std::span<const uint8_t> bytes;
 };
 
 

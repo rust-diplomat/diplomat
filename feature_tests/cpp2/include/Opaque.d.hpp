@@ -18,21 +18,21 @@
 
 class Opaque {
 public:
-	inline static std::unique_ptr<Opaque> new_();
+  inline static std::unique_ptr<Opaque> new_();
 
-	inline void assert_struct(MyStruct s) const;
+  inline void assert_struct(MyStruct s) const;
 
-	inline static size_t returns_usize();
+  inline static size_t returns_usize();
 
-	inline static ImportedStruct returns_imported();
+  inline static ImportedStruct returns_imported();
 
-	inline const capi::Opaque* AsFFI() const;
-	inline capi::Opaque* AsFFI();
+  inline const capi::Opaque* AsFFI() const;
+  inline capi::Opaque* AsFFI();
 
-	inline ~Opaque();
+  inline ~Opaque();
 
 private:
-	Opaque() = delete;
+  Opaque() = delete;
 };
 
 

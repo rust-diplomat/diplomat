@@ -17,11 +17,11 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct diplomat_result_ErrorEnum_box_ResultOpaque {
-	union {
-		ErrorEnum ok;
-		ResultOpaque* err;
-	};
-	bool is_ok;
+  union {
+    ErrorEnum ok;
+    ResultOpaque* err;
+  };
+  bool is_ok;
 } diplomat_result_ErrorEnum_box_ResultOpaque;
 
 

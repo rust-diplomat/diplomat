@@ -16,8 +16,8 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct ICU4XFixedDecimalFormatResult {
-	ICU4XFixedDecimalFormat* fdf;
-	bool success;
+  ICU4XFixedDecimalFormat* fdf;
+  bool success;
 } ICU4XFixedDecimalFormatResult;
 
 

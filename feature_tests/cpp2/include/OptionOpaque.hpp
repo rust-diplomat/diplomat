@@ -16,31 +16,31 @@
 
 
 inline std::unique_ptr<OptionOpaque> OptionOpaque::new_(int32_t i) {
-	// TODO
+  // TODO
 }
 inline std::unique_ptr<OptionOpaque> OptionOpaque::new_none() {
-	// TODO
+  // TODO
 }
 inline OptionStruct OptionOpaque::new_struct() {
-	// TODO
+  // TODO
 }
 inline OptionStruct OptionOpaque::new_struct_nones() {
-	// TODO
+  // TODO
 }
 inline void OptionOpaque::assert_integer(int32_t i) const {
-	// TODO
+  // TODO
 }
 inline bool OptionOpaque::option_opaque_argument(std::optional<const OptionOpaque&> arg) {
-	// TODO
+  // TODO
 }
 inline const capi::OptionOpaque* OptionOpaque::AsFFI() const {
-	return reinterpret_cast<const capi::OptionOpaque*>(this);
+  return reinterpret_cast<const capi::OptionOpaque*>(this);
 }
 inline capi::OptionOpaque* OptionOpaque::AsFFI() {
-	return reinterpret_cast<capi::OptionOpaque*>(this);
+  return reinterpret_cast<capi::OptionOpaque*>(this);
 }
 inline OptionOpaque::~OptionOpaque() {
-	capi::OptionOpaque_destroy(AsFFI());
+  capi::OptionOpaque_destroy(AsFFI());
 }
 
 

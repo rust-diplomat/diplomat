@@ -17,10 +17,10 @@ extern "C" {
 #endif // __cplusplus
 
 typedef struct OptionStruct {
-	OptionOpaque* a;
-	OptionOpaqueChar* b;
-	uint32_t c;
-	OptionOpaque* d;
+  OptionOpaque* a;
+  OptionOpaqueChar* b;
+  uint32_t c;
+  OptionOpaque* d;
 } OptionStruct;
 
 

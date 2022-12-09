@@ -16,16 +16,16 @@
 
 
 inline void OptionOpaqueChar::assert_char(char32_t ch) const {
-	// TODO
+  // TODO
 }
 inline const capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() const {
-	return reinterpret_cast<const capi::OptionOpaqueChar*>(this);
+  return reinterpret_cast<const capi::OptionOpaqueChar*>(this);
 }
 inline capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() {
-	return reinterpret_cast<capi::OptionOpaqueChar*>(this);
+  return reinterpret_cast<capi::OptionOpaqueChar*>(this);
 }
 inline OptionOpaqueChar::~OptionOpaqueChar() {
-	capi::OptionOpaqueChar_destroy(AsFFI());
+  capi::OptionOpaqueChar_destroy(AsFFI());
 }
 
 

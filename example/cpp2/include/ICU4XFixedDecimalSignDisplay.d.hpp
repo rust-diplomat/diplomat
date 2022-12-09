@@ -14,11 +14,11 @@
 
 
 enum struct ICU4XFixedDecimalSignDisplay {
-	Auto = 0,
-	Never = 1,
-	Always = 2,
-	ExceptZero = 3,
-	Negative = 4,
+  Auto = 0,
+  Never = 1,
+  Always = 2,
+  ExceptZero = 3,
+  Negative = 4,
 };
 
 

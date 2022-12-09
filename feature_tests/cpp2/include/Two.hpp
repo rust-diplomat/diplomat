@@ -16,13 +16,13 @@
 
 
 inline const capi::Two* Two::AsFFI() const {
-	return reinterpret_cast<const capi::Two*>(this);
+  return reinterpret_cast<const capi::Two*>(this);
 }
 inline capi::Two* Two::AsFFI() {
-	return reinterpret_cast<capi::Two*>(this);
+  return reinterpret_cast<capi::Two*>(this);
 }
 inline Two::~Two() {
-	capi::Two_destroy(AsFFI());
+  capi::Two_destroy(AsFFI());
 }
 
 

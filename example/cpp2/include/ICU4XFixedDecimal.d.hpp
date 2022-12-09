@@ -16,21 +16,21 @@
 
 class ICU4XFixedDecimal {
 public:
-	inline static std::unique_ptr<ICU4XFixedDecimal> new_(int32_t v);
+  inline static std::unique_ptr<ICU4XFixedDecimal> new_(int32_t v);
 
-	inline void multiply_pow10(int16_t power);
+  inline void multiply_pow10(int16_t power);
 
-	inline void negate();
+  inline void negate();
 
-	inline DiplomatResult<std::string, std::monostate> to_string() const;
+  inline DiplomatResult<std::string, std::monostate> to_string() const;
 
-	inline const capi::ICU4XFixedDecimal* AsFFI() const;
-	inline capi::ICU4XFixedDecimal* AsFFI();
+  inline const capi::ICU4XFixedDecimal* AsFFI() const;
+  inline capi::ICU4XFixedDecimal* AsFFI();
 
-	inline ~ICU4XFixedDecimal();
+  inline ~ICU4XFixedDecimal();
 
 private:
-	ICU4XFixedDecimal() = delete;
+  ICU4XFixedDecimal() = delete;
 };
 
 

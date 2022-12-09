@@ -19,23 +19,23 @@ class Bar;
 
 class Foo {
 public:
-	inline static std::unique_ptr<Foo> new_(std::string_view x);
+  inline static std::unique_ptr<Foo> new_(std::string_view x);
 
-	inline std::unique_ptr<Bar> get_bar() const;
+  inline std::unique_ptr<Bar> get_bar() const;
 
-	inline static std::unique_ptr<Foo> new_static(std::string_view x);
+  inline static std::unique_ptr<Foo> new_static(std::string_view x);
 
-	inline BorrowedFieldsReturning as_returning() const;
+  inline BorrowedFieldsReturning as_returning() const;
 
-	inline static std::unique_ptr<Foo> extract_from_fields(BorrowedFields fields);
+  inline static std::unique_ptr<Foo> extract_from_fields(BorrowedFields fields);
 
-	inline const capi::Foo* AsFFI() const;
-	inline capi::Foo* AsFFI();
+  inline const capi::Foo* AsFFI() const;
+  inline capi::Foo* AsFFI();
 
-	inline ~Foo();
+  inline ~Foo();
 
 private:
-	Foo() = delete;
+  Foo() = delete;
 };
 
 

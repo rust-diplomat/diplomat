@@ -21,17 +21,17 @@ class ICU4XLocale;
 
 class ICU4XFixedDecimalFormat {
 public:
-	inline static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
+  inline static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
 
-	inline std::string format_write(const ICU4XFixedDecimal& value) const;
+  inline std::string format_write(const ICU4XFixedDecimal& value) const;
 
-	inline const capi::ICU4XFixedDecimalFormat* AsFFI() const;
-	inline capi::ICU4XFixedDecimalFormat* AsFFI();
+  inline const capi::ICU4XFixedDecimalFormat* AsFFI() const;
+  inline capi::ICU4XFixedDecimalFormat* AsFFI();
 
-	inline ~ICU4XFixedDecimalFormat();
+  inline ~ICU4XFixedDecimalFormat();
 
 private:
-	ICU4XFixedDecimalFormat() = delete;
+  ICU4XFixedDecimalFormat() = delete;
 };
 
 

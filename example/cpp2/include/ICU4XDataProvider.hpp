@@ -16,19 +16,19 @@
 
 
 inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
-	// TODO
+  // TODO
 }
 inline DiplomatResult<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
-	// TODO
+  // TODO
 }
 inline const capi::ICU4XDataProvider* ICU4XDataProvider::AsFFI() const {
-	return reinterpret_cast<const capi::ICU4XDataProvider*>(this);
+  return reinterpret_cast<const capi::ICU4XDataProvider*>(this);
 }
 inline capi::ICU4XDataProvider* ICU4XDataProvider::AsFFI() {
-	return reinterpret_cast<capi::ICU4XDataProvider*>(this);
+  return reinterpret_cast<capi::ICU4XDataProvider*>(this);
 }
 inline ICU4XDataProvider::~ICU4XDataProvider() {
-	capi::ICU4XDataProvider_destroy(AsFFI());
+  capi::ICU4XDataProvider_destroy(AsFFI());
 }
 
 
