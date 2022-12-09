@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "ResultOpaque.d.hpp"
 #include "ResultOpaque.h"
@@ -13,28 +15,28 @@
 
 
 
-static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> inline ResultOpaque::new_(int32_t i) {
+inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_(int32_t i) {
 	// TODO
 }
-static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> inline ResultOpaque::new_failing_foo() {
+inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_failing_foo() {
 	// TODO
 }
-static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> inline ResultOpaque::new_failing_bar() {
+inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_failing_bar() {
 	// TODO
 }
-static DiplomatResult<std::unique_ptr<ResultOpaque>, std::monostate> inline ResultOpaque::new_failing_unit() {
+inline DiplomatResult<std::unique_ptr<ResultOpaque>, std::monostate> ResultOpaque::new_failing_unit() {
 	// TODO
 }
-static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorStruct> inline ResultOpaque::new_failing_struct(int32_t i) {
+inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorStruct> ResultOpaque::new_failing_struct(int32_t i) {
 	// TODO
 }
-static DiplomatResult<std::monostate, std::unique_ptr<ResultOpaque>> inline ResultOpaque::new_in_err(int32_t i) {
+inline DiplomatResult<std::monostate, std::unique_ptr<ResultOpaque>> ResultOpaque::new_in_err(int32_t i) {
 	// TODO
 }
-static DiplomatResult<ErrorEnum, std::unique_ptr<ResultOpaque>> inline ResultOpaque::new_in_enum_err(int32_t i) {
+inline DiplomatResult<ErrorEnum, std::unique_ptr<ResultOpaque>> ResultOpaque::new_in_enum_err(int32_t i) {
 	// TODO
 }
-void inline ResultOpaque::assert_integer(int32_t i) const {
+inline void ResultOpaque::assert_integer(int32_t i) const {
 	// TODO
 }
 inline capi::ResultOpaque* ResultOpaque::AsFFI() {

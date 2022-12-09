@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "ICU4XFixedDecimalSignDisplay.d.hpp"
 #include "ICU4XFixedDecimalSignDisplay.h"

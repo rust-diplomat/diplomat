@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "Opaque.d.hpp"
 #include "Opaque.h"
@@ -13,16 +15,16 @@
 
 
 
-static std::unique_ptr<Opaque> inline Opaque::new_() {
+inline std::unique_ptr<Opaque> Opaque::new_() {
 	// TODO
 }
-void inline Opaque::assert_struct(MyStruct s) const {
+inline void Opaque::assert_struct(MyStruct s) const {
 	// TODO
 }
-static size_t inline Opaque::returns_usize() {
+inline size_t Opaque::returns_usize() {
 	// TODO
 }
-static ImportedStruct inline Opaque::returns_imported() {
+inline ImportedStruct Opaque::returns_imported() {
 	// TODO
 }
 inline capi::Opaque* Opaque::AsFFI() {

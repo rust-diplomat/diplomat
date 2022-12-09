@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "ImportedStruct.d.hpp"
 #include "MyStruct.d.hpp"
@@ -16,13 +18,13 @@
 
 class Opaque {
 public:
-	static std::unique_ptr<Opaque> inline new_();
+	inline static std::unique_ptr<Opaque> new_();
 
-	void inline assert_struct(MyStruct s) const;
+	inline void assert_struct(MyStruct s) const;
 
-	static size_t inline returns_usize();
+	inline static size_t returns_usize();
 
-	static ImportedStruct inline returns_imported();
+	inline static ImportedStruct returns_imported();
 
 	inline capi::Opaque* AsFFI();
 

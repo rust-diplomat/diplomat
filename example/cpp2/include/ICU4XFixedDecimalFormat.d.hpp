@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "ICU4XFixedDecimalFormat.d.h"
 #include "ICU4XFixedDecimalFormatOptions.d.hpp"
@@ -19,9 +21,9 @@ class ICU4XLocale;
 
 class ICU4XFixedDecimalFormat {
 public:
-	static ICU4XFixedDecimalFormatResult inline try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
+	inline static ICU4XFixedDecimalFormatResult try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options);
 
-	std::string inline format_write(const ICU4XFixedDecimal& value) const;
+	inline std::string format_write(const ICU4XFixedDecimal& value) const;
 
 	inline capi::ICU4XFixedDecimalFormat* AsFFI();
 

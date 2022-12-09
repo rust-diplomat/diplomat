@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "ICU4XFixedDecimal.d.h"
 
@@ -14,13 +16,13 @@
 
 class ICU4XFixedDecimal {
 public:
-	static std::unique_ptr<ICU4XFixedDecimal> inline new_(int32_t v);
+	inline static std::unique_ptr<ICU4XFixedDecimal> new_(int32_t v);
 
-	void inline multiply_pow10(int16_t power);
+	inline void multiply_pow10(int16_t power);
 
-	void inline negate();
+	inline void negate();
 
-	DiplomatResult<std::string, std::monostate> inline to_string() const;
+	inline DiplomatResult<std::string, std::monostate> to_string() const;
 
 	inline capi::ICU4XFixedDecimal* AsFFI();
 

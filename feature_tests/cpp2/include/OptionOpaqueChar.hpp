@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "OptionOpaqueChar.d.hpp"
 #include "OptionOpaqueChar.h"
@@ -13,7 +15,7 @@
 
 
 
-void inline OptionOpaqueChar::assert_char(char32_t ch) const {
+inline void OptionOpaqueChar::assert_char(char32_t ch) const {
 	// TODO
 }
 inline capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() {

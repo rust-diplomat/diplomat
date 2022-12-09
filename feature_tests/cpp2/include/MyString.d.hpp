@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "MyString.d.h"
 
@@ -14,11 +16,11 @@
 
 class MyString {
 public:
-	static std::unique_ptr<MyString> inline new_(std::string_view v);
+	inline static std::unique_ptr<MyString> new_(std::string_view v);
 
-	void inline set_str(std::string_view new_str);
+	inline void set_str(std::string_view new_str);
 
-	std::string inline get_str() const;
+	inline std::string get_str() const;
 
 	inline capi::MyString* AsFFI();
 

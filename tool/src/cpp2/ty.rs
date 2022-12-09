@@ -164,14 +164,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
         writeln!(
             self.decl_header.body,
-            "\t{maybe_static}{return_ty} inline {method_name}({params}){qualifiers};"
+            "\tinline {maybe_static}{return_ty} {method_name}({params}){qualifiers};"
         )
         .unwrap();
 
 
         writeln!(
             self.impl_header.body,
-            "{maybe_static}{return_ty} inline {ty_name}::{method_name}({params}){qualifiers} {{"
+            "inline {return_ty} {ty_name}::{method_name}({params}){qualifiers} {{"
         );
         writeln!(
             self.impl_header.body,

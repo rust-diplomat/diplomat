@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "RefList.d.h"
 
@@ -15,7 +17,7 @@ class RefListParameter;
 
 class RefList {
 public:
-	static std::unique_ptr<RefList> inline node(const RefListParameter& data);
+	inline static std::unique_ptr<RefList> node(const RefListParameter& data);
 
 	inline capi::RefList* AsFFI();
 

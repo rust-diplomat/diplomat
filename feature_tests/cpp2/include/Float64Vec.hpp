@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "Float64Vec.d.hpp"
 #include "Float64Vec.h"
@@ -13,13 +15,13 @@
 
 
 
-static std::unique_ptr<Float64Vec> inline Float64Vec::new_(const std::span<double> v) {
+inline std::unique_ptr<Float64Vec> Float64Vec::new_(const std::span<double> v) {
 	// TODO
 }
-void inline Float64Vec::fill_slice(std::span<double> v) const {
+inline void Float64Vec::fill_slice(std::span<double> v) const {
 	// TODO
 }
-void inline Float64Vec::set_value(const std::span<double> new_slice) {
+inline void Float64Vec::set_value(const std::span<double> new_slice) {
 	// TODO
 }
 inline capi::Float64Vec* Float64Vec::AsFFI() {

@@ -6,6 +6,8 @@ static BASE_INCLUDES: &str = r#"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 "#;
 

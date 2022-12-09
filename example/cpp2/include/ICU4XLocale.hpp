@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "ICU4XLocale.d.hpp"
 #include "ICU4XLocale.h"
@@ -13,10 +15,10 @@
 
 
 
-static std::unique_ptr<ICU4XLocale> inline ICU4XLocale::new_(std::string_view name) {
+inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {
 	// TODO
 }
-static std::unique_ptr<ICU4XLocale> inline ICU4XLocale::new_from_bytes(const std::span<uint8_t> bytes) {
+inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_from_bytes(const std::span<uint8_t> bytes) {
 	// TODO
 }
 inline capi::ICU4XLocale* ICU4XLocale::AsFFI() {

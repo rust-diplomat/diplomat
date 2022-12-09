@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "MyString.d.hpp"
 #include "MyString.h"
@@ -13,13 +15,13 @@
 
 
 
-static std::unique_ptr<MyString> inline MyString::new_(std::string_view v) {
+inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
 	// TODO
 }
-void inline MyString::set_str(std::string_view new_str) {
+inline void MyString::set_str(std::string_view new_str) {
 	// TODO
 }
-std::string inline MyString::get_str() const {
+inline std::string MyString::get_str() const {
 	// TODO
 }
 inline capi::MyString* MyString::AsFFI() {

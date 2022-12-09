@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "ICU4XLocale.d.h"
 
@@ -14,9 +16,9 @@
 
 class ICU4XLocale {
 public:
-	static std::unique_ptr<ICU4XLocale> inline new_(std::string_view name);
+	inline static std::unique_ptr<ICU4XLocale> new_(std::string_view name);
 
-	static std::unique_ptr<ICU4XLocale> inline new_from_bytes(const std::span<uint8_t> bytes);
+	inline static std::unique_ptr<ICU4XLocale> new_from_bytes(const std::span<uint8_t> bytes);
 
 	inline capi::ICU4XLocale* AsFFI();
 

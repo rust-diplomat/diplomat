@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "OptionOpaqueChar.d.h"
 
@@ -14,7 +16,7 @@
 
 class OptionOpaqueChar {
 public:
-	void inline assert_char(char32_t ch) const;
+	inline void assert_char(char32_t ch) const;
 
 	inline capi::OptionOpaqueChar* AsFFI();
 

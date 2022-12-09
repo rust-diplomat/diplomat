@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "OptionOpaque.d.hpp"
 #include "OptionOpaque.h"
@@ -13,22 +15,22 @@
 
 
 
-static std::unique_ptr<OptionOpaque> inline OptionOpaque::new_(int32_t i) {
+inline std::unique_ptr<OptionOpaque> OptionOpaque::new_(int32_t i) {
 	// TODO
 }
-static std::unique_ptr<OptionOpaque> inline OptionOpaque::new_none() {
+inline std::unique_ptr<OptionOpaque> OptionOpaque::new_none() {
 	// TODO
 }
-static OptionStruct inline OptionOpaque::new_struct() {
+inline OptionStruct OptionOpaque::new_struct() {
 	// TODO
 }
-static OptionStruct inline OptionOpaque::new_struct_nones() {
+inline OptionStruct OptionOpaque::new_struct_nones() {
 	// TODO
 }
-void inline OptionOpaque::assert_integer(int32_t i) const {
+inline void OptionOpaque::assert_integer(int32_t i) const {
 	// TODO
 }
-static bool inline OptionOpaque::option_opaque_argument(const std::optional<OptionOpaque&> arg) {
+inline bool OptionOpaque::option_opaque_argument(const std::optional<OptionOpaque&> arg) {
 	// TODO
 }
 inline capi::OptionOpaque* OptionOpaque::AsFFI() {

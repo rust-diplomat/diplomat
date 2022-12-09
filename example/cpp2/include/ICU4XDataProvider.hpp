@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "ICU4XDataProvider.d.hpp"
 #include "ICU4XDataProvider.h"
@@ -13,10 +15,10 @@
 
 
 
-static std::unique_ptr<ICU4XDataProvider> inline ICU4XDataProvider::new_static() {
+inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
 	// TODO
 }
-static DiplomatResult<std::monostate, std::monostate> inline ICU4XDataProvider::returns_result() {
+inline DiplomatResult<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
 	// TODO
 }
 inline capi::ICU4XDataProvider* ICU4XDataProvider::AsFFI() {

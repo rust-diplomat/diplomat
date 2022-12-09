@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <memory>
+#include <optional>
 #include "diplomat_runtime.h"
 #include "Foo.d.hpp"
 #include "Foo.h"
@@ -13,19 +15,19 @@
 
 
 
-static std::unique_ptr<Foo> inline Foo::new_(std::string_view x) {
+inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
 	// TODO
 }
-std::unique_ptr<Bar> inline Foo::get_bar() const {
+inline std::unique_ptr<Bar> Foo::get_bar() const {
 	// TODO
 }
-static std::unique_ptr<Foo> inline Foo::new_static(std::string_view x) {
+inline std::unique_ptr<Foo> Foo::new_static(std::string_view x) {
 	// TODO
 }
-BorrowedFieldsReturning inline Foo::as_returning() const {
+inline BorrowedFieldsReturning Foo::as_returning() const {
 	// TODO
 }
-static std::unique_ptr<Foo> inline Foo::extract_from_fields(BorrowedFields fields) {
+inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
 	// TODO
 }
 inline capi::Foo* Foo::AsFFI() {
