@@ -20,6 +20,10 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext) -> Self {
         Self { tcx }
     }
+    pub fn tcx(&self) -> &'tcx TypeContext {
+        self.tcx
+    }
+
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         // Currently don't do anything fancy

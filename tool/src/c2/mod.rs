@@ -2,7 +2,8 @@ mod formatter;
 mod header;
 mod ty;
 
-use self::formatter::CFormatter;
+pub use self::formatter::CFormatter;
+
 use crate::common::FileMap;
 use diplomat_core::hir::TypeContext;
 use std::cell::RefCell;

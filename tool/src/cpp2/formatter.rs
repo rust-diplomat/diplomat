@@ -2,6 +2,7 @@
 
 use diplomat_core::hir::{self, OpaqueOwner, Type, TypeContext, TypeId};
 use std::borrow::Cow;
+use crate::c2::CFormatter;
 
 /// This type mediates all formatting
 ///
@@ -13,18 +14,21 @@ use std::borrow::Cow;
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub struct Cpp2Formatter<'tcx> {
-    tcx: &'tcx TypeContext,
+    c: CFormatter<'tcx>,
 }
 
 impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext) -> Self {
-        Self { tcx }
+        Self {
+            c: CFormatter::new(tcx)
+        }
     }
+
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         // Currently don't do anything fancy
         // Eventually apply rename rules and such
-        self.tcx.resolve_type(id).name().as_str().into()
+        self.c.tcx().resolve_type(id).name().as_str().into()
     }
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_header_name(&self, id: TypeId) -> Cow<'tcx, str> {
@@ -87,56 +91,8 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         mutability.if_mut_else(ident.into(), format!("const {}", ident).into())
     }
 
-    /// Generates an identifier that uniquely identifies the given *C* type.
-    /// Rust types that map to the same C type will get the same C identifier
-    /// (e.g. &mut Foo and Option<&mut Foo> are all the same)
-    ///
-    /// This is primarily used for generating structs for result types,
-    /// which require one struct for each distinct instance.
-    pub fn fmt_type_name_uniquely<P: hir::TyPosition>(&self, ty: &'tcx Type<P>) -> Cow<'tcx, str> {
-        match ty {
-            Type::Primitive(p) => self.fmt_primitive_as_c(*p),
-            Type::Opaque(o) => {
-                let o_name = self.fmt_type_name(o.tcx_id.into());
-                // Todo (breaking): box should be unified with the mutable branch
-                let ownership = match o.owner.mutability() {
-                    None => "box_",
-                    Some(hir::Mutability::Mutable) => "",
-                    Some(hir::Mutability::Immutable) => "const_",
-                };
-                format!("{ownership}{o_name}").into()
-            }
-            Type::Struct(s) => self.fmt_type_name(P::id_for_path(s)),
-            Type::Enum(e) => self.fmt_type_name(e.tcx_id.into()),
-            Type::Slice(hir::Slice::Str(_)) => "str_ref".into(),
-            Type::Slice(hir::Slice::Primitive(borrow, p)) => {
-                let constness = borrow.mutability.if_mut_else("", "const_");
-                let prim = self.fmt_primitive_as_c(*p);
-                format!("ref_{constness}prim_slice_{prim}").into()
-            }
-        }
-    }
-
     /// Get the primitive type as a C type
     pub fn fmt_primitive_as_c(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
-        use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
-        let s = match prim {
-            PrimitiveType::Bool => "bool",
-            PrimitiveType::Char => "char32_t",
-            PrimitiveType::Int(IntType::I8) => "int8_t",
-            PrimitiveType::Int(IntType::U8) => "uint8_t",
-            PrimitiveType::Int(IntType::I16) => "int16_t",
-            PrimitiveType::Int(IntType::U16) => "uint16_t",
-            PrimitiveType::Int(IntType::I32) => "int32_t",
-            PrimitiveType::Int(IntType::U32) => "uint32_t",
-            PrimitiveType::Int(IntType::I64) => "int64_t",
-            PrimitiveType::Int(IntType::U64) => "uint64_t",
-            PrimitiveType::Int128(_) => panic!("i128 not supported in C"),
-            PrimitiveType::IntSize(IntSizeType::Isize) => "ssize_t",
-            PrimitiveType::IntSize(IntSizeType::Usize) => "size_t",
-            PrimitiveType::Float(FloatType::F32) => "float",
-            PrimitiveType::Float(FloatType::F64) => "double",
-        };
-        s.into()
+        self.c.fmt_primitive_as_c(prim)
     }
 }
