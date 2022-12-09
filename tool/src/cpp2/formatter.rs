@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use crate::c2::CFormatter;
-use diplomat_core::hir::{self, OpaqueOwner, Type, TypeContext, TypeId};
+use diplomat_core::hir::{self, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -118,7 +118,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     /// Format a method
-    pub fn fmt_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
+    pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
         if method.name == "new" {
             "new_".into()
         } else {

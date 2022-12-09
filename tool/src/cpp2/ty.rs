@@ -50,8 +50,6 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             .add_file(impl_header_path, impl_header.to_string());
     }
 }
-/// Simple wrapper type representing the return type of a fallible function
-pub type ResultType<'tcx> = (Option<&'tcx hir::OutType>, Option<&'tcx hir::OutType>);
 
 /// Context for generating a particular type's header
 pub struct TyGenContext<'ccx, 'tcx, 'header> {
@@ -127,7 +125,7 @@ inline {type_name}::~{type_name}() {{
         let type_name = self.cx.formatter.fmt_type_name(id);
         writeln!(self.decl_header, "struct {type_name} {{").unwrap();
         for field in def.fields.iter() {
-            let decls = self.gen_ty_decl(&field.ty, field.name.as_str(), true);
+            let decls = self.gen_ty_decl(&field.ty, field.name.as_str());
             for (decl_ty, decl_name) in decls {
                 writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
             }
@@ -139,11 +137,11 @@ inline {type_name}::~{type_name}() {{
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
         use diplomat_core::hir::{ReturnFallability, ReturnType};
         let type_name = self.cx.formatter.fmt_type_name(id);
-        let method_name = self.cx.formatter.fmt_method_name(id, method);
+        let method_name = self.cx.formatter.fmt_method_name(method);
         let mut param_decls = Vec::new();
 
         for param in &method.params {
-            let decls = self.gen_ty_decl(&param.ty, param.name.as_str(), false);
+            let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.extend(decls);
         }
 
@@ -154,10 +152,10 @@ inline {type_name}::~{type_name}() {{
                 ReturnType::OutType(o) => self.gen_type_name(o),
             },
             ReturnFallability::Fallible(ref ok, ref err) => {
-                let (ok_type_name, ok_ty) = match ok {
-                    Some(ReturnType::Writeable) => (self.cx.formatter.fmt_owned_str(), None),
-                    None => ("std::monostate".into(), None),
-                    Some(ReturnType::OutType(o)) => (self.gen_type_name(o), Some(o)),
+                let ok_type_name = match ok {
+                    Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
+                    None => "std::monostate".into(),
+                    Some(ReturnType::OutType(o)) => self.gen_type_name(o),
                 };
                 let err_type_name = match err {
                     Some(o) => self.gen_type_name(o),
@@ -222,7 +220,6 @@ inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
         &mut self,
         ty: &Type<P>,
         ident: &'a str,
-        is_struct: bool,
     ) -> Vec<(Cow<'ccx, str>, Cow<'a, str>)> {
         let param_name = self.cx.formatter.fmt_param_name(ident);
         let ty = self.gen_type_name(ty);

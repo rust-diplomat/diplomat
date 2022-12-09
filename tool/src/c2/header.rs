@@ -58,7 +58,7 @@ impl fmt::Write for Header {
     fn write_char(&mut self, c: char) -> fmt::Result {
         self.body.write_char(c)
     }
-    fn write_fmt(mut self: &mut Self, args: fmt::Arguments<'_>) -> fmt::Result {
+    fn write_fmt(self: &mut Self, args: fmt::Arguments<'_>) -> fmt::Result {
         self.body.write_fmt(args)
     }
 }
