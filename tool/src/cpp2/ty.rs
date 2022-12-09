@@ -197,9 +197,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 };
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = self.cx.formatter.fmt_constness(&ret, mutability);
+                let ret = ret.into_owned().into();
 
-                self.header.forward_classes.insert(name.to_string());
-                ret.to_string().into()
+                self.header.forward_classes.insert(name.into_owned());
+                ret
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
