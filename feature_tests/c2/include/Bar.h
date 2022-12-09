@@ -14,12 +14,6 @@ namespace capi {
 extern "C" {
 #endif // __cplusplus
 
-
-
-typedef struct Bar Bar;
-
-
-
 void Bar_destroy(Bar* self);
 
 

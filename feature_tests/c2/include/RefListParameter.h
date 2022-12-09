@@ -14,12 +14,6 @@ namespace capi {
 extern "C" {
 #endif // __cplusplus
 
-
-
-typedef struct RefListParameter RefListParameter;
-
-
-
 void RefListParameter_destroy(RefListParameter* self);
 
 

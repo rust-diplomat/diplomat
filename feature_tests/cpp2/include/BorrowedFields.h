@@ -16,16 +16,6 @@ extern "C" {
 
 
 
-typedef struct BorrowedFields {
-	const uint16_t* a_data;
-	size_t a_len;
-	DiplomatStringView b;
-} BorrowedFields;
-
-
-
-
-
 #ifdef __cplusplus
 } // namespace capi
 } // extern "C"

@@ -24,14 +24,6 @@ pub struct Header {
     /// #include "diplomat_runtime.h"
     /// ```
     pub includes: BTreeSet<String>,
-    /// The struct forward decls necessary
-    ///
-    /// Example:
-    /// ```c
-    /// typedef struct Foo Foo;
-    /// typedef struct Bar Bar;
-    /// ```
-    pub forwards: BTreeSet<String>,
     /// The actual meat of the header: usually will contain a type definition and methods
     ///
     /// Example:
@@ -51,7 +43,6 @@ impl Header {
         Header {
             path,
             includes: BTreeSet::new(),
-            forwards: BTreeSet::new(),
             body: String::new(),
         }
     }
@@ -59,15 +50,12 @@ impl Header {
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut forwards = String::new();
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
             includes += &format!("#include \"{}\"\n", i);
         }
-        for f in &self.forwards {
-            forwards += &format!("typedef struct {f} {f};\n");
-        }
         let header_guard = &self.path;
+        let header_guard = header_guard.replace(".d.h", "_D_H");
         let header_guard = header_guard.replace(".h", "_H");
         let body = &self.body;
 
@@ -82,8 +70,6 @@ impl fmt::Display for Header {
 namespace capi {{
 extern "C" {{
 #endif // __cplusplus
-
-{forwards}
 
 {body}
 

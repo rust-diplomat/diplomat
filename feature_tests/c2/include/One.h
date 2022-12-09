@@ -7,20 +7,14 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "Two.h"
+#include "One.d.h"
+#include "Two.d.h"
 
 
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
-
-typedef struct Two Two;
-
-
-typedef struct One One;
-
-
 
 One* One_transitivity(const One* hold, const One* nohold);
 One* One_cycle(const Two* hold, const One* nohold);

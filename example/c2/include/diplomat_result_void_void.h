@@ -16,11 +16,6 @@ extern "C" {
 
 
 
-typedef struct diplomat_result_void_void {
-	bool is_ok;
-} diplomat_result_void_void;
-
-
 #ifdef __cplusplus
 } // namespace capi
 } // extern "C"

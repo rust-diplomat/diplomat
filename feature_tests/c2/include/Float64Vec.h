@@ -7,18 +7,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "Float64Vec.d.h"
 
 
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
-
-
-
-typedef struct Float64Vec Float64Vec;
-
-
 
 Float64Vec* Float64Vec_new(const double* v_data, size_t v_len);
 void Float64Vec_fill_slice(const Float64Vec* self, double* v_data, size_t v_len);

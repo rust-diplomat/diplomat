@@ -7,20 +7,14 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "OptionStruct.h"
+#include "OptionOpaque.d.h"
+#include "OptionStruct.d.h"
 
 
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
-
-typedef struct OptionStruct OptionStruct;
-
-
-typedef struct OptionOpaque OptionOpaque;
-
-
 
 OptionOpaque* OptionOpaque_new(int32_t i);
 OptionOpaque* OptionOpaque_new_none();

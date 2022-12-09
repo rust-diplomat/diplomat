@@ -7,20 +7,14 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "diplomat_result_void_void.h"
+#include "ICU4XFixedDecimal.d.h"
+#include "diplomat_result_void_void.d.h"
 
 
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
-
-typedef struct diplomat_result_void_void diplomat_result_void_void;
-
-
-typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
-
-
 
 ICU4XFixedDecimal* ICU4XFixedDecimal_new(int32_t v);
 void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);

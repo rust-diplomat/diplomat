@@ -7,20 +7,14 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "RefListParameter.h"
+#include "RefList.d.h"
+#include "RefListParameter.d.h"
 
 
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
-
-typedef struct RefListParameter RefListParameter;
-
-
-typedef struct RefList RefList;
-
-
 
 RefList* RefList_node(const RefListParameter* data);
 void RefList_destroy(RefList* self);

@@ -7,22 +7,15 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ImportedStruct.h"
-#include "MyStruct.h"
+#include "ImportedStruct.d.h"
+#include "MyStruct.d.h"
+#include "Opaque.d.h"
 
 
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
-
-typedef struct ImportedStruct ImportedStruct;
-typedef struct MyStruct MyStruct;
-
-
-typedef struct Opaque Opaque;
-
-
 
 Opaque* Opaque_new();
 void Opaque_assert_struct(const Opaque* self, MyStruct s);

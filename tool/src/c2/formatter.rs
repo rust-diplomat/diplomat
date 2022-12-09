@@ -30,9 +30,23 @@ impl<'tcx> CFormatter<'tcx> {
         // Eventually apply rename rules and such
         self.tcx.resolve_type(id).name().as_str().into()
     }
-    /// Resolve and format the name of a type for use in header names
-    pub fn fmt_header_path(&self, type_name: &str) -> String {
+    /// Resolve and format the name of a type for use in header names: decl version
+    //
+    /// Enums can't be forward-declared in C, but we do want enums to have methods,
+    /// which may require additional #includes leading to potential cycles.
+    /// To handle this, we make a separate header file called Foo_decl.h, that contains
+    /// *just* the enum. It is included from Foo.h, and external users should not be importing
+    /// it directly. (We can potentially add a #define guard that makes this actually private, if needed)
+    pub fn fmt_decl_header_path(&self, type_name: &str) -> String {
+        format!("{type_name}.d.h")
+    }
+    /// Resolve and format the name of a type for use in header names: impl version
+    pub fn fmt_impl_header_path(&self, type_name: &str) -> String {
         format!("{type_name}.h")
+    }
+    /// Resolve and format the name of a type for use in header names: result version
+    pub fn fmt_result_header_path(&self, type_name: &str) -> String {
+        format!("{type_name}.d.h")
     }
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {

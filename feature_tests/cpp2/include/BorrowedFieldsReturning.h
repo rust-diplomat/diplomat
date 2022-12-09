@@ -16,15 +16,6 @@ extern "C" {
 
 
 
-typedef struct BorrowedFieldsReturning {
-	const uint8_t* bytes_data;
-	size_t bytes_len;
-} BorrowedFieldsReturning;
-
-
-
-
-
 #ifdef __cplusplus
 } // namespace capi
 } // extern "C"

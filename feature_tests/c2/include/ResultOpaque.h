@@ -7,28 +7,18 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "diplomat_result_ErrorEnum_box_ResultOpaque.h"
-#include "diplomat_result_box_ResultOpaque_ErrorEnum.h"
-#include "diplomat_result_box_ResultOpaque_ErrorStruct.h"
-#include "diplomat_result_box_ResultOpaque_void.h"
-#include "diplomat_result_void_box_ResultOpaque.h"
+#include "ResultOpaque.d.h"
+#include "diplomat_result_ErrorEnum_box_ResultOpaque.d.h"
+#include "diplomat_result_box_ResultOpaque_ErrorEnum.d.h"
+#include "diplomat_result_box_ResultOpaque_ErrorStruct.d.h"
+#include "diplomat_result_box_ResultOpaque_void.d.h"
+#include "diplomat_result_void_box_ResultOpaque.d.h"
 
 
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
-
-typedef struct diplomat_result_ErrorEnum_box_ResultOpaque diplomat_result_ErrorEnum_box_ResultOpaque;
-typedef struct diplomat_result_box_ResultOpaque_ErrorEnum diplomat_result_box_ResultOpaque_ErrorEnum;
-typedef struct diplomat_result_box_ResultOpaque_ErrorStruct diplomat_result_box_ResultOpaque_ErrorStruct;
-typedef struct diplomat_result_box_ResultOpaque_void diplomat_result_box_ResultOpaque_void;
-typedef struct diplomat_result_void_box_ResultOpaque diplomat_result_void_box_ResultOpaque;
-
-
-typedef struct ResultOpaque ResultOpaque;
-
-
 
 diplomat_result_box_ResultOpaque_ErrorEnum ResultOpaque_new(int32_t i);
 diplomat_result_box_ResultOpaque_ErrorEnum ResultOpaque_new_failing_foo();

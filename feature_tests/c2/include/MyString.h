@@ -7,18 +7,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "MyString.d.h"
 
 
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
-
-
-
-typedef struct MyString MyString;
-
-
 
 MyString* MyString_new(const char* v_data, size_t v_len);
 void MyString_set_str(MyString* self, const char* new_str_data, size_t new_str_len);
