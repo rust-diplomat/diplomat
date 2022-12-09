@@ -217,11 +217,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 ]
             }
             Type::Slice(hir::Slice::Primitive(b, p)) if !is_struct => {
-                let constness = self.cx.formatter.fmt_constness(b.mutability);
                 let prim = self.cx.formatter.fmt_primitive_as_c(*p);
+                let ptr_type = self.cx.formatter.fmt_ptr(&prim, b.mutability);
                 vec![
                     (
-                        format!("{constness}{prim}*").into(),
+                        format!("{ptr_type}").into(),
                         format!("{param_name}_data").into(),
                     ),
                     ("size_t".into(), format!("{param_name}_len").into()),
@@ -245,13 +245,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let type_name = self.cx.formatter.fmt_type_name(op_id);
                 // unwrap_or(mut) since owned pointers need to not be const
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let constness = self.cx.formatter.fmt_constness(mutability);
-                let ret = format!("{constness}{type_name}*");
+                let ret = self.cx.formatter.fmt_ptr(&type_name, mutability);
                 // Todo(breaking): We can remove this requirement
                 // and users will be forced to import more types
                 let header_path = self.cx.formatter.fmt_decl_header_path(op_id);
                 header.includes.insert(header_path.into());
-                ret.into()
+                ret.into_owned().into()
             }
             Type::Struct(ref st) => {
                 let st_id = P::id_for_path(st);

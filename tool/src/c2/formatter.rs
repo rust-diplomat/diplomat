@@ -67,10 +67,13 @@ impl<'tcx> CFormatter<'tcx> {
         format!("{ty_name}_{method_name}")
     }
 
-    /// Given a mutability, format a `const ` prefix for pointers if necessary,
-    /// including a space for prepending
-    pub fn fmt_constness(&self, mutability: hir::Mutability) -> &str {
-        mutability.if_mut_else("", "const ")
+    pub fn fmt_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+        // TODO: Where is the right place to put `const` here?
+        if mutability.is_mutable() {
+            format!("{}*", ident).into()
+        } else {
+            format!("const {}*", ident).into()
+        }
     }
 
     /// Generates an identifier that uniquely identifies the given *C* type.
