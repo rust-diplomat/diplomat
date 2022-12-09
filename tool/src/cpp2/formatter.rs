@@ -1,8 +1,8 @@
 //! This module contains functions for formatting types
 
+use crate::c2::CFormatter;
 use diplomat_core::hir::{self, OpaqueOwner, Type, TypeContext, TypeId};
 use std::borrow::Cow;
-use crate::c2::CFormatter;
 
 /// This type mediates all formatting
 ///
@@ -20,7 +20,7 @@ pub struct Cpp2Formatter<'tcx> {
 impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext) -> Self {
         Self {
-            c: CFormatter::new(tcx)
+            c: CFormatter::new(tcx),
         }
     }
 
@@ -79,7 +79,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_optional_borrowed<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+    pub fn fmt_optional_borrowed<'a>(
+        &self,
+        ident: &'a str,
+        mutability: hir::Mutability,
+    ) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
             format!("std::optional<{}&>", ident).into()
@@ -92,7 +96,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         format!("std::unique_ptr<{}>", ident).into()
     }
 
-    pub fn fmt_borrowed_slice<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+    pub fn fmt_borrowed_slice<'a>(
+        &self,
+        ident: &'a str,
+        mutability: hir::Mutability,
+    ) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
             format!("std::span<{}>", ident).into()

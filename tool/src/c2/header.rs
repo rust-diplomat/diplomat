@@ -51,6 +51,18 @@ impl Header {
     }
 }
 
+impl fmt::Write for Header {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.body.write_str(s)
+    }
+    fn write_char(&mut self, c: char) -> fmt::Result {
+        self.body.write_char(c)
+    }
+    fn write_fmt(mut self: &mut Self, args: fmt::Arguments<'_>) -> fmt::Result {
+        self.body.write_fmt(args)
+    }
+}
+
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut includes = String::from(BASE_INCLUDES);

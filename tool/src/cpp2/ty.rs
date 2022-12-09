@@ -17,7 +17,7 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         let mut context = TyGenContext {
             cx: self,
             decl_header: &mut decl_header,
-            impl_header: &mut impl_header
+            impl_header: &mut impl_header,
         };
         match ty {
             TypeDef::Enum(o) => context.gen_enum_def(o, id),
@@ -37,12 +37,17 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         context.decl_header.includes.remove(&*decl_header_path);
         // TODO: Do this for impl_header too?
 
-        context.impl_header.includes.insert(decl_header_path.clone());
+        context
+            .impl_header
+            .includes
+            .insert(decl_header_path.clone());
         let c_impl_header_path = self.formatter.fmt_c_impl_header_path(id);
         context.impl_header.includes.insert(c_impl_header_path);
 
-        self.files.add_file(decl_header_path, decl_header.to_string());
-        self.files.add_file(impl_header_path, impl_header.to_string());
+        self.files
+            .add_file(decl_header_path, decl_header.to_string());
+        self.files
+            .add_file(impl_header_path, impl_header.to_string());
     }
 }
 /// Simple wrapper type representing the return type of a fallible function
@@ -58,11 +63,16 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(&mut self.decl_header.body, "enum struct {type_name} {{");
+        writeln!(self.decl_header, "enum struct {type_name} {{");
         for variant in ty.variants.iter() {
-            writeln!(&mut self.decl_header.body, "\t{} = {},", variant.name.as_str(), variant.discriminant);
+            writeln!(
+                self.decl_header,
+                "\t{} = {},",
+                variant.name.as_str(),
+                variant.discriminant
+            );
         }
-        writeln!(&mut self.decl_header.body, "}};");
+        writeln!(self.decl_header, "}};");
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
@@ -70,46 +80,57 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
         let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
         let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
-        self.decl_header.includes.insert(self.cx.formatter.fmt_c_decl_header_path(id));
-        writeln!(&mut self.decl_header.body, "class {type_name} {{").unwrap();
-        writeln!(&mut self.decl_header.body, "public:");
+        self.decl_header
+            .includes
+            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
+        writeln!(self.decl_header, "class {type_name} {{").unwrap();
+        writeln!(self.decl_header, "public:");
         for method in ty.methods.iter() {
             self.gen_method(id, method);
-            writeln!(&mut self.decl_header.body);
+            writeln!(self.decl_header);
         }
-        writeln!(&mut self.decl_header.body, "\tinline {const_cptr} AsFFI() const;");
-        writeln!(&mut self.impl_header.body, "inline {const_cptr} {type_name}::AsFFI() const {{");
+        writeln!(self.decl_header, "\tinline {const_cptr} AsFFI() const;");
         writeln!(
-            &mut self.impl_header.body,
+            self.impl_header,
+            "inline {const_cptr} {type_name}::AsFFI() const {{"
+        );
+        writeln!(
+            self.impl_header,
             "\treturn reinterpret_cast<{const_cptr}>(this);"
         );
-        writeln!(&mut self.impl_header.body, "}}").unwrap();
-        writeln!(&mut self.decl_header.body, "\tinline {mut_cptr} AsFFI();");
-        writeln!(&mut self.impl_header.body, "inline {mut_cptr} {type_name}::AsFFI() {{");
+        writeln!(self.impl_header, "}}").unwrap();
+        writeln!(self.decl_header, "\tinline {mut_cptr} AsFFI();");
         writeln!(
-            &mut self.impl_header.body,
+            self.impl_header,
+            "inline {mut_cptr} {type_name}::AsFFI() {{"
+        );
+        writeln!(
+            self.impl_header,
             "\treturn reinterpret_cast<{mut_cptr}>(this);"
         );
-        writeln!(&mut self.impl_header.body, "}}").unwrap();
-        writeln!(&mut self.decl_header.body);
-        self.gen_dtor(id);
-        writeln!(&mut self.decl_header.body);
-        writeln!(&mut self.decl_header.body, "private:");
-        writeln!(&mut self.decl_header.body, "\t{type_name}() = delete;");
-        writeln!(&mut self.decl_header.body, "}};").unwrap();
+        writeln!(self.impl_header, "}}").unwrap();
+        writeln!(self.decl_header);
+        writeln!(self.decl_header, "\tinline ~{type_name}();").unwrap();
+        writeln!(self.impl_header, "inline {type_name}::~{type_name}() {{").unwrap();
+        writeln!(self.impl_header, "\t{ctype}_destroy(AsFFI());").unwrap();
+        writeln!(self.impl_header, "}}").unwrap();
+        writeln!(self.decl_header);
+        writeln!(self.decl_header, "private:");
+        writeln!(self.decl_header, "\t{type_name}() = delete;");
+        writeln!(self.decl_header, "}};").unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(&mut self.decl_header.body, "struct {type_name} {{").unwrap();
+        writeln!(self.decl_header, "struct {type_name} {{").unwrap();
         for field in def.fields.iter() {
             let decls = self.gen_ty_decl(&field.ty, field.name.as_str(), true);
             for (decl_ty, decl_name) in decls {
-                writeln!(&mut self.decl_header.body, "\t{decl_ty} {decl_name};").unwrap();
+                writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
             }
         }
         // reborrow to avoid borrowing across mutation
-        writeln!(&mut self.decl_header.body, "}};").unwrap();
+        writeln!(self.decl_header, "}};").unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -139,7 +160,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     Some(o) => self.gen_type_name(o),
                     None => "std::monostate".into(),
                 };
-                let ret: Cow<str> = format!("DiplomatResult<{ok_type_name}, {err_type_name}>").into();
+                let ret: Cow<str> =
+                    format!("DiplomatResult<{ok_type_name}, {err_type_name}>").into();
                 ret
             }
         };
@@ -171,33 +193,17 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         };
 
         writeln!(
-            self.decl_header.body,
+            self.decl_header,
             "\tinline {maybe_static}{return_ty} {method_name}({params}){qualifiers};"
         )
         .unwrap();
 
-
         writeln!(
-            self.impl_header.body,
+            self.impl_header,
             "inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{"
         );
-        writeln!(
-            self.impl_header.body,
-            "\t// TODO"
-        );
-        writeln!(
-            self.impl_header.body,
-            "}}"
-        );
-    }
-
-    pub fn gen_dtor(&mut self, id: TypeId) {
-        let type_name = self.cx.formatter.fmt_type_name(id);
-        let ctype = self.cx.formatter.fmt_c_name(&type_name);
-        writeln!(self.decl_header.body, "\tinline ~{type_name}();").unwrap();
-        writeln!(self.impl_header.body, "inline {type_name}::~{type_name}() {{").unwrap();
-        writeln!(self.impl_header.body, "\t{ctype}_destroy(AsFFI());").unwrap();
-        writeln!(self.impl_header.body, "}}").unwrap();
+        writeln!(self.impl_header, "\t// TODO");
+        writeln!(self.impl_header, "}}");
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)
@@ -227,30 +233,36 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ret = if op.owner.is_owned() {
                     self.cx.formatter.fmt_owned(&type_name)
                 } else if op.is_optional() {
-                    self.cx.formatter.fmt_optional_borrowed(&type_name, mutability)
+                    self.cx
+                        .formatter
+                        .fmt_optional_borrowed(&type_name, mutability)
                 } else {
                     self.cx.formatter.fmt_borrowed(&type_name, mutability)
                 };
                 let ret = ret.into_owned().into();
 
-                self.decl_header.forward_classes.insert(type_name.into_owned());
+                self.decl_header
+                    .forward_classes
+                    .insert(type_name.into_owned());
                 ret
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
                 // TODO: Make these forward declarations instead of includes
-                self.decl_header.includes.insert(self.cx.formatter.fmt_decl_header_path(id));
+                self.decl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_decl_header_path(id));
                 self.cx.formatter.fmt_type_name(id)
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 // TODO: Make these forward declarations instead of includes
-                self.decl_header.includes.insert(self.cx.formatter.fmt_decl_header_path(id));
+                self.decl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_decl_header_path(id));
                 self.cx.formatter.fmt_type_name(id)
             }
-            Type::Slice(hir::Slice::Str(_lifetime)) => {
-                self.cx.formatter.fmt_borrowed_str()
-            }
+            Type::Slice(hir::Slice::Str(_lifetime)) => self.cx.formatter.fmt_borrowed_str(),
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.cx.formatter.fmt_primitive_as_c(p);
                 let ret = self.cx.formatter.fmt_borrowed_slice(&ret, b.mutability);
