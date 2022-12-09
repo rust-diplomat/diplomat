@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "ErrorStruct.d.hpp"
+#include "ErrorStruct.h"
 
 
 

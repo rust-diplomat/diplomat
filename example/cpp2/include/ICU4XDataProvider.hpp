@@ -7,20 +7,22 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "ICU4XDataProvider.d.hpp"
+#include "ICU4XDataProvider.h"
 
 
 
 
-	static std::unique_ptr<ICU4XDataProvider> inline new_static() {
+static std::unique_ptr<ICU4XDataProvider> inline ICU4XDataProvider::new_static() {
 	// TODO
 }
-	static DiplomatResult<std::monostate, std::monostate> inline returns_result() {
+static DiplomatResult<std::monostate, std::monostate> inline ICU4XDataProvider::returns_result() {
 	// TODO
 }
-inline capi::ICU4XDataProvider* AsFFI() {
-	return reinterpret_cast::<capi::ICU4XDataProvider>(this);
+inline capi::ICU4XDataProvider* ICU4XDataProvider::AsFFI() {
+	return reinterpret_cast<capi::ICU4XDataProvider*>(this);
 }
-inline ~ICU4XDataProvider() {
+inline ICU4XDataProvider::~ICU4XDataProvider() {
 	capi::ICU4XDataProvider_destroy(AsFFI());
 }
 

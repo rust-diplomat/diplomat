@@ -7,23 +7,25 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "Float64Vec.d.hpp"
+#include "Float64Vec.h"
 
 
 
 
-	static std::unique_ptr<Float64Vec> inline new_(const std::span<double> v) {
+static std::unique_ptr<Float64Vec> inline Float64Vec::new_(const std::span<double> v) {
 	// TODO
 }
-	void inline fill_slice(std::span<double> v) const {
+void inline Float64Vec::fill_slice(std::span<double> v) const {
 	// TODO
 }
-	void inline set_value(const std::span<double> new_slice) {
+void inline Float64Vec::set_value(const std::span<double> new_slice) {
 	// TODO
 }
-inline capi::Float64Vec* AsFFI() {
-	return reinterpret_cast::<capi::Float64Vec>(this);
+inline capi::Float64Vec* Float64Vec::AsFFI() {
+	return reinterpret_cast<capi::Float64Vec*>(this);
 }
-inline ~Float64Vec() {
+inline Float64Vec::~Float64Vec() {
 	capi::Float64Vec_destroy(AsFFI());
 }
 

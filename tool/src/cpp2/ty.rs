@@ -37,6 +37,10 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         context.decl_header.includes.remove(&*decl_header_path);
         // TODO: Do this for impl_header too?
 
+        context.impl_header.includes.insert(decl_header_path.clone());
+        let c_impl_header_path = self.formatter.fmt_c_impl_header_path(&ty_name);
+        context.impl_header.includes.insert(c_impl_header_path);
+
         self.files.add_file(decl_header_path, decl_header.to_string());
         self.files.add_file(impl_header_path, impl_header.to_string());
     }
@@ -73,10 +77,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             writeln!(&mut self.decl_header.body);
         }
         writeln!(&mut self.decl_header.body, "\tinline {cptr} AsFFI();");
-        writeln!(&mut self.impl_header.body, "inline {cptr} AsFFI() {{");
+        writeln!(&mut self.impl_header.body, "inline {cptr} {ty_name}::AsFFI() {{");
         writeln!(
             &mut self.impl_header.body,
-            "\treturn reinterpret_cast::<{ctype}>(this);"
+            "\treturn reinterpret_cast<{cptr}>(this);"
         );
         writeln!(&mut self.impl_header.body, "}}").unwrap();
         writeln!(&mut self.decl_header.body);
@@ -102,6 +106,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
         use diplomat_core::hir::{ReturnFallability, ReturnType};
+        let ty_name = self.cx.formatter.fmt_type_name(id);
         let method_name = self.cx.formatter.fmt_method_name(id, method);
         let mut param_decls = Vec::new();
 
@@ -166,7 +171,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
         writeln!(
             self.impl_header.body,
-            "\t{maybe_static}{return_ty} inline {method_name}({params}){qualifiers} {{"
+            "{maybe_static}{return_ty} inline {ty_name}::{method_name}({params}){qualifiers} {{"
         );
         writeln!(
             self.impl_header.body,
@@ -182,7 +187,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let ty_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         writeln!(self.decl_header.body, "\tinline ~{ty_name}();").unwrap();
-        writeln!(self.impl_header.body, "inline ~{ty_name}() {{").unwrap();
+        writeln!(self.impl_header.body, "inline {ty_name}::~{ty_name}() {{").unwrap();
         writeln!(self.impl_header.body, "\t{ctype}_destroy(AsFFI());").unwrap();
         writeln!(self.impl_header.body, "}}").unwrap();
     }

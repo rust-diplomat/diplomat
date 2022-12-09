@@ -7,17 +7,19 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "RefList.d.hpp"
+#include "RefList.h"
 
 
 
 
-	static std::unique_ptr<RefList> inline node(const RefListParameter& data) {
+static std::unique_ptr<RefList> inline RefList::node(const RefListParameter& data) {
 	// TODO
 }
-inline capi::RefList* AsFFI() {
-	return reinterpret_cast::<capi::RefList>(this);
+inline capi::RefList* RefList::AsFFI() {
+	return reinterpret_cast<capi::RefList*>(this);
 }
-inline ~RefList() {
+inline RefList::~RefList() {
 	capi::RefList_destroy(AsFFI());
 }
 

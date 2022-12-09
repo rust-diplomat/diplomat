@@ -7,23 +7,25 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "MyString.d.hpp"
+#include "MyString.h"
 
 
 
 
-	static std::unique_ptr<MyString> inline new_(std::string_view v) {
+static std::unique_ptr<MyString> inline MyString::new_(std::string_view v) {
 	// TODO
 }
-	void inline set_str(std::string_view new_str) {
+void inline MyString::set_str(std::string_view new_str) {
 	// TODO
 }
-	std::string inline get_str() const {
+std::string inline MyString::get_str() const {
 	// TODO
 }
-inline capi::MyString* AsFFI() {
-	return reinterpret_cast::<capi::MyString>(this);
+inline capi::MyString* MyString::AsFFI() {
+	return reinterpret_cast<capi::MyString*>(this);
 }
-inline ~MyString() {
+inline MyString::~MyString() {
 	capi::MyString_destroy(AsFFI());
 }
 

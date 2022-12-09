@@ -7,26 +7,28 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "Opaque.d.hpp"
+#include "Opaque.h"
 
 
 
 
-	static std::unique_ptr<Opaque> inline new_() {
+static std::unique_ptr<Opaque> inline Opaque::new_() {
 	// TODO
 }
-	void inline assert_struct(MyStruct s) const {
+void inline Opaque::assert_struct(MyStruct s) const {
 	// TODO
 }
-	static size_t inline returns_usize() {
+static size_t inline Opaque::returns_usize() {
 	// TODO
 }
-	static ImportedStruct inline returns_imported() {
+static ImportedStruct inline Opaque::returns_imported() {
 	// TODO
 }
-inline capi::Opaque* AsFFI() {
-	return reinterpret_cast::<capi::Opaque>(this);
+inline capi::Opaque* Opaque::AsFFI() {
+	return reinterpret_cast<capi::Opaque*>(this);
 }
-inline ~Opaque() {
+inline Opaque::~Opaque() {
 	capi::Opaque_destroy(AsFFI());
 }
 

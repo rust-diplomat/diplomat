@@ -7,17 +7,19 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "OptionOpaqueChar.d.hpp"
+#include "OptionOpaqueChar.h"
 
 
 
 
-	void inline assert_char(char32_t ch) const {
+void inline OptionOpaqueChar::assert_char(char32_t ch) const {
 	// TODO
 }
-inline capi::OptionOpaqueChar* AsFFI() {
-	return reinterpret_cast::<capi::OptionOpaqueChar>(this);
+inline capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() {
+	return reinterpret_cast<capi::OptionOpaqueChar*>(this);
 }
-inline ~OptionOpaqueChar() {
+inline OptionOpaqueChar::~OptionOpaqueChar() {
 	capi::OptionOpaqueChar_destroy(AsFFI());
 }
 

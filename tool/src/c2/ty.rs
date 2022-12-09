@@ -42,6 +42,8 @@ impl<'tcx> super::CContext<'tcx> {
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
 
+        context.impl_header.includes.insert(decl_header_path.clone());
+
         self.files.add_file(decl_header_path, decl_header.to_string());
         self.files.add_file(impl_header_path, impl_header.to_string());
     }

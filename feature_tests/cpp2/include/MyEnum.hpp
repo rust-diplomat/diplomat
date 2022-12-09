@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "MyEnum.d.hpp"
+#include "MyEnum.h"
 
 
 
