@@ -17,14 +17,20 @@
 
 
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
+  capi::MyString_new(v.data(),
+    v.size());
   // TODO
 }
 
 inline void MyString::set_str(std::string_view new_str) {
+  capi::MyString_set_str(this->AsFFI(),
+    new_str.data(),
+    new_str.size());
   // TODO
 }
 
 inline std::string MyString::get_str() const {
+  capi::MyString_get_str(this->AsFFI());
   // TODO
 }
 

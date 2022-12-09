@@ -86,9 +86,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     ) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
-            format!("std::optional<{}&>", ident).into()
+            format!("std::optional<std::reference_wrapper<{}>>", ident).into()
         } else {
-            format!("std::optional<const {}&>", ident).into()
+            format!("std::optional<const std::reference_wrapper<{}>>", ident).into()
         }
     }
 

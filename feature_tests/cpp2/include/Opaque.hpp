@@ -17,18 +17,23 @@
 
 
 inline std::unique_ptr<Opaque> Opaque::new_() {
+  capi::Opaque_new();
   // TODO
 }
 
 inline void Opaque::assert_struct(MyStruct s) const {
+  capi::Opaque_assert_struct(this->AsFFI(),
+    s.AsFFI());
   // TODO
 }
 
 inline size_t Opaque::returns_usize() {
+  capi::Opaque_returns_usize();
   // TODO
 }
 
 inline ImportedStruct Opaque::returns_imported() {
+  capi::Opaque_returns_imported();
   // TODO
 }
 

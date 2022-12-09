@@ -17,10 +17,12 @@
 
 
 inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
+  capi::ICU4XDataProvider_new_static();
   // TODO
 }
 
 inline DiplomatResult<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
+  capi::ICU4XDataProvider_returns_result();
   // TODO
 }
 

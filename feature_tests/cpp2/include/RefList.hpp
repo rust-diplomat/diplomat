@@ -17,6 +17,7 @@
 
 
 inline std::unique_ptr<RefList> RefList::node(const RefListParameter& data) {
+  capi::RefList_node(data.AsFFI());
   // TODO
 }
 

@@ -138,11 +138,19 @@ inline {type_name}::~{type_name}() {{
         use diplomat_core::hir::{ReturnFallability, ReturnType};
         let type_name = self.cx.formatter.fmt_type_name(id);
         let method_name = self.cx.formatter.fmt_method_name(method);
+        let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);
         let mut param_decls = Vec::new();
+        let mut cpp_to_c_params = Vec::new();
 
-        for param in &method.params {
+        if let Some(param_self) = method.param_self.as_ref() {
+            cpp_to_c_params.push(self.gen_cpp_to_c_self(&param_self.ty));
+        }
+
+        for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.extend(decls);
+            let conversions = self.gen_cpp_to_c_param(&param.ty, param.name.as_str());
+            cpp_to_c_params.extend(conversions);
         }
 
         let return_ty: Cow<str> = match method.output {
@@ -179,6 +187,18 @@ inline {type_name}::~{type_name}() {{
             write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
         }
 
+        let mut c_params = String::new();
+        let mut first = true;
+        for conversion in cpp_to_c_params {
+            let comma = if first {
+                first = false;
+                ""
+            } else {
+                ",\n\t\t"
+            };
+            write!(&mut c_params, "{comma}{conversion}").unwrap();
+        }
+
         let maybe_static = if method.param_self.is_none() {
             "static "
         } else {
@@ -205,6 +225,7 @@ inline {type_name}::~{type_name}() {{
             self.impl_header,
             "
 inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
+\t{c_method_name}({c_params});
 \t// TODO
 }}
 "
@@ -274,5 +295,45 @@ inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
                 ret.into_owned().into()
             }
         }
+    }
+
+    fn gen_cpp_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
+        match *ty {
+            SelfType::Opaque(..) => "this->AsFFI()".into(),
+            SelfType::Struct(..) => todo!(),
+            SelfType::Enum(..) => todo!(),
+        }
+    }
+
+    fn gen_cpp_to_c_param<'a, P: TyPosition>(&self, ty: &Type<P>, param_name: &'a str) -> Vec<Cow<'a, str>> {
+        match *ty {
+            Type::Primitive(..) => {
+                vec![param_name.into()]
+            }
+            Type::Opaque(ref op) if op.is_optional() => {
+                vec![format!("{param_name} ? {param_name}.value().get().AsFFI() : nullptr").into()]
+            }
+            Type::Opaque(..) => {
+                vec![format!("{param_name}.AsFFI()").into()]
+            }
+            Type::Struct(..) => {
+                vec![format!("{param_name}.AsFFI()").into()]
+            }
+            Type::Enum(..) => {
+                vec![format!("{param_name}.AsFFI()").into()]
+            }
+            Type::Slice(hir::Slice::Str(..)) => {
+                // TODO: This needs to change if an abstraction other than std::string_view is used
+                vec![format!("{param_name}.data()").into(), format!("{param_name}.size()").into()]
+            },
+            Type::Slice(hir::Slice::Primitive(..)) => {
+                // TODO: This needs to change if an abstraction other than std::span is used
+                vec![format!("{param_name}.data()").into(), format!("{param_name}.size()").into()]
+            }
+        }
+    }
+
+    fn gen_c_to_cpp_return(&self) {
+        todo!()
     }
 }

@@ -17,14 +17,22 @@
 
 
 inline std::unique_ptr<Float64Vec> Float64Vec::new_(std::span<const double> v) {
+  capi::Float64Vec_new(v.data(),
+    v.size());
   // TODO
 }
 
 inline void Float64Vec::fill_slice(std::span<double> v) const {
+  capi::Float64Vec_fill_slice(this->AsFFI(),
+    v.data(),
+    v.size());
   // TODO
 }
 
 inline void Float64Vec::set_value(std::span<const double> new_slice) {
+  capi::Float64Vec_set_value(this->AsFFI(),
+    new_slice.data(),
+    new_slice.size());
   // TODO
 }
 

@@ -17,6 +17,8 @@
 
 
 inline void OptionOpaqueChar::assert_char(char32_t ch) const {
+  capi::OptionOpaqueChar_assert_char(this->AsFFI(),
+    ch);
   // TODO
 }
 

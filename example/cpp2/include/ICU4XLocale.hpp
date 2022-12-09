@@ -17,10 +17,14 @@
 
 
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {
+  capi::ICU4XLocale_new(name.data(),
+    name.size());
   // TODO
 }
 
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_from_bytes(std::span<const uint8_t> bytes) {
+  capi::ICU4XLocale_new_from_bytes(bytes.data(),
+    bytes.size());
   // TODO
 }
 

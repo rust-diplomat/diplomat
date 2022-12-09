@@ -17,10 +17,15 @@
 
 
 inline ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {
+  capi::ICU4XFixedDecimalFormat_try_new(locale.AsFFI(),
+    provider.AsFFI(),
+    options.AsFFI());
   // TODO
 }
 
 inline std::string ICU4XFixedDecimalFormat::format_write(const ICU4XFixedDecimal& value) const {
+  capi::ICU4XFixedDecimalFormat_format_write(this->AsFFI(),
+    value.AsFFI());
   // TODO
 }
 
