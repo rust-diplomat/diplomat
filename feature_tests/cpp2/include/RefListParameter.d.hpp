@@ -16,11 +16,10 @@
 
 class RefListParameter {
 public:
+
   inline const capi::RefListParameter* AsFFI() const;
   inline capi::RefListParameter* AsFFI();
-
   inline ~RefListParameter();
-
 private:
   RefListParameter() = delete;
 };

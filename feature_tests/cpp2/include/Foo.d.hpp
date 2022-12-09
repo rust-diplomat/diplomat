@@ -19,6 +19,7 @@ class Bar;
 
 class Foo {
 public:
+
   inline static std::unique_ptr<Foo> new_(std::string_view x);
 
   inline std::unique_ptr<Bar> get_bar() const;
@@ -31,9 +32,7 @@ public:
 
   inline const capi::Foo* AsFFI() const;
   inline capi::Foo* AsFFI();
-
   inline ~Foo();
-
 private:
   Foo() = delete;
 };

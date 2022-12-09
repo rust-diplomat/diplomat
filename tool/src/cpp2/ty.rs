@@ -63,16 +63,17 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.decl_header, "enum struct {type_name} {{");
+        writeln!(self.decl_header, "enum struct {type_name} {{").unwrap();
         for variant in ty.variants.iter() {
             writeln!(
                 self.decl_header,
                 "\t{} = {},",
                 variant.name.as_str(),
                 variant.discriminant
-            );
+            )
+            .unwrap();
         }
-        writeln!(self.decl_header, "}};");
+        writeln!(self.decl_header, "}};").unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
@@ -83,41 +84,43 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
-        writeln!(self.decl_header, "class {type_name} {{").unwrap();
-        writeln!(self.decl_header, "public:");
+        write!(
+            self.decl_header,
+            "class {type_name} {{
+public:
+"
+        )
+        .unwrap();
         for method in ty.methods.iter() {
             self.gen_method(id, method);
-            writeln!(self.decl_header);
         }
-        writeln!(self.decl_header, "\tinline {const_cptr} AsFFI() const;");
-        writeln!(
+        write!(
+            self.decl_header,
+            "
+\tinline {const_cptr} AsFFI() const;
+\tinline {mut_cptr} AsFFI();
+\tinline ~{type_name}();
+private:
+\t{type_name}() = delete;
+}};
+"
+        )
+        .unwrap();
+        write!(
             self.impl_header,
-            "inline {const_cptr} {type_name}::AsFFI() const {{"
-        );
-        writeln!(
-            self.impl_header,
-            "\treturn reinterpret_cast<{const_cptr}>(this);"
-        );
-        writeln!(self.impl_header, "}}").unwrap();
-        writeln!(self.decl_header, "\tinline {mut_cptr} AsFFI();");
-        writeln!(
-            self.impl_header,
-            "inline {mut_cptr} {type_name}::AsFFI() {{"
-        );
-        writeln!(
-            self.impl_header,
-            "\treturn reinterpret_cast<{mut_cptr}>(this);"
-        );
-        writeln!(self.impl_header, "}}").unwrap();
-        writeln!(self.decl_header);
-        writeln!(self.decl_header, "\tinline ~{type_name}();").unwrap();
-        writeln!(self.impl_header, "inline {type_name}::~{type_name}() {{").unwrap();
-        writeln!(self.impl_header, "\t{ctype}_destroy(AsFFI());").unwrap();
-        writeln!(self.impl_header, "}}").unwrap();
-        writeln!(self.decl_header);
-        writeln!(self.decl_header, "private:");
-        writeln!(self.decl_header, "\t{type_name}() = delete;");
-        writeln!(self.decl_header, "}};").unwrap();
+            "
+inline {const_cptr} {type_name}::AsFFI() const {{
+\treturn reinterpret_cast<{const_cptr}>(this);
+}}
+inline {mut_cptr} {type_name}::AsFFI() {{
+\treturn reinterpret_cast<{mut_cptr}>(this);
+}}
+inline {type_name}::~{type_name}() {{
+\t{ctype}_destroy(AsFFI());
+}}
+"
+        )
+        .unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
@@ -192,18 +195,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             None => "",
         };
 
-        writeln!(
+        write!(
             self.decl_header,
-            "\tinline {maybe_static}{return_ty} {method_name}({params}){qualifiers};"
+            "
+\tinline {maybe_static}{return_ty} {method_name}({params}){qualifiers};
+"
         )
         .unwrap();
 
-        writeln!(
+        write!(
             self.impl_header,
-            "inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{"
-        );
-        writeln!(self.impl_header, "\t// TODO");
-        writeln!(self.impl_header, "}}");
+            "
+inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
+\t// TODO
+}}
+"
+        )
+        .unwrap();
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)

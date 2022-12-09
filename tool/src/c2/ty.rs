@@ -24,7 +24,7 @@ impl<'tcx> super::CContext<'tcx> {
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
         }
 
-        context.decl_header.write_str("\n\n\n");
+        context.decl_header.write_str("\n\n\n").unwrap();
 
         for method in ty.methods() {
             context.gen_method(id, method);
@@ -211,7 +211,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         writeln!(
             self.decl_header,
             "typedef struct {name} {{\n{union_def}\tbool is_ok;\n}} {name};"
-        );
+        )
+        .unwrap();
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)

@@ -15,15 +15,19 @@
 
 
 
+
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
   // TODO
 }
+
 inline void MyString::set_str(std::string_view new_str) {
   // TODO
 }
+
 inline std::string MyString::get_str() const {
   // TODO
 }
+
 inline const capi::MyString* MyString::AsFFI() const {
   return reinterpret_cast<const capi::MyString*>(this);
 }

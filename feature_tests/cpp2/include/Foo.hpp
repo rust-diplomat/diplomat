@@ -15,21 +15,27 @@
 
 
 
+
 inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
   // TODO
 }
+
 inline std::unique_ptr<Bar> Foo::get_bar() const {
   // TODO
 }
+
 inline std::unique_ptr<Foo> Foo::new_static(std::string_view x) {
   // TODO
 }
+
 inline BorrowedFieldsReturning Foo::as_returning() const {
   // TODO
 }
+
 inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
   // TODO
 }
+
 inline const capi::Foo* Foo::AsFFI() const {
   return reinterpret_cast<const capi::Foo*>(this);
 }

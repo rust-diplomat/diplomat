@@ -16,15 +16,14 @@
 
 class ICU4XDataProvider {
 public:
+
   inline static std::unique_ptr<ICU4XDataProvider> new_static();
 
   inline static DiplomatResult<std::monostate, std::monostate> returns_result();
 
   inline const capi::ICU4XDataProvider* AsFFI() const;
   inline capi::ICU4XDataProvider* AsFFI();
-
   inline ~ICU4XDataProvider();
-
 private:
   ICU4XDataProvider() = delete;
 };

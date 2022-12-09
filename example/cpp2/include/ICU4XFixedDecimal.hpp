@@ -15,18 +15,23 @@
 
 
 
+
 inline std::unique_ptr<ICU4XFixedDecimal> ICU4XFixedDecimal::new_(int32_t v) {
   // TODO
 }
+
 inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
   // TODO
 }
+
 inline void ICU4XFixedDecimal::negate() {
   // TODO
 }
+
 inline DiplomatResult<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
   // TODO
 }
+
 inline const capi::ICU4XFixedDecimal* ICU4XFixedDecimal::AsFFI() const {
   return reinterpret_cast<const capi::ICU4XFixedDecimal*>(this);
 }

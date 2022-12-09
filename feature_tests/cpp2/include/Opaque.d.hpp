@@ -18,6 +18,7 @@
 
 class Opaque {
 public:
+
   inline static std::unique_ptr<Opaque> new_();
 
   inline void assert_struct(MyStruct s) const;
@@ -28,9 +29,7 @@ public:
 
   inline const capi::Opaque* AsFFI() const;
   inline capi::Opaque* AsFFI();
-
   inline ~Opaque();
-
 private:
   Opaque() = delete;
 };

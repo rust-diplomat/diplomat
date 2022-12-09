@@ -16,6 +16,7 @@
 
 class MyString {
 public:
+
   inline static std::unique_ptr<MyString> new_(std::string_view v);
 
   inline void set_str(std::string_view new_str);
@@ -24,9 +25,7 @@ public:
 
   inline const capi::MyString* AsFFI() const;
   inline capi::MyString* AsFFI();
-
   inline ~MyString();
-
 private:
   MyString() = delete;
 };

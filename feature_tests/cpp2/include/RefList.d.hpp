@@ -17,13 +17,12 @@ class RefListParameter;
 
 class RefList {
 public:
+
   inline static std::unique_ptr<RefList> node(const RefListParameter& data);
 
   inline const capi::RefList* AsFFI() const;
   inline capi::RefList* AsFFI();
-
   inline ~RefList();
-
 private:
   RefList() = delete;
 };

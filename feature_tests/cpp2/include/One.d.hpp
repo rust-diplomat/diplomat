@@ -17,6 +17,7 @@ class Two;
 
 class One {
 public:
+
   inline static std::unique_ptr<One> transitivity(const One& hold, const One& nohold);
 
   inline static std::unique_ptr<One> cycle(const Two& hold, const One& nohold);
@@ -41,9 +42,7 @@ public:
 
   inline const capi::One* AsFFI() const;
   inline capi::One* AsFFI();
-
   inline ~One();
-
 private:
   One() = delete;
 };

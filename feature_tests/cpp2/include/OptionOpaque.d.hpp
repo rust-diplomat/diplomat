@@ -17,6 +17,7 @@
 
 class OptionOpaque {
 public:
+
   inline static std::unique_ptr<OptionOpaque> new_(int32_t i);
 
   inline static std::unique_ptr<OptionOpaque> new_none();
@@ -31,9 +32,7 @@ public:
 
   inline const capi::OptionOpaque* AsFFI() const;
   inline capi::OptionOpaque* AsFFI();
-
   inline ~OptionOpaque();
-
 private:
   OptionOpaque() = delete;
 };

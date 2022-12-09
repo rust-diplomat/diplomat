@@ -15,9 +15,11 @@
 
 
 
+
 inline void OptionOpaqueChar::assert_char(char32_t ch) const {
   // TODO
 }
+
 inline const capi::OptionOpaqueChar* OptionOpaqueChar::AsFFI() const {
   return reinterpret_cast<const capi::OptionOpaqueChar*>(this);
 }

@@ -16,11 +16,10 @@
 
 class Bar {
 public:
+
   inline const capi::Bar* AsFFI() const;
   inline capi::Bar* AsFFI();
-
   inline ~Bar();
-
 private:
   Bar() = delete;
 };

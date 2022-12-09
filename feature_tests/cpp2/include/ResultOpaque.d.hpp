@@ -18,6 +18,7 @@
 
 class ResultOpaque {
 public:
+
   inline static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> new_(int32_t i);
 
   inline static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> new_failing_foo();
@@ -36,9 +37,7 @@ public:
 
   inline const capi::ResultOpaque* AsFFI() const;
   inline capi::ResultOpaque* AsFFI();
-
   inline ~ResultOpaque();
-
 private:
   ResultOpaque() = delete;
 };
