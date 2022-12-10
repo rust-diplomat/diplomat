@@ -82,7 +82,7 @@ jobs:
 
     - name: Native tests
       run: cargo make test-native
-  ffi-tests-wasm:
+  test-wasm:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

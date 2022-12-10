@@ -6,11 +6,11 @@ default_to_workspace = false
 # If adding a new backend, be sure to update:
 # - test-native (if necessary)
 # - test-example
-# - test-tests
+# - test-feature
 # - gen-example
-# - gen-tests
+# - gen-feature
 #
-# You will likely also want to add {gen, test}-{test, example}-[backend] and
+# You will likely also want to add {gen, test}-{feature, example}-[backend] and
 # {gen, test}-[backend]
 
 # Metatasks invoked by CI
@@ -25,7 +25,7 @@ dependencies = [
 [tasks.gen]
 category = "Code generation"
 dependencies = [
-    "gen-tests",
+    "gen-feature",
     "gen-examples",
 ]
 
@@ -34,14 +34,14 @@ dependencies = [
 category = "Tests"
 dependencies = [
     "test-example",
-    "test-test",
+    "test-feature",
 ]
 
 [tasks.test-cpp]
 category = "Tests"
 dependencies = [
     "test-cpp-example",
-    "test-cpp-tests",
+    "test-cpp-feature",
 ]
 [tasks.test-c]
 category = "Tests"
@@ -53,14 +53,14 @@ category = "Tests"
 dependencies = [
     "test-c2-example",
     "test-c2-example-self-contained",
-    "test-c2-tests-self-contained",
+    "test-c2-feature-self-contained",
 ]
 [tasks.test-wasm]
 category = "Tests"
 dependencies = [
     "test-wasm-example",
     "test-wasm-example-app",
-    "test-wasm-test",
+    "test-wasm-feature",
 ]
 [tasks.test-example]
 category = "Tests"
@@ -71,11 +71,11 @@ dependencies = [
     "test-wasm-example",
 ]
 
-[tasks.test-test]
+[tasks.test-feature]
 category = "Tests"
 dependencies = [
-    "test-cpp-test",
-    "test-wasm-test",
+    "test-cpp-feature",
+    "test-wasm-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -89,7 +89,7 @@ rm tests/*.out
 exec make
 '''
 
-[tasks.test-cpp-test]
+[tasks.test-cpp-feature]
 category = "Tests"
 dependencies = ["build-feature"]
 script_runner = "@duckscript"
@@ -148,7 +148,7 @@ exec npm install
 exec npm run build
 '''
 
-[tasks.test-wasm-test]
+[tasks.test-wasm-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
 script_runner = "@duckscript"
@@ -174,7 +174,7 @@ for file in ${files_list}
 end
 '''
 
-[tasks.test-c2-tests-self-contained]
+[tasks.test-c2-feature-self-contained]
 category = "Tests"
 dependencies = ["build-example"]
 script_runner = "@duckscript"
@@ -254,14 +254,14 @@ end
 '''
 
 
-[tasks.gen-tests]
+[tasks.gen-feature]
 category = "Code generation"
 dependencies = [
-    "gen-tests-cpp",
-    "gen-tests-c",
-    "gen-tests-c2",
-    "gen-tests-js",
-    "gen-tests-dotnet",
+    "gen-feature-cpp",
+    "gen-feature-c",
+    "gen-feature-c2",
+    "gen-feature-js",
+    "gen-feature-dotnet",
 ]
 
 [tasks.gen-examples]
@@ -275,36 +275,36 @@ dependencies = [
 [tasks.gen-cpp]
 category = "Code generation"
 dependencies = [
-    "gen-tests-cpp",
+    "gen-feature-cpp",
     "gen-examples-cpp"
 ]
 [tasks.gen-c]
 category = "Code generation"
 dependencies = [
-    "gen-tests-c",
+    "gen-feature-c",
     "gen-examples-c"
 ]
 [tasks.gen-c2]
 category = "Code generation"
 dependencies = [
-    "gen-tests-c2",
+    "gen-feature-c2",
     "gen-examples-c2"
 ]
 [tasks.gen-js]
 category = "Code generation"
 dependencies = [
-    "gen-tests-js",
+    "gen-feature-js",
     "gen-examples-js"
 ]
 [tasks.gen-dotnet]
 category = "Code generation"
 dependencies = [
-    "gen-tests-dotnet",
+    "gen-feature-dotnet",
 ]
 
 
 
-[tasks.gen-tests-cpp]
+[tasks.gen-feature-cpp]
 category = "Code generation"
 command = "cargo"
 args = [
@@ -327,7 +327,7 @@ args = [
     "docs/source",
     "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
 ]
-[tasks.gen-tests-c]
+[tasks.gen-feature-c]
 category = "Code generation"
 command = "cargo"
 args = [
@@ -347,7 +347,7 @@ args = [
     "c",
     "include",
 ]
-[tasks.gen-tests-c2]
+[tasks.gen-feature-c2]
 category = "Code generation"
 command = "cargo"
 args = [
@@ -367,7 +367,7 @@ args = [
     "c2",
     "include",
 ]
-[tasks.gen-tests-js]
+[tasks.gen-feature-js]
 category = "Code generation"
 command = "cargo"
 args = [
@@ -390,7 +390,7 @@ args = [
     "lib/docs/source",
     "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
 ]
-[tasks.gen-tests-dotnet]
+[tasks.gen-feature-dotnet]
 category = "Code generation"
 command = "cargo"
 args = [
