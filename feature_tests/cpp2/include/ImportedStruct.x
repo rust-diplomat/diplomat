@@ -1,1 +1,0 @@
-Struct(StructDef { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "ImportedStruct" }, fields: [StructField { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "foo" }, ty: Enum(EnumPath { tcx_id: EnumId(0) }) }, StructField { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "count" }, ty: Primitive(Int(U8)) }], methods: [] })

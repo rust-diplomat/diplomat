@@ -1,1 +1,0 @@
-Struct(StructDef { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "ErrorStruct" }, fields: [StructField { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "i" }, ty: Primitive(Int(I32)) }, StructField { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "j" }, ty: Primitive(Int(I32)) }], methods: [] })

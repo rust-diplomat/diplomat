@@ -1,1 +1,0 @@
-Opaque(OpaqueDef { docs: Docs("", []), name: Check { _marker: PhantomData, buf: "Two" }, methods: [] })
