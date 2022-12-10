@@ -17,15 +17,6 @@ extern "C" {
 
 
 
-typedef struct BorrowedFields {
-	struct { const uint16_t* data; size_t len; } a;
-	struct { const char* data; size_t len; } b;
-} BorrowedFields;
-
-
-
-
-
 #ifdef __cplusplus
 } // namespace capi
 } // extern "C"
