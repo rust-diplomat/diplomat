@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "One.d.h"
 
 
@@ -42,6 +42,8 @@ public:
 
   inline const capi::One* AsFFI() const;
   inline capi::One* AsFFI();
+  inline static const One* FromFFI(const capi::One* ptr);
+  inline static One* FromFFI(capi::One* ptr);
   inline ~One();
 private:
   One() = delete;

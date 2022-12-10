@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "MyString.d.h"
 
 
@@ -25,6 +25,8 @@ public:
 
   inline const capi::MyString* AsFFI() const;
   inline capi::MyString* AsFFI();
+  inline static const MyString* FromFFI(const capi::MyString* ptr);
+  inline static MyString* FromFFI(capi::MyString* ptr);
   inline ~MyString();
 private:
   MyString() = delete;

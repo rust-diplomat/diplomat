@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimal.d.hpp"
 #include "ICU4XFixedDecimal.h"
 
@@ -17,24 +17,24 @@
 
 
 inline std::unique_ptr<ICU4XFixedDecimal> ICU4XFixedDecimal::new_(int32_t v) {
-  capi::ICU4XFixedDecimal_new(v);
-  // TODO
+  auto result = capi::ICU4XFixedDecimal_new(v);
+  return std::unique_ptr(ICU4XFixedDecimal::FromFFI(result));
 }
 
 inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
   capi::ICU4XFixedDecimal_multiply_pow10(this->AsFFI(),
     power);
-  // TODO
 }
 
 inline void ICU4XFixedDecimal::negate() {
   capi::ICU4XFixedDecimal_negate(this->AsFFI());
-  // TODO
 }
 
 inline DiplomatResult<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
-  capi::ICU4XFixedDecimal_to_string(this->AsFFI());
-  // TODO
+  std::string output;
+  capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+  capi::ICU4XFixedDecimal_to_string(this->AsFFI(),
+    &writeable);
 }
 
 inline const capi::ICU4XFixedDecimal* ICU4XFixedDecimal::AsFFI() const {
@@ -42,6 +42,12 @@ inline const capi::ICU4XFixedDecimal* ICU4XFixedDecimal::AsFFI() const {
 }
 inline capi::ICU4XFixedDecimal* ICU4XFixedDecimal::AsFFI() {
   return reinterpret_cast<capi::ICU4XFixedDecimal*>(this);
+}
+inline const ICU4XFixedDecimal* ICU4XFixedDecimal::FromFFI(const capi::ICU4XFixedDecimal* ptr) {
+  return reinterpret_cast<const ICU4XFixedDecimal*>(ptr);
+}
+inline ICU4XFixedDecimal* ICU4XFixedDecimal::FromFFI(capi::ICU4XFixedDecimal* ptr) {
+  return reinterpret_cast<ICU4XFixedDecimal*>(ptr);
 }
 inline ICU4XFixedDecimal::~ICU4XFixedDecimal() {
   capi::ICU4XFixedDecimal_destroy(AsFFI());

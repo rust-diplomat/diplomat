@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "Two.d.hpp"
 #include "Two.h"
 
@@ -21,6 +21,12 @@ inline const capi::Two* Two::AsFFI() const {
 }
 inline capi::Two* Two::AsFFI() {
   return reinterpret_cast<capi::Two*>(this);
+}
+inline const Two* Two::FromFFI(const capi::Two* ptr) {
+  return reinterpret_cast<const Two*>(ptr);
+}
+inline Two* Two::FromFFI(capi::Two* ptr) {
+  return reinterpret_cast<Two*>(ptr);
 }
 inline Two::~Two() {
   capi::Two_destroy(AsFFI());

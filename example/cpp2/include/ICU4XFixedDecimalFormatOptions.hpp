@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimalFormatOptions.d.hpp"
 #include "ICU4XFixedDecimalFormatOptions.h"
 

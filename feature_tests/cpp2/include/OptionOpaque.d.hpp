@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "OptionOpaque.d.h"
 #include "OptionStruct.d.hpp"
 
@@ -32,6 +32,8 @@ public:
 
   inline const capi::OptionOpaque* AsFFI() const;
   inline capi::OptionOpaque* AsFFI();
+  inline static const OptionOpaque* FromFFI(const capi::OptionOpaque* ptr);
+  inline static OptionOpaque* FromFFI(capi::OptionOpaque* ptr);
   inline ~OptionOpaque();
 private:
   OptionOpaque() = delete;

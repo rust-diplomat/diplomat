@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "MyString.d.hpp"
 #include "MyString.h"
 
@@ -17,21 +17,22 @@
 
 
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
-  capi::MyString_new(v.data(),
+  auto result = capi::MyString_new(v.data(),
     v.size());
-  // TODO
+  return std::unique_ptr(MyString::FromFFI(result));
 }
 
 inline void MyString::set_str(std::string_view new_str) {
   capi::MyString_set_str(this->AsFFI(),
     new_str.data(),
     new_str.size());
-  // TODO
 }
 
 inline std::string MyString::get_str() const {
-  capi::MyString_get_str(this->AsFFI());
-  // TODO
+  std::string output;
+  capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+  capi::MyString_get_str(this->AsFFI(),
+    &writeable);
 }
 
 inline const capi::MyString* MyString::AsFFI() const {
@@ -39,6 +40,12 @@ inline const capi::MyString* MyString::AsFFI() const {
 }
 inline capi::MyString* MyString::AsFFI() {
   return reinterpret_cast<capi::MyString*>(this);
+}
+inline const MyString* MyString::FromFFI(const capi::MyString* ptr) {
+  return reinterpret_cast<const MyString*>(ptr);
+}
+inline MyString* MyString::FromFFI(capi::MyString* ptr) {
+  return reinterpret_cast<MyString*>(ptr);
 }
 inline MyString::~MyString() {
   capi::MyString_destroy(AsFFI());

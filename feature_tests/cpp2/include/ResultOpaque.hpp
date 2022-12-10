@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "ResultOpaque.d.hpp"
 #include "ResultOpaque.h"
 
@@ -17,44 +17,42 @@
 
 
 inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_(int32_t i) {
-  capi::ResultOpaque_new(i);
-  // TODO
+  auto result = capi::ResultOpaque_new(i);
+  return std::unique_ptr(ResultOpaque::FromFFI(result));
 }
 
 inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_failing_foo() {
-  capi::ResultOpaque_new_failing_foo();
-  // TODO
+  auto result = capi::ResultOpaque_new_failing_foo();
+  return std::unique_ptr(ResultOpaque::FromFFI(result));
 }
 
 inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_failing_bar() {
-  capi::ResultOpaque_new_failing_bar();
-  // TODO
+  auto result = capi::ResultOpaque_new_failing_bar();
+  return std::unique_ptr(ResultOpaque::FromFFI(result));
 }
 
 inline DiplomatResult<std::unique_ptr<ResultOpaque>, std::monostate> ResultOpaque::new_failing_unit() {
-  capi::ResultOpaque_new_failing_unit();
-  // TODO
+  auto result = capi::ResultOpaque_new_failing_unit();
+  return std::unique_ptr(ResultOpaque::FromFFI(result));
 }
 
 inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorStruct> ResultOpaque::new_failing_struct(int32_t i) {
-  capi::ResultOpaque_new_failing_struct(i);
-  // TODO
+  auto result = capi::ResultOpaque_new_failing_struct(i);
+  return std::unique_ptr(ResultOpaque::FromFFI(result));
 }
 
 inline DiplomatResult<std::monostate, std::unique_ptr<ResultOpaque>> ResultOpaque::new_in_err(int32_t i) {
   capi::ResultOpaque_new_in_err(i);
-  // TODO
 }
 
 inline DiplomatResult<ErrorEnum, std::unique_ptr<ResultOpaque>> ResultOpaque::new_in_enum_err(int32_t i) {
-  capi::ResultOpaque_new_in_enum_err(i);
-  // TODO
+  auto result = capi::ResultOpaque_new_in_enum_err(i);
+  return ResultOpaque::FromFFI(result);
 }
 
 inline void ResultOpaque::assert_integer(int32_t i) const {
   capi::ResultOpaque_assert_integer(this->AsFFI(),
     i);
-  // TODO
 }
 
 inline const capi::ResultOpaque* ResultOpaque::AsFFI() const {
@@ -62,6 +60,12 @@ inline const capi::ResultOpaque* ResultOpaque::AsFFI() const {
 }
 inline capi::ResultOpaque* ResultOpaque::AsFFI() {
   return reinterpret_cast<capi::ResultOpaque*>(this);
+}
+inline const ResultOpaque* ResultOpaque::FromFFI(const capi::ResultOpaque* ptr) {
+  return reinterpret_cast<const ResultOpaque*>(ptr);
+}
+inline ResultOpaque* ResultOpaque::FromFFI(capi::ResultOpaque* ptr) {
+  return reinterpret_cast<ResultOpaque*>(ptr);
 }
 inline ResultOpaque::~ResultOpaque() {
   capi::ResultOpaque_destroy(AsFFI());

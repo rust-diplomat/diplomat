@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "ICU4XDataProvider.d.h"
 
 
@@ -23,6 +23,8 @@ public:
 
   inline const capi::ICU4XDataProvider* AsFFI() const;
   inline capi::ICU4XDataProvider* AsFFI();
+  inline static const ICU4XDataProvider* FromFFI(const capi::ICU4XDataProvider* ptr);
+  inline static ICU4XDataProvider* FromFFI(capi::ICU4XDataProvider* ptr);
   inline ~ICU4XDataProvider();
 private:
   ICU4XDataProvider() = delete;

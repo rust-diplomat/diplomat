@@ -8,7 +8,9 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
+#include "OptionOpaque.d.hpp"
+#include "OptionOpaqueChar.d.hpp"
 #include "OptionStruct.d.hpp"
 #include "OptionStruct.h"
 

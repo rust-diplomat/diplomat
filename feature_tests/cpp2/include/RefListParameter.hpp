@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "RefListParameter.d.hpp"
 #include "RefListParameter.h"
 
@@ -21,6 +21,12 @@ inline const capi::RefListParameter* RefListParameter::AsFFI() const {
 }
 inline capi::RefListParameter* RefListParameter::AsFFI() {
   return reinterpret_cast<capi::RefListParameter*>(this);
+}
+inline const RefListParameter* RefListParameter::FromFFI(const capi::RefListParameter* ptr) {
+  return reinterpret_cast<const RefListParameter*>(ptr);
+}
+inline RefListParameter* RefListParameter::FromFFI(capi::RefListParameter* ptr) {
+  return reinterpret_cast<RefListParameter*>(ptr);
 }
 inline RefListParameter::~RefListParameter() {
   capi::RefListParameter_destroy(AsFFI());

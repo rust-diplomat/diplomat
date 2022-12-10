@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "ICU4XLocale.d.h"
 
 
@@ -23,6 +23,8 @@ public:
 
   inline const capi::ICU4XLocale* AsFFI() const;
   inline capi::ICU4XLocale* AsFFI();
+  inline static const ICU4XLocale* FromFFI(const capi::ICU4XLocale* ptr);
+  inline static ICU4XLocale* FromFFI(capi::ICU4XLocale* ptr);
   inline ~ICU4XLocale();
 private:
   ICU4XLocale() = delete;

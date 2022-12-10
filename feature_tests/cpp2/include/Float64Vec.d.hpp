@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "Float64Vec.d.h"
 
 
@@ -25,6 +25,8 @@ public:
 
   inline const capi::Float64Vec* AsFFI() const;
   inline capi::Float64Vec* AsFFI();
+  inline static const Float64Vec* FromFFI(const capi::Float64Vec* ptr);
+  inline static Float64Vec* FromFFI(capi::Float64Vec* ptr);
   inline ~Float64Vec();
 private:
   Float64Vec() = delete;

@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsReturning.d.hpp"
 #include "Foo.d.h"
@@ -32,6 +32,8 @@ public:
 
   inline const capi::Foo* AsFFI() const;
   inline capi::Foo* AsFFI();
+  inline static const Foo* FromFFI(const capi::Foo* ptr);
+  inline static Foo* FromFFI(capi::Foo* ptr);
   inline ~Foo();
 private:
   Foo() = delete;

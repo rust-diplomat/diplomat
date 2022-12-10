@@ -1,7 +1,7 @@
 use super::header::Header;
 use super::Cpp2Context;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ParamSelf, SelfType, TyPosition, Type, TypeDef, TypeId,
+    self, Mutability, OpaqueOwner, ParamSelf, SelfType, TyPosition, Type, TypeDef, TypeId, ReturnFallability, ReturnType, OutType
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -76,6 +76,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
+        let const_ptr = self.cx.formatter.fmt_c_ptr(&type_name, Mutability::Immutable);
+        let mut_ptr = self.cx.formatter.fmt_c_ptr(&type_name, Mutability::Mutable);
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
         let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
         let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
@@ -97,6 +99,8 @@ public:
             "
 \tinline {const_cptr} AsFFI() const;
 \tinline {mut_cptr} AsFFI();
+\tinline static {const_ptr} FromFFI({const_cptr} ptr);
+\tinline static {mut_ptr} FromFFI({mut_cptr} ptr);
 \tinline ~{type_name}();
 private:
 \t{type_name}() = delete;
@@ -112,6 +116,12 @@ inline {const_cptr} {type_name}::AsFFI() const {{
 }}
 inline {mut_cptr} {type_name}::AsFFI() {{
 \treturn reinterpret_cast<{mut_cptr}>(this);
+}}
+inline {const_ptr} {type_name}::FromFFI({const_cptr} ptr) {{
+\treturn reinterpret_cast<{const_ptr}>(ptr);
+}}
+inline {mut_ptr} {type_name}::FromFFI({mut_cptr} ptr) {{
+\treturn reinterpret_cast<{mut_ptr}>(ptr);
 }}
 inline {type_name}::~{type_name}() {{
 \t{ctype}_destroy(AsFFI());
@@ -135,7 +145,6 @@ inline {type_name}::~{type_name}() {{
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
-        use diplomat_core::hir::{ReturnFallability, ReturnType};
         let type_name = self.cx.formatter.fmt_type_name(id);
         let method_name = self.cx.formatter.fmt_method_name(method);
         let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);
@@ -153,26 +162,22 @@ inline {type_name}::~{type_name}() {{
             cpp_to_c_params.extend(conversions);
         }
 
-        let return_ty: Cow<str> = match method.output {
-            ReturnFallability::Infallible(None) => "void".into(),
-            ReturnFallability::Infallible(Some(ref ty)) => match ty {
-                ReturnType::Writeable => self.cx.formatter.fmt_owned_str(),
-                ReturnType::OutType(o) => self.gen_type_name(o),
-            },
-            ReturnFallability::Fallible(ref ok, ref err) => {
-                let ok_type_name = match ok {
-                    Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
-                    None => "std::monostate".into(),
-                    Some(ReturnType::OutType(o)) => self.gen_type_name(o),
-                };
-                let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
-                    None => "std::monostate".into(),
-                };
-                let ret: Cow<str> =
-                    format!("DiplomatResult<{ok_type_name}, {err_type_name}>").into();
-                ret
-            }
+        if method.is_writeable() {
+            cpp_to_c_params.push("&writeable".into());
+        }
+
+        let return_ty = self.gen_return_type_name(&method.output);
+
+        let return_statement = if let Some(ReturnType::OutType(out_type)) = method.output.return_type() {
+            self.gen_c_to_cpp_return(id, out_type)
+        } else {
+            "".into()
+        };
+
+        let return_prefix = if return_statement.is_empty() {
+            ""
+        } else {
+            "auto result = "
         };
 
         let mut params = String::new();
@@ -198,6 +203,12 @@ inline {type_name}::~{type_name}() {{
             };
             write!(&mut c_params, "{comma}{conversion}").unwrap();
         }
+
+        let writeable_prefix = if method.is_writeable() {
+            "std::string output;\n\tcapi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);\n\t"
+        } else {
+            ""
+        };
 
         let maybe_static = if method.param_self.is_none() {
             "static "
@@ -225,8 +236,7 @@ inline {type_name}::~{type_name}() {{
             self.impl_header,
             "
 inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
-\t{c_method_name}({c_params});
-\t// TODO
+\t{writeable_prefix}{return_prefix}{c_method_name}({c_params});{return_statement}
 }}
 "
         )
@@ -256,20 +266,22 @@ inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
                 let op_id = op.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(op_id);
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let ret = if op.owner.is_owned() {
-                    self.cx.formatter.fmt_owned(&type_name)
-                } else if op.is_optional() {
-                    self.cx
-                        .formatter
-                        .fmt_optional_borrowed(&type_name, mutability)
-                } else {
-                    self.cx.formatter.fmt_borrowed(&type_name, mutability)
+                let ret = match (op.owner.is_owned(), op.is_optional()) {
+                    // unique_ptr is nullable
+                    (true, _) => self.cx.formatter.fmt_owned(&type_name),
+                    (false, true) => self.cx
+                    .formatter
+                    .fmt_optional_borrowed(&type_name, mutability),
+                    (false, false) => self.cx.formatter.fmt_borrowed(&type_name, mutability)
                 };
                 let ret = ret.into_owned().into();
 
                 self.decl_header
                     .forward_classes
                     .insert(type_name.into_owned());
+                self.impl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_decl_header_path(op_id));
                 ret
             }
             Type::Struct(ref st) => {
@@ -333,7 +345,57 @@ inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
         }
     }
 
-    fn gen_c_to_cpp_return(&self) {
-        todo!()
+    fn gen_return_type_name(&mut self, ty: &ReturnFallability) -> Cow<'ccx, str> {
+        match *ty {
+            ReturnFallability::Infallible(None) => "void".into(),
+            ReturnFallability::Infallible(Some(ref ty)) => match ty {
+                ReturnType::Writeable => self.cx.formatter.fmt_owned_str(),
+                ReturnType::OutType(o) => self.gen_type_name(o),
+            },
+            ReturnFallability::Fallible(ref ok, ref err) => {
+                let ok_type_name = match ok {
+                    Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
+                    None => "std::monostate".into(),
+                    Some(ReturnType::OutType(o)) => self.gen_type_name(o),
+                };
+                let err_type_name = match err {
+                    Some(o) => self.gen_type_name(o),
+                    None => "std::monostate".into(),
+                };
+                let ret: Cow<str> =
+                    format!("DiplomatResult<{ok_type_name}, {err_type_name}>").into();
+                ret
+            }
+        }
+    }
+
+    fn gen_c_to_cpp_return(&self, id: TypeId, ty: &OutType) -> Cow<'static, str> {
+        let type_name = self.cx.formatter.fmt_type_name(id);
+        match *ty {
+            Type::Primitive(..) => {
+                "\n\treturn result;".into()
+            }
+            Type::Opaque(ref op) if op.owner.is_owned() => {
+                format!("\n\treturn std::unique_ptr({type_name}::FromFFI(result));").into()
+            }
+            Type::Opaque(ref op) if op.is_optional() => {
+                format!("\n\treturn result ? {{ *{type_name}::FromFFI(result) }} : std::nullopt;").into()
+            }
+            Type::Opaque(..) => {
+                format!("\n\treturn *{type_name}::FromFFI(result);").into()
+            }
+            Type::Struct(..) => {
+                format!("\n\treturn {type_name}::FromFFI(result);").into()
+            }
+            Type::Enum(..) => {
+                format!("\n\treturn {type_name}::FromFFI(result);").into()
+            }
+            Type::Slice(hir::Slice::Str(..)) => {
+                todo!()
+            },
+            Type::Slice(hir::Slice::Primitive(..)) => {
+                todo!()
+            }
+        }
     }
 }

@@ -8,7 +8,7 @@ static BASE_INCLUDES: &str = r#"
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 "#;
 
 /// This abstraction allows us to build up headers piece by piece without needing

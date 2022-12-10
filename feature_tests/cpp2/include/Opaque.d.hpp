@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "ImportedStruct.d.hpp"
 #include "MyStruct.d.hpp"
 #include "Opaque.d.h"
@@ -29,6 +29,8 @@ public:
 
   inline const capi::Opaque* AsFFI() const;
   inline capi::Opaque* AsFFI();
+  inline static const Opaque* FromFFI(const capi::Opaque* ptr);
+  inline static Opaque* FromFFI(capi::Opaque* ptr);
   inline ~Opaque();
 private:
   Opaque() = delete;

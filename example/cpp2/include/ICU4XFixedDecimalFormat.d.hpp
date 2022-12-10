@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimalFormat.d.h"
 #include "ICU4XFixedDecimalFormatOptions.d.hpp"
 #include "ICU4XFixedDecimalFormatResult.d.hpp"
@@ -28,6 +28,8 @@ public:
 
   inline const capi::ICU4XFixedDecimalFormat* AsFFI() const;
   inline capi::ICU4XFixedDecimalFormat* AsFFI();
+  inline static const ICU4XFixedDecimalFormat* FromFFI(const capi::ICU4XFixedDecimalFormat* ptr);
+  inline static ICU4XFixedDecimalFormat* FromFFI(capi::ICU4XFixedDecimalFormat* ptr);
   inline ~ICU4XFixedDecimalFormat();
 private:
   ICU4XFixedDecimalFormat() = delete;

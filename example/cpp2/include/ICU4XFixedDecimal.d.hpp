@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimal.d.h"
 
 
@@ -27,6 +27,8 @@ public:
 
   inline const capi::ICU4XFixedDecimal* AsFFI() const;
   inline capi::ICU4XFixedDecimal* AsFFI();
+  inline static const ICU4XFixedDecimal* FromFFI(const capi::ICU4XFixedDecimal* ptr);
+  inline static ICU4XFixedDecimal* FromFFI(capi::ICU4XFixedDecimal* ptr);
   inline ~ICU4XFixedDecimal();
 private:
   ICU4XFixedDecimal() = delete;

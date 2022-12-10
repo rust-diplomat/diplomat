@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.h"
+#include "diplomat_runtime.hpp"
 #include "Bar.d.h"
 
 
@@ -19,6 +19,8 @@ public:
 
   inline const capi::Bar* AsFFI() const;
   inline capi::Bar* AsFFI();
+  inline static const Bar* FromFFI(const capi::Bar* ptr);
+  inline static Bar* FromFFI(capi::Bar* ptr);
   inline ~Bar();
 private:
   Bar() = delete;
