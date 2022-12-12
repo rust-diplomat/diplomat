@@ -1,0 +1,444 @@
+[config]
+default_to_workspace = false
+
+
+
+# If adding a new backend, be sure to update:
+# - test-native (if necessary)
+# - test-example
+# - test-feature
+# - gen-example
+# - gen-feature
+#
+# You will likely also want to add {gen, test}-{feature, example}-[backend] and
+# {gen, test}-[backend]
+
+# Metatasks invoked by CI
+[tasks.test-native]
+description = "Test only the native"
+category = "Tests"
+dependencies = [
+    "test-cpp",
+    "test-c",
+    "test-c2",
+]
+[tasks.gen]
+category = "Code generation"
+dependencies = [
+    "gen-feature",
+    "gen-examples",
+]
+
+# Tests
+[tasks.test-all]
+category = "Tests"
+dependencies = [
+    "test-example",
+    "test-feature",
+]
+
+[tasks.test-cpp]
+category = "Tests"
+dependencies = [
+    "test-cpp-example",
+    "test-cpp-feature",
+]
+[tasks.test-c]
+category = "Tests"
+dependencies = [
+    "test-c-example",
+]
+[tasks.test-c2]
+category = "Tests"
+dependencies = [
+    "test-c2-example",
+    "test-c2-example-self-contained",
+    "test-c2-feature-self-contained",
+]
+[tasks.test-wasm]
+category = "Tests"
+dependencies = [
+    "test-wasm-example",
+    "test-wasm-example-app",
+    "test-wasm-feature",
+]
+[tasks.test-example]
+category = "Tests"
+dependencies = [
+    "test-cpp-example",
+    "test-c-example",
+    "test-c2-example",
+    "test-wasm-example",
+]
+
+[tasks.test-feature]
+category = "Tests"
+dependencies = [
+    "test-cpp-feature",
+    "test-wasm-feature",
+]
+
+[tasks.test-cpp-example]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/cpp
+rm tests/*.out
+exec make
+'''
+
+[tasks.test-cpp-feature]
+category = "Tests"
+dependencies = ["build-feature"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/cpp
+rm tests/*.out
+exec make
+'''
+
+[tasks.test-c-example]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/c
+rm *.out
+exec make
+'''
+
+[tasks.test-c2-example]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/c
+rm *.out
+exec make
+'''
+
+[tasks.test-wasm-example]
+category = "Tests"
+dependencies = ["build-example-wasm"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/js/
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
+cd lib
+exec npm install
+exec npm run test
+'''
+
+[tasks.test-wasm-example-app]
+category = "Tests"
+dependencies = ["build-example-wasm"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/js/
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
+cd app
+exec npm install
+exec npm run build
+'''
+
+[tasks.test-wasm-feature]
+category = "Tests"
+dependencies = ["build-feature-wasm"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/js/
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
+cd app
+exec npm install
+exec npm run test
+'''
+
+[tasks.test-c2-example-self-contained]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/c2/include
+files_list = glob_array "./*.h"
+for file in ${files_list}
+    exec gcc ${file}
+end
+'''
+
+[tasks.test-c2-feature-self-contained]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/c2/include
+files_list = glob_array "./*.h"
+for file in ${files_list}
+    exec gcc ${file}
+end
+'''
+
+# Generation
+
+# Generic task for generating code
+# Usage: cargo make gen-generic feature_tests <backend name> <output folder name> <optional docs folder> <optional additional args>
+[tasks.gen-generic]
+category = "Plumbing"
+dependencies = ["build-tool"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+
+path = array_get ${@} 0
+backend = array_get ${@} 1
+output_folder = array_get ${@} 2
+docs_folder = array_get ${@} 3
+addl_args = array_get ${@} 4
+
+path_is_empty = is_empty ${path}
+backend_is_empty = is_empty ${backend}
+output_folder_is_empty = is_empty ${output_folder}
+docs_folder_is_empty = is_empty ${docs_folder}
+addl_args_is_empty = is_empty ${addl_args}
+if ${path_is_empty} or ${backend_is_empty} or ${output_folder_is_empty}
+    trigger_error "Must have at least three non empty arguments"
+end
+
+cd "${path}"
+rm -r "tmp"
+mkdir "tmp"
+
+mkdir "tmp/${output_folder}"
+if not ${docs_folder_is_empty}
+    mkdir "tmp/${docs_folder}"
+end
+
+
+exit_on_error true
+if ${docs_folder_is_empty}
+    full_args = set "${backend} tmp/${output_folder}"
+else
+    full_args = set "${backend} tmp/${output_folder} --docs tmp/${docs_folder}"
+end
+
+if not ${addl_args_is_empty}
+    full_args = set "${full_args} ${addl_args}"
+end
+output = exec cargo run -p diplomat-tool -- %{full_args}
+if ${output.code}
+    echo ${output.stderr}
+    trigger_error "Bindings failed to generate. Command: diplomat-tool %{full_args}"
+    rm -r "tmp"
+end
+echo ${output.stdout}
+exit_on_error true
+
+rm -r "${backend}/${output_folder}"
+# we do a /.. so that cases where output_folder is multiple folders down
+# end up copying to the right path
+mv "tmp/${output_folder}" "${backend}/${output_folder}/.."
+if not ${docs_folder_is_empty}
+    rm -r "${backend}/${docs_folder}"
+    mv "tmp/${docs_folder}" "${backend}/${docs_folder}/.."
+end
+
+'''
+
+
+[tasks.gen-feature]
+category = "Code generation"
+dependencies = [
+    "gen-feature-cpp",
+    "gen-feature-c",
+    "gen-feature-c2",
+    "gen-feature-js",
+    "gen-feature-dotnet",
+]
+
+[tasks.gen-examples]
+category = "Code generation"
+dependencies = [
+    "gen-examples-cpp",
+    "gen-examples-c",
+    "gen-examples-c2",
+    "gen-examples-js",
+]
+[tasks.gen-cpp]
+category = "Code generation"
+dependencies = [
+    "gen-feature-cpp",
+    "gen-examples-cpp"
+]
+[tasks.gen-c]
+category = "Code generation"
+dependencies = [
+    "gen-feature-c",
+    "gen-examples-c"
+]
+[tasks.gen-c2]
+category = "Code generation"
+dependencies = [
+    "gen-feature-c2",
+    "gen-examples-c2"
+]
+[tasks.gen-js]
+category = "Code generation"
+dependencies = [
+    "gen-feature-js",
+    "gen-examples-js"
+]
+[tasks.gen-dotnet]
+category = "Code generation"
+dependencies = [
+    "gen-feature-dotnet",
+]
+
+
+
+[tasks.gen-feature-cpp]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "feature_tests",
+    "cpp",
+    "include",
+    "docs/source"
+]
+[tasks.gen-examples-cpp]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "example",
+    "cpp",
+    "include",
+    "docs/source",
+    "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
+]
+[tasks.gen-feature-c]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "feature_tests",
+    "c",
+    "include",
+]
+[tasks.gen-examples-c]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "example",
+    "c",
+    "include",
+]
+[tasks.gen-feature-c2]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "feature_tests",
+    "c2",
+    "include",
+]
+[tasks.gen-examples-c2]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "example",
+    "c2",
+    "include",
+]
+[tasks.gen-feature-js]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "feature_tests",
+    "js",
+    "api",
+    "docs/source",
+]
+[tasks.gen-examples-js]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "example",
+    "js",
+    "lib/api",
+    "lib/docs/source",
+    "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
+]
+[tasks.gen-feature-dotnet]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "feature_tests",
+    "dotnet",
+    "Lib/Generated",
+    "",
+    "-l dotnet/dotnet-interop-conf.toml"
+]
+[tasks.gen-examples-dotnet]
+category = "Code generation"
+command = "cargo"
+args = [
+    "make",
+    "gen-generic",
+    "example",
+    "dotnet",
+    "Lib/Generated",
+    "",
+    "-l dotnet/dotnet-interop-conf.toml"
+]
+
+# Build deps
+
+[tasks.build-tool]
+description = "Build diplomat-tool"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-tool"]
+[tasks.build-example]
+description = "Build examples"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-example"]
+[tasks.build-feature]
+description = "Build feature_tests"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-feature-tests"]
+[tasks.build-example-wasm]
+description = "Build feature_tests for wasm"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-example", "--target", "wasm32-unknown-unknown"]
+[tasks.build-feature-wasm]
+description = "Build feature_tests for wasm"
+category = "Plumbing"
+command = "cargo"
+args = ["build", "-p", "diplomat-feature-tests", "--target", "wasm32-unknown-unknown"]
