@@ -23,8 +23,6 @@ impl<'tcx> super::CContext<'tcx> {
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
         }
 
-        context.decl_header.write_str("\n\n\n").unwrap();
-
         for method in ty.methods() {
             context.gen_method(id, method);
         }
@@ -88,12 +86,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             )
             .unwrap();
         }
-        writeln!(self.decl_header, "}} {ty_name};").unwrap();
+        write!(self.decl_header, "}} {ty_name};\n\n").unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.decl_header, "typedef struct {ty_name} {ty_name};").unwrap();
+        write!(self.decl_header, "typedef struct {ty_name} {ty_name};\n\n").unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
@@ -106,7 +104,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
         }
         // reborrow to avoid borrowing across mutation
-        writeln!(self.decl_header, "}} {ty_name};").unwrap();
+        write!(self.decl_header, "}} {ty_name};\n\n").unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -175,14 +173,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
         }
 
-        writeln!(self.impl_header, "{return_ty} {method_name}({params});").unwrap();
+        write!(self.impl_header, "{return_ty} {method_name}({params});\n\n").unwrap();
     }
 
     pub fn gen_dtor(&mut self, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(
+        write!(
             self.impl_header,
-            "void {ty_name}_destroy({ty_name}* self);"
+            "void {ty_name}_destroy({ty_name}* self);\n\n"
         )
         .unwrap();
     }

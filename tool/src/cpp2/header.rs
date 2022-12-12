@@ -1,5 +1,6 @@
 use std::collections::BTreeSet;
 use std::fmt;
+use std::borrow::Cow;
 
 static BASE_INCLUDES: &str = r#"
 #include <stdio.h>
@@ -92,7 +93,11 @@ impl fmt::Display for Header {
         let header_guard = &self.path;
         let header_guard = header_guard.replace(".d.hpp", "_D_HPP");
         let header_guard = header_guard.replace(".hpp", "_HPP");
-        let body = self.body.replace("\t", self.indent_str);
+        let body: Cow<str> = if self.body.is_empty() {
+            "// No Content\n".into()
+        } else {
+            self.body.replace("\t", self.indent_str).into()
+        };
 
         write!(
             f,

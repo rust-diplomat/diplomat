@@ -1,7 +1,6 @@
 #ifndef OptionStruct_D_H
 #define OptionStruct_D_H
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,11 +9,11 @@
 #include "OptionOpaque.d.h"
 #include "OptionOpaqueChar.d.h"
 
-
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
+
 
 typedef struct OptionStruct {
   OptionOpaque* a;
@@ -24,12 +23,9 @@ typedef struct OptionStruct {
 } OptionStruct;
 
 
-
-
-
 #ifdef __cplusplus
-} // namespace capi
 } // extern "C"
+} // namespace capi
 #endif // __cplusplus
 
 #endif // OptionStruct_D_H

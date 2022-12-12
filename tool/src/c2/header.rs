@@ -1,5 +1,6 @@
 use std::collections::BTreeSet;
 use std::fmt;
+use std::borrow::Cow;
 
 static BASE_INCLUDES: &str = r#"
 #include <stdio.h>
@@ -72,25 +73,27 @@ impl fmt::Display for Header {
         let header_guard = &self.path;
         let header_guard = header_guard.replace(".d.h", "_D_H");
         let header_guard = header_guard.replace(".h", "_H");
-        let body = self.body.replace("\t", self.indent_str);
+        let body: Cow<str> = if self.body.is_empty() {
+            "// No Content\n\n".into()
+        } else {
+            self.body.replace("\t", self.indent_str).into()
+        };
 
         write!(
             f,
             r#"#ifndef {header_guard}
 #define {header_guard}
-
 {includes}
-
 #ifdef __cplusplus
 namespace capi {{
 extern "C" {{
 #endif // __cplusplus
 
-{body}
 
+{body}
 #ifdef __cplusplus
-}} // namespace capi
 }} // extern "C"
+}} // namespace capi
 #endif // __cplusplus
 
 #endif // {header_guard}

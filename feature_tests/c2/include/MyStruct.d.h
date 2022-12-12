@@ -1,7 +1,6 @@
 #ifndef MyStruct_D_H
 #define MyStruct_D_H
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,11 +8,11 @@
 #include "diplomat_runtime.h"
 #include "MyEnum.d.h"
 
-
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif // __cplusplus
+
 
 typedef struct MyStruct {
   uint8_t a;
@@ -26,12 +25,9 @@ typedef struct MyStruct {
 } MyStruct;
 
 
-
-
-
 #ifdef __cplusplus
-} // namespace capi
 } // extern "C"
+} // namespace capi
 #endif // __cplusplus
 
 #endif // MyStruct_D_H

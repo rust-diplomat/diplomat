@@ -15,6 +15,7 @@
 
 
 
+// No Content
 
 
 #endif // MyStruct_HPP
