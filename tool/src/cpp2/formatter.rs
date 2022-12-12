@@ -33,12 +33,12 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
         let type_name = self.fmt_type_name(id);
-        format!("{type_name}.d.hpp").into()
+        format!("{type_name}.d.hpp")
     }
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
         let type_name = self.fmt_type_name(id);
-        format!("{type_name}.hpp").into()
+        format!("{type_name}.hpp")
     }
 
     pub fn fmt_c_decl_header_path(&self, id: TypeId) -> String {

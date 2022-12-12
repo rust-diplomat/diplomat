@@ -7,9 +7,9 @@ use std::fmt::Write;
 impl<'tcx> super::CContext<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
-        let mut decl_header = Header::new(decl_header_path.clone().into());
+        let mut decl_header = Header::new(decl_header_path.clone());
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
-        let mut impl_header = Header::new(impl_header_path.clone().into());
+        let mut impl_header = Header::new(impl_header_path.clone());
 
         let mut context = TyGenContext {
             cx: self,
@@ -279,14 +279,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ty_name = self.cx.formatter.fmt_type_name(st_id);
                 let ret = ty_name.clone();
                 let header_path = self.cx.formatter.fmt_decl_header_path(st_id);
-                header.includes.insert(header_path.into());
+                header.includes.insert(header_path);
                 ret
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(id);
                 let header_path = self.cx.formatter.fmt_decl_header_path(id);
-                header.includes.insert(header_path.into());
+                header.includes.insert(header_path);
                 ty_name
             }
             Type::Slice(ref s) => {

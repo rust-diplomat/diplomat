@@ -62,7 +62,7 @@ impl fmt::Write for Header {
     fn write_char(&mut self, c: char) -> fmt::Result {
         self.body.write_char(c)
     }
-    fn write_fmt(self: &mut Self, args: fmt::Arguments<'_>) -> fmt::Result {
+    fn write_fmt(&mut self, args: fmt::Arguments<'_>) -> fmt::Result {
         self.body.write_fmt(args)
     }
 }
@@ -83,7 +83,7 @@ impl fmt::Display for Header {
         let body: Cow<str> = if self.body.is_empty() {
             "// No Content\n\n".into()
         } else {
-            self.body.replace("\t", self.indent_str).into()
+            self.body.replace('\t', self.indent_str).into()
         };
 
         write!(
