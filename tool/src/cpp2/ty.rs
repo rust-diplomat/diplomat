@@ -8,7 +8,7 @@ use std::fmt::Write;
 
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
-        let type_name = self.formatter.fmt_type_name(id);
+        let ty_name = self.formatter.fmt_type_name(id);
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
@@ -32,8 +32,8 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         // a header will get its own forwards and includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        context.decl_header.forward_classes.remove(&*type_name);
-        context.decl_header.forward_structs.remove(&*type_name);
+        context.decl_header.forward_classes.remove(&*ty_name);
+        context.decl_header.forward_structs.remove(&*ty_name);
         context.decl_header.includes.remove(&*decl_header_path);
         // TODO: Do this for impl_header too?
 
@@ -60,8 +60,8 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
-        let type_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.decl_header, "enum struct {type_name} {{").unwrap();
+        let ty_name = self.cx.formatter.fmt_type_name(id);
+        writeln!(self.decl_header, "enum struct {ty_name} {{").unwrap();
         for variant in ty.variants.iter() {
             writeln!(
                 self.decl_header,
@@ -75,10 +75,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
-        let type_name = self.cx.formatter.fmt_type_name(id);
-        let const_ptr = self.cx.formatter.fmt_c_ptr(&type_name, Mutability::Immutable);
-        let mut_ptr = self.cx.formatter.fmt_c_ptr(&type_name, Mutability::Mutable);
-        let ctype = self.cx.formatter.fmt_c_name(&type_name);
+        let ty_name = self.cx.formatter.fmt_type_name(id);
+        let const_ptr = self.cx.formatter.fmt_c_ptr(&ty_name, Mutability::Immutable);
+        let mut_ptr = self.cx.formatter.fmt_c_ptr(&ty_name, Mutability::Mutable);
+        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
         let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
         self.decl_header
@@ -86,7 +86,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
         write!(
             self.decl_header,
-            "class {type_name} {{
+            "class {ty_name} {{
 public:
 "
         )
@@ -101,9 +101,9 @@ public:
 \tinline {mut_cptr} AsFFI();
 \tinline static {const_ptr} FromFFI({const_cptr} ptr);
 \tinline static {mut_ptr} FromFFI({mut_cptr} ptr);
-\tinline ~{type_name}();
+\tinline ~{ty_name}();
 private:
-\t{type_name}() = delete;
+\t{ty_name}() = delete;
 }};
 "
         )
@@ -111,19 +111,19 @@ private:
         write!(
             self.impl_header,
             "
-inline {const_cptr} {type_name}::AsFFI() const {{
+inline {const_cptr} {ty_name}::AsFFI() const {{
 \treturn reinterpret_cast<{const_cptr}>(this);
 }}
-inline {mut_cptr} {type_name}::AsFFI() {{
+inline {mut_cptr} {ty_name}::AsFFI() {{
 \treturn reinterpret_cast<{mut_cptr}>(this);
 }}
-inline {const_ptr} {type_name}::FromFFI({const_cptr} ptr) {{
+inline {const_ptr} {ty_name}::FromFFI({const_cptr} ptr) {{
 \treturn reinterpret_cast<{const_ptr}>(ptr);
 }}
-inline {mut_ptr} {type_name}::FromFFI({mut_cptr} ptr) {{
+inline {mut_ptr} {ty_name}::FromFFI({mut_cptr} ptr) {{
 \treturn reinterpret_cast<{mut_ptr}>(ptr);
 }}
-inline {type_name}::~{type_name}() {{
+inline {ty_name}::~{ty_name}() {{
 \t{ctype}_destroy(AsFFI());
 }}
 "
@@ -132,8 +132,8 @@ inline {type_name}::~{type_name}() {{
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
-        let type_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.decl_header, "struct {type_name} {{").unwrap();
+        let ty_name = self.cx.formatter.fmt_type_name(id);
+        writeln!(self.decl_header, "struct {ty_name} {{").unwrap();
         for field in def.fields.iter() {
             let decls = self.gen_ty_decl(&field.ty, field.name.as_str());
             for (decl_ty, decl_name) in decls {
@@ -145,7 +145,7 @@ inline {type_name}::~{type_name}() {{
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
-        let type_name = self.cx.formatter.fmt_type_name(id);
+        let ty_name = self.cx.formatter.fmt_type_name(id);
         let method_name = self.cx.formatter.fmt_method_name(method);
         let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);
         let mut param_decls = Vec::new();
@@ -166,7 +166,7 @@ inline {type_name}::~{type_name}() {{
             cpp_to_c_params.push("&writeable".into());
         }
 
-        let return_ty = self.gen_return_type_name(&method.output);
+        let return_ty = self.gen_return_ty_name(&method.output);
 
         let return_statement = if let Some(ReturnType::OutType(out_type)) = method.output.return_type() {
             self.gen_c_to_cpp_return(id, out_type)
@@ -235,7 +235,7 @@ inline {type_name}::~{type_name}() {{
         write!(
             self.impl_header,
             "
-inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
+inline {return_ty} {ty_name}::{method_name}({params}){qualifiers} {{
 \t{writeable_prefix}{return_prefix}{c_method_name}({c_params});{return_statement}
 }}
 "
@@ -253,32 +253,32 @@ inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
         ident: &'a str,
     ) -> Vec<(Cow<'ccx, str>, Cow<'a, str>)> {
         let param_name = self.cx.formatter.fmt_param_name(ident);
-        let ty = self.gen_type_name(ty);
+        let ty = self.gen_ty_name(ty);
         vec![(ty, param_name)]
     }
 
     // Generate the C++ code for referencing a particular type.
     // Handles adding imports and such as necessary
-    fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
+    fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
         match *ty {
             Type::Primitive(prim) => self.cx.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
-                let type_name = self.cx.formatter.fmt_type_name(op_id);
+                let ty_name = self.cx.formatter.fmt_type_name(op_id);
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = match (op.owner.is_owned(), op.is_optional()) {
                     // unique_ptr is nullable
-                    (true, _) => self.cx.formatter.fmt_owned(&type_name),
+                    (true, _) => self.cx.formatter.fmt_owned(&ty_name),
                     (false, true) => self.cx
                     .formatter
-                    .fmt_optional_borrowed(&type_name, mutability),
-                    (false, false) => self.cx.formatter.fmt_borrowed(&type_name, mutability)
+                    .fmt_optional_borrowed(&ty_name, mutability),
+                    (false, false) => self.cx.formatter.fmt_borrowed(&ty_name, mutability)
                 };
                 let ret = ret.into_owned().into();
 
                 self.decl_header
                     .forward_classes
-                    .insert(type_name.into_owned());
+                    .insert(ty_name.into_owned());
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(op_id));
@@ -345,21 +345,21 @@ inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
         }
     }
 
-    fn gen_return_type_name(&mut self, ty: &ReturnFallability) -> Cow<'ccx, str> {
+    fn gen_return_ty_name(&mut self, ty: &ReturnFallability) -> Cow<'ccx, str> {
         match *ty {
             ReturnFallability::Infallible(None) => "void".into(),
             ReturnFallability::Infallible(Some(ref ty)) => match ty {
                 ReturnType::Writeable => self.cx.formatter.fmt_owned_str(),
-                ReturnType::OutType(o) => self.gen_type_name(o),
+                ReturnType::OutType(o) => self.gen_ty_name(o),
             },
             ReturnFallability::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
                     Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
                     None => "std::monostate".into(),
-                    Some(ReturnType::OutType(o)) => self.gen_type_name(o),
+                    Some(ReturnType::OutType(o)) => self.gen_ty_name(o),
                 };
                 let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
+                    Some(o) => self.gen_ty_name(o),
                     None => "std::monostate".into(),
                 };
                 let ret: Cow<str> =
@@ -370,25 +370,25 @@ inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
     }
 
     fn gen_c_to_cpp_return(&self, id: TypeId, ty: &OutType) -> Cow<'static, str> {
-        let type_name = self.cx.formatter.fmt_type_name(id);
+        let ty_name = self.cx.formatter.fmt_type_name(id);
         match *ty {
             Type::Primitive(..) => {
                 "\n\treturn result;".into()
             }
             Type::Opaque(ref op) if op.owner.is_owned() => {
-                format!("\n\treturn std::unique_ptr({type_name}::FromFFI(result));").into()
+                format!("\n\treturn std::unique_ptr({ty_name}::FromFFI(result));").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                format!("\n\treturn result ? {{ *{type_name}::FromFFI(result) }} : std::nullopt;").into()
+                format!("\n\treturn result ? {{ *{ty_name}::FromFFI(result) }} : std::nullopt;").into()
             }
             Type::Opaque(..) => {
-                format!("\n\treturn *{type_name}::FromFFI(result);").into()
+                format!("\n\treturn *{ty_name}::FromFFI(result);").into()
             }
             Type::Struct(..) => {
-                format!("\n\treturn {type_name}::FromFFI(result);").into()
+                format!("\n\treturn {ty_name}::FromFFI(result);").into()
             }
             Type::Enum(..) => {
-                format!("\n\treturn {type_name}::FromFFI(result);").into()
+                format!("\n\treturn {ty_name}::FromFFI(result);").into()
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 todo!()
