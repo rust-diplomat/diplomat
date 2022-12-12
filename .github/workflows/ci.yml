@@ -54,7 +54,7 @@ jobs:
     - name: Run regeneration
       run: cargo make gen
     - name: Test code is fresh
-      run: git diff --exit-code
+      run: git add . && git diff --cached --exit-code
   test-native:
     runs-on: ubuntu-latest
     steps:
