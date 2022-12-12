@@ -1,7 +1,6 @@
 #ifndef ICU4XFixedDecimalFormat_D_HPP
 #define ICU4XFixedDecimalFormat_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -12,8 +11,6 @@
 #include "ICU4XFixedDecimalFormat.d.h"
 #include "ICU4XFixedDecimalFormatOptions.d.hpp"
 #include "ICU4XFixedDecimalFormatResult.d.hpp"
-
-
 class ICU4XDataProvider;
 class ICU4XFixedDecimal;
 class ICU4XLocale;
@@ -34,9 +31,6 @@ public:
 private:
   ICU4XFixedDecimalFormat() = delete;
 };
-
-
-
 
 
 #endif // ICU4XFixedDecimalFormat_D_HPP

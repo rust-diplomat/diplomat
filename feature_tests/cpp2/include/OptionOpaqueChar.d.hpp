@@ -1,7 +1,6 @@
 #ifndef OptionOpaqueChar_D_HPP
 #define OptionOpaqueChar_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "OptionOpaqueChar.d.h"
-
-
 
 
 class OptionOpaqueChar {
@@ -27,9 +24,6 @@ public:
 private:
   OptionOpaqueChar() = delete;
 };
-
-
-
 
 
 #endif // OptionOpaqueChar_D_HPP

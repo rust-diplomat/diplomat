@@ -1,7 +1,6 @@
 #ifndef OptionStruct_HPP
 #define OptionStruct_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -13,8 +12,6 @@
 #include "OptionOpaqueChar.d.hpp"
 #include "OptionStruct.d.hpp"
 #include "OptionStruct.h"
-
-
 
 
 // No Content

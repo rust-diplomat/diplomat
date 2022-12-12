@@ -1,7 +1,6 @@
 #ifndef ResultOpaque_HPP
 #define ResultOpaque_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,9 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "ResultOpaque.d.hpp"
 #include "ResultOpaque.h"
-
-
-
 
 
 inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_(int32_t i) {
@@ -58,15 +54,19 @@ inline void ResultOpaque::assert_integer(int32_t i) const {
 inline const capi::ResultOpaque* ResultOpaque::AsFFI() const {
   return reinterpret_cast<const capi::ResultOpaque*>(this);
 }
+
 inline capi::ResultOpaque* ResultOpaque::AsFFI() {
   return reinterpret_cast<capi::ResultOpaque*>(this);
 }
+
 inline const ResultOpaque* ResultOpaque::FromFFI(const capi::ResultOpaque* ptr) {
   return reinterpret_cast<const ResultOpaque*>(ptr);
 }
+
 inline ResultOpaque* ResultOpaque::FromFFI(capi::ResultOpaque* ptr) {
   return reinterpret_cast<ResultOpaque*>(ptr);
 }
+
 inline ResultOpaque::~ResultOpaque() {
   capi::ResultOpaque_destroy(AsFFI());
 }

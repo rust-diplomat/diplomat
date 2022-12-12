@@ -1,7 +1,6 @@
 #ifndef MyEnum_D_HPP
 #define MyEnum_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-
-
 
 
 enum struct MyEnum {
@@ -21,9 +18,6 @@ enum struct MyEnum {
   E = 2,
   F = 3,
 };
-
-
-
 
 
 #endif // MyEnum_D_HPP

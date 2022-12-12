@@ -1,7 +1,6 @@
 #ifndef ICU4XDataProvider_HPP
 #define ICU4XDataProvider_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,9 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "ICU4XDataProvider.d.hpp"
 #include "ICU4XDataProvider.h"
-
-
-
 
 
 inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
@@ -28,15 +24,19 @@ inline DiplomatResult<std::monostate, std::monostate> ICU4XDataProvider::returns
 inline const capi::ICU4XDataProvider* ICU4XDataProvider::AsFFI() const {
   return reinterpret_cast<const capi::ICU4XDataProvider*>(this);
 }
+
 inline capi::ICU4XDataProvider* ICU4XDataProvider::AsFFI() {
   return reinterpret_cast<capi::ICU4XDataProvider*>(this);
 }
+
 inline const ICU4XDataProvider* ICU4XDataProvider::FromFFI(const capi::ICU4XDataProvider* ptr) {
   return reinterpret_cast<const ICU4XDataProvider*>(ptr);
 }
+
 inline ICU4XDataProvider* ICU4XDataProvider::FromFFI(capi::ICU4XDataProvider* ptr) {
   return reinterpret_cast<ICU4XDataProvider*>(ptr);
 }
+
 inline ICU4XDataProvider::~ICU4XDataProvider() {
   capi::ICU4XDataProvider_destroy(AsFFI());
 }

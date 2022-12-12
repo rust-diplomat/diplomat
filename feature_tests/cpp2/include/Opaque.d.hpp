@@ -1,7 +1,6 @@
 #ifndef Opaque_D_HPP
 #define Opaque_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -12,8 +11,6 @@
 #include "ImportedStruct.d.hpp"
 #include "MyStruct.d.hpp"
 #include "Opaque.d.h"
-
-
 
 
 class Opaque {
@@ -35,9 +32,6 @@ public:
 private:
   Opaque() = delete;
 };
-
-
-
 
 
 #endif // Opaque_D_HPP

@@ -1,7 +1,6 @@
 #ifndef MyString_D_HPP
 #define MyString_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "MyString.d.h"
-
-
 
 
 class MyString {
@@ -31,9 +28,6 @@ public:
 private:
   MyString() = delete;
 };
-
-
-
 
 
 #endif // MyString_D_HPP

@@ -1,7 +1,6 @@
 #ifndef Float64Vec_HPP
 #define Float64Vec_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,9 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "Float64Vec.d.hpp"
 #include "Float64Vec.h"
-
-
-
 
 
 inline std::unique_ptr<Float64Vec> Float64Vec::new_(std::span<const double> v) {
@@ -37,15 +33,19 @@ inline void Float64Vec::set_value(std::span<const double> new_slice) {
 inline const capi::Float64Vec* Float64Vec::AsFFI() const {
   return reinterpret_cast<const capi::Float64Vec*>(this);
 }
+
 inline capi::Float64Vec* Float64Vec::AsFFI() {
   return reinterpret_cast<capi::Float64Vec*>(this);
 }
+
 inline const Float64Vec* Float64Vec::FromFFI(const capi::Float64Vec* ptr) {
   return reinterpret_cast<const Float64Vec*>(ptr);
 }
+
 inline Float64Vec* Float64Vec::FromFFI(capi::Float64Vec* ptr) {
   return reinterpret_cast<Float64Vec*>(ptr);
 }
+
 inline Float64Vec::~Float64Vec() {
   capi::Float64Vec_destroy(AsFFI());
 }

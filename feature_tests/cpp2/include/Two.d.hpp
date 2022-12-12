@@ -1,7 +1,6 @@
 #ifndef Two_D_HPP
 #define Two_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "Two.d.h"
-
-
 
 
 class Two {
@@ -25,9 +22,6 @@ public:
 private:
   Two() = delete;
 };
-
-
-
 
 
 #endif // Two_D_HPP

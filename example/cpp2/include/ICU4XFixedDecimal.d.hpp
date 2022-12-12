@@ -1,7 +1,6 @@
 #ifndef ICU4XFixedDecimal_D_HPP
 #define ICU4XFixedDecimal_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimal.d.h"
-
-
 
 
 class ICU4XFixedDecimal {
@@ -33,9 +30,6 @@ public:
 private:
   ICU4XFixedDecimal() = delete;
 };
-
-
-
 
 
 #endif // ICU4XFixedDecimal_D_HPP

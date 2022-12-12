@@ -1,7 +1,6 @@
 #ifndef RefListParameter_HPP
 #define RefListParameter_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -13,21 +12,22 @@
 #include "RefListParameter.h"
 
 
-
-
-
 inline const capi::RefListParameter* RefListParameter::AsFFI() const {
   return reinterpret_cast<const capi::RefListParameter*>(this);
 }
+
 inline capi::RefListParameter* RefListParameter::AsFFI() {
   return reinterpret_cast<capi::RefListParameter*>(this);
 }
+
 inline const RefListParameter* RefListParameter::FromFFI(const capi::RefListParameter* ptr) {
   return reinterpret_cast<const RefListParameter*>(ptr);
 }
+
 inline RefListParameter* RefListParameter::FromFFI(capi::RefListParameter* ptr) {
   return reinterpret_cast<RefListParameter*>(ptr);
 }
+
 inline RefListParameter::~RefListParameter() {
   capi::RefListParameter_destroy(AsFFI());
 }

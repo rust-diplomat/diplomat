@@ -1,7 +1,6 @@
 #ifndef Bar_D_HPP
 #define Bar_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "Bar.d.h"
-
-
 
 
 class Bar {
@@ -25,9 +22,6 @@ public:
 private:
   Bar() = delete;
 };
-
-
-
 
 
 #endif // Bar_D_HPP

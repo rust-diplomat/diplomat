@@ -1,7 +1,6 @@
 #ifndef ICU4XFixedDecimal_HPP
 #define ICU4XFixedDecimal_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,9 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimal.d.hpp"
 #include "ICU4XFixedDecimal.h"
-
-
-
 
 
 inline std::unique_ptr<ICU4XFixedDecimal> ICU4XFixedDecimal::new_(int32_t v) {
@@ -40,15 +36,19 @@ inline DiplomatResult<std::string, std::monostate> ICU4XFixedDecimal::to_string(
 inline const capi::ICU4XFixedDecimal* ICU4XFixedDecimal::AsFFI() const {
   return reinterpret_cast<const capi::ICU4XFixedDecimal*>(this);
 }
+
 inline capi::ICU4XFixedDecimal* ICU4XFixedDecimal::AsFFI() {
   return reinterpret_cast<capi::ICU4XFixedDecimal*>(this);
 }
+
 inline const ICU4XFixedDecimal* ICU4XFixedDecimal::FromFFI(const capi::ICU4XFixedDecimal* ptr) {
   return reinterpret_cast<const ICU4XFixedDecimal*>(ptr);
 }
+
 inline ICU4XFixedDecimal* ICU4XFixedDecimal::FromFFI(capi::ICU4XFixedDecimal* ptr) {
   return reinterpret_cast<ICU4XFixedDecimal*>(ptr);
 }
+
 inline ICU4XFixedDecimal::~ICU4XFixedDecimal() {
   capi::ICU4XFixedDecimal_destroy(AsFFI());
 }

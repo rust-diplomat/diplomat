@@ -1,7 +1,6 @@
 #ifndef ICU4XLocale_D_HPP
 #define ICU4XLocale_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ICU4XLocale.d.h"
-
-
 
 
 class ICU4XLocale {
@@ -29,9 +26,6 @@ public:
 private:
   ICU4XLocale() = delete;
 };
-
-
-
 
 
 #endif // ICU4XLocale_D_HPP

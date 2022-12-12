@@ -1,7 +1,6 @@
 #ifndef ICU4XFixedDecimalGroupingStrategy_HPP
 #define ICU4XFixedDecimalGroupingStrategy_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,8 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
 #include "ICU4XFixedDecimalGroupingStrategy.h"
-
-
 
 
 // No Content

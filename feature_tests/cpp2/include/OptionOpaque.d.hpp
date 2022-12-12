@@ -1,7 +1,6 @@
 #ifndef OptionOpaque_D_HPP
 #define OptionOpaque_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,8 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "OptionOpaque.d.h"
 #include "OptionStruct.d.hpp"
-
-
 
 
 class OptionOpaque {
@@ -38,9 +35,6 @@ public:
 private:
   OptionOpaque() = delete;
 };
-
-
-
 
 
 #endif // OptionOpaque_D_HPP

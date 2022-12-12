@@ -1,7 +1,6 @@
 #ifndef UnimportedEnum_HPP
 #define UnimportedEnum_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,8 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "UnimportedEnum.d.hpp"
 #include "UnimportedEnum.h"
-
-
 
 
 // No Content

@@ -1,7 +1,6 @@
 #ifndef ResultOpaque_D_HPP
 #define ResultOpaque_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -12,8 +11,6 @@
 #include "ErrorEnum.d.hpp"
 #include "ErrorStruct.d.hpp"
 #include "ResultOpaque.d.h"
-
-
 
 
 class ResultOpaque {
@@ -43,9 +40,6 @@ public:
 private:
   ResultOpaque() = delete;
 };
-
-
-
 
 
 #endif // ResultOpaque_D_HPP

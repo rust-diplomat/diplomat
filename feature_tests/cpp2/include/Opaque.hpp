@@ -1,7 +1,6 @@
 #ifndef Opaque_HPP
 #define Opaque_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,9 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "Opaque.d.hpp"
 #include "Opaque.h"
-
-
-
 
 
 inline std::unique_ptr<Opaque> Opaque::new_() {
@@ -39,15 +35,19 @@ inline ImportedStruct Opaque::returns_imported() {
 inline const capi::Opaque* Opaque::AsFFI() const {
   return reinterpret_cast<const capi::Opaque*>(this);
 }
+
 inline capi::Opaque* Opaque::AsFFI() {
   return reinterpret_cast<capi::Opaque*>(this);
 }
+
 inline const Opaque* Opaque::FromFFI(const capi::Opaque* ptr) {
   return reinterpret_cast<const Opaque*>(ptr);
 }
+
 inline Opaque* Opaque::FromFFI(capi::Opaque* ptr) {
   return reinterpret_cast<Opaque*>(ptr);
 }
+
 inline Opaque::~Opaque() {
   capi::Opaque_destroy(AsFFI());
 }

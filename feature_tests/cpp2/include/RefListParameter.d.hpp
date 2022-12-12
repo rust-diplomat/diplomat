@@ -1,7 +1,6 @@
 #ifndef RefListParameter_D_HPP
 #define RefListParameter_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "RefListParameter.d.h"
-
-
 
 
 class RefListParameter {
@@ -25,9 +22,6 @@ public:
 private:
   RefListParameter() = delete;
 };
-
-
-
 
 
 #endif // RefListParameter_D_HPP

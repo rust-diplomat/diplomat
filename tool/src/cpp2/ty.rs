@@ -26,8 +26,6 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
         }
 
-        context.decl_header.body += "\n\n\n";
-
         // In some cases like generating decls for `self` parameters,
         // a header will get its own forwards and includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
@@ -71,7 +69,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             )
             .unwrap();
         }
-        writeln!(self.decl_header, "}};").unwrap();
+        write!(self.decl_header, "}};\n\n").unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
@@ -105,27 +103,32 @@ public:
 private:
 \t{ty_name}() = delete;
 }};
+
 "
         )
         .unwrap();
         write!(
             self.impl_header,
-            "
-inline {const_cptr} {ty_name}::AsFFI() const {{
+            "inline {const_cptr} {ty_name}::AsFFI() const {{
 \treturn reinterpret_cast<{const_cptr}>(this);
 }}
+
 inline {mut_cptr} {ty_name}::AsFFI() {{
 \treturn reinterpret_cast<{mut_cptr}>(this);
 }}
+
 inline {const_ptr} {ty_name}::FromFFI({const_cptr} ptr) {{
 \treturn reinterpret_cast<{const_ptr}>(ptr);
 }}
+
 inline {mut_ptr} {ty_name}::FromFFI({mut_cptr} ptr) {{
 \treturn reinterpret_cast<{mut_ptr}>(ptr);
 }}
+
 inline {ty_name}::~{ty_name}() {{
 \t{ctype}_destroy(AsFFI());
 }}
+
 "
         )
         .unwrap();
@@ -141,7 +144,7 @@ inline {ty_name}::~{ty_name}() {{
             }
         }
         // reborrow to avoid borrowing across mutation
-        writeln!(self.decl_header, "}};").unwrap();
+        write!(self.decl_header, "}};\n\n").unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -234,10 +237,10 @@ inline {ty_name}::~{ty_name}() {{
 
         write!(
             self.impl_header,
-            "
-inline {return_ty} {ty_name}::{method_name}({params}){qualifiers} {{
+            "inline {return_ty} {ty_name}::{method_name}({params}){qualifiers} {{
 \t{writeable_prefix}{return_prefix}{c_method_name}({c_params});{return_statement}
 }}
+
 "
         )
         .unwrap();

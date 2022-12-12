@@ -1,7 +1,6 @@
 #ifndef Foo_D_HPP
 #define Foo_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -12,8 +11,6 @@
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsReturning.d.hpp"
 #include "Foo.d.h"
-
-
 class Bar;
 
 
@@ -38,9 +35,6 @@ public:
 private:
   Foo() = delete;
 };
-
-
-
 
 
 #endif // Foo_D_HPP

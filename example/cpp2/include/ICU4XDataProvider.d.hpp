@@ -1,7 +1,6 @@
 #ifndef ICU4XDataProvider_D_HPP
 #define ICU4XDataProvider_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ICU4XDataProvider.d.h"
-
-
 
 
 class ICU4XDataProvider {
@@ -29,9 +26,6 @@ public:
 private:
   ICU4XDataProvider() = delete;
 };
-
-
-
 
 
 #endif // ICU4XDataProvider_D_HPP

@@ -1,7 +1,6 @@
 #ifndef OptionStruct_D_HPP
 #define OptionStruct_D_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-
-
 class OptionOpaque;
 class OptionOpaqueChar;
 
@@ -21,9 +18,6 @@ struct OptionStruct {
   uint32_t c;
   std::unique_ptr<OptionOpaque> d;
 };
-
-
-
 
 
 #endif // OptionStruct_D_HPP

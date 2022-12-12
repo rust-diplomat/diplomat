@@ -1,7 +1,6 @@
 #ifndef ICU4XFixedDecimalFormatResult_HPP
 #define ICU4XFixedDecimalFormatResult_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -12,8 +11,6 @@
 #include "ICU4XFixedDecimalFormat.d.hpp"
 #include "ICU4XFixedDecimalFormatResult.d.hpp"
 #include "ICU4XFixedDecimalFormatResult.h"
-
-
 
 
 // No Content

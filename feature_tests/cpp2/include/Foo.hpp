@@ -1,7 +1,6 @@
 #ifndef Foo_HPP
 #define Foo_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -12,9 +11,6 @@
 #include "Bar.d.hpp"
 #include "Foo.d.hpp"
 #include "Foo.h"
-
-
-
 
 
 inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
@@ -47,15 +43,19 @@ inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
 inline const capi::Foo* Foo::AsFFI() const {
   return reinterpret_cast<const capi::Foo*>(this);
 }
+
 inline capi::Foo* Foo::AsFFI() {
   return reinterpret_cast<capi::Foo*>(this);
 }
+
 inline const Foo* Foo::FromFFI(const capi::Foo* ptr) {
   return reinterpret_cast<const Foo*>(ptr);
 }
+
 inline Foo* Foo::FromFFI(capi::Foo* ptr) {
   return reinterpret_cast<Foo*>(ptr);
 }
+
 inline Foo::~Foo() {
   capi::Foo_destroy(AsFFI());
 }

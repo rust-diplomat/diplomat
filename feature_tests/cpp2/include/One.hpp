@@ -1,7 +1,6 @@
 #ifndef One_HPP
 #define One_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -12,9 +11,6 @@
 #include "One.d.hpp"
 #include "One.h"
 #include "Two.d.hpp"
-
-
-
 
 
 inline std::unique_ptr<One> One::transitivity(const One& hold, const One& nohold) {
@@ -103,15 +99,19 @@ inline std::unique_ptr<One> One::implicit_bounds_deep(const One& explicit_, cons
 inline const capi::One* One::AsFFI() const {
   return reinterpret_cast<const capi::One*>(this);
 }
+
 inline capi::One* One::AsFFI() {
   return reinterpret_cast<capi::One*>(this);
 }
+
 inline const One* One::FromFFI(const capi::One* ptr) {
   return reinterpret_cast<const One*>(ptr);
 }
+
 inline One* One::FromFFI(capi::One* ptr) {
   return reinterpret_cast<One*>(ptr);
 }
+
 inline One::~One() {
   capi::One_destroy(AsFFI());
 }

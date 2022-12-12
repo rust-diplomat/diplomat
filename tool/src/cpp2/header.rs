@@ -94,7 +94,7 @@ impl fmt::Display for Header {
         let header_guard = header_guard.replace(".d.hpp", "_D_HPP");
         let header_guard = header_guard.replace(".hpp", "_HPP");
         let body: Cow<str> = if self.body.is_empty() {
-            "// No Content\n".into()
+            "// No Content\n\n".into()
         } else {
             self.body.replace("\t", self.indent_str).into()
         };
@@ -103,13 +103,9 @@ impl fmt::Display for Header {
             f,
             r#"#ifndef {header_guard}
 #define {header_guard}
-
-{includes}
-
-{forwards}
+{includes}{forwards}
 
 {body}
-
 #endif // {header_guard}
 "#
         )

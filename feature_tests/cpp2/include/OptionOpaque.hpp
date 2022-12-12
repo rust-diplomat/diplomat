@@ -1,7 +1,6 @@
 #ifndef OptionOpaque_HPP
 #define OptionOpaque_HPP
 
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -11,9 +10,6 @@
 #include "diplomat_runtime.hpp"
 #include "OptionOpaque.d.hpp"
 #include "OptionOpaque.h"
-
-
-
 
 
 inline std::unique_ptr<OptionOpaque> OptionOpaque::new_(int32_t i) {
@@ -49,15 +45,19 @@ inline bool OptionOpaque::option_opaque_argument(std::optional<const std::refere
 inline const capi::OptionOpaque* OptionOpaque::AsFFI() const {
   return reinterpret_cast<const capi::OptionOpaque*>(this);
 }
+
 inline capi::OptionOpaque* OptionOpaque::AsFFI() {
   return reinterpret_cast<capi::OptionOpaque*>(this);
 }
+
 inline const OptionOpaque* OptionOpaque::FromFFI(const capi::OptionOpaque* ptr) {
   return reinterpret_cast<const OptionOpaque*>(ptr);
 }
+
 inline OptionOpaque* OptionOpaque::FromFFI(capi::OptionOpaque* ptr) {
   return reinterpret_cast<OptionOpaque*>(ptr);
 }
+
 inline OptionOpaque::~OptionOpaque() {
   capi::OptionOpaque_destroy(AsFFI());
 }
