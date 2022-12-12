@@ -287,7 +287,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     hir::Slice::Str(..) => "char".into(),
                     hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
                 };
-                (None, format!("struct {{ const {ptr_ty}* data; size_t len; }}").into())
+                (
+                    None,
+                    format!("struct {{ const {ptr_ty}* data; size_t len; }}").into(),
+                )
             }
         };
         // Todo(breaking): We can remove this requirement
