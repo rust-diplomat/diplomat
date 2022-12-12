@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionOpaqueChar.d.hpp"
 #include "OptionOpaqueChar.h"
+
+#include "OptionOpaqueChar.d.hpp"
 
 
 inline void OptionOpaqueChar::assert_char(char32_t ch) const {

@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Bar.d.hpp"
 #include "Bar.h"
+
+#include "Bar.d.hpp"
 
 
 inline const capi::Bar* Bar::AsFFI() const {

@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XFixedDecimal.d.hpp"
 #include "ICU4XFixedDecimal.h"
+
+#include "ICU4XFixedDecimal.d.hpp"
 
 
 inline std::unique_ptr<ICU4XFixedDecimal> ICU4XFixedDecimal::new_(int32_t v) {

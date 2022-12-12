@@ -8,9 +8,10 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "One.d.hpp"
 #include "One.h"
 #include "Two.d.hpp"
+
+#include "One.d.hpp"
 
 
 inline std::unique_ptr<One> One::transitivity(const One& hold, const One& nohold) {

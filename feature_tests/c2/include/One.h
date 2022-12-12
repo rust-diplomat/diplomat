@@ -6,8 +6,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "One.d.h"
 #include "Two.d.h"
+
+#include "One.d.h"
 
 #ifdef __cplusplus
 namespace capi {

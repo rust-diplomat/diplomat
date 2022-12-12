@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XDataProvider.d.hpp"
 #include "ICU4XDataProvider.h"
+
+#include "ICU4XDataProvider.d.hpp"
 
 
 inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {

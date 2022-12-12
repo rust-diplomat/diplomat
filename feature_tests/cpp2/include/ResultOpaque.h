@@ -6,12 +6,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ResultOpaque.d.h"
 #include "diplomat_result_ErrorEnum_box_ResultOpaque.d.h"
 #include "diplomat_result_box_ResultOpaque_ErrorEnum.d.h"
 #include "diplomat_result_box_ResultOpaque_ErrorStruct.d.h"
 #include "diplomat_result_box_ResultOpaque_void.d.h"
 #include "diplomat_result_void_box_ResultOpaque.d.h"
+
+#include "ResultOpaque.d.h"
 
 #ifdef __cplusplus
 namespace capi {

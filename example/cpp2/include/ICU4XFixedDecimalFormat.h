@@ -8,10 +8,11 @@
 #include "diplomat_runtime.h"
 #include "ICU4XDataProvider.d.h"
 #include "ICU4XFixedDecimal.d.h"
-#include "ICU4XFixedDecimalFormat.d.h"
 #include "ICU4XFixedDecimalFormatOptions.d.h"
 #include "ICU4XFixedDecimalFormatResult.d.h"
 #include "ICU4XLocale.d.h"
+
+#include "ICU4XFixedDecimalFormat.d.h"
 
 #ifdef __cplusplus
 namespace capi {

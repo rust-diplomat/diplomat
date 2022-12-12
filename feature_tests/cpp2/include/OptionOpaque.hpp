@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionOpaque.d.hpp"
 #include "OptionOpaque.h"
+
+#include "OptionOpaque.d.hpp"
 
 
 inline std::unique_ptr<OptionOpaque> OptionOpaque::new_(int32_t i) {

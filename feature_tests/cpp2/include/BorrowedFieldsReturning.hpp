@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "BorrowedFieldsReturning.d.hpp"
 #include "BorrowedFieldsReturning.h"
+
+#include "BorrowedFieldsReturning.d.hpp"
 
 
 // No Content

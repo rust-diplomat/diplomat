@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "Float64Vec.d.h"
 
 #ifdef __cplusplus

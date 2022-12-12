@@ -6,8 +6,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "OptionOpaque.d.h"
 #include "OptionStruct.d.h"
+
+#include "OptionOpaque.d.h"
 
 #ifdef __cplusplus
 namespace capi {

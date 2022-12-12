@@ -25,6 +25,8 @@ pub struct Header {
     /// #include "diplomat_runtime.h"
     /// ```
     pub includes: BTreeSet<String>,
+    /// The decl file corresponding to this impl file. Empty if this is not an impl file.
+    pub decl_include: Option<String>,
     /// The actual meat of the header: usually will contain a type definition and methods
     ///
     /// Example:
@@ -46,6 +48,7 @@ impl Header {
         Header {
             path,
             includes: BTreeSet::new(),
+            decl_include: None,
             body: String::new(),
             indent_str: "  ",
         }
@@ -70,6 +73,10 @@ impl fmt::Display for Header {
         for i in &self.includes {
             includes += &format!("#include \"{}\"\n", i);
         }
+        let decl_header_include: Cow<str> = match self.decl_include {
+            Some(ref v) => format!("\n#include \"{v}\"\n").into(),
+            None => "".into()
+        };
         let header_guard = &self.path;
         let header_guard = header_guard.replace(".d.h", "_D_H");
         let header_guard = header_guard.replace(".h", "_H");
@@ -83,7 +90,7 @@ impl fmt::Display for Header {
             f,
             r#"#ifndef {header_guard}
 #define {header_guard}
-{includes}
+{includes}{decl_header_include}
 #ifdef __cplusplus
 namespace capi {{
 extern "C" {{

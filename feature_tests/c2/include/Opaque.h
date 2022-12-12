@@ -8,6 +8,7 @@
 #include "diplomat_runtime.h"
 #include "ImportedStruct.d.h"
 #include "MyStruct.d.h"
+
 #include "Opaque.d.h"
 
 #ifdef __cplusplus

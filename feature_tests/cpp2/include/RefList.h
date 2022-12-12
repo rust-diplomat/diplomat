@@ -6,8 +6,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "RefList.d.h"
 #include "RefListParameter.d.h"
+
+#include "RefList.d.h"
 
 #ifdef __cplusplus
 namespace capi {

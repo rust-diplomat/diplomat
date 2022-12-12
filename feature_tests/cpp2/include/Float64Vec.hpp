@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Float64Vec.d.hpp"
 #include "Float64Vec.h"
+
+#include "Float64Vec.d.hpp"
 
 
 inline std::unique_ptr<Float64Vec> Float64Vec::new_(std::span<const double> v) {

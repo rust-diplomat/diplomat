@@ -9,6 +9,7 @@
 #include "Bar.d.h"
 #include "BorrowedFields.d.h"
 #include "BorrowedFieldsReturning.d.h"
+
 #include "Foo.d.h"
 
 #ifdef __cplusplus

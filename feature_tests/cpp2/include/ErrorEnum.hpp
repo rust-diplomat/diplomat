@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ErrorEnum.d.hpp"
 #include "ErrorEnum.h"
+
+#include "ErrorEnum.d.hpp"
 
 
 // No Content

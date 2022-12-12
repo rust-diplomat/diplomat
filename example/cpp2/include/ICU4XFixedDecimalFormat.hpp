@@ -10,9 +10,10 @@
 #include "diplomat_runtime.hpp"
 #include "ICU4XDataProvider.d.hpp"
 #include "ICU4XFixedDecimal.d.hpp"
-#include "ICU4XFixedDecimalFormat.d.hpp"
 #include "ICU4XFixedDecimalFormat.h"
 #include "ICU4XLocale.d.hpp"
+
+#include "ICU4XFixedDecimalFormat.d.hpp"
 
 
 inline ICU4XFixedDecimalFormatResult ICU4XFixedDecimalFormat::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatOptions options) {

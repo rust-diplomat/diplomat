@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ErrorStruct.d.hpp"
 #include "ErrorStruct.h"
+
+#include "ErrorStruct.d.hpp"
 
 
 // No Content

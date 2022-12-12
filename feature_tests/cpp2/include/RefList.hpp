@@ -8,9 +8,10 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "RefList.d.hpp"
 #include "RefList.h"
 #include "RefListParameter.d.hpp"
+
+#include "RefList.d.hpp"
 
 
 inline std::unique_ptr<RefList> RefList::node(const RefListParameter& data) {

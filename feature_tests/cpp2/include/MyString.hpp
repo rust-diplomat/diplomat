@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "MyString.d.hpp"
 #include "MyString.h"
+
+#include "MyString.d.hpp"
 
 
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {

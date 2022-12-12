@@ -10,8 +10,9 @@
 #include "diplomat_runtime.hpp"
 #include "OptionOpaque.d.hpp"
 #include "OptionOpaqueChar.d.hpp"
-#include "OptionStruct.d.hpp"
 #include "OptionStruct.h"
+
+#include "OptionStruct.d.hpp"
 
 
 // No Content

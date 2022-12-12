@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XLocale.d.hpp"
 #include "ICU4XLocale.h"
+
+#include "ICU4XLocale.d.hpp"
 
 
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {

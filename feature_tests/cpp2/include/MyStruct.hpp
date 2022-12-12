@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "MyStruct.d.hpp"
 #include "MyStruct.h"
+
+#include "MyStruct.d.hpp"
 
 
 // No Content

@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XFixedDecimalSignDisplay.d.hpp"
 #include "ICU4XFixedDecimalSignDisplay.h"
+
+#include "ICU4XFixedDecimalSignDisplay.d.hpp"
 
 
 // No Content

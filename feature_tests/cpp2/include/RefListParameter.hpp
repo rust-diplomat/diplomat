@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "RefListParameter.d.hpp"
 #include "RefListParameter.h"
+
+#include "RefListParameter.d.hpp"
 
 
 inline const capi::RefListParameter* RefListParameter::AsFFI() const {

@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
 #include "ICU4XFixedDecimalGroupingStrategy.h"
+
+#include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
 
 
 // No Content

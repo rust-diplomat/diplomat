@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ResultOpaque.d.hpp"
 #include "ResultOpaque.h"
+
+#include "ResultOpaque.d.hpp"
 
 
 inline DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_(int32_t i) {

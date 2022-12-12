@@ -8,8 +8,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Two.d.hpp"
 #include "Two.h"
+
+#include "Two.d.hpp"
 
 
 inline const capi::Two* Two::AsFFI() const {

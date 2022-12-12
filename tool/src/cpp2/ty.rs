@@ -33,12 +33,13 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         context.decl_header.forward_classes.remove(&*ty_name);
         context.decl_header.forward_structs.remove(&*ty_name);
         context.decl_header.includes.remove(&*decl_header_path);
-        // TODO: Do this for impl_header too?
+        context.impl_header.forward_classes.remove(&*ty_name);
+        context.impl_header.forward_structs.remove(&*ty_name);
+        context.impl_header.includes.remove(&*impl_header_path);
+        context.impl_header.includes.remove(&*decl_header_path);
 
-        context
-            .impl_header
-            .includes
-            .insert(decl_header_path.clone());
+        context.impl_header.decl_include = Some(decl_header_path.clone());
+
         let c_impl_header_path = self.formatter.fmt_c_impl_header_path(id);
         context.impl_header.includes.insert(c_impl_header_path);
 

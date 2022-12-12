@@ -9,8 +9,9 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "Bar.d.hpp"
-#include "Foo.d.hpp"
 #include "Foo.h"
+
+#include "Foo.d.hpp"
 
 
 inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {

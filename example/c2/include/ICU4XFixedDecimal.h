@@ -6,8 +6,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
-#include "ICU4XFixedDecimal.d.h"
 #include "diplomat_result_void_void.d.h"
+
+#include "ICU4XFixedDecimal.d.h"
 
 #ifdef __cplusplus
 namespace capi {
