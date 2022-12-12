@@ -63,7 +63,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             writeln!(
                 self.decl_header,
                 "\t{} = {},",
-                variant.name.as_str(),
+                self.cx.formatter.fmt_enum_variant(variant),
                 variant.discriminant
             )
             .unwrap();
@@ -137,12 +137,9 @@ inline {ty_name}::~{ty_name}() {{
         let ty_name = self.cx.formatter.fmt_type_name(id);
         writeln!(self.decl_header, "struct {ty_name} {{").unwrap();
         for field in def.fields.iter() {
-            let decls = self.gen_ty_decl(&field.ty, field.name.as_str());
-            for (decl_ty, decl_name) in decls {
-                writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
-            }
+            let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
+            writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
         }
-        // reborrow to avoid borrowing across mutation
         write!(self.decl_header, "}};\n\n").unwrap();
     }
 
@@ -159,7 +156,7 @@ inline {ty_name}::~{ty_name}() {{
 
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
-            param_decls.extend(decls);
+            param_decls.push(decls);
             let conversions = self.gen_cpp_to_c_param(&param.ty, param.name.as_str());
             cpp_to_c_params.extend(conversions);
         }
@@ -207,7 +204,9 @@ inline {ty_name}::~{ty_name}() {{
         }
 
         let writeable_prefix = if method.is_writeable() {
-            "std::string output;\n\tcapi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);\n\t"
+            "std::string output;
+\tcapi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+\t"
         } else {
             ""
         };
@@ -245,18 +244,15 @@ inline {ty_name}::~{ty_name}() {{
         .unwrap();
     }
 
-    /// Generates a list of decls for a given type, returned as (type, name)
-    ///
-    /// Might return multiple in the case of slices and strings. The `is_struct` parameter
-    /// affects whether the decls are generated for a struct field or method
+    /// Generates a parameter decl for a given type, returned as (type, param_name)
     pub fn gen_ty_decl<'a, P: TyPosition>(
         &mut self,
         ty: &Type<P>,
         ident: &'a str,
-    ) -> Vec<(Cow<'ccx, str>, Cow<'a, str>)> {
+    ) -> (Cow<'ccx, str>, Cow<'a, str>) {
         let param_name = self.cx.formatter.fmt_param_name(ident);
         let ty = self.gen_ty_name(ty);
-        vec![(ty, param_name)]
+        (ty, param_name)
     }
 
     // Generate the C++ code for referencing a particular type.
