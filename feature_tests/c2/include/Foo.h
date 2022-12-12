@@ -9,7 +9,9 @@
 #include "Bar.d.h"
 #include "Bar.h"
 #include "BorrowedFields.d.h"
+#include "BorrowedFields.h"
 #include "BorrowedFieldsReturning.d.h"
+#include "BorrowedFieldsReturning.h"
 
 #include "Foo.d.h"
 

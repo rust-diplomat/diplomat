@@ -11,7 +11,9 @@
 #include "ICU4XFixedDecimal.d.h"
 #include "ICU4XFixedDecimal.h"
 #include "ICU4XFixedDecimalFormatOptions.d.h"
+#include "ICU4XFixedDecimalFormatOptions.h"
 #include "ICU4XFixedDecimalFormatResult.d.h"
+#include "ICU4XFixedDecimalFormatResult.h"
 #include "ICU4XLocale.d.h"
 #include "ICU4XLocale.h"
 

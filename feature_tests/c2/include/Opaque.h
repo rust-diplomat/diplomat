@@ -7,7 +7,9 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 #include "ImportedStruct.d.h"
+#include "ImportedStruct.h"
 #include "MyStruct.d.h"
+#include "MyStruct.h"
 
 #include "Opaque.d.h"
 

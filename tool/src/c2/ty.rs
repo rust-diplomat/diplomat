@@ -254,8 +254,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         } else {
             &mut self.impl_header
         };
-        match *ty {
-            Type::Primitive(prim) => self.cx.formatter.fmt_primitive_as_c(prim),
+        let (id, ty_name) = match *ty {
+            Type::Primitive(prim) => (None, self.cx.formatter.fmt_primitive_as_c(prim)),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
@@ -265,14 +265,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(op_id));
-                // Todo(breaking): We can remove this requirement
-                // and users will be forced to import more types
-                if !is_decl {
-                    header
-                        .includes
-                        .insert(self.cx.formatter.fmt_impl_header_path(op_id));
-                }
-                ret.into_owned().into()
+                (Some(op_id), ret.into_owned().into())
             }
             Type::Struct(ref st) => {
                 let st_id = P::id_for_path(st);
@@ -280,22 +273,32 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ret = ty_name.clone();
                 let header_path = self.cx.formatter.fmt_decl_header_path(st_id);
                 header.includes.insert(header_path);
-                ret
+                (Some(st_id), ret)
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(id);
                 let header_path = self.cx.formatter.fmt_decl_header_path(id);
                 header.includes.insert(header_path);
-                ty_name
+                (Some(id), ty_name)
             }
             Type::Slice(ref s) => {
                 let ptr_ty = match s {
                     hir::Slice::Str(..) => "char".into(),
                     hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
                 };
-                format!("struct {{ const {ptr_ty}* data; size_t len; }}").into()
+                (None, format!("struct {{ const {ptr_ty}* data; size_t len; }}").into())
+            }
+        };
+        // Todo(breaking): We can remove this requirement
+        // and users will be forced to import more types
+        if let Some(id) = id {
+            if !is_decl {
+                header
+                    .includes
+                    .insert(self.cx.formatter.fmt_impl_header_path(id));
             }
         }
+        ty_name
     }
 }
