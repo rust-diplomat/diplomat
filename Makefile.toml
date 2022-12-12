@@ -224,6 +224,12 @@ dependencies = [
     "gen-feature-c2",
     "gen-examples-c2"
 ]
+[tasks.gen-cpp2]
+category = "Code generation"
+dependencies = [
+    "gen-feature-cpp2",
+    "gen-examples-cpp2"
+]
 [tasks.gen-js]
 category = "Code generation"
 dependencies = [
@@ -291,6 +297,24 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example c2 include
+'''
+
+[tasks.gen-feature-cpp2]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests cpp2 include
+'''
+
+[tasks.gen-examples-cpp2]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example cpp2 include
 '''
 
 [tasks.gen-feature-js]
