@@ -262,10 +262,16 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 // unwrap_or(mut) since owned pointers need to not be const
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = self.cx.formatter.fmt_ptr(&ty_name, mutability);
+                header
+                    .includes
+                    .insert(self.cx.formatter.fmt_decl_header_path(op_id));
                 // Todo(breaking): We can remove this requirement
                 // and users will be forced to import more types
-                let header_path = self.cx.formatter.fmt_decl_header_path(op_id);
-                header.includes.insert(header_path.into());
+                if !is_decl {
+                    header
+                        .includes
+                        .insert(self.cx.formatter.fmt_impl_header_path(op_id));
+                }
                 ret.into_owned().into()
             }
             Type::Struct(ref st) => {

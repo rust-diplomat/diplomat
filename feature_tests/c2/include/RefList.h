@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 #include "RefListParameter.d.h"
+#include "RefListParameter.h"
 
 #include "RefList.d.h"
 
