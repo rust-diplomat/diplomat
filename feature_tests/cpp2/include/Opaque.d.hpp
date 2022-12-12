@@ -12,6 +12,9 @@
 #include "MyStruct.d.hpp"
 #include "Opaque.d.h"
 
+struct ImportedStruct;
+struct MyStruct;
+
 
 class Opaque {
 public:

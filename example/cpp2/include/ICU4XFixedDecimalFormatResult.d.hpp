@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+
 class ICU4XFixedDecimalFormat;
 
 

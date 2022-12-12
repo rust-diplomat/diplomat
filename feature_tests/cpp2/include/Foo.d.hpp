@@ -11,7 +11,10 @@
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsReturning.d.hpp"
 #include "Foo.d.h"
+
 class Bar;
+struct BorrowedFields;
+struct BorrowedFieldsReturning;
 
 
 class Foo {

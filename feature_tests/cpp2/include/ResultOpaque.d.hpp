@@ -12,6 +12,9 @@
 #include "ErrorStruct.d.hpp"
 #include "ResultOpaque.d.h"
 
+struct ErrorStruct;
+enum struct ErrorEnum;
+
 
 class ResultOpaque {
 public:

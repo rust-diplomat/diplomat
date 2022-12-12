@@ -1,4 +1,4 @@
-use super::header::Header;
+use super::header::{Forward, Header};
 use super::Cpp2Context;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ParamSelf, SelfType, TyPosition, Type, TypeDef, TypeId, ReturnFallability, ReturnType, OutType
@@ -30,11 +30,9 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         // a header will get its own forwards and includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        context.decl_header.forward_classes.remove(&*ty_name);
-        context.decl_header.forward_structs.remove(&*ty_name);
+        context.decl_header.forwards.remove(&*ty_name);
+        context.impl_header.forwards.remove(&*ty_name);
         context.decl_header.includes.remove(&*decl_header_path);
-        context.impl_header.forward_classes.remove(&*ty_name);
-        context.impl_header.forward_structs.remove(&*ty_name);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
 
@@ -280,9 +278,7 @@ inline {ty_name}::~{ty_name}() {{
                 };
                 let ret = ret.into_owned().into();
 
-                self.decl_header
-                    .forward_classes
-                    .insert(ty_name.into_owned());
+                self.decl_header.forwards.insert(Forward::Class(ty_name.into_owned()));
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(op_id));
@@ -290,7 +286,7 @@ inline {ty_name}::~{ty_name}() {{
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
-                // TODO: Make these forward declarations instead of includes
+                self.decl_header.forwards.insert(Forward::Struct(self.cx.formatter.fmt_type_name(id).into_owned()));
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
@@ -298,7 +294,7 @@ inline {ty_name}::~{ty_name}() {{
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                // TODO: Make these forward declarations instead of includes
+                self.decl_header.forwards.insert(Forward::EnumStruct(self.cx.formatter.fmt_type_name(id).into_owned()));
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));

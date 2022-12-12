@@ -9,6 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "One.d.h"
+
 class Two;
 
 

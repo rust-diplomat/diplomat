@@ -11,9 +11,12 @@
 #include "ICU4XFixedDecimalFormat.d.h"
 #include "ICU4XFixedDecimalFormatOptions.d.hpp"
 #include "ICU4XFixedDecimalFormatResult.d.hpp"
+
 class ICU4XDataProvider;
 class ICU4XFixedDecimal;
 class ICU4XLocale;
+struct ICU4XFixedDecimalFormatOptions;
+struct ICU4XFixedDecimalFormatResult;
 
 
 class ICU4XFixedDecimalFormat {

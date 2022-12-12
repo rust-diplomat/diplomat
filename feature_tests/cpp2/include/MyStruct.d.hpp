@@ -10,6 +10,8 @@
 #include "diplomat_runtime.hpp"
 #include "MyEnum.d.hpp"
 
+enum struct MyEnum;
+
 
 struct MyStruct {
   uint8_t a;

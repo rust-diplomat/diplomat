@@ -11,6 +11,9 @@
 #include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
 #include "ICU4XFixedDecimalSignDisplay.d.hpp"
 
+enum struct ICU4XFixedDecimalGroupingStrategy;
+enum struct ICU4XFixedDecimalSignDisplay;
+
 
 struct ICU4XFixedDecimalFormatOptions {
   ICU4XFixedDecimalGroupingStrategy grouping_strategy;

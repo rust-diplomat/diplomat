@@ -11,6 +11,8 @@
 #include "OptionOpaque.d.h"
 #include "OptionStruct.d.hpp"
 
+struct OptionStruct;
+
 
 class OptionOpaque {
 public:

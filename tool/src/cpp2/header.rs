@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 use std::fmt;
-use std::borrow::Cow;
+use std::borrow::{Borrow, Cow};
 
 static BASE_INCLUDES: &str = r#"
 #include <stdio.h>
@@ -11,6 +11,26 @@ static BASE_INCLUDES: &str = r#"
 #include <optional>
 #include "diplomat_runtime.hpp"
 "#;
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Forward {
+    Class(String),
+    #[allow(dead_code)]
+    Struct(String),
+    #[allow(dead_code)]
+    EnumStruct(String),
+}
+
+// NOTE: This isn't exactly a valid impl of Borrow, but it makes things more convenient
+impl Borrow<str> for Forward {
+    fn borrow(&self) -> &str {
+        &match self {
+            Forward::Class(s) => s,
+            Forward::Struct(s) => s,
+            Forward::EnumStruct(s) => s,
+        }
+    }
+}
 
 /// This abstraction allows us to build up headers piece by piece without needing
 /// to precalculate things like the list of dependent headers or forward declarations
@@ -36,8 +56,7 @@ pub struct Header {
     /// typedef struct Foo Foo;
     /// typedef struct Bar Bar;
     /// ```
-    pub forward_classes: BTreeSet<String>,
-    pub forward_structs: BTreeSet<String>,
+    pub forwards: BTreeSet<Forward>,
     /// The actual meat of the header: usually will contain a type definition and methods
     ///
     /// Example:
@@ -60,8 +79,7 @@ impl Header {
             path,
             includes: BTreeSet::new(),
             decl_include: None,
-            forward_classes: BTreeSet::new(),
-            forward_structs: BTreeSet::new(),
+            forwards: BTreeSet::new(),
             body: String::new(),
             indent_str: "  ",
         }
@@ -91,11 +109,15 @@ impl fmt::Display for Header {
             Some(ref v) => format!("\n#include \"{v}\"\n").into(),
             None => "".into()
         };
-        for f in &self.forward_classes {
-            forwards += &format!("class {f};\n");
+        if !self.forwards.is_empty() {
+            forwards.push('\n');
         }
-        for f in &self.forward_structs {
-            forwards += &format!("struct {f};\n");
+        for f in self.forwards.iter() {
+            forwards += &match f {
+                Forward::Class(name) => format!("class {name};\n"),
+                Forward::Struct(name) => format!("struct {name};\n"),
+                Forward::EnumStruct(name) => format!("enum struct {name};\n"),
+            };
         }
         let header_guard = &self.path;
         let header_guard = header_guard.replace(".d.hpp", "_D_HPP");

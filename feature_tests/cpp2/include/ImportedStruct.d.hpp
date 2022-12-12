@@ -10,6 +10,8 @@
 #include "diplomat_runtime.hpp"
 #include "UnimportedEnum.d.hpp"
 
+enum struct UnimportedEnum;
+
 
 struct ImportedStruct {
   UnimportedEnum foo;
