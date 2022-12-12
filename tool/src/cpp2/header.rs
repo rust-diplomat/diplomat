@@ -1,6 +1,6 @@
+use std::borrow::{Borrow, Cow};
 use std::collections::BTreeSet;
 use std::fmt;
-use std::borrow::{Borrow, Cow};
 
 static BASE_INCLUDES: &str = r#"
 #include <stdio.h>
@@ -107,7 +107,7 @@ impl fmt::Display for Header {
         }
         let decl_header_include: Cow<str> = match self.decl_include {
             Some(ref v) => format!("\n#include \"{v}\"\n").into(),
-            None => "".into()
+            None => "".into(),
         };
         if !self.forwards.is_empty() {
             forwards.push('\n');

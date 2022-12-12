@@ -1,7 +1,8 @@
 use super::header::{Forward, Header};
 use super::Cpp2Context;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ParamSelf, SelfType, TyPosition, Type, TypeDef, TypeId, ReturnFallability, ReturnType, OutType
+    self, Mutability, OpaqueOwner, OutType, ParamSelf, ReturnFallability, ReturnType, SelfType,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -167,11 +168,12 @@ inline {ty_name}::~{ty_name}() {{
 
         let return_ty = self.gen_return_ty_name(&method.output);
 
-        let return_statement = if let Some(ReturnType::OutType(out_type)) = method.output.return_type() {
-            self.gen_c_to_cpp_return(id, out_type)
-        } else {
-            "".into()
-        };
+        let return_statement =
+            if let Some(ReturnType::OutType(out_type)) = method.output.return_type() {
+                self.gen_c_to_cpp_return(id, out_type)
+            } else {
+                "".into()
+            };
 
         let return_prefix = if return_statement.is_empty() {
             ""
@@ -267,14 +269,17 @@ inline {ty_name}::~{ty_name}() {{
                 let ret = match (op.owner.is_owned(), op.is_optional()) {
                     // unique_ptr is nullable
                     (true, _) => self.cx.formatter.fmt_owned(&ty_name),
-                    (false, true) => self.cx
-                    .formatter
-                    .fmt_optional_borrowed(&ty_name, mutability),
-                    (false, false) => self.cx.formatter.fmt_borrowed(&ty_name, mutability)
+                    (false, true) => self
+                        .cx
+                        .formatter
+                        .fmt_optional_borrowed(&ty_name, mutability),
+                    (false, false) => self.cx.formatter.fmt_borrowed(&ty_name, mutability),
                 };
                 let ret = ret.into_owned().into();
 
-                self.decl_header.forwards.insert(Forward::Class(ty_name.into_owned()));
+                self.decl_header
+                    .forwards
+                    .insert(Forward::Class(ty_name.into_owned()));
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(op_id));
@@ -282,7 +287,9 @@ inline {ty_name}::~{ty_name}() {{
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
-                self.decl_header.forwards.insert(Forward::Struct(self.cx.formatter.fmt_type_name(id).into_owned()));
+                self.decl_header.forwards.insert(Forward::Struct(
+                    self.cx.formatter.fmt_type_name(id).into_owned(),
+                ));
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
@@ -290,7 +297,9 @@ inline {ty_name}::~{ty_name}() {{
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                self.decl_header.forwards.insert(Forward::EnumStruct(self.cx.formatter.fmt_type_name(id).into_owned()));
+                self.decl_header.forwards.insert(Forward::EnumStruct(
+                    self.cx.formatter.fmt_type_name(id).into_owned(),
+                ));
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
@@ -313,7 +322,11 @@ inline {ty_name}::~{ty_name}() {{
         }
     }
 
-    fn gen_cpp_to_c_param<'a, P: TyPosition>(&self, ty: &Type<P>, param_name: &'a str) -> Vec<Cow<'a, str>> {
+    fn gen_cpp_to_c_param<'a, P: TyPosition>(
+        &self,
+        ty: &Type<P>,
+        param_name: &'a str,
+    ) -> Vec<Cow<'a, str>> {
         match *ty {
             Type::Primitive(..) => {
                 vec![param_name.into()]
@@ -332,11 +345,17 @@ inline {ty_name}::~{ty_name}() {{
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 // TODO: This needs to change if an abstraction other than std::string_view is used
-                vec![format!("{param_name}.data()").into(), format!("{param_name}.size()").into()]
-            },
+                vec![
+                    format!("{param_name}.data()").into(),
+                    format!("{param_name}.size()").into(),
+                ]
+            }
             Type::Slice(hir::Slice::Primitive(..)) => {
                 // TODO: This needs to change if an abstraction other than std::span is used
-                vec![format!("{param_name}.data()").into(), format!("{param_name}.size()").into()]
+                vec![
+                    format!("{param_name}.data()").into(),
+                    format!("{param_name}.size()").into(),
+                ]
             }
         }
     }
@@ -368,27 +387,20 @@ inline {ty_name}::~{ty_name}() {{
     fn gen_c_to_cpp_return(&self, id: TypeId, ty: &OutType) -> Cow<'static, str> {
         let ty_name = self.cx.formatter.fmt_type_name(id);
         match *ty {
-            Type::Primitive(..) => {
-                "\n\treturn result;".into()
-            }
+            Type::Primitive(..) => "\n\treturn result;".into(),
             Type::Opaque(ref op) if op.owner.is_owned() => {
                 format!("\n\treturn std::unique_ptr({ty_name}::FromFFI(result));").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                format!("\n\treturn result ? {{ *{ty_name}::FromFFI(result) }} : std::nullopt;").into()
+                format!("\n\treturn result ? {{ *{ty_name}::FromFFI(result) }} : std::nullopt;")
+                    .into()
             }
-            Type::Opaque(..) => {
-                format!("\n\treturn *{ty_name}::FromFFI(result);").into()
-            }
-            Type::Struct(..) => {
-                format!("\n\treturn {ty_name}::FromFFI(result);").into()
-            }
-            Type::Enum(..) => {
-                format!("\n\treturn {ty_name}::FromFFI(result);").into()
-            }
+            Type::Opaque(..) => format!("\n\treturn *{ty_name}::FromFFI(result);").into(),
+            Type::Struct(..) => format!("\n\treturn {ty_name}::FromFFI(result);").into(),
+            Type::Enum(..) => format!("\n\treturn {ty_name}::FromFFI(result);").into(),
             Type::Slice(hir::Slice::Str(..)) => {
                 todo!()
-            },
+            }
             Type::Slice(hir::Slice::Primitive(..)) => {
                 todo!()
             }
