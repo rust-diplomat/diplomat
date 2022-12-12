@@ -188,72 +188,6 @@ end
 '''
 
 # Generation
-
-# Generic task for generating code
-# Usage: cargo make gen-generic feature_tests <backend name> <output folder name> <optional docs folder> <optional additional args>
-[tasks.gen-generic]
-category = "Plumbing"
-dependencies = ["build-tool"]
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
-
-path = array_get ${@} 0
-backend = array_get ${@} 1
-output_folder = array_get ${@} 2
-docs_folder = array_get ${@} 3
-addl_args = array_get ${@} 4
-
-path_is_empty = is_empty ${path}
-backend_is_empty = is_empty ${backend}
-output_folder_is_empty = is_empty ${output_folder}
-docs_folder_is_empty = is_empty ${docs_folder}
-addl_args_is_empty = is_empty ${addl_args}
-if ${path_is_empty} or ${backend_is_empty} or ${output_folder_is_empty}
-    trigger_error "Must have at least three non empty arguments"
-end
-
-cd "${path}"
-rm -r "tmp"
-mkdir "tmp"
-
-mkdir "tmp/${output_folder}"
-if not ${docs_folder_is_empty}
-    mkdir "tmp/${docs_folder}"
-end
-
-
-exit_on_error true
-if ${docs_folder_is_empty}
-    full_args = set "${backend} tmp/${output_folder}"
-else
-    full_args = set "${backend} tmp/${output_folder} --docs tmp/${docs_folder}"
-end
-
-if not ${addl_args_is_empty}
-    full_args = set "${full_args} ${addl_args}"
-end
-output = exec cargo run -p diplomat-tool -- %{full_args}
-if ${output.code}
-    echo ${output.stderr}
-    trigger_error "Bindings failed to generate. Command: diplomat-tool %{full_args}"
-    rm -r "tmp"
-end
-echo ${output.stdout}
-exit_on_error true
-
-rm -r "${backend}/${output_folder}"
-# we do a /.. so that cases where output_folder is multiple folders down
-# end up copying to the right path
-mv "tmp/${output_folder}" "${backend}/${output_folder}/.."
-if not ${docs_folder_is_empty}
-    rm -r "${backend}/${docs_folder}"
-    mv "tmp/${docs_folder}" "${backend}/${docs_folder}/.."
-end
-
-'''
-
-
 [tasks.gen-feature]
 category = "Code generation"
 dependencies = [
@@ -306,114 +240,85 @@ dependencies = [
 
 [tasks.gen-feature-cpp]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "feature_tests",
-    "cpp",
-    "include",
-    "docs/source"
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests cpp include docs/source
+'''
+
+
 [tasks.gen-examples-cpp]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "example",
-    "cpp",
-    "include",
-    "docs/source",
-    "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example cpp include docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
+'''
+
 [tasks.gen-feature-c]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "feature_tests",
-    "c",
-    "include",
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests c include
+'''
+
 [tasks.gen-examples-c]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "example",
-    "c",
-    "include",
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example c include
+'''
+
 [tasks.gen-feature-c2]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "feature_tests",
-    "c2",
-    "include",
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests c2 include
+'''
+
 [tasks.gen-examples-c2]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "example",
-    "c2",
-    "include",
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example c2 include
+'''
+
 [tasks.gen-feature-js]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "feature_tests",
-    "js",
-    "api",
-    "docs/source",
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests js api docs/source
+'''
+
 [tasks.gen-examples-js]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "example",
-    "js",
-    "lib/api",
-    "lib/docs/source",
-    "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example js lib/api lib/docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
+'''
+
 [tasks.gen-feature-dotnet]
 category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "feature_tests",
-    "dotnet",
-    "Lib/Generated",
-    "",
-    "-l dotnet/dotnet-interop-conf.toml"
-]
-[tasks.gen-examples-dotnet]
-category = "Code generation"
-command = "cargo"
-args = [
-    "make",
-    "gen-generic",
-    "example",
-    "dotnet",
-    "Lib/Generated",
-    "",
-    "-l dotnet/dotnet-interop-conf.toml"
-]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests dotnet Lib/Generated "" "-l dotnet/dotnet-interop-conf.toml"
+'''
 
 # Build deps
 

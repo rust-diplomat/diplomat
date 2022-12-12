@@ -1,0 +1,57 @@
+# Usage: generate_generic <feature_tests or example> <backend name> <output folder name> <optional docs folder> <optional additional args>
+fn generate_generic
+    exit_on_error true
+
+    path = set ${1}
+    backend = set ${2}
+    output_folder = set ${3}
+    docs_folder = set ${4}
+    addl_args = set ${5}
+
+    path_is_empty = is_empty ${path}
+    backend_is_empty = is_empty ${backend}
+    output_folder_is_empty = is_empty ${output_folder}
+    docs_folder_is_empty = is_empty ${docs_folder}
+    addl_args_is_empty = is_empty ${addl_args}
+    if ${path_is_empty} or ${backend_is_empty} or ${output_folder_is_empty}
+        trigger_error "Must have at least three non empty arguments"
+    end
+
+    cd "${path}"
+    rm -r "tmp"
+    mkdir "tmp"
+
+    mkdir "tmp/${output_folder}"
+    if not ${docs_folder_is_empty}
+        mkdir "tmp/${docs_folder}"
+    end
+
+
+    exit_on_error true
+    if ${docs_folder_is_empty}
+        full_args = set "${backend} tmp/${output_folder}"
+    else
+        full_args = set "${backend} tmp/${output_folder} --docs tmp/${docs_folder}"
+    end
+
+    if not ${addl_args_is_empty}
+        full_args = set "${full_args} ${addl_args}"
+    end
+    output = exec cargo run -p diplomat-tool -- %{full_args}
+    if ${output.code}
+        echo ${output.stderr}
+        trigger_error "Bindings failed to generate. Command: diplomat-tool %{full_args}"
+        rm -r "tmp"
+    end
+    echo ${output.stdout}
+    exit_on_error true
+
+    rm -r "${backend}/${output_folder}"
+    # we do a /.. so that cases where output_folder is multiple folders down
+    # end up copying to the right path
+    mv "tmp/${output_folder}" "${backend}/${output_folder}/.."
+    if not ${docs_folder_is_empty}
+        rm -r "${backend}/${docs_folder}"
+        mv "tmp/${docs_folder}" "${backend}/${docs_folder}/.."
+    end
+end
