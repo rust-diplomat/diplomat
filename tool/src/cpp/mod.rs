@@ -29,7 +29,7 @@ mod config;
 
 mod util;
 
-static RUNTIME_HPP: &str = include_str!("runtime.hpp");
+pub(crate) static RUNTIME_HPP: &str = include_str!("runtime.hpp");
 // It's easier to statically include than to package with the binary.
 static HEADER_TEMPLATE: &str = include_str!("templates/header.hpp");
 static HEADER_TEMPLATE_NAME: &str = "header.hpp";

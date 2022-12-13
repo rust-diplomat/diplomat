@@ -20,15 +20,35 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext) -> Self {
         Self { tcx }
     }
+    pub fn tcx(&self) -> &'tcx TypeContext {
+        self.tcx
+    }
+
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         // Currently don't do anything fancy
         // Eventually apply rename rules and such
         self.tcx.resolve_type(id).name().as_str().into()
     }
-    /// Resolve and format the name of a type for use in header names
-    pub fn fmt_header_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.fmt_type_name(id)
+    /// Resolve and format the name of a type for use in header names: decl version
+    //
+    /// Enums can't be forward-declared in C, but we do want enums to have methods,
+    /// which may require additional #includes leading to potential cycles.
+    /// To handle this, we make a separate header file called Foo_decl.h, that contains
+    /// *just* the enum. It is included from Foo.h, and external users should not be importing
+    /// it directly. (We can potentially add a #define guard that makes this actually private, if needed)
+    pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
+        let type_name = self.fmt_type_name(id);
+        format!("{type_name}.d.h")
+    }
+    /// Resolve and format the name of a type for use in header names: impl version
+    pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
+        let type_name = self.fmt_type_name(id);
+        format!("{type_name}.h")
+    }
+    /// Resolve and format the name of a type for use in header names: result version
+    pub fn fmt_result_header_path(&self, type_name: &str) -> String {
+        format!("{type_name}.d.h")
     }
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
@@ -47,10 +67,13 @@ impl<'tcx> CFormatter<'tcx> {
         format!("{ty_name}_{method_name}")
     }
 
-    /// Given a mutability, format a `const ` prefix for pointers if necessary,
-    /// including a space for prepending
-    pub fn fmt_constness(&self, mutability: hir::Mutability) -> &str {
-        mutability.if_mut_else("", "const ")
+    pub fn fmt_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
+        // TODO: Where is the right place to put `const` here?
+        if mutability.is_mutable() {
+            format!("{}*", ident).into()
+        } else {
+            format!("const {}*", ident).into()
+        }
     }
 
     /// Generates an identifier that uniquely identifies the given *C* type.
@@ -81,6 +104,10 @@ impl<'tcx> CFormatter<'tcx> {
                 format!("ref_{constness}prim_slice_{prim}").into()
             }
         }
+    }
+
+    pub fn fmt_result_name(&self, ok_ty_name: &str, err_ty_name: &str) -> String {
+        format!("diplomat_result_{ok_ty_name}_{err_ty_name}")
     }
 
     /// Get the primitive type as a C type

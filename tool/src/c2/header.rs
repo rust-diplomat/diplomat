@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::fmt;
 
@@ -13,10 +14,8 @@ static BASE_INCLUDES: &str = r#"
 /// to precalculate things like the list of dependent headers or forward declarations
 #[derive(Default)]
 pub struct Header {
-    /// The identifier used for the header file (without the .h)
-    ///
-    /// Example: the header for struct Foo is probably Foo, with the file named Foo.h
-    pub identifier: String,
+    /// The path name used for the header file (for example Foo.h)
+    pub path: String,
     /// A list of includes
     ///
     /// Example:
@@ -26,14 +25,8 @@ pub struct Header {
     /// #include "diplomat_runtime.h"
     /// ```
     pub includes: BTreeSet<String>,
-    /// The struct forward decls necessary
-    ///
-    /// Example:
-    /// ```c
-    /// typedef struct Foo Foo;
-    /// typedef struct Bar Bar;
-    /// ```
-    pub forwards: BTreeSet<String>,
+    /// The decl file corresponding to this impl file. Empty if this is not an impl file.
+    pub decl_include: Option<String>,
     /// The actual meat of the header: usually will contain a type definition and methods
     ///
     /// Example:
@@ -46,54 +39,71 @@ pub struct Header {
     /// Foo make_foo(uint8_t field1, bool field2);
     /// ```
     pub body: String,
+    /// What string to use for indentation.
+    pub indent_str: &'static str,
 }
 
 impl Header {
-    pub fn new(identifier: String) -> Self {
+    pub fn new(path: String) -> Self {
         Header {
-            identifier,
+            path,
             includes: BTreeSet::new(),
-            forwards: BTreeSet::new(),
+            decl_include: None,
             body: String::new(),
+            indent_str: "  ",
         }
+    }
+}
+
+impl fmt::Write for Header {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.body.write_str(s)
+    }
+    fn write_char(&mut self, c: char) -> fmt::Result {
+        self.body.write_char(c)
+    }
+    fn write_fmt(&mut self, args: fmt::Arguments<'_>) -> fmt::Result {
+        self.body.write_fmt(args)
     }
 }
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut forwards = String::new();
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
-            includes += &format!("#include \"{}.h\"\n", i);
+            includes += &format!("#include \"{}\"\n", i);
         }
-        for f in &self.forwards {
-            forwards += &format!("typedef struct {f} {f};\n");
-        }
-        let identifier = &self.identifier;
-        let body = &self.body;
+        let decl_header_include: Cow<str> = match self.decl_include {
+            Some(ref v) => format!("\n#include \"{v}\"\n").into(),
+            None => "".into(),
+        };
+        let header_guard = &self.path;
+        let header_guard = header_guard.replace(".d.h", "_D_H");
+        let header_guard = header_guard.replace(".h", "_H");
+        let body: Cow<str> = if self.body.is_empty() {
+            "// No Content\n\n".into()
+        } else {
+            self.body.replace('\t', self.indent_str).into()
+        };
 
         write!(
             f,
-            r#"#ifndef {identifier}_H
-#define {identifier}_H
-
-{includes}
-
+            r#"#ifndef {header_guard}
+#define {header_guard}
+{includes}{decl_header_include}
 #ifdef __cplusplus
 namespace capi {{
 extern "C" {{
 #endif // __cplusplus
 
-{forwards}
 
 {body}
-
 #ifdef __cplusplus
-}} // namespace capi
 }} // extern "C"
+}} // namespace capi
 #endif // __cplusplus
 
-#endif // {identifier}_H
+#endif // {header_guard}
 "#
         )
     }

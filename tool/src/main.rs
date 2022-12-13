@@ -9,7 +9,7 @@ use std::{
 use clap::Parser;
 use colored::*;
 use diplomat_core::{ast, hir};
-use diplomat_tool::{c, c2, common, cpp, dotnet, js};
+use diplomat_tool::{c, c2, common, cpp, cpp2, dotnet, js};
 
 /// diplomat-tool CLI options, as parsed by [clap-derive].
 #[derive(Debug, Parser)]
@@ -136,8 +136,7 @@ fn main() -> std::io::Result<()> {
         "dotnet" => {
             dotnet::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
         }
-        "c2" | "cpp-c2" => {
-            let files = common::FileMap::default();
+        "c2" | "cpp-c2" | "cpp2" => {
             let tcx = match hir::TypeContext::from_ast(&env) {
                 Ok(context) => context,
                 Err(e) => {
@@ -147,6 +146,7 @@ fn main() -> std::io::Result<()> {
                     std::process::exit(1);
                 }
             };
+            let files = common::FileMap::default();
             let mut context = c2::CContext::new(&tcx, files);
             context.run();
 
@@ -154,6 +154,12 @@ fn main() -> std::io::Result<()> {
 
             if target_language == "cpp-c2" {
                 cpp::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
+            }
+            if target_language == "cpp2" {
+                let files = common::FileMap::default();
+                let mut context = cpp2::Cpp2Context::new(&tcx, files);
+                context.run();
+                out_texts.extend(context.files.take_files());
             }
         }
         o => panic!("Unknown target: {}", o),

@@ -6,19 +6,22 @@ use std::fmt::Write;
 
 impl<'tcx> super::CContext<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
-        let header_name = self.formatter.fmt_header_name(id);
-        let header_path = format!("{header_name}.h");
-        let mut header = Header::new(header_name.clone().into());
+        let decl_header_path = self.formatter.fmt_decl_header_path(id);
+        let mut decl_header = Header::new(decl_header_path.clone());
+        let impl_header_path = self.formatter.fmt_impl_header_path(id);
+        let mut impl_header = Header::new(impl_header_path.clone());
 
-        let mut context = TyGenContext::new(self, &mut header);
+        let mut context = TyGenContext {
+            cx: self,
+            decl_header: &mut decl_header,
+            impl_header: &mut impl_header,
+        };
         match ty {
             TypeDef::Enum(e) => context.gen_enum_def(e, id),
             TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
             TypeDef::Struct(s) => context.gen_struct_def(s, id),
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
         }
-
-        context.header.body += "\n\n\n";
 
         for method in ty.methods() {
             context.gen_method(id, method);
@@ -29,20 +32,31 @@ impl<'tcx> super::CContext<'tcx> {
         }
 
         // In some cases like generating decls for `self` parameters,
-        // a header will get its own forwards and includes. Instead of
+        // a header will get its own includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        let ty_name = context.cx.formatter.fmt_type_name(id);
-        context.header.forwards.remove(&*ty_name);
-        context.header.includes.remove(&*header_name);
+        context.decl_header.includes.remove(&*decl_header_path);
+        context.impl_header.includes.remove(&*impl_header_path);
+        context.impl_header.includes.remove(&*decl_header_path);
 
-        self.files.add_file(header_path, header.to_string());
+        context.impl_header.decl_include = Some(decl_header_path.clone());
+
+        self.files
+            .add_file(decl_header_path, decl_header.to_string());
+        self.files
+            .add_file(impl_header_path, impl_header.to_string());
     }
 
     pub fn gen_result(&self, name: &str, ty: ResultType) {
-        let header_path = format!("{name}.h");
-        let mut header = Header::new(name.to_owned());
-        let mut context = TyGenContext::new(self, &mut header);
+        let header_path = self.formatter.fmt_result_header_path(name);
+        let mut header = Header::new(header_path.clone());
+        let mut dummy_header = Header::new("".to_string());
+        let mut context = TyGenContext {
+            cx: self,
+            // NOTE: Only one header for results
+            decl_header: &mut header,
+            impl_header: &mut dummy_header,
+        };
         context.gen_result(name, ty);
         self.files.add_file(header_path, header.to_string());
     }
@@ -52,61 +66,43 @@ pub type ResultType<'tcx> = (Option<&'tcx hir::OutType>, Option<&'tcx hir::OutTy
 
 /// Context for generating a particular type's header
 pub struct TyGenContext<'ccx, 'tcx, 'header> {
-    cx: &'ccx CContext<'tcx>,
-    header: &'header mut Header,
+    pub cx: &'ccx CContext<'tcx>,
+    pub decl_header: &'header mut Header,
+    pub impl_header: &'header mut Header,
 }
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
-    pub fn new(cx: &'ccx CContext<'tcx>, header: &'header mut Header) -> Self {
-        TyGenContext { cx, header }
-    }
-
     pub fn gen_enum_def(&mut self, def: &'tcx hir::EnumDef, id: TypeId) {
-        // Enums can't be forward-declared in C, but we do want enums to have methods,
-        // which may require additional #includes leading to potential cycles.
-        // To handle this, we make a separate header file called Foo_enum.h, that contains
-        // *just* the enum. It is included from Foo.h, and external users should not be importing
-        // it directly. (We can potentially add a #define guard that makes this actually private, if needed)
-        let header_name = &self.header.identifier;
-        let enum_header_name = format!("{header_name}_enum");
-        self.header.includes.insert(enum_header_name.to_string());
-        let enum_header_path = format!("{enum_header_name}.h");
-        let mut enum_header = Header::new(enum_header_name);
-
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(&mut enum_header.body, "typedef enum {ty_name} {{").unwrap();
+        writeln!(self.decl_header, "typedef enum {ty_name} {{").unwrap();
         for variant in def.variants.iter() {
             let variant_name = self.cx.formatter.fmt_enum_variant(variant);
             let discriminant = variant.discriminant;
             writeln!(
-                &mut enum_header.body,
+                self.decl_header,
                 "\t{ty_name}_{variant_name} = {discriminant},"
             )
             .unwrap();
         }
-        writeln!(&mut enum_header.body, "}} {ty_name};").unwrap();
-
-        self.cx
-            .files
-            .add_file(enum_header_path, enum_header.to_string());
+        write!(self.decl_header, "}} {ty_name};\n\n").unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(&mut self.header.body, "typedef struct {ty_name} {ty_name};").unwrap();
+        write!(self.decl_header, "typedef struct {ty_name} {ty_name};\n\n").unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(&mut self.header.body, "typedef struct {ty_name} {{").unwrap();
+        writeln!(self.decl_header, "typedef struct {ty_name} {{").unwrap();
         for field in def.fields.iter() {
             let decls = self.gen_ty_decl(&field.ty, field.name.as_str(), true);
             for (decl_ty, decl_name) in decls {
-                writeln!(&mut self.header.body, "\t{decl_ty} {decl_name};").unwrap();
+                writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
             }
         }
         // reborrow to avoid borrowing across mutation
-        writeln!(&mut self.header.body, "}} {ty_name};").unwrap();
+        write!(self.decl_header, "}} {ty_name};\n\n").unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -130,10 +126,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
                     "void".into()
                 }
-                ReturnType::OutType(o) => self.gen_ty_name(o),
+                ReturnType::OutType(o) => self.gen_ty_name(o, false),
             },
             ReturnFallability::Fallible(ref ok, ref err) => {
-                let (ok_ty_name, ok_ty) = match ok {
+                let (ok_type_name, ok_ty) = match ok {
                     Some(ReturnType::Writeable) => {
                         param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
                         ("void".into(), None)
@@ -143,19 +139,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
                     }
                 };
-                let err_ty_name = match err {
+                let err_type_name = match err {
                     Some(o) => self.cx.formatter.fmt_type_name_uniquely(o),
                     None => "void".into(),
                 };
                 // todo push to results set
-                let ret: Cow<str> = format!("diplomat_result_{ok_ty_name}_{err_ty_name}").into();
-                self.header.forwards.insert(ret.to_string());
-                self.header.includes.insert(ret.to_string());
+                let result_name = self
+                    .cx
+                    .formatter
+                    .fmt_result_name(&ok_type_name, &err_type_name);
+                self.impl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_result_header_path(&result_name));
                 self.cx
                     .result_store
                     .borrow_mut()
-                    .insert(ret.to_string(), (ok_ty, err.as_ref()));
-                ret
+                    .insert(result_name.clone(), (ok_ty, err.as_ref()));
+                result_name.into()
             }
         };
 
@@ -171,23 +171,27 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
         }
 
-        writeln!(self.header.body, "{return_ty} {method_name}({params});").unwrap();
+        write!(self.impl_header, "{return_ty} {method_name}({params});\n\n").unwrap();
     }
 
     pub fn gen_dtor(&mut self, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.header.body, "void {ty_name}_destroy({ty_name}* self);").unwrap();
+        write!(
+            self.impl_header,
+            "void {ty_name}_destroy({ty_name}* self);\n\n"
+        )
+        .unwrap();
     }
 
     pub fn gen_result(&mut self, name: &str, ty: ResultType) {
         let ok_line = if let Some(ok) = ty.0 {
-            let ok_name = self.gen_ty_name(ok);
+            let ok_name = self.gen_ty_name(ok, true);
             format!("\t\t{ok_name} ok;\n")
         } else {
             "".into()
         };
         let err_line = if let Some(err) = ty.1 {
-            let err_name = self.gen_ty_name(err);
+            let err_name = self.gen_ty_name(err, true);
             format!("\t\t{err_name} err;\n")
         } else {
             "".into()
@@ -199,8 +203,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             "".into()
         };
 
-        self.header.body +=
-            &format!("typedef struct {name} {{\n{union_def}\tbool is_ok;\n}} {name};\n");
+        writeln!(
+            self.decl_header,
+            "typedef struct {name} {{\n{union_def}\tbool is_ok;\n}} {name};"
+        )
+        .unwrap();
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)
@@ -222,18 +229,18 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 ]
             }
             Type::Slice(hir::Slice::Primitive(b, p)) if !is_struct => {
-                let constness = self.cx.formatter.fmt_constness(b.mutability);
                 let prim = self.cx.formatter.fmt_primitive_as_c(*p);
+                let ptr_type = self.cx.formatter.fmt_ptr(&prim, b.mutability);
                 vec![
                     (
-                        format!("{constness}{prim}*").into(),
+                        format!("{ptr_type}").into(),
                         format!("{param_name}_data").into(),
                     ),
                     ("size_t".into(), format!("{param_name}_len").into()),
                 ]
             }
             _ => {
-                let ty = self.gen_ty_name(ty);
+                let ty = self.gen_ty_name(ty, is_struct);
                 vec![(ty, param_name)]
             }
         }
@@ -241,46 +248,60 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     // Generate the C code for referencing a particular type.
     // Handles adding imports and such as necessary
-    fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
-        match *ty {
-            Type::Primitive(prim) => self.cx.formatter.fmt_primitive_as_c(prim),
+    fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>, is_decl: bool) -> Cow<'ccx, str> {
+        let header = if is_decl {
+            &mut self.decl_header
+        } else {
+            &mut self.impl_header
+        };
+        let (id, ty_name) = match *ty {
+            Type::Primitive(prim) => (None, self.cx.formatter.fmt_primitive_as_c(prim)),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
-                let name = self.cx.formatter.fmt_type_name(op_id);
+                let ty_name = self.cx.formatter.fmt_type_name(op_id);
                 // unwrap_or(mut) since owned pointers need to not be const
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let constness = self.cx.formatter.fmt_constness(mutability);
-                let ret = format!("{constness}{name}*");
-                // Todo(breaking): We can remove this requirement
-                // and users will be forced to import more types
-                let header_name = self.cx.formatter.fmt_header_name(op_id);
-                self.header.includes.insert(header_name.into());
-                self.header.forwards.insert(name.into());
-                ret.into()
+                let ret = self.cx.formatter.fmt_ptr(&ty_name, mutability);
+                header
+                    .includes
+                    .insert(self.cx.formatter.fmt_decl_header_path(op_id));
+                (Some(op_id), ret.into_owned().into())
             }
             Type::Struct(ref st) => {
                 let st_id = P::id_for_path(st);
-                let name = self.cx.formatter.fmt_type_name(st_id);
-                let ret = name.clone();
-                let header_name = self.cx.formatter.fmt_header_name(st_id);
-                self.header.includes.insert(header_name.into());
-                self.header.forwards.insert(name.into());
-                ret
+                let ty_name = self.cx.formatter.fmt_type_name(st_id);
+                let ret = ty_name.clone();
+                let header_path = self.cx.formatter.fmt_decl_header_path(st_id);
+                header.includes.insert(header_path);
+                (Some(st_id), ret)
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                let header_name = self.cx.formatter.fmt_header_name(id);
-                let enum_name = self.cx.formatter.fmt_type_name(id);
-                self.header.includes.insert(header_name.into());
-                enum_name
+                let ty_name = self.cx.formatter.fmt_type_name(id);
+                let header_path = self.cx.formatter.fmt_decl_header_path(id);
+                header.includes.insert(header_path);
+                (Some(id), ty_name)
             }
             Type::Slice(ref s) => {
                 let ptr_ty = match s {
                     hir::Slice::Str(..) => "char".into(),
                     hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
                 };
-                format!("struct {{ const {ptr_ty}* data; size_t len; }}").into()
+                (
+                    None,
+                    format!("struct {{ const {ptr_ty}* data; size_t len; }}").into(),
+                )
+            }
+        };
+        // Todo(breaking): We can remove this requirement
+        // and users will be forced to import more types
+        if let Some(id) = id {
+            if !is_decl {
+                header
+                    .includes
+                    .insert(self.cx.formatter.fmt_impl_header_path(id));
             }
         }
+        ty_name
     }
 }
