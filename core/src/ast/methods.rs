@@ -30,6 +30,12 @@ pub struct Method {
 
     /// The lifetimes introduced in this method and surrounding impl block.
     pub lifetime_env: LifetimeEnv,
+
+    /// The list of `cfg` attributes (if any).
+    /// 
+    /// These are strings instead of `syn::Attribute` or `proc_macro2::TokenStream`
+    /// because those types are not `PartialEq`, `Hash`, `Serialize`, etc.
+    pub cfg: Vec<String>,
 }
 
 impl Method {
@@ -89,6 +95,12 @@ impl Method {
             params: all_params,
             return_type: return_ty,
             lifetime_env,
+            cfg: m
+                .attrs
+                .iter()
+                .filter(|&a| a.path == syn::parse_str("cfg").unwrap())
+                .map(|a| quote::quote!(#a).to_string())
+                .collect(),
         }
     }
 
@@ -389,6 +401,22 @@ mod tests {
                 #[diplomat::rust_link(foo::Bar::batz, FnInEnum)]
                 fn foo(x: u64, y: MyCustomStruct) -> u64 {
                     x
+                }
+            },
+            PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
+            None,
+        ));
+    }
+
+    #[test]
+    fn cfged_method() {
+        insta::assert_yaml_snapshot!(Method::from_syn(
+            &syn::parse_quote! {
+                /// Some docs.
+                #[diplomat::rust_link(foo::Bar::batz, FnInStruct)]
+                #[cfg(any(feature = "foo", not(feature = "bar")))]
+                fn foo(x: u64, y: MyCustomStruct) {
+
                 }
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
