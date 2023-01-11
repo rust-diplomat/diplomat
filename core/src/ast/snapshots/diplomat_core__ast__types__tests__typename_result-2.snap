@@ -9,5 +9,5 @@ Result:
         elements:
           - MyLocalStruct
       lifetimes: []
-  - true
+  - false
 
