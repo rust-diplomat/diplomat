@@ -53,7 +53,7 @@ pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> 
             }
         }
 
-        ast::TypeName::Result(ok, err) => {
+        ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) => {
             let ok_form = return_type_form(ok, in_path, env);
             let err_form = return_type_form(err, in_path, env);
 
@@ -135,7 +135,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    pub fn new() -> DiplomatResult<MyStruct, u8> {
+                    pub fn new() -> Result<MyStruct, u8> {
                         unimplemented!()
                     }
                 }

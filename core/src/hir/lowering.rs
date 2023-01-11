@@ -463,7 +463,7 @@ fn lower_type<L: LifetimeLowerer>(
                 }
             }
         }
-        ast::TypeName::Result(_, _) => {
+        ast::TypeName::Result(_, _) | ast::TypeName::DiplomatResult(_, _) => {
             errors.push(LoweringError::Other(
                 "Results can only appear as the top-level return type of methods".into(),
             ));
@@ -654,7 +654,7 @@ fn lower_out_type<L: LifetimeLowerer>(
                 None
             }
         },
-        ast::TypeName::Result(_, _) => {
+        ast::TypeName::Result(_, _) | ast::TypeName::DiplomatResult(_, _) => {
             errors.push(LoweringError::Other(
                 "Results can only appear as the top-level return type of methods".into(),
             ));
@@ -831,7 +831,7 @@ fn lower_return_type(
         None
     };
     match return_type.unwrap_or(&ast::TypeName::Unit) {
-        ast::TypeName::Result(ok_ty, err_ty) => {
+        ast::TypeName::Result(ok_ty, err_ty) | ast::TypeName::DiplomatResult(ok_ty, err_ty) => {
             let ok_ty = match ok_ty.as_ref() {
                 ast::TypeName::Unit => Some(writeable_option),
                 ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)

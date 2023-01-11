@@ -244,7 +244,7 @@ impl<'env> Imports<'env> {
             | ast::TypeName::Option(typ) => {
                 self.collect_usages(typ, in_path, env, state);
             }
-            ast::TypeName::Result(ok, err) => {
+            ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) => {
                 self.collect_usages(ok, in_path, env, state);
                 self.collect_usages(err, in_path, env, state);
                 self.ts_ffierror = true;

@@ -1,8 +1,8 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! { DiplomatResult < MyLocalStruct, i32 > })"
+expression: "TypeName::from_syn(&syn::parse_quote! {\n                DiplomatResult < MyLocalStruct, i32 >\n            }, None)"
 ---
-Result:
+DiplomatResult:
   - Named:
       path:
         elements:

@@ -59,11 +59,11 @@ fn generation_using_default_config() {
             struct MyStruct;
 
             impl MyStruct {
-                pub fn new_slice(v: &[f64]) -> DiplomatResult<Box<MyStruct>, Box<MyLibError>> {
+                pub fn new_slice(v: &[f64]) -> Result<Box<MyStruct>, Box<MyLibError>> {
                     unimplemented!()
                 }
 
-                pub fn set_slice(&mut self, new_slice: &[f64]) -> DiplomatResult<(), Box<MyLibError>> {
+                pub fn set_slice(&mut self, new_slice: &[f64]) -> Result<(), Box<MyLibError>> {
                     unimplemented!()
                 }
             }
@@ -89,11 +89,11 @@ fn generation_using_library_config() {
             struct MyStruct;
 
             impl MyStruct {
-                pub fn new_slice(v: &[f64]) -> DiplomatResult<Box<MyStruct>, Box<MyLibError>> {
+                pub fn new_slice(v: &[f64]) -> Result<Box<MyStruct>, Box<MyLibError>> {
                     unimplemented!()
                 }
 
-                pub fn set_slice(&mut self, new_slice: &[f64]) -> DiplomatResult<(), Box<MyLibError>> {
+                pub fn set_slice(&mut self, new_slice: &[f64]) -> Result<(), Box<MyLibError>> {
                     unimplemented!()
                 }
             }
@@ -113,19 +113,19 @@ fn setters_getters_properties() {
             struct Bar;
 
             impl Bar {
-                pub fn get_foo(&self) -> DiplomatResult<Box<Foo>, ()> {
+                pub fn get_foo(&self) -> Result<Box<Foo>, ()> {
                     unimplemented!()
                 }
 
-                pub fn set_foo(&mut self, foo: &Foo) -> DiplomatResult<(), ()> {
+                pub fn set_foo(&mut self, foo: &Foo) -> Result<(), ()> {
                     unimplemented!()
                 }
 
-                pub fn get_name(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
+                pub fn get_name(&self, out: &mut DiplomatWriteable) -> Result<(), ()> {
                     unimplemented!()
                 }
 
-                pub fn set_name(&mut self, new_name: &str) -> DiplomatResult<(), ()> {
+                pub fn set_name(&mut self, new_name: &str) -> Result<(), ()> {
                     unimplemented!()
                 }
             }
@@ -325,7 +325,7 @@ fn method_writeable_out() {
                     unimplemented!()
                 }
 
-                pub fn write_result(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), u8> {
+                pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
                     unimplemented!()
                 }
 
@@ -472,7 +472,7 @@ fn result_types() {
             }
 
             impl MyStruct {
-                pub fn new() -> DiplomatResult<MyStruct, u8> {
+                pub fn new() -> Result<MyStruct, u8> {
                     unimplemented!()
                 }
             }
@@ -548,15 +548,15 @@ fn error_handling() {
             }
 
             impl MyStruct {
-                pub fn foo(&self) -> DiplomatResult<u32, MyModuleError> {
+                pub fn foo(&self) -> Result<u32, MyModuleError> {
                     unimplemented!()
                 }
 
-                pub fn bar(&self) -> DiplomatResult<char, MyModuleOpaqueError> {
+                pub fn bar(&self) -> Result<char, MyModuleOpaqueError> {
                     unimplemented!()
                 }
 
-                pub fn baz(&self) -> DiplomatResult<(), ()> {
+                pub fn baz(&self) -> Result<(), ()> {
                     unimplemented!()
                 }
             }
@@ -575,12 +575,12 @@ fn almost_properties() {
 
             impl MyStruct {
                 /// This should not generate a property
-                pub fn get_foo_by_key(&self, key: &str) -> DiplomatResult<u64, ()> {
+                pub fn get_foo_by_key(&self, key: &str) -> Result<u64, ()> {
                     unimplemented!()
                 }
 
                 /// This should not generate a property
-                pub fn set_foo_by_key(&self, key: &str, foo: i64) -> DiplomatResult<(), ()> {
+                pub fn set_foo_by_key(&self, key: &str, foo: i64) -> Result<(), ()> {
                     unimplemented!()
                 }
 

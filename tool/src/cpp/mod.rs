@@ -314,7 +314,7 @@ fn gen_includes<W: fmt::Write>(
                 out,
             )?;
         }
-        ast::TypeName::Result(ok, err) => {
+        ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) => {
             gen_includes(
                 ok.as_ref(),
                 in_path,

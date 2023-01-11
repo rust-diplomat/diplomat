@@ -365,9 +365,10 @@ pub enum TypeName {
     Box(Box<TypeName>),
     /// A `Option<T>` type.
     Option(Box<TypeName>),
-    /// A `diplomat_runtime::DiplomatResult<T, E>` type.
+    /// A `Result<T, E>` type.
     Result(Box<TypeName>, Box<TypeName>),
     /// A `diplomat_runtime::DiplomatWriteable` type.
+    DiplomatResult(Box<TypeName>, Box<TypeName>),
     Writeable,
     /// A `&str` type.
     StrReference(Lifetime),
@@ -438,6 +439,24 @@ impl TypeName {
                 qself: None,
                 path: syn::Path {
                     leading_colon: None,
+                    segments: Punctuated::from_iter(vec![PathSegment {
+                        ident: syn::Ident::new("Result", Span::call_site()),
+                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                            colon2_token: None,
+                            lt_token: syn::token::Lt(Span::call_site()),
+                            args: Punctuated::from_iter(vec![
+                                GenericArgument::Type(ok.to_syn()),
+                                GenericArgument::Type(err.to_syn()),
+                            ]),
+                            gt_token: syn::token::Gt(Span::call_site()),
+                        }),
+                    }]),
+                },
+            }),
+            TypeName::DiplomatResult(ok, err) => syn::Type::Path(TypePath {
+                qself: None,
+                path: syn::Path {
+                    leading_colon: None,
                     segments: Punctuated::from_iter(vec![
                         PathSegment {
                             ident: syn::Ident::new("diplomat_runtime", Span::call_site()),
@@ -489,7 +508,8 @@ impl TypeName {
     /// - If the type is a path with a single element [`Box`], returns a [`TypeName::Box`] with the type parameter recursively converted
     /// - If the type is a path with a single element [`Option`], returns a [`TypeName::Option`] with the type parameter recursively converted
     /// - If the type is a path with a single element `Self` and `self_path_type` is provided, returns a [`TypeName::Named`]
-    /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::Result`] with the type parameters recursively converted
+    /// - If the type is a path with a single element [`Result`], returns a [`TypeName::Result`] with the type parameters recursively converted
+    /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::DiplomatResult`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
     /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
     /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
@@ -559,7 +579,7 @@ impl TypeName {
                     } else {
                         panic!("Cannot have `Self` type outside of a method");
                     }
-                } else if is_runtime_type(p, "DiplomatResult") {
+                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Result" {
                     if let PathArguments::AngleBracketed(type_args) =
                         &p.path.segments.last().unwrap().arguments
                     {
@@ -569,6 +589,22 @@ impl TypeName {
                             let ok = TypeName::from_syn(ok, self_path_type.clone());
                             let err = TypeName::from_syn(err, self_path_type);
                             TypeName::Result(Box::new(ok), Box::new(err))
+                        } else {
+                            panic!("Expected both type arguments for Result to be a type")
+                        }
+                    } else {
+                        panic!("Expected angle brackets for Result type")
+                    }
+                } else if is_runtime_type(p, "DiplomatResult") {
+                    if let PathArguments::AngleBracketed(type_args) =
+                        &p.path.segments.last().unwrap().arguments
+                    {
+                        if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
+                            (&type_args.args[0], &type_args.args[1])
+                        {
+                            let ok = TypeName::from_syn(ok, self_path_type.clone());
+                            let err = TypeName::from_syn(err, self_path_type);
+                            TypeName::DiplomatResult(Box::new(ok), Box::new(err))
                         } else {
                             panic!("Expected both type arguments for Result to be a type")
                         }
@@ -616,7 +652,7 @@ impl TypeName {
                 visit(lt, LifetimeOrigin::Reference)
             }
             TypeName::Box(ty) | TypeName::Option(ty) => ty.visit_lifetimes(visit),
-            TypeName::Result(ok, err) => {
+            TypeName::Result(ok, err) | TypeName::DiplomatResult(ok, err) => {
                 ok.visit_lifetimes(visit)?;
                 err.visit_lifetimes(visit)
             }
@@ -707,7 +743,7 @@ impl TypeName {
             }
             TypeName::Box(underlying) => underlying.check_opaque(in_path, env, true, errors),
             TypeName::Option(underlying) => underlying.check_opaque(in_path, env, false, errors),
-            TypeName::Result(ok, err) => {
+            TypeName::Result(ok, err) | TypeName::DiplomatResult(ok, err) => {
                 ok.check_opaque(in_path, env, false, errors);
                 err.check_opaque(in_path, env, false, errors);
             }
@@ -734,7 +770,7 @@ impl TypeName {
                     errors.push(ValidityError::OptionNotContainingPointer(self.clone()))
                 }
             }
-            TypeName::Result(ok, err) => {
+            TypeName::Result(ok, err) | TypeName::DiplomatResult(ok, err) => {
                 ok.check_option(errors);
                 err.check_option(errors);
             }
@@ -825,7 +861,7 @@ impl TypeName {
             TypeName::Box(ty) | TypeName::Option(ty) => {
                 ty.check_lifetime_elision(full_type, in_path, env, errors)
             }
-            TypeName::Result(ok, err) => {
+            TypeName::Result(ok, err) | TypeName::DiplomatResult(ok, err) => {
                 ok.check_lifetime_elision(full_type, in_path, env, errors);
                 err.check_lifetime_elision(full_type, in_path, env, errors);
             }
@@ -874,7 +910,9 @@ impl fmt::Display for TypeName {
             }
             TypeName::Box(typ) => write!(f, "Box<{typ}>"),
             TypeName::Option(typ) => write!(f, "Option<{typ}>"),
-            TypeName::Result(ok, err) => write!(f, "Result<{ok}, {err}>"),
+            TypeName::Result(ok, err) | TypeName::DiplomatResult(ok, err) => {
+                write!(f, "Result<{ok}, {err}>")
+            }
             TypeName::Writeable => "DiplomatWriteable".fmt(f),
             TypeName::StrReference(lifetime) => {
                 write!(
@@ -1115,6 +1153,20 @@ mod tests {
             },
             None
         ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Result<MyLocalStruct, i32>
+            },
+            None
+        ));
+
+        insta::assert_yaml_snapshot!(TypeName::from_syn(
+            &syn::parse_quote! {
+                Result<(), MyLocalStruct>
+            },
+            None
+        ));
     }
 
     #[test]
@@ -1163,7 +1215,7 @@ mod tests {
 
         insta::assert_yaml_snapshot!(TypeName::from_syn(
             &syn::parse_quote! {
-                DiplomatResult<OkRef<'a, 'b>, ErrRef<'c>>
+                Result<OkRef<'a, 'b>, ErrRef<'c>>
             },
             None
         ));

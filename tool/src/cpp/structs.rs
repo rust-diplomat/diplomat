@@ -561,7 +561,7 @@ mod tests {
                         unimplemented!()
                     }
 
-                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), u8> {
+                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
                         unimplemented!()
                     }
 

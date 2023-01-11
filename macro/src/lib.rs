@@ -100,6 +100,10 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
             };
             expanded_params.push(parse2(tokens).unwrap());
         }
+        ast::TypeName::Result(_, _) | ast::TypeName::DiplomatResult(_, _) => {
+            let param = &param.name;
+            expanded_params.push(parse2(quote!(#param.into())).unwrap());
+        }
         _ => {
             expanded_params.push(Expr::Path(ExprPath {
                 attrs: vec![],
@@ -160,11 +164,20 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         quote! { #self_ident::#method_ident }
     };
 
-    let return_tokens = if let Some(return_type) = &m.return_type {
-        let return_type_syn = return_type.to_syn();
-        quote! { -> #return_type_syn }
+    let (return_tokens, maybe_into) = if let Some(return_type) = &m.return_type {
+        if let ast::TypeName::Result(ok, err) = return_type {
+            let ok = ok.to_syn();
+            let err = err.to_syn();
+            (
+                quote! { -> diplomat_runtime::DiplomatResult<#ok, #err> },
+                quote! { .into() },
+            )
+        } else {
+            let return_type_syn = return_type.to_syn();
+            (quote! { -> #return_type_syn }, quote! {})
+        }
     } else {
-        quote! {}
+        (quote! {}, quote! {})
     };
 
     let cfg = m.cfg.iter().fold(quote!(), |prev, attr| {
@@ -176,7 +189,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         #[no_mangle]
         #cfg
         extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
-            #method_invocation(#(#all_params_invocation),*)
+            #method_invocation(#(#all_params_invocation),*) #maybe_into
         }
     })
 }
@@ -495,6 +508,25 @@ mod tests {
 
                     impl Foo {
                         pub fn to_string(&self, to: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn mod_with_rust_result() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        pub fn bar(&self) -> Result<(), ()> {
                             unimplemented!()
                         }
                     }

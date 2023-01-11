@@ -489,7 +489,7 @@ pub fn gen_ts_type<W: fmt::Write>(
             return gen_ts_type(out, typ, in_path, env)
         }
         ast::TypeName::Option(typ) => return gen_ts_type(out, typ, in_path, env).map(|_| true),
-        ast::TypeName::Result(ok, _err) => {
+        ast::TypeName::Result(ok, _err) | ast::TypeName::DiplomatResult(ok, _err) => {
             let opt = gen_ts_type(out, ok, in_path, env)?;
             write!(out, " | never")?;
             return Ok(opt);
@@ -615,7 +615,11 @@ fn gen_ts_method_declaration<W: fmt::Write>(
                     assert!(
                         matches!(
                             method.return_type,
-                            Some(ast::TypeName::Result(..) | ast::TypeName::Unit),
+                            Some(
+                                ast::TypeName::Result(..)
+                                    | ast::TypeName::DiplomatResult(..)
+                                    | ast::TypeName::Unit
+                            ),
                         ),
                         "found {:?}",
                         method.return_type
@@ -753,7 +757,7 @@ mod tests {
                         unimplemented!()
                     }
 
-                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), u8> {
+                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
                         unimplemented!()
                     }
                 }

@@ -24,7 +24,7 @@ pub fn collect_results<'a>(
         ast::TypeName::Option(underlying) => {
             collect_results(underlying, in_path, _env, seen, results);
         }
-        ast::TypeName::Result(ok, err) => {
+        ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) => {
             if !seen.contains(&typ) {
                 seen.insert(typ);
                 collect_results(ok, in_path, _env, seen, results);
@@ -42,7 +42,7 @@ pub fn gen_result<W: fmt::Write>(
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
-    if let ast::TypeName::Result(ok, err) = typ {
+    if let ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) = typ {
         let result_name = name_for_type(typ);
         writeln!(out, "typedef struct {} {{", result_name)?;
         let mut result_indent = indented(out).with_str("    ");

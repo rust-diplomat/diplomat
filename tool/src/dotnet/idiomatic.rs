@@ -508,7 +508,7 @@ fn gen_method(
 
             match &method.return_type {
                 None | Some(ast::TypeName::Unit) => {}
-                Some(typ @ ast::TypeName::Result(..)) => {
+                Some(typ @ (ast::TypeName::Result(..) | ast::TypeName::DiplomatResult(..))) => {
                     gen_raw_type_name_decl_position(typ, in_path, env, out)?;
                     write!(out, " result = ")?;
                 }

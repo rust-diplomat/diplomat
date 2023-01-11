@@ -1,7 +1,6 @@
 ---
 source: macro/src/lib.rs
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                             mod ffi\n                             {\n                                 struct Foo { } impl Foo\n                                 {\n                                     pub fn\n                                     to_string(& self, to : & mut\n                                               DiplomatWriteable) ->\n                                     DiplomatResult < (), () >\n                                     { unimplemented! () }\n                                 }\n                             }\n                         }).to_token_stream().to_string())"
-
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                struct Foo {} impl Foo\n                                {\n                                    pub fn to_string(& self, to : & mut DiplomatWriteable) ->\n                                    DiplomatResult < (), () > { unimplemented! () }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
     #[repr(C)]
