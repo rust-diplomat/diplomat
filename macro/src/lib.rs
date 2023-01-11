@@ -180,18 +180,40 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         (quote! {}, quote! {})
     };
 
+    let writeable_flushes = m
+        .params
+        .iter()
+        .filter(|p| p.is_writeable())
+        .map(|p| {
+            let p = &p.name;
+            quote! { #p.flush(); }
+        })
+        .collect::<Vec<_>>();
+
     let cfg = m.cfg.iter().fold(quote!(), |prev, attr| {
         let attr = attr.parse::<proc_macro2::TokenStream>().unwrap();
         quote!(#prev #attr)
     });
 
-    Item::Fn(syn::parse_quote! {
-        #[no_mangle]
-        #cfg
-        extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
-            #method_invocation(#(#all_params_invocation),*) #maybe_into
-        }
-    })
+    if writeable_flushes.is_empty() {
+        Item::Fn(syn::parse_quote! {
+            #[no_mangle]
+            #cfg
+            extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
+                #method_invocation(#(#all_params_invocation),*) #maybe_into
+            }
+        })
+    } else {
+        Item::Fn(syn::parse_quote! {
+            #[no_mangle]
+            #cfg
+            extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
+                let ret = #method_invocation(#(#all_params_invocation),*);
+                #(#writeable_flushes)*
+                ret #maybe_into
+            }
+        })
+    }
 }
 
 struct AttributeInfo {
@@ -507,7 +529,7 @@ mod tests {
                     struct Foo {}
 
                     impl Foo {
-                        pub fn to_string(&self, to: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
+                        pub fn to_string(&self, to: &mut DiplomatWriteable) -> Result<(), ()> {
                             unimplemented!()
                         }
                     }

@@ -1,12 +1,12 @@
 ---
 source: macro/src/lib.rs
-expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                struct Foo {} impl Foo\n                                {\n                                    pub fn to_string(& self, to : & mut DiplomatWriteable) ->\n                                    DiplomatResult < (), () > { unimplemented! () }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
+expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                            mod ffi\n                            {\n                                struct Foo {} impl Foo\n                                {\n                                    pub fn to_string(& self, to : & mut DiplomatWriteable) ->\n                                    Result < (), () > { unimplemented! () }\n                                }\n                            }\n                        }).to_token_stream().to_string())"
 ---
 mod ffi {
     #[repr(C)]
     struct Foo {}
     impl Foo {
-        pub fn to_string(&self, to: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
+        pub fn to_string(&self, to: &mut DiplomatWriteable) -> Result<(), ()> {
             unimplemented!()
         }
     }
@@ -15,7 +15,9 @@ mod ffi {
         this: &Foo,
         to: &mut diplomat_runtime::DiplomatWriteable,
     ) -> diplomat_runtime::DiplomatResult<(), ()> {
-        this.to_string(to)
+        let ret = this.to_string(to);
+        to.flush();
+        ret.into()
     }
     #[no_mangle]
     extern "C" fn Foo_destroy(this: Box<Foo>) {}
