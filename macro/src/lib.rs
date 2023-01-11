@@ -167,8 +167,14 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         quote! {}
     };
 
+    let cfg = m.cfg.iter().fold(quote!(), |prev, attr| {
+        let attr = attr.parse::<proc_macro2::TokenStream>().unwrap();
+        quote!(#prev #attr)
+    });
+
     Item::Fn(syn::parse_quote! {
         #[no_mangle]
+        #cfg
         extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
             #method_invocation(#(#all_params_invocation),*)
         }
@@ -547,6 +553,26 @@ mod tests {
 
                     impl<'b> RefList<'b> {
                         pub fn extend(&mut self, other: &Self) -> Self {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn cfged_method() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        #[cfg(feature = "foo")]
+                        pub fn bar(s: u8) {
                             unimplemented!()
                         }
                     }
