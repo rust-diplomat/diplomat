@@ -32,7 +32,7 @@ pub struct Method {
     pub lifetime_env: LifetimeEnv,
 
     /// The list of `cfg` attributes (if any).
-    /// 
+    ///
     /// These are strings instead of `syn::Attribute` or `proc_macro2::TokenStream`
     /// because those types are not `PartialEq`, `Hash`, `Serialize`, etc.
     pub cfg: Vec<String>,
