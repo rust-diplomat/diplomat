@@ -232,12 +232,11 @@ pub fn gen_result(
     env: &Env,
     out: &mut CodeWriter,
 ) -> fmt::Result {
-    let (ok, err) =
-        if let ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) = typ {
-            (ok, err)
-        } else {
-            panic!("not a result: {:?}", typ);
-        };
+    let (ok, err) = if let ast::TypeName::Result(ok, err, _) = typ {
+        (ok, err)
+    } else {
+        panic!("not a result: {:?}", typ);
+    };
 
     writeln!(out)?;
     writeln!(out, "[StructLayout(LayoutKind.Sequential)]")?;

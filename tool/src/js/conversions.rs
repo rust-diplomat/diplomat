@@ -461,7 +461,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                 })
                 .fmt(f)
             }
-            ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) => {
+            ast::TypeName::Result(ok, err, _) => {
                 match self.base.return_type_form(self.typ) {
                     ReturnTypeForm::Scalar => display::iife(|mut f| {
                         writeln!(f, "const is_ok = {} == 1;", self.invocation.scalar())?;
@@ -772,7 +772,7 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                 })
                 .fmt(f)
             }
-            ast::TypeName::Result(..) | ast::TypeName::DiplomatResult(..) => {
+            ast::TypeName::Result(..) => {
                 todo!("Result in a buffer")
             }
             ast::TypeName::Writeable => todo!("Writeable in a buffer"),

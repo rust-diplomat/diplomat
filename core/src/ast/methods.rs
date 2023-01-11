@@ -220,7 +220,7 @@ impl Method {
             .as_ref()
             .map(|return_type| match return_type {
                 TypeName::Unit => true,
-                TypeName::Result(ok, _) | TypeName::DiplomatResult(ok, _) => {
+                TypeName::Result(ok, _, _) => {
                     matches!(ok.as_ref(), TypeName::Unit)
                 }
                 _ => false,

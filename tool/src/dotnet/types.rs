@@ -32,7 +32,7 @@ pub fn gen_type_name(
 
         ast::TypeName::Option(underlying) => gen_type_name(underlying.as_ref(), in_path, env, out),
 
-        ast::TypeName::Result(..) | ast::TypeName::DiplomatResult(..) => {
+        ast::TypeName::Result(..) => {
             write!(
                 out,
                 "{}{}",
@@ -103,7 +103,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
         ast::TypeName::Option(underlying) => {
             ast::Ident::from(format!("Opt{}", name_for_type(underlying)))
         }
-        ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) => {
+        ast::TypeName::Result(ok, err, _) => {
             ast::Ident::from(format!("Result{}{}", name_for_type(ok), name_for_type(err)))
         }
         ast::TypeName::Writeable => ast::Ident::from("Writeable"),

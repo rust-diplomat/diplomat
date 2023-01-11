@@ -48,7 +48,7 @@ pub fn collect_results<'ast>(
         ast::TypeName::Option(underlying) => {
             collect_results(underlying, in_path, _env, results);
         }
-        ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) => {
+        ast::TypeName::Result(ok, err, _) => {
             let key = (in_path.clone(), typ);
             if !results.contains(&key) {
                 results.insert(key);
@@ -83,7 +83,7 @@ fn collect_errors_impl<'ast>(
     is_err_variant: bool,
 ) {
     match typ {
-        ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) => {
+        ast::TypeName::Result(ok, err, _) => {
             if is_err_variant {
                 let key = (in_path.clone(), typ);
                 if !errors.contains(&key) {

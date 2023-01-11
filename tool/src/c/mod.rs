@@ -191,7 +191,7 @@ fn gen_result_header(
     outs: &mut HashMap<String, String>,
     env: &Env,
 ) -> fmt::Result {
-    if let ast::TypeName::Result(ok, err) | ast::TypeName::DiplomatResult(ok, err) = typ {
+    if let ast::TypeName::Result(ok, err, _) = typ {
         let out = outs
             .entry(format!("{}.h", name_for_type(typ)))
             .or_insert_with(String::new);
@@ -322,7 +322,7 @@ pub fn gen_includes<W: fmt::Write>(
                 out,
             )?;
         }
-        ast::TypeName::Result(_, _) | ast::TypeName::DiplomatResult(_, _) => {
+        ast::TypeName::Result(_, _, _) => {
             let include = format!("#include \"{}.h\"", name_for_type(typ));
             if !seen_includes.contains(&include) {
                 writeln!(out, "{}", include)?;

@@ -100,7 +100,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
             };
             expanded_params.push(parse2(tokens).unwrap());
         }
-        ast::TypeName::Result(_, _) | ast::TypeName::DiplomatResult(_, _) => {
+        ast::TypeName::Result(_, _, _) => {
             let param = &param.name;
             expanded_params.push(parse2(quote!(#param.into())).unwrap());
         }
@@ -165,7 +165,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     };
 
     let (return_tokens, maybe_into) = if let Some(return_type) = &m.return_type {
-        if let ast::TypeName::Result(ok, err) = return_type {
+        if let ast::TypeName::Result(ok, err, true) = return_type {
             let ok = ok.to_syn();
             let err = err.to_syn();
             (
