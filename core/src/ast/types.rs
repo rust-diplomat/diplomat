@@ -365,7 +365,7 @@ pub enum TypeName {
     Box(Box<TypeName>),
     /// A `Option<T>` type.
     Option(Box<TypeName>),
-    /// A `Result<T, E>` or `diplomat_runtime::DiplomatWriteable` type. If the bool is true, it's `Result
+    /// A `Result<T, E>` or `diplomat_runtime::DiplomatWriteable` type. If the bool is true, it's `Result`
     Result(Box<TypeName>, Box<TypeName>, bool),
     Writeable,
     /// A `&str` type.
@@ -591,7 +591,7 @@ impl TypeName {
                             TypeName::Result(
                                 Box::new(ok),
                                 Box::new(err),
-                                p.path.segments.len() == 1,
+                                !is_runtime_type(p, "DiplomatResult"),
                             )
                         } else {
                             panic!("Expected both type arguments for Result to be a type")
