@@ -47,7 +47,7 @@ pub struct DiplomatWriteable {
     /// The current capacity of the buffer
     cap: usize,
     /// Called by Rust to indicate that there is no more data to write.
-    /// 
+    ///
     /// May be called multiple times.
     ///
     /// Arguments:
