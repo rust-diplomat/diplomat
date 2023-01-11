@@ -379,10 +379,11 @@ impl fmt::Display for InvocationIntoJs<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.typ {
             ast::TypeName::Primitive(..) => self.invocation.scalar().fmt(f),
-            ast::TypeName::Named(path_type) |ast::TypeName::SelfType(path_type)=> match self.base.resolve_type(path_type) {
-                ast::CustomType::Struct(strct) => {
-                    // TODO: optimize `return_type_form` because we already know we're a non-opaque struct
-                    match self.base.return_type_form(self.typ) {
+            ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
+                match self.base.resolve_type(path_type) {
+                    ast::CustomType::Struct(strct) => {
+                        // TODO: optimize `return_type_form` because we already know we're a non-opaque struct
+                        match self.base.return_type_form(self.typ) {
                         ReturnTypeForm::Scalar => {
                             todo!("#173: constructing a scalar struct")
                         }
@@ -413,15 +414,16 @@ impl fmt::Display for InvocationIntoJs<'_> {
                         .fmt(f),
                         ReturnTypeForm::Empty => unreachable!(),
                     }
+                    }
+                    ast::CustomType::Opaque(_opaque) => {
+                        // Codegen for opaque structs is in `Pointer`s `fmt::Display` impl
+                        unreachable!("Cannot construct an opaque struct that's not borrowed")
+                    }
+                    ast::CustomType::Enum(enm) => {
+                        write!(f, "{}_rust_to_js[{}]", enm.name, self.invocation.scalar())
+                    }
                 }
-                ast::CustomType::Opaque(_opaque) => {
-                    // Codegen for opaque structs is in `Pointer`s `fmt::Display` impl
-                    unreachable!("Cannot construct an opaque struct that's not borrowed")
-                }
-                ast::CustomType::Enum(enm) => {
-                    write!(f, "{}_rust_to_js[{}]", enm.name, self.invocation.scalar())
-                }
-            },
+            }
             ast::TypeName::Reference(.., inner) => Pointer {
                 inner,
                 underlying: Underlying::Invocation(&self.invocation),
@@ -459,7 +461,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                 })
                 .fmt(f)
             }
-            ast::TypeName::Result(ok, err) => {
+            ast::TypeName::Result(ok, err, _) => {
                 match self.base.return_type_form(self.typ) {
                     ReturnTypeForm::Scalar => display::iife(|mut f| {
                         writeln!(f, "const is_ok = {} == 1;", self.invocation.scalar())?;
@@ -504,7 +506,9 @@ impl fmt::Display for InvocationIntoJs<'_> {
                 }
             }
             ast::TypeName::StrReference(..) => self.display_slice(SliceKind::Str).fmt(f),
-            ast::TypeName::PrimitiveSlice(.., prim) => self.display_slice(SliceKind::Primitive(prim.into())).fmt(f),
+            ast::TypeName::PrimitiveSlice(.., prim) => {
+                self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
+            }
             ast::TypeName::Writeable => todo!(),
             ast::TypeName::Unit => self.invocation.scalar().fmt(f),
         }
@@ -768,7 +772,9 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                 })
                 .fmt(f)
             }
-            ast::TypeName::Result(..) => todo!("Result in a buffer"),
+            ast::TypeName::Result(..) => {
+                todo!("Result in a buffer")
+            }
             ast::TypeName::Writeable => todo!("Writeable in a buffer"),
             ast::TypeName::StrReference(..) => self.display_slice(SliceKind::Str).fmt(f),
             ast::TypeName::PrimitiveSlice(.., prim) => {

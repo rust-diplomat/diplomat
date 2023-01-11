@@ -489,7 +489,7 @@ pub fn gen_ts_type<W: fmt::Write>(
             return gen_ts_type(out, typ, in_path, env)
         }
         ast::TypeName::Option(typ) => return gen_ts_type(out, typ, in_path, env).map(|_| true),
-        ast::TypeName::Result(ok, _err) => {
+        ast::TypeName::Result(ok, _err, _) => {
             let opt = gen_ts_type(out, ok, in_path, env)?;
             write!(out, " | never")?;
             return Ok(opt);
@@ -541,7 +541,7 @@ fn gen_ts_method_declaration<W: fmt::Write>(
                     env,
                     &mut f,
                 )?;
-                if let Some(ast::TypeName::Result(_, ref err)) = method.return_type {
+                if let Some(ast::TypeName::Result(_, ref err, _)) = method.return_type {
                     writeln!(
                         f,
                         "@throws {{@link FFIError}}<{}>",
@@ -753,7 +753,7 @@ mod tests {
                         unimplemented!()
                     }
 
-                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), u8> {
+                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
                         unimplemented!()
                     }
                 }

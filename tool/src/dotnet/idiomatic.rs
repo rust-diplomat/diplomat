@@ -338,7 +338,7 @@ fn gen_method(
     )?;
 
     let result_to_handle: Option<(&ast::TypeName, &ast::TypeName)> = match &method.return_type {
-        Some(ast::TypeName::Result(ok_variant, err_variant)) => {
+        Some(ast::TypeName::Result(ok_variant, err_variant, _)) => {
             let exception_name = if err_variant.is_zst() {
                 "DiplomatOpaqueException".to_owned()
             } else {
@@ -736,7 +736,7 @@ fn gen_type_name_return_position<'ast>(
     out: &mut dyn fmt::Write,
 ) -> fmt::Result {
     match &typ.into() {
-        Some(ast::TypeName::Result(ok, _)) => gen_type_name(ok, in_path, env, out),
+        Some(ast::TypeName::Result(ok, _, _)) => gen_type_name(ok, in_path, env, out),
         Some(ast::TypeName::Option(underlying)) => {
             gen_type_name(underlying.as_ref(), in_path, env, out)?;
             write!(out, "?")
@@ -770,7 +770,7 @@ fn gen_return_type_remark_about_drop(
                 _ => gen_return_type_remark_about_drop(underlying, in_path, env, out),
             }
         }
-        ast::TypeName::Result(underlying, _) | ast::TypeName::Option(underlying) => {
+        ast::TypeName::Result(underlying, _, _) | ast::TypeName::Option(underlying) => {
             gen_return_type_remark_about_drop(underlying, in_path, env, out)
         }
         _ => Ok(()),

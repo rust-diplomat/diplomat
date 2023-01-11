@@ -129,7 +129,7 @@ fn gen_type_inner<W: fmt::Write>(
             _ => todo!(),
         },
 
-        ast::TypeName::Result(ok, err) => {
+        ast::TypeName::Result(ok, err, _) => {
             write!(out, "diplomat::result<")?;
             if ok.is_zst() {
                 write!(out, "std::monostate")?;
@@ -259,7 +259,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    pub fn new() -> DiplomatResult<MyStruct, u8> {
+                    pub fn new() -> Result<MyStruct, u8> {
                         unimplemented!()
                     }
                 }

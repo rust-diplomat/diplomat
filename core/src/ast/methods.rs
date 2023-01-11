@@ -220,7 +220,9 @@ impl Method {
             .as_ref()
             .map(|return_type| match return_type {
                 TypeName::Unit => true,
-                TypeName::Result(ok, _) => matches!(ok.as_ref(), TypeName::Unit),
+                TypeName::Result(ok, _, _) => {
+                    matches!(ok.as_ref(), TypeName::Unit)
+                }
                 _ => false,
             })
             .unwrap_or(true);
@@ -510,7 +512,7 @@ mod tests {
 
         assert_borrowed_params! { [hold] =>
             #[diplomat::rust_link(Foo, FnInStruct)]
-            fn transitivity_deep_types<'a, 'b: 'a, 'c: 'b, 'd: 'c>(hold: Option<Box<Bar<'d>>>, nohold: &'a Box<Option<Baz<'a>>>) -> DiplomatResult<Box<Foo<'b>>, Error> {
+            fn transitivity_deep_types<'a, 'b: 'a, 'c: 'b, 'd: 'c>(hold: Option<Box<Bar<'d>>>, nohold: &'a Box<Option<Baz<'a>>>) -> Result<Box<Foo<'b>>, Error> {
                 unimplemented!()
             }
         }

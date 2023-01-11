@@ -47,7 +47,7 @@ pub fn gen_type<W: fmt::Write>(
             _ => unreachable!("Cannot have non-pointer types inside Option"),
         },
 
-        ast::TypeName::Result(_, _) => {
+        ast::TypeName::Result(_, _, _) => {
             write!(out, "{}", name_for_type(typ))?;
         }
 
@@ -89,7 +89,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
         ast::TypeName::Option(underlying) => {
             ast::Ident::from(format!("opt_{}", name_for_type(underlying)))
         }
-        ast::TypeName::Result(ok, err) => ast::Ident::from(format!(
+        ast::TypeName::Result(ok, err, _) => ast::Ident::from(format!(
             "diplomat_result_{}_{}",
             name_for_type(ok),
             name_for_type(err)
@@ -172,7 +172,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    pub fn new() -> DiplomatResult<MyStruct, u8> {
+                    pub fn new() -> Result<MyStruct, u8> {
                         unimplemented!()
                     }
                 }

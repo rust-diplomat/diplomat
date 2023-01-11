@@ -174,7 +174,7 @@ impl LifetimeEnv {
                 self.extend_implicit_lifetime_bounds(typ, behind_ref);
             }
             TypeName::Option(typ) => self.extend_implicit_lifetime_bounds(typ, None),
-            TypeName::Result(ok, err) => {
+            TypeName::Result(ok, err, _) => {
                 self.extend_implicit_lifetime_bounds(ok, None);
                 self.extend_implicit_lifetime_bounds(err, None);
             }

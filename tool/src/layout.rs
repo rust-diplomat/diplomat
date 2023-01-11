@@ -73,7 +73,7 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
             }
             _ => unreachable!("Cannot have non-pointer types inside Option"),
         },
-        ast::TypeName::Result(ok, err) => {
+        ast::TypeName::Result(ok, err, _) => {
             let (_, size_align) = result_ok_offset_size_align(ok, err, in_path, env);
             size_align
         }

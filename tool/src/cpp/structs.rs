@@ -353,7 +353,7 @@ pub fn gen_method_interface<W: fmt::Write>(
     }
 
     if rearranged_writeable {
-        if let Some(ast::TypeName::Result(_, err)) = &method.return_type {
+        if let Some(ast::TypeName::Result(_, err, _)) = &method.return_type {
             let err_ty = if err.is_zst() {
                 "std::monostate".into()
             } else {
@@ -414,7 +414,7 @@ fn gen_writeable_out_value<W: fmt::Write>(
     ret_typ: &ast::TypeName,
     method_body: &mut W,
 ) -> fmt::Result {
-    if let ast::TypeName::Result(_, _) = ret_typ {
+    if let ast::TypeName::Result(_, _, _) = ret_typ {
         writeln!(
             method_body,
             "return {}.replace_ok(std::move(diplomat_writeable_string));",
@@ -561,7 +561,7 @@ mod tests {
                         unimplemented!()
                     }
 
-                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> DiplomatResult<(), u8> {
+                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
                         unimplemented!()
                     }
 

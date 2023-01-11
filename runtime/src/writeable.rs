@@ -31,7 +31,8 @@ use core::{fmt, ptr};
 ///  - `buf` must be `cap` bytes long
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
 ///    of at least the requested buffer size
-///  - Rust code must call `DiplomatWriteable::flush()` before releasing to C
+///  - `DiplomatWriteable::flush()` will be automatically called by Diplomat. `flush()` might also be called
+///    (erroneously) on the Rust side (it's a public method), so it must be idempotent.
 #[repr(C)]
 pub struct DiplomatWriteable {
     /// Context pointer for additional data needed by `grow()` and `flush()`. May be `null`.
@@ -46,6 +47,8 @@ pub struct DiplomatWriteable {
     /// The current capacity of the buffer
     cap: usize,
     /// Called by Rust to indicate that there is no more data to write.
+    ///
+    /// May be called multiple times.
     ///
     /// Arguments:
     /// - `self` (`*mut DiplomatWriteable`): This `DiplomatWriteable`

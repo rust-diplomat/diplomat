@@ -132,7 +132,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             _ => todo!(),
         },
 
-        ast::TypeName::Result(ok, err) => {
+        ast::TypeName::Result(ok, err, _) => {
             let raw_value_id = format!("diplomat_result_raw_{}", path);
             writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
             let wrapped_value_id = format!("diplomat_result_{}", path);

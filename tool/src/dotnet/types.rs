@@ -103,7 +103,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
         ast::TypeName::Option(underlying) => {
             ast::Ident::from(format!("Opt{}", name_for_type(underlying)))
         }
-        ast::TypeName::Result(ok, err) => {
+        ast::TypeName::Result(ok, err, _) => {
             ast::Ident::from(format!("Result{}{}", name_for_type(ok), name_for_type(err)))
         }
         ast::TypeName::Writeable => ast::Ident::from("Writeable"),

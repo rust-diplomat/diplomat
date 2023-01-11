@@ -1,8 +1,6 @@
 #[diplomat::bridge]
 pub mod ffi {
 
-    use diplomat_runtime::DiplomatResult;
-
     #[diplomat::opaque]
     pub struct ResultOpaque(i32);
 
@@ -18,32 +16,32 @@ pub mod ffi {
         j: i32,
     }
     impl ResultOpaque {
-        pub fn new(i: i32) -> DiplomatResult<Box<ResultOpaque>, ErrorEnum> {
-            Ok(Box::new(ResultOpaque(i))).into()
+        pub fn new(i: i32) -> Result<Box<ResultOpaque>, ErrorEnum> {
+            Ok(Box::new(ResultOpaque(i)))
         }
 
-        pub fn new_failing_foo() -> DiplomatResult<Box<ResultOpaque>, ErrorEnum> {
-            Err(ErrorEnum::Foo).into()
+        pub fn new_failing_foo() -> Result<Box<ResultOpaque>, ErrorEnum> {
+            Err(ErrorEnum::Foo)
         }
 
-        pub fn new_failing_bar() -> DiplomatResult<Box<ResultOpaque>, ErrorEnum> {
-            Err(ErrorEnum::Bar).into()
+        pub fn new_failing_bar() -> Result<Box<ResultOpaque>, ErrorEnum> {
+            Err(ErrorEnum::Bar)
         }
 
-        pub fn new_failing_unit() -> DiplomatResult<Box<ResultOpaque>, ()> {
-            Err(()).into()
+        pub fn new_failing_unit() -> Result<Box<ResultOpaque>, ()> {
+            Err(())
         }
 
-        pub fn new_failing_struct(i: i32) -> DiplomatResult<Box<ResultOpaque>, ErrorStruct> {
-            Err(ErrorStruct { i, j: 12 }).into()
+        pub fn new_failing_struct(i: i32) -> Result<Box<ResultOpaque>, ErrorStruct> {
+            Err(ErrorStruct { i, j: 12 })
         }
 
-        pub fn new_in_err(i: i32) -> DiplomatResult<(), Box<ResultOpaque>> {
-            Err(Box::new(ResultOpaque(i))).into()
+        pub fn new_in_err(i: i32) -> Result<(), Box<ResultOpaque>> {
+            Err(Box::new(ResultOpaque(i)))
         }
 
-        pub fn new_in_enum_err(i: i32) -> DiplomatResult<ErrorEnum, Box<ResultOpaque>> {
-            Err(Box::new(ResultOpaque(i))).into()
+        pub fn new_in_enum_err(i: i32) -> Result<ErrorEnum, Box<ResultOpaque>> {
+            Err(Box::new(ResultOpaque(i)))
         }
 
         pub fn assert_integer(&self, i: i32) {
