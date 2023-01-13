@@ -4,7 +4,6 @@ use std::fmt;
 use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
-use tera::{Context, Tera};
 
 use diplomat_core::ast;
 use diplomat_core::Env;
@@ -30,9 +29,24 @@ mod config;
 mod util;
 
 pub(crate) static RUNTIME_HPP: &str = include_str!("runtime.hpp");
-// It's easier to statically include than to package with the binary.
-static HEADER_TEMPLATE: &str = include_str!("templates/header.hpp");
-static HEADER_TEMPLATE_NAME: &str = "header.hpp";
+
+fn render_header(typ_name: &ast::Ident, headers: &[String]) -> String {
+    let all_headers = headers.join("\n");
+
+    format!(r##"#ifndef {typ_name}_HPP
+#define {typ_name}_HPP
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <algorithm>
+#include <memory>
+#include <variant>
+{all_headers}
+#include "diplomat_runtime.hpp"
+
+#include "{typ_name}.h"
+"##)
+}
 
 pub fn gen_bindings(
     env: &Env,
@@ -43,11 +57,6 @@ pub fn gen_bindings(
     // Note: Assumes the existence of C bindings!
     // This must be called alongside c::gen_bindings
 
-    // Load header template for C++.
-    let mut header_template = Tera::default();
-    header_template
-        .add_raw_template(HEADER_TEMPLATE_NAME, HEADER_TEMPLATE)
-        .expect("Couldn't parse template");
 
     let mut library_config = config::LibraryConfig::default();
     if let Some(path) = library_config_path {
@@ -80,12 +89,7 @@ pub fn gen_bindings(
             .entry(format!("{}.hpp", typ.name()))
             .or_insert_with(String::new);
 
-        let mut header_context = Context::new();
-        header_context.insert("typ_name", typ.name());
-        header_context.insert("headers", &library_config.headers);
-        let rendered = header_template
-            .render(HEADER_TEMPLATE_NAME, &header_context)
-            .expect("Couldn't render template");
+        let rendered = render_header(&typ.name(), &library_config.headers);
         writeln!(out, "{}", rendered).expect("Failed to write string.");
 
         let mut seen_includes = HashSet::new();
