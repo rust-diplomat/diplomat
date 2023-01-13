@@ -18,13 +18,6 @@
         See the `Rust documentation for multiply_pow10 <https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10>`__ for more information.
 
 
-    .. js:function:: negate()
-
-        Invert the sign of the :js:class:`ICU4XFixedDecimal`.
-
-        See the `Rust documentation for negate <https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.negate>`__ for more information.
-
-
     .. js:function:: to_string()
 
         Format the :js:class:`ICU4XFixedDecimal` as a string.

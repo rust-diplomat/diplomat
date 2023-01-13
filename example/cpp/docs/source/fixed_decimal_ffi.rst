@@ -18,13 +18,6 @@
         See the `Rust documentation for multiply_pow10 <https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10>`__ for more information.
 
 
-    .. cpp:function:: void negate()
-
-        Invert the sign of the :cpp:class:`ICU4XFixedDecimal`.
-
-        See the `Rust documentation for negate <https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.negate>`__ for more information.
-
-
     .. cpp:function:: template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_writeable(W& to) const
 
         Format the :cpp:class:`ICU4XFixedDecimal` as a string.

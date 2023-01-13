@@ -43,13 +43,6 @@ class ICU4XFixedDecimal {
   void multiply_pow10(int16_t power);
 
   /**
-   * Invert the sign of the [`ICU4XFixedDecimal`].
-   * 
-   * See the [Rust documentation for `negate`](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.negate) for more information.
-   */
-  void negate();
-
-  /**
    * Format the [`ICU4XFixedDecimal`] as a string.
    * 
    * See the [Rust documentation for `write_to`](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
@@ -78,9 +71,6 @@ inline ICU4XFixedDecimal ICU4XFixedDecimal::new_(int32_t v) {
 }
 inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
   capi::ICU4XFixedDecimal_multiply_pow10(this->inner.get(), power);
-}
-inline void ICU4XFixedDecimal::negate() {
-  capi::ICU4XFixedDecimal_negate(this->inner.get());
 }
 template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_writeable(W& to) const {
   capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
