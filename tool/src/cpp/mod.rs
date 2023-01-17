@@ -33,7 +33,8 @@ pub(crate) static RUNTIME_HPP: &str = include_str!("runtime.hpp");
 fn render_header(typ_name: &ast::Ident, headers: &[String]) -> String {
     let all_headers = headers.join("\n");
 
-    format!(r##"#ifndef {typ_name}_HPP
+    format!(
+        r##"#ifndef {typ_name}_HPP
 #define {typ_name}_HPP
 #include <stdint.h>
 #include <stddef.h>
@@ -45,7 +46,8 @@ fn render_header(typ_name: &ast::Ident, headers: &[String]) -> String {
 #include "diplomat_runtime.hpp"
 
 #include "{typ_name}.h"
-"##)
+"##
+    )
 }
 
 pub fn gen_bindings(
@@ -56,7 +58,6 @@ pub fn gen_bindings(
 ) -> fmt::Result {
     // Note: Assumes the existence of C bindings!
     // This must be called alongside c::gen_bindings
-
 
     let mut library_config = config::LibraryConfig::default();
     if let Some(path) = library_config_path {
