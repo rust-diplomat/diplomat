@@ -4,6 +4,7 @@ example/cpp/include/** linguist-generated=true
 example/cpp/docs/source/** linguist-generated=true
 example/cpp2/include/** linguist-generated=true
 example/js/lib/api/** linguist-generated=true
+example/js/lib/docs/source/**
 
 feature_tests/c/include/** linguist-generated=true
 feature_tests/c2/include/** linguist-generated=true
