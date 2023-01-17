@@ -1,3 +1,5 @@
+#![allow(clippy::result_unit_err, clippy::should_implement_trait)]
+
 #[diplomat::bridge]
 pub mod ffi {
     use diplomat_runtime::DiplomatWriteable;

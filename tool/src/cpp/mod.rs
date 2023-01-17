@@ -89,7 +89,7 @@ pub fn gen_bindings(
             .entry(format!("{}.hpp", typ.name()))
             .or_insert_with(String::new);
 
-        let rendered = render_header(&typ.name(), &library_config.headers);
+        let rendered = render_header(typ.name(), &library_config.headers);
         writeln!(out, "{}", rendered).expect("Failed to write string.");
 
         let mut seen_includes = HashSet::new();
