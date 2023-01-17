@@ -12,4 +12,5 @@ feature_tests/cpp/include/** linguist-generated=true
 feature_tests/cpp/docs/source/** linguist-generated=true
 feature_tests/cpp2/include/** linguist-generated=true
 feature_tests/js/lib/api/** linguist-generated=true
+feature_tests/js/lib/docs/source/** linguist-generated=true
 feature_tests/dotnet/Lib/** linguist-generated=true
