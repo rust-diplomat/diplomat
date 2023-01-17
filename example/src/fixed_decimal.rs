@@ -17,13 +17,7 @@ pub mod ffi {
         /// Multiply the [`ICU4XFixedDecimal`] by a given power of ten.
         #[diplomat::rust_link(fixed_decimal::FixedDecimal::multiply_pow10, FnInStruct)]
         pub fn multiply_pow10(&mut self, power: i16) {
-            self.0.multiply_pow10(power).unwrap();
-        }
-
-        /// Invert the sign of the [`ICU4XFixedDecimal`].
-        #[diplomat::rust_link(fixed_decimal::FixedDecimal::negate, FnInStruct)]
-        pub fn negate(&mut self) {
-            self.0.negate()
+            self.0.multiply_pow10(power);
         }
 
         /// Format the [`ICU4XFixedDecimal`] as a string.

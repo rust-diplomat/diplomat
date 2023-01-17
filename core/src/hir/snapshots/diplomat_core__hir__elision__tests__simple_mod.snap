@@ -10,7 +10,7 @@ TypeContext {
                 [],
             ),
             name: Check {
-                _marker: PhantomData,
+                _marker: PhantomData<strck_ident::rust::RustIdent>,
                 buf: "OutStruct",
             },
             fields: [
@@ -20,7 +20,7 @@ TypeContext {
                         [],
                     ),
                     name: Check {
-                        _marker: PhantomData,
+                        _marker: PhantomData<strck_ident::rust::RustIdent>,
                         buf: "inner",
                     },
                     ty: Opaque(
@@ -52,14 +52,14 @@ TypeContext {
                         [],
                     ),
                     name: Check {
-                        _marker: PhantomData,
+                        _marker: PhantomData<strck_ident::rust::RustIdent>,
                         buf: "new",
                     },
                     lifetime_env: LifetimeEnv {
                         nodes: [
                             Lifetime {
                                 ident: Check {
-                                    _marker: PhantomData,
+                                    _marker: PhantomData<strck_ident::rust::RustIdent>,
                                     buf: "a",
                                 },
                                 longer: [],
@@ -72,7 +72,7 @@ TypeContext {
                     params: [
                         Param {
                             name: Check {
-                                _marker: PhantomData,
+                                _marker: PhantomData<strck_ident::rust::RustIdent>,
                                 buf: "s",
                             },
                             ty: Slice(
@@ -121,7 +121,7 @@ TypeContext {
                 [],
             ),
             name: Check {
-                _marker: PhantomData,
+                _marker: PhantomData<strck_ident::rust::RustIdent>,
                 buf: "Struct",
             },
             fields: [
@@ -131,7 +131,7 @@ TypeContext {
                         [],
                     ),
                     name: Check {
-                        _marker: PhantomData,
+                        _marker: PhantomData<strck_ident::rust::RustIdent>,
                         buf: "s",
                     },
                     ty: Slice(
@@ -152,14 +152,14 @@ TypeContext {
                         [],
                     ),
                     name: Check {
-                        _marker: PhantomData,
+                        _marker: PhantomData<strck_ident::rust::RustIdent>,
                         buf: "rustc_elision",
                     },
                     lifetime_env: LifetimeEnv {
                         nodes: [
                             Lifetime {
                                 ident: Check {
-                                    _marker: PhantomData,
+                                    _marker: PhantomData<strck_ident::rust::RustIdent>,
                                     buf: "a",
                                 },
                                 longer: [],
@@ -191,7 +191,7 @@ TypeContext {
                     params: [
                         Param {
                             name: Check {
-                                _marker: PhantomData,
+                                _marker: PhantomData<strck_ident::rust::RustIdent>,
                                 buf: "s",
                             },
                             ty: Slice(
@@ -231,7 +231,7 @@ TypeContext {
                 [],
             ),
             name: Check {
-                _marker: PhantomData,
+                _marker: PhantomData<strck_ident::rust::RustIdent>,
                 buf: "Opaque",
             },
             methods: [],

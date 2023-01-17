@@ -1,6 +1,6 @@
 [package]
 name = "diplomat-example"
-version = "0.4.1"
+version = "0.5.0"
 authors = [
     "Shadaj Laddad <shadaj@users.noreply.github.com>",
     "Manish Goregaokar <manishsmail@gmail.com>",
@@ -14,8 +14,8 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 [dependencies]
 diplomat = { path = "../macro" }
 diplomat-runtime = { path = "../runtime" }
-icu = "0.3.0"
-writeable = "0.2.0"
-fixed_decimal = "0.2.1"
-icu_provider = { version = "0.3.0", features = ["provider_serde"] }
-icu_testdata = { version = "0.3.0", features = ["static"] }
+icu = "1.0.0"
+writeable = "0.5.0"
+fixed_decimal = "0.5.1"
+icu_provider = { version = "1.0", features = ["serde"] }
+icu_testdata = { version = "1.0" }

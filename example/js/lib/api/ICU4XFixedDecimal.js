@@ -23,10 +23,6 @@ export class ICU4XFixedDecimal {
     wasm.ICU4XFixedDecimal_multiply_pow10(this.underlying, arg_power);
   }
 
-  negate() {
-    wasm.ICU4XFixedDecimal_negate(this.underlying);
-  }
-
   to_string() {
     return diplomatRuntime.withWriteable(wasm, (writeable) => {
       return (() => {

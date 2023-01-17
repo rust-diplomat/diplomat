@@ -23,14 +23,6 @@ export class ICU4XFixedDecimal {
 
   /**
 
-   * Invert the sign of the {@link ICU4XFixedDecimal `ICU4XFixedDecimal`}.
-
-   * See the {@link https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.negate Rust documentation for `negate`} for more information.
-   */
-  negate(): void;
-
-  /**
-
    * Format the {@link ICU4XFixedDecimal `ICU4XFixedDecimal`} as a string.
 
    * See the {@link https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to Rust documentation for `write_to`} for more information.

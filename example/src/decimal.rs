@@ -1,10 +1,10 @@
+#![allow(clippy::result_unit_err, clippy::should_implement_trait)]
+
 #[diplomat::bridge]
 pub mod ffi {
     use diplomat_runtime::DiplomatWriteable;
-    use icu::decimal::{
-        options::{FixedDecimalFormatOptions, GroupingStrategy, SignDisplay},
-        FixedDecimalFormat,
-    };
+    use icu::decimal::{options::GroupingStrategy, FixedDecimalFormatter};
+    use icu_provider::DataLocale;
     use writeable::Writeable;
 
     use crate::{
@@ -14,16 +14,8 @@ pub mod ffi {
 
     #[diplomat::opaque]
     /// An ICU4X Fixed Decimal Format object, capable of formatting a [`ICU4XFixedDecimal`] as a string.
-    #[diplomat::rust_link(icu::decimal::FixedDecimalFormat, Struct)]
-    pub struct ICU4XFixedDecimalFormat(pub FixedDecimalFormat<'static>);
-
-    #[diplomat::out]
-    pub struct ICU4XFixedDecimalFormatResult {
-        /// The [`ICU4XFixedDecimalFormat`], exists if creation was successful.
-        pub fdf: Option<Box<ICU4XFixedDecimalFormat>>,
-        /// Whether creating the [`ICU4XFixedDecimalFormat`] was successful.
-        pub success: bool,
-    }
+    #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter, Struct)]
+    pub struct ICU4XFixedDecimalFormatter(pub FixedDecimalFormatter);
 
     // Doc comments for testing TSDoc
     #[diplomat::enum_convert(GroupingStrategy, needs_wildcard)]
@@ -38,65 +30,50 @@ pub mod ffi {
         Min2,
     }
 
-    #[diplomat::enum_convert(SignDisplay, needs_wildcard)]
-    pub enum ICU4XFixedDecimalSignDisplay {
-        Auto,
-        Never,
-        Always,
-        ExceptZero,
-        Negative,
-    }
-
-    pub struct ICU4XFixedDecimalFormatOptions {
+    pub struct ICU4XFixedDecimalFormatterOptions {
         pub grouping_strategy: ICU4XFixedDecimalGroupingStrategy,
-        pub sign_display: ICU4XFixedDecimalSignDisplay,
+        pub some_other_config: bool,
     }
 
-    impl ICU4XFixedDecimalFormatOptions {
-        pub fn default() -> ICU4XFixedDecimalFormatOptions {
-            ICU4XFixedDecimalFormatOptions {
+    impl ICU4XFixedDecimalFormatterOptions {
+        pub fn default() -> Self {
+            Self {
                 grouping_strategy: ICU4XFixedDecimalGroupingStrategy::Auto,
-                sign_display: ICU4XFixedDecimalSignDisplay::Auto,
+                some_other_config: false,
             }
         }
     }
 
-    impl ICU4XFixedDecimalFormat {
-        /// Creates a new [`ICU4XFixedDecimalFormat`] from locale data.
-        #[diplomat::rust_link(icu::decimal::FixedDecimalFormat::try_new, FnInStruct)]
+    impl ICU4XFixedDecimalFormatter {
+        /// Creates a new [`ICU4XFixedDecimalFormatter`] from locale data.
+        #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter::try_new, FnInStruct)]
         pub fn try_new(
             locale: &ICU4XLocale,
             provider: &ICU4XDataProvider,
-            options: ICU4XFixedDecimalFormatOptions,
-        ) -> ICU4XFixedDecimalFormatResult {
-            let langid = locale.0.as_ref().clone();
+            options: ICU4XFixedDecimalFormatterOptions,
+        ) -> Result<Box<ICU4XFixedDecimalFormatter>, ()> {
+            let locale = DataLocale::from(locale.0.as_ref());
             let provider = provider.0.as_ref();
-
-            if let Result::Ok(fdf) = FixedDecimalFormat::try_new(
-                langid,
-                provider,
-                FixedDecimalFormatOptions {
-                    grouping_strategy: options.grouping_strategy.into(),
-                    sign_display: options.sign_display.into(),
-                },
-            ) {
-                ICU4XFixedDecimalFormatResult {
-                    fdf: Some(Box::new(ICU4XFixedDecimalFormat(fdf))),
-                    success: true,
-                }
-            } else {
-                ICU4XFixedDecimalFormatResult {
-                    fdf: None,
-                    success: false,
-                }
-            }
+            FixedDecimalFormatter::try_new_with_any_provider(provider, &locale, options.into())
+                .map_err(|_| ())
+                .map(|x| Box::new(ICU4XFixedDecimalFormatter(x)))
         }
 
         /// Formats a [`ICU4XFixedDecimal`] to a string.
-        #[diplomat::rust_link(icu::decimal::FixedDecimalFormat::format, FnInStruct)]
+        #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter::format, FnInStruct)]
         pub fn format_write(&self, value: &ICU4XFixedDecimal, write: &mut DiplomatWriteable) {
             self.0.format(&value.0).write_to(write).unwrap();
             write.flush();
         }
+    }
+}
+
+impl From<ffi::ICU4XFixedDecimalFormatterOptions>
+    for icu::decimal::options::FixedDecimalFormatterOptions
+{
+    fn from(other: ffi::ICU4XFixedDecimalFormatterOptions) -> Self {
+        let mut ret = Self::default();
+        ret.grouping_strategy = other.grouping_strategy.into();
+        ret
     }
 }

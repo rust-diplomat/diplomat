@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../include/ICU4XFixedDecimalFormat.hpp"
+#include "../include/ICU4XFixedDecimalFormatter.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
@@ -30,11 +30,11 @@ int main(int argc, char *argv[]) {
 
     ICU4XDataProvider data_provider = ICU4XDataProvider::new_static();
 
-    auto fdf = ICU4XFixedDecimalFormat::try_new(locale, data_provider, ICU4XFixedDecimalFormatOptions::default_());
+    auto fdf = ICU4XFixedDecimalFormatter::try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions::default_());
 
-    simple_assert("Formatting FixedDecimal", fdf.success);
+    simple_assert("Formatting FixedDecimal", fdf.is_ok());
 
-    out = fdf.fdf.value().format_write(fd);
+    out = std::move(fdf).ok().value().format_write(fd);
 
     simple_assert_eq("Formatting FixedDecimal", out, "১২.৩");
 

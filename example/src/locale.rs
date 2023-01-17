@@ -16,7 +16,7 @@ pub mod ffi {
 
         /// Construct an [`ICU4XLocale`] from a locale identifier represented as bytes.
         pub fn new_from_bytes(bytes: &[u8]) -> Box<ICU4XLocale> {
-            Box::new(ICU4XLocale(Locale::from_bytes(bytes).unwrap()))
+            Box::new(ICU4XLocale(Locale::try_from_bytes(bytes).unwrap()))
         }
     }
 }
