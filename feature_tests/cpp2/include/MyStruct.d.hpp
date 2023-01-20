@@ -22,6 +22,8 @@ struct MyStruct {
   char32_t f;
   MyEnum g;
 
+  inline static MyStruct new_();
+
   inline capi::MyStruct AsFFI() const;
   inline static MyStruct FromFFI(capi::MyStruct ptr);
 };

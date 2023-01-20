@@ -142,6 +142,9 @@ inline {ty_name}::~{ty_name}() {{
             let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
             writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
         }
+        for method in def.methods.iter() {
+            self.gen_method(id, method);
+        }
         write!(self.decl_header, "
 \tinline {ctype} AsFFI() const;
 \tinline static {ty_name} FromFFI({ctype} ptr);

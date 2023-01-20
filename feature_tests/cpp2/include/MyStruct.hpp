@@ -13,7 +13,10 @@
 #include "MyStruct.d.hpp"
 
 
-// No Content
+inline MyStruct MyStruct::new_() {
+  auto result = capi::MyStruct_new();
+  return MyStruct::FromFFI(result);
+}
 
 
 #endif // MyStruct_HPP

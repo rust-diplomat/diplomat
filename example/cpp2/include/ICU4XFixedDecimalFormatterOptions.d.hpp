@@ -17,6 +17,8 @@ struct ICU4XFixedDecimalFormatterOptions {
   ICU4XFixedDecimalGroupingStrategy grouping_strategy;
   bool some_other_config;
 
+  inline static ICU4XFixedDecimalFormatterOptions default();
+
   inline capi::ICU4XFixedDecimalFormatterOptions AsFFI() const;
   inline static ICU4XFixedDecimalFormatterOptions FromFFI(capi::ICU4XFixedDecimalFormatterOptions ptr);
 };

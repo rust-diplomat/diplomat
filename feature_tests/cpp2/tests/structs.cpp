@@ -4,10 +4,10 @@
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
-    Opaque o = Opaque::new_();
+    std::unique_ptr<Opaque> o = Opaque::new_();
     MyStruct s = MyStruct::new_();
 
-    o.assert_struct(s);
+    o->assert_struct(s);
 
     simple_assert_eq("struct values", s.a, 17);
     simple_assert_eq("struct values", s.b, true);
