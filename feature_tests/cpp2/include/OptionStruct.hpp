@@ -15,7 +15,24 @@
 #include "OptionStruct.d.hpp"
 
 
-// No Content
+
+inline capi::OptionStruct OptionStruct::AsFFI() const {
+  return capi::OptionStruct {
+    .a = a ? a.value().get().AsFFI() : nullptr,
+    .b = b ? b.value().get().AsFFI() : nullptr,
+    .c = c,
+    .d = d ? d.value().get().AsFFI() : nullptr,
+  };
+}
+
+inline OptionStruct OptionStruct::FromFFI(capi::OptionStruct c_struct) {
+  return OptionStruct {
+    .a = std::unique_ptr<OptionOpaque>(OptionOpaque::FromFFI(c_struct.a)),
+    .b = std::unique_ptr<OptionOpaqueChar>(OptionOpaqueChar::FromFFI(c_struct.b)),
+    .c = c_struct.c,
+    .d = std::unique_ptr<OptionOpaque>(OptionOpaque::FromFFI(c_struct.d)),
+  };
+}
 
 
 #endif // OptionStruct_HPP

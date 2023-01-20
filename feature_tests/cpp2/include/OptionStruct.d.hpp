@@ -20,7 +20,7 @@ struct OptionStruct {
   std::unique_ptr<OptionOpaque> d;
 
   inline capi::OptionStruct AsFFI() const;
-  inline static OptionStruct FromFFI(capi::OptionStruct ptr);
+  inline static OptionStruct FromFFI(capi::OptionStruct c_struct);
 };
 
 

@@ -14,7 +14,7 @@ struct BorrowedFieldsReturning {
   std::span<const uint8_t> bytes;
 
   inline capi::BorrowedFieldsReturning AsFFI() const;
-  inline static BorrowedFieldsReturning FromFFI(capi::BorrowedFieldsReturning ptr);
+  inline static BorrowedFieldsReturning FromFFI(capi::BorrowedFieldsReturning c_struct);
 };
 
 

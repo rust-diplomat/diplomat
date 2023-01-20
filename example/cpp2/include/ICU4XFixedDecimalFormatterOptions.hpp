@@ -19,4 +19,19 @@ inline ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::defa
 }
 
 
+inline capi::ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::AsFFI() const {
+  return capi::ICU4XFixedDecimalFormatterOptions {
+    .grouping_strategy = grouping_strategy.AsFFI(),
+    .some_other_config = some_other_config,
+  };
+}
+
+inline ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::FromFFI(capi::ICU4XFixedDecimalFormatterOptions c_struct) {
+  return ICU4XFixedDecimalFormatterOptions {
+    .grouping_strategy = ICU4XFixedDecimalGroupingStrategy::FromFFI(c_struct.grouping_strategy),
+    .some_other_config = c_struct.some_other_config,
+  };
+}
+
+
 #endif // ICU4XFixedDecimalFormatterOptions_HPP

@@ -25,7 +25,7 @@ struct MyStruct {
   inline static MyStruct new_();
 
   inline capi::MyStruct AsFFI() const;
-  inline static MyStruct FromFFI(capi::MyStruct ptr);
+  inline static MyStruct FromFFI(capi::MyStruct c_struct);
 };
 
 

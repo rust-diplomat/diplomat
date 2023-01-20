@@ -15,7 +15,7 @@ struct BorrowedFields {
   std::string_view b;
 
   inline capi::BorrowedFields AsFFI() const;
-  inline static BorrowedFields FromFFI(capi::BorrowedFields ptr);
+  inline static BorrowedFields FromFFI(capi::BorrowedFields c_struct);
 };
 
 

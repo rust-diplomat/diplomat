@@ -18,7 +18,7 @@ struct ImportedStruct {
   uint8_t count;
 
   inline capi::ImportedStruct AsFFI() const;
-  inline static ImportedStruct FromFFI(capi::ImportedStruct ptr);
+  inline static ImportedStruct FromFFI(capi::ImportedStruct c_struct);
 };
 
 

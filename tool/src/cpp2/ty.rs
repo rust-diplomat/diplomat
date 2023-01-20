@@ -1,8 +1,8 @@
 use super::header::{Forward, Header};
 use super::Cpp2Context;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, OutType, ParamSelf, ReturnFallability, ReturnType, SelfType,
-    TyPosition, Type, TypeDef, TypeId, OutputOnly,
+    self, Mutability, OpaqueOwner, ParamSelf, ReturnFallability, ReturnType, SelfType,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -147,8 +147,37 @@ inline {ty_name}::~{ty_name}() {{
         }
         write!(self.decl_header, "
 \tinline {ctype} AsFFI() const;
-\tinline static {ty_name} FromFFI({ctype} ptr);
+\tinline static {ty_name} FromFFI({ctype} c_struct);
 }};\n\n").unwrap();
+    write!(self.impl_header,
+    "
+inline {ctype} {ty_name}::AsFFI() const {{
+\treturn {ctype} {{
+").unwrap();
+    for field in def.fields.iter() {
+        let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
+        for (c_name, conversion) in self.gen_cpp_to_c(&field.ty, &decl_name) {
+            writeln!(self.impl_header, "\t\t.{c_name} = {conversion},").unwrap();
+        }
+    }
+write!(self.impl_header, "\t}};
+}}
+
+inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
+\treturn {ty_name} {{
+").unwrap();
+        for field in def.fields.iter() {
+            let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
+            let field_getter = format!("c_struct.{decl_name}");
+            let conversion = self.gen_c_to_cpp(&field.ty, &field_getter);
+            writeln!(self.impl_header, "\t\t.{decl_name} = {conversion},").unwrap();
+        }
+    write!(self.impl_header, "\t}};
+}}
+
+"
+)
+.unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -165,8 +194,8 @@ inline {ty_name}::~{ty_name}() {{
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
-            let conversions = self.gen_cpp_to_c_param(&param.ty, param.name.as_str());
-            cpp_to_c_params.extend(conversions);
+            let conversions = self.gen_cpp_to_c(&param.ty, param.name.as_str());
+            cpp_to_c_params.extend(conversions.into_iter().map(|(_, cnv)| cnv));
         }
 
         if method.is_writeable() {
@@ -175,9 +204,9 @@ inline {ty_name}::~{ty_name}() {{
 
         let return_ty = self.gen_return_ty_name(&method.output);
 
-        let return_statement =
+        let return_statement: Cow<str> =
             if let Some(ReturnType::OutType(out_type)) = method.output.return_type() {
-                self.gen_c_to_cpp_return(out_type)
+                format!("\n\treturn {};", self.gen_c_to_cpp(out_type, "result")).into()
             } else {
                 "".into()
             };
@@ -329,39 +358,39 @@ inline {ty_name}::~{ty_name}() {{
         }
     }
 
-    fn gen_cpp_to_c_param<'a, P: TyPosition>(
+    fn gen_cpp_to_c<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
         param_name: &'a str,
-    ) -> Vec<Cow<'a, str>> {
+    ) -> Vec<(Cow<'a, str>, Cow<'a, str>)> {
         match *ty {
             Type::Primitive(..) => {
-                vec![param_name.into()]
+                vec![(param_name.into(), param_name.into())]
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                vec![format!("{param_name} ? {param_name}.value().get().AsFFI() : nullptr").into()]
+                vec![(param_name.into(), format!("{param_name} ? {param_name}.value().get().AsFFI() : nullptr").into())]
             }
             Type::Opaque(..) => {
-                vec![format!("{param_name}.AsFFI()").into()]
+                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
             }
             Type::Struct(..) => {
-                vec![format!("{param_name}.AsFFI()").into()]
+                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
             }
             Type::Enum(..) => {
-                vec![format!("{param_name}.AsFFI()").into()]
+                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 // TODO: This needs to change if an abstraction other than std::string_view is used
                 vec![
-                    format!("{param_name}.data()").into(),
-                    format!("{param_name}.size()").into(),
+                    (format!("{}_data", param_name).into(), format!("{param_name}.data()").into()),
+                    (format!("{}_size", param_name).into(), format!("{param_name}.size()").into()),
                 ]
             }
             Type::Slice(hir::Slice::Primitive(..)) => {
                 // TODO: This needs to change if an abstraction other than std::span is used
                 vec![
-                    format!("{param_name}.data()").into(),
-                    format!("{param_name}.size()").into(),
+                    (format!("{}_data", param_name).into(), format!("{param_name}.data()").into()),
+                    (format!("{}_size", param_name).into(), format!("{param_name}.size()").into()),
                 ]
             }
         }
@@ -391,45 +420,50 @@ inline {ty_name}::~{ty_name}() {{
         }
     }
 
-    fn gen_c_to_cpp_return(&self, ty: &OutType) -> Cow<'static, str> {
+    fn gen_c_to_cpp<'a, P: TyPosition>(&self, ty: &Type<P>, var_name: &'a str) -> Cow<'a, str> {
         match *ty {
-            Type::Primitive(..) => "\n\treturn result;".into(),
+            Type::Primitive(..) => var_name.into(),
             Type::Opaque(ref op) if op.owner.is_owned() => {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
                 // TODO: Add imports?
-                format!("\n\treturn std::unique_ptr<{ty_name}>({ty_name}::FromFFI(result));").into()
+                format!("std::unique_ptr<{ty_name}>({ty_name}::FromFFI({var_name}))").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
                 // TODO: Add imports?
-                format!("\n\treturn result ? {{ *{ty_name}::FromFFI(result) }} : std::nullopt;")
+                format!("{var_name} ? {{ *{ty_name}::FromFFI({var_name}) }} : std::nullopt")
                     .into()
             }
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
                 // TODO: Add imports?
-                format!("\n\treturn *{ty_name}::FromFFI(result);").into()
+                format!("*{ty_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
-                let id = OutputOnly::id_for_path(&st);
+                let id = P::id_for_path(&st);
                 let ty_name = self.cx.formatter.fmt_type_name(id);
                 // TODO: Add imports?
-                format!("\n\treturn {ty_name}::FromFFI(result);").into()
+                format!("{ty_name}::FromFFI({var_name})").into()
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(id);
                 // TODO: Add imports?
-                format!("\n\treturn {ty_name}::FromFFI(result);").into()
+                format!("{ty_name}::FromFFI({var_name})").into()
             }
             Type::Slice(hir::Slice::Str(..)) => {
-                todo!()
+                // TODO: This needs to change if an abstraction other than std::string_view is used
+                let string_view = self.cx.formatter.fmt_borrowed_str();
+                format!("{string_view}({var_name}_data, {var_name}_size)").into()
             }
-            Type::Slice(hir::Slice::Primitive(..)) => {
-                todo!()
+            Type::Slice(hir::Slice::Primitive(b, p)) => {
+                // TODO: This needs to change if an abstraction other than std::span is used
+                let prim_name = self.cx.formatter.fmt_primitive_as_c(p);
+                let span = self.cx.formatter.fmt_borrowed_slice(&prim_name, b.mutability);
+                format!("{span}({var_name}_data, {var_name}_size)").into()
             }
         }
     }

@@ -20,7 +20,7 @@ struct ICU4XFixedDecimalFormatterOptions {
   inline static ICU4XFixedDecimalFormatterOptions default();
 
   inline capi::ICU4XFixedDecimalFormatterOptions AsFFI() const;
-  inline static ICU4XFixedDecimalFormatterOptions FromFFI(capi::ICU4XFixedDecimalFormatterOptions ptr);
+  inline static ICU4XFixedDecimalFormatterOptions FromFFI(capi::ICU4XFixedDecimalFormatterOptions c_struct);
 };
 
 

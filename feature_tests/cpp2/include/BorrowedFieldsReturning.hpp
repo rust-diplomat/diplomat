@@ -13,7 +13,19 @@
 #include "BorrowedFieldsReturning.d.hpp"
 
 
-// No Content
+
+inline capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
+  return capi::BorrowedFieldsReturning {
+    .bytes_data = bytes.data(),
+    .bytes_size = bytes.size(),
+  };
+}
+
+inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(capi::BorrowedFieldsReturning c_struct) {
+  return BorrowedFieldsReturning {
+    .bytes = std::span<const uint8_t>(c_struct.bytes_data, c_struct.bytes_size),
+  };
+}
 
 
 #endif // BorrowedFieldsReturning_HPP
