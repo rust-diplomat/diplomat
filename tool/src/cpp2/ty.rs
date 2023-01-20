@@ -2,7 +2,7 @@ use super::header::{Forward, Header};
 use super::Cpp2Context;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, OutType, ParamSelf, ReturnFallability, ReturnType, SelfType,
-    TyPosition, Type, TypeDef, TypeId,
+    TyPosition, Type, TypeDef, TypeId, OutputOnly,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -136,12 +136,16 @@ inline {ty_name}::~{ty_name}() {{
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
+        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         writeln!(self.decl_header, "struct {ty_name} {{").unwrap();
         for field in def.fields.iter() {
             let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
             writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
         }
-        write!(self.decl_header, "}};\n\n").unwrap();
+        write!(self.decl_header, "
+\tinline {ctype} AsFFI() const;
+\tinline static {ty_name} FromFFI({ctype} ptr);
+}};\n\n").unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -170,7 +174,7 @@ inline {ty_name}::~{ty_name}() {{
 
         let return_statement =
             if let Some(ReturnType::OutType(out_type)) = method.output.return_type() {
-                self.gen_c_to_cpp_return(id, out_type)
+                self.gen_c_to_cpp_return(out_type)
             } else {
                 "".into()
             };
@@ -384,20 +388,40 @@ inline {ty_name}::~{ty_name}() {{
         }
     }
 
-    fn gen_c_to_cpp_return(&self, id: TypeId, ty: &OutType) -> Cow<'static, str> {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+    fn gen_c_to_cpp_return(&self, ty: &OutType) -> Cow<'static, str> {
         match *ty {
             Type::Primitive(..) => "\n\treturn result;".into(),
             Type::Opaque(ref op) if op.owner.is_owned() => {
-                format!("\n\treturn std::unique_ptr({ty_name}::FromFFI(result));").into()
+                let op_id = op.tcx_id.into();
+                let ty_name = self.cx.formatter.fmt_type_name(op_id);
+                // TODO: Add imports?
+                format!("\n\treturn std::unique_ptr<{ty_name}>({ty_name}::FromFFI(result));").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
+                let op_id = op.tcx_id.into();
+                let ty_name = self.cx.formatter.fmt_type_name(op_id);
+                // TODO: Add imports?
                 format!("\n\treturn result ? {{ *{ty_name}::FromFFI(result) }} : std::nullopt;")
                     .into()
             }
-            Type::Opaque(..) => format!("\n\treturn *{ty_name}::FromFFI(result);").into(),
-            Type::Struct(..) => format!("\n\treturn {ty_name}::FromFFI(result);").into(),
-            Type::Enum(..) => format!("\n\treturn {ty_name}::FromFFI(result);").into(),
+            Type::Opaque(ref op) => {
+                let op_id = op.tcx_id.into();
+                let ty_name = self.cx.formatter.fmt_type_name(op_id);
+                // TODO: Add imports?
+                format!("\n\treturn *{ty_name}::FromFFI(result);").into()
+            }
+            Type::Struct(ref st) => {
+                let id = OutputOnly::id_for_path(&st);
+                let ty_name = self.cx.formatter.fmt_type_name(id);
+                // TODO: Add imports?
+                format!("\n\treturn {ty_name}::FromFFI(result);").into()
+            }
+            Type::Enum(ref e) => {
+                let id = e.tcx_id.into();
+                let ty_name = self.cx.formatter.fmt_type_name(id);
+                // TODO: Add imports?
+                format!("\n\treturn {ty_name}::FromFFI(result);").into()
+            }
             Type::Slice(hir::Slice::Str(..)) => {
                 todo!()
             }

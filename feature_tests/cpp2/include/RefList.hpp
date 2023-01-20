@@ -16,7 +16,7 @@
 
 inline std::unique_ptr<RefList> RefList::node(const RefListParameter& data) {
   auto result = capi::RefList_node(data.AsFFI());
-  return std::unique_ptr(RefList::FromFFI(result));
+  return std::unique_ptr<RefList>(RefList::FromFFI(result));
 }
 
 inline const capi::RefList* RefList::AsFFI() const {

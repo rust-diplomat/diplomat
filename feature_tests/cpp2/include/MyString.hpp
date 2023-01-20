@@ -16,7 +16,7 @@
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
   auto result = capi::MyString_new(v.data(),
     v.size());
-  return std::unique_ptr(MyString::FromFFI(result));
+  return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }
 
 inline void MyString::set_str(std::string_view new_str) {

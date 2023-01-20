@@ -15,7 +15,7 @@
 
 inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
   auto result = capi::ICU4XDataProvider_new_static();
-  return std::unique_ptr(ICU4XDataProvider::FromFFI(result));
+  return std::unique_ptr<ICU4XDataProvider>(ICU4XDataProvider::FromFFI(result));
 }
 
 inline DiplomatResult<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {

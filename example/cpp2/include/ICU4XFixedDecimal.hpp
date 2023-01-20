@@ -15,7 +15,7 @@
 
 inline std::unique_ptr<ICU4XFixedDecimal> ICU4XFixedDecimal::new_(int32_t v) {
   auto result = capi::ICU4XFixedDecimal_new(v);
-  return std::unique_ptr(ICU4XFixedDecimal::FromFFI(result));
+  return std::unique_ptr<ICU4XFixedDecimal>(ICU4XFixedDecimal::FromFFI(result));
 }
 
 inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {

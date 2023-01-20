@@ -13,6 +13,9 @@
 struct ErrorStruct {
   int32_t i;
   int32_t j;
+
+  inline capi::ErrorStruct AsFFI() const;
+  inline static ErrorStruct FromFFI(capi::ErrorStruct ptr);
 };
 
 

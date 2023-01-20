@@ -15,7 +15,7 @@
 
 inline std::unique_ptr<Opaque> Opaque::new_() {
   auto result = capi::Opaque_new();
-  return std::unique_ptr(Opaque::FromFFI(result));
+  return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
 }
 
 inline void Opaque::assert_struct(MyStruct s) const {
@@ -30,7 +30,7 @@ inline size_t Opaque::returns_usize() {
 
 inline ImportedStruct Opaque::returns_imported() {
   auto result = capi::Opaque_returns_imported();
-  return Opaque::FromFFI(result);
+  return ImportedStruct::FromFFI(result);
 }
 
 inline const capi::Opaque* Opaque::AsFFI() const {

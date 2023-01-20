@@ -16,7 +16,7 @@
 inline std::unique_ptr<Float64Vec> Float64Vec::new_(std::span<const double> v) {
   auto result = capi::Float64Vec_new(v.data(),
     v.size());
-  return std::unique_ptr(Float64Vec::FromFFI(result));
+  return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
 }
 
 inline void Float64Vec::fill_slice(std::span<double> v) const {

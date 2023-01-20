@@ -16,6 +16,9 @@ enum struct UnimportedEnum;
 struct ImportedStruct {
   UnimportedEnum foo;
   uint8_t count;
+
+  inline capi::ImportedStruct AsFFI() const;
+  inline static ImportedStruct FromFFI(capi::ImportedStruct ptr);
 };
 
 

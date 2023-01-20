@@ -20,7 +20,7 @@ inline DiplomatResult<std::unique_ptr<ICU4XFixedDecimalFormatter>, std::monostat
   auto result = capi::ICU4XFixedDecimalFormatter_try_new(locale.AsFFI(),
     provider.AsFFI(),
     options.AsFFI());
-  return std::unique_ptr(ICU4XFixedDecimalFormatter::FromFFI(result));
+  return std::unique_ptr<ICU4XFixedDecimalFormatter>(ICU4XFixedDecimalFormatter::FromFFI(result));
 }
 
 inline std::string ICU4XFixedDecimalFormatter::format_write(const ICU4XFixedDecimal& value) const {

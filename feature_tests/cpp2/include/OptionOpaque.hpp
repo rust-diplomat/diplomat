@@ -15,22 +15,22 @@
 
 inline std::unique_ptr<OptionOpaque> OptionOpaque::new_(int32_t i) {
   auto result = capi::OptionOpaque_new(i);
-  return std::unique_ptr(OptionOpaque::FromFFI(result));
+  return std::unique_ptr<OptionOpaque>(OptionOpaque::FromFFI(result));
 }
 
 inline std::unique_ptr<OptionOpaque> OptionOpaque::new_none() {
   auto result = capi::OptionOpaque_new_none();
-  return std::unique_ptr(OptionOpaque::FromFFI(result));
+  return std::unique_ptr<OptionOpaque>(OptionOpaque::FromFFI(result));
 }
 
 inline OptionStruct OptionOpaque::new_struct() {
   auto result = capi::OptionOpaque_new_struct();
-  return OptionOpaque::FromFFI(result);
+  return OptionStruct::FromFFI(result);
 }
 
 inline OptionStruct OptionOpaque::new_struct_nones() {
   auto result = capi::OptionOpaque_new_struct_nones();
-  return OptionOpaque::FromFFI(result);
+  return OptionStruct::FromFFI(result);
 }
 
 inline void OptionOpaque::assert_integer(int32_t i) const {

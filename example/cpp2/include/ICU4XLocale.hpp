@@ -16,13 +16,13 @@
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {
   auto result = capi::ICU4XLocale_new(name.data(),
     name.size());
-  return std::unique_ptr(ICU4XLocale::FromFFI(result));
+  return std::unique_ptr<ICU4XLocale>(ICU4XLocale::FromFFI(result));
 }
 
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_from_bytes(std::span<const uint8_t> bytes) {
   auto result = capi::ICU4XLocale_new_from_bytes(bytes.data(),
     bytes.size());
-  return std::unique_ptr(ICU4XLocale::FromFFI(result));
+  return std::unique_ptr<ICU4XLocale>(ICU4XLocale::FromFFI(result));
 }
 
 inline const capi::ICU4XLocale* ICU4XLocale::AsFFI() const {
