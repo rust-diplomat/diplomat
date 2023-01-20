@@ -9,20 +9,14 @@ TypeContext {
                 "",
                 [],
             ),
-            name: Check {
-                _marker: PhantomData<strck_ident::rust::RustIdent>,
-                buf: "OutStruct",
-            },
+            name: "OutStruct",
             fields: [
                 StructField {
                     docs: Docs(
                         "",
                         [],
                     ),
-                    name: Check {
-                        _marker: PhantomData<strck_ident::rust::RustIdent>,
-                        buf: "inner",
-                    },
+                    name: "inner",
                     ty: Opaque(
                         OpaquePath {
                             lifetimes: TypeLifetimes {
@@ -51,17 +45,11 @@ TypeContext {
                         "",
                         [],
                     ),
-                    name: Check {
-                        _marker: PhantomData<strck_ident::rust::RustIdent>,
-                        buf: "new",
-                    },
+                    name: "new",
                     lifetime_env: LifetimeEnv {
                         nodes: [
                             Lifetime {
-                                ident: Check {
-                                    _marker: PhantomData<strck_ident::rust::RustIdent>,
-                                    buf: "a",
-                                },
+                                ident: "a",
                                 longer: [],
                                 shorter: [],
                             },
@@ -71,10 +59,7 @@ TypeContext {
                     param_self: None,
                     params: [
                         Param {
-                            name: Check {
-                                _marker: PhantomData<strck_ident::rust::RustIdent>,
-                                buf: "s",
-                            },
+                            name: "s",
                             ty: Slice(
                                 Str(
                                     NonStatic(
@@ -120,20 +105,14 @@ TypeContext {
                 "",
                 [],
             ),
-            name: Check {
-                _marker: PhantomData<strck_ident::rust::RustIdent>,
-                buf: "Struct",
-            },
+            name: "Struct",
             fields: [
                 StructField {
                     docs: Docs(
                         "",
                         [],
                     ),
-                    name: Check {
-                        _marker: PhantomData<strck_ident::rust::RustIdent>,
-                        buf: "s",
-                    },
+                    name: "s",
                     ty: Slice(
                         Str(
                             NonStatic(
@@ -151,17 +130,11 @@ TypeContext {
                         "",
                         [],
                     ),
-                    name: Check {
-                        _marker: PhantomData<strck_ident::rust::RustIdent>,
-                        buf: "rustc_elision",
-                    },
+                    name: "rustc_elision",
                     lifetime_env: LifetimeEnv {
                         nodes: [
                             Lifetime {
-                                ident: Check {
-                                    _marker: PhantomData<strck_ident::rust::RustIdent>,
-                                    buf: "a",
-                                },
+                                ident: "a",
                                 longer: [],
                                 shorter: [],
                             },
@@ -190,10 +163,7 @@ TypeContext {
                     ),
                     params: [
                         Param {
-                            name: Check {
-                                _marker: PhantomData<strck_ident::rust::RustIdent>,
-                                buf: "s",
-                            },
+                            name: "s",
                             ty: Slice(
                                 Str(
                                     NonStatic(
@@ -230,10 +200,7 @@ TypeContext {
                 "",
                 [],
             ),
-            name: Check {
-                _marker: PhantomData<strck_ident::rust::RustIdent>,
-                buf: "Opaque",
-            },
+            name: "Opaque",
             methods: [],
         },
     ],

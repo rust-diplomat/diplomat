@@ -854,15 +854,15 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "strck"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42b99bb054f5dcde86a98558e47aeeaa334cedc523728dff80a4c2824a5a54ad"
+checksum = "be91090ded9d8f979d9fe921777342d37e769e0b6b7296843a7a38247240e917"
 
 [[package]]
 name = "strck_ident"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7af2d128f1161e1356e1f9a5cc32e58c62ccbdb79287a2269fc2aaaacf8ff27b"
+checksum = "e1c3802b169b3858a44667f221c9a0b3136e6019936ea926fc97fbad8af77202"
 dependencies = [
  "strck",
  "unicode-ident",
