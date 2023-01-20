@@ -18,8 +18,6 @@ public:
 
   inline void multiply_pow10(int16_t power);
 
-  inline void negate();
-
   inline DiplomatResult<std::string, std::monostate> to_string() const;
 
   inline const capi::ICU4XFixedDecimal* AsFFI() const;

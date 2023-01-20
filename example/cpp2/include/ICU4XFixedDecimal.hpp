@@ -23,10 +23,6 @@ inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
     power);
 }
 
-inline void ICU4XFixedDecimal::negate() {
-  capi::ICU4XFixedDecimal_negate(this->AsFFI());
-}
-
 inline DiplomatResult<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
   std::string output;
   capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
