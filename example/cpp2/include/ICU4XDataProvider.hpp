@@ -18,8 +18,9 @@ inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
   return std::unique_ptr<ICU4XDataProvider>(ICU4XDataProvider::FromFFI(result));
 }
 
-inline DiplomatResult<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
-  capi::ICU4XDataProvider_returns_result();
+inline diplomat::result<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
+  auto result = capi::ICU4XDataProvider_returns_result();
+  return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline const capi::ICU4XDataProvider* ICU4XDataProvider::AsFFI() const {

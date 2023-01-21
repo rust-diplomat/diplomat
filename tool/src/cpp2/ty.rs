@@ -241,12 +241,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
 
         let return_ty = self.gen_return_ty_name(&method.output);
 
-        let return_statement: Cow<str> =
-            if let Some(ReturnType::OutType(out_type)) = method.output.return_type() {
-                format!("\n\treturn {};", self.gen_c_to_cpp(out_type, "result")).into()
-            } else {
-                "".into()
-            };
+        let return_statement: Cow<str> = self.gen_fallible_c_to_cpp(&method.output, "result").map(|s| format!("\n\treturn {s};").into()).unwrap_or("".into());
 
         let return_prefix = if return_statement.is_empty() {
             ""
@@ -451,7 +446,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                     None => "std::monostate".into(),
                 };
                 let ret: Cow<str> =
-                    format!("DiplomatResult<{ok_type_name}, {err_type_name}>").into();
+                    format!("diplomat::result<{ok_type_name}, {err_type_name}>").into();
                 ret
             }
         }
@@ -501,6 +496,47 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 let prim_name = self.cx.formatter.fmt_primitive_as_c(p);
                 let span = self.cx.formatter.fmt_borrowed_slice(&prim_name, b.mutability);
                 format!("{span}({var_name}_data, {var_name}_size)").into()
+            }
+        }
+    }
+
+    fn gen_fallible_c_to_cpp<'a>(&mut self, result_ty: &ReturnFallability, var_name: &'a str) -> Option<Cow<'a, str>> {
+        match *result_ty {
+            ReturnFallability::Infallible(None) => None,
+            ReturnFallability::Infallible(Some(ReturnType::Writeable)) => {
+                Some(
+                    "/* TODO: Writeable conversion */".into()
+                )
+            },
+            ReturnFallability::Infallible(Some(ReturnType::OutType(ref out_ty))) => {
+                Some(
+                    self.gen_c_to_cpp(out_ty, var_name)
+                )
+            },
+            ReturnFallability::Fallible(ref ok, ref err) => {
+                let ok_path = format!("{var_name}.ok");
+                let err_path = format!("{var_name}.err");
+                let ok_ty_name = match ok {
+                    Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
+                    None => "std::monostate".into(),
+                    Some(ReturnType::OutType(o)) => self.gen_ty_name(o),
+                };
+                let err_ty_name = match err {
+                    Some(o) => self.gen_ty_name(o),
+                    None => "std::monostate".into(),
+                };
+                let ok_conversion = match ok {
+                    Some(ReturnType::Writeable) => "/* TODO: Writeable conversion */".into(),
+                    None => "".into(),
+                    Some(ReturnType::OutType(o)) => self.gen_c_to_cpp(o, &ok_path),
+                };
+                let err_conversion = match err {
+                    Some(o) => self.gen_c_to_cpp(o, &err_path),
+                    None => "".into(),
+                };
+                Some(
+                    format!("{var_name}.is_ok ? diplomat::result<{ok_ty_name}, {err_ty_name}>(diplomat::Ok<{ok_ty_name}>({ok_conversion})) : diplomat::result<{ok_ty_name}, {err_ty_name}>(diplomat::Err<{err_ty_name}>({err_conversion}))").into()
+                )
             }
         }
     }

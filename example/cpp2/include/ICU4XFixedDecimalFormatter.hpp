@@ -16,19 +16,20 @@
 #include "ICU4XFixedDecimalFormatter.d.hpp"
 
 
-inline DiplomatResult<std::unique_ptr<ICU4XFixedDecimalFormatter>, std::monostate> ICU4XFixedDecimalFormatter::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatterOptions options) {
+inline diplomat::result<std::unique_ptr<ICU4XFixedDecimalFormatter>, std::monostate> ICU4XFixedDecimalFormatter::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatterOptions options) {
   auto result = capi::ICU4XFixedDecimalFormatter_try_new(locale.AsFFI(),
     provider.AsFFI(),
     options.AsFFI());
-  return std::unique_ptr<ICU4XFixedDecimalFormatter>(ICU4XFixedDecimalFormatter::FromFFI(result));
+  return result.is_ok ? diplomat::result<std::unique_ptr<ICU4XFixedDecimalFormatter>, std::monostate>(diplomat::Ok<std::unique_ptr<ICU4XFixedDecimalFormatter>>(std::unique_ptr<ICU4XFixedDecimalFormatter>(ICU4XFixedDecimalFormatter::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ICU4XFixedDecimalFormatter>, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline std::string ICU4XFixedDecimalFormatter::format_write(const ICU4XFixedDecimal& value) const {
   std::string output;
   capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
-  capi::ICU4XFixedDecimalFormatter_format_write(this->AsFFI(),
+  auto result = capi::ICU4XFixedDecimalFormatter_format_write(this->AsFFI(),
     value.AsFFI(),
     &writeable);
+  return /* TODO: Writeable conversion */;
 }
 
 inline const capi::ICU4XFixedDecimalFormatter* ICU4XFixedDecimalFormatter::AsFFI() const {
