@@ -10,7 +10,7 @@
 #include "diplomat_runtime.hpp"
 #include "UnimportedEnum.d.hpp"
 
-enum struct UnimportedEnum;
+class UnimportedEnum;
 
 
 struct ImportedStruct {

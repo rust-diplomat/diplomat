@@ -13,7 +13,7 @@
 #include "ResultOpaque.d.h"
 
 struct ErrorStruct;
-enum struct ErrorEnum;
+class ErrorEnum;
 
 
 class ResultOpaque {

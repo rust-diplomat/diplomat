@@ -59,17 +59,54 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.decl_header, "enum struct {ty_name} {{").unwrap();
+        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
+        self.decl_header
+            .includes
+            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
+        write!(self.decl_header, "class {ty_name} {{
+\t{ctype} value;
+
+public:
+\tenum Value {{
+").unwrap();
+write!(self.impl_header, "inline {ty_name}::{ty_name}({ty_name}::Value cpp_value) {{
+\tswitch (cpp_value) {{
+").unwrap();
         for variant in ty.variants.iter() {
-            writeln!(
-                self.decl_header,
-                "\t{} = {},",
-                self.cx.formatter.fmt_enum_variant(variant),
-                variant.discriminant
-            )
-            .unwrap();
+            let enum_variant = self.cx.formatter.fmt_enum_variant(variant);
+            let c_enum_variant = self.cx.formatter.fmt_c_enum_variant(&ty_name, variant);
+            writeln!(self.decl_header, "\t\t{enum_variant},").unwrap();
+            write!(self.impl_header, "\t\tcase {enum_variant}:
+\t\t\tvalue = {c_enum_variant};
+\t\t\tbreak;
+").unwrap();
         }
-        write!(self.decl_header, "}};\n\n").unwrap();
+        write!(self.decl_header, "\t}};
+
+\tinline {ty_name}({ty_name}::Value cpp_value);
+\tinline {ty_name}({ctype} c_enum) : value(c_enum) {{}};
+");
+        write!(self.impl_header, "\t\tdefault:
+\t\t\tabort();
+\t}}
+}}
+").unwrap();
+        for method in ty.methods.iter() {
+            self.gen_method(id, method);
+        }
+        write!(self.decl_header, "
+\tinline {ctype} AsFFI() const;
+\tinline static {ty_name} FromFFI({ctype} c_enum);
+}};\n\n").unwrap();
+        write!(self.impl_header, "
+inline {ctype} {ty_name}::AsFFI() const {{
+\treturn value;
+}}
+
+inline {ty_name} {ty_name}::FromFFI({ctype} c_enum) {{
+\treturn {ty_name}(c_enum);
+}}
+").unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {

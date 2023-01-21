@@ -116,7 +116,7 @@ impl fmt::Display for Header {
             forwards += &match f {
                 Forward::Class(name) => format!("class {name};\n"),
                 Forward::Struct(name) => format!("struct {name};\n"),
-                Forward::EnumStruct(name) => format!("enum struct {name};\n"),
+                Forward::EnumStruct(name) => format!("class {name};\n"),
             };
         }
         let header_guard = &self.path;

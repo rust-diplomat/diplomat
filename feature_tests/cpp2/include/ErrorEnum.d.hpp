@@ -8,11 +8,23 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "ErrorEnum.d.h"
 
 
-enum struct ErrorEnum {
-  Foo = 0,
-  Bar = 1,
+class ErrorEnum {
+  capi::ErrorEnum value;
+
+public:
+  enum Value {
+    Foo,
+    Bar,
+  };
+
+  inline ErrorEnum(ErrorEnum::Value cpp_value);
+  inline ErrorEnum(capi::ErrorEnum c_enum) : value(c_enum) {};
+
+  inline capi::ErrorEnum AsFFI() const;
+  inline static ErrorEnum FromFFI(capi::ErrorEnum c_enum);
 };
 
 

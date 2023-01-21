@@ -8,13 +8,25 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "ICU4XFixedDecimalGroupingStrategy.d.h"
 
 
-enum struct ICU4XFixedDecimalGroupingStrategy {
-  Auto = 0,
-  Never = 1,
-  Always = 2,
-  Min2 = 3,
+class ICU4XFixedDecimalGroupingStrategy {
+  capi::ICU4XFixedDecimalGroupingStrategy value;
+
+public:
+  enum Value {
+    Auto,
+    Never,
+    Always,
+    Min2,
+  };
+
+  inline ICU4XFixedDecimalGroupingStrategy(ICU4XFixedDecimalGroupingStrategy::Value cpp_value);
+  inline ICU4XFixedDecimalGroupingStrategy(capi::ICU4XFixedDecimalGroupingStrategy c_enum) : value(c_enum) {};
+
+  inline capi::ICU4XFixedDecimalGroupingStrategy AsFFI() const;
+  inline static ICU4XFixedDecimalGroupingStrategy FromFFI(capi::ICU4XFixedDecimalGroupingStrategy c_enum);
 };
 
 

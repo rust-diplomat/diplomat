@@ -10,7 +10,7 @@
 #include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
 
-enum struct ICU4XFixedDecimalGroupingStrategy;
+class ICU4XFixedDecimalGroupingStrategy;
 
 
 struct ICU4XFixedDecimalFormatterOptions {
