@@ -89,6 +89,17 @@ rm tests/*.out
 exec make
 '''
 
+[tasks.test-cpp2-example]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/cpp2
+rm tests/*.out
+exec make
+'''
+
 [tasks.test-cpp-feature]
 category = "Tests"
 dependencies = ["build-feature"]
@@ -96,6 +107,17 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 cd feature_tests/cpp
+rm tests/*.out
+exec make
+'''
+
+[tasks.test-cpp2-feature]
+category = "Tests"
+dependencies = ["build-feature"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/cpp2
 rm tests/*.out
 exec make
 '''
