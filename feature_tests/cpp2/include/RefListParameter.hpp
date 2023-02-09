@@ -29,8 +29,8 @@ inline RefListParameter* RefListParameter::FromFFI(capi::RefListParameter* ptr) 
   return reinterpret_cast<RefListParameter*>(ptr);
 }
 
-inline RefListParameter::~RefListParameter() {
-  capi::RefListParameter_destroy(AsFFI());
+inline void RefListParameter::operator delete(void* ptr) {
+  capi::RefListParameter_destroy(reinterpret_cast<capi::RefListParameter*>(ptr));
 }
 
 

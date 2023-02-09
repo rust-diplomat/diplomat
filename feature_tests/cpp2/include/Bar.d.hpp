@@ -18,9 +18,10 @@ public:
   inline capi::Bar* AsFFI();
   inline static const Bar* FromFFI(const capi::Bar* ptr);
   inline static Bar* FromFFI(capi::Bar* ptr);
-  inline ~Bar();
+  inline static void operator delete(void* ptr);
 private:
   Bar() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

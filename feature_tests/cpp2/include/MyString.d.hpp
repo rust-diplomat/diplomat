@@ -24,9 +24,10 @@ public:
   inline capi::MyString* AsFFI();
   inline static const MyString* FromFFI(const capi::MyString* ptr);
   inline static MyString* FromFFI(capi::MyString* ptr);
-  inline ~MyString();
+  inline static void operator delete(void* ptr);
 private:
   MyString() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

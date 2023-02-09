@@ -49,8 +49,8 @@ inline MyString* MyString::FromFFI(capi::MyString* ptr) {
   return reinterpret_cast<MyString*>(ptr);
 }
 
-inline MyString::~MyString() {
-  capi::MyString_destroy(AsFFI());
+inline void MyString::operator delete(void* ptr) {
+  capi::MyString_destroy(reinterpret_cast<capi::MyString*>(ptr));
 }
 
 

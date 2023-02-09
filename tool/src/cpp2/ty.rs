@@ -136,9 +136,10 @@ public:
 \tinline {mut_cptr} AsFFI();
 \tinline static {const_ptr} FromFFI({const_cptr} ptr);
 \tinline static {mut_ptr} FromFFI({mut_cptr} ptr);
-\tinline ~{ty_name}();
+\tinline static void operator delete(void* ptr);
 private:
 \t{ty_name}() = delete;
+\tstatic void operator delete[](void*, size_t) = delete;
 }};
 
 "
@@ -162,8 +163,8 @@ inline {mut_ptr} {ty_name}::FromFFI({mut_cptr} ptr) {{
 \treturn reinterpret_cast<{mut_ptr}>(ptr);
 }}
 
-inline {ty_name}::~{ty_name}() {{
-\t{ctype}_destroy(AsFFI());
+inline void {ty_name}::operator delete(void* ptr) {{
+\t{ctype}_destroy(reinterpret_cast<{mut_cptr}>(ptr));
 }}
 
 "

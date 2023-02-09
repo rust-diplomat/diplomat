@@ -57,8 +57,8 @@ inline Foo* Foo::FromFFI(capi::Foo* ptr) {
   return reinterpret_cast<Foo*>(ptr);
 }
 
-inline Foo::~Foo() {
-  capi::Foo_destroy(AsFFI());
+inline void Foo::operator delete(void* ptr) {
+  capi::Foo_destroy(reinterpret_cast<capi::Foo*>(ptr));
 }
 
 

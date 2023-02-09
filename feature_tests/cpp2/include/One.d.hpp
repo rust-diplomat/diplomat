@@ -42,9 +42,10 @@ public:
   inline capi::One* AsFFI();
   inline static const One* FromFFI(const capi::One* ptr);
   inline static One* FromFFI(capi::One* ptr);
-  inline ~One();
+  inline static void operator delete(void* ptr);
 private:
   One() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

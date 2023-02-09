@@ -18,9 +18,10 @@ public:
   inline capi::RefListParameter* AsFFI();
   inline static const RefListParameter* FromFFI(const capi::RefListParameter* ptr);
   inline static RefListParameter* FromFFI(capi::RefListParameter* ptr);
-  inline ~RefListParameter();
+  inline static void operator delete(void* ptr);
 private:
   RefListParameter() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

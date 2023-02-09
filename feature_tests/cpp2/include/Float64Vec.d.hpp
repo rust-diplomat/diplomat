@@ -24,9 +24,10 @@ public:
   inline capi::Float64Vec* AsFFI();
   inline static const Float64Vec* FromFFI(const capi::Float64Vec* ptr);
   inline static Float64Vec* FromFFI(capi::Float64Vec* ptr);
-  inline ~Float64Vec();
+  inline static void operator delete(void* ptr);
 private:
   Float64Vec() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

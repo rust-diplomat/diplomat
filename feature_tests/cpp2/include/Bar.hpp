@@ -29,8 +29,8 @@ inline Bar* Bar::FromFFI(capi::Bar* ptr) {
   return reinterpret_cast<Bar*>(ptr);
 }
 
-inline Bar::~Bar() {
-  capi::Bar_destroy(AsFFI());
+inline void Bar::operator delete(void* ptr) {
+  capi::Bar_destroy(reinterpret_cast<capi::Bar*>(ptr));
 }
 
 

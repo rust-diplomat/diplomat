@@ -35,8 +35,8 @@ inline RefList* RefList::FromFFI(capi::RefList* ptr) {
   return reinterpret_cast<RefList*>(ptr);
 }
 
-inline RefList::~RefList() {
-  capi::RefList_destroy(AsFFI());
+inline void RefList::operator delete(void* ptr) {
+  capi::RefList_destroy(reinterpret_cast<capi::RefList*>(ptr));
 }
 
 

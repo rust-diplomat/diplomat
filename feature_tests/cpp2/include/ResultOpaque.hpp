@@ -69,8 +69,8 @@ inline ResultOpaque* ResultOpaque::FromFFI(capi::ResultOpaque* ptr) {
   return reinterpret_cast<ResultOpaque*>(ptr);
 }
 
-inline ResultOpaque::~ResultOpaque() {
-  capi::ResultOpaque_destroy(AsFFI());
+inline void ResultOpaque::operator delete(void* ptr) {
+  capi::ResultOpaque_destroy(reinterpret_cast<capi::ResultOpaque*>(ptr));
 }
 
 

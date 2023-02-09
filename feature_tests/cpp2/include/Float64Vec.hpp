@@ -47,8 +47,8 @@ inline Float64Vec* Float64Vec::FromFFI(capi::Float64Vec* ptr) {
   return reinterpret_cast<Float64Vec*>(ptr);
 }
 
-inline Float64Vec::~Float64Vec() {
-  capi::Float64Vec_destroy(AsFFI());
+inline void Float64Vec::operator delete(void* ptr) {
+  capi::Float64Vec_destroy(reinterpret_cast<capi::Float64Vec*>(ptr));
 }
 
 

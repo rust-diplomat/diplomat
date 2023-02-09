@@ -39,9 +39,10 @@ public:
   inline capi::ResultOpaque* AsFFI();
   inline static const ResultOpaque* FromFFI(const capi::ResultOpaque* ptr);
   inline static ResultOpaque* FromFFI(capi::ResultOpaque* ptr);
-  inline ~ResultOpaque();
+  inline static void operator delete(void* ptr);
 private:
   ResultOpaque() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

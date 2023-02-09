@@ -33,9 +33,10 @@ public:
   inline capi::OptionOpaque* AsFFI();
   inline static const OptionOpaque* FromFFI(const capi::OptionOpaque* ptr);
   inline static OptionOpaque* FromFFI(capi::OptionOpaque* ptr);
-  inline ~OptionOpaque();
+  inline static void operator delete(void* ptr);
 private:
   OptionOpaque() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

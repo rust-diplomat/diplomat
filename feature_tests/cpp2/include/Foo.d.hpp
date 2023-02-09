@@ -34,9 +34,10 @@ public:
   inline capi::Foo* AsFFI();
   inline static const Foo* FromFFI(const capi::Foo* ptr);
   inline static Foo* FromFFI(capi::Foo* ptr);
-  inline ~Foo();
+  inline static void operator delete(void* ptr);
 private:
   Foo() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

@@ -49,8 +49,8 @@ inline Opaque* Opaque::FromFFI(capi::Opaque* ptr) {
   return reinterpret_cast<Opaque*>(ptr);
 }
 
-inline Opaque::~Opaque() {
-  capi::Opaque_destroy(AsFFI());
+inline void Opaque::operator delete(void* ptr) {
+  capi::Opaque_destroy(reinterpret_cast<capi::Opaque*>(ptr));
 }
 
 

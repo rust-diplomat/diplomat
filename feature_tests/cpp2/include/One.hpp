@@ -113,8 +113,8 @@ inline One* One::FromFFI(capi::One* ptr) {
   return reinterpret_cast<One*>(ptr);
 }
 
-inline One::~One() {
-  capi::One_destroy(AsFFI());
+inline void One::operator delete(void* ptr) {
+  capi::One_destroy(reinterpret_cast<capi::One*>(ptr));
 }
 
 
