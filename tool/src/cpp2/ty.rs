@@ -1,8 +1,8 @@
 use super::header::{Forward, Header};
 use super::Cpp2Context;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ParamSelf, ReturnFallability, ReturnType, SelfType,
-    TyPosition, Type, TypeDef, TypeId,
+    self, Mutability, OpaqueOwner, ParamSelf, ReturnFallability, ReturnType, SelfType, TyPosition,
+    Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -66,42 +66,67 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
-        write!(self.decl_header, "class {ty_name} {{
+        write!(
+            self.decl_header,
+            "class {ty_name} {{
 \t{ctype} value;
 
 public:
 \tenum Value {{
-").unwrap();
-write!(self.impl_header, "inline {ty_name}::{ty_name}({ty_name}::Value cpp_value) {{
+"
+        )
+        .unwrap();
+        write!(
+            self.impl_header,
+            "inline {ty_name}::{ty_name}({ty_name}::Value cpp_value) {{
 \tswitch (cpp_value) {{
-").unwrap();
+"
+        )
+        .unwrap();
         for variant in ty.variants.iter() {
             let enum_variant = self.cx.formatter.fmt_enum_variant(variant);
             let c_enum_variant = self.cx.formatter.fmt_c_enum_variant(&ty_name, variant);
             writeln!(self.decl_header, "\t\t{enum_variant},").unwrap();
-            write!(self.impl_header, "\t\tcase {enum_variant}:
+            write!(
+                self.impl_header,
+                "\t\tcase {enum_variant}:
 \t\t\tvalue = {c_enum_variant};
 \t\t\tbreak;
-").unwrap();
+"
+            )
+            .unwrap();
         }
-        write!(self.decl_header, "\t}};
+        write!(
+            self.decl_header,
+            "\t}};
 
 \tinline {ty_name}({ty_name}::Value cpp_value);
 \tinline {ty_name}({ctype} c_enum) : value(c_enum) {{}};
-");
-        write!(self.impl_header, "\t\tdefault:
+"
+        );
+        write!(
+            self.impl_header,
+            "\t\tdefault:
 \t\t\tabort();
 \t}}
 }}
-").unwrap();
+"
+        )
+        .unwrap();
         for method in ty.methods.iter() {
             self.gen_method(id, method);
         }
-        write!(self.decl_header, "
+        write!(
+            self.decl_header,
+            "
 \tinline {ctype} AsFFI() const;
 \tinline static {ty_name} FromFFI({ctype} c_enum);
-}};\n\n").unwrap();
-        write!(self.impl_header, "
+}};\n\n"
+        )
+        .unwrap();
+        write!(
+            self.impl_header,
+            "
 inline {ctype} {ty_name}::AsFFI() const {{
 \treturn value;
 }}
@@ -109,7 +134,9 @@ inline {ctype} {ty_name}::AsFFI() const {{
 inline {ty_name} {ty_name}::FromFFI({ctype} c_enum) {{
 \treturn {ty_name}(c_enum);
 }}
-").unwrap();
+"
+        )
+        .unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
@@ -186,39 +213,52 @@ inline void {ty_name}::operator delete(void* ptr) {{
         for method in def.methods.iter() {
             self.gen_method(id, method);
         }
-        write!(self.decl_header, "
+        write!(
+            self.decl_header,
+            "
 \tinline {ctype} AsFFI() const;
 \tinline static {ty_name} FromFFI({ctype} c_struct);
-}};\n\n").unwrap();
-    write!(self.impl_header,
-    "
+}};\n\n"
+        )
+        .unwrap();
+        write!(
+            self.impl_header,
+            "
 inline {ctype} {ty_name}::AsFFI() const {{
 \treturn {ctype} {{
-").unwrap();
-    for field in def.fields.iter() {
-        let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
-        for (c_name, conversion) in self.gen_cpp_to_c(&field.ty, &decl_name) {
-            writeln!(self.impl_header, "\t\t.{c_name} = {conversion},").unwrap();
+"
+        )
+        .unwrap();
+        for field in def.fields.iter() {
+            let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
+            for (c_name, conversion) in self.gen_cpp_to_c(&field.ty, &decl_name) {
+                writeln!(self.impl_header, "\t\t.{c_name} = {conversion},").unwrap();
+            }
         }
-    }
-write!(self.impl_header, "\t}};
+        write!(
+            self.impl_header,
+            "\t}};
 }}
 
 inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
 \treturn {ty_name} {{
-").unwrap();
+"
+        )
+        .unwrap();
         for field in def.fields.iter() {
             let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
             let field_getter = format!("c_struct.{decl_name}");
             let conversion = self.gen_c_to_cpp(&field.ty, &field_getter);
             writeln!(self.impl_header, "\t\t.{decl_name} = {conversion},").unwrap();
         }
-    write!(self.impl_header, "\t}};
+        write!(
+            self.impl_header,
+            "\t}};
 }}
 
 "
-)
-.unwrap();
+        )
+        .unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -245,7 +285,10 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
 
         let return_ty = self.gen_return_ty_name(&method.output);
 
-        let return_statement: Cow<str> = self.gen_fallible_c_to_cpp(&method.output, "result").map(|s| format!("\n\treturn {s};").into()).unwrap_or("".into());
+        let return_statement: Cow<str> = self
+            .gen_fallible_c_to_cpp(&method.output, "result")
+            .map(|s| format!("\n\treturn {s};").into())
+            .unwrap_or("".into());
 
         let return_prefix = if return_statement.is_empty() {
             ""
@@ -410,7 +453,10 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 vec![(param_name.into(), param_name.into())]
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                vec![(param_name.into(), format!("{param_name} ? {param_name}->AsFFI() : nullptr").into())]
+                vec![(
+                    param_name.into(),
+                    format!("{param_name} ? {param_name}->AsFFI() : nullptr").into(),
+                )]
             }
             Type::Opaque(..) => {
                 vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
@@ -424,15 +470,27 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
             Type::Slice(hir::Slice::Str(..)) => {
                 // TODO: This needs to change if an abstraction other than std::string_view is used
                 vec![
-                    (format!("{}_data", param_name).into(), format!("{param_name}.data()").into()),
-                    (format!("{}_size", param_name).into(), format!("{param_name}.size()").into()),
+                    (
+                        format!("{}_data", param_name).into(),
+                        format!("{param_name}.data()").into(),
+                    ),
+                    (
+                        format!("{}_size", param_name).into(),
+                        format!("{param_name}.size()").into(),
+                    ),
                 ]
             }
             Type::Slice(hir::Slice::Primitive(..)) => {
                 // TODO: This needs to change if an abstraction other than std::span is used
                 vec![
-                    (format!("{}_data", param_name).into(), format!("{param_name}.data()").into()),
-                    (format!("{}_size", param_name).into(), format!("{param_name}.size()").into()),
+                    (
+                        format!("{}_data", param_name).into(),
+                        format!("{param_name}.data()").into(),
+                    ),
+                    (
+                        format!("{}_size", param_name).into(),
+                        format!("{param_name}.size()").into(),
+                    ),
                 ]
             }
         }
@@ -475,8 +533,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
                 // TODO: Add imports?
-                format!("{var_name} ? {{ *{ty_name}::FromFFI({var_name}) }} : std::nullopt")
-                    .into()
+                format!("{var_name} ? {{ *{ty_name}::FromFFI({var_name}) }} : std::nullopt").into()
             }
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
@@ -504,25 +561,28 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 // TODO: This needs to change if an abstraction other than std::span is used
                 let prim_name = self.cx.formatter.fmt_primitive_as_c(p);
-                let span = self.cx.formatter.fmt_borrowed_slice(&prim_name, b.mutability);
+                let span = self
+                    .cx
+                    .formatter
+                    .fmt_borrowed_slice(&prim_name, b.mutability);
                 format!("{span}({var_name}_data, {var_name}_size)").into()
             }
         }
     }
 
-    fn gen_fallible_c_to_cpp<'a>(&mut self, result_ty: &ReturnFallability, var_name: &'a str) -> Option<Cow<'a, str>> {
+    fn gen_fallible_c_to_cpp<'a>(
+        &mut self,
+        result_ty: &ReturnFallability,
+        var_name: &'a str,
+    ) -> Option<Cow<'a, str>> {
         match *result_ty {
             ReturnFallability::Infallible(None) => None,
             ReturnFallability::Infallible(Some(ReturnType::Writeable)) => {
-                Some(
-                    "/* TODO: Writeable conversion */".into()
-                )
-            },
+                Some("/* TODO: Writeable conversion */".into())
+            }
             ReturnFallability::Infallible(Some(ReturnType::OutType(ref out_ty))) => {
-                Some(
-                    self.gen_c_to_cpp(out_ty, var_name)
-                )
-            },
+                Some(self.gen_c_to_cpp(out_ty, var_name))
+            }
             ReturnFallability::Fallible(ref ok, ref err) => {
                 let ok_path = format!("{var_name}.ok");
                 let err_path = format!("{var_name}.err");
