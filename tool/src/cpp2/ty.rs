@@ -532,31 +532,31 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
             Type::Opaque(ref op) if op.owner.is_owned() => {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
-                // TODO: Add imports?
+                // Note: The impl file is imported in gen_ty_name().
                 format!("std::unique_ptr<{ty_name}>({ty_name}::FromFFI({var_name}))").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
-                // TODO: Add imports?
+                // Note: The impl file is imported in gen_ty_name().
                 format!("{var_name} ? {{ *{ty_name}::FromFFI({var_name}) }} : std::nullopt").into()
             }
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
-                // TODO: Add imports?
+                // Note: The impl file is imported in gen_ty_name().
                 format!("*{ty_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(&st);
                 let ty_name = self.cx.formatter.fmt_type_name(id);
-                // TODO: Add imports?
+                // Note: The impl file is imported in gen_ty_name().
                 format!("{ty_name}::FromFFI({var_name})").into()
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(id);
-                // TODO: Add imports?
+                // Note: The impl file is imported in gen_ty_name().
                 format!("{ty_name}::FromFFI({var_name})").into()
             }
             Type::Slice(hir::Slice::Str(..)) => {
