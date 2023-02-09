@@ -51,8 +51,9 @@ impl<'tcx> CFormatter<'tcx> {
         format!("{type_name}.d.h")
     }
     /// Format an enum variant.
-    pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
-        variant.name.as_str().into()
+    pub fn fmt_enum_variant(&self, type_name: &str, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
+        let variant_name = variant.name.as_str();
+        format!("{type_name}_{variant_name}").into()
     }
     /// Format a field name or parameter name
     // might need splitting in the future if we decide to support renames here

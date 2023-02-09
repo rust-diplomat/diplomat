@@ -57,8 +57,8 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         ident: &'a str,
         variant: &'tcx hir::EnumVariant,
     ) -> Cow<'tcx, str> {
-        let variant_name = &variant.name;
-        format!("capi::{ident}_{variant_name}").into()
+        let c_variant_name = self.c.fmt_enum_variant(ident, variant);
+        format!("capi::{c_variant_name}").into()
     }
     /// Format a field name or parameter name
     // might need splitting in the future if we decide to support renames here
