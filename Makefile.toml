@@ -75,6 +75,7 @@ dependencies = [
 category = "Tests"
 dependencies = [
     "test-cpp-feature",
+    "test-cpp2-feature",
     "test-wasm-feature",
 ]
 
@@ -214,6 +215,7 @@ end
 category = "Code generation"
 dependencies = [
     "gen-feature-cpp",
+    "gen-feature-cpp2",
     "gen-feature-c",
     "gen-feature-c2",
     "gen-feature-js",
@@ -224,6 +226,7 @@ dependencies = [
 category = "Code generation"
 dependencies = [
     "gen-examples-cpp",
+    "gen-examples-cpp2",
     "gen-examples-c",
     "gen-examples-c2",
     "gen-examples-js",
