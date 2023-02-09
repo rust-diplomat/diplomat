@@ -18,9 +18,14 @@ public:
   inline capi::Two* AsFFI();
   inline static const Two* FromFFI(const capi::Two* ptr);
   inline static Two* FromFFI(capi::Two* ptr);
-  inline ~Two();
+  inline static void operator delete(void* ptr);
 private:
   Two() = delete;
+  Two(const Two&) = delete;
+  Two(Two&&) noexcept = delete;
+  Two operator=(const Two&) = delete;
+  Two operator=(Two&&) noexcept = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

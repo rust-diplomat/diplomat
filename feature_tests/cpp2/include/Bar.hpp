@@ -1,6 +1,8 @@
 #ifndef Bar_HPP
 #define Bar_HPP
 
+#include "Bar.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "Bar.h"
-
-#include "Bar.d.hpp"
 
 
 inline const capi::Bar* Bar::AsFFI() const {
@@ -29,8 +29,8 @@ inline Bar* Bar::FromFFI(capi::Bar* ptr) {
   return reinterpret_cast<Bar*>(ptr);
 }
 
-inline Bar::~Bar() {
-  capi::Bar_destroy(AsFFI());
+inline void Bar::operator delete(void* ptr) {
+  capi::Bar_destroy(reinterpret_cast<capi::Bar*>(ptr));
 }
 
 

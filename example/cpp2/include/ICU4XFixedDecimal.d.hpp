@@ -18,17 +18,20 @@ public:
 
   inline void multiply_pow10(int16_t power);
 
-  inline void negate();
-
-  inline DiplomatResult<std::string, std::monostate> to_string() const;
+  inline diplomat::result<std::string, std::monostate> to_string() const;
 
   inline const capi::ICU4XFixedDecimal* AsFFI() const;
   inline capi::ICU4XFixedDecimal* AsFFI();
   inline static const ICU4XFixedDecimal* FromFFI(const capi::ICU4XFixedDecimal* ptr);
   inline static ICU4XFixedDecimal* FromFFI(capi::ICU4XFixedDecimal* ptr);
-  inline ~ICU4XFixedDecimal();
+  inline static void operator delete(void* ptr);
 private:
   ICU4XFixedDecimal() = delete;
+  ICU4XFixedDecimal(const ICU4XFixedDecimal&) = delete;
+  ICU4XFixedDecimal(ICU4XFixedDecimal&&) noexcept = delete;
+  ICU4XFixedDecimal operator=(const ICU4XFixedDecimal&) = delete;
+  ICU4XFixedDecimal operator=(ICU4XFixedDecimal&&) noexcept = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

@@ -13,25 +13,25 @@
 #include "ResultOpaque.d.h"
 
 struct ErrorStruct;
-enum struct ErrorEnum;
+class ErrorEnum;
 
 
 class ResultOpaque {
 public:
 
-  inline static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> new_(int32_t i);
+  inline static diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> new_(int32_t i);
 
-  inline static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> new_failing_foo();
+  inline static diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> new_failing_foo();
 
-  inline static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorEnum> new_failing_bar();
+  inline static diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> new_failing_bar();
 
-  inline static DiplomatResult<std::unique_ptr<ResultOpaque>, std::monostate> new_failing_unit();
+  inline static diplomat::result<std::unique_ptr<ResultOpaque>, std::monostate> new_failing_unit();
 
-  inline static DiplomatResult<std::unique_ptr<ResultOpaque>, ErrorStruct> new_failing_struct(int32_t i);
+  inline static diplomat::result<std::unique_ptr<ResultOpaque>, ErrorStruct> new_failing_struct(int32_t i);
 
-  inline static DiplomatResult<std::monostate, std::unique_ptr<ResultOpaque>> new_in_err(int32_t i);
+  inline static diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>> new_in_err(int32_t i);
 
-  inline static DiplomatResult<ErrorEnum, std::unique_ptr<ResultOpaque>> new_in_enum_err(int32_t i);
+  inline static diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> new_in_enum_err(int32_t i);
 
   inline void assert_integer(int32_t i) const;
 
@@ -39,9 +39,14 @@ public:
   inline capi::ResultOpaque* AsFFI();
   inline static const ResultOpaque* FromFFI(const capi::ResultOpaque* ptr);
   inline static ResultOpaque* FromFFI(capi::ResultOpaque* ptr);
-  inline ~ResultOpaque();
+  inline static void operator delete(void* ptr);
 private:
   ResultOpaque() = delete;
+  ResultOpaque(const ResultOpaque&) = delete;
+  ResultOpaque(ResultOpaque&&) noexcept = delete;
+  ResultOpaque operator=(const ResultOpaque&) = delete;
+  ResultOpaque operator=(ResultOpaque&&) noexcept = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

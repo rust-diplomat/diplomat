@@ -1,6 +1,8 @@
 #ifndef OptionOpaqueChar_HPP
 #define OptionOpaqueChar_HPP
 
+#include "OptionOpaqueChar.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "OptionOpaqueChar.h"
-
-#include "OptionOpaqueChar.d.hpp"
 
 
 inline void OptionOpaqueChar::assert_char(char32_t ch) const {
@@ -34,8 +34,8 @@ inline OptionOpaqueChar* OptionOpaqueChar::FromFFI(capi::OptionOpaqueChar* ptr) 
   return reinterpret_cast<OptionOpaqueChar*>(ptr);
 }
 
-inline OptionOpaqueChar::~OptionOpaqueChar() {
-  capi::OptionOpaqueChar_destroy(AsFFI());
+inline void OptionOpaqueChar::operator delete(void* ptr) {
+  capi::OptionOpaqueChar_destroy(reinterpret_cast<capi::OptionOpaqueChar*>(ptr));
 }
 
 

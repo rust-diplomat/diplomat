@@ -1,6 +1,8 @@
 #ifndef Two_HPP
 #define Two_HPP
 
+#include "Two.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "Two.h"
-
-#include "Two.d.hpp"
 
 
 inline const capi::Two* Two::AsFFI() const {
@@ -29,8 +29,8 @@ inline Two* Two::FromFFI(capi::Two* ptr) {
   return reinterpret_cast<Two*>(ptr);
 }
 
-inline Two::~Two() {
-  capi::Two_destroy(AsFFI());
+inline void Two::operator delete(void* ptr) {
+  capi::Two_destroy(reinterpret_cast<capi::Two*>(ptr));
 }
 
 

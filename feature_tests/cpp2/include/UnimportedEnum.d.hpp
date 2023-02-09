@@ -8,12 +8,24 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "UnimportedEnum.d.h"
 
 
-enum struct UnimportedEnum {
-  A = 0,
-  B = 1,
-  C = 2,
+class UnimportedEnum {
+  capi::UnimportedEnum value;
+
+public:
+  enum Value {
+    A,
+    B,
+    C,
+  };
+
+  inline UnimportedEnum(UnimportedEnum::Value cpp_value);
+  inline UnimportedEnum(capi::UnimportedEnum c_enum) : value(c_enum) {};
+
+  inline capi::UnimportedEnum AsFFI() const;
+  inline static UnimportedEnum FromFFI(capi::UnimportedEnum c_enum);
 };
 
 

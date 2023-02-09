@@ -1,6 +1,8 @@
 #ifndef Foo_HPP
 #define Foo_HPP
 
+#include "Foo.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -8,37 +10,37 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Bar.d.hpp"
+#include "Bar.hpp"
+#include "BorrowedFields.hpp"
+#include "BorrowedFieldsReturning.hpp"
 #include "Foo.h"
-
-#include "Foo.d.hpp"
 
 
 inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
   auto result = capi::Foo_new(x.data(),
     x.size());
-  return std::unique_ptr(Foo::FromFFI(result));
+  return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
 
 inline std::unique_ptr<Bar> Foo::get_bar() const {
   auto result = capi::Foo_get_bar(this->AsFFI());
-  return std::unique_ptr(Foo::FromFFI(result));
+  return std::unique_ptr<Bar>(Bar::FromFFI(result));
 }
 
 inline std::unique_ptr<Foo> Foo::new_static(std::string_view x) {
   auto result = capi::Foo_new_static(x.data(),
     x.size());
-  return std::unique_ptr(Foo::FromFFI(result));
+  return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
 
 inline BorrowedFieldsReturning Foo::as_returning() const {
   auto result = capi::Foo_as_returning(this->AsFFI());
-  return Foo::FromFFI(result);
+  return BorrowedFieldsReturning::FromFFI(result);
 }
 
 inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
   auto result = capi::Foo_extract_from_fields(fields.AsFFI());
-  return std::unique_ptr(Foo::FromFFI(result));
+  return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
 
 inline const capi::Foo* Foo::AsFFI() const {
@@ -57,8 +59,8 @@ inline Foo* Foo::FromFFI(capi::Foo* ptr) {
   return reinterpret_cast<Foo*>(ptr);
 }
 
-inline Foo::~Foo() {
-  capi::Foo_destroy(AsFFI());
+inline void Foo::operator delete(void* ptr) {
+  capi::Foo_destroy(reinterpret_cast<capi::Foo*>(ptr));
 }
 
 

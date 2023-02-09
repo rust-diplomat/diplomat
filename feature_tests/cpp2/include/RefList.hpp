@@ -1,6 +1,8 @@
 #ifndef RefList_HPP
 #define RefList_HPP
 
+#include "RefList.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,14 +11,12 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "RefList.h"
-#include "RefListParameter.d.hpp"
-
-#include "RefList.d.hpp"
+#include "RefListParameter.hpp"
 
 
 inline std::unique_ptr<RefList> RefList::node(const RefListParameter& data) {
   auto result = capi::RefList_node(data.AsFFI());
-  return std::unique_ptr(RefList::FromFFI(result));
+  return std::unique_ptr<RefList>(RefList::FromFFI(result));
 }
 
 inline const capi::RefList* RefList::AsFFI() const {
@@ -35,8 +35,8 @@ inline RefList* RefList::FromFFI(capi::RefList* ptr) {
   return reinterpret_cast<RefList*>(ptr);
 }
 
-inline RefList::~RefList() {
-  capi::RefList_destroy(AsFFI());
+inline void RefList::operator delete(void* ptr) {
+  capi::RefList_destroy(reinterpret_cast<capi::RefList*>(ptr));
 }
 
 

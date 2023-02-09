@@ -27,15 +27,20 @@ public:
 
   inline void assert_integer(int32_t i) const;
 
-  inline static bool option_opaque_argument(std::optional<const std::reference_wrapper<OptionOpaque>> arg);
+  inline static bool option_opaque_argument(const OptionOpaque* arg);
 
   inline const capi::OptionOpaque* AsFFI() const;
   inline capi::OptionOpaque* AsFFI();
   inline static const OptionOpaque* FromFFI(const capi::OptionOpaque* ptr);
   inline static OptionOpaque* FromFFI(capi::OptionOpaque* ptr);
-  inline ~OptionOpaque();
+  inline static void operator delete(void* ptr);
 private:
   OptionOpaque() = delete;
+  OptionOpaque(const OptionOpaque&) = delete;
+  OptionOpaque(OptionOpaque&&) noexcept = delete;
+  OptionOpaque operator=(const OptionOpaque&) = delete;
+  OptionOpaque operator=(OptionOpaque&&) noexcept = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

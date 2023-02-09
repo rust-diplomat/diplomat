@@ -8,14 +8,18 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "ImportedStruct.d.h"
 #include "UnimportedEnum.d.hpp"
 
-enum struct UnimportedEnum;
+class UnimportedEnum;
 
 
 struct ImportedStruct {
   UnimportedEnum foo;
   uint8_t count;
+
+  inline capi::ImportedStruct AsFFI() const;
+  inline static ImportedStruct FromFFI(capi::ImportedStruct c_struct);
 };
 
 

@@ -1,6 +1,8 @@
 #ifndef One_HPP
 #define One_HPP
 
+#include "One.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,21 +11,19 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "One.h"
-#include "Two.d.hpp"
-
-#include "One.d.hpp"
+#include "Two.hpp"
 
 
 inline std::unique_ptr<One> One::transitivity(const One& hold, const One& nohold) {
   auto result = capi::One_transitivity(hold.AsFFI(),
     nohold.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::cycle(const Two& hold, const One& nohold) {
   auto result = capi::One_cycle(hold.AsFFI(),
     nohold.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::many_dependents(const One& a, const One& b, const Two& c, const Two& d, const Two& nohold) {
@@ -32,13 +32,13 @@ inline std::unique_ptr<One> One::many_dependents(const One& a, const One& b, con
     c.AsFFI(),
     d.AsFFI(),
     nohold.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::return_outlives_param(const Two& hold, const One& nohold) {
   auto result = capi::One_return_outlives_param(hold.AsFFI(),
     nohold.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::diamond_top(const One& top, const One& left, const One& right, const One& bottom) {
@@ -46,7 +46,7 @@ inline std::unique_ptr<One> One::diamond_top(const One& top, const One& left, co
     left.AsFFI(),
     right.AsFFI(),
     bottom.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::diamond_left(const One& top, const One& left, const One& right, const One& bottom) {
@@ -54,7 +54,7 @@ inline std::unique_ptr<One> One::diamond_left(const One& top, const One& left, c
     left.AsFFI(),
     right.AsFFI(),
     bottom.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::diamond_right(const One& top, const One& left, const One& right, const One& bottom) {
@@ -62,7 +62,7 @@ inline std::unique_ptr<One> One::diamond_right(const One& top, const One& left, 
     left.AsFFI(),
     right.AsFFI(),
     bottom.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::diamond_bottom(const One& top, const One& left, const One& right, const One& bottom) {
@@ -70,7 +70,7 @@ inline std::unique_ptr<One> One::diamond_bottom(const One& top, const One& left,
     left.AsFFI(),
     right.AsFFI(),
     bottom.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::diamond_and_nested_types(const One& a, const One& b, const One& c, const One& d, const One& nohold) {
@@ -79,14 +79,14 @@ inline std::unique_ptr<One> One::diamond_and_nested_types(const One& a, const On
     c.AsFFI(),
     d.AsFFI(),
     nohold.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::implicit_bounds(const One& explicit_hold, const One& implicit_hold, const One& nohold) {
   auto result = capi::One_implicit_bounds(explicit_hold.AsFFI(),
     implicit_hold.AsFFI(),
     nohold.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline std::unique_ptr<One> One::implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold) {
@@ -94,7 +94,7 @@ inline std::unique_ptr<One> One::implicit_bounds_deep(const One& explicit_, cons
     implicit_1.AsFFI(),
     implicit_2.AsFFI(),
     nohold.AsFFI());
-  return std::unique_ptr(One::FromFFI(result));
+  return std::unique_ptr<One>(One::FromFFI(result));
 }
 
 inline const capi::One* One::AsFFI() const {
@@ -113,8 +113,8 @@ inline One* One::FromFFI(capi::One* ptr) {
   return reinterpret_cast<One*>(ptr);
 }
 
-inline One::~One() {
-  capi::One_destroy(AsFFI());
+inline void One::operator delete(void* ptr) {
+  capi::One_destroy(reinterpret_cast<capi::One*>(ptr));
 }
 
 

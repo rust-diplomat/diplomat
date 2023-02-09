@@ -52,6 +52,14 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
         variant.name.as_str().into()
     }
+    pub fn fmt_c_enum_variant<'a>(
+        &self,
+        ident: &'a str,
+        variant: &'tcx hir::EnumVariant,
+    ) -> Cow<'tcx, str> {
+        let c_variant_name = self.c.fmt_enum_variant(ident, variant);
+        format!("capi::{c_variant_name}").into()
+    }
     /// Format a field name or parameter name
     // might need splitting in the future if we decide to support renames here
     pub fn fmt_param_name<'a>(&self, ident: &'a str) -> Cow<'a, str> {
@@ -79,17 +87,16 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
+    pub fn fmt_move_ref<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        format!("{ident}&&").into()
+    }
+
     pub fn fmt_optional_borrowed<'a>(
         &self,
         ident: &'a str,
         mutability: hir::Mutability,
     ) -> Cow<'a, str> {
-        // TODO: Where is the right place to put `const` here?
-        if mutability.is_mutable() {
-            format!("std::optional<std::reference_wrapper<{}>>", ident).into()
-        } else {
-            format!("std::optional<const std::reference_wrapper<{}>>", ident).into()
-        }
+        self.c.fmt_ptr(ident, mutability)
     }
 
     pub fn fmt_owned<'a>(&self, ident: &'a str) -> Cow<'a, str> {
@@ -103,9 +110,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     ) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
-            format!("std::span<{}>", ident).into()
+            format!("diplomat::span<{}>", ident).into()
         } else {
-            format!("std::span<const {}>", ident).into()
+            format!("diplomat::span<const {}>", ident).into()
         }
     }
 
@@ -119,8 +126,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Format a method
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
+        // TODO(#60): handle other keywords
         if method.name == "new" {
             "new_".into()
+        } else if method.name == "default" {
+            "default_".into()
         } else {
             method.name.as_str().into()
         }

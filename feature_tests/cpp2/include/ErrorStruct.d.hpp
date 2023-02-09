@@ -8,11 +8,15 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "ErrorStruct.d.h"
 
 
 struct ErrorStruct {
   int32_t i;
   int32_t j;
+
+  inline capi::ErrorStruct AsFFI() const;
+  inline static ErrorStruct FromFFI(capi::ErrorStruct c_struct);
 };
 
 

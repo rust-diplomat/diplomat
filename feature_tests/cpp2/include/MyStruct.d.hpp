@@ -9,8 +9,9 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "MyEnum.d.hpp"
+#include "MyStruct.d.h"
 
-enum struct MyEnum;
+class MyEnum;
 
 
 struct MyStruct {
@@ -21,6 +22,11 @@ struct MyStruct {
   int32_t e;
   char32_t f;
   MyEnum g;
+
+  inline static MyStruct new_();
+
+  inline capi::MyStruct AsFFI() const;
+  inline static MyStruct FromFFI(capi::MyStruct c_struct);
 };
 
 

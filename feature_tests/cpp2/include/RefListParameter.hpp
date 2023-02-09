@@ -1,6 +1,8 @@
 #ifndef RefListParameter_HPP
 #define RefListParameter_HPP
 
+#include "RefListParameter.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "RefListParameter.h"
-
-#include "RefListParameter.d.hpp"
 
 
 inline const capi::RefListParameter* RefListParameter::AsFFI() const {
@@ -29,8 +29,8 @@ inline RefListParameter* RefListParameter::FromFFI(capi::RefListParameter* ptr) 
   return reinterpret_cast<RefListParameter*>(ptr);
 }
 
-inline RefListParameter::~RefListParameter() {
-  capi::RefListParameter_destroy(AsFFI());
+inline void RefListParameter::operator delete(void* ptr) {
+  capi::RefListParameter_destroy(reinterpret_cast<capi::RefListParameter*>(ptr));
 }
 
 

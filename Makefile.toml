@@ -75,6 +75,7 @@ dependencies = [
 category = "Tests"
 dependencies = [
     "test-cpp-feature",
+    "test-cpp2-feature",
     "test-wasm-feature",
 ]
 
@@ -89,6 +90,17 @@ rm tests/*.out
 exec make
 '''
 
+[tasks.test-cpp2-example]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/cpp2
+rm tests/*.out
+exec make
+'''
+
 [tasks.test-cpp-feature]
 category = "Tests"
 dependencies = ["build-feature"]
@@ -96,6 +108,17 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 cd feature_tests/cpp
+rm tests/*.out
+exec make
+'''
+
+[tasks.test-cpp2-feature]
+category = "Tests"
+dependencies = ["build-feature"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/cpp2
 rm tests/*.out
 exec make
 '''
@@ -192,6 +215,7 @@ end
 category = "Code generation"
 dependencies = [
     "gen-feature-cpp",
+    "gen-feature-cpp2",
     "gen-feature-c",
     "gen-feature-c2",
     "gen-feature-js",
@@ -202,6 +226,7 @@ dependencies = [
 category = "Code generation"
 dependencies = [
     "gen-examples-cpp",
+    "gen-examples-cpp2",
     "gen-examples-c",
     "gen-examples-c2",
     "gen-examples-js",

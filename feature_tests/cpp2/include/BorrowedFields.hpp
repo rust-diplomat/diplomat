@@ -1,6 +1,8 @@
 #ifndef BorrowedFields_HPP
 #define BorrowedFields_HPP
 
+#include "BorrowedFields.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,10 +12,23 @@
 #include "diplomat_runtime.hpp"
 #include "BorrowedFields.h"
 
-#include "BorrowedFields.d.hpp"
 
 
-// No Content
+inline capi::BorrowedFields BorrowedFields::AsFFI() const {
+  return capi::BorrowedFields {
+    .a_data = a.data(),
+    .a_size = a.size(),
+    .b_data = b.data(),
+    .b_size = b.size(),
+  };
+}
+
+inline BorrowedFields BorrowedFields::FromFFI(capi::BorrowedFields c_struct) {
+  return BorrowedFields {
+    .a = diplomat::span<const uint16_t>(c_struct.a_data, c_struct.a_size),
+    .b = std::string_view(c_struct.b_data, c_struct.b_size),
+  };
+}
 
 
 #endif // BorrowedFields_HPP

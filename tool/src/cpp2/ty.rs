@@ -1,8 +1,8 @@
 use super::header::{Forward, Header};
 use super::Cpp2Context;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, OutType, ParamSelf, ReturnFallability, ReturnType, SelfType,
-    TyPosition, Type, TypeDef, TypeId,
+    self, Mutability, OpaqueOwner, ParamSelf, ReturnFallability, ReturnType, SelfType, TyPosition,
+    Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -39,6 +39,9 @@ impl<'tcx> super::Cpp2Context<'tcx> {
 
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
+        let c_decl_header_path = self.formatter.fmt_c_decl_header_path(id);
+        context.decl_header.includes.insert(c_decl_header_path);
+
         let c_impl_header_path = self.formatter.fmt_c_impl_header_path(id);
         context.impl_header.includes.insert(c_impl_header_path);
 
@@ -57,19 +60,90 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
 }
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
+    /// Adds an enum definition to the current decl and impl headers.
+    ///
+    /// The enum is defined in C++ using a `class` with a single private field that is the
+    /// C enum type. This enables us to add methods to the enum and generally make the enum
+    /// behave more like an upgraded C++ type. We don't use `enum class` because methods
+    /// cannot be added to it.
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.decl_header, "enum struct {ty_name} {{").unwrap();
+        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
+        self.decl_header
+            .includes
+            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
+        write!(
+            self.decl_header,
+            "class {ty_name} {{
+\t{ctype} value;
+
+public:
+\tenum Value {{
+"
+        )
+        .unwrap();
+        write!(
+            self.impl_header,
+            "inline {ty_name}::{ty_name}({ty_name}::Value cpp_value) {{
+\tswitch (cpp_value) {{
+"
+        )
+        .unwrap();
         for variant in ty.variants.iter() {
-            writeln!(
-                self.decl_header,
-                "\t{} = {},",
-                self.cx.formatter.fmt_enum_variant(variant),
-                variant.discriminant
+            let enum_variant = self.cx.formatter.fmt_enum_variant(variant);
+            let c_enum_variant = self.cx.formatter.fmt_c_enum_variant(&ty_name, variant);
+            writeln!(self.decl_header, "\t\t{enum_variant},").unwrap();
+            write!(
+                self.impl_header,
+                "\t\tcase {enum_variant}:
+\t\t\tvalue = {c_enum_variant};
+\t\t\tbreak;
+"
             )
             .unwrap();
         }
-        write!(self.decl_header, "}};\n\n").unwrap();
+        write!(
+            self.decl_header,
+            "\t}};
+
+\tinline {ty_name}({ty_name}::Value cpp_value);
+\tinline {ty_name}({ctype} c_enum) : value(c_enum) {{}};
+"
+        )
+        .unwrap();
+        write!(
+            self.impl_header,
+            "\t\tdefault:
+\t\t\tabort();
+\t}}
+}}
+"
+        )
+        .unwrap();
+        for method in ty.methods.iter() {
+            self.gen_method(id, method);
+        }
+        write!(
+            self.decl_header,
+            "
+\tinline {ctype} AsFFI() const;
+\tinline static {ty_name} FromFFI({ctype} c_enum);
+}};\n\n"
+        )
+        .unwrap();
+        write!(
+            self.impl_header,
+            "
+inline {ctype} {ty_name}::AsFFI() const {{
+\treturn value;
+}}
+
+inline {ty_name} {ty_name}::FromFFI({ctype} c_enum) {{
+\treturn {ty_name}(c_enum);
+}}
+"
+        )
+        .unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
@@ -79,6 +153,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
         let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
+        let const_ref = self
+            .cx
+            .formatter
+            .fmt_borrowed(&ty_name, Mutability::Immutable);
+        let move_ref = self.cx.formatter.fmt_move_ref(&ty_name);
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
@@ -99,9 +178,14 @@ public:
 \tinline {mut_cptr} AsFFI();
 \tinline static {const_ptr} FromFFI({const_cptr} ptr);
 \tinline static {mut_ptr} FromFFI({mut_cptr} ptr);
-\tinline ~{ty_name}();
+\tinline static void operator delete(void* ptr);
 private:
 \t{ty_name}() = delete;
+\t{ty_name}({const_ref}) = delete;
+\t{ty_name}({move_ref}) noexcept = delete;
+\t{ty_name} operator=({const_ref}) = delete;
+\t{ty_name} operator=({move_ref}) noexcept = delete;
+\tstatic void operator delete[](void*, size_t) = delete;
 }};
 
 "
@@ -125,8 +209,8 @@ inline {mut_ptr} {ty_name}::FromFFI({mut_cptr} ptr) {{
 \treturn reinterpret_cast<{mut_ptr}>(ptr);
 }}
 
-inline {ty_name}::~{ty_name}() {{
-\t{ctype}_destroy(AsFFI());
+inline void {ty_name}::operator delete(void* ptr) {{
+\t{ctype}_destroy(reinterpret_cast<{mut_cptr}>(ptr));
 }}
 
 "
@@ -136,12 +220,61 @@ inline {ty_name}::~{ty_name}() {{
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
+        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         writeln!(self.decl_header, "struct {ty_name} {{").unwrap();
         for field in def.fields.iter() {
             let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
             writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
         }
-        write!(self.decl_header, "}};\n\n").unwrap();
+        for method in def.methods.iter() {
+            self.gen_method(id, method);
+        }
+        write!(
+            self.decl_header,
+            "
+\tinline {ctype} AsFFI() const;
+\tinline static {ty_name} FromFFI({ctype} c_struct);
+}};\n\n"
+        )
+        .unwrap();
+        write!(
+            self.impl_header,
+            "
+inline {ctype} {ty_name}::AsFFI() const {{
+\treturn {ctype} {{
+"
+        )
+        .unwrap();
+        for field in def.fields.iter() {
+            let (_decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
+            for (c_name, conversion) in self.gen_cpp_to_c(&field.ty, &decl_name) {
+                writeln!(self.impl_header, "\t\t.{c_name} = {conversion},").unwrap();
+            }
+        }
+        write!(
+            self.impl_header,
+            "\t}};
+}}
+
+inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
+\treturn {ty_name} {{
+"
+        )
+        .unwrap();
+        for field in def.fields.iter() {
+            let (_decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
+            let field_getter = format!("c_struct.{decl_name}");
+            let conversion = self.gen_c_to_cpp(&field.ty, &field_getter);
+            writeln!(self.impl_header, "\t\t.{decl_name} = {conversion},").unwrap();
+        }
+        write!(
+            self.impl_header,
+            "\t}};
+}}
+
+"
+        )
+        .unwrap();
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
@@ -158,8 +291,8 @@ inline {ty_name}::~{ty_name}() {{
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
-            let conversions = self.gen_cpp_to_c_param(&param.ty, param.name.as_str());
-            cpp_to_c_params.extend(conversions);
+            let conversions = self.gen_cpp_to_c(&param.ty, param.name.as_str());
+            cpp_to_c_params.extend(conversions.into_iter().map(|(_, cnv)| cnv));
         }
 
         if method.is_writeable() {
@@ -168,12 +301,10 @@ inline {ty_name}::~{ty_name}() {{
 
         let return_ty = self.gen_return_ty_name(&method.output);
 
-        let return_statement =
-            if let Some(ReturnType::OutType(out_type)) = method.output.return_type() {
-                self.gen_c_to_cpp_return(id, out_type)
-            } else {
-                "".into()
-            };
+        let return_statement: Cow<str> = self
+            .gen_fallible_c_to_cpp(&method.output, "result")
+            .map(|s| format!("\n\treturn {s};").into())
+            .unwrap_or_else(|| "".into());
 
         let return_prefix = if return_statement.is_empty() {
             ""
@@ -282,7 +413,7 @@ inline {ty_name}::~{ty_name}() {{
                     .insert(Forward::Class(ty_name.into_owned()));
                 self.impl_header
                     .includes
-                    .insert(self.cx.formatter.fmt_decl_header_path(op_id));
+                    .insert(self.cx.formatter.fmt_impl_header_path(op_id));
                 ret
             }
             Type::Struct(ref st) => {
@@ -293,6 +424,9 @@ inline {ty_name}::~{ty_name}() {{
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
+                self.impl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_impl_header_path(id));
                 self.cx.formatter.fmt_type_name(id)
             }
             Type::Enum(ref e) => {
@@ -303,6 +437,9 @@ inline {ty_name}::~{ty_name}() {{
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
+                self.impl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_impl_header_path(id));
                 self.cx.formatter.fmt_type_name(id)
             }
             Type::Slice(hir::Slice::Str(_lifetime)) => self.cx.formatter.fmt_borrowed_str(),
@@ -322,39 +459,54 @@ inline {ty_name}::~{ty_name}() {{
         }
     }
 
-    fn gen_cpp_to_c_param<'a, P: TyPosition>(
+    fn gen_cpp_to_c<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
         param_name: &'a str,
-    ) -> Vec<Cow<'a, str>> {
+    ) -> Vec<(Cow<'a, str>, Cow<'a, str>)> {
         match *ty {
             Type::Primitive(..) => {
-                vec![param_name.into()]
+                vec![(param_name.into(), param_name.into())]
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                vec![format!("{param_name} ? {param_name}.value().get().AsFFI() : nullptr").into()]
+                vec![(
+                    param_name.into(),
+                    format!("{param_name} ? {param_name}->AsFFI() : nullptr").into(),
+                )]
             }
             Type::Opaque(..) => {
-                vec![format!("{param_name}.AsFFI()").into()]
+                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
             }
             Type::Struct(..) => {
-                vec![format!("{param_name}.AsFFI()").into()]
+                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
             }
             Type::Enum(..) => {
-                vec![format!("{param_name}.AsFFI()").into()]
+                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 // TODO: This needs to change if an abstraction other than std::string_view is used
                 vec![
-                    format!("{param_name}.data()").into(),
-                    format!("{param_name}.size()").into(),
+                    (
+                        format!("{}_data", param_name).into(),
+                        format!("{param_name}.data()").into(),
+                    ),
+                    (
+                        format!("{}_size", param_name).into(),
+                        format!("{param_name}.size()").into(),
+                    ),
                 ]
             }
             Type::Slice(hir::Slice::Primitive(..)) => {
                 // TODO: This needs to change if an abstraction other than std::span is used
                 vec![
-                    format!("{param_name}.data()").into(),
-                    format!("{param_name}.size()").into(),
+                    (
+                        format!("{}_data", param_name).into(),
+                        format!("{param_name}.data()").into(),
+                    ),
+                    (
+                        format!("{}_size", param_name).into(),
+                        format!("{param_name}.size()").into(),
+                    ),
                 ]
             }
         }
@@ -378,31 +530,99 @@ inline {ty_name}::~{ty_name}() {{
                     None => "std::monostate".into(),
                 };
                 let ret: Cow<str> =
-                    format!("DiplomatResult<{ok_type_name}, {err_type_name}>").into();
+                    format!("diplomat::result<{ok_type_name}, {err_type_name}>").into();
                 ret
             }
         }
     }
 
-    fn gen_c_to_cpp_return(&self, id: TypeId, ty: &OutType) -> Cow<'static, str> {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+    fn gen_c_to_cpp<'a, P: TyPosition>(&self, ty: &Type<P>, var_name: &'a str) -> Cow<'a, str> {
         match *ty {
-            Type::Primitive(..) => "\n\treturn result;".into(),
+            Type::Primitive(..) => var_name.into(),
             Type::Opaque(ref op) if op.owner.is_owned() => {
-                format!("\n\treturn std::unique_ptr({ty_name}::FromFFI(result));").into()
+                let op_id = op.tcx_id.into();
+                let ty_name = self.cx.formatter.fmt_type_name(op_id);
+                // Note: The impl file is imported in gen_ty_name().
+                format!("std::unique_ptr<{ty_name}>({ty_name}::FromFFI({var_name}))").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                format!("\n\treturn result ? {{ *{ty_name}::FromFFI(result) }} : std::nullopt;")
-                    .into()
+                let op_id = op.tcx_id.into();
+                let ty_name = self.cx.formatter.fmt_type_name(op_id);
+                // Note: The impl file is imported in gen_ty_name().
+                format!("{var_name} ? {{ *{ty_name}::FromFFI({var_name}) }} : std::nullopt").into()
             }
-            Type::Opaque(..) => format!("\n\treturn *{ty_name}::FromFFI(result);").into(),
-            Type::Struct(..) => format!("\n\treturn {ty_name}::FromFFI(result);").into(),
-            Type::Enum(..) => format!("\n\treturn {ty_name}::FromFFI(result);").into(),
+            Type::Opaque(ref op) => {
+                let op_id = op.tcx_id.into();
+                let ty_name = self.cx.formatter.fmt_type_name(op_id);
+                // Note: The impl file is imported in gen_ty_name().
+                format!("*{ty_name}::FromFFI({var_name})").into()
+            }
+            Type::Struct(ref st) => {
+                let id = P::id_for_path(st);
+                let ty_name = self.cx.formatter.fmt_type_name(id);
+                // Note: The impl file is imported in gen_ty_name().
+                format!("{ty_name}::FromFFI({var_name})").into()
+            }
+            Type::Enum(ref e) => {
+                let id = e.tcx_id.into();
+                let ty_name = self.cx.formatter.fmt_type_name(id);
+                // Note: The impl file is imported in gen_ty_name().
+                format!("{ty_name}::FromFFI({var_name})").into()
+            }
             Type::Slice(hir::Slice::Str(..)) => {
-                todo!()
+                // TODO: This needs to change if an abstraction other than std::string_view is used
+                let string_view = self.cx.formatter.fmt_borrowed_str();
+                format!("{string_view}({var_name}_data, {var_name}_size)").into()
             }
-            Type::Slice(hir::Slice::Primitive(..)) => {
-                todo!()
+            Type::Slice(hir::Slice::Primitive(b, p)) => {
+                // TODO: This needs to change if an abstraction other than std::span is used
+                let prim_name = self.cx.formatter.fmt_primitive_as_c(p);
+                let span = self
+                    .cx
+                    .formatter
+                    .fmt_borrowed_slice(&prim_name, b.mutability);
+                format!("{span}({var_name}_data, {var_name}_size)").into()
+            }
+        }
+    }
+
+    fn gen_fallible_c_to_cpp<'a>(
+        &mut self,
+        result_ty: &ReturnFallability,
+        var_name: &'a str,
+    ) -> Option<Cow<'a, str>> {
+        match *result_ty {
+            ReturnFallability::Infallible(None) => None,
+            ReturnFallability::Infallible(Some(ReturnType::Writeable)) => {
+                Some("/* TODO: Writeable conversion */".into())
+            }
+            ReturnFallability::Infallible(Some(ReturnType::OutType(ref out_ty))) => {
+                Some(self.gen_c_to_cpp(out_ty, var_name))
+            }
+            ReturnFallability::Fallible(ref ok, ref err) => {
+                let ok_path = format!("{var_name}.ok");
+                let err_path = format!("{var_name}.err");
+                let ok_ty_name = match ok {
+                    Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
+                    None => "std::monostate".into(),
+                    Some(ReturnType::OutType(o)) => self.gen_ty_name(o),
+                };
+                let err_ty_name = match err {
+                    Some(o) => self.gen_ty_name(o),
+                    None => "std::monostate".into(),
+                };
+                let ok_conversion = match ok {
+                    Some(ReturnType::Writeable) => "/* TODO: Writeable conversion */".into(),
+                    None => "".into(),
+                    Some(ReturnType::OutType(o)) => self.gen_c_to_cpp(o, &ok_path),
+                };
+                let err_conversion = match err {
+                    Some(o) => self.gen_c_to_cpp(o, &err_path),
+                    None => "".into(),
+                };
+                Some(
+                    format!("{var_name}.is_ok ? diplomat::result<{ok_ty_name}, {err_ty_name}>(diplomat::Ok<{ok_ty_name}>({ok_conversion})) : diplomat::result<{ok_ty_name}, {err_ty_name}>(diplomat::Err<{err_ty_name}>({err_conversion}))").into()
+                )
             }
         }
     }

@@ -20,9 +20,14 @@ public:
   inline capi::OptionOpaqueChar* AsFFI();
   inline static const OptionOpaqueChar* FromFFI(const capi::OptionOpaqueChar* ptr);
   inline static OptionOpaqueChar* FromFFI(capi::OptionOpaqueChar* ptr);
-  inline ~OptionOpaqueChar();
+  inline static void operator delete(void* ptr);
 private:
   OptionOpaqueChar() = delete;
+  OptionOpaqueChar(const OptionOpaqueChar&) = delete;
+  OptionOpaqueChar(OptionOpaqueChar&&) noexcept = delete;
+  OptionOpaqueChar operator=(const OptionOpaqueChar&) = delete;
+  OptionOpaqueChar operator=(OptionOpaqueChar&&) noexcept = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

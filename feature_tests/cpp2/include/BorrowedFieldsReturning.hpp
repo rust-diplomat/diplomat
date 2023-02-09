@@ -1,6 +1,8 @@
 #ifndef BorrowedFieldsReturning_HPP
 #define BorrowedFieldsReturning_HPP
 
+#include "BorrowedFieldsReturning.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,10 +12,20 @@
 #include "diplomat_runtime.hpp"
 #include "BorrowedFieldsReturning.h"
 
-#include "BorrowedFieldsReturning.d.hpp"
 
 
-// No Content
+inline capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
+  return capi::BorrowedFieldsReturning {
+    .bytes_data = bytes.data(),
+    .bytes_size = bytes.size(),
+  };
+}
+
+inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(capi::BorrowedFieldsReturning c_struct) {
+  return BorrowedFieldsReturning {
+    .bytes = diplomat::span<const uint8_t>(c_struct.bytes_data, c_struct.bytes_size),
+  };
+}
 
 
 #endif // BorrowedFieldsReturning_HPP

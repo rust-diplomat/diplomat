@@ -182,6 +182,7 @@ pub mod ffi {
         }
 
         // Holds: [a, b, c]
+        #[allow(clippy::needless_lifetimes)]
         pub fn implicit_bounds_deep<'a, 'b, 'c, 'd, 'x>(
             explicit_: &'a One<'b>,
             implicit_1: &'b One<'c>,

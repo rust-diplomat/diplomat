@@ -1,6 +1,8 @@
 #ifndef ICU4XDataProvider_HPP
 #define ICU4XDataProvider_HPP
 
+#include "ICU4XDataProvider.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,16 +12,15 @@
 #include "diplomat_runtime.hpp"
 #include "ICU4XDataProvider.h"
 
-#include "ICU4XDataProvider.d.hpp"
-
 
 inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
   auto result = capi::ICU4XDataProvider_new_static();
-  return std::unique_ptr(ICU4XDataProvider::FromFFI(result));
+  return std::unique_ptr<ICU4XDataProvider>(ICU4XDataProvider::FromFFI(result));
 }
 
-inline DiplomatResult<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
-  capi::ICU4XDataProvider_returns_result();
+inline diplomat::result<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
+  auto result = capi::ICU4XDataProvider_returns_result();
+  return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
 }
 
 inline const capi::ICU4XDataProvider* ICU4XDataProvider::AsFFI() const {
@@ -38,8 +39,8 @@ inline ICU4XDataProvider* ICU4XDataProvider::FromFFI(capi::ICU4XDataProvider* pt
   return reinterpret_cast<ICU4XDataProvider*>(ptr);
 }
 
-inline ICU4XDataProvider::~ICU4XDataProvider() {
-  capi::ICU4XDataProvider_destroy(AsFFI());
+inline void ICU4XDataProvider::operator delete(void* ptr) {
+  capi::ICU4XDataProvider_destroy(reinterpret_cast<capi::ICU4XDataProvider*>(ptr));
 }
 
 

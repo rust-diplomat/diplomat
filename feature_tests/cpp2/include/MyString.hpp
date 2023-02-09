@@ -1,6 +1,8 @@
 #ifndef MyString_HPP
 #define MyString_HPP
 
+#include "MyString.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,13 +12,11 @@
 #include "diplomat_runtime.hpp"
 #include "MyString.h"
 
-#include "MyString.d.hpp"
-
 
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
   auto result = capi::MyString_new(v.data(),
     v.size());
-  return std::unique_ptr(MyString::FromFFI(result));
+  return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }
 
 inline void MyString::set_str(std::string_view new_str) {
@@ -28,8 +28,9 @@ inline void MyString::set_str(std::string_view new_str) {
 inline std::string MyString::get_str() const {
   std::string output;
   capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
-  capi::MyString_get_str(this->AsFFI(),
+  auto result = capi::MyString_get_str(this->AsFFI(),
     &writeable);
+  return /* TODO: Writeable conversion */;
 }
 
 inline const capi::MyString* MyString::AsFFI() const {
@@ -48,8 +49,8 @@ inline MyString* MyString::FromFFI(capi::MyString* ptr) {
   return reinterpret_cast<MyString*>(ptr);
 }
 
-inline MyString::~MyString() {
-  capi::MyString_destroy(AsFFI());
+inline void MyString::operator delete(void* ptr) {
+  capi::MyString_destroy(reinterpret_cast<capi::MyString*>(ptr));
 }
 
 

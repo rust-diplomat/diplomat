@@ -8,15 +8,27 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "MyEnum.d.h"
 
 
-enum struct MyEnum {
-  A = -2,
-  B = -1,
-  C = 0,
-  D = 1,
-  E = 2,
-  F = 3,
+class MyEnum {
+  capi::MyEnum value;
+
+public:
+  enum Value {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+  };
+
+  inline MyEnum(MyEnum::Value cpp_value);
+  inline MyEnum(capi::MyEnum c_enum) : value(c_enum) {};
+
+  inline capi::MyEnum AsFFI() const;
+  inline static MyEnum FromFFI(capi::MyEnum c_enum);
 };
 
 
