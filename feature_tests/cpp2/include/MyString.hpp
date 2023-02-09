@@ -1,6 +1,8 @@
 #ifndef MyString_HPP
 #define MyString_HPP
 
+#include "MyString.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "MyString.h"
-
-#include "MyString.d.hpp"
 
 
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {

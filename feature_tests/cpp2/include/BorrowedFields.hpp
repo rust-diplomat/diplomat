@@ -1,6 +1,8 @@
 #ifndef BorrowedFields_HPP
 #define BorrowedFields_HPP
 
+#include "BorrowedFields.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "BorrowedFields.h"
-
-#include "BorrowedFields.d.hpp"
 
 
 

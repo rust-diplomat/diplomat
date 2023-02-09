@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "ImportedStruct.d.h"
 #include "UnimportedEnum.d.hpp"
 
 class UnimportedEnum;

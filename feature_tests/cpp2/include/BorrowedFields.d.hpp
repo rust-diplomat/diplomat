@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "BorrowedFields.d.h"
 
 
 struct BorrowedFields {

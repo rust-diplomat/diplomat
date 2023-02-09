@@ -1,6 +1,8 @@
 #ifndef MyStruct_HPP
 #define MyStruct_HPP
 
+#include "MyStruct.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -8,9 +10,8 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "MyEnum.hpp"
 #include "MyStruct.h"
-
-#include "MyStruct.d.hpp"
 
 
 inline MyStruct MyStruct::new_() {

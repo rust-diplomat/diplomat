@@ -1,6 +1,8 @@
 #ifndef UnimportedEnum_HPP
 #define UnimportedEnum_HPP
 
+#include "UnimportedEnum.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "UnimportedEnum.h"
-
-#include "UnimportedEnum.d.hpp"
 
 
 inline UnimportedEnum::UnimportedEnum(UnimportedEnum::Value cpp_value) {

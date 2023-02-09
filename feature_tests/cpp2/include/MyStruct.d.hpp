@@ -9,6 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "MyEnum.d.hpp"
+#include "MyStruct.d.h"
 
 class MyEnum;
 

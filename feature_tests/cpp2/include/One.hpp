@@ -1,6 +1,8 @@
 #ifndef One_HPP
 #define One_HPP
 
+#include "One.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,9 +11,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "One.h"
-#include "Two.d.hpp"
-
-#include "One.d.hpp"
+#include "Two.hpp"
 
 
 inline std::unique_ptr<One> One::transitivity(const One& hold, const One& nohold) {

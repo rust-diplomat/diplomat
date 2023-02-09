@@ -1,6 +1,8 @@
 #ifndef ImportedStruct_HPP
 #define ImportedStruct_HPP
 
+#include "ImportedStruct.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ImportedStruct.h"
-
-#include "ImportedStruct.d.hpp"
+#include "UnimportedEnum.hpp"
 
 
 

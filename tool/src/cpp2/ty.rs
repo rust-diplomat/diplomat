@@ -39,6 +39,9 @@ impl<'tcx> super::Cpp2Context<'tcx> {
 
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
+        let c_decl_header_path = self.formatter.fmt_c_decl_header_path(id);
+        context.decl_header.includes.insert(c_decl_header_path);
+
         let c_impl_header_path = self.formatter.fmt_c_impl_header_path(id);
         context.impl_header.includes.insert(c_impl_header_path);
 
@@ -351,7 +354,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                     .insert(Forward::Class(ty_name.into_owned()));
                 self.impl_header
                     .includes
-                    .insert(self.cx.formatter.fmt_decl_header_path(op_id));
+                    .insert(self.cx.formatter.fmt_impl_header_path(op_id));
                 ret
             }
             Type::Struct(ref st) => {
@@ -362,6 +365,9 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
+                self.impl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_impl_header_path(id));
                 self.cx.formatter.fmt_type_name(id)
             }
             Type::Enum(ref e) => {
@@ -372,6 +378,9 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
+                self.impl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_impl_header_path(id));
                 self.cx.formatter.fmt_type_name(id)
             }
             Type::Slice(hir::Slice::Str(_lifetime)) => self.cx.formatter.fmt_borrowed_str(),

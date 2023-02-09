@@ -1,6 +1,8 @@
 #ifndef ErrorStruct_HPP
 #define ErrorStruct_HPP
 
+#include "ErrorStruct.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ErrorStruct.h"
-
-#include "ErrorStruct.d.hpp"
 
 
 

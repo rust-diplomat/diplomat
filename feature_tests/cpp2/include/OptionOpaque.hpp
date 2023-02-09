@@ -1,6 +1,8 @@
 #ifndef OptionOpaque_HPP
 #define OptionOpaque_HPP
 
+#include "OptionOpaque.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "OptionOpaque.h"
-
-#include "OptionOpaque.d.hpp"
+#include "OptionStruct.hpp"
 
 
 inline std::unique_ptr<OptionOpaque> OptionOpaque::new_(int32_t i) {

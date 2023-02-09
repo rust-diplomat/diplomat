@@ -132,7 +132,7 @@ impl fmt::Display for Header {
             f,
             r#"#ifndef {header_guard}
 #define {header_guard}
-{includes}{decl_header_include}{forwards}
+{decl_header_include}{includes}{forwards}
 
 {body}
 #endif // {header_guard}

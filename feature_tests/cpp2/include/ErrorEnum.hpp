@@ -1,6 +1,8 @@
 #ifndef ErrorEnum_HPP
 #define ErrorEnum_HPP
 
+#include "ErrorEnum.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ErrorEnum.h"
-
-#include "ErrorEnum.d.hpp"
 
 
 inline ErrorEnum::ErrorEnum(ErrorEnum::Value cpp_value) {

@@ -1,6 +1,8 @@
 #ifndef MyEnum_HPP
 #define MyEnum_HPP
 
+#include "MyEnum.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "MyEnum.h"
-
-#include "MyEnum.d.hpp"
 
 
 inline MyEnum::MyEnum(MyEnum::Value cpp_value) {

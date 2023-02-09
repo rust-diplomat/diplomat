@@ -1,6 +1,8 @@
 #ifndef OptionOpaqueChar_HPP
 #define OptionOpaqueChar_HPP
 
+#include "OptionOpaqueChar.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "OptionOpaqueChar.h"
-
-#include "OptionOpaqueChar.d.hpp"
 
 
 inline void OptionOpaqueChar::assert_char(char32_t ch) const {

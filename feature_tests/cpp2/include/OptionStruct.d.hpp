@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "OptionStruct.d.h"
 
 class OptionOpaque;
 class OptionOpaqueChar;

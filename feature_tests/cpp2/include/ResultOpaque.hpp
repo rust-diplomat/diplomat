@@ -1,6 +1,8 @@
 #ifndef ResultOpaque_HPP
 #define ResultOpaque_HPP
 
+#include "ResultOpaque.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -8,9 +10,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "ErrorEnum.hpp"
+#include "ErrorStruct.hpp"
 #include "ResultOpaque.h"
-
-#include "ResultOpaque.d.hpp"
 
 
 inline diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_(int32_t i) {

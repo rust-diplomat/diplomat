@@ -1,6 +1,8 @@
 #ifndef OptionStruct_HPP
 #define OptionStruct_HPP
 
+#include "OptionStruct.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -8,11 +10,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionOpaque.d.hpp"
-#include "OptionOpaqueChar.d.hpp"
+#include "OptionOpaque.hpp"
+#include "OptionOpaqueChar.hpp"
 #include "OptionStruct.h"
-
-#include "OptionStruct.d.hpp"
 
 
 

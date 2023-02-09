@@ -1,6 +1,8 @@
 #ifndef Opaque_HPP
 #define Opaque_HPP
 
+#include "Opaque.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -8,9 +10,9 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "ImportedStruct.hpp"
+#include "MyStruct.hpp"
 #include "Opaque.h"
-
-#include "Opaque.d.hpp"
 
 
 inline std::unique_ptr<Opaque> Opaque::new_() {

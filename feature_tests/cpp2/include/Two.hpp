@@ -1,6 +1,8 @@
 #ifndef Two_HPP
 #define Two_HPP
 
+#include "Two.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "Two.h"
-
-#include "Two.d.hpp"
 
 
 inline const capi::Two* Two::AsFFI() const {

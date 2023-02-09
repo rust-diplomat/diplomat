@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "ErrorStruct.d.h"
 
 
 struct ErrorStruct {

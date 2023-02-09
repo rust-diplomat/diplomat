@@ -1,6 +1,8 @@
 #ifndef Foo_HPP
 #define Foo_HPP
 
+#include "Foo.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -8,10 +10,10 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Bar.d.hpp"
+#include "Bar.hpp"
+#include "BorrowedFields.hpp"
+#include "BorrowedFieldsReturning.hpp"
 #include "Foo.h"
-
-#include "Foo.d.hpp"
 
 
 inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
