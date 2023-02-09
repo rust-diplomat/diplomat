@@ -21,6 +21,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   Two() = delete;
+  Two(const Two&) = delete;
+  Two(Two&&) noexcept = delete;
+  Two operator=(const Two&) = delete;
+  Two operator=(Two&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

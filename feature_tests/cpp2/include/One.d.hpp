@@ -45,6 +45,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   One() = delete;
+  One(const One&) = delete;
+  One(One&&) noexcept = delete;
+  One operator=(const One&) = delete;
+  One operator=(One&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

@@ -25,6 +25,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   ICU4XDataProvider() = delete;
+  ICU4XDataProvider(const ICU4XDataProvider&) = delete;
+  ICU4XDataProvider(ICU4XDataProvider&&) noexcept = delete;
+  ICU4XDataProvider operator=(const ICU4XDataProvider&) = delete;
+  ICU4XDataProvider operator=(ICU4XDataProvider&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

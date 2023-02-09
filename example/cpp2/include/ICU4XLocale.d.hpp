@@ -25,6 +25,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   ICU4XLocale() = delete;
+  ICU4XLocale(const ICU4XLocale&) = delete;
+  ICU4XLocale(ICU4XLocale&&) noexcept = delete;
+  ICU4XLocale operator=(const ICU4XLocale&) = delete;
+  ICU4XLocale operator=(ICU4XLocale&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

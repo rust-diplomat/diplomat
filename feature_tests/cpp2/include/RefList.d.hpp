@@ -25,6 +25,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   RefList() = delete;
+  RefList(const RefList&) = delete;
+  RefList(RefList&&) noexcept = delete;
+  RefList operator=(const RefList&) = delete;
+  RefList operator=(RefList&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

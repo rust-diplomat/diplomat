@@ -146,6 +146,8 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_enum) {{
         let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
         let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
+        let const_ref = self.cx.formatter.fmt_borrowed(&ty_name, Mutability::Immutable);
+        let move_ref = self.cx.formatter.fmt_move_ref(&ty_name);
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
@@ -169,6 +171,10 @@ public:
 \tinline static void operator delete(void* ptr);
 private:
 \t{ty_name}() = delete;
+\t{ty_name}({const_ref}) = delete;
+\t{ty_name}({move_ref}) noexcept = delete;
+\t{ty_name} operator=({const_ref}) = delete;
+\t{ty_name} operator=({move_ref}) noexcept = delete;
 \tstatic void operator delete[](void*, size_t) = delete;
 }};
 

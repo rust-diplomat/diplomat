@@ -21,6 +21,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   Bar() = delete;
+  Bar(const Bar&) = delete;
+  Bar(Bar&&) noexcept = delete;
+  Bar operator=(const Bar&) = delete;
+  Bar operator=(Bar&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

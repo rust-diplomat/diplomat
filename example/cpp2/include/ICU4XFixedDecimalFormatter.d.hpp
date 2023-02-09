@@ -31,6 +31,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   ICU4XFixedDecimalFormatter() = delete;
+  ICU4XFixedDecimalFormatter(const ICU4XFixedDecimalFormatter&) = delete;
+  ICU4XFixedDecimalFormatter(ICU4XFixedDecimalFormatter&&) noexcept = delete;
+  ICU4XFixedDecimalFormatter operator=(const ICU4XFixedDecimalFormatter&) = delete;
+  ICU4XFixedDecimalFormatter operator=(ICU4XFixedDecimalFormatter&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

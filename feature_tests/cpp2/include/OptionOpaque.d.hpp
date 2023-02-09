@@ -36,6 +36,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   OptionOpaque() = delete;
+  OptionOpaque(const OptionOpaque&) = delete;
+  OptionOpaque(OptionOpaque&&) noexcept = delete;
+  OptionOpaque operator=(const OptionOpaque&) = delete;
+  OptionOpaque operator=(OptionOpaque&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

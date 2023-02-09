@@ -12,7 +12,7 @@
 
 
 struct BorrowedFields {
-  std::span<const uint16_t> a;
+  diplomat::span<const uint16_t> a;
   std::string_view b;
 
   inline capi::BorrowedFields AsFFI() const;

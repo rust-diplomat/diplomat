@@ -37,6 +37,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   Foo() = delete;
+  Foo(const Foo&) = delete;
+  Foo(Foo&&) noexcept = delete;
+  Foo operator=(const Foo&) = delete;
+  Foo operator=(Foo&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

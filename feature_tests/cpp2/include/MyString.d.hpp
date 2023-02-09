@@ -27,6 +27,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   MyString() = delete;
+  MyString(const MyString&) = delete;
+  MyString(MyString&&) noexcept = delete;
+  MyString operator=(const MyString&) = delete;
+  MyString operator=(MyString&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

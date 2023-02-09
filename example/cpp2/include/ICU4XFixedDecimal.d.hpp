@@ -27,6 +27,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   ICU4XFixedDecimal() = delete;
+  ICU4XFixedDecimal(const ICU4XFixedDecimal&) = delete;
+  ICU4XFixedDecimal(ICU4XFixedDecimal&&) noexcept = delete;
+  ICU4XFixedDecimal operator=(const ICU4XFixedDecimal&) = delete;
+  ICU4XFixedDecimal operator=(ICU4XFixedDecimal&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

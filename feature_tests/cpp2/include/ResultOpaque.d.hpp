@@ -42,6 +42,10 @@ public:
   inline static void operator delete(void* ptr);
 private:
   ResultOpaque() = delete;
+  ResultOpaque(const ResultOpaque&) = delete;
+  ResultOpaque(ResultOpaque&&) noexcept = delete;
+  ResultOpaque operator=(const ResultOpaque&) = delete;
+  ResultOpaque operator=(ResultOpaque&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 

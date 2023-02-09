@@ -13,19 +13,19 @@
 #include "Float64Vec.h"
 
 
-inline std::unique_ptr<Float64Vec> Float64Vec::new_(std::span<const double> v) {
+inline std::unique_ptr<Float64Vec> Float64Vec::new_(diplomat::span<const double> v) {
   auto result = capi::Float64Vec_new(v.data(),
     v.size());
   return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
 }
 
-inline void Float64Vec::fill_slice(std::span<double> v) const {
+inline void Float64Vec::fill_slice(diplomat::span<double> v) const {
   capi::Float64Vec_fill_slice(this->AsFFI(),
     v.data(),
     v.size());
 }
 
-inline void Float64Vec::set_value(std::span<const double> new_slice) {
+inline void Float64Vec::set_value(diplomat::span<const double> new_slice) {
   capi::Float64Vec_set_value(this->AsFFI(),
     new_slice.data(),
     new_slice.size());

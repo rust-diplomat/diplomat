@@ -87,6 +87,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
+    pub fn fmt_move_ref<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+        format!("{ident}&&").into()
+    }
+
     pub fn fmt_optional_borrowed<'a>(
         &self,
         ident: &'a str,

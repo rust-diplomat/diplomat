@@ -23,7 +23,7 @@ inline capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
 
 inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(capi::BorrowedFieldsReturning c_struct) {
   return BorrowedFieldsReturning {
-    .bytes = std::span<const uint8_t>(c_struct.bytes_data, c_struct.bytes_size),
+    .bytes = diplomat::span<const uint8_t>(c_struct.bytes_data, c_struct.bytes_size),
   };
 }
 
