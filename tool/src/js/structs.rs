@@ -42,7 +42,7 @@ pub fn gen_struct<W: fmt::Write>(
                 enm.name,
                 display::block(|mut f| {
                     enm.variants.iter().try_for_each(|(name, discriminant, _)| {
-                        writeln!(f, "\"{}\": {},", name, discriminant)
+                        writeln!(f, "\"{name}\": {discriminant},")
                     })
                 })
             )?;
@@ -53,7 +53,7 @@ pub fn gen_struct<W: fmt::Write>(
                 enm.name,
                 display::block(|mut f| {
                     enm.variants.iter().try_for_each(|(name, discriminant, _)| {
-                        writeln!(f, "[{}]: \"{}\",", discriminant, name)
+                        writeln!(f, "[{discriminant}]: \"{name}\",")
                     })
                 })
             )?;
@@ -65,7 +65,7 @@ pub fn gen_struct<W: fmt::Write>(
                 display::block(|mut f| {
                     enm.variants
                         .iter()
-                        .try_for_each(|(name, ..)| writeln!(f, "\"{0}\": \"{0}\",", name))
+                        .try_for_each(|(name, ..)| writeln!(f, "\"{name}\": \"{name}\","))
                 })
             )
         }
@@ -309,7 +309,7 @@ fn gen_method<W: fmt::Write>(
         Csv(&all_params[..]),
         display::block(|mut f| {
             for s in pre_stmts.iter() {
-                writeln!(f, "{}", s)?;
+                writeln!(f, "{s}")?;
             }
 
             let diplomat_out = display::expr(|f| {
@@ -346,10 +346,10 @@ fn gen_method<W: fmt::Write>(
                     write!(
                         f,
                         "diplomatRuntime.withWriteable(wasm, (writeable) => {})",
-                        display::block(|mut f| writeln!(f, "return {};", display_return_type))
+                        display::block(|mut f| writeln!(f, "return {display_return_type};"))
                     )
                 } else {
-                    write!(f, "{}", display_return_type)
+                    write!(f, "{display_return_type}")
                 }
             });
 
@@ -365,7 +365,7 @@ fn gen_method<W: fmt::Write>(
                 }
 
                 for s in post_stmts.iter() {
-                    writeln!(f, "{}", s)?;
+                    writeln!(f, "{s}")?;
                 }
 
                 if do_return {
@@ -478,7 +478,7 @@ pub fn gen_ts_type<W: fmt::Write>(
             _ => {
                 // Print the type name because we have type aliases for all the
                 // primitives (except bool) in `diplomatRuntime.ts`.
-                write!(out, "{}", prim)?;
+                write!(out, "{prim}")?;
             }
         },
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {

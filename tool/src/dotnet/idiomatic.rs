@@ -21,7 +21,7 @@ pub fn gen_header(library_config: &LibraryConfig, out: &mut CodeWriter) -> fmt::
     writeln!(out, "using System.Runtime.InteropServices;")?;
     writeln!(out)?;
     for using in &library_config.usings {
-        writeln!(out, "using {};", using)?;
+        writeln!(out, "using {using};")?;
     }
     writeln!(out, "using {}.Diplomat;", library_config.namespace)?;
     writeln!(out, "#pragma warning restore 0105")?;
@@ -179,7 +179,7 @@ pub fn gen(
                         out,
                         &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
                     )?;
-                    writeln!(out, "{} = {},", name, discriminant)?;
+                    writeln!(out, "{name} = {discriminant},")?;
                 }
 
                 Ok(())
@@ -392,19 +392,19 @@ fn gen_method(
 
         if let ast::TypeName::StrReference(..) = param.ty {
             params_str_ref.push(name.clone());
-            all_params_invocation.push(format!("{}BufPtr", name));
-            all_params_invocation.push(format!("{}BufLength", name));
+            all_params_invocation.push(format!("{name}BufPtr"));
+            all_params_invocation.push(format!("{name}BufLength"));
         } else if let ast::TypeName::PrimitiveSlice(.., prim) = param.ty {
             params_slice.push(SliceParam::new(name.clone(), prim));
-            all_params_invocation.push(format!("{}Ptr", name));
-            all_params_invocation.push(format!("{}Length", name));
+            all_params_invocation.push(format!("{name}Ptr"));
+            all_params_invocation.push(format!("{name}Length"));
         } else if param.is_writeable() {
-            all_params_invocation.push(format!("&{}", name));
+            all_params_invocation.push(format!("&{name}"));
         } else if let ast::TypeName::Primitive(_) = param.ty {
             all_params_invocation.push(name.clone());
         } else {
             params_custom_types.push(param.clone());
-            all_params_invocation.push(format!("{}Raw", name));
+            all_params_invocation.push(format!("{name}Raw"));
         }
 
         gen_type_name_decl_position(&param.ty, in_path, env, out)?;
@@ -428,7 +428,7 @@ fn gen_method(
             }
 
             for str_ref in params_str_ref {
-                let name = format!("{}Buf", str_ref);
+                let name = format!("{str_ref}Buf");
                 writeln!(
                     out,
                     r#"byte[] {name} = DiplomatUtils.StringToUtf8({str_ref});"#
@@ -446,7 +446,7 @@ fn gen_method(
 
             for param in &params_custom_types {
                 let param_name = param.name.as_str().to_lower_camel_case();
-                let raw_var_name = format!("{}Raw", param_name);
+                let raw_var_name = format!("{param_name}Raw");
                 let mut raw_type_name = String::new();
                 gen_raw_conversion_type_name_decl_position(
                     &param.ty,
@@ -528,7 +528,7 @@ fn gen_method(
                 if i != 0 {
                     write!(out, ", ")?;
                 }
-                write!(out, "{}", param)?;
+                write!(out, "{param}")?;
             }
             writeln!(out, ");")?;
 
@@ -615,7 +615,7 @@ pub fn error_type_to_exception_name(
     let trimmed_error_name = error_name
         .trim_end_matches(&library_config.exceptions.trim_suffix)
         .to_upper_camel_case();
-    let exception_name = format!("{}Exception", trimmed_error_name);
+    let exception_name = format!("{trimmed_error_name}Exception");
 
     Ok(ExceptionCtx {
         error_name,
@@ -647,7 +647,7 @@ pub fn gen_exception(
         writeln!(out)?;
         write!(out, "public {exception_name}({error_name} inner) : base(")?;
         if let Some(method) = &library_config.exceptions.error_message_method {
-            writeln!(out, "inner.{}())", method)?;
+            writeln!(out, "inner.{method}())")?;
         } else {
             writeln!(out, r#""{error_str}")"#)?;
         }

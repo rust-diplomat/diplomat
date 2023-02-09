@@ -74,7 +74,7 @@ pub fn gen_docs(
                 .or_insert_with(String::new);
 
             let title = format!("``{}``", in_path.elements.join("::"));
-            writeln!(out, "{}", title)?;
+            writeln!(out, "{title}")?;
             writeln!(out, "{}", "=".repeat(title.len()))?;
 
             for item in module.items() {
@@ -228,18 +228,18 @@ pub fn gen_docs_and_lifetime_notes_markdown(
         write!(docs, "Lifetimes:").unwrap();
         let mut return_names = borrowed_params.return_names(&ast::Ident::THIS);
         if let Some(first) = return_names.next() {
-            write!(docs, " `{}`", first).unwrap();
+            write!(docs, " `{first}`").unwrap();
             for param in return_names {
-                write!(docs, ", `{}`", param).unwrap();
+                write!(docs, ", `{param}`").unwrap();
             }
             writeln!(docs, " must live at least as long as the output.").unwrap();
         }
 
         let mut static_names = borrowed_params.static_names();
         if let Some(first) = static_names.next() {
-            write!(docs, " `{}`", first).unwrap();
+            write!(docs, " `{first}`").unwrap();
             for param in static_names {
-                write!(docs, ", `{}`", param).unwrap();
+                write!(docs, ", `{param}`").unwrap();
             }
             writeln!(docs, " must live for the duration of the program.").unwrap();
         }

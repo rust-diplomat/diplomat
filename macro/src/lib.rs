@@ -424,7 +424,7 @@ mod tests {
         let file_path = dir.path().join("temp.rs");
         let mut file = File::create(file_path.clone()).unwrap();
 
-        writeln!(file, "{}", code).unwrap();
+        writeln!(file, "{code}").unwrap();
         drop(file);
 
         Command::new("rustfmt")

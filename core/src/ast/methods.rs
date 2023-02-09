@@ -48,7 +48,7 @@ impl Method {
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
         let extern_ident = syn::Ident::new(
-            format!("{}_{}", self_ident, method_ident).as_str(),
+            format!("{self_ident}_{method_ident}").as_str(),
             m.sig.ident.span(),
         );
 

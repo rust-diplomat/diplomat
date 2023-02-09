@@ -19,7 +19,7 @@ pub fn gen_doc_block(out: &mut CodeWriter, comment: &str) -> fmt::Result {
                     writeln!(out, "/// <br/>")?;
                 }
             } else {
-                writeln!(out, "/// {}", line)?;
+                writeln!(out, "/// {line}")?;
             }
         }
 

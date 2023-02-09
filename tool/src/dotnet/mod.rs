@@ -87,7 +87,7 @@ pub fn gen_bindings(
             let mut out = CodeWriter::new(&mut out_buf, INDENTATION, SCOPE_OPENING, SCOPE_CLOSING);
             raw::gen_header(&library_config, &mut out)?;
             raw::gen_result(typ, &in_path, env, &mut out)?;
-            outs.insert(format!("Raw{}.cs", result_name), out_buf)
+            outs.insert(format!("Raw{result_name}.cs"), out_buf)
                 .and_then::<String, _>(|_| panic!("file created twice: Raw{}.cs", result_name));
         }
     }
@@ -111,7 +111,7 @@ pub fn gen_bindings(
             let mut out = CodeWriter::new(&mut out_buf, INDENTATION, SCOPE_OPENING, SCOPE_CLOSING);
             idiomatic::gen_header(&library_config, &mut out)?;
             idiomatic::gen_exception(env, &library_config, typ, &in_path, &mut out)?;
-            outs.insert(format!("{}.cs", name), out_buf)
+            outs.insert(format!("{name}.cs"), out_buf)
                 .and_then::<String, _>(|_| panic!("file created twice: {}.cs", name));
         }
     }

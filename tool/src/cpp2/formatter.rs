@@ -75,15 +75,15 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     pub fn fmt_optional<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        format!("std::optional<{}>", ident).into()
+        format!("std::optional<{ident}>").into()
     }
 
     pub fn fmt_borrowed<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
-            format!("{}&", ident).into()
+            format!("{ident}&").into()
         } else {
-            format!("const {}&", ident).into()
+            format!("const {ident}&").into()
         }
     }
 
@@ -100,7 +100,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     pub fn fmt_owned<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        format!("std::unique_ptr<{}>", ident).into()
+        format!("std::unique_ptr<{ident}>").into()
     }
 
     pub fn fmt_borrowed_slice<'a>(
@@ -110,9 +110,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     ) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
-            format!("diplomat::span<{}>", ident).into()
+            format!("diplomat::span<{ident}>").into()
         } else {
-            format!("diplomat::span<const {}>", ident).into()
+            format!("diplomat::span<const {ident}>").into()
         }
     }
 

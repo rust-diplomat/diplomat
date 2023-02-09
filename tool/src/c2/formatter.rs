@@ -75,9 +75,9 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn fmt_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
-            format!("{}*", ident).into()
+            format!("{ident}*").into()
         } else {
-            format!("const {}*", ident).into()
+            format!("const {ident}*").into()
         }
     }
 

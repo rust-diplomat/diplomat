@@ -28,7 +28,7 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
     let diplomat_runtime_out = outs
         .entry("diplomat_runtime.h".to_string())
         .or_insert_with(String::new);
-    write!(diplomat_runtime_out, "{}", RUNTIME_H)?;
+    write!(diplomat_runtime_out, "{RUNTIME_H}")?;
 
     let all_types = util::get_all_custom_types(env);
     let mut seen_results = HashSet::new();
@@ -263,13 +263,13 @@ pub fn gen_includes<W: fmt::Write>(
                             custom_typ.name()
                         );
                         if !seen_includes.contains(&decl) {
-                            writeln!(out, "{}", decl)?;
+                            writeln!(out, "{decl}")?;
                             seen_includes.insert(decl);
                         }
                     } else {
                         let include = format!("#include \"{}.h\"", custom_typ.name());
                         if !seen_includes.contains(&include) {
-                            writeln!(out, "{}", include)?;
+                            writeln!(out, "{include}")?;
                             seen_includes.insert(include);
                         }
                     }
@@ -278,7 +278,7 @@ pub fn gen_includes<W: fmt::Write>(
                 (ast::CustomType::Struct(_), false) | (ast::CustomType::Enum(_), _) => {
                     let include = format!("#include \"{}.h\"", custom_typ.name());
                     if !seen_includes.contains(&include) {
-                        writeln!(out, "{}", include)?;
+                        writeln!(out, "{include}")?;
                         seen_includes.insert(include);
                     }
                 }
@@ -325,7 +325,7 @@ pub fn gen_includes<W: fmt::Write>(
         ast::TypeName::Result(_, _, _) => {
             let include = format!("#include \"{}.h\"", name_for_type(typ));
             if !seen_includes.contains(&include) {
-                writeln!(out, "{}", include)?;
+                writeln!(out, "{include}")?;
                 seen_includes.insert(include);
             }
         }

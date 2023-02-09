@@ -184,8 +184,7 @@ pub fn gen_value_js_to_rust<'env>(
                         };
 
                         pre_logic.push(format!(
-                            "const {} = {}[\"{}\"];",
-                            field_extracted_name, param_name, field_name
+                            "const {field_extracted_name} = {param_name}[\"{field_name}\"];"
                         ));
 
                         gen_value_js_to_rust(
@@ -251,7 +250,7 @@ impl Invocation {
                 "wasm.{}({})",
                 self.full_path_name,
                 display::expr(|f| {
-                    write!(f, "{}", buf)?;
+                    write!(f, "{buf}")?;
                     for param in &self.args {
                         write!(f, ", {param}")?;
                     }

@@ -44,7 +44,7 @@ pub fn gen_result<W: fmt::Write>(
 ) -> fmt::Result {
     if let ast::TypeName::Result(ok, err, _) = typ {
         let result_name = name_for_type(typ);
-        writeln!(out, "typedef struct {} {{", result_name)?;
+        writeln!(out, "typedef struct {result_name} {{")?;
         let mut result_indent = indented(out).with_str("    ");
         // zero-sized types in C unions work differently across C and C++
         // we avoid the problem by omitting variants or even the entire union
@@ -76,7 +76,7 @@ pub fn gen_result<W: fmt::Write>(
             writeln!(&mut result_indent, "}};")?;
         }
         writeln!(&mut result_indent, "bool is_ok;")?;
-        writeln!(out, "}} {};", result_name)?;
+        writeln!(out, "}} {result_name};")?;
 
         Ok(())
     } else {

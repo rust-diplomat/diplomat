@@ -153,7 +153,7 @@ impl Module {
                                 CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable))
                             }
                             Err(errors) => {
-                                panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {:?}", errors);
+                                panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
                             }
                         };
 

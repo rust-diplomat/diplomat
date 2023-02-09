@@ -487,11 +487,11 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 // TODO: This needs to change if an abstraction other than std::string_view is used
                 vec![
                     (
-                        format!("{}_data", param_name).into(),
+                        format!("{param_name}_data").into(),
                         format!("{param_name}.data()").into(),
                     ),
                     (
-                        format!("{}_size", param_name).into(),
+                        format!("{param_name}_size").into(),
                         format!("{param_name}.size()").into(),
                     ),
                 ]
@@ -500,11 +500,11 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 // TODO: This needs to change if an abstraction other than std::span is used
                 vec![
                     (
-                        format!("{}_data", param_name).into(),
+                        format!("{param_name}_data").into(),
                         format!("{param_name}.data()").into(),
                     ),
                     (
-                        format!("{}_size", param_name).into(),
+                        format!("{param_name}_size").into(),
                         format!("{param_name}.size()").into(),
                     ),
                 ]

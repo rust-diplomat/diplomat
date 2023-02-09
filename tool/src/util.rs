@@ -55,14 +55,14 @@ impl<'io> CodeWriter<'io> {
         F: FnOnce(&mut CodeWriter<'_>) -> fmt::Result,
     {
         let scope_opening = self.scope_opening;
-        writeln!(self, "{}", scope_opening)?;
+        writeln!(self, "{scope_opening}")?;
         self.indent();
 
         func(self)?;
 
         self.dedent();
         let scope_closing = self.scope_closing;
-        writeln!(self, "{}", scope_closing)?;
+        writeln!(self, "{scope_closing}")?;
 
         Ok(())
     }

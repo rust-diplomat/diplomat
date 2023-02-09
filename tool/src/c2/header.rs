@@ -71,7 +71,7 @@ impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
-            includes += &format!("#include \"{}\"\n", i);
+            includes += &format!("#include \"{i}\"\n");
         }
         let decl_header_include: Cow<str> = match self.decl_include {
             Some(ref v) => format!("\n#include \"{v}\"\n").into(),
