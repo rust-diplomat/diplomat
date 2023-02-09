@@ -38,8 +38,8 @@ inline void OptionOpaque::assert_integer(int32_t i) const {
     i);
 }
 
-inline bool OptionOpaque::option_opaque_argument(std::optional<const std::reference_wrapper<OptionOpaque>> arg) {
-  auto result = capi::OptionOpaque_option_opaque_argument(arg ? arg.value().get().AsFFI() : nullptr);
+inline bool OptionOpaque::option_opaque_argument(const OptionOpaque* arg) {
+  auto result = capi::OptionOpaque_option_opaque_argument(arg ? arg->AsFFI() : nullptr);
   return result;
 }
 

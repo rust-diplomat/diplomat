@@ -400,7 +400,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 vec![(param_name.into(), param_name.into())]
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                vec![(param_name.into(), format!("{param_name} ? {param_name}.value().get().AsFFI() : nullptr").into())]
+                vec![(param_name.into(), format!("{param_name} ? {param_name}->AsFFI() : nullptr").into())]
             }
             Type::Opaque(..) => {
                 vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]

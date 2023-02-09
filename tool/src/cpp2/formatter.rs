@@ -88,12 +88,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         ident: &'a str,
         mutability: hir::Mutability,
     ) -> Cow<'a, str> {
-        // TODO: Where is the right place to put `const` here?
-        if mutability.is_mutable() {
-            format!("std::optional<std::reference_wrapper<{}>>", ident).into()
-        } else {
-            format!("std::optional<const std::reference_wrapper<{}>>", ident).into()
-        }
+        self.c.fmt_ptr(ident, mutability)
     }
 
     pub fn fmt_owned<'a>(&self, ident: &'a str) -> Cow<'a, str> {
