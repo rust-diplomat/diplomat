@@ -22,9 +22,10 @@ public:
   inline capi::ICU4XDataProvider* AsFFI();
   inline static const ICU4XDataProvider* FromFFI(const capi::ICU4XDataProvider* ptr);
   inline static ICU4XDataProvider* FromFFI(capi::ICU4XDataProvider* ptr);
-  inline ~ICU4XDataProvider();
+  inline static void operator delete(void* ptr);
 private:
   ICU4XDataProvider() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

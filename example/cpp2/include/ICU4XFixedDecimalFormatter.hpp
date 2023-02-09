@@ -1,6 +1,8 @@
 #ifndef ICU4XFixedDecimalFormatter_HPP
 #define ICU4XFixedDecimalFormatter_HPP
 
+#include "ICU4XFixedDecimalFormatter.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -8,12 +10,11 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XDataProvider.d.hpp"
-#include "ICU4XFixedDecimal.d.hpp"
+#include "ICU4XDataProvider.hpp"
+#include "ICU4XFixedDecimal.hpp"
 #include "ICU4XFixedDecimalFormatter.h"
-#include "ICU4XLocale.d.hpp"
-
-#include "ICU4XFixedDecimalFormatter.d.hpp"
+#include "ICU4XFixedDecimalFormatterOptions.hpp"
+#include "ICU4XLocale.hpp"
 
 
 inline diplomat::result<std::unique_ptr<ICU4XFixedDecimalFormatter>, std::monostate> ICU4XFixedDecimalFormatter::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatterOptions options) {
@@ -48,8 +49,8 @@ inline ICU4XFixedDecimalFormatter* ICU4XFixedDecimalFormatter::FromFFI(capi::ICU
   return reinterpret_cast<ICU4XFixedDecimalFormatter*>(ptr);
 }
 
-inline ICU4XFixedDecimalFormatter::~ICU4XFixedDecimalFormatter() {
-  capi::ICU4XFixedDecimalFormatter_destroy(AsFFI());
+inline void ICU4XFixedDecimalFormatter::operator delete(void* ptr) {
+  capi::ICU4XFixedDecimalFormatter_destroy(reinterpret_cast<capi::ICU4XFixedDecimalFormatter*>(ptr));
 }
 
 

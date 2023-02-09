@@ -1,6 +1,8 @@
 #ifndef ICU4XFixedDecimalFormatterOptions_HPP
 #define ICU4XFixedDecimalFormatterOptions_HPP
 
+#include "ICU4XFixedDecimalFormatterOptions.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,11 +11,10 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimalFormatterOptions.h"
+#include "ICU4XFixedDecimalGroupingStrategy.hpp"
 
-#include "ICU4XFixedDecimalFormatterOptions.d.hpp"
 
-
-inline ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::default() {
+inline ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::default_() {
   auto result = capi::ICU4XFixedDecimalFormatterOptions_default();
   return ICU4XFixedDecimalFormatterOptions::FromFFI(result);
 }

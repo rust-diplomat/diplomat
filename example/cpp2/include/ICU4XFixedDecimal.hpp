@@ -1,6 +1,8 @@
 #ifndef ICU4XFixedDecimal_HPP
 #define ICU4XFixedDecimal_HPP
 
+#include "ICU4XFixedDecimal.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimal.h"
-
-#include "ICU4XFixedDecimal.d.hpp"
 
 
 inline std::unique_ptr<ICU4XFixedDecimal> ICU4XFixedDecimal::new_(int32_t v) {
@@ -47,8 +47,8 @@ inline ICU4XFixedDecimal* ICU4XFixedDecimal::FromFFI(capi::ICU4XFixedDecimal* pt
   return reinterpret_cast<ICU4XFixedDecimal*>(ptr);
 }
 
-inline ICU4XFixedDecimal::~ICU4XFixedDecimal() {
-  capi::ICU4XFixedDecimal_destroy(AsFFI());
+inline void ICU4XFixedDecimal::operator delete(void* ptr) {
+  capi::ICU4XFixedDecimal_destroy(reinterpret_cast<capi::ICU4XFixedDecimal*>(ptr));
 }
 
 

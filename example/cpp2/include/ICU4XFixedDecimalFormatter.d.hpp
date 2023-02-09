@@ -28,9 +28,10 @@ public:
   inline capi::ICU4XFixedDecimalFormatter* AsFFI();
   inline static const ICU4XFixedDecimalFormatter* FromFFI(const capi::ICU4XFixedDecimalFormatter* ptr);
   inline static ICU4XFixedDecimalFormatter* FromFFI(capi::ICU4XFixedDecimalFormatter* ptr);
-  inline ~ICU4XFixedDecimalFormatter();
+  inline static void operator delete(void* ptr);
 private:
   ICU4XFixedDecimalFormatter() = delete;
+  static void operator delete[](void*, size_t) = delete;
 };
 
 

@@ -102,9 +102,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     ) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
-            format!("std::span<{}>", ident).into()
+            format!("diplomat::span<{}>", ident).into()
         } else {
-            format!("std::span<const {}>", ident).into()
+            format!("diplomat::span<const {}>", ident).into()
         }
     }
 
@@ -118,8 +118,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Format a method
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
+        // TODO(#60): handle other keywords
         if method.name == "new" {
             "new_".into()
+        } else if method.name == "default" {
+            "default_".into()
         } else {
             method.name.as_str().into()
         }

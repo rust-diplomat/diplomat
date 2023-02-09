@@ -1,6 +1,8 @@
 #ifndef ICU4XDataProvider_HPP
 #define ICU4XDataProvider_HPP
 
+#include "ICU4XDataProvider.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ICU4XDataProvider.h"
-
-#include "ICU4XDataProvider.d.hpp"
 
 
 inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
@@ -39,8 +39,8 @@ inline ICU4XDataProvider* ICU4XDataProvider::FromFFI(capi::ICU4XDataProvider* pt
   return reinterpret_cast<ICU4XDataProvider*>(ptr);
 }
 
-inline ICU4XDataProvider::~ICU4XDataProvider() {
-  capi::ICU4XDataProvider_destroy(AsFFI());
+inline void ICU4XDataProvider::operator delete(void* ptr) {
+  capi::ICU4XDataProvider_destroy(reinterpret_cast<capi::ICU4XDataProvider*>(ptr));
 }
 
 

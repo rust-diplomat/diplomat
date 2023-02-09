@@ -1,6 +1,8 @@
 #ifndef ICU4XLocale_HPP
 #define ICU4XLocale_HPP
 
+#include "ICU4XLocale.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +12,6 @@
 #include "diplomat_runtime.hpp"
 #include "ICU4XLocale.h"
 
-#include "ICU4XLocale.d.hpp"
-
 
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {
   auto result = capi::ICU4XLocale_new(name.data(),
@@ -19,7 +19,7 @@ inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {
   return std::unique_ptr<ICU4XLocale>(ICU4XLocale::FromFFI(result));
 }
 
-inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_from_bytes(std::span<const uint8_t> bytes) {
+inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_from_bytes(diplomat::span<const uint8_t> bytes) {
   auto result = capi::ICU4XLocale_new_from_bytes(bytes.data(),
     bytes.size());
   return std::unique_ptr<ICU4XLocale>(ICU4XLocale::FromFFI(result));
@@ -41,8 +41,8 @@ inline ICU4XLocale* ICU4XLocale::FromFFI(capi::ICU4XLocale* ptr) {
   return reinterpret_cast<ICU4XLocale*>(ptr);
 }
 
-inline ICU4XLocale::~ICU4XLocale() {
-  capi::ICU4XLocale_destroy(AsFFI());
+inline void ICU4XLocale::operator delete(void* ptr) {
+  capi::ICU4XLocale_destroy(reinterpret_cast<capi::ICU4XLocale*>(ptr));
 }
 
 

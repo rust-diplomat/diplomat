@@ -1,6 +1,8 @@
 #ifndef ICU4XFixedDecimalGroupingStrategy_HPP
 #define ICU4XFixedDecimalGroupingStrategy_HPP
 
+#include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -9,8 +11,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimalGroupingStrategy.h"
-
-#include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
 
 
 inline ICU4XFixedDecimalGroupingStrategy::ICU4XFixedDecimalGroupingStrategy(ICU4XFixedDecimalGroupingStrategy::Value cpp_value) {
