@@ -60,6 +60,12 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
 }
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
+    /// Adds an enum definition to the current decl and impl headers.
+    /// 
+    /// The enum is defined in C++ using a `class` with a single private field that is the
+    /// C enum type. This enables us to add methods to the enum and generally make the enum
+    /// behave more like an upgraded C++ type. We don't use `enum class` because methods
+    /// cannot be added to it.
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&ty_name);
