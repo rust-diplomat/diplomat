@@ -78,11 +78,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         for variant in def.variants.iter() {
             let enum_variant = self.cx.formatter.fmt_enum_variant(&ty_name, variant);
             let discriminant = variant.discriminant;
-            writeln!(
-                self.decl_header,
-                "\t{enum_variant} = {discriminant},"
-            )
-            .unwrap();
+            writeln!(self.decl_header, "\t{enum_variant} = {discriminant},").unwrap();
         }
         write!(self.decl_header, "}} {ty_name};\n\n").unwrap();
     }

@@ -61,7 +61,7 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     /// Adds an enum definition to the current decl and impl headers.
-    /// 
+    ///
     /// The enum is defined in C++ using a `class` with a single private field that is the
     /// C enum type. This enables us to add methods to the enum and generally make the enum
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
@@ -152,7 +152,10 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_enum) {{
         let ctype = self.cx.formatter.fmt_c_name(&ty_name);
         let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
         let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
-        let const_ref = self.cx.formatter.fmt_borrowed(&ty_name, Mutability::Immutable);
+        let const_ref = self
+            .cx
+            .formatter
+            .fmt_borrowed(&ty_name, Mutability::Immutable);
         let move_ref = self.cx.formatter.fmt_move_ref(&ty_name);
         self.decl_header
             .includes

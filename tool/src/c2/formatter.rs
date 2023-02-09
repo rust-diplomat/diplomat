@@ -51,7 +51,11 @@ impl<'tcx> CFormatter<'tcx> {
         format!("{type_name}.d.h")
     }
     /// Format an enum variant.
-    pub fn fmt_enum_variant(&self, type_name: &str, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
+    pub fn fmt_enum_variant(
+        &self,
+        type_name: &str,
+        variant: &'tcx hir::EnumVariant,
+    ) -> Cow<'tcx, str> {
         let variant_name = variant.name.as_str();
         format!("{type_name}_{variant_name}").into()
     }
