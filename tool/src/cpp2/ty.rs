@@ -109,7 +109,8 @@ public:
 \tinline {ty_name}({ty_name}::Value cpp_value);
 \tinline {ty_name}({ctype} c_enum) : value(c_enum) {{}};
 "
-        );
+        )
+        .unwrap();
         write!(
             self.impl_header,
             "\t\tdefault:
@@ -245,7 +246,7 @@ inline {ctype} {ty_name}::AsFFI() const {{
         )
         .unwrap();
         for field in def.fields.iter() {
-            let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
+            let (_decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
             for (c_name, conversion) in self.gen_cpp_to_c(&field.ty, &decl_name) {
                 writeln!(self.impl_header, "\t\t.{c_name} = {conversion},").unwrap();
             }
@@ -261,7 +262,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         )
         .unwrap();
         for field in def.fields.iter() {
-            let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
+            let (_decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
             let field_getter = format!("c_struct.{decl_name}");
             let conversion = self.gen_c_to_cpp(&field.ty, &field_getter);
             writeln!(self.impl_header, "\t\t.{decl_name} = {conversion},").unwrap();
@@ -303,7 +304,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         let return_statement: Cow<str> = self
             .gen_fallible_c_to_cpp(&method.output, "result")
             .map(|s| format!("\n\treturn {s};").into())
-            .unwrap_or("".into());
+            .unwrap_or_else(|| "".into());
 
         let return_prefix = if return_statement.is_empty() {
             ""
@@ -557,7 +558,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                 format!("*{ty_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(&st);
+                let id = P::id_for_path(st);
                 let ty_name = self.cx.formatter.fmt_type_name(id);
                 // Note: The impl file is imported in gen_ty_name().
                 format!("{ty_name}::FromFFI({var_name})").into()
