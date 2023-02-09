@@ -49,7 +49,7 @@ pub fn gen_docs(
                 .or_insert_with(String::new);
 
             let title = format!("``{}``", in_path.elements.join("::"));
-            writeln!(out, "{}", title)?;
+            writeln!(out, "{title}")?;
             writeln!(out, "{}", "=".repeat(title.len()))?;
 
             for item in module.items() {

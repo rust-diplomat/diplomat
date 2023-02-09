@@ -6,7 +6,7 @@ use std::fmt;
 pub fn transform_keyword_ident(ident: &ast::Ident) -> ast::Ident {
     // TODO(#60): handle other keywords
     match ident.as_str() {
-        "new" | "default" => ast::Ident::from(format!("{}_", ident)),
+        "new" | "default" => ast::Ident::from(format!("{ident}_")),
         _ => ident.clone(),
     }
 }
@@ -17,7 +17,7 @@ pub fn gen_comment_block<W: fmt::Write>(out: &mut W, comment: &str) -> fmt::Resu
         writeln!(out)?;
         writeln!(out, "/**")?;
         for line in comment.lines() {
-            writeln!(out, " * {}", line)?;
+            writeln!(out, " * {line}")?;
         }
         writeln!(out, " */")?;
     }

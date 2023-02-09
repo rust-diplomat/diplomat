@@ -14,8 +14,8 @@ pub struct SliceParam {
 
 impl SliceParam {
     pub fn new(name: String, underlying_type: ast::PrimitiveType) -> Self {
-        let ptr_var_name = format!("{}Ptr", name);
-        let length_var_name = format!("{}Length", name);
+        let ptr_var_name = format!("{name}Ptr");
+        let length_var_name = format!("{name}Length");
         Self {
             array_var_name: name,
             ptr_var_name,

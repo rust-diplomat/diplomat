@@ -44,7 +44,7 @@ pub fn gen_field<W: fmt::Write>(
     out: &mut W,
 ) -> fmt::Result {
     gen_type(typ, in_path, env, out)?;
-    write!(out, " {};", name)?;
+    write!(out, " {name};")?;
 
     Ok(())
 }

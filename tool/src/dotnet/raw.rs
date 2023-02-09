@@ -20,7 +20,7 @@ pub fn gen_header(library_config: &LibraryConfig, out: &mut CodeWriter) -> fmt::
     writeln!(out, "using System.Runtime.InteropServices;")?;
     writeln!(out)?;
     for using in &library_config.usings {
-        writeln!(out, "using {};", using)?;
+        writeln!(out, "using {using};")?;
     }
     writeln!(out, "using {}.Diplomat;", library_config.namespace)?;
     writeln!(out, "#pragma warning restore 0105")?;
@@ -138,7 +138,7 @@ pub fn gen<'ast>(
                         out,
                         &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
                     )?;
-                    writeln!(out, "{} = {},", name, discriminant)?;
+                    writeln!(out, "{name} = {discriminant},")?;
                 }
 
                 Ok(())

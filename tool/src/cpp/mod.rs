@@ -81,7 +81,7 @@ pub fn gen_bindings(
     let diplomat_runtime_out = outs
         .entry("diplomat_runtime.hpp".to_string())
         .or_insert_with(String::new);
-    write!(diplomat_runtime_out, "{}", RUNTIME_HPP)?;
+    write!(diplomat_runtime_out, "{RUNTIME_HPP}")?;
 
     let all_types = crate::util::get_all_custom_types(env);
 
@@ -91,7 +91,7 @@ pub fn gen_bindings(
             .or_insert_with(String::new);
 
         let rendered = render_header(typ.name(), &library_config.headers);
-        writeln!(out, "{}", rendered).expect("Failed to write string.");
+        writeln!(out, "{rendered}").expect("Failed to write string.");
 
         let mut seen_includes = HashSet::new();
         seen_includes.insert(format!("#include \"{}.hpp\"", typ.name()));
@@ -113,7 +113,7 @@ pub fn gen_bindings(
                         &mut enm_indent,
                         &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
                     )?;
-                    writeln!(&mut enm_indent, "{} = {},", name, discriminant)?;
+                    writeln!(&mut enm_indent, "{name} = {discriminant},")?;
                 }
                 writeln!(out, "}};")?;
             }
@@ -245,13 +245,13 @@ fn gen_includes<W: fmt::Write>(
                     if pre_struct {
                         let decl = format!("class {};", custom_typ.name());
                         if !seen_includes.contains(&decl) {
-                            writeln!(out, "{}", decl)?;
+                            writeln!(out, "{decl}")?;
                             seen_includes.insert(decl);
                         }
                     } else {
                         let include = format!("#include \"{}.hpp\"", custom_typ.name());
                         if !seen_includes.contains(&include) {
-                            writeln!(out, "{}", include)?;
+                            writeln!(out, "{include}")?;
                             seen_includes.insert(include);
                         }
                     }
@@ -261,13 +261,13 @@ fn gen_includes<W: fmt::Write>(
                     if pre_struct && (!for_field || behind_ref) {
                         let decl = format!("struct {};", custom_typ.name());
                         if !seen_includes.contains(&decl) {
-                            writeln!(out, "{}", decl)?;
+                            writeln!(out, "{decl}")?;
                             seen_includes.insert(decl);
                         }
                     } else {
                         let include = format!("#include \"{}.hpp\"", custom_typ.name());
                         if !seen_includes.contains(&include) {
-                            writeln!(out, "{}", include)?;
+                            writeln!(out, "{include}")?;
                             seen_includes.insert(include);
                         }
                     }
@@ -276,7 +276,7 @@ fn gen_includes<W: fmt::Write>(
                 ast::CustomType::Enum(_) => {
                     let include = format!("#include \"{}.hpp\"", custom_typ.name());
                     if !seen_includes.contains(&include) {
-                        writeln!(out, "{}", include)?;
+                        writeln!(out, "{include}")?;
                         seen_includes.insert(include);
                     }
                 }

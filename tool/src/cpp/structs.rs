@@ -134,7 +134,7 @@ pub fn gen_struct<W: fmt::Write>(
                         &mut public_body,
                         &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
                     )?;
-                    writeln!(&mut public_body, "{} {};", ty_name, name)?;
+                    writeln!(&mut public_body, "{ty_name} {name};")?;
                 }
             }
 
@@ -310,7 +310,7 @@ fn gen_method<W: fmt::Write>(
                 if rearranged_writeable {
                     gen_writeable_out_value(&out_expr, ret_typ, &mut method_body)?;
                 } else {
-                    writeln!(&mut method_body, "return {};", out_expr)?;
+                    writeln!(&mut method_body, "return {out_expr};")?;
                 }
             }
         }
@@ -359,7 +359,7 @@ pub fn gen_method_interface<W: fmt::Write>(
             } else {
                 gen_type(err, in_path, None, env, library_config, false)?
             };
-            write!(out, "diplomat::result<std::string, {}>", err_ty)?;
+            write!(out, "diplomat::result<std::string, {err_ty}>")?;
         } else {
             write!(out, "std::string")?;
         }
@@ -369,7 +369,7 @@ pub fn gen_method_interface<W: fmt::Write>(
 
             None => "void".into(),
         };
-        write!(out, "{}", ty_name)?;
+        write!(out, "{ty_name}")?;
     }
 
     if is_header {
@@ -417,8 +417,7 @@ fn gen_writeable_out_value<W: fmt::Write>(
     if let ast::TypeName::Result(_, _, _) = ret_typ {
         writeln!(
             method_body,
-            "return {}.replace_ok(std::move(diplomat_writeable_string));",
-            out_expr
+            "return {out_expr}.replace_ok(std::move(diplomat_writeable_string));"
         )?;
     } else {
         panic!("Not in writeable out form")

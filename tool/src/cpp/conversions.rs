@@ -42,7 +42,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                 }
 
                 (in_path, ast::CustomType::Struct(strct)) => {
-                    let raw_struct_id = format!("diplomat_raw_struct_{}", path);
+                    let raw_struct_id = format!("diplomat_raw_struct_{path}");
                     writeln!(out, "capi::{} {} = {};", strct.name, raw_struct_id, cpp).unwrap();
                     let mut all_fields_wrapped = vec![];
                     for (name, typ, _) in &strct.fields {
@@ -50,8 +50,8 @@ pub fn gen_rust_to_cpp<W: Write>(
                             ".{} = std::move({})",
                             name,
                             gen_rust_to_cpp(
-                                &format!("{}.{}", raw_struct_id, name),
-                                &format!("{}_{}", path, name),
+                                &format!("{raw_struct_id}.{name}"),
+                                &format!("{path}_{name}"),
                                 typ,
                                 &in_path,
                                 env,
@@ -72,16 +72,16 @@ pub fn gen_rust_to_cpp<W: Write>(
 
         ast::TypeName::Option(underlying) => match underlying.as_ref() {
             ast::TypeName::Box(_) => {
-                let raw_value_id = format!("diplomat_optional_raw_{}", path);
-                writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
+                let raw_value_id = format!("diplomat_optional_raw_{path}");
+                writeln!(out, "auto {raw_value_id} = {cpp};").unwrap();
 
                 let ty_name =
                     super::types::gen_type(typ, in_path, None, env, library_config, false).unwrap();
 
-                let wrapped_value_id = format!("diplomat_optional_{}", path);
-                writeln!(out, "{} {};", ty_name, wrapped_value_id).unwrap();
+                let wrapped_value_id = format!("diplomat_optional_{path}");
+                writeln!(out, "{ty_name} {wrapped_value_id};").unwrap();
 
-                writeln!(out, "if ({} != nullptr) {{", raw_value_id).unwrap();
+                writeln!(out, "if ({raw_value_id} != nullptr) {{").unwrap();
 
                 let some_expr = gen_rust_to_cpp(
                     &raw_value_id,
@@ -133,17 +133,17 @@ pub fn gen_rust_to_cpp<W: Write>(
         },
 
         ast::TypeName::Result(ok, err, _) => {
-            let raw_value_id = format!("diplomat_result_raw_{}", path);
-            writeln!(out, "auto {} = {};", raw_value_id, cpp).unwrap();
-            let wrapped_value_id = format!("diplomat_result_{}", path);
+            let raw_value_id = format!("diplomat_result_raw_{path}");
+            writeln!(out, "auto {raw_value_id} = {cpp};").unwrap();
+            let wrapped_value_id = format!("diplomat_result_{path}");
             let result_ty =
                 super::types::gen_type(typ, in_path, None, env, library_config, false).unwrap();
-            writeln!(out, "{} {};", result_ty, wrapped_value_id).unwrap();
+            writeln!(out, "{result_ty} {wrapped_value_id};").unwrap();
 
-            writeln!(out, "if ({}.is_ok) {{", raw_value_id).unwrap();
+            writeln!(out, "if ({raw_value_id}.is_ok) {{").unwrap();
             if !ok.is_zst() {
                 let ok_expr = gen_rust_to_cpp(
-                    &format!("{}.ok", raw_value_id),
+                    &format!("{raw_value_id}.ok"),
                     path,
                     ok,
                     in_path,
@@ -155,15 +155,13 @@ pub fn gen_rust_to_cpp<W: Write>(
                     super::types::gen_type(ok, in_path, None, env, library_config, false).unwrap();
                 writeln!(
                     out,
-                    "  {} = diplomat::Ok<{}>(std::move({}));",
-                    wrapped_value_id, ok_type, ok_expr
+                    "  {wrapped_value_id} = diplomat::Ok<{ok_type}>(std::move({ok_expr}));"
                 )
                 .unwrap();
             } else {
                 writeln!(
                     out,
-                    "  {} = diplomat::Ok(std::monostate());",
-                    wrapped_value_id
+                    "  {wrapped_value_id} = diplomat::Ok(std::monostate());"
                 )
                 .unwrap();
             };
@@ -171,7 +169,7 @@ pub fn gen_rust_to_cpp<W: Write>(
 
             if !err.is_zst() {
                 let err_expr = gen_rust_to_cpp(
-                    &format!("{}.err", raw_value_id),
+                    &format!("{raw_value_id}.err"),
                     path,
                     err,
                     in_path,
@@ -183,15 +181,13 @@ pub fn gen_rust_to_cpp<W: Write>(
                     super::types::gen_type(err, in_path, None, env, library_config, false).unwrap();
                 writeln!(
                     out,
-                    "  {} = diplomat::Err<{}>(std::move({}));",
-                    wrapped_value_id, err_type, err_expr
+                    "  {wrapped_value_id} = diplomat::Err<{err_type}>(std::move({err_expr}));"
                 )
                 .unwrap();
             } else {
                 writeln!(
                     out,
-                    "  {} = diplomat::Err(std::monostate());",
-                    wrapped_value_id
+                    "  {wrapped_value_id} = diplomat::Err(std::monostate());"
                 )
                 .unwrap();
             };
@@ -206,8 +202,8 @@ pub fn gen_rust_to_cpp<W: Write>(
         }
         ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
         ast::TypeName::StrReference(..) => {
-            let raw_value_id = format!("diplomat_str_raw_{}", path);
-            writeln!(out, "capi::DiplomatStringView {} = {};", raw_value_id, cpp).unwrap();
+            let raw_value_id = format!("diplomat_str_raw_{path}");
+            writeln!(out, "capi::DiplomatStringView {raw_value_id} = {cpp};").unwrap();
 
             writeln!(
                 out,
@@ -218,7 +214,7 @@ pub fn gen_rust_to_cpp<W: Write>(
         }
         ast::TypeName::PrimitiveSlice(_lt, mutability, prim) => {
             assert!(mutability.is_immutable());
-            let raw_value_id = format!("diplomat_slice_raw_{}", path);
+            let raw_value_id = format!("diplomat_slice_raw_{path}");
             let mut prim_caps = prim.to_string();
             prim_caps.get_mut(0..1).unwrap().make_ascii_uppercase();
             let span = &library_config.span.expr;
@@ -287,13 +283,13 @@ pub fn gen_cpp_to_rust<W: Write>(
                 ast::CustomType::Opaque(_opaque) => {
                     if let Some(reference) = behind_ref {
                         if is_self {
-                            format!("{}->inner.get()", cpp)
+                            format!("{cpp}->inner.get()")
                         } else if reference.is_nullable {
-                            format!("({}) ? {}->AsFFI() : nullptr", cpp, cpp)
+                            format!("({cpp}) ? {cpp}->AsFFI() : nullptr")
                         } else if reference.mutable {
-                            format!("{}.AsFFIMut()", cpp)
+                            format!("{cpp}.AsFFIMut()")
                         } else {
-                            format!("{}.AsFFI()", cpp)
+                            format!("{cpp}.AsFFI()")
                         }
                     } else {
                         panic!("Cannot handle opaque types by value");
@@ -308,7 +304,7 @@ pub fn gen_cpp_to_rust<W: Write>(
                             format!("(capi::{}*) &{}", strct.name, cpp)
                         }
                     } else {
-                        let wrapped_struct_id = format!("diplomat_wrapped_struct_{}", path);
+                        let wrapped_struct_id = format!("diplomat_wrapped_struct_{path}");
                         writeln!(out, "{} {} = {};", strct.name, wrapped_struct_id, cpp).unwrap();
                         let mut all_fields_wrapped = vec![];
                         for (name, typ, _) in &strct.fields {
@@ -316,8 +312,8 @@ pub fn gen_cpp_to_rust<W: Write>(
                                 ".{} = {}",
                                 name,
                                 gen_cpp_to_rust(
-                                    &format!("{}.{}", wrapped_struct_id, name),
-                                    &format!("{}_{}", path, name),
+                                    &format!("{wrapped_struct_id}.{name}"),
+                                    &format!("{path}_{name}"),
                                     None,
                                     typ,
                                     in_path,
@@ -347,8 +343,8 @@ pub fn gen_cpp_to_rust<W: Write>(
                     is_nullable: false,
                 })
             {
-                writeln!(out, "capi::DiplomatWriteable {cpp}_writer = diplomat::WriteableTrait<W>::Construct({cpp});", cpp=cpp).unwrap();
-                format!("&{}_writer", cpp)
+                writeln!(out, "capi::DiplomatWriteable {cpp}_writer = diplomat::WriteableTrait<W>::Construct({cpp});").unwrap();
+                format!("&{cpp}_writer")
             } else {
                 panic!("Cannot send Writeable to Rust as a value");
             }

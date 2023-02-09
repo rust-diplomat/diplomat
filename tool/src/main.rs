@@ -96,7 +96,7 @@ fn main() -> std::io::Result<()> {
     let errors = diplomat_file.check_validity(&env);
     if !errors.is_empty() {
         for e in errors {
-            eprintln!("{}", e);
+            eprintln!("{e}");
         }
         panic!();
     }
@@ -141,7 +141,7 @@ fn main() -> std::io::Result<()> {
                 Ok(context) => context,
                 Err(e) => {
                     for err in e {
-                        eprintln!("Lowering error: {}", err);
+                        eprintln!("Lowering error: {err}");
                     }
                     std::process::exit(1);
                 }

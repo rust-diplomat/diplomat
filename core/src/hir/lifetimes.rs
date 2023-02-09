@@ -199,7 +199,7 @@ impl TypeLifetime {
     pub(super) fn from_ast(named: &ast::NamedLifetime, lifetime_env: &ast::LifetimeEnv) -> Self {
         let index = lifetime_env
             .id(named)
-            .unwrap_or_else(|| panic!("lifetime `{}` not found in lifetime env", named));
+            .unwrap_or_else(|| panic!("lifetime `{named}` not found in lifetime env"));
         Self(index)
     }
 

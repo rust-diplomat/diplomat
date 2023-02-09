@@ -60,7 +60,7 @@ pub(crate) trait FromMarkdown<W: fmt::Write> {
                     o => todo!("{:?}", o),
                 },
                 Event::Text(text) => {
-                    write!(out, "{}", text)?;
+                    write!(out, "{text}")?;
                 }
                 Event::Code(text) => {
                     if in_shortcut {
@@ -96,11 +96,11 @@ impl<W: fmt::Write> FromMarkdown<W> for CppRst {
     }
 
     fn link_end(url: &str, out: &mut W) -> fmt::Result {
-        write!(out, " <{}>`__", url)
+        write!(out, " <{url}>`__")
     }
 
     fn code(text: &str, out: &mut W) -> fmt::Result {
-        write!(out, "``{}``", text)
+        write!(out, "``{text}``")
     }
 
     fn write_reference(custom_type: &ast::CustomType, out: &mut W) -> fmt::Result {
@@ -120,11 +120,11 @@ impl<W: fmt::Write> FromMarkdown<W> for JsRst {
     }
 
     fn link_end(url: &str, out: &mut W) -> fmt::Result {
-        write!(out, " <{}>`__", url)
+        write!(out, " <{url}>`__")
     }
 
     fn code(text: &str, out: &mut W) -> fmt::Result {
-        write!(out, "``{}``", text)
+        write!(out, "``{text}``")
     }
 
     fn write_reference(custom_type: &ast::CustomType, out: &mut W) -> fmt::Result {
@@ -144,7 +144,7 @@ impl<W: fmt::Write> FromMarkdown<W> for TsDoc {
     }
 
     fn code(text: &str, out: &mut W) -> fmt::Result {
-        write!(out, "`{}`", text)
+        write!(out, "`{text}`")
     }
 
     fn write_reference(custom_type: &ast::CustomType, out: &mut W) -> fmt::Result {

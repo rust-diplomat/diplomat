@@ -120,7 +120,7 @@ impl Docs {
                                 "AssociatedTypeInTrait" => DocType::AssociatedTypeInTrait,
                                 "AssociatedTypeInStruct" => DocType::AssociatedTypeInStruct,
                                 "Typedef" => DocType::Typedef,
-                                x => panic!("Invalid doc type {:?}", x),
+                                x => panic!("Invalid doc type {x:?}"),
                             },
                             display,
                         });
