@@ -593,9 +593,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
     ) -> Option<Cow<'a, str>> {
         match *result_ty {
             ReturnFallability::Infallible(None) => None,
-            ReturnFallability::Infallible(Some(ReturnType::Writeable)) => {
-                Some("output".into())
-            }
+            ReturnFallability::Infallible(Some(ReturnType::Writeable)) => Some("output".into()),
             ReturnFallability::Infallible(Some(ReturnType::OutType(ref out_ty))) => {
                 Some(self.gen_c_to_cpp(out_ty, var_name))
             }
