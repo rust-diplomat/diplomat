@@ -610,6 +610,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                     None => "std::monostate".into(),
                 };
                 let ok_conversion = match ok {
+                    // Note: the `output` variable is a string initialized in gen_method
                     Some(ReturnType::Writeable) => "std::move(output)".into(),
                     None => "".into(),
                     Some(ReturnType::OutType(o)) => self.gen_c_to_cpp(o, &ok_path),
