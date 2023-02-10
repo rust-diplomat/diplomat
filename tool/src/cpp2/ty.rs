@@ -9,7 +9,7 @@ use std::fmt::Write;
 
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
-        let ty_name = self.formatter.fmt_type_name(id);
+        let type_name = self.formatter.fmt_type_name(id);
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
@@ -31,8 +31,8 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         // a header will get its own forwards and includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        context.decl_header.forwards.remove(&*ty_name);
-        context.impl_header.forwards.remove(&*ty_name);
+        context.decl_header.forwards.remove(&*type_name);
+        context.impl_header.forwards.remove(&*type_name);
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
@@ -52,6 +52,18 @@ impl<'tcx> super::Cpp2Context<'tcx> {
     }
 }
 
+/// An expression with a corresponding variable name, such as a struct field or a function parameter.
+struct NamedExpression<'a> {
+    var_name: Cow<'a, str>,
+    expression: Cow<'a, str>,
+}
+
+/// A type name with a corresponding variable name, such as a struct field or a function parameter.
+struct NamedType<'a> {
+    var_name: Cow<'a, str>,
+    type_name: Cow<'a, str>,
+}
+
 /// Context for generating a particular type's header
 pub struct TyGenContext<'ccx, 'tcx, 'header> {
     pub cx: &'ccx Cpp2Context<'tcx>,
@@ -67,14 +79,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
     /// cannot be added to it.
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
-        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
+        let type_name = self.cx.formatter.fmt_type_name(id);
+        let ctype = self.cx.formatter.fmt_c_name(&type_name);
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
         write!(
             self.decl_header,
-            "class {ty_name} {{
+            "class {type_name} {{
 \t{ctype} value;
 
 public:
@@ -84,14 +96,14 @@ public:
         .unwrap();
         write!(
             self.impl_header,
-            "inline {ty_name}::{ty_name}({ty_name}::Value cpp_value) {{
+            "inline {type_name}::{type_name}({type_name}::Value cpp_value) {{
 \tswitch (cpp_value) {{
 "
         )
         .unwrap();
         for variant in ty.variants.iter() {
             let enum_variant = self.cx.formatter.fmt_enum_variant(variant);
-            let c_enum_variant = self.cx.formatter.fmt_c_enum_variant(&ty_name, variant);
+            let c_enum_variant = self.cx.formatter.fmt_c_enum_variant(&type_name, variant);
             writeln!(self.decl_header, "\t\t{enum_variant},").unwrap();
             write!(
                 self.impl_header,
@@ -106,8 +118,8 @@ public:
             self.decl_header,
             "\t}};
 
-\tinline {ty_name}({ty_name}::Value cpp_value);
-\tinline {ty_name}({ctype} c_enum) : value(c_enum) {{}};
+\tinline {type_name}({type_name}::Value cpp_value);
+\tinline {type_name}({ctype} c_enum) : value(c_enum) {{}};
 "
         )
         .unwrap();
@@ -127,19 +139,19 @@ public:
             self.decl_header,
             "
 \tinline {ctype} AsFFI() const;
-\tinline static {ty_name} FromFFI({ctype} c_enum);
+\tinline static {type_name} FromFFI({ctype} c_enum);
 }};\n\n"
         )
         .unwrap();
         write!(
             self.impl_header,
             "
-inline {ctype} {ty_name}::AsFFI() const {{
+inline {ctype} {type_name}::AsFFI() const {{
 \treturn value;
 }}
 
-inline {ty_name} {ty_name}::FromFFI({ctype} c_enum) {{
-\treturn {ty_name}(c_enum);
+inline {type_name} {type_name}::FromFFI({ctype} c_enum) {{
+\treturn {type_name}(c_enum);
 }}
 "
         )
@@ -147,23 +159,26 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_enum) {{
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
-        let const_ptr = self.cx.formatter.fmt_c_ptr(&ty_name, Mutability::Immutable);
-        let mut_ptr = self.cx.formatter.fmt_c_ptr(&ty_name, Mutability::Mutable);
-        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
+        let type_name = self.cx.formatter.fmt_type_name(id);
+        let const_ptr = self
+            .cx
+            .formatter
+            .fmt_c_ptr(&type_name, Mutability::Immutable);
+        let mut_ptr = self.cx.formatter.fmt_c_ptr(&type_name, Mutability::Mutable);
+        let ctype = self.cx.formatter.fmt_c_name(&type_name);
         let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
         let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
         let const_ref = self
             .cx
             .formatter
-            .fmt_borrowed(&ty_name, Mutability::Immutable);
-        let move_ref = self.cx.formatter.fmt_move_ref(&ty_name);
+            .fmt_borrowed(&type_name, Mutability::Immutable);
+        let move_ref = self.cx.formatter.fmt_move_ref(&type_name);
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
         write!(
             self.decl_header,
-            "class {ty_name} {{
+            "class {type_name} {{
 public:
 "
         )
@@ -180,11 +195,11 @@ public:
 \tinline static {mut_ptr} FromFFI({mut_cptr} ptr);
 \tinline static void operator delete(void* ptr);
 private:
-\t{ty_name}() = delete;
-\t{ty_name}({const_ref}) = delete;
-\t{ty_name}({move_ref}) noexcept = delete;
-\t{ty_name} operator=({const_ref}) = delete;
-\t{ty_name} operator=({move_ref}) noexcept = delete;
+\t{type_name}() = delete;
+\t{type_name}({const_ref}) = delete;
+\t{type_name}({move_ref}) noexcept = delete;
+\t{type_name} operator=({const_ref}) = delete;
+\t{type_name} operator=({move_ref}) noexcept = delete;
 \tstatic void operator delete[](void*, size_t) = delete;
 }};
 
@@ -193,23 +208,23 @@ private:
         .unwrap();
         write!(
             self.impl_header,
-            "inline {const_cptr} {ty_name}::AsFFI() const {{
+            "inline {const_cptr} {type_name}::AsFFI() const {{
 \treturn reinterpret_cast<{const_cptr}>(this);
 }}
 
-inline {mut_cptr} {ty_name}::AsFFI() {{
+inline {mut_cptr} {type_name}::AsFFI() {{
 \treturn reinterpret_cast<{mut_cptr}>(this);
 }}
 
-inline {const_ptr} {ty_name}::FromFFI({const_cptr} ptr) {{
+inline {const_ptr} {type_name}::FromFFI({const_cptr} ptr) {{
 \treturn reinterpret_cast<{const_ptr}>(ptr);
 }}
 
-inline {mut_ptr} {ty_name}::FromFFI({mut_cptr} ptr) {{
+inline {mut_ptr} {type_name}::FromFFI({mut_cptr} ptr) {{
 \treturn reinterpret_cast<{mut_ptr}>(ptr);
 }}
 
-inline void {ty_name}::operator delete(void* ptr) {{
+inline void {type_name}::operator delete(void* ptr) {{
 \t{ctype}_destroy(reinterpret_cast<{mut_cptr}>(ptr));
 }}
 
@@ -219,12 +234,15 @@ inline void {ty_name}::operator delete(void* ptr) {{
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
-        let ctype = self.cx.formatter.fmt_c_name(&ty_name);
-        writeln!(self.decl_header, "struct {ty_name} {{").unwrap();
+        let type_name = self.cx.formatter.fmt_type_name(id);
+        let ctype = self.cx.formatter.fmt_c_name(&type_name);
+        writeln!(self.decl_header, "struct {type_name} {{").unwrap();
         for field in def.fields.iter() {
-            let (decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
-            writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
+            let NamedType {
+                var_name,
+                type_name,
+            } = self.gen_ty_decl(&field.ty, field.name.as_str());
+            writeln!(self.decl_header, "\t{type_name} {var_name};").unwrap();
         }
         for method in def.methods.iter() {
             self.gen_method(id, method);
@@ -233,22 +251,26 @@ inline void {ty_name}::operator delete(void* ptr) {{
             self.decl_header,
             "
 \tinline {ctype} AsFFI() const;
-\tinline static {ty_name} FromFFI({ctype} c_struct);
+\tinline static {type_name} FromFFI({ctype} c_struct);
 }};\n\n"
         )
         .unwrap();
         write!(
             self.impl_header,
             "
-inline {ctype} {ty_name}::AsFFI() const {{
+inline {ctype} {type_name}::AsFFI() const {{
 \treturn {ctype} {{
 "
         )
         .unwrap();
         for field in def.fields.iter() {
-            let (_decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
-            for (c_name, conversion) in self.gen_cpp_to_c(&field.ty, &decl_name) {
-                writeln!(self.impl_header, "\t\t.{c_name} = {conversion},").unwrap();
+            let param_name = self.cx.formatter.fmt_param_name(field.name.as_str());
+            for NamedExpression {
+                var_name,
+                expression,
+            } in self.gen_cpp_to_c_for_type(&field.ty, &param_name)
+            {
+                writeln!(self.impl_header, "\t\t.{var_name} = {expression},").unwrap();
             }
         }
         write!(
@@ -256,16 +278,16 @@ inline {ctype} {ty_name}::AsFFI() const {{
             "\t}};
 }}
 
-inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
-\treturn {ty_name} {{
+inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
+\treturn {type_name} {{
 "
         )
         .unwrap();
         for field in def.fields.iter() {
-            let (_decl_ty, decl_name) = self.gen_ty_decl(&field.ty, field.name.as_str());
-            let field_getter = format!("c_struct.{decl_name}");
-            let conversion = self.gen_c_to_cpp(&field.ty, &field_getter);
-            writeln!(self.impl_header, "\t\t.{decl_name} = {conversion},").unwrap();
+            let param_name = self.cx.formatter.fmt_param_name(field.name.as_str());
+            let field_getter = format!("c_struct.{param_name}");
+            let conversion = self.gen_c_to_cpp_for_type(&field.ty, &field_getter);
+            writeln!(self.impl_header, "\t\t.{param_name} = {conversion},").unwrap();
         }
         write!(
             self.impl_header,
@@ -278,7 +300,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+        let type_name = self.cx.formatter.fmt_type_name(id);
         let method_name = self.cx.formatter.fmt_method_name(method);
         let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);
         let mut param_decls = Vec::new();
@@ -291,18 +313,22 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
-            let conversions = self.gen_cpp_to_c(&param.ty, param.name.as_str());
-            cpp_to_c_params.extend(conversions.into_iter().map(|(_, cnv)| cnv));
+            let conversions = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str());
+            cpp_to_c_params.extend(
+                conversions
+                    .into_iter()
+                    .map(|named_expression| named_expression.expression),
+            );
         }
 
         if method.is_writeable() {
             cpp_to_c_params.push("&writeable".into());
         }
 
-        let return_ty = self.gen_return_ty_name(&method.output);
+        let return_ty = self.gen_cpp_return_type_name(&method.output);
 
         let return_statement: Cow<str> = self
-            .gen_fallible_c_to_cpp(&method.output, "result")
+            .gen_c_to_cpp_for_return_type(&method.output, "result")
             .map(|s| format!("\n\treturn {s};").into())
             .unwrap_or_else(|| "".into());
 
@@ -314,14 +340,18 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
 
         let mut params = String::new();
         let mut first = true;
-        for (decl_ty, decl_name) in param_decls {
+        for NamedType {
+            var_name,
+            type_name,
+        } in param_decls
+        {
             let comma = if first {
                 first = false;
                 ""
             } else {
                 ", "
             };
-            write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
+            write!(&mut params, "{comma}{type_name} {var_name}").unwrap();
         }
 
         let mut c_params = String::new();
@@ -368,7 +398,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
 
         write!(
             self.impl_header,
-            "inline {return_ty} {ty_name}::{method_name}({params}){qualifiers} {{
+            "inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
 \t{writeable_prefix}{return_prefix}{c_method_name}({c_params});{return_statement}
 }}
 
@@ -377,40 +407,43 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         .unwrap();
     }
 
-    /// Generates a parameter decl for a given type, returned as (type, param_name)
-    pub fn gen_ty_decl<'a, P: TyPosition>(
-        &mut self,
-        ty: &Type<P>,
-        ident: &'a str,
-    ) -> (Cow<'ccx, str>, Cow<'a, str>) {
-        let param_name = self.cx.formatter.fmt_param_name(ident);
-        let ty = self.gen_ty_name(ty);
-        (ty, param_name)
+    /// Generates C++ code for referencing a particular type with a given name.
+    fn gen_ty_decl<'a, P: TyPosition>(&mut self, ty: &Type<P>, var_name: &'a str) -> NamedType<'a>
+    where
+        'ccx: 'a,
+    {
+        let param_name = self.cx.formatter.fmt_param_name(var_name);
+        let ty = self.gen_type_name(ty);
+        NamedType {
+            var_name: param_name,
+            type_name: ty,
+        }
     }
 
-    // Generate the C++ code for referencing a particular type.
-    // Handles adding imports and such as necessary
-    fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
+    /// Generates C++ code for referencing a particular type.
+    ///
+    /// This function adds the necessary type imports to the decl and impl files.
+    fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
         match *ty {
             Type::Primitive(prim) => self.cx.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(op_id);
+                let type_name = self.cx.formatter.fmt_type_name(op_id);
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = match (op.owner.is_owned(), op.is_optional()) {
                     // unique_ptr is nullable
-                    (true, _) => self.cx.formatter.fmt_owned(&ty_name),
+                    (true, _) => self.cx.formatter.fmt_owned(&type_name),
                     (false, true) => self
                         .cx
                         .formatter
-                        .fmt_optional_borrowed(&ty_name, mutability),
-                    (false, false) => self.cx.formatter.fmt_borrowed(&ty_name, mutability),
+                        .fmt_optional_borrowed(&type_name, mutability),
+                    (false, false) => self.cx.formatter.fmt_borrowed(&type_name, mutability),
                 };
                 let ret = ret.into_owned().into();
 
                 self.decl_header
                     .forwards
-                    .insert(Forward::Class(ty_name.into_owned()));
+                    .insert(Forward::Class(type_name.into_owned()));
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_impl_header_path(op_id));
@@ -451,6 +484,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         }
     }
 
+    /// Generates a C++ expression that converts from the C++ self type to the corresponding C self type.
     fn gen_cpp_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
@@ -459,74 +493,91 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         }
     }
 
-    fn gen_cpp_to_c<'a, P: TyPosition>(
+    /// Generates one or two C++ expressions that convert from a C++ type to the corresponding C type.
+    ///
+    /// If the type is a slice, this function assumes that `{var_name}_data` and `{var_name}_size` resolve
+    /// to valid expressions referencing the two different C variables for the pointer and the length.
+    fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
-        param_name: &'a str,
-    ) -> Vec<(Cow<'a, str>, Cow<'a, str>)> {
+        var_name: &'a str,
+    ) -> Vec<NamedExpression<'a>> {
         match *ty {
             Type::Primitive(..) => {
-                vec![(param_name.into(), param_name.into())]
+                vec![NamedExpression {
+                    var_name: var_name.into(),
+                    expression: var_name.into(),
+                }]
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                vec![(
-                    param_name.into(),
-                    format!("{param_name} ? {param_name}->AsFFI() : nullptr").into(),
-                )]
+                vec![NamedExpression {
+                    var_name: var_name.into(),
+                    expression: format!("{var_name} ? {var_name}->AsFFI() : nullptr").into(),
+                }]
             }
             Type::Opaque(..) => {
-                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
+                vec![NamedExpression {
+                    var_name: var_name.into(),
+                    expression: format!("{var_name}.AsFFI()").into(),
+                }]
             }
             Type::Struct(..) => {
-                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
+                vec![NamedExpression {
+                    var_name: var_name.into(),
+                    expression: format!("{var_name}.AsFFI()").into(),
+                }]
             }
             Type::Enum(..) => {
-                vec![(param_name.into(), format!("{param_name}.AsFFI()").into())]
+                vec![NamedExpression {
+                    var_name: var_name.into(),
+                    expression: format!("{var_name}.AsFFI()").into(),
+                }]
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 // TODO: This needs to change if an abstraction other than std::string_view is used
                 vec![
-                    (
-                        format!("{param_name}_data").into(),
-                        format!("{param_name}.data()").into(),
-                    ),
-                    (
-                        format!("{param_name}_size").into(),
-                        format!("{param_name}.size()").into(),
-                    ),
+                    NamedExpression {
+                        var_name: format!("{var_name}_data").into(),
+                        expression: format!("{var_name}.data()").into(),
+                    },
+                    NamedExpression {
+                        var_name: format!("{var_name}_size").into(),
+                        expression: format!("{var_name}.size()").into(),
+                    },
                 ]
             }
             Type::Slice(hir::Slice::Primitive(..)) => {
                 // TODO: This needs to change if an abstraction other than std::span is used
                 vec![
-                    (
-                        format!("{param_name}_data").into(),
-                        format!("{param_name}.data()").into(),
-                    ),
-                    (
-                        format!("{param_name}_size").into(),
-                        format!("{param_name}.size()").into(),
-                    ),
+                    NamedExpression {
+                        var_name: format!("{var_name}_data").into(),
+                        expression: format!("{var_name}.data()").into(),
+                    },
+                    NamedExpression {
+                        var_name: format!("{var_name}_size").into(),
+                        expression: format!("{var_name}.size()").into(),
+                    },
                 ]
             }
         }
     }
 
-    fn gen_return_ty_name(&mut self, ty: &ReturnFallability) -> Cow<'ccx, str> {
-        match *ty {
+    /// Generates the C++ type name of a return type.
+    fn gen_cpp_return_type_name(&mut self, result_ty: &ReturnFallability) -> Cow<'ccx, str> {
+        match *result_ty {
             ReturnFallability::Infallible(None) => "void".into(),
             ReturnFallability::Infallible(Some(ref ty)) => match ty {
                 ReturnType::Writeable => self.cx.formatter.fmt_owned_str(),
-                ReturnType::OutType(o) => self.gen_ty_name(o),
+                ReturnType::OutType(o) => self.gen_type_name(o),
             },
             ReturnFallability::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
                     Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
                     None => "std::monostate".into(),
-                    Some(ReturnType::OutType(o)) => self.gen_ty_name(o),
+                    Some(ReturnType::OutType(o)) => self.gen_type_name(o),
                 };
                 let err_type_name = match err {
-                    Some(o) => self.gen_ty_name(o),
+                    Some(o) => self.gen_type_name(o),
                     None => "std::monostate".into(),
                 };
                 let ret: Cow<str> =
@@ -536,38 +587,47 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         }
     }
 
-    fn gen_c_to_cpp<'a, P: TyPosition>(&self, ty: &Type<P>, var_name: &'a str) -> Cow<'a, str> {
+    /// Generates a C++ expression that converts from a C type to the corresponding C++ type.
+    ///
+    /// If the type is a slice, this function assumes that `{var_name}_data` and `{var_name}_size` resolve
+    /// to valid expressions referencing the two different C variables for the pointer and the length.
+    fn gen_c_to_cpp_for_type<'a, P: TyPosition>(
+        &self,
+        ty: &Type<P>,
+        var_name: &'a str,
+    ) -> Cow<'a, str> {
         match *ty {
             Type::Primitive(..) => var_name.into(),
             Type::Opaque(ref op) if op.owner.is_owned() => {
-                let op_id = op.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(op_id);
-                // Note: The impl file is imported in gen_ty_name().
-                format!("std::unique_ptr<{ty_name}>({ty_name}::FromFFI({var_name}))").into()
+                let id = op.tcx_id.into();
+                let type_name = self.cx.formatter.fmt_type_name(id);
+                // Note: The impl file is imported in gen_type_name().
+                format!("std::unique_ptr<{type_name}>({type_name}::FromFFI({var_name}))").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                let op_id = op.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(op_id);
-                // Note: The impl file is imported in gen_ty_name().
-                format!("{var_name} ? {{ *{ty_name}::FromFFI({var_name}) }} : std::nullopt").into()
+                let id = op.tcx_id.into();
+                let type_name = self.cx.formatter.fmt_type_name(id);
+                // Note: The impl file is imported in gen_type_name().
+                format!("{var_name} ? {{ *{type_name}::FromFFI({var_name}) }} : std::nullopt")
+                    .into()
             }
             Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(op_id);
-                // Note: The impl file is imported in gen_ty_name().
-                format!("*{ty_name}::FromFFI({var_name})").into()
+                let id = op.tcx_id.into();
+                let type_name = self.cx.formatter.fmt_type_name(id);
+                // Note: The impl file is imported in gen_type_name().
+                format!("*{type_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
-                let ty_name = self.cx.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_ty_name().
-                format!("{ty_name}::FromFFI({var_name})").into()
+                let type_name = self.cx.formatter.fmt_type_name(id);
+                // Note: The impl file is imported in gen_type_name().
+                format!("{type_name}::FromFFI({var_name})").into()
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_ty_name().
-                format!("{ty_name}::FromFFI({var_name})").into()
+                let type_name = self.cx.formatter.fmt_type_name(id);
+                // Note: The impl file is imported in gen_type_name().
+                format!("{type_name}::FromFFI({var_name})").into()
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 // TODO: This needs to change if an abstraction other than std::string_view is used
@@ -586,7 +646,13 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         }
     }
 
-    fn gen_fallible_c_to_cpp<'a>(
+    /// Generates a C++ expression that converts from a C return type to the corresponding C++ return type.
+    ///
+    /// If the type is `Writeable`, this function assumes that there is a variable named `output` in scope.
+    ///
+    /// If the type is a slice, this function assumes that `{var_name}_data` and `{var_name}_size` resolve
+    /// to valid expressions referencing the two different C variables for the pointer and the length.
+    fn gen_c_to_cpp_for_return_type<'a>(
         &mut self,
         result_ty: &ReturnFallability,
         var_name: &'a str,
@@ -595,32 +661,32 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
             ReturnFallability::Infallible(None) => None,
             ReturnFallability::Infallible(Some(ReturnType::Writeable)) => Some("output".into()),
             ReturnFallability::Infallible(Some(ReturnType::OutType(ref out_ty))) => {
-                Some(self.gen_c_to_cpp(out_ty, var_name))
+                Some(self.gen_c_to_cpp_for_type(out_ty, var_name))
             }
             ReturnFallability::Fallible(ref ok, ref err) => {
                 let ok_path = format!("{var_name}.ok");
                 let err_path = format!("{var_name}.err");
-                let ok_ty_name = match ok {
+                let ok_type_name = match ok {
                     Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
                     None => "std::monostate".into(),
-                    Some(ReturnType::OutType(o)) => self.gen_ty_name(o),
+                    Some(ReturnType::OutType(o)) => self.gen_type_name(o),
                 };
-                let err_ty_name = match err {
-                    Some(o) => self.gen_ty_name(o),
+                let err_type_name = match err {
+                    Some(o) => self.gen_type_name(o),
                     None => "std::monostate".into(),
                 };
                 let ok_conversion = match ok {
                     // Note: the `output` variable is a string initialized in gen_method
                     Some(ReturnType::Writeable) => "std::move(output)".into(),
                     None => "".into(),
-                    Some(ReturnType::OutType(o)) => self.gen_c_to_cpp(o, &ok_path),
+                    Some(ReturnType::OutType(o)) => self.gen_c_to_cpp_for_type(o, &ok_path),
                 };
                 let err_conversion = match err {
-                    Some(o) => self.gen_c_to_cpp(o, &err_path),
+                    Some(o) => self.gen_c_to_cpp_for_type(o, &err_path),
                     None => "".into(),
                 };
                 Some(
-                    format!("{var_name}.is_ok ? diplomat::result<{ok_ty_name}, {err_ty_name}>(diplomat::Ok<{ok_ty_name}>({ok_conversion})) : diplomat::result<{ok_ty_name}, {err_ty_name}>(diplomat::Err<{err_ty_name}>({err_conversion}))").into()
+                    format!("{var_name}.is_ok ? diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Ok<{ok_type_name}>({ok_conversion})) : diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Err<{err_type_name}>({err_conversion}))").into()
                 )
             }
         }
