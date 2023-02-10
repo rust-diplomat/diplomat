@@ -306,10 +306,10 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
             .map(|s| format!("\n\treturn {s};").into())
             .unwrap_or_else(|| "".into());
 
-        let return_prefix = if return_statement.is_empty() {
-            ""
-        } else {
+        let return_prefix = if method.output.returns_value() {
             "auto result = "
+        } else {
+            ""
         };
 
         let mut params = String::new();
@@ -594,7 +594,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
         match *result_ty {
             ReturnFallability::Infallible(None) => None,
             ReturnFallability::Infallible(Some(ReturnType::Writeable)) => {
-                Some("/* TODO: Writeable conversion */".into())
+                Some("output".into())
             }
             ReturnFallability::Infallible(Some(ReturnType::OutType(ref out_ty))) => {
                 Some(self.gen_c_to_cpp(out_ty, var_name))
@@ -612,7 +612,7 @@ inline {ty_name} {ty_name}::FromFFI({ctype} c_struct) {{
                     None => "std::monostate".into(),
                 };
                 let ok_conversion = match ok {
-                    Some(ReturnType::Writeable) => "/* TODO: Writeable conversion */".into(),
+                    Some(ReturnType::Writeable) => "std::move(output)".into(),
                     None => "".into(),
                     Some(ReturnType::OutType(o)) => self.gen_c_to_cpp(o, &ok_path),
                 };
