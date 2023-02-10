@@ -18,11 +18,11 @@ int main(int argc, char *argv[]) {
 
     simple_assert_eq("Multiplying FixedDecimal", fd_out, "12.3");
 
-    std::string out;
+    // std::string out;
 
     // fd->to_string_to_writeable(out);
 
-    simple_assert_eq("Formatting FixedDecimal to Writeable", fd_out, "12.3");
+    // simple_assert_eq("Formatting FixedDecimal to Writeable", fd_out, "12.3");
 
     std::array<uint8_t, 2> bytes = {'e', 'n'};
     std::unique_ptr<ICU4XLocale> locale = ICU4XLocale::new_from_bytes(bytes);
@@ -31,13 +31,13 @@ int main(int argc, char *argv[]) {
 
     std::unique_ptr<ICU4XDataProvider> data_provider = ICU4XDataProvider::new_static();
 
-    auto fdf = ICU4XFixedDecimalFormatter::try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions::default_());
+    auto fdf = ICU4XFixedDecimalFormatter::try_new(*locale, *data_provider, ICU4XFixedDecimalFormatterOptions::default_());
 
     simple_assert("Formatting FixedDecimal", fdf.is_ok());
 
-    out = std::move(fdf).ok().value().format_write(fd);
+    std::string fdf_out = std::move(fdf).ok().value()->format_write(*fd);
 
-    simple_assert_eq("Formatting FixedDecimal", out, "১২.৩");
+    simple_assert_eq("Formatting FixedDecimal", fdf_out, "১২.৩");
 
-    std::cout << "Formatted value is " << out << std::endl;
+    std::cout << "Formatted value is " << fdf_out << std::endl;
 }

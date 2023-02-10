@@ -28,9 +28,9 @@ inline void MyString::set_str(std::string_view new_str) {
 inline std::string MyString::get_str() const {
   std::string output;
   capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
-  auto result = capi::MyString_get_str(this->AsFFI(),
+  capi::MyString_get_str(this->AsFFI(),
     &writeable);
-  return /* TODO: Writeable conversion */;
+  return output;
 }
 
 inline const capi::MyString* MyString::AsFFI() const {

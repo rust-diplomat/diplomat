@@ -66,6 +66,7 @@ dependencies = [
 category = "Tests"
 dependencies = [
     "test-cpp-example",
+    "test-cpp2-example",
     "test-c-example",
     "test-c2-example",
     "test-wasm-example",

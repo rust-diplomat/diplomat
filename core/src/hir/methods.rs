@@ -117,6 +117,16 @@ impl ReturnFallability {
             }
         }
     }
+
+    /// Returns `true` if the FFI function returns a value (such that it may be assigned to a variable).
+    pub fn returns_value(&self) -> bool {
+        match self {
+            ReturnFallability::Fallible(_, _) => true,
+            ReturnFallability::Infallible(Some(ReturnType::OutType(_))) => true,
+            ReturnFallability::Infallible(Some(ReturnType::Writeable)) => false,
+            ReturnFallability::Infallible(None) => false,
+        }
+    }
 }
 
 impl ParamSelf {
