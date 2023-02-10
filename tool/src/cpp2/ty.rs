@@ -1,8 +1,8 @@
 use super::header::{Forward, Header};
 use super::Cpp2Context;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ParamSelf, ReturnFallability, ReturnType, SelfType, TyPosition,
-    Type, TypeDef, TypeId,
+    self, Mutability, OpaqueOwner, ParamSelf, ReturnType, SelfType, SuccessType, TyPosition, Type,
+    TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -563,18 +563,18 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     }
 
     /// Generates the C++ type name of a return type.
-    fn gen_cpp_return_type_name(&mut self, result_ty: &ReturnFallability) -> Cow<'ccx, str> {
+    fn gen_cpp_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'ccx, str> {
         match *result_ty {
-            ReturnFallability::Infallible(None) => "void".into(),
-            ReturnFallability::Infallible(Some(ref ty)) => match ty {
-                ReturnType::Writeable => self.cx.formatter.fmt_owned_str(),
-                ReturnType::OutType(o) => self.gen_type_name(o),
+            ReturnType::Infallible(None) => "void".into(),
+            ReturnType::Infallible(Some(ref ty)) => match ty {
+                SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                SuccessType::OutType(o) => self.gen_type_name(o),
             },
-            ReturnFallability::Fallible(ref ok, ref err) => {
+            ReturnType::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
-                    Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
+                    Some(SuccessType::Writeable) => self.cx.formatter.fmt_owned_str(),
                     None => "std::monostate".into(),
-                    Some(ReturnType::OutType(o)) => self.gen_type_name(o),
+                    Some(SuccessType::OutType(o)) => self.gen_type_name(o),
                 };
                 let err_type_name = match err {
                     Some(o) => self.gen_type_name(o),
@@ -654,22 +654,22 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     /// to valid expressions referencing the two different C variables for the pointer and the length.
     fn gen_c_to_cpp_for_return_type<'a>(
         &mut self,
-        result_ty: &ReturnFallability,
+        result_ty: &ReturnType,
         var_name: &'a str,
     ) -> Option<Cow<'a, str>> {
         match *result_ty {
-            ReturnFallability::Infallible(None) => None,
-            ReturnFallability::Infallible(Some(ReturnType::Writeable)) => Some("output".into()),
-            ReturnFallability::Infallible(Some(ReturnType::OutType(ref out_ty))) => {
+            ReturnType::Infallible(None) => None,
+            ReturnType::Infallible(Some(SuccessType::Writeable)) => Some("output".into()),
+            ReturnType::Infallible(Some(SuccessType::OutType(ref out_ty))) => {
                 Some(self.gen_c_to_cpp_for_type(out_ty, var_name))
             }
-            ReturnFallability::Fallible(ref ok, ref err) => {
+            ReturnType::Fallible(ref ok, ref err) => {
                 let ok_path = format!("{var_name}.ok");
                 let err_path = format!("{var_name}.err");
                 let ok_type_name = match ok {
-                    Some(ReturnType::Writeable) => self.cx.formatter.fmt_owned_str(),
+                    Some(SuccessType::Writeable) => self.cx.formatter.fmt_owned_str(),
                     None => "std::monostate".into(),
-                    Some(ReturnType::OutType(o)) => self.gen_type_name(o),
+                    Some(SuccessType::OutType(o)) => self.gen_type_name(o),
                 };
                 let err_type_name = match err {
                     Some(o) => self.gen_type_name(o),
@@ -677,9 +677,9 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
                 };
                 let ok_conversion = match ok {
                     // Note: the `output` variable is a string initialized in gen_method
-                    Some(ReturnType::Writeable) => "std::move(output)".into(),
+                    Some(SuccessType::Writeable) => "std::move(output)".into(),
                     None => "".into(),
-                    Some(ReturnType::OutType(o)) => self.gen_c_to_cpp_for_type(o, &ok_path),
+                    Some(SuccessType::OutType(o)) => self.gen_c_to_cpp_for_type(o, &ok_path),
                 };
                 let err_conversion = match err {
                     Some(o) => self.gen_c_to_cpp_for_type(o, &err_path),

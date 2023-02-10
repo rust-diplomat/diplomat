@@ -2,8 +2,8 @@ use super::{
     Borrow, EnumDef, EnumPath, EnumVariant, IdentBuf, LifetimeEnv, LifetimeLowerer, LookupId,
     MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
     OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
-    ReturnFallability, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
-    SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, Type,
+    ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
+    Slice, StructDef, StructField, StructPath, SuccessType, Type,
 };
 use crate::{ast, Env};
 use core::fmt;
@@ -824,9 +824,9 @@ fn lower_return_type(
     in_path: &ast::Path,
     env: &Env,
     errors: &mut Vec<LoweringError>,
-) -> Option<(ReturnFallability, LifetimeEnv)> {
+) -> Option<(ReturnType, LifetimeEnv)> {
     let writeable_option = if takes_writeable {
-        Some(ReturnType::Writeable)
+        Some(SuccessType::Writeable)
     } else {
         None
     };
@@ -835,7 +835,7 @@ fn lower_return_type(
             let ok_ty = match ok_ty.as_ref() {
                 ast::TypeName::Unit => Some(writeable_option),
                 ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)
-                    .map(|ty| Some(ReturnType::OutType(ty))),
+                    .map(|ty| Some(SuccessType::OutType(ty))),
             };
             let err_ty = match err_ty.as_ref() {
                 ast::TypeName::Unit => Some(None),
@@ -844,13 +844,13 @@ fn lower_return_type(
             };
 
             match (ok_ty, err_ty) {
-                (Some(ok_ty), Some(err_ty)) => Some(ReturnFallability::Fallible(ok_ty, err_ty)),
+                (Some(ok_ty), Some(err_ty)) => Some(ReturnType::Fallible(ok_ty, err_ty)),
                 _ => None,
             }
         }
-        ast::TypeName::Unit => Some(ReturnFallability::Infallible(writeable_option)),
+        ast::TypeName::Unit => Some(ReturnType::Infallible(writeable_option)),
         ty => lower_out_type(ty, return_ltl.as_mut(), lookup_id, in_path, env, errors)
-            .map(|ty| ReturnFallability::Infallible(Some(ReturnType::OutType(ty)))),
+            .map(|ty| ReturnType::Infallible(Some(SuccessType::OutType(ty)))),
     }
     .and_then(|return_fallability| Some((return_fallability, return_ltl?.finish())))
 }

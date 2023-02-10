@@ -102,7 +102,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
-        use diplomat_core::hir::{ReturnFallability, ReturnType};
+        use diplomat_core::hir::{ReturnType, SuccessType};
         let method_name = self.cx.formatter.fmt_method_name(id, method);
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
@@ -116,22 +116,22 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         }
 
         let return_ty: Cow<str> = match method.output {
-            ReturnFallability::Infallible(None) => "void".into(),
-            ReturnFallability::Infallible(Some(ref ty)) => match ty {
-                ReturnType::Writeable => {
+            ReturnType::Infallible(None) => "void".into(),
+            ReturnType::Infallible(Some(ref ty)) => match ty {
+                SuccessType::Writeable => {
                     param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
                     "void".into()
                 }
-                ReturnType::OutType(o) => self.gen_ty_name(o, false),
+                SuccessType::OutType(o) => self.gen_ty_name(o, false),
             },
-            ReturnFallability::Fallible(ref ok, ref err) => {
+            ReturnType::Fallible(ref ok, ref err) => {
                 let (ok_type_name, ok_ty) = match ok {
-                    Some(ReturnType::Writeable) => {
+                    Some(SuccessType::Writeable) => {
                         param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
                         ("void".into(), None)
                     }
                     None => ("void".into(), None),
-                    Some(ReturnType::OutType(o)) => {
+                    Some(SuccessType::OutType(o)) => {
                         (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
                     }
                 };
