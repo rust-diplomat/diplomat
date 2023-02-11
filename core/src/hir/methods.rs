@@ -18,21 +18,21 @@ pub struct Method {
 
     pub param_self: Option<ParamSelf>,
     pub params: Vec<Param>,
-    pub output: ReturnFallability,
+    pub output: ReturnType,
 }
 
 /// Type that the method returns.
 #[derive(Debug)]
-pub enum ReturnType {
+pub enum SuccessType {
     Writeable,
     OutType(OutType),
 }
 
 /// Whether or not the method returns a value or a result.
 #[derive(Debug)]
-pub enum ReturnFallability {
-    Infallible(Option<ReturnType>),
-    Fallible(Option<ReturnType>, Option<OutType>),
+pub enum ReturnType {
+    Infallible(Option<SuccessType>),
+    Fallible(Option<SuccessType>, Option<OutType>),
 }
 
 /// The `self` parameter of a method.
@@ -85,46 +85,44 @@ pub struct BorrowingField<'m> {
     leaf: &'m BorrowingFieldVisitorLeaf,
 }
 
-impl ReturnType {
+impl SuccessType {
     /// Returns `true` if it's writeable, otherwise `false`.
     pub fn is_writeable(&self) -> bool {
-        matches!(self, ReturnType::Writeable)
+        matches!(self, SuccessType::Writeable)
     }
 
     /// Returns a return type, if it's not a writeable.
     pub fn as_type(&self) -> Option<&OutType> {
         match self {
-            ReturnType::Writeable => None,
-            ReturnType::OutType(ty) => Some(ty),
+            SuccessType::Writeable => None,
+            SuccessType::OutType(ty) => Some(ty),
         }
     }
 }
 
-impl ReturnFallability {
+impl ReturnType {
     /// Returns `true` if it's writeable, otherwise `false`.
     pub fn is_writeable(&self) -> bool {
         self.return_type()
-            .map(ReturnType::is_writeable)
+            .map(SuccessType::is_writeable)
             .unwrap_or(false)
     }
 
     /// Returns the [`ReturnOk`] value, whether it's the single return type or
     /// the `Ok` variant of a result.
-    pub fn return_type(&self) -> Option<&ReturnType> {
+    pub fn return_type(&self) -> Option<&SuccessType> {
         match self {
-            ReturnFallability::Infallible(ret) | ReturnFallability::Fallible(ret, _) => {
-                ret.as_ref()
-            }
+            ReturnType::Infallible(ret) | ReturnType::Fallible(ret, _) => ret.as_ref(),
         }
     }
 
     /// Returns `true` if the FFI function returns a value (such that it may be assigned to a variable).
     pub fn returns_value(&self) -> bool {
         match self {
-            ReturnFallability::Fallible(_, _) => true,
-            ReturnFallability::Infallible(Some(ReturnType::OutType(_))) => true,
-            ReturnFallability::Infallible(Some(ReturnType::Writeable)) => false,
-            ReturnFallability::Infallible(None) => false,
+            ReturnType::Fallible(_, _) => true,
+            ReturnType::Infallible(Some(SuccessType::OutType(_))) => true,
+            ReturnType::Infallible(Some(SuccessType::Writeable)) => false,
+            ReturnType::Infallible(None) => false,
         }
     }
 }
