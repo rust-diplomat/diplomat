@@ -13,5 +13,5 @@ expression: out_docs.get(out).unwrap()
 
     .. js:attribute:: b
 
-    .. js:staticfunction:: new(foo, bar)
+    .. js:function:: new(foo, bar)
 

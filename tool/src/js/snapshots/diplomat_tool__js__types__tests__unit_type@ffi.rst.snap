@@ -11,5 +11,5 @@ expression: out_docs.get(out).unwrap()
 
     .. js:attribute:: b
 
-    .. js:function:: something()
+    .. js:method:: something()
 

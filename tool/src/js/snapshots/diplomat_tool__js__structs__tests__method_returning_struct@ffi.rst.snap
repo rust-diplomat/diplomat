@@ -7,7 +7,7 @@ expression: out_docs.get(out).unwrap()
 
 .. js:class:: MyStruct
 
-    .. js:function:: get_non_opaque()
+    .. js:method:: get_non_opaque()
 
 .. js:class:: NonOpaqueStruct
 

@@ -11,7 +11,7 @@ expression: out_docs.get(out).unwrap()
 
     .. js:attribute:: end
 
-    .. js:function:: do_stuff()
+    .. js:method:: do_stuff()
 
 .. js:class:: Point
 
