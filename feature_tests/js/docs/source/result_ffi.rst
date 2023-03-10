@@ -11,18 +11,18 @@
 
 .. js:class:: ResultOpaque
 
-    .. js:staticfunction:: new(i)
+    .. js:function:: new(i)
 
-    .. js:staticfunction:: new_failing_foo()
+    .. js:function:: new_failing_foo()
 
-    .. js:staticfunction:: new_failing_bar()
+    .. js:function:: new_failing_bar()
 
-    .. js:staticfunction:: new_failing_unit()
+    .. js:function:: new_failing_unit()
 
-    .. js:staticfunction:: new_failing_struct(i)
+    .. js:function:: new_failing_struct(i)
 
-    .. js:staticfunction:: new_in_err(i)
+    .. js:function:: new_in_err(i)
 
-    .. js:staticfunction:: new_in_enum_err(i)
+    .. js:function:: new_in_enum_err(i)
 
-    .. js:function:: assert_integer(i)
+    .. js:method:: assert_integer(i)

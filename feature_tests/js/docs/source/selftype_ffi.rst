@@ -3,6 +3,6 @@
 
 .. js:class:: RefList
 
-    .. js:staticfunction:: node(data)
+    .. js:function:: node(data)
 
 .. js:class:: RefListParameter

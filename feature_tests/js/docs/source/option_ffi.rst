@@ -3,21 +3,21 @@
 
 .. js:class:: OptionOpaque
 
-    .. js:staticfunction:: new(i)
+    .. js:function:: new(i)
 
-    .. js:staticfunction:: new_none()
+    .. js:function:: new_none()
 
-    .. js:staticfunction:: new_struct()
+    .. js:function:: new_struct()
 
-    .. js:staticfunction:: new_struct_nones()
+    .. js:function:: new_struct_nones()
 
-    .. js:function:: assert_integer(i)
+    .. js:method:: assert_integer(i)
 
-    .. js:staticfunction:: option_opaque_argument(arg)
+    .. js:function:: option_opaque_argument(arg)
 
 .. js:class:: OptionOpaqueChar
 
-    .. js:function:: assert_char(ch)
+    .. js:method:: assert_char(ch)
 
 .. js:class:: OptionStruct
 

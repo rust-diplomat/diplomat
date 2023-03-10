@@ -7,9 +7,9 @@ expression: out_docs.get(out).unwrap()
 
 .. js:class:: MyStruct
 
-    .. js:function:: write()
+    .. js:method:: write()
 
-    .. js:function:: write_unit()
+    .. js:method:: write_unit()
 
-    .. js:function:: write_result()
+    .. js:method:: write_result()
 

@@ -8,12 +8,12 @@
     See the `Rust documentation for Locale <https://unicode-org.github.io/icu4x-docs/doc/icu/locid/struct.Locale.html>`__ for more information.
 
 
-    .. js:staticfunction:: new(name)
+    .. js:function:: new(name)
 
         Construct an :js:class:`ICU4XLocale` from a locale identifier represented as a string.
 
 
-    .. js:staticfunction:: new_from_bytes(bytes)
+    .. js:function:: new_from_bytes(bytes)
 
         Construct an :js:class:`ICU4XLocale` from a locale identifier represented as bytes.
 

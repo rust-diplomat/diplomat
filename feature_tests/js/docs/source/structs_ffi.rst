@@ -19,13 +19,13 @@
 
     .. js:attribute:: g
 
-    .. js:staticfunction:: new()
+    .. js:function:: new()
 
 .. js:class:: Opaque
 
-    .. js:staticfunction:: new()
+    .. js:function:: new()
 
-    .. js:function:: assert_struct(s)
+    .. js:method:: assert_struct(s)
 
         See the `Rust documentation for something <https://docs.rs/Something/latest/struct.Something.html#method.something>`__ for more information.
 
@@ -34,6 +34,6 @@
         Additional information: `1 <https://docs.rs/Something/latest/struct.Something.html#method.something_small>`__, `2 <https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something>`__
 
 
-    .. js:staticfunction:: returns_usize()
+    .. js:function:: returns_usize()
 
-    .. js:staticfunction:: returns_imported()
+    .. js:function:: returns_imported()

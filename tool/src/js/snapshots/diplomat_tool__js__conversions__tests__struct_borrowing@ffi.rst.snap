@@ -11,7 +11,7 @@ expression: out_docs.get(out).unwrap()
 
     .. js:attribute:: y
 
-    .. js:function:: get_x()
+    .. js:method:: get_x()
 
 .. js:class:: PointTranspose
 
@@ -19,11 +19,11 @@ expression: out_docs.get(out).unwrap()
 
     .. js:attribute:: transpose
 
-    .. js:staticfunction:: new(u, v)
+    .. js:function:: new(u, v)
 
-    .. js:function:: transpose()
+    .. js:method:: transpose()
 
-    .. js:function:: point()
+    .. js:method:: point()
 
 .. js:class:: Scalar
 

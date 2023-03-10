@@ -9,7 +9,7 @@ expression: out_docs.get(out).unwrap()
 
     .. js:attribute:: s
 
-    .. js:staticfunction:: new(s)
+    .. js:function:: new(s)
 
-    .. js:function:: get()
+    .. js:method:: get()
 
