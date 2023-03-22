@@ -51,7 +51,7 @@ mod ffi {
 
 Enums exposed via Diplomat must be simple C-like enums. Structs may only contain fields which are [allowed](./types.md).
 
-In C++ the structs are translated to simple structs and the enums become simple enum classes. In JS the structs become classes with getters, and the enums are exposed as strings that get converted at the boundary.
+In C++ the structs are translated to simple structs and the enums become simple enum classes. In JS the structs become objects with fields, and the enums are exposed as strings that get converted at the boundary.
 
 # `diplomat::enum_convert`
 
