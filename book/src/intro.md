@@ -23,14 +23,12 @@ To install the `diplomat` CLI tool, run
 $ cargo install diplomat-tool
 ```
 
-Note that right now Diplomat is still subject to change and it might be better to install from a git revision for the latest features.
-
 
 You can then add `diplomat` as a dependency to your project like so:
 
 ```toml
-diplomat = "0.2.0"
-diplomat-runtime = "0.2.0"
+diplomat = "0.5.0"
+diplomat-runtime = "0.5.0"
 ```
 
 It is recommended to create a separate crate for the FFI interface. Diplomat will only read the contents of specially tagged modules so it is possible to mix Diplomat code with normal Rust code, but it is prefereable to minimize this since proc macros can make debugging hard.

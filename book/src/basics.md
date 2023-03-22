@@ -5,20 +5,20 @@ When using Diplomat, you'll need to define Rust modules that contain the Rust AP
 ```rust
 #[diplomat::bridge]
 mod ffi {
-    pub struct MyFFIType {
+    pub struct MyFFIStruct {
         pub a: i32,
         pub b: bool,
     }
     
-    impl MyFFIType {
-        pub fn create() -> MyFFIType {
-            MyFFIType {
+    impl MyFFIStruct {
+        pub fn create() -> MyFFIStruct {
+            MyFFIStruct {
                 a: 42,
                 b: true
             }
         }
 
-        pub fn do_a_thing(&self) {
+        pub fn do_a_thing(self) {
             println!("doing thing {:?}", self.b);
         }
     }
@@ -31,15 +31,17 @@ Every type declared within a `diplomat::bridge` module along with all methods in
 
 ```rust
 #[no_mangle]
-extern "C" fn MyFFIType_create() -> MyFFIType {
-    MyFFIType::create()
+extern "C" fn MyFFIStruct_create() -> MyFFIStruct {
+    MyFFIStruct::create()
 }
 
 #[no_mangle]
-extern "C" fn MyFFIType_do_a_thing(this: &MyFFIType) {
+extern "C" fn MyFFIStruct_do_a_thing(this: &MyFFIStruct) {
     this.do_a_thing()
 }
 ```
+
+
 
 We can then generate the bindings for this API using the `diplomat-tool` CLI.
 
@@ -52,14 +54,14 @@ For example, if we want to generate C++ bindings, we can create a folder `cpp/``
 $ diplomat-tool cpp cpp/
 ```
 
-This will generate the following struct in `MyFFIType.hpp`, along with some boilerplate:
+This will generate the following struct in `MyFFIStruct.hpp`, along with some boilerplate:
 
 ```cpp
-struct MyFFIType {
+struct MyFFIStruct {
  public:
   int32_t a;
   bool b;
-  static MyFFIType create_();
+  static MyFFIStruct create();
   void do_a_thing();
 };
 ```
@@ -72,16 +74,17 @@ $ diplomat-tool cpp cpp/ --docs cpp-docs/
 
 ## WASM
 
-For WASM bindings, you can use the following options, with similarly named directories:
+For WASM JS/TypeScript bindings, you can use the following options, with similarly named directories:
 
 ```shell
 $ diplomat-tool js js/ --docs js/docs/
 ```
 
-This will generate JS that has a `MyFFIType` class, with a static `create()` method, a `do_a_thing()` method, and getters for the fields. This JS will require there to be a `wasm.mjs` file that loads in the built wasm file (See [issue #80](https://github.com/rust-diplomat/diplomat/issues/80) for improving this), which you can base off of [this file](https://github.com/rust-diplomat/diplomat/blob/38cffa9bc2ef21d0aba89ed7d76236de4153248a/example/js/wasm.mjs).
+This will generate JS that has a `MyFFIStruct` class, with a static `create()` method, a `do_a_thing()` method, and getters for the fields. This JS will require there to be a `wasm.mjs` file that loads in the built wasm file (See [issue #80](https://github.com/rust-diplomat/diplomat/issues/80) for improving this), which you can base off of [this file](https://github.com/rust-diplomat/diplomat/blob/38cffa9bc2ef21d0aba89ed7d76236de4153248a/example/js/wasm.mjs).
 
 
-## C 
+## C
+
 While low-level C headers are generated in the process of running `diplomat-tool cpp`, you can also generate just the C headers with
 
 ```shell

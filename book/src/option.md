@@ -2,14 +2,14 @@
 
 Option types in Diplomat are relatively straightforward, you simply use `Option<T>` and it turns into the idiomatic equivalent over FFI.
 
-The main thing to note is that `Option<T>` currently only works when wrapping reference types.
+`Option<T>` currently only works when wrapping reference types (`Box<OpaqueType>` and `&OpaqueType`).
 
 ```rust
 #[diplomat::bridge]
 mod ffi {
     // just exists so we can get methods
     #[diplomat::opaque]
-    struct Thingy;
+    pub struct Thingy;
 
     impl Thingy {
         fn maybe_create() -> Option<Box<Thingy>> {

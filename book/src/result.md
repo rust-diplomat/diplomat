@@ -1,29 +1,23 @@
 # Result types
 
-Result types are returned by using [`DiplomatResult<T, E>`](https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatResult.html)
-(see [#82](https://github.com/rust-diplomat/diplomat/issues/82) for support for returning `Result<T, E>` directly).
+Result types are returned by using [`Result<T, E>`](https://docs.rs/diplomat-runtime/0.2.0/diplomat_runtime/struct.DiplomatResult.html) (or `DiplomatResult<T, E>`).
 
 For example, let's say we wish to define a fallible constructor:
 
 ```rust
 #[diplomat::bridge]
 mod ffi {
-    use diplomat_runtime::DiplomatResult;
-
     #[diplomat::opaque]
     struct Thingy(u8);
 
     impl Thingy {
-        pub fn try_create(string: &str) -> DiplomatResult<Box<Thingy>, ()> {
+        pub fn try_create(string: &str) -> Result<Box<Thingy>, ()> {
             let parsed: Result<u8, ()> = string.parse().map_err(|_| ());
-            let boxed: Result<Box<Thingy>, ()> = parsed.map(Thingy).map(Box::new);
-            boxed.into()
+            parsed.map(Thingy).map(Box::new)
         }
     }
 }
 ```
-
-`DiplomatResult` can be created from a regular `Result` with a simple `.into()`.
 
 On the C++ side, this will generate a method on `Thingy` with the signature
 
