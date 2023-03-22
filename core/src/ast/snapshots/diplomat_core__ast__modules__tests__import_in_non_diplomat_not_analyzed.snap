@@ -17,6 +17,7 @@ modules:
           fields: []
           methods: []
           output_only: false
+          cfg_attrs: []
     sub_modules: []
   other:
     name: other

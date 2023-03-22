@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
+use super::attrs;
 use super::docs::Docs;
 use super::{Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError};
 use crate::Env;
@@ -35,7 +36,7 @@ pub struct Method {
     ///
     /// These are strings instead of `syn::Attribute` or `proc_macro2::TokenStream`
     /// because those types are not `PartialEq`, `Hash`, `Serialize`, etc.
-    pub cfg: Vec<String>,
+    pub cfg_attrs: Vec<String>,
 }
 
 impl Method {
@@ -44,6 +45,7 @@ impl Method {
         m: &syn::ImplItemMethod,
         self_path_type: PathType,
         impl_generics: Option<&syn::Generics>,
+        cfg_attrs: &[String],
     ) -> Method {
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
@@ -87,6 +89,9 @@ impl Method {
             return_ty.as_ref(),
         );
 
+        let mut cfg_attrs = cfg_attrs.to_owned();
+        cfg_attrs.extend(attrs::extract_cfg_attrs(&m.attrs));
+
         Method {
             name: Ident::from(method_ident),
             docs: Docs::from_attrs(&m.attrs),
@@ -95,12 +100,7 @@ impl Method {
             params: all_params,
             return_type: return_ty,
             lifetime_env,
-            cfg: m
-                .attrs
-                .iter()
-                .filter(|&a| a.path == syn::parse_str("cfg").unwrap())
-                .map(|a| quote::quote!(#a).to_string())
-                .collect(),
+            cfg_attrs,
         }
     }
 
@@ -392,6 +392,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &[]
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -407,6 +408,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &[]
         ));
     }
 
@@ -423,6 +425,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &[]
         ));
     }
 
@@ -436,6 +439,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &[]
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -447,6 +451,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &[]
         ));
     }
 
@@ -456,6 +461,7 @@ mod tests {
                 &syn::parse_quote! { $($tokens)* },
                 PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
                 None,
+                &[]
             );
 
             let borrowed_params = method.borrowed_params();

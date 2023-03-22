@@ -1,7 +1,6 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! { Box < i32 > }).unwrap())"
-
+expression: "TypeName::from_syn(&syn::parse_quote! { Box < i32 > }, None)"
 ---
 Box:
   Primitive: i32

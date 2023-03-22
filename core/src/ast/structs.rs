@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
-use super::{Ident, LifetimeEnv, Method, Mutability, PathType, TypeName};
+use super::{attrs, Ident, LifetimeEnv, Method, Mutability, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
@@ -12,6 +12,7 @@ pub struct Struct {
     pub fields: Vec<(Ident, TypeName, Docs)>,
     pub methods: Vec<Method>,
     pub output_only: bool,
+    pub cfg_attrs: Vec<String>,
 }
 
 impl Struct {
@@ -36,6 +37,7 @@ impl Struct {
             .collect();
 
         let lifetimes = LifetimeEnv::from_struct_item(strct, &fields[..]);
+        let cfg_attrs = attrs::extract_cfg_attrs(&strct.attrs).collect();
 
         Struct {
             name: (&strct.ident).into(),
@@ -44,6 +46,7 @@ impl Struct {
             fields,
             methods: vec![],
             output_only,
+            cfg_attrs,
         }
     }
 }
@@ -58,17 +61,20 @@ pub struct OpaqueStruct {
     pub lifetimes: LifetimeEnv,
     pub methods: Vec<Method>,
     pub mutability: Mutability,
+    pub cfg_attrs: Vec<String>,
 }
 
 impl OpaqueStruct {
     /// Extract a [`OpaqueStruct`] metadata value from an AST node.
     pub fn new(strct: &syn::ItemStruct, mutability: Mutability) -> Self {
+        let cfg_attrs = attrs::extract_cfg_attrs(&strct.attrs).collect();
         OpaqueStruct {
             name: Ident::from(&strct.ident),
             docs: Docs::from_attrs(&strct.attrs),
             lifetimes: LifetimeEnv::from_struct_item(strct, &[]),
             methods: vec![],
             mutability,
+            cfg_attrs,
         }
     }
 }

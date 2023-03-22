@@ -7,6 +7,13 @@ use diplomat_core::ast;
 mod enum_convert;
 mod transparent_convert;
 
+fn cfgs_to_stream(attrs: &[String]) -> proc_macro2::TokenStream {
+    attrs.iter().fold(quote!(), |prev, attr| {
+        let attr = attr.parse::<proc_macro2::TokenStream>().unwrap();
+        quote!(#prev #attr)
+    })
+}
+
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
         ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(..) => {
@@ -190,10 +197,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         })
         .collect::<Vec<_>>();
 
-    let cfg = m.cfg.iter().fold(quote!(), |prev, attr| {
-        let attr = attr.parse::<proc_macro2::TokenStream>().unwrap();
-        quote!(#prev #attr)
-    });
+    let cfg = cfgs_to_stream(&m.cfg_attrs);
 
     if writeable_flushes.is_empty() {
         Item::Fn(syn::parse_quote! {
@@ -327,10 +331,13 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             (quote! {}, quote! {})
         };
 
+        let cfg = cfgs_to_stream(custom_type.cfg_attrs());
+
         // for now, body is empty since all we need to do is drop the box
         // TODO(#13): change to take a `*mut` and handle DST boxes appropriately
         new_contents.push(Item::Fn(syn::parse_quote! {
             #[no_mangle]
+            #cfg
             extern "C" fn #destroy_ident#lifetime_defs(this: Box<#type_ident#lifetimes>) {}
         }));
     }
@@ -626,6 +633,45 @@ mod tests {
 
                     impl Foo {
                         #[cfg(feature = "foo")]
+                        pub fn bar(s: u8) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    #[cfg(feature = "bar")]
+                    impl Foo {
+                        #[cfg(feature = "foo")]
+                        pub fn bar(s: u8) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn cfgd_struct() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    #[diplomat::opaque]
+                    #[cfg(feature = "foo")]
+                    struct Foo {}
+                    #[cfg(feature = "foo")]
+                    impl Foo {
                         pub fn bar(s: u8) {
                             unimplemented!()
                         }
