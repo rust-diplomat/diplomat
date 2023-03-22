@@ -1,6 +1,6 @@
 # Opaque Types
 
-In the vast majority of cases, we'd like to expose Rust types over FFI "opaquely", that is, the FFI code does not know anything about the contents of these types.
+In the vast majority of cases, we'd like to expose Rust types over FFI "opaquely", that is, the FFI code does not know anything about the contents of these types, rather it wants to do things with the type.
 
 By default, Diplomat will not let you expose fields of types other than the [allowed types](./types.md) over FFI. The following code will trigger a resolution error when running `diplomat-tool`:
 
@@ -59,10 +59,10 @@ mod ffi {
     use super::MyCollection as RustCollection;
 
     #[diplomat::opaque]
-    struct MyCollection(RustCollection);
+    pub struct MyCollection(RustCollection);
 
     impl MyCollection {
-        pub fn create(s: &str) -> Box<Self> {
+        pub fn create(s: &str) -> Box<MyCollection> {
             Box::new(MyCollection(RustCollection::new(s.into())))
         }
 
@@ -94,3 +94,9 @@ class MyCollection {
 };
 ```
 
+When exposing your library over FFI, most of the main types will probably end up being "opaque".
+
+# Boxes are return-only
+
+`Box<T>` can only be returned, not accepted as a parameter. This is because in garbage collected languages it is not possible to know if we are the unique owner when converting back to Rust. There are some techniques we could use to add such functionality, see [#317](https://github.com/rust-diplomat/diplomat/issues/317)
+    

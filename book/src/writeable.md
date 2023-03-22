@@ -7,20 +7,20 @@ For example, if we want to have methods that philosophically return a `String` o
 ```rust
 #[diplomat::bridge]
 mod ffi {
-    use diplomat_runtime::{DiplomatResult, DiplomatWriteable};
+    use diplomat_runtime::DiplomatWriteable;
     use std::fmt::Write;
 
     #[diplomat::opaque]
     #[derive(Debug)]
-    struct Thingy(u8);
+    pub struct Thingy(u8);
 
     impl Thingy {
         pub fn debug_output(&self, writeable: &mut DiplomatWriteable) {
             write!(writeable, "{:?}", self);
         }
 
-        pub fn maybe_get_string(&self, writeable: &mut DiplomatWriteable) -> DiplomatResult<(), ()> {
-            write!(writeable, "integer is {}", self.0).map_err(|_| ()).into()
+        pub fn maybe_get_string(&self, writeable: &mut DiplomatWriteable) -> Result<(), ()> {
+            write!(writeable, "integer is {}", self.0).map_err(|_| ())
         }
     }
 }
