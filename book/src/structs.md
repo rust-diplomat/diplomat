@@ -76,7 +76,7 @@ In case the enum is `#[non_exhaustive]`, you may need to supply a `needs_wildcar
 
 # Structs containing boxes
 
-By default, structs cannot contain output-only types like `Box<T>`. This can be opted in to by using `#[diplomat::out_struct]`
+By default, structs cannot contain output-only types like `Box<T>`. This can be opted in to by using `#[diplomat::out]`
 
 
 ```rust
@@ -86,7 +86,7 @@ mod ffi {
     #[diplomat::opaque]
     pub struct Thingy(=MyThingy);
 
-    #[diplomat::out_struct]
+    #[diplomat::out]
     pub struct ThingyAndExtraStuff {
         pub thingy: Box<Thingy>,
         pub stuff: u32
