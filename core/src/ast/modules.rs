@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType, RustLink,
-    Struct, ValidityError,
+    attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType,
+    RustLink, Struct, ValidityError,
 };
 use crate::environment::*;
 
@@ -176,6 +176,7 @@ impl Module {
                             syn::Type::Path(s) => PathType::from(s),
                             _ => panic!("Self type not found"),
                         };
+                        let cfg_attrs: Vec<_> = attrs::extract_cfg_attrs(&imp.attrs).collect();
 
                         let mut new_methods = imp
                             .items
@@ -185,7 +186,7 @@ impl Module {
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics)))
+                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &cfg_attrs))
                             .collect();
 
                         let self_ident = self_path.path.elements.last().unwrap();

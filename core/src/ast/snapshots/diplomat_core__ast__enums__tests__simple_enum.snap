@@ -21,4 +21,5 @@ variants:
     - - Some more docs.
       - []
 methods: []
+cfg_attrs: []
 

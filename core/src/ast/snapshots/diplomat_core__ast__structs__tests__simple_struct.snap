@@ -28,4 +28,5 @@ fields:
       - []
 methods: []
 output_only: true
+cfg_attrs: []
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::docs::Docs;
-use super::{Ident, Method};
+use super::{attrs, Ident, Method};
 use quote::ToTokens;
 
 /// A fieldless enum declaration in an FFI module.
@@ -12,6 +12,7 @@ pub struct Enum {
     /// A list of variants of the enum. (name, discriminant, docs)
     pub variants: Vec<(Ident, isize, Docs)>,
     pub methods: Vec<Method>,
+    pub cfg_attrs: Vec<String>,
 }
 
 impl From<&syn::ItemEnum> for Enum {
@@ -25,6 +26,8 @@ impl From<&syn::ItemEnum> for Enum {
             // and update the `CustomType::lifetimes` API accordingly.
             panic!("Enums cannot have generic parameters");
         }
+
+        let cfg_attrs = attrs::extract_cfg_attrs(&enm.attrs).collect();
         Enum {
             name: (&enm.ident).into(),
             docs: Docs::from_attrs(&enm.attrs),
@@ -57,6 +60,7 @@ impl From<&syn::ItemEnum> for Enum {
                 })
                 .collect(),
             methods: vec![],
+            cfg_attrs,
         }
     }
 }

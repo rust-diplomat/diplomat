@@ -190,7 +190,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         })
         .collect::<Vec<_>>();
 
-    let cfg = m.cfg.iter().fold(quote!(), |prev, attr| {
+    let cfg = m.cfg_attrs.iter().fold(quote!(), |prev, attr| {
         let attr = attr.parse::<proc_macro2::TokenStream>().unwrap();
         quote!(#prev #attr)
     });
@@ -624,6 +624,24 @@ mod tests {
                 mod ffi {
                     struct Foo {}
 
+                    impl Foo {
+                        #[cfg(feature = "foo")]
+                        pub fn bar(s: u8) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    #[cfg(feature = "bar")]
                     impl Foo {
                         #[cfg(feature = "foo")]
                         pub fn bar(s: u8) {
