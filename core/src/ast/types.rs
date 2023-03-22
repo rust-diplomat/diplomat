@@ -44,6 +44,14 @@ impl CustomType {
         }
     }
 
+    pub fn cfg_attrs(&self) -> &[String] {
+        match self {
+            CustomType::Struct(strct) => &strct.cfg_attrs,
+            CustomType::Opaque(strct) => &strct.cfg_attrs,
+            CustomType::Enum(enm) => &enm.cfg_attrs,
+        }
+    }
+
     /// Get the doc lines of the custom type.
     pub fn docs(&self) -> &Docs {
         match self {
