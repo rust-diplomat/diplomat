@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
+use super::attrs;
 use super::docs::Docs;
 use super::{Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError};
 use crate::Env;
@@ -95,12 +96,7 @@ impl Method {
             params: all_params,
             return_type: return_ty,
             lifetime_env,
-            cfg: m
-                .attrs
-                .iter()
-                .filter(|&a| a.path == syn::parse_str("cfg").unwrap())
-                .map(|a| quote::quote!(#a).to_string())
-                .collect(),
+            cfg: attrs::extract_cfg_attrs(&m.attrs).collect(),
         }
     }
 
