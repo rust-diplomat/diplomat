@@ -379,7 +379,7 @@ mod tests {
 
     use crate::ast::Ident;
 
-    use super::{Method, Path, PathType};
+    use super::{Attrs, Method, Path, PathType};
 
     #[test]
     fn static_methods() {
@@ -393,7 +393,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &[]
+            &Attrs::default()
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -409,7 +409,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &[]
+            &Attrs::default()
         ));
     }
 
@@ -426,7 +426,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &[]
+            &Attrs::default()
         ));
     }
 
@@ -440,7 +440,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &[]
+            &Attrs::default()
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -452,7 +452,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &[]
+            &Attrs::default()
         ));
     }
 
@@ -462,7 +462,7 @@ mod tests {
                 &syn::parse_quote! { $($tokens)* },
                 PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
                 None,
-                &[]
+                &Attrs::default()
             );
 
             let borrowed_params = method.borrowed_params();
