@@ -1,15 +1,16 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::ops::ControlFlow;
 
-use super::attrs;
 use super::docs::Docs;
-use super::{Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError};
+use super::{
+    Attrs, Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError,
+};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
 /// by inspecting [`Method::self_param`].
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct Method {
     /// The name of the method as initially declared.
     pub name: Ident,
@@ -36,7 +37,7 @@ pub struct Method {
     ///
     /// These are strings instead of `syn::Attribute` or `proc_macro2::TokenStream`
     /// because those types are not `PartialEq`, `Hash`, `Serialize`, etc.
-    pub cfg_attrs: Vec<String>,
+    pub attrs: Attrs,
 }
 
 impl Method {
@@ -45,7 +46,7 @@ impl Method {
         m: &syn::ImplItemFn,
         self_path_type: PathType,
         impl_generics: Option<&syn::Generics>,
-        cfg_attrs: &[String],
+        impl_attrs: &Attrs,
     ) -> Method {
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
@@ -89,8 +90,8 @@ impl Method {
             return_ty.as_ref(),
         );
 
-        let mut cfg_attrs = cfg_attrs.to_owned();
-        cfg_attrs.extend(attrs::extract_cfg_attrs(&m.attrs));
+        let mut attrs: Attrs = (&*m.attrs).into();
+        attrs.merge_parent_attrs(impl_attrs);
 
         Method {
             name: Ident::from(method_ident),
@@ -100,7 +101,7 @@ impl Method {
             params: all_params,
             return_type: return_ty,
             lifetime_env,
-            cfg_attrs,
+            attrs,
         }
     }
 
@@ -242,7 +243,7 @@ impl Method {
 }
 
 /// The `self` parameter taken by a [`Method`].
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct SelfParam {
     /// The lifetime and mutability of the `self` param, if it's a reference.
     pub reference: Option<(Lifetime, Mutability)>,
@@ -273,7 +274,7 @@ impl SelfParam {
 }
 
 /// A parameter taken by a [`Method`], not including `self`.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct Param {
     /// The name of the parameter in the original method declaration.
     pub name: Ident,
