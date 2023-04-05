@@ -7,9 +7,8 @@ use diplomat_core::ast;
 mod enum_convert;
 mod transparent_convert;
 
-fn cfgs_to_stream(attrs: &[String]) -> proc_macro2::TokenStream {
+fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
     attrs.iter().fold(quote!(), |prev, attr| {
-        let attr = attr.parse::<proc_macro2::TokenStream>().unwrap();
         quote!(#prev #attr)
     })
 }
@@ -197,7 +196,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         })
         .collect::<Vec<_>>();
 
-    let cfg = cfgs_to_stream(&m.cfg_attrs);
+    let cfg = cfgs_to_stream(&m.attrs.cfg);
 
     if writeable_flushes.is_empty() {
         Item::Fn(syn::parse_quote! {
@@ -331,7 +330,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             (quote! {}, quote! {})
         };
 
-        let cfg = cfgs_to_stream(custom_type.cfg_attrs());
+        let cfg = cfgs_to_stream(&custom_type.attrs().cfg);
 
         // for now, body is empty since all we need to do is drop the box
         // TODO(#13): change to take a `*mut` and handle DST boxes appropriately
