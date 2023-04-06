@@ -8,9 +8,9 @@ mod enum_convert;
 mod transparent_convert;
 
 fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
-    attrs.iter().fold(quote!(), |prev, attr| {
-        quote!(#prev #attr)
-    })
+    attrs
+        .iter()
+        .fold(quote!(), |prev, attr| quote!(#prev #attr))
 }
 
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
@@ -240,7 +240,7 @@ impl AttributeInfo {
                     if seg == "opaque" {
                         opaque = true;
                         return false;
-                    } else if seg == "rust_link" || seg == "out" {
+                    } else if seg == "rust_link" || seg == "out" || seg == "attr" {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
                         return false;
