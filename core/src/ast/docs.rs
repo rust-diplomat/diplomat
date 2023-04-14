@@ -3,7 +3,8 @@ use core::fmt;
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use syn::Attribute;
+use syn::parse::{self, Parse, ParseStream};
+use syn::{Attribute, Ident, Meta, Token};
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Default)]
 pub struct Docs(String, Vec<RustLink>);
@@ -29,17 +30,17 @@ impl Docs {
         let mut lines: String = String::new();
 
         attrs.iter().for_each(|attr| {
-            let maybe_ident = attr.path.get_ident();
-            if maybe_ident.is_some() && *maybe_ident.unwrap() == "doc" {
-                let literal_token = attr.tokens.clone().into_iter().nth(1).unwrap();
-                let node: syn::LitStr = syn::parse2(literal_token.to_token_stream()).unwrap();
-                let line = node.value().trim().to_string();
+            if let Meta::NameValue(ref nv) = attr.meta {
+                if nv.path.is_ident("doc") {
+                    let node: syn::LitStr = syn::parse2(nv.value.to_token_stream()).unwrap();
+                    let line = node.value().trim().to_string();
 
-                if !lines.is_empty() {
-                    lines.push('\n');
+                    if !lines.is_empty() {
+                        lines.push('\n');
+                    }
+
+                    lines.push_str(&line);
                 }
-
-                lines.push_str(&line);
             }
         });
 
@@ -47,90 +48,11 @@ impl Docs {
     }
 
     fn get_rust_link(attrs: &[Attribute]) -> Vec<RustLink> {
-        let mut vec = vec![];
-        for attr in attrs {
-            if attr.path.to_token_stream().to_string() == "diplomat :: rust_link" {
-                if let Ok(syn::Meta::List(syn::MetaList { nested, .. })) = attr.parse_meta() {
-                    let (path, typ, maybe_display) = if nested.len() == 2 {
-                        if let (
-                            syn::NestedMeta::Meta(syn::Meta::Path(path)),
-                            syn::NestedMeta::Meta(syn::Meta::Path(typ)),
-                        ) = (&nested[0], &nested[1])
-                        {
-                            (path, typ, None)
-                        } else {
-                            panic!("Malformed attribute: {}", attr.to_token_stream());
-                        }
-                    } else if nested.len() == 3 {
-                        if let (
-                            syn::NestedMeta::Meta(syn::Meta::Path(path)),
-                            syn::NestedMeta::Meta(syn::Meta::Path(typ)),
-                            syn::NestedMeta::Meta(syn::Meta::Path(display)),
-                        ) = (&nested[0], &nested[1], &nested[2])
-                        {
-                            (path, typ, Some(display))
-                        } else {
-                            panic!("Malformed attribute: {}", attr.to_token_stream());
-                        }
-                    } else {
-                        panic!(
-                            "#[diplomat::rust_link()] can take two or three parameters, found: {}",
-                            attr.to_token_stream()
-                        );
-                    };
-
-                    if let Some(typ) = typ.get_ident() {
-                        let display = if let Some(display) = maybe_display {
-                            if let Some(ident) = display.get_ident() {
-                                let s = ident.to_string();
-                                match &*s {
-                                    "normal" => RustLinkDisplay::Normal,
-                                    "compact" => RustLinkDisplay::Compact,
-                                    "hidden" => RustLinkDisplay::Hidden,
-                                    _ => panic!("#[diplomat::rust_link()]'s third argument must be `normal`, `compact`, \
-                                                 or `hidden`, found: {}", display.to_token_stream()),
-                                }
-                            } else {
-                                panic!("#[diplomat::rust_link()]'s third argument must be a path, found: {}", display.to_token_stream());
-                            }
-                        } else {
-                            RustLinkDisplay::Normal
-                        };
-                        vec.push(RustLink {
-                            path: Path::from_syn(path),
-                            typ: match typ.to_token_stream().to_string().as_str() {
-                                "Struct" => DocType::Struct,
-                                "StructField" => DocType::StructField,
-                                "Enum" => DocType::Enum,
-                                "EnumVariant" => DocType::EnumVariant,
-                                "EnumVariantField" => DocType::EnumVariantField,
-                                "Trait" => DocType::Trait,
-                                "FnInStruct" => DocType::FnInStruct,
-                                "FnInEnum" => DocType::FnInEnum,
-                                "FnInTrait" => DocType::FnInTrait,
-                                "DefaultFnInTrait" => DocType::DefaultFnInTrait,
-                                "Fn" => DocType::Fn,
-                                "Mod" => DocType::Mod,
-                                "Constant" => DocType::Constant,
-                                "AssociatedConstantInEnum" => DocType::AssociatedConstantInEnum,
-                                "AssociatedConstantInTrait" => DocType::AssociatedConstantInTrait,
-                                "AssociatedConstantInStruct" => DocType::AssociatedConstantInStruct,
-                                "Macro" => DocType::Macro,
-                                "AssociatedTypeInEnum" => DocType::AssociatedTypeInEnum,
-                                "AssociatedTypeInTrait" => DocType::AssociatedTypeInTrait,
-                                "AssociatedTypeInStruct" => DocType::AssociatedTypeInStruct,
-                                "Typedef" => DocType::Typedef,
-                                x => panic!("Invalid doc type {x:?}"),
-                            },
-                            display,
-                        });
-                        continue;
-                    };
-                }
-                panic!("Malformed attribute: {}", attr.to_token_stream());
-            }
-        }
-        vec
+        attrs
+            .iter()
+            .filter(|i| i.path().to_token_stream().to_string() == "diplomat :: rust_link")
+            .map(|i| i.parse_args().expect("Malformed attribute"))
+            .collect()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -209,6 +131,57 @@ pub struct RustLink {
     pub display: RustLinkDisplay,
 }
 
+impl Parse for RustLink {
+    fn parse(input: ParseStream<'_>) -> parse::Result<Self> {
+        let path = input.parse()?;
+        let path = Path::from_syn(&path);
+        let _comma: Token![,] = input.parse()?;
+        let ty_ident: Ident = input.parse()?;
+        let typ = match &*ty_ident.to_string() {
+            "Struct" => DocType::Struct,
+            "StructField" => DocType::StructField,
+            "Enum" => DocType::Enum,
+            "EnumVariant" => DocType::EnumVariant,
+            "EnumVariantField" => DocType::EnumVariantField,
+            "Trait" => DocType::Trait,
+            "FnInStruct" => DocType::FnInStruct,
+            "FnInEnum" => DocType::FnInEnum,
+            "FnInTrait" => DocType::FnInTrait,
+            "DefaultFnInTrait" => DocType::DefaultFnInTrait,
+            "Fn" => DocType::Fn,
+            "Mod" => DocType::Mod,
+            "Constant" => DocType::Constant,
+            "AssociatedConstantInEnum" => DocType::AssociatedConstantInEnum,
+            "AssociatedConstantInTrait" => DocType::AssociatedConstantInTrait,
+            "AssociatedConstantInStruct" => DocType::AssociatedConstantInStruct,
+            "Macro" => DocType::Macro,
+            "AssociatedTypeInEnum" => DocType::AssociatedTypeInEnum,
+            "AssociatedTypeInTrait" => DocType::AssociatedTypeInTrait,
+            "AssociatedTypeInStruct" => DocType::AssociatedTypeInStruct,
+            "Typedef" => DocType::Typedef,
+            _ => {
+                return Err(parse::Error::new(
+                    ty_ident.span(),
+                    "Unknown rust_link doc type",
+                ))
+            }
+        };
+        let lookahead = input.lookahead1();
+        let display = if lookahead.peek(Token![,]) {
+            let _comma: Token![,] = input.parse()?;
+            let display_ident: Ident = input.parse()?;
+            match &*display_ident.to_string() {
+                "normal" => RustLinkDisplay::Normal,
+                "compact" => RustLinkDisplay::Compact,
+                "hidden" => RustLinkDisplay::Hidden,
+                _ => return Err(parse::Error::new(display_ident.span(), "Unknown rust_link display style: Must be must be `normal`, `compact`, or `hidden`.")),
+            }
+        } else {
+            RustLinkDisplay::Normal
+        };
+        Ok(RustLink { path, typ, display })
+    }
+}
 impl fmt::Display for RustLink {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}#{:?}", self.path, self.typ)

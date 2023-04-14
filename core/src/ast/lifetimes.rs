@@ -95,7 +95,7 @@ impl LifetimeEnv {
     /// bounds in the optional `self` param, other param, and optional return type.
     /// For example, the type `&'a Foo<'b>` implies `'b: 'a`.
     pub fn from_method_item(
-        method: &syn::ImplItemMethod,
+        method: &syn::ImplItemFn,
         impl_generics: Option<&syn::Generics>,
         self_param: Option<&SelfParam>,
         params: &[Param],
@@ -199,7 +199,7 @@ impl LifetimeEnv {
             self.extend_bounds(where_clause.predicates.iter().map(|pred| match pred {
                 syn::WherePredicate::Type(_) => panic!("trait bounds are unsupported"),
                 syn::WherePredicate::Lifetime(pred) => (&pred.lifetime, &pred.bounds),
-                syn::WherePredicate::Eq(_) => panic!("eq bounds are unsupported"),
+                _ => panic!("Found unknown kind of where predicate"),
             }));
         }
     }

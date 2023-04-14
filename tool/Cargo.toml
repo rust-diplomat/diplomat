@@ -16,8 +16,8 @@ repository = "https://github.com/rust-diplomat/diplomat"
 
 [dependencies]
 diplomat_core = { path = "../core", version = "0.5.1", features = ["displaydoc", "hir"] }
-syn = { version = "1.0", features = [ "full", "extra-traits" ] }
-syn-inline-mod = "0.4.0"
+syn = { version = "2", features = [ "full", "extra-traits" ] }
+syn-inline-mod = "0.5.0"
 quote = "1.0"
 indenter = "0.3.3"
 pulldown-cmark = "0.8.0"
