@@ -12,6 +12,7 @@ documentation = "https://docs.rs/diplomat_core/"
 edition = "2021"
 keywords = ["ffi", "codegen"]
 categories = ["development-tools"]
+repository = "https://github.com/rust-diplomat/diplomat"
 
 [lib]
 path = "src/lib.rs"
