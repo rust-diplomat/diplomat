@@ -14,8 +14,8 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 [dependencies]
 diplomat = { path = "../macro" }
 diplomat-runtime = { path = "../runtime" }
-icu = "1.0.0"
-writeable = "0.5.0"
-fixed_decimal = "0.5.1"
-icu_provider = { version = "1.0", features = ["serde"] }
-icu_testdata = { version = "1.0" }
+icu = "1.2"
+writeable = "0.5.2"
+fixed_decimal = "0.5.3"
+icu_provider = { version = "1.2", features = ["serde"] }
+icu_testdata = { version = "1.2" }
