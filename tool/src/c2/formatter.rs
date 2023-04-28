@@ -130,7 +130,7 @@ impl<'tcx> CFormatter<'tcx> {
             PrimitiveType::Int(IntType::I64) => "int64_t",
             PrimitiveType::Int(IntType::U64) => "uint64_t",
             PrimitiveType::Int128(_) => panic!("i128 not supported in C"),
-            PrimitiveType::IntSize(IntSizeType::Isize) => "ssize_t",
+            PrimitiveType::IntSize(IntSizeType::Isize) => "intptr_t",
             PrimitiveType::IntSize(IntSizeType::Usize) => "size_t",
             PrimitiveType::Float(FloatType::F32) => "float",
             PrimitiveType::Float(FloatType::F64) => "double",
