@@ -1,6 +1,5 @@
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
 use syn::*;
 
 // An attribute that is a list of idents
@@ -12,7 +11,7 @@ pub struct EnumConvertAttribute {
 
 impl Parse for EnumConvertAttribute {
     fn parse(input: ParseStream) -> Result<Self> {
-        let paths: Punctuated<Path, Token![,]> = input.parse_terminated(Path::parse)?;
+        let paths = input.parse_terminated(Path::parse, Token![,])?;
         if paths.is_empty() {
             return Err(input.error("#[diplomat::enum_convert] needs a path argument"));
         }

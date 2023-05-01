@@ -230,14 +230,14 @@ impl AttributeInfo {
         let mut repr = false;
         let mut opaque = false;
         attrs.retain(|attr| {
-            let ident = &attr.path.segments.iter().next().unwrap().ident;
+            let ident = &attr.path().segments.iter().next().unwrap().ident;
             if ident == "repr" {
                 repr = true;
                 // don't actually extract repr attrs, just detect them
                 return true;
             } else if ident == "diplomat" {
-                if attr.path.segments.len() == 2 {
-                    let seg = &attr.path.segments.iter().nth(1).unwrap().ident;
+                if attr.path().segments.len() == 2 {
+                    let seg = &attr.path().segments.iter().nth(1).unwrap().ident;
                     if seg == "opaque" {
                         opaque = true;
                         return false;
@@ -299,7 +299,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
 
         Item::Impl(i) => {
             for item in &mut i.items {
-                if let syn::ImplItem::Method(ref mut m) = *item {
+                if let syn::ImplItem::Fn(ref mut m) = *item {
                     let info = AttributeInfo::extract(&mut m.attrs);
                     if info.opaque {
                         panic!("#[diplomat::opaque] not allowed on methods")
@@ -349,6 +349,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         ident: input.ident,
         content: Some((brace, new_contents)),
         semi: input.semi,
+        unsafety: None,
     }
 }
 

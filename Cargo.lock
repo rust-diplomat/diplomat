@@ -94,7 +94,7 @@ dependencies = [
  "proc-macro-error",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
 ]
 
 [[package]]
@@ -132,13 +132,13 @@ dependencies = [
 
 [[package]]
 name = "diplomat"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "diplomat_core",
  "insta",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 2.0.15",
  "tempfile",
 ]
 
@@ -165,7 +165,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-runtime"
-version = "0.5.1"
+version = "0.5.2"
 
 [[package]]
 name = "diplomat-tool"
@@ -181,14 +181,14 @@ dependencies = [
  "pulldown-cmark",
  "quote",
  "serde",
- "syn",
+ "syn 2.0.15",
  "syn-inline-mod",
  "toml",
 ]
 
 [[package]]
 name = "diplomat_core"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "displaydoc",
  "insta",
@@ -198,7 +198,7 @@ dependencies = [
  "serde",
  "smallvec",
  "strck_ident",
- "syn",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -209,7 +209,7 @@ checksum = "3bf95dc3f046b9da4f2d51833c0d3547d8564ef6910f5c1ed130306a75b92886"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
 ]
 
 [[package]]
@@ -507,7 +507,7 @@ checksum = "dd8b728b9421e93eff1d9f8681101b78fa745e0748c95c655c83f337044a7e10"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
 ]
 
 [[package]]
@@ -693,7 +693,7 @@ dependencies = [
  "proc-macro-error-attr",
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
  "version_check",
 ]
 
@@ -710,11 +710,11 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.28"
+version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c7ed8b8c7b886ea3ed7dde405212185f423ab44682667c8c6dd14aa1d9f6612"
+checksum = "2b63bdb0cd06f1f4dedf69b254734f9b45af66e4a031e42a7480257d9898b435"
 dependencies = [
- "unicode-xid",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -731,9 +731,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.9"
+version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3d0b9745dc2debf507c8422de05d7226cc1f0644216dfdfead988f9b1ab32a7"
+checksum = "4424af4bf778aae2051a77b60283332f386554255d722233d09fbfc7e30da2fc"
 dependencies = [
  "proc-macro2",
 ]
@@ -834,7 +834,7 @@ checksum = "d7bc1a1ab1961464eae040d96713baa5a724a8152c1222492465b54322ec508b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
 ]
 
 [[package]]
@@ -912,13 +912,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "syn-inline-mod"
-version = "0.4.0"
+name = "syn"
+version = "2.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0356188b235b38dc1357a13fa13b79319d80598028d549af5750e4b03a0fc47"
+checksum = "a34fcf3e8b60f57e6a14301a2e916d323af98b0ea63c599441eec8558660c822"
 dependencies = [
  "proc-macro2",
- "syn",
+ "quote",
+ "unicode-ident",
+]
+
+[[package]]
+name = "syn-inline-mod"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fa6dca1fdb7b2ed46dd534a326725419d4fb10f23d8c85a8b2860e5eb25d0f9"
+dependencies = [
+ "proc-macro2",
+ "syn 2.0.15",
 ]
 
 [[package]]
@@ -929,7 +940,7 @@ checksum = "474aaa926faa1603c40b7885a9eaea29b444d1cb2850cb7c0e37bb1a4182f4fa"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
  "unicode-xid",
 ]
 
@@ -1120,7 +1131,7 @@ checksum = "af46c169923ed7516eef0aa32b56d2651b229f57458ebe46b49ddd6efef5b7a2"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
  "synstructure",
 ]
 
@@ -1141,7 +1152,7 @@ checksum = "2e8aa86add9ddbd2409c1ed01e033cd457d79b1b1229b64922c25095c595e829"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
  "synstructure",
 ]
 
@@ -1164,6 +1175,6 @@ checksum = "486558732d5dde10d0f8cb2936507c1bb21bc539d924c949baf5f36a58e51bac"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn",
+ "syn 1.0.74",
  "synstructure",
 ]

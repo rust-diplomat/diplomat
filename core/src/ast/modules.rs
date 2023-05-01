@@ -38,7 +38,7 @@ impl DiplomatStructAttribute {
         let mut res = Ok(None);
         for attr in attrs {
             buf.clear();
-            write!(&mut buf, "{}", attr.path.to_token_stream()).unwrap();
+            write!(&mut buf, "{}", attr.path().to_token_stream()).unwrap();
             let parsed = match buf.as_str() {
                 "diplomat :: out" => Some(Self::Out),
                 "diplomat :: opaque" => Some(Self::Opaque),
@@ -125,7 +125,7 @@ impl Module {
             || input
                 .attrs
                 .iter()
-                .any(|a| a.path.to_token_stream().to_string() == "diplomat :: bridge");
+                .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge");
 
         input
             .content
@@ -182,7 +182,7 @@ impl Module {
                             .items
                             .iter()
                             .filter_map(|i| match i {
-                                ImplItem::Method(m) => Some(m),
+                                ImplItem::Fn(m) => Some(m),
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))

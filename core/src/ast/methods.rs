@@ -42,7 +42,7 @@ pub struct Method {
 impl Method {
     /// Extracts a [`Method`] from an AST node inside an `impl`.
     pub fn from_syn(
-        m: &syn::ImplItemMethod,
+        m: &syn::ImplItemFn,
         self_path_type: PathType,
         impl_generics: Option<&syn::Generics>,
         cfg_attrs: &[String],
@@ -64,10 +64,10 @@ impl Method {
             })
             .collect::<Vec<_>>();
 
-        let self_param = m.sig.receiver().map(|rec| match rec {
-            syn::FnArg::Receiver(ref rec) => SelfParam::from_syn(rec, self_path_type.clone()),
-            _ => panic!("Unexpected self param type"),
-        });
+        let self_param = m
+            .sig
+            .receiver()
+            .map(|rec| SelfParam::from_syn(rec, self_path_type.clone()));
 
         let return_ty = match &m.sig.output {
             syn::ReturnType::Type(_, return_typ) => {
