@@ -80,9 +80,9 @@ pub trait AttributeValidator {
     /// Provided, checks if type satisfies a `DiplomatAttrCfg`
     fn satisfies_cfg(&self, cfg: &DiplomatAttrCfg) -> bool {
         match *cfg {
-            DiplomatAttrCfg::Not(ref c) => !self.satisfies_cfg(&c),
-            DiplomatAttrCfg::Any(ref cs) => cs.iter().any(|c| self.satisfies_cfg(&c)),
-            DiplomatAttrCfg::All(ref cs) => cs.iter().all(|c| self.satisfies_cfg(&c)),
+            DiplomatAttrCfg::Not(ref c) => !self.satisfies_cfg(c),
+            DiplomatAttrCfg::Any(ref cs) => cs.iter().any(|c| self.satisfies_cfg(c)),
+            DiplomatAttrCfg::All(ref cs) => cs.iter().all(|c| self.satisfies_cfg(c)),
             DiplomatAttrCfg::Star => true,
             DiplomatAttrCfg::BackendName(ref n) => self.is_backend(n),
             DiplomatAttrCfg::NameValue(ref n, ref v) => self.is_name_value(n, v),

@@ -131,22 +131,20 @@ impl Parse for DiplomatAttrCfg {
                 } else {
                     Ok(DiplomatAttrCfg::All(vec))
                 }
-            } else {
-                if input.peek(Token![=]) {
-                    let _t: Token![=] = input.parse()?;
-                    if input.peek(Ident) {
-                        let value: Ident = input.parse()?;
-                        Ok(DiplomatAttrCfg::NameValue(
-                            name.to_string(),
-                            value.to_string(),
-                        ))
-                    } else {
-                        let value: LitStr = input.parse()?;
-                        Ok(DiplomatAttrCfg::NameValue(name.to_string(), value.value()))
-                    }
+            } else if input.peek(Token![=]) {
+                let _t: Token![=] = input.parse()?;
+                if input.peek(Ident) {
+                    let value: Ident = input.parse()?;
+                    Ok(DiplomatAttrCfg::NameValue(
+                        name.to_string(),
+                        value.to_string(),
+                    ))
                 } else {
-                    Ok(DiplomatAttrCfg::BackendName(name.to_string()))
+                    let value: LitStr = input.parse()?;
+                    Ok(DiplomatAttrCfg::NameValue(name.to_string(), value.value()))
                 }
+            } else {
+                Ok(DiplomatAttrCfg::BackendName(name.to_string()))
             }
         } else if lookahead.peek(Token![*]) {
             let _t: Token![*] = input.parse()?;
@@ -175,8 +173,6 @@ mod tests {
     use insta;
 
     use syn;
-
-    use crate::ast::Ident;
 
     use super::{DiplomatAttr, DiplomatAttrCfg};
 
