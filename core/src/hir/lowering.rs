@@ -311,7 +311,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         match ty {
             ast::TypeName::Primitive(prim) => Some(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                match path.resolve(in_path, &self.env) {
+                match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                             let lifetimes = ltl?.lower_generics(&path.lifetimes[..], ty.is_self());
@@ -341,7 +341,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                    match path.resolve(in_path, &self.env) {
+                    match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes =
@@ -371,7 +371,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             ast::TypeName::Box(box_ty) => {
                 self.errors.push(match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                    match path.resolve(in_path, &self.env) {
+                    match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(_) => LoweringError::Other(format!("found Box<T> in input where T is an opaque, but owned opaques aren't allowed in inputs. try &T instead? T = {path}")),
                         _ => LoweringError::Other(format!("found Box<T> in input where T is a custom type but not opaque. non-opaques can't be behind pointers, and opaques in inputs can't be owned. T = {path}")),
                     }
@@ -383,7 +383,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             ast::TypeName::Option(opt_ty) => {
                 match opt_ty.as_ref() {
                 ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
-                    ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path.resolve(in_path, &self.env) {
+                    ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
@@ -461,7 +461,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 Some(OutType::Primitive(PrimitiveType::from_ast(*prim)))
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                match path.resolve(in_path, &self.env) {
+                match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
                         let lifetimes = ltl?.lower_generics(&path.lifetimes, ty.is_self());
 
@@ -494,7 +494,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                    match path.resolve(in_path, &self.env) {
+                    match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
@@ -522,7 +522,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             },
             ast::TypeName::Box(box_ty) => match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                    match path.resolve(in_path, &self.env) {
+                    match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
                             let lifetimes = ltl.lower_generics(&path.lifetimes, box_ty.is_self());
                             let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
@@ -552,7 +552,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             ast::TypeName::Option(opt_ty) => match opt_ty.as_ref() {
                 ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                        match path.resolve(in_path, &self.env) {
+                        match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
@@ -580,7 +580,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 },
                 ast::TypeName::Box(box_ty) => match box_ty.as_ref() {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                        match path.resolve(in_path, &self.env) {
+                        match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
                                 let lifetimes =
                                     ltl?.lower_generics(&path.lifetimes, box_ty.is_self());
@@ -649,7 +649,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         method_full_path: &ast::Ident, // for better error msg
         in_path: &ast::Path,
     ) -> Option<(ParamSelf, ParamLifetimeLowerer<'ast>)> {
-        match self_param.path_type.resolve(in_path, &self.env) {
+        match self_param.path_type.resolve(in_path, self.env) {
             ast::CustomType::Struct(strct) => {
                 if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                     if self_param.reference.is_some() {
