@@ -97,7 +97,7 @@
 //! [Nomicon]: https://doc.rust-lang.org/nomicon/lifetime-elision.html
 
 use super::{
-    lower_ident, Lifetime, LifetimeEnv, LoweringContext, MaybeStatic, MethodLifetime, TypeLifetime,
+    Lifetime, LifetimeEnv, LoweringContext, MaybeStatic, MethodLifetime, TypeLifetime,
     TypeLifetimes,
 };
 use crate::ast;
@@ -250,7 +250,7 @@ impl<'ast> SelfParamLifetimeLowerer<'ast> {
         let mut hir_nodes = Some(SmallVec::new());
 
         for ast_node in lifetime_env.nodes.iter() {
-            let lifetime = lower_ident(ast_node.lifetime.name(), "named lifetime", ctx);
+            let lifetime = ctx.lower_ident(ast_node.lifetime.name(), "named lifetime");
             match (lifetime, &mut hir_nodes) {
                 (Some(lifetime), Some(hir_nodes)) => {
                     hir_nodes.push(Lifetime::new(
