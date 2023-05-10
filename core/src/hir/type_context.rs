@@ -1,6 +1,6 @@
 //! Store all the types contained in the HIR.
 
-use super::{EnumDef, LoweringError, OpaqueDef, OutStructDef, StructDef, TypeDef, TypeLowerer};
+use super::{EnumDef, LoweringContext, LoweringError, OpaqueDef, OutStructDef, StructDef, TypeDef};
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
 use crate::{ast, Env};
@@ -140,11 +140,16 @@ impl TypeContext {
             &ast_enums[..],
         );
 
-        let out_structs =
-            OutStructDef::lower_all(&ast_out_structs[..], &lookup_id, env, &mut errors);
-        let structs = StructDef::lower_all(&ast_structs[..], &lookup_id, env, &mut errors);
-        let opaques = OpaqueDef::lower_all(&ast_opaques[..], &lookup_id, env, &mut errors);
-        let enums = EnumDef::lower_all(&ast_enums[..], &lookup_id, env, &mut errors);
+        let mut ctx = LoweringContext {
+            lookup_id: &lookup_id,
+            env,
+            errors: &mut errors,
+        };
+
+        let out_structs = ctx.lower_all_out_structs(&ast_out_structs[..]);
+        let structs = ctx.lower_all_structs(&ast_structs[..]);
+        let opaques = ctx.lower_all_opaques(&ast_opaques[..]);
+        let enums = ctx.lower_all_enums(&ast_enums[..]);
 
         match (out_structs, structs, opaques, enums) {
             (Some(out_structs), Some(structs), Some(opaques), Some(enums)) => {
