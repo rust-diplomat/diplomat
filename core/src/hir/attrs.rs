@@ -58,7 +58,7 @@ impl Attrs {
 }
 
 #[non_exhaustive]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
     disabling: bool,
     // more to be added: rename, namespace, etc
@@ -67,7 +67,7 @@ pub struct BackendAttrSupport {
 /// Defined by backends when validating attributes
 pub trait AttributeValidator {
     /// The primary name of the backend, for use in diagnostics
-    fn primary_name(&self) -> &'static str;
+    fn primary_name(&self) -> &str;
     /// Does this backend satisfy `cfg(backend_name)`?
     /// (Backends are allowed to satisfy multiple backend names, useful when there
     /// are multiple backends for a language)
@@ -87,5 +87,48 @@ pub trait AttributeValidator {
             DiplomatAttrCfg::BackendName(ref n) => self.is_backend(n),
             DiplomatAttrCfg::NameValue(ref n, ref v) => self.is_name_value(n, v),
         }
+    }
+}
+
+/// A basic attribute validator
+#[non_exhaustive]
+#[derive(Default)]
+pub struct BasicAttributeValidator {
+    /// The primary name of this backend (should be unique, ideally)
+    pub backend_name: String,
+    /// The attributes supported
+    pub support: BackendAttrSupport,
+    /// Additional names for this backend
+    pub other_backend_names: Vec<String>,
+    /// override is_name_value()
+    pub is_name_value: Option<Box<dyn Fn(&str, &str) -> bool>>,
+}
+
+impl BasicAttributeValidator {
+    pub fn new(backend_name: &str) -> Self {
+        BasicAttributeValidator {
+            backend_name: backend_name.into(),
+            ..Self::default()
+        }
+    }
+}
+
+impl AttributeValidator for BasicAttributeValidator {
+    fn primary_name(&self) -> &str {
+        &self.backend_name
+    }
+    fn is_backend(&self, backend_name: &str) -> bool {
+        self.backend_name == backend_name
+            || self.other_backend_names.iter().any(|n| n == backend_name)
+    }
+    fn is_name_value(&self, name: &str, value: &str) -> bool {
+        if let Some(ref nv) = self.is_name_value {
+            nv(name, value)
+        } else {
+            false
+        }
+    }
+    fn attrs_supported(&self) -> BackendAttrSupport {
+        self.support
     }
 }
