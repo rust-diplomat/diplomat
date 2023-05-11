@@ -139,7 +139,17 @@ fn main() -> std::io::Result<()> {
             dotnet::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
         }
         "c2" | "cpp-c2" | "cpp2" => {
-            let tcx = match hir::TypeContext::from_ast(&env) {
+            let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
+
+            if target_language == "c2" {
+                attr_validator.other_backend_names.push("c".into());
+            } else {
+                attr_validator.other_backend_names.push("cpp".into());
+            }
+            // cpp-c2 is a testing backend, we're not going to treat it as a real c/cpp backend
+            // since the ast-cpp backend doesn't know about attributes.
+
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
                     for err in e {

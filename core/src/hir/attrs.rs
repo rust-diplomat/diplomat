@@ -7,16 +7,28 @@ use crate::hir::LoweringError;
 use syn::Meta;
 
 #[non_exhaustive]
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct Attrs {
     pub disable: bool,
     // more to be added: rename, namespace, etc
 }
 
+/// Where the attribute was found. Some attributes are only allowed in some contexts
+/// (e.g. namespaces cannot be specified on methods)
+#[non_exhaustive] // might add module attrs in the future
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum AttributeContext {
+    Struct { out: bool },
+    Enum,
+    Opaque,
+    Method,
+}
+
 impl Attrs {
     pub fn from_ast(
         ast: &ast::Attrs,
-        validator: &impl AttributeValidator,
+        validator: &(impl AttributeValidator + ?Sized),
+        _context: AttributeContext,
         errors: &mut Vec<LoweringError>,
     ) -> Self {
         let mut this = Attrs::default();
@@ -88,6 +100,16 @@ pub trait AttributeValidator {
             DiplomatAttrCfg::NameValue(ref n, ref v) => self.is_name_value(n, v),
         }
     }
+
+    // Provided, constructs an attribute
+    fn attr_from_ast(
+        &self,
+        ast: &ast::Attrs,
+        context: AttributeContext,
+        errors: &mut Vec<LoweringError>,
+    ) -> Attrs {
+        Attrs::from_ast(ast, self, context, errors)
+    }
 }
 
 /// A basic attribute validator
@@ -101,6 +123,7 @@ pub struct BasicAttributeValidator {
     /// Additional names for this backend
     pub other_backend_names: Vec<String>,
     /// override is_name_value()
+    #[allow(clippy::type_complexity)] // dyn fn is not that complex
     pub is_name_value: Option<Box<dyn Fn(&str, &str) -> bool>>,
 }
 

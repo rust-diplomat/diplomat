@@ -417,7 +417,7 @@ mod tests {
 
             env.insert(crate::ast::Path::empty(), top_symbols);
 
-            let tcx = crate::hir::TypeContext::from_ast(&env).unwrap();
+            let tcx = crate::hir::TypeContext::from_ast(&env, crate::hir::BasicAttributeValidator::new("test-backend")).unwrap();
 
             tcx
         }}
