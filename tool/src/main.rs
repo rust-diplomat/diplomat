@@ -146,6 +146,8 @@ fn main() -> std::io::Result<()> {
             } else {
                 attr_validator.other_backend_names.push("cpp".into());
             }
+
+            attr_validator.support.disabling = true;
             // cpp-c2 is a testing backend, we're not going to treat it as a real c/cpp backend
             // since the ast-cpp backend doesn't know about attributes.
 
