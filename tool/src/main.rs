@@ -4,6 +4,7 @@ use std::{
     fs::File,
     io::Write,
     path::{Path, PathBuf},
+    process,
 };
 
 use clap::Parser;
@@ -125,6 +126,7 @@ fn main() -> std::io::Result<()> {
     let mut out_texts: HashMap<String, String> = HashMap::new();
 
     let target_language = opt.target_language.as_str();
+    let mut errors_found = false;
 
     match target_language {
         "js" => js::gen_bindings(&env, &mut out_texts, Some(&docs_url_gen)).unwrap(),
@@ -150,6 +152,16 @@ fn main() -> std::io::Result<()> {
             let mut context = c2::CContext::new(&tcx, files);
             context.run();
 
+            let errors = context.errors.take_all();
+
+            if !errors.is_empty() {
+                eprintln!("Found errors whilst generating {target_language}:");
+                for error in errors {
+                    eprintln!("\t{}: {}", error.0, error.1);
+                }
+                errors_found = true;
+            }
+
             out_texts = context.files.take_files();
 
             if target_language == "cpp-c2" {
@@ -160,9 +172,25 @@ fn main() -> std::io::Result<()> {
                 let mut context = cpp2::Cpp2Context::new(&tcx, files);
                 context.run();
                 out_texts.extend(context.files.take_files());
+
+                let errors = context.errors.take_all();
+
+                if !errors.is_empty() {
+                    eprintln!("Found errors whilst generating {target_language}:");
+                    for error in errors {
+                        eprintln!("\t{}: {}", error.0, error.1);
+                    }
+                    errors_found = true;
+                }
             }
         }
         o => panic!("Unknown target: {}", o),
+    }
+
+    if errors_found {
+        eprintln!("Not generating files due to errors");
+        // Eventually this should use eyre or something
+        process::exit(1);
     }
 
     if !opt.silent {

@@ -1,5 +1,6 @@
 //! This module contains functions for formatting types
 
+use super::ty::ResultType;
 use diplomat_core::hir::{self, OpaqueOwner, Type, TypeContext, TypeId};
 use std::borrow::Cow;
 
@@ -28,6 +29,12 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         // Currently don't do anything fancy
         // Eventually apply rename rules and such
+        self.tcx.resolve_type(id).name().as_str().into()
+    }
+
+    /// Resolve and format a named type for use in diagnostics
+    /// (don't apply rename rules and such)
+    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
         self.tcx.resolve_type(id).name().as_str().into()
     }
     /// Resolve and format the name of a type for use in header names: decl version
@@ -113,6 +120,21 @@ impl<'tcx> CFormatter<'tcx> {
 
     pub fn fmt_result_name(&self, ok_ty_name: &str, err_ty_name: &str) -> String {
         format!("diplomat_result_{ok_ty_name}_{err_ty_name}")
+    }
+
+    pub fn fmt_result_for_diagnostics(&self, r: ResultType) -> String {
+        let ok = if let Some(ok) = r.0 {
+            self.fmt_type_name_uniquely(ok)
+        } else {
+            "()".into()
+        };
+        let err = if let Some(err) = r.1 {
+            self.fmt_type_name_uniquely(err)
+        } else {
+            "()".into()
+        };
+
+        format!("Result<{ok},{err}>")
     }
 
     /// Get the primitive type as a C type

@@ -20,12 +20,14 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
         };
+        let guard = self.errors.set_context_ty(ty.name().as_str().into());
         match ty {
             TypeDef::Enum(o) => context.gen_enum_def(o, id),
             TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
             TypeDef::Struct(s) => context.gen_struct_def(s, id),
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
         }
+        drop(guard);
 
         // In some cases like generating decls for `self` parameters,
         // a header will get its own forwards and includes. Instead of
@@ -300,6 +302,10 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
+        let _guard = self.cx.errors.set_context_method(
+            self.cx.formatter.fmt_type_name_diagnostics(id),
+            method.name.as_str().into(),
+        );
         let type_name = self.cx.formatter.fmt_type_name(id);
         let method_name = self.cx.formatter.fmt_method_name(method);
         let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);

@@ -30,6 +30,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         // Eventually apply rename rules and such
         self.c.tcx().resolve_type(id).name().as_str().into()
     }
+
+    /// Resolve and format a named type for use in diagnostics
+    /// (don't apply rename rules and such)
+    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
+        self.c.fmt_type_name_diagnostics(id)
+    }
+
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
         let type_name = self.fmt_type_name(id);

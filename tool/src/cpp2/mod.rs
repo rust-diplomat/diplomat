@@ -2,7 +2,7 @@ mod formatter;
 mod header;
 mod ty;
 
-use crate::common::FileMap;
+use crate::common::{ErrorStore, FileMap};
 use diplomat_core::hir::TypeContext;
 use formatter::Cpp2Formatter;
 
@@ -12,6 +12,7 @@ pub struct Cpp2Context<'tcx> {
     pub tcx: &'tcx TypeContext,
     pub formatter: Cpp2Formatter<'tcx>,
     pub files: FileMap,
+    pub errors: ErrorStore<'tcx, String>,
 }
 
 impl<'tcx> Cpp2Context<'tcx> {
@@ -20,6 +21,7 @@ impl<'tcx> Cpp2Context<'tcx> {
             tcx,
             files,
             formatter: Cpp2Formatter::new(tcx),
+            errors: ErrorStore::default(),
         }
     }
 
