@@ -141,7 +141,10 @@ impl Parse for DiplomatBackendAttrCfg {
                     ))
                 } else {
                     let value: LitStr = input.parse()?;
-                    Ok(DiplomatBackendAttrCfg::NameValue(name.to_string(), value.value()))
+                    Ok(DiplomatBackendAttrCfg::NameValue(
+                        name.to_string(),
+                        value.value(),
+                    ))
                 }
             } else {
                 Ok(DiplomatBackendAttrCfg::BackendName(name.to_string()))
