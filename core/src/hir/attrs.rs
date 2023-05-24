@@ -1,7 +1,7 @@
 //! #[diplomat::attr] and other attributes
 
 use crate::ast;
-use crate::ast::attrs::DiplomatAttrCfg;
+use crate::ast::attrs::DiplomatBackendAttrCfg;
 use crate::hir::LoweringError;
 
 use syn::Meta;
@@ -89,15 +89,15 @@ pub trait AttributeValidator {
     /// What backedn attrs does this support?
     fn attrs_supported(&self) -> BackendAttrSupport;
 
-    /// Provided, checks if type satisfies a `DiplomatAttrCfg`
-    fn satisfies_cfg(&self, cfg: &DiplomatAttrCfg) -> bool {
+    /// Provided, checks if type satisfies a `DiplomatBackendAttrCfg`
+    fn satisfies_cfg(&self, cfg: &DiplomatBackendAttrCfg) -> bool {
         match *cfg {
-            DiplomatAttrCfg::Not(ref c) => !self.satisfies_cfg(c),
-            DiplomatAttrCfg::Any(ref cs) => cs.iter().any(|c| self.satisfies_cfg(c)),
-            DiplomatAttrCfg::All(ref cs) => cs.iter().all(|c| self.satisfies_cfg(c)),
-            DiplomatAttrCfg::Star => true,
-            DiplomatAttrCfg::BackendName(ref n) => self.is_backend(n),
-            DiplomatAttrCfg::NameValue(ref n, ref v) => self.is_name_value(n, v),
+            DiplomatBackendAttrCfg::Not(ref c) => !self.satisfies_cfg(c),
+            DiplomatBackendAttrCfg::Any(ref cs) => cs.iter().any(|c| self.satisfies_cfg(c)),
+            DiplomatBackendAttrCfg::All(ref cs) => cs.iter().all(|c| self.satisfies_cfg(c)),
+            DiplomatBackendAttrCfg::Star => true,
+            DiplomatBackendAttrCfg::BackendName(ref n) => self.is_backend(n),
+            DiplomatBackendAttrCfg::NameValue(ref n, ref v) => self.is_name_value(n, v),
         }
     }
 

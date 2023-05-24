@@ -9,14 +9,14 @@ use syn::{Attribute, Ident, LitStr, Meta, Token};
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
 pub struct Attrs {
     pub cfg: Vec<Attribute>,
-    pub attrs: Vec<DiplomatAttr>,
+    pub attrs: Vec<DiplomatBackendAttr>,
 }
 
 impl Attrs {
     fn add_attr(&mut self, attr: Attr) {
         match attr {
             Attr::Cfg(attr) => self.cfg.push(attr),
-            Attr::DiplomatAttr(attr) => self.attrs.push(attr),
+            Attr::DiplomatBackendAttr(attr) => self.attrs.push(attr),
         }
     }
 
@@ -44,7 +44,7 @@ impl From<&[Attribute]> for Attrs {
 
 enum Attr {
     Cfg(Attribute),
-    DiplomatAttr(DiplomatAttr),
+    DiplomatBackendAttr(DiplomatBackendAttr),
     // More goes here
 }
 
@@ -55,7 +55,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
         } else if a.path() == &dattr_path {
-            Some(Attr::DiplomatAttr(
+            Some(Attr::DiplomatBackendAttr(
                 a.parse_args()
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
@@ -89,8 +89,8 @@ impl Serialize for Attrs {
 /// and `all()`, `not()`, and `any()` combiners), and then be followed by one
 /// or more backend-specific attributes, which can be any valid meta-item
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
-pub struct DiplomatAttr {
-    pub cfg: DiplomatAttrCfg,
+pub struct DiplomatBackendAttr {
+    pub cfg: DiplomatBackendAttrCfg,
     #[serde(serialize_with = "serialize_meta")]
     pub meta: Meta,
 }
@@ -103,16 +103,16 @@ where
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
-pub enum DiplomatAttrCfg {
-    Not(Box<DiplomatAttrCfg>),
-    Any(Vec<DiplomatAttrCfg>),
-    All(Vec<DiplomatAttrCfg>),
+pub enum DiplomatBackendAttrCfg {
+    Not(Box<DiplomatBackendAttrCfg>),
+    Any(Vec<DiplomatBackendAttrCfg>),
+    All(Vec<DiplomatBackendAttrCfg>),
     Star,
     BackendName(String),
     NameValue(String, String),
 }
 
-impl Parse for DiplomatAttrCfg {
+impl Parse for DiplomatBackendAttrCfg {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
@@ -120,35 +120,35 @@ impl Parse for DiplomatAttrCfg {
             if name == "not" {
                 let content;
                 let _paren = syn::parenthesized!(content in input);
-                Ok(DiplomatAttrCfg::Not(Box::new(content.parse()?)))
+                Ok(DiplomatBackendAttrCfg::Not(Box::new(content.parse()?)))
             } else if name == "any" || name == "all" {
                 let content;
                 let _paren = syn::parenthesized!(content in input);
                 let list = content.parse_terminated(Self::parse, Token![,])?;
                 let vec = list.into_iter().collect();
                 if name == "any" {
-                    Ok(DiplomatAttrCfg::Any(vec))
+                    Ok(DiplomatBackendAttrCfg::Any(vec))
                 } else {
-                    Ok(DiplomatAttrCfg::All(vec))
+                    Ok(DiplomatBackendAttrCfg::All(vec))
                 }
             } else if input.peek(Token![=]) {
                 let _t: Token![=] = input.parse()?;
                 if input.peek(Ident) {
                     let value: Ident = input.parse()?;
-                    Ok(DiplomatAttrCfg::NameValue(
+                    Ok(DiplomatBackendAttrCfg::NameValue(
                         name.to_string(),
                         value.to_string(),
                     ))
                 } else {
                     let value: LitStr = input.parse()?;
-                    Ok(DiplomatAttrCfg::NameValue(name.to_string(), value.value()))
+                    Ok(DiplomatBackendAttrCfg::NameValue(name.to_string(), value.value()))
                 }
             } else {
-                Ok(DiplomatAttrCfg::BackendName(name.to_string()))
+                Ok(DiplomatBackendAttrCfg::BackendName(name.to_string()))
             }
         } else if lookahead.peek(Token![*]) {
             let _t: Token![*] = input.parse()?;
-            Ok(DiplomatAttrCfg::Star)
+            Ok(DiplomatBackendAttrCfg::Star)
         } else {
             Err(ParseError::new(
                 input.span(),
@@ -159,7 +159,7 @@ impl Parse for DiplomatAttrCfg {
 }
 
 /// Meant to be used with Attribute::parse_args()
-impl Parse for DiplomatAttr {
+impl Parse for DiplomatBackendAttr {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let cfg = input.parse()?;
         let _comma: Token![,] = input.parse()?;
@@ -174,19 +174,19 @@ mod tests {
 
     use syn;
 
-    use super::{DiplomatAttr, DiplomatAttrCfg};
+    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg};
 
     #[test]
     fn test_cfgs() {
-        let attr_cfg: DiplomatAttrCfg = syn::parse_quote!(*);
+        let attr_cfg: DiplomatBackendAttrCfg = syn::parse_quote!(*);
         insta::assert_yaml_snapshot!(attr_cfg);
-        let attr_cfg: DiplomatAttrCfg = syn::parse_quote!(cpp);
+        let attr_cfg: DiplomatBackendAttrCfg = syn::parse_quote!(cpp);
         insta::assert_yaml_snapshot!(attr_cfg);
-        let attr_cfg: DiplomatAttrCfg = syn::parse_quote!(has = overloading);
+        let attr_cfg: DiplomatBackendAttrCfg = syn::parse_quote!(has = overloading);
         insta::assert_yaml_snapshot!(attr_cfg);
-        let attr_cfg: DiplomatAttrCfg = syn::parse_quote!(has = "overloading");
+        let attr_cfg: DiplomatBackendAttrCfg = syn::parse_quote!(has = "overloading");
         insta::assert_yaml_snapshot!(attr_cfg);
-        let attr_cfg: DiplomatAttrCfg =
+        let attr_cfg: DiplomatBackendAttrCfg =
             syn::parse_quote!(any(all(*, cpp, has="overloading"), not(js)));
         insta::assert_yaml_snapshot!(attr_cfg);
     }
@@ -195,7 +195,7 @@ mod tests {
     fn test_attr() {
         let attr: syn::Attribute =
             syn::parse_quote!(#[diplomat::attr(any(cpp, has = "overloading"), namespacing)]);
-        let attr: DiplomatAttr = attr.parse_args().unwrap();
+        let attr: DiplomatBackendAttr = attr.parse_args().unwrap();
         insta::assert_yaml_snapshot!(attr);
     }
 }
