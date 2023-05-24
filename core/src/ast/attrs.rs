@@ -70,7 +70,7 @@ impl Serialize for Attrs {
     where
         S: Serializer,
     {
-        // 3 is the number of fields in the struct.
+        // 1 is the number of fields in the struct.
         let mut state = serializer.serialize_struct("Attrs", 1)?;
         let cfg: Vec<_> = self
             .cfg
