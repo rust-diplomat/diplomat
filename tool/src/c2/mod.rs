@@ -4,7 +4,7 @@ mod ty;
 
 pub use self::formatter::CFormatter;
 
-use crate::common::FileMap;
+use crate::common::{ErrorStore, FileMap};
 use diplomat_core::hir::TypeContext;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -17,6 +17,8 @@ pub struct CContext<'tcx> {
     pub files: FileMap,
     // The results needed by various methods
     pub result_store: RefCell<HashMap<String, ty::ResultType<'tcx>>>,
+
+    pub errors: ErrorStore<'tcx, String>,
 }
 
 impl<'tcx> CContext<'tcx> {
@@ -26,6 +28,7 @@ impl<'tcx> CContext<'tcx> {
             files,
             formatter: CFormatter::new(tcx),
             result_store: Default::default(),
+            errors: ErrorStore::default(),
         }
     }
 

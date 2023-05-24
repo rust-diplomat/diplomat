@@ -16,14 +16,19 @@ impl<'tcx> super::CContext<'tcx> {
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
         };
+
+        let _guard = self.errors.set_context_ty(ty.name().as_str().into());
         match ty {
             TypeDef::Enum(e) => context.gen_enum_def(e, id),
             TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
             TypeDef::Struct(s) => context.gen_struct_def(s, id),
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
         }
-
         for method in ty.methods() {
+            let _guard = self.errors.set_context_method(
+                self.formatter.fmt_type_name_diagnostics(id),
+                method.name.as_str().into(),
+            );
             context.gen_method(id, method);
         }
 
@@ -48,6 +53,9 @@ impl<'tcx> super::CContext<'tcx> {
     }
 
     pub fn gen_result(&self, name: &str, ty: ResultType) {
+        let _guard = self
+            .errors
+            .set_context_ty(self.formatter.fmt_result_for_diagnostics(ty).into());
         let header_path = self.formatter.fmt_result_header_path(name);
         let mut header = Header::new(header_path.clone());
         let mut dummy_header = Header::new("".to_string());
