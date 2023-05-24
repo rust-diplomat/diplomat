@@ -8,5 +8,5 @@ cfg:
     - NameValue:
         - has
         - overloading
-attr: namespacing
+meta: namespacing
 

@@ -35,7 +35,7 @@ impl Attrs {
         let support = validator.attrs_supported();
         for attr in &ast.attrs {
             if validator.satisfies_cfg(&attr.cfg) {
-                match &attr.attr {
+                match &attr.meta {
                     Meta::Path(p) => {
                         if p.is_ident("disable") {
                             if this.disable {

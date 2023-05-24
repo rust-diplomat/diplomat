@@ -92,7 +92,7 @@ impl Serialize for Attrs {
 pub struct DiplomatAttr {
     pub cfg: DiplomatAttrCfg,
     #[serde(serialize_with = "serialize_meta")]
-    pub attr: Meta,
+    pub meta: Meta,
 }
 
 fn serialize_meta<S>(m: &Meta, s: S) -> Result<S::Ok, S::Error>
@@ -163,8 +163,8 @@ impl Parse for DiplomatAttr {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let cfg = input.parse()?;
         let _comma: Token![,] = input.parse()?;
-        let attr = input.parse()?;
-        Ok(Self { cfg, attr })
+        let meta = input.parse()?;
+        Ok(Self { cfg, meta })
     }
 }
 
