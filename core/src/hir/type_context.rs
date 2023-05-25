@@ -1,6 +1,9 @@
 //! Store all the types contained in the HIR.
 
-use super::{EnumDef, LoweringContext, LoweringError, OpaqueDef, OutStructDef, StructDef, TypeDef};
+use super::{
+    AttributeValidator, EnumDef, LoweringContext, LoweringError, OpaqueDef, OutStructDef,
+    StructDef, TypeDef,
+};
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
 use crate::{ast, Env};
@@ -109,7 +112,10 @@ impl TypeContext {
     }
 
     /// Lower the AST to the HIR while simultaneously performing validation.
-    pub fn from_ast(env: &Env) -> Result<Self, Vec<LoweringError>> {
+    pub fn from_ast(
+        env: &Env,
+        attr_validator: impl AttributeValidator + 'static,
+    ) -> Result<Self, Vec<LoweringError>> {
         let mut ast_out_structs = SmallVec::<[_; 16]>::new();
         let mut ast_structs = SmallVec::<[_; 16]>::new();
         let mut ast_opaques = SmallVec::<[_; 16]>::new();
@@ -139,11 +145,13 @@ impl TypeContext {
             &ast_opaques[..],
             &ast_enums[..],
         );
+        let attr_validator = Box::new(attr_validator);
 
         let mut ctx = LoweringContext {
             lookup_id: &lookup_id,
             env,
             errors: &mut errors,
+            attr_validator,
         };
 
         let out_structs = ctx.lower_all_out_structs(&ast_out_structs[..]);

@@ -95,8 +95,14 @@ TypeContext {
                             ),
                         ),
                     ),
+                    attrs: Attrs {
+                        disable: false,
+                    },
                 },
             ],
+            attrs: Attrs {
+                disable: false,
+            },
         },
     ],
     structs: [
@@ -190,8 +196,14 @@ TypeContext {
                             ),
                         ),
                     ),
+                    attrs: Attrs {
+                        disable: false,
+                    },
                 },
             ],
+            attrs: Attrs {
+                disable: false,
+            },
         },
     ],
     opaques: [
@@ -202,6 +214,9 @@ TypeContext {
             ),
             name: "Opaque",
             methods: [],
+            attrs: Attrs {
+                disable: false,
+            },
         },
     ],
     enums: [],

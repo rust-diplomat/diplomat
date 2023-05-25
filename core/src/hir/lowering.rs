@@ -1,9 +1,10 @@
 use super::{
-    Borrow, EnumDef, EnumPath, EnumVariant, IdentBuf, LifetimeEnv, LifetimeLowerer, LookupId,
-    MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
-    OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
-    ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
-    Slice, StructDef, StructField, StructPath, SuccessType, Type,
+    AttributeContext, AttributeValidator, Borrow, EnumDef, EnumPath, EnumVariant, IdentBuf,
+    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath,
+    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
+    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, SuccessType,
+    Type,
 };
 use crate::{ast, Env};
 use core::fmt;
@@ -35,6 +36,7 @@ pub(super) struct LoweringContext<'ast, 'errors> {
     pub lookup_id: &'ast LookupId<'ast>,
     pub errors: &'errors mut Vec<LoweringError>,
     pub env: &'ast Env,
+    pub attr_validator: Box<dyn AttributeValidator>,
 }
 
 impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
@@ -123,12 +125,16 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         }
 
         let methods = self.lower_all_methods(&ast_enum.methods[..], in_path);
+        let attrs =
+            self.attr_validator
+                .attr_from_ast(&ast_enum.attrs, AttributeContext::Enum, self.errors);
 
         Some(EnumDef::new(
             ast_enum.docs.clone(),
             name?,
             variants?,
             methods?,
+            attrs,
         ))
     }
 
@@ -140,8 +146,17 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         let name = self.lower_ident(&ast_opaque.name, "opaque name");
 
         let methods = self.lower_all_methods(&ast_opaque.methods[..], in_path);
-
-        Some(OpaqueDef::new(ast_opaque.docs.clone(), name?, methods?))
+        let attrs = self.attr_validator.attr_from_ast(
+            &ast_opaque.attrs,
+            AttributeContext::Opaque,
+            self.errors,
+        );
+        Some(OpaqueDef::new(
+            ast_opaque.docs.clone(),
+            name?,
+            methods?,
+            attrs,
+        ))
     }
 
     fn lower_struct(
@@ -178,12 +193,17 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         };
 
         let methods = self.lower_all_methods(&ast_struct.methods[..], in_path);
-
+        let attrs = self.attr_validator.attr_from_ast(
+            &ast_struct.attrs,
+            AttributeContext::Struct { out: false },
+            self.errors,
+        );
         Some(StructDef::new(
             ast_struct.docs.clone(),
             name?,
             fields?,
             methods?,
+            attrs,
         ))
     }
 
@@ -221,12 +241,17 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         };
 
         let methods = self.lower_all_methods(&ast_out_struct.methods[..], in_path);
-
+        let attrs = self.attr_validator.attr_from_ast(
+            &ast_out_struct.attrs,
+            AttributeContext::Struct { out: true },
+            self.errors,
+        );
         Some(OutStructDef::new(
             ast_out_struct.docs.clone(),
             name?,
             fields?,
             methods?,
+            attrs,
         ))
     }
 
@@ -266,6 +291,9 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             in_path,
         )?;
 
+        let attrs =
+            self.attr_validator
+                .attr_from_ast(&method.attrs, AttributeContext::Enum, self.errors);
         Some(Method {
             docs: method.docs.clone(),
             name: name?,
@@ -273,6 +301,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             param_self: param_self?,
             params: params?,
             output,
+            attrs,
         })
     }
 

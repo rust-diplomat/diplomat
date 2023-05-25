@@ -1,6 +1,6 @@
 //! Type definitions for structs, output structs, opaque structs, and enums.
 
-use super::{Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
+use super::{Attrs, Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
 use crate::ast::Docs;
 
 pub enum ReturnableStructDef<'tcx> {
@@ -26,6 +26,7 @@ pub struct StructDef<P: TyPosition = Everywhere> {
     pub name: IdentBuf,
     pub fields: Vec<StructField<P>>,
     pub methods: Vec<Method>,
+    pub attrs: Attrs,
 }
 
 /// A struct whose contents are opaque across the FFI boundary, and can only
@@ -41,6 +42,7 @@ pub struct OpaqueDef {
     pub docs: Docs,
     pub name: IdentBuf,
     pub methods: Vec<Method>,
+    pub attrs: Attrs,
 }
 
 /// The enum type.
@@ -50,6 +52,7 @@ pub struct EnumDef {
     pub name: IdentBuf,
     pub variants: Vec<EnumVariant>,
     pub methods: Vec<Method>,
+    pub attrs: Attrs,
 }
 
 /// A field on a [`OutStruct`]s.
@@ -77,22 +80,25 @@ impl<P: TyPosition> StructDef<P> {
         name: IdentBuf,
         fields: Vec<StructField<P>>,
         methods: Vec<Method>,
+        attrs: Attrs,
     ) -> Self {
         Self {
             docs,
             name,
             fields,
             methods,
+            attrs,
         }
     }
 }
 
 impl OpaqueDef {
-    pub(super) fn new(docs: Docs, name: IdentBuf, methods: Vec<Method>) -> Self {
+    pub(super) fn new(docs: Docs, name: IdentBuf, methods: Vec<Method>, attrs: Attrs) -> Self {
         Self {
             docs,
             name,
             methods,
+            attrs,
         }
     }
 }
@@ -103,12 +109,14 @@ impl EnumDef {
         name: IdentBuf,
         variants: Vec<EnumVariant>,
         methods: Vec<Method>,
+        attrs: Attrs,
     ) -> Self {
         Self {
             docs,
             name,
             variants,
             methods,
+            attrs,
         }
     }
 }

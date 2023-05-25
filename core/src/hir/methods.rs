@@ -5,7 +5,7 @@ use std::fmt::{self, Write};
 use smallvec::SmallVec;
 
 use super::{
-    paths, Docs, Ident, IdentBuf, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes,
+    paths, Attrs, Docs, Ident, IdentBuf, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes,
     OutType, SelfType, Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
 };
 
@@ -19,6 +19,7 @@ pub struct Method {
     pub param_self: Option<ParamSelf>,
     pub params: Vec<Param>,
     pub output: ReturnType,
+    pub attrs: Attrs,
 }
 
 /// Type that the method returns.

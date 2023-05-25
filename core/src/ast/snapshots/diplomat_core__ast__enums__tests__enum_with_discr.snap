@@ -29,5 +29,6 @@ variants:
     - - ""
       - []
 methods: []
-cfg_attrs: []
+attrs:
+  cfg: []
 
