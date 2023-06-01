@@ -8,11 +8,13 @@ pub mod ffi {
             println!("method");
         }
 
+        #[diplomat::attr(cpp2, disable)]
         pub fn method_disabledcpp(&self) {
             println!("disabled in cpp");
         }
     }
 
     #[diplomat::opaque]
+    #[diplomat::attr(cpp2, disable)]
     pub struct AttrOpaque2;
 }

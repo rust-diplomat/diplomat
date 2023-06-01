@@ -16,8 +16,6 @@ public:
 
   inline void method() const;
 
-  inline void method_disabledcpp() const;
-
   inline const capi::AttrOpaque1* AsFFI() const;
   inline capi::AttrOpaque1* AsFFI();
   inline static const AttrOpaque1* FromFFI(const capi::AttrOpaque1* ptr);

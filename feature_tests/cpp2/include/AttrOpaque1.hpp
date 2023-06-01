@@ -17,10 +17,6 @@ inline void AttrOpaque1::method() const {
   capi::AttrOpaque1_method(this->AsFFI());
 }
 
-inline void AttrOpaque1::method_disabledcpp() const {
-  capi::AttrOpaque1_method_disabledcpp(this->AsFFI());
-}
-
 inline const capi::AttrOpaque1* AttrOpaque1::AsFFI() const {
   return reinterpret_cast<const capi::AttrOpaque1*>(this);
 }
