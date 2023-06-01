@@ -9,6 +9,10 @@ use std::fmt::Write;
 
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
+        if ty.attrs().disable {
+            // Skip type if disabled
+            return;
+        }
         let type_name = self.formatter.fmt_type_name(id);
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
@@ -302,6 +306,9 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
+        if method.attrs.disable {
+            return;
+        }
         let _guard = self.cx.errors.set_context_method(
             self.cx.formatter.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
