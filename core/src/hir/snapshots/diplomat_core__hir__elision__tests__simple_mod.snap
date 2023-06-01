@@ -97,11 +97,13 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        rename: None,
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
+                rename: None,
             },
         },
     ],
@@ -198,11 +200,13 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        rename: None,
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
+                rename: None,
             },
         },
     ],
@@ -216,6 +220,7 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
+                rename: None,
             },
         },
     ],
