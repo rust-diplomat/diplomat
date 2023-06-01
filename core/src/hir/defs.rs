@@ -171,4 +171,13 @@ impl<'tcx> TypeDef<'tcx> {
             Self::Enum(ty) => &ty.methods,
         }
     }
+
+    pub fn attrs(&self) -> &'tcx Attrs {
+        match *self {
+            Self::Struct(ty) => &ty.attrs,
+            Self::OutStruct(ty) => &ty.attrs,
+            Self::Opaque(ty) => &ty.attrs,
+            Self::Enum(ty) => &ty.attrs,
+        }
+    }
 }

@@ -9,6 +9,10 @@ use std::fmt::Write;
 
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
+        if ty.attrs().disable {
+            // Skip type if disabled
+            return;
+        }
         let type_name = self.formatter.fmt_type_name(id);
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
@@ -302,6 +306,9 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     }
 
     pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
+        if method.attrs.disable {
+            return;
+        }
         let _guard = self.cx.errors.set_context_method(
             self.cx.formatter.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
@@ -420,6 +427,7 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     {
         let param_name = self.cx.formatter.fmt_param_name(var_name);
         let ty = self.gen_type_name(ty);
+
         NamedType {
             var_name: param_name,
             type_name: ty,
@@ -435,6 +443,12 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(op_id);
+
+                if self.cx.tcx.resolve_type(op_id).attrs().disable {
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
+                }
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = match (op.owner.is_owned(), op.is_optional()) {
                     // unique_ptr is nullable
@@ -457,6 +471,12 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
+                let type_name = self.cx.formatter.fmt_type_name(id);
+                if self.cx.tcx.resolve_type(id).attrs().disable {
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
+                }
                 self.decl_header.forwards.insert(Forward::Struct(
                     self.cx.formatter.fmt_type_name(id).into_owned(),
                 ));
@@ -466,10 +486,16 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_impl_header_path(id));
-                self.cx.formatter.fmt_type_name(id)
+                type_name
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
+                let type_name = self.cx.formatter.fmt_type_name(id);
+                if self.cx.tcx.resolve_type(id).attrs().disable {
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
+                }
                 self.decl_header.forwards.insert(Forward::EnumStruct(
                     self.cx.formatter.fmt_type_name(id).into_owned(),
                 ));
@@ -479,7 +505,7 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_impl_header_path(id));
-                self.cx.formatter.fmt_type_name(id)
+                type_name
             }
             Type::Slice(hir::Slice::Str(_lifetime)) => self.cx.formatter.fmt_borrowed_str(),
             Type::Slice(hir::Slice::Primitive(b, p)) => {

@@ -72,7 +72,7 @@ impl Attrs {
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
-    disabling: bool,
+    pub disabling: bool,
     // more to be added: rename, namespace, etc
 }
 
