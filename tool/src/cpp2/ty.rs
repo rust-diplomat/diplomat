@@ -445,7 +445,9 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
                 let type_name = self.cx.formatter.fmt_type_name(op_id);
 
                 if self.cx.tcx.resolve_type(op_id).attrs().disable {
-                    self.cx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = match (op.owner.is_owned(), op.is_optional()) {
@@ -471,7 +473,9 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
                 let id = P::id_for_path(st);
                 let type_name = self.cx.formatter.fmt_type_name(id);
                 if self.cx.tcx.resolve_type(id).attrs().disable {
-                    self.cx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 self.decl_header.forwards.insert(Forward::Struct(
                     self.cx.formatter.fmt_type_name(id).into_owned(),
@@ -488,7 +492,9 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
                 let id = e.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(id);
                 if self.cx.tcx.resolve_type(id).attrs().disable {
-                    self.cx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 self.decl_header.forwards.insert(Forward::EnumStruct(
                     self.cx.formatter.fmt_type_name(id).into_owned(),

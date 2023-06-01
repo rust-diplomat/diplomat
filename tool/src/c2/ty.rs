@@ -272,7 +272,9 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
                 if self.cx.tcx.resolve_type(op_id).attrs().disable {
-                    self.cx.errors.push_error(format!("Found usage of disabled type {ty_name}"))
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
                 // unwrap_or(mut) since owned pointers need to not be const
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
@@ -286,7 +288,9 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let st_id = P::id_for_path(st);
                 let ty_name = self.cx.formatter.fmt_type_name(st_id);
                 if self.cx.tcx.resolve_type(st_id).attrs().disable {
-                    self.cx.errors.push_error(format!("Found usage of disabled type {ty_name}"))
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
                 let ret = ty_name.clone();
                 let header_path = self.cx.formatter.fmt_decl_header_path(st_id);
@@ -297,7 +301,9 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let id = e.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(id);
                 if self.cx.tcx.resolve_type(id).attrs().disable {
-                    self.cx.errors.push_error(format!("Found usage of disabled type {ty_name}"))
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
                 let header_path = self.cx.formatter.fmt_decl_header_path(id);
                 header.includes.insert(header_path);
