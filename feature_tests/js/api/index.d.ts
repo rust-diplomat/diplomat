@@ -1,4 +1,6 @@
 export { FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char } from './diplomat-runtime.js';
+export { AttrOpaque1 } from './AttrOpaque1.js';
+export { AttrOpaque2 } from './AttrOpaque2.js';
 export { Bar } from './Bar.js';
 export { BorrowedFields } from './BorrowedFields.js';
 export { BorrowedFieldsReturning } from './BorrowedFieldsReturning.js';
