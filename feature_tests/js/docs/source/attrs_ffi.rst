@@ -1,6 +1,8 @@
 ``attrs::ffi``
 ==============
 
+.. js:class:: AttrEnum
+
 .. js:class:: AttrOpaque1
 
     .. js:method:: method()
