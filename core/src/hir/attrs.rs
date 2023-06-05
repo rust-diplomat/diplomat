@@ -22,6 +22,7 @@ pub struct Attrs {
 pub enum AttributeContext {
     Struct { out: bool },
     Enum,
+    EnumVariant,
     Opaque,
     Method,
 }
@@ -30,7 +31,7 @@ impl Attrs {
     pub fn from_ast(
         ast: &ast::Attrs,
         validator: &(impl AttributeValidator + ?Sized),
-        _context: AttributeContext,
+        context: AttributeContext,
         errors: &mut Vec<LoweringError>,
     ) -> Self {
         let mut this = Attrs::default();
@@ -48,6 +49,10 @@ impl Attrs {
                                 errors.push(LoweringError::Other(format!(
                                     "`disable` not supported in backend {}",
                                     validator.primary_name()
+                                )))
+                            } else if context == AttributeContext::EnumVariant {
+                                errors.push(LoweringError::Other(format!(
+                                    "`disable` cannot be used on enum variants",
                                 )))
                             } else {
                                 this.disable = true;

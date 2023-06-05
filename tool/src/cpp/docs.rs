@@ -276,7 +276,7 @@ pub fn gen_field_docs<W: fmt::Write>(
 
 pub fn gen_enum_variant_docs<W: fmt::Write>(
     out: &mut W,
-    variant: &(ast::Ident, isize, ast::Docs),
+    variant: &(ast::Ident, isize, ast::Docs, ast::Attrs),
     in_path: &ast::Path,
     env: &Env,
     docs_url_gen: &ast::DocsUrlGenerator,

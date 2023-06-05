@@ -72,6 +72,7 @@ pub struct EnumVariant {
     pub docs: Docs,
     pub name: IdentBuf,
     pub discriminant: isize,
+    pub attrs: Attrs,
 }
 
 impl<P: TyPosition> StructDef<P> {

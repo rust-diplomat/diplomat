@@ -290,6 +290,12 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             if info.opaque {
                 panic!("#[diplomat::opaque] not allowed on enums")
             }
+            for v in &mut e.variants {
+                let info = AttributeInfo::extract(&mut v.attrs);
+                if info.opaque {
+                    panic!("#[diplomat::opaque] not allowed on enum variants");
+                }
+            }
             *e = syn::parse_quote! {
                 #[repr(C)]
                 #e

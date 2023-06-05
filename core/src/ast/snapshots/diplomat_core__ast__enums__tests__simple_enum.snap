@@ -16,10 +16,12 @@ variants:
     - 0
     - - ""
       - []
+    - cfg: []
   - - Def
     - 1
     - - Some more docs.
       - []
+    - cfg: []
 methods: []
 attrs:
   cfg: []
