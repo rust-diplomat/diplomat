@@ -145,6 +145,9 @@ fn main() -> std::io::Result<()> {
                 attr_validator.other_backend_names.push("c".into());
             } else {
                 attr_validator.other_backend_names.push("cpp".into());
+                // C backends cannot rename types using backend attributes
+                // In the future we may add a c_rename attribute
+                attr_validator.support.renaming = true;
             }
 
             attr_validator.support.disabling = true;
