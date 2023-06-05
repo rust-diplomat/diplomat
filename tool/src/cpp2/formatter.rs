@@ -60,7 +60,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
-        variant.name.as_str().into()
+        if let Some(rename) = variant.attrs.rename.as_ref() {
+            rename.into()
+        } else {
+            variant.name.as_str().into()
+        }
     }
     pub fn fmt_c_enum_variant<'a>(
         &self,

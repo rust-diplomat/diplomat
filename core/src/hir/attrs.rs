@@ -51,9 +51,9 @@ impl Attrs {
                                     validator.primary_name()
                                 )))
                             } else if context == AttributeContext::EnumVariant {
-                                errors.push(LoweringError::Other(format!(
-                                    "`disable` cannot be used on enum variants",
-                                )))
+                                errors.push(LoweringError::Other(
+                                    "`disable` cannot be used on enum variants".into(),
+                                ))
                             } else {
                                 this.disable = true;
                             }

@@ -111,9 +111,11 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
 
         for (ident, discriminant, docs, attrs) in ast_enum.variants.iter() {
             let name = self.lower_ident(ident, "enum variant");
-            let attrs =
-                self.attr_validator
-                    .attr_from_ast(&attrs, AttributeContext::EnumVariant, self.errors);
+            let attrs = self.attr_validator.attr_from_ast(
+                attrs,
+                AttributeContext::EnumVariant,
+                self.errors,
+            );
             match (name, &mut variants) {
                 (Some(name), Some(variants)) => {
                     variants.push(EnumVariant {
