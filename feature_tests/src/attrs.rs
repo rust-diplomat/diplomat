@@ -1,9 +1,11 @@
 #[diplomat::bridge]
 pub mod ffi {
     #[diplomat::opaque]
+    #[diplomat::attr(cpp2, rename = "AttrOpaque1Renamed")]
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
+        #[diplomat::attr(cpp2, rename = "method_renamed")]
         pub fn method(&self) {
             println!("method");
         }
