@@ -98,7 +98,7 @@ fn gen_struct_header<'a>(
             writeln!(out)?;
             writeln!(out, "typedef enum {} {{", enm.name)?;
             let mut enum_body_out = indented(out).with_str("  ");
-            for (name, discriminant, _) in enm.variants.iter() {
+            for (name, discriminant, _, _attrs) in enm.variants.iter() {
                 writeln!(
                     &mut enum_body_out,
                     "{}_{} = {},",

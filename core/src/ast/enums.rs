@@ -9,8 +9,8 @@ use quote::ToTokens;
 pub struct Enum {
     pub name: Ident,
     pub docs: Docs,
-    /// A list of variants of the enum. (name, discriminant, docs)
-    pub variants: Vec<(Ident, isize, Docs)>,
+    /// A list of variants of the enum. (name, discriminant, docs, attrs)
+    pub variants: Vec<(Ident, isize, Docs, Attrs)>,
     pub methods: Vec<Method>,
     pub attrs: Attrs,
 }
@@ -55,6 +55,7 @@ impl From<&syn::ItemEnum> for Enum {
                         (&v.ident).into(),
                         new_discriminant,
                         Docs::from_attrs(&v.attrs),
+                        (&*v.attrs).into(),
                     )
                 })
                 .collect(),

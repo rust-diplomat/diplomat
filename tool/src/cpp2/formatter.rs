@@ -26,9 +26,12 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        // Currently don't do anything fancy
-        // Eventually apply rename rules and such
-        self.c.tcx().resolve_type(id).name().as_str().into()
+        let resolved = self.c.tcx().resolve_type(id);
+        if let Some(rename) = resolved.attrs().rename.as_ref() {
+            rename.into()
+        } else {
+            resolved.name().as_str().into()
+        }
     }
 
     /// Resolve and format a named type for use in diagnostics
@@ -57,7 +60,11 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
-        variant.name.as_str().into()
+        if let Some(rename) = variant.attrs.rename.as_ref() {
+            rename.into()
+        } else {
+            variant.name.as_str().into()
+        }
     }
     pub fn fmt_c_enum_variant<'a>(
         &self,
@@ -134,7 +141,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     /// Format a method
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
         // TODO(#60): handle other keywords
-        if method.name == "new" {
+        if let Some(rename) = method.attrs.rename.as_ref() {
+            rename.into()
+        } else if method.name == "new" {
             "new_".into()
         } else if method.name == "default" {
             "default_".into()

@@ -4,12 +4,14 @@ use crate::ast;
 use crate::ast::attrs::DiplomatBackendAttrCfg;
 use crate::hir::LoweringError;
 
-use syn::Meta;
+use quote::ToTokens;
+use syn::{LitStr, Meta};
 
 #[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct Attrs {
     pub disable: bool,
+    pub rename: Option<String>,
     // more to be added: rename, namespace, etc
 }
 
@@ -20,6 +22,7 @@ pub struct Attrs {
 pub enum AttributeContext {
     Struct { out: bool },
     Enum,
+    EnumVariant,
     Opaque,
     Method,
 }
@@ -28,7 +31,7 @@ impl Attrs {
     pub fn from_ast(
         ast: &ast::Attrs,
         validator: &(impl AttributeValidator + ?Sized),
-        _context: AttributeContext,
+        context: AttributeContext,
         errors: &mut Vec<LoweringError>,
     ) -> Self {
         let mut this = Attrs::default();
@@ -47,18 +50,51 @@ impl Attrs {
                                     "`disable` not supported in backend {}",
                                     validator.primary_name()
                                 )))
+                            } else if context == AttributeContext::EnumVariant {
+                                errors.push(LoweringError::Other(
+                                    "`disable` cannot be used on enum variants".into(),
+                                ))
                             } else {
                                 this.disable = true;
                             }
                         } else {
                             errors.push(LoweringError::Other(format!(
-                                "Unknown diplomat attribute {p:?}: expected one of: `disable`"
+                                "Unknown diplomat attribute {p:?}: expected one of: `disable, rename`"
+                            )));
+                        }
+                    }
+                    Meta::NameValue(nv) => {
+                        let p = &nv.path;
+                        if p.is_ident("rename") {
+                            if this.rename.is_some() {
+                                errors.push(LoweringError::Other(
+                                    "Duplicate `rename` attribute".into(),
+                                ));
+                            } else if !support.renaming {
+                                errors.push(LoweringError::Other(format!(
+                                    "`rename` not supported in backend {}",
+                                    validator.primary_name()
+                                )))
+                            } else {
+                                let v = nv.value.to_token_stream();
+                                let l = syn::parse2::<LitStr>(v);
+                                if let Ok(ref l) = l {
+                                    this.rename = Some(l.value())
+                                } else {
+                                    errors.push(LoweringError::Other(format!(
+                                        "Found diplomat attribute {p:?}: expected string as `rename` argument"
+                                    )));
+                                }
+                            }
+                        } else {
+                            errors.push(LoweringError::Other(format!(
+                                "Unknown diplomat attribute {p:?}: expected one of: `disable, rename`"
                             )));
                         }
                     }
                     other => {
                         errors.push(LoweringError::Other(format!(
-                            "Unknown diplomat attribute {other:?}: expected one of: `disable`"
+                            "Unknown diplomat attribute {other:?}: expected one of: `disable, rename`"
                         )));
                     }
                 }
@@ -73,6 +109,7 @@ impl Attrs {
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
     pub disabling: bool,
+    pub renaming: bool,
     // more to be added: rename, namespace, etc
 }
 

@@ -109,15 +109,20 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
 
         let mut variants = Some(Vec::with_capacity(ast_enum.variants.len()));
 
-        for (ident, discriminant, docs) in ast_enum.variants.iter() {
+        for (ident, discriminant, docs, attrs) in ast_enum.variants.iter() {
             let name = self.lower_ident(ident, "enum variant");
-
+            let attrs = self.attr_validator.attr_from_ast(
+                attrs,
+                AttributeContext::EnumVariant,
+                self.errors,
+            );
             match (name, &mut variants) {
                 (Some(name), Some(variants)) => {
                     variants.push(EnumVariant {
                         docs: docs.clone(),
                         name,
                         discriminant: *discriminant,
+                        attrs,
                     });
                 }
                 _ => variants = None,

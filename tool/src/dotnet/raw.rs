@@ -133,7 +133,7 @@ pub fn gen<'ast>(
             )?;
             writeln!(out, "public enum {}", enm.name)?;
             out.scope(|out| {
-                for (name, discriminant, docs) in enm.variants.iter() {
+                for (name, discriminant, docs, _attrs) in enm.variants.iter() {
                     gen_doc_block(
                         out,
                         &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),
