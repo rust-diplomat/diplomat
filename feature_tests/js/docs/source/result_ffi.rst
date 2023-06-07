@@ -23,6 +23,8 @@
 
     .. js:function:: new_in_err(i)
 
+    .. js:function:: new_int(i)
+
     .. js:function:: new_in_enum_err(i)
 
     .. js:method:: assert_integer(i)

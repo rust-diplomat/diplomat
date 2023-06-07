@@ -38,6 +38,11 @@ export class ResultOpaque {
   static new_in_err(i: i32): void | never;
 
   /**
+   * @throws {@link FFIError}<void>
+   */
+  static new_int(i: i32): i32 | never;
+
+  /**
    * @throws {@link FFIError}<{@link ResultOpaque}>
    */
   static new_in_enum_err(i: i32): ErrorEnum | never;

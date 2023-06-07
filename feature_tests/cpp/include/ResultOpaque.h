@@ -18,6 +18,7 @@ typedef struct ResultOpaque ResultOpaque;
 #include "diplomat_result_box_ResultOpaque_void.h"
 #include "diplomat_result_box_ResultOpaque_ErrorStruct.h"
 #include "diplomat_result_void_box_ResultOpaque.h"
+#include "diplomat_result_int32_t_void.h"
 #include "diplomat_result_ErrorEnum_box_ResultOpaque.h"
 #ifdef __cplusplus
 namespace capi {
@@ -35,6 +36,8 @@ diplomat_result_box_ResultOpaque_void ResultOpaque_new_failing_unit();
 diplomat_result_box_ResultOpaque_ErrorStruct ResultOpaque_new_failing_struct(int32_t i);
 
 diplomat_result_void_box_ResultOpaque ResultOpaque_new_in_err(int32_t i);
+
+diplomat_result_int32_t_void ResultOpaque_new_int(int32_t i);
 
 diplomat_result_ErrorEnum_box_ResultOpaque ResultOpaque_new_in_enum_err(int32_t i);
 

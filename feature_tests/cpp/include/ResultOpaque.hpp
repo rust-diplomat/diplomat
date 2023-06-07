@@ -31,6 +31,7 @@ class ResultOpaque {
   static diplomat::result<ResultOpaque, std::monostate> new_failing_unit();
   static diplomat::result<ResultOpaque, ErrorStruct> new_failing_struct(int32_t i);
   static diplomat::result<std::monostate, ResultOpaque> new_in_err(int32_t i);
+  static diplomat::result<int32_t, std::monostate> new_int(int32_t i);
   static diplomat::result<ErrorEnum, ResultOpaque> new_in_enum_err(int32_t i);
   void assert_integer(int32_t i) const;
   inline const capi::ResultOpaque* AsFFI() const { return this->inner.get(); }
@@ -103,6 +104,16 @@ inline diplomat::result<std::monostate, ResultOpaque> ResultOpaque::new_in_err(i
     diplomat_result_out_value = diplomat::Ok(std::monostate());
   } else {
     diplomat_result_out_value = diplomat::Err<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.err));
+  }
+  return diplomat_result_out_value;
+}
+inline diplomat::result<int32_t, std::monostate> ResultOpaque::new_int(int32_t i) {
+  auto diplomat_result_raw_out_value = capi::ResultOpaque_new_int(i);
+  diplomat::result<int32_t, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok<int32_t>(diplomat_result_raw_out_value.ok);
+  } else {
+    diplomat_result_out_value = diplomat::Err(std::monostate());
   }
   return diplomat_result_out_value;
 }

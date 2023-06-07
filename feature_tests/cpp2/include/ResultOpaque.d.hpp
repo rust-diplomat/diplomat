@@ -31,6 +31,8 @@ public:
 
   inline static diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>> new_in_err(int32_t i);
 
+  inline static diplomat::result<int32_t, std::monostate> new_int(int32_t i);
+
   inline static diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> new_in_enum_err(int32_t i);
 
   inline void assert_integer(int32_t i) const;

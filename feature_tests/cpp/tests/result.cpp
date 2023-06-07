@@ -18,6 +18,10 @@ int main(int argc, char *argv[]) {
     auto struc = ResultOpaque::new_failing_struct(109).err().value();
     simple_assert_eq("struct error", struc.i, 109);
 
+
+    auto integer = ResultOpaque::new_int(109).ok().value();
+    simple_assert_eq("int ok", integer, 109);
+
     auto in_err = ResultOpaque::new_in_err(198).err().value();
     in_err.assert_integer(198);
 

@@ -45,6 +45,11 @@ inline diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>> ResultOpa
   return result.is_ok ? diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>>(diplomat::Err<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.err))));
 }
 
+inline diplomat::result<int32_t, std::monostate> ResultOpaque::new_int(int32_t i) {
+  auto result = capi::ResultOpaque_new_int(i);
+  return result.is_ok ? diplomat::result<int32_t, std::monostate>(diplomat::Ok<int32_t>(result.ok)) : diplomat::result<int32_t, std::monostate>(diplomat::Err<std::monostate>());
+}
+
 inline diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> ResultOpaque::new_in_enum_err(int32_t i) {
   auto result = capi::ResultOpaque_new_in_enum_err(i);
   return result.is_ok ? diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>>(diplomat::Ok<ErrorEnum>(ErrorEnum::FromFFI(result.ok))) : diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>>(diplomat::Err<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.err))));
