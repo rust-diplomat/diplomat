@@ -155,7 +155,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                     super::types::gen_type(ok, in_path, None, env, library_config, false).unwrap();
                 writeln!(
                     out,
-                    "  {wrapped_value_id} = diplomat::Ok<{ok_type}>(std::move({ok_expr}));"
+                    "  {wrapped_value_id} = diplomat::Ok<{ok_type}>({ok_expr});"
                 )
                 .unwrap();
             } else {
@@ -181,7 +181,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                     super::types::gen_type(err, in_path, None, env, library_config, false).unwrap();
                 writeln!(
                     out,
-                    "  {wrapped_value_id} = diplomat::Err<{err_type}>(std::move({err_expr}));"
+                    "  {wrapped_value_id} = diplomat::Err<{err_type}>({err_expr});"
                 )
                 .unwrap();
             } else {

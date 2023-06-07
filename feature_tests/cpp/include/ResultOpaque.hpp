@@ -49,9 +49,9 @@ inline diplomat::result<ResultOpaque, ErrorEnum> ResultOpaque::new_(int32_t i) {
   auto diplomat_result_raw_out_value = capi::ResultOpaque_new(i);
   diplomat::result<ResultOpaque, ErrorEnum> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(std::move(ResultOpaque(diplomat_result_raw_out_value.ok)));
+    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.ok));
   } else {
-    diplomat_result_out_value = diplomat::Err<ErrorEnum>(std::move(static_cast<ErrorEnum>(diplomat_result_raw_out_value.err)));
+    diplomat_result_out_value = diplomat::Err<ErrorEnum>(static_cast<ErrorEnum>(diplomat_result_raw_out_value.err));
   }
   return diplomat_result_out_value;
 }
@@ -59,9 +59,9 @@ inline diplomat::result<ResultOpaque, ErrorEnum> ResultOpaque::new_failing_foo()
   auto diplomat_result_raw_out_value = capi::ResultOpaque_new_failing_foo();
   diplomat::result<ResultOpaque, ErrorEnum> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(std::move(ResultOpaque(diplomat_result_raw_out_value.ok)));
+    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.ok));
   } else {
-    diplomat_result_out_value = diplomat::Err<ErrorEnum>(std::move(static_cast<ErrorEnum>(diplomat_result_raw_out_value.err)));
+    diplomat_result_out_value = diplomat::Err<ErrorEnum>(static_cast<ErrorEnum>(diplomat_result_raw_out_value.err));
   }
   return diplomat_result_out_value;
 }
@@ -69,9 +69,9 @@ inline diplomat::result<ResultOpaque, ErrorEnum> ResultOpaque::new_failing_bar()
   auto diplomat_result_raw_out_value = capi::ResultOpaque_new_failing_bar();
   diplomat::result<ResultOpaque, ErrorEnum> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(std::move(ResultOpaque(diplomat_result_raw_out_value.ok)));
+    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.ok));
   } else {
-    diplomat_result_out_value = diplomat::Err<ErrorEnum>(std::move(static_cast<ErrorEnum>(diplomat_result_raw_out_value.err)));
+    diplomat_result_out_value = diplomat::Err<ErrorEnum>(static_cast<ErrorEnum>(diplomat_result_raw_out_value.err));
   }
   return diplomat_result_out_value;
 }
@@ -79,7 +79,7 @@ inline diplomat::result<ResultOpaque, std::monostate> ResultOpaque::new_failing_
   auto diplomat_result_raw_out_value = capi::ResultOpaque_new_failing_unit();
   diplomat::result<ResultOpaque, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(std::move(ResultOpaque(diplomat_result_raw_out_value.ok)));
+    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.ok));
   } else {
     diplomat_result_out_value = diplomat::Err(std::monostate());
   }
@@ -89,10 +89,10 @@ inline diplomat::result<ResultOpaque, ErrorStruct> ResultOpaque::new_failing_str
   auto diplomat_result_raw_out_value = capi::ResultOpaque_new_failing_struct(i);
   diplomat::result<ResultOpaque, ErrorStruct> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(std::move(ResultOpaque(diplomat_result_raw_out_value.ok)));
+    diplomat_result_out_value = diplomat::Ok<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.ok));
   } else {
   capi::ErrorStruct diplomat_raw_struct_out_value = diplomat_result_raw_out_value.err;
-    diplomat_result_out_value = diplomat::Err<ErrorStruct>(std::move(ErrorStruct{ .i = std::move(diplomat_raw_struct_out_value.i), .j = std::move(diplomat_raw_struct_out_value.j) }));
+    diplomat_result_out_value = diplomat::Err<ErrorStruct>(ErrorStruct{ .i = std::move(diplomat_raw_struct_out_value.i), .j = std::move(diplomat_raw_struct_out_value.j) });
   }
   return diplomat_result_out_value;
 }
@@ -102,7 +102,7 @@ inline diplomat::result<std::monostate, ResultOpaque> ResultOpaque::new_in_err(i
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok(std::monostate());
   } else {
-    diplomat_result_out_value = diplomat::Err<ResultOpaque>(std::move(ResultOpaque(diplomat_result_raw_out_value.err)));
+    diplomat_result_out_value = diplomat::Err<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.err));
   }
   return diplomat_result_out_value;
 }
@@ -110,9 +110,9 @@ inline diplomat::result<ErrorEnum, ResultOpaque> ResultOpaque::new_in_enum_err(i
   auto diplomat_result_raw_out_value = capi::ResultOpaque_new_in_enum_err(i);
   diplomat::result<ErrorEnum, ResultOpaque> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<ErrorEnum>(std::move(static_cast<ErrorEnum>(diplomat_result_raw_out_value.ok)));
+    diplomat_result_out_value = diplomat::Ok<ErrorEnum>(static_cast<ErrorEnum>(diplomat_result_raw_out_value.ok));
   } else {
-    diplomat_result_out_value = diplomat::Err<ResultOpaque>(std::move(ResultOpaque(diplomat_result_raw_out_value.err)));
+    diplomat_result_out_value = diplomat::Err<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.err));
   }
   return diplomat_result_out_value;
 }
