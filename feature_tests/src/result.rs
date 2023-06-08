@@ -40,6 +40,10 @@ pub mod ffi {
             Err(Box::new(ResultOpaque(i)))
         }
 
+        pub fn new_int(i: i32) -> Result<i32, ()> {
+            Ok(i)
+        }
+
         pub fn new_in_enum_err(i: i32) -> Result<ErrorEnum, Box<ResultOpaque>> {
             Err(Box::new(ResultOpaque(i)))
         }

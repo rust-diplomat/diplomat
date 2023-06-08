@@ -33,6 +33,9 @@
     .. cpp:function:: static diplomat::result<std::monostate, ResultOpaque> new_in_err(int32_t i)
 
 
+    .. cpp:function:: static diplomat::result<int32_t, std::monostate> new_int(int32_t i)
+
+
     .. cpp:function:: static diplomat::result<ErrorEnum, ResultOpaque> new_in_enum_err(int32_t i)
 
 

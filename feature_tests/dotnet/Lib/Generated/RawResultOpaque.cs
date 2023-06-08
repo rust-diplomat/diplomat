@@ -34,6 +34,9 @@ public partial struct ResultOpaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "ResultOpaque_new_in_err", ExactSpelling = true)]
     public static unsafe extern ResultFfiResultVoidBoxResultOpaque NewInErr(int i);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "ResultOpaque_new_int", ExactSpelling = true)]
+    public static unsafe extern ResultFfiResultI32Void NewInt(int i);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "ResultOpaque_new_in_enum_err", ExactSpelling = true)]
     public static unsafe extern ResultFfiResultErrorEnumBoxResultOpaque NewInEnumErr(int i);
 

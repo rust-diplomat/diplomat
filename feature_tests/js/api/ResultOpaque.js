@@ -119,6 +119,23 @@ export class ResultOpaque {
     })();
   }
 
+  static new_int(arg_i) {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+      wasm.ResultOpaque_new_int(diplomat_receive_buffer, arg_i);
+      const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
+      if (is_ok) {
+        const ok_value = (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        return ok_value;
+      } else {
+        const throw_value = {};
+        wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        throw new diplomatRuntime.FFIError(throw_value);
+      }
+    })();
+  }
+
   static new_in_enum_err(arg_i) {
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
