@@ -28,4 +28,6 @@ fields:
       - []
 methods: []
 output_only: true
+attrs:
+  cfg: []
 

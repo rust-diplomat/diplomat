@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! {\n                very :: long :: path :: to :: my :: Type < 'x, 'y, 'z >\n            })"
+expression: "TypeName::from_syn(&syn::parse_quote! {\n                very :: long :: path :: to :: my :: Type < 'x, 'y, 'z >\n            }, None)"
 ---
 Named:
   path:

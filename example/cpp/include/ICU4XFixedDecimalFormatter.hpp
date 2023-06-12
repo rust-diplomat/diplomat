@@ -74,7 +74,7 @@ inline diplomat::result<ICU4XFixedDecimalFormatter, std::monostate> ICU4XFixedDe
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimalFormatter_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatterOptions{ .grouping_strategy = static_cast<capi::ICU4XFixedDecimalGroupingStrategy>(diplomat_wrapped_struct_options.grouping_strategy), .some_other_config = diplomat_wrapped_struct_options.some_other_config });
   diplomat::result<ICU4XFixedDecimalFormatter, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<ICU4XFixedDecimalFormatter>(std::move(ICU4XFixedDecimalFormatter(diplomat_result_raw_out_value.ok)));
+    diplomat_result_out_value = diplomat::Ok<ICU4XFixedDecimalFormatter>(ICU4XFixedDecimalFormatter(diplomat_result_raw_out_value.ok));
   } else {
     diplomat_result_out_value = diplomat::Err(std::monostate());
   }

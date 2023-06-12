@@ -41,9 +41,11 @@ pub fn gen_struct<W: fmt::Write>(
                 "export const {}_js_to_rust = {};",
                 enm.name,
                 display::block(|mut f| {
-                    enm.variants.iter().try_for_each(|(name, discriminant, _)| {
-                        writeln!(f, "\"{name}\": {discriminant},")
-                    })
+                    enm.variants
+                        .iter()
+                        .try_for_each(|(name, discriminant, _, _attrs)| {
+                            writeln!(f, "\"{name}\": {discriminant},")
+                        })
                 })
             )?;
             writeln!(out)?;
@@ -52,9 +54,11 @@ pub fn gen_struct<W: fmt::Write>(
                 "export const {}_rust_to_js = {};",
                 enm.name,
                 display::block(|mut f| {
-                    enm.variants.iter().try_for_each(|(name, discriminant, _)| {
-                        writeln!(f, "[{discriminant}]: \"{name}\",")
-                    })
+                    enm.variants
+                        .iter()
+                        .try_for_each(|(name, discriminant, _, _attrs)| {
+                            writeln!(f, "[{discriminant}]: \"{name}\",")
+                        })
                 })
             )?;
             writeln!(out)?;
@@ -408,7 +412,7 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
             "export enum {} {}",
             enm.name,
             display::block(|mut f| {
-                for (name, _, docs) in enm.variants.iter() {
+                for (name, _, docs, _attrs) in enm.variants.iter() {
                     if let Some(docs_url_gen) = docs_url_gen {
                         write!(
                             f,

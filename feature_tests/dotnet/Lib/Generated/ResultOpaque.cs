@@ -132,6 +132,21 @@ public partial class ResultOpaque: IDisposable
         }
     }
 
+    /// <exception cref="DiplomatOpaqueException"></exception>
+    public static int NewInt(int i)
+    {
+        unsafe
+        {
+            Raw.ResultFfiResultI32Void result = Raw.ResultOpaque.NewInt(i);
+            if (!result.isOk)
+            {
+                throw new DiplomatOpaqueException();
+            }
+            int retVal = result.Ok;
+            return retVal;
+        }
+    }
+
     /// <exception cref="ResultOpaqueException"></exception>
     /// <returns>
     /// A <c>ErrorEnum</c> allocated on C# side.

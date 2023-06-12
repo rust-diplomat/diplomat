@@ -7,9 +7,9 @@ expression: out_docs.get(out).unwrap()
 
 .. js:class:: MyStruct
 
-    .. js:staticfunction:: new(a, b)
+    .. js:function:: new(a, b)
 
-    .. js:function:: get_a()
+    .. js:method:: get_a()
 
-    .. js:function:: set_b(b)
+    .. js:method:: set_b(b)
 

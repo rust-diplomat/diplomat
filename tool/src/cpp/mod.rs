@@ -108,7 +108,7 @@ pub fn gen_bindings(
                 )?;
                 writeln!(out, "enum struct {} {{", enm.name)?;
                 let mut enm_indent = indented(out).with_str("  ");
-                for (name, discriminant, docs) in enm.variants.iter() {
+                for (name, discriminant, docs, _attrs) in enm.variants.iter() {
                     gen_comment_block(
                         &mut enm_indent,
                         &docs.to_markdown(docs_url_gen, ast::MarkdownStyle::Normal),

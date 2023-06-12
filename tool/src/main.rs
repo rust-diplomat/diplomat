@@ -4,6 +4,7 @@ use std::{
     fs::File,
     io::Write,
     path::{Path, PathBuf},
+    process,
 };
 
 use clap::Parser;
@@ -125,6 +126,7 @@ fn main() -> std::io::Result<()> {
     let mut out_texts: HashMap<String, String> = HashMap::new();
 
     let target_language = opt.target_language.as_str();
+    let mut errors_found = false;
 
     match target_language {
         "json" => json::gen_bindings(&env, &mut out_texts).unwrap(),
@@ -138,7 +140,22 @@ fn main() -> std::io::Result<()> {
             dotnet::gen_bindings(&env, &opt.library_config, &docs_url_gen, &mut out_texts).unwrap()
         }
         "c2" | "cpp-c2" | "cpp2" => {
-            let tcx = match hir::TypeContext::from_ast(&env) {
+            let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
+
+            if target_language == "c2" {
+                attr_validator.other_backend_names.push("c".into());
+            } else {
+                attr_validator.other_backend_names.push("cpp".into());
+                // C backends cannot rename types using backend attributes
+                // In the future we may add a c_rename attribute
+                attr_validator.support.renaming = true;
+            }
+
+            attr_validator.support.disabling = true;
+            // cpp-c2 is a testing backend, we're not going to treat it as a real c/cpp backend
+            // since the ast-cpp backend doesn't know about attributes.
+
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
                     for err in e {
@@ -151,6 +168,16 @@ fn main() -> std::io::Result<()> {
             let mut context = c2::CContext::new(&tcx, files);
             context.run();
 
+            let errors = context.errors.take_all();
+
+            if !errors.is_empty() {
+                eprintln!("Found errors whilst generating {target_language}:");
+                for error in errors {
+                    eprintln!("\t{}: {}", error.0, error.1);
+                }
+                errors_found = true;
+            }
+
             out_texts = context.files.take_files();
 
             if target_language == "cpp-c2" {
@@ -161,9 +188,25 @@ fn main() -> std::io::Result<()> {
                 let mut context = cpp2::Cpp2Context::new(&tcx, files);
                 context.run();
                 out_texts.extend(context.files.take_files());
+
+                let errors = context.errors.take_all();
+
+                if !errors.is_empty() {
+                    eprintln!("Found errors whilst generating {target_language}:");
+                    for error in errors {
+                        eprintln!("\t{}: {}", error.0, error.1);
+                    }
+                    errors_found = true;
+                }
             }
         }
         o => panic!("Unknown target: {}", o),
+    }
+
+    if errors_found {
+        eprintln!("Not generating files due to errors");
+        // Eventually this should use eyre or something
+        process::exit(1);
     }
 
     if !opt.silent {

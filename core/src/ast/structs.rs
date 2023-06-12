@@ -1,10 +1,10 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::docs::Docs;
-use super::{Ident, LifetimeEnv, Method, Mutability, PathType, TypeName};
+use super::{Attrs, Ident, LifetimeEnv, Method, Mutability, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct Struct {
     pub name: Ident,
     pub docs: Docs,
@@ -12,6 +12,7 @@ pub struct Struct {
     pub fields: Vec<(Ident, TypeName, Docs)>,
     pub methods: Vec<Method>,
     pub output_only: bool,
+    pub attrs: Attrs,
 }
 
 impl Struct {
@@ -44,6 +45,7 @@ impl Struct {
             fields,
             methods: vec![],
             output_only,
+            attrs: (&*strct.attrs).into(),
         }
     }
 }
@@ -51,13 +53,14 @@ impl Struct {
 /// A struct annotated with [`diplomat::opaque`] whose fields are not visible.
 /// Opaque structs cannot be passed by-value across the FFI boundary, so they
 /// must be boxed or passed as references.
-#[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
 pub struct OpaqueStruct {
     pub name: Ident,
     pub docs: Docs,
     pub lifetimes: LifetimeEnv,
     pub methods: Vec<Method>,
     pub mutability: Mutability,
+    pub attrs: Attrs,
 }
 
 impl OpaqueStruct {
@@ -69,6 +72,7 @@ impl OpaqueStruct {
             lifetimes: LifetimeEnv::from_struct_item(strct, &[]),
             methods: vec![],
             mutability,
+            attrs: (&*strct.attrs).into(),
         }
     }
 }

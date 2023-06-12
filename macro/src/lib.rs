@@ -7,6 +7,12 @@ use diplomat_core::ast;
 mod enum_convert;
 mod transparent_convert;
 
+fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
+    attrs
+        .iter()
+        .fold(quote!(), |prev, attr| quote!(#prev #attr))
+}
+
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
         ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(..) => {
@@ -190,10 +196,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         })
         .collect::<Vec<_>>();
 
-    let cfg = m.cfg.iter().fold(quote!(), |prev, attr| {
-        let attr = attr.parse::<proc_macro2::TokenStream>().unwrap();
-        quote!(#prev #attr)
-    });
+    let cfg = cfgs_to_stream(&m.attrs.cfg);
 
     if writeable_flushes.is_empty() {
         Item::Fn(syn::parse_quote! {
@@ -226,18 +229,18 @@ impl AttributeInfo {
         let mut repr = false;
         let mut opaque = false;
         attrs.retain(|attr| {
-            let ident = &attr.path.segments.iter().next().unwrap().ident;
+            let ident = &attr.path().segments.iter().next().unwrap().ident;
             if ident == "repr" {
                 repr = true;
                 // don't actually extract repr attrs, just detect them
                 return true;
             } else if ident == "diplomat" {
-                if attr.path.segments.len() == 2 {
-                    let seg = &attr.path.segments.iter().nth(1).unwrap().ident;
+                if attr.path().segments.len() == 2 {
+                    let seg = &attr.path().segments.iter().nth(1).unwrap().ident;
                     if seg == "opaque" {
                         opaque = true;
                         return false;
-                    } else if seg == "rust_link" || seg == "out" {
+                    } else if seg == "rust_link" || seg == "out" || seg == "attr" {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
                         return false;
@@ -287,6 +290,12 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             if info.opaque {
                 panic!("#[diplomat::opaque] not allowed on enums")
             }
+            for v in &mut e.variants {
+                let info = AttributeInfo::extract(&mut v.attrs);
+                if info.opaque {
+                    panic!("#[diplomat::opaque] not allowed on enum variants");
+                }
+            }
             *e = syn::parse_quote! {
                 #[repr(C)]
                 #e
@@ -295,7 +304,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
 
         Item::Impl(i) => {
             for item in &mut i.items {
-                if let syn::ImplItem::Method(ref mut m) = *item {
+                if let syn::ImplItem::Fn(ref mut m) = *item {
                     let info = AttributeInfo::extract(&mut m.attrs);
                     if info.opaque {
                         panic!("#[diplomat::opaque] not allowed on methods")
@@ -327,10 +336,13 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             (quote! {}, quote! {})
         };
 
+        let cfg = cfgs_to_stream(&custom_type.attrs().cfg);
+
         // for now, body is empty since all we need to do is drop the box
         // TODO(#13): change to take a `*mut` and handle DST boxes appropriately
         new_contents.push(Item::Fn(syn::parse_quote! {
             #[no_mangle]
+            #cfg
             extern "C" fn #destroy_ident#lifetime_defs(this: Box<#type_ident#lifetimes>) {}
         }));
     }
@@ -342,6 +354,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
         ident: input.ident,
         content: Some((brace, new_contents)),
         semi: input.semi,
+        unsafety: None,
     }
 }
 
@@ -626,6 +639,45 @@ mod tests {
 
                     impl Foo {
                         #[cfg(feature = "foo")]
+                        pub fn bar(s: u8) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    #[cfg(feature = "bar")]
+                    impl Foo {
+                        #[cfg(feature = "foo")]
+                        pub fn bar(s: u8) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn cfgd_struct() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    #[diplomat::opaque]
+                    #[cfg(feature = "foo")]
+                    struct Foo {}
+                    #[cfg(feature = "foo")]
+                    impl Foo {
                         pub fn bar(s: u8) {
                             unimplemented!()
                         }

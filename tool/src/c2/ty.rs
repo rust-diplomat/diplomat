@@ -6,6 +6,10 @@ use std::fmt::Write;
 
 impl<'tcx> super::CContext<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
+        if ty.attrs().disable {
+            // Skip type if disabled
+            return;
+        }
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
@@ -16,14 +20,23 @@ impl<'tcx> super::CContext<'tcx> {
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
         };
+
+        let _guard = self.errors.set_context_ty(ty.name().as_str().into());
         match ty {
             TypeDef::Enum(e) => context.gen_enum_def(e, id),
             TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
             TypeDef::Struct(s) => context.gen_struct_def(s, id),
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
         }
-
         for method in ty.methods() {
+            if method.attrs.disable {
+                // Skip type if disabled
+                return;
+            }
+            let _guard = self.errors.set_context_method(
+                self.formatter.fmt_type_name_diagnostics(id),
+                method.name.as_str().into(),
+            );
             context.gen_method(id, method);
         }
 
@@ -48,6 +61,9 @@ impl<'tcx> super::CContext<'tcx> {
     }
 
     pub fn gen_result(&self, name: &str, ty: ResultType) {
+        let _guard = self
+            .errors
+            .set_context_ty(self.formatter.fmt_result_for_diagnostics(ty).into());
         let header_path = self.formatter.fmt_result_header_path(name);
         let mut header = Header::new(header_path.clone());
         let mut dummy_header = Header::new("".to_string());
@@ -255,6 +271,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(op_id);
+                if self.cx.tcx.resolve_type(op_id).attrs().disable {
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {ty_name}"))
+                }
                 // unwrap_or(mut) since owned pointers need to not be const
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
                 let ret = self.cx.formatter.fmt_ptr(&ty_name, mutability);
@@ -266,6 +287,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Struct(ref st) => {
                 let st_id = P::id_for_path(st);
                 let ty_name = self.cx.formatter.fmt_type_name(st_id);
+                if self.cx.tcx.resolve_type(st_id).attrs().disable {
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {ty_name}"))
+                }
                 let ret = ty_name.clone();
                 let header_path = self.cx.formatter.fmt_decl_header_path(st_id);
                 header.includes.insert(header_path);
@@ -274,6 +300,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let ty_name = self.cx.formatter.fmt_type_name(id);
+                if self.cx.tcx.resolve_type(id).attrs().disable {
+                    self.cx
+                        .errors
+                        .push_error(format!("Found usage of disabled type {ty_name}"))
+                }
                 let header_path = self.cx.formatter.fmt_decl_header_path(id);
                 header.includes.insert(header_path);
                 (Some(id), ty_name)

@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! { Option < Ref < 'object >> })"
+expression: "TypeName::from_syn(&syn::parse_quote! { Option < Ref < 'object >> }, None)"
 ---
 Option:
   Named:

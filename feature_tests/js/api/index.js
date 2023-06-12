@@ -1,4 +1,7 @@
 export { FFIError } from './diplomat-runtime.js';
+export { AttrEnum } from './AttrEnum.js';
+export { AttrOpaque1 } from './AttrOpaque1.js';
+export { AttrOpaque2 } from './AttrOpaque2.js';
 export { Bar } from './Bar.js';
 export { BorrowedFields } from './BorrowedFields.js';
 export { BorrowedFieldsReturning } from './BorrowedFieldsReturning.js';

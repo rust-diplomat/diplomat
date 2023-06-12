@@ -1,7 +1,6 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from(&syn::parse_quote! { Option < i32 > })"
-
+expression: "TypeName::from_syn(&syn::parse_quote! { Option < i32 > }, None)"
 ---
 Option:
   Primitive: i32

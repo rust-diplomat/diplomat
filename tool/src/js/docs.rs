@@ -118,14 +118,14 @@ pub fn gen_method_docs<W: fmt::Write>(
     if method.self_param.is_some() {
         writeln!(
             out,
-            ".. js:function:: {}({})",
+            ".. js:method:: {}({})",
             method.name,
             param_names.join(", ")
         )?;
     } else {
         writeln!(
             out,
-            ".. js:staticfunction:: {}({})",
+            ".. js:function:: {}({})",
             method.name,
             param_names.join(", ")
         )?;

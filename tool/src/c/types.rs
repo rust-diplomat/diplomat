@@ -118,7 +118,7 @@ pub fn c_type_for_prim(prim: &PrimitiveType) -> &'static str {
         PrimitiveType::u64 => "uint64_t",
         PrimitiveType::i128 => panic!("i128 not supported in C"),
         PrimitiveType::u128 => panic!("u128 not supported in C"),
-        PrimitiveType::isize => "ssize_t",
+        PrimitiveType::isize => "intptr_t",
         PrimitiveType::usize => "size_t",
         PrimitiveType::f32 => "float",
         PrimitiveType::f64 => "double",

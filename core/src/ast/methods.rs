@@ -1,14 +1,16 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
-use super::{Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError};
+use super::{
+    Attrs, Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError,
+};
 use crate::Env;
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
 /// by inspecting [`Method::self_param`].
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct Method {
     /// The name of the method as initially declared.
     pub name: Ident,
@@ -35,15 +37,16 @@ pub struct Method {
     ///
     /// These are strings instead of `syn::Attribute` or `proc_macro2::TokenStream`
     /// because those types are not `PartialEq`, `Hash`, `Serialize`, etc.
-    pub cfg: Vec<String>,
+    pub attrs: Attrs,
 }
 
 impl Method {
     /// Extracts a [`Method`] from an AST node inside an `impl`.
     pub fn from_syn(
-        m: &syn::ImplItemMethod,
+        m: &syn::ImplItemFn,
         self_path_type: PathType,
         impl_generics: Option<&syn::Generics>,
+        impl_attrs: &Attrs,
     ) -> Method {
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
@@ -62,10 +65,10 @@ impl Method {
             })
             .collect::<Vec<_>>();
 
-        let self_param = m.sig.receiver().map(|rec| match rec {
-            syn::FnArg::Receiver(ref rec) => SelfParam::from_syn(rec, self_path_type.clone()),
-            _ => panic!("Unexpected self param type"),
-        });
+        let self_param = m
+            .sig
+            .receiver()
+            .map(|rec| SelfParam::from_syn(rec, self_path_type.clone()));
 
         let return_ty = match &m.sig.output {
             syn::ReturnType::Type(_, return_typ) => {
@@ -87,6 +90,9 @@ impl Method {
             return_ty.as_ref(),
         );
 
+        let mut attrs: Attrs = (&*m.attrs).into();
+        attrs.merge_parent_attrs(impl_attrs);
+
         Method {
             name: Ident::from(method_ident),
             docs: Docs::from_attrs(&m.attrs),
@@ -95,12 +101,7 @@ impl Method {
             params: all_params,
             return_type: return_ty,
             lifetime_env,
-            cfg: m
-                .attrs
-                .iter()
-                .filter(|&a| a.path == syn::parse_str("cfg").unwrap())
-                .map(|a| quote::quote!(#a).to_string())
-                .collect(),
+            attrs,
         }
     }
 
@@ -242,7 +243,7 @@ impl Method {
 }
 
 /// The `self` parameter taken by a [`Method`].
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct SelfParam {
     /// The lifetime and mutability of the `self` param, if it's a reference.
     pub reference: Option<(Lifetime, Mutability)>,
@@ -273,7 +274,7 @@ impl SelfParam {
 }
 
 /// A parameter taken by a [`Method`], not including `self`.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct Param {
     /// The name of the parameter in the original method declaration.
     pub name: Ident,
@@ -378,7 +379,7 @@ mod tests {
 
     use crate::ast::Ident;
 
-    use super::{Method, Path, PathType};
+    use super::{Attrs, Method, Path, PathType};
 
     #[test]
     fn static_methods() {
@@ -392,6 +393,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &Attrs::default()
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -407,6 +409,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &Attrs::default()
         ));
     }
 
@@ -423,6 +426,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &Attrs::default()
         ));
     }
 
@@ -436,6 +440,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &Attrs::default()
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -447,6 +452,7 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
+            &Attrs::default()
         ));
     }
 
@@ -456,6 +462,7 @@ mod tests {
                 &syn::parse_quote! { $($tokens)* },
                 PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
                 None,
+                &Attrs::default()
             );
 
             let borrowed_params = method.borrowed_params();

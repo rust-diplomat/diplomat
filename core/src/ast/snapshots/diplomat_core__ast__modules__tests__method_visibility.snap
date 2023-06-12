@@ -23,7 +23,10 @@ declared_types:
           params: []
           return_type: ~
           lifetime_env: {}
-          cfg: []
+          attrs:
+            cfg: []
       output_only: false
+      attrs:
+        cfg: []
 sub_modules: []
 

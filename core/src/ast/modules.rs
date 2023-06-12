@@ -2,12 +2,12 @@ use std::collections::{BTreeMap, HashSet};
 use std::fmt::Write as _;
 
 use quote::ToTokens;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType, RustLink,
-    Struct, ValidityError,
+    Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType,
+    RustLink, Struct, ValidityError,
 };
 use crate::environment::*;
 
@@ -38,7 +38,7 @@ impl DiplomatStructAttribute {
         let mut res = Ok(None);
         for attr in attrs {
             buf.clear();
-            write!(&mut buf, "{}", attr.path.to_token_stream()).unwrap();
+            write!(&mut buf, "{}", attr.path().to_token_stream()).unwrap();
             let parsed = match buf.as_str() {
                 "diplomat :: out" => Some(Self::Out),
                 "diplomat :: opaque" => Some(Self::Opaque),
@@ -59,7 +59,7 @@ impl DiplomatStructAttribute {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Debug)]
 pub struct Module {
     pub name: Ident,
     pub imports: Vec<(Path, Ident)>,
@@ -125,7 +125,7 @@ impl Module {
             || input
                 .attrs
                 .iter()
-                .any(|a| a.path.to_token_stream().to_string() == "diplomat :: bridge");
+                .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge");
 
         input
             .content
@@ -176,16 +176,17 @@ impl Module {
                             syn::Type::Path(s) => PathType::from(s),
                             _ => panic!("Self type not found"),
                         };
+                        let attrs = Attrs::from(&*imp.attrs);
 
                         let mut new_methods = imp
                             .items
                             .iter()
                             .filter_map(|i| match i {
-                                ImplItem::Method(m) => Some(m),
+                                ImplItem::Fn(m) => Some(m),
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics)))
+                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &attrs))
                             .collect();
 
                         let self_ident = self_path.path.elements.last().unwrap();
@@ -241,7 +242,7 @@ fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, Id
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct File {
     pub modules: BTreeMap<String, Module>,
 }

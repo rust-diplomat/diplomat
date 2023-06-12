@@ -9,13 +9,13 @@ use std::fmt;
 use std::ops::ControlFlow;
 
 use super::{
-    Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
+    Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
     OpaqueStruct, Path, RustLink, Struct, ValidityError,
 };
 use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
-#[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
 pub enum CustomType {
     /// A non-opaque struct whose fields will be visible across the FFI boundary.
     Struct(Struct),
@@ -41,6 +41,14 @@ impl CustomType {
             CustomType::Struct(strct) => &strct.methods,
             CustomType::Opaque(strct) => &strct.methods,
             CustomType::Enum(enm) => &enm.methods,
+        }
+    }
+
+    pub fn attrs(&self) -> &Attrs {
+        match self {
+            CustomType::Struct(strct) => &strct.attrs,
+            CustomType::Opaque(strct) => &strct.attrs,
+            CustomType::Enum(enm) => &enm.attrs,
         }
     }
 
@@ -118,7 +126,7 @@ impl CustomType {
 
 /// A symbol declared in a module, which can either be a pointer to another path,
 /// or a custom type defined directly inside that module
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Debug)]
 pub enum ModSymbol {
     /// A symbol that is a pointer to another path.
     Alias(Path),

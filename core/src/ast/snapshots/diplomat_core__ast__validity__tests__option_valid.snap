@@ -1,6 +1,5 @@
 ---
 source: core/src/ast/validity.rs
 expression: output
-
 ---
 
