@@ -112,7 +112,7 @@ type AstElement<T> = (ast::Path, T);
 /// Ordered set of AST types for deterministic traversal
 pub struct SetOfAstTypes<T> {
     set: std::collections::HashSet<AstElement<T>>,
-    order: Vec<AstElement<T>>,
+    pub(crate) order: Vec<AstElement<T>>,
 }
 
 impl<T> Default for SetOfAstTypes<T> {

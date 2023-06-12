@@ -9,7 +9,7 @@ use std::{
 use clap::Parser;
 use colored::*;
 use diplomat_core::{ast, hir};
-use diplomat_tool::{c, c2, common, cpp, cpp2, dotnet, js};
+use diplomat_tool::{c, c2, common, cpp, cpp2, dotnet, js, json};
 
 /// diplomat-tool CLI options, as parsed by [clap-derive].
 #[derive(Debug, Parser)]
@@ -127,6 +127,7 @@ fn main() -> std::io::Result<()> {
     let target_language = opt.target_language.as_str();
 
     match target_language {
+        "json" => json::gen_bindings(&env, &mut out_texts).unwrap(),
         "js" => js::gen_bindings(&env, &mut out_texts, Some(&docs_url_gen)).unwrap(),
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
         "cpp" => {
