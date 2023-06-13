@@ -1,0 +1,35 @@
+#ifndef {{ header_guard }}
+#define {{ header_guard }}
+
+{%~ match decl_include %}
+	{% when Some with (include) ~%}
+		#include "{{ include }}"
+	{%~ when None %}
+{%- endmatch ~%}
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <memory>
+#include <optional>
+#include "diplomat_runtime.hpp"
+{%- for include in includes %}
+#include "{{ include }}"
+{%- endfor %}
+
+{%~ if forwards.len() > 0 %}
+{%- for forward in forwards %}
+{%- match forward %}
+	{%- when Forward::Class with (name) ~%}
+		class {{ name }};
+	{%- when Forward::Struct with (name) ~%}
+		struct {{ name }};
+	{%- when Forward::EnumStruct with (name) ~%}
+		class {{ name }};
+{%- endmatch %}
+{%- endfor %}
+{% endif %}
+
+{{ body }}
+#endif // {{ header_guard }}

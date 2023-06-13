@@ -1,0 +1,16 @@
+class {{ type_name }} {
+	{{ ctype }} value;
+
+public:
+	enum Value {
+{%- for enum_variant in enum_variants %}
+		{{ enum_variant }},
+{%- endfor %}
+	};
+
+	inline {{ type_name }}({{ type_name }}::Value cpp_value);
+	inline {{ type_name }}({{ ctype }} c_enum) : value(c_enum) {};
+
+	inline {{ ctype }} AsFFI() const;
+	inline static {{ type_name }} FromFFI({{ ctype }} c_enum);
+};

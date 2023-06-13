@@ -1,11 +1,20 @@
 use super::header::{Forward, Header};
 use super::Cpp2Context;
+use askama::Template;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ParamSelf, ReturnType, SelfType, SuccessType, TyPosition, Type,
     TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
+
+#[derive(Template)]
+#[template(path = "cpp2/enum_decl_h.txt")]
+struct EnumDeclTemplate<'a> {
+    type_name: Cow<'a, str>,
+    ctype: Cow<'a, str>,
+    enum_variants: Vec<Cow<'a, str>>,
+}
 
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
@@ -87,19 +96,22 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
+        EnumDeclTemplate {
+            type_name: type_name.clone(),
+            ctype: ctype.clone(),
+            enum_variants: ty
+                .variants
+                .iter()
+                .map(|v| self.cx.formatter.fmt_enum_variant(v))
+                .collect(),
+        }
+        .render_into(self.decl_header)
+        .unwrap();
+        self.decl_header.write_char('\n').unwrap();
+        self.decl_header.write_char('\n').unwrap();
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
-        write!(
-            self.decl_header,
-            "class {type_name} {{
-\t{ctype} value;
-
-public:
-\tenum Value {{
-"
-        )
-        .unwrap();
         write!(
             self.impl_header,
             "inline {type_name}::{type_name}({type_name}::Value cpp_value) {{
@@ -110,7 +122,6 @@ public:
         for variant in ty.variants.iter() {
             let enum_variant = self.cx.formatter.fmt_enum_variant(variant);
             let c_enum_variant = self.cx.formatter.fmt_c_enum_variant(&type_name, variant);
-            writeln!(self.decl_header, "\t\t{enum_variant},").unwrap();
             write!(
                 self.impl_header,
                 "\t\tcase {enum_variant}:
@@ -120,15 +131,6 @@ public:
             )
             .unwrap();
         }
-        write!(
-            self.decl_header,
-            "\t}};
-
-\tinline {type_name}({type_name}::Value cpp_value);
-\tinline {type_name}({ctype} c_enum) : value(c_enum) {{}};
-"
-        )
-        .unwrap();
         write!(
             self.impl_header,
             "\t\tdefault:
@@ -141,14 +143,6 @@ public:
         for method in ty.methods.iter() {
             self.gen_method(id, method);
         }
-        write!(
-            self.decl_header,
-            "
-\tinline {ctype} AsFFI() const;
-\tinline static {type_name} FromFFI({ctype} c_enum);
-}};\n\n"
-        )
-        .unwrap();
         write!(
             self.impl_header,
             "

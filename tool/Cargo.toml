@@ -27,6 +27,7 @@ serde = { features = ["derive"], version = "1.0.130" }
 toml = "0.5.8"
 heck = "0.4" # conversion between naming convention
 displaydoc = "0.2"
+askama = "0.12"
 
 [dev-dependencies]
 insta = { version = "1.7.1", features = [ "backtrace" ] }

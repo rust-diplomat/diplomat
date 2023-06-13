@@ -1,6 +1,7 @@
+use askama::Template;
 use std::borrow::{Borrow, Cow};
 use std::collections::BTreeSet;
-use std::fmt;
+use std::fmt::{self, Write};
 
 static BASE_INCLUDES: &str = r#"
 #include <stdio.h>
@@ -12,7 +13,7 @@ static BASE_INCLUDES: &str = r#"
 #include "diplomat_runtime.hpp"
 "#;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Forward {
     Class(String),
     #[allow(dead_code)]
@@ -30,6 +31,16 @@ impl Borrow<str> for Forward {
             Forward::EnumStruct(s) => s,
         }
     }
+}
+
+#[derive(Template)]
+#[template(path = "cpp2/base.txt")]
+struct HeaderTemplate<'a> {
+    header_guard: Cow<'a, str>,
+    decl_include: Option<Cow<'a, str>>,
+    includes: Vec<Cow<'a, str>>,
+    forwards: Vec<Forward>,
+    body: Cow<'a, str>,
 }
 
 /// This abstraction allows us to build up headers piece by piece without needing
@@ -100,25 +111,6 @@ impl fmt::Write for Header {
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut forwards = String::new();
-        let mut includes = String::from(BASE_INCLUDES);
-        for i in &self.includes {
-            includes += &format!("#include \"{i}\"\n");
-        }
-        let decl_header_include: Cow<str> = match self.decl_include {
-            Some(ref v) => format!("\n#include \"{v}\"\n").into(),
-            None => "".into(),
-        };
-        if !self.forwards.is_empty() {
-            forwards.push('\n');
-        }
-        for f in self.forwards.iter() {
-            forwards += &match f {
-                Forward::Class(name) => format!("class {name};\n"),
-                Forward::Struct(name) => format!("struct {name};\n"),
-                Forward::EnumStruct(name) => format!("class {name};\n"),
-            };
-        }
         let header_guard = &self.path;
         let header_guard = header_guard.replace(".d.hpp", "_D_HPP");
         let header_guard = header_guard.replace(".hpp", "_HPP");
@@ -128,15 +120,22 @@ impl fmt::Display for Header {
             self.body.replace('\t', self.indent_str).into()
         };
 
-        write!(
-            f,
-            r#"#ifndef {header_guard}
-#define {header_guard}
-{decl_header_include}{includes}{forwards}
-
-{body}
-#endif // {header_guard}
-"#
-        )
+        HeaderTemplate {
+            header_guard: header_guard.into(),
+            decl_include: self
+                .decl_include
+                .as_ref()
+                .map(|s| Cow::Borrowed(s.as_str())),
+            includes: self
+                .includes
+                .iter()
+                .map(|s| Cow::Borrowed(s.as_str()))
+                .collect(),
+            forwards: self.forwards.iter().cloned().collect(),
+            body,
+        }
+        .render_into(f)
+        .unwrap();
+        f.write_char('\n')
     }
 }
