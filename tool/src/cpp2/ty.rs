@@ -221,21 +221,36 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
 
-        let field_decls = def.fields.iter().map(|field| self.gen_ty_decl(&field.ty, field.name.as_str()))
+        let field_decls = def
+            .fields
+            .iter()
+            .map(|field| self.gen_ty_decl(&field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
 
-        let field_impls = def.fields.iter().flat_map(|field| self.gen_cpp_to_c_for_type(&field.ty, self.cx.formatter.fmt_param_name(field.name.as_str())))
+        let cpp_to_c_fields = def
+            .fields
+            .iter()
+            .flat_map(|field| {
+                self.gen_cpp_to_c_for_type(
+                    &field.ty,
+                    self.cx.formatter.fmt_param_name(field.name.as_str()),
+                )
+            })
             .collect::<Vec<_>>();
 
-        let field_conversions = def.fields.iter().map(|field| {
-            let param_name = self.cx.formatter.fmt_param_name(field.name.as_str());
-            let field_getter = format!("c_struct.{param_name}");
-            let conversion = self.gen_c_to_cpp_for_type(&field.ty, field_getter.into());
-            ConversionInfo {
-                param_name,
-                conversion,
-            }
-        }).collect::<Vec<_>>();
+        let c_to_cpp_fields = def
+            .fields
+            .iter()
+            .map(|field| {
+                let var_name = self.cx.formatter.fmt_param_name(field.name.as_str());
+                let field_getter = format!("c_struct.{var_name}");
+                let expression = self.gen_c_to_cpp_for_type(&field.ty, field_getter.into());
+                NamedExpression {
+                    var_name,
+                    expression,
+                }
+            })
+            .collect::<Vec<_>>();
 
         let methods = def
             .methods
@@ -272,8 +287,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             // fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
-            fields: &'a [NamedExpression<'a>],
-            field_conversions: &'a [ConversionInfo<'a>],
+            cpp_to_c_fields: &'a [NamedExpression<'a>],
+            c_to_cpp_fields: &'a [NamedExpression<'a>],
             methods: &'a [MethodInfo<'a>],
         }
 
@@ -282,8 +297,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             // fmt: &self.cx.formatter,
             type_name: &type_name,
             ctype: &ctype,
-            fields: field_impls.as_slice(),
-            field_conversions: field_conversions.as_slice(),
+            cpp_to_c_fields: cpp_to_c_fields.as_slice(),
+            c_to_cpp_fields: c_to_cpp_fields.as_slice(),
             methods: methods.as_slice(),
         }
         .render_into(self.impl_header)
