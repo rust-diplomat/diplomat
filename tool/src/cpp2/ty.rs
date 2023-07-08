@@ -9,24 +9,6 @@ use diplomat_core::hir::{
 use std::borrow::Cow;
 use std::fmt::Write;
 
-#[derive(Template)]
-#[template(path = "cpp2/enum_decl_h.txt")]
-struct EnumDeclTemplate<'a> {
-    type_name: Cow<'a, str>,
-    ctype: Cow<'a, str>,
-    enum_variants: Vec<Cow<'a, str>>,
-}
-
-#[derive(Template)]
-#[template(path = "cpp2/enum_impl_h.txt")]
-struct EnumImplTemplate<'a> {
-    type_name: Cow<'a, str>,
-    ctype: Cow<'a, str>,
-    enum_variants: Vec<Cow<'a, str>>,
-    ty: &'a hir::EnumDef,
-    fmt: &'a Cpp2Formatter<'a>,
-}
-
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
         if ty.attrs().disable {
@@ -107,36 +89,46 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
+
+        #[derive(Template)]
+        #[template(path = "cpp2/enum_decl_h.txt")]
+        struct EnumDeclTemplate<'a> {
+            ty: &'a hir::EnumDef,
+            fmt: &'a Cpp2Formatter<'a>,
+            type_name: &'a str,
+            ctype: &'a str,
+        }
+
         EnumDeclTemplate {
-            type_name: type_name.clone(),
-            ctype: ctype.clone(),
-            enum_variants: ty
-                .variants
-                .iter()
-                .map(|v| self.cx.formatter.fmt_enum_variant(v))
-                .collect(),
+            ty,
+            fmt: &self.cx.formatter,
+            type_name: &type_name,
+            ctype: &ctype,
         }
         .render_into(self.decl_header)
         .unwrap();
-        self.decl_header.write_char('\n').unwrap();
-        self.decl_header.write_char('\n').unwrap();
-        self.decl_header
-            .includes
-            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
+
+        #[derive(Template)]
+        #[template(path = "cpp2/enum_impl_h.txt")]
+        struct EnumImplTemplate<'a> {
+            ty: &'a hir::EnumDef,
+            fmt: &'a Cpp2Formatter<'a>,
+            type_name: &'a str,
+            ctype: &'a str,
+        }
 
         EnumImplTemplate {
-            ty: &ty,
-            type_name: type_name.clone(),
-            ctype: ctype.clone(),
-            enum_variants: ty
-                .variants
-                .iter()
-                .map(|v| self.cx.formatter.fmt_enum_variant(v))
-                .collect(),
+            ty,
             fmt: &self.cx.formatter,
+            type_name: &type_name,
+            ctype: &ctype,
         }
         .render_into(self.impl_header)
         .unwrap();
+
+        self.decl_header
+            .includes
+            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
 
         for method in ty.methods.iter() {
             self.gen_method(id, method);

@@ -3,8 +3,8 @@ class {{type_name}} {
 
 public:
 	enum Value {
-{%- for enum_variant in enum_variants %}
-		{{enum_variant}},
+{%- for enum_variant in ty.variants %}
+		{{fmt.fmt_enum_variant(enum_variant)}},
 {%- endfor %}
 	};
 
@@ -14,3 +14,5 @@ public:
 	inline {{ctype}} AsFFI() const;
 	inline static {{type_name}} FromFFI({{ctype}} c_enum);
 };
+
+
