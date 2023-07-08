@@ -1,5 +1,6 @@
 use super::header::{Forward, Header};
 use super::Cpp2Context;
+use super::Cpp2Formatter;
 use askama::Template;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ParamSelf, ReturnType, SelfType, SuccessType, TyPosition, Type,
@@ -14,6 +15,16 @@ struct EnumDeclTemplate<'a> {
     type_name: Cow<'a, str>,
     ctype: Cow<'a, str>,
     enum_variants: Vec<Cow<'a, str>>,
+}
+
+#[derive(Template)]
+#[template(path = "cpp2/enum_impl_h.txt")]
+struct EnumImplTemplate<'a> {
+    type_name: Cow<'a, str>,
+    ctype: Cow<'a, str>,
+    enum_variants: Vec<Cow<'a, str>>,
+    ty: &'a hir::EnumDef,
+    fmt: &'a Cpp2Formatter<'a>,
 }
 
 impl<'tcx> super::Cpp2Context<'tcx> {
@@ -112,50 +123,24 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
-        write!(
-            self.impl_header,
-            "inline {type_name}::{type_name}({type_name}::Value cpp_value) {{
-\tswitch (cpp_value) {{
-"
-        )
-        .unwrap();
-        for variant in ty.variants.iter() {
-            let enum_variant = self.cx.formatter.fmt_enum_variant(variant);
-            let c_enum_variant = self.cx.formatter.fmt_c_enum_variant(&type_name, variant);
-            write!(
-                self.impl_header,
-                "\t\tcase {enum_variant}:
-\t\t\tvalue = {c_enum_variant};
-\t\t\tbreak;
-"
-            )
-            .unwrap();
+
+        EnumImplTemplate {
+            ty: &ty,
+            type_name: type_name.clone(),
+            ctype: ctype.clone(),
+            enum_variants: ty
+                .variants
+                .iter()
+                .map(|v| self.cx.formatter.fmt_enum_variant(v))
+                .collect(),
+            fmt: &self.cx.formatter,
         }
-        write!(
-            self.impl_header,
-            "\t\tdefault:
-\t\t\tabort();
-\t}}
-}}
-"
-        )
+        .render_into(self.impl_header)
         .unwrap();
+
         for method in ty.methods.iter() {
             self.gen_method(id, method);
         }
-        write!(
-            self.impl_header,
-            "
-inline {ctype} {type_name}::AsFFI() const {{
-\treturn value;
-}}
-
-inline {type_name} {type_name}::FromFFI({ctype} c_enum) {{
-\treturn {type_name}(c_enum);
-}}
-"
-        )
-        .unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
