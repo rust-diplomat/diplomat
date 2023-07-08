@@ -230,26 +230,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .flat_map(|field| {
-                self.gen_cpp_to_c_for_type(
-                    &field.ty,
-                    self.cx.formatter.fmt_param_name(field.name.as_str()),
-                )
-            })
+            .flat_map(|field| self.gen_cpp_to_c_for_field("", &field))
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
             .fields
             .iter()
-            .map(|field| {
-                let var_name = self.cx.formatter.fmt_param_name(field.name.as_str());
-                let field_getter = format!("c_struct.{var_name}");
-                let expression = self.gen_c_to_cpp_for_type(&field.ty, field_getter.into());
-                NamedExpression {
-                    var_name,
-                    expression,
-                }
-            })
+            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", &field))
             .collect::<Vec<_>>();
 
         let methods = def
@@ -330,7 +317,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
-            let conversions = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into());
+            let conversions = self.gen_cpp_to_c_for_type(
+                &param.ty,
+                "<UNUSED>".into(),
+                param.name.as_str().into(),
+            );
             cpp_to_c_params.extend(
                 conversions
                     .into_iter()
@@ -525,6 +516,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         }
     }
 
+    /// Generates one or two C++ expressions that convert from a C++ field to the corresponding C field.
+    ///
+    /// `cpp_struct_access` should be code for referencing a field of the C++ struct.
+    fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
+        &self,
+        cpp_struct_access: &str,
+        field: &'a hir::StructField<P>,
+    ) -> Vec<NamedExpression<'a>> {
+        let var_name = self.cx.formatter.fmt_param_name(field.name.as_str());
+        let field_getter = format!("{cpp_struct_access}{var_name}");
+        self.gen_cpp_to_c_for_type(
+            &field.ty,
+            var_name,
+            field_getter.into(),
+        )
+    }
+
     /// Generates one or two C++ expressions that convert from a C++ type to the corresponding C type.
     ///
     /// If the type is a slice, this function assumes that `{var_name}_data` and `{var_name}_size` resolve
@@ -532,49 +540,50 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
-        var_name: Cow<'a, str>,
+        c_name: Cow<'a, str>,
+        cpp_name: Cow<'a, str>,
     ) -> Vec<NamedExpression<'a>> {
         match *ty {
             Type::Primitive(..) => {
                 vec![NamedExpression {
-                    var_name: var_name.clone(),
-                    expression: var_name.clone(),
+                    var_name: c_name.clone(),
+                    expression: cpp_name.clone(),
                 }]
             }
             Type::Opaque(ref op) if op.is_optional() => {
                 vec![NamedExpression {
-                    var_name: var_name.clone(),
-                    expression: format!("{var_name} ? {var_name}->AsFFI() : nullptr").into(),
+                    var_name: c_name.clone(),
+                    expression: format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into(),
                 }]
             }
             Type::Opaque(..) => {
                 vec![NamedExpression {
-                    var_name: var_name.clone(),
-                    expression: format!("{var_name}.AsFFI()").into(),
+                    var_name: c_name.clone(),
+                    expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
             Type::Struct(..) => {
                 vec![NamedExpression {
-                    var_name: var_name.clone(),
-                    expression: format!("{var_name}.AsFFI()").into(),
+                    var_name: c_name.clone(),
+                    expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
             Type::Enum(..) => {
                 vec![NamedExpression {
-                    var_name: var_name.clone(),
-                    expression: format!("{var_name}.AsFFI()").into(),
+                    var_name: c_name.clone(),
+                    expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 // TODO: This needs to change if an abstraction other than std::string_view is used
                 vec![
                     NamedExpression {
-                        var_name: format!("{var_name}_data").into(),
-                        expression: format!("{var_name}.data()").into(),
+                        var_name: format!("{c_name}_data").into(),
+                        expression: format!("{cpp_name}.data()").into(),
                     },
                     NamedExpression {
-                        var_name: format!("{var_name}_size").into(),
-                        expression: format!("{var_name}.size()").into(),
+                        var_name: format!("{c_name}_size").into(),
+                        expression: format!("{cpp_name}.size()").into(),
                     },
                 ]
             }
@@ -582,12 +591,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 // TODO: This needs to change if an abstraction other than std::span is used
                 vec![
                     NamedExpression {
-                        var_name: format!("{var_name}_data").into(),
-                        expression: format!("{var_name}.data()").into(),
+                        var_name: format!("{c_name}_data").into(),
+                        expression: format!("{cpp_name}.data()").into(),
                     },
                     NamedExpression {
-                        var_name: format!("{var_name}_size").into(),
-                        expression: format!("{var_name}.size()").into(),
+                        var_name: format!("{c_name}_size").into(),
+                        expression: format!("{cpp_name}.size()").into(),
                     },
                 ]
             }
@@ -616,6 +625,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     format!("diplomat::result<{ok_type_name}, {err_type_name}>").into();
                 ret
             }
+        }
+    }
+
+    /// Generates a C++ expression that converts from a C field to the corresponding C++ field.
+    ///
+    /// `c_struct_access` should be code for referencing a field of the C struct.
+    fn gen_c_to_cpp_for_field<'a, P: TyPosition>(
+        &self,
+        c_struct_access: &str,
+        field: &'a hir::StructField<P>,
+    ) -> NamedExpression<'a> {
+        let var_name = self.cx.formatter.fmt_param_name(field.name.as_str());
+        let field_getter = format!("{c_struct_access}{var_name}");
+        let expression = self.gen_c_to_cpp_for_type(&field.ty, field_getter.into());
+        NamedExpression {
+            var_name,
+            expression,
         }
     }
 
