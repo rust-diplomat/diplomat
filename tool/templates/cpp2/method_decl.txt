@@ -1,0 +1,1 @@
+inline {{m.maybe_static}}{{m.return_ty}} {{m.method_name}}({{m.params}}){{m.qualifiers}};

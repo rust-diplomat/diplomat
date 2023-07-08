@@ -72,6 +72,21 @@ struct NamedType<'a> {
     type_name: Cow<'a, str>,
 }
 
+/// Everything needed for rendering a method
+struct MethodInfo<'a> {
+    maybe_static: Cow<'a, str>,
+    return_ty: Cow<'a, str>,
+    type_name: Cow<'a, str>,
+    method_name: Cow<'a, str>,
+    params: Cow<'a, str>,
+    qualifiers: Cow<'a, str>,
+    writeable_prefix: Cow<'a, str>,
+    return_prefix: Cow<'a, str>,
+    c_method_name: Cow<'a, str>,
+    c_params: Cow<'a, str>,
+    return_statement: Cow<'a, str>,
+}
+
 /// Context for generating a particular type's header
 pub struct TyGenContext<'ccx, 'tcx, 'header> {
     pub cx: &'ccx Cpp2Context<'tcx>,
@@ -90,6 +105,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
 
+        let methods = ty
+            .methods
+            .iter()
+            .flat_map(|method| self.gen_method_info(id, method))
+            .collect::<Vec<_>>();
+
         #[derive(Template)]
         #[template(path = "cpp2/enum_decl_h.txt")]
         struct EnumDeclTemplate<'a> {
@@ -97,6 +118,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
+            methods: &'a [MethodInfo<'a>],
         }
 
         EnumDeclTemplate {
@@ -104,6 +126,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &self.cx.formatter,
             type_name: &type_name,
             ctype: &ctype,
+            methods: methods.as_slice(),
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -115,6 +138,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
+            methods: &'a [MethodInfo<'a>],
         }
 
         EnumImplTemplate {
@@ -122,6 +146,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &self.cx.formatter,
             type_name: &type_name,
             ctype: &ctype,
+            methods: methods.as_slice(),
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -129,85 +154,61 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
-
-        for method in ty.methods.iter() {
-            self.gen_method(id, method);
-        }
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
-        let const_ptr = self
-            .cx
-            .formatter
-            .fmt_c_ptr(&type_name, Mutability::Immutable);
-        let mut_ptr = self.cx.formatter.fmt_c_ptr(&type_name, Mutability::Mutable);
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
-        let const_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Immutable);
-        let mut_cptr = self.cx.formatter.fmt_c_ptr(&ctype, Mutability::Mutable);
-        let const_ref = self
-            .cx
-            .formatter
-            .fmt_borrowed(&type_name, Mutability::Immutable);
-        let move_ref = self.cx.formatter.fmt_move_ref(&type_name);
+
+        let methods = ty
+            .methods
+            .iter()
+            .flat_map(|method| self.gen_method_info(id, method))
+            .collect::<Vec<_>>();
+
+        #[derive(Template)]
+        #[template(path = "cpp2/opaque_decl_h.txt")]
+        struct DeclTemplate<'a> {
+            // ty: &'a hir::OpaqueDef,
+            fmt: &'a Cpp2Formatter<'a>,
+            type_name: &'a str,
+            ctype: &'a str,
+            methods: &'a [MethodInfo<'a>],
+        }
+
+        DeclTemplate {
+            // ty,
+            fmt: &self.cx.formatter,
+            type_name: &type_name,
+            ctype: &ctype,
+            methods: methods.as_slice(),
+        }
+        .render_into(self.decl_header)
+        .unwrap();
+
+        #[derive(Template)]
+        #[template(path = "cpp2/opaque_impl_h.txt")]
+        struct ImplTemplate<'a> {
+            // ty: &'a hir::OpaqueDef,
+            fmt: &'a Cpp2Formatter<'a>,
+            type_name: &'a str,
+            ctype: &'a str,
+            methods: &'a [MethodInfo<'a>],
+        }
+
+        ImplTemplate {
+            // ty,
+            fmt: &self.cx.formatter,
+            type_name: &type_name,
+            ctype: &ctype,
+            methods: methods.as_slice(),
+        }
+        .render_into(self.impl_header)
+        .unwrap();
+
         self.decl_header
             .includes
             .insert(self.cx.formatter.fmt_c_decl_header_path(id));
-        write!(
-            self.decl_header,
-            "class {type_name} {{
-public:
-"
-        )
-        .unwrap();
-        for method in ty.methods.iter() {
-            self.gen_method(id, method);
-        }
-        write!(
-            self.decl_header,
-            "
-\tinline {const_cptr} AsFFI() const;
-\tinline {mut_cptr} AsFFI();
-\tinline static {const_ptr} FromFFI({const_cptr} ptr);
-\tinline static {mut_ptr} FromFFI({mut_cptr} ptr);
-\tinline static void operator delete(void* ptr);
-private:
-\t{type_name}() = delete;
-\t{type_name}({const_ref}) = delete;
-\t{type_name}({move_ref}) noexcept = delete;
-\t{type_name} operator=({const_ref}) = delete;
-\t{type_name} operator=({move_ref}) noexcept = delete;
-\tstatic void operator delete[](void*, size_t) = delete;
-}};
-
-"
-        )
-        .unwrap();
-        write!(
-            self.impl_header,
-            "inline {const_cptr} {type_name}::AsFFI() const {{
-\treturn reinterpret_cast<{const_cptr}>(this);
-}}
-
-inline {mut_cptr} {type_name}::AsFFI() {{
-\treturn reinterpret_cast<{mut_cptr}>(this);
-}}
-
-inline {const_ptr} {type_name}::FromFFI({const_cptr} ptr) {{
-\treturn reinterpret_cast<{const_ptr}>(ptr);
-}}
-
-inline {mut_ptr} {type_name}::FromFFI({mut_cptr} ptr) {{
-\treturn reinterpret_cast<{mut_ptr}>(ptr);
-}}
-
-inline void {type_name}::operator delete(void* ptr) {{
-\t{ctype}_destroy(reinterpret_cast<{mut_cptr}>(ptr));
-}}
-
-"
-        )
-        .unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
@@ -276,9 +277,13 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
         .unwrap();
     }
 
-    pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
+    fn gen_method_info(
+        &mut self,
+        id: TypeId,
+        method: &'tcx hir::Method,
+    ) -> Option<MethodInfo<'ccx>> {
         if method.attrs.disable {
-            return;
+            return None;
         }
         let _guard = self.cx.errors.set_context_method(
             self.cx.formatter.fmt_type_name_diagnostics(id),
@@ -370,6 +375,39 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
             }) if opaque_path.owner.mutability == Mutability::Immutable => " const",
             Some(_) => "",
             None => "",
+        };
+
+        Some(MethodInfo {
+            maybe_static: maybe_static.into(),
+            return_ty,
+            type_name,
+            method_name,
+            params: params.into(),
+            qualifiers: qualifiers.into(),
+            writeable_prefix: writeable_prefix.into(),
+            return_prefix: return_prefix.into(),
+            c_method_name,
+            c_params: c_params.into(),
+            return_statement,
+        })
+    }
+
+    pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
+        let MethodInfo {
+            maybe_static,
+            return_ty,
+            type_name,
+            method_name,
+            params,
+            qualifiers,
+            writeable_prefix,
+            return_prefix,
+            c_method_name,
+            c_params,
+            return_statement,
+        } = match self.gen_method_info(id, method) {
+            Some(x) => x,
+            None => return,
         };
 
         write!(

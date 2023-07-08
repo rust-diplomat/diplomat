@@ -1,1 +1,3 @@
-// TODO: METHOD
+inline {{m.return_ty}} {{m.type_name}}::{{m.method_name}}({{m.params}}){{m.qualifiers}} {
+	{{m.writeable_prefix}}{{m.return_prefix}}{{m.c_method_name}}({{m.c_params}});{{m.return_statement}}
+}
