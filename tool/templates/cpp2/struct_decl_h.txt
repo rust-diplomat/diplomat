@@ -1,0 +1,12 @@
+struct {{type_name}} {
+{%- for field in fields %}
+	{{field.type_name}} {{field.var_name}};
+{%- endfor %}
+{% for m in methods %}
+	{% include "method_decl.txt" %}
+{% endfor %}
+	inline {{ctype}} AsFFI() const;
+	inline static {{type_name}} FromFFI({{ctype}} c_struct);
+};
+
+

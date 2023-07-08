@@ -72,6 +72,12 @@ struct NamedType<'a> {
     type_name: Cow<'a, str>,
 }
 
+/// Everything needed for converting a C struct to a C++ struct
+struct ConversionInfo<'a> {
+    param_name: Cow<'a, str>,
+    conversion: Cow<'a, str>,
+}
+
 /// Everything needed for rendering a method
 struct MethodInfo<'a> {
     maybe_static: Cow<'a, str>,
@@ -214,66 +220,73 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_name(&type_name);
-        writeln!(self.decl_header, "struct {type_name} {{").unwrap();
-        for field in def.fields.iter() {
-            let NamedType {
-                var_name,
-                type_name,
-            } = self.gen_ty_decl(&field.ty, field.name.as_str());
-            writeln!(self.decl_header, "\t{type_name} {var_name};").unwrap();
-        }
-        for method in def.methods.iter() {
-            self.gen_method(id, method);
-        }
-        write!(
-            self.decl_header,
-            "
-\tinline {ctype} AsFFI() const;
-\tinline static {type_name} FromFFI({ctype} c_struct);
-}};\n\n"
-        )
-        .unwrap();
-        write!(
-            self.impl_header,
-            "
-inline {ctype} {type_name}::AsFFI() const {{
-\treturn {ctype} {{
-"
-        )
-        .unwrap();
-        for field in def.fields.iter() {
-            let param_name = self.cx.formatter.fmt_param_name(field.name.as_str());
-            for NamedExpression {
-                var_name,
-                expression,
-            } in self.gen_cpp_to_c_for_type(&field.ty, &param_name)
-            {
-                writeln!(self.impl_header, "\t\t.{var_name} = {expression},").unwrap();
-            }
-        }
-        write!(
-            self.impl_header,
-            "\t}};
-}}
 
-inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
-\treturn {type_name} {{
-"
-        )
-        .unwrap();
-        for field in def.fields.iter() {
+        let field_decls = def.fields.iter().map(|field| self.gen_ty_decl(&field.ty, field.name.as_str()))
+            .collect::<Vec<_>>();
+
+        let field_impls = def.fields.iter().flat_map(|field| self.gen_cpp_to_c_for_type(&field.ty, self.cx.formatter.fmt_param_name(field.name.as_str())))
+            .collect::<Vec<_>>();
+
+        let field_conversions = def.fields.iter().map(|field| {
             let param_name = self.cx.formatter.fmt_param_name(field.name.as_str());
             let field_getter = format!("c_struct.{param_name}");
-            let conversion = self.gen_c_to_cpp_for_type(&field.ty, &field_getter);
-            writeln!(self.impl_header, "\t\t.{param_name} = {conversion},").unwrap();
-        }
-        write!(
-            self.impl_header,
-            "\t}};
-}}
+            let conversion = self.gen_c_to_cpp_for_type(&field.ty, field_getter.into());
+            ConversionInfo {
+                param_name,
+                conversion,
+            }
+        }).collect::<Vec<_>>();
 
-"
-        )
+        let methods = def
+            .methods
+            .iter()
+            .flat_map(|method| self.gen_method_info(id, method))
+            .collect::<Vec<_>>();
+
+        #[derive(Template)]
+        #[template(path = "cpp2/struct_decl_h.txt")]
+        struct DeclTemplate<'a> {
+            // ty: &'a hir::OpaqueDef,
+            // fmt: &'a Cpp2Formatter<'a>,
+            type_name: &'a str,
+            ctype: &'a str,
+            fields: &'a [NamedType<'a>],
+            methods: &'a [MethodInfo<'a>],
+        }
+
+        DeclTemplate {
+            // ty,
+            // fmt: &self.cx.formatter,
+            type_name: &type_name,
+            ctype: &ctype,
+            fields: field_decls.as_slice(),
+            methods: methods.as_slice(),
+        }
+        .render_into(self.decl_header)
+        .unwrap();
+
+        #[derive(Template)]
+        #[template(path = "cpp2/struct_impl_h.txt")]
+        struct ImplTemplate<'a> {
+            // ty: &'a hir::OpaqueDef,
+            // fmt: &'a Cpp2Formatter<'a>,
+            type_name: &'a str,
+            ctype: &'a str,
+            fields: &'a [NamedExpression<'a>],
+            field_conversions: &'a [ConversionInfo<'a>],
+            methods: &'a [MethodInfo<'a>],
+        }
+
+        ImplTemplate {
+            // ty,
+            // fmt: &self.cx.formatter,
+            type_name: &type_name,
+            ctype: &ctype,
+            fields: field_impls.as_slice(),
+            field_conversions: field_conversions.as_slice(),
+            methods: methods.as_slice(),
+        }
+        .render_into(self.impl_header)
         .unwrap();
     }
 
@@ -302,7 +315,7 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
-            let conversions = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str());
+            let conversions = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into());
             cpp_to_c_params.extend(
                 conversions
                     .into_iter()
@@ -317,7 +330,7 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
         let return_ty = self.gen_cpp_return_type_name(&method.output);
 
         let return_statement: Cow<str> = self
-            .gen_c_to_cpp_for_return_type(&method.output, "result")
+            .gen_c_to_cpp_for_return_type(&method.output, "result".into())
             .map(|s| format!("\n\treturn {s};").into())
             .unwrap_or_else(|| "".into());
 
@@ -390,43 +403,6 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
             c_params: c_params.into(),
             return_statement,
         })
-    }
-
-    pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
-        let MethodInfo {
-            maybe_static,
-            return_ty,
-            type_name,
-            method_name,
-            params,
-            qualifiers,
-            writeable_prefix,
-            return_prefix,
-            c_method_name,
-            c_params,
-            return_statement,
-        } = match self.gen_method_info(id, method) {
-            Some(x) => x,
-            None => return,
-        };
-
-        write!(
-            self.decl_header,
-            "
-\tinline {maybe_static}{return_ty} {method_name}({params}){qualifiers};
-"
-        )
-        .unwrap();
-
-        write!(
-            self.impl_header,
-            "inline {return_ty} {type_name}::{method_name}({params}){qualifiers} {{
-\t{writeable_prefix}{return_prefix}{c_method_name}({c_params});{return_statement}
-}}
-
-"
-        )
-        .unwrap();
     }
 
     /// Generates C++ code for referencing a particular type with a given name.
@@ -541,36 +517,36 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
-        var_name: &'a str,
+        var_name: Cow<'a, str>,
     ) -> Vec<NamedExpression<'a>> {
         match *ty {
             Type::Primitive(..) => {
                 vec![NamedExpression {
-                    var_name: var_name.into(),
-                    expression: var_name.into(),
+                    var_name: var_name.clone(),
+                    expression: var_name.clone(),
                 }]
             }
             Type::Opaque(ref op) if op.is_optional() => {
                 vec![NamedExpression {
-                    var_name: var_name.into(),
+                    var_name: var_name.clone(),
                     expression: format!("{var_name} ? {var_name}->AsFFI() : nullptr").into(),
                 }]
             }
             Type::Opaque(..) => {
                 vec![NamedExpression {
-                    var_name: var_name.into(),
+                    var_name: var_name.clone(),
                     expression: format!("{var_name}.AsFFI()").into(),
                 }]
             }
             Type::Struct(..) => {
                 vec![NamedExpression {
-                    var_name: var_name.into(),
+                    var_name: var_name.clone(),
                     expression: format!("{var_name}.AsFFI()").into(),
                 }]
             }
             Type::Enum(..) => {
                 vec![NamedExpression {
-                    var_name: var_name.into(),
+                    var_name: var_name.clone(),
                     expression: format!("{var_name}.AsFFI()").into(),
                 }]
             }
@@ -635,7 +611,7 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     fn gen_c_to_cpp_for_type<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
-        var_name: &'a str,
+        var_name: Cow<'a, str>,
     ) -> Cow<'a, str> {
         match *ty {
             Type::Primitive(..) => var_name.into(),
@@ -696,7 +672,7 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
     fn gen_c_to_cpp_for_return_type<'a>(
         &mut self,
         result_ty: &ReturnType,
-        var_name: &'a str,
+        var_name: Cow<'a, str>,
     ) -> Option<Cow<'a, str>> {
         match *result_ty {
             ReturnType::Infallible(None) => None,
@@ -720,10 +696,10 @@ inline {type_name} {type_name}::FromFFI({ctype} c_struct) {{
                     // Note: the `output` variable is a string initialized in gen_method
                     Some(SuccessType::Writeable) => "std::move(output)".into(),
                     None => "".into(),
-                    Some(SuccessType::OutType(o)) => self.gen_c_to_cpp_for_type(o, &ok_path),
+                    Some(SuccessType::OutType(o)) => self.gen_c_to_cpp_for_type(o, ok_path.into()),
                 };
                 let err_conversion = match err {
-                    Some(o) => self.gen_c_to_cpp_for_type(o, &err_path),
+                    Some(o) => self.gen_c_to_cpp_for_type(o, err_path.into()),
                     None => "".into(),
                 };
                 Some(

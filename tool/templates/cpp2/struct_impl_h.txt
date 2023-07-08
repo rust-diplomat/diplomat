@@ -1,0 +1,22 @@
+{% for m in methods -%}
+{% include "method_impl.txt" %}
+
+{% endfor ~%}
+
+inline {{ctype}} {{type_name}}::AsFFI() const {
+	return {{ctype}} {
+{%- for field in fields %}
+		.{{field.var_name}} = {{field.expression}},
+{%- endfor %}
+	};
+}
+
+inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_struct) {
+	return {{type_name}} {
+{%- for field in field_conversions %}
+		.{{field.param_name}} = {{field.conversion}},
+{%- endfor %}
+	};
+}
+
+
