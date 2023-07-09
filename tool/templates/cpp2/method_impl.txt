@@ -1,3 +1,10 @@
-inline {{m.return_ty}} {{m.type_name}}::{{m.method_name}}({{m.params}}){{m.qualifiers}} {
-	{{m.writeable_prefix}}{{m.return_prefix}}{{m.c_method_name}}({{m.c_params}});{{m.return_statement}}
+inline {{m.return_ty}} {{m.type_name}}::{{m.method_name}}({% for param in m.param_decls %}
+	{%- if !loop.first %}, {% endif -%}
+	{{ param.type_name }} {{ param.var_name }}
+{%- endfor %}){{m.qualifiers}} {
+	{{m.writeable_prefix}}{{m.return_prefix}}{{m.c_method_name}}({% for param in m.cpp_to_c_params %}
+		{%- if !loop.first %},
+		{% endif -%}
+		{{ param }}
+	{%- endfor %});{{m.return_statement}}
 }

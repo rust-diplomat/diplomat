@@ -72,24 +72,18 @@ struct NamedType<'a> {
     type_name: Cow<'a, str>,
 }
 
-/// Everything needed for converting a C struct to a C++ struct
-struct ConversionInfo<'a> {
-    param_name: Cow<'a, str>,
-    conversion: Cow<'a, str>,
-}
-
 /// Everything needed for rendering a method
 struct MethodInfo<'a> {
     maybe_static: Cow<'a, str>,
     return_ty: Cow<'a, str>,
     type_name: Cow<'a, str>,
     method_name: Cow<'a, str>,
-    params: Cow<'a, str>,
     qualifiers: Cow<'a, str>,
     writeable_prefix: Cow<'a, str>,
     return_prefix: Cow<'a, str>,
     c_method_name: Cow<'a, str>,
-    c_params: Cow<'a, str>,
+    param_decls: Vec<NamedType<'a>>,
+    cpp_to_c_params: Vec<Cow<'a, str>>,
     return_statement: Cow<'a, str>,
 }
 
@@ -119,7 +113,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
         #[derive(Template)]
         #[template(path = "cpp2/enum_decl_h.txt")]
-        struct EnumDeclTemplate<'a> {
+        struct DeclTemplate<'a> {
             ty: &'a hir::EnumDef,
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
@@ -127,7 +121,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: &'a [MethodInfo<'a>],
         }
 
-        EnumDeclTemplate {
+        DeclTemplate {
             ty,
             fmt: &self.cx.formatter,
             type_name: &type_name,
@@ -139,7 +133,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
         #[derive(Template)]
         #[template(path = "cpp2/enum_impl_h.txt")]
-        struct EnumImplTemplate<'a> {
+        struct ImplTemplate<'a> {
             ty: &'a hir::EnumDef,
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
@@ -147,7 +141,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: &'a [MethodInfo<'a>],
         }
 
-        EnumImplTemplate {
+        ImplTemplate {
             ty,
             fmt: &self.cx.formatter,
             type_name: &type_name,
@@ -346,34 +340,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ""
         };
 
-        let mut params = String::new();
-        let mut first = true;
-        for NamedType {
-            var_name,
-            type_name,
-        } in param_decls
-        {
-            let comma = if first {
-                first = false;
-                ""
-            } else {
-                ", "
-            };
-            write!(&mut params, "{comma}{type_name} {var_name}").unwrap();
-        }
-
-        let mut c_params = String::new();
-        let mut first = true;
-        for conversion in cpp_to_c_params {
-            let comma = if first {
-                first = false;
-                ""
-            } else {
-                ",\n\t\t"
-            };
-            write!(&mut c_params, "{comma}{conversion}").unwrap();
-        }
-
         let writeable_prefix = if method.is_writeable() {
             "std::string output;
 \tcapi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
@@ -401,12 +367,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             return_ty,
             type_name,
             method_name,
-            params: params.into(),
             qualifiers: qualifiers.into(),
             writeable_prefix: writeable_prefix.into(),
             return_prefix: return_prefix.into(),
             c_method_name,
-            c_params: c_params.into(),
+            param_decls,
+            cpp_to_c_params,
             return_statement,
         })
     }
@@ -416,12 +382,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     where
         'ccx: 'a,
     {
-        let param_name = self.cx.formatter.fmt_param_name(var_name);
-        let ty = self.gen_type_name(ty);
+        let var_name = self.cx.formatter.fmt_param_name(var_name);
+        let type_name = self.gen_type_name(ty);
 
         NamedType {
-            var_name: param_name,
-            type_name: ty,
+            var_name,
+            type_name,
         }
     }
 
