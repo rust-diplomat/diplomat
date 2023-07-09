@@ -222,13 +222,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .flat_map(|field| self.gen_cpp_to_c_for_field("", &field))
+            .flat_map(|field| self.gen_cpp_to_c_for_field("", field))
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", &field))
+            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", field))
             .collect::<Vec<_>>();
 
         let methods = def
@@ -597,7 +597,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         var_name: Cow<'a, str>,
     ) -> Cow<'a, str> {
         match *ty {
-            Type::Primitive(..) => var_name.into(),
+            Type::Primitive(..) => var_name,
             Type::Opaque(ref op) if op.owner.is_owned() => {
                 let id = op.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(id);
