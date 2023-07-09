@@ -1,4 +1,11 @@
-inline{% for qualifier in m.pre_qualifiers %} {{qualifier}}{% endfor %} {{m.return_ty}} {{m.method_name}}({% for param in m.param_decls %}
-	{%- if !loop.first %}, {% endif -%}
-	{{ param.type_name }} {{ param.var_name }}
-{%- endfor %}){% for qualifier in m.post_qualifiers %} {{qualifier}}{% endfor %};
+inline {##}
+{%- for qualifier in m.pre_qualifiers %}{{qualifier}} {% endfor -%}
+{{ m.return_ty }} {##}
+{{- m.method_name -}}
+(
+	{%- for param in m.param_decls %}
+		{%- if !loop.first %}, {% endif -%}
+		{{ param.type_name }} {{ param.var_name }}
+	{%- endfor -%}
+)
+{%- for qualifier in m.post_qualifiers %} {{qualifier}}{% endfor %};

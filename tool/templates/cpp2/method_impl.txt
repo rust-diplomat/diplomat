@@ -1,10 +1,29 @@
-inline {{m.return_ty}} {{m.type_name}}::{{m.method_name}}({% for param in m.param_decls %}
-	{%- if !loop.first %}, {% endif -%}
-	{{ param.type_name }} {{ param.var_name }}
-{%- endfor %}){% for qualifier in m.post_qualifiers %} {{qualifier}}{% endfor %} {
-	{{m.writeable_prefix}}{{m.return_prefix}}{{m.c_method_name}}({% for param in m.cpp_to_c_params %}
+inline {##}
+{{- m.return_ty }} {##}
+{{- m.type_name }}::{{ m.method_name -}}
+(
+	{%- for param in m.param_decls %}
+		{%- if !loop.first %}, {% endif -%}
+		{{ param.type_name }} {{ param.var_name }}
+	{%- endfor -%}
+) {#+ (preserve space) -#}
+{% for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
+{
+	{%- if m.method.is_writeable() %}
+	std::string output;
+	capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+	{%- endif %}
+	{% if m.method.output.returns_value() -%}
+	auto result = {##}
+	{%- endif -%}
+	{{ m.c_method_name }}(
+		{%- for param in m.cpp_to_c_params %}
 		{%- if !loop.first %},
 		{% endif -%}
 		{{ param }}
-	{%- endfor %});{{m.return_statement}}
+		{%- endfor -%}
+	);
+	{%- if !m.return_statement.is_empty() %}
+	return {{m.return_statement}};
+	{%- endif %}
 }

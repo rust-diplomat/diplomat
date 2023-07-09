@@ -74,13 +74,12 @@ struct NamedType<'a> {
 
 /// Everything needed for rendering a method
 struct MethodInfo<'a> {
+    method: &'a hir::Method,
     return_ty: Cow<'a, str>,
     type_name: Cow<'a, str>,
     method_name: Cow<'a, str>,
     pre_qualifiers: Vec<Cow<'a, str>>,
     post_qualifiers: Vec<Cow<'a, str>>,
-    writeable_prefix: Cow<'a, str>,
-    return_prefix: Cow<'a, str>,
     c_method_name: Cow<'a, str>,
     param_decls: Vec<NamedType<'a>>,
     cpp_to_c_params: Vec<Cow<'a, str>>,
@@ -331,22 +330,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
         let return_statement: Cow<str> = self
             .gen_c_to_cpp_for_return_type(&method.output, "result".into())
-            .map(|s| format!("\n\treturn {s};").into())
             .unwrap_or_else(|| "".into());
-
-        let return_prefix = if method.output.returns_value() {
-            "auto result = "
-        } else {
-            ""
-        };
-
-        let writeable_prefix = if method.is_writeable() {
-            "std::string output;
-\tcapi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
-\t"
-        } else {
-            ""
-        };
 
         let pre_qualifiers = if method.param_self.is_none() {
             vec!["static".into()]
@@ -361,13 +345,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         };
 
         Some(MethodInfo {
+            method,
             return_ty,
             type_name,
             method_name,
             pre_qualifiers,
             post_qualifiers,
-            writeable_prefix: writeable_prefix.into(),
-            return_prefix: return_prefix.into(),
             c_method_name,
             param_decls,
             cpp_to_c_params,
