@@ -9,8 +9,9 @@ public:
 	};
 
 {%- for m in methods %}
+
 	{% include "method_decl.txt" %}
-{% endfor %}
+{%- endfor %}
 
 	inline {{type_name}}({{type_name}}::Value cpp_value);
 	inline {{type_name}}({{ctype}} c_enum) : value(c_enum) {};

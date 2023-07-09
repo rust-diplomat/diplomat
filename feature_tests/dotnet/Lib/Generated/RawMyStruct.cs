@@ -33,4 +33,7 @@ public partial struct MyStruct
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_new", ExactSpelling = true)]
     public static unsafe extern MyStruct New();
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_into_a", ExactSpelling = true)]
+    public static unsafe extern byte IntoA(MyStruct self);
 }

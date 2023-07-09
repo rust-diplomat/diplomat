@@ -1,3 +1,4 @@
+import { i8 } from "./diplomat-runtime"
 
 /**
  */

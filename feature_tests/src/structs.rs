@@ -48,6 +48,12 @@ pub mod ffi {
         }
     }
 
+    impl MyEnum {
+        pub fn into_value(self) -> i8 {
+            self as i8
+        }
+    }
+
     impl MyStruct {
         pub fn new() -> MyStruct {
             MyStruct {
@@ -59,6 +65,10 @@ pub mod ffi {
                 f: '餐',
                 g: MyEnum::B,
             }
+        }
+
+        pub fn into_a(self) -> u8 {
+            self.a
         }
 
         fn assert_value(&self) {

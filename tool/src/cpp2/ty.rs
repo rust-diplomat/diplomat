@@ -477,8 +477,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     fn gen_cpp_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
-            SelfType::Struct(..) => todo!(),
-            SelfType::Enum(..) => todo!(),
+            SelfType::Struct(..) => "this->AsFFI()".into(),
+            SelfType::Enum(..) => "this->AsFFI()".into(),
         }
     }
 

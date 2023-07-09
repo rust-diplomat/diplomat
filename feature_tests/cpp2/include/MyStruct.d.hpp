@@ -25,6 +25,8 @@ struct MyStruct {
 
   inline static MyStruct new_();
 
+  inline uint8_t into_a();
+
   inline capi::MyStruct AsFFI() const;
   inline static MyStruct FromFFI(capi::MyStruct c_struct);
 };

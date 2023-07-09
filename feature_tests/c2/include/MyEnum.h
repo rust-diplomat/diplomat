@@ -15,7 +15,7 @@ extern "C" {
 #endif // __cplusplus
 
 
-// No Content
+int8_t MyEnum_into_value(MyEnum self);
 
 
 #ifdef __cplusplus

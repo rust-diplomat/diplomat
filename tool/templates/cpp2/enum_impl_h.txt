@@ -12,8 +12,9 @@ inline {{type_name}}::{{type_name}}({{type_name}}::Value cpp_value) {
 
 
 {%- for m in methods %}
+
 {% include "method_impl.txt" %}
-{% endfor %}
+{%- endfor %}
 
 inline {{ctype}} {{type_name}}::AsFFI() const {
 	return value;

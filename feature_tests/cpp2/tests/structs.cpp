@@ -17,4 +17,7 @@ int main(int argc, char *argv[]) {
     simple_assert_eq("struct values", s.e, 5991);
     simple_assert_eq("struct values", (uint32_t)s.f, (uint32_t)U'餐');
     simple_assert_eq("struct values", (uint32_t)s.g.AsFFI(), (uint32_t)MyEnum(MyEnum::B).AsFFI());
+
+    simple_assert_eq("enum fn", s.g.into_value(), -1);
+    simple_assert_eq("struct fn", s.into_a(), 17);
 }

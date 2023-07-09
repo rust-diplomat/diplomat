@@ -24,6 +24,8 @@ public:
     F,
   };
 
+  inline int8_t into_value();
+
   inline MyEnum(MyEnum::Value cpp_value);
   inline MyEnum(capi::MyEnum c_enum) : value(c_enum) {};
 

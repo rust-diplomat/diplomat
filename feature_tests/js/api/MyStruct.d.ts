@@ -15,4 +15,8 @@ export class MyStruct {
   /**
    */
   static new(): MyStruct;
+
+  /**
+   */
+  into_a(): u8;
 }
