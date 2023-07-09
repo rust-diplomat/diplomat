@@ -75,7 +75,7 @@ impl SelfType {
     pub fn is_immutably_borrowed(&self) -> bool {
         match self {
             SelfType::Opaque(opaque_path) => opaque_path.owner.mutability == Mutability::Immutable,
-            _ => false
+            _ => false,
         }
     }
 }

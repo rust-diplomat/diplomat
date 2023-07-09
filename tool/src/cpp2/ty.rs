@@ -3,11 +3,10 @@ use super::Cpp2Context;
 use super::Cpp2Formatter;
 use askama::Template;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ParamSelf, ReturnType, SelfType, SuccessType, TyPosition, Type,
-    TypeDef, TypeId,
+    self, Mutability, OpaqueOwner, ReturnType, SelfType, SuccessType, TyPosition, Type, TypeDef,
+    TypeId,
 };
 use std::borrow::Cow;
-use std::fmt::Write;
 
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
@@ -111,7 +110,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "cpp2/enum_decl_h.txt")]
+        #[template(path = "cpp2/enum_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
             ty: &'a hir::EnumDef,
             fmt: &'a Cpp2Formatter<'a>,
@@ -131,7 +130,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         .unwrap();
 
         #[derive(Template)]
-        #[template(path = "cpp2/enum_impl_h.txt")]
+        #[template(path = "cpp2/enum_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             ty: &'a hir::EnumDef,
             fmt: &'a Cpp2Formatter<'a>,
@@ -166,7 +165,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "cpp2/opaque_decl_h.txt")]
+        #[template(path = "cpp2/opaque_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             fmt: &'a Cpp2Formatter<'a>,
@@ -186,7 +185,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         .unwrap();
 
         #[derive(Template)]
-        #[template(path = "cpp2/opaque_impl_h.txt")]
+        #[template(path = "cpp2/opaque_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             fmt: &'a Cpp2Formatter<'a>,
@@ -239,7 +238,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "cpp2/struct_decl_h.txt")]
+        #[template(path = "cpp2/struct_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             // fmt: &'a Cpp2Formatter<'a>,
@@ -261,7 +260,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         .unwrap();
 
         #[derive(Template)]
-        #[template(path = "cpp2/struct_impl_h.txt")]
+        #[template(path = "cpp2/struct_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             // fmt: &'a Cpp2Formatter<'a>,
@@ -473,11 +472,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     ) -> Vec<NamedExpression<'a>> {
         let var_name = self.cx.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        self.gen_cpp_to_c_for_type(
-            &field.ty,
-            var_name,
-            field_getter.into(),
-        )
+        self.gen_cpp_to_c_for_type(&field.ty, var_name, field_getter.into())
     }
 
     /// Generates one or two C++ expressions that convert from a C++ type to the corresponding C type.

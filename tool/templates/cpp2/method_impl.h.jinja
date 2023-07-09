@@ -6,8 +6,8 @@ inline {##}
 		{%- if !loop.first %}, {% endif -%}
 		{{ param.type_name }} {{ param.var_name }}
 	{%- endfor -%}
-) {#+ (preserve space) -#}
-{% for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
+) {##}
+{%- for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
 {
 	{%- if m.method.is_writeable() %}
 	std::string output;

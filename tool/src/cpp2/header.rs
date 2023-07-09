@@ -3,16 +3,6 @@ use std::borrow::{Borrow, Cow};
 use std::collections::BTreeSet;
 use std::fmt::{self, Write};
 
-static BASE_INCLUDES: &str = r#"
-#include <stdio.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
-#include <memory>
-#include <optional>
-#include "diplomat_runtime.hpp"
-"#;
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Forward {
     Class(String),
@@ -34,7 +24,7 @@ impl Borrow<str> for Forward {
 }
 
 #[derive(Template)]
-#[template(path = "cpp2/base.txt")]
+#[template(path = "cpp2/base.h.jinja", escape = "none")]
 struct HeaderTemplate<'a> {
     header_guard: Cow<'a, str>,
     decl_include: Option<Cow<'a, str>>,

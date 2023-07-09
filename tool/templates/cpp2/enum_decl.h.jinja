@@ -10,7 +10,7 @@ public:
 
 {%- for m in methods %}
 
-	{% include "method_decl.txt" %}
+	{% include "method_decl.h.jinja" %}
 {%- endfor %}
 
 	inline {{type_name}}({{type_name}}::Value cpp_value);

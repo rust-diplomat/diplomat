@@ -6,7 +6,7 @@
 {% let move_ref = fmt.fmt_move_ref(type_name) -%}
 
 {% for m in methods -%}
-{% include "method_impl.txt" %}
+{% include "method_impl.h.jinja" %}
 
 {% endfor -%}
 
