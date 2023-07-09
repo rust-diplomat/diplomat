@@ -74,11 +74,11 @@ struct NamedType<'a> {
 
 /// Everything needed for rendering a method
 struct MethodInfo<'a> {
-    maybe_static: Cow<'a, str>,
     return_ty: Cow<'a, str>,
     type_name: Cow<'a, str>,
     method_name: Cow<'a, str>,
-    qualifiers: Cow<'a, str>,
+    pre_qualifiers: Vec<Cow<'a, str>>,
+    post_qualifiers: Vec<Cow<'a, str>>,
     writeable_prefix: Cow<'a, str>,
     return_prefix: Cow<'a, str>,
     c_method_name: Cow<'a, str>,
@@ -348,26 +348,24 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ""
         };
 
-        let maybe_static = if method.param_self.is_none() {
-            "static "
+        let pre_qualifiers = if method.param_self.is_none() {
+            vec!["static".into()]
         } else {
-            ""
+            vec![]
         };
 
-        let qualifiers = match &method.param_self {
-            Some(ParamSelf {
-                ty: SelfType::Opaque(opaque_path),
-            }) if opaque_path.owner.mutability == Mutability::Immutable => " const",
-            Some(_) => "",
-            None => "",
+        let post_qualifiers = match &method.param_self {
+            Some(param_self) if param_self.ty.is_immutably_borrowed() => vec!["const".into()],
+            Some(_) => vec![],
+            None => vec![],
         };
 
         Some(MethodInfo {
-            maybe_static: maybe_static.into(),
             return_ty,
             type_name,
             method_name,
-            qualifiers: qualifiers.into(),
+            pre_qualifiers,
+            post_qualifiers,
             writeable_prefix: writeable_prefix.into(),
             return_prefix: return_prefix.into(),
             c_method_name,

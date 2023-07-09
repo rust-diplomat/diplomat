@@ -68,6 +68,18 @@ impl Type {
     }
 }
 
+impl SelfType {
+    /// Returns whether the self parameter is borrowed immutably.
+    ///
+    /// Curently this can only happen with opaque types.
+    pub fn is_immutably_borrowed(&self) -> bool {
+        match self {
+            SelfType::Opaque(opaque_path) => opaque_path.owner.mutability == Mutability::Immutable,
+            _ => false
+        }
+    }
+}
+
 impl Slice {
     /// Returns the [`TypeLifetime`] contained in either the `Str` or `Primitive`
     /// variant.
