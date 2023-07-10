@@ -65,24 +65,40 @@ struct NamedExpression<'a> {
     expression: Cow<'a, str>,
 }
 
+/// An expression associated with a variable name having the given suffix.
+struct PartiallyNamedExpression<'a> {
+    suffix: Cow<'a, str>,
+    expression: Cow<'a, str>,
+}
+
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
 struct NamedType<'a> {
     var_name: Cow<'a, str>,
     type_name: Cow<'a, str>,
 }
 
-/// Everything needed for rendering a method
+/// Everything needed for rendering a method.
 struct MethodInfo<'a> {
+    /// HIR of the method being rendered
     method: &'a hir::Method,
+    /// The C++ return type
     return_ty: Cow<'a, str>,
-    type_name: Cow<'a, str>,
+    /// The C++ method name
     method_name: Cow<'a, str>,
-    pre_qualifiers: Vec<Cow<'a, str>>,
-    post_qualifiers: Vec<Cow<'a, str>>,
+    /// The C method name
     c_method_name: Cow<'a, str>,
+    /// Qualifiers for the function that come before the declaration (like "static")
+    pre_qualifiers: Vec<Cow<'a, str>>,
+    /// Qualifiers for the function that come after the declaration (like "const")
+    post_qualifiers: Vec<Cow<'a, str>>,
+    /// Type declarations for the C++ parameters
     param_decls: Vec<NamedType<'a>>,
+    /// C++ conversion code for each parameter of the C function
     cpp_to_c_params: Vec<Cow<'a, str>>,
-    return_statement: Cow<'a, str>,
+    /// If the function has a return value, the C++ code for the conversion. Assumes that
+    /// the C function return value is saved to a variable named `result` or that the
+    /// writeable, if present, is saved to a variable named `output`.
+    c_to_cpp_return_expression: Option<Cow<'a, str>>,
 }
 
 /// Context for generating a particular type's header
@@ -296,7 +312,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             self.cx.formatter.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
-        let type_name = self.cx.formatter.fmt_type_name(id);
         let method_name = self.cx.formatter.fmt_method_name(method);
         let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);
         let mut param_decls = Vec::new();
@@ -309,15 +324,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
-            let conversions = self.gen_cpp_to_c_for_type(
-                &param.ty,
-                "<UNUSED>".into(),
-                param.name.as_str().into(),
-            );
+            let conversions = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into());
             cpp_to_c_params.extend(
                 conversions
                     .into_iter()
-                    .map(|named_expression| named_expression.expression),
+                    .map(|PartiallyNamedExpression { expression, .. }| expression),
             );
         }
 
@@ -327,9 +338,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
         let return_ty = self.gen_cpp_return_type_name(&method.output);
 
-        let return_statement: Cow<str> = self
-            .gen_c_to_cpp_for_return_type(&method.output, "result".into())
-            .unwrap_or_else(|| "".into());
+        let c_to_cpp_return_expression: Option<Cow<str>> =
+            self.gen_c_to_cpp_for_return_type(&method.output, "result".into());
 
         let pre_qualifiers = if method.param_self.is_none() {
             vec!["static".into()]
@@ -346,14 +356,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         Some(MethodInfo {
             method,
             return_ty,
-            type_name,
             method_name,
+            c_method_name,
             pre_qualifiers,
             post_qualifiers,
-            c_method_name,
             param_decls,
             cpp_to_c_params,
-            return_statement,
+            c_to_cpp_return_expression,
         })
     }
 
@@ -464,6 +473,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     /// Generates one or two C++ expressions that convert from a C++ field to the corresponding C field.
     ///
+    /// Returns `NamedExpression`s whose `var_name` corresponds to the field of the C struct.
+    ///
     /// `cpp_struct_access` should be code for referencing a field of the C++ struct.
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
         &self,
@@ -472,59 +483,66 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     ) -> Vec<NamedExpression<'a>> {
         let var_name = self.cx.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        self.gen_cpp_to_c_for_type(&field.ty, var_name, field_getter.into())
+        self.gen_cpp_to_c_for_type(&field.ty, field_getter.into())
+            .into_iter()
+            .map(
+                |PartiallyNamedExpression { suffix, expression }| NamedExpression {
+                    var_name: format!("{var_name}{suffix}").into(),
+                    expression,
+                },
+            )
+            .collect()
     }
 
     /// Generates one or two C++ expressions that convert from a C++ type to the corresponding C type.
     ///
-    /// If the type is a slice, this function assumes that `{var_name}_data` and `{var_name}_size` resolve
-    /// to valid expressions referencing the two different C variables for the pointer and the length.
+    /// Returns `PartiallyNamedExpression`s whose `suffix` is either empty, `_data`, or `_size` for
+    /// referencing fields of the C struct.
     fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
-        c_name: Cow<'a, str>,
         cpp_name: Cow<'a, str>,
-    ) -> Vec<NamedExpression<'a>> {
+    ) -> Vec<PartiallyNamedExpression<'a>> {
         match *ty {
             Type::Primitive(..) => {
-                vec![NamedExpression {
-                    var_name: c_name.clone(),
+                vec![PartiallyNamedExpression {
+                    suffix: "".into(),
                     expression: cpp_name.clone(),
                 }]
             }
             Type::Opaque(ref op) if op.is_optional() => {
-                vec![NamedExpression {
-                    var_name: c_name.clone(),
+                vec![PartiallyNamedExpression {
+                    suffix: "".into(),
                     expression: format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into(),
                 }]
             }
             Type::Opaque(..) => {
-                vec![NamedExpression {
-                    var_name: c_name.clone(),
+                vec![PartiallyNamedExpression {
+                    suffix: "".into(),
                     expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
             Type::Struct(..) => {
-                vec![NamedExpression {
-                    var_name: c_name.clone(),
+                vec![PartiallyNamedExpression {
+                    suffix: "".into(),
                     expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
             Type::Enum(..) => {
-                vec![NamedExpression {
-                    var_name: c_name.clone(),
+                vec![PartiallyNamedExpression {
+                    suffix: "".into(),
                     expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 // TODO: This needs to change if an abstraction other than std::string_view is used
                 vec![
-                    NamedExpression {
-                        var_name: format!("{c_name}_data").into(),
+                    PartiallyNamedExpression {
+                        suffix: "_data".into(),
                         expression: format!("{cpp_name}.data()").into(),
                     },
-                    NamedExpression {
-                        var_name: format!("{c_name}_size").into(),
+                    PartiallyNamedExpression {
+                        suffix: "_size".into(),
                         expression: format!("{cpp_name}.size()").into(),
                     },
                 ]
@@ -532,12 +550,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Slice(hir::Slice::Primitive(..)) => {
                 // TODO: This needs to change if an abstraction other than std::span is used
                 vec![
-                    NamedExpression {
-                        var_name: format!("{c_name}_data").into(),
+                    PartiallyNamedExpression {
+                        suffix: "_data".into(),
                         expression: format!("{cpp_name}.data()").into(),
                     },
-                    NamedExpression {
-                        var_name: format!("{c_name}_size").into(),
+                    PartiallyNamedExpression {
+                        suffix: "_size".into(),
                         expression: format!("{cpp_name}.size()").into(),
                     },
                 ]
@@ -649,9 +667,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     /// Generates a C++ expression that converts from a C return type to the corresponding C++ return type.
     ///
     /// If the type is `Writeable`, this function assumes that there is a variable named `output` in scope.
-    ///
-    /// If the type is a slice, this function assumes that `{var_name}_data` and `{var_name}_size` resolve
-    /// to valid expressions referencing the two different C variables for the pointer and the length.
     fn gen_c_to_cpp_for_return_type<'a>(
         &mut self,
         result_ty: &ReturnType,
@@ -676,7 +691,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     None => "std::monostate".into(),
                 };
                 let ok_conversion = match ok {
-                    // Note: the `output` variable is a string initialized in gen_method
+                    // Note: the `output` variable is a string initialized in the template
                     Some(SuccessType::Writeable) => "std::move(output)".into(),
                     None => "".into(),
                     Some(SuccessType::OutType(o)) => self.gen_c_to_cpp_for_type(o, ok_path.into()),

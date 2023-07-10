@@ -1,6 +1,6 @@
 inline {##}
 {{- m.return_ty }} {##}
-{{- m.type_name }}::{{ m.method_name -}}
+{{- type_name }}::{{ m.method_name -}}
 (
 	{%- for param in m.param_decls %}
 		{%- if !loop.first %}, {% endif -%}
@@ -23,7 +23,9 @@ inline {##}
 		{{ param }}
 		{%- endfor -%}
 	);
-	{%- if !m.return_statement.is_empty() %}
-	return {{m.return_statement}};
-	{%- endif %}
+	{%- match m.c_to_cpp_return_expression %}
+	{%- when Some with (statement) %}
+	return {{ statement }};
+	{%- when None %}
+	{%- endmatch %}
 }
