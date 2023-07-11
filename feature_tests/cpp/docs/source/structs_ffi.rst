@@ -15,6 +15,9 @@
 
     .. cpp:enumerator:: F
 
+    .. cpp:function:: int8_t into_value()
+
+
 .. cpp:struct:: MyStruct
 
     .. cpp:member:: uint8_t a
@@ -32,6 +35,9 @@
     .. cpp:member:: MyEnum g
 
     .. cpp:function:: static MyStruct new_()
+
+
+    .. cpp:function:: uint8_t into_a()
 
 
 .. cpp:class:: Opaque

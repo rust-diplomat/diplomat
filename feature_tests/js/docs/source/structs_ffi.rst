@@ -3,6 +3,8 @@
 
 .. js:class:: MyEnum
 
+    .. js:method:: into_value()
+
 .. js:class:: MyStruct
 
     .. js:attribute:: a
@@ -20,6 +22,8 @@
     .. js:attribute:: g
 
     .. js:function:: new()
+
+    .. js:method:: into_a()
 
 .. js:class:: Opaque
 

@@ -161,6 +161,19 @@ public partial class MyStruct
         }
     }
 
+    public byte IntoA()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("MyStruct");
+            }
+            byte retVal = Raw.MyStruct.IntoA(_inner);
+            return retVal;
+        }
+    }
+
     /// <summary>
     /// Returns a copy of the underlying raw representation.
     /// </summary>

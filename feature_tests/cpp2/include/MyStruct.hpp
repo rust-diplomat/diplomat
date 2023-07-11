@@ -19,6 +19,11 @@ inline MyStruct MyStruct::new_() {
   return MyStruct::FromFFI(result);
 }
 
+inline uint8_t MyStruct::into_a() {
+  auto result = capi::MyStruct_into_a(this->AsFFI());
+  return result;
+}
+
 
 inline capi::MyStruct MyStruct::AsFFI() const {
   return capi::MyStruct {

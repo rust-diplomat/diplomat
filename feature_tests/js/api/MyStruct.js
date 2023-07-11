@@ -22,4 +22,15 @@ export class MyStruct {
       return out;
     })();
   }
+
+  into_a() {
+    const field_a_this = this["a"];
+    const field_b_this = this["b"];
+    const field_c_this = this["c"];
+    const field_d_this = this["d"];
+    const field_e_this = this["e"];
+    const field_f_this = this["f"];
+    const field_g_this = this["g"];
+    return wasm.MyStruct_into_a(field_a_this, field_b_this, field_c_this, field_d_this, field_e_this, diplomatRuntime.extractCodePoint(field_f_this, 'field_f_this'), MyEnum_js_to_rust[field_g_this]);
+  }
 }

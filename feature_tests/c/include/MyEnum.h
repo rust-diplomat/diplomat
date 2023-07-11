@@ -26,6 +26,7 @@ namespace capi {
 extern "C" {
 #endif
 
+int8_t MyEnum_into_value(MyEnum self);
 void MyEnum_destroy(MyEnum* self);
 
 #ifdef __cplusplus

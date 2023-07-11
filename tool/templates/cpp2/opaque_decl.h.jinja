@@ -1,0 +1,27 @@
+{% let const_ptr = fmt.fmt_c_ptr(type_name, Mutability::Immutable) -%}
+{% let mut_ptr = fmt.fmt_c_ptr(type_name, Mutability::Mutable) -%}
+{% let const_cptr = fmt.fmt_c_ptr(ctype, Mutability::Immutable) -%}
+{% let mut_cptr = fmt.fmt_c_ptr(ctype, Mutability::Mutable) -%}
+{% let const_ref = fmt.fmt_borrowed(type_name, Mutability::Immutable) -%}
+{% let move_ref = fmt.fmt_move_ref(type_name) -%}
+
+class {{type_name}} {
+public:
+{% for m in methods %}
+	{% include "method_decl.h.jinja" %}
+{% endfor %}
+	inline {{const_cptr}} AsFFI() const;
+	inline {{mut_cptr}} AsFFI();
+	inline static {{const_ptr}} FromFFI({{const_cptr}} ptr);
+	inline static {{mut_ptr}} FromFFI({{mut_cptr}} ptr);
+	inline static void operator delete(void* ptr);
+private:
+	{{type_name}}() = delete;
+	{{type_name}}({{const_ref}}) = delete;
+	{{type_name}}({{move_ref}}) noexcept = delete;
+	{{type_name}} operator=({{const_ref}}) = delete;
+	{{type_name}} operator=({{move_ref}}) noexcept = delete;
+	static void operator delete[](void*, size_t) = delete;
+};
+
+

@@ -1,0 +1,26 @@
+inline {{type_name}}::{{type_name}}({{type_name}}::Value cpp_value) {
+	switch (cpp_value) {
+{%- for enum_variant in ty.variants %}
+		case {{fmt.fmt_enum_variant(enum_variant)}}:
+			value = {{fmt.fmt_c_enum_variant(type_name, enum_variant)}};
+			break;
+{%- endfor %}
+		default:
+			abort();
+	}
+}
+
+
+{%- for m in methods %}
+
+{% include "method_impl.h.jinja" %}
+{%- endfor %}
+
+inline {{ctype}} {{type_name}}::AsFFI() const {
+	return value;
+}
+
+inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_enum) {
+	return {{type_name}}(c_enum);
+}
+

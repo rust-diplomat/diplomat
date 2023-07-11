@@ -1,0 +1,31 @@
+inline {##}
+{{- m.return_ty }} {##}
+{{- type_name }}::{{ m.method_name -}}
+(
+	{%- for param in m.param_decls %}
+		{%- if !loop.first %}, {% endif -%}
+		{{ param.type_name }} {{ param.var_name }}
+	{%- endfor -%}
+) {##}
+{%- for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
+{
+	{%- if m.method.is_writeable() %}
+	std::string output;
+	capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+	{%- endif %}
+	{% if m.method.output.returns_value() -%}
+	auto result = {##}
+	{%- endif -%}
+	{{ m.c_method_name }}(
+		{%- for param in m.cpp_to_c_params %}
+		{%- if !loop.first %},
+		{% endif -%}
+		{{ param }}
+		{%- endfor -%}
+	);
+	{%- match m.c_to_cpp_return_expression %}
+	{%- when Some with (statement) %}
+	return {{ statement }};
+	{%- when None %}
+	{%- endmatch %}
+}

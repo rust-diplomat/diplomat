@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::fmt;
+use std::fmt::Write;
 
 static BASE_INCLUDES: &str = r#"
 #include <stdio.h>
@@ -71,7 +72,7 @@ impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut includes = String::from(BASE_INCLUDES);
         for i in &self.includes {
-            includes += &format!("#include \"{i}\"\n");
+            writeln!(includes, "#include \"{i}\"").unwrap();
         }
         let decl_header_include: Cow<str> = match self.decl_include {
             Some(ref v) => format!("\n#include \"{v}\"\n").into(),

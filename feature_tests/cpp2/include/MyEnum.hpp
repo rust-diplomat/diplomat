@@ -38,6 +38,11 @@ inline MyEnum::MyEnum(MyEnum::Value cpp_value) {
   }
 }
 
+inline int8_t MyEnum::into_value() {
+  auto result = capi::MyEnum_into_value(this->AsFFI());
+  return result;
+}
+
 inline capi::MyEnum MyEnum::AsFFI() const {
   return value;
 }
