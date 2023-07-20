@@ -7,7 +7,7 @@ authors = [
     "Manish Goregaokar <manishsmail@gmail.com>",
     "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>"
 ]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 documentation = "https://docs.rs/diplomat_core/"
 edition = "2021"
 keywords = ["ffi", "codegen"]

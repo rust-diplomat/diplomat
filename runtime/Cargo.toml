@@ -8,7 +8,7 @@ authors = [
     "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>"
 ]
 edition = "2018"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 documentation = "https://docs.rs/diplomat_core/"
 keywords = ["ffi", "codegen"]
 categories = ["development-tools"]
