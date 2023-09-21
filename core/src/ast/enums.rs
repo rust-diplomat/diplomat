@@ -6,6 +6,7 @@ use quote::ToTokens;
 
 /// A fieldless enum declaration in an FFI module.
 #[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Enum {
     pub name: Ident,
     pub docs: Docs,

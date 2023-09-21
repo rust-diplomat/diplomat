@@ -7,6 +7,7 @@ use syn::{Attribute, Ident, LitStr, Meta, Token};
 
 /// The list of attributes on a type
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
+#[non_exhaustive]
 pub struct Attrs {
     pub cfg: Vec<Attribute>,
     pub attrs: Vec<DiplomatBackendAttr>,
@@ -89,6 +90,7 @@ impl Serialize for Attrs {
 /// and `all()`, `not()`, and `any()` combiners), and then be followed by one
 /// or more backend-specific attributes, which can be any valid meta-item
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+#[non_exhaustive]
 pub struct DiplomatBackendAttr {
     pub cfg: DiplomatBackendAttrCfg,
     #[serde(serialize_with = "serialize_meta")]
@@ -103,6 +105,7 @@ where
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+#[non_exhaustive]
 pub enum DiplomatBackendAttrCfg {
     Not(Box<DiplomatBackendAttrCfg>),
     Any(Vec<DiplomatBackendAttrCfg>),

@@ -11,6 +11,7 @@ use crate::Env;
 /// Includes both static and non-static methods, which can be distinguished
 /// by inspecting [`Method::self_param`].
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
+#[non_exhaustive]
 pub struct Method {
     /// The name of the method as initially declared.
     pub name: Ident,
@@ -244,6 +245,7 @@ impl Method {
 
 /// The `self` parameter taken by a [`Method`].
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
+#[non_exhaustive]
 pub struct SelfParam {
     /// The lifetime and mutability of the `self` param, if it's a reference.
     pub reference: Option<(Lifetime, Mutability)>,
@@ -275,6 +277,7 @@ impl SelfParam {
 
 /// A parameter taken by a [`Method`], not including `self`.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
+#[non_exhaustive]
 pub struct Param {
     /// The name of the parameter in the original method declaration.
     pub name: Ident,
@@ -316,6 +319,7 @@ pub enum LifetimeKind {
 
 #[derive(Default, Debug)]
 /// Parameters in a method that might be borrowed in the return type.
+#[non_exhaustive]
 pub struct BorrowedParams<'a>(
     pub Option<&'a SelfParam>,
     pub Vec<(&'a Param, LifetimeKind)>,

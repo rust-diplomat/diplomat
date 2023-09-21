@@ -12,6 +12,7 @@ pub type OutType = Type<OutputOnly>;
 
 /// Type that may be used as input or output.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Type<P: TyPosition = Everywhere> {
     Primitive(PrimitiveType),
     Opaque(OpaquePath<Optional, P::OpaqueOwnership>),
@@ -22,6 +23,7 @@ pub enum Type<P: TyPosition = Everywhere> {
 
 /// Type that can appear in the `self` position.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
@@ -29,6 +31,7 @@ pub enum SelfType {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[non_exhaustive]
 pub enum Slice {
     /// A string slice, e.g. `&str`.
     Str(MaybeStatic<TypeLifetime>),
@@ -46,6 +49,7 @@ pub enum Slice {
 // involve getting the implicit lifetime thing to be understood by Diplomat, but
 // should be doable.
 #[derive(Copy, Clone, Debug)]
+#[non_exhaustive]
 pub struct Borrow {
     pub lifetime: MaybeStatic<TypeLifetime>,
     pub mutability: Mutability,

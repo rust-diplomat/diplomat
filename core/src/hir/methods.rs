@@ -11,6 +11,7 @@ use super::{
 
 /// A method exposed to Diplomat.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Method {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -24,6 +25,7 @@ pub struct Method {
 
 /// Type that the method returns.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum SuccessType {
     Writeable,
     OutType(OutType),
@@ -31,6 +33,7 @@ pub enum SuccessType {
 
 /// Whether or not the method returns a value or a result.
 #[derive(Debug)]
+#[allow(clippy::exhaustive_enums)] // this only exists for fallible/infallible, breaking changes for more complex returns are ok
 pub enum ReturnType {
     Infallible(Option<SuccessType>),
     Fallible(Option<SuccessType>, Option<OutType>),
@@ -38,12 +41,14 @@ pub enum ReturnType {
 
 /// The `self` parameter of a method.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct ParamSelf {
     pub ty: SelfType,
 }
 
 /// A parameter in a method.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Param {
     pub name: IdentBuf,
     pub ty: Type,

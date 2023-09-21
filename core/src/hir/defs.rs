@@ -3,12 +3,14 @@
 use super::{Attrs, Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
 use crate::ast::Docs;
 
+#[non_exhaustive]
 pub enum ReturnableStructDef<'tcx> {
     Struct(&'tcx StructDef),
     OutStruct(&'tcx OutStructDef),
 }
 
 #[derive(Copy, Clone, Debug)]
+#[non_exhaustive]
 pub enum TypeDef<'tcx> {
     Struct(&'tcx StructDef),
     OutStruct(&'tcx OutStructDef),
@@ -21,6 +23,7 @@ pub type OutStructDef = StructDef<OutputOnly>;
 
 /// Structs that can be either inputs or outputs in methods.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct StructDef<P: TyPosition = Everywhere> {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -38,6 +41,7 @@ pub struct StructDef<P: TyPosition = Everywhere> {
 ///
 /// A struct marked with `#[diplomat::opaque]`.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct OpaqueDef {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -47,6 +51,7 @@ pub struct OpaqueDef {
 
 /// The enum type.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct EnumDef {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -60,6 +65,7 @@ pub type OutStructField = StructField<OutputOnly>;
 
 /// A field on a [`Struct`]s.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct StructField<P: TyPosition = Everywhere> {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -68,6 +74,7 @@ pub struct StructField<P: TyPosition = Everywhere> {
 
 /// A variant of an [`Enum`].
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct EnumVariant {
     pub docs: Docs,
     pub name: IdentBuf,

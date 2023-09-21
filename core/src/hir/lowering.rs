@@ -12,6 +12,7 @@ use strck_ident::IntoCk;
 
 /// An error from lowering the AST to the HIR.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum LoweringError {
     /// The purpose of having this is that translating to the HIR has enormous
     /// potential for really detailed error handling and giving suggestions.

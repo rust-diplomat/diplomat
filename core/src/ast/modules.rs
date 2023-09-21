@@ -60,6 +60,7 @@ impl DiplomatStructAttribute {
 }
 
 #[derive(Clone, Serialize, Debug)]
+#[non_exhaustive]
 pub struct Module {
     pub name: Ident,
     pub imports: Vec<(Path, Ident)>,
@@ -243,6 +244,7 @@ fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, Id
 }
 
 #[derive(Serialize, Clone, Debug)]
+#[non_exhaustive]
 pub struct File {
     pub modules: BTreeMap<String, Module>,
 }
