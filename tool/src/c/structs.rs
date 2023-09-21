@@ -31,6 +31,7 @@ pub fn gen_struct<W: fmt::Write>(
         }
 
         ast::CustomType::Enum(_) => {}
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 
     Ok(())

@@ -37,6 +37,7 @@ pub struct OpaqueId(usize);
 pub struct EnumId(usize);
 
 #[derive(Copy, Clone, Debug)]
+#[non_exhaustive]
 pub enum TypeId {
     Struct(StructId),
     OutStruct(OutStructId),

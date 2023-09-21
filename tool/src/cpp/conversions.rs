@@ -31,6 +31,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                         // TODO(#59): should emit a unique_ptr
                         todo!("Receiving boxes of enums is not yet supported")
                     }
+                    &_ => unreachable!("unknown AST/HIR variant"),
                 }
             }
             _o => todo!(),
@@ -67,6 +68,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                 (_, ast::CustomType::Enum(enm)) => {
                     format!("static_cast<{}>({})", enm.name, cpp)
                 }
+                (_, &_) => unreachable!("unknown AST/HIR variant"),
             }
         }
 
@@ -229,6 +231,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             "slice".into()
         }
         ast::TypeName::Unit => cpp.to_string(),
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }
 
@@ -333,6 +336,7 @@ pub fn gen_cpp_to_rust<W: Write>(
                 }
 
                 ast::CustomType::Enum(enm) => format!("static_cast<capi::{}>({})", enm.name, cpp),
+                &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
         ast::TypeName::Writeable => {

@@ -19,6 +19,7 @@ pub fn gen_type<W: fmt::Write>(
                 ast::CustomType::Enum(enm) => {
                     write!(out, "{}", enm.name)?;
                 }
+                &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
 
@@ -62,6 +63,7 @@ pub fn gen_type<W: fmt::Write>(
             write!(out, "Diplomat{prim}View")?;
         }
         ast::TypeName::Unit => write!(out, "void")?,
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 
     Ok(())
@@ -103,6 +105,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             ast::Ident::from(format!("ref_prim_slice_{}", c_type_for_prim(prim)))
         }
         ast::TypeName::Unit => ast::Ident::from("void"),
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }
 

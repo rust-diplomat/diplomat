@@ -77,6 +77,7 @@ pub fn to_idiomatic_object<W: fmt::Write>(
                         ast::CustomType::Enum(_) => {
                             write!(out, "({name}){input_var_name}")
                         }
+                        &_ => unreachable!("unknown AST/HIR variant"),
                     }
                 }
                 other => panic!("expected named type name, found `{}`", other),
@@ -119,6 +120,7 @@ pub fn to_raw_object<W: fmt::Write>(
                         ast::CustomType::Enum(_) => {
                             write!(out, "(Raw.{name}){input_var_name}")
                         }
+                        &_ => unreachable!("unknown AST/HIR variant"),
                     }
                 }
                 other => panic!("expected named type name, found `{}`", other),

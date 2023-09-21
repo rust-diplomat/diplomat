@@ -5,6 +5,7 @@ use super::{Attrs, Ident, LifetimeEnv, Method, Mutability, PathType, TypeName};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
+#[non_exhaustive]
 pub struct Struct {
     pub name: Ident,
     pub docs: Docs,
@@ -54,6 +55,7 @@ impl Struct {
 /// Opaque structs cannot be passed by-value across the FFI boundary, so they
 /// must be boxed or passed as references.
 #[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct OpaqueStruct {
     pub name: Ident,
     pub docs: Docs,

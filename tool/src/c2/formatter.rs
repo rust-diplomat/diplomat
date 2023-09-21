@@ -115,6 +115,7 @@ impl<'tcx> CFormatter<'tcx> {
                 let prim = self.fmt_primitive_as_c(*p);
                 format!("ref_{constness}prim_slice_{prim}").into()
             }
+            &_ => unreachable!("unknown AST/HIR variant"),
         }
     }
 

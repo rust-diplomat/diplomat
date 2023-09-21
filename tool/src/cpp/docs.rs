@@ -101,6 +101,7 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
         ast::CustomType::Struct(_) => writeln!(out, ".. cpp:struct:: {}", typ.name())?,
         ast::CustomType::Enum(_) => writeln!(out, ".. cpp:enum-struct:: {}", typ.name())?,
         ast::CustomType::Opaque(_) => writeln!(out, ".. cpp:class:: {}", typ.name())?,
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 
     let mut class_indented = indented(out).with_str("    ");

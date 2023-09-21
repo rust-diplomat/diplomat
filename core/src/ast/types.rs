@@ -16,6 +16,7 @@ use crate::Env;
 
 /// A type declared inside a Diplomat-annotated module.
 #[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum CustomType {
     /// A non-opaque struct whose fields will be visible across the FFI boundary.
     Struct(Struct),
@@ -127,6 +128,7 @@ impl CustomType {
 /// A symbol declared in a module, which can either be a pointer to another path,
 /// or a custom type defined directly inside that module
 #[derive(Clone, Serialize, Debug)]
+#[non_exhaustive]
 pub enum ModSymbol {
     /// A symbol that is a pointer to another path.
     Alias(Path),
@@ -138,6 +140,7 @@ pub enum ModSymbol {
 
 /// A named type that is just a path, e.g. `std::borrow::Cow<'a, T>`.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[non_exhaustive]
 pub struct PathType {
     pub path: Path,
     pub lifetimes: Vec<Lifetime>,
@@ -299,6 +302,7 @@ impl From<Path> for PathType {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[allow(clippy::exhaustive_enums)] // there are only two kinds of mutability we care about
 pub enum Mutability {
     Mutable,
     Immutable,
@@ -361,6 +365,7 @@ impl Mutability {
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[non_exhaustive]
 pub enum TypeName {
     /// A built-in Rust scalar primitive.
     Primitive(PrimitiveType),
@@ -882,6 +887,7 @@ impl TypeName {
     }
 }
 
+#[non_exhaustive]
 pub enum LifetimeOrigin {
     Named,
     Reference,
@@ -973,6 +979,7 @@ impl fmt::Display for PathType {
 /// A built-in Rust primitive scalar type.
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 #[allow(non_camel_case_types)]
+#[allow(clippy::exhaustive_enums)] // there are only these (scalar types)
 pub enum PrimitiveType {
     i8,
     u8,

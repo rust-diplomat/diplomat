@@ -66,6 +66,7 @@ fn gen_type_inner<W: fmt::Write>(
                 ast::CustomType::Enum(enm) => {
                     write!(out, "{}", enm.name)?;
                 }
+                &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
 
@@ -126,7 +127,7 @@ fn gen_type_inner<W: fmt::Write>(
                 )?;
             }
 
-            _ => todo!(),
+            _ => unreachable!("unknown AST/HIR variant"),
         },
 
         ast::TypeName::Result(ok, err, _) => {
@@ -180,6 +181,7 @@ fn gen_type_inner<W: fmt::Write>(
         ast::TypeName::Unit => {
             write!(out, "void")?;
         }
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 
     if !handled_ref {
