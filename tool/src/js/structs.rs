@@ -182,6 +182,7 @@ pub fn gen_struct<W: fmt::Write>(
                 })
             )
         }
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }
 
@@ -521,6 +522,7 @@ pub fn gen_ts_type<W: fmt::Write>(
         ast::TypeName::Unit => {
             out.write_str("void")?;
         }
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
     Ok(false)
 }

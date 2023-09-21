@@ -207,6 +207,7 @@ pub fn gen_value_js_to_rust<'env>(
                 ast::CustomType::Opaque(_) => {
                     panic!("Opaque types cannot be sent as values");
                 }
+                &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
         _ => invocation_params.push(param_name.to_string()),
@@ -420,7 +421,8 @@ impl fmt::Display for InvocationIntoJs<'_> {
                     }
                     ast::CustomType::Enum(enm) => {
                         write!(f, "{}_rust_to_js[{}]", enm.name, self.invocation.scalar())
-                    }
+                    },
+                    &_ => unreachable!("unknown AST/HIR variant")
                 }
             }
             ast::TypeName::Reference(.., inner) => Pointer {
@@ -510,6 +512,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
             }
             ast::TypeName::Writeable => todo!(),
             ast::TypeName::Unit => self.invocation.scalar().fmt(f),
+            &_ => unreachable!("unknown AST/HIR variant"),
         }
     }
 }
@@ -728,6 +731,7 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                         "{}_rust_to_js[diplomatRuntime.enumDiscriminant(wasm, {})]",
                         enm.name, self.underlying,
                     ),
+                    &_ => unreachable!("unknown AST/HIR variant"),
                 }
             }
             ast::TypeName::Reference(.., typ) => Pointer {
@@ -780,6 +784,7 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                 self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
             }
             ast::TypeName::Unit => "{}".fmt(f),
+            &_ => unreachable!("unknown AST/HIR variant"),
         }
     }
 }

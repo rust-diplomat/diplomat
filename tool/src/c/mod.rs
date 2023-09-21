@@ -107,6 +107,7 @@ fn gen_struct_header<'a>(
             }
             writeln!(out, "}} {};", enm.name)?;
         }
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 
     writeln!(out, "#ifdef __cplusplus")?;
@@ -286,6 +287,7 @@ pub fn gen_includes<W: fmt::Write>(
                 (ast::CustomType::Opaque(_), false) => {
                     panic!("Cannot pass opaque types by value")
                 }
+                (&_, _) => unreachable!("unknown AST/HIR variant"),
             }
         }
         ast::TypeName::Box(underlying) => {
@@ -333,6 +335,7 @@ pub fn gen_includes<W: fmt::Write>(
         ast::TypeName::StrReference(..) => {}
         ast::TypeName::PrimitiveSlice(..) => {}
         ast::TypeName::Unit => {}
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 
     Ok(())

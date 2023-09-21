@@ -237,6 +237,7 @@ impl<'env> Imports<'env> {
                             self.collect_usages(typ, &ty_in_path, env, TypePosition::Inner)
                         }
                     }
+                    &_ => unreachable!("unknown AST/HIR variant"),
                 }
             }
             ast::TypeName::Reference(.., typ)

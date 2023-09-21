@@ -185,6 +185,7 @@ pub fn gen(
                 Ok(())
             })?;
         }
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 
     Ok(())
@@ -212,6 +213,7 @@ fn gen_property_for_field(
                     return Ok(());
                 }
                 ast::CustomType::Enum(_) => {}
+                &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
         _ => {
@@ -723,6 +725,7 @@ fn gen_raw_conversion_type_name_decl_position(
                 ast::CustomType::Enum(_) | ast::CustomType::Struct(_) => {
                     gen_raw_type_name_decl_position(typ, in_path, env, out)
                 }
+                &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
         _ => gen_raw_type_name_decl_position(typ, in_path, env, out),
@@ -790,6 +793,7 @@ fn requires_null_check(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> b
                 match path_type.resolve(in_path, env) {
                     ast::CustomType::Opaque(_) => true,
                     ast::CustomType::Struct(_) | ast::CustomType::Enum(_) => false,
+                    &_ => unreachable!("unknown AST/HIR variant"),
                 }
             }
             other => panic!("expected named type name, found `{}`", other),

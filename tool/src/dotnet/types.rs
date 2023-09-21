@@ -60,6 +60,7 @@ pub fn gen_type_name(
         ast::TypeName::Unit => {
             write!(out, "void")
         }
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }
 
@@ -115,5 +116,6 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             format!("RefPrimSlice{}", prim.to_string().to_upper_camel_case()),
         ),
         ast::TypeName::Unit => ast::Ident::from("Void"),
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }

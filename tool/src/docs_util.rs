@@ -108,6 +108,7 @@ impl<W: fmt::Write> FromMarkdown<W> for CppRst {
             ast::CustomType::Struct(strct) => write!(out, ":cpp:struct:`{}`", strct.name),
             ast::CustomType::Enum(enm) => write!(out, ":cpp:enum-struct:`{}`", enm.name),
             ast::CustomType::Opaque(opaque) => write!(out, ":cpp:class:`{}`", opaque.name),
+            &_ => unreachable!("unknown AST/HIR variant"),
         }
     }
 }

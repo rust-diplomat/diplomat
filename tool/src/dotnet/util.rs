@@ -63,6 +63,7 @@ pub fn collect_results<'ast>(
         | ast::TypeName::Named(_)
         | ast::TypeName::SelfType(_)
         | ast::TypeName::Primitive(_) => {}
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }
 
@@ -124,5 +125,6 @@ fn collect_errors_impl<'ast>(
         | ast::TypeName::Writeable
         | ast::TypeName::StrReference(..)
         | ast::TypeName::PrimitiveSlice(..) => {}
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }

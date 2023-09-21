@@ -132,6 +132,7 @@ pub fn gen_bindings(
                     )?;
                 }
             }
+            &&_ => unreachable!("unknown AST/HIR variant"),
         }
 
         for method in typ.methods() {
@@ -174,6 +175,7 @@ pub fn gen_bindings(
                 writeln!(out)?;
                 gen_struct(typ, in_path, true, env, &library_config, docs_url_gen, out)?;
             }
+            &&_ => unreachable!("unknown AST/HIR variant"),
         }
 
         writeln!(out)?;
@@ -218,6 +220,7 @@ pub fn gen_bindings(
                 writeln!(out)?;
                 gen_struct(typ, in_path, false, env, &library_config, docs_url_gen, out)?;
             }
+            &&_ => unreachable!("unknown AST/HIR variant"),
         }
 
         writeln!(out, "#endif")?
@@ -280,6 +283,7 @@ fn gen_includes<W: fmt::Write>(
                         seen_includes.insert(include);
                     }
                 }
+                &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
         ast::TypeName::Box(underlying) => {
@@ -346,6 +350,7 @@ fn gen_includes<W: fmt::Write>(
         ast::TypeName::StrReference(..) => {}
         ast::TypeName::PrimitiveSlice(..) => {}
         ast::TypeName::Unit => {}
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 
     Ok(())

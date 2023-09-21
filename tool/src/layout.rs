@@ -96,6 +96,7 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
                 (_, ast::CustomType::Opaque(_)) => {
                     panic!("Size of opaque types is unknown")
                 }
+                (_, &_) => unreachable!("unknown AST/HIR variant"),
             }
         }
         ast::TypeName::Primitive(p) => primitive_size_alignment(*p),
@@ -108,6 +109,7 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
         ast::TypeName::PrimitiveSlice(..) => Layout::new::<(usize_target, usize_target)>(),
         ast::TypeName::Writeable => panic!(),
         ast::TypeName::Unit => Layout::new::<()>(),
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }
 

@@ -144,6 +144,7 @@ pub fn gen<'ast>(
                 Ok(())
             })
         }
+        &_ => unreachable!("unknown AST/HIR variant"),
     }
 }
 

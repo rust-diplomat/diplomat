@@ -27,6 +27,7 @@ impl<'tcx> super::CContext<'tcx> {
             TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
             TypeDef::Struct(s) => context.gen_struct_def(s, id),
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
+            _ => unreachable!("unknown AST/HIR variant"),
         }
         for method in ty.methods() {
             if method.attrs.disable {
@@ -139,6 +140,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     "void".into()
                 }
                 SuccessType::OutType(o) => self.gen_ty_name(o, false),
+                &_ => unreachable!("unknown AST/HIR variant"),
             },
             ReturnType::Fallible(ref ok, ref err) => {
                 let (ok_type_name, ok_ty) = match ok {
@@ -150,6 +152,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     Some(SuccessType::OutType(o)) => {
                         (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
                     }
+                    &Some(_) => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
                     Some(o) => self.cx.formatter.fmt_type_name_uniquely(o),
@@ -313,12 +316,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ptr_ty = match s {
                     hir::Slice::Str(..) => "char".into(),
                     hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
+                    &_ => unreachable!("unknown AST/HIR variant"),
                 };
                 (
                     None,
                     format!("struct {{ const {ptr_ty}* data; size_t len; }}").into(),
                 )
             }
+            _ => unreachable!("unknown AST/HIR variant"),
         };
         // Todo(breaking): We can remove this requirement
         // and users will be forced to import more types

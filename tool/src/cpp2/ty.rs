@@ -31,6 +31,7 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
             TypeDef::Struct(s) => context.gen_struct_def(s, id),
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
+            _ => unreachable!("unknown AST/HIR variant"),
         }
         drop(guard);
 
@@ -459,6 +460,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ret = self.cx.formatter.fmt_borrowed_slice(&ret, b.mutability);
                 ret.into_owned().into()
             }
+            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
@@ -468,6 +470,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             SelfType::Opaque(..) => "this->AsFFI()".into(),
             SelfType::Struct(..) => "this->AsFFI()".into(),
             SelfType::Enum(..) => "this->AsFFI()".into(),
+            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
@@ -560,6 +563,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     },
                 ]
             }
+            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
@@ -570,12 +574,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ReturnType::Infallible(Some(ref ty)) => match ty {
                 SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
                 SuccessType::OutType(o) => self.gen_type_name(o),
+                &_ => unreachable!("unknown AST/HIR variant"),
             },
             ReturnType::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
                     Some(SuccessType::Writeable) => self.cx.formatter.fmt_owned_str(),
                     None => "std::monostate".into(),
                     Some(SuccessType::OutType(o)) => self.gen_type_name(o),
+                    &Some(_) => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
                     Some(o) => self.gen_type_name(o),
@@ -661,6 +667,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     .fmt_borrowed_slice(&prim_name, b.mutability);
                 format!("{span}({var_name}_data, {var_name}_size)").into()
             }
+            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
@@ -685,6 +692,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     Some(SuccessType::Writeable) => self.cx.formatter.fmt_owned_str(),
                     None => "std::monostate".into(),
                     Some(SuccessType::OutType(o)) => self.gen_type_name(o),
+                    &Some(_) => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
                     Some(o) => self.gen_type_name(o),
@@ -695,6 +703,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     Some(SuccessType::Writeable) => "std::move(output)".into(),
                     None => "".into(),
                     Some(SuccessType::OutType(o)) => self.gen_c_to_cpp_for_type(o, ok_path.into()),
+                    &Some(_) => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_conversion = match err {
                     Some(o) => self.gen_c_to_cpp_for_type(o, err_path.into()),
@@ -704,6 +713,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     format!("{var_name}.is_ok ? diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Ok<{ok_type_name}>({ok_conversion})) : diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Err<{err_type_name}>({err_conversion}))").into()
                 )
             }
+            ReturnType::Infallible(Some(_)) => unreachable!("unknown AST/HIR variant"),
         }
     }
 }
