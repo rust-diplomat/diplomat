@@ -6,12 +6,11 @@ ALL_RUST := $(wildcard ../src/*.rs)
 
 CC=gcc
 
-$(ALL_RUST):
+FORCE:
 
 $(ALL_HEADERS):
 
-
-../../target/debug/libdiplomat_example.a: $(ALL_RUST)
+../../target/debug/libdiplomat_example.a: FORCE
 	cargo build
 
 a.out: ../../target/debug/libdiplomat_example.a $(ALL_HEADERS) main.c

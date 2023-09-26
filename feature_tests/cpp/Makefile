@@ -6,11 +6,11 @@ ALL_RUST := $(wildcard ../src/*.rs)
 
 CXX=g++-10
 
-$(ALL_RUST):
+FORCE:
 
 $(ALL_HEADERS):
 
-../../target/debug/libdiplomat_feature_tests.a: $(ALL_RUST)
+../../target/debug/libdiplomat_feature_tests.a: FORCE
 	cargo build
 
 ./tests/structs.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/structs.cpp
