@@ -6,12 +6,11 @@ ALL_RUST := $(wildcard ../src/*.rs)
 
 CXX=g++-10
 
-$(ALL_RUST):
+FORCE:
 
 $(ALL_HEADERS):
 
-
-../../target/debug/libdiplomat_example.a: $(ALL_RUST)
+../../target/debug/libdiplomat_example.a: FORCE
 	cargo build
 
 ./tests/fixeddecimal.out: ../../target/debug/libdiplomat_example.a $(ALL_HEADERS) ./tests/fixeddecimal.cpp
@@ -19,7 +18,6 @@ $(ALL_HEADERS):
 
 ./tests/fixeddecimal-20.out: ../../target/debug/libdiplomat_example.a $(ALL_HEADERS) ./tests/fixeddecimal.cpp
 	$(CXX) -std=c++20 ./tests/fixeddecimal.cpp ../../target/debug/libdiplomat_example.a -ldl -lpthread -lm -g -o ./tests/fixeddecimal-20.out
-
 
 test: ./tests/fixeddecimal.out ./tests/fixeddecimal-20.out
 	./tests/fixeddecimal.out
