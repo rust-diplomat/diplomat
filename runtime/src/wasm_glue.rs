@@ -8,7 +8,7 @@ unsafe extern "C" fn diplomat_init() {
     #[cfg(feature = "log")]
     log::set_logger(&ConsoleLogger)
         .map(|()| log::set_max_level(log::LevelFilter::Debug))
-        .is_ok()
+        .unwrap();
 }
 
 fn panic_handler(info: &PanicInfo) {
