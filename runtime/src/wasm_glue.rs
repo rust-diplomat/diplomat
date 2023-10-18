@@ -11,7 +11,6 @@ unsafe extern "C" fn diplomat_init() {
         .is_ok()
 }
 
-
 fn panic_handler(info: &PanicInfo) {
     let msg = match info.payload().downcast_ref::<&'static str>() {
         Some(&s) => s,
