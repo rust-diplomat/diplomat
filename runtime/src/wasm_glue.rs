@@ -31,10 +31,10 @@ fn panic_handler(info: &PanicInfo) {
     };
 
     extern "C" {
-        fn throw_error_js(ptr: *const u8, len: usize);
+        fn diplomat_throw_error_js(ptr: *const u8, len: usize);
     }
 
-    unsafe { throw_error_js(msg.as_ptr(), msg.len()) }
+    unsafe { diplomat_throw_error_js(msg.as_ptr(), msg.len()) }
 }
 
 #[cfg(feature = "log")]
@@ -55,33 +55,33 @@ impl log::Log for ConsoleLogger {
         let out = match record.level() {
             log::Level::Error => {
                 extern "C" {
-                    fn console_error_js(ptr: *const u8, len: usize);
+                    fn diplomat_console_error_js(ptr: *const u8, len: usize);
                 }
-                console_error_js
+                diplomat_console_error_js
             }
             log::Level::Warn => {
                 extern "C" {
-                    fn console_warn_js(ptr: *const u8, len: usize);
+                    fn diplomat_console_warn_js(ptr: *const u8, len: usize);
                 }
-                console_warn_js
+                diplomat_console_warn_js
             }
             log::Level::Info => {
                 extern "C" {
-                    fn console_info_js(ptr: *const u8, len: usize);
+                    fn diplomat_console_info_js(ptr: *const u8, len: usize);
                 }
-                console_info_js
+                diplomat_console_info_js
             }
             log::Level::Debug => {
                 extern "C" {
-                    fn console_log_js(ptr: *const u8, len: usize);
+                    fn diplomat_console_log_js(ptr: *const u8, len: usize);
                 }
-                console_log_js
+                diplomat_console_log_js
             }
             log::Level::Trace => {
                 extern "C" {
-                    fn console_debug_js(ptr: *const u8, len: usize);
+                    fn diplomat_console_debug_js(ptr: *const u8, len: usize);
                 }
-                console_debug_js
+                diplomat_console_debug_js
             }
         };
 
