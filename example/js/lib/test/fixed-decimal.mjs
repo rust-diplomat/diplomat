@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormat, ICU4XFixedDecimalFormatOptions } from "../api/index.js"
+import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormatter, ICU4XFixedDecimalFormatterOptions } from "../api/index.js"
 
 test("multiply a fixed decimal by 0.1", t => {
     const my_decimal = ICU4XFixedDecimal.new(123);
@@ -21,7 +21,7 @@ test("format a fixed decimal", t => {
 
     const data_provider = ICU4XDataProvider.new_static();
 
-    const fdf = ICU4XFixedDecimalFormat.try_new(locale, data_provider, ICU4XFixedDecimalFormatOptions.default());
+    const fdf = ICU4XFixedDecimalFormatter.try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions.default());
     if (!fdf.success) {
         throw "Failed to format fixed decimal";
     }

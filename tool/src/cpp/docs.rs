@@ -37,9 +37,7 @@ pub fn gen_docs(
         }
     }
 
-    let index_out = outs
-        .entry("index.rst".to_string())
-        .or_insert_with(String::new);
+    let index_out = outs.entry("index.rst".to_string()).or_default();
     writeln!(index_out, "Documentation")?;
     writeln!(index_out, "=============")?;
     writeln!(index_out)?;
@@ -71,7 +69,7 @@ pub fn gen_docs(
         {
             let out = outs
                 .entry(format!("{}.rst", in_path.elements.join("_")))
-                .or_insert_with(String::new);
+                .or_default();
 
             let title = format!("``{}``", in_path.elements.join("::"));
             writeln!(out, "{title}")?;

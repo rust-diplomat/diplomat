@@ -25,9 +25,7 @@ use results::*;
 pub static RUNTIME_H: &str = include_str!("runtime.h");
 
 pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Result {
-    let diplomat_runtime_out = outs
-        .entry("diplomat_runtime.h".to_string())
-        .or_insert_with(String::new);
+    let diplomat_runtime_out = outs.entry("diplomat_runtime.h".to_string()).or_default();
     write!(diplomat_runtime_out, "{RUNTIME_H}")?;
 
     let all_types = util::get_all_custom_types(env);
@@ -60,9 +58,7 @@ fn gen_struct_header<'a>(
     outs: &mut HashMap<String, String>,
     env: &Env,
 ) -> Result<(), fmt::Error> {
-    let out = outs
-        .entry(format!("{}.h", typ.name()))
-        .or_insert_with(String::new);
+    let out = outs.entry(format!("{}.h", typ.name())).or_default();
 
     writeln!(out, "#ifndef {}_H", typ.name())?;
     writeln!(out, "#define {}_H", typ.name())?;
@@ -193,9 +189,7 @@ fn gen_result_header(
     env: &Env,
 ) -> fmt::Result {
     if let ast::TypeName::Result(ok, err, _) = typ {
-        let out = outs
-            .entry(format!("{}.h", name_for_type(typ)))
-            .or_insert_with(String::new);
+        let out = outs.entry(format!("{}.h", name_for_type(typ))).or_default();
 
         writeln!(out, "#ifndef {}_H", name_for_type(typ))?;
         writeln!(out, "#define {}_H", name_for_type(typ))?;

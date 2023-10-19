@@ -331,9 +331,10 @@ impl BorrowedParams<'_> {
     /// param will be called if present.
     pub fn return_names<'a>(&'a self, self_name: &'a Ident) -> impl Iterator<Item = &'a Ident> {
         self.0.iter().map(move |_| self_name).chain(
-            self.1.iter().filter_map(|&(param, ltk)| {
-                (ltk == LifetimeKind::ReturnValue).then(|| &param.name)
-            }),
+            self.1
+                .iter()
+                .filter(|(_, ltk)| (*ltk == LifetimeKind::ReturnValue))
+                .map(|(param, _)| &param.name),
         )
     }
 
@@ -342,7 +343,8 @@ impl BorrowedParams<'_> {
     pub fn static_names(&self) -> impl Iterator<Item = &'_ Ident> {
         self.1
             .iter()
-            .filter_map(|&(param, ltk)| (ltk == LifetimeKind::Static).then(|| &param.name))
+            .filter(|(_, ltk)| (*ltk == LifetimeKind::Static))
+            .map(|(param, _)| &param.name)
     }
 
     /// Returns `true` if a provided param name is included in the borrowed params,
