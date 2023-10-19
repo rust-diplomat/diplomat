@@ -78,17 +78,13 @@ pub fn gen_bindings(
         }
     }
 
-    let diplomat_runtime_out = outs
-        .entry("diplomat_runtime.hpp".to_string())
-        .or_insert_with(String::new);
+    let diplomat_runtime_out = outs.entry("diplomat_runtime.hpp".to_string()).or_default();
     write!(diplomat_runtime_out, "{RUNTIME_HPP}")?;
 
     let all_types = crate::util::get_all_custom_types(env);
 
     for (in_path, typ) in &all_types {
-        let out = outs
-            .entry(format!("{}.hpp", typ.name()))
-            .or_insert_with(String::new);
+        let out = outs.entry(format!("{}.hpp", typ.name())).or_default();
 
         let rendered = render_header(typ.name(), &library_config.headers);
         writeln!(out, "{rendered}").expect("Failed to write string.");

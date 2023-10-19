@@ -46,9 +46,7 @@ pub fn gen_bindings(
         }
     }
 
-    let diplomat_runtime_out = outs
-        .entry("DiplomatRuntime.cs".to_owned())
-        .or_insert_with(String::new);
+    let diplomat_runtime_out = outs.entry("DiplomatRuntime.cs".to_owned()).or_default();
     write!(
         diplomat_runtime_out,
         "{}",
