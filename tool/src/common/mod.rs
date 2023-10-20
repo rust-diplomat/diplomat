@@ -21,6 +21,7 @@ pub struct FileMap {
 }
 
 impl FileMap {
+    #[allow(dead_code)]
     pub fn new(files: HashMap<String, String>) -> Self {
         FileMap {
             files: RefCell::new(files),

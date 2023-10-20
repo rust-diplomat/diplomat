@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Write;
 use std::fs;
-use std::path::PathBuf;
+use std::path::Path;
 
 use colored::*;
 use diplomat_core::Env;
@@ -26,7 +26,7 @@ const SCOPE_CLOSING: &str = "}";
 
 pub fn gen_bindings(
     env: &Env,
-    library_config_path: &Option<PathBuf>,
+    library_config_path: Option<&Path>,
     docs_url_gen: &diplomat_core::ast::DocsUrlGenerator,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
