@@ -2,7 +2,7 @@ use colored::*;
 use diplomat_core::Env;
 use std::fmt::Write;
 use std::fs;
-use std::path::PathBuf;
+use std::path::Path;
 use std::{collections::HashMap, fmt};
 
 use diplomat_core::ast;
@@ -14,7 +14,7 @@ use crate::docs_util::{CppRst, FromMarkdown};
 /// Generate RST-formatted Sphinx docs for all FFI types.
 pub fn gen_docs(
     env: &Env,
-    library_config_path: &Option<PathBuf>,
+    library_config_path: Option<&Path>,
     outs: &mut HashMap<String, String>,
     docs_url_gen: &ast::DocsUrlGenerator,
 ) -> fmt::Result {

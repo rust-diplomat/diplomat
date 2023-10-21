@@ -8,7 +8,7 @@ macro_rules! test_file {
 
         let mut out_texts = std::collections::HashMap::new();
 
-        gen_bindings(&env, &None, &Default::default(), &mut out_texts).unwrap();
+        gen_bindings(&env, None, &Default::default(), &mut out_texts).unwrap();
         out_texts.remove("DiplomatRuntime.cs");
 
         for out in out_texts.keys() {
@@ -30,7 +30,7 @@ macro_rules! test_file_using_library_config {
         use std::path::PathBuf;
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push("tests/configs/dotnet_example.toml");
-        gen_bindings(&env, &Some(path), &Default::default(), &mut out_texts).unwrap();
+        gen_bindings(&env, Some(&path), &Default::default(), &mut out_texts).unwrap();
         out_texts.remove("DiplomatRuntime.cs");
 
         for out in out_texts.keys() {

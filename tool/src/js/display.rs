@@ -130,6 +130,7 @@ where
 }
 
 /// An `fmt::Display` type returned by [`iife`].
+#[allow(clippy::upper_case_acronyms)]
 pub struct IIFE<F>(F)
 where
     F: Fn(Indented<Formatter>) -> Result;

@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Write;
 use std::fs;
-use std::path::PathBuf;
+use std::path::Path;
 
 use diplomat_core::ast;
 use diplomat_core::Env;
@@ -52,7 +52,7 @@ fn render_header(typ_name: &ast::Ident, headers: &[String]) -> String {
 
 pub fn gen_bindings(
     env: &Env,
-    library_config_path: &Option<PathBuf>,
+    library_config_path: Option<&Path>,
     docs_url_gen: &ast::DocsUrlGenerator,
     outs: &mut HashMap<String, String>,
 ) -> fmt::Result {
