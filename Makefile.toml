@@ -393,7 +393,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests dart include
+generate_generic feature_tests dart lib
 '''
 
 [tasks.gen-examples-dart]
@@ -402,7 +402,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example dart include
+generate_generic example dart lib
 '''
 
 # Build deps
