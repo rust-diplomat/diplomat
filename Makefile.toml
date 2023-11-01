@@ -62,6 +62,13 @@ dependencies = [
     "test-wasm-example-app",
     "test-wasm-feature",
 ]
+[tasks.test-dart]
+category = "Tests"
+dependencies = [
+    "test-dart-example",
+    "test-dart-example-app",
+    "test-dart-feature",
+]
 [tasks.test-example]
 category = "Tests"
 dependencies = [
@@ -70,6 +77,7 @@ dependencies = [
     "test-c-example",
     "test-c2-example",
     "test-wasm-example",
+    "test-dart-example",
 ]
 
 [tasks.test-feature]
@@ -78,6 +86,7 @@ dependencies = [
     "test-cpp-feature",
     "test-cpp2-feature",
     "test-wasm-feature",
+    "test-dart-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -221,6 +230,7 @@ dependencies = [
     "gen-feature-c2",
     "gen-feature-js",
     "gen-feature-dotnet",
+    "gen-feature-dart",
 ]
 
 [tasks.gen-examples]
@@ -231,6 +241,7 @@ dependencies = [
     "gen-examples-c",
     "gen-examples-c2",
     "gen-examples-js",
+    "gen-examples-dart",
 ]
 [tasks.gen-cpp]
 category = "Code generation"
@@ -266,6 +277,12 @@ dependencies = [
 category = "Code generation"
 dependencies = [
     "gen-feature-dotnet",
+]
+[tasks.gen-dart]
+category = "Code generation"
+dependencies = [
+    "gen-feature-dart",
+    "gen-examples-dart",
 ]
 
 
@@ -368,6 +385,24 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic feature_tests dotnet Lib/Generated "" "-l dotnet/dotnet-interop-conf.toml"
+'''
+
+[tasks.gen-feature-dart]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests dart include
+'''
+
+[tasks.gen-examples-dart]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example dart include
 '''
 
 # Build deps
