@@ -2,6 +2,7 @@ mod class;
 mod formatter;
 
 use crate::common::{ErrorStore, FileMap};
+use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::TypeContext;
 use formatter::DartFormatter;
 
@@ -17,11 +18,15 @@ pub(crate) struct DartContext<'tcx> {
 }
 
 impl<'tcx> DartContext<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, files: FileMap) -> Self {
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        files: FileMap,
+        docs_url_generator: &'tcx DocsUrlGenerator,
+    ) -> Self {
         DartContext {
             tcx,
             files,
-            formatter: DartFormatter::new(tcx),
+            formatter: DartFormatter::new(tcx, docs_url_generator),
             errors: ErrorStore::default(),
         }
     }

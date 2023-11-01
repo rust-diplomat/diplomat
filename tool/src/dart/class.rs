@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 impl<'tcx> DartContext<'tcx> {
-    pub fn gen_ty<'dartcx>(&'dartcx self, id: TypeId) -> ClassFile {
+    pub fn gen_ty(&self, id: TypeId) -> ClassFile {
         let ty = self.tcx.resolve_type(id);
 
         let mut imports = BTreeSet::new();
@@ -47,7 +47,7 @@ impl<'tcx> DartContext<'tcx> {
             } else {
                 body.replace('\t', DartFormatter::INDENT_STR).into()
             },
-            result_classes: result_classes,
+            result_classes,
         }
         .render()
         .unwrap();
@@ -82,7 +82,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method, &*type_name))
+            .flat_map(|method| self.gen_method_info(id, method, &type_name))
             .collect::<Vec<_>>();
 
         ImplTemplate {
@@ -121,7 +121,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method, &*type_name))
+            .flat_map(|method| self.gen_method_info(id, method, &type_name))
             .collect::<Vec<_>>();
 
         ImplTemplate {
@@ -202,11 +202,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let mut set_slice_conversions = Vec::new();
 
                 let set_expressions = self
-                    .gen_dart_to_c_for_type(
-                        &field.ty,
-                        name.clone().into(),
-                        &mut set_slice_conversions,
-                    )
+                    .gen_dart_to_c_for_type(&field.ty, name.clone(), &mut set_slice_conversions)
                     .into_iter()
                     .map(
                         |PartiallyNamedExpression { suffix, expression }| NamedExpression {
@@ -232,7 +228,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method, &*type_name))
+            .flat_map(|method| self.gen_method_info(id, method, &type_name))
             .collect::<Vec<_>>();
 
         ImplTemplate {
@@ -288,14 +284,14 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
             if let Some(element_type_ffi) = param_type_ffi.strip_prefix("Slice:") {
                 param_types_ffi.push(format!("ffi.Pointer<{element_type_ffi}>").into());
-                param_types_ffi.push(format!("ffi.Size").into());
+                param_types_ffi.push("ffi.Size".into());
             } else {
                 param_types_ffi.push(param_type_ffi);
             }
             let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
             if let Some(element_type_ffi_cast) = param_type_ffi_cast.strip_prefix("Slice:") {
                 param_types_ffi_cast.push(format!("ffi.Pointer<{element_type_ffi_cast}>").into());
-                param_types_ffi_cast.push(format!("int").into());
+                param_types_ffi_cast.push("int".into());
             } else {
                 param_types_ffi_cast.push(param_type_ffi_cast);
             }
@@ -386,7 +382,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let ret = if op.is_optional() {
                     self.cx.formatter.fmt_nullable(&type_name)
                 } else {
-                    type_name.into()
+                    type_name
                 };
                 let ret = ret.into_owned().into();
 
@@ -423,7 +419,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.imports
                     .insert(Import::simple("dart:typed_data".into()));
-                self.cx.formatter.fmt_primitive_list(p).into()
+                self.cx.formatter.fmt_primitive_list(p)
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -475,11 +471,10 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 if cast {
                     self.imports
                         .insert(Import::simple(self.cx.formatter.fmt_import_path(id).into()));
-                    format!("{type_name}Ffi")
+                    format!("{type_name}Ffi").into()
                 } else {
-                    format!("ffi.Uint32")
+                    "ffi.Uint32".into()
                 }
-                .into()
             }
             Type::Slice(hir::Slice::Str(_lifetime)) => "Slice:ffi.Char".into(),
             Type::Slice(hir::Slice::Primitive(_, p)) => {
@@ -491,8 +486,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
 
     fn gen_self_type_ffi(&self, ty: &SelfType, cast: bool) -> Cow<'tcx, str> {
         match ty {
-            SelfType::Opaque(o) => format!("{}Ffi", o.resolve(&self.cx.tcx).name.as_str()).into(),
-            SelfType::Struct(s) => format!("{}Ffi", s.resolve(&self.cx.tcx).name.as_str()).into(),
+            SelfType::Opaque(o) => format!("{}Ffi", o.resolve(self.cx.tcx).name.as_str()).into(),
+            SelfType::Struct(s) => format!("{}Ffi", s.resolve(self.cx.tcx).name.as_str()).into(),
             SelfType::Enum(_) => if cast { "int" } else { "ffi.Uint32" }.into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }

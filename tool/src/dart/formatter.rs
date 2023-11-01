@@ -1,6 +1,7 @@
 //! This module contains functions for formatting types
 
 use crate::c2::CFormatter;
+use diplomat_core::ast::{DocsUrlGenerator, MarkdownStyle};
 use diplomat_core::hir::{self, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
@@ -16,19 +17,22 @@ use std::borrow::Cow;
 /// of C types and methods.
 pub(super) struct DartFormatter<'tcx> {
     c: CFormatter<'tcx>,
+    docs_url_generator: &'tcx DocsUrlGenerator,
 }
 
 impl<'tcx> DartFormatter<'tcx> {
     pub const INDENT_STR: &str = "  ";
 
-    pub fn new(tcx: &'tcx TypeContext) -> Self {
+    pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
         Self {
             c: CFormatter::new(tcx),
+            docs_url_generator,
         }
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(&Default::default(), diplomat_core::ast::MarkdownStyle::Normal).replace("\n", "\n/// ")
+        docs.to_markdown(self.docs_url_generator, MarkdownStyle::Normal)
+            .replace('\n', "\n/// ")
     }
 
     /// Resolve and format a named type for use in code
