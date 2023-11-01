@@ -29,7 +29,7 @@ TypeContext {
                                 ],
                             },
                             optional: Optional(
-                                true,
+                                false,
                             ),
                             owner: Own,
                             tcx_id: OpaqueId(
