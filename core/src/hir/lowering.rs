@@ -625,7 +625,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
 
                                 Some(OutType::Opaque(OpaquePath::new(
                                     lifetimes,
-                                    Optional(true),
+                                    Optional(false),
                                     MaybeOwn::Own,
                                     tcx_id,
                                 )))
