@@ -18,10 +18,10 @@
 
 inline capi::OptionStruct OptionStruct::AsFFI() const {
   return capi::OptionStruct {
-    .a = a.AsFFI(),
-    .b = b.AsFFI(),
+    .a = a ? a->AsFFI() : nullptr,
+    .b = b ? b->AsFFI() : nullptr,
     .c = c,
-    .d = d.AsFFI(),
+    .d = d ? d->AsFFI() : nullptr,
   };
 }
 
