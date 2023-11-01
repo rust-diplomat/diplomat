@@ -23,8 +23,6 @@ struct ICU4XFixedDecimalDeleter {
 };
 
 /**
- * 
- * 
  * See the [Rust documentation for `FixedDecimal`](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html) for more information.
  */
 class ICU4XFixedDecimal {

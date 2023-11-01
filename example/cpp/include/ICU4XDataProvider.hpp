@@ -31,8 +31,6 @@ class ICU4XDataProvider {
  public:
 
   /**
-   * 
-   * 
    * See the [Rust documentation for `get_static_provider`](https://unicode-org.github.io/icu4x-docs/doc/icu_testdata/fn.get_static_provider.html) for more information.
    */
   static ICU4XDataProvider new_static();
