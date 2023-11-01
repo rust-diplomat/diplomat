@@ -1,0 +1,27 @@
+typedef {{type_name}}Ffi = int;
+
+{%- if !docs.is_empty() %}
+/// {{docs}}
+{%- endif %}
+enum {{type_name}} {
+{%- for enum_variant in ty.variants %}
+  {%- if !enum_variant.docs.is_empty() %}
+  /// {{fmt.fmt_docs(enum_variant.docs) }}
+  {%- endif %}
+	{{fmt.fmt_enum_variant(enum_variant)}}._({{enum_variant.discriminant}}){% if loop.last %};{% else %},{% endif %}
+{%- endfor %}
+
+  const {{type_name}}._(this._id);
+
+  final int _id;
+
+{%- for m in methods %}
+
+{% include "method.dart.jinja" %}
+{%- endfor %}
+
+}
+
+// These are not methods because we want to keep them package-private, and methods are either private or public
+{{type_name}} {{type_name}}FromFfi(int id) => {{type_name}}.values.firstWhere((value) => value._id == id);
+{{type_name}}Ffi {{type_name}}AsFfi({{type_name}} t) => t._id;

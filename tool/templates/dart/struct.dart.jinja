@@ -1,0 +1,44 @@
+{%- if !docs.is_empty() %}
+/// {{docs}}
+{%- endif %}
+class {{type_name}}Ffi extends ffi.Struct {
+{%- for field in fields %}
+		{%- match field.annotation %}
+		{%- when Some with (annotation) %}
+		@{{annotation}}()
+		{%- when None %}
+		{%- endmatch %}
+		external {{field.ffi_cast_type_name}} {{field.name}};
+{%- endfor %}
+}
+
+class {{type_name}} {
+	final {{type_name}}Ffi _underlying;
+
+	{%- for field in fields %}
+	{{field.dart_type_name}} get {{field.name}} => {{ field.get_expression }};
+	void set {{field.name}}({{field.dart_type_name}} {{field.name}}) {
+		{%- for cleanup in field.set_cleanups -%}
+		{%- if loop.first %}
+		final alloc = allocators.calloc;{% endif %}
+		alloc.free({{ cleanup }});
+		{%- endfor %}
+		{%- for conversion in field.set_slice_conversions -%}
+		{{ conversion }}
+		{%- endfor %}
+		{%- for set_expression in field.set_expressions -%}
+		this._underlying.{{set_expression.name}} = {{set_expression.expression}};
+		{%- endfor %}
+	}
+
+	{%~ endfor %}
+	{%- for m in methods -%}
+	{%- include "method.dart.jinja" %}
+
+	{%- endfor %}
+	{{type_name}}._(this._underlying);
+}
+
+// These are not methods because we want to keep them package-private, and methods are either private or public
+{{type_name}} {{type_name}}FromFfi({{type_name}}Ffi underlying) => {{type_name}}._(underlying);
+{{type_name}}Ffi {{type_name}}AsFfi({{type_name}} t) => t._underlying;
