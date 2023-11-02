@@ -1,11 +1,9 @@
-typedef {{type_name}}Ffi = ffi.Pointer<ffi.Opaque>;
-
 {%- if !docs.is_empty() %}
 /// {{docs}}
 {%- endif %}
 class {{type_name}} implements ffi.Finalizable {
 
-	final {{type_name}}Ffi _underlying;
+	final ffi.Pointer<ffi.Opaque> _underlying;
 
 	{% for m in methods -%}
 	{% include "method.dart.jinja" %}
@@ -16,9 +14,5 @@ class {{type_name}} implements ffi.Finalizable {
 		_finalizer.attach(this, this._underlying.cast());
 	}
 
-	static late final _finalizer = ffi.NativeFinalizer(capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('{{type_name}}_destroy'));
+	static late final _finalizer = ffi.NativeFinalizer(_capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('{{type_name}}_destroy'));
 }
-
-// These are not methods because we want to keep them package-private, and methods are either private or public
-{{type_name}} {{type_name}}FromFfi({{type_name}}Ffi underlying) => {{type_name}}._(underlying);
-{{type_name}}Ffi {{type_name}}AsFfi({{type_name}} t) => t._underlying;

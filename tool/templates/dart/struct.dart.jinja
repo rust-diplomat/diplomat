@@ -1,7 +1,7 @@
 {%- if !docs.is_empty() %}
 /// {{docs}}
 {%- endif %}
-class {{type_name}}Ffi extends ffi.Struct {
+class _{{type_name}}Ffi extends ffi.Struct {
 {%- for field in fields %}
 		{%- match field.annotation %}
 		{%- when Some with (annotation) %}
@@ -13,9 +13,11 @@ class {{type_name}}Ffi extends ffi.Struct {
 }
 
 class {{type_name}} {
-	final {{type_name}}Ffi _underlying;
+	final _{{type_name}}Ffi _underlying;
 
-	{%- for field in fields %}
+	{{type_name}}._(this._underlying);
+
+	{% for field in fields -%}
 	{{field.dart_type_name}} get {{field.name}} => {{ field.get_expression }};
 	void set {{field.name}}({{field.dart_type_name}} {{field.name}}) {
 		{%- for cleanup in field.set_cleanups -%}
@@ -36,9 +38,4 @@ class {{type_name}} {
 	{%- include "method.dart.jinja" %}
 
 	{%- endfor %}
-	{{type_name}}._(this._underlying);
 }
-
-// These are not methods because we want to keep them package-private, and methods are either private or public
-{{type_name}} {{type_name}}FromFfi({{type_name}}Ffi underlying) => {{type_name}}._(underlying);
-{{type_name}}Ffi {{type_name}}AsFfi({{type_name}} t) => t._underlying;

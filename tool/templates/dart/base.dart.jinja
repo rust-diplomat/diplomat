@@ -3,27 +3,8 @@ import '{{import.path}}'{{import.suffix}};
 {% endfor %}
 {{ body }}
 
-{% for result_class in result_classes.values() %}
+{% for helper_class in helper_classes.values() -%}
 
-{%- if result_class.ok_decl.is_some() || result_class.err_decl.is_some() -%}
-class {{result_class.name}} extends ffi.Union {
-    {%- if result_class.ok_decl.is_some() %}
-    {{result_class.ok_decl.as_ref().unwrap()}}
-    {%- endif %}
-    
-    {%- if result_class.err_decl.is_some() %}
-    {{result_class.err_decl.as_ref().unwrap()}}
-    {%- endif %}
-}
-{% endif -%}
-
-class Result{{result_class.name}} extends ffi.Struct {
-    {% if result_class.ok_decl.is_some() || result_class.err_decl.is_some() -%}
-    external {{result_class.name}} union;
-    {%- endif %}
-
-    @ffi.Bool()
-    external bool isOk;
-}
+{{helper_class}}
 
 {% endfor %}

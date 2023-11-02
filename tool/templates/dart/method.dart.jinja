@@ -14,7 +14,7 @@
 		{{ slice_conversion }}
 		{%- endfor -%}
 		{%- if m.method.is_writeable() %}
-		final writeable = create_writeable();
+		final writeable = _Writeable();
 		{%- endif %}
 		{% if m.method.output.returns_value() -%}
 		final result = {##}
@@ -34,7 +34,7 @@
 		{%- when None %}
 		{%- endmatch %}
   }
-	static late final _{{ m.method_name -}}Ffi = capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
+	static late final _{{ m.method_name -}}Ffi = _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
 		{%- for param in m.param_types_ffi %}
 			{%- if !loop.first %}, {% endif -%}
 			{{ param }}

@@ -8,58 +8,104 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
+#[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
+pub struct Class {
+    // Only for sorting
+    name: String,
+    body: String,
+    imports: BTreeSet<Import>,
+    helper_classes: BTreeMap<String, String>,
+}
+
+impl Class {
+    pub fn init() -> Self {
+        Self {
+            name: Default::default(),
+            body: include_str!("init.dart").into(),
+            imports: [
+                Import::simple("dart:convert".into()),
+                Import {
+                    path: "dart:ffi".into(),
+                    suffix: " as ffi".into(),
+                },
+            ]
+            .into_iter()
+            .collect(),
+            helper_classes: Default::default(),
+        }
+    }
+
+    pub fn append(mut self, other: Self) -> Self {
+        self.body.push_str("\n\n");
+        self.body.push_str(&other.body);
+        self.imports.extend(other.imports.into_iter());
+        self.helper_classes.extend(other.helper_classes.into_iter());
+        self
+    }
+
+    pub fn render(self) -> String {
+        #[derive(askama::Template)]
+        #[template(path = "dart/base.dart.jinja", escape = "none")]
+        struct ClassTemplate {
+            imports: BTreeSet<Import>,
+            body: String,
+            helper_classes: BTreeMap<String, String>,
+        }
+
+        let Self {
+            body,
+            imports,
+            helper_classes,
+            ..
+        } = self;
+
+        ClassTemplate {
+            body,
+            imports,
+            helper_classes,
+        }
+        .render()
+        .unwrap()
+    }
+}
+
 impl<'tcx> DartContext<'tcx> {
-    pub fn gen_ty(&self, id: TypeId) -> ClassFile {
+    pub fn gen_ty(&self, id: TypeId) -> Class {
         let ty = self.tcx.resolve_type(id);
 
         let mut imports = BTreeSet::new();
-        let mut result_classes = BTreeMap::new();
+        let mut helper_classes = BTreeMap::new();
         let _guard = self.errors.set_context_ty(ty.name().as_str().into());
 
         let mut tgcx = TyGenContext {
             imports: &mut imports,
-            result_classes: &mut result_classes,
+            helper_classes: &mut helper_classes,
             cx: self,
         };
 
+        let name = ty.name().as_str();
+
         let body = match ty {
-            TypeDef::Enum(o) => tgcx.gen_enum(o, id, ty.name().as_str().into()),
-            TypeDef::Opaque(o) => tgcx.gen_opaque_def(o, id, ty.name().as_str().into()),
-            TypeDef::Struct(s) => tgcx.gen_struct_def(s, id, ty.name().as_str().into()),
-            TypeDef::OutStruct(s) => tgcx.gen_struct_def(s, id, ty.name().as_str().into()),
+            TypeDef::Enum(o) => tgcx.gen_enum(o, id, name.into()),
+            TypeDef::Opaque(o) => tgcx.gen_opaque_def(o, id, name.into()),
+            TypeDef::Struct(s) => tgcx.gen_struct_def(s, id, name.into()),
+            TypeDef::OutStruct(s) => tgcx.gen_struct_def(s, id, name.into()),
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let path = self.formatter.fmt_import_path(id);
-
-        #[derive(Template)]
-        #[template(path = "dart/base.dart.jinja", escape = "none")]
-        struct ClassTemplate<'a> {
-            imports: BTreeSet<&'a Import<'a>>,
-            body: Cow<'a, str>,
-            result_classes: BTreeMap<String, ResultClass>,
+        Class {
+            name: name.into(),
+            body,
+            imports,
+            helper_classes,
         }
-
-        let content = ClassTemplate {
-            imports: imports.iter().filter(|i| i.path != path).collect(),
-            body: if body.is_empty() {
-                "// No Content\n\n".into()
-            } else {
-                body.replace('\t', DartFormatter::INDENT_STR).into()
-            },
-            result_classes,
-        }
-        .render()
-        .unwrap();
-
-        ClassFile { path, content }
     }
 }
 
 pub struct TyGenContext<'a, 'dartcx, 'tcx> {
     cx: &'dartcx DartContext<'tcx>,
-    imports: &'a mut BTreeSet<Import<'static>>,
-    result_classes: &'a mut BTreeMap<String, ResultClass>,
+    imports: &'a mut BTreeSet<Import>,
+    helper_classes: &'a mut BTreeMap<String, String>,
 }
 
 impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
@@ -115,7 +161,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 path: "dart:ffi".into(),
                 suffix: " as ffi".into(),
             },
-            Import::simple("diplomat_runtime.dart".into()),
         ]);
 
         let methods = ty
@@ -179,9 +224,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let ffi_cast_type_name = self.gen_type_name_ffi(&field.ty, true);
 
                 let ffi_cast_type_name = if ffi_cast_type_name.starts_with("Slice:") {
-                    self.imports
-                        .insert(Import::simple("diplomat_runtime.dart".into()));
-                    "Slice".into()
+                    self.helper_classes.insert("slice".into(), include_str!("slice.dart").into());
+                    "_Slice".into()
                 } else {
                     ffi_cast_type_name
                 };
@@ -191,7 +235,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let get_expression = self
                     .gen_c_to_dart_for_type(&field.ty, format!("this._underlying.{name}").into());
 
-                let set_cleanups = if ffi_cast_type_name == "Slice" {
+                let set_cleanups = if ffi_cast_type_name == "_Slice" {
                     vec![format!("this._underlying.{name}.bytes")]
                 } else if ffi_cast_type_name.starts_with("ffi.Pointer") {
                     vec![format!("this._underlying.{name}")]
@@ -261,9 +305,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             suffix: " as ffi".into(),
         });
 
-        self.imports
-            .insert(Import::simple("diplomat_runtime.dart".into()));
-
         let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);
 
         let mut param_decls_dart = Vec::new();
@@ -308,9 +349,10 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         }
 
         if method.is_writeable() {
-            dart_to_ffi_params.push("writeable".into());
-            param_types_ffi.push("DiplomatWriteable".into());
-            param_types_ffi_cast.push("DiplomatWriteable".into());
+            dart_to_ffi_params.push("writeable._underlying".into());
+            param_types_ffi.push("ffi.Pointer<ffi.Opaque>".into());
+            param_types_ffi_cast.push("ffi.Pointer<ffi.Opaque>".into());
+            self.helper_classes.insert("writeable".into(), include_str!("writeable.dart").into());
         }
 
         let ffi_return_ty = self.gen_ffi_return_type_name(&method.output, false);
@@ -384,12 +426,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 } else {
                     type_name
                 };
-                let ret = ret.into_owned().into();
-
-                self.imports.insert(Import::simple(
-                    self.cx.formatter.fmt_import_path(op_id).into(),
-                ));
-                ret
+                
+                ret.into_owned().into()
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
@@ -399,8 +437,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                         .errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
-                self.imports
-                    .insert(Import::simple(self.cx.formatter.fmt_import_path(id).into()));
                 type_name
             }
             Type::Enum(ref e) => {
@@ -411,8 +447,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                         .errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
-                self.imports
-                    .insert(Import::simple(self.cx.formatter.fmt_import_path(id).into()));
                 type_name
             }
             Type::Slice(hir::Slice::Str(_lifetime)) => self.cx.formatter.fmt_string(),
@@ -446,7 +480,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                         .errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
-                format!("{type_name}Ffi").into()
+                "ffi.Pointer<ffi.Opaque>".into()
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
@@ -456,9 +490,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                         .errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
-                self.imports
-                    .insert(Import::simple(self.cx.formatter.fmt_import_path(id).into()));
-                format!("{type_name}Ffi").into()
+                format!("_{type_name}Ffi").into()
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
@@ -468,13 +500,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                         .errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
-                if cast {
-                    self.imports
-                        .insert(Import::simple(self.cx.formatter.fmt_import_path(id).into()));
-                    format!("{type_name}Ffi").into()
-                } else {
-                    "ffi.Uint32".into()
-                }
+                if cast { "int" } else { "ffi.Uint32" }.into()
             }
             Type::Slice(hir::Slice::Str(_lifetime)) => "Slice:ffi.Char".into(),
             Type::Slice(hir::Slice::Primitive(_, p)) => {
@@ -486,8 +512,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
 
     fn gen_self_type_ffi(&self, ty: &SelfType, cast: bool) -> Cow<'tcx, str> {
         match ty {
-            SelfType::Opaque(o) => format!("{}Ffi", o.resolve(self.cx.tcx).name.as_str()).into(),
-            SelfType::Struct(s) => format!("{}Ffi", s.resolve(self.cx.tcx).name.as_str()).into(),
+            SelfType::Opaque(_) => "ffi.Pointer<ffi.Opaque>".into(),
+            SelfType::Struct(s) => format!("_{}Ffi", s.resolve(self.cx.tcx).name.as_str()).into(),
             SelfType::Enum(_) => if cast { "int" } else { "ffi.Uint32" }.into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -517,7 +543,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         dart_name: Cow<'b, str>,
         slice_conversions: &mut Vec<Cow<'b, str>>,
     ) -> Vec<PartiallyNamedExpression<'b>> {
-        let type_name = self.gen_type_name(ty);
         match *ty {
             Type::Primitive(..) => {
                 vec![PartiallyNamedExpression {
@@ -529,25 +554,25 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 vec![PartiallyNamedExpression {
                     suffix: "".into(),
                     // TODO(rb): Is `null` a valid `ffi.Pointer<T>`?
-                    expression: format!("{type_name}AsFfi({dart_name})").into(),
+                    expression: format!("{dart_name}._underlying").into(),
                 }]
             }
             Type::Opaque(..) => {
                 vec![PartiallyNamedExpression {
                     suffix: "".into(),
-                    expression: format!("{type_name}AsFfi({dart_name})").into(),
+                    expression: format!("{dart_name}._underlying").into(),
                 }]
             }
             Type::Struct(..) => {
                 vec![PartiallyNamedExpression {
                     suffix: "".into(),
-                    expression: format!("{type_name}AsFfi({dart_name})").into(),
+                    expression: format!("{dart_name}._underlying").into(),
                 }]
             }
             Type::Enum(..) => {
                 vec![PartiallyNamedExpression {
                     suffix: "".into(),
-                    expression: format!("{type_name}AsFfi({dart_name})").into(),
+                    expression: format!("{dart_name}._id").into(),
                 }]
             }
             Type::Slice(hir::Slice::Str(..)) => {
@@ -636,7 +661,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                     let out = self.gen_type_name_ffi(o, cast);
 
                     if out.starts_with("Slice:") {
-                        "Slice".into()
+                        self.helper_classes.insert("slice".into(), include_str!("slice.dart").into());
+                        "_Slice".into()
                     } else {
                         out
                     }
@@ -650,17 +676,21 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                     &Some(_) => unreachable!("unknown AST/HIR variant"),
                 };
 
-                let name = format!(
-                    "{}Union{}",
-                    ok.as_ref()
-                        .map(|o| self.gen_type_name(o))
-                        .as_deref()
-                        .unwrap_or("Void"),
-                    err.as_ref()
-                        .map(|o| self.gen_type_name(o))
-                        .as_deref()
-                        .unwrap_or("Void"),
-                );
+                let ok_name = ok
+                    .as_ref()
+                    .map(|o| self.gen_type_name_ffi(o, false))
+                    .as_deref()
+                    .unwrap_or("Void")
+                    .replace("ffi.Pointer<ffi.Opaque>", "Opaque")
+                    .replace("ffi.", "");
+
+                let err_name = err
+                    .as_ref()
+                    .map(|o| self.gen_type_name_ffi(o, false))
+                    .as_deref()
+                    .unwrap_or("Void")
+                    .replace("ffi.Pointer<ffi.Opaque>", "Opaque")
+                    .replace("ffi.", "");
 
                 fn decl(
                     selff: &mut TyGenContext,
@@ -682,16 +712,28 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let ok_decl = ok.map(|o| decl(self, "ok", o));
                 let err_decl = err.as_ref().map(|o| decl(self, "err", o));
 
-                self.result_classes.insert(
+                #[derive(askama::Template)]
+                #[template(path = "dart/result.dart.jinja", escape = "none")]
+                struct ResultTemplate<'a> {
+                    ok_name: &'a str,
+                    err_name: &'a str,
+                    ok_decl: Option<String>,
+                    err_decl: Option<String>,
+                }
+
+                let name = format!("_Result{ok_name}{err_name}");
+
+                self.helper_classes.insert(
                     name.clone(),
-                    ResultClass {
-                        name: name.clone(),
+                    ResultTemplate {
+                        ok_name: &ok_name,
+                        err_name: &err_name,
                         ok_decl,
                         err_decl,
-                    },
+                    }.render().unwrap(),
                 );
 
-                format!("Result{name}").into()
+                name.into()
             }
         }
     }
@@ -713,23 +755,21 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
 
                 match (op.owner.is_owned(), op.is_optional()) {
                     (false, _) => unimplemented!(),
-                    (true, false) => format!("{type_name}FromFfi({var_name})").into(),
+                    (true, false) => format!("{type_name}._({var_name})").into(),
                     (true, true) => {
-                        format!("{var_name}.address == 0 ? null : {type_name}FromFfi({var_name})")
-                            .into()
+                        format!("{var_name}.address == 0 ? null : {type_name}._({var_name})").into()
                     }
                 }
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
                 let type_name = self.cx.formatter.fmt_type_name(id);
-                format!("{type_name}FromFfi({var_name})").into()
+                format!("{type_name}._({var_name})").into()
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_type_name().
-                format!("{type_name}FromFfi({var_name})").into()
+                format!("{type_name}._({var_name})").into()
             }
             Type::Slice(hir::Slice::Str(..)) => {
                 self.imports.insert(Import::simple("dart:convert".into()));
@@ -758,7 +798,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         match *result_ty {
             ReturnType::Infallible(None) => None,
             ReturnType::Infallible(Some(SuccessType::Writeable)) => {
-                Some("return writeable_to_string(writeable);".into())
+                Some("return writeable.toString();".into())
             }
             ReturnType::Infallible(Some(SuccessType::OutType(ref out_ty))) => {
                 Some(format!("return {};", self.gen_c_to_dart_for_type(out_ty, var_name)).into())
@@ -768,11 +808,14 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let err_path = format!("{var_name}.union.err");
                 let err_conversion = match err {
                     Some(o) => self.gen_c_to_dart_for_type(o, err_path.into()),
-                    None => "VoidError()".into(),
+                    None => {
+                        self.helper_classes.insert("voiderror".into(), "class VoidError {}".into());
+                        "VoidError()".into()
+                    }
                 };
                 let ok_conversion = match ok {
                     // Note: the `writeable` variable is a string initialized in the template
-                    Some(SuccessType::Writeable) => "writeable_to_string(writeable)".into(),
+                    Some(SuccessType::Writeable) => "writeable.toString()".into(),
                     Some(SuccessType::OutType(o)) => self.gen_c_to_dart_for_type(o, ok_path.into()),
                     None => {
                         return Some(
@@ -839,13 +882,13 @@ struct MethodInfo<'a> {
 }
 
 #[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
-struct Import<'a> {
-    path: Cow<'a, str>,
-    suffix: Cow<'a, str>,
+struct Import {
+    path: Cow<'static, str>,
+    suffix: Cow<'static, str>,
 }
 
-impl<'a> Import<'a> {
-    fn simple(path: Cow<'a, str>) -> Self {
+impl Import {
+    fn simple(path: Cow<'static, str>) -> Self {
         Import {
             path,
             suffix: "".into(),
@@ -853,13 +896,10 @@ impl<'a> Import<'a> {
     }
 }
 
+#[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
 struct ResultClass {
-    name: String,
+    ok_name: String,
+    err_name: String,
     ok_decl: Option<String>,
     err_decl: Option<String>,
-}
-
-pub struct ClassFile {
-    pub path: String,
-    pub content: String,
 }

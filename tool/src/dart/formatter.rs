@@ -21,8 +21,6 @@ pub(super) struct DartFormatter<'tcx> {
 }
 
 impl<'tcx> DartFormatter<'tcx> {
-    pub const INDENT_STR: &str = "  ";
-
     pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
         Self {
             c: CFormatter::new(tcx),
@@ -49,12 +47,6 @@ impl<'tcx> DartFormatter<'tcx> {
     /// (don't apply rename rules and such)
     pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
         self.c.fmt_type_name_diagnostics(id)
-    }
-
-    /// Resolve and format the file name where a type is declared
-    pub fn fmt_import_path(&self, id: TypeId) -> String {
-        let type_name = self.fmt_type_name(id);
-        format!("{type_name}.dart")
     }
 
     /// Format an enum variant.
