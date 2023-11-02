@@ -16,14 +16,14 @@ class _Writeable {
   static late final _len =
       _capi<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ffi.Opaque>)>>(
               "diplomat_buffer_writeable_len")
-          .asFunction<int Function(ffi.Pointer<ffi.Opaque>)>();
+          .asFunction<int Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
   static late final _get_bytes = _capi<
               ffi.NativeFunction<
                   ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Opaque>)>>(
           "diplomat_buffer_writeable_get_bytes")
-      .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Opaque>)>();
+      .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
   static late final _destroy =
       _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>(
               "diplomat_buffer_writeable_destroy")
-          .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>();
+          .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }
