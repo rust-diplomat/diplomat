@@ -1,0 +1,20 @@
+{%- if ok_decl.is_some() || err_decl.is_some() -%}
+class _Union{{ok_name}}{{err_name}} extends ffi.Union {
+    {%- if ok_decl.is_some() %}
+    {{ok_decl.as_ref().unwrap()}}
+    {%- endif %}
+    
+    {%- if err_decl.is_some() %}
+    {{err_decl.as_ref().unwrap()}}
+    {%- endif %}
+}
+{% endif -%}
+
+class _Result{{ok_name}}{{err_name}} extends ffi.Struct {
+    {% if ok_decl.is_some() || err_decl.is_some() -%}
+    external _Union{{ok_name}}{{err_name}} union;
+    {%- endif %}
+
+    @ffi.Bool()
+    external bool isOk;
+}

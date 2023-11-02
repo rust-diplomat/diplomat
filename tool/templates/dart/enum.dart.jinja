@@ -1,0 +1,23 @@
+{%- if !docs.is_empty() %}
+/// {{docs}}
+{%- endif %}
+enum {{type_name}} {
+{%- for enum_variant in ty.variants %}
+  {%- if !enum_variant.docs.is_empty() %}
+  /// {{fmt.fmt_docs(enum_variant.docs) }}
+  {%- endif %}
+	{{fmt.fmt_enum_variant(enum_variant)}}.__({{enum_variant.discriminant}}){% if loop.last %};{% else %},{% endif %}
+{%- endfor %}
+
+  const {{type_name}}.__(this._id);
+
+  factory {{type_name}}._(int id) => values.firstWhere((value) => value._id == id);
+
+  final int _id;
+
+{%- for m in methods %}
+
+{% include "method.dart.jinja" %}
+{%- endfor %}
+
+}

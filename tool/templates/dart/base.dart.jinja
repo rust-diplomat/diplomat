@@ -1,0 +1,10 @@
+{% for import in imports -%}
+import '{{import.path}}'{{import.suffix}};
+{% endfor %}
+{{ body }}
+
+{% for helper_class in helper_classes.values() -%}
+
+{{helper_class}}
+
+{% endfor %}

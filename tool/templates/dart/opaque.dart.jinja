@@ -1,0 +1,18 @@
+{%- if !docs.is_empty() %}
+/// {{docs}}
+{%- endif %}
+class {{type_name}} implements ffi.Finalizable {
+
+	final ffi.Pointer<ffi.Opaque> _underlying;
+
+	{{type_name}}._(this._underlying) {
+		_finalizer.attach(this, this._underlying.cast());
+	}
+
+	static late final _finalizer = ffi.NativeFinalizer(_capi('{{destructor}}'));
+
+	{% for m in methods -%}
+	{% include "method.dart.jinja" %}
+
+	{% endfor -%}
+}

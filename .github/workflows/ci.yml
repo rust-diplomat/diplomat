@@ -50,6 +50,7 @@ jobs:
       with:
         crate: cargo-make
         version: latest
+    - uses: dart-lang/setup-dart@v1
 
     - name: Run regeneration
       run: cargo make gen

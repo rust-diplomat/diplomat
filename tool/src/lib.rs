@@ -12,6 +12,8 @@ pub mod cpp;
 #[doc(hidden)]
 pub mod cpp2;
 #[doc(hidden)]
+pub mod dart;
+#[doc(hidden)]
 pub mod dotnet;
 #[doc(hidden)]
 pub mod js;
@@ -78,6 +80,24 @@ pub fn gen(
 
     match target_language {
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
+        "dart" => {
+            let tcx = match hir::TypeContext::from_ast(
+                &env,
+                hir::BasicAttributeValidator::new(target_language),
+            ) {
+                Ok(context) => context,
+                Err(e) => {
+                    for err in e {
+                        eprintln!("Lowering error: {}", err);
+                    }
+                    std::process::exit(1);
+                }
+            };
+            let files = common::FileMap::default();
+            let mut context = dart::DartContext::new(&tcx, files, docs_url_gen);
+            context.run();
+            out_texts = context.files.take_files();
+        }
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
         "cpp" => {
             c::gen_bindings(&env, &mut out_texts).unwrap();
@@ -167,10 +187,30 @@ pub fn gen(
 
     for (subpath, text) in out_texts {
         let out_path = out_folder.join(subpath);
+        let parent = out_path.parent().unwrap();
+        std::fs::create_dir_all(parent).unwrap();
         let mut out_file = File::create(&out_path)?;
         out_file.write_all(text.as_bytes())?;
         if !silent {
             println!("{}", format!("  {}", out_path.display()).dimmed());
+        }
+    }
+
+    if target_language == "dart" {
+        if !silent {
+            print!("{}", "Trying to run `dart format` ... ".green().bold());
+        }
+        let _ = std::io::stdout().flush();
+        if std::process::Command::new("dart")
+            .args([std::ffi::OsStr::new("format"), out_folder.as_os_str()])
+            .output()
+            .is_ok()
+        {
+            if !silent {
+                println!("{}", "success".green().bold());
+            }
+        } else if !silent {
+            println!("{}", "failure".red().bold());
         }
     }
 
