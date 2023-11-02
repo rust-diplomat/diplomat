@@ -38,8 +38,8 @@ impl<'tcx> Class<'tcx> {
     pub fn append(mut self, other: Self) -> Self {
         self.body.push_str("\n\n");
         self.body.push_str(&other.body);
-        self.imports.extend(other.imports.into_iter());
-        self.helper_classes.extend(other.helper_classes.into_iter());
+        self.imports.extend(other.imports);
+        self.helper_classes.extend(other.helper_classes);
         self
     }
 
