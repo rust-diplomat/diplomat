@@ -123,13 +123,13 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method, &type_name))
+            .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
         ImplTemplate {
             ty,
             fmt: &self.cx.formatter,
-            type_name: &type_name,
+            type_name,
             methods: methods.as_slice(),
             docs: self.cx.formatter.fmt_docs(&ty.docs),
         }
@@ -155,13 +155,13 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method, &type_name))
+            .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
         let destructor = self.cx.formatter.fmt_destructor_name(id);
 
         ImplTemplate {
-            type_name: &type_name,
+            type_name,
             methods: methods.as_slice(),
             destructor,
             docs: self.cx.formatter.fmt_docs(&ty.docs),
@@ -265,11 +265,11 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let methods = ty
             .methods
             .iter()
-            .flat_map(|method| self.gen_method_info(id, method, &type_name))
+            .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
         ImplTemplate {
-            type_name: &type_name,
+            type_name,
             fields: &fields,
             methods: methods.as_slice(),
             docs: self.cx.formatter.fmt_docs(&ty.docs),
@@ -370,12 +370,10 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 } else {
                     format!("factory {type_name}.{method_name}({params})")
                 }
+            } else if method_name == "new" {
+                format!("static {return_ty} new_({params})")
             } else {
-                if method_name == "new" {
-                    format!("static {return_ty} new_({params})")
-                } else {
-                    format!("static {return_ty} {method_name}({params})")
-                }
+                format!("static {return_ty} {method_name}({params})")
             }
         // } else if method.params.is_empty() && return_ty != "void" && method_name != "toString" {
         //     format!("{return_ty} get {method_name}")
