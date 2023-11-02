@@ -4,21 +4,20 @@ use askama::Template;
 use diplomat_core::hir::{
     self, OpaqueOwner, ReturnType, SelfType, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
-use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 #[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
-pub struct Class {
+pub struct Class<'tcx> {
     // Only for sorting
-    name: String,
+    name: Cow<'tcx, str>,
     body: String,
     imports: BTreeSet<Import>,
     helper_classes: BTreeMap<String, String>,
 }
 
-impl Class {
+impl<'tcx> Class<'tcx> {
     pub fn init() -> Self {
         Self {
             name: Default::default(),
@@ -71,7 +70,7 @@ impl Class {
 }
 
 impl<'tcx> DartContext<'tcx> {
-    pub fn gen_ty(&self, id: TypeId) -> Class {
+    pub fn gen_ty(&self, id: TypeId) -> Class<'tcx> {
         let ty = self.tcx.resolve_type(id);
 
         let mut imports = BTreeSet::new();
@@ -84,18 +83,18 @@ impl<'tcx> DartContext<'tcx> {
             cx: self,
         };
 
-        let name = ty.name().as_str();
+        let name = self.formatter.fmt_type_name(id);
 
         let body = match ty {
-            TypeDef::Enum(o) => tgcx.gen_enum(o, id, name.into()),
-            TypeDef::Opaque(o) => tgcx.gen_opaque_def(o, id, name.into()),
-            TypeDef::Struct(s) => tgcx.gen_struct_def(s, id, name.into()),
-            TypeDef::OutStruct(s) => tgcx.gen_struct_def(s, id, name.into()),
+            TypeDef::Enum(o) => tgcx.gen_enum(o, id, &name),
+            TypeDef::Opaque(o) => tgcx.gen_opaque_def(o, id, &name),
+            TypeDef::Struct(s) => tgcx.gen_struct_def(s, id, &name),
+            TypeDef::OutStruct(s) => tgcx.gen_struct_def(s, id, &name),
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
         Class {
-            name: name.into(),
+            name,
             body,
             imports,
             helper_classes,
@@ -110,12 +109,7 @@ pub struct TyGenContext<'a, 'dartcx, 'tcx> {
 }
 
 impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
-    fn gen_enum(
-        &mut self,
-        ty: &'tcx hir::EnumDef,
-        id: TypeId,
-        type_name: Cow<'tcx, str>,
-    ) -> String {
+    fn gen_enum(&mut self, ty: &'tcx hir::EnumDef, id: TypeId, type_name: &str) -> String {
         #[derive(Template)]
         #[template(path = "dart/enum.dart.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -143,18 +137,14 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         .unwrap()
     }
 
-    fn gen_opaque_def(
-        &mut self,
-        ty: &'tcx hir::OpaqueDef,
-        id: TypeId,
-        type_name: Cow<'tcx, str>,
-    ) -> String {
+    fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId, type_name: &str) -> String {
         #[derive(Template)]
         #[template(path = "dart/opaque.dart.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             docs: String,
+            destructor: String,
         }
 
         self.imports.extend([Import {
@@ -168,9 +158,12 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             .flat_map(|method| self.gen_method_info(id, method, &type_name))
             .collect::<Vec<_>>();
 
+        let destructor = self.cx.formatter.fmt_destructor_name(id);
+
         ImplTemplate {
             type_name: &type_name,
             methods: methods.as_slice(),
+            destructor,
             docs: self.cx.formatter.fmt_docs(&ty.docs),
         }
         .render()
@@ -181,7 +174,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         &mut self,
         ty: &'tcx hir::StructDef<P>,
         id: TypeId,
-        type_name: Cow<'tcx, str>,
+        type_name: &str,
     ) -> String {
         #[derive(Template)]
         #[template(path = "dart/struct.dart.jinja", escape = "none")]
@@ -196,7 +189,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             name: Cow<'a, str>,
             annotation: Option<Cow<'a, str>>,
             ffi_cast_type_name: Cow<'a, str>,
-            default: Cow<'a, str>,
             dart_type_name: Cow<'a, str>,
             get_expression: Cow<'a, str>,
             set_cleanups: Vec<String>,
@@ -231,13 +223,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                     ffi_cast_type_name
                 };
 
-                let default = match field.ty {
-                    hir::Type::Primitive(_) | hir::Type::Enum(_) => "0".into(),
-                    hir::Type::Struct(_) => ffi_cast_type_name.clone().into(),
-                    hir::Type::Slice(_) => "_Slice()".into(),
-                    _ => unreachable!("{:?}", field.ty),
-                };
-
                 let dart_type_name = self.gen_type_name(&field.ty);
 
                 let get_expression = self
@@ -268,7 +253,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                     name,
                     annotation,
                     ffi_cast_type_name,
-                    default,
                     dart_type_name,
                     get_expression,
                     set_cleanups,
@@ -388,6 +372,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         // } else if method.params.is_empty() && return_ty != "void" && method_name != "toString" {
         //     format!("{return_ty} get {method_name}")
         // } else if method_name.starts_with("set") && method.params.len() == 1 {
+        //     use heck::ToLowerCamelCase;
         //     format!("{return_ty} set {}({params})", method_name.strip_prefix("set").unwrap().to_lower_camel_case())
         } else {
             format!("{return_ty} {method_name}({params})")
@@ -401,7 +386,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             declaration,
             method_name,
             c_method_name,
-            param_decls_dart,
             param_types_ffi,
             param_types_ffi_cast,
             ffi_return_ty,
@@ -832,8 +816,10 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let err_conversion = match err {
                     Some(o) => self.gen_c_to_dart_for_type(o, err_path.into()),
                     None => {
-                        self.helper_classes
-                            .insert("voiderror".into(), "class VoidError {}".into());
+                        self.helper_classes.insert(
+                            "voiderror".into(),
+                            "/// An unspecified error value\nclass VoidError {}".into(),
+                        );
                         "VoidError()".into()
                     }
                 };
@@ -888,8 +874,7 @@ struct MethodInfo<'a> {
     method_name: Cow<'a, str>,
     /// The C method name
     c_method_name: Cow<'a, str>,
-    /// Type declarations for the Dart parameters
-    param_decls_dart: Vec<NamedType<'a>>,
+
     param_types_ffi: Vec<Cow<'a, str>>,
     param_types_ffi_cast: Vec<Cow<'a, str>>,
     ffi_return_ty: Cow<'a, str>,

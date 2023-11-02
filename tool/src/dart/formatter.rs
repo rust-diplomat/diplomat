@@ -33,6 +33,11 @@ impl<'tcx> DartFormatter<'tcx> {
             .replace('\n', "\n/// ")
     }
 
+    pub fn fmt_destructor_name(&self, id: TypeId) -> String {
+        let ty_name = self.c.fmt_type_name(id);
+        format!("{ty_name}_destroy")
+    }
+
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);

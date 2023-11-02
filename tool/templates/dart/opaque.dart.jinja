@@ -14,5 +14,5 @@ class {{type_name}} implements ffi.Finalizable {
 		_finalizer.attach(this, this._underlying.cast());
 	}
 
-	static late final _finalizer = ffi.NativeFinalizer(_capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('{{type_name}}_destroy'));
+	static late final _finalizer = ffi.NativeFinalizer(_capi('{{destructor}}'));
 }

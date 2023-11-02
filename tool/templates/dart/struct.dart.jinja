@@ -13,17 +13,17 @@ class _{{type_name}}Ffi extends ffi.Struct {
 }
 
 class {{type_name}} {
-	final ffi.Pointer<_{{type_name}}Ffi>? _underlyingPtr;
-	final _{{type_name}}Ffi? _underlyingNative;
+	final _{{type_name}}Ffi _underlying;
 
-	{{type_name}}._(this._underlyingNative) : _underlyingPtr = null;
+	{{type_name}}._(this._underlying);
 
- 	{{type_name}}() : _underlyingPtr = allocators.calloc<_{{type_name}}Ffi>(), _underlyingNative = null {
-		_finalizer.attach(this, this._underlyingPtr!);
+ 	factory {{type_name}}() {
+		final pointer = allocators.calloc<_{{type_name}}Ffi>();
+		final result = {{type_name}}._(pointer.ref);
+		_finalizer.attach(result, pointer.cast());
+		return result;
 	}
 	static late final _finalizer = Finalizer(allocators.calloc.free);
-
-	_{{type_name}}Ffi get _underlying => _underlyingNative ?? _underlyingPtr!.ref;
 
 	{% for field in fields -%}
 	{{field.dart_type_name}} get {{field.name}} => {{ field.get_expression }};
