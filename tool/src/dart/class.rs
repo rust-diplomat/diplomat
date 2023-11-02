@@ -365,9 +365,17 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let method_name = self.cx.formatter.fmt_method_name(method);
         let declaration = if method.param_self.is_none() {
             if return_ty == type_name {
-                format!("factory {type_name}.{method_name}({params})")
+                if method_name == "new" {
+                    format!("factory {type_name}({params})")
+                } else {
+                    format!("factory {type_name}.{method_name}({params})")
+                }
             } else {
-                format!("static {return_ty} {method_name}({params})")
+                if method_name == "new" {
+                    format!("static {return_ty} new_({params})")
+                } else {
+                    format!("static {return_ty} {method_name}({params})")
+                }
             }
         // } else if method.params.is_empty() && return_ty != "void" && method_name != "toString" {
         //     format!("{return_ty} get {method_name}")
