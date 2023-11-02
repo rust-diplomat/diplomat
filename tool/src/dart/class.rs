@@ -4,6 +4,7 @@ use askama::Template;
 use diplomat_core::hir::{
     self, OpaqueOwner, ReturnType, SelfType, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
+use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -156,12 +157,10 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             docs: String,
         }
 
-        self.imports.extend([
-            Import {
-                path: "dart:ffi".into(),
-                suffix: " as ffi".into(),
-            },
-        ]);
+        self.imports.extend([Import {
+            path: "dart:ffi".into(),
+            suffix: " as ffi".into(),
+        }]);
 
         let methods = ty
             .methods
@@ -197,6 +196,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             name: Cow<'a, str>,
             annotation: Option<Cow<'a, str>>,
             ffi_cast_type_name: Cow<'a, str>,
+            default: Cow<'a, str>,
             dart_type_name: Cow<'a, str>,
             get_expression: Cow<'a, str>,
             set_cleanups: Vec<String>,
@@ -224,10 +224,18 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let ffi_cast_type_name = self.gen_type_name_ffi(&field.ty, true);
 
                 let ffi_cast_type_name = if ffi_cast_type_name.starts_with("Slice:") {
-                    self.helper_classes.insert("slice".into(), include_str!("slice.dart").into());
+                    self.helper_classes
+                        .insert("slice".into(), include_str!("slice.dart").into());
                     "_Slice".into()
                 } else {
                     ffi_cast_type_name
+                };
+
+                let default = match field.ty {
+                    hir::Type::Primitive(_) | hir::Type::Enum(_) => "0".into(),
+                    hir::Type::Struct(_) => ffi_cast_type_name.clone().into(),
+                    hir::Type::Slice(_) => "_Slice()".into(),
+                    _ => unreachable!("{:?}", field.ty),
                 };
 
                 let dart_type_name = self.gen_type_name(&field.ty);
@@ -250,7 +258,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                     .into_iter()
                     .map(
                         |PartiallyNamedExpression { suffix, expression }| NamedExpression {
-                            name: format!("{name}{suffix}").into(),
+                            name: format!("this._underlying.{name}{suffix}").into(),
                             expression,
                         },
                     )
@@ -260,6 +268,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                     name,
                     annotation,
                     ffi_cast_type_name,
+                    default,
                     dart_type_name,
                     get_expression,
                     set_cleanups,
@@ -352,7 +361,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             dart_to_ffi_params.push("writeable._underlying".into());
             param_types_ffi.push("ffi.Pointer<ffi.Opaque>".into());
             param_types_ffi_cast.push("ffi.Pointer<ffi.Opaque>".into());
-            self.helper_classes.insert("writeable".into(), include_str!("writeable.dart").into());
+            self.helper_classes
+                .insert("writeable".into(), include_str!("writeable.dart").into());
         }
 
         let ffi_return_ty = self.gen_ffi_return_type_name(&method.output, false);
@@ -361,16 +371,26 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let dart_return_expression: Option<Cow<str>> =
             self.gen_c_to_dart_for_return_type(&method.output, "result".into());
 
+        let params = param_decls_dart
+            .iter()
+            .map(|param| format!("{} {}", param.type_name, param.var_name))
+            .collect::<Vec<_>>()
+            .join(", ");
+
         let return_ty = self.gen_dart_return_type_name(&method.output);
         let method_name = self.cx.formatter.fmt_method_name(method);
         let declaration = if method.param_self.is_none() {
             if return_ty == type_name {
-                format!("factory {type_name}.{method_name}")
+                format!("factory {type_name}.{method_name}({params})")
             } else {
-                format!("static {return_ty} {method_name}")
+                format!("static {return_ty} {method_name}({params})")
             }
+        // } else if method.params.is_empty() && return_ty != "void" && method_name != "toString" {
+        //     format!("{return_ty} get {method_name}")
+        // } else if method_name.starts_with("set") && method.params.len() == 1 {
+        //     format!("{return_ty} set {}({params})", method_name.strip_prefix("set").unwrap().to_lower_camel_case())
         } else {
-            format!("{return_ty} {method_name}")
+            format!("{return_ty} {method_name}({params})")
         };
 
         let docs = self.cx.formatter.fmt_docs(&method.docs);
@@ -426,7 +446,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 } else {
                     type_name
                 };
-                
+
                 ret.into_owned().into()
             }
             Type::Struct(ref st) => {
@@ -661,7 +681,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                     let out = self.gen_type_name_ffi(o, cast);
 
                     if out.starts_with("Slice:") {
-                        self.helper_classes.insert("slice".into(), include_str!("slice.dart").into());
+                        self.helper_classes
+                            .insert("slice".into(), include_str!("slice.dart").into());
                         "_Slice".into()
                     } else {
                         out
@@ -730,7 +751,9 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                         err_name: &err_name,
                         ok_decl,
                         err_decl,
-                    }.render().unwrap(),
+                    }
+                    .render()
+                    .unwrap(),
                 );
 
                 name.into()
@@ -809,7 +832,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let err_conversion = match err {
                     Some(o) => self.gen_c_to_dart_for_type(o, err_path.into()),
                     None => {
-                        self.helper_classes.insert("voiderror".into(), "class VoidError {}".into());
+                        self.helper_classes
+                            .insert("voiderror".into(), "class VoidError {}".into());
                         "VoidError()".into()
                     }
                 };

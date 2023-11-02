@@ -13,9 +13,17 @@ class _{{type_name}}Ffi extends ffi.Struct {
 }
 
 class {{type_name}} {
-	final _{{type_name}}Ffi _underlying;
+	final ffi.Pointer<_{{type_name}}Ffi>? _underlyingPtr;
+	final _{{type_name}}Ffi? _underlyingNative;
 
-	{{type_name}}._(this._underlying);
+	{{type_name}}._(this._underlyingNative) : _underlyingPtr = null;
+
+ 	{{type_name}}() : _underlyingPtr = allocators.calloc<_{{type_name}}Ffi>(), _underlyingNative = null {
+		_finalizer.attach(this, this._underlyingPtr!);
+	}
+	static late final _finalizer = Finalizer(allocators.calloc.free);
+
+	_{{type_name}}Ffi get _underlying => _underlyingNative ?? _underlyingPtr!.ref;
 
 	{% for field in fields -%}
 	{{field.dart_type_name}} get {{field.name}} => {{ field.get_expression }};
@@ -29,7 +37,7 @@ class {{type_name}} {
 		{{ conversion }}
 		{%- endfor %}
 		{%- for set_expression in field.set_expressions -%}
-		this._underlying.{{set_expression.name}} = {{set_expression.expression}};
+		{{set_expression.name}} = {{set_expression.expression}};
 		{%- endfor %}
 	}
 
