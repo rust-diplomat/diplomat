@@ -74,9 +74,12 @@ impl Docs {
             if rust_link.display == RustLinkDisplay::Compact {
                 has_compact = true;
             } else if rust_link.display == RustLinkDisplay::Normal {
+                if !lines.is_empty() {
+                    write!(lines, "\n\n").unwrap();
+                }
                 write!(
                     lines,
-                    "\n\nSee the [Rust documentation for {backtick}{name}{backtick}]({link}) for more information.",
+                    "See the [Rust documentation for {backtick}{name}{backtick}]({link}) for more information.",
                     name = rust_link.path.elements.last().unwrap(),
                     link = docs_url_gen.gen_for_rust_link(rust_link)
                 )
@@ -84,7 +87,10 @@ impl Docs {
             }
         }
         if has_compact {
-            write!(lines, "\n\n Additional information: ").unwrap();
+            if !lines.is_empty() {
+                write!(lines, "\n\n").unwrap();
+            }
+            write!(lines, "Additional information: ").unwrap();
             for (i, rust_link) in self
                 .1
                 .iter()
