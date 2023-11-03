@@ -1,7 +1,9 @@
 {%- if !m.docs.is_empty() %}
 /// {{m.docs}}
 {%- endif %}
-{{ m.declaration -}} { {##}
+{{ m.declaration -}}
+{%- if !m.declaration.starts_with("static late") -%}
+{##} { {##}
 		{%- for slice_conversion in m.slice_conversions %}
 		{%- if loop.first %}
 		final alloc = allocators.Arena();
@@ -41,3 +43,4 @@
 			{{ param }}
 		{%- endfor -%}
 	)>(isLeaf: true);
+{% endif %}
