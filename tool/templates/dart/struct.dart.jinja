@@ -2,43 +2,41 @@
 /// {{docs}}
 {%- endif %}
 class _{{type_name}}Ffi extends ffi.Struct {
-{%- for field in fields %}
-		{%- match field.annotation %}
-		{%- when Some with (annotation) %}
-		@{{annotation}}()
-		{%- when None %}
-		{%- endmatch %}
-		external {{field.ffi_cast_type_name}} {{field.name}};
-{%- endfor %}
+	{%- for field in fields %}
+	{%- match field.annotation %}
+	{%- when Some with (annotation) %}
+	@{{annotation}}()
+	{%- when None %}
+	{%- endmatch %}
+	external {{field.ffi_cast_type_name}} {{field.name}};
+	{%- endfor %}
 }
 
 class {{type_name}} {
 	final _{{type_name}}Ffi _underlying;
 
+  	// ignore: unused_element
 	{{type_name}}._(this._underlying);
 
  	factory {{type_name}}() {
-		final pointer = allocators.calloc<_{{type_name}}Ffi>();
+		final pointer = ffi2.calloc<_{{type_name}}Ffi>();
 		final result = {{type_name}}._(pointer.ref);
-		_finalizer.attach(result, pointer.cast());
+		_callocFree.attach(result, pointer.cast());
 		return result;
 	}
-	static late final _finalizer = Finalizer(allocators.calloc.free);
 
 	{% for field in fields -%}
 	{{field.dart_type_name}} get {{field.name}} => {{ field.get_expression }};
-	void set {{field.name}}({{field.dart_type_name}} {{field.name}}) {
-		{%- for cleanup in field.set_cleanups -%}
-		{%- if loop.first %}
-		final alloc = allocators.calloc;{% endif %}
-		alloc.free({{ cleanup }});
-		{%- endfor %}
+	set {{field.name}}({{field.dart_type_name}} {{field.name}}) {
+		{%- if !field.set_slice_conversions.is_empty() %}
+		final alloc = ffi2.calloc;
+		alloc.free(_underlying.{{field.name}}.bytes);
+		{# TODO: What if the field is a struct containing a pointer? #}
+		{%- endif %}
 		{%- for conversion in field.set_slice_conversions -%}
 		{{ conversion }}
 		{%- endfor %}
-		{%- for set_expression in field.set_expressions -%}
-		{{set_expression.name}} = {{set_expression.expression}};
-		{%- endfor %}
+		_underlying.{{field.name}} = {{field.set_expression}};
 	}
 
 	{%~ endfor %}
@@ -46,4 +44,14 @@ class {{type_name}} {
 	{%- include "method.dart.jinja" %}
 
 	{%- endfor %}
+
+	@override
+	bool operator ==(Object other) =>
+		other is {{type_name}}
+		{%- for field in fields %}
+		&& other._underlying.{{field.name}} == _underlying.{{field.name}}
+		{%- endfor %};
+
+	@override
+	int get hashCode => Object.hashAll([{% for field in fields %}_underlying.{{field.name}},{% endfor %}]);
 }

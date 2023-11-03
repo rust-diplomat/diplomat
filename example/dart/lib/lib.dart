@@ -1,10 +1,16 @@
+// I believe these two lints produce false positives:
+// ignore_for_file: unnecessary_late
+// ignore_for_file: non_native_function_type_argument_to_pointer
+
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'dart:typed_data';
-import 'package:ffi/ffi.dart' as allocators;
+import 'package:ffi/ffi.dart' as ffi2;
 
 late final ffi.Pointer<T> Function<T extends ffi.NativeType>(String) _capi;
 void init(String path) => _capi = ffi.DynamicLibrary.open(path).lookup;
+
+late final _callocFree = Finalizer(ffi2.calloc.free);
 
 /// An ICU4X data provider, capable of loading ICU4X data keys from some source.
 ///
@@ -13,7 +19,7 @@ class ICU4XDataProvider implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   ICU4XDataProvider._(this._underlying) {
-    _finalizer.attach(this, this._underlying.cast());
+    _finalizer.attach(this, _underlying.cast());
   }
 
   static late final _finalizer =
@@ -48,7 +54,7 @@ class ICU4XFixedDecimal implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   ICU4XFixedDecimal._(this._underlying) {
-    _finalizer.attach(this, this._underlying.cast());
+    _finalizer.attach(this, _underlying.cast());
   }
 
   static late final _finalizer =
@@ -68,7 +74,7 @@ class ICU4XFixedDecimal implements ffi.Finalizable {
   ///
   /// See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
   void multiplyPow10(int power) {
-    _multiplyPow10Ffi(this._underlying, power);
+    _multiplyPow10Ffi(_underlying, power);
   }
 
   static late final _multiplyPow10Ffi = _capi<
@@ -80,10 +86,11 @@ class ICU4XFixedDecimal implements ffi.Finalizable {
   /// Format the [`ICU4XFixedDecimal`] as a string.
   ///
   /// See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
+  @override
   String toString() {
     final writeable = _Writeable();
-    final result = _toStringFfi(this._underlying, writeable._underlying);
-    return result.isOk ? writeable.toString() : throw VoidError();
+    final result = _toStringFfi(_underlying, writeable._underlying);
+    return result.isOk ? writeable.finalize() : throw VoidError();
   }
 
   static late final _toStringFfi = _capi<
@@ -102,7 +109,7 @@ class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   ICU4XFixedDecimalFormatter._(this._underlying) {
-    _finalizer.attach(this, this._underlying.cast());
+    _finalizer.attach(this, _underlying.cast());
   }
 
   static late final _finalizer =
@@ -137,8 +144,8 @@ class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   /// See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
   String formatWrite(ICU4XFixedDecimal value) {
     final writeable = _Writeable();
-    _formatWriteFfi(this._underlying, value._underlying, writeable._underlying);
-    return writeable.toString();
+    _formatWriteFfi(_underlying, value._underlying, writeable._underlying);
+    return writeable.finalize();
   }
 
   static late final _formatWriteFfi = _capi<
@@ -152,7 +159,7 @@ class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
 }
 
 class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Uint32()
   external int groupingStrategy;
   @ffi.Bool()
   external bool someOtherConfig;
@@ -161,26 +168,25 @@ class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
 class ICU4XFixedDecimalFormatterOptions {
   final _ICU4XFixedDecimalFormatterOptionsFfi _underlying;
 
+  // ignore: unused_element
   ICU4XFixedDecimalFormatterOptions._(this._underlying);
 
   factory ICU4XFixedDecimalFormatterOptions() {
-    final pointer = allocators.calloc<_ICU4XFixedDecimalFormatterOptionsFfi>();
+    final pointer = ffi2.calloc<_ICU4XFixedDecimalFormatterOptionsFfi>();
     final result = ICU4XFixedDecimalFormatterOptions._(pointer.ref);
-    _finalizer.attach(result, pointer.cast());
+    _callocFree.attach(result, pointer.cast());
     return result;
   }
-  static late final _finalizer = Finalizer(allocators.calloc.free);
 
   ICU4XFixedDecimalGroupingStrategy get groupingStrategy =>
-      ICU4XFixedDecimalGroupingStrategy._(this._underlying.groupingStrategy);
-  void set groupingStrategy(
-      ICU4XFixedDecimalGroupingStrategy groupingStrategy) {
-    this._underlying.groupingStrategy = groupingStrategy._id;
+      ICU4XFixedDecimalGroupingStrategy._(_underlying.groupingStrategy);
+  set groupingStrategy(ICU4XFixedDecimalGroupingStrategy groupingStrategy) {
+    _underlying.groupingStrategy = groupingStrategy._id;
   }
 
-  bool get someOtherConfig => this._underlying.someOtherConfig;
-  void set someOtherConfig(bool someOtherConfig) {
-    this._underlying.someOtherConfig = someOtherConfig;
+  bool get someOtherConfig => _underlying.someOtherConfig;
+  set someOtherConfig(bool someOtherConfig) {
+    _underlying.someOtherConfig = someOtherConfig;
   }
 
   factory ICU4XFixedDecimalFormatterOptions() {
@@ -193,23 +199,36 @@ class ICU4XFixedDecimalFormatterOptions {
                   Function()>>('ICU4XFixedDecimalFormatterOptions_default')
       .asFunction<_ICU4XFixedDecimalFormatterOptionsFfi Function()>(
           isLeaf: true);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ICU4XFixedDecimalFormatterOptions &&
+      other._underlying.groupingStrategy == _underlying.groupingStrategy &&
+      other._underlying.someOtherConfig == _underlying.someOtherConfig;
+
+  @override
+  int get hashCode => Object.hashAll([
+        _underlying.groupingStrategy,
+        _underlying.someOtherConfig,
+      ]);
 }
 
 enum ICU4XFixedDecimalGroupingStrategy {
   /// Auto grouping
-  Auto.__(0),
+  auto.__(0),
 
   /// No grouping
-  Never.__(1),
+  never.__(1),
 
   /// Always group
-  Always.__(2),
+  always.__(2),
 
   /// At least 2 groups
-  Min2.__(3);
+  min2.__(3);
 
   const ICU4XFixedDecimalGroupingStrategy.__(this._id);
 
+  // ignore: unused_element
   factory ICU4XFixedDecimalGroupingStrategy._(int id) =>
       values.firstWhere((value) => value._id == id);
 
@@ -223,7 +242,7 @@ class ICU4XLocale implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   ICU4XLocale._(this._underlying) {
-    _finalizer.attach(this, this._underlying.cast());
+    _finalizer.attach(this, _underlying.cast());
   }
 
   static late final _finalizer =
@@ -231,34 +250,27 @@ class ICU4XLocale implements ffi.Finalizable {
 
   /// Construct an [`ICU4XLocale`] from a locale identifier represented as a string.
   factory ICU4XLocale(String name) {
-    final alloc = allocators.Arena();
+    final alloc = ffi2.Arena();
+    final nameSlice = _SliceFfi2Utf8.fromDart(name, alloc);
 
-    final nameList = Utf8Encoder().convert(name);
-    final nameBytes = alloc.call<ffi.Char>(nameList.length);
-    nameBytes
-        .cast<ffi.Uint8>()
-        .asTypedList(nameList.length)
-        .setAll(0, nameList);
-
-    final result = _newFfi(nameBytes.cast(), nameList.length);
+    final result = _newFfi(nameSlice.bytes, nameSlice.length);
     alloc.releaseAll();
     return ICU4XLocale._(result);
   }
   static late final _newFfi = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
-                  ffi.Pointer<ffi.Char>, ffi.Size)>>('ICU4XLocale_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Char>, int)>(
-          isLeaf: true);
+                  ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('ICU4XLocale_new')
+      .asFunction<
+          ffi.Pointer<ffi.Opaque> Function(
+              ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
 
   /// Construct an [`ICU4XLocale`] from a locale identifier represented as bytes.
   factory ICU4XLocale.fromBytes(Uint8List bytes) {
-    final alloc = allocators.Arena();
+    final alloc = ffi2.Arena();
+    final bytesSlice = _SliceFfiUint8.fromDart(bytes, alloc);
 
-    final bytesBytes = alloc.call<ffi.Uint8>(bytes.length);
-    bytesBytes.asTypedList(bytes.length).setAll(0, bytes);
-
-    final result = _newFromBytesFfi(bytesBytes.cast(), bytes.length);
+    final result = _newFromBytesFfi(bytesSlice.bytes, bytesSlice.length);
     alloc.releaseAll();
     return ICU4XLocale._(result);
   }
@@ -271,12 +283,12 @@ class ICU4XLocale implements ffi.Finalizable {
               ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
 }
 
-class _UnionOpaqueVoid extends ffi.Union {
+class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
 }
 
 class _ResultOpaqueVoid extends ffi.Struct {
-  external _UnionOpaqueVoid union;
+  external _ResultOpaqueVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
@@ -285,6 +297,92 @@ class _ResultOpaqueVoid extends ffi.Struct {
 class _ResultVoidVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
+}
+
+class _SliceFfi2Utf8 extends ffi.Struct {
+  external ffi.Pointer<ffi2.Utf8> bytes;
+
+  @ffi.Size()
+  external int length;
+
+  // Produces a slice from a Dart object. The Dart object's data is copied into the given allocator
+  // as it cannot be borrowed directly, and gets freed with the slice object.
+  // ignore: unused_element
+  static _SliceFfi2Utf8 fromDart(String value, ffi.Allocator allocator) {
+    final pointer = allocator<_SliceFfi2Utf8>();
+    final slice = pointer.ref;
+    final units = Utf8Encoder().convert(value);
+    slice.length = units.length;
+    slice.bytes = allocator<ffi.Uint8>(slice.length).cast();
+    slice.bytes.cast<ffi.Uint8>().asTypedList(slice.length).setAll(0, units);
+
+    return slice;
+  }
+
+  // ignore: unused_element
+  String get asDart =>
+      Utf8Decoder().convert(bytes.cast<ffi.Uint8>().asTypedList(length));
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceFfi2Utf8 || other.length != length) {
+      return false;
+    }
+
+    for (var i = 0; i < length; i++) {
+      if (other.bytes.cast<ffi.Uint8>()[i] != bytes.cast<ffi.Uint8>()[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => length.hashCode;
+}
+
+class _SliceFfiUint8 extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint8> bytes;
+
+  @ffi.Size()
+  external int length;
+
+  // Produces a slice from a Dart object. The Dart object's data is copied into the given allocator
+  // as it cannot be borrowed directly, and gets freed with the slice object.
+  // ignore: unused_element
+  static _SliceFfiUint8 fromDart(Uint8List value, ffi.Allocator allocator) {
+    final pointer = allocator<_SliceFfiUint8>();
+    final slice = pointer.ref;
+    slice.length = value.length;
+    slice.bytes = allocator(slice.length);
+    slice.bytes.asTypedList(slice.length).setAll(0, value);
+
+    return slice;
+  }
+
+  // ignore: unused_element
+  Uint8List get asDart => bytes.asTypedList(length);
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceFfiUint8 || other.length != length) {
+      return false;
+    }
+
+    for (var i = 0; i < length; i++) {
+      if (other.bytes[i] != bytes[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => length.hashCode;
 }
 
 /// An unspecified error value
@@ -296,30 +394,28 @@ class _Writeable {
   _Writeable() : _underlying = _create(0);
   static late final _create =
       _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Size)>>(
-              "diplomat_buffer_writeable_create")
+              'diplomat_buffer_writeable_create')
           .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>();
 
-  String toString() {
-    final string = Utf8Decoder(allowMalformed: false).convert(
-        _get_bytes(_underlying)
-            .cast<ffi.Uint8>()
-            .asTypedList(_len(_underlying)));
+  String finalize() {
+    final string =
+        _getBytes(_underlying).toDartString(length: _len(_underlying));
     _destroy(_underlying);
     return string;
   }
 
   static late final _len =
       _capi<ffi.NativeFunction<ffi.Size Function(ffi.Pointer<ffi.Opaque>)>>(
-              "diplomat_buffer_writeable_len")
+              'diplomat_buffer_writeable_len')
           .asFunction<int Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
-  static late final _get_bytes = _capi<
+  static late final _getBytes = _capi<
               ffi.NativeFunction<
-                  ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Opaque>)>>(
-          "diplomat_buffer_writeable_get_bytes")
-      .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Opaque>)>(
+                  ffi.Pointer<ffi2.Utf8> Function(ffi.Pointer<ffi.Opaque>)>>(
+          'diplomat_buffer_writeable_get_bytes')
+      .asFunction<ffi.Pointer<ffi2.Utf8> Function(ffi.Pointer<ffi.Opaque>)>(
           isLeaf: true);
   static late final _destroy =
       _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>(
-              "diplomat_buffer_writeable_destroy")
+              'diplomat_buffer_writeable_destroy')
           .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }

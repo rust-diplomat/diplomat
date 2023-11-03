@@ -1,3 +1,7 @@
+// I believe these two lints produce false positives:
+// ignore_for_file: unnecessary_late
+// ignore_for_file: non_native_function_type_argument_to_pointer
+
 {% for import in imports -%}
 import '{{import.path}}'{{import.suffix}};
 {% endfor %}

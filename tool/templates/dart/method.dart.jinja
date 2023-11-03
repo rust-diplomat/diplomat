@@ -6,11 +6,11 @@
 {##} { {##}
 		{%- for slice_conversion in m.slice_conversions %}
 		{%- if loop.first %}
-		final alloc = allocators.Arena();
-		{% endif %}
+		final alloc = ffi2.Arena();
+		{%- endif %}
 		{{ slice_conversion }}
-		{%- endfor -%}
-		{%- if m.method.is_writeable() %}
+		{%- endfor %}
+		{% if m.method.is_writeable() %}
 		final writeable = _Writeable();
 		{%- endif %}
 		{% if m.method.output.returns_value() -%}
