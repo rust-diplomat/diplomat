@@ -16,7 +16,7 @@
 		{% if m.method.output.returns_value() -%}
 		final result = {##}
 		{%- endif -%}
-		_{{ m.method_name -}}Ffi(
+		_{{ m.c_method_name -}}(
 			{%- for param in m.dart_to_ffi_params %}
 			{%- if !loop.first %},{% endif -%}
 			{{ param }}
@@ -31,7 +31,8 @@
 		{%- when None %}
 		{%- endmatch %}
   }
-	static final _{{ m.method_name -}}Ffi = _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
+  // ignore: non_constant_identifier_names
+	static final _{{ m.c_method_name -}} = _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
 		{%- for param in m.param_types_ffi %}
 			{%- if !loop.first %}, {% endif -%}
 			{{ param }}

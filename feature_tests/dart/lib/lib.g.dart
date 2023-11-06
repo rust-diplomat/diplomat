@@ -34,19 +34,21 @@ class AttrOpaque1 implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(_capi('AttrOpaque1_destroy'));
 
   void method() {
-    _methodFfi(_underlying);
+    _AttrOpaque1_method(_underlying);
   }
 
-  static final _methodFfi =
+  // ignore: non_constant_identifier_names
+  static final _AttrOpaque1_method =
       _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>(
               'AttrOpaque1_method')
           .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   void methodDisabledcpp() {
-    _methodDisabledcppFfi(_underlying);
+    _AttrOpaque1_method_disabledcpp(_underlying);
   }
 
-  static final _methodDisabledcppFfi =
+  // ignore: non_constant_identifier_names
+  static final _AttrOpaque1_method_disabledcpp =
       _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>(
               'AttrOpaque1_method_disabledcpp')
           .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
@@ -223,11 +225,12 @@ class Float64Vec implements ffi.Finalizable {
     final alloc = ffi2.Arena();
     final vSlice = _SliceFfiDouble._fromDart(v, alloc);
 
-    final result = _newFfi(vSlice._bytes, vSlice._length);
+    final result = _Float64Vec_new(vSlice._bytes, vSlice._length);
     alloc.releaseAll();
     return Float64Vec._(result);
   }
-  static final _newFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Float64Vec_new = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Double>, ffi.Size)>>('Float64Vec_new')
@@ -239,11 +242,12 @@ class Float64Vec implements ffi.Finalizable {
     final alloc = ffi2.Arena();
     final vSlice = _SliceFfiDouble._fromDart(v, alloc);
 
-    _fillSliceFfi(_underlying, vSlice._bytes, vSlice._length);
+    _Float64Vec_fill_slice(_underlying, vSlice._bytes, vSlice._length);
     alloc.releaseAll();
   }
 
-  static final _fillSliceFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Float64Vec_fill_slice = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Pointer<ffi.Double>, ffi.Size)>>('Float64Vec_fill_slice')
@@ -255,11 +259,13 @@ class Float64Vec implements ffi.Finalizable {
     final alloc = ffi2.Arena();
     final newSliceSlice = _SliceFfiDouble._fromDart(newSlice, alloc);
 
-    _setValueFfi(_underlying, newSliceSlice._bytes, newSliceSlice._length);
+    _Float64Vec_set_value(
+        _underlying, newSliceSlice._bytes, newSliceSlice._length);
     alloc.releaseAll();
   }
 
-  static final _setValueFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Float64Vec_set_value = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Pointer<ffi.Double>, ffi.Size)>>('Float64Vec_set_value')
@@ -281,11 +287,12 @@ class Foo implements ffi.Finalizable {
     final alloc = ffi2.Arena();
     final xSlice = _SliceFfi2Utf8._fromDart(x, alloc);
 
-    final result = _newFfi(xSlice._bytes, xSlice._length);
+    final result = _Foo_new(xSlice._bytes, xSlice._length);
     alloc.releaseAll();
     return Foo._(result);
   }
-  static final _newFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Foo_new = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('Foo_new')
@@ -294,26 +301,28 @@ class Foo implements ffi.Finalizable {
               ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
 
   Bar get getBar {
-    final result = _getBarFfi(_underlying);
+    final result = _Foo_get_bar(_underlying);
     return Bar._(result);
   }
 
-  static final _getBarFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Foo_get_bar = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>)>>('Foo_get_bar')
       .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(
           isLeaf: true);
 
-  factory Foo.static(String x) {
+  factory Foo.static_(String x) {
     final alloc = ffi2.Arena();
     final xSlice = _SliceFfi2Utf8._fromDart(x, alloc);
 
-    final result = _newStaticFfi(xSlice._bytes, xSlice._length);
+    final result = _Foo_new_static(xSlice._bytes, xSlice._length);
     alloc.releaseAll();
     return Foo._(result);
   }
-  static final _newStaticFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Foo_new_static = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('Foo_new_static')
@@ -322,11 +331,12 @@ class Foo implements ffi.Finalizable {
               ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
 
   BorrowedFieldsReturning get asReturning {
-    final result = _asReturningFfi(_underlying);
+    final result = _Foo_as_returning(_underlying);
     return BorrowedFieldsReturning._(result);
   }
 
-  static final _asReturningFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Foo_as_returning = _capi<
           ffi.NativeFunction<
               _BorrowedFieldsReturningFfi Function(
                   ffi.Pointer<ffi.Opaque>)>>('Foo_as_returning')
@@ -335,10 +345,11 @@ class Foo implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory Foo.extractFromFields(BorrowedFields fields) {
-    final result = _extractFromFieldsFfi(fields._underlying);
+    final result = _Foo_extract_from_fields(fields._underlying);
     return Foo._(result);
   }
-  static final _extractFromFieldsFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Foo_extract_from_fields = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   _BorrowedFieldsFfi)>>('Foo_extract_from_fields')
@@ -405,11 +416,12 @@ enum MyEnum {
   final int _id;
 
   int intoValue() {
-    final result = _intoValueFfi(_id);
+    final result = _MyEnum_into_value(_id);
     return result;
   }
 
-  static final _intoValueFfi =
+  // ignore: non_constant_identifier_names
+  static final _MyEnum_into_value =
       _capi<ffi.NativeFunction<ffi.Int8 Function(ffi.Uint32)>>(
               'MyEnum_into_value')
           .asFunction<int Function(int)>(isLeaf: true);
@@ -428,11 +440,12 @@ class MyString implements ffi.Finalizable {
     final alloc = ffi2.Arena();
     final vSlice = _SliceFfi2Utf8._fromDart(v, alloc);
 
-    final result = _newFfi(vSlice._bytes, vSlice._length);
+    final result = _MyString_new(vSlice._bytes, vSlice._length);
     alloc.releaseAll();
     return MyString._(result);
   }
-  static final _newFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _MyString_new = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('MyString_new')
@@ -444,11 +457,12 @@ class MyString implements ffi.Finalizable {
     final alloc = ffi2.Arena();
     final newStrSlice = _SliceFfi2Utf8._fromDart(newStr, alloc);
 
-    _setStrFfi(_underlying, newStrSlice._bytes, newStrSlice._length);
+    _MyString_set_str(_underlying, newStrSlice._bytes, newStrSlice._length);
     alloc.releaseAll();
   }
 
-  static final _setStrFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _MyString_set_str = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi2.Utf8>,
                   ffi.Size)>>('MyString_set_str')
@@ -458,11 +472,12 @@ class MyString implements ffi.Finalizable {
 
   String get getStr {
     final writeable = _Writeable();
-    _getStrFfi(_underlying, writeable._underlying);
+    _MyString_get_str(_underlying, writeable._underlying);
     return writeable.finalize();
   }
 
-  static final _getStrFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _MyString_get_str = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Pointer<ffi.Opaque>)>>('MyString_get_str')
@@ -537,19 +552,21 @@ class MyStruct {
   }
 
   factory MyStruct() {
-    final result = _newFfi();
+    final result = _MyStruct_new();
     return MyStruct._(result);
   }
-  static final _newFfi =
+  // ignore: non_constant_identifier_names
+  static final _MyStruct_new =
       _capi<ffi.NativeFunction<_MyStructFfi Function()>>('MyStruct_new')
           .asFunction<_MyStructFfi Function()>(isLeaf: true);
 
   int intoA() {
-    final result = _intoAFfi(_underlying);
+    final result = _MyStruct_into_a(_underlying);
     return result;
   }
 
-  static final _intoAFfi =
+  // ignore: non_constant_identifier_names
+  static final _MyStruct_into_a =
       _capi<ffi.NativeFunction<ffi.Uint8 Function(_MyStructFfi)>>(
               'MyStruct_into_a')
           .asFunction<int Function(_MyStructFfi)>(isLeaf: true);
@@ -587,10 +604,11 @@ class One implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(_capi('One_destroy'));
 
   factory One.transitivity(One hold, One nohold) {
-    final result = _transitivityFfi(hold._underlying, nohold._underlying);
+    final result = _One_transitivity(hold._underlying, nohold._underlying);
     return One._(result);
   }
-  static final _transitivityFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_transitivity = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Pointer<ffi.Opaque>)>>('One_transitivity')
@@ -599,10 +617,11 @@ class One implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory One.cycle(Two hold, One nohold) {
-    final result = _cycleFfi(hold._underlying, nohold._underlying);
+    final result = _One_cycle(hold._underlying, nohold._underlying);
     return One._(result);
   }
-  static final _cycleFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_cycle = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Pointer<ffi.Opaque>)>>('One_cycle')
@@ -611,11 +630,12 @@ class One implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory One.manyDependents(One a, One b, Two c, Two d, Two nohold) {
-    final result = _manyDependentsFfi(a._underlying, b._underlying,
+    final result = _One_many_dependents(a._underlying, b._underlying,
         c._underlying, d._underlying, nohold._underlying);
     return One._(result);
   }
-  static final _manyDependentsFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_many_dependents = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>,
@@ -633,10 +653,11 @@ class One implements ffi.Finalizable {
 
   factory One.returnOutlivesParam(Two hold, One nohold) {
     final result =
-        _returnOutlivesParamFfi(hold._underlying, nohold._underlying);
+        _One_return_outlives_param(hold._underlying, nohold._underlying);
     return One._(result);
   }
-  static final _returnOutlivesParamFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_return_outlives_param = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Pointer<ffi.Opaque>)>>('One_return_outlives_param')
@@ -645,11 +666,12 @@ class One implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory One.diamondTop(One top, One left, One right, One bottom) {
-    final result = _diamondTopFfi(top._underlying, left._underlying,
+    final result = _One_diamond_top(top._underlying, left._underlying,
         right._underlying, bottom._underlying);
     return One._(result);
   }
-  static final _diamondTopFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_diamond_top = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>,
@@ -664,11 +686,12 @@ class One implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory One.diamondLeft(One top, One left, One right, One bottom) {
-    final result = _diamondLeftFfi(top._underlying, left._underlying,
+    final result = _One_diamond_left(top._underlying, left._underlying,
         right._underlying, bottom._underlying);
     return One._(result);
   }
-  static final _diamondLeftFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_diamond_left = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>,
@@ -683,11 +706,12 @@ class One implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory One.diamondRight(One top, One left, One right, One bottom) {
-    final result = _diamondRightFfi(top._underlying, left._underlying,
+    final result = _One_diamond_right(top._underlying, left._underlying,
         right._underlying, bottom._underlying);
     return One._(result);
   }
-  static final _diamondRightFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_diamond_right = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>,
@@ -702,11 +726,12 @@ class One implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory One.diamondBottom(One top, One left, One right, One bottom) {
-    final result = _diamondBottomFfi(top._underlying, left._underlying,
+    final result = _One_diamond_bottom(top._underlying, left._underlying,
         right._underlying, bottom._underlying);
     return One._(result);
   }
-  static final _diamondBottomFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_diamond_bottom = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>,
@@ -721,11 +746,12 @@ class One implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory One.diamondAndNestedTypes(One a, One b, One c, One d, One nohold) {
-    final result = _diamondAndNestedTypesFfi(a._underlying, b._underlying,
+    final result = _One_diamond_and_nested_types(a._underlying, b._underlying,
         c._underlying, d._underlying, nohold._underlying);
     return One._(result);
   }
-  static final _diamondAndNestedTypesFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_diamond_and_nested_types = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>,
@@ -742,11 +768,12 @@ class One implements ffi.Finalizable {
               ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory One.implicitBounds(One explicitHold, One implicitHold, One nohold) {
-    final result = _implicitBoundsFfi(
+    final result = _One_implicit_bounds(
         explicitHold._underlying, implicitHold._underlying, nohold._underlying);
     return One._(result);
   }
-  static final _implicitBoundsFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_implicit_bounds = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>,
@@ -758,11 +785,12 @@ class One implements ffi.Finalizable {
 
   factory One.implicitBoundsDeep(
       One explicit, One implicit1, One implicit2, One nohold) {
-    final result = _implicitBoundsDeepFfi(explicit._underlying,
+    final result = _One_implicit_bounds_deep(explicit._underlying,
         implicit1._underlying, implicit2._underlying, nohold._underlying);
     return One._(result);
   }
-  static final _implicitBoundsDeepFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _One_implicit_bounds_deep = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>,
@@ -787,10 +815,11 @@ class Opaque implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(_capi('Opaque_destroy'));
 
   factory Opaque() {
-    final result = _newFfi();
+    final result = _Opaque_new();
     return Opaque._(result);
   }
-  static final _newFfi =
+  // ignore: non_constant_identifier_names
+  static final _Opaque_new =
       _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>(
               'Opaque_new')
           .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
@@ -801,10 +830,11 @@ class Opaque implements ffi.Finalizable {
   ///
   /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
   void assertStruct(MyStruct s) {
-    _assertStructFfi(_underlying, s._underlying);
+    _Opaque_assert_struct(_underlying, s._underlying);
   }
 
-  static final _assertStructFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _Opaque_assert_struct = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                   _MyStructFfi)>>('Opaque_assert_struct')
@@ -831,46 +861,49 @@ class OptionOpaque implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(_capi('OptionOpaque_destroy'));
 
   static OptionOpaque? new_(int i) {
-    final result = _newFfi(i);
+    final result = _OptionOpaque_new(i);
     return result.address == 0 ? null : OptionOpaque._(result);
   }
 
-  static final _newFfi =
+  // ignore: non_constant_identifier_names
+  static final _OptionOpaque_new =
       _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>>(
               'OptionOpaque_new')
           .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>(isLeaf: true);
 
-  static final OptionOpaque? newNone =
+  static final OptionOpaque? none =
       _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>(
               'OptionOpaque_new_none')
           .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true)();
 
-  static final OptionStruct newStruct =
+  static final OptionStruct struct =
       _capi<ffi.NativeFunction<_OptionStructFfi Function()>>(
               'OptionOpaque_new_struct')
           .asFunction<_OptionStructFfi Function()>(isLeaf: true)();
 
-  static final OptionStruct newStructNones =
+  static final OptionStruct structNones =
       _capi<ffi.NativeFunction<_OptionStructFfi Function()>>(
               'OptionOpaque_new_struct_nones')
           .asFunction<_OptionStructFfi Function()>(isLeaf: true)();
 
   void assertInteger(int i) {
-    _assertIntegerFfi(_underlying, i);
+    _OptionOpaque_assert_integer(_underlying, i);
   }
 
-  static final _assertIntegerFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _OptionOpaque_assert_integer = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Int32)>>('OptionOpaque_assert_integer')
       .asFunction<void Function(ffi.Pointer<ffi.Opaque>, int)>(isLeaf: true);
 
   static bool optionOpaqueArgument(OptionOpaque? arg) {
-    final result = _optionOpaqueArgumentFfi(arg._underlying);
+    final result = _OptionOpaque_option_opaque_argument(arg._underlying);
     return result;
   }
 
-  static final _optionOpaqueArgumentFfi =
+  // ignore: non_constant_identifier_names
+  static final _OptionOpaque_option_opaque_argument =
       _capi<ffi.NativeFunction<ffi.Bool Function(ffi.Pointer<ffi.Opaque>)>>(
               'OptionOpaque_option_opaque_argument')
           .asFunction<bool Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
@@ -887,10 +920,11 @@ class OptionOpaqueChar implements ffi.Finalizable {
       ffi.NativeFinalizer(_capi('OptionOpaqueChar_destroy'));
 
   void assertChar(int ch) {
-    _assertCharFfi(_underlying, ch);
+    _OptionOpaqueChar_assert_char(_underlying, ch);
   }
 
-  static final _assertCharFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _OptionOpaqueChar_assert_char = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Uint32)>>('OptionOpaqueChar_assert_char')
@@ -968,10 +1002,11 @@ class RefList implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(_capi('RefList_destroy'));
 
   factory RefList.node(RefListParameter data) {
-    final result = _nodeFfi(data._underlying);
+    final result = _RefList_node(data._underlying);
     return RefList._(result);
   }
-  static final _nodeFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _RefList_node = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi.Opaque>)>>('RefList_node')
@@ -1000,98 +1035,107 @@ class ResultOpaque implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(_capi('ResultOpaque_destroy'));
 
   factory ResultOpaque(int i) {
-    final result = _newFfi(i);
+    final result = _ResultOpaque_new(i);
     return result.isOk
         ? ResultOpaque._(result.union.ok)
         : throw ErrorEnum._(result.union.err);
   }
-  static final _newFfi =
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_new =
       _capi<ffi.NativeFunction<_ResultOpaqueUint32 Function(ffi.Int32)>>(
               'ResultOpaque_new')
           .asFunction<_ResultOpaqueUint32 Function(int)>(isLeaf: true);
 
   factory ResultOpaque.failingFoo() {
-    final result = _newFailingFooFfi();
+    final result = _ResultOpaque_new_failing_foo();
     return result.isOk
         ? ResultOpaque._(result.union.ok)
         : throw ErrorEnum._(result.union.err);
   }
-  static final _newFailingFooFfi =
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_new_failing_foo =
       _capi<ffi.NativeFunction<_ResultOpaqueUint32 Function()>>(
               'ResultOpaque_new_failing_foo')
           .asFunction<_ResultOpaqueUint32 Function()>(isLeaf: true);
 
   factory ResultOpaque.failingBar() {
-    final result = _newFailingBarFfi();
+    final result = _ResultOpaque_new_failing_bar();
     return result.isOk
         ? ResultOpaque._(result.union.ok)
         : throw ErrorEnum._(result.union.err);
   }
-  static final _newFailingBarFfi =
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_new_failing_bar =
       _capi<ffi.NativeFunction<_ResultOpaqueUint32 Function()>>(
               'ResultOpaque_new_failing_bar')
           .asFunction<_ResultOpaqueUint32 Function()>(isLeaf: true);
 
   factory ResultOpaque.failingUnit() {
-    final result = _newFailingUnitFfi();
+    final result = _ResultOpaque_new_failing_unit();
     return result.isOk ? ResultOpaque._(result.union.ok) : throw VoidError();
   }
-  static final _newFailingUnitFfi =
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_new_failing_unit =
       _capi<ffi.NativeFunction<_ResultOpaqueVoid Function()>>(
               'ResultOpaque_new_failing_unit')
           .asFunction<_ResultOpaqueVoid Function()>(isLeaf: true);
 
   factory ResultOpaque.failingStruct(int i) {
-    final result = _newFailingStructFfi(i);
+    final result = _ResultOpaque_new_failing_struct(i);
     return result.isOk
         ? ResultOpaque._(result.union.ok)
         : throw ErrorStruct._(result.union.err);
   }
-  static final _newFailingStructFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_new_failing_struct = _capi<
               ffi
               .NativeFunction<_ResultOpaqueErrorStructFfi Function(ffi.Int32)>>(
           'ResultOpaque_new_failing_struct')
       .asFunction<_ResultOpaqueErrorStructFfi Function(int)>(isLeaf: true);
 
   static void newInErr(int i) {
-    final result = _newInErrFfi(i);
+    final result = _ResultOpaque_new_in_err(i);
     if (!result.isOk) {
       throw ResultOpaque._(result.union.err);
     }
   }
 
-  static final _newInErrFfi =
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_new_in_err =
       _capi<ffi.NativeFunction<_ResultVoidOpaque Function(ffi.Int32)>>(
               'ResultOpaque_new_in_err')
           .asFunction<_ResultVoidOpaque Function(int)>(isLeaf: true);
 
   static int newInt(int i) {
-    final result = _newIntFfi(i);
+    final result = _ResultOpaque_new_int(i);
     return result.isOk ? result.union.ok : throw VoidError();
   }
 
-  static final _newIntFfi =
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_new_int =
       _capi<ffi.NativeFunction<_ResultInt32Void Function(ffi.Int32)>>(
               'ResultOpaque_new_int')
           .asFunction<_ResultInt32Void Function(int)>(isLeaf: true);
 
   static ErrorEnum newInEnumErr(int i) {
-    final result = _newInEnumErrFfi(i);
+    final result = _ResultOpaque_new_in_enum_err(i);
     return result.isOk
         ? ErrorEnum._(result.union.ok)
         : throw ResultOpaque._(result.union.err);
   }
 
-  static final _newInEnumErrFfi =
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_new_in_enum_err =
       _capi<ffi.NativeFunction<_ResultUint32Opaque Function(ffi.Int32)>>(
               'ResultOpaque_new_in_enum_err')
           .asFunction<_ResultUint32Opaque Function(int)>(isLeaf: true);
 
   void assertInteger(int i) {
-    _assertIntegerFfi(_underlying, i);
+    _ResultOpaque_assert_integer(_underlying, i);
   }
 
-  static final _assertIntegerFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ResultOpaque_assert_integer = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Int32)>>('ResultOpaque_assert_integer')

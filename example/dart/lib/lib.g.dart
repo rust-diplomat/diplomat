@@ -25,24 +25,26 @@ class ICU4XDataProvider implements ffi.Finalizable {
       ffi.NativeFinalizer(_capi('ICU4XDataProvider_destroy'));
 
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
-  factory ICU4XDataProvider.static() {
-    final result = _newStaticFfi();
+  factory ICU4XDataProvider.static_() {
+    final result = _ICU4XDataProvider_new_static();
     return ICU4XDataProvider._(result);
   }
-  static final _newStaticFfi =
+  // ignore: non_constant_identifier_names
+  static final _ICU4XDataProvider_new_static =
       _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>(
               'ICU4XDataProvider_new_static')
           .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
 
   /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
   static void returnsResult() {
-    final result = _returnsResultFfi();
+    final result = _ICU4XDataProvider_returns_result();
     if (!result.isOk) {
       throw VoidError();
     }
   }
 
-  static final _returnsResultFfi =
+  // ignore: non_constant_identifier_names
+  static final _ICU4XDataProvider_returns_result =
       _capi<ffi.NativeFunction<_ResultVoidVoid Function()>>(
               'ICU4XDataProvider_returns_result')
           .asFunction<_ResultVoidVoid Function()>(isLeaf: true);
@@ -61,10 +63,11 @@ class ICU4XFixedDecimal implements ffi.Finalizable {
 
   /// Construct an [`ICU4XFixedDecimal`] from an integer.
   factory ICU4XFixedDecimal(int v) {
-    final result = _newFfi(v);
+    final result = _ICU4XFixedDecimal_new(v);
     return ICU4XFixedDecimal._(result);
   }
-  static final _newFfi =
+  // ignore: non_constant_identifier_names
+  static final _ICU4XFixedDecimal_new =
       _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>>(
               'ICU4XFixedDecimal_new')
           .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>(isLeaf: true);
@@ -73,10 +76,11 @@ class ICU4XFixedDecimal implements ffi.Finalizable {
   ///
   /// See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
   void multiplyPow10(int power) {
-    _multiplyPow10Ffi(_underlying, power);
+    _ICU4XFixedDecimal_multiply_pow10(_underlying, power);
   }
 
-  static final _multiplyPow10Ffi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ICU4XFixedDecimal_multiply_pow10 = _capi<
           ffi.NativeFunction<
               ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Int16)>>('ICU4XFixedDecimal_multiply_pow10')
@@ -88,11 +92,13 @@ class ICU4XFixedDecimal implements ffi.Finalizable {
   @override
   String toString() {
     final writeable = _Writeable();
-    final result = _toStringFfi(_underlying, writeable._underlying);
+    final result =
+        _ICU4XFixedDecimal_to_string(_underlying, writeable._underlying);
     return result.isOk ? writeable.finalize() : throw VoidError();
   }
 
-  static final _toStringFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ICU4XFixedDecimal_to_string = _capi<
           ffi.NativeFunction<
               _ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>,
                   ffi.Pointer<ffi.Opaque>)>>('ICU4XFixedDecimal_to_string')
@@ -119,13 +125,14 @@ class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   /// See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
   factory ICU4XFixedDecimalFormatter.tryNew(ICU4XLocale locale,
       ICU4XDataProvider provider, ICU4XFixedDecimalFormatterOptions options) {
-    final result = _tryNewFfi(
+    final result = _ICU4XFixedDecimalFormatter_try_new(
         locale._underlying, provider._underlying, options._underlying);
     return result.isOk
         ? ICU4XFixedDecimalFormatter._(result.union.ok)
         : throw VoidError();
   }
-  static final _tryNewFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ICU4XFixedDecimalFormatter_try_new = _capi<
               ffi.NativeFunction<
                   _ResultOpaqueVoid Function(
                       ffi.Pointer<ffi.Opaque>,
@@ -143,11 +150,13 @@ class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   /// See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
   String formatWrite(ICU4XFixedDecimal value) {
     final writeable = _Writeable();
-    _formatWriteFfi(_underlying, value._underlying, writeable._underlying);
+    _ICU4XFixedDecimalFormatter_format_write(
+        _underlying, value._underlying, writeable._underlying);
     return writeable.finalize();
   }
 
-  static final _formatWriteFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ICU4XFixedDecimalFormatter_format_write = _capi<
               ffi.NativeFunction<
                   ffi.Void Function(ffi.Pointer<ffi.Opaque>,
                       ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>>(
@@ -189,10 +198,11 @@ class ICU4XFixedDecimalFormatterOptions {
   }
 
   factory ICU4XFixedDecimalFormatterOptions() {
-    final result = _defaultFfi();
+    final result = _ICU4XFixedDecimalFormatterOptions_default();
     return ICU4XFixedDecimalFormatterOptions._(result);
   }
-  static final _defaultFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ICU4XFixedDecimalFormatterOptions_default = _capi<
           ffi.NativeFunction<
               _ICU4XFixedDecimalFormatterOptionsFfi
                   Function()>>('ICU4XFixedDecimalFormatterOptions_default')
@@ -251,11 +261,12 @@ class ICU4XLocale implements ffi.Finalizable {
     final alloc = ffi2.Arena();
     final nameSlice = _SliceFfi2Utf8._fromDart(name, alloc);
 
-    final result = _newFfi(nameSlice._bytes, nameSlice._length);
+    final result = _ICU4XLocale_new(nameSlice._bytes, nameSlice._length);
     alloc.releaseAll();
     return ICU4XLocale._(result);
   }
-  static final _newFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ICU4XLocale_new = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(
                   ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('ICU4XLocale_new')
@@ -268,11 +279,13 @@ class ICU4XLocale implements ffi.Finalizable {
     final alloc = ffi2.Arena();
     final bytesSlice = _SliceFfiUint8._fromDart(bytes, alloc);
 
-    final result = _newFromBytesFfi(bytesSlice._bytes, bytesSlice._length);
+    final result =
+        _ICU4XLocale_new_from_bytes(bytesSlice._bytes, bytesSlice._length);
     alloc.releaseAll();
     return ICU4XLocale._(result);
   }
-  static final _newFromBytesFfi = _capi<
+  // ignore: non_constant_identifier_names
+  static final _ICU4XLocale_new_from_bytes = _capi<
           ffi.NativeFunction<
               ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>,
                   ffi.Size)>>('ICU4XLocale_new_from_bytes')

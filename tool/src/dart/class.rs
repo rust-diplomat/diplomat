@@ -4,7 +4,6 @@ use askama::Template;
 use diplomat_core::hir::{
     self, OpaqueOwner, ReturnType, SelfType, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
-use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -355,50 +354,52 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             .join(", ");
 
         let return_ty = self.gen_dart_return_type_name(&method.output);
-        let method_name = self.cx.formatter.fmt_method_name(method);
 
         let declaration = if method.param_self.is_none() {
+            // Constructor
             if return_ty == type_name {
-                let mut method_name = &*method_name;
-                for prefix in ["create", "new", "default"] {
-                    method_name = method_name.strip_prefix(prefix).unwrap_or(method_name);
-                }
-                if method_name.is_empty() {
-                    format!("factory {type_name}({params})")
+                if let Some(name) = self.cx.formatter.fmt_constructor_name(method) {
+                    format!("factory {type_name}.{name}({params})")
                 } else {
-                    format!(
-                        "factory {type_name}.{}({params})",
-                        method_name.to_lower_camel_case()
-                    )
+                    format!("factory {type_name}({params})")
                 }
+            // Static field
             } else if params.is_empty()
-                && (return_ty != "bool" || method_name.starts_with("is"))
                 && !matches!(method.output, hir::ReturnType::Fallible(..))
+                && return_ty != "bool"
             {
+                let method_name = self
+                    .cx
+                    .formatter
+                    .fmt_constructor_name(method)
+                    .unwrap_or("singleton".into());
                 format!(
                     "static final {return_ty} {method_name} = \
                         _capi<ffi.NativeFunction<{ffi_return_ty} Function()>>('{c_method_name}')\
                         .asFunction<{ffi_cast_return_ty} Function()>(isLeaf: true)();"
                 )
-            } else if method_name == "new" {
-                format!("static {return_ty} new_({params})")
+            // Static method
             } else {
+                let method_name = self.cx.formatter.fmt_method_name(method);
                 format!("static {return_ty} {method_name}({params})")
             }
+        // Getter
         } else if method.params.is_empty()
             // Returns some value
             && method.output.return_type().is_some()
             // If it returns a bool it has be a `isFoo`, otherwise the bool might be a success flag of a side effect
-            && (return_ty != "bool" || method_name.starts_with("is"))
+            && (return_ty != "bool" || method.name.as_str().starts_with("is"))
             // Conversions are not getters according to the style guide
-            && !(method_name.starts_with("to") || method_name.starts_with("into"))
+            && !(method.name.as_str().starts_with("to") || method.name.as_str().starts_with("into"))
             // Mutates
-            && !method_name.starts_with("enable")
+            && !method.name.as_str().starts_with("enable")
             // Clone and build are not getters according to the style guide, and next is usually not pure
-            && !["clone", "next", "build"].contains(&&*method_name)
+            && !["clone", "next", "build"].contains(&method.name.as_str())
         {
+            let method_name = self.cx.formatter.fmt_method_name(method);
             format!("{return_ty} get {method_name}",)
-        } else if method_name.starts_with("set")
+        // Setter
+        } else if method.name.as_str().starts_with("set_")
             && method.params.len() == 1
             && method.output.return_type().is_none()
             // The corresponding getter exists, as required by the style guide
@@ -410,16 +411,15 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 .iter()
                 .any(|m| m.name.as_str() == method.name.as_str().strip_prefix("set_").unwrap())
         {
-            format!(
-                "set {}({params})",
-                method_name
-                    .strip_prefix("set")
-                    .unwrap()
-                    .to_lower_camel_case()
-            )
-        } else if method_name == "toString" && method.output.is_writeable() && params.is_empty() {
+            let method_name = self.cx.formatter.fmt_setter_name(method);
+            format!("set {method_name}({params})")
+        } else if method.name.as_str() == "to_string"
+            && method.output.is_writeable()
+            && params.is_empty()
+        {
             "@override\n  String toString()".to_string()
         } else {
+            let method_name = self.cx.formatter.fmt_method_name(method);
             format!("{return_ty} {method_name}({params})")
         };
 
@@ -429,7 +429,6 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             method,
             docs,
             declaration,
-            method_name,
             c_method_name,
             param_types_ffi,
             param_types_ffi_cast,
@@ -915,8 +914,6 @@ struct MethodInfo<'a> {
     docs: String,
     /// The declaration (everything before the parameter list)
     declaration: String,
-    /// The Dart method name
-    method_name: Cow<'a, str>,
     /// The C method name
     c_method_name: Cow<'a, str>,
 

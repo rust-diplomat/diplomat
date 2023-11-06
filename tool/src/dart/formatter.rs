@@ -20,6 +20,9 @@ pub(super) struct DartFormatter<'tcx> {
     docs_url_generator: &'tcx DocsUrlGenerator,
 }
 
+const INVALID_METHOD_NAMES: &[&str] = &["new", "static"];
+const INVALID_FIELD_NAMES: &[&str] = &["new", "static"];
+
 impl<'tcx> DartFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
         Self {
@@ -79,7 +82,39 @@ impl<'tcx> DartFormatter<'tcx> {
         if let Some(rename) = method.attrs.rename.as_ref() {
             rename.into()
         } else {
-            method.name.as_str().to_lower_camel_case().into()
+            let name = method.name.as_str().to_lower_camel_case();
+            if INVALID_METHOD_NAMES.contains(&name.as_str()) {
+                format!("{name}_").into()
+            } else {
+                name.into()
+            }
+        }
+    }
+
+    pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
+        let mut name = &*self.fmt_method_name(method);
+        for prefix in ["create", "new", "default"] {
+            name = name.strip_prefix(prefix).unwrap_or(name);
+        }
+        let name = name.to_lower_camel_case();
+
+        if name.is_empty() {
+            None
+        } else if INVALID_METHOD_NAMES.contains(&name.as_str()) {
+            Some(format!("{name}_"))
+        } else {
+            Some(name)
+        }
+    }
+
+    pub fn fmt_setter_name(&self, method: &hir::Method) -> String {
+        let name = &*self.fmt_method_name(method);
+        let name = name.strip_prefix("set").unwrap().to_lower_camel_case();
+
+        if INVALID_FIELD_NAMES.contains(&name.as_str()) {
+            format!("{name}_")
+        } else {
+            name
         }
     }
 
