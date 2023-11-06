@@ -313,8 +313,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                     .push(self.cx.formatter.fmt_pointer(&param_type_ffi_cast).into());
                 param_types_ffi_cast.push(self.cx.formatter.fmt_usize(true).into());
 
-                dart_to_ffi_params.push(format!("{conversion}.bytes").into());
-                dart_to_ffi_params.push(format!("{conversion}.length").into());
+                dart_to_ffi_params.push(format!("{conversion}._bytes").into());
+                dart_to_ffi_params.push(format!("{conversion}._length").into());
             } else {
                 param_types_ffi.push(param_type_ffi);
                 param_types_ffi_cast.push(param_type_ffi_cast);
@@ -376,7 +376,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 && !matches!(method.output, hir::ReturnType::Fallible(..))
             {
                 format!(
-                    "static late final {return_ty} {method_name} = \
+                    "static final {return_ty} {method_name} = \
                         _capi<ffi.NativeFunction<{ffi_return_ty} Function()>>('{c_method_name}')\
                         .asFunction<{ffi_cast_return_ty} Function()>(isLeaf: true)();"
                 )
@@ -678,11 +678,11 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
         let to_dart = match slice {
             hir::Slice::Str(..) => {
                 self.imports.insert(Import::simple("dart:convert".into()));
-                "Utf8Decoder().convert(bytes.cast<ffi.Uint8>().asTypedList(length))"
+                "Utf8Decoder().convert(_bytes.cast<ffi.Uint8>().asTypedList(_length))"
             }
             // TODO: How to read ffi.Size?
             hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "this",
-            _ => "bytes.asTypedList(length)",
+            _ => "_bytes.asTypedList(_length)",
         };
 
         let from_dart = match slice {

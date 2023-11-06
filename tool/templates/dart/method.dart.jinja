@@ -2,7 +2,7 @@
 /// {{m.docs}}
 {%- endif %}
 {{ m.declaration -}}
-{%- if !m.declaration.starts_with("static late") -%}
+{%- if !m.declaration.starts_with("static final") -%}
 {##} { {##}
 		{%- for slice_conversion in m.slice_conversions %}
 		{%- if loop.first %}
@@ -31,7 +31,7 @@
 		{%- when None %}
 		{%- endmatch %}
   }
-	static late final _{{ m.method_name -}}Ffi = _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
+	static final _{{ m.method_name -}}Ffi = _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
 		{%- for param in m.param_types_ffi %}
 			{%- if !loop.first %}, {% endif -%}
 			{{ param }}
