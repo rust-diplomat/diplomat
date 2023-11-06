@@ -176,7 +176,7 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Int(IntType::I64) => "Int64List",
             PrimitiveType::Int(IntType::U64) => "Uint64List",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            PrimitiveType::IntSize(_) => "Uint64List", // TODO this won't work but is used by ICU4X
+            PrimitiveType::IntSize(_) => "SizeList",
             PrimitiveType::Float(FloatType::F32) => "Float32List",
             PrimitiveType::Float(FloatType::F64) => "Float64List",
             _ => panic!("Primitive {:?} not supported in lists", prim),
@@ -196,7 +196,7 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Int(IntType::I64) => "_SliceFfiInt64",
             PrimitiveType::Int(IntType::U64) => "_SliceFfiUint64",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            PrimitiveType::IntSize(_) => "_SliceFfiUint64", // TODO this won't work but is used by ICU4X
+            PrimitiveType::IntSize(_) => self.fmt_primitive_list_type(prim),
             PrimitiveType::Float(FloatType::F32) => "_SliceFfiFloat",
             PrimitiveType::Float(FloatType::F64) => "_SliceFfiDouble",
             _ => panic!("Primitive {:?} not supported in lists", prim),

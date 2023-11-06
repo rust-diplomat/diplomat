@@ -608,7 +608,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let name = format!("{dart_name}Slice");
                 slice_conversions.push(
                     format!(
-                        "final {name} = {}.fromDart({dart_name}, alloc);",
+                        "final {name} = {}._fromDart({dart_name}, alloc);",
                         &self.gen_slice(&s)
                     )
                     .into(),
@@ -681,24 +681,23 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 "Utf8Decoder().convert(bytes.cast<ffi.Uint8>().asTypedList(length))"
             }
             // TODO: How to read ffi.Size?
-            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "throw 'unimplemented'",
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "this",
             _ => "bytes.asTypedList(length)",
         };
 
         let from_dart = match slice {
             hir::Slice::Str(..) => concat!(
                 "    final units = Utf8Encoder().convert(value);\n",
-                "    slice.length = units.length;\n",
+                "    slice._length = units.length;\n",
                 // TODO: Figure out why Pointer<Utf8> cannot be allocated
-                "    slice.bytes = allocator<ffi.Uint8>(slice.length).cast();\n",
-                "    slice.bytes.cast<ffi.Uint8>().asTypedList(slice.length).setAll(0, units);\n"
+                "    slice._bytes = allocator<ffi.Uint8>(slice._length).cast();\n",
+                "    slice._bytes.cast<ffi.Uint8>().asTypedList(slice._length).setAll(0, units);\n"
             ),
-            // TODO: How to write ffi.Size?
-            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "throw 'unimplemented';",
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "",
             _ => concat!(
-                "    slice.length = value.length;\n",
-                "    slice.bytes = allocator(slice.length);\n",
-                "    slice.bytes.asTypedList(slice.length).setAll(0, value);\n"
+                "    slice._length = value.length;\n",
+                "    slice._bytes = allocator(slice._length);\n",
+                "    slice._bytes.asTypedList(slice._length).setAll(0, value);\n"
             ),
         };
 
@@ -847,7 +846,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let type_name = self.cx.formatter.fmt_type_name(id);
                 format!("{type_name}._({var_name})").into()
             }
-            Type::Slice(..) => format!("{var_name}.asDart").into(),
+            Type::Slice(..) => format!("{var_name}._asDart").into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
