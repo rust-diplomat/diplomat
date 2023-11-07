@@ -1,0 +1,45 @@
+class {{slice_ty}} extends ffi.Struct {
+  external ffi.Pointer<{{ffi_type}}> _bytes;
+
+  @ffi.Size()
+  external int _length;
+
+  {%- if !from_dart.is_empty() %}
+  /// Produces a slice from a Dart object. The Dart object's data is copied into the given allocator
+  /// as it cannot be borrowed directly, and gets freed with the slice object.
+  // ignore: unused_element
+  static {{slice_ty}} _fromDart({{dart_ty}} value, ffi.Allocator allocator) {
+    final pointer = allocator<{{slice_ty}}>();
+		final slice = pointer.ref;
+    {{from_dart}}
+    return slice;
+  }
+  {%- endif %}
+
+  // ignore: unused_element
+  {{dart_ty}} get _asDart => {{to_dart}};
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! {{slice_ty}} || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      {%- if ffi_type == "ffi2.Utf8" %}
+      if (other._bytes.cast<ffi.Uint8>()[i] != _bytes.cast<ffi.Uint8>()[i]) {
+      {%- else -%}
+      if (other._bytes[i] != _bytes[i]) {
+      {% endif -%}
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+}
+

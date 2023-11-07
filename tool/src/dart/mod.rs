@@ -34,7 +34,7 @@ impl<'tcx> DartContext<'tcx> {
     /// Will populate self.files as a result
     pub fn run(&self) {
         self.files.add_file(
-            "lib.dart".to_string(),
+            "lib.g.dart".to_string(),
             self.tcx
                 .all_types()
                 .filter(|(_, ty)| !ty.attrs().disable)

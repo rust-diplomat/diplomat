@@ -1,20 +1,22 @@
 {%- if !m.docs.is_empty() %}
 /// {{m.docs}}
 {%- endif %}
-{{ m.declaration -}} { {##}
+{{ m.declaration -}}
+{%- if !m.declaration.starts_with("static final") -%}
+{##} { {##}
 		{%- for slice_conversion in m.slice_conversions %}
 		{%- if loop.first %}
-		final alloc = allocators.Arena();
-		{% endif %}
+		final alloc = ffi2.Arena();
+		{%- endif %}
 		{{ slice_conversion }}
-		{%- endfor -%}
-		{%- if m.method.is_writeable() %}
+		{%- endfor %}
+		{% if m.method.is_writeable() %}
 		final writeable = _Writeable();
 		{%- endif %}
 		{% if m.method.output.returns_value() -%}
 		final result = {##}
 		{%- endif -%}
-		_{{ m.method_name -}}Ffi(
+		_{{ m.c_method_name -}}(
 			{%- for param in m.dart_to_ffi_params %}
 			{%- if !loop.first %},{% endif -%}
 			{{ param }}
@@ -29,7 +31,8 @@
 		{%- when None %}
 		{%- endmatch %}
   }
-	static late final _{{ m.method_name -}}Ffi = _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
+  // ignore: non_constant_identifier_names
+	static final _{{ m.c_method_name -}} = _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
 		{%- for param in m.param_types_ffi %}
 			{%- if !loop.first %}, {% endif -%}
 			{{ param }}
@@ -41,3 +44,4 @@
 			{{ param }}
 		{%- endfor -%}
 	)>(isLeaf: true);
+{% endif %}

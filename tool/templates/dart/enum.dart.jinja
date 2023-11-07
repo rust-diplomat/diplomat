@@ -11,6 +11,7 @@ enum {{type_name}} {
 
   const {{type_name}}.__(this._id);
 
+  // ignore: unused_element
   factory {{type_name}}._(int id) => values.firstWhere((value) => value._id == id);
 
   final int _id;

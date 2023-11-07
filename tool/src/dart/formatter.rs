@@ -20,6 +20,9 @@ pub(super) struct DartFormatter<'tcx> {
     docs_url_generator: &'tcx DocsUrlGenerator,
 }
 
+const INVALID_METHOD_NAMES: &[&str] = &["new", "static"];
+const INVALID_FIELD_NAMES: &[&str] = &["new", "static"];
+
 impl<'tcx> DartFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
         Self {
@@ -59,7 +62,7 @@ impl<'tcx> DartFormatter<'tcx> {
         if let Some(rename) = variant.attrs.rename.as_ref() {
             rename.into()
         } else {
-            variant.name.as_str().into()
+            variant.name.as_str().to_lower_camel_case().into()
         }
     }
 
@@ -73,7 +76,129 @@ impl<'tcx> DartFormatter<'tcx> {
         format!("{ident}?").into()
     }
 
-    pub fn fmt_primitive_list<'a>(&self, prim: hir::PrimitiveType) -> Cow<'a, str> {
+    /// Format a method
+    pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
+        // TODO(#60): handle other keywords
+        if let Some(rename) = method.attrs.rename.as_ref() {
+            rename.into()
+        } else {
+            let name = method.name.as_str().to_lower_camel_case();
+            if INVALID_METHOD_NAMES.contains(&name.as_str()) {
+                format!("{name}_").into()
+            } else {
+                name.into()
+            }
+        }
+    }
+
+    pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
+        let mut name = &*self.fmt_method_name(method);
+        for prefix in ["create", "new", "default"] {
+            name = name.strip_prefix(prefix).unwrap_or(name);
+        }
+        let name = name.to_lower_camel_case();
+
+        if name.is_empty() {
+            None
+        } else if INVALID_METHOD_NAMES.contains(&name.as_str()) {
+            Some(format!("{name}_"))
+        } else {
+            Some(name)
+        }
+    }
+
+    pub fn fmt_setter_name(&self, method: &hir::Method) -> String {
+        let name = &*self.fmt_method_name(method);
+        let name = name.strip_prefix("set").unwrap().to_lower_camel_case();
+
+        if INVALID_FIELD_NAMES.contains(&name.as_str()) {
+            format!("{name}_")
+        } else {
+            name
+        }
+    }
+
+    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
+        self.c.fmt_method_name(ty, method).into()
+    }
+
+    pub fn fmt_string(&self) -> &'static str {
+        "String"
+    }
+
+    pub fn fmt_utf8_primitive(&self) -> &'static str {
+        "ffi2.Utf8"
+    }
+
+    pub fn fmt_void(&self) -> &'static str {
+        "void"
+    }
+
+    pub fn fmt_ffi_void(&self) -> &'static str {
+        "ffi.Void"
+    }
+
+    pub fn fmt_pointer(&self, target: &str) -> String {
+        format!("ffi.Pointer<{target}>")
+    }
+
+    pub fn fmt_opaque(&self) -> &'static str {
+        "ffi.Opaque"
+    }
+
+    pub fn fmt_usize(&self, cast: bool) -> &'static str {
+        if cast {
+            "int"
+        } else {
+            "ffi.Size"
+        }
+    }
+
+    pub fn fmt_type_as_ident(&self, ty: Option<&str>) -> String {
+        ty.unwrap_or("Void")
+            .replace(&self.fmt_pointer(self.fmt_opaque()), "Opaque")
+            .replace("ffi.", "")
+            .replace('_', "")
+    }
+
+    pub fn fmt_enum_as_ffi(&self, cast: bool) -> &'static str {
+        self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::U32), cast)
+    }
+
+    /// Get the primitive type as a Dart FFI type
+    pub fn fmt_primitive_as_ffi(&self, prim: hir::PrimitiveType, cast: bool) -> &'static str {
+        use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
+        if cast {
+            match prim {
+                PrimitiveType::Bool => "bool",
+                PrimitiveType::Char => "int",
+                PrimitiveType::Int(_) | PrimitiveType::IntSize(_) => "int",
+                PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+                PrimitiveType::Float(_) => "double",
+            }
+        } else {
+            match prim {
+                PrimitiveType::Bool => "ffi.Bool",
+                PrimitiveType::Char => "ffi.Uint32",
+                PrimitiveType::Int(IntType::I8) => "ffi.Int8",
+                PrimitiveType::Int(IntType::U8) => "ffi.Uint8",
+                PrimitiveType::Int(IntType::I16) => "ffi.Int16",
+                PrimitiveType::Int(IntType::U16) => "ffi.Uint16",
+                PrimitiveType::Int(IntType::I32) => "ffi.Int32",
+                PrimitiveType::Int(IntType::U32) => "ffi.Uint32",
+                PrimitiveType::Int(IntType::I64) => "ffi.Int64",
+                PrimitiveType::Int(IntType::U64) => "ffi.Uint64",
+                PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+                // TODO: is there a usize type?
+                PrimitiveType::IntSize(IntSizeType::Isize) => "ffi.Size",
+                PrimitiveType::IntSize(IntSizeType::Usize) => "ffi.Size",
+                PrimitiveType::Float(FloatType::F32) => "ffi.Float",
+                PrimitiveType::Float(FloatType::F64) => "ffi.Double",
+            }
+        }
+    }
+
+    pub fn fmt_primitive_list_type(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
         match prim {
             PrimitiveType::Char => "Uint32List",
@@ -86,67 +211,34 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Int(IntType::I64) => "Int64List",
             PrimitiveType::Int(IntType::U64) => "Uint64List",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            PrimitiveType::IntSize(_) => "Uint64List", // TODO this won't work but is used by ICU4X
+            PrimitiveType::IntSize(_) => "SizeList",
             PrimitiveType::Float(FloatType::F32) => "Float32List",
             PrimitiveType::Float(FloatType::F64) => "Float64List",
             _ => panic!("Primitive {:?} not supported in lists", prim),
         }
-        .into()
     }
 
-    pub fn fmt_string(&self) -> Cow<'static, str> {
-        "String".into()
-    }
-
-    /// Format a method
-    pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
-        // TODO(#60): handle other keywords
-        if let Some(rename) = method.attrs.rename.as_ref() {
-            rename.into()
-        } else {
-            method.name.as_str().to_lower_camel_case().into()
-        }
-    }
-
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
-    }
-
-    /// Get the primitive type as a Dart FFI type
-    pub fn fmt_primitive_as_ffi(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
-        use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
+    pub fn fmt_slice_type(&self, prim: hir::PrimitiveType) -> &'static str {
+        use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
         match prim {
-            PrimitiveType::Bool => "ffi.Bool",
-            PrimitiveType::Char => "ffi.Uint32",
-            PrimitiveType::Int(IntType::I8) => "ffi.Int8",
-            PrimitiveType::Int(IntType::U8) => "ffi.Uint8",
-            PrimitiveType::Int(IntType::I16) => "ffi.Int16",
-            PrimitiveType::Int(IntType::U16) => "ffi.Uint16",
-            PrimitiveType::Int(IntType::I32) => "ffi.Int32",
-            PrimitiveType::Int(IntType::U32) => "ffi.Uint32",
-            PrimitiveType::Int(IntType::I64) => "ffi.Int64",
-            PrimitiveType::Int(IntType::U64) => "ffi.Uint64",
+            PrimitiveType::Char => "_SliceFfiUint32",
+            PrimitiveType::Int(IntType::I8) => "_SliceFfiInt8",
+            PrimitiveType::Int(IntType::U8) => "_SliceFfiUint8",
+            PrimitiveType::Int(IntType::I16) => "_SliceFfiInt16",
+            PrimitiveType::Int(IntType::U16) => "_SliceFfiUint16",
+            PrimitiveType::Int(IntType::I32) => "_SliceFfiInt32",
+            PrimitiveType::Int(IntType::U32) => "_SliceFfiUint32",
+            PrimitiveType::Int(IntType::I64) => "_SliceFfiInt64",
+            PrimitiveType::Int(IntType::U64) => "_SliceFfiUint64",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            // TODO: verify these
-            PrimitiveType::IntSize(IntSizeType::Isize) => "ffi.Int64",
-            PrimitiveType::IntSize(IntSizeType::Usize) => "ffi.Uint64",
-            PrimitiveType::Float(FloatType::F32) => "ffi.Float",
-            PrimitiveType::Float(FloatType::F64) => "ffi.Double",
+            PrimitiveType::IntSize(_) => self.fmt_primitive_list_type(prim),
+            PrimitiveType::Float(FloatType::F32) => "_SliceFfiFloat",
+            PrimitiveType::Float(FloatType::F64) => "_SliceFfiDouble",
+            _ => panic!("Primitive {:?} not supported in lists", prim),
         }
-        .into()
     }
 
-    /// Get the primitive type as a Dart type
-    pub fn fmt_primitive_as_dart(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
-        use diplomat_core::hir::PrimitiveType;
-        match prim {
-            PrimitiveType::Bool => "bool",
-            PrimitiveType::Char => "int",
-            PrimitiveType::Int(_) => "int",
-            PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            PrimitiveType::IntSize(_) => "int",
-            PrimitiveType::Float(_) => "double",
-        }
-        .into()
+    pub fn fmt_str_slice_type(&self) -> &'static str {
+        "_SliceFfi2Utf8"
     }
 }

@@ -1,3 +1,6 @@
+// https://github.com/dart-lang/sdk/issues/53946
+// ignore_for_file: non_native_function_type_argument_to_pointer
+
 {% for import in imports -%}
 import '{{import.path}}'{{import.suffix}};
 {% endfor %}
