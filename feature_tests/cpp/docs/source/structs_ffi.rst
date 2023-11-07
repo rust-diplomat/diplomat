@@ -1,6 +1,16 @@
 ``structs::ffi``
 ================
 
+.. cpp:enum-struct:: ContiguousEnum
+
+    .. cpp:enumerator:: C
+
+    .. cpp:enumerator:: D
+
+    .. cpp:enumerator:: E
+
+    .. cpp:enumerator:: F
+
 .. cpp:enum-struct:: MyEnum
 
     .. cpp:enumerator:: A

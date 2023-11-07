@@ -15,6 +15,15 @@ pub mod ffi {
         E = 2,
         F = 3,
     }
+
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum ContiguousEnum {
+        C = 0,
+        D = 1,
+        E = 2,
+        F = 3,
+    }
+
     pub struct MyStruct {
         a: u8,
         b: bool,
