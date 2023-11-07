@@ -106,7 +106,7 @@ impl<'tcx> DartFormatter<'tcx> {
 
     pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
         let mut name = &*self.fmt_method_name(method);
-        for prefix in ["create", "new", "default"] {
+        for prefix in ["create", "new", "default", "get"] {
             name = name.strip_prefix(prefix).unwrap_or(name);
         }
         let name = name.to_lower_camel_case();
