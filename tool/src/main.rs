@@ -66,5 +66,6 @@ fn main() -> std::io::Result<()> {
         ),
         opt.library_config.as_deref(),
         opt.silent,
+        None,
     )
 }

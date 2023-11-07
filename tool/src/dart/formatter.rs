@@ -53,7 +53,12 @@ impl<'tcx> DartFormatter<'tcx> {
         if let Some(rename) = resolved.attrs().rename.as_ref() {
             rename.into()
         } else if let Some(strip_prefix) = self.strip_prefix.as_ref() {
-            resolved.name().as_str().strip_prefix(strip_prefix).unwrap_or(resolved.name().as_str()).into()
+            resolved
+                .name()
+                .as_str()
+                .strip_prefix(strip_prefix)
+                .unwrap_or(resolved.name().as_str())
+                .into()
         } else {
             resolved.name().as_str().into()
         }

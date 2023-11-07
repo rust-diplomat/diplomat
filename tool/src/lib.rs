@@ -32,6 +32,7 @@ use std::path::Path;
 
 pub use ast::DocsUrlGenerator;
 
+#[allow(clippy::too_many_arguments)]
 pub fn gen(
     entry: &Path,
     target_language: &str,
