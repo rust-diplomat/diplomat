@@ -420,6 +420,11 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             && params.is_empty()
         {
             "@override\n  String toString()".to_string()
+        } else if method.name.as_str() == "get"
+            && method.output.return_type().is_some()
+            && method.params.len() == 1
+        {
+            format!("{return_ty} operator []({params})")
         } else {
             let method_name = self.cx.formatter.fmt_method_name(method);
             format!("{return_ty} {method_name}({params})")
