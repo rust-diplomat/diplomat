@@ -187,9 +187,9 @@ class ICU4XFixedDecimalFormatterOptions {
   }
 
   ICU4XFixedDecimalGroupingStrategy get groupingStrategy =>
-      ICU4XFixedDecimalGroupingStrategy._(_underlying.groupingStrategy);
+      ICU4XFixedDecimalGroupingStrategy.values[_underlying.groupingStrategy];
   set groupingStrategy(ICU4XFixedDecimalGroupingStrategy groupingStrategy) {
-    _underlying.groupingStrategy = groupingStrategy._id;
+    _underlying.groupingStrategy = groupingStrategy.index;
   }
 
   bool get someOtherConfig => _underlying.someOtherConfig;
@@ -224,24 +224,16 @@ class ICU4XFixedDecimalFormatterOptions {
 
 enum ICU4XFixedDecimalGroupingStrategy {
   /// Auto grouping
-  auto.__(0),
+  auto,
 
   /// No grouping
-  never.__(1),
+  never,
 
   /// Always group
-  always.__(2),
+  always,
 
   /// At least 2 groups
-  min2.__(3);
-
-  const ICU4XFixedDecimalGroupingStrategy.__(this._id);
-
-  // ignore: unused_element
-  factory ICU4XFixedDecimalGroupingStrategy._(int id) =>
-      values.firstWhere((value) => value._id == id);
-
-  final int _id;
+  min2;
 }
 
 /// An ICU4X Locale, capable of representing strings like `"en-US"`.

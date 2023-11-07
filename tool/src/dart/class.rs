@@ -115,6 +115,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             docs: String,
+            is_contiguous: bool,
         }
 
         let methods = ty
@@ -129,6 +130,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             type_name,
             methods: methods.as_slice(),
             docs: self.cx.formatter.fmt_docs(&ty.docs),
+            is_contiguous: is_contiguous_enum(ty),
         }
         .render()
         .unwrap()
@@ -577,9 +579,10 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
     /// Generates a C++ expression that converts from the C++ self type to the corresponding C self type.
     fn gen_dart_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
-            SelfType::Opaque(..) => "_underlying".into(),
-            SelfType::Struct(..) => "_underlying".into(),
-            SelfType::Enum(..) => "_id".into(),
+            SelfType::Enum(ref e) if is_contiguous_enum(e.resolve(self.cx.tcx)) => "index".into(),
+            SelfType::Opaque(..) | SelfType::Struct(..) | SelfType::Enum(..) => {
+                "_underlying".into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -596,13 +599,16 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
     ) -> Cow<'b, str> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
-            Type::Opaque(ref op) if op.is_optional() => {
-                // TODO(rb): Is `null` a valid `ffi.Pointer<T>`?
+            Type::Opaque(ref op) if op.is_optional() => format!(
+                "{dart_name} == null ? ffi.Pointer.fromAddress(0) ? {dart_name}._underlying"
+            )
+            .into(),
+            Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.cx.tcx)) => {
+                format!("{dart_name}.index").into()
+            }
+            Type::Opaque(..) | Type::Struct(..) | Type::Enum(..) => {
                 format!("{dart_name}._underlying").into()
             }
-            Type::Opaque(..) => format!("{dart_name}._underlying").into(),
-            Type::Struct(..) => format!("{dart_name}._underlying").into(),
-            Type::Enum(..) => format!("{dart_name}._id").into(),
             Type::Slice(s) => {
                 let name = format!("{dart_name}Slice");
                 slice_conversions.push(
@@ -840,10 +846,15 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                 let type_name = self.cx.formatter.fmt_type_name(id);
                 format!("{type_name}._({var_name})").into()
             }
+            Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.cx.tcx)) => {
+                let id = e.tcx_id.into();
+                let type_name = self.cx.formatter.fmt_type_name(id);
+                format!("{type_name}.values[{var_name}]").into()
+            }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(id);
-                format!("{type_name}._({var_name})").into()
+                format!("{type_name}.values.firstWhere((v) => v._underlying == {var_name})").into()
             }
             Type::Slice(..) => format!("{var_name}._asDart").into(),
             _ => unreachable!("unknown AST/HIR variant"),
@@ -898,6 +909,13 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             ReturnType::Infallible(Some(_)) => unreachable!("unknown AST/HIR variant"),
         }
     }
+}
+
+fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
+    ty.variants
+        .iter()
+        .enumerate()
+        .all(|(i, v)| i as isize == v.discriminant)
 }
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.

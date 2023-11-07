@@ -1,6 +1,8 @@
 ``structs::ffi``
 ================
 
+.. js:class:: ContiguousEnum
+
 .. js:class:: MyEnum
 
     .. js:method:: into_value()
