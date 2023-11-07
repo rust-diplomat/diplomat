@@ -18,16 +18,22 @@ use std::borrow::Cow;
 pub(super) struct DartFormatter<'tcx> {
     c: CFormatter<'tcx>,
     docs_url_generator: &'tcx DocsUrlGenerator,
+    strip_prefix: Option<String>,
 }
 
 const INVALID_METHOD_NAMES: &[&str] = &["new", "static"];
 const INVALID_FIELD_NAMES: &[&str] = &["new", "static"];
 
 impl<'tcx> DartFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
+    pub fn new(
+        tcx: &'tcx TypeContext,
+        docs_url_generator: &'tcx DocsUrlGenerator,
+        strip_prefix: Option<String>,
+    ) -> Self {
         Self {
             c: CFormatter::new(tcx),
             docs_url_generator,
+            strip_prefix,
         }
     }
 
@@ -46,6 +52,13 @@ impl<'tcx> DartFormatter<'tcx> {
         let resolved = self.c.tcx().resolve_type(id);
         if let Some(rename) = resolved.attrs().rename.as_ref() {
             rename.into()
+        } else if let Some(strip_prefix) = self.strip_prefix.as_ref() {
+            resolved
+                .name()
+                .as_str()
+                .strip_prefix(strip_prefix)
+                .unwrap_or(resolved.name().as_str())
+                .into()
         } else {
             resolved.name().as_str().into()
         }

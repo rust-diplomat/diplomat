@@ -20,11 +20,12 @@ impl<'tcx> DartContext<'tcx> {
         tcx: &'tcx TypeContext,
         files: FileMap,
         docs_url_generator: &'tcx DocsUrlGenerator,
+        strip_prefix: Option<String>,
     ) -> Self {
         DartContext {
             tcx,
             files,
-            formatter: DartFormatter::new(tcx, docs_url_generator),
+            formatter: DartFormatter::new(tcx, docs_url_generator, strip_prefix),
             errors: ErrorStore::default(),
         }
     }

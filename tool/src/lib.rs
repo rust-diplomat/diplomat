@@ -32,6 +32,7 @@ use std::path::Path;
 
 pub use ast::DocsUrlGenerator;
 
+#[allow(clippy::too_many_arguments)]
 pub fn gen(
     entry: &Path,
     target_language: &str,
@@ -40,6 +41,7 @@ pub fn gen(
     docs_url_gen: &ast::DocsUrlGenerator,
     library_config: Option<&Path>,
     silent: bool,
+    strip_prefix: Option<String>,
 ) -> std::io::Result<()> {
     // Check that user-provided paths exist. Exit early with a nice error message
     // if anything doesn't exist.
@@ -81,10 +83,10 @@ pub fn gen(
     match target_language {
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "dart" => {
-            let tcx = match hir::TypeContext::from_ast(
-                &env,
-                hir::BasicAttributeValidator::new(target_language),
-            ) {
+            let mut attr_validator = hir::BasicAttributeValidator::new("dart");
+            attr_validator.support.renaming = true;
+            attr_validator.support.disabling = true;
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
                     for err in e {
@@ -94,7 +96,7 @@ pub fn gen(
                 }
             };
             let files = common::FileMap::default();
-            let mut context = dart::DartContext::new(&tcx, files, docs_url_gen);
+            let mut context = dart::DartContext::new(&tcx, files, docs_url_gen, strip_prefix);
             context.run();
             out_texts = context.files.take_files();
         }
