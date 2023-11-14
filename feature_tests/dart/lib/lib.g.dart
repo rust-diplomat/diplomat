@@ -339,7 +339,7 @@ factory Foo.extractFromFields(BorrowedFields fields) {
 
 
 class _ImportedStructFfi extends ffi.Struct {
-	@ffi.Uint32()
+	@ffi.Int32()
 	external int foo;
 	@ffi.Uint8()
 	external int count;
@@ -412,7 +412,7 @@ int intoValue() {
 		return result;
   }
   // ignore: non_constant_identifier_names
-	static final _MyEnum_into_value= _capi<ffi.NativeFunction<ffi.Int8 Function(ffi.Uint32)>>('MyEnum_into_value')
+	static final _MyEnum_into_value= _capi<ffi.NativeFunction<ffi.Int8 Function(ffi.Int32)>>('MyEnum_into_value')
 	.asFunction<int Function(int)>(isLeaf: true);
 
 
@@ -482,7 +482,7 @@ class _MyStructFfi extends ffi.Struct {
 	external int e;
 	@ffi.Uint32()
 	external int f;
-	@ffi.Uint32()
+	@ffi.Int32()
 	external int g;
 }
 
@@ -925,8 +925,8 @@ factory ResultOpaque(int i) {
 		return result.isOk ? ResultOpaque._(result.union.ok) : throw ErrorEnum.values[result.union.err];
   }
   // ignore: non_constant_identifier_names
-	static final _ResultOpaque_new= _capi<ffi.NativeFunction<_ResultOpaqueUint32 Function(ffi.Int32)>>('ResultOpaque_new')
-	.asFunction<_ResultOpaqueUint32 Function(int)>(isLeaf: true);
+	static final _ResultOpaque_new= _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function(ffi.Int32)>>('ResultOpaque_new')
+	.asFunction<_ResultOpaqueInt32 Function(int)>(isLeaf: true);
 
 
 	
@@ -936,8 +936,8 @@ factory ResultOpaque.failingFoo() {
 		return result.isOk ? ResultOpaque._(result.union.ok) : throw ErrorEnum.values[result.union.err];
   }
   // ignore: non_constant_identifier_names
-	static final _ResultOpaque_new_failing_foo= _capi<ffi.NativeFunction<_ResultOpaqueUint32 Function()>>('ResultOpaque_new_failing_foo')
-	.asFunction<_ResultOpaqueUint32 Function()>(isLeaf: true);
+	static final _ResultOpaque_new_failing_foo= _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function()>>('ResultOpaque_new_failing_foo')
+	.asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
 
 
 	
@@ -947,8 +947,8 @@ factory ResultOpaque.failingBar() {
 		return result.isOk ? ResultOpaque._(result.union.ok) : throw ErrorEnum.values[result.union.err];
   }
   // ignore: non_constant_identifier_names
-	static final _ResultOpaque_new_failing_bar= _capi<ffi.NativeFunction<_ResultOpaqueUint32 Function()>>('ResultOpaque_new_failing_bar')
-	.asFunction<_ResultOpaqueUint32 Function()>(isLeaf: true);
+	static final _ResultOpaque_new_failing_bar= _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function()>>('ResultOpaque_new_failing_bar')
+	.asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
 
 
 	
@@ -1002,8 +1002,8 @@ static ErrorEnum newInEnumErr(int i) {
 		return result.isOk ? ErrorEnum.values[result.union.ok] : throw ResultOpaque._(result.union.err);
   }
   // ignore: non_constant_identifier_names
-	static final _ResultOpaque_new_in_enum_err= _capi<ffi.NativeFunction<_ResultUint32Opaque Function(ffi.Int32)>>('ResultOpaque_new_in_enum_err')
-	.asFunction<_ResultUint32Opaque Function(int)>(isLeaf: true);
+	static final _ResultOpaque_new_in_enum_err= _capi<ffi.NativeFunction<_ResultInt32Opaque Function(ffi.Int32)>>('ResultOpaque_new_in_enum_err')
+	.asFunction<_ResultInt32Opaque Function(int)>(isLeaf: true);
 
 
 	
@@ -1038,6 +1038,20 @@ enum UnimportedEnum {
   c;
 }
 
+class _ResultInt32OpaqueUnion extends ffi.Union {
+    @ffi.Int32()
+		external int ok;
+
+    external ffi.Pointer<ffi.Opaque> err;
+
+}
+class _ResultInt32Opaque extends ffi.Struct {
+    external _ResultInt32OpaqueUnion union;
+
+    @ffi.Bool()
+    external bool isOk;
+}
+
 class _ResultInt32VoidUnion extends ffi.Union {
     @ffi.Int32()
 		external int ok;
@@ -1063,15 +1077,15 @@ class _ResultOpaqueErrorStructFfi extends ffi.Struct {
     external bool isOk;
 }
 
-class _ResultOpaqueUint32Union extends ffi.Union {
+class _ResultOpaqueInt32Union extends ffi.Union {
     external ffi.Pointer<ffi.Opaque> ok;
 
-    @ffi.Uint32()
+    @ffi.Int32()
 		external int err;
 
 }
-class _ResultOpaqueUint32 extends ffi.Struct {
-    external _ResultOpaqueUint32Union union;
+class _ResultOpaqueInt32 extends ffi.Struct {
+    external _ResultOpaqueInt32Union union;
 
     @ffi.Bool()
     external bool isOk;
@@ -1083,20 +1097,6 @@ class _ResultOpaqueVoidUnion extends ffi.Union {
 }
 class _ResultOpaqueVoid extends ffi.Struct {
     external _ResultOpaqueVoidUnion union;
-
-    @ffi.Bool()
-    external bool isOk;
-}
-
-class _ResultUint32OpaqueUnion extends ffi.Union {
-    @ffi.Uint32()
-		external int ok;
-
-    external ffi.Pointer<ffi.Opaque> err;
-
-}
-class _ResultUint32Opaque extends ffi.Struct {
-    external _ResultUint32OpaqueUnion union;
 
     @ffi.Bool()
     external bool isOk;
