@@ -169,7 +169,7 @@ class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
 }
 
 class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
-  @ffi.Uint32()
+  @ffi.Int32()
   external int groupingStrategy;
   @ffi.Bool()
   external bool someOtherConfig;
