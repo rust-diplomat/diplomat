@@ -176,7 +176,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "diplomat_core",
  "insta",
@@ -209,14 +209,14 @@ dependencies = [
 
 [[package]]
 name = "diplomat-runtime"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "log",
 ]
 
 [[package]]
 name = "diplomat-tool"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "askama",
  "clap",
@@ -236,7 +236,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat_core"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "displaydoc",
  "insta",
