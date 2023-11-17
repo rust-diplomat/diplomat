@@ -7,6 +7,7 @@ use diplomat_core::hir::{
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::fmt::Write;
 
 impl<'tcx> DartContext<'tcx> {
     pub fn gen_root(
@@ -428,7 +429,20 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             format!("{return_ty} {method_name}({params})")
         };
 
-        let docs = self.cx.formatter.fmt_docs(&method.docs);
+        let mut docs = self.cx.formatter.fmt_docs(&method.docs);
+
+        if let hir::ReturnType::Fallible(_, e) = &method.output {
+            write!(
+                &mut docs,
+                "\n///\n/// Throws [{}] on failure.",
+                &if let Some(e) = e {
+                    self.gen_type_name(e)
+                } else {
+                    "VoidError".into()
+                },
+            )
+            .unwrap();
+        }
 
         Some(MethodInfo {
             method,
@@ -895,21 +909,16 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
                         "VoidError()".into()
                     }
                 };
+                let err_check =
+                    format!("if (!{var_name}.isOk) {{ throw {err_conversion}; }}").into();
                 let ok_conversion = match ok {
                     // Note: the `writeable` variable is a string initialized in the template
                     Some(SuccessType::Writeable) => "writeable.finalize()".into(),
                     Some(SuccessType::OutType(o)) => self.gen_c_to_dart_for_type(o, ok_path.into()),
-                    None => {
-                        return Some(
-                            format!("if (!{var_name}.isOk) {{ throw {err_conversion}; }}").into(),
-                        )
-                    }
+                    None => return Some(err_check),
                     &Some(_) => unreachable!("unknown AST/HIR variant"),
                 };
-                Some(
-                    format!("return {var_name}.isOk ? {ok_conversion} : throw {err_conversion};")
-                        .into(),
-                )
+                Some(format!("{err_check}\nreturn {ok_conversion};").into())
             }
             ReturnType::Infallible(Some(_)) => unreachable!("unknown AST/HIR variant"),
         }
