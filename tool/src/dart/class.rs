@@ -8,79 +8,46 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-#[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
-pub struct Class<'tcx> {
-    // Only for sorting
-    name: Cow<'tcx, str>,
-    body: String,
-    imports: BTreeSet<Import>,
-    helper_classes: BTreeMap<String, String>,
-}
-
-impl<'tcx> Class<'tcx> {
-    pub fn init() -> Self {
-        Self {
-            name: Default::default(),
-            body: include_str!("../../templates/dart/init.dart").into(),
-            imports: [Import {
-                path: "dart:ffi".into(),
-                suffix: " as ffi".into(),
-            }]
-            .into_iter()
-            .collect(),
-            helper_classes: Default::default(),
-        }
-    }
-
-    pub fn append(mut self, other: Self) -> Self {
-        self.body.push_str("\n\n");
-        self.body.push_str(&other.body);
-        self.imports.extend(other.imports);
-        self.helper_classes.extend(other.helper_classes);
-        self
-    }
-
-    pub fn render(self) -> String {
-        #[derive(askama::Template)]
-        #[template(path = "dart/base.dart.jinja", escape = "none")]
-        struct ClassTemplate {
-            imports: BTreeSet<Import>,
-            body: String,
-            helper_classes: BTreeMap<String, String>,
-        }
-
-        let Self {
-            body,
-            imports,
-            helper_classes,
-            ..
-        } = self;
-
-        ClassTemplate {
-            body,
-            imports,
-            helper_classes,
-        }
-        .render()
-        .unwrap()
-    }
-}
-
 impl<'tcx> DartContext<'tcx> {
-    pub fn gen_ty(&self, id: TypeId) -> Class<'tcx> {
+    pub fn gen_root(
+        &self,
+        mut directives: BTreeSet<Cow<'static, str>>,
+        helper_classes: BTreeMap<String, String>,
+    ) {
+        directives.insert(self.formatter.fmt_renamed_import("dart:ffi", "ffi"));
+        directives.insert(
+            self.formatter
+                .fmt_renamed_import("package:ffi/ffi.dart", "ffi2"),
+        );
+        self.files.add_file(
+            self.formatter.fmt_file_name("lib"),
+            Class {
+                body: include_str!("../../templates/dart/init.dart").into(),
+                directives,
+                helper_classes,
+            }
+            .render(),
+        );
+    }
+
+    pub fn gen_ty(
+        &self,
+        id: TypeId,
+        directives: &mut BTreeSet<Cow<'static, str>>,
+        helper_classes: &mut BTreeMap<String, String>,
+    ) {
         let ty = self.tcx.resolve_type(id);
 
-        let mut imports = BTreeSet::new();
-        let mut helper_classes = BTreeMap::new();
         let _guard = self.errors.set_context_ty(ty.name().as_str().into());
 
+        let name = self.formatter.fmt_type_name(id);
+        directives.insert(self.formatter.fmt_part(&name));
+
         let mut tgcx = TyGenContext {
-            imports: &mut imports,
-            helper_classes: &mut helper_classes,
+            imports: directives,
+            helper_classes,
             cx: self,
         };
-
-        let name = self.formatter.fmt_type_name(id);
 
         let body = match ty {
             TypeDef::Enum(o) => tgcx.gen_enum(o, id, &name),
@@ -90,18 +57,55 @@ impl<'tcx> DartContext<'tcx> {
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        Class {
-            name,
+        self.files.add_file(
+            self.formatter.fmt_file_name(&name),
+            Class {
+                body,
+                directives: BTreeSet::from_iter([self.formatter.fmt_part_of_lib()]),
+                helper_classes: Default::default(),
+            }
+            .render(),
+        );
+    }
+}
+
+#[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
+struct Class {
+    body: String,
+    directives: BTreeSet<Cow<'static, str>>,
+    helper_classes: BTreeMap<String, String>,
+}
+
+impl Class {
+    fn render(self) -> String {
+        #[derive(askama::Template)]
+        #[template(path = "dart/base.dart.jinja", escape = "none")]
+        struct ClassTemplate {
+            directives: BTreeSet<Cow<'static, str>>,
+            body: String,
+            helper_classes: BTreeMap<String, String>,
+        }
+
+        let Self {
             body,
-            imports,
+            directives,
+            helper_classes,
+            ..
+        } = self;
+
+        ClassTemplate {
+            body,
+            directives,
             helper_classes,
         }
+        .render()
+        .unwrap()
     }
 }
 
 pub struct TyGenContext<'a, 'dartcx, 'tcx> {
     cx: &'dartcx DartContext<'tcx>,
-    imports: &'a mut BTreeSet<Import>,
+    imports: &'a mut BTreeSet<Cow<'static, str>>,
     helper_classes: &'a mut BTreeMap<String, String>,
 }
 
@@ -146,10 +150,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             destructor: String,
         }
 
-        self.imports.extend([Import {
-            path: "dart:ffi".into(),
-            suffix: " as ffi".into(),
-        }]);
+        self.imports
+            .insert(self.cx.formatter.fmt_renamed_import("dart:ffi", "ffi"));
 
         let methods = ty
             .methods
@@ -194,10 +196,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             set_slice_conversions: Vec<Cow<'a, str>>,
         }
 
-        self.imports.insert(Import {
-            path: "dart:ffi".into(),
-            suffix: " as ffi".into(),
-        });
+        self.imports
+            .insert(self.cx.formatter.fmt_renamed_import("dart:ffi", "ffi"));
 
         let fields = ty
             .fields
@@ -275,10 +275,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             method.name.as_str().into(),
         );
 
-        self.imports.insert(Import {
-            path: "dart:ffi".into(),
-            suffix: " as ffi".into(),
-        });
+        self.imports
+            .insert(self.cx.formatter.fmt_renamed_import("dart:ffi", "ffi"));
 
         let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);
 
@@ -507,7 +505,7 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             Type::Slice(hir::Slice::Str(_lifetime)) => self.cx.formatter.fmt_string().into(),
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.imports
-                    .insert(Import::simple("dart:typed_data".into()));
+                    .insert(self.cx.formatter.fmt_import("dart:typed_data"));
                 self.cx.formatter.fmt_primitive_list_type(p).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
@@ -658,16 +656,17 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
             from_dart: &'static str,
         }
 
-        self.imports.insert(Import {
-            path: "package:ffi/ffi.dart".into(),
-            suffix: " as ffi2".into(),
-        });
+        self.imports.insert(
+            self.cx
+                .formatter
+                .fmt_renamed_import("package:ffi/ffi.dart", "ffi2"),
+        );
 
         let dart_ty = match slice {
             hir::Slice::Str(..) => self.cx.formatter.fmt_string(),
             hir::Slice::Primitive(_, p) => {
                 self.imports
-                    .insert(Import::simple("dart:typed_data".into()));
+                    .insert(self.cx.formatter.fmt_import("dart:typed_data"));
                 self.cx.formatter.fmt_primitive_list_type(*p)
             }
             _ => todo!("{slice:?}"),
@@ -687,7 +686,8 @@ impl<'a, 'dartcx, 'tcx: 'dartcx> TyGenContext<'a, 'dartcx, 'tcx> {
 
         let to_dart = match slice {
             hir::Slice::Str(..) => {
-                self.imports.insert(Import::simple("dart:convert".into()));
+                self.imports
+                    .insert(self.cx.formatter.fmt_import("dart:convert"));
                 "Utf8Decoder().convert(_bytes.cast<ffi.Uint8>().asTypedList(_length))"
             }
             // TODO: How to read ffi.Size?
@@ -953,21 +953,6 @@ struct MethodInfo<'a> {
     /// the C function return value is saved to a variable named `result` or that the
     /// writeable, if present, is saved to a variable named `writeable`.
     dart_return_expression: Option<Cow<'a, str>>,
-}
-
-#[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
-struct Import {
-    path: Cow<'static, str>,
-    suffix: Cow<'static, str>,
-}
-
-impl Import {
-    fn simple(path: Cow<'static, str>) -> Self {
-        Import {
-            path,
-            suffix: "".into(),
-        }
-    }
 }
 
 #[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
