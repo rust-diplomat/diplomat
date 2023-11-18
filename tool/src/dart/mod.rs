@@ -34,16 +34,17 @@ impl<'tcx> DartContext<'tcx> {
     ///
     /// Will populate self.files as a result
     pub fn run(&self) {
-        self.files.add_file(
-            "lib.g.dart".to_string(),
-            self.tcx
-                .all_types()
-                .filter(|(_, ty)| !ty.attrs().disable)
-                .map(|(id, _)| self.gen_ty(id))
-                .collect::<std::collections::BTreeSet<_>>()
-                .into_iter()
-                .fold(class::Class::init(), class::Class::append)
-                .render(),
-        );
+        let mut directives = Default::default();
+        let mut helper_classes = Default::default();
+
+        for (id, ty) in self.tcx.all_types() {
+            if ty.attrs().disable {
+                continue;
+            }
+
+            self.gen_ty(id, &mut directives, &mut helper_classes);
+        }
+
+        self.gen_root(directives, helper_classes);
     }
 }

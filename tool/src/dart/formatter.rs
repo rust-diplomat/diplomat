@@ -37,9 +37,33 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_file_name(&self, name: &str) -> String {
+        format!("{name}.g.dart")
+    }
+
+    pub fn fmt_import(&self, path: &str) -> Cow<'static, str> {
+        format!("import '{path}';").into()
+    }
+
+    pub fn fmt_renamed_import(&self, path: &str, name: &str) -> Cow<'static, str> {
+        format!("import '{path}' as {name};").into()
+    }
+
+    pub fn fmt_part_of_lib(&self) -> Cow<'static, str> {
+        format!("part of '{}';", self.fmt_file_name("lib")).into()
+    }
+
+    pub fn fmt_part(&self, part: &str) -> Cow<'static, str> {
+        format!("part '{}';", self.fmt_file_name(part)).into()
+    }
+
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
         docs.to_markdown(self.docs_url_generator, MarkdownStyle::Normal)
             .replace('\n', "\n/// ")
+            .replace(
+                &format!("`{}", self.strip_prefix.as_deref().unwrap_or("")),
+                "`",
+            )
     }
 
     pub fn fmt_destructor_name(&self, id: TypeId) -> String {
