@@ -21,13 +21,16 @@ class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   /// Creates a new [`ICU4XFixedDecimalFormatter`] from locale data.
   ///
   /// See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
+  ///
+  /// Throws [VoidError] on failure.
   factory ICU4XFixedDecimalFormatter.tryNew(ICU4XLocale locale,
       ICU4XDataProvider provider, ICU4XFixedDecimalFormatterOptions options) {
     final result = _ICU4XFixedDecimalFormatter_try_new(
         locale._underlying, provider._underlying, options._underlying);
-    return result.isOk
-        ? ICU4XFixedDecimalFormatter._(result.union.ok)
-        : throw VoidError();
+    if (!result.isOk) {
+      throw VoidError();
+    }
+    return ICU4XFixedDecimalFormatter._(result.union.ok);
   }
   // ignore: non_constant_identifier_names
   static final _ICU4XFixedDecimalFormatter_try_new = _capi<

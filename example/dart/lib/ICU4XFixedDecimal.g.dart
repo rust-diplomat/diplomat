@@ -44,12 +44,17 @@ class ICU4XFixedDecimal implements ffi.Finalizable {
   /// Format the [`ICU4XFixedDecimal`] as a string.
   ///
   /// See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
+  ///
+  /// Throws [VoidError] on failure.
   @override
   String toString() {
     final writeable = _Writeable();
     final result =
         _ICU4XFixedDecimal_to_string(_underlying, writeable._underlying);
-    return result.isOk ? writeable.finalize() : throw VoidError();
+    if (!result.isOk) {
+      throw VoidError();
+    }
+    return writeable.finalize();
   }
 
   // ignore: non_constant_identifier_names

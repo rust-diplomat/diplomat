@@ -14,11 +14,15 @@ class ResultOpaque implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(_capi('ResultOpaque_destroy'));
 
+  ///
+  ///
+  /// Throws [ErrorEnum] on failure.
   factory ResultOpaque(int i) {
     final result = _ResultOpaque_new(i);
-    return result.isOk
-        ? ResultOpaque._(result.union.ok)
-        : throw ErrorEnum.values[result.union.err];
+    if (!result.isOk) {
+      throw ErrorEnum.values[result.union.err];
+    }
+    return ResultOpaque._(result.union.ok);
   }
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new =
@@ -26,11 +30,15 @@ class ResultOpaque implements ffi.Finalizable {
               'ResultOpaque_new')
           .asFunction<_ResultOpaqueInt32 Function(int)>(isLeaf: true);
 
+  ///
+  ///
+  /// Throws [ErrorEnum] on failure.
   factory ResultOpaque.failingFoo() {
     final result = _ResultOpaque_new_failing_foo();
-    return result.isOk
-        ? ResultOpaque._(result.union.ok)
-        : throw ErrorEnum.values[result.union.err];
+    if (!result.isOk) {
+      throw ErrorEnum.values[result.union.err];
+    }
+    return ResultOpaque._(result.union.ok);
   }
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_failing_foo =
@@ -38,11 +46,15 @@ class ResultOpaque implements ffi.Finalizable {
               'ResultOpaque_new_failing_foo')
           .asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
 
+  ///
+  ///
+  /// Throws [ErrorEnum] on failure.
   factory ResultOpaque.failingBar() {
     final result = _ResultOpaque_new_failing_bar();
-    return result.isOk
-        ? ResultOpaque._(result.union.ok)
-        : throw ErrorEnum.values[result.union.err];
+    if (!result.isOk) {
+      throw ErrorEnum.values[result.union.err];
+    }
+    return ResultOpaque._(result.union.ok);
   }
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_failing_bar =
@@ -50,9 +62,15 @@ class ResultOpaque implements ffi.Finalizable {
               'ResultOpaque_new_failing_bar')
           .asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
 
+  ///
+  ///
+  /// Throws [VoidError] on failure.
   factory ResultOpaque.failingUnit() {
     final result = _ResultOpaque_new_failing_unit();
-    return result.isOk ? ResultOpaque._(result.union.ok) : throw VoidError();
+    if (!result.isOk) {
+      throw VoidError();
+    }
+    return ResultOpaque._(result.union.ok);
   }
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_failing_unit =
@@ -60,11 +78,15 @@ class ResultOpaque implements ffi.Finalizable {
               'ResultOpaque_new_failing_unit')
           .asFunction<_ResultOpaqueVoid Function()>(isLeaf: true);
 
+  ///
+  ///
+  /// Throws [ErrorStruct] on failure.
   factory ResultOpaque.failingStruct(int i) {
     final result = _ResultOpaque_new_failing_struct(i);
-    return result.isOk
-        ? ResultOpaque._(result.union.ok)
-        : throw ErrorStruct._(result.union.err);
+    if (!result.isOk) {
+      throw ErrorStruct._(result.union.err);
+    }
+    return ResultOpaque._(result.union.ok);
   }
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_failing_struct = _capi<
@@ -73,6 +95,9 @@ class ResultOpaque implements ffi.Finalizable {
           'ResultOpaque_new_failing_struct')
       .asFunction<_ResultOpaqueErrorStructFfi Function(int)>(isLeaf: true);
 
+  ///
+  ///
+  /// Throws [ResultOpaque] on failure.
   static void newInErr(int i) {
     final result = _ResultOpaque_new_in_err(i);
     if (!result.isOk) {
@@ -86,9 +111,15 @@ class ResultOpaque implements ffi.Finalizable {
               'ResultOpaque_new_in_err')
           .asFunction<_ResultVoidOpaque Function(int)>(isLeaf: true);
 
+  ///
+  ///
+  /// Throws [VoidError] on failure.
   static int newInt(int i) {
     final result = _ResultOpaque_new_int(i);
-    return result.isOk ? result.union.ok : throw VoidError();
+    if (!result.isOk) {
+      throw VoidError();
+    }
+    return result.union.ok;
   }
 
   // ignore: non_constant_identifier_names
@@ -97,11 +128,15 @@ class ResultOpaque implements ffi.Finalizable {
               'ResultOpaque_new_int')
           .asFunction<_ResultInt32Void Function(int)>(isLeaf: true);
 
+  ///
+  ///
+  /// Throws [ResultOpaque] on failure.
   static ErrorEnum newInEnumErr(int i) {
     final result = _ResultOpaque_new_in_enum_err(i);
-    return result.isOk
-        ? ErrorEnum.values[result.union.ok]
-        : throw ResultOpaque._(result.union.err);
+    if (!result.isOk) {
+      throw ResultOpaque._(result.union.err);
+    }
+    return ErrorEnum.values[result.union.ok];
   }
 
   // ignore: non_constant_identifier_names
