@@ -32,7 +32,7 @@ pub fn run<'cx>(
         }
 
         let (file_name, body) = TyGenContext {
-            tcx: &tcx,
+            tcx,
             imports: &mut directives,
             errors: &errors,
             helper_classes: &mut helper_classes,
@@ -140,7 +140,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         ImplTemplate {
             ty,
-            fmt: &self.formatter,
+            fmt: self.formatter,
             type_name,
             methods: methods.as_slice(),
             docs: self.formatter.fmt_docs(&ty.docs),
