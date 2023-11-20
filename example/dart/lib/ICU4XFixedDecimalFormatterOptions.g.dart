@@ -5,14 +5,14 @@
 
 part of 'lib.g.dart';
 
-class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
+final class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
   @ffi.Int32()
   external int groupingStrategy;
   @ffi.Bool()
   external bool someOtherConfig;
 }
 
-class ICU4XFixedDecimalFormatterOptions {
+final class ICU4XFixedDecimalFormatterOptions {
   final _ICU4XFixedDecimalFormatterOptionsFfi _underlying;
 
   // ignore: unused_element

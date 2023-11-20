@@ -5,7 +5,7 @@
 
 part of 'lib.g.dart';
 
-class RefListParameter implements ffi.Finalizable {
+final class RefListParameter implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   RefListParameter._(this._underlying) {

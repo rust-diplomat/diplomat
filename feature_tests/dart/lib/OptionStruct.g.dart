@@ -6,7 +6,7 @@
 part of 'lib.g.dart';
 
 
-class _OptionStructFfi extends ffi.Struct {
+final class _OptionStructFfi extends ffi.Struct {
 	external ffi.Pointer<ffi.Opaque> a;
 	external ffi.Pointer<ffi.Opaque> b;
 	@ffi.Uint32()
@@ -14,7 +14,7 @@ class _OptionStructFfi extends ffi.Struct {
 	external ffi.Pointer<ffi.Opaque> d;
 }
 
-class OptionStruct {
+final class OptionStruct {
 	final _OptionStructFfi _underlying;
 
   	// ignore: unused_element

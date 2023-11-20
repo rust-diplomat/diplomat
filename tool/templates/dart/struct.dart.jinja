@@ -1,7 +1,7 @@
 {%- if !docs.is_empty() %}
 /// {{docs}}
 {%- endif %}
-class _{{type_name}}Ffi extends ffi.Struct {
+final class _{{type_name}}Ffi extends ffi.Struct {
 	{%- for field in fields %}
 	{%- match field.annotation %}
 	{%- when Some with (annotation) %}
@@ -12,7 +12,7 @@ class _{{type_name}}Ffi extends ffi.Struct {
 	{%- endfor %}
 }
 
-class {{type_name}} {
+final class {{type_name}} {
 	final _{{type_name}}Ffi _underlying;
 
   	// ignore: unused_element

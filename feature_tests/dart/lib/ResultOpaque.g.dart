@@ -5,7 +5,7 @@
 
 part of 'lib.g.dart';
 
-class ResultOpaque implements ffi.Finalizable {
+final class ResultOpaque implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   ResultOpaque._(this._underlying) {

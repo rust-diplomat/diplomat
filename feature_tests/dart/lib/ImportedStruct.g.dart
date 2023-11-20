@@ -5,14 +5,14 @@
 
 part of 'lib.g.dart';
 
-class _ImportedStructFfi extends ffi.Struct {
+final class _ImportedStructFfi extends ffi.Struct {
   @ffi.Int32()
   external int foo;
   @ffi.Uint8()
   external int count;
 }
 
-class ImportedStruct {
+final class ImportedStruct {
   final _ImportedStructFfi _underlying;
 
   // ignore: unused_element

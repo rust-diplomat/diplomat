@@ -6,7 +6,7 @@
 part of 'lib.g.dart';
 
 /// See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
-class ICU4XFixedDecimal implements ffi.Finalizable {
+final class ICU4XFixedDecimal implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   ICU4XFixedDecimal._(this._underlying) {

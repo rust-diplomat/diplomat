@@ -1,4 +1,4 @@
-class _Writeable {
+final class _Writeable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   _Writeable() : _underlying = _create(0);

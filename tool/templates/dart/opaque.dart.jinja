@@ -1,7 +1,7 @@
 {%- if !docs.is_empty() %}
 /// {{docs}}
 {%- endif %}
-class {{type_name}} implements ffi.Finalizable {
+final class {{type_name}} implements ffi.Finalizable {
 
 	final ffi.Pointer<ffi.Opaque> _underlying;
 

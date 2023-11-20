@@ -5,7 +5,7 @@
 
 part of 'lib.g.dart';
 
-class _MyStructFfi extends ffi.Struct {
+final class _MyStructFfi extends ffi.Struct {
   @ffi.Uint8()
   external int a;
   @ffi.Bool()
@@ -22,7 +22,7 @@ class _MyStructFfi extends ffi.Struct {
   external int g;
 }
 
-class MyStruct {
+final class MyStruct {
   final _MyStructFfi _underlying;
 
   // ignore: unused_element

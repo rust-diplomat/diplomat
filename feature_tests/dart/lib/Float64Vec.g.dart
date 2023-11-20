@@ -5,7 +5,7 @@
 
 part of 'lib.g.dart';
 
-class Float64Vec implements ffi.Finalizable {
+final class Float64Vec implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   Float64Vec._(this._underlying) {

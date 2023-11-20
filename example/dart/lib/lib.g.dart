@@ -19,23 +19,23 @@ void init(String path) => _capi = ffi.DynamicLibrary.open(path).lookup;
 
 final _callocFree = Finalizer(ffi2.calloc.free);
 
-class _ResultOpaqueVoidUnion extends ffi.Union {
+final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
 }
 
-class _ResultOpaqueVoid extends ffi.Struct {
+final class _ResultOpaqueVoid extends ffi.Struct {
   external _ResultOpaqueVoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
 }
 
-class _ResultVoidVoid extends ffi.Struct {
+final class _ResultVoidVoid extends ffi.Struct {
   @ffi.Bool()
   external bool isOk;
 }
 
-class _SliceFfi2Utf8 extends ffi.Struct {
+final class _SliceFfi2Utf8 extends ffi.Struct {
   external ffi.Pointer<ffi2.Utf8> _bytes;
 
   @ffi.Size()
@@ -79,7 +79,7 @@ class _SliceFfi2Utf8 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 }
 
-class _SliceFfiUint8 extends ffi.Struct {
+final class _SliceFfiUint8 extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> _bytes;
 
   @ffi.Size()
@@ -124,7 +124,7 @@ class _SliceFfiUint8 extends ffi.Struct {
 /// An unspecified error value
 class VoidError {}
 
-class _Writeable {
+final class _Writeable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   _Writeable() : _underlying = _create(0);

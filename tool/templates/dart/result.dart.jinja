@@ -1,12 +1,12 @@
 {%- if !decls.is_empty() -%}
-class {{name}}Union extends ffi.Union {
+final class {{name}}Union extends ffi.Union {
     {%- for decl in decls %}
     {{decl}}
     {%- endfor %}
 }
 {% endif -%}
 
-class {{name}} extends ffi.Struct {
+final class {{name}} extends ffi.Struct {
     {% if !decls.is_empty() -%}
     external {{name}}Union union;
     {%- endif %}

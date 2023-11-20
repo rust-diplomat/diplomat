@@ -5,14 +5,14 @@
 
 part of 'lib.g.dart';
 
-class _ErrorStructFfi extends ffi.Struct {
+final class _ErrorStructFfi extends ffi.Struct {
   @ffi.Int32()
   external int i;
   @ffi.Int32()
   external int j;
 }
 
-class ErrorStruct {
+final class ErrorStruct {
   final _ErrorStructFfi _underlying;
 
   // ignore: unused_element
