@@ -17,36 +17,27 @@ final class MyString implements ffi.Finalizable {
   factory MyString(String v) {
     final alloc = ffi2.Arena();
     final vSlice = _SliceFfi2Utf8._fromDart(v, alloc);
-
     final result = _MyString_new(vSlice._bytes, vSlice._length);
     alloc.releaseAll();
     return MyString._(result);
   }
+
   // ignore: non_constant_identifier_names
-  static final _MyString_new = _capi<
-          ffi.NativeFunction<
-              ffi.Pointer<ffi.Opaque> Function(
-                  ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('MyString_new')
-      .asFunction<
-          ffi.Pointer<ffi.Opaque> Function(
-              ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
+  static final _MyString_new =
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('MyString_new')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
 
   void setStr(String newStr) {
     final alloc = ffi2.Arena();
     final newStrSlice = _SliceFfi2Utf8._fromDart(newStr, alloc);
-
     _MyString_set_str(_underlying, newStrSlice._bytes, newStrSlice._length);
     alloc.releaseAll();
   }
 
   // ignore: non_constant_identifier_names
-  static final _MyString_set_str = _capi<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi2.Utf8>,
-                  ffi.Size)>>('MyString_set_str')
-      .asFunction<
-          void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi2.Utf8>,
-              int)>(isLeaf: true);
+  static final _MyString_set_str =
+    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('MyString_set_str')
+      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
 
   String get getStr {
     final writeable = _Writeable();
@@ -55,11 +46,7 @@ final class MyString implements ffi.Finalizable {
   }
 
   // ignore: non_constant_identifier_names
-  static final _MyString_get_str = _capi<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Opaque>,
-                  ffi.Pointer<ffi.Opaque>)>>('MyString_get_str')
-      .asFunction<
-          void Function(
-              ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
+  static final _MyString_get_str =
+    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>>('MyString_get_str')
+      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }

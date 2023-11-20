@@ -18,11 +18,11 @@ final class Opaque implements ffi.Finalizable {
     final result = _Opaque_new();
     return Opaque._(result);
   }
+
   // ignore: non_constant_identifier_names
   static final _Opaque_new =
-      _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>(
-              'Opaque_new')
-          .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>('Opaque_new')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
 
   /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
   ///
@@ -34,19 +34,11 @@ final class Opaque implements ffi.Finalizable {
   }
 
   // ignore: non_constant_identifier_names
-  static final _Opaque_assert_struct = _capi<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Opaque>,
-                  _MyStructFfi)>>('Opaque_assert_struct')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>(
-          isLeaf: true);
+  static final _Opaque_assert_struct =
+    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>>('Opaque_assert_struct')
+      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>(isLeaf: true);
 
-  static final int returnsUsize =
-      _capi<ffi.NativeFunction<ffi.Size Function()>>('Opaque_returns_usize')
-          .asFunction<int Function()>(isLeaf: true)();
+  static final int returnsUsize = _capi<ffi.NativeFunction<ffi.Size Function()>>('Opaque_returns_usize').asFunction<int Function()>(isLeaf: true)();
 
-  static final ImportedStruct returnsImported =
-      _capi<ffi.NativeFunction<_ImportedStructFfi Function()>>(
-              'Opaque_returns_imported')
-          .asFunction<_ImportedStructFfi Function()>(isLeaf: true)();
+  static final ImportedStruct returnsImported = _capi<ffi.NativeFunction<_ImportedStructFfi Function()>>('Opaque_returns_imported').asFunction<_ImportedStructFfi Function()>(isLeaf: true)();
 }

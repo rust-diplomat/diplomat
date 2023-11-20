@@ -1,47 +1,48 @@
-{%- if !m.docs.is_empty() %}
-/// {{m.docs}}
-{%- endif %}
-{{ m.declaration -}}
-{%- if !m.declaration.starts_with("static final") -%}
-{##} { {##}
-		{%- for slice_conversion in m.slice_conversions %}
-		{%- if loop.first %}
-		final alloc = ffi2.Arena();
-		{%- endif %}
-		{{ slice_conversion }}
-		{%- endfor %}
-		{% if m.method.is_writeable() %}
-		final writeable = _Writeable();
-		{%- endif %}
-		{% if m.method.output.returns_value() -%}
-		final result = {##}
-		{%- endif -%}
-		_{{ m.c_method_name -}}(
-			{%- for param in m.dart_to_ffi_params %}
-			{%- if !loop.first %},{% endif -%}
-			{{ param }}
-			{%- endfor -%}
-		);
-		{%- if !m.slice_conversions.is_empty() -%}
-		alloc.releaseAll();
-		{%- endif %}
-		{%- match m.dart_return_expression %}
-		{%- when Some with (statement) %}
-		{{statement}}
-		{%- when None %}
-		{%- endmatch %}
+  {%- if !m.docs.is_empty() %}
+  /// {{m.docs.replace('\n', "\n  ")}}
+  {%- endif %}
+  {{ m.declaration -}}
+  {%- if !m.declaration.starts_with("static final") %} {
+    {%- for slice_conversion in m.slice_conversions %}
+    {%- if loop.first %}
+    final alloc = ffi2.Arena();
+    {%- endif %}
+    {{ slice_conversion }}
+    {%- endfor %}
+    {%- if m.method.is_writeable() %}
+    final writeable = _Writeable();
+    {%- endif %}
+    {%- if m.method.output.returns_value() %}
+    final result = {% else %}
+    {% endif -%}
+    _{{ m.c_method_name -}}(
+        {%- for param in m.dart_to_ffi_params %}
+        {%- if loop.first %}{% else %}, {% endif -%}
+        {{ param }}
+        {%- endfor -%}
+    );
+    {%- if !m.slice_conversions.is_empty() %}
+    alloc.releaseAll();
+    {%- endif %}
+    {%- match m.dart_return_expression %}
+    {%- when Some with (statement) %}
+    {{statement.replace('\n', "\n    ")}}
+    {%- when None %}
+    {%- endmatch %}
   }
+
   // ignore: non_constant_identifier_names
-	static final _{{ m.c_method_name -}} = _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
-		{%- for param in m.param_types_ffi %}
-			{%- if !loop.first %}, {% endif -%}
-			{{ param }}
-		{%- endfor -%}
-	)>>('{{ m.c_method_name }}')
-	.asFunction<{{ m.ffi_cast_return_ty }} Function(
-		{%- for param in m.param_types_ffi_cast %}
-			{%- if !loop.first %}, {% endif -%}
-			{{ param }}
-		{%- endfor -%}
-	)>(isLeaf: true);
-{% endif %}
+  static final _{{ m.c_method_name }} =
+    _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
+    {%- for param in m.param_types_ffi %}
+        {%- if !loop.first %}, {% endif -%}
+        {{ param }}
+    {%- endfor -%}
+  )>>('{{ m.c_method_name }}')
+      .asFunction<{{ m.ffi_cast_return_ty }} Function(
+        {%- for param in m.param_types_ffi_cast %}
+          {%- if !loop.first %}, {% endif -%}
+          {{ param }}
+        {%- endfor -%}
+      )>(isLeaf: true);
+{%- endif %}

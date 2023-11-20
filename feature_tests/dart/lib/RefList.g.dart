@@ -18,11 +18,9 @@ final class RefList implements ffi.Finalizable {
     final result = _RefList_node(data._underlying);
     return RefList._(result);
   }
+
   // ignore: non_constant_identifier_names
-  static final _RefList_node = _capi<
-          ffi.NativeFunction<
-              ffi.Pointer<ffi.Opaque> Function(
-                  ffi.Pointer<ffi.Opaque>)>>('RefList_node')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(
-          isLeaf: true);
+  static final _RefList_node =
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>>('RefList_node')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }

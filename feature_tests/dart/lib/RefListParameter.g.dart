@@ -12,6 +12,5 @@ final class RefListParameter implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer =
-      ffi.NativeFinalizer(_capi('RefListParameter_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(_capi('RefListParameter_destroy'));
 }

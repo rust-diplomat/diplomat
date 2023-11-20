@@ -13,19 +13,18 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer =
-      ffi.NativeFinalizer(_capi('ICU4XFixedDecimal_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(_capi('ICU4XFixedDecimal_destroy'));
 
   /// Construct an [`ICU4XFixedDecimal`] from an integer.
   factory ICU4XFixedDecimal(int v) {
     final result = _ICU4XFixedDecimal_new(v);
     return ICU4XFixedDecimal._(result);
   }
+
   // ignore: non_constant_identifier_names
   static final _ICU4XFixedDecimal_new =
-      _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>>(
-              'ICU4XFixedDecimal_new')
-          .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>>('ICU4XFixedDecimal_new')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>(isLeaf: true);
 
   /// Multiply the [`ICU4XFixedDecimal`] by a given power of ten.
   ///
@@ -35,10 +34,8 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   }
 
   // ignore: non_constant_identifier_names
-  static final _ICU4XFixedDecimal_multiply_pow10 = _capi<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Opaque>,
-                  ffi.Int16)>>('ICU4XFixedDecimal_multiply_pow10')
+  static final _ICU4XFixedDecimal_multiply_pow10 =
+    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int16)>>('ICU4XFixedDecimal_multiply_pow10')
       .asFunction<void Function(ffi.Pointer<ffi.Opaque>, int)>(isLeaf: true);
 
   /// Format the [`ICU4XFixedDecimal`] as a string.
@@ -49,8 +46,7 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   @override
   String toString() {
     final writeable = _Writeable();
-    final result =
-        _ICU4XFixedDecimal_to_string(_underlying, writeable._underlying);
+    final result = _ICU4XFixedDecimal_to_string(_underlying, writeable._underlying);
     if (!result.isOk) {
       throw VoidError();
     }
@@ -58,11 +54,7 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   }
 
   // ignore: non_constant_identifier_names
-  static final _ICU4XFixedDecimal_to_string = _capi<
-          ffi.NativeFunction<
-              _ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>,
-                  ffi.Pointer<ffi.Opaque>)>>('ICU4XFixedDecimal_to_string')
-      .asFunction<
-          _ResultVoidVoid Function(
-              ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
+  static final _ICU4XFixedDecimal_to_string =
+    _capi<ffi.NativeFunction<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>>('ICU4XFixedDecimal_to_string')
+      .asFunction<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }
