@@ -17,7 +17,7 @@ final class _MyStructFfi extends ffi.Struct {
   @ffi.Int32()
   external int e;
   @ffi.Uint32()
-  external int f;
+  external Rune f;
   @ffi.Int32()
   external int g;
 }
@@ -60,8 +60,8 @@ final class MyStruct {
     _underlying.e = e;
   }
 
-  int get f => _underlying.f;
-  set f(int f) {
+  Rune get f => _underlying.f;
+  set f(Rune f) {
     _underlying.f = f;
   }
 

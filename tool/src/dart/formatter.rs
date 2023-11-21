@@ -210,7 +210,7 @@ impl<'tcx> DartFormatter<'tcx> {
         if cast {
             match prim {
                 PrimitiveType::Bool => "bool",
-                PrimitiveType::Char => "int",
+                PrimitiveType::Char => "Rune",
                 PrimitiveType::Int(_) | PrimitiveType::IntSize(_) => "int",
                 PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
                 PrimitiveType::Float(_) => "double",
@@ -240,7 +240,7 @@ impl<'tcx> DartFormatter<'tcx> {
     pub fn fmt_primitive_list_type(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
         match prim {
-            PrimitiveType::Char => "Uint32List",
+            PrimitiveType::Char => "RuneList",
             PrimitiveType::Int(IntType::I8) => "Int8List",
             PrimitiveType::Int(IntType::U8) => "Uint8List",
             PrimitiveType::Int(IntType::I16) => "Int16List",
@@ -260,7 +260,7 @@ impl<'tcx> DartFormatter<'tcx> {
     pub fn fmt_slice_type(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
         match prim {
-            PrimitiveType::Char => "_SliceFfiUint32",
+            PrimitiveType::Char => "_SliceRune",
             PrimitiveType::Int(IntType::I8) => "_SliceFfiInt8",
             PrimitiveType::Int(IntType::U8) => "_SliceFfiUint8",
             PrimitiveType::Int(IntType::I16) => "_SliceFfiInt16",
