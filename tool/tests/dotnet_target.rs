@@ -552,7 +552,7 @@ fn error_handling() {
                     unimplemented!()
                 }
 
-                pub fn bar(&self) -> Result<char, MyModuleOpaqueError> {
+                pub fn bar(&self) -> Result<DiplomatChar, MyModuleOpaqueError> {
                     unimplemented!()
                 }
 

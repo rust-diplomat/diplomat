@@ -51,8 +51,8 @@ pub mod ffi {
     }
 
     impl OptionOpaqueChar {
-        pub fn assert_char(&self, ch: char) {
-            assert_eq!(ch, self.0)
+        pub fn assert_char(&self, ch: DiplomatChar) {
+            assert_eq!(ch, self.0 as u32)
         }
     }
 }

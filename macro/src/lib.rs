@@ -63,14 +63,6 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 ),
             }));
         }
-        ast::TypeName::Primitive(ast::PrimitiveType::char) => gen_params_at_boundary(
-            &{
-                let mut p = param.clone();
-                p.ty = ast::TypeName::Primitive(ast::PrimitiveType::u32);
-                p
-            },
-            expanded_params,
-        ),
         o => {
             expanded_params.push(FnArg::Typed(PatType {
                 attrs: vec![],
@@ -117,11 +109,6 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
         ast::TypeName::Result(_, _, _) => {
             let param = &param.name;
             expanded_params.push(parse2(quote!(#param.into())).unwrap());
-        }
-        ast::TypeName::Primitive(ast::PrimitiveType::char) => {
-            let name = &param.name;
-            // TODO(#318): don't just unwrap? or should we assume that the other side gives us a good value?
-            expanded_params.push(parse2(quote! { char::from_u32(#name).unwrap() }).unwrap());
         }
         _ => {
             expanded_params.push(Expr::Path(ExprPath {
@@ -278,6 +265,8 @@ impl AttributeInfo {
 fn gen_bridge(input: ItemMod) -> ItemMod {
     let module = ast::Module::from_syn(&input, true);
     let (brace, mut new_contents) = input.content.unwrap();
+
+    new_contents.push(parse2(quote! { use diplomat_runtime::*; }).unwrap());
 
     new_contents.iter_mut().for_each(|c| match c {
         Item::Struct(s) => {

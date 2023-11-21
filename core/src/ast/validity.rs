@@ -166,7 +166,7 @@ mod tests {
 
                     }
 
-                    pub fn do_thing2(opt: DiplomatResult<Option<char>, u8>) {
+                    pub fn do_thing2(opt: DiplomatResult<Option<DiplomatChar>, u8>) {
 
                     }
                     pub fn do_thing2(opt: Option<u16>) {
