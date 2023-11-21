@@ -5,7 +5,7 @@
 
 part of 'lib.g.dart';
 
-class Foo implements ffi.Finalizable {
+final class Foo implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   Foo._(this._underlying) {
@@ -17,19 +17,15 @@ class Foo implements ffi.Finalizable {
   factory Foo(String x) {
     final alloc = ffi2.Arena();
     final xSlice = _SliceFfi2Utf8._fromDart(x, alloc);
-
     final result = _Foo_new(xSlice._bytes, xSlice._length);
     alloc.releaseAll();
     return Foo._(result);
   }
+
   // ignore: non_constant_identifier_names
-  static final _Foo_new = _capi<
-          ffi.NativeFunction<
-              ffi.Pointer<ffi.Opaque> Function(
-                  ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('Foo_new')
-      .asFunction<
-          ffi.Pointer<ffi.Opaque> Function(
-              ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
+  static final _Foo_new =
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('Foo_new')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
 
   Bar get getBar {
     final result = _Foo_get_bar(_underlying);
@@ -37,29 +33,22 @@ class Foo implements ffi.Finalizable {
   }
 
   // ignore: non_constant_identifier_names
-  static final _Foo_get_bar = _capi<
-          ffi.NativeFunction<
-              ffi.Pointer<ffi.Opaque> Function(
-                  ffi.Pointer<ffi.Opaque>)>>('Foo_get_bar')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(
-          isLeaf: true);
+  static final _Foo_get_bar =
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>>('Foo_get_bar')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory Foo.static_(String x) {
     final alloc = ffi2.Arena();
     final xSlice = _SliceFfi2Utf8._fromDart(x, alloc);
-
     final result = _Foo_new_static(xSlice._bytes, xSlice._length);
     alloc.releaseAll();
     return Foo._(result);
   }
+
   // ignore: non_constant_identifier_names
-  static final _Foo_new_static = _capi<
-          ffi.NativeFunction<
-              ffi.Pointer<ffi.Opaque> Function(
-                  ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('Foo_new_static')
-      .asFunction<
-          ffi.Pointer<ffi.Opaque> Function(
-              ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
+  static final _Foo_new_static =
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('Foo_new_static')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
 
   BorrowedFieldsReturning get asReturning {
     final result = _Foo_as_returning(_underlying);
@@ -67,23 +56,17 @@ class Foo implements ffi.Finalizable {
   }
 
   // ignore: non_constant_identifier_names
-  static final _Foo_as_returning = _capi<
-          ffi.NativeFunction<
-              _BorrowedFieldsReturningFfi Function(
-                  ffi.Pointer<ffi.Opaque>)>>('Foo_as_returning')
-      .asFunction<
-          _BorrowedFieldsReturningFfi Function(
-              ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
+  static final _Foo_as_returning =
+    _capi<ffi.NativeFunction<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>>('Foo_as_returning')
+      .asFunction<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory Foo.extractFromFields(BorrowedFields fields) {
     final result = _Foo_extract_from_fields(fields._underlying);
     return Foo._(result);
   }
+
   // ignore: non_constant_identifier_names
-  static final _Foo_extract_from_fields = _capi<
-          ffi.NativeFunction<
-              ffi.Pointer<ffi.Opaque> Function(
-                  _BorrowedFieldsFfi)>>('Foo_extract_from_fields')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(
-          isLeaf: true);
+  static final _Foo_extract_from_fields =
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>>('Foo_extract_from_fields')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(isLeaf: true);
 }

@@ -5,7 +5,7 @@
 
 part of 'lib.g.dart';
 
-class _MyStructFfi extends ffi.Struct {
+final class _MyStructFfi extends ffi.Struct {
   @ffi.Uint8()
   external int a;
   @ffi.Bool()
@@ -22,7 +22,7 @@ class _MyStructFfi extends ffi.Struct {
   external int g;
 }
 
-class MyStruct {
+final class MyStruct {
   final _MyStructFfi _underlying;
 
   // ignore: unused_element
@@ -65,8 +65,7 @@ class MyStruct {
     _underlying.f = f;
   }
 
-  MyEnum get g =>
-      MyEnum.values.firstWhere((v) => v._underlying == _underlying.g);
+  MyEnum get g => MyEnum.values.firstWhere((v) => v._underlying == _underlying.g);
   set g(MyEnum g) {
     _underlying.g = g._underlying;
   }
@@ -75,10 +74,11 @@ class MyStruct {
     final result = _MyStruct_new();
     return MyStruct._(result);
   }
+
   // ignore: non_constant_identifier_names
   static final _MyStruct_new =
-      _capi<ffi.NativeFunction<_MyStructFfi Function()>>('MyStruct_new')
-          .asFunction<_MyStructFfi Function()>(isLeaf: true);
+    _capi<ffi.NativeFunction<_MyStructFfi Function()>>('MyStruct_new')
+      .asFunction<_MyStructFfi Function()>(isLeaf: true);
 
   int intoA() {
     final result = _MyStruct_into_a(_underlying);
@@ -87,9 +87,8 @@ class MyStruct {
 
   // ignore: non_constant_identifier_names
   static final _MyStruct_into_a =
-      _capi<ffi.NativeFunction<ffi.Uint8 Function(_MyStructFfi)>>(
-              'MyStruct_into_a')
-          .asFunction<int Function(_MyStructFfi)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Uint8 Function(_MyStructFfi)>>('MyStruct_into_a')
+      .asFunction<int Function(_MyStructFfi)>(isLeaf: true);
 
   @override
   bool operator ==(Object other) =>

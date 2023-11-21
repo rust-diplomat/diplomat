@@ -5,7 +5,7 @@
 
 part of 'lib.g.dart';
 
-class ResultOpaque implements ffi.Finalizable {
+final class ResultOpaque implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   ResultOpaque._(this._underlying) {
@@ -14,7 +14,7 @@ class ResultOpaque implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(_capi('ResultOpaque_destroy'));
 
-  ///
+  /// 
   ///
   /// Throws [ErrorEnum] on failure.
   factory ResultOpaque(int i) {
@@ -24,13 +24,13 @@ class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._(result.union.ok);
   }
+
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new =
-      _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function(ffi.Int32)>>(
-              'ResultOpaque_new')
-          .asFunction<_ResultOpaqueInt32 Function(int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function(ffi.Int32)>>('ResultOpaque_new')
+      .asFunction<_ResultOpaqueInt32 Function(int)>(isLeaf: true);
 
-  ///
+  /// 
   ///
   /// Throws [ErrorEnum] on failure.
   factory ResultOpaque.failingFoo() {
@@ -40,13 +40,13 @@ class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._(result.union.ok);
   }
+
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_failing_foo =
-      _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function()>>(
-              'ResultOpaque_new_failing_foo')
-          .asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
+    _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function()>>('ResultOpaque_new_failing_foo')
+      .asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
 
-  ///
+  /// 
   ///
   /// Throws [ErrorEnum] on failure.
   factory ResultOpaque.failingBar() {
@@ -56,13 +56,13 @@ class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._(result.union.ok);
   }
+
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_failing_bar =
-      _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function()>>(
-              'ResultOpaque_new_failing_bar')
-          .asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
+    _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function()>>('ResultOpaque_new_failing_bar')
+      .asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
 
-  ///
+  /// 
   ///
   /// Throws [VoidError] on failure.
   factory ResultOpaque.failingUnit() {
@@ -72,13 +72,13 @@ class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._(result.union.ok);
   }
+
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_failing_unit =
-      _capi<ffi.NativeFunction<_ResultOpaqueVoid Function()>>(
-              'ResultOpaque_new_failing_unit')
-          .asFunction<_ResultOpaqueVoid Function()>(isLeaf: true);
+    _capi<ffi.NativeFunction<_ResultOpaqueVoid Function()>>('ResultOpaque_new_failing_unit')
+      .asFunction<_ResultOpaqueVoid Function()>(isLeaf: true);
 
-  ///
+  /// 
   ///
   /// Throws [ErrorStruct] on failure.
   factory ResultOpaque.failingStruct(int i) {
@@ -88,14 +88,13 @@ class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._(result.union.ok);
   }
+
   // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new_failing_struct = _capi<
-              ffi
-              .NativeFunction<_ResultOpaqueErrorStructFfi Function(ffi.Int32)>>(
-          'ResultOpaque_new_failing_struct')
+  static final _ResultOpaque_new_failing_struct =
+    _capi<ffi.NativeFunction<_ResultOpaqueErrorStructFfi Function(ffi.Int32)>>('ResultOpaque_new_failing_struct')
       .asFunction<_ResultOpaqueErrorStructFfi Function(int)>(isLeaf: true);
 
-  ///
+  /// 
   ///
   /// Throws [ResultOpaque] on failure.
   static void newInErr(int i) {
@@ -107,11 +106,10 @@ class ResultOpaque implements ffi.Finalizable {
 
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_in_err =
-      _capi<ffi.NativeFunction<_ResultVoidOpaque Function(ffi.Int32)>>(
-              'ResultOpaque_new_in_err')
-          .asFunction<_ResultVoidOpaque Function(int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<_ResultVoidOpaque Function(ffi.Int32)>>('ResultOpaque_new_in_err')
+      .asFunction<_ResultVoidOpaque Function(int)>(isLeaf: true);
 
-  ///
+  /// 
   ///
   /// Throws [VoidError] on failure.
   static int newInt(int i) {
@@ -124,11 +122,10 @@ class ResultOpaque implements ffi.Finalizable {
 
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_int =
-      _capi<ffi.NativeFunction<_ResultInt32Void Function(ffi.Int32)>>(
-              'ResultOpaque_new_int')
-          .asFunction<_ResultInt32Void Function(int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<_ResultInt32Void Function(ffi.Int32)>>('ResultOpaque_new_int')
+      .asFunction<_ResultInt32Void Function(int)>(isLeaf: true);
 
-  ///
+  /// 
   ///
   /// Throws [ResultOpaque] on failure.
   static ErrorEnum newInEnumErr(int i) {
@@ -141,18 +138,15 @@ class ResultOpaque implements ffi.Finalizable {
 
   // ignore: non_constant_identifier_names
   static final _ResultOpaque_new_in_enum_err =
-      _capi<ffi.NativeFunction<_ResultInt32Opaque Function(ffi.Int32)>>(
-              'ResultOpaque_new_in_enum_err')
-          .asFunction<_ResultInt32Opaque Function(int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<_ResultInt32Opaque Function(ffi.Int32)>>('ResultOpaque_new_in_enum_err')
+      .asFunction<_ResultInt32Opaque Function(int)>(isLeaf: true);
 
   void assertInteger(int i) {
     _ResultOpaque_assert_integer(_underlying, i);
   }
 
   // ignore: non_constant_identifier_names
-  static final _ResultOpaque_assert_integer = _capi<
-          ffi.NativeFunction<
-              ffi.Void Function(ffi.Pointer<ffi.Opaque>,
-                  ffi.Int32)>>('ResultOpaque_assert_integer')
+  static final _ResultOpaque_assert_integer =
+    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>>('ResultOpaque_assert_integer')
       .asFunction<void Function(ffi.Pointer<ffi.Opaque>, int)>(isLeaf: true);
 }

@@ -95,10 +95,16 @@ pub fn gen(
                     std::process::exit(1);
                 }
             };
-            let files = common::FileMap::default();
-            let mut context = dart::DartContext::new(&tcx, files, docs_url_gen, strip_prefix);
-            context.run();
-            out_texts = context.files.take_files();
+            match dart::run(&tcx, docs_url_gen, strip_prefix) {
+                Ok(mut files) => out_texts = files.take_files(),
+                Err(errors) => {
+                    eprintln!("Found errors whilst generating {target_language}:");
+                    for error in errors {
+                        eprintln!("\t{}: {}", error.0, error.1);
+                    }
+                    errors_found = true;
+                }
+            };
         }
         "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
         "cpp" => {
@@ -195,24 +201,6 @@ pub fn gen(
         out_file.write_all(text.as_bytes())?;
         if !silent {
             println!("{}", format!("  {}", out_path.display()).dimmed());
-        }
-    }
-
-    if target_language == "dart" {
-        if !silent {
-            print!("{}", "Trying to run `dart format` ... ".green().bold());
-        }
-        let _ = std::io::stdout().flush();
-        if std::process::Command::new("dart")
-            .args([std::ffi::OsStr::new("format"), out_folder.as_os_str()])
-            .output()
-            .is_ok()
-        {
-            if !silent {
-                println!("{}", "success".green().bold());
-            }
-        } else if !silent {
-            println!("{}", "failure".red().bold());
         }
     }
 

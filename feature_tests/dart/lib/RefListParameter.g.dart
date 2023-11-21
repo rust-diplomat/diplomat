@@ -5,13 +5,12 @@
 
 part of 'lib.g.dart';
 
-class RefListParameter implements ffi.Finalizable {
+final class RefListParameter implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   RefListParameter._(this._underlying) {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer =
-      ffi.NativeFinalizer(_capi('RefListParameter_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(_capi('RefListParameter_destroy'));
 }

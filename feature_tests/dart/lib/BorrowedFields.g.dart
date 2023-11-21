@@ -5,12 +5,12 @@
 
 part of 'lib.g.dart';
 
-class _BorrowedFieldsFfi extends ffi.Struct {
+final class _BorrowedFieldsFfi extends ffi.Struct {
   external _SliceFfiUint16 a;
   external _SliceFfi2Utf8 b;
 }
 
-class BorrowedFields {
+final class BorrowedFields {
   final _BorrowedFieldsFfi _underlying;
 
   // ignore: unused_element

@@ -8,26 +8,25 @@ part of 'lib.g.dart';
 /// An ICU4X data provider, capable of loading ICU4X data keys from some source.
 ///
 /// See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
-class ICU4XDataProvider implements ffi.Finalizable {
+final class ICU4XDataProvider implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   ICU4XDataProvider._(this._underlying) {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer =
-      ffi.NativeFinalizer(_capi('ICU4XDataProvider_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(_capi('ICU4XDataProvider_destroy'));
 
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory ICU4XDataProvider.static_() {
     final result = _ICU4XDataProvider_new_static();
     return ICU4XDataProvider._(result);
   }
+
   // ignore: non_constant_identifier_names
   static final _ICU4XDataProvider_new_static =
-      _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>(
-              'ICU4XDataProvider_new_static')
-          .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>('ICU4XDataProvider_new_static')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
 
   /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
   ///
@@ -41,7 +40,6 @@ class ICU4XDataProvider implements ffi.Finalizable {
 
   // ignore: non_constant_identifier_names
   static final _ICU4XDataProvider_returns_result =
-      _capi<ffi.NativeFunction<_ResultVoidVoid Function()>>(
-              'ICU4XDataProvider_returns_result')
-          .asFunction<_ResultVoidVoid Function()>(isLeaf: true);
+    _capi<ffi.NativeFunction<_ResultVoidVoid Function()>>('ICU4XDataProvider_returns_result')
+      .asFunction<_ResultVoidVoid Function()>(isLeaf: true);
 }

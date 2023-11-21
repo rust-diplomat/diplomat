@@ -7,6 +7,8 @@ part of 'lib.g.dart';
 
 enum AttrEnum {
   a,
+
   b,
+
   c;
 }

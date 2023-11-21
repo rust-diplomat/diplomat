@@ -4,25 +4,24 @@
 enum {{type_name}} {
 {%- for enum_variant in ty.variants %}
   {% if !enum_variant.docs.is_empty() -%}
-  /// {{fmt.fmt_docs(enum_variant.docs) }}
+  /// {{fmt.fmt_docs(enum_variant.docs).replace('\n', "\n  ") }}
   {% endif -%}
-	{{fmt.fmt_enum_variant(enum_variant)}}{% if loop.last %};{% else %},{% endif %}
+  {{fmt.fmt_enum_variant(enum_variant)}}{% if loop.last %};{% else %},
+{% endif %}
 {%- endfor %}
-
   {%- if !is_contiguous %}
 
   int get _underlying {
     switch (this) {
       {%- for enum_variant in ty.variants %}
-        case {{fmt.fmt_enum_variant(enum_variant)}}: 
-          return {{ enum_variant.discriminant }};
+      case {{fmt.fmt_enum_variant(enum_variant)}}:
+        return {{ enum_variant.discriminant }};
       {%- endfor %}
     }
   }
-  {% endif -%}
+  {%- endif %}
 
-{%- for m in methods %}
-
+  {%- for m in methods %}
 {% include "method.dart.jinja" %}
-{% endfor %}
+  {%-endfor %}
 }

@@ -1,16 +1,20 @@
-{%- if !decls.is_empty() -%}
-class {{name}}Union extends ffi.Union {
-    {%- for decl in decls %}
-    {{decl}}
-    {%- endfor %}
+{% if !decls.is_empty() -%}
+final class {{name}}Union extends ffi.Union {
+  {% for decl in decls -%}
+  {% if !loop.first %}
+
+  {% endif -%}
+  {{decl.replace('\n', "\n  ")}}
+  {%- endfor %}
 }
+
 {% endif -%}
 
-class {{name}} extends ffi.Struct {
-    {% if !decls.is_empty() -%}
-    external {{name}}Union union;
-    {%- endif %}
+final class {{name}} extends ffi.Struct {
+  {% if !decls.is_empty() -%}
+  external {{name}}Union union;
+  {%- endif %}
 
-    @ffi.Bool()
-    external bool isOk;
+  @ffi.Bool()
+  external bool isOk;
 }

@@ -59,7 +59,9 @@ impl<'tcx> DartFormatter<'tcx> {
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
         docs.to_markdown(self.docs_url_generator, MarkdownStyle::Normal)
+            .trim()
             .replace('\n', "\n/// ")
+            .replace(" \n", "\n")
             .replace(
                 &format!("`{}", self.strip_prefix.as_deref().unwrap_or("")),
                 "`",

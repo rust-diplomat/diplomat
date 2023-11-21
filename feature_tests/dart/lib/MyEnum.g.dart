@@ -7,10 +7,15 @@ part of 'lib.g.dart';
 
 enum MyEnum {
   a,
+
   b,
+
   c,
+
   d,
+
   e,
+
   f;
 
   int get _underlying {
@@ -37,7 +42,6 @@ enum MyEnum {
 
   // ignore: non_constant_identifier_names
   static final _MyEnum_into_value =
-      _capi<ffi.NativeFunction<ffi.Int8 Function(ffi.Int32)>>(
-              'MyEnum_into_value')
-          .asFunction<int Function(int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Int8 Function(ffi.Int32)>>('MyEnum_into_value')
+      .asFunction<int Function(int)>(isLeaf: true);
 }

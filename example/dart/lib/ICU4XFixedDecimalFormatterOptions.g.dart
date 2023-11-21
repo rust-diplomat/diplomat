@@ -5,14 +5,14 @@
 
 part of 'lib.g.dart';
 
-class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
+final class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
   @ffi.Int32()
   external int groupingStrategy;
   @ffi.Bool()
   external bool someOtherConfig;
 }
 
-class ICU4XFixedDecimalFormatterOptions {
+final class ICU4XFixedDecimalFormatterOptions {
   final _ICU4XFixedDecimalFormatterOptionsFfi _underlying;
 
   // ignore: unused_element
@@ -25,8 +25,7 @@ class ICU4XFixedDecimalFormatterOptions {
     return result;
   }
 
-  ICU4XFixedDecimalGroupingStrategy get groupingStrategy =>
-      ICU4XFixedDecimalGroupingStrategy.values[_underlying.groupingStrategy];
+  ICU4XFixedDecimalGroupingStrategy get groupingStrategy => ICU4XFixedDecimalGroupingStrategy.values[_underlying.groupingStrategy];
   set groupingStrategy(ICU4XFixedDecimalGroupingStrategy groupingStrategy) {
     _underlying.groupingStrategy = groupingStrategy.index;
   }
@@ -40,13 +39,11 @@ class ICU4XFixedDecimalFormatterOptions {
     final result = _ICU4XFixedDecimalFormatterOptions_default();
     return ICU4XFixedDecimalFormatterOptions._(result);
   }
+
   // ignore: non_constant_identifier_names
-  static final _ICU4XFixedDecimalFormatterOptions_default = _capi<
-          ffi.NativeFunction<
-              _ICU4XFixedDecimalFormatterOptionsFfi
-                  Function()>>('ICU4XFixedDecimalFormatterOptions_default')
-      .asFunction<_ICU4XFixedDecimalFormatterOptionsFfi Function()>(
-          isLeaf: true);
+  static final _ICU4XFixedDecimalFormatterOptions_default =
+    _capi<ffi.NativeFunction<_ICU4XFixedDecimalFormatterOptionsFfi Function()>>('ICU4XFixedDecimalFormatterOptions_default')
+      .asFunction<_ICU4XFixedDecimalFormatterOptionsFfi Function()>(isLeaf: true);
 
   @override
   bool operator ==(Object other) =>

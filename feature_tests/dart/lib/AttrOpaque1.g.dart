@@ -5,7 +5,7 @@
 
 part of 'lib.g.dart';
 
-class AttrOpaque1 implements ffi.Finalizable {
+final class AttrOpaque1 implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
   AttrOpaque1._(this._underlying) {
@@ -20,9 +20,8 @@ class AttrOpaque1 implements ffi.Finalizable {
 
   // ignore: non_constant_identifier_names
   static final _AttrOpaque1_method =
-      _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>(
-              'AttrOpaque1_method')
-          .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>('AttrOpaque1_method')
+      .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   void methodDisabledcpp() {
     _AttrOpaque1_method_disabledcpp(_underlying);
@@ -30,7 +29,6 @@ class AttrOpaque1 implements ffi.Finalizable {
 
   // ignore: non_constant_identifier_names
   static final _AttrOpaque1_method_disabledcpp =
-      _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>(
-              'AttrOpaque1_method_disabledcpp')
-          .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>('AttrOpaque1_method_disabledcpp')
+      .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }
