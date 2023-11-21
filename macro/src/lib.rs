@@ -63,14 +63,6 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 ),
             }));
         }
-        ast::TypeName::Primitive(ast::PrimitiveType::char) => gen_params_at_boundary(
-            &{
-                let mut p = param.clone();
-                p.ty = ast::TypeName::Primitive(ast::PrimitiveType::u32);
-                p
-            },
-            expanded_params,
-        ),
         o => {
             expanded_params.push(FnArg::Typed(PatType {
                 attrs: vec![],
@@ -107,9 +99,9 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
             } else {
                 // TODO(#57): don't just unwrap? or should we assume that the other side gives us a good value?
                 quote! {
-                    core::str::from_utf8(unsafe {
-                        core::slice::from_raw_parts(#data_ident, #len_ident)
-                    }).unwrap()
+                    unsafe {
+                        core::str::from_utf8(core::slice::from_raw_parts(#data_ident, #len_ident)).unwrap()
+                    }
                 }
             };
             expanded_params.push(parse2(tokens).unwrap());
@@ -117,11 +109,6 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
         ast::TypeName::Result(_, _, _) => {
             let param = &param.name;
             expanded_params.push(parse2(quote!(#param.into())).unwrap());
-        }
-        ast::TypeName::Primitive(ast::PrimitiveType::char) => {
-            let name = &param.name;
-            // TODO(#318): don't just unwrap? or should we assume that the other side gives us a good value?
-            expanded_params.push(parse2(quote! { char::from_u32(#name).unwrap() }).unwrap());
         }
         _ => {
             expanded_params.push(Expr::Path(ExprPath {
