@@ -120,8 +120,8 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
         }
         ast::TypeName::Primitive(ast::PrimitiveType::char) => {
             let name = &param.name;
-                // TODO(#318): don't just unwrap? or should we assume that the other side gives us a good value?
-                expanded_params.push(parse2(quote! { char::from_u32(#name).unwrap() }).unwrap());
+            // TODO(#318): don't just unwrap? or should we assume that the other side gives us a good value?
+            expanded_params.push(parse2(quote! { char::from_u32(#name).unwrap() }).unwrap());
         }
         _ => {
             expanded_params.push(Expr::Path(ExprPath {
