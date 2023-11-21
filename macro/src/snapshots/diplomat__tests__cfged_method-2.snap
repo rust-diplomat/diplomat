@@ -12,6 +12,7 @@ mod ffi {
             unimplemented!()
         }
     }
+    use diplomat_runtime::*;
     #[no_mangle]
     #[cfg(feature = "foo")]
     #[cfg(feature = "bar")]
