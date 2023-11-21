@@ -51,6 +51,7 @@ pub fn run<'cx>(
     }
 
     directives.insert(formatter.fmt_renamed_import("dart:ffi", "ffi"));
+    directives.insert(formatter.fmt_import("dart:typed_data"));
     directives.insert(formatter.fmt_renamed_import("package:ffi/ffi.dart", "ffi2"));
     files.add_file(
         formatter.fmt_file_name("lib"),
