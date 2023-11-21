@@ -1040,7 +1040,7 @@ lazy_static! {
         ("f32", PrimitiveType::f32),
         ("f64", PrimitiveType::f64),
         ("bool", PrimitiveType::bool),
-        ("char", PrimitiveType::char),
+        ("DiplomatChar", PrimitiveType::char),
     ];
     static ref STRING_TO_PRIMITIVE: HashMap<&'static str, PrimitiveType> =
         PRIMITIVES_MAPPING.iter().cloned().collect();

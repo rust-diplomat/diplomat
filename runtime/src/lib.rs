@@ -14,6 +14,8 @@ pub use writeable::DiplomatWriteable;
 mod result;
 pub use result::DiplomatResult;
 
+pub type DiplomatChar = u32;
+
 /// Allocates a buffer of a given size in Rust's memory.
 ///
 /// # Safety

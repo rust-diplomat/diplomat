@@ -266,6 +266,8 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     let module = ast::Module::from_syn(&input, true);
     let (brace, mut new_contents) = input.content.unwrap();
 
+    new_contents.push(parse2(quote!{ use diplomat_runtime::*; }).unwrap());
+
     new_contents.iter_mut().for_each(|c| match c {
         Item::Struct(s) => {
             let info = AttributeInfo::extract(&mut s.attrs);

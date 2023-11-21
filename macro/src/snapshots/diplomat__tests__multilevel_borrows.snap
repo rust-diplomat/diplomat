@@ -20,6 +20,7 @@ mod ffi {
             Bax { foo: self }
         }
     }
+    use diplomat_runtime::*;
     #[no_mangle]
     extern "C" fn Bar_destroy<'b, 'a: 'b>(this: Box<Bar<'b, 'a>>) {}
     #[no_mangle]
