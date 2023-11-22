@@ -382,13 +382,19 @@ pub enum TypeName {
     Result(Box<TypeName>, Box<TypeName>, bool),
     Writeable,
     /// A `&DiplomatStr` type.
-    StrReference(Lifetime),
+    StrReference(Lifetime, StringEncoding),
     /// A `&[T]` type, where `T` is a primitive.
     PrimitiveSlice(Lifetime, Mutability, PrimitiveType),
     /// The `()` type.
     Unit,
     /// The `Self` type.
     SelfType(PathType),
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
+pub enum StringEncoding {
+    UnvalidatedUtf8,
+    UnvalidatedUtf16,
 }
 
 impl TypeName {
@@ -493,11 +499,20 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference(lifetime) => syn::parse_str(&format!(
-                "{}DiplomatStr",
-                ReferenceDisplay(lifetime, &Mutability::Immutable)
-            ))
-            .unwrap(),
+            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8) => {
+                syn::parse_str(&format!(
+                    "{}DiplomatStr",
+                    ReferenceDisplay(lifetime, &Mutability::Immutable)
+                ))
+                .unwrap()
+            }
+            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16) => {
+                syn::parse_str(&format!(
+                    "{}DiplomatStr16",
+                    ReferenceDisplay(lifetime, &Mutability::Immutable)
+                ))
+                .unwrap()
+            }
             TypeName::PrimitiveSlice(lifetime, mutability, name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
@@ -532,11 +547,16 @@ impl TypeName {
                 let lifetime = Lifetime::from(&r.lifetime);
                 let mutability = Mutability::from_syn(&r.mutability);
 
-                if r.elem.to_token_stream().to_string() == "DiplomatStr" {
+                let name = r.elem.to_token_stream().to_string();
+                if name.starts_with("DiplomatStr") {
                     if mutability.is_mutable() {
-                        panic!("mutable `DiplomatStr` references are disallowed");
+                        panic!("mutable `DiplomatStr*` references are disallowed");
                     }
-                    return TypeName::StrReference(lifetime);
+                    if name == "DiplomatStr" {
+                        return TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8);
+                    } else if name == "DiplomatStr16" {
+                        return TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16);
+                    }
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
                     if let syn::Type::Path(p) = &*slice.elem {
@@ -657,7 +677,7 @@ impl TypeName {
                 ok.visit_lifetimes(visit)?;
                 err.visit_lifetimes(visit)
             }
-            TypeName::StrReference(lt) => visit(lt, LifetimeOrigin::StrReference),
+            TypeName::StrReference(lt, ..) => visit(lt, LifetimeOrigin::StrReference),
             TypeName::PrimitiveSlice(lt, ..) => visit(lt, LifetimeOrigin::PrimitiveSlice),
             _ => ControlFlow::Continue(()),
         }
@@ -866,7 +886,7 @@ impl TypeName {
                 ok.check_lifetime_elision(full_type, in_path, env, errors);
                 err.check_lifetime_elision(full_type, in_path, env, errors);
             }
-            TypeName::StrReference(Lifetime::Anonymous)
+            TypeName::StrReference(Lifetime::Anonymous, ..)
             | TypeName::PrimitiveSlice(Lifetime::Anonymous, ..) => {
                 errors.push(ValidityError::LifetimeElisionInReturn {
                     full_type: full_type.clone(),
@@ -916,10 +936,17 @@ impl fmt::Display for TypeName {
                 write!(f, "Result<{ok}, {err}>")
             }
             TypeName::Writeable => "DiplomatWriteable".fmt(f),
-            TypeName::StrReference(lifetime) => {
+            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8) => {
                 write!(
                     f,
                     "{}DiplomatStr",
+                    ReferenceDisplay(lifetime, &Mutability::Immutable)
+                )
+            }
+            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16) => {
+                write!(
+                    f,
+                    "{}DiplomatStr16",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }

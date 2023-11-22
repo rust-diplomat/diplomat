@@ -6,7 +6,7 @@
 part of 'lib.g.dart';
 
 final class _BorrowedFieldsFfi extends ffi.Struct {
-  external _SliceFfiUint16 a;
+  external _SliceFfiUtf16 a;
   external _SliceFfi2Utf8 b;
 }
 
@@ -23,11 +23,11 @@ final class BorrowedFields {
     return result;
   }
 
-  Uint16List get a => _underlying.a._asDart;
-  set a(Uint16List a) {
+  String get a => _underlying.a._asDart;
+  set a(String a) {
     final alloc = ffi2.calloc;
     alloc.free(_underlying.a._bytes);
-    final aSlice = _SliceFfiUint16._fromDart(a, alloc);
+    final aSlice = _SliceFfiUtf16._fromDart(a, alloc);
     _underlying.a = aSlice;
   }
 

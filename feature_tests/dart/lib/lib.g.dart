@@ -213,8 +213,8 @@ final class _SliceFfiDouble extends ffi.Struct {
   int get hashCode => _length.hashCode;
 }
 
-final class _SliceFfiUint16 extends ffi.Struct {
-  external ffi.Pointer<ffi.Uint16> _bytes;
+final class _SliceFfiUtf16 extends ffi.Struct {
+  external ffi.Pointer<ffi2.Utf16> _bytes;
 
   @ffi.Size()
   external int _length;
@@ -222,27 +222,27 @@ final class _SliceFfiUint16 extends ffi.Struct {
   /// Produces a slice from a Dart object. The Dart object's data is copied into the given allocator
   /// as it cannot be borrowed directly, and gets freed with the slice object.
   // ignore: unused_element
-  static _SliceFfiUint16 _fromDart(Uint16List value, ffi.Allocator allocator) {
-    final pointer = allocator<_SliceFfiUint16>();
+  static _SliceFfiUtf16 _fromDart(String value, ffi.Allocator allocator) {
+    final pointer = allocator<_SliceFfiUtf16>();
     final slice = pointer.ref;
     slice._length = value.length;
-    slice._bytes = allocator(slice._length);
-    slice._bytes.asTypedList(slice._length).setAll(0, value);
+    slice._bytes = allocator<ffi.Uint16>(slice._length).cast();
+    slice._bytes.cast<ffi.Uint16>().asTypedList(slice._length).setAll(0, value.codeUnits);
     return slice;
   }
 
   // ignore: unused_element
-  Uint16List get _asDart => _bytes.asTypedList(_length);
+  String get _asDart => String.fromCharCodes(_bytes.cast<ffi.Uint16>().asTypedList(_length));
 
   // This is expensive
   @override
   bool operator ==(Object other) {
-    if (other is! _SliceFfiUint16 || other._length != _length) {
+    if (other is! _SliceFfiUtf16 || other._length != _length) {
       return false;
     }
 
     for (var i = 0; i < _length; i++) {
-      if (other._bytes[i] != _bytes[i]) {
+      if (other._bytes.cast<ffi.Uint16>()[i] != _bytes.cast<ffi.Uint16>()[i]) {
         return false;
       }
     }

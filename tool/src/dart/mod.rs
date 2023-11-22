@@ -502,7 +502,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 type_name
             }
-            Type::Slice(hir::Slice::Str(_lifetime)) => self.formatter.fmt_string().into(),
+            Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().into(),
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.imports
                     .insert(self.formatter.fmt_import("dart:typed_data"));
@@ -545,7 +545,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
-            Type::Slice(hir::Slice::Str(_lifetime)) => self.formatter.fmt_utf8_primitive().into(),
+            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
+                self.formatter.fmt_utf8_primitive().into()
+            }
+            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
+                self.formatter.fmt_utf16_primitive().into()
+            }
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_as_ffi(p, false).into()
             }
@@ -662,22 +667,37 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         };
 
         let slice_ty = match slice {
-            hir::Slice::Str(..) => self.formatter.fmt_str_slice_type(),
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
+                self.formatter.fmt_utf8_slice_type()
+            }
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                self.formatter.fmt_utf16_slice_type()
+            }
             hir::Slice::Primitive(_, p) => self.formatter.fmt_slice_type(*p),
             _ => todo!("{slice:?}"),
         };
 
         let ffi_type = match slice {
-            hir::Slice::Str(..) => self.formatter.fmt_utf8_primitive(),
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
+                self.formatter.fmt_utf8_primitive()
+            }
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                self.formatter.fmt_utf16_primitive()
+            }
             hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_as_ffi(*p, false),
             _ => todo!("{slice:?}"),
         };
 
         let to_dart = match slice {
-            hir::Slice::Str(..) => {
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
                 self.imports
                     .insert(self.formatter.fmt_import("dart:convert"));
                 "Utf8Decoder().convert(_bytes.cast<ffi.Uint8>().asTypedList(_length))"
+            }
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                self.imports
+                    .insert(self.formatter.fmt_import("dart:convert"));
+                "String.fromCharCodes(_bytes.cast<ffi.Uint16>().asTypedList(_length))"
             }
             // TODO: How to read ffi.Size?
             hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "this",
@@ -685,12 +705,18 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         };
 
         let from_dart = match slice {
-            hir::Slice::Str(..) => concat!(
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => concat!(
                 "final units = Utf8Encoder().convert(value);\n",
                 "slice._length = units.length;\n",
                 // TODO: Figure out why Pointer<Utf8> cannot be allocated
                 "slice._bytes = allocator<ffi.Uint8>(slice._length).cast();\n",
                 "slice._bytes.cast<ffi.Uint8>().asTypedList(slice._length).setAll(0, units);"
+            ),
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => concat!(
+                "slice._length = value.length;\n",
+                // TODO: Figure out why Pointer<Utf16> cannot be allocated
+                "slice._bytes = allocator<ffi.Uint16>(slice._length).cast();\n",
+                "slice._bytes.cast<ffi.Uint16>().asTypedList(slice._length).setAll(0, value.codeUnits);"
             ),
             hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "",
             _ => concat!(

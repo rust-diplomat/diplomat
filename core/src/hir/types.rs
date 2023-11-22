@@ -6,6 +6,7 @@ use super::{
 };
 use crate::ast;
 pub use ast::Mutability;
+pub use ast::StringEncoding;
 
 /// Type that can only be used as an output.
 pub type OutType = Type<OutputOnly>;
@@ -34,7 +35,7 @@ pub enum SelfType {
 #[non_exhaustive]
 pub enum Slice {
     /// A string slice, e.g. `&DiplomatStr`.
-    Str(MaybeStatic<TypeLifetime>),
+    Str(MaybeStatic<TypeLifetime>, StringEncoding),
 
     /// A primitive slice, e.g. `&mut [u8]`.
     Primitive(Borrow, PrimitiveType),
@@ -89,8 +90,8 @@ impl Slice {
     /// variant.
     pub fn lifetime(&self) -> &MaybeStatic<TypeLifetime> {
         match self {
-            Slice::Str(lifetime) => lifetime,
-            Slice::Primitive(reference, _) => &reference.lifetime,
+            Slice::Str(lifetime, ..) => lifetime,
+            Slice::Primitive(reference, ..) => &reference.lifetime,
         }
     }
 }

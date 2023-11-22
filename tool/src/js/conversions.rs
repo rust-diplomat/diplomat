@@ -114,7 +114,7 @@ pub fn gen_value_js_to_rust<'env>(
     entries: &mut BTreeMap<&'env ast::NamedLifetime, Vec<Argument<'env>>>,
 ) {
     match typ {
-        ast::TypeName::StrReference(lifetime) | ast::TypeName::PrimitiveSlice(lifetime, ..) => {
+        ast::TypeName::StrReference(lifetime, ..) | ast::TypeName::PrimitiveSlice(lifetime, ..) => {
             let param_name_buf = Argument::DiplomatBuf(param_name.clone());
             // TODO: turn `gen_value_js_to_rust` into a struct and add a
             // `display_slice` method so we can use the `SliceKind` type here to
@@ -123,6 +123,14 @@ pub fn gen_value_js_to_rust<'env>(
                 pre_logic.push(format!(
                     "const {param_name_buf} = diplomatRuntime.DiplomatBuf.slice(wasm, {param_name}, {align});",
                     align = layout::primitive_size_alignment(*prim).align()
+                ));
+            } else if matches!(
+                typ,
+                ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16)
+            ) {
+                // TODO(#240): Implement UTF-16
+                pre_logic.push(format!(
+                    "const {param_name_buf} = diplomatRuntime.DiplomatBuf.slice(wasm, {param_name}, 2);",
                 ));
             } else {
                 pre_logic.push(format!(
@@ -506,7 +514,9 @@ impl fmt::Display for InvocationIntoJs<'_> {
                     ReturnTypeForm::Empty => unreachable!(),
                 }
             }
-            ast::TypeName::StrReference(..) => self.display_slice(SliceKind::Str).fmt(f),
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => self.display_slice(SliceKind::Str).fmt(f),
+                // TODO(#240): Implement UTF-16
+                ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self.display_slice(SliceKind::Primitive((&ast::PrimitiveType::u16).into())).fmt(f),
             ast::TypeName::PrimitiveSlice(.., prim) => {
                 self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
             }
@@ -779,7 +789,13 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                 todo!("Result in a buffer")
             }
             ast::TypeName::Writeable => todo!("Writeable in a buffer"),
-            ast::TypeName::StrReference(..) => self.display_slice(SliceKind::Str).fmt(f),
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
+                self.display_slice(SliceKind::Str).fmt(f)
+            }
+            // TODO(#240): Implement UTF-16
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self
+                .display_slice(SliceKind::Primitive((&ast::PrimitiveType::u16).into()))
+                .fmt(f),
             ast::TypeName::PrimitiveSlice(.., prim) => {
                 self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
             }

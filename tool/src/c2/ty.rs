@@ -237,9 +237,21 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     ) -> Vec<(Cow<'ccx, str>, Cow<'a, str>)> {
         let param_name = self.cx.formatter.fmt_param_name(ident);
         match ty {
-            Type::Slice(hir::Slice::Str(..)) if !is_struct => {
+            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) if !is_struct => {
                 vec![
                     ("const char*".into(), format!("{param_name}_data").into()),
+                    ("size_t".into(), format!("{param_name}_len").into()),
+                ]
+            }
+            // TODO(#240): Implement UTF-16
+            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16))
+                if !is_struct =>
+            {
+                vec![
+                    (
+                        "const uint16_t*".into(),
+                        format!("{param_name}_data").into(),
+                    ),
                     ("size_t".into(), format!("{param_name}_len").into()),
                 ]
             }
@@ -314,7 +326,9 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
             Type::Slice(ref s) => {
                 let ptr_ty = match s {
-                    hir::Slice::Str(..) => "char".into(),
+                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => "char".into(),
+                    // TODO(#240): Implement UTF-16
+                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "uint16_t".into(),
                     hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
                     &_ => unreachable!("unknown AST/HIR variant"),
                 };

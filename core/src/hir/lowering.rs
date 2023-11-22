@@ -466,9 +466,10 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 ));
                 None
             }
-            ast::TypeName::StrReference(lifetime) => {
-                Some(Type::Slice(Slice::Str(ltl?.lower_lifetime(lifetime))))
-            }
+            ast::TypeName::StrReference(lifetime, encoding) => Some(Type::Slice(Slice::Str(
+                ltl?.lower_lifetime(lifetime),
+                *encoding,
+            ))),
             ast::TypeName::PrimitiveSlice(lifetime, mutability, prim) => {
                 let borrow = Borrow::new(ltl?.lower_lifetime(lifetime), *mutability);
                 let prim = PrimitiveType::from_ast(*prim);
@@ -658,9 +659,10 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 ));
                 None
             }
-            ast::TypeName::StrReference(lifetime) => {
-                Some(OutType::Slice(Slice::Str(ltl?.lower_lifetime(lifetime))))
-            }
+            ast::TypeName::StrReference(lifetime, encoding) => Some(OutType::Slice(Slice::Str(
+                ltl?.lower_lifetime(lifetime),
+                *encoding,
+            ))),
             ast::TypeName::PrimitiveSlice(lifetime, mutability, prim) => {
                 let borrow = Borrow::new(ltl?.lower_lifetime(lifetime), *mutability);
                 let prim = PrimitiveType::from_ast(*prim);

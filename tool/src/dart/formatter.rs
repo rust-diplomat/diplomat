@@ -169,6 +169,10 @@ impl<'tcx> DartFormatter<'tcx> {
         "ffi2.Utf8"
     }
 
+    pub fn fmt_utf16_primitive(&self) -> &'static str {
+        "ffi2.Utf16"
+    }
+
     pub fn fmt_void(&self) -> &'static str {
         "void"
     }
@@ -277,7 +281,11 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_str_slice_type(&self) -> &'static str {
+    pub fn fmt_utf8_slice_type(&self) -> &'static str {
         "_SliceFfi2Utf8"
+    }
+
+    pub fn fmt_utf16_slice_type(&self) -> &'static str {
+        "_SliceFfiUtf16"
     }
 }

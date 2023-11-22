@@ -203,7 +203,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             todo!("Returning references from Rust to C++ is not currently supported")
         }
         ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
-        ast::TypeName::StrReference(..) => {
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
             let raw_value_id = format!("diplomat_str_raw_{path}");
             writeln!(out, "capi::DiplomatStringView {raw_value_id} = {cpp};").unwrap();
 
@@ -213,6 +213,18 @@ pub fn gen_rust_to_cpp<W: Write>(
             )
             .unwrap();
             "str".into()
+        }
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
+            let raw_value_id = format!("diplomat_slice_raw_{path}");
+            writeln!(out, "capi::DiplomatU16View {raw_value_id} = {cpp};").unwrap();
+
+            let span = &library_config.span.expr;
+            writeln!(
+                out,
+                "{span}<const uint16_t> slice({raw_value_id}.data, {raw_value_id}.len);"
+            )
+            .unwrap();
+            "slice".into()
         }
         ast::TypeName::PrimitiveSlice(_lt, mutability, prim) => {
             assert!(mutability.is_immutable());
@@ -354,7 +366,7 @@ pub fn gen_cpp_to_rust<W: Write>(
             }
         }
         ast::TypeName::Primitive(_) => cpp.to_string(),
-        ast::TypeName::StrReference(_) => {
+        ast::TypeName::StrReference(..) => {
             format!("{{ {cpp}.data(), {cpp}.size() }}")
         }
         ast::TypeName::PrimitiveSlice(..) => {
