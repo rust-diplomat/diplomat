@@ -500,7 +500,10 @@ pub fn gen_ts_type<W: fmt::Write>(
             return Ok(opt);
         }
         ast::TypeName::Writeable => unreachable!(),
-        ast::TypeName::StrReference(_) => out.write_str("string")?,
+        ast::TypeName::StrReference(
+            _,
+            ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::UnvalidatedUtf16,
+        ) => out.write_str("string")?,
         ast::TypeName::PrimitiveSlice(.., prim) => match prim {
             ast::PrimitiveType::i8 => write!(out, "Int8Array")?,
             ast::PrimitiveType::u8 => write!(out, "Uint8Array")?,

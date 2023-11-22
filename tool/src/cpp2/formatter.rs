@@ -123,6 +123,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         ident: &'a str,
         mutability: hir::Mutability,
     ) -> Cow<'a, str> {
+        // TODO: This needs to change if an abstraction other than std::span is used
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {
             format!("diplomat::span<{ident}>").into()
@@ -131,8 +132,14 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_borrowed_str(&self) -> Cow<'static, str> {
+    pub fn fmt_borrowed_utf8_str(&self) -> Cow<'static, str> {
+        // TODO: This needs to change if an abstraction other than std::u8string_view is used
         "std::string_view".into()
+    }
+
+    pub fn fmt_borrowed_utf16_str(&self) -> Cow<'static, str> {
+        // TODO: This needs to change if an abstraction other than std::u16string_view is used
+        "std::wstring_view".into()
     }
 
     pub fn fmt_owned_str(&self) -> Cow<'static, str> {

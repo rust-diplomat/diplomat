@@ -18,6 +18,8 @@ pub type DiplomatChar = u32;
 
 pub type DiplomatStr = [u8];
 
+pub type DiplomatStr16 = [u16];
+
 /// Allocates a buffer of a given size in Rust's memory.
 ///
 /// # Safety

@@ -49,8 +49,12 @@ pub fn gen_type_name(
             write!(out, "DiplomatWriteable")
         }
 
-        ast::TypeName::StrReference(..) => {
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
             write!(out, "string")
+        }
+
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
+            write!(out, "ushort[]")
         }
 
         ast::TypeName::PrimitiveSlice(.., prim) => {
@@ -108,7 +112,12 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             ast::Ident::from(format!("Result{}{}", name_for_type(ok), name_for_type(err)))
         }
         ast::TypeName::Writeable => ast::Ident::from("Writeable"),
-        ast::TypeName::StrReference(_) => ast::Ident::from("StrRef"),
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
+            ast::Ident::from("StrRef8")
+        }
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
+            ast::Ident::from("RefMutPrimSliceU16")
+        }
         ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => ast::Ident::from(
             format!("RefMutPrimSlice{}", prim.to_string().to_upper_camel_case()),
         ),

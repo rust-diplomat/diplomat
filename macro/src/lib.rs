@@ -15,11 +15,23 @@ fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
 
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
     match &param.ty {
-        ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(..) => {
+        ast::TypeName::StrReference(
+            ..,
+            ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::UnvalidatedUtf16,
+        )
+        | ast::TypeName::PrimitiveSlice(..) => {
             let data_type = if let ast::TypeName::PrimitiveSlice(.., prim) = &param.ty {
                 ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
-            } else {
+            } else if let ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) =
+                &param.ty
+            {
                 quote! { u8 }
+            } else if let ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) =
+                &param.ty
+            {
+                quote! { u16 }
+            } else {
+                unreachable!()
             };
             expanded_params.push(FnArg::Typed(PatType {
                 attrs: vec![],
@@ -82,7 +94,7 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
 
 fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
     match &param.ty {
-        ast::TypeName::StrReference(_) | ast::TypeName::PrimitiveSlice(..) => {
+        ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
             let data_ident =
                 Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site());
             let len_ident = Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site());

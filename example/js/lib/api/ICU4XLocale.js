@@ -16,7 +16,7 @@ export class ICU4XLocale {
   }
 
   static new(arg_name) {
-    const buf_arg_name = diplomatRuntime.DiplomatBuf.str(wasm, arg_name);
+    const buf_arg_name = diplomatRuntime.DiplomatBuf.str8(wasm, arg_name);
     const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new(buf_arg_name.ptr, buf_arg_name.size), true, []);
     buf_arg_name.free();
     return diplomat_out;

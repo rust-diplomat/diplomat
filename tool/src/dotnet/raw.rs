@@ -385,8 +385,11 @@ fn gen_param(
         write!(out, "DiplomatWriteable* {name}")
     } else {
         match typ {
-            ast::TypeName::StrReference(..) => {
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
                 write!(out, "byte* {name}, nuint {name}Sz")
+            }
+            ast::TypeName::StrReference(..) => {
+                write!(out, "ushort* {name}, nuint {name}Sz")
             }
             ast::TypeName::PrimitiveSlice(.., prim) => {
                 write!(

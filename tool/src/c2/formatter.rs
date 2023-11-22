@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use super::ty::ResultType;
-use diplomat_core::hir::{self, OpaqueOwner, Type, TypeContext, TypeId};
+use diplomat_core::hir::{self, OpaqueOwner, StringEncoding, Type, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -109,7 +109,8 @@ impl<'tcx> CFormatter<'tcx> {
             }
             Type::Struct(s) => self.fmt_type_name(P::id_for_path(s)),
             Type::Enum(e) => self.fmt_type_name(e.tcx_id.into()),
-            Type::Slice(hir::Slice::Str(_)) => "str_ref".into(),
+            Type::Slice(hir::Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "str_ref8".into(),
+            Type::Slice(hir::Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => "str_ref16".into(),
             Type::Slice(hir::Slice::Primitive(borrow, p)) => {
                 let constness = borrow.mutability.if_mut_else("", "const_");
                 let prim = self.fmt_primitive_as_c(*p);

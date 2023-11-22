@@ -8,7 +8,7 @@ pub mod ffi {
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
     pub struct BorrowedFields<'a> {
-        a: &'a [u16],
+        a: &'a DiplomatStr16,
         b: &'a DiplomatStr,
     }
 

@@ -2,6 +2,6 @@
 /**
  */
 export class BorrowedFields {
-  a: Uint16Array;
+  a: string;
   b: string;
 }

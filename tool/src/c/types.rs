@@ -53,7 +53,12 @@ pub fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
-        ast::TypeName::StrReference(..) => write!(out, "DiplomatStringView")?,
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
+            write!(out, "DiplomatStringView")?
+        }
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
+            write!(out, "DiplomatU16View")?
+        }
         ast::TypeName::PrimitiveSlice(_lt, mutability, prim) => {
             if mutability.is_mutable() {
                 panic!("Mutable slices in structs not supported");
@@ -97,7 +102,12 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             name_for_type(err)
         )),
         ast::TypeName::Writeable => ast::Ident::from("writeable"),
-        ast::TypeName::StrReference(_) => ast::Ident::from("str_ref"),
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
+            ast::Ident::from("str_ref8")
+        }
+        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
+            ast::Ident::from("str_ref16")
+        }
         ast::TypeName::PrimitiveSlice(_lt, ast::Mutability::Mutable, prim) => {
             ast::Ident::from(format!("ref_mut_prim_slice_{}", c_type_for_prim(prim)))
         }

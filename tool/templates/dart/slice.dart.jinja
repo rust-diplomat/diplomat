@@ -30,6 +30,8 @@ final class {{slice_ty}} extends ffi.Struct {
     for (var i = 0; i < _length; i++) {
       {%- if ffi_type == "ffi2.Utf8" %}
       if (other._bytes.cast<ffi.Uint8>()[i] != _bytes.cast<ffi.Uint8>()[i]) {
+      {%- else if ffi_type == "ffi2.Utf16" %}
+      if (other._bytes.cast<ffi.Uint16>()[i] != _bytes.cast<ffi.Uint16>()[i]) {
       {%- else %}
       if (other._bytes[i] != _bytes[i]) {
       {%- endif %}
