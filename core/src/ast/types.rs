@@ -392,6 +392,7 @@ pub enum TypeName {
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
+#[non_exhaustive]
 pub enum StringEncoding {
     UnvalidatedUtf8,
     UnvalidatedUtf16,
