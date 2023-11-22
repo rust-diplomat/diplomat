@@ -542,31 +542,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
-                vec![
-                    PartiallyNamedExpression {
-                        suffix: "_data".into(),
-                        expression: format!("{cpp_name}.data()").into(),
-                    },
-                    PartiallyNamedExpression {
-                        suffix: "_size".into(),
-                        expression: format!("{cpp_name}.size()").into(),
-                    },
-                ]
-            }
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                vec![
-                    PartiallyNamedExpression {
-                        suffix: "_data".into(),
-                        expression: format!("{cpp_name}.data()").into(),
-                    },
-                    PartiallyNamedExpression {
-                        suffix: "_size".into(),
-                        expression: format!("{cpp_name}.size()").into(),
-                    },
-                ]
-            }
-            Type::Slice(hir::Slice::Primitive(..)) => {
+            Type::Slice(hir::Slice::Str(..)) | Type::Slice(hir::Slice::Primitive(..)) => {
                 vec![
                     PartiallyNamedExpression {
                         suffix: "_data".into(),
