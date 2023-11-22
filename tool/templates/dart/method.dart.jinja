@@ -1,8 +1,7 @@
   {%- if !m.docs.is_empty() %}
   /// {{m.docs.replace('\n', "\n  ")}}
   {%- endif %}
-  {{ m.declaration -}}
-  {%- if !m.declaration.starts_with("static final") %} {
+  {{ m.declaration }} {
     {%- for slice_conversion in m.slice_conversions %}
     {%- if loop.first %}
     final alloc = ffi2.Arena();
@@ -29,7 +28,7 @@
     {{statement.replace('\n', "\n    ")}}
     {%- when None %}
     {%- endmatch %}
-  }
+  }{% if m.declaration.starts_with("static final") %}();{% endif %}
 
   // ignore: non_constant_identifier_names
   static final _{{ m.c_method_name }} =
@@ -45,4 +44,3 @@
           {{ param }}
         {%- endfor -%}
       )>(isLeaf: true);
-{%- endif %}

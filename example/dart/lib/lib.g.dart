@@ -54,7 +54,7 @@ final class _ResultVoidVoid extends ffi.Struct {
   external bool isOk;
 }
 
-final class _SliceFfi2Utf8 extends ffi.Struct {
+final class _SliceUtf8 extends ffi.Struct {
   external ffi.Pointer<ffi2.Utf8> _bytes;
 
   @ffi.Size()
@@ -63,8 +63,8 @@ final class _SliceFfi2Utf8 extends ffi.Struct {
   /// Produces a slice from a Dart object. The Dart object's data is copied into the given allocator
   /// as it cannot be borrowed directly, and gets freed with the slice object.
   // ignore: unused_element
-  static _SliceFfi2Utf8 _fromDart(String value, ffi.Allocator allocator) {
-    final pointer = allocator<_SliceFfi2Utf8>();
+  static _SliceUtf8 _fromDart(String value, ffi.Allocator allocator) {
+    final pointer = allocator<_SliceUtf8>();
     final slice = pointer.ref;
     final units = Utf8Encoder().convert(value);
     slice._length = units.length;
@@ -79,7 +79,7 @@ final class _SliceFfi2Utf8 extends ffi.Struct {
   // This is expensive
   @override
   bool operator ==(Object other) {
-    if (other is! _SliceFfi2Utf8 || other._length != _length) {
+    if (other is! _SliceUtf8 || other._length != _length) {
       return false;
     }
 

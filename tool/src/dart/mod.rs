@@ -371,18 +371,17 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
             // Static field
             } else if params.is_empty()
-                && !matches!(method.output, hir::ReturnType::Fallible(..))
+                && !matches!(
+                    method.output,
+                    hir::ReturnType::Fallible(..) | hir::ReturnType::Infallible(None)
+                )
                 && return_ty != "bool"
             {
                 let method_name = self
                     .formatter
                     .fmt_constructor_name(method)
                     .unwrap_or("singleton".into());
-                format!(
-                    "static final {return_ty} {method_name} = \
-                        _capi<ffi.NativeFunction<{ffi_return_ty} Function()>>('{c_method_name}')\
-                        .asFunction<{ffi_cast_return_ty} Function()>(isLeaf: true)();"
-                )
+                format!("static final {return_ty} {method_name} = ()")
             // Static method
             } else {
                 let method_name = self.formatter.fmt_method_name(method);
@@ -598,7 +597,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!(
-                "{dart_name} == null ? ffi.Pointer.fromAddress(0) ? {dart_name}._underlying"
+                "{dart_name} == null ? ffi.Pointer.fromAddress(0) : {dart_name}._underlying"
             )
             .into(),
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
@@ -767,67 +766,64 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 &_ => unreachable!("unknown AST/HIR variant"),
             },
-            ReturnType::Fallible(ref ok, ref err) => {
-                #[derive(askama::Template)]
-                #[template(path = "dart/result.dart.jinja", escape = "none")]
-                struct ResultTemplate {
-                    name: String,
-                    decls: Vec<String>,
-                }
-
-                let ok = match ok {
-                    None | Some(SuccessType::Writeable) => None,
-                    Some(SuccessType::OutType(o)) => Some(o),
-                    &Some(_) => unreachable!("unknown AST/HIR variant"),
-                };
-
-                let err = err.as_ref();
-
-                let name = format!(
-                    "_Result{}{}",
-                    &self
-                        .formatter
-                        .fmt_type_as_ident(ok.map(|o| self.gen_type_name_ffi(o, false)).as_deref()),
-                    &self.formatter.fmt_type_as_ident(
-                        err.map(|o| self.gen_type_name_ffi(o, false)).as_deref()
-                    )
-                );
-
-                let decls = [ok.map(|o| (o, "ok")), err.map(|o| (o, "err"))]
-                    .into_iter()
-                    .flatten()
-                    .map(|(o, field_name)| {
-                        format!(
-                            "{}external {} {field_name};",
-                            match o {
-                                hir::OutType::Primitive(p) => {
-                                    format!(
-                                        "@{}()\n",
-                                        self.formatter.fmt_primitive_as_ffi(*p, false)
-                                    )
-                                }
-                                hir::OutType::Enum(_) =>
-                                    format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
-                                _ => String::new(),
-                            },
-                            { self.gen_type_name_ffi(o, true) }
-                        )
-                    })
-                    .collect();
-
-                self.helper_classes.insert(
-                    name.clone(),
-                    ResultTemplate {
-                        name: name.clone(),
-                        decls,
-                    }
-                    .render()
-                    .unwrap(),
-                );
-
-                name.into()
-            }
+            ReturnType::Fallible(ref ok, ref err) => self
+                .gen_result(ok.as_ref().and_then(SuccessType::as_type), err.as_ref())
+                .into(),
         }
+    }
+
+    fn gen_result(&mut self, ok: Option<&hir::OutType>, err: Option<&hir::OutType>) -> String {
+        let name = format!(
+            "_Result{}{}",
+            &self
+                .formatter
+                .fmt_type_as_ident(ok.map(|o| self.gen_type_name_ffi(o, false)).as_deref()),
+            &self
+                .formatter
+                .fmt_type_as_ident(err.map(|o| self.gen_type_name_ffi(o, false)).as_deref())
+        );
+
+        if self.helper_classes.contains_key(&name) {
+            return name;
+        }
+
+        #[derive(askama::Template)]
+        #[template(path = "dart/result.dart.jinja", escape = "none")]
+        struct ResultTemplate {
+            name: String,
+            decls: Vec<String>,
+        }
+
+        let decls = [ok.map(|o| (o, "ok")), err.map(|o| (o, "err"))]
+            .into_iter()
+            .flatten()
+            .map(|(o, field_name)| {
+                format!(
+                    "{}external {} {field_name};",
+                    match o {
+                        hir::OutType::Primitive(p) => {
+                            format!("@{}()\n", self.formatter.fmt_primitive_as_ffi(*p, false))
+                        }
+                        hir::OutType::Enum(_) =>
+                            format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
+                        _ => String::new(),
+                    },
+                    { self.gen_type_name_ffi(o, true) }
+                )
+            })
+            .collect();
+
+        self.helper_classes.insert(
+            name.clone(),
+            ResultTemplate {
+                name: name.clone(),
+                decls,
+            }
+            .render()
+            .unwrap(),
+        );
+
+        name
     }
 
     /// Generates a C++ expression that converts from a C type to the corresponding C++ type.
