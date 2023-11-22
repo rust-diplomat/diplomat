@@ -11,7 +11,7 @@ namespace capi {
 #endif
 
 typedef struct BorrowedFieldsReturning {
-    DiplomatU8View bytes;
+    DiplomatStringView bytes;
 } BorrowedFieldsReturning;
 #ifdef __cplusplus
 } // namespace capi

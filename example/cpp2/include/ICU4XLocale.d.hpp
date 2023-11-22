@@ -16,8 +16,6 @@ public:
 
   inline static std::unique_ptr<ICU4XLocale> new_(std::string_view name);
 
-  inline static std::unique_ptr<ICU4XLocale> new_from_bytes(diplomat::span<const uint8_t> bytes);
-
   inline const capi::ICU4XLocale* AsFFI() const;
   inline capi::ICU4XLocale* AsFFI();
   inline static const ICU4XLocale* FromFFI(const capi::ICU4XLocale* ptr);

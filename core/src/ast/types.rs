@@ -532,9 +532,9 @@ impl TypeName {
                 let lifetime = Lifetime::from(&r.lifetime);
                 let mutability = Mutability::from_syn(&r.mutability);
 
-                if r.elem.to_token_stream().to_string() == "str" {
+                if r.elem.to_token_stream().to_string() == "DiplomatWtf8" {
                     if mutability.is_mutable() {
-                        panic!("mutable `str` references are disallowed");
+                        panic!("mutable `DiplomatWtf8` references are disallowed");
                     }
                     return TypeName::StrReference(lifetime);
                 }

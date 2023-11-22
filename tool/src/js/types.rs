@@ -156,7 +156,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    pub fn new(v: &str) -> MyStruct {
+                    pub fn new(v: &DiplomatWtf8) -> MyStruct {
                         unimplemented!()
                     }
                 }

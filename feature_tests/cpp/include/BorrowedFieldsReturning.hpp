@@ -14,7 +14,7 @@
 
 struct BorrowedFieldsReturning {
  public:
-  const diplomat::span<const uint8_t> bytes;
+  std::string_view bytes;
 };
 
 

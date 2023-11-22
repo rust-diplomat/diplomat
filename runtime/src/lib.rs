@@ -16,6 +16,8 @@ pub use result::DiplomatResult;
 
 pub type DiplomatChar = u32;
 
+pub type DiplomatWtf8 = [u8];
+
 /// Allocates a buffer of a given size in Rust's memory.
 ///
 /// # Safety

@@ -76,9 +76,9 @@ inline Foo Foo::new_static(const std::string_view x) {
 }
 inline BorrowedFieldsReturning Foo::as_returning() const {
   capi::BorrowedFieldsReturning diplomat_raw_struct_out_value = capi::Foo_as_returning(this->inner.get());
-  capi::DiplomatU8View diplomat_slice_raw_out_value_bytes = diplomat_raw_struct_out_value.bytes;
-  diplomat::span<const uint8_t> slice(diplomat_slice_raw_out_value_bytes.data, diplomat_slice_raw_out_value_bytes.len);
-  return BorrowedFieldsReturning{ .bytes = std::move(slice) };
+  capi::DiplomatStringView diplomat_str_raw_out_value_bytes = diplomat_raw_struct_out_value.bytes;
+  std::string_view str(diplomat_str_raw_out_value_bytes.data, diplomat_str_raw_out_value_bytes.len);
+  return BorrowedFieldsReturning{ .bytes = std::move(str) };
 }
 inline Foo Foo::extract_from_fields(BorrowedFields fields) {
   BorrowedFields diplomat_wrapped_struct_fields = fields;

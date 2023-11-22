@@ -6,7 +6,7 @@ authors = [
     "Manish Goregaokar <manishsmail@gmail.com>",
     "Quinn Okabayashi <QnnOkabayashi@users.noreply.github.com>"
 ]
-edition = "2018"
+edition = "2021"
 
 [lib]
 crate-type = ["staticlib", "rlib", "cdylib"]

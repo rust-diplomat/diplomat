@@ -442,11 +442,11 @@ mod tests {
             mod ffi {
                 #[diplomat::opaque]
                 struct Opaque<'a> {
-                    s: &'a str,
+                    s: &'a DiplomatWtf8,
                 }
 
                 struct Struct<'a> {
-                    s: &'a str,
+                    s: &'a DiplomatWtf8,
                 }
 
                 #[diplomat::out]
@@ -455,14 +455,14 @@ mod tests {
                 }
 
                 impl<'a> OutStruct<'a> {
-                    pub fn new(s: &'a str) -> Self {
+                    pub fn new(s: &'a DiplomatWtf8) -> Self {
                         Self { inner: Box::new(Opaque { s }) }
                     }
 
                 }
 
                 impl<'a> Struct<'a> {
-                    pub fn rustc_elision(self, s: &str) -> &str {
+                    pub fn rustc_elision(self, s: &DiplomatWtf8) -> &DiplomatWtf8 {
                         s
                     }
                 }
@@ -483,12 +483,12 @@ mod tests {
                 struct Input<'p, 'q> {
                     p_data: &'p Opaque,
                     q_data: &'q Opaque,
-                    name: &'static str,
+                    name: &'static DiplomatWtf8,
                     inner: Inner<'q>,
                 }
 
                 struct Inner<'a> {
-                    more_data: &'a str,
+                    more_data: &'a DiplomatWtf8,
                 }
 
                 struct Output<'p,'q> {
@@ -497,7 +497,7 @@ mod tests {
                 }
 
                 impl<'a, 'b> Input<'a, 'b> {
-                    pub fn as_output(self, _s: &'static str) -> Output<'b, 'a> {
+                    pub fn as_output(self, _s: &'static DiplomatWtf8) -> Output<'b, 'a> {
                         Output { data: self.data }
                     }
 

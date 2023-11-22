@@ -11,7 +11,7 @@
 
 .. cpp:struct:: BorrowedFieldsReturning
 
-    .. cpp:member:: const diplomat::span<const uint8_t> bytes
+    .. cpp:member:: std::string_view bytes
 
 .. cpp:class:: Foo
 

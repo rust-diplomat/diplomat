@@ -1,7 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
     #[diplomat::opaque]
-    pub struct Foo<'a>(&'a str);
+    pub struct Foo<'a>(&'a DiplomatWtf8);
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
@@ -9,14 +9,14 @@ pub mod ffi {
 
     pub struct BorrowedFields<'a> {
         a: &'a [u16],
-        b: &'a str,
+        b: &'a DiplomatWtf8,
     }
 
     pub struct BorrowedFieldsReturning<'a> {
-        bytes: &'a [u8],
+        bytes: &'a DiplomatWtf8,
     }
     impl<'a> Foo<'a> {
-        pub fn new(x: &'a str) -> Box<Self> {
+        pub fn new(x: &'a DiplomatWtf8) -> Box<Self> {
             Box::new(Foo(x))
         }
 
@@ -24,14 +24,12 @@ pub mod ffi {
             Box::new(Bar(self))
         }
 
-        pub fn new_static(x: &'static str) -> Box<Self> {
+        pub fn new_static(x: &'static DiplomatWtf8) -> Box<Self> {
             Box::new(Foo(x))
         }
 
         pub fn as_returning(&self) -> BorrowedFieldsReturning<'a> {
-            BorrowedFieldsReturning {
-                bytes: self.0.as_bytes(),
-            }
+            BorrowedFieldsReturning { bytes: self.0 }
         }
 
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {

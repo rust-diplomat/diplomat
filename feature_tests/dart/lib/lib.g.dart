@@ -254,47 +254,6 @@ final class _SliceFfiUint16 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 }
 
-final class _SliceFfiUint8 extends ffi.Struct {
-  external ffi.Pointer<ffi.Uint8> _bytes;
-
-  @ffi.Size()
-  external int _length;
-
-  /// Produces a slice from a Dart object. The Dart object's data is copied into the given allocator
-  /// as it cannot be borrowed directly, and gets freed with the slice object.
-  // ignore: unused_element
-  static _SliceFfiUint8 _fromDart(Uint8List value, ffi.Allocator allocator) {
-    final pointer = allocator<_SliceFfiUint8>();
-    final slice = pointer.ref;
-    slice._length = value.length;
-    slice._bytes = allocator(slice._length);
-    slice._bytes.asTypedList(slice._length).setAll(0, value);
-    return slice;
-  }
-
-  // ignore: unused_element
-  Uint8List get _asDart => _bytes.asTypedList(_length);
-
-  // This is expensive
-  @override
-  bool operator ==(Object other) {
-    if (other is! _SliceFfiUint8 || other._length != _length) {
-      return false;
-    }
-
-    for (var i = 0; i < _length; i++) {
-      if (other._bytes[i] != _bytes[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // This is cheap
-  @override
-  int get hashCode => _length.hashCode;
-}
-
 /// An unspecified error value
 class VoidError {}
 
