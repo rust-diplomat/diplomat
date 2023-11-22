@@ -142,13 +142,11 @@ pub fn gen_method_docs<W: fmt::Write>(
         writeln!(method_indented)?;
     }
 
-    for p in method.params.iter().filter(|p| {
-        matches!(
-            p.ty,
-            ast::TypeName::PrimitiveSlice(..)
-                | ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16)
-        )
-    }) {
+    for p in method
+        .params
+        .iter()
+        .filter(|p| matches!(p.ty, ast::TypeName::PrimitiveSlice(..)))
+    {
         writeln!(
             method_indented,
             "- Note: ``{}`` should be an ArrayBuffer or TypedArray corresponding to the slice type expected by Rust.",
