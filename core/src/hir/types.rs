@@ -33,7 +33,7 @@ pub enum SelfType {
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
 pub enum Slice {
-    /// A string slice, e.g. `&DiplomatWtf8`.
+    /// A string slice, e.g. `&DiplomatStr`.
     Str(MaybeStatic<TypeLifetime>),
 
     /// A primitive slice, e.g. `&mut [u8]`.

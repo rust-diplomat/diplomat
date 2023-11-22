@@ -125,7 +125,7 @@ fn setters_getters_properties() {
                     unimplemented!()
                 }
 
-                pub fn set_name(&mut self, new_name: &DiplomatWtf8) -> Result<(), ()> {
+                pub fn set_name(&mut self, new_name: &DiplomatStr) -> Result<(), ()> {
                     unimplemented!()
                 }
             }
@@ -271,11 +271,11 @@ fn method_taking_str() {
             struct MyStruct(UnknownType);
 
             impl MyStruct {
-                pub fn new_str(v: &DiplomatWtf8) -> Box<MyStruct> {
+                pub fn new_str(v: &DiplomatStr) -> Box<MyStruct> {
                     unimplemented!()
                 }
 
-                pub fn set_str(&mut self, new_str: &DiplomatWtf8) {
+                pub fn set_str(&mut self, new_str: &DiplomatStr) {
                     unimplemented!()
                 }
             }
@@ -489,7 +489,7 @@ fn string_reference() {
             struct MyStruct;
 
             impl MyStruct {
-                pub fn new(v: &DiplomatWtf8) -> MyStruct {
+                pub fn new(v: &DiplomatStr) -> MyStruct {
                     unimplemented!()
                 }
             }
@@ -575,22 +575,22 @@ fn almost_properties() {
 
             impl MyStruct {
                 /// This should not generate a property
-                pub fn get_foo_by_key(&self, key: &DiplomatWtf8) -> Result<u64, ()> {
+                pub fn get_foo_by_key(&self, key: &DiplomatStr) -> Result<u64, ()> {
                     unimplemented!()
                 }
 
                 /// This should not generate a property
-                pub fn set_foo_by_key(&self, key: &DiplomatWtf8, foo: i64) -> Result<(), ()> {
+                pub fn set_foo_by_key(&self, key: &DiplomatStr, foo: i64) -> Result<(), ()> {
                     unimplemented!()
                 }
 
                 /// This should not generate a property
-                pub fn get_str_by_key(&self, key: &DiplomatWtf8, writer: &mut DiplomatWriteable) {
+                pub fn get_str_by_key(&self, key: &DiplomatStr, writer: &mut DiplomatWriteable) {
                     unimplemented!()
                 }
 
                 /// This should not generate a property
-                pub fn set_str_by_key(&self, key: &DiplomatWtf8, s: &DiplomatWtf8) {
+                pub fn set_str_by_key(&self, key: &DiplomatStr, s: &DiplomatStr) {
                     unimplemented!()
                 }
             }

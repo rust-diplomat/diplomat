@@ -1,7 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
     #[diplomat::opaque]
-    pub struct Foo<'a>(&'a DiplomatWtf8);
+    pub struct Foo<'a>(&'a DiplomatStr);
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
@@ -9,14 +9,14 @@ pub mod ffi {
 
     pub struct BorrowedFields<'a> {
         a: &'a [u16],
-        b: &'a DiplomatWtf8,
+        b: &'a DiplomatStr,
     }
 
     pub struct BorrowedFieldsReturning<'a> {
-        bytes: &'a DiplomatWtf8,
+        bytes: &'a DiplomatStr,
     }
     impl<'a> Foo<'a> {
-        pub fn new(x: &'a DiplomatWtf8) -> Box<Self> {
+        pub fn new(x: &'a DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }
 
@@ -24,7 +24,7 @@ pub mod ffi {
             Box::new(Bar(self))
         }
 
-        pub fn new_static(x: &'static DiplomatWtf8) -> Box<Self> {
+        pub fn new_static(x: &'static DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }
 

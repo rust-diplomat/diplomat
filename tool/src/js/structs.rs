@@ -730,11 +730,11 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    pub fn new_str(v: &DiplomatWtf8) -> Box<MyStruct> {
+                    pub fn new_str(v: &DiplomatStr) -> Box<MyStruct> {
                         unimplemented!()
                     }
 
-                    pub fn set_str(&mut self, new_str: &DiplomatWtf8) {
+                    pub fn set_str(&mut self, new_str: &DiplomatStr) {
                         unimplemented!()
                     }
                 }

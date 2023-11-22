@@ -277,7 +277,7 @@ mod tests {
                 struct MyStruct;
 
                 impl MyStruct {
-                    pub fn new(v: &DiplomatWtf8) -> MyStruct {
+                    pub fn new(v: &DiplomatStr) -> MyStruct {
                         unimplemented!()
                     }
                 }

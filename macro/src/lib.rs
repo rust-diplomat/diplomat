@@ -460,7 +460,7 @@ mod tests {
                     struct Foo {}
 
                     impl Foo {
-                        pub fn from_str(s: &DiplomatWtf8) {
+                        pub fn from_str(s: &DiplomatStr) {
                             unimplemented!()
                         }
                     }
