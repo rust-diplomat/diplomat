@@ -21,11 +21,4 @@ export class ICU4XLocale {
     buf_arg_name.free();
     return diplomat_out;
   }
-
-  static new_from_bytes(arg_bytes) {
-    const buf_arg_bytes = diplomatRuntime.DiplomatBuf.slice(wasm, arg_bytes, 1);
-    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new_from_bytes(buf_arg_bytes.ptr, buf_arg_bytes.size), true, []);
-    buf_arg_bytes.free();
-    return diplomat_out;
-  }
 }

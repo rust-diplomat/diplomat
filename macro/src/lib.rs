@@ -97,12 +97,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                     },
                 }
             } else {
-                // TODO(#57): don't just unwrap? or should we assume that the other side gives us a good value?
-                quote! {
-                    core::str::from_utf8(unsafe {
-                        core::slice::from_raw_parts(#data_ident, #len_ident)
-                    }).unwrap()
-                }
+                quote! {unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) } }
             };
             expanded_params.push(parse2(tokens).unwrap());
         }
@@ -465,7 +460,7 @@ mod tests {
                     struct Foo {}
 
                     impl Foo {
-                        pub fn from_str(s: &str) {
+                        pub fn from_str(s: &DiplomatStr) {
                             unimplemented!()
                         }
                     }

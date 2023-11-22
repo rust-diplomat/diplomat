@@ -879,15 +879,15 @@ mod tests {
             #[diplomat::bridge]
             mod ffi {
                 pub struct MyStruct<'a> {
-                    s: &'a str,
+                    s: &'a DiplomatStr,
                 }
 
                 impl<'a> MyStruct<'a> {
-                    pub fn new(s: &'a str) -> Self {
+                    pub fn new(s: &'a DiplomatStr) -> Self {
                         Self { s }
                     }
 
-                    pub fn get(self) -> &'a str {
+                    pub fn get(self) -> &'a DiplomatStr {
                         self.s
                     }
                 }

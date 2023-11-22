@@ -19,12 +19,6 @@ inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {
   return std::unique_ptr<ICU4XLocale>(ICU4XLocale::FromFFI(result));
 }
 
-inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_from_bytes(diplomat::span<const uint8_t> bytes) {
-  auto result = capi::ICU4XLocale_new_from_bytes(bytes.data(),
-    bytes.size());
-  return std::unique_ptr<ICU4XLocale>(ICU4XLocale::FromFFI(result));
-}
-
 inline const capi::ICU4XLocale* ICU4XLocale::AsFFI() const {
   return reinterpret_cast<const capi::ICU4XLocale*>(this);
 }

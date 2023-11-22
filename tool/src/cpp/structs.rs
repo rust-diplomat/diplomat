@@ -490,11 +490,11 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    pub fn new_str(v: &str) -> Box<MyStruct> {
+                    pub fn new_str(v: &DiplomatStr) -> Box<MyStruct> {
                         unimplemented!()
                     }
 
-                    pub fn set_str(&mut self, new_str: &str) {
+                    pub fn set_str(&mut self, new_str: &DiplomatStr) {
                         unimplemented!()
                     }
                 }

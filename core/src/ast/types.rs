@@ -381,7 +381,7 @@ pub enum TypeName {
     /// A `Result<T, E>` or `diplomat_runtime::DiplomatWriteable` type. If the bool is true, it's `Result`
     Result(Box<TypeName>, Box<TypeName>, bool),
     Writeable,
-    /// A `&str` type.
+    /// A `&DiplomatStr` type.
     StrReference(Lifetime),
     /// A `&[T]` type, where `T` is a primitive.
     PrimitiveSlice(Lifetime, Mutability, PrimitiveType),
@@ -494,7 +494,7 @@ impl TypeName {
                 diplomat_runtime::DiplomatWriteable
             },
             TypeName::StrReference(lifetime) => syn::parse_str(&format!(
-                "{}str",
+                "{}DiplomatStr",
                 ReferenceDisplay(lifetime, &Mutability::Immutable)
             ))
             .unwrap(),
@@ -522,7 +522,7 @@ impl TypeName {
     /// - If the type is a path with a single element [`Result`], returns a [`TypeName::Result`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::DiplomatResult`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
-    /// - If the type is a reference to `str`, returns a [`TypeName::StrReference`]
+    /// - If the type is a reference to `DiplomatStr`, returns a [`TypeName::StrReference`]
     /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
     /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
@@ -532,9 +532,9 @@ impl TypeName {
                 let lifetime = Lifetime::from(&r.lifetime);
                 let mutability = Mutability::from_syn(&r.mutability);
 
-                if r.elem.to_token_stream().to_string() == "str" {
+                if r.elem.to_token_stream().to_string() == "DiplomatStr" {
                     if mutability.is_mutable() {
-                        panic!("mutable `str` references are disallowed");
+                        panic!("mutable `DiplomatStr` references are disallowed");
                     }
                     return TypeName::StrReference(lifetime);
                 }
@@ -919,7 +919,7 @@ impl fmt::Display for TypeName {
             TypeName::StrReference(lifetime) => {
                 write!(
                     f,
-                    "{}str",
+                    "{}DiplomatStr",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }

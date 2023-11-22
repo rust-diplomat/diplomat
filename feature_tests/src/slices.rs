@@ -7,12 +7,12 @@ mod ffi {
     struct MyString(String);
 
     impl MyString {
-        pub fn new(v: &str) -> Box<MyString> {
-            Box::new(Self(v.to_owned()))
+        pub fn new(v: &DiplomatStr) -> Box<MyString> {
+            Box::new(Self(String::from_utf8(v.to_owned()).unwrap()))
         }
 
-        pub fn set_str(&mut self, new_str: &str) {
-            self.0 = new_str.to_owned();
+        pub fn set_str(&mut self, new_str: &DiplomatStr) {
+            self.0 = String::from_utf8(new_str.to_owned()).unwrap();
         }
 
         pub fn get_str(&self, writeable: &mut DiplomatWriteable) {

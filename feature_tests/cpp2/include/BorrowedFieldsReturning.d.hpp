@@ -12,7 +12,7 @@
 
 
 struct BorrowedFieldsReturning {
-  diplomat::span<const uint8_t> bytes;
+  std::string_view bytes;
 
   inline capi::BorrowedFieldsReturning AsFFI() const;
   inline static BorrowedFieldsReturning FromFFI(capi::BorrowedFieldsReturning c_struct);

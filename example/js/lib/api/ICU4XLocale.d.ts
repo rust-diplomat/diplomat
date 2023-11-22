@@ -12,10 +12,4 @@ export class ICU4XLocale {
    * Construct an {@link ICU4XLocale `ICU4XLocale`} from a locale identifier represented as a string.
    */
   static new(name: string): ICU4XLocale;
-
-  /**
-
-   * Construct an {@link ICU4XLocale `ICU4XLocale`} from a locale identifier represented as bytes.
-   */
-  static new_from_bytes(bytes: Uint8Array): ICU4XLocale;
 }

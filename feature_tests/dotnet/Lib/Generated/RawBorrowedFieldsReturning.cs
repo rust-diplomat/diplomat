@@ -16,5 +16,5 @@ public partial struct BorrowedFieldsReturning
 {
     private const string NativeLib = "diplomat_feature_tests";
 
-    public byte[] bytes;
+    public string bytes;
 }

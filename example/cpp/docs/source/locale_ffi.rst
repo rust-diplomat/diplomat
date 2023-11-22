@@ -12,8 +12,3 @@
 
         Construct an :cpp:class:`ICU4XLocale` from a locale identifier represented as a string.
 
-
-    .. cpp:function:: static ICU4XLocale new_from_bytes(const diplomat::span<const uint8_t> bytes)
-
-        Construct an :cpp:class:`ICU4XLocale` from a locale identifier represented as bytes.
-

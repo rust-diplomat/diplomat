@@ -5,7 +5,7 @@ export class BorrowedFieldsReturning {
   constructor(underlying, edges_a) {
     this.bytes = (() => {
       const [ptr, size] = new Uint32Array(wasm.memory.buffer, underlying, 2);
-      return new Uint8Array(wasm.memory.buffer, ptr, size);
+      return diplomatRuntime.readString(wasm, ptr, size);
     })();
   }
 }
