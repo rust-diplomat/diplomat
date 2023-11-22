@@ -112,7 +112,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                         unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
                     },
                 }
-            } else if let ast::TypeName(_, ast::StringEncoding::Utf8) = &param.ty {
+            } else if let ast::TypeName::StrReference(_, ast::StringEncoding::Utf8) = &param.ty {
                 // The FFI guarantees this, by either validating, or communicating this requirement to the user.
                 quote! {unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(#data_ident, #len_ident))} }
             } else {
