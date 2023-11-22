@@ -53,9 +53,10 @@ pub fn gen_type<W: fmt::Write>(
         }
 
         ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
-        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
-            write!(out, "DiplomatStringView")?
-        }
+        ast::TypeName::StrReference(
+            _,
+            ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
+        ) => write!(out, "DiplomatStringView")?,
         ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
             write!(out, "DiplomatU16View")?
         }
@@ -102,9 +103,10 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             name_for_type(err)
         )),
         ast::TypeName::Writeable => ast::Ident::from("writeable"),
-        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
-            ast::Ident::from("str_ref8")
-        }
+        ast::TypeName::StrReference(
+            _,
+            ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
+        ) => ast::Ident::from("str_ref8"),
         ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
             ast::Ident::from("str_ref16")
         }

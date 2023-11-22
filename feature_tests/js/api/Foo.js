@@ -48,6 +48,8 @@ export class Foo {
     const buf_field_a_arg_fields = diplomatRuntime.DiplomatBuf.str16(wasm, field_a_arg_fields, 2);
     const field_b_arg_fields = arg_fields["b"];
     const buf_field_b_arg_fields = diplomatRuntime.DiplomatBuf.str8(wasm, field_b_arg_fields);
-    return new Foo(wasm.Foo_extract_from_fields(buf_field_a_arg_fields.ptr, buf_field_a_arg_fields.size, buf_field_b_arg_fields.ptr, buf_field_b_arg_fields.size), true, [buf_field_a_arg_fields, buf_field_b_arg_fields]);
+    const field_c_arg_fields = arg_fields["c"];
+    const buf_field_c_arg_fields = diplomatRuntime.DiplomatBuf.str8(wasm, field_c_arg_fields);
+    return new Foo(wasm.Foo_extract_from_fields(buf_field_a_arg_fields.ptr, buf_field_a_arg_fields.size, buf_field_b_arg_fields.ptr, buf_field_b_arg_fields.size, buf_field_c_arg_fields.ptr, buf_field_c_arg_fields.size), true, [buf_field_a_arg_fields, buf_field_b_arg_fields, buf_field_c_arg_fields]);
   }
 }

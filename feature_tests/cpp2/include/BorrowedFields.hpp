@@ -20,6 +20,8 @@ inline capi::BorrowedFields BorrowedFields::AsFFI() const {
     .a_size = a.size(),
     .b_data = b.data(),
     .b_size = b.size(),
+    .c_data = c.data(),
+    .c_size = c.size(),
   };
 }
 
@@ -27,6 +29,7 @@ inline BorrowedFields BorrowedFields::FromFFI(capi::BorrowedFields c_struct) {
   return BorrowedFields {
     .a = std::wstring_view(c_struct.a_data, c_struct.a_size),
     .b = std::string_view(c_struct.b_data, c_struct.b_size),
+    .c = std::string_view(c_struct.c_data, c_struct.c_size),
   };
 }
 

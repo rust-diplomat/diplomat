@@ -10,6 +10,7 @@ pub mod ffi {
     pub struct BorrowedFields<'a> {
         a: &'a DiplomatStr16,
         b: &'a DiplomatStr,
+        c: &'a str,
     }
 
     pub struct BorrowedFieldsReturning<'a> {

@@ -396,6 +396,7 @@ pub enum TypeName {
 pub enum StringEncoding {
     UnvalidatedUtf8,
     UnvalidatedUtf16,
+    Utf8,
 }
 
 impl TypeName {
@@ -514,6 +515,11 @@ impl TypeName {
                 ))
                 .unwrap()
             }
+            TypeName::StrReference(lifetime, StringEncoding::Utf8) => syn::parse_str(&format!(
+                "{}str",
+                ReferenceDisplay(lifetime, &Mutability::Immutable)
+            ))
+            .unwrap(),
             TypeName::PrimitiveSlice(lifetime, mutability, name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
@@ -549,14 +555,16 @@ impl TypeName {
                 let mutability = Mutability::from_syn(&r.mutability);
 
                 let name = r.elem.to_token_stream().to_string();
-                if name.starts_with("DiplomatStr") {
+                if name.starts_with("DiplomatStr") || name == "str" {
                     if mutability.is_mutable() {
-                        panic!("mutable `DiplomatStr*` references are disallowed");
+                        panic!("mutable string references are disallowed");
                     }
                     if name == "DiplomatStr" {
                         return TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8);
                     } else if name == "DiplomatStr16" {
                         return TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16);
+                    } else if name == "str" {
+                        return TypeName::StrReference(lifetime, StringEncoding::Utf8);
                     }
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
@@ -948,6 +956,13 @@ impl fmt::Display for TypeName {
                 write!(
                     f,
                     "{}DiplomatStr16",
+                    ReferenceDisplay(lifetime, &Mutability::Immutable)
+                )
+            }
+            TypeName::StrReference(lifetime, StringEncoding::Utf8) => {
+                write!(
+                    f,
+                    "{}str",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }

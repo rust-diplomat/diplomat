@@ -82,7 +82,11 @@ pub fn gen_method<W: fmt::Write>(
             write!(out, ", ")?;
         }
 
-        if let ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) = &param.ty {
+        if let ast::TypeName::StrReference(
+            _,
+            ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
+        ) = &param.ty
+        {
             write!(out, "const char* {0}_data, size_t {0}_len", param.name)?;
         } else if let ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) =
             &param.ty

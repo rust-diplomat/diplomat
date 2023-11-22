@@ -513,8 +513,8 @@ impl fmt::Display for InvocationIntoJs<'_> {
                     ReturnTypeForm::Empty => unreachable!(),
                 }
             }
-            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => self.display_slice(SliceKind::Str).fmt(f),
-                ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self.display_slice(SliceKind::Str16).fmt(f),
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8) => self.display_slice(SliceKind::Str).fmt(f),
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self.display_slice(SliceKind::Str16).fmt(f),
             ast::TypeName::PrimitiveSlice(.., prim) => {
                 self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
             }
@@ -789,9 +789,10 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                 todo!("Result in a buffer")
             }
             ast::TypeName::Writeable => todo!("Writeable in a buffer"),
-            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
-                self.display_slice(SliceKind::Str).fmt(f)
-            }
+            ast::TypeName::StrReference(
+                _,
+                ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
+            ) => self.display_slice(SliceKind::Str).fmt(f),
             ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
                 self.display_slice(SliceKind::Str16).fmt(f)
             }

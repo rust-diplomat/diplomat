@@ -11,5 +11,9 @@ export class BorrowedFields {
       const [ptr, size] = new Uint32Array(wasm.memory.buffer, underlying + 8, 2);
       return diplomatRuntime.readString8(wasm, ptr, size);
     })();
+    this.c = (() => {
+      const [ptr, size] = new Uint32Array(wasm.memory.buffer, underlying + 16, 2);
+      return diplomatRuntime.readString8(wasm, ptr, size);
+    })();
   }
 }

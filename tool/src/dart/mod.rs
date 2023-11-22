@@ -545,9 +545,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
-                self.formatter.fmt_utf8_primitive().into()
-            }
+            Type::Slice(hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            )) => self.formatter.fmt_utf8_primitive().into(),
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
                 self.formatter.fmt_utf16_primitive().into()
             }
@@ -667,9 +668,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         };
 
         let slice_ty = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
-                self.formatter.fmt_utf8_slice_type()
-            }
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => self.formatter.fmt_utf8_slice_type(),
             hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
                 self.formatter.fmt_utf16_slice_type()
             }
@@ -678,9 +680,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         };
 
         let ffi_type = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
-                self.formatter.fmt_utf8_primitive()
-            }
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => self.formatter.fmt_utf8_primitive(),
             hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
                 self.formatter.fmt_utf16_primitive()
             }
@@ -689,7 +692,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         };
 
         let to_dart = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => {
                 self.imports
                     .insert(self.formatter.fmt_import("dart:convert"));
                 "Utf8Decoder().convert(_bytes.cast<ffi.Uint8>().asTypedList(_length))"
@@ -705,7 +711,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         };
 
         let from_dart = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => concat!(
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8) => concat!(
                 "final units = Utf8Encoder().convert(value);\n",
                 "slice._length = units.length;\n",
                 // TODO: Figure out why Pointer<Utf8> cannot be allocated

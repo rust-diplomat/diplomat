@@ -110,6 +110,7 @@ impl<'tcx> CFormatter<'tcx> {
             Type::Struct(s) => self.fmt_type_name(P::id_for_path(s)),
             Type::Enum(e) => self.fmt_type_name(e.tcx_id.into()),
             Type::Slice(hir::Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "str_ref8".into(),
+            Type::Slice(hir::Slice::Str(_, StringEncoding::Utf8)) => "str_refv8".into(),
             Type::Slice(hir::Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => "str_ref16".into(),
             Type::Slice(hir::Slice::Primitive(borrow, p)) => {
                 let constness = borrow.mutability.if_mut_else("", "const_");
