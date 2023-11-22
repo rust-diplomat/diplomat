@@ -455,19 +455,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 type_name
             }
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
-                self.cx.formatter.fmt_borrowed_str()
+                self.cx.formatter.fmt_borrowed_utf8_str()
             }
-            // TODO(#240): Implement UTF-16
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                let ret = self
-                    .cx
-                    .formatter
-                    .fmt_primitive_as_c(hir::PrimitiveType::Int(hir::IntType::U16));
-                let ret = self
-                    .cx
-                    .formatter
-                    .fmt_borrowed_slice(&ret, hir::Mutability::Immutable);
-                ret.into_owned().into()
+                self.cx.formatter.fmt_borrowed_utf16_str()
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.cx.formatter.fmt_primitive_as_c(p);
@@ -552,7 +543,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 }]
             }
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
-                // TODO: This needs to change if an abstraction other than std::string_view is used
                 vec![
                     PartiallyNamedExpression {
                         suffix: "_data".into(),
@@ -565,7 +555,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 ]
             }
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                // TODO(#240): Implement UTF-16
                 vec![
                     PartiallyNamedExpression {
                         suffix: "_data".into(),
@@ -578,7 +567,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 ]
             }
             Type::Slice(hir::Slice::Primitive(..)) => {
-                // TODO: This needs to change if an abstraction other than std::span is used
                 vec![
                     PartiallyNamedExpression {
                         suffix: "_data".into(),
@@ -681,24 +669,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 format!("{type_name}::FromFFI({var_name})").into()
             }
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
-                // TODO: This needs to change if an abstraction other than std::string_view is used
-                let string_view = self.cx.formatter.fmt_borrowed_str();
+                let string_view = self.cx.formatter.fmt_borrowed_utf8_str();
                 format!("{string_view}({var_name}_data, {var_name}_size)").into()
             }
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                // TODO(#240): Implement UTF-16
-                let prim_name = self
-                    .cx
-                    .formatter
-                    .fmt_primitive_as_c(hir::PrimitiveType::Int(hir::IntType::U16));
-                let span = self
-                    .cx
-                    .formatter
-                    .fmt_borrowed_slice(&prim_name, hir::Mutability::Immutable);
-                format!("{span}({var_name}_data, {var_name}_size)").into()
+                let string_view = self.cx.formatter.fmt_borrowed_utf16_str();
+                format!("{string_view}({var_name}_data, {var_name}_size)").into()
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
-                // TODO: This needs to change if an abstraction other than std::span is used
                 let prim_name = self.cx.formatter.fmt_primitive_as_c(p);
                 let span = self
                     .cx

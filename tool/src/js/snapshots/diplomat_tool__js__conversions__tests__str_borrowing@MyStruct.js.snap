@@ -9,12 +9,12 @@ export class MyStruct {
   constructor(underlying, edges_a) {
     this.s = (() => {
       const [ptr, size] = new Uint32Array(wasm.memory.buffer, underlying, 2);
-      return diplomatRuntime.readString(wasm, ptr, size);
+      return diplomatRuntime.readString8(wasm, ptr, size);
     })();
   }
 
   static new(arg_s) {
-    const buf_arg_s = diplomatRuntime.DiplomatBuf.str(wasm, arg_s);
+    const buf_arg_s = diplomatRuntime.DiplomatBuf.str8(wasm, arg_s);
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
       wasm.MyStruct_new(diplomat_receive_buffer, buf_arg_s.ptr, buf_arg_s.size);
@@ -26,13 +26,13 @@ export class MyStruct {
 
   get() {
     const field_s_this = this["s"];
-    const buf_field_s_this = diplomatRuntime.DiplomatBuf.str(wasm, field_s_this);
+    const buf_field_s_this = diplomatRuntime.DiplomatBuf.str8(wasm, field_s_this);
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
       wasm.MyStruct_get(diplomat_receive_buffer, buf_field_s_this.ptr, buf_field_s_this.size);
       const [ptr, size] = new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2);
       wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
-      return diplomatRuntime.readString(wasm, ptr, size);
+      return diplomatRuntime.readString8(wasm, ptr, size);
     })();
   }
 }

@@ -25,7 +25,7 @@ inline capi::BorrowedFields BorrowedFields::AsFFI() const {
 
 inline BorrowedFields BorrowedFields::FromFFI(capi::BorrowedFields c_struct) {
   return BorrowedFields {
-    .a = diplomat::span<const uint16_t>(c_struct.a_data, c_struct.a_size),
+    .a = std::wstring_view(c_struct.a_data, c_struct.a_size),
     .b = std::string_view(c_struct.b_data, c_struct.b_size),
   };
 }

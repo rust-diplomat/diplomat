@@ -128,13 +128,12 @@ pub fn gen_value_js_to_rust<'env>(
                 typ,
                 ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16)
             ) {
-                // TODO(#240): Implement UTF-16
                 pre_logic.push(format!(
-                    "const {param_name_buf} = diplomatRuntime.DiplomatBuf.slice(wasm, {param_name}, 2);",
+                    "const {param_name_buf} = diplomatRuntime.DiplomatBuf.str16(wasm, {param_name}, 2);",
                 ));
             } else {
                 pre_logic.push(format!(
-                    "const {param_name_buf} = diplomatRuntime.DiplomatBuf.str(wasm, {param_name});"
+                    "const {param_name_buf} = diplomatRuntime.DiplomatBuf.str8(wasm, {param_name});"
                 ));
             }
 
@@ -515,8 +514,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                 }
             }
             ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => self.display_slice(SliceKind::Str).fmt(f),
-                // TODO(#240): Implement UTF-16
-                ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self.display_slice(SliceKind::Primitive((&ast::PrimitiveType::u16).into())).fmt(f),
+                ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self.display_slice(SliceKind::Str16).fmt(f),
             ast::TypeName::PrimitiveSlice(.., prim) => {
                 self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
             }
@@ -531,13 +529,15 @@ impl fmt::Display for InvocationIntoJs<'_> {
 /// where the implementations are largely the same.
 enum SliceKind {
     Str,
+    Str16,
     Primitive(JsPrimitive),
 }
 
 impl SliceKind {
     fn display<'a>(&'a self, ptr: &'a ast::Ident, size: &'a ast::Ident) -> impl fmt::Display + 'a {
         display::expr(move |f| match self {
-            SliceKind::Str => write!(f, "diplomatRuntime.readString(wasm, {ptr}, {size})"),
+            SliceKind::Str => write!(f, "diplomatRuntime.readString8(wasm, {ptr}, {size})"),
+            SliceKind::Str16 => write!(f, "diplomatRuntime.readString16(wasm, {ptr}, {size})"),
             SliceKind::Primitive(prim) => match prim {
                 JsPrimitive::Number(num) => {
                     write!(f, "new {num}Array(wasm.memory.buffer, ptr, size)")
@@ -792,10 +792,9 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
             ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
                 self.display_slice(SliceKind::Str).fmt(f)
             }
-            // TODO(#240): Implement UTF-16
-            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self
-                .display_slice(SliceKind::Primitive((&ast::PrimitiveType::u16).into()))
-                .fmt(f),
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
+                self.display_slice(SliceKind::Str16).fmt(f)
+            }
             ast::TypeName::PrimitiveSlice(.., prim) => {
                 self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
             }

@@ -12,7 +12,7 @@ export class MyStruct {
   }
 
   static new(arg_v) {
-    const buf_arg_v = diplomatRuntime.DiplomatBuf.str(wasm, arg_v);
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.str8(wasm, arg_v);
     const diplomat_out = (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
       wasm.MyStruct_new(diplomat_receive_buffer, buf_arg_v.ptr, buf_arg_v.size);
