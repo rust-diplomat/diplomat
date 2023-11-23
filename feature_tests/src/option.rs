@@ -23,6 +23,10 @@ pub mod ffi {
             None
         }
 
+        pub fn returns() -> Option<OptionStruct> {
+            None
+        }
+
         pub fn new_struct() -> OptionStruct {
             OptionStruct {
                 a: Some(Box::new(OptionOpaque(101))),

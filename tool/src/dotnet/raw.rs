@@ -350,7 +350,7 @@ fn gen_type_name_decl_position(
                 gen_type_name_decl_position(ptr.as_ref(), in_path, env, out)?;
                 write!(out, "*")
             }
-            _ => panic!("Options without a pointer type are not yet supported"),
+            _ => write!(out, "Options without a pointer type are not yet supported"),
         },
         ast::TypeName::Box(underlying) | ast::TypeName::Reference(.., underlying) => {
             gen_type_name_decl_position(underlying.as_ref(), in_path, env, out)?;

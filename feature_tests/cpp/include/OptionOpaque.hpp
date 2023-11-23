@@ -26,6 +26,7 @@ class OptionOpaque {
  public:
   static std::optional<OptionOpaque> new_(int32_t i);
   static std::optional<OptionOpaque> new_none();
+  static std::optional<OptionStruct> returns();
   static OptionStruct new_struct();
   static OptionStruct new_struct_nones();
   void assert_integer(int32_t i) const;
@@ -61,6 +62,38 @@ inline std::optional<OptionOpaque> OptionOpaque::new_none() {
     diplomat_optional_out_value = std::nullopt;
   }
   return diplomat_optional_out_value;
+}
+inline std::optional<OptionStruct> OptionOpaque::returns() {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_returns();
+  diplomat::result<OptionStruct, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+  capi::OptionStruct diplomat_raw_struct_out_value = diplomat_result_raw_out_value.ok;
+  auto diplomat_optional_raw_out_value_a = diplomat_raw_struct_out_value.a;
+  std::optional<OptionOpaque> diplomat_optional_out_value_a;
+  if (diplomat_optional_raw_out_value_a != nullptr) {
+    diplomat_optional_out_value_a = OptionOpaque(diplomat_optional_raw_out_value_a);
+  } else {
+    diplomat_optional_out_value_a = std::nullopt;
+  }
+  auto diplomat_optional_raw_out_value_b = diplomat_raw_struct_out_value.b;
+  std::optional<OptionOpaqueChar> diplomat_optional_out_value_b;
+  if (diplomat_optional_raw_out_value_b != nullptr) {
+    diplomat_optional_out_value_b = OptionOpaqueChar(diplomat_optional_raw_out_value_b);
+  } else {
+    diplomat_optional_out_value_b = std::nullopt;
+  }
+  auto diplomat_optional_raw_out_value_d = diplomat_raw_struct_out_value.d;
+  std::optional<OptionOpaque> diplomat_optional_out_value_d;
+  if (diplomat_optional_raw_out_value_d != nullptr) {
+    diplomat_optional_out_value_d = OptionOpaque(diplomat_optional_raw_out_value_d);
+  } else {
+    diplomat_optional_out_value_d = std::nullopt;
+  }
+    diplomat_result_out_value = std::optional<OptionStruct>(OptionStruct{ .a = std::move(diplomat_optional_out_value_a), .b = std::move(diplomat_optional_out_value_b), .c = std::move(diplomat_raw_struct_out_value.c), .d = std::move(diplomat_optional_out_value_d) });
+  } else {
+    diplomat_result_out_value = std::nullopt;
+  }
+  return diplomat_result_out_value;
 }
 inline OptionStruct OptionOpaque::new_struct() {
   capi::OptionStruct diplomat_raw_struct_out_value = capi::OptionOpaque_new_struct();

@@ -11,8 +11,8 @@ pub fn collect_results<'a>(
     typ: &'a ast::TypeName,
     in_path: &ast::Path,
     _env: &Env,
-    seen: &mut HashSet<&'a ast::TypeName>,
-    results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
+    seen: &mut HashSet<ast::TypeName>,
+    results: &mut Vec<(ast::Path, ast::TypeName)>,
 ) {
     match typ {
         ast::TypeName::Box(underlying) => {
@@ -22,14 +22,27 @@ pub fn collect_results<'a>(
             collect_results(underlying, in_path, _env, seen, results);
         }
         ast::TypeName::Option(underlying) => {
-            collect_results(underlying, in_path, _env, seen, results);
+            if matches!(
+                underlying.as_ref(),
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..)
+            ) {
+                collect_results(underlying, in_path, _env, seen, results);
+            } else {
+                let typ =
+                    ast::TypeName::Result(underlying.clone(), Box::new(ast::TypeName::Unit), true);
+                if !seen.contains(&typ) {
+                    seen.insert(typ.clone());
+                    collect_results(underlying, in_path, _env, seen, results);
+                    results.push((in_path.clone(), typ));
+                }
+            }
         }
         ast::TypeName::Result(ok, err, _) => {
             if !seen.contains(&typ) {
-                seen.insert(typ);
+                seen.insert(typ.clone());
                 collect_results(ok, in_path, _env, seen, results);
                 collect_results(err, in_path, _env, seen, results);
-                results.push((in_path.clone(), typ));
+                results.push((in_path.clone(), typ.clone()));
             }
         }
         _ => {}

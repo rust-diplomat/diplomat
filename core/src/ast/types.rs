@@ -791,24 +791,6 @@ impl TypeName {
         }
     }
 
-    // Disallow non-pointer containing Option<T> inside struct fields and Result
-    fn check_option(&self, errors: &mut Vec<ValidityError>) {
-        match self {
-            TypeName::Reference(.., underlying) => underlying.check_option(errors),
-            TypeName::Box(underlying) => underlying.check_option(errors),
-            TypeName::Option(underlying) => {
-                if !underlying.is_pointer() {
-                    errors.push(ValidityError::OptionNotContainingPointer(self.clone()))
-                }
-            }
-            TypeName::Result(ok, err, _) => {
-                ok.check_option(errors);
-                err.check_option(errors);
-            }
-            _ => {}
-        }
-    }
-
     /// Checks that any references to opaque structs in parameters or return values
     /// are always behind a box or reference, and that non-opaque custom types are *never* behind
     /// references or boxes.
@@ -823,7 +805,6 @@ impl TypeName {
         errors: &mut Vec<ValidityError>,
     ) {
         self.check_opaque(in_path, env, false, errors);
-        self.check_option(errors);
     }
 
     /// Checks the validity of return types.

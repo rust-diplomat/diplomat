@@ -21,6 +21,8 @@ public:
 
   inline static std::unique_ptr<OptionOpaque> new_none();
 
+  inline static std::optional<OptionStruct> returns();
+
   inline static OptionStruct new_struct();
 
   inline static OptionStruct new_struct_nones();

@@ -842,6 +842,19 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                     _ => None,
                 }
             }
+            ty @ ast::TypeName::Option(value_ty) => {
+                if let Some(ty) = self.lower_out_type(ty, return_ltl.as_mut(), in_path) {
+                    // reference type
+                    Some(ReturnType::Infallible(Some(SuccessType::OutType(ty))))
+                } else {
+                    // value type
+                    self.errors.remove(self.errors.len() - 1);
+                    let value_ty = self.lower_out_type(value_ty, return_ltl.as_mut(), in_path);
+                    dbg!(&self.errors);
+                    // todo unwrap
+                    Some(ReturnType::Option(SuccessType::OutType(value_ty.unwrap())))
+                }
+            }
             ast::TypeName::Unit => Some(ReturnType::Infallible(writeable_option)),
             ty => self
                 .lower_out_type(ty, return_ltl.as_mut(), in_path)

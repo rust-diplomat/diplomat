@@ -24,6 +24,11 @@ inline std::unique_ptr<OptionOpaque> OptionOpaque::new_none() {
   return std::unique_ptr<OptionOpaque>(OptionOpaque::FromFFI(result));
 }
 
+inline std::optional<OptionStruct> OptionOpaque::returns() {
+  auto result = capi::OptionOpaque_returns();
+  return result.is_ok ? std::optional<OptionStruct>(OptionStruct::FromFFI(result.ok)) : std::nullopt;
+}
+
 inline OptionStruct OptionOpaque::new_struct() {
   auto result = capi::OptionOpaque_new_struct();
   return OptionStruct::FromFFI(result);

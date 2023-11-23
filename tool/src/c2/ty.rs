@@ -172,6 +172,28 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     .insert(result_name.clone(), (ok_ty, err.as_ref()));
                 result_name.into()
             }
+            ReturnType::Option(ref ty) => {
+                let (type_name, ty) = match ty {
+                    SuccessType::Writeable => {
+                        param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
+                        ("void".into(), None)
+                    }
+                    SuccessType::OutType(o) => {
+                        (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
+                    }
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+                // todo push to results set
+                let result_name = self.cx.formatter.fmt_result_name(&type_name, "void");
+                self.impl_header
+                    .includes
+                    .insert(self.cx.formatter.fmt_result_header_path(&result_name));
+                self.cx
+                    .result_store
+                    .borrow_mut()
+                    .insert(result_name.clone(), (ty, None));
+                result_name.into()
+            }
         };
 
         let mut params = String::new();

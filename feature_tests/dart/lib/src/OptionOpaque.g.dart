@@ -34,6 +34,19 @@ final class OptionOpaque implements ffi.Finalizable {
     _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>('OptionOpaque_new_none')
       .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
 
+  static final OptionStruct? returns = () {
+    final result = _OptionOpaque_returns();
+    if (!result.isOk) {
+      return null;
+    }
+    return OptionStruct._(result.union.ok);
+  }();
+
+  // ignore: non_constant_identifier_names
+  static final _OptionOpaque_returns =
+    _capi<ffi.NativeFunction<_ResultOptionStructFfiVoid Function()>>('OptionOpaque_returns')
+      .asFunction<_ResultOptionStructFfiVoid Function()>(isLeaf: true);
+
   static final OptionStruct struct = () {
     final result = _OptionOpaque_new_struct();
     return OptionStruct._(result);

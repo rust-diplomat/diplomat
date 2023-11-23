@@ -119,8 +119,8 @@ impl<'tcx> DartFormatter<'tcx> {
         ident.to_lower_camel_case().into()
     }
 
-    pub fn fmt_nullable<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        format!("{ident}?").into()
+    pub fn fmt_nullable(&self, ident: &str) -> String {
+        format!("{ident}?")
     }
 
     /// Format a method

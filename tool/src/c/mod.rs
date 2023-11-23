@@ -53,8 +53,8 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
 fn gen_struct_header<'a>(
     typ: &'a ast::CustomType,
     in_path: &ast::Path,
-    seen_results: &mut HashSet<&'a ast::TypeName>,
-    all_results: &mut Vec<(ast::Path, &'a ast::TypeName)>,
+    seen_results: &mut HashSet<ast::TypeName>,
+    all_results: &mut Vec<(ast::Path, ast::TypeName)>,
     outs: &mut HashMap<String, String>,
     env: &Env,
 ) -> Result<(), fmt::Error> {
@@ -237,6 +237,23 @@ pub fn gen_includes<W: fmt::Write>(
         }
         ast::TypeName::Primitive(_) => {}
         ast::TypeName::Option(underlying) => {
+            if !matches!(
+                underlying.as_ref(),
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..)
+            ) {
+                let include = format!(
+                    "#include \"{}.h\"",
+                    name_for_type(&ast::TypeName::Result(
+                        underlying.clone(),
+                        Box::new(ast::TypeName::Unit),
+                        true
+                    ))
+                );
+                if !seen_includes.contains(&include) {
+                    writeln!(out, "{include}")?;
+                    seen_includes.insert(include);
+                }
+            }
             gen_includes(underlying, in_path, env, seen_includes, out)?;
         }
         ast::TypeName::Result(_, _, _) => {

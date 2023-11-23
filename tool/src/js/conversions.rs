@@ -448,27 +448,54 @@ impl fmt::Display for InvocationIntoJs<'_> {
             }
             .fmt(f),
             ast::TypeName::Option(inner) => {
-                let (inner, owned) = match inner.as_ref() {
-                    ast::TypeName::Reference(.., inner) => (inner, false),
-                    ast::TypeName::Box(inner) => (inner, true),
-                    _ => unreachable!("non-pointer type in an Option"),
-                };
-
-                display::iife(|mut f| {
-                    let option_ptr: ast::Ident = "option_ptr".into();
-                    writeln!(f, "const {option_ptr} = {};", self.invocation.scalar())?;
-                    writeln!(
-                        f,
-                        "return ({option_ptr} == 0) ? null : {};",
-                        Pointer {
-                            inner,
-                            underlying: Underlying::Binding(&option_ptr, None),
-                            owned,
-                            base: self.base,
+                match inner.as_ref() {
+                    ast::TypeName::Reference(.., inner) | ast::TypeName::Box(inner) => {
+                        display::iife(|mut f| {
+                            let option_ptr: ast::Ident = "option_ptr".into();
+                            writeln!(f, "const {option_ptr} = {};", self.invocation.scalar())?;
+                            writeln!(
+                                f,
+                                "return ({option_ptr} == 0) ? null : {};",
+                                Pointer {
+                                    inner,
+                                    underlying: Underlying::Binding(&option_ptr, None),
+                                    owned: !matches!(self.typ, ast::TypeName::Box(..)),
+                                    base: self.base,
+                                }
+                            )
+                        })
+                        .fmt(f)
+                    },
+                    _ => {
+                        match self.base.return_type_form(self.typ) {
+                            ReturnTypeForm::Scalar =>
+                             display::iife(|mut f| {
+                                writeln!(f, "const is_ok = {} == 1;", self.invocation.scalar())?;
+                                writeln!(f, "if (!is_ok) return null;")
+                            })
+                            .fmt(f),
+                            ReturnTypeForm::Complex => {
+                                display::iife(|mut f| {
+                                    let (flag_offset, (size, align)) = self.base.result_size_align(inner, &ast::TypeName::Unit);
+                                    let diplomat_receive_buffer: ast::Ident = "diplomat_receive_buffer".into();
+                                    writeln!(f, "const {diplomat_receive_buffer} = wasm.diplomat_alloc({size}, {align});")?;
+                                    writeln!(f, "{};", self.invocation.complex(&diplomat_receive_buffer))?;
+                                    writeln!(f, "const is_ok = diplomatRuntime.resultFlag(wasm, {diplomat_receive_buffer}, {flag_offset});")?;
+                                    writeln!(f, "if (!is_ok) return null;")?;
+                                    writeln!(f, "const value = {};", UnderlyingIntoJs {
+                                        inner: inner.as_ref(),
+                                        underlying: Underlying::Binding(&diplomat_receive_buffer, None),
+                                        base: self.base,
+                                    })?;
+                                    writeln!(f, "wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
+                                    writeln!(f, "return value;")
+                                })
+                                .fmt(f)
+                            }
+                            ReturnTypeForm::Empty => unreachable!(),
                         }
-                    )
-                })
-                .fmt(f)
+                    },
+                }
             }
             ast::TypeName::Result(ok, err, _) => {
                 match self.base.return_type_form(self.typ) {

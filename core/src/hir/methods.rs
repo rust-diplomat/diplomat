@@ -37,6 +37,7 @@ pub enum SuccessType {
 pub enum ReturnType {
     Infallible(Option<SuccessType>),
     Fallible(Option<SuccessType>, Option<OutType>),
+    Option(SuccessType),
 }
 
 /// The `self` parameter of a method.
@@ -119,6 +120,7 @@ impl ReturnType {
     pub fn return_type(&self) -> Option<&SuccessType> {
         match self {
             ReturnType::Infallible(ret) | ReturnType::Fallible(ret, _) => ret.as_ref(),
+            ReturnType::Option(ref ret) => Some(ret),
         }
     }
 
@@ -129,6 +131,7 @@ impl ReturnType {
             ReturnType::Infallible(Some(SuccessType::OutType(_))) => true,
             ReturnType::Infallible(Some(SuccessType::Writeable)) => false,
             ReturnType::Infallible(None) => false,
+            ReturnType::Option(_) => true,
         }
     }
 }

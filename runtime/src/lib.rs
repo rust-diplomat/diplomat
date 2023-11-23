@@ -14,6 +14,8 @@ pub use writeable::DiplomatWriteable;
 mod result;
 pub use result::DiplomatResult;
 
+pub type DiplomatOption<T> = DiplomatResult<T, ()>;
+
 pub type DiplomatChar = u32;
 
 pub type DiplomatStr = [u8];

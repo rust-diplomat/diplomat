@@ -484,7 +484,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 let ret = if op.is_optional() {
-                    self.formatter.fmt_nullable(&type_name)
+                    self.formatter.fmt_nullable(&type_name).into()
                 } else {
                     type_name
                 };
@@ -532,6 +532,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 Some(SuccessType::OutType(o)) => self.gen_type_name(o),
                 &Some(_) => unreachable!("unknown AST/HIR variant"),
             },
+            ReturnType::Option(ref ok) => match ok {
+                SuccessType::Writeable => self.formatter.fmt_nullable(self.formatter.fmt_string()),
+                SuccessType::OutType(o) => self.formatter.fmt_nullable(&self.gen_type_name(o)),
+                _ => unreachable!("unknown AST/HIR variant"),
+            }
+            .into(),
         }
     }
 
@@ -610,6 +616,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Fallible(ref ok, ref err) => self
                 .gen_result(ok.as_ref().and_then(SuccessType::as_type), err.as_ref())
                 .into(),
+            ReturnType::Option(ref ty) => self.gen_result(ty.as_type(), None).into(),
         }
     }
 
@@ -755,6 +762,17 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     &Some(_) => unreachable!("unknown AST/HIR variant"),
                 };
                 Some(format!("{err_check}\nreturn {ok_conversion};").into())
+            }
+            ReturnType::Option(ref ty) => {
+                let ok_conversion = match ty {
+                    // Note: the `writeable` variable is initialized in the template
+                    SuccessType::Writeable => "writeable.finalize()".into(),
+                    SuccessType::OutType(o) => {
+                        self.gen_c_to_dart_for_type(o, "result.union.ok".into())
+                    }
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+                Some(format!("if (!result.isOk) {{\n  return null;\n}}\nreturn {ok_conversion};").into())
             }
             ReturnType::Infallible(Some(_)) => unreachable!("unknown AST/HIR variant"),
         }

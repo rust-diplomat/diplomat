@@ -257,6 +257,17 @@ final class _ResultOpaqueVoid extends ffi.Struct {
   external bool isOk;
 }
 
+final class _ResultOptionStructFfiVoidUnion extends ffi.Union {
+  external _OptionStructFfi ok;
+}
+
+final class _ResultOptionStructFfiVoid extends ffi.Struct {
+  external _ResultOptionStructFfiVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
 final class _ResultVoidOpaqueUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> err;
 }

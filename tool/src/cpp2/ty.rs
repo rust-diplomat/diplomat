@@ -583,6 +583,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     format!("diplomat::result<{ok_type_name}, {err_type_name}>").into();
                 ret
             }
+            ReturnType::Option(ref ty) => {
+                let ty_name = match ty {
+                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                    SuccessType::OutType(o) => self.gen_type_name(o),
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+                self.cx.formatter.fmt_optional(&ty_name).into()
+            }
         }
     }
 
@@ -708,6 +716,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 };
                 Some(
                     format!("{var_name}.is_ok ? diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Ok<{ok_type_name}>({ok_conversion})) : diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Err<{err_type_name}>({err_conversion}))").into()
+                )
+            }
+            ReturnType::Option(ref ty) => {
+                let value_path = format!("{var_name}.ok");
+                let type_name = match ty {
+                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                    SuccessType::OutType(o) => self.gen_type_name(o),
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+                let conversion = match ty {
+                    // Note: the `output` variable is a string initialized in the template
+                    SuccessType::Writeable => "std::move(output)".into(),
+                    SuccessType::OutType(o) => self.gen_c_to_cpp_for_type(o, value_path.into()),
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+                Some(
+                    format!("{var_name}.is_ok ? std::optional<{type_name}>({conversion}) : std::nullopt").into()
                 )
             }
             ReturnType::Infallible(Some(_)) => unreachable!("unknown AST/HIR variant"),

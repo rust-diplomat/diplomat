@@ -206,6 +206,22 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
                 quote! { -> diplomat_runtime::DiplomatResult<#ok, #err> },
                 quote! { .into() },
             )
+        } else if let ast::TypeName::Option(ty) = return_type {
+            match ty.as_ref() {
+                // pass by reference, Option becomes null
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => {
+                    let return_type_syn = return_type.to_syn();
+                    (quote! { -> #return_type_syn }, quote! {})
+                }
+                // anything else goes through DiplomatResult
+                _ => {
+                    let ty = ty.to_syn();
+                    (
+                        quote! { -> diplomat_runtime::DiplomatResult<#ty, ()> },
+                        quote! { .ok_or(()).into() },
+                    )
+                }
+            }
         } else {
             let return_type_syn = return_type.to_syn();
             (quote! { -> #return_type_syn }, quote! {})
