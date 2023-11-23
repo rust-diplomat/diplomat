@@ -19,7 +19,9 @@ export class Foo {
 
   static new(arg_x) {
     const buf_arg_x = diplomatRuntime.DiplomatBuf.str8(wasm, arg_x);
-    return new Foo(wasm.Foo_new(buf_arg_x.ptr, buf_arg_x.size), true, [buf_arg_x]);
+    const diplomat_out = new Foo(wasm.Foo_new(buf_arg_x.ptr, buf_arg_x.size), true, [buf_arg_x]);
+    buf_arg_x.garbageCollect();
+    return diplomat_out;
   }
 
   get_bar() {
@@ -45,9 +47,12 @@ export class Foo {
 
   static extract_from_fields(arg_fields) {
     const field_a_arg_fields = arg_fields["a"];
-    const buf_field_a_arg_fields = diplomatRuntime.DiplomatBuf.str16(wasm, field_a_arg_fields, 2);
+    const buf_field_a_arg_fields = diplomatRuntime.DiplomatBuf.str16(wasm, field_a_arg_fields);
     const field_b_arg_fields = arg_fields["b"];
     const buf_field_b_arg_fields = diplomatRuntime.DiplomatBuf.str8(wasm, field_b_arg_fields);
-    return new Foo(wasm.Foo_extract_from_fields(buf_field_a_arg_fields.ptr, buf_field_a_arg_fields.size, buf_field_b_arg_fields.ptr, buf_field_b_arg_fields.size), true, [buf_field_a_arg_fields, buf_field_b_arg_fields]);
+    const diplomat_out = new Foo(wasm.Foo_extract_from_fields(buf_field_a_arg_fields.ptr, buf_field_a_arg_fields.size, buf_field_b_arg_fields.ptr, buf_field_b_arg_fields.size), true, [buf_field_a_arg_fields, buf_field_b_arg_fields]);
+    buf_field_a_arg_fields.garbageCollect();
+    buf_field_b_arg_fields.garbageCollect();
+    return diplomat_out;
   }
 }
