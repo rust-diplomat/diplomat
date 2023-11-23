@@ -208,7 +208,6 @@ impl<'tcx> DartFormatter<'tcx> {
         self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
     }
 
-    /// Get the primitive type as a Dart FFI type
     pub fn fmt_primitive_as_ffi(&self, prim: hir::PrimitiveType, cast: bool) -> &'static str {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         if cast {
