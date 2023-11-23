@@ -130,7 +130,7 @@ pub fn gen_value_js_to_rust<'env>(
                     match encoding {
                         ast::StringEncoding::UnvalidatedUtf8 => "str8",
                         ast::StringEncoding::UnvalidatedUtf16 => "str16",
-                       _ => unreachable!("unknown AST/HIR variant"),
+                        _ => unreachable!("unknown AST/HIR variant"),
                     }
                 ));
             } else {

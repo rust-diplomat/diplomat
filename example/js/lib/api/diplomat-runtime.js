@@ -116,12 +116,12 @@ export class DiplomatBuf {
         rustType == "i8" ? new Int8Array(wasm.memory.buffer, ptr, byteLength) :
           rustType == "u16" ? new Uint16Array(wasm.memory.buffer, ptr, byteLength) :
             rustType == "i16" ? new Int16Array(wasm.memory.buffer, ptr, byteLength) :
-              rustType == "u32" || rustType == "usize" || rustType == "char" ? new Uint32Array(wasm.memory.buffer, ptr, byteLength) :
-                rustType == "i32" || rustType == "isize" ? new Int32Array(wasm.memory.buffer, ptr, byteLength) :
-                  rustType == "u64" ? new BigUint64Array(wasm.memory.buffer, ptr, byteLength) :
-                    rustType == "i64" ? new BigInt64Array(wasm.memory.buffer, ptr, byteLength) :
-                      rustType == "f32" ? new Float32Array(wasm.memory.buffer, ptr, byteLength) :
-                        Float64Array(wasm.memory.buffer, ptr, byteLength);
+              rustType == "i32" || rustType == "isize" ? new Int32Array(wasm.memory.buffer, ptr, byteLength) :
+                rustType == "u64" ? new BigUint64Array(wasm.memory.buffer, ptr, byteLength) :
+                  rustType == "i64" ? new BigInt64Array(wasm.memory.buffer, ptr, byteLength) :
+                    rustType == "f32" ? new Float32Array(wasm.memory.buffer, ptr, byteLength) :
+                      rustType == "f64" ? new Float64Array(wasm.memory.buffer, ptr, byteLength) :
+                        new Uint32Array(wasm.memory.buffer, ptr, byteLength);
     destination.set(list);
 
     return new DiplomatBuf(ptr, list.length, () => wasm.diplomat_free(ptr, byteLength, elementSize));
