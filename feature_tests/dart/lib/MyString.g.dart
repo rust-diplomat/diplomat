@@ -16,7 +16,7 @@ final class MyString implements ffi.Finalizable {
 
   factory MyString(String v) {
     final alloc = ffi2.Arena();
-    final vSlice = _SliceFfi2Utf8._fromDart(v, alloc);
+    final vSlice = _SliceUtf8._fromDart(v, alloc);
     final result = _MyString_new(vSlice._bytes, vSlice._length);
     alloc.releaseAll();
     return MyString._(result);
@@ -29,7 +29,7 @@ final class MyString implements ffi.Finalizable {
 
   void setStr(String newStr) {
     final alloc = ffi2.Arena();
-    final newStrSlice = _SliceFfi2Utf8._fromDart(newStr, alloc);
+    final newStrSlice = _SliceUtf8._fromDart(newStr, alloc);
     _MyString_set_str(_underlying, newStrSlice._bytes, newStrSlice._length);
     alloc.releaseAll();
   }

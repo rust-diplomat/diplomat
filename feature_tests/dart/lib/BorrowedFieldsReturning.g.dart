@@ -6,7 +6,7 @@
 part of 'lib.g.dart';
 
 final class _BorrowedFieldsReturningFfi extends ffi.Struct {
-  external _SliceFfi2Utf8 bytes;
+  external _SliceUtf8 bytes;
 }
 
 final class BorrowedFieldsReturning {
@@ -26,7 +26,7 @@ final class BorrowedFieldsReturning {
   set bytes(String bytes) {
     final alloc = ffi2.calloc;
     alloc.free(_underlying.bytes._bytes);
-    final bytesSlice = _SliceFfi2Utf8._fromDart(bytes, alloc);
+    final bytesSlice = _SliceUtf8._fromDart(bytes, alloc);
     _underlying.bytes = bytesSlice;
   }
 

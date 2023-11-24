@@ -16,7 +16,7 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo(String x) {
     final alloc = ffi2.Arena();
-    final xSlice = _SliceFfi2Utf8._fromDart(x, alloc);
+    final xSlice = _SliceUtf8._fromDart(x, alloc);
     final result = _Foo_new(xSlice._bytes, xSlice._length);
     alloc.releaseAll();
     return Foo._(result);
@@ -39,7 +39,7 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo.static_(String x) {
     final alloc = ffi2.Arena();
-    final xSlice = _SliceFfi2Utf8._fromDart(x, alloc);
+    final xSlice = _SliceUtf8._fromDart(x, alloc);
     final result = _Foo_new_static(xSlice._bytes, xSlice._length);
     alloc.releaseAll();
     return Foo._(result);

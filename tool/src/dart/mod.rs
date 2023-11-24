@@ -122,6 +122,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     fn gen_enum(&mut self, ty: &'cx hir::EnumDef, id: TypeId, type_name: &str) -> String {
+        let methods = ty
+            .methods
+            .iter()
+            .flat_map(|method| self.gen_method_info(id, method, type_name))
+            .collect::<Vec<_>>();
+
         #[derive(Template)]
         #[template(path = "dart/enum.dart.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -132,12 +138,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             docs: String,
             is_contiguous: bool,
         }
-
-        let methods = ty
-            .methods
-            .iter()
-            .flat_map(|method| self.gen_method_info(id, method, type_name))
-            .collect::<Vec<_>>();
 
         ImplTemplate {
             ty,
@@ -152,15 +152,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, id: TypeId, type_name: &str) -> String {
-        #[derive(Template)]
-        #[template(path = "dart/opaque.dart.jinja", escape = "none")]
-        struct ImplTemplate<'a> {
-            type_name: &'a str,
-            methods: &'a [MethodInfo<'a>],
-            docs: String,
-            destructor: String,
-        }
-
         self.imports
             .insert(self.formatter.fmt_renamed_import("dart:ffi", "ffi"));
 
@@ -171,6 +162,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .collect::<Vec<_>>();
 
         let destructor = self.formatter.fmt_destructor_name(id);
+
+        #[derive(Template)]
+        #[template(path = "dart/opaque.dart.jinja", escape = "none")]
+        struct ImplTemplate<'a> {
+            type_name: &'a str,
+            methods: &'a [MethodInfo<'a>],
+            docs: String,
+            destructor: String,
+        }
 
         ImplTemplate {
             type_name,
@@ -188,14 +188,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         id: TypeId,
         type_name: &str,
     ) -> String {
-        #[derive(Template)]
-        #[template(path = "dart/struct.dart.jinja", escape = "none")]
-        struct ImplTemplate<'a> {
-            type_name: &'a str,
-            fields: &'a [FieldInfo<'a>],
-            methods: &'a [MethodInfo<'a>],
-            docs: String,
-        }
+        self.imports
+            .insert(self.formatter.fmt_renamed_import("dart:ffi", "ffi"));
 
         struct FieldInfo<'a> {
             name: Cow<'a, str>,
@@ -206,9 +200,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             set_expression: Cow<'a, str>,
             set_slice_conversions: Vec<Cow<'a, str>>,
         }
-
-        self.imports
-            .insert(self.formatter.fmt_renamed_import("dart:ffi", "ffi"));
 
         let fields = ty
             .fields
@@ -259,6 +250,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
+        #[derive(Template)]
+        #[template(path = "dart/struct.dart.jinja", escape = "none")]
+        struct ImplTemplate<'a> {
+            type_name: &'a str,
+            fields: &'a [FieldInfo<'a>],
+            methods: &'a [MethodInfo<'a>],
+            docs: String,
+        }
+
         ImplTemplate {
             type_name,
             fields: &fields,
@@ -292,12 +292,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut param_decls_dart = Vec::new();
         let mut param_types_ffi = Vec::new();
         let mut param_types_ffi_cast = Vec::new();
-        let mut dart_to_ffi_params = Vec::new();
+        let mut param_conversions = Vec::new();
 
         if let Some(param_self) = method.param_self.as_ref() {
-            param_types_ffi.push(self.gen_self_type_ffi(&param_self.ty, false));
-            param_types_ffi_cast.push(self.gen_self_type_ffi(&param_self.ty, true));
-            dart_to_ffi_params.push(self.gen_dart_to_c_self(&param_self.ty));
+            param_types_ffi.push(self.gen_self_type_name_ffi(&param_self.ty, false));
+            param_types_ffi_cast.push(self.gen_self_type_name_ffi(&param_self.ty, true));
+            param_conversions.push(self.gen_dart_to_c_self(&param_self.ty));
         }
 
         let mut slice_conversions = Vec::new();
@@ -324,17 +324,17 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 param_types_ffi_cast.push(self.formatter.fmt_pointer(&param_type_ffi_cast).into());
                 param_types_ffi_cast.push(self.formatter.fmt_usize(true).into());
 
-                dart_to_ffi_params.push(format!("{conversion}._bytes").into());
-                dart_to_ffi_params.push(format!("{conversion}._length").into());
+                param_conversions.push(format!("{conversion}._bytes").into());
+                param_conversions.push(format!("{conversion}._length").into());
             } else {
                 param_types_ffi.push(param_type_ffi);
                 param_types_ffi_cast.push(param_type_ffi_cast);
-                dart_to_ffi_params.push(conversion);
+                param_conversions.push(conversion);
             }
         }
 
         if method.is_writeable() {
-            dart_to_ffi_params.push("writeable._underlying".into());
+            param_conversions.push("writeable._underlying".into());
             param_types_ffi.push(
                 self.formatter
                     .fmt_pointer(self.formatter.fmt_opaque())
@@ -351,15 +351,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             );
         }
 
-        let ffi_return_ty = self.gen_ffi_return_type_name(&method.output, false);
-        let ffi_cast_return_ty = self.gen_ffi_return_type_name(&method.output, true);
+        let return_ty = self.gen_return_type_name(&method.output);
+        let return_type_ffi = self.gen_return_type_name_ffi(&method.output, false);
+        let return_type_ffi_cast = self.gen_return_type_name_ffi(&method.output, true);
 
-        let dart_return_expression: Option<Cow<str>> =
-            self.gen_c_to_dart_for_return_type(&method.output, "result".into());
+        let return_expression = self.gen_c_to_dart_for_return_type(&method.output);
 
         let params = param_decls_dart.join(", ");
-
-        let return_ty = self.gen_dart_return_type_name(&method.output);
 
         let declaration = if method.param_self.is_none() {
             // Constructor
@@ -371,18 +369,17 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
             // Static field
             } else if params.is_empty()
-                && !matches!(method.output, hir::ReturnType::Fallible(..))
+                && !matches!(
+                    method.output,
+                    hir::ReturnType::Fallible(..) | hir::ReturnType::Infallible(None)
+                )
                 && return_ty != "bool"
             {
                 let method_name = self
                     .formatter
                     .fmt_constructor_name(method)
                     .unwrap_or("singleton".into());
-                format!(
-                    "static final {return_ty} {method_name} = \
-                        _capi<ffi.NativeFunction<{ffi_return_ty} Function()>>('{c_method_name}')\
-                        .asFunction<{ffi_cast_return_ty} Function()>(isLeaf: true)();"
-                )
+                format!("static final {return_ty} {method_name} = ()")
             // Static method
             } else {
                 let method_name = self.formatter.fmt_method_name(method);
@@ -454,17 +451,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             c_method_name,
             param_types_ffi,
             param_types_ffi_cast,
-            ffi_return_ty,
-            ffi_cast_return_ty,
-            dart_to_ffi_params,
-            dart_return_expression,
+            return_type_ffi,
+            return_type_ffi_cast,
             slice_conversions,
+            param_conversions,
+            return_expression,
         })
     }
 
-    /// Generates Dart code for referencing a particular Dart type.
-    ///
-    /// This function adds the necessary type imports to the decl and impl files.
+    /// Generates a type's Dart type.
     fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim, true).into(),
@@ -512,7 +507,25 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
-    /// Generates Dart code for referencing a particular FFI type with a given name.
+    /// Generates a return type's Dart type.
+    fn gen_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'cx, str> {
+        match *result_ty {
+            ReturnType::Infallible(None) => self.formatter.fmt_void().into(),
+            ReturnType::Infallible(Some(ref ty)) => match ty {
+                SuccessType::Writeable => self.formatter.fmt_string().into(),
+                SuccessType::OutType(o) => self.gen_type_name(o),
+                &_ => unreachable!("unknown AST/HIR variant"),
+            },
+            ReturnType::Fallible(ref ok, _) => match ok {
+                Some(SuccessType::Writeable) => self.formatter.fmt_string().into(),
+                None => self.formatter.fmt_void().into(),
+                Some(SuccessType::OutType(o)) => self.gen_type_name(o),
+                &Some(_) => unreachable!("unknown AST/HIR variant"),
+            },
+        }
+    }
+
+    /// Generates a type's Dart FFI type.
     fn gen_type_name_ffi<P: TyPosition>(&mut self, ty: &Type<P>, cast: bool) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim, cast).into(),
@@ -558,192 +571,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
-    fn gen_self_type_ffi(&self, ty: &SelfType, cast: bool) -> Cow<'cx, str> {
-        match ty {
-            SelfType::Opaque(_) => self
-                .formatter
-                .fmt_pointer(self.formatter.fmt_opaque())
-                .into(),
-            SelfType::Struct(s) => format!("_{}Ffi", s.resolve(self.tcx).name.as_str()).into(),
-            SelfType::Enum(_) => self.formatter.fmt_enum_as_ffi(cast).into(),
-            _ => unreachable!("unknown AST/HIR variant"),
-        }
-    }
-
-    /// Generates Dart code for referencing a particular FFI type.
-    ///
-    /// This function adds the necessary type imports to the decl and impl files.
-
-    /// Generates a C++ expression that converts from the C++ self type to the corresponding C self type.
-    fn gen_dart_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
-        match *ty {
-            SelfType::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => "index".into(),
-            SelfType::Opaque(..) | SelfType::Struct(..) | SelfType::Enum(..) => {
-                "_underlying".into()
-            }
-            _ => unreachable!("unknown AST/HIR variant"),
-        }
-    }
-
-    /// Generates one or two C++ expressions that convert from a C++ type to the corresponding C type.
-    ///
-    /// Returns `PartiallyNamedExpression`s whose `suffix` is either empty, `Data`, or `Size` for
-    /// referencing fields of the C struct.
-    fn gen_dart_to_c_for_type<P: TyPosition>(
-        &mut self,
-        ty: &Type<P>,
-        dart_name: Cow<'cx, str>,
-        slice_conversions: &mut Vec<Cow<'cx, str>>,
-    ) -> Cow<'cx, str> {
-        match *ty {
-            Type::Primitive(..) => dart_name.clone(),
-            Type::Opaque(ref op) if op.is_optional() => format!(
-                "{dart_name} == null ? ffi.Pointer.fromAddress(0) ? {dart_name}._underlying"
-            )
-            .into(),
-            Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
-                format!("{dart_name}.index").into()
-            }
-            Type::Opaque(..) | Type::Struct(..) | Type::Enum(..) => {
-                format!("{dart_name}._underlying").into()
-            }
-            Type::Slice(s) => {
-                let name = format!("{dart_name}Slice");
-                slice_conversions.push(
-                    format!(
-                        "final {name} = {}._fromDart({dart_name}, alloc);",
-                        &self.gen_slice(&s)
-                    )
-                    .into(),
-                );
-                name.into()
-            }
-            _ => unreachable!("unknown AST/HIR variant"),
-        }
-    }
-
-    /// Generates the Dart type name of a return type.
-    fn gen_dart_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'cx, str> {
-        match *result_ty {
-            ReturnType::Infallible(None) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(Some(ref ty)) => match ty {
-                SuccessType::Writeable => self.formatter.fmt_string().into(),
-                SuccessType::OutType(o) => self.gen_type_name(o),
-                &_ => unreachable!("unknown AST/HIR variant"),
-            },
-            ReturnType::Fallible(ref ok, _) => match ok {
-                Some(SuccessType::Writeable) => self.formatter.fmt_string().into(),
-                None => self.formatter.fmt_void().into(),
-                Some(SuccessType::OutType(o)) => self.gen_type_name(o),
-                &Some(_) => unreachable!("unknown AST/HIR variant"),
-            },
-        }
-    }
-
-    fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
-        #[derive(askama::Template)]
-        #[template(path = "dart/slice.dart.jinja", escape = "none")]
-        struct SliceTemplate {
-            ffi_type: &'static str,
-            slice_ty: &'static str,
-            dart_ty: &'static str,
-            to_dart: &'static str,
-            from_dart: &'static str,
-        }
-
-        self.imports.insert(
-            self.formatter
-                .fmt_renamed_import("package:ffi/ffi.dart", "ffi2"),
-        );
-
-        let dart_ty = match slice {
-            hir::Slice::Str(..) => self.formatter.fmt_string(),
-            hir::Slice::Primitive(_, p) => {
-                self.imports
-                    .insert(self.formatter.fmt_import("dart:typed_data"));
-                self.formatter.fmt_primitive_list_type(*p)
-            }
-            _ => todo!("{slice:?}"),
-        };
-
-        let slice_ty = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
-                self.formatter.fmt_utf8_slice_type()
-            }
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
-                self.formatter.fmt_utf16_slice_type()
-            }
-            hir::Slice::Primitive(_, p) => self.formatter.fmt_slice_type(*p),
-            _ => todo!("{slice:?}"),
-        };
-
-        let ffi_type = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
-                self.formatter.fmt_utf8_primitive()
-            }
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
-                self.formatter.fmt_utf16_primitive()
-            }
-            hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_as_ffi(*p, false),
-            _ => todo!("{slice:?}"),
-        };
-
-        let to_dart = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
-                self.imports
-                    .insert(self.formatter.fmt_import("dart:convert"));
-                "Utf8Decoder().convert(_bytes.cast<ffi.Uint8>().asTypedList(_length))"
-            }
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
-                self.imports
-                    .insert(self.formatter.fmt_import("dart:convert"));
-                "String.fromCharCodes(_bytes.cast<ffi.Uint16>().asTypedList(_length))"
-            }
-            // TODO: How to read ffi.Size?
-            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "this",
-            _ => "_bytes.asTypedList(_length)",
-        };
-
-        let from_dart = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => concat!(
-                "final units = Utf8Encoder().convert(value);\n",
-                "slice._length = units.length;\n",
-                // TODO: Figure out why Pointer<Utf8> cannot be allocated
-                "slice._bytes = allocator<ffi.Uint8>(slice._length).cast();\n",
-                "slice._bytes.cast<ffi.Uint8>().asTypedList(slice._length).setAll(0, units);"
-            ),
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => concat!(
-                "slice._length = value.length;\n",
-                // TODO: Figure out why Pointer<Utf16> cannot be allocated
-                "slice._bytes = allocator<ffi.Uint16>(slice._length).cast();\n",
-                "slice._bytes.cast<ffi.Uint16>().asTypedList(slice._length).setAll(0, value.codeUnits);"
-            ),
-            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "",
-            _ => concat!(
-                "slice._length = value.length;\n",
-                "slice._bytes = allocator(slice._length);\n",
-                "slice._bytes.asTypedList(slice._length).setAll(0, value);"
-            ),
-        };
-
-        self.helper_classes.insert(
-            slice_ty.into(),
-            SliceTemplate {
-                ffi_type,
-                slice_ty,
-                dart_ty,
-                to_dart,
-                from_dart,
-            }
-            .render()
-            .unwrap(),
-        );
-
-        slice_ty
-    }
-
     /// Generates the Dart FFI type name of a return type.
-    fn gen_ffi_return_type_name(&mut self, result_ty: &ReturnType, cast: bool) -> Cow<'cx, str> {
+    fn gen_return_type_name_ffi(&mut self, result_ty: &ReturnType, cast: bool) -> Cow<'cx, str> {
         match *result_ty {
             ReturnType::Infallible(None) => if cast {
                 self.formatter.fmt_void()
@@ -767,73 +596,71 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 &_ => unreachable!("unknown AST/HIR variant"),
             },
-            ReturnType::Fallible(ref ok, ref err) => {
-                #[derive(askama::Template)]
-                #[template(path = "dart/result.dart.jinja", escape = "none")]
-                struct ResultTemplate {
-                    name: String,
-                    decls: Vec<String>,
-                }
-
-                let ok = match ok {
-                    None | Some(SuccessType::Writeable) => None,
-                    Some(SuccessType::OutType(o)) => Some(o),
-                    &Some(_) => unreachable!("unknown AST/HIR variant"),
-                };
-
-                let err = err.as_ref();
-
-                let name = format!(
-                    "_Result{}{}",
-                    &self
-                        .formatter
-                        .fmt_type_as_ident(ok.map(|o| self.gen_type_name_ffi(o, false)).as_deref()),
-                    &self.formatter.fmt_type_as_ident(
-                        err.map(|o| self.gen_type_name_ffi(o, false)).as_deref()
-                    )
-                );
-
-                let decls = [ok.map(|o| (o, "ok")), err.map(|o| (o, "err"))]
-                    .into_iter()
-                    .flatten()
-                    .map(|(o, field_name)| {
-                        format!(
-                            "{}external {} {field_name};",
-                            match o {
-                                hir::OutType::Primitive(p) => {
-                                    format!(
-                                        "@{}()\n",
-                                        self.formatter.fmt_primitive_as_ffi(*p, false)
-                                    )
-                                }
-                                hir::OutType::Enum(_) =>
-                                    format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
-                                _ => String::new(),
-                            },
-                            { self.gen_type_name_ffi(o, true) }
-                        )
-                    })
-                    .collect();
-
-                self.helper_classes.insert(
-                    name.clone(),
-                    ResultTemplate {
-                        name: name.clone(),
-                        decls,
-                    }
-                    .render()
-                    .unwrap(),
-                );
-
-                name.into()
-            }
+            ReturnType::Fallible(ref ok, ref err) => self
+                .gen_result(ok.as_ref().and_then(SuccessType::as_type), err.as_ref())
+                .into(),
         }
     }
 
-    /// Generates a C++ expression that converts from a C type to the corresponding C++ type.
-    ///
-    /// If the type is a slice, this function assumes that `{var_name}_data` and `{var_name}_size` resolve
-    /// to valid expressions referencing the two different C variables for the pointer and the length.
+    /// Generates a self type's Dart FFI type.
+    fn gen_self_type_name_ffi(&self, ty: &SelfType, cast: bool) -> Cow<'cx, str> {
+        match ty {
+            SelfType::Opaque(_) => self
+                .formatter
+                .fmt_pointer(self.formatter.fmt_opaque())
+                .into(),
+            SelfType::Struct(s) => format!("_{}Ffi", s.resolve(self.tcx).name.as_str()).into(),
+            SelfType::Enum(_) => self.formatter.fmt_enum_as_ffi(cast).into(),
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    /// Generates an FFI expression for a self type.
+    fn gen_dart_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
+        match *ty {
+            SelfType::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => "index".into(),
+            SelfType::Opaque(..) | SelfType::Struct(..) | SelfType::Enum(..) => {
+                "_underlying".into()
+            }
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    /// Generates an FFI expression for a type.
+    fn gen_dart_to_c_for_type<P: TyPosition>(
+        &mut self,
+        ty: &Type<P>,
+        dart_name: Cow<'cx, str>,
+        slice_conversions: &mut Vec<Cow<'cx, str>>,
+    ) -> Cow<'cx, str> {
+        match *ty {
+            Type::Primitive(..) => dart_name.clone(),
+            Type::Opaque(ref op) if op.is_optional() => format!(
+                "{dart_name} == null ? ffi.Pointer.fromAddress(0) : {dart_name}._underlying"
+            )
+            .into(),
+            Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
+                format!("{dart_name}.index").into()
+            }
+            Type::Opaque(..) | Type::Struct(..) | Type::Enum(..) => {
+                format!("{dart_name}._underlying").into()
+            }
+            Type::Slice(s) => {
+                let name = format!("{dart_name}Slice");
+                slice_conversions.push(
+                    format!(
+                        "final {name} = {}._fromDart({dart_name}, alloc);",
+                        &self.gen_slice(&s)
+                    )
+                    .into(),
+                );
+                name.into()
+            }
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
+    /// Generates a Dart expression for a type.
     fn gen_c_to_dart_for_type<P: TyPosition>(
         &mut self,
         ty: &Type<P>,
@@ -873,27 +700,24 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
-    /// Generates a C++ expression that converts from a C return type to the corresponding C++ return type.
-    ///
-    /// If the type is `Writeable`, this function assumes that there is a variable named `writeable` in scope.
-    fn gen_c_to_dart_for_return_type(
-        &mut self,
-        result_ty: &ReturnType,
-        var_name: Cow<'cx, str>,
-    ) -> Option<Cow<'cx, str>> {
+    /// Generates a Dart expressions for a return type.
+    fn gen_c_to_dart_for_return_type(&mut self, result_ty: &ReturnType) -> Option<Cow<'cx, str>> {
         match *result_ty {
             ReturnType::Infallible(None) => None,
             ReturnType::Infallible(Some(SuccessType::Writeable)) => {
+                // Note: the `writeable` variable is initialized in the template
                 Some("return writeable.finalize();".into())
             }
-            ReturnType::Infallible(Some(SuccessType::OutType(ref out_ty))) => {
-                Some(format!("return {};", self.gen_c_to_dart_for_type(out_ty, var_name)).into())
-            }
+            ReturnType::Infallible(Some(SuccessType::OutType(ref out_ty))) => Some(
+                format!(
+                    "return {};",
+                    self.gen_c_to_dart_for_type(out_ty, "result".into())
+                )
+                .into(),
+            ),
             ReturnType::Fallible(ref ok, ref err) => {
-                let ok_path = format!("{var_name}.union.ok");
-                let err_path = format!("{var_name}.union.err");
                 let err_conversion = match err {
-                    Some(o) => self.gen_c_to_dart_for_type(o, err_path.into()),
+                    Some(o) => self.gen_c_to_dart_for_type(o, "result.union.err".into()),
                     None => {
                         self.helper_classes.insert(
                             "voiderror".into(),
@@ -903,11 +727,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     }
                 };
                 let err_check =
-                    format!("if (!{var_name}.isOk) {{\n  throw {err_conversion};\n}}").into();
+                    format!("if (!result.isOk) {{\n  throw {err_conversion};\n}}").into();
                 let ok_conversion = match ok {
-                    // Note: the `writeable` variable is a string initialized in the template
+                    // Note: the `writeable` variable is initialized in the template
                     Some(SuccessType::Writeable) => "writeable.finalize()".into(),
-                    Some(SuccessType::OutType(o)) => self.gen_c_to_dart_for_type(o, ok_path.into()),
+                    Some(SuccessType::OutType(o)) => {
+                        self.gen_c_to_dart_for_type(o, "result.union.ok".into())
+                    }
                     None => return Some(err_check),
                     &Some(_) => unreachable!("unknown AST/HIR variant"),
                 };
@@ -915,6 +741,179 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             ReturnType::Infallible(Some(_)) => unreachable!("unknown AST/HIR variant"),
         }
+    }
+
+    /// Generates a Dart helper class for a slice type.
+    fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
+        let slice_ty = match slice {
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
+                self.formatter.fmt_utf8_slice_type()
+            }
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                self.formatter.fmt_utf16_slice_type()
+            }
+            hir::Slice::Primitive(_, p) => self.formatter.fmt_slice_type(*p),
+            _ => todo!("{slice:?}"),
+        };
+
+        if self.helper_classes.contains_key(slice_ty) {
+            return slice_ty;
+        }
+
+        self.imports.insert(
+            self.formatter
+                .fmt_renamed_import("package:ffi/ffi.dart", "ffi2"),
+        );
+
+        let dart_ty = match slice {
+            hir::Slice::Str(..) => self.formatter.fmt_string(),
+            hir::Slice::Primitive(_, p) => {
+                self.imports
+                    .insert(self.formatter.fmt_import("dart:typed_data"));
+                self.formatter.fmt_primitive_list_type(*p)
+            }
+            _ => todo!("{slice:?}"),
+        };
+
+        let ffi_type = match slice {
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
+                self.formatter.fmt_utf8_primitive()
+            }
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                self.formatter.fmt_utf16_primitive()
+            }
+            hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_as_ffi(*p, false),
+            _ => todo!("{slice:?}"),
+        };
+
+        let to_dart = match slice {
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
+                self.imports
+                    .insert(self.formatter.fmt_import("dart:convert"));
+                "Utf8Decoder().convert(_bytes.cast<ffi.Uint8>().asTypedList(_length))"
+            }
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                self.imports
+                    .insert(self.formatter.fmt_import("dart:convert"));
+                "String.fromCharCodes(_bytes.cast<ffi.Uint16>().asTypedList(_length))"
+            }
+            // TODO: How to read ffi.Size?
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "this",
+            _ => "_bytes.asTypedList(_length)",
+        };
+
+        let from_dart = match slice {
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => concat!(
+                "slice._length = 0;\n",
+                "for (var rune in value.runes) {\n",
+                "  if (rune < 0x80) {\n",  
+                "    slice._length += 1;\n",
+                "  } else if (rune < 0x800) {\n",  
+                "    slice._length += 2;\n",
+                "  } else if (rune < 0x10000) {\n",  
+                "    slice._length += 3;\n",
+                "  } else {\n",  
+                "    slice._length += 4;\n",
+                "  }\n",
+                "}\n",
+                "// https://github.com/dart-lang/ffi/issues/223\n",
+                "slice._bytes = allocator<ffi.Uint8>(slice._length).cast();\n",
+                "// https://github.com/dart-lang/sdk/issues/49470\n",
+                "slice._bytes.cast<ffi.Uint8>().asTypedList(slice._length).setAll(0, Utf8Encoder().convert(value));"
+            ),
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => concat!(
+                "slice._length = value.length;\n",
+                "// https://github.com/dart-lang/ffi/issues/223\n",
+                "slice._bytes = allocator<ffi.Uint16>(slice._length).cast();\n",
+                "slice._bytes.cast<ffi.Uint16>().asTypedList(slice._length).setAll(0, value.codeUnits);"
+            ),
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => "",
+            _ => concat!(
+                "slice._length = value.length;\n",
+                "slice._bytes = allocator(slice._length);\n",
+                "slice._bytes.asTypedList(slice._length).setAll(0, value);"
+            ),
+        };
+
+        #[derive(askama::Template)]
+        #[template(path = "dart/slice.dart.jinja", escape = "none")]
+        struct SliceTemplate {
+            ffi_type: &'static str,
+            slice_ty: &'static str,
+            dart_ty: &'static str,
+            to_dart: &'static str,
+            from_dart: &'static str,
+        }
+
+        self.helper_classes.insert(
+            slice_ty.into(),
+            SliceTemplate {
+                ffi_type,
+                slice_ty,
+                dart_ty,
+                to_dart,
+                from_dart,
+            }
+            .render()
+            .unwrap(),
+        );
+
+        slice_ty
+    }
+
+    /// Generates a Dart helper class for a result type.
+    fn gen_result(&mut self, ok: Option<&hir::OutType>, err: Option<&hir::OutType>) -> String {
+        let name = format!(
+            "_Result{}{}",
+            &self
+                .formatter
+                .fmt_type_as_ident(ok.map(|o| self.gen_type_name_ffi(o, false)).as_deref()),
+            &self
+                .formatter
+                .fmt_type_as_ident(err.map(|o| self.gen_type_name_ffi(o, false)).as_deref())
+        );
+
+        if self.helper_classes.contains_key(&name) {
+            return name;
+        }
+
+        let decls = [ok.map(|o| (o, "ok")), err.map(|o| (o, "err"))]
+            .into_iter()
+            .flatten()
+            .map(|(o, field_name)| {
+                format!(
+                    "{}external {} {field_name};",
+                    match o {
+                        hir::OutType::Primitive(p) => {
+                            format!("@{}()\n", self.formatter.fmt_primitive_as_ffi(*p, false))
+                        }
+                        hir::OutType::Enum(_) =>
+                            format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
+                        _ => String::new(),
+                    },
+                    { self.gen_type_name_ffi(o, true) }
+                )
+            })
+            .collect();
+
+        #[derive(askama::Template)]
+        #[template(path = "dart/result.dart.jinja", escape = "none")]
+        struct ResultTemplate {
+            name: String,
+            decls: Vec<String>,
+        }
+
+        self.helper_classes.insert(
+            name.clone(),
+            ResultTemplate {
+                name: name.clone(),
+                decls,
+            }
+            .render()
+            .unwrap(),
+        );
+
+        name
     }
 }
 
@@ -929,32 +928,28 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
     method: &'a hir::Method,
-    ///
+    /// Docs
     docs: String,
     /// The declaration (everything before the parameter list)
     declaration: String,
     /// The C method name
     c_method_name: Cow<'a, str>,
 
+    // The types for the FFI declaration. The uncast types are the types
+    // from the `dart:ffi` package, the cast types are native Dart types.
     param_types_ffi: Vec<Cow<'a, str>>,
     param_types_ffi_cast: Vec<Cow<'a, str>>,
-    ffi_return_ty: Cow<'a, str>,
-    ffi_cast_return_ty: Cow<'a, str>,
+    return_type_ffi: Cow<'a, str>,
+    return_type_ffi_cast: Cow<'a, str>,
 
+    /// Conversion code for Dart arguments to slice helper structs
     slice_conversions: Vec<Cow<'a, str>>,
 
-    /// Dart conversion code for each parameter of the C function
-    dart_to_ffi_params: Vec<Cow<'a, str>>,
+    /// Conversion code for each parameter
+    param_conversions: Vec<Cow<'a, str>>,
+
     /// If the function has a return value, the Dart code for the conversion. Assumes that
     /// the C function return value is saved to a variable named `result` or that the
     /// writeable, if present, is saved to a variable named `writeable`.
-    dart_return_expression: Option<Cow<'a, str>>,
-}
-
-#[derive(PartialEq, Ord, PartialOrd, Clone, Eq, Debug)]
-struct ResultClass {
-    ok_name: String,
-    err_name: String,
-    ok_decl: Option<String>,
-    err_decl: Option<String>,
+    return_expression: Option<Cow<'a, str>>,
 }

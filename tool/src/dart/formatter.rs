@@ -208,7 +208,6 @@ impl<'tcx> DartFormatter<'tcx> {
         self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
     }
 
-    /// Get the primitive type as a Dart FFI type
     pub fn fmt_primitive_as_ffi(&self, prim: hir::PrimitiveType, cast: bool) -> &'static str {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         if cast {
@@ -265,27 +264,27 @@ impl<'tcx> DartFormatter<'tcx> {
         use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
         match prim {
             PrimitiveType::Char => "_SliceRune",
-            PrimitiveType::Int(IntType::I8) => "_SliceFfiInt8",
-            PrimitiveType::Int(IntType::U8) => "_SliceFfiUint8",
-            PrimitiveType::Int(IntType::I16) => "_SliceFfiInt16",
-            PrimitiveType::Int(IntType::U16) => "_SliceFfiUint16",
-            PrimitiveType::Int(IntType::I32) => "_SliceFfiInt32",
-            PrimitiveType::Int(IntType::U32) => "_SliceFfiUint32",
-            PrimitiveType::Int(IntType::I64) => "_SliceFfiInt64",
-            PrimitiveType::Int(IntType::U64) => "_SliceFfiUint64",
+            PrimitiveType::Int(IntType::I8) => "_SliceInt8",
+            PrimitiveType::Int(IntType::U8) => "_SliceUint8",
+            PrimitiveType::Int(IntType::I16) => "_SliceInt16",
+            PrimitiveType::Int(IntType::U16) => "_SliceUint16",
+            PrimitiveType::Int(IntType::I32) => "_SliceInt32",
+            PrimitiveType::Int(IntType::U32) => "_SliceUint32",
+            PrimitiveType::Int(IntType::I64) => "_SliceInt64",
+            PrimitiveType::Int(IntType::U64) => "_SliceUint64",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
             PrimitiveType::IntSize(_) => self.fmt_primitive_list_type(prim),
-            PrimitiveType::Float(FloatType::F32) => "_SliceFfiFloat",
-            PrimitiveType::Float(FloatType::F64) => "_SliceFfiDouble",
+            PrimitiveType::Float(FloatType::F32) => "_SliceFloat",
+            PrimitiveType::Float(FloatType::F64) => "_SliceDouble",
             _ => panic!("Primitive {:?} not supported in lists", prim),
         }
     }
 
     pub fn fmt_utf8_slice_type(&self) -> &'static str {
-        "_SliceFfi2Utf8"
+        "_SliceUtf8"
     }
 
     pub fn fmt_utf16_slice_type(&self) -> &'static str {
-        "_SliceFfiUtf16"
+        "_SliceUtf16"
     }
 }

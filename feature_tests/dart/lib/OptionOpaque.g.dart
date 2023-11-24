@@ -24,11 +24,35 @@ final class OptionOpaque implements ffi.Finalizable {
     _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>>('OptionOpaque_new')
       .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>(isLeaf: true);
 
-  static final OptionOpaque? none = _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>('OptionOpaque_new_none').asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true)();
+  static final OptionOpaque? none = () {
+    final result = _OptionOpaque_new_none();
+    return result.address == 0 ? null : OptionOpaque._(result);
+  }();
 
-  static final OptionStruct struct = _capi<ffi.NativeFunction<_OptionStructFfi Function()>>('OptionOpaque_new_struct').asFunction<_OptionStructFfi Function()>(isLeaf: true)();
+  // ignore: non_constant_identifier_names
+  static final _OptionOpaque_new_none =
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>('OptionOpaque_new_none')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
 
-  static final OptionStruct structNones = _capi<ffi.NativeFunction<_OptionStructFfi Function()>>('OptionOpaque_new_struct_nones').asFunction<_OptionStructFfi Function()>(isLeaf: true)();
+  static final OptionStruct struct = () {
+    final result = _OptionOpaque_new_struct();
+    return OptionStruct._(result);
+  }();
+
+  // ignore: non_constant_identifier_names
+  static final _OptionOpaque_new_struct =
+    _capi<ffi.NativeFunction<_OptionStructFfi Function()>>('OptionOpaque_new_struct')
+      .asFunction<_OptionStructFfi Function()>(isLeaf: true);
+
+  static final OptionStruct structNones = () {
+    final result = _OptionOpaque_new_struct_nones();
+    return OptionStruct._(result);
+  }();
+
+  // ignore: non_constant_identifier_names
+  static final _OptionOpaque_new_struct_nones =
+    _capi<ffi.NativeFunction<_OptionStructFfi Function()>>('OptionOpaque_new_struct_nones')
+      .asFunction<_OptionStructFfi Function()>(isLeaf: true);
 
   void assertInteger(int i) {
     _OptionOpaque_assert_integer(_underlying, i);
@@ -40,7 +64,7 @@ final class OptionOpaque implements ffi.Finalizable {
       .asFunction<void Function(ffi.Pointer<ffi.Opaque>, int)>(isLeaf: true);
 
   static bool optionOpaqueArgument(OptionOpaque? arg) {
-    final result = _OptionOpaque_option_opaque_argument(arg == null ? ffi.Pointer.fromAddress(0) ? arg._underlying);
+    final result = _OptionOpaque_option_opaque_argument(arg == null ? ffi.Pointer.fromAddress(0) : arg._underlying);
     return result;
   }
 
