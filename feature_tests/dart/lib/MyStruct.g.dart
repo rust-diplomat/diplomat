@@ -25,7 +25,6 @@ final class _MyStructFfi extends ffi.Struct {
 final class MyStruct {
   final _MyStructFfi _underlying;
 
-  // ignore: unused_element
   MyStruct._(this._underlying);
 
   factory MyStruct() {
