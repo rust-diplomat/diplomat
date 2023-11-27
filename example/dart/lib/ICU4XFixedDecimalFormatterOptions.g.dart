@@ -15,7 +15,6 @@ final class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
 final class ICU4XFixedDecimalFormatterOptions {
   final _ICU4XFixedDecimalFormatterOptionsFfi _underlying;
 
-  // ignore: unused_element
   ICU4XFixedDecimalFormatterOptions._(this._underlying);
 
   factory ICU4XFixedDecimalFormatterOptions() {

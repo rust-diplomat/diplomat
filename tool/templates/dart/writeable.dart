@@ -7,7 +7,7 @@ final class _Writeable {
     .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>();
 
   String finalize() {
-    final string = _getBytes(_underlying).toDartString(length: _len(_underlying));
+    final string = Utf8Decoder().convert(_getBytes(_underlying).asTypedList(_len(_underlying)));
     _destroy(_underlying);
     return string;
   }
@@ -16,8 +16,8 @@ final class _Writeable {
     .asFunction<int Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   static final _getBytes = 
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi2.Utf8> Function(ffi.Pointer<ffi.Opaque>)>>('diplomat_buffer_writeable_get_bytes')
-    .asFunction<ffi.Pointer<ffi2.Utf8> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Uint8> Function(ffi.Pointer<ffi.Opaque>)>>('diplomat_buffer_writeable_get_bytes')
+    .asFunction<ffi.Pointer<ffi.Uint8> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
   static final _destroy =
     _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>('diplomat_buffer_writeable_destroy')
     .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);

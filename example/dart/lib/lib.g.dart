@@ -3,10 +3,12 @@
 // https://github.com/dart-lang/sdk/issues/53946
 // ignore_for_file: non_native_function_type_argument_to_pointer
 
-import 'dart:convert';
-import 'dart:ffi' as ffi;
-import 'dart:typed_data';
-import 'package:ffi/ffi.dart' as ffi2;
+import 'dart:convert'  ;
+import 'dart:core'as core;
+import 'dart:core'show int, double, bool, String, Object, override;
+import 'dart:ffi'as ffi;
+import 'dart:typed_data'  ;
+import 'package:ffi/ffi.dart'as ffi2 show Arena, calloc;
 part 'ICU4XDataProvider.g.dart';
 part 'ICU4XFixedDecimal.g.dart';
 part 'ICU4XFixedDecimalFormatter.g.dart';
@@ -34,7 +36,99 @@ typedef RuneList = Uint32List;
 late final ffi.Pointer<T> Function<T extends ffi.NativeType>(String) _capi;
 void init(String path) => _capi = ffi.DynamicLibrary.open(path).lookup;
 
-final _callocFree = Finalizer(ffi2.calloc.free);
+final _callocFree = core.Finalizer(ffi2.calloc.free);
+
+extension _AllocConvert on Utf8Encoder {
+  ffi.Pointer<ffi.Uint8> allocConvert(ffi.Allocator alloc, String string, {int? length}) {
+      final l = length ?? string.utf8Length;
+      return alloc<ffi.Uint8>(l)..asTypedList(l).setAll(0, convert(string));
+   }
+}
+
+extension _Utf8Length on String {
+  int get utf8Length {
+    var length = 0;
+    for (var rune in runes) {
+      if (rune < 0x80) {
+        length += 1;
+      } else if (rune < 0x800) {
+        length += 2;
+      } else if (rune < 0x10000) {
+        length += 3;
+      } else {
+        length += 4;
+      }
+    }
+    return length;
+  }
+}
+
+extension _CopyString on String {
+  ffi.Pointer<ffi.Uint16> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Uint16>(length)..asTypedList(length).setAll(0, codeUnits);
+  }
+}
+
+extension _CopyInt8List on Int8List {
+  ffi.Pointer<ffi.Int8> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Int8>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyInt16List on Int16List {
+  ffi.Pointer<ffi.Int16> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Int16>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyInt32List on Int32List {
+  ffi.Pointer<ffi.Int32> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Int32>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyInt64List on Int64List {
+  ffi.Pointer<ffi.Int64> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Int64>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyUint8List on Uint8List {
+  ffi.Pointer<ffi.Uint8> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Uint8>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyUint16List on Uint16List {
+  ffi.Pointer<ffi.Uint16> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Uint16>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyUint32List on Uint32List {
+  ffi.Pointer<ffi.Uint32> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Uint32>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyUint64List on Uint64List {
+  ffi.Pointer<ffi.Uint64> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Uint64>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyFloat32List on Float32List {
+  ffi.Pointer<ffi.Float> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Float>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
+extension _CopyFloat64List on Float64List {
+  ffi.Pointer<ffi.Double> copy(ffi.Allocator alloc) {
+    return alloc<ffi.Double>(length)..asTypedList(length).setAll(0, this);
+  }
+}
+
 
 final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
@@ -54,48 +148,6 @@ final class _ResultVoidVoid extends ffi.Struct {
   external bool isOk;
 }
 
-final class _SliceFfi2Utf8 extends ffi.Struct {
-  external ffi.Pointer<ffi2.Utf8> _bytes;
-
-  @ffi.Size()
-  external int _length;
-
-  /// Produces a slice from a Dart object. The Dart object's data is copied into the given allocator
-  /// as it cannot be borrowed directly, and gets freed with the slice object.
-  // ignore: unused_element
-  static _SliceFfi2Utf8 _fromDart(String value, ffi.Allocator allocator) {
-    final pointer = allocator<_SliceFfi2Utf8>();
-    final slice = pointer.ref;
-    final units = Utf8Encoder().convert(value);
-    slice._length = units.length;
-    slice._bytes = allocator<ffi.Uint8>(slice._length).cast();
-    slice._bytes.cast<ffi.Uint8>().asTypedList(slice._length).setAll(0, units);
-    return slice;
-  }
-
-  // ignore: unused_element
-  String get _asDart => Utf8Decoder().convert(_bytes.cast<ffi.Uint8>().asTypedList(_length));
-
-  // This is expensive
-  @override
-  bool operator ==(Object other) {
-    if (other is! _SliceFfi2Utf8 || other._length != _length) {
-      return false;
-    }
-
-    for (var i = 0; i < _length; i++) {
-      if (other._bytes.cast<ffi.Uint8>()[i] != _bytes.cast<ffi.Uint8>()[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // This is cheap
-  @override
-  int get hashCode => _length.hashCode;
-}
-
 /// An unspecified error value
 class VoidError {}
 
@@ -108,7 +160,7 @@ final class _Writeable {
     .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>();
 
   String finalize() {
-    final string = _getBytes(_underlying).toDartString(length: _len(_underlying));
+    final string = Utf8Decoder().convert(_getBytes(_underlying).asTypedList(_len(_underlying)));
     _destroy(_underlying);
     return string;
   }
@@ -117,8 +169,8 @@ final class _Writeable {
     .asFunction<int Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   static final _getBytes = 
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi2.Utf8> Function(ffi.Pointer<ffi.Opaque>)>>('diplomat_buffer_writeable_get_bytes')
-    .asFunction<ffi.Pointer<ffi2.Utf8> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Uint8> Function(ffi.Pointer<ffi.Opaque>)>>('diplomat_buffer_writeable_get_bytes')
+    .asFunction<ffi.Pointer<ffi.Uint8> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
   static final _destroy =
     _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>>('diplomat_buffer_writeable_destroy')
     .asFunction<void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);

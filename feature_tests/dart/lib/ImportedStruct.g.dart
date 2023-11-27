@@ -15,7 +15,6 @@ final class _ImportedStructFfi extends ffi.Struct {
 final class ImportedStruct {
   final _ImportedStructFfi _underlying;
 
-  // ignore: unused_element
   ImportedStruct._(this._underlying);
 
   factory ImportedStruct() {

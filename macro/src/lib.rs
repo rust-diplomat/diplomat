@@ -106,17 +106,31 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
             let tokens = if let ast::TypeName::PrimitiveSlice(_, mutability, _) = &param.ty {
                 match mutability {
                     ast::Mutability::Mutable => quote! {
-                        unsafe { core::slice::from_raw_parts_mut(#data_ident, #len_ident) }
+                        if #len_ident == 0 {
+                            &mut []
+                        } else {
+                            unsafe { core::slice::from_raw_parts_mut(#data_ident, #len_ident) }
+                        }
                     },
                     ast::Mutability::Immutable => quote! {
-                        unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
+                        if #len_ident == 0 {
+                            &[]
+                        } else {
+                            unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
+                        }
                     },
                 }
             } else if let ast::TypeName::StrReference(_, ast::StringEncoding::Utf8) = &param.ty {
                 // The FFI guarantees this, by either validating, or communicating this requirement to the user.
                 quote! {unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(#data_ident, #len_ident))} }
             } else {
-                quote! {unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) } }
+                quote! {
+                    if #len_ident == 0 {
+                        &[]
+                    } else {
+                        unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
+                    }
+                }
             };
             expanded_params.push(parse2(tokens).unwrap());
         }

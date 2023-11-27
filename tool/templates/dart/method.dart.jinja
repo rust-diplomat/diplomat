@@ -1,12 +1,11 @@
   {%- if !m.docs.is_empty() %}
   /// {{m.docs.replace('\n', "\n  ")}}
   {%- endif %}
-  {{ m.declaration -}}
-  {%- if !m.declaration.starts_with("static final") %} {
-    {%- for slice_conversion in m.slice_conversions %}
-    {%- if loop.first %}
-    final alloc = ffi2.Arena();
+  {{ m.declaration }} {
+    {%- if m.needs_arena %}
+    final temp = ffi2.Arena();
     {%- endif %}
+    {%- for slice_conversion in m.slice_conversions %}
     {{ slice_conversion }}
     {%- endfor %}
     {%- if m.method.is_writeable() %}
@@ -16,33 +15,32 @@
     final result = {% else %}
     {% endif -%}
     _{{ m.c_method_name -}}(
-        {%- for param in m.dart_to_ffi_params %}
+        {%- for param in m.param_conversions %}
         {%- if loop.first %}{% else %}, {% endif -%}
         {{ param }}
         {%- endfor -%}
     );
-    {%- if !m.slice_conversions.is_empty() %}
-    alloc.releaseAll();
+    {%- if m.needs_arena %}
+    temp.releaseAll();
     {%- endif %}
-    {%- match m.dart_return_expression %}
+    {%- match m.return_expression %}
     {%- when Some with (statement) %}
     {{statement.replace('\n', "\n    ")}}
     {%- when None %}
     {%- endmatch %}
-  }
+  }{% if m.declaration.starts_with("static final") %}();{% endif %}
 
   // ignore: non_constant_identifier_names
   static final _{{ m.c_method_name }} =
-    _capi<ffi.NativeFunction<{{ m.ffi_return_ty }} Function(
+    _capi<ffi.NativeFunction<{{ m.return_type_ffi }} Function(
     {%- for param in m.param_types_ffi %}
         {%- if !loop.first %}, {% endif -%}
         {{ param }}
     {%- endfor -%}
   )>>('{{ m.c_method_name }}')
-      .asFunction<{{ m.ffi_cast_return_ty }} Function(
+      .asFunction<{{ m.return_type_ffi_cast }} Function(
         {%- for param in m.param_types_ffi_cast %}
           {%- if !loop.first %}, {% endif -%}
           {{ param }}
         {%- endfor -%}
       )>(isLeaf: true);
-{%- endif %}

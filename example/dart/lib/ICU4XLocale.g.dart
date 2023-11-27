@@ -19,15 +19,15 @@ final class ICU4XLocale implements ffi.Finalizable {
 
   /// Construct an [`ICU4XLocale`] from a locale identifier represented as a string.
   factory ICU4XLocale(String name) {
-    final alloc = ffi2.Arena();
-    final nameSlice = _SliceFfi2Utf8._fromDart(name, alloc);
-    final result = _ICU4XLocale_new(nameSlice._bytes, nameSlice._length);
-    alloc.releaseAll();
+    final temp = ffi2.Arena();
+    final nameLength = name.utf8Length;
+    final result = _ICU4XLocale_new(Utf8Encoder().allocConvert(temp, name, length: nameLength), nameLength);
+    temp.releaseAll();
     return ICU4XLocale._(result);
   }
 
   // ignore: non_constant_identifier_names
   static final _ICU4XLocale_new =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('ICU4XLocale_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('ICU4XLocale_new')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
 }

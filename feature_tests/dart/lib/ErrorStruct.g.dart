@@ -15,7 +15,6 @@ final class _ErrorStructFfi extends ffi.Struct {
 final class ErrorStruct {
   final _ErrorStructFfi _underlying;
 
-  // ignore: unused_element
   ErrorStruct._(this._underlying);
 
   factory ErrorStruct() {

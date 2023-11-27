@@ -6,15 +6,14 @@
 part of 'lib.g.dart';
 
 final class _BorrowedFieldsFfi extends ffi.Struct {
-  external _SliceFfiUtf16 a;
-  external _SliceFfi2Utf8 b;
-  external _SliceFfi2Utf8 c;
+  external _SliceUtf16 a;
+  external _SliceUtf8 b;
+  external _SliceUtf8 c;
 }
 
 final class BorrowedFields {
   final _BorrowedFieldsFfi _underlying;
 
-  // ignore: unused_element
   BorrowedFields._(this._underlying);
 
   factory BorrowedFields() {
@@ -24,28 +23,25 @@ final class BorrowedFields {
     return result;
   }
 
-  String get a => _underlying.a._asDart;
+  String get a => core.String.fromCharCodes(_underlying.a._pointer.asTypedList(_underlying.a._length));
   set a(String a) {
-    final alloc = ffi2.calloc;
-    alloc.free(_underlying.a._bytes);
-    final aSlice = _SliceFfiUtf16._fromDart(a, alloc);
-    _underlying.a = aSlice;
+    ffi2.calloc.free(_underlying.a._pointer);
+    _underlying.a._length = a.length;
+    _underlying.a._pointer = a.copy(ffi2.calloc);
   }
 
-  String get b => _underlying.b._asDart;
+  String get b => Utf8Decoder().convert(_underlying.b._pointer.asTypedList(_underlying.b._length));
   set b(String b) {
-    final alloc = ffi2.calloc;
-    alloc.free(_underlying.b._bytes);
-    final bSlice = _SliceFfi2Utf8._fromDart(b, alloc);
-    _underlying.b = bSlice;
+    ffi2.calloc.free(_underlying.b._pointer);
+    _underlying.b._length = b.utf8Length;
+    _underlying.b._pointer = Utf8Encoder().allocConvert(ffi2.calloc, b, length: _underlying.b._length);
   }
 
-  String get c => _underlying.c._asDart;
+  String get c => _underlying.c._pointer.asTypedList(_underlying.c._length);
   set c(String c) {
-    final alloc = ffi2.calloc;
-    alloc.free(_underlying.c._bytes);
-    final cSlice = _SliceFfi2Utf8._fromDart(c, alloc);
-    _underlying.c = cSlice;
+    ffi2.calloc.free(_underlying.c._pointer);
+    _underlying.c._length = c.length;
+    _underlying.c._pointer = Utf8Encoder().allocConvert(ffi2.calloc, c, length: _underlying.c._length);
   }
 
   @override

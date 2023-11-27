@@ -6,13 +6,12 @@
 part of 'lib.g.dart';
 
 final class _BorrowedFieldsReturningFfi extends ffi.Struct {
-  external _SliceFfi2Utf8 bytes;
+  external _SliceUtf8 bytes;
 }
 
 final class BorrowedFieldsReturning {
   final _BorrowedFieldsReturningFfi _underlying;
 
-  // ignore: unused_element
   BorrowedFieldsReturning._(this._underlying);
 
   factory BorrowedFieldsReturning() {
@@ -22,12 +21,11 @@ final class BorrowedFieldsReturning {
     return result;
   }
 
-  String get bytes => _underlying.bytes._asDart;
+  String get bytes => Utf8Decoder().convert(_underlying.bytes._pointer.asTypedList(_underlying.bytes._length));
   set bytes(String bytes) {
-    final alloc = ffi2.calloc;
-    alloc.free(_underlying.bytes._bytes);
-    final bytesSlice = _SliceFfi2Utf8._fromDart(bytes, alloc);
-    _underlying.bytes = bytesSlice;
+    ffi2.calloc.free(_underlying.bytes._pointer);
+    _underlying.bytes._length = bytes.utf8Length;
+    _underlying.bytes._pointer = Utf8Encoder().allocConvert(ffi2.calloc, bytes, length: _underlying.bytes._length);
   }
 
   @override

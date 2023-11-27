@@ -5,7 +5,7 @@ export function readString8(wasm, ptr, len) {
 
 export function readString16(wasm, ptr, len) {
   const buf = new Uint16Array(wasm.memory.buffer, ptr, len);
-  return String.fromCharCode(buf)
+  return String.fromCharCode.apply(null, buf)
 }
 
 export function withWriteable(wasm, callback) {
@@ -89,7 +89,7 @@ export class DiplomatBuf {
   static str16 = (wasm, string) => {
     return new DiplomatBuf(wasm, string.length, 2, buf => {
       for (var i; i < string.length; i++) {
-        buf[i] = string.codePointAt(i);
+        buf[i] = string.charCodeAt(i);
       }
     })
   }
