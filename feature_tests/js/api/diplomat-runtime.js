@@ -130,6 +130,9 @@ export class DiplomatBuf {
   constructor(ptr, size, free) {
     this.ptr = ptr;
     this.size = size;
+    // Generated code calls one of methods these for each allocation, to either
+    // free directly after the FFI call, to leak (to create a &'static), or to
+    // register the buffer with the garbage collector (to create a &'a).
     this.free = free;
     this.leak = () => { };
     this.garbageCollect = () => DiplomatBufferFinalizer(this, this.free);
