@@ -2,10 +2,10 @@
   /// {{m.docs.replace('\n', "\n  ")}}
   {%- endif %}
   {{ m.declaration }} {
-    {%- for slice_conversion in m.slice_conversions %}
-    {%- if loop.first %}
-    final alloc = ffi2.Arena();
+    {%- if m.needs_arena %}
+    final temp = ffi2.Arena();
     {%- endif %}
+    {%- for slice_conversion in m.slice_conversions %}
     {{ slice_conversion }}
     {%- endfor %}
     {%- if m.method.is_writeable() %}
@@ -20,8 +20,8 @@
         {{ param }}
         {%- endfor -%}
     );
-    {%- if !m.slice_conversions.is_empty() %}
-    alloc.releaseAll();
+    {%- if m.needs_arena %}
+    temp.releaseAll();
     {%- endif %}
     {%- match m.return_expression %}
     {%- when Some with (statement) %}

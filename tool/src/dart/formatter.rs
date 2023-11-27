@@ -23,6 +23,7 @@ pub(super) struct DartFormatter<'tcx> {
 
 const INVALID_METHOD_NAMES: &[&str] = &["new", "static"];
 const INVALID_FIELD_NAMES: &[&str] = &["new", "static"];
+const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> DartFormatter<'tcx> {
     pub fn new(
@@ -41,12 +42,13 @@ impl<'tcx> DartFormatter<'tcx> {
         format!("{name}.g.dart")
     }
 
-    pub fn fmt_import(&self, path: &str) -> Cow<'static, str> {
-        format!("import '{path}';").into()
-    }
-
-    pub fn fmt_renamed_import(&self, path: &str, name: &str) -> Cow<'static, str> {
-        format!("import '{path}' as {name};").into()
+    pub fn fmt_import(&self, path: &str, as_show_hide: Option<&str>) -> Cow<'static, str> {
+        format!(
+            "import '{path}'{}{};",
+            if as_show_hide.is_some() { "" } else { " " },
+            if let Some(s) = as_show_hide { s } else { " " },
+        )
+        .into()
     }
 
     pub fn fmt_part_of_lib(&self) -> Cow<'static, str> {
@@ -54,7 +56,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_part(&self, part: &str) -> Cow<'static, str> {
-        format!("part '{}';", self.fmt_file_name(part)).into()
+        format!("part '{}';", part).into()
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
@@ -76,7 +78,7 @@ impl<'tcx> DartFormatter<'tcx> {
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
-        if let Some(rename) = resolved.attrs().rename.as_ref() {
+        let candidate: Cow<'tcx, str> = if let Some(rename) = resolved.attrs().rename.as_ref() {
             rename.into()
         } else if let Some(strip_prefix) = self.strip_prefix.as_ref() {
             resolved
@@ -87,7 +89,13 @@ impl<'tcx> DartFormatter<'tcx> {
                 .into()
         } else {
             resolved.name().as_str().into()
+        };
+
+        if DISALLOWED_CORE_TYPES.contains(&&*candidate) {
+            panic!("{candidate:?} is not a valid Dart type name. Please rename.");
         }
+
+        candidate
     }
 
     /// Resolve and format a named type for use in diagnostics
@@ -166,11 +174,11 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_utf8_primitive(&self) -> &'static str {
-        "ffi2.Utf8"
+        "ffi.Uint8"
     }
 
     pub fn fmt_utf16_primitive(&self) -> &'static str {
-        "ffi2.Utf16"
+        "ffi.Uint16"
     }
 
     pub fn fmt_void(&self) -> &'static str {
@@ -190,11 +198,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_usize(&self, cast: bool) -> &'static str {
-        if cast {
-            "int"
-        } else {
-            "ffi.Size"
-        }
+        self.fmt_primitive_as_ffi(hir::PrimitiveType::IntSize(hir::IntSizeType::Usize), cast)
     }
 
     pub fn fmt_type_as_ident(&self, ty: Option<&str>) -> String {
@@ -214,7 +218,8 @@ impl<'tcx> DartFormatter<'tcx> {
             match prim {
                 PrimitiveType::Bool => "bool",
                 PrimitiveType::Char => "Rune",
-                PrimitiveType::Int(_) | PrimitiveType::IntSize(_) => "int",
+                PrimitiveType::Int(_) | PrimitiveType::IntSize(IntSizeType::Usize) => "int",
+                PrimitiveType::IntSize(IntSizeType::Isize) => panic!("isize not supported in Dart"),
                 PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
                 PrimitiveType::Float(_) => "double",
             }
@@ -231,8 +236,7 @@ impl<'tcx> DartFormatter<'tcx> {
                 PrimitiveType::Int(IntType::I64) => "ffi.Int64",
                 PrimitiveType::Int(IntType::U64) => "ffi.Uint64",
                 PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-                // TODO: is there a usize type?
-                PrimitiveType::IntSize(IntSizeType::Isize) => "ffi.Size",
+                PrimitiveType::IntSize(IntSizeType::Isize) => panic!("isize not supported in Dart"),
                 PrimitiveType::IntSize(IntSizeType::Usize) => "ffi.Size",
                 PrimitiveType::Float(FloatType::F32) => "ffi.Float",
                 PrimitiveType::Float(FloatType::F64) => "ffi.Double",
@@ -241,8 +245,9 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_primitive_list_type(&self, prim: hir::PrimitiveType) -> &'static str {
-        use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
+        use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         match prim {
+            PrimitiveType::Bool => panic!("bool not supported in lists"),
             PrimitiveType::Char => "RuneList",
             PrimitiveType::Int(IntType::I8) => "Int8List",
             PrimitiveType::Int(IntType::U8) => "Uint8List",
@@ -253,16 +258,17 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Int(IntType::I64) => "Int64List",
             PrimitiveType::Int(IntType::U64) => "Uint64List",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            PrimitiveType::IntSize(_) => "SizeList",
+            PrimitiveType::IntSize(IntSizeType::Isize) => panic!("isize not supported in Dart"),
+            PrimitiveType::IntSize(IntSizeType::Usize) => "core.List<int>", // no typed list
             PrimitiveType::Float(FloatType::F32) => "Float32List",
             PrimitiveType::Float(FloatType::F64) => "Float64List",
-            _ => panic!("Primitive {:?} not supported in lists", prim),
         }
     }
 
     pub fn fmt_slice_type(&self, prim: hir::PrimitiveType) -> &'static str {
-        use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
+        use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         match prim {
+            PrimitiveType::Bool => panic!("bool not supported in lists"),
             PrimitiveType::Char => "_SliceRune",
             PrimitiveType::Int(IntType::I8) => "_SliceInt8",
             PrimitiveType::Int(IntType::U8) => "_SliceUint8",
@@ -273,10 +279,10 @@ impl<'tcx> DartFormatter<'tcx> {
             PrimitiveType::Int(IntType::I64) => "_SliceInt64",
             PrimitiveType::Int(IntType::U64) => "_SliceUint64",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            PrimitiveType::IntSize(_) => self.fmt_primitive_list_type(prim),
+            PrimitiveType::IntSize(IntSizeType::Usize) => "_SliceSize",
+            PrimitiveType::IntSize(_) => panic!("isize not supported in Dart"),
             PrimitiveType::Float(FloatType::F32) => "_SliceFloat",
             PrimitiveType::Float(FloatType::F64) => "_SliceDouble",
-            _ => panic!("Primitive {:?} not supported in lists", prim),
         }
     }
 

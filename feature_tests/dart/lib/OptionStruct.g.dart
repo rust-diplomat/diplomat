@@ -16,35 +16,15 @@ final class _OptionStructFfi extends ffi.Struct {
 final class OptionStruct {
   final _OptionStructFfi _underlying;
 
-  // ignore: unused_element
   OptionStruct._(this._underlying);
 
-  factory OptionStruct() {
-    final pointer = ffi2.calloc<_OptionStructFfi>();
-    final result = OptionStruct._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
-  }
-
   OptionOpaque? get a => _underlying.a.address == 0 ? null : OptionOpaque._(_underlying.a);
-  set a(OptionOpaque? a) {
-    _underlying.a = a == null ? ffi.Pointer.fromAddress(0) : a._underlying;
-  }
 
   OptionOpaqueChar? get b => _underlying.b.address == 0 ? null : OptionOpaqueChar._(_underlying.b);
-  set b(OptionOpaqueChar? b) {
-    _underlying.b = b == null ? ffi.Pointer.fromAddress(0) : b._underlying;
-  }
 
   int get c => _underlying.c;
-  set c(int c) {
-    _underlying.c = c;
-  }
 
   OptionOpaque? get d => _underlying.d.address == 0 ? null : OptionOpaque._(_underlying.d);
-  set d(OptionOpaque? d) {
-    _underlying.d = d == null ? ffi.Pointer.fromAddress(0) : d._underlying;
-  }
 
   @override
   bool operator ==(Object other) =>

@@ -15,17 +15,17 @@ final class Foo implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(_capi('Foo_destroy'));
 
   factory Foo(String x) {
-    final alloc = ffi2.Arena();
-    final xSlice = _SliceUtf8._fromDart(x, alloc);
-    final result = _Foo_new(xSlice._bytes, xSlice._length);
-    alloc.releaseAll();
+    final temp = ffi2.Arena();
+    final xLength = x.utf8Length;
+    final result = _Foo_new(Utf8Encoder().allocConvert(temp, x, length: xLength), xLength);
+    temp.releaseAll();
     return Foo._(result);
   }
 
   // ignore: non_constant_identifier_names
   static final _Foo_new =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('Foo_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('Foo_new')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
 
   Bar get getBar {
     final result = _Foo_get_bar(_underlying);
@@ -38,17 +38,17 @@ final class Foo implements ffi.Finalizable {
       .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory Foo.static_(String x) {
-    final alloc = ffi2.Arena();
-    final xSlice = _SliceUtf8._fromDart(x, alloc);
-    final result = _Foo_new_static(xSlice._bytes, xSlice._length);
-    alloc.releaseAll();
+    final temp = ffi2.Arena();
+    final xLength = x.utf8Length;
+    final result = _Foo_new_static(Utf8Encoder().allocConvert(temp, x, length: xLength), xLength);
+    temp.releaseAll();
     return Foo._(result);
   }
 
   // ignore: non_constant_identifier_names
   static final _Foo_new_static =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, ffi.Size)>>('Foo_new_static')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi2.Utf8>, int)>(isLeaf: true);
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('Foo_new_static')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
 
   BorrowedFieldsReturning get asReturning {
     final result = _Foo_as_returning(_underlying);
