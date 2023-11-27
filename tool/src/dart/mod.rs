@@ -319,7 +319,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
             let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
 
-            if let hir::Type::Slice(s) = &param.ty {
+            if let hir::Type::Slice(..) = &param.ty {
                 // Two args on the ABI: pointer and size
                 param_types_ffi.push(self.formatter.fmt_pointer(&param_type_ffi).into());
                 param_types_ffi_cast.push(self.formatter.fmt_pointer(&param_type_ffi_cast).into());
@@ -329,7 +329,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let view_expr = self.gen_dart_to_c_for_type(&param.ty, var_name.clone());
 
-                slice_conversions.push(format!("final {var_name}View = {view_expr};",));
+                slice_conversions.push(format!("final {var_name}View = {view_expr};"));
                 needs_arena = true;
                 param_conversions.push(format!("{var_name}View.pointer(temp)").into());
                 param_conversions.push(format!("{var_name}View.length").into());
@@ -406,7 +406,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             && !["clone", "next", "build"].contains(&method.name.as_str())
         {
             let method_name = self.formatter.fmt_method_name(method);
-            format!("{return_ty} get {method_name}",)
+            format!("{return_ty} get {method_name}")
         // Setter
         } else if method.name.as_str().starts_with("set_")
             && method.params.len() == 1
