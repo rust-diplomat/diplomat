@@ -53,13 +53,14 @@ pub fn run<'cx>(
 
     directives.insert(formatter.fmt_import(
         "dart:core",
-        "show int, double, bool, String, Object, override",
+        Some("show int, double, bool, String, Object, override"),
     ));
-    directives.insert(formatter.fmt_import("dart:convert", ""));
-    directives.insert(formatter.fmt_import("dart:core", "as core"));
-    directives.insert(formatter.fmt_import("dart:ffi", "as ffi"));
-    directives.insert(formatter.fmt_import("package:ffi/ffi.dart", "as ffi2 show Arena, calloc"));
-    directives.insert(formatter.fmt_import("dart:typed_data", ""));
+    directives.insert(formatter.fmt_import("dart:convert", None));
+    directives.insert(formatter.fmt_import("dart:core", Some("as core")));
+    directives.insert(formatter.fmt_import("dart:ffi", Some("as ffi")));
+    directives
+        .insert(formatter.fmt_import("package:ffi/ffi.dart", Some("as ffi2 show Arena, calloc")));
+    directives.insert(formatter.fmt_import("dart:typed_data", None));
     files.add_file(
         formatter.fmt_file_name("lib"),
         render_class(
@@ -226,6 +227,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     vec![]
                 } else if let hir::Type::Slice(s) = &field.ty {
                     vec![
+                        // Free the existing slice, which is owned by us. After construction, the slice
+                        // is (null, 0), which is valid to free.
                         format!("ffi2.calloc.free(_underlying.{name}._pointer);"),
                         format!(
                             "_underlying.{name}._length = {name}{};",
@@ -942,6 +945,8 @@ struct MethodInfo<'a> {
 
     /// Conversion code for Dart arguments to slice helper structs
     slice_conversions: Vec<String>,
+    /// The invocation of the Rust method might need temporary allocations,
+    /// for which we use a Dart Arena type.
     needs_arena: bool,
 
     /// Conversion code for each parameter

@@ -3,12 +3,12 @@
 // https://github.com/dart-lang/sdk/issues/53946
 // ignore_for_file: non_native_function_type_argument_to_pointer
 
-import 'dart:convert';
-import 'dart:core' as core;
-import 'dart:core' show int, double, bool, String, Object, override;
-import 'dart:ffi' as ffi;
-import 'dart:typed_data';
-import 'package:ffi/ffi.dart' as ffi2 show Arena, calloc;
+import 'dart:convert'  ;
+import 'dart:core'as core;
+import 'dart:core'show int, double, bool, String, Object, override;
+import 'dart:ffi'as ffi;
+import 'dart:typed_data'  ;
+import 'package:ffi/ffi.dart'as ffi2 show Arena, calloc;
 part 'ICU4XDataProvider.g.dart';
 part 'ICU4XFixedDecimal.g.dart';
 part 'ICU4XFixedDecimalFormatter.g.dart';

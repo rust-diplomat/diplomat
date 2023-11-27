@@ -42,10 +42,11 @@ impl<'tcx> DartFormatter<'tcx> {
         format!("{name}.g.dart")
     }
 
-    pub fn fmt_import(&self, path: &str, as_show_hide: &str) -> Cow<'static, str> {
+    pub fn fmt_import(&self, path: &str, as_show_hide: Option<&str>) -> Cow<'static, str> {
         format!(
-            "import '{path}'{}{as_show_hide};",
-            if as_show_hide.is_empty() { "" } else { " " }
+            "import '{path}'{}{};",
+            if as_show_hide.is_some() { "" } else { " " },
+            if let Some(s) = as_show_hide { s } else { " " },
         )
         .into()
     }
