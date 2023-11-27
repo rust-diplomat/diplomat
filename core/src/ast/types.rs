@@ -396,6 +396,7 @@ pub enum TypeName {
 pub enum StringEncoding {
     UnvalidatedUtf8,
     UnvalidatedUtf16,
+    /// The caller guarantees that they're passing valid UTF-8, under penalty of UB
     Utf8,
 }
 
