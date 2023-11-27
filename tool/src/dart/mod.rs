@@ -225,34 +225,20 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let set_expressions = if !mutable {
                     vec![]
-                } else if let hir::Type::Slice(s) = &field.ty {
+                } else if let hir::Type::Slice(..) = &field.ty {
+                    let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone());
                     vec![
                         // Free the existing slice, which is owned by us. After construction, the slice
                         // is (null, 0), which is valid to free.
                         format!("ffi2.calloc.free(_underlying.{name}._pointer);"),
-                        format!(
-                            "_underlying.{name}._length = {name}{};",
-                            if matches!(s, hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8))
-                            {
-                                ".utf8Length"
-                            } else {
-                                ".length"
-                            }
-                        ),
-                        format!(
-                            "_underlying.{name}._pointer = {};",
-                            self.gen_dart_to_c_for_type(
-                                &field.ty,
-                                name.clone(),
-                                Some("ffi2.calloc"),
-                                Some(format!("_underlying.{name}._length"))
-                            )
-                        ),
+                        format!("final {name}View = {view_expr}"),
+                        format!("_underlying.{name}._pointer = {name}View.pointer(ffi2.calloc);"),
+                        format!("_underlying.{name}._length = {name}View.length;"),
                     ]
                 } else {
                     vec![format!(
                         "_underlying.{name} = {};",
-                        self.gen_dart_to_c_for_type(&field.ty, name.clone(), None, None)
+                        self.gen_dart_to_c_for_type(&field.ty, name.clone())
                     )]
                 };
 
@@ -341,38 +327,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 param_types_ffi.push(self.formatter.fmt_usize(false).into());
                 param_types_ffi_cast.push(self.formatter.fmt_usize(true).into());
 
-                if let hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) = s {
-                    // For UTF-8, param_conversion requires the precomputed length
-                    slice_conversions
-                        .push(format!("final {var_name}Length = {var_name}.utf8Length;"));
+                let view_expr = self.gen_dart_to_c_for_type(&param.ty, var_name.clone());
 
-                    needs_arena = true;
-                    param_conversions.push(self.gen_dart_to_c_for_type(
-                        &param.ty,
-                        self.formatter.fmt_param_name(param.name.as_str()),
-                        Some("temp"),
-                        Some(format!("{var_name}Length")),
-                    ));
-                    param_conversions.push(format!("{var_name}Length").into());
-                } else {
-                    needs_arena = true;
-                    param_conversions.push(self.gen_dart_to_c_for_type(
-                        &param.ty,
-                        self.formatter.fmt_param_name(param.name.as_str()),
-                        Some("temp"),
-                        None,
-                    ));
-                    param_conversions.push(format!("{var_name}.length").into());
-                }
+                slice_conversions.push(format!("final {var_name}View = {view_expr};",));
+                needs_arena = true;
+                param_conversions.push(format!("{var_name}View.pointer(temp)").into());
+                param_conversions.push(format!("{var_name}View.length").into());
             } else {
                 param_types_ffi.push(param_type_ffi);
                 param_types_ffi_cast.push(param_type_ffi_cast);
-                param_conversions.push(self.gen_dart_to_c_for_type(
-                    &param.ty,
-                    self.formatter.fmt_param_name(param.name.as_str()),
-                    None,
-                    None,
-                ));
+                param_conversions.push(self.gen_dart_to_c_for_type(&param.ty, var_name.clone()));
             }
         }
 
@@ -673,8 +637,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         &mut self,
         ty: &Type<P>,
         dart_name: Cow<'cx, str>,
-        allocator: Option<&str>,
-        slice_length: Option<String>,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
@@ -688,42 +650,21 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Opaque(..) | Type::Struct(..) | Type::Enum(..) => {
                 format!("{dart_name}._underlying").into()
             }
-            // Utf-8 will always need to be reallocated. Currently `allocConvert` requires two allocations.
-            // https://github.com/dart-lang/sdk/issues/49470
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => format!(
-                "Utf8Encoder().allocConvert({allocator}, {dart_name}, length: {length})",
-                allocator = allocator.unwrap(),
-                length = slice_length.unwrap()
-            )
-            .into(),
-            // Utf-16 currently cannot be borrowed:
-            // https://github.com/dart-lang/sdk/issues/39787
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => format!(
-                "{dart_name}.copy({allocator})",
-                allocator = allocator.unwrap()
-            )
-            .into(),
-            // These types have typed lists in Dart which we'll eventually be able to borrow from.
-            // https://github.com/dart-lang/sdk/issues/44589
+            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
+                format!("{dart_name}.utf8View;").into()
+            }
+            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
+                format!("{dart_name}.utf16View;").into()
+            }
             Type::Slice(hir::Slice::Primitive(
                 _,
                 hir::PrimitiveType::Int(_) | hir::PrimitiveType::Float(_),
-            )) => format!(
-                "{dart_name}.copy({allocator})",
-                allocator = allocator.unwrap()
-            )
-            .into(),
-            // usize doesn't have a typed list, so we have to manually copy it.
-            // https://github.com/dart-lang/sdk/issues/54119
+            )) => dart_name,
+            // usize doesn't have a typed list: https://github.com/dart-lang/sdk/issues/54119
             Type::Slice(hir::Slice::Primitive(
                 _,
-                p @ hir::PrimitiveType::IntSize(hir::IntSizeType::Usize),
-            )) => format!(
-                "{allocator}<{prim}>(length)..asTypedList(length).setAll(0, {dart_name});",
-                allocator = allocator.unwrap(),
-                prim = self.formatter.fmt_primitive_as_ffi(p, false)
-            )
-            .into(),
+                hir::PrimitiveType::IntSize(hir::IntSizeType::Usize),
+            )) => format!("_SizeList({dart_name})").into(),
             // Other primitive slices are not supported in Dart
             _ => unreachable!("unknown AST/HIR variant"),
         }
