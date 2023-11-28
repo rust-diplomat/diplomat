@@ -70,10 +70,10 @@ class _Utf16View {
   int get length => _codeUnits.length;
 }
 
-class _SizeList {
+class _SizeListView {
   final List<int> values;
 
-  _SizeList(this._values);
+  _SizeListView(this._values);
 
   // Copies
   ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {

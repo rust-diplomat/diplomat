@@ -664,7 +664,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(hir::Slice::Primitive(
                 _,
                 hir::PrimitiveType::IntSize(hir::IntSizeType::Usize),
-            )) => format!("_SizeList({dart_name})").into(),
+            )) => format!("_SizeListView({dart_name})").into(),
             // Other primitive slices are not supported in Dart
             _ => unreachable!("unknown AST/HIR variant"),
         }
