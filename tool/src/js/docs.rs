@@ -142,19 +142,6 @@ pub fn gen_method_docs<W: fmt::Write>(
         writeln!(method_indented)?;
     }
 
-    for p in method
-        .params
-        .iter()
-        .filter(|p| matches!(p.ty, ast::TypeName::PrimitiveSlice(..)))
-    {
-        writeln!(
-            method_indented,
-            "- Note: ``{}`` should be an ArrayBuffer or TypedArray corresponding to the slice type expected by Rust.",
-            p.name
-        )?;
-        writeln!(method_indented)?;
-    }
-
     let static_borrows = method.borrowed_params();
     let static_borrows = static_borrows.static_names().collect::<Vec<_>>();
     if !static_borrows.is_empty() {
