@@ -55,13 +55,26 @@ typedef RuneList = Uint32List;
 late final ffi.Pointer<T> Function<T extends ffi.NativeType>(String) _capi;
 void init(String path) => _capi = ffi.DynamicLibrary.open(path).lookup;
 
+// ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
+// ignore: unused_element
 extension _UtfViews on String {
   _Utf8View get utf8View => _Utf8View(this);
   _Utf16View get utf16View => _Utf16View(this);
 }
 
+/// An unspecified error value
+// ignore: unused_element
+class VoidError {
+  @override
+  bool operator ==(Object other) => other is VoidError;
+
+  @override
+  int get hashCode => 1;
+}
+
+// ignore: unused_element
 class _Utf8View {
   final Uint8List _codeUnits;
 
@@ -76,10 +89,11 @@ class _Utf8View {
   int get length => _codeUnits.length;
 }
 
+// ignore: unused_element
 class _Utf16View {
-  final List<int> _codeUnits;
+  final core.List<int> _codeUnits;
 
-  _Utf8View(String string) : this._codeUnits = string.codeUnits;
+  _Utf16View(String string) : this._codeUnits = string.codeUnits;
 
   ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
     // Copies
@@ -89,73 +103,88 @@ class _Utf16View {
   int get length => _codeUnits.length;
 }
 
+// ignore: unused_element
 class _SizeListView {
-  final List<int> values;
+  final core.List<int> _values;
 
   _SizeListView(this._values);
 
   // Copies
-  ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
-    return alloc<ffi.Size>(values.length)..asTypedList(values.length).setAll(0, values);
+  ffi.Pointer<ffi.Size> pointer(ffi.Allocator alloc) {
+    final pointer = alloc<ffi.Size>(_values.length);
+    for (var i = 0; i < _values.length; i++) {
+      pointer[i] = _values[i];
+    }
+    return pointer;
   }
 
   int get length => _values.length;
 }
 
+// ignore: unused_element
 extension _Int8ListFfi on Int8List {
   ffi.Pointer<ffi.Int8> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Int8>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Int16ListFfi on Int16List {
   ffi.Pointer<ffi.Int16> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Int16>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Int32ListFfi on Int32List {
   ffi.Pointer<ffi.Int32> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Int32>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Int64ListFfi on Int64List {
   ffi.Pointer<ffi.Int64> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Int64>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Uint8ListFfi on Uint8List {
   ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint8>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Uint16ListFfi on Uint16List {
   ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint16>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Uint32ListFfi on Uint32List {
   ffi.Pointer<ffi.Uint32> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint32>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Uint64ListFfi on Uint64List {
   ffi.Pointer<ffi.Uint64> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint64>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Float32ListFfi on Float32List {
   ffi.Pointer<ffi.Float> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Float>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
+// ignore: unused_element
 extension _Float64ListFfi on Float64List {
   ffi.Pointer<ffi.Double> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Double>(length)..asTypedList(length).setAll(0, this);
@@ -289,9 +318,6 @@ final class _SliceUtf8 extends ffi.Struct {
   @override
   int get hashCode => _length.hashCode;
 }
-
-/// An unspecified error value
-class VoidError {}
 
 final class _Writeable {
   final ffi.Pointer<ffi.Opaque> _underlying;

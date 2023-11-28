@@ -24,10 +24,7 @@ int main(int argc, char *argv[]) {
 
     // simple_assert_eq("Formatting FixedDecimal to Writeable", fd_out, "12.3");
 
-    std::array<uint8_t, 2> bytes = {'e', 'n'};
-    std::unique_ptr<ICU4XLocale> locale = ICU4XLocale::new_from_bytes(bytes);
-
-    locale = ICU4XLocale::new_("bn");
+    std::unique_ptr<ICU4XLocale> locale = ICU4XLocale::new_("bn");
 
     std::unique_ptr<ICU4XDataProvider> data_provider = ICU4XDataProvider::new_static();
 

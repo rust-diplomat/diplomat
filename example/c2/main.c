@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "include/ICU4XFixedDecimalFormat.h"
+#include "include/ICU4XFixedDecimalFormatter.h"
 
 void print_decimal(ICU4XFixedDecimal* fd) {
     char output[40];
@@ -11,10 +11,10 @@ void print_decimal(ICU4XFixedDecimal* fd) {
     printf("%s\n", output);
 }
 
-void format_decimal(ICU4XFixedDecimalFormat* fdf, ICU4XFixedDecimal* fd) {
+void format_decimal(ICU4XFixedDecimalFormatter* fdf, ICU4XFixedDecimal* fd) {
     char output[40];
     DiplomatWriteable out = diplomat_simple_writeable(output, 40);
-    ICU4XFixedDecimalFormat_format_write(fdf, fd, &out);
+    ICU4XFixedDecimalFormatter_format_write(fdf, fd, &out);
     output[out.len] = '\0';
     printf("%s\n", output);
 }
@@ -29,14 +29,11 @@ int main(int argc, char *argv[]) {
 
     print_decimal(fd);
 
-    ICU4XLocale* locale = ICU4XLocale_new_from_bytes("en", 2);
-    ICU4XLocale_destroy(locale);
-
-    locale = ICU4XLocale_new("bn", 2);
+    ICU4XLocale* locale = ICU4XLocale_new("bn", 2);
 
     ICU4XDataProvider* data_provider = ICU4XDataProvider_new_static();
 
-    ICU4XFixedDecimalFormatResult fdf = ICU4XFixedDecimalFormat_try_new(locale, data_provider, ICU4XFixedDecimalFormatOptions_default());
-    printf("%d\n", fdf.success);
-    format_decimal(fdf.fdf, fd);
+    diplomat_result_box_ICU4XFixedDecimalFormatter_void fdf = ICU4XFixedDecimalFormatter_try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions_default());
+    printf("%d\n", fdf.is_ok);
+    format_decimal(fdf.ok, fd);
 }

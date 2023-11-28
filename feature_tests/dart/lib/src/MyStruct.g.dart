@@ -27,13 +27,6 @@ final class MyStruct {
 
   MyStruct._(this._underlying);
 
-  factory MyStruct() {
-    final pointer = ffi2.calloc<_MyStructFfi>();
-    final result = MyStruct._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
-  }
-
   int get a => _underlying.a;
   set a(int a) {
     _underlying.a = a;

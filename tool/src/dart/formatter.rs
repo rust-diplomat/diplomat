@@ -21,8 +21,8 @@ pub(super) struct DartFormatter<'tcx> {
     strip_prefix: Option<String>,
 }
 
-const INVALID_METHOD_NAMES: &[&str] = &["new", "static"];
-const INVALID_FIELD_NAMES: &[&str] = &["new", "static"];
+const INVALID_METHOD_NAMES: &[&str] = &["new", "static", "default"];
+const INVALID_FIELD_NAMES: &[&str] = &["new", "static", "default"];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> DartFormatter<'tcx> {
@@ -139,11 +139,13 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
-        let mut name = &*self.fmt_method_name(method);
-        for prefix in ["create", "new", "default", "get"] {
-            name = name.strip_prefix(prefix).unwrap_or(name);
+        let mut name = self.fmt_method_name(method).into_owned();
+        for prefix in ["try", "create", "new_", "new", "default_", "default", "get"] {
+            name = name
+                .strip_prefix(prefix)
+                .map(|s| s.to_lower_camel_case())
+                .unwrap_or(name);
         }
-        let name = name.to_lower_camel_case();
 
         if name.is_empty() {
             None

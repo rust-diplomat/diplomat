@@ -29,10 +29,7 @@ int main(int argc, char *argv[]) {
 
     print_decimal(fd);
 
-    ICU4XLocale* locale = ICU4XLocale_new_from_bytes("en", 2);
-    ICU4XLocale_destroy(locale);
-
-    locale = ICU4XLocale_new("bn", 2);
+    ICU4XLocale* locale = ICU4XLocale_new("bn", 2);
 
     ICU4XDataProvider* data_provider = ICU4XDataProvider_new_static();
 

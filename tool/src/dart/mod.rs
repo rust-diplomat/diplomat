@@ -263,6 +263,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         #[template(path = "dart/struct.dart.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
+            needs_constructor: bool,
             mutable: bool,
             fields: Vec<FieldInfo<'a>>,
             methods: Vec<MethodInfo<'a>>,
@@ -271,6 +272,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         ImplTemplate {
             type_name,
+            needs_constructor: !methods
+                .iter()
+                .any(|m| m.declaration.contains(&format!("{type_name}()"))),
             mutable,
             fields,
             methods,
@@ -737,13 +741,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Fallible(ref ok, ref err) => {
                 let err_conversion = match err {
                     Some(o) => self.gen_c_to_dart_for_type(o, "result.union.err".into()),
-                    None => {
-                        self.helper_classes.insert(
-                            "voiderror".into(),
-                            "/// An unspecified error value\nclass VoidError {}".into(),
-                        );
-                        "VoidError()".into()
-                    }
+                    None => "VoidError()".into(),
                 };
                 let err_check =
                     format!("if (!result.isOk) {{\n  throw {err_conversion};\n}}").into();
