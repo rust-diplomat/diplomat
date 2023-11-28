@@ -25,15 +25,17 @@ final class BorrowedFields {
   String get a => core.String.fromCharCodes(_underlying.a._pointer.asTypedList(_underlying.a._length));
   set a(String a) {
     ffi2.calloc.free(_underlying.a._pointer);
-    _underlying.a._length = a.length;
-    _underlying.a._pointer = a.copy(ffi2.calloc);
+    final aView = a.utf16View;
+    _underlying.a._pointer = aView.pointer(ffi2.calloc);
+    _underlying.a._length = aView.length;
   }
 
   String get b => Utf8Decoder().convert(_underlying.b._pointer.asTypedList(_underlying.b._length));
   set b(String b) {
     ffi2.calloc.free(_underlying.b._pointer);
-    _underlying.b._length = b.utf8Length;
-    _underlying.b._pointer = Utf8Encoder().allocConvert(ffi2.calloc, b, length: _underlying.b._length);
+    final bView = b.utf8View;
+    _underlying.b._pointer = bView.pointer(ffi2.calloc);
+    _underlying.b._length = bView.length;
   }
 
   @override

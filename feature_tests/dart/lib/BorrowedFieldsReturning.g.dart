@@ -24,8 +24,9 @@ final class BorrowedFieldsReturning {
   String get bytes => Utf8Decoder().convert(_underlying.bytes._pointer.asTypedList(_underlying.bytes._length));
   set bytes(String bytes) {
     ffi2.calloc.free(_underlying.bytes._pointer);
-    _underlying.bytes._length = bytes.utf8Length;
-    _underlying.bytes._pointer = Utf8Encoder().allocConvert(ffi2.calloc, bytes, length: _underlying.bytes._length);
+    final bytesView = bytes.utf8View;
+    _underlying.bytes._pointer = bytesView.pointer(ffi2.calloc);
+    _underlying.bytes._length = bytesView.length;
   }
 
   @override

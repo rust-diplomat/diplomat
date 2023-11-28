@@ -57,93 +57,107 @@ void init(String path) => _capi = ffi.DynamicLibrary.open(path).lookup;
 
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
-extension _AllocConvert on Utf8Encoder {
-  ffi.Pointer<ffi.Uint8> allocConvert(ffi.Allocator alloc, String string, {int? length}) {
-      final l = length ?? string.utf8Length;
-      return alloc<ffi.Uint8>(l)..asTypedList(l).setAll(0, convert(string));
-   }
+extension _UtfViews on String {
+  _Utf8View get utf8View => _Utf8View(this);
+  _Utf16View get utf16View => _Utf16View(this);
 }
 
-extension _Utf8Length on String {
-  int get utf8Length {
-    var length = 0;
-    for (var rune in runes) {
-      if (rune < 0x80) {
-        length += 1;
-      } else if (rune < 0x800) {
-        length += 2;
-      } else if (rune < 0x10000) {
-        length += 3;
-      } else {
-        length += 4;
-      }
-    }
-    return length;
+class _Utf8View {
+  final Uint8List _codeUnits;
+
+  // Copies
+  _Utf8View(String string) : this._codeUnits = Utf8Encoder().convert(string);
+
+  ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
+    // Copies
+    return alloc<ffi.Uint8>(length)..asTypedList(length).setAll(0, _codeUnits);
   }
+
+  int get length => _codeUnits.length;
 }
 
-extension _CopyString on String {
-  ffi.Pointer<ffi.Uint16> copy(ffi.Allocator alloc) {
-    return alloc<ffi.Uint16>(length)..asTypedList(length).setAll(0, codeUnits);
+class _Utf16View {
+  final List<int> _codeUnits;
+
+  _Utf8View(String string) : this._codeUnits = string.codeUnits;
+
+  ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
+    // Copies
+    return alloc<ffi.Uint16>(length)..asTypedList(length).setAll(0, _codeUnits);
   }
+
+  int get length => _codeUnits.length;
 }
 
-extension _CopyInt8List on Int8List {
-  ffi.Pointer<ffi.Int8> copy(ffi.Allocator alloc) {
+class _SizeListView {
+  final List<int> values;
+
+  _SizeListView(this._values);
+
+  // Copies
+  ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
+    return alloc<ffi.Size>(values.length)..asTypedList(values.length).setAll(0, values);
+  }
+
+  int get length => _values.length;
+}
+
+extension _Int8ListFfi on Int8List {
+  ffi.Pointer<ffi.Int8> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Int8>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyInt16List on Int16List {
-  ffi.Pointer<ffi.Int16> copy(ffi.Allocator alloc) {
+extension _Int16ListFfi on Int16List {
+  ffi.Pointer<ffi.Int16> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Int16>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyInt32List on Int32List {
-  ffi.Pointer<ffi.Int32> copy(ffi.Allocator alloc) {
+extension _Int32ListFfi on Int32List {
+  ffi.Pointer<ffi.Int32> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Int32>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyInt64List on Int64List {
-  ffi.Pointer<ffi.Int64> copy(ffi.Allocator alloc) {
+extension _Int64ListFfi on Int64List {
+  ffi.Pointer<ffi.Int64> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Int64>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyUint8List on Uint8List {
-  ffi.Pointer<ffi.Uint8> copy(ffi.Allocator alloc) {
+extension _Uint8ListFfi on Uint8List {
+  ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint8>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyUint16List on Uint16List {
-  ffi.Pointer<ffi.Uint16> copy(ffi.Allocator alloc) {
+extension _Uint16ListFfi on Uint16List {
+  ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint16>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyUint32List on Uint32List {
-  ffi.Pointer<ffi.Uint32> copy(ffi.Allocator alloc) {
+extension _Uint32ListFfi on Uint32List {
+  ffi.Pointer<ffi.Uint32> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint32>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyUint64List on Uint64List {
-  ffi.Pointer<ffi.Uint64> copy(ffi.Allocator alloc) {
+extension _Uint64ListFfi on Uint64List {
+  ffi.Pointer<ffi.Uint64> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint64>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyFloat32List on Float32List {
-  ffi.Pointer<ffi.Float> copy(ffi.Allocator alloc) {
+extension _Float32ListFfi on Float32List {
+  ffi.Pointer<ffi.Float> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Float>(length)..asTypedList(length).setAll(0, this);
   }
 }
 
-extension _CopyFloat64List on Float64List {
-  ffi.Pointer<ffi.Double> copy(ffi.Allocator alloc) {
+extension _Float64ListFfi on Float64List {
+  ffi.Pointer<ffi.Double> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Double>(length)..asTypedList(length).setAll(0, this);
   }
 }
