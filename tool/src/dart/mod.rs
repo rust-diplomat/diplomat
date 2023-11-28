@@ -651,9 +651,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Opaque(..) | Type::Struct(..) | Type::Enum(..) => {
                 format!("{dart_name}._underlying").into()
             }
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8)) => {
-                format!("{dart_name}.utf8View;").into()
-            }
+            Type::Slice(hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            )) => format!("{dart_name}.utf8View;").into(),
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
                 format!("{dart_name}.utf16View;").into()
             }
