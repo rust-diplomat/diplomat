@@ -16,8 +16,8 @@ final class MyString implements ffi.Finalizable {
 
   factory MyString(String v) {
     final temp = ffi2.Arena();
-    final vLength = v.utf8Length;
-    final result = _MyString_new(Utf8Encoder().allocConvert(temp, v, length: vLength), vLength);
+    final vView = v.utf8View;;
+    final result = _MyString_new(vView.pointer(temp), vView.length);
     temp.releaseAll();
     return MyString._(result);
   }
@@ -29,8 +29,8 @@ final class MyString implements ffi.Finalizable {
 
   void setStr(String newStr) {
     final temp = ffi2.Arena();
-    final newStrLength = newStr.utf8Length;
-    _MyString_set_str(_underlying, Utf8Encoder().allocConvert(temp, newStr, length: newStrLength), newStrLength);
+    final newStrView = newStr.utf8View;;
+    _MyString_set_str(_underlying, newStrView.pointer(temp), newStrView.length);
     temp.releaseAll();
   }
 

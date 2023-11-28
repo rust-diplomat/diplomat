@@ -16,7 +16,8 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec(Float64List v) {
     final temp = ffi2.Arena();
-    final result = _Float64Vec_new(v.copy(temp), v.length);
+    final vView = v;
+    final result = _Float64Vec_new(vView.pointer(temp), vView.length);
     temp.releaseAll();
     return Float64Vec._(result);
   }
@@ -28,7 +29,8 @@ final class Float64Vec implements ffi.Finalizable {
 
   void fillSlice(Float64List v) {
     final temp = ffi2.Arena();
-    _Float64Vec_fill_slice(_underlying, v.copy(temp), v.length);
+    final vView = v;
+    _Float64Vec_fill_slice(_underlying, vView.pointer(temp), vView.length);
     temp.releaseAll();
   }
 
@@ -39,7 +41,8 @@ final class Float64Vec implements ffi.Finalizable {
 
   void setValue(Float64List newSlice) {
     final temp = ffi2.Arena();
-    _Float64Vec_set_value(_underlying, newSlice.copy(temp), newSlice.length);
+    final newSliceView = newSlice;
+    _Float64Vec_set_value(_underlying, newSliceView.pointer(temp), newSliceView.length);
     temp.releaseAll();
   }
 
