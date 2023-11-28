@@ -16,7 +16,7 @@ final class {{type_name}} {
   final _{{type_name}}Ffi _underlying;
 
   {{type_name}}._(this._underlying);
-  {%- if mutable %}
+  {%- if mutable && needs_constructor %}
 
   {# https://github.com/dart-lang/sdk/issues/45697 -#}
   factory {{type_name}}() {

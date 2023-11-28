@@ -1,4 +1,5 @@
 import test from 'ava';
+import { MyEnum } from '../api/MyEnum.js';
 
 import { MyStruct } from "../api/MyStruct.js"
 
@@ -10,5 +11,5 @@ test("Verify invariants of struct", t => {
     t.is(s["d"], 1234n);
     t.is(s["e"], 5991);
     t.is(s["f"], "餐");
-    // t.is(s["g"], "hello");
+    t.is(s["g"], MyEnum.B);
 });

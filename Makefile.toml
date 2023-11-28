@@ -43,6 +43,12 @@ dependencies = [
     "test-cpp-example",
     "test-cpp-feature",
 ]
+[tasks.test-cpp2]
+category = "Tests"
+dependencies = [
+    "test-cpp2-example",
+    "test-cpp2-feature",
+]
 [tasks.test-c]
 category = "Tests"
 dependencies = [
@@ -66,7 +72,6 @@ dependencies = [
 category = "Tests"
 dependencies = [
     "test-dart-example",
-    "test-dart-example-app",
     "test-dart-feature",
 ]
 [tasks.test-example]
@@ -97,7 +102,7 @@ script = '''
 exit_on_error true
 cd example/cpp
 rm tests/*.out
-exec make
+exec --fail-on-error make
 '''
 
 [tasks.test-cpp2-example]
@@ -108,7 +113,7 @@ script = '''
 exit_on_error true
 cd example/cpp2
 rm tests/*.out
-exec make
+exec --fail-on-error make
 '''
 
 [tasks.test-cpp-feature]
@@ -119,7 +124,7 @@ script = '''
 exit_on_error true
 cd feature_tests/cpp
 rm tests/*.out
-exec make
+exec --fail-on-error make
 '''
 
 [tasks.test-cpp2-feature]
@@ -130,7 +135,7 @@ script = '''
 exit_on_error true
 cd feature_tests/cpp2
 rm tests/*.out
-exec make
+exec --fail-on-error make
 '''
 
 [tasks.test-c-example]
@@ -141,7 +146,7 @@ script = '''
 exit_on_error true
 cd example/c
 rm *.out
-exec make
+exec --fail-on-error make
 '''
 
 [tasks.test-c2-example]
@@ -150,9 +155,9 @@ dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd example/c
+cd example/c2
 rm *.out
-exec make
+exec --fail-on-error make
 '''
 
 [tasks.test-wasm-example]
@@ -164,8 +169,8 @@ exit_on_error true
 cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd lib
-exec npm install
-exec npm run test
+exec --fail-on-error npm install
+exec --fail-on-error npm run test
 '''
 
 [tasks.test-wasm-example-app]
@@ -177,8 +182,8 @@ exit_on_error true
 cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd app
-exec npm install
-exec npm run build
+exec --fail-on-error npm install
+exec --fail-on-error npm run build
 '''
 
 [tasks.test-wasm-feature]
@@ -190,8 +195,28 @@ exit_on_error true
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
 cd app
-exec npm install
-exec npm run test
+exec --fail-on-error npm install
+exec --fail-on-error npm run test
+'''
+
+[tasks.test-dart-example]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd example/dart/
+exec --fail-on-error dart test
+'''
+
+[tasks.test-dart-feature]
+category = "Tests"
+dependencies = ["build-feature"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/dart/
+exec --fail-on-error dart test
 '''
 
 [tasks.test-c2-example-self-contained]
@@ -393,7 +418,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests dart lib
+generate_generic feature_tests dart lib/src
 '''
 
 [tasks.gen-examples-dart]
@@ -402,7 +427,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example dart lib
+generate_generic example dart lib/src
 '''
 
 # Build deps
