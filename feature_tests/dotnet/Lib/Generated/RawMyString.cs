@@ -19,6 +19,9 @@ public partial struct MyString
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyString_new", ExactSpelling = true)]
     public static unsafe extern MyString* New(byte* v, nuint vSz);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyString_new_unsafe", ExactSpelling = true)]
+    public static unsafe extern MyString* NewUnsafe(ushort* v, nuint vSz);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyString_set_str", ExactSpelling = true)]
     public static unsafe extern void SetStr(MyString* self, byte* newStr, nuint newStrSz);
 

@@ -17,13 +17,17 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
     match &param.ty {
         ast::TypeName::StrReference(
             ..,
-            ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::UnvalidatedUtf16,
+            ast::StringEncoding::UnvalidatedUtf8
+            | ast::StringEncoding::UnvalidatedUtf16
+            | ast::StringEncoding::Utf8,
         )
         | ast::TypeName::PrimitiveSlice(..) => {
             let data_type = if let ast::TypeName::PrimitiveSlice(.., prim) = &param.ty {
                 ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
-            } else if let ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) =
-                &param.ty
+            } else if let ast::TypeName::StrReference(
+                _,
+                ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
+            ) = &param.ty
             {
                 quote! { u8 }
             } else if let ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) =
@@ -116,6 +120,9 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                         }
                     },
                 }
+            } else if let ast::TypeName::StrReference(_, ast::StringEncoding::Utf8) = &param.ty {
+                // The FFI guarantees this, by either validating, or communicating this requirement to the user.
+                quote! {unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(#data_ident, #len_ident))} }
             } else {
                 quote! {
                     if #len_ident == 0 {

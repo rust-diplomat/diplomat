@@ -203,7 +203,10 @@ pub fn gen_rust_to_cpp<W: Write>(
             todo!("Returning references from Rust to C++ is not currently supported")
         }
         ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
-        ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
+        ast::TypeName::StrReference(
+            _,
+            ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
+        ) => {
             let raw_value_id = format!("diplomat_str_raw_{path}");
             writeln!(out, "capi::DiplomatStringView {raw_value_id} = {cpp};").unwrap();
 

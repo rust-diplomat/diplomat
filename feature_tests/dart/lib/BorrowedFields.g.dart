@@ -8,6 +8,7 @@ part of 'lib.g.dart';
 final class _BorrowedFieldsFfi extends ffi.Struct {
   external _SliceUtf16 a;
   external _SliceUtf8 b;
+  external _SliceUtf8 c;
 }
 
 final class BorrowedFields {
@@ -38,15 +39,25 @@ final class BorrowedFields {
     _underlying.b._length = bView.length;
   }
 
+  String get c => Utf8Decoder().convert(_underlying.c._pointer.asTypedList(_underlying.c._length));
+  set c(String c) {
+    ffi2.calloc.free(_underlying.c._pointer);
+    final cView = c.utf8View;
+    _underlying.c._pointer = cView.pointer(ffi2.calloc);
+    _underlying.c._length = cView.length;
+  }
+
   @override
   bool operator ==(Object other) =>
       other is BorrowedFields &&
       other._underlying.a == _underlying.a &&
-      other._underlying.b == _underlying.b;
+      other._underlying.b == _underlying.b &&
+      other._underlying.c == _underlying.c;
 
   @override
   int get hashCode => Object.hashAll([
         _underlying.a,
         _underlying.b,
+        _underlying.c,
       ]);
 }

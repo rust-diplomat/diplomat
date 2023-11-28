@@ -9,6 +9,9 @@
 
     .. cpp:member:: std::string_view b
 
+    .. cpp:member:: std::string_view c
+        Warning: Setting ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
+
 .. cpp:struct:: BorrowedFieldsReturning
 
     .. cpp:member:: std::string_view bytes

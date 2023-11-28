@@ -82,6 +82,6 @@ inline BorrowedFieldsReturning Foo::as_returning() const {
 }
 inline Foo Foo::extract_from_fields(BorrowedFields fields) {
   BorrowedFields diplomat_wrapped_struct_fields = fields;
-  return Foo(capi::Foo_extract_from_fields(capi::BorrowedFields{ .a = { diplomat_wrapped_struct_fields.a.data(), diplomat_wrapped_struct_fields.a.size() }, .b = { diplomat_wrapped_struct_fields.b.data(), diplomat_wrapped_struct_fields.b.size() } }));
+  return Foo(capi::Foo_extract_from_fields(capi::BorrowedFields{ .a = { diplomat_wrapped_struct_fields.a.data(), diplomat_wrapped_struct_fields.a.size() }, .b = { diplomat_wrapped_struct_fields.b.data(), diplomat_wrapped_struct_fields.b.size() }, .c = { diplomat_wrapped_struct_fields.c.data(), diplomat_wrapped_struct_fields.c.size() } }));
 }
 #endif

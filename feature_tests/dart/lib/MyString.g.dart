@@ -27,6 +27,19 @@ final class MyString implements ffi.Finalizable {
     _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('MyString_new')
       .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
 
+  factory MyString.unsafe(String v) {
+    final temp = ffi2.Arena();
+    final vView = v.utf8View;;
+    final result = _MyString_new_unsafe(vView.pointer(temp), vView.length);
+    temp.releaseAll();
+    return MyString._(result);
+  }
+
+  // ignore: non_constant_identifier_names
+  static final _MyString_new_unsafe =
+    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('MyString_new_unsafe')
+      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
+
   void setStr(String newStr) {
     final temp = ffi2.Arena();
     final newStrView = newStr.utf8View;;

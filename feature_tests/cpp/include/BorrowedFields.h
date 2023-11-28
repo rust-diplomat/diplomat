@@ -13,6 +13,7 @@ namespace capi {
 typedef struct BorrowedFields {
     DiplomatU16View a;
     DiplomatStringView b;
+    DiplomatStringView c;
 } BorrowedFields;
 #ifdef __cplusplus
 } // namespace capi

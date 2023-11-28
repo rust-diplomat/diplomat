@@ -19,4 +19,6 @@ public partial struct BorrowedFields
     public ushort[] a;
 
     public string b;
+
+    public string c;
 }

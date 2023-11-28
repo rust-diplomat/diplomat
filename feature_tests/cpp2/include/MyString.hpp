@@ -19,6 +19,12 @@ inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
   return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }
 
+inline std::unique_ptr<MyString> MyString::new_unsafe(std::string_view v) {
+  auto result = capi::MyString_new_unsafe(v.data(),
+    v.size());
+  return std::unique_ptr<MyString>(MyString::FromFFI(result));
+}
+
 inline void MyString::set_str(std::string_view new_str) {
   capi::MyString_set_str(this->AsFFI(),
     new_str.data(),

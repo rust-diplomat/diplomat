@@ -199,8 +199,24 @@ pub fn gen_method_docs<W: fmt::Write>(
 
     writeln!(out)?;
 
-    let docs =
+    let mut docs =
         gen_docs_and_lifetime_notes_markdown(method, docs_url_gen, ast::MarkdownStyle::RstCompat);
+
+    if method.params.iter().any(|p| {
+        matches!(
+            p,
+            ast::Param {
+                ty: ast::TypeName::StrReference(_, ast::StringEncoding::Utf8),
+                ..
+            }
+        )
+    }) {
+        write!(
+            docs,
+            "\nWarning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe)."
+        )?;
+    }
+
     if !docs.is_empty() {
         CppRst::from_markdown(&docs, in_path, env, &mut indented(out).with_str("    "))?;
     }
@@ -257,16 +273,36 @@ pub fn gen_field_docs<W: fmt::Write>(
     let ty_name = gen_type(&field.1, in_path, None, env, library_config, true)?;
     writeln!(out, ".. cpp:member:: {} {}", ty_name, field.0)?;
 
-    if !field.2.is_empty() {
+    let has_doc = !field.2.is_empty();
+    let has_ub_warning = matches!(
+        field.1,
+        ast::TypeName::StrReference(_, ast::StringEncoding::Utf8)
+    );
+
+    if has_doc || has_ub_warning {
         let mut field_indented = indented(out).with_str("    ");
-        CppRst::from_markdown(
-            &field
-                .2
-                .to_markdown(docs_url_gen, ast::MarkdownStyle::RstCompat),
-            in_path,
-            env,
-            &mut field_indented,
-        )?;
+        if has_doc {
+            CppRst::from_markdown(
+                &field
+                    .2
+                    .to_markdown(docs_url_gen, ast::MarkdownStyle::RstCompat),
+                in_path,
+                env,
+                &mut field_indented,
+            )?;
+        }
+
+        if has_doc && has_ub_warning {
+            writeln!(field_indented)?;
+        }
+
+        if has_ub_warning {
+            write!(
+                field_indented,
+                "Warning: Setting ill-formed UTF-8 is undefined behavior (and may be memory-unsafe)."
+            )?;
+        }
+
         writeln!(field_indented)?;
     }
 

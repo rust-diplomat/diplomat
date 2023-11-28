@@ -564,9 +564,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
-                self.formatter.fmt_utf8_primitive().into()
-            }
+            Type::Slice(hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            )) => self.formatter.fmt_utf8_primitive().into(),
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
                 self.formatter.fmt_utf16_primitive().into()
             }
@@ -650,9 +651,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Opaque(..) | Type::Struct(..) | Type::Enum(..) => {
                 format!("{dart_name}._underlying").into()
             }
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) => {
-                format!("{dart_name}.utf8View;").into()
-            }
+            Type::Slice(hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            )) => format!("{dart_name}.utf8View;").into(),
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
                 format!("{dart_name}.utf16View;").into()
             }
@@ -706,7 +708,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 format!("{type_name}.values.firstWhere((v) => v._underlying == {var_name})").into()
             }
             // As we only get borrowed slices from the FFI, we always have to copy.
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8)) =>
+            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8)) =>
                 format!("Utf8Decoder().convert({var_name}._pointer.asTypedList({var_name}._length))").into(),
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) =>
                 format!("core.String.fromCharCodes({var_name}._pointer.asTypedList({var_name}._length))").into(),
@@ -763,9 +765,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     /// Generates a Dart helper class for a slice type.
     fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
         let slice_ty = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
-                self.formatter.fmt_utf8_slice_type()
-            }
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => self.formatter.fmt_utf8_slice_type(),
             hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
                 self.formatter.fmt_utf16_slice_type()
             }
@@ -773,14 +776,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        if self.helper_classes.contains_key(slice_ty) {
-            return slice_ty;
-        }
-
         let ffi_type = match slice {
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8) => {
-                self.formatter.fmt_utf8_primitive()
-            }
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => self.formatter.fmt_utf8_primitive(),
             hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
                 self.formatter.fmt_utf16_primitive()
             }

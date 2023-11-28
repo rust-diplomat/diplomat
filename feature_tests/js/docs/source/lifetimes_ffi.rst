@@ -9,6 +9,8 @@
 
     .. js:attribute:: b
 
+    .. js:attribute:: c
+
 .. js:class:: BorrowedFieldsReturning
 
     .. js:attribute:: bytes

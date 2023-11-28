@@ -502,7 +502,9 @@ pub fn gen_ts_type<W: fmt::Write>(
         ast::TypeName::Writeable => unreachable!(),
         ast::TypeName::StrReference(
             _,
-            ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::UnvalidatedUtf16,
+            ast::StringEncoding::UnvalidatedUtf8
+            | ast::StringEncoding::UnvalidatedUtf16
+            | ast::StringEncoding::Utf8,
         ) => out.write_str("string")?,
         ast::TypeName::PrimitiveSlice(.., prim) => match prim {
             ast::PrimitiveType::i8 => write!(out, "Int8Array")?,

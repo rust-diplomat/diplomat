@@ -13,6 +13,8 @@
 
     .. js:function:: new(v)
 
+    .. js:function:: new_unsafe(v)
+
     .. js:method:: set_str(new_str)
 
     .. js:method:: get_str()

@@ -128,7 +128,7 @@ pub fn gen_value_js_to_rust<'env>(
                 pre_logic.push(format!(
                     "const {param_name_buf} = diplomatRuntime.DiplomatBuf.{}(wasm, {param_name});",
                     match encoding {
-                        ast::StringEncoding::UnvalidatedUtf8 => "str8",
+                        ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8 => "str8",
                         ast::StringEncoding::UnvalidatedUtf16 => "str16",
                         _ => unreachable!("unknown AST/HIR variant"),
                     }
@@ -514,8 +514,8 @@ impl fmt::Display for InvocationIntoJs<'_> {
                     ReturnTypeForm::Empty => unreachable!(),
                 }
             }
-            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => self.display_slice(SliceKind::Str).fmt(f),
-                ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self.display_slice(SliceKind::Str16).fmt(f),
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8) => self.display_slice(SliceKind::Str).fmt(f),
+            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => self.display_slice(SliceKind::Str16).fmt(f),
             ast::TypeName::PrimitiveSlice(.., prim) => {
                 self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
             }
@@ -790,9 +790,10 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                 todo!("Result in a buffer")
             }
             ast::TypeName::Writeable => todo!("Writeable in a buffer"),
-            ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {
-                self.display_slice(SliceKind::Str).fmt(f)
-            }
+            ast::TypeName::StrReference(
+                _,
+                ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
+            ) => self.display_slice(SliceKind::Str).fmt(f),
             ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
                 self.display_slice(SliceKind::Str16).fmt(f)
             }
