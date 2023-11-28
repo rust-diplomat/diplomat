@@ -46,6 +46,23 @@ public partial class MyString: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>MyString</c> allocated on Rust side.
+    /// </returns>
+    public static MyString NewUnsafe(string v)
+    {
+        unsafe
+        {
+            byte[] vBuf = DiplomatUtils.StringToUtf8(v);
+            nuint vBufLength = (nuint)vBuf.Length;
+            fixed (byte* vBufPtr = vBuf)
+            {
+                Raw.MyString* retVal = Raw.MyString.NewUnsafe(vBufPtr, vBufLength);
+                return new MyString(retVal);
+            }
+        }
+    }
+
     public void SetStr(string newStr)
     {
         unsafe

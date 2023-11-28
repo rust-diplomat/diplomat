@@ -11,6 +11,10 @@ mod ffi {
             Box::new(Self(String::from_utf8(v.to_owned()).unwrap()))
         }
 
+        pub fn new_unsafe(v: &str) -> Box<MyString> {
+            Box::new(Self(v.to_string()))
+        }
+
         pub fn set_str(&mut self, new_str: &DiplomatStr) {
             self.0 = String::from_utf8(new_str.to_owned()).unwrap();
         }

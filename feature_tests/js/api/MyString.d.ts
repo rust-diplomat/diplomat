@@ -9,6 +9,10 @@ export class MyString {
 
   /**
    */
+  static new_unsafe(v: string): MyString;
+
+  /**
+   */
   set_str(new_str: string): void;
 
   /**
