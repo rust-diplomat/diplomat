@@ -250,7 +250,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 if !is_struct =>
             {
                 vec![
-                    ("const chat16_t*".into(), format!("{param_name}_data").into()),
+                    (
+                        "const chat16_t*".into(),
+                        format!("{param_name}_data").into(),
+                    ),
                     ("size_t".into(), format!("{param_name}_len").into()),
                 ]
             }
