@@ -29,7 +29,7 @@ expr = "mozilla::Span<const char>"
 
 [string_view16]
 name = "mozilla::Span"
-expr = "mozilla::Span<const char_16t>"
+expr = "mozilla::Span<const char16_t>"
 
 [unique_ptr]
 name = "mozilla::UniquePtr"
