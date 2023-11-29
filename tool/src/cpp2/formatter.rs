@@ -139,7 +139,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     pub fn fmt_borrowed_utf16_str(&self) -> Cow<'static, str> {
         // TODO: This needs to change if an abstraction other than std::u16string_view is used
-        "std::wstring_view".into()
+        "std::u16string_view".into()
     }
 
     pub fn fmt_owned_str(&self) -> Cow<'static, str> {

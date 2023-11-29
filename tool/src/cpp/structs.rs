@@ -199,14 +199,29 @@ fn gen_method<W: fmt::Write>(
     }
 
     if is_header {
-        gen_comment_block(
-            out,
-            &super::docs::gen_docs_and_lifetime_notes_markdown(
-                method,
-                docs_url_gen,
-                ast::MarkdownStyle::Normal,
-            ),
-        )?;
+        let mut comment = super::docs::gen_docs_and_lifetime_notes_markdown(
+            method,
+            docs_url_gen,
+            ast::MarkdownStyle::Normal,
+        );
+
+        if method.params.iter().any(|p| {
+            matches!(
+                p,
+                ast::Param {
+                    ty: ast::TypeName::StrReference(_, ast::StringEncoding::Utf8),
+                    ..
+                }
+            )
+        }) {
+            if !comment.is_empty() {
+                writeln!(comment).unwrap();
+                writeln!(comment).unwrap();
+            }
+            writeln!(comment, "Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).").unwrap();
+        }
+
+        gen_comment_block(out, &comment)?;
     }
     let params_to_gen = gen_method_interface(
         method,
