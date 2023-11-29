@@ -251,7 +251,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             {
                 vec![
                     (
-                        "const chat16_t*".into(),
+                        "const char16_t*".into(),
                         format!("{param_name}_data").into(),
                     ),
                     ("size_t".into(), format!("{param_name}_len").into()),
