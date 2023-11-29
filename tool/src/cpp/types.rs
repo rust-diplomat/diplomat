@@ -164,7 +164,8 @@ fn gen_type_inner<W: fmt::Write>(
         }
 
         ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
-            write!(out, "const {}<const uint16_t>", library_config.span.expr)?;
+            let maybe_const = if in_struct { "" } else { "const " };
+            write!(out, "{maybe_const}{}", library_config.string_view16.expr)?;
         }
 
         ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => {

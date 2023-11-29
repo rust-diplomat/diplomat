@@ -21,6 +21,7 @@ pub struct LibraryConfig {
     pub someopt: CallableLibraryType,
     pub span: LibraryType,
     pub string_view: LibraryType,
+    pub string_view16: LibraryType,
     pub unique_ptr: LibraryType,
 }
 
@@ -52,6 +53,10 @@ impl LibraryConfig {
             string_view: LibraryType {
                 name: "std::string_view".into(),
                 expr: "std::string_view".into(),
+            },
+            string_view16: LibraryType {
+                name: "std::u16string_view".into(),
+                expr: "std::u16string_view".into(),
             },
             unique_ptr: LibraryType {
                 name: "std::unique_ptr".into(),

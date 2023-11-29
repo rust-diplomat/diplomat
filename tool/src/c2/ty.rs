@@ -250,7 +250,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 if !is_struct =>
             {
                 vec![
-                    ("const wchar_t*".into(), format!("{param_name}_data").into()),
+                    (
+                        "const char16_t*".into(),
+                        format!("{param_name}_data").into(),
+                    ),
                     ("size_t".into(), format!("{param_name}_len").into()),
                 ]
             }
@@ -329,7 +332,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         _,
                         hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
                     ) => "char".into(),
-                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "wchar_t".into(),
+                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "char16_t".into(),
                     hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
                     &_ => unreachable!("unknown AST/HIR variant"),
                 };
