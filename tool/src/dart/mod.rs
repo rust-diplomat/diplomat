@@ -231,7 +231,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         // Free the existing slice, which is owned by us. After construction, the slice
                         // is (null, 0), which is valid to free.
                         format!("ffi2.calloc.free(_underlying.{name}._pointer);"),
-                        format!("final {name}View = {view_expr}"),
+                        format!("final {name}View = {view_expr};"),
                         format!("_underlying.{name}._pointer = {name}View.pointer(ffi2.calloc);"),
                         format!("_underlying.{name}._length = {name}View.length;"),
                     ]
@@ -658,9 +658,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(hir::Slice::Str(
                 _,
                 hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            )) => format!("{dart_name}.utf8View;").into(),
+            )) => format!("{dart_name}.utf8View").into(),
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                format!("{dart_name}.utf16View;").into()
+                format!("{dart_name}.utf16View").into()
             }
             Type::Slice(hir::Slice::Primitive(
                 _,
