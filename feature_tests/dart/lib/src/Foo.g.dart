@@ -16,7 +16,7 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo(String x) {
     final temp = ffi2.Arena();
-    final xView = x.utf8View;;
+    final xView = x.utf8View;
     final result = _Foo_new(xView.pointer(temp), xView.length);
     temp.releaseAll();
     return Foo._(result);
@@ -39,7 +39,7 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo.static_(String x) {
     final temp = ffi2.Arena();
-    final xView = x.utf8View;;
+    final xView = x.utf8View;
     final result = _Foo_new_static(xView.pointer(temp), xView.length);
     temp.releaseAll();
     return Foo._(result);
