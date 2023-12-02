@@ -541,7 +541,11 @@ impl SliceKind {
             SliceKind::Str16 => write!(f, "diplomatRuntime.readString16(wasm, {ptr}, {size})"),
             SliceKind::Primitive(prim) => match prim {
                 JsPrimitive::Number(num) => {
-                    write!(f, "new {num}Array(wasm.memory.buffer, ptr, size)")
+                    // TODO(#383): can we borrow this?
+                    write!(
+                        f,
+                        "{num}Array.from(new {num}Array(wasm.memory.buffer, ptr, size))"
+                    )
                 }
                 JsPrimitive::Bool => todo!("Handle returning `&[bool]`."),
                 JsPrimitive::Char => todo!("Handle returning `&[char]`."),
