@@ -542,7 +542,10 @@ impl SliceKind {
             SliceKind::Primitive(prim) => match prim {
                 JsPrimitive::Number(num) => {
                     // TODO(#383): can we borrow this?
-                    write!(f, "{num}Array.from(new {num}Array(wasm.memory.buffer, ptr, size))")
+                    write!(
+                        f,
+                        "{num}Array.from(new {num}Array(wasm.memory.buffer, ptr, size))"
+                    )
                 }
                 JsPrimitive::Bool => todo!("Handle returning `&[bool]`."),
                 JsPrimitive::Char => todo!("Handle returning `&[char]`."),
