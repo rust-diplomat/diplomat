@@ -24,7 +24,7 @@ class Two {
  public:
   inline const capi::Two* AsFFI() const { return this->inner.get(); }
   inline capi::Two* AsFFIMut() { return this->inner.get(); }
-  inline Two(capi::Two* i) : inner(i) {}
+  inline explicit Two(capi::Two* i) : inner(i) {}
   Two() = default;
   Two(Two&&) noexcept = default;
   Two& operator=(Two&& other) noexcept = default;

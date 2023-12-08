@@ -24,7 +24,7 @@ class RefListParameter {
  public:
   inline const capi::RefListParameter* AsFFI() const { return this->inner.get(); }
   inline capi::RefListParameter* AsFFIMut() { return this->inner.get(); }
-  inline RefListParameter(capi::RefListParameter* i) : inner(i) {}
+  inline explicit RefListParameter(capi::RefListParameter* i) : inner(i) {}
   RefListParameter() = default;
   RefListParameter(RefListParameter&&) noexcept = default;
   RefListParameter& operator=(RefListParameter&& other) noexcept = default;

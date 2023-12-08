@@ -34,7 +34,7 @@ class MyString {
   std::string get_str() const;
   inline const capi::MyString* AsFFI() const { return this->inner.get(); }
   inline capi::MyString* AsFFIMut() { return this->inner.get(); }
-  inline MyString(capi::MyString* i) : inner(i) {}
+  inline explicit MyString(capi::MyString* i) : inner(i) {}
   MyString() = default;
   MyString(MyString&&) noexcept = default;
   MyString& operator=(MyString&& other) noexcept = default;

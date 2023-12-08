@@ -24,7 +24,7 @@ class AttrOpaque2 {
  public:
   inline const capi::AttrOpaque2* AsFFI() const { return this->inner.get(); }
   inline capi::AttrOpaque2* AsFFIMut() { return this->inner.get(); }
-  inline AttrOpaque2(capi::AttrOpaque2* i) : inner(i) {}
+  inline explicit AttrOpaque2(capi::AttrOpaque2* i) : inner(i) {}
   AttrOpaque2() = default;
   AttrOpaque2(AttrOpaque2&&) noexcept = default;
   AttrOpaque2& operator=(AttrOpaque2&& other) noexcept = default;

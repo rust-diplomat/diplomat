@@ -32,7 +32,7 @@ class OptionOpaque {
   static bool option_opaque_argument(const OptionOpaque* arg);
   inline const capi::OptionOpaque* AsFFI() const { return this->inner.get(); }
   inline capi::OptionOpaque* AsFFIMut() { return this->inner.get(); }
-  inline OptionOpaque(capi::OptionOpaque* i) : inner(i) {}
+  inline explicit OptionOpaque(capi::OptionOpaque* i) : inner(i) {}
   OptionOpaque() = default;
   OptionOpaque(OptionOpaque&&) noexcept = default;
   OptionOpaque& operator=(OptionOpaque&& other) noexcept = default;

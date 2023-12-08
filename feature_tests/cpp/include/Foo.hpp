@@ -53,7 +53,7 @@ class Foo {
   static Foo extract_from_fields(BorrowedFields fields);
   inline const capi::Foo* AsFFI() const { return this->inner.get(); }
   inline capi::Foo* AsFFIMut() { return this->inner.get(); }
-  inline Foo(capi::Foo* i) : inner(i) {}
+  inline explicit Foo(capi::Foo* i) : inner(i) {}
   Foo() = default;
   Foo(Foo&&) noexcept = default;
   Foo& operator=(Foo&& other) noexcept = default;
