@@ -2,10 +2,10 @@
 source: tool/src/js/structs.rs
 expression: out_texts.get(out).unwrap()
 ---
-import wasm from "../wasm.mjs"
+import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-export default class NonOpaqueStruct {
+export class NonOpaqueStruct {
   constructor(underlying) {
     this.a = (new Uint16Array(wasm.memory.buffer, underlying, 1))[0];
     this.b = (new Uint8Array(wasm.memory.buffer, underlying + 2, 1))[0];

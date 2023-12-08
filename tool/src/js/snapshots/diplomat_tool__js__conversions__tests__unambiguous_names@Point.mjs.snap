@@ -2,10 +2,10 @@
 source: tool/src/js/conversions.rs
 expression: out_texts.get(out).unwrap()
 ---
-import wasm from "../wasm.mjs"
+import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-export default class Point {
+export class Point {
   constructor(underlying) {
     this.x = (new Int32Array(wasm.memory.buffer, underlying, 1))[0];
     this.y = (new Int32Array(wasm.memory.buffer, underlying + 4, 1))[0];

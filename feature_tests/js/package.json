@@ -2,7 +2,10 @@
   "name": "diplomat-wasm-feature-tests",
   "version": "0.0.1",
   "description": "Diplomat WASM Feature Tests",
-  "main": "./api/index.js",
+  "main": "./api/index.mjs",
+  "exports": {
+    ".": "./api/index.mjs"
+  },
   "type": "module",
   "directories": {
     "doc": "docs",

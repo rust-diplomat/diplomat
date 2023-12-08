@@ -2,12 +2,11 @@
 source: tool/src/js/conversions.rs
 expression: out_texts.get(out).unwrap()
 ---
-import wasm from "../wasm.mjs"
+import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
-import Point from "./Point.mjs"
-import Scalar from "./Scalar.mjs"
+import { Point } from "./Point.mjs"
 
-export default class PointTranspose {
+export class PointTranspose {
   constructor(underlying, edges_u, edges_v) {
     this.point = new Point(underlying, edges_u, edges_v);
     this.transpose = new Point(underlying + 8, edges_v, edges_u);

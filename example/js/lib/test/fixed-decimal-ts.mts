@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormatter, ICU4XFixedDecimalFormatterOptions } from "../api/index.js"
+import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormatter, ICU4XFixedDecimalFormatterOptions } from "demo";
 
 test("multiply a fixed decimal by 0.1", t => {
     const my_decimal = ICU4XFixedDecimal.new(123);

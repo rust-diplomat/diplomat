@@ -2,14 +2,14 @@
 source: tool/src/js/structs.rs
 expression: out_texts.get(out).unwrap()
 ---
-import wasm from "../wasm.mjs"
+import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 const MyStruct_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.MyStruct_destroy(underlying);
 });
 
-export default class MyStruct {
+export class MyStruct {
   #lifetimeEdges = [];
   constructor(underlying, owned, edges) {
     this.underlying = underlying;
@@ -20,14 +20,14 @@ export default class MyStruct {
   }
 
   static new_str(arg_v) {
-    const buf_arg_v = diplomatRuntime.DiplomatBuf.str(wasm, arg_v);
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.str8(wasm, arg_v);
     const diplomat_out = new MyStruct(wasm.MyStruct_new_str(buf_arg_v.ptr, buf_arg_v.size), true, []);
     buf_arg_v.free();
     return diplomat_out;
   }
 
   set_str(arg_new_str) {
-    const buf_arg_new_str = diplomatRuntime.DiplomatBuf.str(wasm, arg_new_str);
+    const buf_arg_new_str = diplomatRuntime.DiplomatBuf.str8(wasm, arg_new_str);
     wasm.MyStruct_set_str(this.underlying, buf_arg_new_str.ptr, buf_arg_new_str.size);
     buf_arg_new_str.free();
   }

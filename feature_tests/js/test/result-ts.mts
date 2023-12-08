@@ -1,8 +1,8 @@
 import test from 'ava';
-import { FFIError } from '../api/diplomat-runtime.js';
-import { ErrorEnum } from '../api/ErrorEnum.js';
-import { ErrorStruct } from '../api/ErrorStruct.js';
-import { ResultOpaque } from "../api/ResultOpaque.js"
+import { FFIError } from "diplomat-wasm-feature-tests";
+import { ErrorEnum } from "diplomat-wasm-feature-tests";
+import { ErrorStruct } from "diplomat-wasm-feature-tests";
+import { ResultOpaque } from "diplomat-wasm-feature-tests"
 
 test("Verify result methods", t => {
     const s = ResultOpaque.new(5);
