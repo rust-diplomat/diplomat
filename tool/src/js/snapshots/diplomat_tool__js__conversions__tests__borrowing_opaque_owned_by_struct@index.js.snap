@@ -1,8 +1,0 @@
----
-source: tool/src/js/conversions.rs
-expression: out_texts.get(out).unwrap()
----
-export { FFIError } from './diplomat-runtime.js';
-export { BorrowingOpaque } from './BorrowingOpaque.js';
-export { BorrowingStruct } from './BorrowingStruct.js';
-

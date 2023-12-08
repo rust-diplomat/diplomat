@@ -1,7 +1,0 @@
----
-source: tool/src/js/types.rs
-expression: out_texts.get(out).unwrap()
----
-export { FFIError } from './diplomat-runtime.js';
-export { MyStruct } from './MyStruct.js';
-

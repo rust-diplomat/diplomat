@@ -2,11 +2,11 @@
 source: tool/src/js/conversions.rs
 expression: out_texts.get(out).unwrap()
 ---
-import wasm from "../wasm.mjs"
+import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
-import Scalar from "./Scalar.mjs"
+import { Scalar } from "./Scalar.mjs"
 
-export default class Point {
+export class Point {
   constructor(underlying, edges_x, edges_y) {
     this.x = new Scalar(diplomatRuntime.ptrRead(wasm, underlying), false, [...edges_x]);
     this.y = new Scalar(diplomatRuntime.ptrRead(wasm, underlying + 4), false, [...edges_y]);

@@ -2,11 +2,11 @@
 source: tool/src/js/conversions.rs
 expression: out_texts.get(out).unwrap()
 ---
-import wasm from "../wasm.mjs"
+import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
-import BorrowingOpaque from "./BorrowingOpaque.mjs"
+import { BorrowingOpaque } from "./BorrowingOpaque.mjs"
 
-export default class BorrowingStruct {
+export class BorrowingStruct {
   constructor(underlying, edges_a) {
     this.opaque = new BorrowingOpaque(diplomatRuntime.ptrRead(wasm, underlying), true, [...edges_a]);
     this.x = (new Uint8Array(wasm.memory.buffer, underlying + 4, 1))[0];

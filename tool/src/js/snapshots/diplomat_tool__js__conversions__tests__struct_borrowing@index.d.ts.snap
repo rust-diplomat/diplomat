@@ -2,8 +2,8 @@
 source: tool/src/js/conversions.rs
 expression: out_texts.get(out).unwrap()
 ---
-export { FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char } from './diplomat-runtime.js';
-export { Point } from './Point.js';
-export { PointTranspose } from './PointTranspose.js';
-export { Scalar } from './Scalar.js';
+export { FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char } from './diplomat-runtime.mjs';
+export { Point } from './Point.mjs';
+export { PointTranspose } from './PointTranspose.mjs';
+export { Scalar } from './Scalar.mjs';
 
