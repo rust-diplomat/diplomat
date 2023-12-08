@@ -90,7 +90,7 @@ pub fn gen_struct<W: fmt::Write>(
 
                 writeln!(
                     &mut public_body,
-                    "inline {}(capi::{}* i) : inner(i) {{}}",
+                    "inline explicit {}(capi::{}* i) : inner(i) {{}}",
                     opaque.name, opaque.name
                 )?;
                 writeln!(

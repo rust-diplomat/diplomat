@@ -32,7 +32,7 @@ class MyStruct {
   void set_b(uint8_t b);
   inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
   inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
-  inline MyStruct(capi::MyStruct* i) : inner(i) {}
+  inline explicit MyStruct(capi::MyStruct* i) : inner(i) {}
   MyStruct() = default;
   MyStruct(MyStruct&&) noexcept = default;
   MyStruct& operator=(MyStruct&& other) noexcept = default;

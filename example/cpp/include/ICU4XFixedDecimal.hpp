@@ -55,7 +55,7 @@ class ICU4XFixedDecimal {
   diplomat::result<std::string, std::monostate> to_string() const;
   inline const capi::ICU4XFixedDecimal* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XFixedDecimal* AsFFIMut() { return this->inner.get(); }
-  inline ICU4XFixedDecimal(capi::ICU4XFixedDecimal* i) : inner(i) {}
+  inline explicit ICU4XFixedDecimal(capi::ICU4XFixedDecimal* i) : inner(i) {}
   ICU4XFixedDecimal() = default;
   ICU4XFixedDecimal(ICU4XFixedDecimal&&) noexcept = default;
   ICU4XFixedDecimal& operator=(ICU4XFixedDecimal&& other) noexcept = default;
