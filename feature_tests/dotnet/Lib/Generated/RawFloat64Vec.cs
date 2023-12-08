@@ -19,11 +19,32 @@ public partial struct Float64Vec
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new", ExactSpelling = true)]
     public static unsafe extern Float64Vec* New(double* v, nuint vSz);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new_bool", ExactSpelling = true)]
+    public static unsafe extern Float64Vec* NewBool(bool* v, nuint vSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new_i16", ExactSpelling = true)]
+    public static unsafe extern Float64Vec* NewI16(short* v, nuint vSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new_u16", ExactSpelling = true)]
+    public static unsafe extern Float64Vec* NewU16(ushort* v, nuint vSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new_isize", ExactSpelling = true)]
+    public static unsafe extern Float64Vec* NewIsize(nint* v, nuint vSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new_usize", ExactSpelling = true)]
+    public static unsafe extern Float64Vec* NewUsize(nuint* v, nuint vSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new_f64_be_bytes", ExactSpelling = true)]
+    public static unsafe extern Float64Vec* NewF64BeBytes(byte* v, nuint vSz);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_fill_slice", ExactSpelling = true)]
     public static unsafe extern void FillSlice(Float64Vec* self, double* v, nuint vSz);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_set_value", ExactSpelling = true)]
     public static unsafe extern void SetValue(Float64Vec* self, double* newSlice, nuint newSliceSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_to_string", ExactSpelling = true)]
+    public static unsafe extern void ToString(Float64Vec* self, DiplomatWriteable* w);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Float64Vec* self);

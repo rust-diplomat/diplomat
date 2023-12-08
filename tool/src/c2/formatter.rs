@@ -147,7 +147,7 @@ impl<'tcx> CFormatter<'tcx> {
             PrimitiveType::Bool => "bool",
             PrimitiveType::Char => "char32_t",
             PrimitiveType::Int(IntType::I8) => "int8_t",
-            PrimitiveType::Int(IntType::U8) => "uint8_t",
+            PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "uint8_t",
             PrimitiveType::Int(IntType::I16) => "int16_t",
             PrimitiveType::Int(IntType::U16) => "uint16_t",
             PrimitiveType::Int(IntType::I32) => "int32_t",

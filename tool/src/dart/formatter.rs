@@ -45,8 +45,8 @@ impl<'tcx> DartFormatter<'tcx> {
     pub fn fmt_import(&self, path: &str, as_show_hide: Option<&str>) -> Cow<'static, str> {
         format!(
             "import '{path}'{}{};",
-            if as_show_hide.is_some() { "" } else { " " },
-            if let Some(s) = as_show_hide { s } else { " " },
+            if as_show_hide.is_some() { " " } else { "" },
+            if let Some(s) = as_show_hide { s } else { "" },
         )
         .into()
     }
@@ -220,71 +220,83 @@ impl<'tcx> DartFormatter<'tcx> {
             match prim {
                 PrimitiveType::Bool => "bool",
                 PrimitiveType::Char => "Rune",
-                PrimitiveType::Int(_) | PrimitiveType::IntSize(IntSizeType::Usize) => "int",
-                PrimitiveType::IntSize(IntSizeType::Isize) => panic!("isize not supported in Dart"),
-                PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+                PrimitiveType::Int(_) | PrimitiveType::IntSize(_) | PrimitiveType::Byte  => "int",
                 PrimitiveType::Float(_) => "double",
+                PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
             }
         } else {
             match prim {
                 PrimitiveType::Bool => "ffi.Bool",
                 PrimitiveType::Char => "ffi.Uint32",
                 PrimitiveType::Int(IntType::I8) => "ffi.Int8",
-                PrimitiveType::Int(IntType::U8) => "ffi.Uint8",
+                PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "ffi.Uint8",
                 PrimitiveType::Int(IntType::I16) => "ffi.Int16",
                 PrimitiveType::Int(IntType::U16) => "ffi.Uint16",
                 PrimitiveType::Int(IntType::I32) => "ffi.Int32",
                 PrimitiveType::Int(IntType::U32) => "ffi.Uint32",
                 PrimitiveType::Int(IntType::I64) => "ffi.Int64",
                 PrimitiveType::Int(IntType::U64) => "ffi.Uint64",
-                PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-                PrimitiveType::IntSize(IntSizeType::Isize) => panic!("isize not supported in Dart"),
+                PrimitiveType::IntSize(IntSizeType::Isize) => "ffi.IntPtr",
                 PrimitiveType::IntSize(IntSizeType::Usize) => "ffi.Size",
                 PrimitiveType::Float(FloatType::F32) => "ffi.Float",
                 PrimitiveType::Float(FloatType::F64) => "ffi.Double",
+                PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
             }
         }
     }
 
     pub fn fmt_primitive_list_type(&self, prim: hir::PrimitiveType) -> &'static str {
+        use diplomat_core::hir::PrimitiveType;
+        match prim {
+            PrimitiveType::Bool => "core.List<bool>",
+            PrimitiveType::Char => "core.List<Rune>",
+            PrimitiveType::Byte => "ByteBuffer",
+            PrimitiveType::Int(_) | PrimitiveType::IntSize(_) => "core.List<int>",
+            PrimitiveType::Float(_) => "core.List<double>",
+            PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+        }
+    }
+
+    pub fn fmt_primitive_list_view(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         match prim {
-            PrimitiveType::Bool => panic!("bool not supported in lists"),
-            PrimitiveType::Char => "RuneList",
-            PrimitiveType::Int(IntType::I8) => "Int8List",
-            PrimitiveType::Int(IntType::U8) => "Uint8List",
-            PrimitiveType::Int(IntType::I16) => "Int16List",
-            PrimitiveType::Int(IntType::U16) => "Uint16List",
-            PrimitiveType::Int(IntType::I32) => "Int32List",
-            PrimitiveType::Int(IntType::U32) => "Uint32List",
-            PrimitiveType::Int(IntType::I64) => "Int64List",
-            PrimitiveType::Int(IntType::U64) => "Uint64List",
+            PrimitiveType::Bool => ".boolView",
+            PrimitiveType::Char => ".uint32View",
+            PrimitiveType::Byte => "",
+            PrimitiveType::Int(IntType::I8) => ".int8View",
+            PrimitiveType::Int(IntType::U8) => ".uint8View",
+            PrimitiveType::Int(IntType::I16) => ".int16View",
+            PrimitiveType::Int(IntType::U16) => ".uint16View",
+            PrimitiveType::Int(IntType::I32) => ".int32View",
+            PrimitiveType::Int(IntType::U32) => ".uint32View",
+            PrimitiveType::Int(IntType::I64) => ".int64View",
+            PrimitiveType::Int(IntType::U64) => ".uint64View",
+            PrimitiveType::IntSize(IntSizeType::Usize) => ".usizeView",
+            PrimitiveType::IntSize(IntSizeType::Isize) => ".isizeView",
+            PrimitiveType::Float(FloatType::F32) => ".float32View",
+            PrimitiveType::Float(FloatType::F64) => ".float64View",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            PrimitiveType::IntSize(IntSizeType::Isize) => panic!("isize not supported in Dart"),
-            PrimitiveType::IntSize(IntSizeType::Usize) => "core.List<int>", // no typed list
-            PrimitiveType::Float(FloatType::F32) => "Float32List",
-            PrimitiveType::Float(FloatType::F64) => "Float64List",
         }
     }
 
     pub fn fmt_slice_type(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         match prim {
-            PrimitiveType::Bool => panic!("bool not supported in lists"),
+            PrimitiveType::Bool => "_SliceBool",
             PrimitiveType::Char => "_SliceRune",
             PrimitiveType::Int(IntType::I8) => "_SliceInt8",
-            PrimitiveType::Int(IntType::U8) => "_SliceUint8",
+            PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "_SliceUint8",
             PrimitiveType::Int(IntType::I16) => "_SliceInt16",
             PrimitiveType::Int(IntType::U16) => "_SliceUint16",
             PrimitiveType::Int(IntType::I32) => "_SliceInt32",
             PrimitiveType::Int(IntType::U32) => "_SliceUint32",
             PrimitiveType::Int(IntType::I64) => "_SliceInt64",
             PrimitiveType::Int(IntType::U64) => "_SliceUint64",
-            PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-            PrimitiveType::IntSize(IntSizeType::Usize) => "_SliceSize",
-            PrimitiveType::IntSize(_) => panic!("isize not supported in Dart"),
+            PrimitiveType::IntSize(IntSizeType::Usize) => "_SliceUsize",
+            PrimitiveType::IntSize(IntSizeType::Isize) => "_SliceIsize",
             PrimitiveType::Float(FloatType::F32) => "_SliceFloat",
             PrimitiveType::Float(FloatType::F64) => "_SliceDouble",
+            PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
         }
     }
 

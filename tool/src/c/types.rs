@@ -124,7 +124,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
 pub fn c_type_for_prim(prim: &PrimitiveType) -> &'static str {
     match prim {
         PrimitiveType::i8 => "int8_t",
-        PrimitiveType::u8 => "uint8_t",
+        PrimitiveType::u8 | PrimitiveType::byte => "uint8_t",
         PrimitiveType::i16 => "int16_t",
         PrimitiveType::u16 => "uint16_t",
         PrimitiveType::i32 => "int32_t",
