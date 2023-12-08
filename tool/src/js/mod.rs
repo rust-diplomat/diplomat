@@ -42,7 +42,11 @@ pub fn gen_bindings(
     let header_exports: String = {
         let mut buf = String::new();
         for (_, custom_type) in &all_types {
-            writeln!(buf, "export {{ {0} }} from './{0}.mjs';", custom_type.name())?;
+            writeln!(
+                buf,
+                "export {{ {0} }} from './{0}.mjs';",
+                custom_type.name()
+            )?;
         }
         buf
     };
