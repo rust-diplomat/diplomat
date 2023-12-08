@@ -26,7 +26,7 @@ pub fn gen_bindings(
     outs: &mut HashMap<String, String>,
     docs_url_gen: Option<&ast::DocsUrlGenerator>,
 ) -> fmt::Result {
-    outs.entry("diplomat-runtime.js".to_string())
+    outs.entry("diplomat-runtime.mjs".to_string())
         .or_default()
         .write_str(include_str!("runtime.mjs"))?;
     outs.entry("diplomat-runtime.d.ts".to_string())
@@ -42,19 +42,19 @@ pub fn gen_bindings(
     let header_exports: String = {
         let mut buf = String::new();
         for (_, custom_type) in &all_types {
-            writeln!(buf, "export {{ {0} }} from './{0}.js';", custom_type.name())?;
+            writeln!(buf, "export {{ {0} }} from './{0}.mjs';", custom_type.name())?;
         }
         buf
     };
 
     let index_ts = outs.entry("index.d.ts".to_string()).or_default();
-    writeln!(index_ts, "export {{ FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char }} from './diplomat-runtime.js';")?;
+    writeln!(index_ts, "export {{ FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char }} from './diplomat-runtime.mjs';")?;
     index_ts.write_str(&header_exports)?;
 
-    let index_js = outs.entry("index.js".to_string()).or_default();
+    let index_js = outs.entry("index.mjs".to_string()).or_default();
     writeln!(
         index_js,
-        "export {{ FFIError }} from './diplomat-runtime.js';"
+        "export {{ FFIError }} from './diplomat-runtime.mjs';"
     )?;
     index_js.write_str(&header_exports)?;
 
@@ -62,25 +62,25 @@ pub fn gen_bindings(
         let imports = Imports::new(custom_type, in_path, env);
 
         let out = outs
-            .entry(format!("{}.js", custom_type.name()))
+            .entry(format!("{}.mjs", custom_type.name()))
             .or_default();
 
         writeln!(out, "import wasm from \"./diplomat-wasm.mjs\"")?;
         writeln!(
             out,
-            "import * as diplomatRuntime from \"./diplomat-runtime.js\""
+            "import * as diplomatRuntime from \"./diplomat-runtime.mjs\""
         )?;
         for custom_type in imports.js_imports.iter() {
             if let ast::CustomType::Enum(enm) = custom_type {
                 writeln!(
                     out,
-                    "import {{ {0}_js_to_rust, {0}_rust_to_js }} from \"./{0}.js\"",
+                    "import {{ {0}_js_to_rust, {0}_rust_to_js }} from \"./{0}.mjs\"",
                     enm.name
                 )?;
             } else {
                 writeln!(
                     out,
-                    "import {{ {0} }} from \"./{0}.js\"",
+                    "import {{ {0} }} from \"./{0}.mjs\"",
                     custom_type.name()
                 )?;
             }
@@ -133,7 +133,7 @@ pub fn gen_bindings(
     Ok(())
 }
 
-/// A struct for detecting all the the imports required for .js and d.ts files.
+/// A struct for detecting all the the imports required for .mjs and d.ts files.
 #[derive(Default)]
 struct Imports<'env> {
     /// Type that show up in a type's fields, or as a parameter or return value.
