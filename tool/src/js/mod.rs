@@ -41,7 +41,7 @@ pub fn gen_bindings(
 
     let index_ts = outs.entry("index.d.ts".to_string()).or_default();
     writeln!(
-        index_ts, 
+        index_ts,
         "export {{ FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char }} from './diplomat-runtime';"
     )?;
     for (_, custom_type) in &all_types {
