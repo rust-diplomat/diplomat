@@ -39,28 +39,25 @@ pub fn gen_bindings(
     let mut all_types = util::get_all_custom_types(env);
     all_types.sort_by_key(|t| t.1.name());
 
-    let header_exports: String = {
-        let mut buf = String::new();
-        for (_, custom_type) in &all_types {
-            writeln!(
-                buf,
-                "export {{ {0} }} from './{0}.mjs';",
-                custom_type.name()
-            )?;
-        }
-        buf
-    };
-
     let index_ts = outs.entry("index.d.ts".to_string()).or_default();
-    writeln!(index_ts, "export {{ FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char }} from './diplomat-runtime.mjs';")?;
-    index_ts.write_str(&header_exports)?;
+    writeln!(
+        index_ts,
+        "export {{ FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char }} from './diplomat-runtime';"
+    )?;
+    for (_, custom_type) in &all_types {
+        let name = custom_type.name();
+        writeln!(index_ts, "export {{ {name} }} from './{name}';",)?;
+    }
 
     let index_js = outs.entry("index.mjs".to_string()).or_default();
     writeln!(
         index_js,
         "export {{ FFIError }} from './diplomat-runtime.mjs';"
     )?;
-    index_js.write_str(&header_exports)?;
+    for (_, custom_type) in &all_types {
+        let name = custom_type.name();
+        writeln!(index_js, "export {{ {name} }} from './{name}.mjs';",)?;
+    }
 
     for (in_path, custom_type) in &all_types {
         let imports = Imports::new(custom_type, in_path, env);
