@@ -56,7 +56,7 @@ class ICU4XFixedDecimalFormatter {
   std::string format_write(const ICU4XFixedDecimal& value) const;
   inline const capi::ICU4XFixedDecimalFormatter* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XFixedDecimalFormatter* AsFFIMut() { return this->inner.get(); }
-  inline ICU4XFixedDecimalFormatter(capi::ICU4XFixedDecimalFormatter* i) : inner(i) {}
+  inline explicit ICU4XFixedDecimalFormatter(capi::ICU4XFixedDecimalFormatter* i) : inner(i) {}
   ICU4XFixedDecimalFormatter() = default;
   ICU4XFixedDecimalFormatter(ICU4XFixedDecimalFormatter&&) noexcept = default;
   ICU4XFixedDecimalFormatter& operator=(ICU4XFixedDecimalFormatter&& other) noexcept = default;

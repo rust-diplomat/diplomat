@@ -28,7 +28,7 @@ class MyOpaqueStruct {
  public:
   inline const capi::MyOpaqueStruct* AsFFI() const { return this->inner.get(); }
   inline capi::MyOpaqueStruct* AsFFIMut() { return this->inner.get(); }
-  inline MyOpaqueStruct(capi::MyOpaqueStruct* i) : inner(i) {}
+  inline explicit MyOpaqueStruct(capi::MyOpaqueStruct* i) : inner(i) {}
   MyOpaqueStruct() = default;
   MyOpaqueStruct(MyOpaqueStruct&&) noexcept = default;
   MyOpaqueStruct& operator=(MyOpaqueStruct&& other) noexcept = default;

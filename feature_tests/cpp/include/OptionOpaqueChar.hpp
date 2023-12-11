@@ -25,7 +25,7 @@ class OptionOpaqueChar {
   void assert_char(char32_t ch) const;
   inline const capi::OptionOpaqueChar* AsFFI() const { return this->inner.get(); }
   inline capi::OptionOpaqueChar* AsFFIMut() { return this->inner.get(); }
-  inline OptionOpaqueChar(capi::OptionOpaqueChar* i) : inner(i) {}
+  inline explicit OptionOpaqueChar(capi::OptionOpaqueChar* i) : inner(i) {}
   OptionOpaqueChar() = default;
   OptionOpaqueChar(OptionOpaqueChar&&) noexcept = default;
   OptionOpaqueChar& operator=(OptionOpaqueChar&& other) noexcept = default;

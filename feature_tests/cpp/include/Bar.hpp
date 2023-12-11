@@ -24,7 +24,7 @@ class Bar {
  public:
   inline const capi::Bar* AsFFI() const { return this->inner.get(); }
   inline capi::Bar* AsFFIMut() { return this->inner.get(); }
-  inline Bar(capi::Bar* i) : inner(i) {}
+  inline explicit Bar(capi::Bar* i) : inner(i) {}
   Bar() = default;
   Bar(Bar&&) noexcept = default;
   Bar& operator=(Bar&& other) noexcept = default;

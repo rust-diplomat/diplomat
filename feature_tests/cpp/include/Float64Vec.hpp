@@ -28,7 +28,7 @@ class Float64Vec {
   void set_value(const diplomat::span<const double> new_slice);
   inline const capi::Float64Vec* AsFFI() const { return this->inner.get(); }
   inline capi::Float64Vec* AsFFIMut() { return this->inner.get(); }
-  inline Float64Vec(capi::Float64Vec* i) : inner(i) {}
+  inline explicit Float64Vec(capi::Float64Vec* i) : inner(i) {}
   Float64Vec() = default;
   Float64Vec(Float64Vec&&) noexcept = default;
   Float64Vec& operator=(Float64Vec&& other) noexcept = default;

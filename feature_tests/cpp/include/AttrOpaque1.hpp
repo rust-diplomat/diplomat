@@ -26,7 +26,7 @@ class AttrOpaque1 {
   void method_disabledcpp() const;
   inline const capi::AttrOpaque1* AsFFI() const { return this->inner.get(); }
   inline capi::AttrOpaque1* AsFFIMut() { return this->inner.get(); }
-  inline AttrOpaque1(capi::AttrOpaque1* i) : inner(i) {}
+  inline explicit AttrOpaque1(capi::AttrOpaque1* i) : inner(i) {}
   AttrOpaque1() = default;
   AttrOpaque1(AttrOpaque1&&) noexcept = default;
   AttrOpaque1& operator=(AttrOpaque1&& other) noexcept = default;

@@ -81,7 +81,7 @@ class One {
   static One implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold);
   inline const capi::One* AsFFI() const { return this->inner.get(); }
   inline capi::One* AsFFIMut() { return this->inner.get(); }
-  inline One(capi::One* i) : inner(i) {}
+  inline explicit One(capi::One* i) : inner(i) {}
   One() = default;
   One(One&&) noexcept = default;
   One& operator=(One&& other) noexcept = default;

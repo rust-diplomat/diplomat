@@ -36,7 +36,7 @@ class ResultOpaque {
   void assert_integer(int32_t i) const;
   inline const capi::ResultOpaque* AsFFI() const { return this->inner.get(); }
   inline capi::ResultOpaque* AsFFIMut() { return this->inner.get(); }
-  inline ResultOpaque(capi::ResultOpaque* i) : inner(i) {}
+  inline explicit ResultOpaque(capi::ResultOpaque* i) : inner(i) {}
   ResultOpaque() = default;
   ResultOpaque(ResultOpaque&&) noexcept = default;
   ResultOpaque& operator=(ResultOpaque&& other) noexcept = default;

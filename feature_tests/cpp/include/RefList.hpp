@@ -31,7 +31,7 @@ class RefList {
   static RefList node(const RefListParameter& data);
   inline const capi::RefList* AsFFI() const { return this->inner.get(); }
   inline capi::RefList* AsFFIMut() { return this->inner.get(); }
-  inline RefList(capi::RefList* i) : inner(i) {}
+  inline explicit RefList(capi::RefList* i) : inner(i) {}
   RefList() = default;
   RefList(RefList&&) noexcept = default;
   RefList& operator=(RefList&& other) noexcept = default;
