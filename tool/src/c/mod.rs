@@ -75,7 +75,7 @@ fn gen_struct_header<'a>(
 
     if let ast::CustomType::Struct(strct) = typ {
         for (_, typ, _) in &strct.fields {
-            gen_includes(typ, in_path, true, false, env, &mut seen_includes, out)?;
+            gen_includes(typ, in_path, env, &mut seen_includes, out)?;
             collect_results(typ, in_path, env, seen_results, all_results);
         }
     }
@@ -115,34 +115,18 @@ fn gen_struct_header<'a>(
 
     if let ast::CustomType::Struct(strct) = typ {
         for (_, typ, _) in &strct.fields {
-            gen_includes(typ, in_path, true, false, env, &mut seen_includes, out)?;
+            gen_includes(typ, in_path, env, &mut seen_includes, out)?;
             collect_results(typ, in_path, env, seen_results, all_results);
         }
     }
     for method in typ.methods() {
         for param in &method.params {
-            gen_includes(
-                &param.ty,
-                in_path,
-                false,
-                false,
-                env,
-                &mut seen_includes,
-                out,
-            )?;
+            gen_includes(&param.ty, in_path, env, &mut seen_includes, out)?;
             collect_results(&param.ty, in_path, env, seen_results, all_results);
         }
 
         if let Some(return_type) = method.return_type.as_ref() {
-            gen_includes(
-                return_type,
-                in_path,
-                false,
-                false,
-                env,
-                &mut seen_includes,
-                out,
-            )?;
+            gen_includes(return_type, in_path, env, &mut seen_includes, out)?;
             collect_results(return_type, in_path, env, seen_results, all_results);
         }
     }
@@ -200,24 +184,8 @@ fn gen_result_header(
         writeln!(out, "#include \"diplomat_runtime.h\"")?;
         writeln!(out)?;
         let mut seen_includes = HashSet::new();
-        gen_includes(
-            ok.as_ref(),
-            in_path,
-            true,
-            false,
-            env,
-            &mut seen_includes,
-            out,
-        )?;
-        gen_includes(
-            err.as_ref(),
-            in_path,
-            true,
-            false,
-            env,
-            &mut seen_includes,
-            out,
-        )?;
+        gen_includes(ok.as_ref(), in_path, env, &mut seen_includes, out)?;
+        gen_includes(err.as_ref(), in_path, env, &mut seen_includes, out)?;
         writeln!(out, "#ifdef __cplusplus")?;
         writeln!(out, "namespace capi {{")?;
         writeln!(out, "extern \"C\" {{")?;
@@ -240,8 +208,6 @@ fn gen_result_header(
 pub fn gen_includes<W: fmt::Write>(
     typ: &ast::TypeName,
     in_path: &ast::Path,
-    pre_struct: bool,
-    behind_ref: bool,
     env: &Env,
     seen_includes: &mut HashSet<String>,
     out: &mut W,
@@ -249,28 +215,10 @@ pub fn gen_includes<W: fmt::Write>(
     match typ {
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             let custom_typ = path_type.resolve(in_path, env);
-            match (custom_typ, behind_ref) {
-                (ast::CustomType::Opaque(_) | ast::CustomType::Struct(_), true) => {
-                    if pre_struct {
-                        let decl = format!(
-                            "typedef struct {} {};",
-                            custom_typ.name(),
-                            custom_typ.name()
-                        );
-                        if !seen_includes.contains(&decl) {
-                            writeln!(out, "{decl}")?;
-                            seen_includes.insert(decl);
-                        }
-                    } else {
-                        let include = format!("#include \"{}.h\"", custom_typ.name());
-                        if !seen_includes.contains(&include) {
-                            writeln!(out, "{include}")?;
-                            seen_includes.insert(include);
-                        }
-                    }
-                }
-
-                (ast::CustomType::Struct(_), false) | (ast::CustomType::Enum(_), _) => {
+            match custom_typ {
+                ast::CustomType::Opaque(_)
+                | ast::CustomType::Struct(_)
+                | ast::CustomType::Enum(_) => {
                     let include = format!("#include \"{}.h\"", custom_typ.name());
                     if !seen_includes.contains(&include) {
                         writeln!(out, "{include}")?;
@@ -278,45 +226,18 @@ pub fn gen_includes<W: fmt::Write>(
                     }
                 }
 
-                (ast::CustomType::Opaque(_), false) => {
-                    panic!("Cannot pass opaque types by value")
-                }
-                (&_, _) => unreachable!("unknown AST/HIR variant"),
+                _ => unreachable!("unknown AST/HIR variant"),
             }
         }
         ast::TypeName::Box(underlying) => {
-            gen_includes(
-                underlying,
-                in_path,
-                pre_struct,
-                true,
-                env,
-                seen_includes,
-                out,
-            )?;
+            gen_includes(underlying, in_path, env, seen_includes, out)?;
         }
         ast::TypeName::Reference(.., underlying) => {
-            gen_includes(
-                underlying,
-                in_path,
-                pre_struct,
-                true,
-                env,
-                seen_includes,
-                out,
-            )?;
+            gen_includes(underlying, in_path, env, seen_includes, out)?;
         }
         ast::TypeName::Primitive(_) => {}
         ast::TypeName::Option(underlying) => {
-            gen_includes(
-                underlying,
-                in_path,
-                pre_struct,
-                behind_ref,
-                env,
-                seen_includes,
-                out,
-            )?;
+            gen_includes(underlying, in_path, env, seen_includes, out)?;
         }
         ast::TypeName::Result(_, _, _) => {
             let include = format!("#include \"{}.h\"", name_for_type(typ));

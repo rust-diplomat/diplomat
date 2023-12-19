@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-typedef struct ResultOpaque ResultOpaque;
+#include "ResultOpaque.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {

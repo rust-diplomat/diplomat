@@ -10,7 +10,7 @@ expression: out_texts.get(out).unwrap()
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-typedef struct MyOpaqueStruct MyOpaqueStruct;
+#include "MyOpaqueStruct.h"
 #ifdef __cplusplus
 namespace capi {
 #endif
@@ -21,7 +21,6 @@ typedef struct MyStruct {
 #ifdef __cplusplus
 } // namespace capi
 #endif
-typedef struct MyOpaqueStruct MyOpaqueStruct;
 #include "MyOpaqueStruct.h"
 #ifdef __cplusplus
 namespace capi {

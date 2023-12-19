@@ -6,8 +6,8 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-typedef struct OptionOpaque OptionOpaque;
-typedef struct OptionOpaqueChar OptionOpaqueChar;
+#include "OptionOpaque.h"
+#include "OptionOpaqueChar.h"
 #ifdef __cplusplus
 namespace capi {
 #endif
@@ -21,8 +21,8 @@ typedef struct OptionStruct {
 #ifdef __cplusplus
 } // namespace capi
 #endif
-typedef struct OptionOpaque OptionOpaque;
-typedef struct OptionOpaqueChar OptionOpaqueChar;
+#include "OptionOpaque.h"
+#include "OptionOpaqueChar.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {

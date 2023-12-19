@@ -10,7 +10,7 @@ expression: out_texts.get(out).unwrap()
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-typedef struct MyStruct MyStruct;
+#include "MyStruct.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
