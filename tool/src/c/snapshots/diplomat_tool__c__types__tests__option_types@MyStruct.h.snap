@@ -20,7 +20,6 @@ typedef struct MyStruct {
 #ifdef __cplusplus
 } // namespace capi
 #endif
-typedef struct MyStruct MyStruct;
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
