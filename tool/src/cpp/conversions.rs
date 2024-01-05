@@ -136,11 +136,7 @@ pub fn gen_rust_to_cpp<W: Write>(
                 writeln!(out, "auto {raw_value_id} = {cpp};").unwrap();
                 let wrapped_value_id = format!("diplomat_result_{path}");
                 let result_ty = super::types::gen_type(
-                    &ast::TypeName::Result(
-                        Box::new(underlying.clone()),
-                        Box::new(ast::TypeName::Unit),
-                        true,
-                    ),
+                    &ast::TypeName::Option(Box::new(underlying.clone())),
                     in_path,
                     None,
                     env,

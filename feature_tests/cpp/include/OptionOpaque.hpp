@@ -65,7 +65,7 @@ inline std::optional<OptionOpaque> OptionOpaque::new_none() {
 }
 inline std::optional<OptionStruct> OptionOpaque::returns() {
   auto diplomat_result_raw_out_value = capi::OptionOpaque_returns();
-  diplomat::result<OptionStruct, std::monostate> diplomat_result_out_value;
+  std::optional<OptionStruct> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
   capi::OptionStruct diplomat_raw_struct_out_value = diplomat_result_raw_out_value.ok;
   auto diplomat_optional_raw_out_value_a = diplomat_raw_struct_out_value.a;
