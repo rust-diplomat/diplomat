@@ -1,6 +1,6 @@
-{%- if !docs.is_empty() %}
+{% if !docs.is_empty() -%}
 /// {{docs}}
-{%- endif %}
+{% endif -%}
 enum {{type_name}} {
 {%- for enum_variant in ty.variants %}
   {% if !enum_variant.docs.is_empty() -%}

@@ -173,7 +173,6 @@ extension _Float64ListFfi on Float64List {
   }
 }
 
-
 final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
 }

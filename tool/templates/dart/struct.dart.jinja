@@ -1,6 +1,3 @@
-{%- if !docs.is_empty() %}
-/// {{docs}}
-{%- endif %}
 final class _{{type_name}}Ffi extends ffi.Struct {
   {%- for field in fields %}
   {%- match field.annotation %}
@@ -12,6 +9,9 @@ final class _{{type_name}}Ffi extends ffi.Struct {
   {%- endfor %}
 }
 
+{% if !docs.is_empty() -%}
+/// {{docs}}
+{% endif -%}
 final class {{type_name}} {
   final _{{type_name}}Ffi _underlying;
 
