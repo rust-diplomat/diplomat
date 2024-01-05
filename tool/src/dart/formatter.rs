@@ -220,7 +220,7 @@ impl<'tcx> DartFormatter<'tcx> {
             match prim {
                 PrimitiveType::Bool => "bool",
                 PrimitiveType::Char => "Rune",
-                PrimitiveType::Int(_) | PrimitiveType::IntSize(_) | PrimitiveType::Byte  => "int",
+                PrimitiveType::Int(_) | PrimitiveType::IntSize(_) | PrimitiveType::Byte => "int",
                 PrimitiveType::Float(_) => "double",
                 PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
             }
