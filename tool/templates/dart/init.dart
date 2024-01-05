@@ -1,4 +1,3 @@
-
 /// A [Rune] is a Unicode code point, such as `a`, or `💡`.
 /// 
 /// The recommended way to obtain a [Rune] is to create it from a 

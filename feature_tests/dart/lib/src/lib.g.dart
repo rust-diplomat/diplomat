@@ -192,7 +192,6 @@ extension _Float64ListFfi on Float64List {
   }
 }
 
-
 final class _ResultInt32OpaqueUnion extends ffi.Union {
   @ffi.Int32()
   external int ok;

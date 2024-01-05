@@ -5,13 +5,10 @@
 
 {% for directive in directives -%}
 {{directive}}
-{% endfor -%}
-
+{% endfor %}
 {{ body }}
-
-{%- for helper_class in helper_classes.values() %}
-
+{% for helper_class in helper_classes.values() -%}
+{%- if !loop.first %}
+{% endif -%}
 {{helper_class}}
-
-{%- endfor %}
-
+{% endfor -%}
