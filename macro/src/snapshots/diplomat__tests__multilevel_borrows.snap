@@ -6,6 +6,7 @@ mod ffi {
     struct Foo<'a>(&'a str);
     struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
     #[repr(C)]
+    #[derive(Clone, Copy)]
     struct Baz<'x, 'y> {
         foo: &'y Foo<'x>,
     }

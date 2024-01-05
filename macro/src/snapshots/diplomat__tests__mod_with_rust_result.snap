@@ -4,6 +4,7 @@ expression: "rustfmt_code(&gen_bridge(parse_quote! {\n                          
 ---
 mod ffi {
     #[repr(C)]
+    #[derive(Clone, Copy)]
     struct Foo {}
     impl Foo {
         pub fn bar(&self) -> Result<(), ()> {
