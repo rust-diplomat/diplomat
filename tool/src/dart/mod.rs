@@ -772,7 +772,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     }
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                Some(format!("if (!result.isOk) {{\n  return null;\n}}\nreturn {ok_conversion};").into())
+                Some(
+                    format!("if (!result.isOk) {{\n  return null;\n}}\nreturn {ok_conversion};")
+                        .into(),
+                )
             }
             ReturnType::Infallible(Some(_)) => unreachable!("unknown AST/HIR variant"),
         }
