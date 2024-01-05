@@ -34,7 +34,7 @@ jobs:
     - name: Get cargo-make version
       id: cargo-make-version
       run: |
-        echo "::set-output name=hash::$(cargo search cargo-make | grep '^cargo-make =' | md5sum)"
+        echo "::set-output name=hash::0.36.13"
       shell: bash
     - name: Attempt to load cached cargo-make
       uses: actions/cache@v2
@@ -49,7 +49,7 @@ jobs:
       uses: actions-rs/install@v0.1.2
       with:
         crate: cargo-make
-        version: latest
+        version: 0.36.13
     - uses: dart-lang/setup-dart@v1
 
     - name: Run regeneration
