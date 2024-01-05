@@ -206,6 +206,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 cd example/dart/
+exec --fail-on-error dart --enable-experiment=native-assets pub get
 exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
@@ -216,6 +217,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 cd feature_tests/dart/
+exec --fail-on-error dart --enable-experiment=native-assets pub get
 exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
