@@ -29,18 +29,3 @@
     {%- when None %}
     {%- endmatch %}
   }{% if m.declaration.starts_with("static final") %}();{% endif %}
-
-  // ignore: non_constant_identifier_names
-  static final _{{ m.c_method_name }} =
-    _capi<ffi.NativeFunction<{{ m.return_type_ffi }} Function(
-    {%- for param in m.param_types_ffi %}
-        {%- if !loop.first %}, {% endif -%}
-        {{ param }}
-    {%- endfor -%}
-  )>>('{{ m.c_method_name }}')
-      .asFunction<{{ m.return_type_ffi_cast }} Function(
-        {%- for param in m.param_types_ffi_cast %}
-          {%- if !loop.first %}, {% endif -%}
-          {{ param }}
-        {%- endfor -%}
-      )>(isLeaf: true);

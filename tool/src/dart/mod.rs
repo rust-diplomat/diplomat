@@ -304,21 +304,23 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut param_decls_dart = Vec::new();
         let mut param_types_ffi = Vec::new();
         let mut param_types_ffi_cast = Vec::new();
+        let mut param_names_ffi = Vec::new();
         let mut param_conversions = Vec::new();
 
         if let Some(param_self) = method.param_self.as_ref() {
             param_types_ffi.push(self.gen_self_type_name_ffi(&param_self.ty, false));
             param_types_ffi_cast.push(self.gen_self_type_name_ffi(&param_self.ty, true));
             param_conversions.push(self.gen_dart_to_c_self(&param_self.ty));
+            param_names_ffi.push("self".into());
         }
 
         let mut slice_conversions = Vec::new();
         let mut needs_arena = false;
 
         for param in method.params.iter() {
-            let var_name = self.formatter.fmt_param_name(param.name.as_str());
+            let param_name = self.formatter.fmt_param_name(param.name.as_str());
 
-            param_decls_dart.push(format!("{} {var_name}", self.gen_type_name(&param.ty)));
+            param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
 
             let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
             let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
@@ -327,20 +329,23 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 // Two args on the ABI: pointer and size
                 param_types_ffi.push(self.formatter.fmt_pointer(&param_type_ffi).into());
                 param_types_ffi_cast.push(self.formatter.fmt_pointer(&param_type_ffi_cast).into());
+                param_names_ffi.push(format!("{param_name}Data").into());
 
                 param_types_ffi.push(self.formatter.fmt_usize(false).into());
                 param_types_ffi_cast.push(self.formatter.fmt_usize(true).into());
+                param_names_ffi.push(format!("{param_name}Length").into());
 
-                let view_expr = self.gen_dart_to_c_for_type(&param.ty, var_name.clone());
+                let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone());
 
-                slice_conversions.push(format!("final {var_name}View = {view_expr};"));
+                slice_conversions.push(format!("final {param_name}View = {view_expr};"));
                 needs_arena = true;
-                param_conversions.push(format!("{var_name}View.pointer(temp)").into());
-                param_conversions.push(format!("{var_name}View.length").into());
+                param_conversions.push(format!("{param_name}View.pointer(temp)").into());
+                param_conversions.push(format!("{param_name}View.length").into());
             } else {
                 param_types_ffi.push(param_type_ffi);
                 param_types_ffi_cast.push(param_type_ffi_cast);
-                param_conversions.push(self.gen_dart_to_c_for_type(&param.ty, var_name.clone()));
+                param_conversions.push(self.gen_dart_to_c_for_type(&param.ty, param_name.clone()));
+                param_names_ffi.push(param_name);
             }
         }
 
@@ -356,6 +361,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     .fmt_pointer(self.formatter.fmt_opaque())
                     .into(),
             );
+            param_names_ffi.push("writeable".into());
             self.helper_classes.insert(
                 "writeable".into(),
                 include_str!("../../templates/dart/writeable.dart").into(),
@@ -462,6 +468,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             c_method_name,
             param_types_ffi,
             param_types_ffi_cast,
+            param_names_ffi,
             return_type_ffi,
             return_type_ffi_cast,
             slice_conversions,
@@ -879,6 +886,7 @@ struct MethodInfo<'a> {
     // from the `dart:ffi` package, the cast types are native Dart types.
     param_types_ffi: Vec<Cow<'a, str>>,
     param_types_ffi_cast: Vec<Cow<'a, str>>,
+    param_names_ffi: Vec<Cow<'a, str>>,
     return_type_ffi: Cow<'a, str>,
     return_type_ffi_cast: Cow<'a, str>,
 
