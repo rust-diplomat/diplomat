@@ -50,7 +50,6 @@ jobs:
       with:
         crate: cargo-make
         version: 0.36.13
-    - uses: dart-lang/setup-dart@v1
 
     - name: Run regeneration
       run: cargo make gen
@@ -124,6 +123,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install Dart
       uses: dart-lang/setup-dart@v1
+      with:
+        sdk: 3.3.0-277.0.dev
+
 
     # Cargo-make boilerplate
     - name: Get cargo-make version

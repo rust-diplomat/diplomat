@@ -1,10 +1,7 @@
 import 'package:example/lib.dart';
 import 'package:test/test.dart';
-import 'package:path/path.dart' as path;
 
 void main() {
-  init(path.absolute('../../target/debug/libdiplomat_example.so'));
-
   test("multiply a fixed decimal by 0.1", () {
     final myDecimal = ICU4XFixedDecimal.new(123);
 

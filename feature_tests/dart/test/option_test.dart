@@ -1,10 +1,7 @@
 import 'package:feature_tests/lib.dart';
 import 'package:test/test.dart';
-import 'package:path/path.dart' as path;
 
 void main() {
-  init(path.absolute('../../target/debug/libdiplomat_feature_tests.so'));
-
   test("Verify option methods", () {
     final o = OptionOpaque.new_(5);
     o!.assertInteger(5);

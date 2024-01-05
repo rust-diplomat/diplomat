@@ -39,9 +39,8 @@ enum MyEnum {
     final result = _MyEnum_into_value(_underlying);
     return result;
   }
-
-  // ignore: non_constant_identifier_names
-  static final _MyEnum_into_value =
-    _capi<ffi.NativeFunction<ffi.Int8 Function(ffi.Int32)>>('MyEnum_into_value')
-      .asFunction<int Function(int)>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Int8 Function(ffi.Int32)>(isLeaf: true, symbol: 'MyEnum_into_value')
+// ignore: non_constant_identifier_names
+external int _MyEnum_into_value(int self);

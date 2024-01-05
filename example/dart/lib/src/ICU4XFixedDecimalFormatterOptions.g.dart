@@ -32,11 +32,6 @@ final class ICU4XFixedDecimalFormatterOptions {
     return ICU4XFixedDecimalFormatterOptions._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _ICU4XFixedDecimalFormatterOptions_default =
-    _capi<ffi.NativeFunction<_ICU4XFixedDecimalFormatterOptionsFfi Function()>>('ICU4XFixedDecimalFormatterOptions_default')
-      .asFunction<_ICU4XFixedDecimalFormatterOptionsFfi Function()>(isLeaf: true);
-
   @override
   bool operator ==(Object other) =>
       other is ICU4XFixedDecimalFormatterOptions &&
@@ -49,3 +44,7 @@ final class ICU4XFixedDecimalFormatterOptions {
         _underlying.someOtherConfig,
       ]);
 }
+
+@ffi.Native<_ICU4XFixedDecimalFormatterOptionsFfi Function()>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatterOptions_default')
+// ignore: non_constant_identifier_names
+external _ICU4XFixedDecimalFormatterOptionsFfi _ICU4XFixedDecimalFormatterOptions_default();

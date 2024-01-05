@@ -15,7 +15,7 @@ final class ICU4XLocale implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('ICU4XLocale_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ICU4XLocale_destroy));
 
   /// Construct an [`ICU4XLocale`] from a locale identifier represented as a string.
   factory ICU4XLocale(String name) {
@@ -25,9 +25,12 @@ final class ICU4XLocale implements ffi.Finalizable {
     temp.releaseAll();
     return ICU4XLocale._(result);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ICU4XLocale_new =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('ICU4XLocale_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XLocale_destroy')
+// ignore: non_constant_identifier_names
+external void _ICU4XLocale_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'ICU4XLocale_new')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _ICU4XLocale_new(ffi.Pointer<ffi.Uint8> nameData, int nameLength);
