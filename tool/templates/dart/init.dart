@@ -15,9 +15,6 @@ typedef Rune = int;
 /// A list of [Rune]s.
 typedef RuneList = Uint32List;
 
-late final ffi.Pointer<T> Function<T extends ffi.NativeType>(String) _capi;
-void init(String path) => _capi = ffi.DynamicLibrary.open(path).lookup;
-
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
