@@ -50,8 +50,8 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
     Ok(())
 }
 
-fn gen_struct_header<'a>(
-    typ: &'a ast::CustomType,
+fn gen_struct_header(
+    typ: &ast::CustomType,
     in_path: &ast::Path,
     seen_results: &mut HashSet<ast::TypeName>,
     all_results: &mut Vec<(ast::Path, ast::TypeName)>,

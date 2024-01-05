@@ -7,8 +7,8 @@ use indenter::indented;
 
 use super::types::{gen_type, name_for_type};
 
-pub fn collect_results<'a>(
-    typ: &'a ast::TypeName,
+pub fn collect_results(
+    typ: &ast::TypeName,
     in_path: &ast::Path,
     _env: &Env,
     seen: &mut HashSet<ast::TypeName>,
@@ -38,7 +38,7 @@ pub fn collect_results<'a>(
             }
         }
         ast::TypeName::Result(ok, err, _) => {
-            if !seen.contains(&typ) {
+            if !seen.contains(typ) {
                 seen.insert(typ.clone());
                 collect_results(ok, in_path, _env, seen, results);
                 collect_results(err, in_path, _env, seen, results);
