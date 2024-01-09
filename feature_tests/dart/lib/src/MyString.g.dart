@@ -12,7 +12,7 @@ final class MyString implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('MyString_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
 
   factory MyString(String v) {
     final temp = ffi2.Arena();
@@ -22,11 +22,6 @@ final class MyString implements ffi.Finalizable {
     return MyString._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _MyString_new =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('MyString_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
-
   factory MyString.unsafe(String v) {
     final temp = ffi2.Arena();
     final vView = v.utf8View;
@@ -35,11 +30,6 @@ final class MyString implements ffi.Finalizable {
     return MyString._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _MyString_new_unsafe =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('MyString_new_unsafe')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
-
   void setStr(String newStr) {
     final temp = ffi2.Arena();
     final newStrView = newStr.utf8View;
@@ -47,19 +37,29 @@ final class MyString implements ffi.Finalizable {
     temp.releaseAll();
   }
 
-  // ignore: non_constant_identifier_names
-  static final _MyString_set_str =
-    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint8>, ffi.Size)>>('MyString_set_str')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
-
   String get getStr {
     final writeable = _Writeable();
     _MyString_get_str(_underlying, writeable._underlying);
     return writeable.finalize();
   }
-
-  // ignore: non_constant_identifier_names
-  static final _MyString_get_str =
-    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>>('MyString_get_str')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'MyString_destroy')
+// ignore: non_constant_identifier_names
+external void _MyString_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _MyString_new(ffi.Pointer<ffi.Uint8> vData, int vLength);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_unsafe')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _MyString_new_unsafe(ffi.Pointer<ffi.Uint8> vData, int vLength);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_set_str')
+// ignore: non_constant_identifier_names
+external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Uint8> newStrData, int newStrLength);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_str')
+// ignore: non_constant_identifier_names
+external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);

@@ -12,7 +12,7 @@ final class Float64Vec implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('Float64Vec_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Float64Vec_destroy));
 
   factory Float64Vec(core.List<double> v) {
     final temp = ffi2.Arena();
@@ -22,11 +22,6 @@ final class Float64Vec implements ffi.Finalizable {
     return Float64Vec._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_new =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Double>, ffi.Size)>>('Float64Vec_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Double>, int)>(isLeaf: true);
-
   factory Float64Vec.bool(core.List<bool> v) {
     final temp = ffi2.Arena();
     final vView = v.boolView;
@@ -34,11 +29,6 @@ final class Float64Vec implements ffi.Finalizable {
     temp.releaseAll();
     return Float64Vec._(result);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_new_bool =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Bool>, ffi.Size)>>('Float64Vec_new_bool')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Bool>, int)>(isLeaf: true);
 
   factory Float64Vec.i16(core.List<int> v) {
     final temp = ffi2.Arena();
@@ -48,11 +38,6 @@ final class Float64Vec implements ffi.Finalizable {
     return Float64Vec._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_new_i16 =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Int16>, ffi.Size)>>('Float64Vec_new_i16')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Int16>, int)>(isLeaf: true);
-
   factory Float64Vec.u16(core.List<int> v) {
     final temp = ffi2.Arena();
     final vView = v.uint16View;
@@ -60,11 +45,6 @@ final class Float64Vec implements ffi.Finalizable {
     temp.releaseAll();
     return Float64Vec._(result);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_new_u16 =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint16>, ffi.Size)>>('Float64Vec_new_u16')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint16>, int)>(isLeaf: true);
 
   factory Float64Vec.isize(core.List<int> v) {
     final temp = ffi2.Arena();
@@ -74,11 +54,6 @@ final class Float64Vec implements ffi.Finalizable {
     return Float64Vec._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_new_isize =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.IntPtr>, ffi.Size)>>('Float64Vec_new_isize')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.IntPtr>, int)>(isLeaf: true);
-
   factory Float64Vec.usize(core.List<int> v) {
     final temp = ffi2.Arena();
     final vView = v.usizeView;
@@ -86,11 +61,6 @@ final class Float64Vec implements ffi.Finalizable {
     temp.releaseAll();
     return Float64Vec._(result);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_new_usize =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Size>, ffi.Size)>>('Float64Vec_new_usize')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Size>, int)>(isLeaf: true);
 
   factory Float64Vec.f64BeBytes(ByteBuffer v) {
     final temp = ffi2.Arena();
@@ -100,22 +70,12 @@ final class Float64Vec implements ffi.Finalizable {
     return Float64Vec._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_new_f64_be_bytes =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('Float64Vec_new_f64_be_bytes')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
-
   void fillSlice(core.List<double> v) {
     final temp = ffi2.Arena();
     final vView = v.float64View;
     _Float64Vec_fill_slice(_underlying, vView.pointer(temp), vView.length);
     temp.releaseAll();
   }
-
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_fill_slice =
-    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Double>, ffi.Size)>>('Float64Vec_fill_slice')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Double>, int)>(isLeaf: true);
 
   void setValue(core.List<double> newSlice) {
     final temp = ffi2.Arena();
@@ -124,20 +84,54 @@ final class Float64Vec implements ffi.Finalizable {
     temp.releaseAll();
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_set_value =
-    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Double>, ffi.Size)>>('Float64Vec_set_value')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Double>, int)>(isLeaf: true);
-
   @override
   String toString() {
     final writeable = _Writeable();
     _Float64Vec_to_string(_underlying, writeable._underlying);
     return writeable.finalize();
   }
-
-  // ignore: non_constant_identifier_names
-  static final _Float64Vec_to_string =
-    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>>('Float64Vec_to_string')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Float64Vec_destroy')
+// ignore: non_constant_identifier_names
+external void _Float64Vec_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Double>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Float64Vec_new(ffi.Pointer<ffi.Double> vData, int vLength);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Bool>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_bool')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Float64Vec_new_bool(ffi.Pointer<ffi.Bool> vData, int vLength);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Int16>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_i16')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Float64Vec_new_i16(ffi.Pointer<ffi.Int16> vData, int vLength);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint16>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_u16')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Float64Vec_new_u16(ffi.Pointer<ffi.Uint16> vData, int vLength);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.IntPtr>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_isize')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Float64Vec_new_isize(ffi.Pointer<ffi.IntPtr> vData, int vLength);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Size>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_usize')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Float64Vec_new_usize(ffi.Pointer<ffi.Size> vData, int vLength);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_f64_be_bytes')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Float64Vec_new_f64_be_bytes(ffi.Pointer<ffi.Uint8> vData, int vLength);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Double>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_fill_slice')
+// ignore: non_constant_identifier_names
+external void _Float64Vec_fill_slice(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Double> vData, int vLength);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Double>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_set_value')
+// ignore: non_constant_identifier_names
+external void _Float64Vec_set_value(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Double> newSliceData, int newSliceLength);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_to_string')
+// ignore: non_constant_identifier_names
+external void _Float64Vec_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);

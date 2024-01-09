@@ -25,3 +25,8 @@ enum {{type_name}} {
 {% include "method.dart.jinja" %}
   {%-endfor %}
 }
+
+{%- for m in methods %}
+
+{% include "native_method.dart.jinja" %}
+{%- endfor %}

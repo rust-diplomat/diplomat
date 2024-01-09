@@ -15,18 +15,13 @@ final class ICU4XDataProvider implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('ICU4XDataProvider_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ICU4XDataProvider_destroy));
 
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory ICU4XDataProvider.static_() {
     final result = _ICU4XDataProvider_new_static();
     return ICU4XDataProvider._(result);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ICU4XDataProvider_new_static =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>('ICU4XDataProvider_new_static')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
 
   /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
   ///
@@ -37,9 +32,16 @@ final class ICU4XDataProvider implements ffi.Finalizable {
       throw VoidError();
     }
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ICU4XDataProvider_returns_result =
-    _capi<ffi.NativeFunction<_ResultVoidVoid Function()>>('ICU4XDataProvider_returns_result')
-      .asFunction<_ResultVoidVoid Function()>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XDataProvider_destroy')
+// ignore: non_constant_identifier_names
+external void _ICU4XDataProvider_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'ICU4XDataProvider_new_static')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _ICU4XDataProvider_new_static();
+
+@ffi.Native<_ResultVoidVoid Function()>(isLeaf: true, symbol: 'ICU4XDataProvider_returns_result')
+// ignore: non_constant_identifier_names
+external _ResultVoidVoid _ICU4XDataProvider_returns_result();

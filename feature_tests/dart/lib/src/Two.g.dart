@@ -12,5 +12,9 @@ final class Two implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('Two_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Two_destroy));
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Two_destroy')
+// ignore: non_constant_identifier_names
+external void _Two_destroy(ffi.Pointer<ffi.Void> self);

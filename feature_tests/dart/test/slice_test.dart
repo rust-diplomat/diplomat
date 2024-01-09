@@ -4,8 +4,6 @@ import 'package:path/path.dart' as path;
 import 'dart:typed_data';
 
 void main() {
-  init(path.absolute('../../target/debug/libdiplomat_feature_tests.so'));
-
   test("double", () {
     expect(Float64Vec([-10.0, double.maxFinite, double.infinity]).toString(), "[-10.0, 1.7976931348623157e308, inf]");
   });

@@ -13,9 +13,6 @@
 /// A [String] can be constructed from a [Rune] using [String.fromCharCode]. 
 typedef Rune = int;
 
-late final ffi.Pointer<T> Function<T extends ffi.NativeType>(String) _capi;
-void init(String path) => _capi = ffi.DynamicLibrary.open(path).lookup;
-
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 

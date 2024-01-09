@@ -12,17 +12,12 @@ final class Opaque implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('Opaque_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Opaque_destroy));
 
   factory Opaque() {
     final result = _Opaque_new();
     return Opaque._(result);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _Opaque_new =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function()>>('Opaque_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true);
 
   /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
   ///
@@ -33,28 +28,33 @@ final class Opaque implements ffi.Finalizable {
     _Opaque_assert_struct(_underlying, s._underlying);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Opaque_assert_struct =
-    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>>('Opaque_assert_struct')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>(isLeaf: true);
-
   static final int returnsUsize = () {
     final result = _Opaque_returns_usize();
     return result;
   }();
 
-  // ignore: non_constant_identifier_names
-  static final _Opaque_returns_usize =
-    _capi<ffi.NativeFunction<ffi.Size Function()>>('Opaque_returns_usize')
-      .asFunction<int Function()>(isLeaf: true);
-
   static final ImportedStruct returnsImported = () {
     final result = _Opaque_returns_imported();
     return ImportedStruct._(result);
   }();
-
-  // ignore: non_constant_identifier_names
-  static final _Opaque_returns_imported =
-    _capi<ffi.NativeFunction<_ImportedStructFfi Function()>>('Opaque_returns_imported')
-      .asFunction<_ImportedStructFfi Function()>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Opaque_destroy')
+// ignore: non_constant_identifier_names
+external void _Opaque_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'Opaque_new')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Opaque_new();
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>(isLeaf: true, symbol: 'Opaque_assert_struct')
+// ignore: non_constant_identifier_names
+external void _Opaque_assert_struct(ffi.Pointer<ffi.Opaque> self, _MyStructFfi s);
+
+@ffi.Native<ffi.Size Function()>(isLeaf: true, symbol: 'Opaque_returns_usize')
+// ignore: non_constant_identifier_names
+external int _Opaque_returns_usize();
+
+@ffi.Native<_ImportedStructFfi Function()>(isLeaf: true, symbol: 'Opaque_returns_imported')
+// ignore: non_constant_identifier_names
+external _ImportedStructFfi _Opaque_returns_imported();
