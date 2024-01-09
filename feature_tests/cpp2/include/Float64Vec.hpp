@@ -19,6 +19,42 @@ inline std::unique_ptr<Float64Vec> Float64Vec::new_(diplomat::span<const double>
   return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
 }
 
+inline std::unique_ptr<Float64Vec> Float64Vec::new_bool(diplomat::span<const bool> v) {
+  auto result = capi::Float64Vec_new_bool(v.data(),
+    v.size());
+  return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
+}
+
+inline std::unique_ptr<Float64Vec> Float64Vec::new_i16(diplomat::span<const int16_t> v) {
+  auto result = capi::Float64Vec_new_i16(v.data(),
+    v.size());
+  return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
+}
+
+inline std::unique_ptr<Float64Vec> Float64Vec::new_u16(diplomat::span<const uint16_t> v) {
+  auto result = capi::Float64Vec_new_u16(v.data(),
+    v.size());
+  return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
+}
+
+inline std::unique_ptr<Float64Vec> Float64Vec::new_isize(diplomat::span<const intptr_t> v) {
+  auto result = capi::Float64Vec_new_isize(v.data(),
+    v.size());
+  return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
+}
+
+inline std::unique_ptr<Float64Vec> Float64Vec::new_usize(diplomat::span<const size_t> v) {
+  auto result = capi::Float64Vec_new_usize(v.data(),
+    v.size());
+  return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
+}
+
+inline std::unique_ptr<Float64Vec> Float64Vec::new_f64_be_bytes(diplomat::span<const uint8_t> v) {
+  auto result = capi::Float64Vec_new_f64_be_bytes(v.data(),
+    v.size());
+  return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
+}
+
 inline void Float64Vec::fill_slice(diplomat::span<double> v) const {
   capi::Float64Vec_fill_slice(this->AsFFI(),
     v.data(),
@@ -29,6 +65,14 @@ inline void Float64Vec::set_value(diplomat::span<const double> new_slice) {
   capi::Float64Vec_set_value(this->AsFFI(),
     new_slice.data(),
     new_slice.size());
+}
+
+inline std::string Float64Vec::to_string() const {
+  std::string output;
+  capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+  capi::Float64Vec_to_string(this->AsFFI(),
+    &writeable);
+  return output;
 }
 
 inline const capi::Float64Vec* Float64Vec::AsFFI() const {

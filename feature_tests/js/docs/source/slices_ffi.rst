@@ -5,9 +5,23 @@
 
     .. js:function:: new(v)
 
+    .. js:function:: new_bool(v)
+
+    .. js:function:: new_i16(v)
+
+    .. js:function:: new_u16(v)
+
+    .. js:function:: new_isize(v)
+
+    .. js:function:: new_usize(v)
+
+    .. js:function:: new_f64_be_bytes(v)
+
     .. js:method:: fill_slice(v)
 
     .. js:method:: set_value(new_slice)
+
+    .. js:method:: to_string()
 
 .. js:class:: MyString
 

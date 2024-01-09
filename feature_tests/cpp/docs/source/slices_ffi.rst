@@ -6,10 +6,34 @@
     .. cpp:function:: static Float64Vec new_(const diplomat::span<const double> v)
 
 
+    .. cpp:function:: static Float64Vec new_bool(const diplomat::span<const bool> v)
+
+
+    .. cpp:function:: static Float64Vec new_i16(const diplomat::span<const int16_t> v)
+
+
+    .. cpp:function:: static Float64Vec new_u16(const diplomat::span<const uint16_t> v)
+
+
+    .. cpp:function:: static Float64Vec new_isize(const diplomat::span<const intptr_t> v)
+
+
+    .. cpp:function:: static Float64Vec new_usize(const diplomat::span<const size_t> v)
+
+
+    .. cpp:function:: static Float64Vec new_f64_be_bytes(const diplomat::span<const uint8_t> v)
+
+
     .. cpp:function:: void fill_slice(diplomat::span<const double> v) const
 
 
     .. cpp:function:: void set_value(const diplomat::span<const double> new_slice)
+
+
+    .. cpp:function:: template<typename W> void to_string_to_writeable(W& w) const
+
+
+    .. cpp:function:: std::string to_string() const
 
 
 .. cpp:class:: MyString

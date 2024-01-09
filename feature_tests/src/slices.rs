@@ -33,12 +33,44 @@ mod ffi {
             Box::new(Self(v.to_vec()))
         }
 
+        pub fn new_bool(v: &[bool]) -> Box<Float64Vec> {
+            Box::new(Self(v.iter().map(|&x| x as u8 as f64).collect()))
+        }
+
+        pub fn new_i16(v: &[i16]) -> Box<Float64Vec> {
+            Box::new(Self(v.iter().map(|&x| x as f64).collect()))
+        }
+
+        pub fn new_u16(v: &[u16]) -> Box<Float64Vec> {
+            Box::new(Self(v.iter().map(|&x| x as f64).collect()))
+        }
+
+        pub fn new_isize(v: &[isize]) -> Box<Float64Vec> {
+            Box::new(Self(v.iter().map(|&x| x as f64).collect()))
+        }
+
+        pub fn new_usize(v: &[usize]) -> Box<Float64Vec> {
+            Box::new(Self(v.iter().map(|&x| x as f64).collect()))
+        }
+
+        pub fn new_f64_be_bytes(v: &[DiplomatByte]) -> Box<Float64Vec> {
+            Box::new(Self(
+                v.chunks_exact(8)
+                    .map(|b| f64::from_be_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]))
+                    .collect(),
+            ))
+        }
+
         pub fn fill_slice(&self, v: &mut [f64]) {
             v.copy_from_slice(&self.0)
         }
 
         pub fn set_value(&mut self, new_slice: &[f64]) {
             self.0 = new_slice.to_vec();
+        }
+
+        pub fn to_string(&self, w: &mut DiplomatWriteable) {
+            write!(w, "{:?}", self.0).unwrap();
         }
     }
 }

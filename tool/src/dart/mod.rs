@@ -56,6 +56,7 @@ pub fn run<'cx>(
         Some("show int, double, bool, String, Object, override"),
     ));
     directives.insert(formatter.fmt_import("dart:convert", None));
+    directives.insert(formatter.fmt_import("dart:math", None));
     directives.insert(formatter.fmt_import("dart:core", Some("as core")));
     directives.insert(formatter.fmt_import("dart:ffi", Some("as ffi")));
     directives
@@ -662,16 +663,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
                 format!("{dart_name}.utf16View").into()
             }
-            Type::Slice(hir::Slice::Primitive(
-                _,
-                hir::PrimitiveType::Int(_) | hir::PrimitiveType::Float(_),
-            )) => dart_name,
-            // usize doesn't have a typed list: https://github.com/dart-lang/sdk/issues/54119
-            Type::Slice(hir::Slice::Primitive(
-                _,
-                hir::PrimitiveType::IntSize(hir::IntSizeType::Usize),
-            )) => format!("_SizeListView({dart_name})").into(),
-            // Other primitive slices are not supported in Dart
+            Type::Slice(hir::Slice::Primitive(_, p)) => format!(
+                "{dart_name}{view}",
+                view = self.formatter.fmt_primitive_list_view(p)
+            )
+            .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }

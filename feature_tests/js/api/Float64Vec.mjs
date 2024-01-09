@@ -22,6 +22,48 @@ export class Float64Vec {
     return diplomat_out;
   }
 
+  static new_bool(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "bool");
+    const diplomat_out = new Float64Vec(wasm.Float64Vec_new_bool(buf_arg_v.ptr, buf_arg_v.size), true, []);
+    buf_arg_v.free();
+    return diplomat_out;
+  }
+
+  static new_i16(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "i16");
+    const diplomat_out = new Float64Vec(wasm.Float64Vec_new_i16(buf_arg_v.ptr, buf_arg_v.size), true, []);
+    buf_arg_v.free();
+    return diplomat_out;
+  }
+
+  static new_u16(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "u16");
+    const diplomat_out = new Float64Vec(wasm.Float64Vec_new_u16(buf_arg_v.ptr, buf_arg_v.size), true, []);
+    buf_arg_v.free();
+    return diplomat_out;
+  }
+
+  static new_isize(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "isize");
+    const diplomat_out = new Float64Vec(wasm.Float64Vec_new_isize(buf_arg_v.ptr, buf_arg_v.size), true, []);
+    buf_arg_v.free();
+    return diplomat_out;
+  }
+
+  static new_usize(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "usize");
+    const diplomat_out = new Float64Vec(wasm.Float64Vec_new_usize(buf_arg_v.ptr, buf_arg_v.size), true, []);
+    buf_arg_v.free();
+    return diplomat_out;
+  }
+
+  static new_f64_be_bytes(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "u8");
+    const diplomat_out = new Float64Vec(wasm.Float64Vec_new_f64_be_bytes(buf_arg_v.ptr, buf_arg_v.size), true, []);
+    buf_arg_v.free();
+    return diplomat_out;
+  }
+
   fill_slice(arg_v) {
     const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "f64");
     wasm.Float64Vec_fill_slice(this.underlying, buf_arg_v.ptr, buf_arg_v.size);
@@ -32,5 +74,11 @@ export class Float64Vec {
     const buf_arg_new_slice = diplomatRuntime.DiplomatBuf.slice(wasm, arg_new_slice, "f64");
     wasm.Float64Vec_set_value(this.underlying, buf_arg_new_slice.ptr, buf_arg_new_slice.size);
     buf_arg_new_slice.free();
+  }
+
+  to_string() {
+    return diplomatRuntime.withWriteable(wasm, (writeable) => {
+      return wasm.Float64Vec_to_string(this.underlying, writeable);
+    });
   }
 }
