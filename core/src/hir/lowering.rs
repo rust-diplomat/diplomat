@@ -643,7 +643,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                     }
                 },
                 _ => {
-                    self.errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = {opt_ty}")));
+                    self.errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> requires that T is a reference to an opaque. T = {opt_ty}")));
                     None
                 }
             },
@@ -849,10 +849,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 } else {
                     // value type
                     self.errors.remove(self.errors.len() - 1);
-                    let value_ty = self.lower_out_type(value_ty, return_ltl.as_mut(), in_path);
-                    dbg!(&self.errors);
-                    // todo unwrap
-                    Some(ReturnType::Option(SuccessType::OutType(value_ty.unwrap())))
+                    self.lower_out_type(value_ty, return_ltl.as_mut(), in_path).map(SuccessType::OutType).map(ReturnType::Option)
                 }
             }
             ast::TypeName::Unit => Some(ReturnType::Infallible(writeable_option)),
