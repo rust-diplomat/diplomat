@@ -1041,6 +1041,8 @@ pub enum PrimitiveType {
     f64,
     bool,
     char,
+    /// a primitive byte that is not meant to be interpreted numerically
+    /// in languages that don't have fine-grained integer types
     byte,
 }
 
