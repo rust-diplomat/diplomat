@@ -67,20 +67,10 @@ final class MyStruct {
     return MyStruct._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _MyStruct_new =
-    _capi<ffi.NativeFunction<_MyStructFfi Function()>>('MyStruct_new')
-      .asFunction<_MyStructFfi Function()>(isLeaf: true);
-
   int intoA() {
     final result = _MyStruct_into_a(_underlying);
     return result;
   }
-
-  // ignore: non_constant_identifier_names
-  static final _MyStruct_into_a =
-    _capi<ffi.NativeFunction<ffi.Uint8 Function(_MyStructFfi)>>('MyStruct_into_a')
-      .asFunction<int Function(_MyStructFfi)>(isLeaf: true);
 
   @override
   bool operator ==(Object other) =>
@@ -104,3 +94,11 @@ final class MyStruct {
         _underlying.g,
       ]);
 }
+
+@ffi.Native<_MyStructFfi Function()>(isLeaf: true, symbol: 'MyStruct_new')
+// ignore: non_constant_identifier_names
+external _MyStructFfi _MyStruct_new();
+
+@ffi.Native<ffi.Uint8 Function(_MyStructFfi)>(isLeaf: true, symbol: 'MyStruct_into_a')
+// ignore: non_constant_identifier_names
+external int _MyStruct_into_a(_MyStructFfi self);

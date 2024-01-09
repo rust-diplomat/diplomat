@@ -201,22 +201,22 @@ exec --fail-on-error npm run test
 
 [tasks.test-dart-example]
 category = "Tests"
-dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 cd example/dart/
-exec --fail-on-error dart test
+exec --fail-on-error dart --enable-experiment=native-assets pub get
+exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
 [tasks.test-dart-feature]
 category = "Tests"
-dependencies = ["build-feature"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 cd feature_tests/dart/
-exec --fail-on-error dart test
+exec --fail-on-error dart --enable-experiment=native-assets pub get
+exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
 [tasks.test-c2-example-self-contained]

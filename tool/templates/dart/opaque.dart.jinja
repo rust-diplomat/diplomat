@@ -8,9 +8,18 @@ final class {{type_name}} implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('{{destructor}}'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_{{destructor}}));
 
   {%- for m in methods %}
 {% include "method.dart.jinja" %}
   {%- endfor %}
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: '{{destructor}}')
+// ignore: non_constant_identifier_names
+external void _{{destructor}}(ffi.Pointer<ffi.Void> self);
+
+{%- for m in methods %}
+
+{% include "native_method.dart.jinja" %}
+{%- endfor %}

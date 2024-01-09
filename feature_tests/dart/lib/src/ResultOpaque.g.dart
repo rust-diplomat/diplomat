@@ -12,7 +12,7 @@ final class ResultOpaque implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('ResultOpaque_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ResultOpaque_destroy));
 
   /// 
   ///
@@ -25,11 +25,6 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._(result.union.ok);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new =
-    _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function(ffi.Int32)>>('ResultOpaque_new')
-      .asFunction<_ResultOpaqueInt32 Function(int)>(isLeaf: true);
-
   /// 
   ///
   /// Throws [ErrorEnum] on failure.
@@ -40,11 +35,6 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._(result.union.ok);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new_failing_foo =
-    _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function()>>('ResultOpaque_new_failing_foo')
-      .asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
 
   /// 
   ///
@@ -57,11 +47,6 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._(result.union.ok);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new_failing_bar =
-    _capi<ffi.NativeFunction<_ResultOpaqueInt32 Function()>>('ResultOpaque_new_failing_bar')
-      .asFunction<_ResultOpaqueInt32 Function()>(isLeaf: true);
-
   /// 
   ///
   /// Throws [VoidError] on failure.
@@ -72,11 +57,6 @@ final class ResultOpaque implements ffi.Finalizable {
     }
     return ResultOpaque._(result.union.ok);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new_failing_unit =
-    _capi<ffi.NativeFunction<_ResultOpaqueVoid Function()>>('ResultOpaque_new_failing_unit')
-      .asFunction<_ResultOpaqueVoid Function()>(isLeaf: true);
 
   /// 
   ///
@@ -89,11 +69,6 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._(result.union.ok);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new_failing_struct =
-    _capi<ffi.NativeFunction<_ResultOpaqueErrorStructFfi Function(ffi.Int32)>>('ResultOpaque_new_failing_struct')
-      .asFunction<_ResultOpaqueErrorStructFfi Function(int)>(isLeaf: true);
-
   /// 
   ///
   /// Throws [ResultOpaque] on failure.
@@ -103,11 +78,6 @@ final class ResultOpaque implements ffi.Finalizable {
       throw ResultOpaque._(result.union.err);
     }
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new_in_err =
-    _capi<ffi.NativeFunction<_ResultVoidOpaque Function(ffi.Int32)>>('ResultOpaque_new_in_err')
-      .asFunction<_ResultVoidOpaque Function(int)>(isLeaf: true);
 
   /// 
   ///
@@ -120,11 +90,6 @@ final class ResultOpaque implements ffi.Finalizable {
     return result.union.ok;
   }
 
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new_int =
-    _capi<ffi.NativeFunction<_ResultInt32Void Function(ffi.Int32)>>('ResultOpaque_new_int')
-      .asFunction<_ResultInt32Void Function(int)>(isLeaf: true);
-
   /// 
   ///
   /// Throws [ResultOpaque] on failure.
@@ -136,17 +101,47 @@ final class ResultOpaque implements ffi.Finalizable {
     return ErrorEnum.values[result.union.ok];
   }
 
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_new_in_enum_err =
-    _capi<ffi.NativeFunction<_ResultInt32Opaque Function(ffi.Int32)>>('ResultOpaque_new_in_enum_err')
-      .asFunction<_ResultInt32Opaque Function(int)>(isLeaf: true);
-
   void assertInteger(int i) {
     _ResultOpaque_assert_integer(_underlying, i);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ResultOpaque_assert_integer =
-    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>>('ResultOpaque_assert_integer')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, int)>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ResultOpaque_destroy')
+// ignore: non_constant_identifier_names
+external void _ResultOpaque_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<_ResultOpaqueInt32 Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new')
+// ignore: non_constant_identifier_names
+external _ResultOpaqueInt32 _ResultOpaque_new(int i);
+
+@ffi.Native<_ResultOpaqueInt32 Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_foo')
+// ignore: non_constant_identifier_names
+external _ResultOpaqueInt32 _ResultOpaque_new_failing_foo();
+
+@ffi.Native<_ResultOpaqueInt32 Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_bar')
+// ignore: non_constant_identifier_names
+external _ResultOpaqueInt32 _ResultOpaque_new_failing_bar();
+
+@ffi.Native<_ResultOpaqueVoid Function()>(isLeaf: true, symbol: 'ResultOpaque_new_failing_unit')
+// ignore: non_constant_identifier_names
+external _ResultOpaqueVoid _ResultOpaque_new_failing_unit();
+
+@ffi.Native<_ResultOpaqueErrorStructFfi Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_failing_struct')
+// ignore: non_constant_identifier_names
+external _ResultOpaqueErrorStructFfi _ResultOpaque_new_failing_struct(int i);
+
+@ffi.Native<_ResultVoidOpaque Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_in_err')
+// ignore: non_constant_identifier_names
+external _ResultVoidOpaque _ResultOpaque_new_in_err(int i);
+
+@ffi.Native<_ResultInt32Void Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_int')
+// ignore: non_constant_identifier_names
+external _ResultInt32Void _ResultOpaque_new_int(int i);
+
+@ffi.Native<_ResultInt32Opaque Function(ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_new_in_enum_err')
+// ignore: non_constant_identifier_names
+external _ResultInt32Opaque _ResultOpaque_new_in_enum_err(int i);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'ResultOpaque_assert_integer')
+// ignore: non_constant_identifier_names
+external void _ResultOpaque_assert_integer(ffi.Pointer<ffi.Opaque> self, int i);

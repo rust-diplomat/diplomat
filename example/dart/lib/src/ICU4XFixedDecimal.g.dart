@@ -13,7 +13,7 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('ICU4XFixedDecimal_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ICU4XFixedDecimal_destroy));
 
   /// Construct an [`ICU4XFixedDecimal`] from an integer.
   factory ICU4XFixedDecimal(int v) {
@@ -21,22 +21,12 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
     return ICU4XFixedDecimal._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _ICU4XFixedDecimal_new =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>>('ICU4XFixedDecimal_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(int)>(isLeaf: true);
-
   /// Multiply the [`ICU4XFixedDecimal`] by a given power of ten.
   ///
   /// See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
   void multiplyPow10(int power) {
     _ICU4XFixedDecimal_multiply_pow10(_underlying, power);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ICU4XFixedDecimal_multiply_pow10 =
-    _capi<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int16)>>('ICU4XFixedDecimal_multiply_pow10')
-      .asFunction<void Function(ffi.Pointer<ffi.Opaque>, int)>(isLeaf: true);
 
   /// Format the [`ICU4XFixedDecimal`] as a string.
   ///
@@ -52,9 +42,20 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
     }
     return writeable.finalize();
   }
-
-  // ignore: non_constant_identifier_names
-  static final _ICU4XFixedDecimal_to_string =
-    _capi<ffi.NativeFunction<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>>('ICU4XFixedDecimal_to_string')
-      .asFunction<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XFixedDecimal_destroy')
+// ignore: non_constant_identifier_names
+external void _ICU4XFixedDecimal_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'ICU4XFixedDecimal_new')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _ICU4XFixedDecimal_new(int v);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int16)>(isLeaf: true, symbol: 'ICU4XFixedDecimal_multiply_pow10')
+// ignore: non_constant_identifier_names
+external void _ICU4XFixedDecimal_multiply_pow10(ffi.Pointer<ffi.Opaque> self, int power);
+
+@ffi.Native<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'ICU4XFixedDecimal_to_string')
+// ignore: non_constant_identifier_names
+external _ResultVoidVoid _ICU4XFixedDecimal_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);

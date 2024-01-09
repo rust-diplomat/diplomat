@@ -56,3 +56,8 @@ final class {{type_name}} {
       {%- endfor %}
       ]);
 }
+
+{%- for m in methods %}
+
+{% include "native_method.dart.jinja" %}
+{%- endfor %}

@@ -12,7 +12,7 @@ final class Foo implements ffi.Finalizable {
     _finalizer.attach(this, _underlying.cast());
   }
 
-  static final _finalizer = ffi.NativeFinalizer(_capi('Foo_destroy'));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Foo_destroy));
 
   factory Foo(String x) {
     final temp = ffi2.Arena();
@@ -22,20 +22,10 @@ final class Foo implements ffi.Finalizable {
     return Foo._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Foo_new =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('Foo_new')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
-
   Bar get getBar {
     final result = _Foo_get_bar(_underlying);
     return Bar._(result);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _Foo_get_bar =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>>('Foo_get_bar')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
 
   factory Foo.static_(String x) {
     final temp = ffi2.Arena();
@@ -45,28 +35,37 @@ final class Foo implements ffi.Finalizable {
     return Foo._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Foo_new_static =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>>('Foo_new_static')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, int)>(isLeaf: true);
-
   BorrowedFieldsReturning get asReturning {
     final result = _Foo_as_returning(_underlying);
     return BorrowedFieldsReturning._(result);
   }
 
-  // ignore: non_constant_identifier_names
-  static final _Foo_as_returning =
-    _capi<ffi.NativeFunction<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>>('Foo_as_returning')
-      .asFunction<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true);
-
   factory Foo.extractFromFields(BorrowedFields fields) {
     final result = _Foo_extract_from_fields(fields._underlying);
     return Foo._(result);
   }
-
-  // ignore: non_constant_identifier_names
-  static final _Foo_extract_from_fields =
-    _capi<ffi.NativeFunction<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>>('Foo_extract_from_fields')
-      .asFunction<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(isLeaf: true);
 }
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Foo_destroy')
+// ignore: non_constant_identifier_names
+external void _Foo_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_new')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Foo_new(ffi.Pointer<ffi.Uint8> xData, int xLength);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_get_bar')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Foo_get_bar(ffi.Pointer<ffi.Opaque> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_new_static')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Foo_new_static(ffi.Pointer<ffi.Uint8> xData, int xLength);
+
+@ffi.Native<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_as_returning')
+// ignore: non_constant_identifier_names
+external _BorrowedFieldsReturningFfi _Foo_as_returning(ffi.Pointer<ffi.Opaque> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(isLeaf: true, symbol: 'Foo_extract_from_fields')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Foo_extract_from_fields(_BorrowedFieldsFfi fields);
