@@ -682,7 +682,9 @@ impl From<&ast::PrimitiveType> for JsPrimitive {
     fn from(prim: &ast::PrimitiveType) -> Self {
         match prim {
             ast::PrimitiveType::i8 => JsPrimitive::Number(JsPrimitiveNumber::Int8),
-            ast::PrimitiveType::u8 => JsPrimitive::Number(JsPrimitiveNumber::Uint8),
+            ast::PrimitiveType::u8 | ast::PrimitiveType::byte => {
+                JsPrimitive::Number(JsPrimitiveNumber::Uint8)
+            }
             ast::PrimitiveType::i16 => JsPrimitive::Number(JsPrimitiveNumber::Int16),
             ast::PrimitiveType::u16 => JsPrimitive::Number(JsPrimitiveNumber::Uint16),
             ast::PrimitiveType::i32 => JsPrimitive::Number(JsPrimitiveNumber::Int32),

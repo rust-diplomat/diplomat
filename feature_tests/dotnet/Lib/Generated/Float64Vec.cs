@@ -45,6 +45,102 @@ public partial class Float64Vec: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// </returns>
+    public static Float64Vec NewBool(bool[] v)
+    {
+        unsafe
+        {
+            nuint vLength = (nuint)v.Length;
+            fixed (bool* vPtr = v)
+            {
+                Raw.Float64Vec* retVal = Raw.Float64Vec.NewBool(vPtr, vLength);
+                return new Float64Vec(retVal);
+            }
+        }
+    }
+
+    /// <returns>
+    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// </returns>
+    public static Float64Vec NewI16(short[] v)
+    {
+        unsafe
+        {
+            nuint vLength = (nuint)v.Length;
+            fixed (short* vPtr = v)
+            {
+                Raw.Float64Vec* retVal = Raw.Float64Vec.NewI16(vPtr, vLength);
+                return new Float64Vec(retVal);
+            }
+        }
+    }
+
+    /// <returns>
+    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// </returns>
+    public static Float64Vec NewU16(ushort[] v)
+    {
+        unsafe
+        {
+            nuint vLength = (nuint)v.Length;
+            fixed (ushort* vPtr = v)
+            {
+                Raw.Float64Vec* retVal = Raw.Float64Vec.NewU16(vPtr, vLength);
+                return new Float64Vec(retVal);
+            }
+        }
+    }
+
+    /// <returns>
+    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// </returns>
+    public static Float64Vec NewIsize(nint[] v)
+    {
+        unsafe
+        {
+            nuint vLength = (nuint)v.Length;
+            fixed (nint* vPtr = v)
+            {
+                Raw.Float64Vec* retVal = Raw.Float64Vec.NewIsize(vPtr, vLength);
+                return new Float64Vec(retVal);
+            }
+        }
+    }
+
+    /// <returns>
+    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// </returns>
+    public static Float64Vec NewUsize(nuint[] v)
+    {
+        unsafe
+        {
+            nuint vLength = (nuint)v.Length;
+            fixed (nuint* vPtr = v)
+            {
+                Raw.Float64Vec* retVal = Raw.Float64Vec.NewUsize(vPtr, vLength);
+                return new Float64Vec(retVal);
+            }
+        }
+    }
+
+    /// <returns>
+    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// </returns>
+    public static Float64Vec NewF64BeBytes(byte[] v)
+    {
+        unsafe
+        {
+            nuint vLength = (nuint)v.Length;
+            fixed (byte* vPtr = v)
+            {
+                Raw.Float64Vec* retVal = Raw.Float64Vec.NewF64BeBytes(vPtr, vLength);
+                return new Float64Vec(retVal);
+            }
+        }
+    }
+
     public void FillSlice(double[] v)
     {
         unsafe
@@ -74,6 +170,34 @@ public partial class Float64Vec: IDisposable
             {
                 Raw.Float64Vec.SetValue(_inner, newSlicePtr, newSliceLength);
             }
+        }
+    }
+
+    public void ToString(DiplomatWriteable w)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            Raw.Float64Vec.ToString(_inner, &w);
+        }
+    }
+
+    public string ToString()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            DiplomatWriteable writeable = new DiplomatWriteable();
+            Raw.Float64Vec.ToString(_inner, &writeable);
+            string retVal = writeable.ToUnicode();
+            writeable.Dispose();
+            return retVal;
         }
     }
 

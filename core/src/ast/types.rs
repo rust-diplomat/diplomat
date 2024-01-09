@@ -1022,13 +1022,16 @@ pub enum PrimitiveType {
     f64,
     bool,
     char,
+    /// a primitive byte that is not meant to be interpreted numerically
+    /// in languages that don't have fine-grained integer types
+    byte,
 }
 
 impl fmt::Display for PrimitiveType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             PrimitiveType::i8 => "i8",
-            PrimitiveType::u8 => "u8",
+            PrimitiveType::u8 | PrimitiveType::byte => "u8",
             PrimitiveType::i16 => "i16",
             PrimitiveType::u16 => "u16",
             PrimitiveType::i32 => "i32",
@@ -1049,7 +1052,7 @@ impl fmt::Display for PrimitiveType {
 }
 
 lazy_static! {
-    static ref PRIMITIVES_MAPPING: [(&'static str, PrimitiveType); 16] = [
+    static ref PRIMITIVES_MAPPING: [(&'static str, PrimitiveType); 17] = [
         ("i8", PrimitiveType::i8),
         ("u8", PrimitiveType::u8),
         ("i16", PrimitiveType::i16),
@@ -1066,6 +1069,7 @@ lazy_static! {
         ("f64", PrimitiveType::f64),
         ("bool", PrimitiveType::bool),
         ("DiplomatChar", PrimitiveType::char),
+        ("DiplomatByte", PrimitiveType::byte),
     ];
     static ref STRING_TO_PRIMITIVE: HashMap<&'static str, PrimitiveType> =
         PRIMITIVES_MAPPING.iter().cloned().collect();

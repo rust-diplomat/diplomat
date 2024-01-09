@@ -117,7 +117,9 @@ pub fn primitive_size_alignment(prim: PrimitiveType) -> Layout {
     match prim {
         ast::PrimitiveType::bool => Layout::new::<bool>(),
         ast::PrimitiveType::char => Layout::new::<char>(),
-        ast::PrimitiveType::i8 | ast::PrimitiveType::u8 => Layout::new::<u8>(),
+        ast::PrimitiveType::i8 | ast::PrimitiveType::u8 | ast::PrimitiveType::byte => {
+            Layout::new::<u8>()
+        }
         ast::PrimitiveType::i16 | ast::PrimitiveType::u16 => Layout::new::<u16>(),
         ast::PrimitiveType::i32 | ast::PrimitiveType::u32 => Layout::new::<u32>(),
         ast::PrimitiveType::i64 | ast::PrimitiveType::u64 => Layout::new::<u64>(),

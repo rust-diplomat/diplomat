@@ -508,7 +508,7 @@ pub fn gen_ts_type<W: fmt::Write>(
         ) => out.write_str("string")?,
         ast::TypeName::PrimitiveSlice(.., prim) => match prim {
             ast::PrimitiveType::i8 => write!(out, "Int8Array")?,
-            ast::PrimitiveType::u8 => write!(out, "Uint8Array")?,
+            ast::PrimitiveType::u8 | ast::PrimitiveType::byte => write!(out, "Uint8Array")?,
             ast::PrimitiveType::i16 => write!(out, "Int16Array")?,
             ast::PrimitiveType::u16 => write!(out, "Uint16Array")?,
             ast::PrimitiveType::i32 => write!(out, "Int32Array")?,

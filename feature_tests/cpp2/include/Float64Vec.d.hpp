@@ -16,9 +16,23 @@ public:
 
   inline static std::unique_ptr<Float64Vec> new_(diplomat::span<const double> v);
 
+  inline static std::unique_ptr<Float64Vec> new_bool(diplomat::span<const bool> v);
+
+  inline static std::unique_ptr<Float64Vec> new_i16(diplomat::span<const int16_t> v);
+
+  inline static std::unique_ptr<Float64Vec> new_u16(diplomat::span<const uint16_t> v);
+
+  inline static std::unique_ptr<Float64Vec> new_isize(diplomat::span<const intptr_t> v);
+
+  inline static std::unique_ptr<Float64Vec> new_usize(diplomat::span<const size_t> v);
+
+  inline static std::unique_ptr<Float64Vec> new_f64_be_bytes(diplomat::span<const uint8_t> v);
+
   inline void fill_slice(diplomat::span<double> v) const;
 
   inline void set_value(diplomat::span<const double> new_slice);
+
+  inline std::string to_string() const;
 
   inline const capi::Float64Vec* AsFFI() const;
   inline capi::Float64Vec* AsFFI();

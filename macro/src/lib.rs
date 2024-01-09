@@ -266,12 +266,14 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
 struct AttributeInfo {
     repr: bool,
     opaque: bool,
+    is_out: bool,
 }
 
 impl AttributeInfo {
     fn extract(attrs: &mut Vec<Attribute>) -> Self {
         let mut repr = false;
         let mut opaque = false;
+        let mut is_out = false;
         attrs.retain(|attr| {
             let ident = &attr.path().segments.iter().next().unwrap().ident;
             if ident == "repr" {
@@ -283,6 +285,9 @@ impl AttributeInfo {
                     let seg = &attr.path().segments.iter().nth(1).unwrap().ident;
                     if seg == "opaque" {
                         opaque = true;
+                        return false;
+                    } else if seg == "out" {
+                        is_out = true;
                         return false;
                     } else if seg == "rust_link" || seg == "out" || seg == "attr" {
                         // diplomat-tool reads these, not diplomat::bridge.
@@ -302,7 +307,11 @@ impl AttributeInfo {
             true
         });
 
-        Self { repr, opaque }
+        Self {
+            repr,
+            opaque,
+            is_out,
+        }
     }
 }
 
@@ -315,17 +324,27 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
     new_contents.iter_mut().for_each(|c| match c {
         Item::Struct(s) => {
             let info = AttributeInfo::extract(&mut s.attrs);
-            if info.opaque || !info.repr {
-                let repr = if info.opaque {
-                    // Normal opaque types don't need repr(transparent) because the inner type is
-                    // never referenced. #[diplomat::transparent_convert] handles adding repr(transparent)
-                    // on its own
-                    quote!()
+
+            // Normal opaque types don't need repr(transparent) because the inner type is
+            // never referenced. #[diplomat::transparent_convert] handles adding repr(transparent)
+            // on its own
+            if !info.opaque {
+                let copy = if !info.is_out {
+                    // Nothing stops FFI from copying, so we better make sure the struct is Copy.
+                    quote!(#[derive(Clone, Copy)])
                 } else {
-                    quote!(#[repr(C)])
+                    quote!()
                 };
+
+                let repr = if !info.repr {
+                    quote!(#[repr(C)])
+                } else {
+                    quote!()
+                };
+
                 *s = syn::parse_quote! {
                     #repr
+                    #copy
                     #s
                 }
             }
@@ -344,6 +363,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             }
             *e = syn::parse_quote! {
                 #[repr(C)]
+                #[derive(Clone, Copy)]
                 #e
             };
         }

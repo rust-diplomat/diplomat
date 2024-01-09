@@ -101,7 +101,7 @@ pub fn gen_bindings(
                 "import {{ {} }} from \"./diplomat-runtime\"",
                 Csv(imports.ts_primitives.iter().map(|prim| match prim {
                     ast::PrimitiveType::i8 => "i8",
-                    ast::PrimitiveType::u8 => "u8",
+                    ast::PrimitiveType::u8 | ast::PrimitiveType::byte => "u8",
                     ast::PrimitiveType::i16 => "i16",
                     ast::PrimitiveType::u16 => "u16",
                     ast::PrimitiveType::i32 => "i32",
