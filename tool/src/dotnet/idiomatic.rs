@@ -895,7 +895,7 @@ fn extract_setter_metadata(
         return None;
     }
 
-    let first_arg = method.params.get(0)?;
+    let first_arg = method.params.first()?;
 
     let mut param_type = String::new();
     gen_type_name_decl_position(&first_arg.ty, in_path, env, &mut param_type).ok()?;

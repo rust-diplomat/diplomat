@@ -74,7 +74,7 @@ pub fn gen_type_name(
 pub fn type_name_for_prim(prim: &ast::PrimitiveType) -> &str {
     match prim {
         ast::PrimitiveType::i8 => "sbyte",
-        ast::PrimitiveType::u8 => "byte",
+        ast::PrimitiveType::u8 | ast::PrimitiveType::byte => "byte",
         ast::PrimitiveType::i16 => "short",
         ast::PrimitiveType::u16 => "ushort",
         ast::PrimitiveType::i32 => "int",
