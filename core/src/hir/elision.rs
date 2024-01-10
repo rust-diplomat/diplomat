@@ -97,7 +97,7 @@
 //! [Nomicon]: https://doc.rust-lang.org/nomicon/lifetime-elision.html
 
 use super::lifetimes::{
-    BoundedLifetime, LifetimeEnv, MaybeStatic, MethodLifetime, TypeLifetime, TypeLifetimes,
+    self, BoundedLifetime, LifetimeEnv, MaybeStatic, MethodLifetime, TypeLifetime, TypeLifetimes,
 };
 use super::LoweringContext;
 use crate::ast;
@@ -171,7 +171,7 @@ impl ElisionSource {
 pub(super) struct BaseLifetimeLowerer<'ast> {
     lifetime_env: &'ast ast::LifetimeEnv,
     self_lifetimes: Option<TypeLifetimes>,
-    nodes: SmallVec<[BoundedLifetime; super::lifetimes::INLINE_NUM_LIFETIMES]>,
+    nodes: SmallVec<[BoundedLifetime<lifetimes::Method>; super::lifetimes::INLINE_NUM_LIFETIMES]>,
     num_lifetimes: usize,
 }
 
@@ -345,7 +345,7 @@ impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
 
 impl<'ast> ReturnLifetimeLowerer<'ast> {
     /// Finalize the lifetimes in the method, returning the resulting [`LifetimeEnv`].
-    pub fn finish(self) -> LifetimeEnv {
+    pub fn finish(self) -> LifetimeEnv<lifetimes::Method> {
         LifetimeEnv::new(self.base.nodes, self.base.num_lifetimes)
     }
 }
