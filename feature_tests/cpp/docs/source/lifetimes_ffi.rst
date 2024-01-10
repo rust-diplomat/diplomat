@@ -3,6 +3,7 @@
 
 .. cpp:class:: Bar
 
+
 .. cpp:struct:: BorrowedFields
 
     .. cpp:member:: std::u16string_view a
