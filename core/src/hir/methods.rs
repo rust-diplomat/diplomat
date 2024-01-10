@@ -4,9 +4,10 @@ use std::fmt::{self, Write};
 
 use smallvec::SmallVec;
 
-use super::{
-    paths, Attrs, Docs, Ident, IdentBuf, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes,
-    OutType, SelfType, Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
+use super::{paths, Attrs, Docs, Ident, IdentBuf, OutType, SelfType, Slice, Type, TypeContext};
+
+use super::lifetimes::{
+    LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes, TypeLifetime, TypeLifetimes,
 };
 
 /// A method exposed to Diplomat.

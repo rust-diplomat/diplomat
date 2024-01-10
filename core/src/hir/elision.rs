@@ -96,10 +96,10 @@
 //!
 //! [Nomicon]: https://doc.rust-lang.org/nomicon/lifetime-elision.html
 
-use super::{
-    BoundedLifetime, LifetimeEnv, LoweringContext, MaybeStatic, MethodLifetime, TypeLifetime,
-    TypeLifetimes,
+use super::lifetimes::{
+    BoundedLifetime, LifetimeEnv, MaybeStatic, MethodLifetime, TypeLifetime, TypeLifetimes,
 };
+use super::LoweringContext;
 use crate::ast;
 use smallvec::SmallVec;
 

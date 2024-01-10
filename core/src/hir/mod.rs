@@ -5,7 +5,7 @@
 mod attrs;
 mod defs;
 mod elision;
-mod lifetimes;
+pub mod lifetimes;
 mod lowering;
 mod methods;
 mod paths;
@@ -16,7 +16,9 @@ mod types;
 pub use attrs::*;
 pub use defs::*;
 pub(super) use elision::*;
-pub use lifetimes::*;
+pub use lifetimes::{
+    LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes, TypeLifetime, TypeLifetimes,
+};
 pub(super) use lowering::*;
 pub use methods::*;
 pub use paths::*;

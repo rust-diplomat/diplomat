@@ -3,6 +3,7 @@
 
 use super::IdentBuf;
 use crate::ast;
+use core::marker::PhantomData;
 use smallvec::{smallvec, SmallVec};
 
 /// Convenience const representing the number of lifetimes a [`LifetimeEnv`]
@@ -127,12 +128,37 @@ impl<T> MaybeStatic<T> {
     }
 }
 
+/// The [`LifetimeKind`] of [`TypeLifetimes`]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Type;
+/// The [`LifetimeKind`] of [`MethodLifetimes`]
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Method;
+
+/// Abstraction over where lifetimes can occur
+pub trait LifetimeKind {}
+
+impl LifetimeKind for Type {}
+impl LifetimeKind for Method {}
+
+/// A lifetime that exists as part of a type or method signature (determined by
+/// Kind parameter, which will be one of [`LifetimeKind`])
+/// [`TypeLifetime::as_method_lifetime`] method.
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Lifetime<Kind>(usize, PhantomData<Kind>);
+
+/// A set of lifetimes found on a type name or method signature (determined by
+/// Kind parameter, which will be one of [`LifetimeKind`])
+#[derive(Clone, Debug)]
+pub struct Lifetimes<Kind> {
+    indices: SmallVec<[MaybeStatic<Lifetime<Kind>>; 2]>,
+}
+
 /// A lifetime that exists as part of a type signature.
 ///
 /// This type can be mapped to a [`MethodLifetime`] by using the
 /// [`TypeLifetime::as_method_lifetime`] method.
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TypeLifetime(usize);
+pub type TypeLifetime = Lifetime<Type>;
 
 /// A set of lifetimes that exist as generic arguments on [`StructPath`]s,
 /// [`OutStructPath`]s, and [`OpaquePath`]s.
@@ -144,24 +170,18 @@ pub struct TypeLifetime(usize);
 /// [`StructPath`]: super::StructPath
 /// [`OutStructPath`]: super::OutStructPath
 /// [`OpaquePath`]: super::OpaquePath
-#[derive(Clone, Debug)]
-pub struct TypeLifetimes {
-    indices: SmallVec<[MaybeStatic<TypeLifetime>; 2]>,
-}
+pub type TypeLifetimes = Lifetimes<Type>;
 
 /// A lifetime that exists as part of a method signature, e.g. `'a` or an
 /// anonymous lifetime.
 ///
 /// This type is intended to be used as a key into a map to keep track of which
 /// borrowed fields depend on which method lifetimes.
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct MethodLifetime(usize);
+pub type MethodLifetime = Lifetime<Method>;
 
 /// Map a lifetime in a nested struct to the original lifetime defined
 /// in the method that it refers to.
-pub struct MethodLifetimes {
-    indices: SmallVec<[MaybeStatic<MethodLifetime>; 2]>,
-}
+pub type MethodLifetimes = Lifetimes<Method>;
 
 impl LifetimeEnv {
     /// Returns a new [`LifetimeEnv`].
@@ -178,7 +198,7 @@ impl LifetimeEnv {
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> MethodLifetimes {
         let indices = (0..self.num_lifetimes)
-            .map(|index| MaybeStatic::NonStatic(MethodLifetime(index)))
+            .map(|index| MaybeStatic::NonStatic(MethodLifetime::new(index)))
             .collect();
 
         MethodLifetimes { indices }
@@ -200,11 +220,11 @@ impl TypeLifetime {
         let index = lifetime_env
             .id(named)
             .unwrap_or_else(|| panic!("lifetime `{named}` not found in lifetime env"));
-        Self(index)
+        Self::new(index)
     }
 
     pub(super) fn new(index: usize) -> Self {
-        Self(index)
+        Self(index, PhantomData)
     }
 
     /// Returns a new [`MaybeStatic<MethodLifetime>`] representing `self` in the
@@ -272,7 +292,7 @@ impl TypeLifetimes {
 impl MethodLifetime {
     /// Returns a new `MethodLifetime` from an index into a `LifetimeEnv`.
     pub(super) fn new(index: usize) -> Self {
-        Self(index)
+        Self(index, PhantomData)
     }
 }
 
