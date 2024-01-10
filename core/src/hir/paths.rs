@@ -1,6 +1,7 @@
+use super::lifetimes::TypeLifetimes;
 use super::{
     Borrow, EnumDef, EnumId, Everywhere, OpaqueDef, OpaqueId, OpaqueOwner, OutStructDef,
-    OutputOnly, ReturnableStructDef, StructDef, TyPosition, TypeContext, TypeLifetimes,
+    OutputOnly, ReturnableStructDef, StructDef, TyPosition, TypeContext,
 };
 
 /// Path to a struct that may appear as an output.

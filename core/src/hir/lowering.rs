@@ -1,10 +1,11 @@
+use super::lifetimes::{self, LifetimeEnv};
 use super::{
-    lifetimes, AttributeContext, AttributeValidator, Borrow, EnumDef, EnumPath, EnumVariant,
-    IdentBuf, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef,
-    OpaquePath, Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param,
-    ParamLifetimeLowerer, ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType,
-    ReturnableStructPath, SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField,
-    StructPath, SuccessType, Type,
+    AttributeContext, AttributeValidator, Borrow, EnumDef, EnumPath, EnumVariant, IdentBuf,
+    LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional,
+    OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf,
+    PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, SuccessType,
+    Type,
 };
 use crate::{ast, Env};
 use core::fmt;

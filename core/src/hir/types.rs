@@ -1,8 +1,9 @@
 //! Types that can be exposed in Diplomat APIs.
 
+use super::lifetimes::{MaybeStatic, TypeLifetime};
 use super::{
-    EnumPath, Everywhere, MaybeStatic, NonOptional, OpaquePath, Optional, OutputOnly,
-    PrimitiveType, StructPath, TyPosition, TypeContext, TypeLifetime,
+    EnumPath, Everywhere, NonOptional, OpaquePath, Optional, OutputOnly, PrimitiveType, StructPath,
+    TyPosition, TypeContext,
 };
 use crate::ast;
 pub use ast::Mutability;
