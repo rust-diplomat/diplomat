@@ -22,7 +22,7 @@ impl Attrs {
     fn add_attr(&mut self, attr: Attr) {
         match attr {
             Attr::Cfg(attr) => self.cfg.push(attr),
-            Attr::DiplomatBackendAttr(attr) => self.attrs.push(attr),
+            Attr::DiplomatBackend(attr) => self.attrs.push(attr),
             Attr::SkipIfUnsupported => self.skip_if_unsupported = true,
         }
     }
@@ -51,7 +51,7 @@ impl From<&[Attribute]> for Attrs {
 
 enum Attr {
     Cfg(Attribute),
-    DiplomatBackendAttr(DiplomatBackendAttr),
+    DiplomatBackend(DiplomatBackendAttr),
     SkipIfUnsupported,
     // More goes here
 }
@@ -64,7 +64,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
         } else if a.path() == &dattr_path {
-            Some(Attr::DiplomatBackendAttr(
+            Some(Attr::DiplomatBackend(
                 a.parse_args()
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
