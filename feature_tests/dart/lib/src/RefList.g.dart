@@ -8,15 +8,17 @@ part of 'lib.g.dart';
 final class RefList implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  RefList._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  RefList._(this._underlying, bool isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_RefList_destroy));
 
   factory RefList.node(RefListParameter data) {
     final result = _RefList_node(data._underlying);
-    return RefList._(result);
+    return RefList._(result, true);
   }
 }
 

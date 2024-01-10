@@ -313,6 +313,12 @@ fn gen_method(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
+    if method.attrs.skip_if_unsupported
+        && matches!(method.return_type, Some(ast::TypeName::Reference(..)))
+    {
+        // We don't support returning references
+        return Ok(());
+    }
     // This method should rearrange the writeable
     let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
 

@@ -273,7 +273,11 @@ impl AttributeInfo {
                     } else if seg == "out" {
                         is_out = true;
                         return false;
-                    } else if seg == "rust_link" || seg == "out" || seg == "attr" {
+                    } else if seg == "rust_link"
+                        || seg == "out"
+                        || seg == "attr"
+                        || seg == "skip_if_unsupported"
+                    {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
                         return false;

@@ -39,11 +39,12 @@ pub mod ffi {
     }
 
     // FIXME(#191): This test breaks the C++ codegen
-    // impl<'b, 'a: 'b> Bar<'b, 'a> {
-    //     pub fn foo(&'b self) -> &'b Foo<'a> {
-    //         self.0
-    //     }
-    // }
+    impl<'b, 'a: 'b> Bar<'b, 'a> {
+        #[diplomat::skip_if_unsupported]
+        pub fn foo(&'b self) -> &'b Foo<'a> {
+            self.0
+        }
+    }
 
     #[derive(Copy, Clone)]
     #[diplomat::opaque]

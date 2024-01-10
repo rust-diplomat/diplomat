@@ -8,8 +8,10 @@ part of 'lib.g.dart';
 final class Foo implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  Foo._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  Foo._(this._underlying, bool isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Foo_destroy));
@@ -19,12 +21,12 @@ final class Foo implements ffi.Finalizable {
     final xView = x.utf8View;
     final result = _Foo_new(xView.pointer(temp), xView.length);
     temp.releaseAll();
-    return Foo._(result);
+    return Foo._(result, true);
   }
 
   Bar get getBar {
     final result = _Foo_get_bar(_underlying);
-    return Bar._(result);
+    return Bar._(result, true);
   }
 
   factory Foo.static_(String x) {
@@ -32,7 +34,7 @@ final class Foo implements ffi.Finalizable {
     final xView = x.utf8View;
     final result = _Foo_new_static(xView.pointer(temp), xView.length);
     temp.releaseAll();
-    return Foo._(result);
+    return Foo._(result, true);
   }
 
   BorrowedFieldsReturning get asReturning {
@@ -42,7 +44,7 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo.extractFromFields(BorrowedFields fields) {
     final result = _Foo_extract_from_fields(fields._underlying);
-    return Foo._(result);
+    return Foo._(result, true);
   }
 }
 

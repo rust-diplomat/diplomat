@@ -11,7 +11,13 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "Bar.h"
+#include "Foo.hpp"
 
+
+inline const Foo& Bar::foo() const {
+  auto result = capi::Bar_foo(this->AsFFI());
+  return *Foo::FromFFI(result);
+}
 
 inline const capi::Bar* Bar::AsFFI() const {
   return reinterpret_cast<const capi::Bar*>(this);

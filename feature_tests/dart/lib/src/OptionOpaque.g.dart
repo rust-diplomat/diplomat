@@ -8,20 +8,22 @@ part of 'lib.g.dart';
 final class OptionOpaque implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  OptionOpaque._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  OptionOpaque._(this._underlying, bool isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OptionOpaque_destroy));
 
   static OptionOpaque? new_(int i) {
     final result = _OptionOpaque_new(i);
-    return result.address == 0 ? null : OptionOpaque._(result);
+    return result.address == 0 ? null : OptionOpaque._(result, true);
   }
 
   static final OptionOpaque? none = () {
     final result = _OptionOpaque_new_none();
-    return result.address == 0 ? null : OptionOpaque._(result);
+    return result.address == 0 ? null : OptionOpaque._(result, true);
   }();
 
   static final OptionStruct struct = () {

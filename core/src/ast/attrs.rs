@@ -11,13 +11,19 @@ use syn::{Attribute, Ident, LitStr, Meta, Token};
 pub struct Attrs {
     pub cfg: Vec<Attribute>,
     pub attrs: Vec<DiplomatBackendAttr>,
+    /// AST backends only. For using features that may panic AST backends, like returning references.
+    ///
+    /// This isn't a regular attribute since AST backends do not handle regular attributes. Do not use
+    /// in HIR backends,
+    pub skip_if_unsupported: bool,
 }
 
 impl Attrs {
     fn add_attr(&mut self, attr: Attr) {
         match attr {
             Attr::Cfg(attr) => self.cfg.push(attr),
-            Attr::DiplomatBackendAttr(attr) => self.attrs.push(attr),
+            Attr::DiplomatBackend(attr) => self.attrs.push(attr),
+            Attr::SkipIfUnsupported => self.skip_if_unsupported = true,
         }
     }
 
@@ -45,21 +51,25 @@ impl From<&[Attribute]> for Attrs {
 
 enum Attr {
     Cfg(Attribute),
-    DiplomatBackendAttr(DiplomatBackendAttr),
+    DiplomatBackend(DiplomatBackendAttr),
+    SkipIfUnsupported,
     // More goes here
 }
 
 fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ {
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
+    let skipast: syn::Path = syn::parse_str("diplomat::skip_if_unsupported").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
         } else if a.path() == &dattr_path {
-            Some(Attr::DiplomatBackendAttr(
+            Some(Attr::DiplomatBackend(
                 a.parse_args()
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
+        } else if a.path() == &skipast {
+            Some(Attr::SkipIfUnsupported)
         } else {
             None
         }

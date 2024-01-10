@@ -8,15 +8,17 @@ part of 'lib.g.dart';
 final class Opaque implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  Opaque._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  Opaque._(this._underlying, bool isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Opaque_destroy));
 
   factory Opaque() {
     final result = _Opaque_new();
-    return Opaque._(result);
+    return Opaque._(result, true);
   }
 
   /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.

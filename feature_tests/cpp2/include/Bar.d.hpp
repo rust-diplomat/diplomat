@@ -10,9 +10,13 @@
 #include "diplomat_runtime.hpp"
 #include "Bar.d.h"
 
+class Foo;
+
 
 class Bar {
 public:
+
+  inline const Foo& foo() const;
 
   inline const capi::Bar* AsFFI() const;
   inline capi::Bar* AsFFI();

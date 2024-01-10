@@ -18,13 +18,13 @@ final class OptionStruct {
 
   OptionStruct._(this._underlying);
 
-  OptionOpaque? get a => _underlying.a.address == 0 ? null : OptionOpaque._(_underlying.a);
+  OptionOpaque? get a => _underlying.a.address == 0 ? null : OptionOpaque._(_underlying.a, true);
 
-  OptionOpaqueChar? get b => _underlying.b.address == 0 ? null : OptionOpaqueChar._(_underlying.b);
+  OptionOpaqueChar? get b => _underlying.b.address == 0 ? null : OptionOpaqueChar._(_underlying.b, true);
 
   int get c => _underlying.c;
 
-  OptionOpaque? get d => _underlying.d.address == 0 ? null : OptionOpaque._(_underlying.d);
+  OptionOpaque? get d => _underlying.d.address == 0 ? null : OptionOpaque._(_underlying.d, true);
 
   @override
   bool operator ==(Object other) =>
