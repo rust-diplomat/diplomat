@@ -8,8 +8,10 @@ part of 'lib.g.dart';
 final class AttrOpaque1 implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  AttrOpaque1._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  AttrOpaque1._(this._underlying, bool isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_AttrOpaque1_destroy));

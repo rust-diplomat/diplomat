@@ -693,9 +693,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 match (op.owner.is_owned(), op.is_optional()) {
                     (false, _) => unimplemented!(),
-                    (true, false) => format!("{type_name}._({var_name})").into(),
+                    (true, false) => format!("{type_name}._({var_name}, true)").into(),
                     (true, true) => {
-                        format!("{var_name}.address == 0 ? null : {type_name}._({var_name})").into()
+                        format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, true)").into()
                     }
                 }
             }

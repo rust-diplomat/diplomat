@@ -8,8 +8,10 @@ part of 'lib.g.dart';
 final class MyString implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  MyString._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  MyString._(this._underlying, bool isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
@@ -19,7 +21,7 @@ final class MyString implements ffi.Finalizable {
     final vView = v.utf8View;
     final result = _MyString_new(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return MyString._(result);
+    return MyString._(result, true);
   }
 
   factory MyString.unsafe(String v) {
@@ -27,7 +29,7 @@ final class MyString implements ffi.Finalizable {
     final vView = v.utf8View;
     final result = _MyString_new_unsafe(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return MyString._(result);
+    return MyString._(result, true);
   }
 
   void setStr(String newStr) {

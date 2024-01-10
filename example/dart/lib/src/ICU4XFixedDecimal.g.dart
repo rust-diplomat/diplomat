@@ -9,8 +9,10 @@ part of 'lib.g.dart';
 final class ICU4XFixedDecimal implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  ICU4XFixedDecimal._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  ICU4XFixedDecimal._(this._underlying, bool isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ICU4XFixedDecimal_destroy));
@@ -18,7 +20,7 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   /// Construct an [`ICU4XFixedDecimal`] from an integer.
   factory ICU4XFixedDecimal(int v) {
     final result = _ICU4XFixedDecimal_new(v);
-    return ICU4XFixedDecimal._(result);
+    return ICU4XFixedDecimal._(result, true);
   }
 
   /// Multiply the [`ICU4XFixedDecimal`] by a given power of ten.

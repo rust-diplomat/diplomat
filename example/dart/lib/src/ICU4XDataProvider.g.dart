@@ -11,8 +11,10 @@ part of 'lib.g.dart';
 final class ICU4XDataProvider implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  ICU4XDataProvider._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  ICU4XDataProvider._(this._underlying, bool isOwned) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ICU4XDataProvider_destroy));
@@ -20,7 +22,7 @@ final class ICU4XDataProvider implements ffi.Finalizable {
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory ICU4XDataProvider.static_() {
     final result = _ICU4XDataProvider_new_static();
-    return ICU4XDataProvider._(result);
+    return ICU4XDataProvider._(result, true);
   }
 
   /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
