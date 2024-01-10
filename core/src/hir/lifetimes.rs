@@ -7,16 +7,15 @@ use smallvec::{smallvec, SmallVec};
 
 /// Convenience const representing the number of lifetimes a [`LifetimeEnv`]
 /// can hold inline before needing to dynamically allocate.
-const INLINE_NUM_LIFETIMES: usize = 4;
+pub(crate) const INLINE_NUM_LIFETIMES: usize = 4;
 
 // TODO(Quinn): This type is going to mainly be recycled from `ast::LifetimeEnv`.
 // Not fully sure how that will look like yet, but the ideas of what this will do
 // is basically the same.
 #[derive(Debug)]
 pub struct LifetimeEnv {
-    /// List of named lifetimes in scope of the method, in the form of an
-    /// adjacency matrix.
-    nodes: SmallVec<[Lifetime; INLINE_NUM_LIFETIMES]>,
+    /// List of named lifetimes in scope of the method, and their bounds
+    nodes: SmallVec<[BoundedLifetime; INLINE_NUM_LIFETIMES]>,
 
     /// The number of named _and_ anonymous lifetimes in the method.
     /// We store the sum since it represents the upper bound on what indices
@@ -32,14 +31,14 @@ pub struct LifetimeEnv {
 /// A lifetime in a [`LifetimeEnv`], which keeps track of which lifetimes it's
 /// longer and shorter than.
 #[derive(Debug)]
-pub(super) struct Lifetime {
+pub(super) struct BoundedLifetime {
     ident: IdentBuf,
     longer: SmallVec<[MethodLifetime; 2]>,
     shorter: SmallVec<[MethodLifetime; 2]>,
 }
 
-impl Lifetime {
-    /// Returns a new [`Lifetime`].
+impl BoundedLifetime {
+    /// Returns a new [`BoundedLifetime`].
     pub(super) fn new(
         ident: IdentBuf,
         longer: SmallVec<[MethodLifetime; 2]>,
@@ -167,7 +166,7 @@ pub struct MethodLifetimes {
 impl LifetimeEnv {
     /// Returns a new [`LifetimeEnv`].
     pub(super) fn new(
-        nodes: SmallVec<[Lifetime; INLINE_NUM_LIFETIMES]>,
+        nodes: SmallVec<[BoundedLifetime; INLINE_NUM_LIFETIMES]>,
         num_lifetimes: usize,
     ) -> Self {
         Self {
