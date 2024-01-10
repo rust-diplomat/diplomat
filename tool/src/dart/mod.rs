@@ -691,12 +691,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
 
-                match (op.owner.is_owned(), op.is_optional()) {
-                    (false, _) => unimplemented!(),
-                    (true, false) => format!("{type_name}._({var_name}, true)").into(),
-                    (true, true) => {
-                        format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, true)").into()
-                    }
+                let owned = op.owner.is_owned();
+                if op.is_optional() {
+                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned})").into()
+                } else {
+                    format!("{type_name}._({var_name}, {owned})").into()
                 }
             }
             Type::Struct(ref st) => {

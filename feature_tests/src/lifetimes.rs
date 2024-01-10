@@ -41,7 +41,6 @@ pub mod ffi {
     // FIXME(#191): This test breaks the C++ codegen
     impl<'b, 'a: 'b> Bar<'b, 'a> {
         #[diplomat::skip_if_unsupported]
-        #[diplomat::attr(dart, disable)]
         pub fn foo(&'b self) -> &'b Foo<'a> {
             self.0
         }
