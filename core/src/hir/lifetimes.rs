@@ -148,8 +148,10 @@ impl LifetimeKind for Type {}
 impl LifetimeKind for Method {}
 
 /// A lifetime that exists as part of a type or method signature (determined by
-/// Kind parameter, which will be one of [`LifetimeKind`])
-/// [`TypeLifetime::as_method_lifetime`] method.
+/// Kind parameter, which will be one of [`LifetimeKind`]).
+///
+/// This index only makes sense in the context of a surrounding type or method; since
+/// this is essentially an index into that type/method's lifetime list.
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Lifetime<Kind>(usize, PhantomData<Kind>);
 
