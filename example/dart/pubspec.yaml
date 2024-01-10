@@ -2,7 +2,7 @@ name: example
 version: 0.0.0
 
 environment:
-  sdk: 3.3.0-277.0.dev
+  sdk: ^3.3.0-279.1.beta
 
 dependencies:
   ffi: ^2.0.0
