@@ -135,9 +135,11 @@ impl<T> MaybeStatic<T> {
 
 /// The [`LifetimeKind`] of [`TypeLifetimes`]
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(clippy::exhaustive_structs)] // marker type
 pub struct Type;
 /// The [`LifetimeKind`] of [`MethodLifetimes`]
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(clippy::exhaustive_structs)] // marker type
 pub struct Method;
 
 /// Abstraction over where lifetimes can occur
