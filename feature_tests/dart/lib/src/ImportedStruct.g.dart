@@ -28,9 +28,12 @@ final class ImportedStruct {
   }
 
   _ImportedStructFfi _toFfi() {
-    var _underlying;
+    final pointer = ffi2.calloc<_ImportedStructFfi>();
+    var _underlying = pointer.ref;
     _underlying.foo = foo.index;;
     _underlying.count = count;;
+
+    _callocFree.attach(_underlying, pointer.cast());
     return _underlying;
   }
 

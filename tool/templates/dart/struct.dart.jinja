@@ -31,12 +31,18 @@ final class {{type_name}} {
   }
 
   _{{type_name}}Ffi _toFfi() {
-    var _underlying;
+    final pointer = ffi2.calloc<_{{type_name}}Ffi>();
+    var _underlying = pointer.ref;
     {%- for field in fields %}
     {%- for set_expression in field.set_expressions %}
     {{set_expression}};
     {%- endfor %}
     {%- endfor %}
+
+    // This isn't allowed since _underlying is a value type
+    // We will need to instead return a pointer and free on the other side,
+    // which will be less elegant
+    _callocFree.attach(_underlying, pointer.cast());
     return _underlying;
   }
 

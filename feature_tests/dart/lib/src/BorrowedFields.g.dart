@@ -29,7 +29,8 @@ final class BorrowedFields {
   }
 
   _BorrowedFieldsFfi _toFfi() {
-    var _underlying;
+    final pointer = ffi2.calloc<_BorrowedFieldsFfi>();
+    var _underlying = pointer.ref;
     ffi2.calloc.free(_underlying.a._pointer);;
     final aView = a.utf16View;;
     _underlying.a._pointer = aView.pointer(ffi2.calloc);;
@@ -42,6 +43,8 @@ final class BorrowedFields {
     final cView = c.utf8View;;
     _underlying.c._pointer = cView.pointer(ffi2.calloc);;
     _underlying.c._length = cView.length;;
+
+    _callocFree.attach(_underlying, pointer.cast());
     return _underlying;
   }
 

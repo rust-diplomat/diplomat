@@ -28,9 +28,12 @@ final class ErrorStruct {
   }
 
   _ErrorStructFfi _toFfi() {
-    var _underlying;
+    final pointer = ffi2.calloc<_ErrorStructFfi>();
+    var _underlying = pointer.ref;
     _underlying.i = i;;
     _underlying.j = j;;
+
+    _callocFree.attach(_underlying, pointer.cast());
     return _underlying;
   }
 

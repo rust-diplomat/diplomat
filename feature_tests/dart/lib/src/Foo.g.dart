@@ -39,11 +39,11 @@ final class Foo implements ffi.Finalizable {
 
   BorrowedFieldsReturning get asReturning {
     final result = _Foo_as_returning(_underlying);
-    return BorrowedFieldsReturning._(result);
+    return BorrowedFieldsReturning._fromFfi(result);
   }
 
   factory Foo.extractFromFields(BorrowedFields fields) {
-    final result = _Foo_extract_from_fields(fields._underlying);
+    final result = _Foo_extract_from_fields(fields._toFfi());
     return Foo._(result, true);
   }
 }

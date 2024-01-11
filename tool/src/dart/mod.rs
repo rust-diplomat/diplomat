@@ -660,9 +660,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 format!("{dart_name}.index").into()
             }
-            Type::Opaque(..) | Type::Struct(..) | Type::Enum(..) => {
-                format!("{dart_name}._underlying").into()
-            }
+            Type::Struct(..) => format!("{dart_name}._toFfi()").into(),
+            Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._underlying").into(),
             Type::Slice(hir::Slice::Str(
                 _,
                 hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
@@ -701,7 +700,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}._({var_name})").into()
+                format!("{type_name}._fromFfi({var_name})").into()
             }
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 let id = e.tcx_id.into();

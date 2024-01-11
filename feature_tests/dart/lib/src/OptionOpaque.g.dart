@@ -28,12 +28,12 @@ final class OptionOpaque implements ffi.Finalizable {
 
   static final OptionStruct struct = () {
     final result = _OptionOpaque_new_struct();
-    return OptionStruct._(result);
+    return OptionStruct._fromFfi(result);
   }();
 
   static final OptionStruct structNones = () {
     final result = _OptionOpaque_new_struct_nones();
-    return OptionStruct._(result);
+    return OptionStruct._fromFfi(result);
   }();
 
   void assertInteger(int i) {

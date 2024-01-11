@@ -48,7 +48,8 @@ final class MyStruct {
   }
 
   _MyStructFfi _toFfi() {
-    var _underlying;
+    final pointer = ffi2.calloc<_MyStructFfi>();
+    var _underlying = pointer.ref;
     _underlying.a = a;;
     _underlying.b = b;;
     _underlying.c = c;;
@@ -56,6 +57,8 @@ final class MyStruct {
     _underlying.e = e;;
     _underlying.f = f;;
     _underlying.g = g._underlying;;
+
+    _callocFree.attach(_underlying, pointer.cast());
     return _underlying;
   }
 
@@ -96,7 +99,7 @@ final class MyStruct {
 
   factory MyStruct() {
     final result = _MyStruct_new();
-    return MyStruct._(result);
+    return MyStruct._fromFfi(result);
   }
 
   int intoA() {

@@ -27,7 +27,7 @@ final class Opaque implements ffi.Finalizable {
   ///
   /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
   void assertStruct(MyStruct s) {
-    _Opaque_assert_struct(_underlying, s._underlying);
+    _Opaque_assert_struct(_underlying, s._toFfi());
   }
 
   static final int returnsUsize = () {
@@ -37,7 +37,7 @@ final class Opaque implements ffi.Finalizable {
 
   static final ImportedStruct returnsImported = () {
     final result = _Opaque_returns_imported();
-    return ImportedStruct._(result);
+    return ImportedStruct._fromFfi(result);
   }();
 }
 

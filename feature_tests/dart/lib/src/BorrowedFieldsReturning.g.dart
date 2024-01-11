@@ -23,11 +23,14 @@ final class BorrowedFieldsReturning {
   }
 
   _BorrowedFieldsReturningFfi _toFfi() {
-    var _underlying;
+    final pointer = ffi2.calloc<_BorrowedFieldsReturningFfi>();
+    var _underlying = pointer.ref;
     ffi2.calloc.free(_underlying.bytes._pointer);;
     final bytesView = bytes.utf8View;;
     _underlying.bytes._pointer = bytesView.pointer(ffi2.calloc);;
     _underlying.bytes._length = bytesView.length;;
+
+    _callocFree.attach(_underlying, pointer.cast());
     return _underlying;
   }
 

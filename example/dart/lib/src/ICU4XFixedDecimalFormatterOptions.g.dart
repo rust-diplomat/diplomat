@@ -28,9 +28,13 @@ final class ICU4XFixedDecimalFormatterOptions {
   }
 
   _ICU4XFixedDecimalFormatterOptionsFfi _toFfi() {
-    var _underlying;
+    // https://github.com/dart-lang/sdk/issues/45697
+    final pointer = ffi2.calloc<_ICU4XFixedDecimalFormatterOptionsFfi>();
+    var _underlying = pointer.ref;
     _underlying.groupingStrategy = groupingStrategy.index;;
     _underlying.someOtherConfig = someOtherConfig;;
+
+    _callocFree.attach(_underlying, pointer.cast());
     return _underlying;
   }
 
@@ -46,7 +50,7 @@ final class ICU4XFixedDecimalFormatterOptions {
 
   factory ICU4XFixedDecimalFormatterOptions() {
     final result = _ICU4XFixedDecimalFormatterOptions_default();
-    return ICU4XFixedDecimalFormatterOptions._(result);
+    return ICU4XFixedDecimalFormatterOptions._fromFfi(result);
   }
 
   @override

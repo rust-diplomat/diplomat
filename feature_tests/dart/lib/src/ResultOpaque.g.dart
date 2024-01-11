@@ -66,7 +66,7 @@ final class ResultOpaque implements ffi.Finalizable {
   factory ResultOpaque.failingStruct(int i) {
     final result = _ResultOpaque_new_failing_struct(i);
     if (!result.isOk) {
-      throw ErrorStruct._(result.union.err);
+      throw ErrorStruct._fromFfi(result.union.err);
     }
     return ResultOpaque._(result.union.ok, true);
   }

@@ -33,7 +33,10 @@ final class OptionStruct {
   }
 
   _OptionStructFfi _toFfi() {
-    var _underlying;
+    final pointer = ffi2.calloc<_OptionStructFfi>();
+    var _underlying = pointer.ref;
+
+    _callocFree.attach(_underlying, pointer.cast());
     return _underlying;
   }
 
