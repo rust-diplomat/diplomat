@@ -19,11 +19,12 @@ TypeContext {
                     name: "inner",
                     ty: Opaque(
                         OpaquePath {
-                            lifetimes: TypeLifetimes {
+                            lifetimes: Lifetimes {
                                 indices: [
                                     NonStatic(
-                                        TypeLifetime(
+                                        Lifetime(
                                             0,
+                                            PhantomData<diplomat_core::hir::lifetimes::Type>,
                                         ),
                                     ),
                                 ],
@@ -48,7 +49,7 @@ TypeContext {
                     name: "new",
                     lifetime_env: LifetimeEnv {
                         nodes: [
-                            Lifetime {
+                            BoundedLifetime {
                                 ident: "a",
                                 longer: [],
                                 shorter: [],
@@ -63,8 +64,9 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        TypeLifetime(
+                                        Lifetime(
                                             0,
+                                            PhantomData<diplomat_core::hir::lifetimes::Type>,
                                         ),
                                     ),
                                     UnvalidatedUtf8,
@@ -78,11 +80,12 @@ TypeContext {
                                 Struct(
                                     OutStruct(
                                         StructPath {
-                                            lifetimes: TypeLifetimes {
+                                            lifetimes: Lifetimes {
                                                 indices: [
                                                     NonStatic(
-                                                        TypeLifetime(
+                                                        Lifetime(
                                                             0,
+                                                            PhantomData<diplomat_core::hir::lifetimes::Type>,
                                                         ),
                                                     ),
                                                 ],
@@ -125,8 +128,9 @@ TypeContext {
                     ty: Slice(
                         Str(
                             NonStatic(
-                                TypeLifetime(
+                                Lifetime(
                                     0,
+                                    PhantomData<diplomat_core::hir::lifetimes::Type>,
                                 ),
                             ),
                             UnvalidatedUtf8,
@@ -143,7 +147,7 @@ TypeContext {
                     name: "rustc_elision",
                     lifetime_env: LifetimeEnv {
                         nodes: [
-                            Lifetime {
+                            BoundedLifetime {
                                 ident: "a",
                                 longer: [],
                                 shorter: [],
@@ -155,11 +159,12 @@ TypeContext {
                         ParamSelf {
                             ty: Struct(
                                 StructPath {
-                                    lifetimes: TypeLifetimes {
+                                    lifetimes: Lifetimes {
                                         indices: [
                                             NonStatic(
-                                                TypeLifetime(
+                                                Lifetime(
                                                     0,
+                                                    PhantomData<diplomat_core::hir::lifetimes::Type>,
                                                 ),
                                             ),
                                         ],
@@ -177,8 +182,9 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        TypeLifetime(
+                                        Lifetime(
                                             1,
+                                            PhantomData<diplomat_core::hir::lifetimes::Type>,
                                         ),
                                     ),
                                     UnvalidatedUtf8,
@@ -192,8 +198,9 @@ TypeContext {
                                 Slice(
                                     Str(
                                         NonStatic(
-                                            TypeLifetime(
+                                            Lifetime(
                                                 1,
+                                                PhantomData<diplomat_core::hir::lifetimes::Type>,
                                             ),
                                         ),
                                         UnvalidatedUtf8,
