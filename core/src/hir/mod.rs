@@ -6,7 +6,7 @@ mod attrs;
 mod defs;
 mod elision;
 // We don't reexport this for two reasons.
-// 
+//
 // One is that these are somewhat more niche types and we don't want to clutter the main module too
 // much. You only need these if you're dealing with lifetimes, which not all backends may wish to
 // do.
