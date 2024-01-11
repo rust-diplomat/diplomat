@@ -13,27 +13,41 @@ final class _{{type_name}}Ffi extends ffi.Struct {
 /// {{docs}}
 {% endif -%}
 final class {{type_name}} {
-  final _{{type_name}}Ffi _underlying;
 
-  {{type_name}}._(this._underlying);
-  {%- if mutable && needs_constructor %}
+  {%- for field in fields %}
+  {% if !mutable -%} final {% endif -%} {{field.dart_type_name}} _{{field.name}};
+  {%- endfor %}
 
-  {# https://github.com/dart-lang/sdk/issues/45697 -#}
-  factory {{type_name}}() {
-    final pointer = ffi2.calloc<_{{type_name}}Ffi>();
-    final result = {{type_name}}._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
+  {{type_name}}._({%- for field in fields %}this._{{field.name}}, {%- endfor -%});
+
+
+  factory {{type_name}}._fromFfi(_{{type_name}}Ffi ffi){
+
+    var _underlying = ffi;
+    {%- for field in fields %}
+    var _{{field.name}} = {{field.get_expression}};
+    {%- endfor %}
+    return {{type_name}}._({%- for field in fields %}_{{field.name}}, {% endfor -%});
   }
-  {%- endif %}
+
+  _{{type_name}}Ffi _toFfi() {
+    var _underlying;
+    {%- for field in fields %}
+    {%- for set_expression in field.set_expressions %}
+    {{set_expression}};
+    {%- endfor %}
+    {%- endfor %}
+    return _underlying;
+  }
+
+
   {%- for field in fields %}
 
-  {{field.dart_type_name}} get {{field.name}} => {{ field.get_expression }};
+  {{field.dart_type_name}} get {{field.name}} => this._{{field.name}};
+
   {%- if mutable %}
   set {{field.name}}({{field.dart_type_name}} {{field.name}}) {
-    {%- for set_expression in field.set_expressions %}
-    {{set_expression}}
-    {%- endfor %}
+    _{{field.name}} = {{field.name}};
   }
   {%- endif %}
   {%- endfor %}
@@ -46,13 +60,13 @@ final class {{type_name}} {
   bool operator ==(Object other) =>
       other is {{type_name}}
       {%- for field in fields %} &&
-      other._underlying.{{field.name}} == _underlying.{{field.name}}
+      other.{{field.name}} == this.{{field.name}}
       {%- endfor %};
 
   @override
   int get hashCode => Object.hashAll([
       {%- for field in fields %}
-        _underlying.{{field.name}},
+        this.{{field.name}},
       {%- endfor %}
       ]);
 }

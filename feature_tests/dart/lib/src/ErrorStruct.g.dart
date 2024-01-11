@@ -13,36 +13,46 @@ final class _ErrorStructFfi extends ffi.Struct {
 }
 
 final class ErrorStruct {
-  final _ErrorStructFfi _underlying;
+  int _i;
+  int _j;
 
-  ErrorStruct._(this._underlying);
+  ErrorStruct._(this._i,this._j,);
 
-  factory ErrorStruct() {
-    final pointer = ffi2.calloc<_ErrorStructFfi>();
-    final result = ErrorStruct._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
+
+  factory ErrorStruct._fromFfi(_ErrorStructFfi ffi){
+
+    var _underlying = ffi;
+    var _i = _underlying.i;
+    var _j = _underlying.j;
+    return ErrorStruct._(_i, _j, );
   }
 
-  int get i => _underlying.i;
+  _ErrorStructFfi _toFfi() {
+    var _underlying;
+    _underlying.i = i;;
+    _underlying.j = j;;
+    return _underlying;
+  }
+
+  int get i => this._i;
   set i(int i) {
-    _underlying.i = i;
+    _i = i;
   }
 
-  int get j => _underlying.j;
+  int get j => this._j;
   set j(int j) {
-    _underlying.j = j;
+    _j = j;
   }
 
   @override
   bool operator ==(Object other) =>
       other is ErrorStruct &&
-      other._underlying.i == _underlying.i &&
-      other._underlying.j == _underlying.j;
+      other.i == this.i &&
+      other.j == this.j;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.i,
-        _underlying.j,
+        this.i,
+        this.j,
       ]);
 }

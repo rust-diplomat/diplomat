@@ -10,32 +10,39 @@ final class _BorrowedFieldsReturningFfi extends ffi.Struct {
 }
 
 final class BorrowedFieldsReturning {
-  final _BorrowedFieldsReturningFfi _underlying;
+  String _bytes;
 
-  BorrowedFieldsReturning._(this._underlying);
+  BorrowedFieldsReturning._(this._bytes,);
 
-  factory BorrowedFieldsReturning() {
-    final pointer = ffi2.calloc<_BorrowedFieldsReturningFfi>();
-    final result = BorrowedFieldsReturning._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
+
+  factory BorrowedFieldsReturning._fromFfi(_BorrowedFieldsReturningFfi ffi){
+
+    var _underlying = ffi;
+    var _bytes = Utf8Decoder().convert(_underlying.bytes._pointer.asTypedList(_underlying.bytes._length));
+    return BorrowedFieldsReturning._(_bytes, );
   }
 
-  String get bytes => Utf8Decoder().convert(_underlying.bytes._pointer.asTypedList(_underlying.bytes._length));
+  _BorrowedFieldsReturningFfi _toFfi() {
+    var _underlying;
+    ffi2.calloc.free(_underlying.bytes._pointer);;
+    final bytesView = bytes.utf8View;;
+    _underlying.bytes._pointer = bytesView.pointer(ffi2.calloc);;
+    _underlying.bytes._length = bytesView.length;;
+    return _underlying;
+  }
+
+  String get bytes => this._bytes;
   set bytes(String bytes) {
-    ffi2.calloc.free(_underlying.bytes._pointer);
-    final bytesView = bytes.utf8View;
-    _underlying.bytes._pointer = bytesView.pointer(ffi2.calloc);
-    _underlying.bytes._length = bytesView.length;
+    _bytes = bytes;
   }
 
   @override
   bool operator ==(Object other) =>
       other is BorrowedFieldsReturning &&
-      other._underlying.bytes == _underlying.bytes;
+      other.bytes == this.bytes;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.bytes,
+        this.bytes,
       ]);
 }

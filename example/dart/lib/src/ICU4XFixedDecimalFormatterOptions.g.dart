@@ -13,18 +13,35 @@ final class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
 }
 
 final class ICU4XFixedDecimalFormatterOptions {
-  final _ICU4XFixedDecimalFormatterOptionsFfi _underlying;
+  ICU4XFixedDecimalGroupingStrategy _groupingStrategy;
+  bool _someOtherConfig;
 
-  ICU4XFixedDecimalFormatterOptions._(this._underlying);
+  ICU4XFixedDecimalFormatterOptions._(this._groupingStrategy,this._someOtherConfig,);
 
-  ICU4XFixedDecimalGroupingStrategy get groupingStrategy => ICU4XFixedDecimalGroupingStrategy.values[_underlying.groupingStrategy];
-  set groupingStrategy(ICU4XFixedDecimalGroupingStrategy groupingStrategy) {
-    _underlying.groupingStrategy = groupingStrategy.index;
+
+  factory ICU4XFixedDecimalFormatterOptions._fromFfi(_ICU4XFixedDecimalFormatterOptionsFfi ffi){
+
+    var _underlying = ffi;
+    var _groupingStrategy = ICU4XFixedDecimalGroupingStrategy.values[_underlying.groupingStrategy];
+    var _someOtherConfig = _underlying.someOtherConfig;
+    return ICU4XFixedDecimalFormatterOptions._(_groupingStrategy, _someOtherConfig, );
   }
 
-  bool get someOtherConfig => _underlying.someOtherConfig;
+  _ICU4XFixedDecimalFormatterOptionsFfi _toFfi() {
+    var _underlying;
+    _underlying.groupingStrategy = groupingStrategy.index;;
+    _underlying.someOtherConfig = someOtherConfig;;
+    return _underlying;
+  }
+
+  ICU4XFixedDecimalGroupingStrategy get groupingStrategy => this._groupingStrategy;
+  set groupingStrategy(ICU4XFixedDecimalGroupingStrategy groupingStrategy) {
+    _groupingStrategy = groupingStrategy;
+  }
+
+  bool get someOtherConfig => this._someOtherConfig;
   set someOtherConfig(bool someOtherConfig) {
-    _underlying.someOtherConfig = someOtherConfig;
+    _someOtherConfig = someOtherConfig;
   }
 
   factory ICU4XFixedDecimalFormatterOptions() {
@@ -35,13 +52,13 @@ final class ICU4XFixedDecimalFormatterOptions {
   @override
   bool operator ==(Object other) =>
       other is ICU4XFixedDecimalFormatterOptions &&
-      other._underlying.groupingStrategy == _underlying.groupingStrategy &&
-      other._underlying.someOtherConfig == _underlying.someOtherConfig;
+      other.groupingStrategy == this.groupingStrategy &&
+      other.someOtherConfig == this.someOtherConfig;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.groupingStrategy,
-        _underlying.someOtherConfig,
+        this.groupingStrategy,
+        this.someOtherConfig,
       ]);
 }
 

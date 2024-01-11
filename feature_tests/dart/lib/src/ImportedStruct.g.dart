@@ -13,36 +13,46 @@ final class _ImportedStructFfi extends ffi.Struct {
 }
 
 final class ImportedStruct {
-  final _ImportedStructFfi _underlying;
+  UnimportedEnum _foo;
+  int _count;
 
-  ImportedStruct._(this._underlying);
+  ImportedStruct._(this._foo,this._count,);
 
-  factory ImportedStruct() {
-    final pointer = ffi2.calloc<_ImportedStructFfi>();
-    final result = ImportedStruct._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
+
+  factory ImportedStruct._fromFfi(_ImportedStructFfi ffi){
+
+    var _underlying = ffi;
+    var _foo = UnimportedEnum.values[_underlying.foo];
+    var _count = _underlying.count;
+    return ImportedStruct._(_foo, _count, );
   }
 
-  UnimportedEnum get foo => UnimportedEnum.values[_underlying.foo];
+  _ImportedStructFfi _toFfi() {
+    var _underlying;
+    _underlying.foo = foo.index;;
+    _underlying.count = count;;
+    return _underlying;
+  }
+
+  UnimportedEnum get foo => this._foo;
   set foo(UnimportedEnum foo) {
-    _underlying.foo = foo.index;
+    _foo = foo;
   }
 
-  int get count => _underlying.count;
+  int get count => this._count;
   set count(int count) {
-    _underlying.count = count;
+    _count = count;
   }
 
   @override
   bool operator ==(Object other) =>
       other is ImportedStruct &&
-      other._underlying.foo == _underlying.foo &&
-      other._underlying.count == _underlying.count;
+      other.foo == this.foo &&
+      other.count == this.count;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.foo,
-        _underlying.count,
+        this.foo,
+        this.count,
       ]);
 }

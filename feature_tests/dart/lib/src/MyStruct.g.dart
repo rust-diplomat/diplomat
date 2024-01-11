@@ -23,43 +23,75 @@ final class _MyStructFfi extends ffi.Struct {
 }
 
 final class MyStruct {
-  final _MyStructFfi _underlying;
+  int _a;
+  bool _b;
+  int _c;
+  int _d;
+  int _e;
+  Rune _f;
+  MyEnum _g;
 
-  MyStruct._(this._underlying);
+  MyStruct._(this._a,this._b,this._c,this._d,this._e,this._f,this._g,);
 
-  int get a => _underlying.a;
+
+  factory MyStruct._fromFfi(_MyStructFfi ffi){
+
+    var _underlying = ffi;
+    var _a = _underlying.a;
+    var _b = _underlying.b;
+    var _c = _underlying.c;
+    var _d = _underlying.d;
+    var _e = _underlying.e;
+    var _f = _underlying.f;
+    var _g = MyEnum.values.firstWhere((v) => v._underlying == _underlying.g);
+    return MyStruct._(_a, _b, _c, _d, _e, _f, _g, );
+  }
+
+  _MyStructFfi _toFfi() {
+    var _underlying;
+    _underlying.a = a;;
+    _underlying.b = b;;
+    _underlying.c = c;;
+    _underlying.d = d;;
+    _underlying.e = e;;
+    _underlying.f = f;;
+    _underlying.g = g._underlying;;
+    return _underlying;
+  }
+
+  int get a => this._a;
   set a(int a) {
-    _underlying.a = a;
+    _a = a;
   }
 
-  bool get b => _underlying.b;
+  bool get b => this._b;
   set b(bool b) {
-    _underlying.b = b;
+    _b = b;
   }
 
-  int get c => _underlying.c;
+  int get c => this._c;
   set c(int c) {
-    _underlying.c = c;
+    _c = c;
   }
 
-  int get d => _underlying.d;
+  int get d => this._d;
   set d(int d) {
-    _underlying.d = d;
+    _d = d;
   }
 
-  int get e => _underlying.e;
+  int get e => this._e;
   set e(int e) {
-    _underlying.e = e;
+    _e = e;
   }
 
-  Rune get f => _underlying.f;
+  Rune get f => this._f;
   set f(Rune f) {
-    _underlying.f = f;
+    _f = f;
   }
 
-  MyEnum get g => MyEnum.values.firstWhere((v) => v._underlying == _underlying.g);
+  MyEnum get g => this._g;
   set g(MyEnum g) {
-    _underlying.g = g._underlying;
+    _g = g;
   }
 
   factory MyStruct() {
@@ -75,23 +107,23 @@ final class MyStruct {
   @override
   bool operator ==(Object other) =>
       other is MyStruct &&
-      other._underlying.a == _underlying.a &&
-      other._underlying.b == _underlying.b &&
-      other._underlying.c == _underlying.c &&
-      other._underlying.d == _underlying.d &&
-      other._underlying.e == _underlying.e &&
-      other._underlying.f == _underlying.f &&
-      other._underlying.g == _underlying.g;
+      other.a == this.a &&
+      other.b == this.b &&
+      other.c == this.c &&
+      other.d == this.d &&
+      other.e == this.e &&
+      other.f == this.f &&
+      other.g == this.g;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.a,
-        _underlying.b,
-        _underlying.c,
-        _underlying.d,
-        _underlying.e,
-        _underlying.f,
-        _underlying.g,
+        this.a,
+        this.b,
+        this.c,
+        this.d,
+        this.e,
+        this.f,
+        this.g,
       ]);
 }
 

@@ -12,52 +12,65 @@ final class _BorrowedFieldsFfi extends ffi.Struct {
 }
 
 final class BorrowedFields {
-  final _BorrowedFieldsFfi _underlying;
+  String _a;
+  String _b;
+  String _c;
 
-  BorrowedFields._(this._underlying);
+  BorrowedFields._(this._a,this._b,this._c,);
 
-  factory BorrowedFields() {
-    final pointer = ffi2.calloc<_BorrowedFieldsFfi>();
-    final result = BorrowedFields._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
+
+  factory BorrowedFields._fromFfi(_BorrowedFieldsFfi ffi){
+
+    var _underlying = ffi;
+    var _a = core.String.fromCharCodes(_underlying.a._pointer.asTypedList(_underlying.a._length));
+    var _b = Utf8Decoder().convert(_underlying.b._pointer.asTypedList(_underlying.b._length));
+    var _c = Utf8Decoder().convert(_underlying.c._pointer.asTypedList(_underlying.c._length));
+    return BorrowedFields._(_a, _b, _c, );
   }
 
-  String get a => core.String.fromCharCodes(_underlying.a._pointer.asTypedList(_underlying.a._length));
+  _BorrowedFieldsFfi _toFfi() {
+    var _underlying;
+    ffi2.calloc.free(_underlying.a._pointer);;
+    final aView = a.utf16View;;
+    _underlying.a._pointer = aView.pointer(ffi2.calloc);;
+    _underlying.a._length = aView.length;;
+    ffi2.calloc.free(_underlying.b._pointer);;
+    final bView = b.utf8View;;
+    _underlying.b._pointer = bView.pointer(ffi2.calloc);;
+    _underlying.b._length = bView.length;;
+    ffi2.calloc.free(_underlying.c._pointer);;
+    final cView = c.utf8View;;
+    _underlying.c._pointer = cView.pointer(ffi2.calloc);;
+    _underlying.c._length = cView.length;;
+    return _underlying;
+  }
+
+  String get a => this._a;
   set a(String a) {
-    ffi2.calloc.free(_underlying.a._pointer);
-    final aView = a.utf16View;
-    _underlying.a._pointer = aView.pointer(ffi2.calloc);
-    _underlying.a._length = aView.length;
+    _a = a;
   }
 
-  String get b => Utf8Decoder().convert(_underlying.b._pointer.asTypedList(_underlying.b._length));
+  String get b => this._b;
   set b(String b) {
-    ffi2.calloc.free(_underlying.b._pointer);
-    final bView = b.utf8View;
-    _underlying.b._pointer = bView.pointer(ffi2.calloc);
-    _underlying.b._length = bView.length;
+    _b = b;
   }
 
-  String get c => Utf8Decoder().convert(_underlying.c._pointer.asTypedList(_underlying.c._length));
+  String get c => this._c;
   set c(String c) {
-    ffi2.calloc.free(_underlying.c._pointer);
-    final cView = c.utf8View;
-    _underlying.c._pointer = cView.pointer(ffi2.calloc);
-    _underlying.c._length = cView.length;
+    _c = c;
   }
 
   @override
   bool operator ==(Object other) =>
       other is BorrowedFields &&
-      other._underlying.a == _underlying.a &&
-      other._underlying.b == _underlying.b &&
-      other._underlying.c == _underlying.c;
+      other.a == this.a &&
+      other.b == this.b &&
+      other.c == this.c;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.a,
-        _underlying.b,
-        _underlying.c,
+        this.a,
+        this.b,
+        this.c,
       ]);
 }

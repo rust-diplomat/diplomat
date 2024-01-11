@@ -14,31 +14,50 @@ final class _OptionStructFfi extends ffi.Struct {
 }
 
 final class OptionStruct {
-  final _OptionStructFfi _underlying;
+  final OptionOpaque? _a;
+  final OptionOpaqueChar? _b;
+  final int _c;
+  final OptionOpaque? _d;
 
-  OptionStruct._(this._underlying);
+  OptionStruct._(this._a,this._b,this._c,this._d,);
 
-  OptionOpaque? get a => _underlying.a.address == 0 ? null : OptionOpaque._(_underlying.a, true);
 
-  OptionOpaqueChar? get b => _underlying.b.address == 0 ? null : OptionOpaqueChar._(_underlying.b, true);
+  factory OptionStruct._fromFfi(_OptionStructFfi ffi){
 
-  int get c => _underlying.c;
+    var _underlying = ffi;
+    var _a = _underlying.a.address == 0 ? null : OptionOpaque._(_underlying.a, true);
+    var _b = _underlying.b.address == 0 ? null : OptionOpaqueChar._(_underlying.b, true);
+    var _c = _underlying.c;
+    var _d = _underlying.d.address == 0 ? null : OptionOpaque._(_underlying.d, true);
+    return OptionStruct._(_a, _b, _c, _d, );
+  }
 
-  OptionOpaque? get d => _underlying.d.address == 0 ? null : OptionOpaque._(_underlying.d, true);
+  _OptionStructFfi _toFfi() {
+    var _underlying;
+    return _underlying;
+  }
+
+  OptionOpaque? get a => this._a;
+
+  OptionOpaqueChar? get b => this._b;
+
+  int get c => this._c;
+
+  OptionOpaque? get d => this._d;
 
   @override
   bool operator ==(Object other) =>
       other is OptionStruct &&
-      other._underlying.a == _underlying.a &&
-      other._underlying.b == _underlying.b &&
-      other._underlying.c == _underlying.c &&
-      other._underlying.d == _underlying.d;
+      other.a == this.a &&
+      other.b == this.b &&
+      other.c == this.c &&
+      other.d == this.d;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.a,
-        _underlying.b,
-        _underlying.c,
-        _underlying.d,
+        this.a,
+        this.b,
+        this.c,
+        this.d,
       ]);
 }
