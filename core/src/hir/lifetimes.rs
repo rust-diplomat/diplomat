@@ -3,10 +3,10 @@
 
 use super::IdentBuf;
 use crate::ast;
-use core::marker::PhantomData;
-use smallvec::{smallvec, SmallVec};
 use core::fmt::{self, Debug};
 use core::hash::Hash;
+use core::marker::PhantomData;
+use smallvec::{smallvec, SmallVec};
 
 /// Convenience const representing the number of lifetimes a [`LifetimeEnv`]
 /// can hold inline before needing to dynamically allocate.
@@ -141,10 +141,7 @@ pub struct Type;
 pub struct Method;
 
 /// Abstraction over where lifetimes can occur
-pub trait LifetimeKind:
-    Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord
-{
-}
+pub trait LifetimeKind: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {}
 
 impl LifetimeKind for Type {}
 impl LifetimeKind for Method {}
