@@ -5,6 +5,8 @@ use super::IdentBuf;
 use crate::ast;
 use core::marker::PhantomData;
 use smallvec::{smallvec, SmallVec};
+use core::fmt::{self, Debug};
+use core::hash::Hash;
 
 /// Convenience const representing the number of lifetimes a [`LifetimeEnv`]
 /// can hold inline before needing to dynamically allocate.
@@ -140,7 +142,7 @@ pub struct Method;
 
 /// Abstraction over where lifetimes can occur
 pub trait LifetimeKind:
-    Copy + Clone + core::fmt::Debug + core::hash::Hash + PartialEq + Eq + PartialOrd + Ord
+    Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord
 {
 }
 
@@ -152,8 +154,14 @@ impl LifetimeKind for Method {}
 ///
 /// This index only makes sense in the context of a surrounding type or method; since
 /// this is essentially an index into that type/method's lifetime list.
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Lifetime<Kind>(usize, PhantomData<Kind>);
+
+impl<Kind> Debug for Lifetime<Kind> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}Lifetime({})", std::any::type_name::<Kind>(), self.0)
+    }
+}
 
 /// A set of lifetimes found on a type name or method signature (determined by
 /// Kind parameter, which will be one of [`LifetimeKind`])

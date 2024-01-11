@@ -8,18 +8,12 @@ expression: lt_to_borrowing_fields
         "_s",
     ],
     NonStatic(
-        Lifetime(
-            0,
-            PhantomData<diplomat_core::hir::lifetimes::Method>,
-        ),
+        diplomat_core::hir::lifetimes::MethodLifetime(0),
     ): [
         "this.p_data",
     ],
     NonStatic(
-        Lifetime(
-            1,
-            PhantomData<diplomat_core::hir::lifetimes::Method>,
-        ),
+        diplomat_core::hir::lifetimes::MethodLifetime(1),
     ): [
         "this.q_data",
         "this.inner.more_data",

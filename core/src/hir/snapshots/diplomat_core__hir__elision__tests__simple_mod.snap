@@ -22,10 +22,7 @@ TypeContext {
                             lifetimes: Lifetimes {
                                 indices: [
                                     NonStatic(
-                                        Lifetime(
-                                            0,
-                                            PhantomData<diplomat_core::hir::lifetimes::Type>,
-                                        ),
+                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
                                     ),
                                 ],
                             },
@@ -64,10 +61,7 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        Lifetime(
-                                            0,
-                                            PhantomData<diplomat_core::hir::lifetimes::Type>,
-                                        ),
+                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
                                     ),
                                     UnvalidatedUtf8,
                                 ),
@@ -83,10 +77,7 @@ TypeContext {
                                             lifetimes: Lifetimes {
                                                 indices: [
                                                     NonStatic(
-                                                        Lifetime(
-                                                            0,
-                                                            PhantomData<diplomat_core::hir::lifetimes::Type>,
-                                                        ),
+                                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
                                                     ),
                                                 ],
                                             },
@@ -128,10 +119,7 @@ TypeContext {
                     ty: Slice(
                         Str(
                             NonStatic(
-                                Lifetime(
-                                    0,
-                                    PhantomData<diplomat_core::hir::lifetimes::Type>,
-                                ),
+                                diplomat_core::hir::lifetimes::TypeLifetime(0),
                             ),
                             UnvalidatedUtf8,
                         ),
@@ -162,10 +150,7 @@ TypeContext {
                                     lifetimes: Lifetimes {
                                         indices: [
                                             NonStatic(
-                                                Lifetime(
-                                                    0,
-                                                    PhantomData<diplomat_core::hir::lifetimes::Type>,
-                                                ),
+                                                diplomat_core::hir::lifetimes::TypeLifetime(0),
                                             ),
                                         ],
                                     },
@@ -182,10 +167,7 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        Lifetime(
-                                            1,
-                                            PhantomData<diplomat_core::hir::lifetimes::Type>,
-                                        ),
+                                        diplomat_core::hir::lifetimes::TypeLifetime(1),
                                     ),
                                     UnvalidatedUtf8,
                                 ),
@@ -198,10 +180,7 @@ TypeContext {
                                 Slice(
                                     Str(
                                         NonStatic(
-                                            Lifetime(
-                                                1,
-                                                PhantomData<diplomat_core::hir::lifetimes::Type>,
-                                            ),
+                                            diplomat_core::hir::lifetimes::TypeLifetime(1),
                                         ),
                                         UnvalidatedUtf8,
                                     ),
