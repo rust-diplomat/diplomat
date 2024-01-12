@@ -193,14 +193,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
-        struct FieldInfo<'a, P: hir::TyPosition> {
+        struct FieldInfo<'a> {
             name: Cow<'a, str>,
             annotation: Option<&'static str>,
             ffi_cast_type_name: Cow<'a, str>,
             dart_type_name: Cow<'a, str>,
             c_to_dart: Cow<'a, str>,
             dart_to_c: Vec<String>,
-            ty: &'a hir::Type<P>,
         }
 
         let fields = ty
@@ -249,7 +248,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     dart_type_name,
                     c_to_dart,
                     dart_to_c,
-                    ty: &field.ty,
                 }
             })
             .collect::<Vec<_>>();
@@ -267,21 +265,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 .find(|m| m.declaration.contains(&format!("{type_name}()")))
             {
                 // If there's an existing zero-arg constructor, we repurpose it with optional arguments for all fields
-                let mut is_first = true;
-                let args = fields.iter().fold(String::new(), |acc, field| {
-                    format!(
-                        "{acc}{comma}{typ}? {name}",
-                        comma = if is_first {
-                            is_first = false;
-                            ""
-                        } else {
-                            ", "
-                        },
-                        typ = field.dart_type_name,
-                        name = field.name
-                    )
-                });
-                constructor.declaration = format!("factory {type_name}({{{args}}})");
+                let args = fields
+                    .iter()
+                    .map(|field| format!("{}? {}", field.dart_type_name, field.name))
+                    .collect::<Vec<_>>();
+                constructor.declaration =
+                    format!("factory {type_name}({{{args}}})", args = args.join(", "));
 
                 let mut r = String::new();
                 writeln!(&mut r, "final dart = {type_name}._(result);").unwrap();
@@ -297,21 +286,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 None
             } else {
                 // Otherwise we create a constructor with default values for all fields.
-                let mut is_first = true;
-                let args = fields.iter().fold(String::new(), |acc, field| {
-                    format!(
-                        "{acc}{comma}required this.{name}",
-                        comma = if is_first {
-                            is_first = false;
-                            ""
-                        } else {
-                            ", "
-                        },
-                        name = field.name
-                    )
-                });
+                let args = fields
+                    .iter()
+                    .map(|field| format!("required this.{}", field.name))
+                    .collect::<Vec<_>>();
 
-                Some(format!("{type_name}({{{args}}});"))
+                Some(format!("{type_name}({{{args}}});", args = args.join(", ")))
             }
         } else {
             None
@@ -319,11 +299,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         #[derive(Template)]
         #[template(path = "dart/struct.dart.jinja", escape = "none")]
-        struct ImplTemplate<'a, P: hir::TyPosition> {
+        struct ImplTemplate<'a> {
             type_name: &'a str,
             default_constructor: Option<String>,
             mutable: bool,
-            fields: Vec<FieldInfo<'a, P>>,
+            fields: Vec<FieldInfo<'a>>,
             methods: Vec<MethodInfo<'a>>,
             docs: String,
         }
