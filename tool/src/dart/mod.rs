@@ -299,45 +299,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 // Otherwise we create a constructor with default values for all fields.
                 let mut is_first = true;
                 let args = fields.iter().fold(String::new(), |acc, field| {
-                    let defaultt: Cow<'static, str> = match &field.ty {
-                        hir::Type::Primitive(hir::PrimitiveType::Bool) => "false".into(),
-                        hir::Type::Primitive(hir::PrimitiveType::Float(..)) => "0.0".into(),
-                        hir::Type::Primitive(_) => "0".into(),
-                        hir::Type::Enum(e) => {
-                            let type_name = self.gen_type_name(field.ty);
-                            let variant = e
-                                .resolve(self.tcx)
-                                .variants
-                                .iter()
-                                .find(|v| v.discriminant == 0)
-                                .map(|v| self.formatter.fmt_enum_variant(v))
-                                .unwrap_or_else(|| {
-                                    self.errors.push_error(format!(
-                                        "Enum {type_name} used in struct needs a 0 variant"
-                                    ));
-                                    "".into()
-                                });
-                            format!("{type_name}.{variant}").into()
-                        }
-                        hir::Type::Struct(_) => {
-                            format!("{}()", self.gen_type_name(field.ty)).into()
-                        }
-                        hir::Type::Opaque(..) => {
-                            unreachable!("cannot have opaque in non-out struct")
-                        }
-                        hir::Type::Slice(hir::Slice::Str(..)) => "''".into(),
-                        hir::Type::Slice(hir::Slice::Primitive(..)) => "[]".into(),
-                        _ => unreachable!("unknown AST/HIR variant"),
-                    };
                     format!(
-                        "{acc}{comma}{typ} this.{name} = {defaultt}",
+                        "{acc}{comma}required this.{name}",
                         comma = if is_first {
                             is_first = false;
                             ""
                         } else {
                             ", "
                         },
-                        typ = field.dart_type_name,
                         name = field.name
                     )
                 });

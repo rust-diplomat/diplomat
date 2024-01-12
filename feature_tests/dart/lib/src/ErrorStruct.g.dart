@@ -16,7 +16,7 @@ final class ErrorStruct {
   int i;
   int j;
 
-  ErrorStruct({int this.i = 0, int this.j = 0});
+  ErrorStruct({required this.i, required this.j});
 
   // ignore: unused_element
   ErrorStruct._(_ErrorStructFfi underlying) :

@@ -12,7 +12,7 @@ final class _BorrowedFieldsReturningFfi extends ffi.Struct {
 final class BorrowedFieldsReturning {
   String bytes;
 
-  BorrowedFieldsReturning({String this.bytes = ''});
+  BorrowedFieldsReturning({required this.bytes});
 
   // ignore: unused_element
   BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying) :

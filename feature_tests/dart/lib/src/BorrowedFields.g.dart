@@ -16,7 +16,7 @@ final class BorrowedFields {
   String b;
   String c;
 
-  BorrowedFields({String this.a = '', String this.b = '', String this.c = ''});
+  BorrowedFields({required this.a, required this.b, required this.c});
 
   // ignore: unused_element
   BorrowedFields._(_BorrowedFieldsFfi underlying) :

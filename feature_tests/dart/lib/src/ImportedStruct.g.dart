@@ -16,7 +16,7 @@ final class ImportedStruct {
   UnimportedEnum foo;
   int count;
 
-  ImportedStruct({UnimportedEnum this.foo = UnimportedEnum.a, int this.count = 0});
+  ImportedStruct({required this.foo, required this.count});
 
   // ignore: unused_element
   ImportedStruct._(_ImportedStructFfi underlying) :
