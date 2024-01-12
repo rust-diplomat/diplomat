@@ -13,18 +13,20 @@ final class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
 }
 
 final class ICU4XFixedDecimalFormatterOptions {
-  final _ICU4XFixedDecimalFormatterOptionsFfi _underlying;
+  ICU4XFixedDecimalGroupingStrategy groupingStrategy;
+  bool someOtherConfig;
 
-  ICU4XFixedDecimalFormatterOptions._(this._underlying);
+  // ignore: unused_element
+  ICU4XFixedDecimalFormatterOptions._(_ICU4XFixedDecimalFormatterOptionsFfi underlying) :
+    groupingStrategy = ICU4XFixedDecimalGroupingStrategy.values[underlying.groupingStrategy],
+    someOtherConfig = underlying.someOtherConfig;
 
-  ICU4XFixedDecimalGroupingStrategy get groupingStrategy => ICU4XFixedDecimalGroupingStrategy.values[_underlying.groupingStrategy];
-  set groupingStrategy(ICU4XFixedDecimalGroupingStrategy groupingStrategy) {
-    _underlying.groupingStrategy = groupingStrategy.index;
-  }
-
-  bool get someOtherConfig => _underlying.someOtherConfig;
-  set someOtherConfig(bool someOtherConfig) {
-    _underlying.someOtherConfig = someOtherConfig;
+  // ignore: unused_element
+  _ICU4XFixedDecimalFormatterOptionsFfi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_ICU4XFixedDecimalFormatterOptionsFfi>();
+    pointer.ref.groupingStrategy = groupingStrategy.index;
+    pointer.ref.someOtherConfig = someOtherConfig;
+    return pointer.ref;
   }
 
   factory ICU4XFixedDecimalFormatterOptions() {
@@ -35,13 +37,13 @@ final class ICU4XFixedDecimalFormatterOptions {
   @override
   bool operator ==(Object other) =>
       other is ICU4XFixedDecimalFormatterOptions &&
-      other._underlying.groupingStrategy == _underlying.groupingStrategy &&
-      other._underlying.someOtherConfig == _underlying.someOtherConfig;
+      other.groupingStrategy == this.groupingStrategy &&
+      other.someOtherConfig == this.someOtherConfig;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.groupingStrategy,
-        _underlying.someOtherConfig,
+        this.groupingStrategy,
+        this.someOtherConfig,
       ]);
 }
 

@@ -13,30 +13,35 @@ final class _{{type_name}}Ffi extends ffi.Struct {
 /// {{docs}}
 {% endif -%}
 final class {{type_name}} {
-  final _{{type_name}}Ffi _underlying;
 
-  {{type_name}}._(this._underlying);
-  {%- if mutable && needs_constructor %}
-
-  {# https://github.com/dart-lang/sdk/issues/45697 -#}
-  factory {{type_name}}() {
-    final pointer = ffi2.calloc<_{{type_name}}Ffi>();
-    final result = {{type_name}}._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
-  }
-  {%- endif %}
   {%- for field in fields %}
-
-  {{field.dart_type_name}} get {{field.name}} => {{ field.get_expression }};
-  {%- if mutable %}
-  set {{field.name}}({{field.dart_type_name}} {{field.name}}) {
-    {%- for set_expression in field.set_expressions %}
-    {{set_expression}}
-    {%- endfor %}
-  }
-  {%- endif %}
+  {% if !mutable -%} final {% endif -%} {{field.dart_type_name}} {{field.name}};
   {%- endfor %}
+
+  {%- match default_constructor %}
+  {%- when Some with (c) %}
+
+  {{c}}
+  {%- when None %}
+  {%- endmatch %}
+
+  // ignore: unused_element
+  {{type_name}}._(_{{type_name}}Ffi underlying) : 
+    {%- for field in fields %}
+    {{field.name}} = {{field.c_to_dart}}
+    {%- if loop.last %};{% else %},{% endif -%}
+    {%- endfor %}
+
+  // ignore: unused_element
+  _{{type_name}}Ffi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_{{type_name}}Ffi>();
+    {%- for field in fields %}
+    {%- for statement in field.dart_to_c %}
+    {{statement}}
+    {%- endfor %}
+    {%- endfor %}
+    return pointer.ref;
+  }
 
   {%- for m in methods %}
 {% include "method.dart.jinja" %}
@@ -46,13 +51,13 @@ final class {{type_name}} {
   bool operator ==(Object other) =>
       other is {{type_name}}
       {%- for field in fields %} &&
-      other._underlying.{{field.name}} == _underlying.{{field.name}}
+      other.{{field.name}} == this.{{field.name}}
       {%- endfor %};
 
   @override
   int get hashCode => Object.hashAll([
       {%- for field in fields %}
-        _underlying.{{field.name}},
+        this.{{field.name}},
       {%- endfor %}
       ]);
 }

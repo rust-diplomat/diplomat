@@ -120,8 +120,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             match ty {
                 TypeDef::Enum(e) => self.gen_enum(e, id, &name),
                 TypeDef::Opaque(o) => self.gen_opaque_def(o, id, &name),
-                TypeDef::Struct(s) => self.gen_struct_def(s, id, &name, true),
-                TypeDef::OutStruct(s) => self.gen_struct_def(s, id, &name, false),
+                TypeDef::Struct(s) => self.gen_struct_def(s, id, false, &name, true),
+                TypeDef::OutStruct(s) => self.gen_struct_def(s, id, true, &name, false),
                 _ => unreachable!("unknown AST/HIR variant"),
             },
         )
@@ -189,16 +189,18 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         &mut self,
         ty: &'cx hir::StructDef<P>,
         id: TypeId,
+        is_out: bool,
         type_name: &str,
         mutable: bool,
     ) -> String {
-        struct FieldInfo<'a> {
+        struct FieldInfo<'a, P: hir::TyPosition> {
             name: Cow<'a, str>,
             annotation: Option<&'static str>,
             ffi_cast_type_name: Cow<'a, str>,
             dart_type_name: Cow<'a, str>,
-            get_expression: Cow<'a, str>,
-            set_expressions: Vec<String>,
+            c_to_dart: Cow<'a, str>,
+            dart_to_c: Vec<String>,
+            ty: &'a hir::Type<P>,
         }
 
         let fields = ty
@@ -221,24 +223,21 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let dart_type_name = self.gen_type_name(&field.ty);
 
-                let get_expression =
-                    self.gen_c_to_dart_for_type(&field.ty, format!("_underlying.{name}").into());
+                let c_to_dart =
+                    self.gen_c_to_dart_for_type(&field.ty, format!("underlying.{name}").into());
 
-                let set_expressions = if !mutable {
+                let dart_to_c = if !mutable {
                     vec![]
                 } else if let hir::Type::Slice(..) = &field.ty {
                     let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone());
                     vec![
-                        // Free the existing slice, which is owned by us. After construction, the slice
-                        // is (null, 0), which is valid to free.
-                        format!("ffi2.calloc.free(_underlying.{name}._pointer);"),
                         format!("final {name}View = {view_expr};"),
-                        format!("_underlying.{name}._pointer = {name}View.pointer(ffi2.calloc);"),
-                        format!("_underlying.{name}._length = {name}View.length;"),
+                        format!("pointer.ref.{name}._pointer = {name}View.pointer(temp);"),
+                        format!("pointer.ref.{name}._length = {name}View.length;"),
                     ]
                 } else {
                     vec![format!(
-                        "_underlying.{name} = {};",
+                        "pointer.ref.{name} = {};",
                         self.gen_dart_to_c_for_type(&field.ty, name.clone())
                     )]
                 };
@@ -248,34 +247,92 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     annotation,
                     ffi_cast_type_name,
                     dart_type_name,
-                    get_expression,
-                    set_expressions,
+                    c_to_dart,
+                    dart_to_c,
+                    ty: &field.ty,
                 }
             })
             .collect::<Vec<_>>();
 
-        let methods = ty
+        let mut methods = ty
             .methods
             .iter()
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
+        let default_constructor = if !is_out {
+            if let Some(_existing_constructor) = methods
+                .iter_mut()
+                .find(|m| m.declaration.contains(&format!("{type_name}()")))
+            {
+                // todo add parameters that default to what's returned by the ffi call
+                None
+            } else {
+                let mut is_first = true;
+                let args = fields.iter().fold(String::new(), |acc, field| {
+                    let defaultt: Cow<'static, str> = match &field.ty {
+                        hir::Type::Primitive(hir::PrimitiveType::Bool) => "false".into(),
+                        hir::Type::Primitive(hir::PrimitiveType::Float(..)) => "0.0".into(),
+                        hir::Type::Primitive(_) => "0".into(),
+                        hir::Type::Enum(e) => {
+                            let type_name = self.gen_type_name(&field.ty);
+                            let variant = e
+                                .resolve(&self.tcx)
+                                .variants
+                                .iter()
+                                .find(|v| v.discriminant == 0)
+                                .map(|v| self.formatter.fmt_enum_variant(v))
+                                .unwrap_or_else(|| {
+                                    self.errors.push_error(format!(
+                                        "Enum {type_name} used in struct needs a 0 variant"
+                                    ));
+                                    "".into()
+                                });
+                            format!("{type_name}.{variant}").into()
+                        }
+                        hir::Type::Struct(_) => {
+                            format!("{}()", self.gen_type_name(&field.ty)).into()
+                        }
+                        hir::Type::Opaque(..) => {
+                            unreachable!("cannot have opaque in non-out struct")
+                        }
+                        hir::Type::Slice(hir::Slice::Str(..)) => "''".into(),
+                        hir::Type::Slice(hir::Slice::Primitive(..)) => "[]".into(),
+                        _ => unreachable!("unknown AST/HIR variant"),
+                    };
+                    format!(
+                        "{acc}{comma}{typ} this.{name} = {defaultt}",
+                        comma = if is_first {
+                            is_first = false;
+                            ""
+                        } else {
+                            ", "
+                        },
+                        typ = field.dart_type_name,
+                        name = field.name
+                    )
+                });
+
+                Some(format!("{type_name}({{{args}}});"))
+            }
+        } else {
+            None
+        };
+
         #[derive(Template)]
         #[template(path = "dart/struct.dart.jinja", escape = "none")]
-        struct ImplTemplate<'a> {
+        struct ImplTemplate<'a, P: hir::TyPosition> {
             type_name: &'a str,
-            needs_constructor: bool,
+            default_constructor: Option<String>,
             mutable: bool,
-            fields: Vec<FieldInfo<'a>>,
+            fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<MethodInfo<'a>>,
             docs: String,
         }
 
         ImplTemplate {
             type_name,
-            needs_constructor: !methods
-                .iter()
-                .any(|m| m.declaration.contains(&format!("{type_name}()"))),
+            default_constructor,
             mutable,
             fields,
             methods,
@@ -308,15 +365,19 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut param_names_ffi = Vec::new();
         let mut param_conversions = Vec::new();
 
+        let mut needs_arena = false;
+
         if let Some(param_self) = method.param_self.as_ref() {
             param_types_ffi.push(self.gen_self_type_name_ffi(&param_self.ty, false));
             param_types_ffi_cast.push(self.gen_self_type_name_ffi(&param_self.ty, true));
             param_conversions.push(self.gen_dart_to_c_self(&param_self.ty));
             param_names_ffi.push("self".into());
+            if matches!(param_self.ty, hir::SelfType::Struct(..)) {
+                needs_arena = true;
+            }
         }
 
         let mut slice_conversions = Vec::new();
-        let mut needs_arena = false;
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
@@ -343,6 +404,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 param_conversions.push(format!("{param_name}View.pointer(temp)").into());
                 param_conversions.push(format!("{param_name}View.length").into());
             } else {
+                if matches!(param.ty, hir::Type::Struct(..)) {
+                    needs_arena = true;
+                }
                 param_types_ffi.push(param_type_ffi);
                 param_types_ffi_cast.push(param_type_ffi_cast);
                 param_conversions.push(self.gen_dart_to_c_for_type(&param.ty, param_name.clone()));
@@ -638,9 +702,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_dart_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => "index".into(),
-            SelfType::Opaque(..) | SelfType::Struct(..) | SelfType::Enum(..) => {
-                "_underlying".into()
-            }
+            SelfType::Struct(..) => "_pointer(temp)".into(),
+            SelfType::Opaque(..) | SelfType::Enum(..) => "_underlying".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -660,9 +723,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 format!("{dart_name}.index").into()
             }
-            Type::Opaque(..) | Type::Struct(..) | Type::Enum(..) => {
-                format!("{dart_name}._underlying").into()
-            }
+            Type::Struct(..) => format!("{dart_name}._pointer(temp)").into(),
+            Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._underlying").into(),
             Type::Slice(hir::Slice::Str(
                 _,
                 hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,

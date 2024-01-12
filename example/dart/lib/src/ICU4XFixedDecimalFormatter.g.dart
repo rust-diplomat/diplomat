@@ -25,7 +25,9 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   ///
   /// Throws [VoidError] on failure.
   factory ICU4XFixedDecimalFormatter(ICU4XLocale locale, ICU4XDataProvider provider, ICU4XFixedDecimalFormatterOptions options) {
-    final result = _ICU4XFixedDecimalFormatter_try_new(locale._underlying, provider._underlying, options._underlying);
+    final temp = ffi2.Arena();
+    final result = _ICU4XFixedDecimalFormatter_try_new(locale._underlying, provider._underlying, options._pointer(temp));
+    temp.releaseAll();
     if (!result.isOk) {
       throw VoidError();
     }

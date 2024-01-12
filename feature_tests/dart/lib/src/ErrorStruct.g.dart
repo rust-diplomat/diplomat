@@ -13,36 +13,33 @@ final class _ErrorStructFfi extends ffi.Struct {
 }
 
 final class ErrorStruct {
-  final _ErrorStructFfi _underlying;
+  int i;
+  int j;
 
-  ErrorStruct._(this._underlying);
+  ErrorStruct({int this.i = 0, int this.j = 0});
 
-  factory ErrorStruct() {
-    final pointer = ffi2.calloc<_ErrorStructFfi>();
-    final result = ErrorStruct._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
-  }
+  // ignore: unused_element
+  ErrorStruct._(_ErrorStructFfi underlying) :
+    i = underlying.i,
+    j = underlying.j;
 
-  int get i => _underlying.i;
-  set i(int i) {
-    _underlying.i = i;
-  }
-
-  int get j => _underlying.j;
-  set j(int j) {
-    _underlying.j = j;
+  // ignore: unused_element
+  _ErrorStructFfi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_ErrorStructFfi>();
+    pointer.ref.i = i;
+    pointer.ref.j = j;
+    return pointer.ref;
   }
 
   @override
   bool operator ==(Object other) =>
       other is ErrorStruct &&
-      other._underlying.i == _underlying.i &&
-      other._underlying.j == _underlying.j;
+      other.i == this.i &&
+      other.j == this.j;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.i,
-        _underlying.j,
+        this.i,
+        this.j,
       ]);
 }

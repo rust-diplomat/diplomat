@@ -12,52 +12,44 @@ final class _BorrowedFieldsFfi extends ffi.Struct {
 }
 
 final class BorrowedFields {
-  final _BorrowedFieldsFfi _underlying;
+  String a;
+  String b;
+  String c;
 
-  BorrowedFields._(this._underlying);
+  BorrowedFields({String this.a = '', String this.b = '', String this.c = ''});
 
-  factory BorrowedFields() {
-    final pointer = ffi2.calloc<_BorrowedFieldsFfi>();
-    final result = BorrowedFields._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
-  }
+  // ignore: unused_element
+  BorrowedFields._(_BorrowedFieldsFfi underlying) :
+    a = core.String.fromCharCodes(underlying.a._pointer.asTypedList(underlying.a._length)),
+    b = Utf8Decoder().convert(underlying.b._pointer.asTypedList(underlying.b._length)),
+    c = Utf8Decoder().convert(underlying.c._pointer.asTypedList(underlying.c._length));
 
-  String get a => core.String.fromCharCodes(_underlying.a._pointer.asTypedList(_underlying.a._length));
-  set a(String a) {
-    ffi2.calloc.free(_underlying.a._pointer);
+  // ignore: unused_element
+  _BorrowedFieldsFfi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_BorrowedFieldsFfi>();
     final aView = a.utf16View;
-    _underlying.a._pointer = aView.pointer(ffi2.calloc);
-    _underlying.a._length = aView.length;
-  }
-
-  String get b => Utf8Decoder().convert(_underlying.b._pointer.asTypedList(_underlying.b._length));
-  set b(String b) {
-    ffi2.calloc.free(_underlying.b._pointer);
+    pointer.ref.a._pointer = aView.pointer(temp);
+    pointer.ref.a._length = aView.length;
     final bView = b.utf8View;
-    _underlying.b._pointer = bView.pointer(ffi2.calloc);
-    _underlying.b._length = bView.length;
-  }
-
-  String get c => Utf8Decoder().convert(_underlying.c._pointer.asTypedList(_underlying.c._length));
-  set c(String c) {
-    ffi2.calloc.free(_underlying.c._pointer);
+    pointer.ref.b._pointer = bView.pointer(temp);
+    pointer.ref.b._length = bView.length;
     final cView = c.utf8View;
-    _underlying.c._pointer = cView.pointer(ffi2.calloc);
-    _underlying.c._length = cView.length;
+    pointer.ref.c._pointer = cView.pointer(temp);
+    pointer.ref.c._length = cView.length;
+    return pointer.ref;
   }
 
   @override
   bool operator ==(Object other) =>
       other is BorrowedFields &&
-      other._underlying.a == _underlying.a &&
-      other._underlying.b == _underlying.b &&
-      other._underlying.c == _underlying.c;
+      other.a == this.a &&
+      other.b == this.b &&
+      other.c == this.c;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.a,
-        _underlying.b,
-        _underlying.c,
+        this.a,
+        this.b,
+        this.c,
       ]);
 }
