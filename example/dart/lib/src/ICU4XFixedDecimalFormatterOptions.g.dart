@@ -29,9 +29,16 @@ final class ICU4XFixedDecimalFormatterOptions {
     return pointer.ref;
   }
 
-  factory ICU4XFixedDecimalFormatterOptions() {
+  factory ICU4XFixedDecimalFormatterOptions({ICU4XFixedDecimalGroupingStrategy? groupingStrategy, bool? someOtherConfig}) {
     final result = _ICU4XFixedDecimalFormatterOptions_default();
-    return ICU4XFixedDecimalFormatterOptions._(result);
+    final dart = ICU4XFixedDecimalFormatterOptions._(result);
+    if (groupingStrategy != null) {
+      dart.groupingStrategy = groupingStrategy;
+    }
+    if (someOtherConfig != null) {
+      dart.someOtherConfig = someOtherConfig;
+    }
+    return dart;
   }
 
   @override

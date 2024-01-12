@@ -261,11 +261,37 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .collect::<Vec<_>>();
 
         let default_constructor = if !is_out {
-            if let Some(_existing_constructor) = methods
+            if let Some(constructor) = methods
                 .iter_mut()
                 .find(|m| m.declaration.contains(&format!("{type_name}()")))
             {
-                // todo add parameters that default to what's returned by the ffi call
+                let mut is_first = true;
+                let args = fields.iter().fold(String::new(), |acc, field| {
+                    format!(
+                        "{acc}{comma}{typ}? {name}",
+                        comma = if is_first {
+                            is_first = false;
+                            ""
+                        } else {
+                            ", "
+                        },
+                        typ = field.dart_type_name,
+                        name = field.name
+                    )
+                });
+
+                let mut r = String::new();
+                writeln!(&mut r, "final dart = {type_name}._(result);").unwrap();
+                for field in &fields {
+                    let name = &field.name;
+                    writeln!(&mut r, "if ({name} != null) {{").unwrap();
+                    writeln!(&mut r, "  dart.{name} = {name};").unwrap();
+                    writeln!(&mut r, "}}").unwrap();
+                }
+                write!(&mut r, "return dart;").unwrap();
+
+                constructor.declaration = format!("factory {type_name}({{{args}}})");
+                constructor.return_expression = Some(r.into());
                 None
             } else {
                 let mut is_first = true;

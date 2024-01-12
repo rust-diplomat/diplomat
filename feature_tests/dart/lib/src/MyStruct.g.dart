@@ -54,9 +54,31 @@ final class MyStruct {
     return pointer.ref;
   }
 
-  factory MyStruct() {
+  factory MyStruct({int? a, bool? b, int? c, int? d, int? e, Rune? f, MyEnum? g}) {
     final result = _MyStruct_new();
-    return MyStruct._(result);
+    final dart = MyStruct._(result);
+    if (a != null) {
+      dart.a = a;
+    }
+    if (b != null) {
+      dart.b = b;
+    }
+    if (c != null) {
+      dart.c = c;
+    }
+    if (d != null) {
+      dart.d = d;
+    }
+    if (e != null) {
+      dart.e = e;
+    }
+    if (f != null) {
+      dart.f = f;
+    }
+    if (g != null) {
+      dart.g = g;
+    }
+    return dart;
   }
 
   int intoA() {
