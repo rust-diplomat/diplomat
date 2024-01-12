@@ -260,11 +260,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
+        // Non-out structs needs to be constructible in Dart
         let default_constructor = if !is_out {
             if let Some(constructor) = methods
                 .iter_mut()
                 .find(|m| m.declaration.contains(&format!("{type_name}()")))
             {
+                // If there's an existing zero-arg constructor, we repurpose it with optional arguments for all fields
                 let mut is_first = true;
                 let args = fields.iter().fold(String::new(), |acc, field| {
                     format!(
@@ -279,6 +281,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         name = field.name
                     )
                 });
+                constructor.declaration = format!("factory {type_name}({{{args}}})");
 
                 let mut r = String::new();
                 writeln!(&mut r, "final dart = {type_name}._(result);").unwrap();
@@ -289,11 +292,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     writeln!(&mut r, "}}").unwrap();
                 }
                 write!(&mut r, "return dart;").unwrap();
-
-                constructor.declaration = format!("factory {type_name}({{{args}}})");
                 constructor.return_expression = Some(r.into());
+
                 None
             } else {
+                // Otherwise we create a constructor with default values for all fields.
                 let mut is_first = true;
                 let args = fields.iter().fold(String::new(), |acc, field| {
                     let defaultt: Cow<'static, str> = match &field.ty {
@@ -301,9 +304,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         hir::Type::Primitive(hir::PrimitiveType::Float(..)) => "0.0".into(),
                         hir::Type::Primitive(_) => "0".into(),
                         hir::Type::Enum(e) => {
-                            let type_name = self.gen_type_name(&field.ty);
+                            let type_name = self.gen_type_name(field.ty);
                             let variant = e
-                                .resolve(&self.tcx)
+                                .resolve(self.tcx)
                                 .variants
                                 .iter()
                                 .find(|v| v.discriminant == 0)
@@ -317,7 +320,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                             format!("{type_name}.{variant}").into()
                         }
                         hir::Type::Struct(_) => {
-                            format!("{}()", self.gen_type_name(&field.ty)).into()
+                            format!("{}()", self.gen_type_name(field.ty)).into()
                         }
                         hir::Type::Opaque(..) => {
                             unreachable!("cannot have opaque in non-out struct")
