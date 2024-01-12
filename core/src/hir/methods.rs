@@ -4,9 +4,10 @@ use std::fmt::{self, Write};
 
 use smallvec::SmallVec;
 
-use super::{
-    paths, Attrs, Docs, Ident, IdentBuf, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes,
-    OutType, SelfType, Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
+use super::{paths, Attrs, Docs, Ident, IdentBuf, OutType, SelfType, Slice, Type, TypeContext};
+
+use super::lifetimes::{
+    self, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes, TypeLifetime, TypeLifetimes,
 };
 
 /// A method exposed to Diplomat.
@@ -15,7 +16,7 @@ use super::{
 pub struct Method {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub lifetime_env: LifetimeEnv,
+    pub lifetime_env: LifetimeEnv<lifetimes::Method>,
 
     pub param_self: Option<ParamSelf>,
     pub params: Vec<Param>,
@@ -168,7 +169,7 @@ impl Method {
 
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> MethodLifetimes {
-        self.lifetime_env.method_lifetimes()
+        self.lifetime_env.lifetimes()
     }
 
     /// Returns a new [`BorrowingFieldVisitor`], which allocates memory to

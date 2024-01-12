@@ -1,8 +1,9 @@
+use super::lifetimes::{self, LifetimeEnv};
 use super::{
     AttributeContext, AttributeValidator, Borrow, EnumDef, EnumPath, EnumVariant, IdentBuf,
-    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath,
-    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
-    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional,
+    OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf,
+    PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, SuccessType,
     Type,
 };
@@ -816,7 +817,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         takes_writeable: bool,
         mut return_ltl: Option<ReturnLifetimeLowerer<'_>>,
         in_path: &ast::Path,
-    ) -> Option<(ReturnType, LifetimeEnv)> {
+    ) -> Option<(ReturnType, LifetimeEnv<lifetimes::Method>)> {
         let writeable_option = if takes_writeable {
             Some(SuccessType::Writeable)
         } else {
