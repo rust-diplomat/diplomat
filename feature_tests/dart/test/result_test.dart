@@ -8,7 +8,7 @@ void main() {
         expect(ResultOpaque.failingFoo, throwsA(ErrorEnum.foo));
         expect(ResultOpaque.failingBar, throwsA(ErrorEnum.bar));
         expect(ResultOpaque.failingUnit, throwsA(VoidError()));
-        expect(() => ResultOpaque.failingStruct(109), throwsA(ErrorStruct()..i = 109..j = 12));
+        expect(() => ResultOpaque.failingStruct(109), throwsA(ErrorStruct(i: 109)..j = 12));
 
         expect(() => ResultOpaque.newInErr(559), throwsA(ResultOpaqueMatcher(559)));
         expect(() => ResultOpaque.newInEnumErr(881), throwsA(ResultOpaqueMatcher(881)));
