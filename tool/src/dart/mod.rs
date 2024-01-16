@@ -258,7 +258,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
-        // Non-out structs needs to be constructible in Dart
+        // Non-out structs need to be constructible in Dart
         let default_constructor = if !is_out {
             if let Some(constructor) = methods
                 .iter_mut()
@@ -285,7 +285,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 None
             } else {
-                // Otherwise we create a constructor with default values for all fields.
+                // Otherwise we create a constructor with required values for all fields.
                 let args = fields
                     .iter()
                     .map(|field| format!("required this.{}", field.name))
