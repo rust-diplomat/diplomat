@@ -43,7 +43,9 @@ final class Foo implements ffi.Finalizable {
   }
 
   factory Foo.extractFromFields(BorrowedFields fields) {
-    final result = _Foo_extract_from_fields(fields._underlying);
+    final temp = ffi2.Arena();
+    final result = _Foo_extract_from_fields(fields._pointer(temp));
+    temp.releaseAll();
     return Foo._(result, true);
   }
 }

@@ -14,31 +14,37 @@ final class _OptionStructFfi extends ffi.Struct {
 }
 
 final class OptionStruct {
-  final _OptionStructFfi _underlying;
+  final OptionOpaque? a;
+  final OptionOpaqueChar? b;
+  final int c;
+  final OptionOpaque? d;
 
-  OptionStruct._(this._underlying);
+  // ignore: unused_element
+  OptionStruct._(_OptionStructFfi underlying) :
+    a = underlying.a.address == 0 ? null : OptionOpaque._(underlying.a, true),
+    b = underlying.b.address == 0 ? null : OptionOpaqueChar._(underlying.b, true),
+    c = underlying.c,
+    d = underlying.d.address == 0 ? null : OptionOpaque._(underlying.d, true);
 
-  OptionOpaque? get a => _underlying.a.address == 0 ? null : OptionOpaque._(_underlying.a, true);
-
-  OptionOpaqueChar? get b => _underlying.b.address == 0 ? null : OptionOpaqueChar._(_underlying.b, true);
-
-  int get c => _underlying.c;
-
-  OptionOpaque? get d => _underlying.d.address == 0 ? null : OptionOpaque._(_underlying.d, true);
+  // ignore: unused_element
+  _OptionStructFfi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_OptionStructFfi>();
+    return pointer.ref;
+  }
 
   @override
   bool operator ==(Object other) =>
       other is OptionStruct &&
-      other._underlying.a == _underlying.a &&
-      other._underlying.b == _underlying.b &&
-      other._underlying.c == _underlying.c &&
-      other._underlying.d == _underlying.d;
+      other.a == this.a &&
+      other.b == this.b &&
+      other.c == this.c &&
+      other.d == this.d;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.a,
-        _underlying.b,
-        _underlying.c,
-        _underlying.d,
+        this.a,
+        this.b,
+        this.c,
+        this.d,
       ]);
 }
