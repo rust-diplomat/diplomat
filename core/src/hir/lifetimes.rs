@@ -240,6 +240,10 @@ impl<Kind: LifetimeKind> Lifetimes<Kind> {
     pub(super) fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<Lifetime<Kind>>> + '_ {
         self.indices.iter().copied()
     }
+
+    pub(super) fn as_slice(&self) -> &[MaybeStatic<Lifetime<Kind>>] {
+        self.indices.as_slice()
+    }
 }
 
 impl TypeLifetime {
