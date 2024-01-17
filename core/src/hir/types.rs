@@ -73,6 +73,7 @@ impl Type {
         }
     }
 
+    #[allow(unused)] // wip lifetimes (#406)
     pub(super) fn lifetimes(&self) -> &[MaybeStatic<TypeLifetime>] {
         match self {
             Type::Opaque(opaque) => opaque.lifetimes.as_slice(),
