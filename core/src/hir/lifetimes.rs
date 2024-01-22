@@ -7,6 +7,7 @@ use core::fmt::{self, Debug};
 use core::hash::Hash;
 use core::marker::PhantomData;
 use smallvec::{smallvec, SmallVec};
+use std::borrow::Cow;
 
 /// Convenience const representing the number of lifetimes a [`LifetimeEnv`]
 /// can hold inline before needing to dynamically allocate.
@@ -33,6 +34,28 @@ pub struct LifetimeEnv<Kind> {
     /// lifetime if it's < `num_lifetimes`. Otherwise, we'd have to make a
     /// distinction in `TypeLifetime` about which kind it refers to.
     pub(super) num_lifetimes: usize,
+}
+
+impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
+    /// Format a lifetime from this env for use in code
+    pub fn fmt_lifetime(&self, lt: &Lifetime<Kind>) -> Cow<str> {
+        if let Some(lt) = self.nodes.get(lt.0) {
+            Cow::from(lt.ident.as_str())
+        } else if lt.0 < self.num_lifetimes {
+            format!("anon_{}", lt.0 - self.nodes.len()).into()
+        } else {
+            panic!("Found out of range lifetime: Got {lt:?} for env with {} nodes and {} total lifetimes", self.nodes.len(), self.num_lifetimes);
+        }
+    }
+
+    // List all named and unnamed lifetimes
+    pub fn num_lifetimes(&self) -> usize {
+        self.num_lifetimes
+    }
+
+    pub fn all_lifetimes(&self) -> impl Iterator<Item = Lifetime<Kind>> {
+        (0..self.num_lifetimes()).map(|i| Lifetime::new(i))
+    }
 }
 
 /// A lifetime in a [`LifetimeEnv`], which keeps track of which lifetimes it's
