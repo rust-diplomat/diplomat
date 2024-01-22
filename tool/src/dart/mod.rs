@@ -1,9 +1,11 @@
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
+use diplomat_core::hir::lifetimes::{self, LifetimeEnv};
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, OpaqueOwner, ReturnType, SelfType, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type,
+    TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
@@ -173,6 +175,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: &'a [MethodInfo<'a>],
             docs: String,
             destructor: String,
+            lifetimes: &'a LifetimeEnv<lifetimes::Type>,
         }
 
         ImplTemplate {
@@ -180,6 +183,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: methods.as_slice(),
             destructor,
             docs: self.formatter.fmt_docs(&ty.docs),
+            lifetimes: &ty.lifetimes,
         }
         .render()
         .unwrap()
@@ -306,6 +310,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             fields: Vec<FieldInfo<'a>>,
             methods: Vec<MethodInfo<'a>>,
             docs: String,
+            lifetimes: &'a LifetimeEnv<lifetimes::Type>,
         }
 
         ImplTemplate {
@@ -315,6 +320,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             fields,
             methods,
             docs: self.formatter.fmt_docs(&ty.docs),
+            lifetimes: &ty.lifetimes,
         }
         .render()
         .unwrap()
@@ -732,16 +738,21 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 let owned = op.owner.is_owned();
+                // TODO (#406) use correct edges here
+                let edges = op.lifetimes.lifetimes().map(|_| ", []").collect::<Vec<_>>().join("");
                 if op.is_optional() {
-                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned})").into()
+                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned}, []{edges})").into()
                 } else {
-                    format!("{type_name}._({var_name}, {owned})").into()
+                    format!("{type_name}._({var_name}, {owned}, []{edges})").into()
                 }
             }
             Type::Struct(ref st) => {
                 let id = P::id_for_path(st);
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}._({var_name})").into()
+                // TODO (#406) use correct edges here
+                let edges = st.lifetimes().lifetimes().map(|_| ", []").collect::<Vec<_>>().join("");
+
+                format!("{type_name}._({var_name}{edges})").into()
             }
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 let id = e.tcx_id.into();

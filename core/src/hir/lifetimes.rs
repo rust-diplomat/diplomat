@@ -265,7 +265,7 @@ impl<Kind: LifetimeKind> Lifetime<Kind> {
 
 impl<Kind: LifetimeKind> Lifetimes<Kind> {
     /// Returns an iterator over the contained [`Lifetime`]s.
-    pub(super) fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<Lifetime<Kind>>> + '_ {
+    pub fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<Lifetime<Kind>>> + '_ {
         self.indices.iter().copied()
     }
 

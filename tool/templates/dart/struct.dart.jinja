@@ -26,7 +26,7 @@ final class {{type_name}} {
   {%- endmatch %}
 
   // ignore: unused_element
-  {{type_name}}._(_{{type_name}}Ffi underlying) : 
+  {{type_name}}._(_{{type_name}}Ffi underlying {%- for lifetime in lifetimes.all_lifetimes() -%} , core.List<Object> edge_{{lifetimes.fmt_lifetime(lifetime)}} {%- endfor -%}) :
     {%- for field in fields %}
     {{field.name}} = {{field.c_to_dart}}
     {%- if loop.last %};{% else %},{% endif -%}

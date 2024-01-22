@@ -117,6 +117,13 @@ impl ReturnableStructPath {
             }
         }
     }
+
+    pub(crate) fn lifetimes(&self) -> &TypeLifetimes {
+        match self {
+            Self::Struct(p) => &p.lifetimes,
+            Self::OutStruct(p) => &p.lifetimes,
+        }
+    }
 }
 
 impl<P: TyPosition> StructPath<P> {

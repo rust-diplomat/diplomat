@@ -1,5 +1,6 @@
 use super::{
-    Borrow, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructId, StructPath, TypeId,
+    lifetimes::TypeLifetimes, Borrow, MaybeOwn, Mutability, OutStructId, ReturnableStructPath,
+    StructId, StructPath, TypeId,
 };
 use core::fmt::Debug;
 
@@ -99,7 +100,7 @@ pub trait TyPosition: Debug + Copy {
 
     type StructId: Debug;
 
-    type StructPath: Debug;
+    type StructPath: Debug + StructPathLike;
 
     fn id_for_path(p: &Self::StructPath) -> TypeId;
 }
@@ -144,6 +145,22 @@ impl TyPosition for OutputOnly {
     }
 }
 
+pub trait StructPathLike {
+    fn lifetimes(&self) -> &TypeLifetimes;
+    // todo move id_for_path here
+}
+
+impl StructPathLike for StructPath {
+    fn lifetimes(&self) -> &TypeLifetimes {
+        &self.lifetimes
+    }
+}
+
+impl StructPathLike for ReturnableStructPath {
+    fn lifetimes(&self) -> &TypeLifetimes {
+        self.lifetimes()
+    }
+}
 /// Abstraction over how a type can hold a pointer to an opaque.
 ///
 /// This trait is designed as a helper abstraction for the `OpaqueOwnership`
