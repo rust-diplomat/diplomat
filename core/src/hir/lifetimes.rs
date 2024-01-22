@@ -37,7 +37,7 @@ pub struct LifetimeEnv<Kind> {
 }
 
 impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
-    /// Format a lifetime from this env for use in code
+    /// Format a lifetime indexing this env for use in code=
     pub fn fmt_lifetime(&self, lt: &Lifetime<Kind>) -> Cow<str> {
         if let Some(lt) = self.nodes.get(lt.0) {
             Cow::from(lt.ident.as_str())
@@ -46,6 +46,20 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
         } else {
             panic!("Found out of range lifetime: Got {lt:?} for env with {} nodes and {} total lifetimes", self.nodes.len(), self.num_lifetimes);
         }
+    }
+
+    /// Get an iterator of all lifetimes that this must live as long as (including itself)
+    ///
+    /// The kind *can* be different: e.g. the Type paths in a method signature will
+    /// still have Lifetime<Type> even though they're in a method context.
+    ///
+    /// In the medium term we may want to get rid of Type vs Method lifetimes, OR
+    /// make them a parameter on Type.
+    pub fn all_longer_lifetimes<K2: LifetimeKind>(
+        &self,
+        lt: &Lifetime<K2>,
+    ) -> impl Iterator<Item = Lifetime<Kind>> + '_ {
+        LifetimeTransitivityIterator::new(self, lt.0, true)
     }
 
     // List all named and unnamed lifetimes
@@ -342,5 +356,48 @@ impl TypeLifetimes {
             .collect();
 
         MethodLifetimes { indices }
+    }
+}
+
+struct LifetimeTransitivityIterator<'env, Kind> {
+    env: &'env LifetimeEnv<Kind>,
+    visited: Vec<bool>,
+    queue: Vec<usize>,
+    longer: bool,
+}
+
+impl<'env, Kind: LifetimeKind> LifetimeTransitivityIterator<'env, Kind> {
+    fn new(env: &'env LifetimeEnv<Kind>, starting: usize, longer: bool) -> Self {
+        Self {
+            env,
+            visited: vec![false; env.num_lifetimes()],
+            queue: vec![starting],
+            longer,
+        }
+    }
+}
+
+impl<'env, Kind: LifetimeKind> Iterator for LifetimeTransitivityIterator<'env, Kind> {
+    type Item = Lifetime<Kind>;
+
+    fn next(&mut self) -> Option<Lifetime<Kind>> {
+        while let Some(next) = self.queue.pop() {
+            if self.visited[next] {
+                continue;
+            }
+            self.visited[next] = true;
+
+            if let Some(named) = self.env.nodes.get(next) {
+                let edge_dir = if self.longer {
+                    &named.longer
+                } else {
+                    &named.shorter
+                };
+                self.queue.extend(edge_dir.iter().map(|i| i.0));
+            }
+
+            return Some(Lifetime::new(next));
+        }
+        None
     }
 }
