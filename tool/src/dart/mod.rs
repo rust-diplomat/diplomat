@@ -1,7 +1,7 @@
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
-use diplomat_core::hir::lifetimes::{self, LifetimeEnv};
+use diplomat_core::hir::lifetimes::{self, LifetimeEnv, LifetimeKind};
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type,
@@ -226,8 +226,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let dart_type_name = self.gen_type_name(&field.ty);
 
-                let c_to_dart =
-                    self.gen_c_to_dart_for_type(&field.ty, format!("underlying.{name}").into());
+                let c_to_dart = self.gen_c_to_dart_for_type(
+                    &field.ty,
+                    format!("underlying.{name}").into(),
+                    &ty.lifetimes,
+                );
 
                 let dart_to_c = if !mutable {
                     vec![]
@@ -421,7 +424,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let return_type_ffi = self.gen_return_type_name_ffi(&method.output, false);
         let return_type_ffi_cast = self.gen_return_type_name_ffi(&method.output, true);
 
-        let return_expression = self.gen_c_to_dart_for_return_type(&method.output);
+        let return_expression =
+            self.gen_c_to_dart_for_return_type(&method.output, &method.lifetime_env);
 
         let params = param_decls_dart.join(", ");
 
@@ -726,10 +730,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates a Dart expression for a type.
-    fn gen_c_to_dart_for_type<P: TyPosition>(
+    fn gen_c_to_dart_for_type<P: TyPosition, Kind: LifetimeKind>(
         &mut self,
         ty: &Type<P>,
         var_name: Cow<'cx, str>,
+        lifetime_env: &LifetimeEnv<Kind>,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(..) => var_name,
@@ -777,7 +782,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates a Dart expressions for a return type.
-    fn gen_c_to_dart_for_return_type(&mut self, result_ty: &ReturnType) -> Option<Cow<'cx, str>> {
+    fn gen_c_to_dart_for_return_type<Kind: LifetimeKind>(
+        &mut self,
+        result_ty: &ReturnType,
+        lifetime_env: &LifetimeEnv<Kind>,
+    ) -> Option<Cow<'cx, str>> {
         match *result_ty {
             ReturnType::Infallible(None) => None,
             ReturnType::Infallible(Some(SuccessType::Writeable)) => {
@@ -787,13 +796,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Infallible(Some(SuccessType::OutType(ref out_ty))) => Some(
                 format!(
                     "return {};",
-                    self.gen_c_to_dart_for_type(out_ty, "result".into())
+                    self.gen_c_to_dart_for_type(out_ty, "result".into(), lifetime_env)
                 )
                 .into(),
             ),
             ReturnType::Fallible(ref ok, ref err) => {
                 let err_conversion = match err {
-                    Some(o) => self.gen_c_to_dart_for_type(o, "result.union.err".into()),
+                    Some(o) => {
+                        self.gen_c_to_dart_for_type(o, "result.union.err".into(), lifetime_env)
+                    }
                     None => "VoidError()".into(),
                 };
                 let err_check =
@@ -802,7 +813,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // Note: the `writeable` variable is initialized in the template
                     Some(SuccessType::Writeable) => "writeable.finalize()".into(),
                     Some(SuccessType::OutType(o)) => {
-                        self.gen_c_to_dart_for_type(o, "result.union.ok".into())
+                        self.gen_c_to_dart_for_type(o, "result.union.ok".into(), lifetime_env)
                     }
                     None => return Some(err_check),
                     &Some(_) => unreachable!("unknown AST/HIR variant"),
