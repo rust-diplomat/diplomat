@@ -3,8 +3,8 @@ use super::Cpp2Context;
 use super::Cpp2Formatter;
 use askama::Template;
 use diplomat_core::hir::{
-    self, Mutability, OpaqueOwner, ReturnType, SelfType, SuccessType, TyPosition, Type, TypeDef,
-    TypeId,
+    self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
+    Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 
@@ -417,7 +417,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 ret
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(st);
+                let id = st.id();
                 let type_name = self.cx.formatter.fmt_type_name(id);
                 if self.cx.tcx.resolve_type(id).attrs().disable {
                     self.cx
@@ -634,7 +634,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 format!("*{type_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(st);
+                let id = st.id();
                 let type_name = self.cx.formatter.fmt_type_name(id);
                 // Note: The impl file is imported in gen_type_name().
                 format!("{type_name}::FromFFI({var_name})").into()

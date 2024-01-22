@@ -1,6 +1,6 @@
 use super::header::Header;
 use super::CContext;
-use diplomat_core::hir::{self, OpaqueOwner, TyPosition, Type, TypeDef, TypeId};
+use diplomat_core::hir::{self, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef, TypeId};
 use std::borrow::Cow;
 use std::fmt::Write;
 
@@ -302,7 +302,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 (Some(op_id), ret.into_owned().into())
             }
             Type::Struct(ref st) => {
-                let st_id = P::id_for_path(st);
+                let st_id = st.id();
                 let ty_name = self.cx.formatter.fmt_type_name(st_id);
                 if self.cx.tcx.resolve_type(st_id).attrs().disable {
                     self.cx

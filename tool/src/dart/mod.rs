@@ -548,7 +548,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 ret.into_owned().into()
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(st);
+                let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -607,7 +607,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     .into()
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(st);
+                let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -747,7 +747,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(st);
+                let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
                 // TODO (#406) use correct edges here
                 let edges = st.lifetimes().lifetimes().map(|_| ", []").collect::<Vec<_>>().join("");

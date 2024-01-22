@@ -101,8 +101,6 @@ pub trait TyPosition: Debug + Copy {
     type StructId: Debug;
 
     type StructPath: Debug + StructPathLike;
-
-    fn id_for_path(p: &Self::StructPath) -> TypeId;
 }
 
 /// One of two types implementing [`TyPosition`], representing types that can be
@@ -126,10 +124,6 @@ impl TyPosition for Everywhere {
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
-
-    fn id_for_path(p: &Self::StructPath) -> TypeId {
-        p.tcx_id.into()
-    }
 }
 
 impl TyPosition for OutputOnly {
@@ -137,28 +131,31 @@ impl TyPosition for OutputOnly {
     type OpaqueOwnership = MaybeOwn;
     type StructId = OutStructId;
     type StructPath = ReturnableStructPath;
-    fn id_for_path(p: &Self::StructPath) -> TypeId {
-        match p {
-            ReturnableStructPath::Struct(p) => p.tcx_id.into(),
-            ReturnableStructPath::OutStruct(p) => p.tcx_id.into(),
-        }
-    }
 }
 
 pub trait StructPathLike {
     fn lifetimes(&self) -> &TypeLifetimes;
-    // todo move id_for_path here
+    fn id(&self) -> TypeId;
 }
 
 impl StructPathLike for StructPath {
     fn lifetimes(&self) -> &TypeLifetimes {
         &self.lifetimes
     }
+    fn id(&self) -> TypeId {
+        self.tcx_id.into()
+    }
 }
 
 impl StructPathLike for ReturnableStructPath {
     fn lifetimes(&self) -> &TypeLifetimes {
         self.lifetimes()
+    }
+    fn id(&self) -> TypeId {
+        match self {
+            ReturnableStructPath::Struct(p) => p.tcx_id.into(),
+            ReturnableStructPath::OutStruct(p) => p.tcx_id.into(),
+        }
     }
 }
 /// Abstraction over how a type can hold a pointer to an opaque.
