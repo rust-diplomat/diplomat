@@ -8,7 +8,9 @@ part of 'lib.g.dart';
 final class OptionOpaqueChar implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  OptionOpaqueChar._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+
+  OptionOpaqueChar._(this._underlying, bool isOwned, this._edge_self) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }

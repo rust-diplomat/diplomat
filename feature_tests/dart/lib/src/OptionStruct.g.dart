@@ -21,10 +21,10 @@ final class OptionStruct {
 
   // ignore: unused_element
   OptionStruct._(_OptionStructFfi underlying) :
-    a = underlying.a.address == 0 ? null : OptionOpaque._(underlying.a, true),
-    b = underlying.b.address == 0 ? null : OptionOpaqueChar._(underlying.b, true),
+    a = underlying.a.address == 0 ? null : OptionOpaque._(underlying.a, true, []),
+    b = underlying.b.address == 0 ? null : OptionOpaqueChar._(underlying.b, true, []),
     c = underlying.c,
-    d = underlying.d.address == 0 ? null : OptionOpaque._(underlying.d, true);
+    d = underlying.d.address == 0 ? null : OptionOpaque._(underlying.d, true, []);
 
   // ignore: unused_element
   _OptionStructFfi _pointer(ffi.Allocator temp) {

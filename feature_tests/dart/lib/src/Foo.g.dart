@@ -8,7 +8,10 @@ part of 'lib.g.dart';
 final class Foo implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  Foo._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+  final core.List<Object> _edge_a;
+
+  Foo._(this._underlying, bool isOwned, this._edge_self, this._edge_a) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -21,12 +24,12 @@ final class Foo implements ffi.Finalizable {
     final xView = x.utf8View;
     final result = _Foo_new(xView.pointer(temp), xView.length);
     temp.releaseAll();
-    return Foo._(result, true);
+    return Foo._(result, true, [], []);
   }
 
   Bar get getBar {
     final result = _Foo_get_bar(_underlying);
-    return Bar._(result, true);
+    return Bar._(result, true, [], [], []);
   }
 
   factory Foo.static_(String x) {
@@ -34,19 +37,19 @@ final class Foo implements ffi.Finalizable {
     final xView = x.utf8View;
     final result = _Foo_new_static(xView.pointer(temp), xView.length);
     temp.releaseAll();
-    return Foo._(result, true);
+    return Foo._(result, true, [], []);
   }
 
   BorrowedFieldsReturning get asReturning {
     final result = _Foo_as_returning(_underlying);
-    return BorrowedFieldsReturning._(result);
+    return BorrowedFieldsReturning._(result, []);
   }
 
   factory Foo.extractFromFields(BorrowedFields fields) {
     final temp = ffi2.Arena();
     final result = _Foo_extract_from_fields(fields._pointer(temp));
     temp.releaseAll();
-    return Foo._(result, true);
+    return Foo._(result, true, [], []);
   }
 }
 

@@ -8,7 +8,10 @@ part of 'lib.g.dart';
 final class RefList implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  RefList._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+  final core.List<Object> _edge_a;
+
+  RefList._(this._underlying, bool isOwned, this._edge_self, this._edge_a) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -18,7 +21,7 @@ final class RefList implements ffi.Finalizable {
 
   factory RefList.node(RefListParameter data) {
     final result = _RefList_node(data._underlying);
-    return RefList._(result, true);
+    return RefList._(result, true, [], []);
   }
 }
 

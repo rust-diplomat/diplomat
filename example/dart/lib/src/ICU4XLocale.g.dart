@@ -11,7 +11,9 @@ part of 'lib.g.dart';
 final class ICU4XLocale implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  ICU4XLocale._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+
+  ICU4XLocale._(this._underlying, bool isOwned, this._edge_self) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -25,7 +27,7 @@ final class ICU4XLocale implements ffi.Finalizable {
     final nameView = name.utf8View;
     final result = _ICU4XLocale_new(nameView.pointer(temp), nameView.length);
     temp.releaseAll();
-    return ICU4XLocale._(result, true);
+    return ICU4XLocale._(result, true, []);
   }
 }
 

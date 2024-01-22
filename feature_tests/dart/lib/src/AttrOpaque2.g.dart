@@ -8,7 +8,9 @@ part of 'lib.g.dart';
 final class AttrOpaque2 implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  AttrOpaque2._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+
+  AttrOpaque2._(this._underlying, bool isOwned, this._edge_self) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }

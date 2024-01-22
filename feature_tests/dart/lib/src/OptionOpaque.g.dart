@@ -8,7 +8,9 @@ part of 'lib.g.dart';
 final class OptionOpaque implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  OptionOpaque._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+
+  OptionOpaque._(this._underlying, bool isOwned, this._edge_self) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -18,12 +20,12 @@ final class OptionOpaque implements ffi.Finalizable {
 
   static OptionOpaque? new_(int i) {
     final result = _OptionOpaque_new(i);
-    return result.address == 0 ? null : OptionOpaque._(result, true);
+    return result.address == 0 ? null : OptionOpaque._(result, true, []);
   }
 
   static final OptionOpaque? none = () {
     final result = _OptionOpaque_new_none();
-    return result.address == 0 ? null : OptionOpaque._(result, true);
+    return result.address == 0 ? null : OptionOpaque._(result, true, []);
   }();
 
   static final OptionStruct struct = () {

@@ -8,7 +8,9 @@ part of 'lib.g.dart';
 final class ResultOpaque implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  ResultOpaque._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+
+  ResultOpaque._(this._underlying, bool isOwned, this._edge_self) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -24,7 +26,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
-    return ResultOpaque._(result.union.ok, true);
+    return ResultOpaque._(result.union.ok, true, []);
   }
 
   /// 
@@ -35,7 +37,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
-    return ResultOpaque._(result.union.ok, true);
+    return ResultOpaque._(result.union.ok, true, []);
   }
 
   /// 
@@ -46,7 +48,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
-    return ResultOpaque._(result.union.ok, true);
+    return ResultOpaque._(result.union.ok, true, []);
   }
 
   /// 
@@ -57,7 +59,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw VoidError();
     }
-    return ResultOpaque._(result.union.ok, true);
+    return ResultOpaque._(result.union.ok, true, []);
   }
 
   /// 
@@ -68,7 +70,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ErrorStruct._(result.union.err);
     }
-    return ResultOpaque._(result.union.ok, true);
+    return ResultOpaque._(result.union.ok, true, []);
   }
 
   /// 
@@ -77,7 +79,7 @@ final class ResultOpaque implements ffi.Finalizable {
   static void newInErr(int i) {
     final result = _ResultOpaque_new_in_err(i);
     if (!result.isOk) {
-      throw ResultOpaque._(result.union.err, true);
+      throw ResultOpaque._(result.union.err, true, []);
     }
   }
 
@@ -98,7 +100,7 @@ final class ResultOpaque implements ffi.Finalizable {
   static ErrorEnum newInEnumErr(int i) {
     final result = _ResultOpaque_new_in_enum_err(i);
     if (!result.isOk) {
-      throw ResultOpaque._(result.union.err, true);
+      throw ResultOpaque._(result.union.err, true, []);
     }
     return ErrorEnum.values[result.union.ok];
   }

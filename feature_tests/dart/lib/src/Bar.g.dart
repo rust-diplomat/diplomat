@@ -8,7 +8,11 @@ part of 'lib.g.dart';
 final class Bar implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  Bar._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+  final core.List<Object> _edge_b;
+  final core.List<Object> _edge_a;
+
+  Bar._(this._underlying, bool isOwned, this._edge_self, this._edge_b, this._edge_a) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -18,7 +22,7 @@ final class Bar implements ffi.Finalizable {
 
   Foo get foo {
     final result = _Bar_foo(_underlying);
-    return Foo._(result, false);
+    return Foo._(result, false, [], []);
   }
 }
 

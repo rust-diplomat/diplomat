@@ -11,7 +11,9 @@ part of 'lib.g.dart';
 final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  ICU4XFixedDecimalFormatter._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+
+  ICU4XFixedDecimalFormatter._(this._underlying, bool isOwned, this._edge_self) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -31,7 +33,7 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
     if (!result.isOk) {
       throw VoidError();
     }
-    return ICU4XFixedDecimalFormatter._(result.union.ok, true);
+    return ICU4XFixedDecimalFormatter._(result.union.ok, true, []);
   }
 
   /// Formats a [`ICU4XFixedDecimal`] to a string.
