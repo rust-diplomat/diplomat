@@ -23,7 +23,7 @@ pub use types::{
     TypeName,
 };
 
-mod lifetimes;
+pub(crate) mod lifetimes;
 pub use lifetimes::{Lifetime, LifetimeEnv, LifetimeTransitivity, NamedLifetime};
 
 mod paths;

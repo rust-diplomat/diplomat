@@ -20,8 +20,10 @@ pub(crate) const INLINE_NUM_LIFETIMES: usize = 4;
 #[derive(Debug)]
 pub struct LifetimeEnv<Kind> {
     /// List of named lifetimes in scope of the method, and their bounds
-    nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
+    pub(super) nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
 
+    /// Only relevant for method LifetimeEnvs (otherwise this is nodes.len())
+    ///
     /// The number of named _and_ anonymous lifetimes in the method.
     /// We store the sum since it represents the upper bound on what indices
     /// are in range of the graph. If we make a [`MethodLifetimes`] with
@@ -30,16 +32,19 @@ pub struct LifetimeEnv<Kind> {
     /// a named lifetime if it's < `nodes.len()`, or that it's an anonymous
     /// lifetime if it's < `num_lifetimes`. Otherwise, we'd have to make a
     /// distinction in `TypeLifetime` about which kind it refers to.
-    num_lifetimes: usize,
+    pub(super) num_lifetimes: usize,
 }
 
 /// A lifetime in a [`LifetimeEnv`], which keeps track of which lifetimes it's
 /// longer and shorter than.
+///
+/// Invariant: for a BoundedLifetime found inside a LifetimeEnv, all short/long connections
+/// should be bidirectional.
 #[derive(Debug)]
 pub(super) struct BoundedLifetime<Kind> {
-    ident: IdentBuf,
-    longer: SmallVec<[Lifetime<Kind>; 2]>,
-    shorter: SmallVec<[Lifetime<Kind>; 2]>,
+    pub(super) ident: IdentBuf,
+    pub(super) longer: SmallVec<[Lifetime<Kind>; 2]>,
+    pub(super) shorter: SmallVec<[Lifetime<Kind>; 2]>,
 }
 
 impl<Kind> BoundedLifetime<Kind> {
