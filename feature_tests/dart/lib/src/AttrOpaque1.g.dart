@@ -19,12 +19,12 @@ final class AttrOpaque1 implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_AttrOpaque1_destroy));
 
   void method() {
-    var core.List<Object> edge_anon_0;
+    core.List<Object> edge_anon_0 = [];
     _AttrOpaque1_method(_underlying);
   }
 
   void methodDisabledcpp() {
-    var core.List<Object> edge_anon_0;
+    core.List<Object> edge_anon_0 = [];
     _AttrOpaque1_method_disabledcpp(_underlying);
   }
 }

@@ -24,6 +24,7 @@ final class ICU4XLocale implements ffi.Finalizable {
   /// Construct an [`ICU4XLocale`] from a locale identifier represented as a string.
   factory ICU4XLocale(String name) {
     final temp = ffi2.Arena();
+    core.List<Object> edge_anon_0 = [];
     final nameView = name.utf8View;
     final result = _ICU4XLocale_new(nameView.pointer(temp), nameView.length);
     temp.releaseAll();

@@ -19,7 +19,7 @@ final class OptionOpaqueChar implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OptionOpaqueChar_destroy));
 
   void assertChar(Rune ch) {
-    var core.List<Object> edge_anon_0;
+    core.List<Object> edge_anon_0 = [];
     _OptionOpaqueChar_assert_char(_underlying, ch);
   }
 }

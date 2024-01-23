@@ -20,7 +20,7 @@ final class RefList implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_RefList_destroy));
 
   factory RefList.node(RefListParameter data) {
-    var core.List<Object> edge_b;
+    core.List<Object> edge_b = [];
     final result = _RefList_node(data._underlying);
     return RefList._(result, true, [], [edge_b]);
   }

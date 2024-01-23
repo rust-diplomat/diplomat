@@ -28,6 +28,8 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   /// Throws [VoidError] on failure.
   factory ICU4XFixedDecimalFormatter(ICU4XLocale locale, ICU4XDataProvider provider, ICU4XFixedDecimalFormatterOptions options) {
     final temp = ffi2.Arena();
+    core.List<Object> edge_anon_0 = [];
+    core.List<Object> edge_anon_1 = [];
     final result = _ICU4XFixedDecimalFormatter_try_new(locale._underlying, provider._underlying, options._pointer(temp));
     temp.releaseAll();
     if (!result.isOk) {
@@ -40,6 +42,8 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   ///
   /// See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
   String formatWrite(ICU4XFixedDecimal value) {
+    core.List<Object> edge_anon_0 = [];
+    core.List<Object> edge_anon_1 = [];
     final writeable = _Writeable();
     _ICU4XFixedDecimalFormatter_format_write(_underlying, value._underlying, writeable._underlying);
     return writeable.finalize();

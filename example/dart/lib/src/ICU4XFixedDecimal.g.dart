@@ -29,6 +29,7 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   ///
   /// See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
   void multiplyPow10(int power) {
+    core.List<Object> edge_anon_0 = [];
     _ICU4XFixedDecimal_multiply_pow10(_underlying, power);
   }
 
@@ -39,6 +40,7 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   /// Throws [VoidError] on failure.
   @override
   String toString() {
+    core.List<Object> edge_anon_0 = [];
     final writeable = _Writeable();
     final result = _ICU4XFixedDecimal_to_string(_underlying, writeable._underlying);
     if (!result.isOk) {
