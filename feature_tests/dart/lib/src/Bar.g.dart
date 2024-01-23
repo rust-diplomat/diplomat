@@ -21,8 +21,10 @@ final class Bar implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Bar_destroy));
 
   Foo get foo {
+    var core.List<Object> edge_b;
+    var core.List<Object> edge_a;
     final result = _Bar_foo(_underlying);
-    return Foo._(result, false, [], []);
+    return Foo._(result, false, [edge_b, edge_a], [edge_a]);
   }
 }
 

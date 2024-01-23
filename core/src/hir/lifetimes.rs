@@ -57,7 +57,7 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
     /// make them a parameter on Type.
     pub fn all_longer_lifetimes<K2: LifetimeKind>(
         &self,
-        lt: &Lifetime<K2>,
+        lt: Lifetime<K2>,
     ) -> impl Iterator<Item = Lifetime<Kind>> + '_ {
         LifetimeTransitivityIterator::new(self, lt.0, true)
     }

@@ -20,6 +20,7 @@ final class MyString implements ffi.Finalizable {
 
   factory MyString(String v) {
     final temp = ffi2.Arena();
+    var core.List<Object> edge_anon_0;
     final vView = v.utf8View;
     final result = _MyString_new(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -28,6 +29,7 @@ final class MyString implements ffi.Finalizable {
 
   factory MyString.unsafe(String v) {
     final temp = ffi2.Arena();
+    var core.List<Object> edge_anon_0;
     final vView = v.utf8View;
     final result = _MyString_new_unsafe(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -36,12 +38,15 @@ final class MyString implements ffi.Finalizable {
 
   void setStr(String newStr) {
     final temp = ffi2.Arena();
+    var core.List<Object> edge_anon_0;
+    var core.List<Object> edge_anon_1;
     final newStrView = newStr.utf8View;
     _MyString_set_str(_underlying, newStrView.pointer(temp), newStrView.length);
     temp.releaseAll();
   }
 
   String get getStr {
+    var core.List<Object> edge_anon_0;
     final writeable = _Writeable();
     _MyString_get_str(_underlying, writeable._underlying);
     return writeable.finalize();

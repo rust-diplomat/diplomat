@@ -20,58 +20,146 @@ final class One implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_One_destroy));
 
   factory One.transitivity(One hold, One nohold) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_a;
+    var core.List<Object> edge_b;
+    var core.List<Object> edge_c;
+    var core.List<Object> edge_d;
+    var core.List<Object> edge_e;
+    var core.List<Object> edge_x;
+    var core.List<Object> edge_anon_0;
     final result = _One_transitivity(hold._underlying, nohold._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_a, edge_b, edge_c, edge_d, edge_e]);
   }
 
   factory One.cycle(Two hold, One nohold) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_a;
+    var core.List<Object> edge_b;
+    var core.List<Object> edge_c;
+    var core.List<Object> edge_x;
+    var core.List<Object> edge_anon_0;
     final result = _One_cycle(hold._underlying, nohold._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_a, edge_c, edge_b]);
   }
 
   factory One.manyDependents(One a, One b, Two c, Two d, Two nohold) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_a;
+    var core.List<Object> edge_b;
+    var core.List<Object> edge_c;
+    var core.List<Object> edge_d;
+    var core.List<Object> edge_x;
+    var core.List<Object> edge_y;
+    var core.List<Object> edge_anon_0;
     final result = _One_many_dependents(a._underlying, b._underlying, c._underlying, d._underlying, nohold._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_a, edge_c, edge_b, edge_d]);
   }
 
   factory One.returnOutlivesParam(Two hold, One nohold) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_short;
+    var core.List<Object> edge_long;
+    var core.List<Object> edge_anon_0;
     final result = _One_return_outlives_param(hold._underlying, nohold._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_long]);
   }
 
   factory One.diamondTop(One top, One left, One right, One bottom) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_top;
+    var core.List<Object> edge_left;
+    var core.List<Object> edge_right;
+    var core.List<Object> edge_bottom;
+    var core.List<Object> edge_anon_0;
+    var core.List<Object> edge_anon_1;
+    var core.List<Object> edge_anon_2;
+    var core.List<Object> edge_anon_3;
     final result = _One_diamond_top(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_top, edge_right, edge_bottom, edge_left]);
   }
 
   factory One.diamondLeft(One top, One left, One right, One bottom) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_top;
+    var core.List<Object> edge_left;
+    var core.List<Object> edge_right;
+    var core.List<Object> edge_bottom;
+    var core.List<Object> edge_anon_0;
+    var core.List<Object> edge_anon_1;
+    var core.List<Object> edge_anon_2;
+    var core.List<Object> edge_anon_3;
     final result = _One_diamond_left(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_left, edge_bottom]);
   }
 
   factory One.diamondRight(One top, One left, One right, One bottom) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_top;
+    var core.List<Object> edge_left;
+    var core.List<Object> edge_right;
+    var core.List<Object> edge_bottom;
+    var core.List<Object> edge_anon_0;
+    var core.List<Object> edge_anon_1;
+    var core.List<Object> edge_anon_2;
+    var core.List<Object> edge_anon_3;
     final result = _One_diamond_right(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_right, edge_bottom]);
   }
 
   factory One.diamondBottom(One top, One left, One right, One bottom) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_top;
+    var core.List<Object> edge_left;
+    var core.List<Object> edge_right;
+    var core.List<Object> edge_bottom;
+    var core.List<Object> edge_anon_0;
+    var core.List<Object> edge_anon_1;
+    var core.List<Object> edge_anon_2;
+    var core.List<Object> edge_anon_3;
     final result = _One_diamond_bottom(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_bottom]);
   }
 
   factory One.diamondAndNestedTypes(One a, One b, One c, One d, One nohold) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_a;
+    var core.List<Object> edge_b;
+    var core.List<Object> edge_c;
+    var core.List<Object> edge_d;
+    var core.List<Object> edge_x;
+    var core.List<Object> edge_y;
+    var core.List<Object> edge_anon_0;
+    var core.List<Object> edge_anon_1;
+    var core.List<Object> edge_anon_2;
+    var core.List<Object> edge_anon_3;
     final result = _One_diamond_and_nested_types(a._underlying, b._underlying, c._underlying, d._underlying, nohold._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_a, edge_b, edge_d, edge_c]);
   }
 
   factory One.implicitBounds(One explicitHold, One implicitHold, One nohold) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_a;
+    var core.List<Object> edge_b;
+    var core.List<Object> edge_c;
+    var core.List<Object> edge_d;
+    var core.List<Object> edge_x;
+    var core.List<Object> edge_y;
+    var core.List<Object> edge_anon_0;
+    var core.List<Object> edge_anon_1;
     final result = _One_implicit_bounds(explicitHold._underlying, implicitHold._underlying, nohold._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_a, edge_b, edge_c, edge_d, edge_x]);
   }
 
   factory One.implicitBoundsDeep(One explicit, One implicit1, One implicit2, One nohold) {
+    var core.List<Object> edge_o;
+    var core.List<Object> edge_a;
+    var core.List<Object> edge_b;
+    var core.List<Object> edge_c;
+    var core.List<Object> edge_d;
+    var core.List<Object> edge_x;
     final result = _One_implicit_bounds_deep(explicit._underlying, implicit1._underlying, implicit2._underlying, nohold._underlying);
-    return One._(result, true, [], []);
+    return One._(result, true, [], [edge_a, edge_b, edge_c, edge_d]);
   }
 }
 

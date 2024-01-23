@@ -1,7 +1,9 @@
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
-use diplomat_core::hir::lifetimes::{self, LifetimeEnv, LifetimeKind};
+use diplomat_core::hir::lifetimes::{
+    self, LifetimeEnv, LifetimeKind, MaybeStatic, TypeLifetime, TypeLifetimes,
+};
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type,
@@ -528,6 +530,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             needs_arena,
             param_conversions,
             return_expression,
+            lifetimes: &method.lifetime_env,
         })
     }
 
@@ -729,6 +732,46 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
+    /// Generate the edge array for a single lifetime (as a list of comma separated edge names, without surrounding array brackets)
+    fn gen_lifetime_edge_array<Kind: LifetimeKind>(
+        &self,
+        lifetime: TypeLifetime,
+        lifetime_env: &LifetimeEnv<Kind>,
+    ) -> String {
+        let mut ret = String::new();
+        for lt in lifetime_env.all_longer_lifetimes(lifetime) {
+            if !ret.is_empty() {
+                write!(ret, ", ").unwrap();
+            }
+            write!(ret, "edge_{}", lifetime_env.fmt_lifetime(&lt)).unwrap();
+        }
+        ret
+    }
+
+    /// Generate the edges array for every lifetime in a TypeLifetimes
+    ///
+    /// Will generate with a leading `, `, so will look something like `, [edge_a, edge_b, edge_c], [edge_d, edge_e, edge_f]`
+    fn gen_lifetimes_edge_arrays<Kind: LifetimeKind>(
+        &self,
+        lifetimes: &TypeLifetimes,
+        lifetime_env: &LifetimeEnv<Kind>,
+    ) -> String {
+        let mut ret = String::new();
+        for lt in lifetimes.lifetimes() {
+            if let MaybeStatic::NonStatic(lt) = lt {
+                write!(
+                    ret,
+                    ", [{}]",
+                    self.gen_lifetime_edge_array(lt, lifetime_env)
+                )
+                .unwrap();
+            } else {
+                write!(ret, ", []").unwrap();
+            }
+        }
+        ret
+    }
+
     /// Generates a Dart expression for a type.
     fn gen_c_to_dart_for_type<P: TyPosition, Kind: LifetimeKind>(
         &mut self,
@@ -742,13 +785,23 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
 
-                let owned = op.owner.is_owned();
-                // TODO (#406) use correct edges here
-                let edges = op.lifetimes.lifetimes().map(|_| ", []").collect::<Vec<_>>().join("");
-                if op.is_optional() {
-                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned}, []{edges})").into()
+                let (owned, self_edges) = if let Some(lt) = op.owner.lifetime() {
+                    if let MaybeStatic::NonStatic(lt) = lt {
+                        (false, self.gen_lifetime_edge_array(lt, lifetime_env))
+                    } else {
+                        // 'statics are still not owned and should not register finalizers
+                        // but they also have no lifetime edges
+                        (false, "".into())
+                    }
                 } else {
-                    format!("{type_name}._({var_name}, {owned}, []{edges})").into()
+                    (true, "".into())
+                };
+                // TODO (#406) use correct edges here
+                let edges = self.gen_lifetimes_edge_arrays(&op.lifetimes, lifetime_env);
+                if op.is_optional() {
+                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned}, [{self_edges}]{edges})").into()
+                } else {
+                    format!("{type_name}._({var_name}, {owned}, [{self_edges}]{edges})").into()
                 }
             }
             Type::Struct(ref st) => {
@@ -960,4 +1013,6 @@ struct MethodInfo<'a> {
     /// the C function return value is saved to a variable named `result` or that the
     /// writeable, if present, is saved to a variable named `writeable`.
     return_expression: Option<Cow<'a, str>>,
+
+    lifetimes: &'a LifetimeEnv<lifetimes::Method>,
 }

@@ -5,6 +5,11 @@
     {%- if m.needs_arena %}
     final temp = ffi2.Arena();
     {%- endif %}
+
+    {%- for lifetime in m.lifetimes.all_lifetimes() %}
+    core.List<Object> edge_{{m.lifetimes.fmt_lifetime(lifetime)}} = [];
+    {%- endfor %}
+
     {%- for slice_conversion in m.slice_conversions %}
     {{ slice_conversion }}
     {%- endfor %}

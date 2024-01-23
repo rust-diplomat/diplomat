@@ -1,6 +1,6 @@
+use super::lifetimes::{MaybeStatic, TypeLifetime, TypeLifetimes};
 use super::{
-    lifetimes::TypeLifetimes, Borrow, MaybeOwn, Mutability, OutStructId, ReturnableStructPath,
-    StructId, StructPath, TypeId,
+    Borrow, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructId, StructPath, TypeId,
 };
 use core::fmt::Debug;
 
@@ -169,6 +169,9 @@ pub trait OpaqueOwner {
     fn mutability(&self) -> Option<Mutability>;
 
     fn is_owned(&self) -> bool;
+
+    /// Return the lifetime of the borrow, if any.
+    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>>;
 }
 
 impl OpaqueOwner for MaybeOwn {
@@ -185,6 +188,13 @@ impl OpaqueOwner for MaybeOwn {
             MaybeOwn::Borrow(_) => false,
         }
     }
+
+    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>> {
+        match self {
+            MaybeOwn::Own => None,
+            MaybeOwn::Borrow(b) => b.lifetime(),
+        }
+    }
 }
 
 impl OpaqueOwner for Borrow {
@@ -194,5 +204,9 @@ impl OpaqueOwner for Borrow {
 
     fn is_owned(&self) -> bool {
         false
+    }
+
+    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>> {
+        Some(self.lifetime)
     }
 }
