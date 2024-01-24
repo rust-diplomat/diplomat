@@ -279,7 +279,7 @@ impl<Kind: LifetimeKind> Lifetime<Kind> {
     /// Cast between lifetime kinds. See all_longer_lifetimes() as to why this can be necessary.
     ///
     /// Hopefully can be removed in the long run.
-    pub(super) fn cast<K2: LifetimeKind>(self) -> Lifetime<K2> {
+    pub fn cast<K2: LifetimeKind>(self) -> Lifetime<K2> {
         Lifetime::new(self.0)
     }
 }
