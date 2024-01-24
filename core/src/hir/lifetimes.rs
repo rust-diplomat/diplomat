@@ -75,6 +75,35 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
     pub fn all_lifetimes(&self) -> impl Iterator<Item = Lifetime<Kind>> {
         (0..self.num_lifetimes()).map(|i| Lifetime::new(i))
     }
+
+    /// Returns a new [`LifetimeEnv`].
+    pub(super) fn new(
+        nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
+        num_lifetimes: usize,
+    ) -> Self {
+        Self {
+            nodes,
+            num_lifetimes,
+        }
+    }
+
+    /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
+    pub fn lifetimes(&self) -> Lifetimes<Kind> {
+        let indices = (0..self.num_lifetimes)
+            .map(|index| MaybeStatic::NonStatic(Lifetime::new(index)))
+            .collect();
+
+        Lifetimes { indices }
+    }
+
+    /// Returns a new [`SubtypeLifetimeVisitor`], which can visit all reachable
+    /// lifetimes
+    pub fn subtype_lifetimes_visitor<F>(&self, visit_fn: F) -> SubtypeLifetimeVisitor<'_, Kind, F>
+    where
+        F: FnMut(Lifetime<Kind>),
+    {
+        SubtypeLifetimeVisitor::new(self, visit_fn)
+    }
 }
 
 /// A lifetime in a [`LifetimeEnv`], which keeps track of which lifetimes it's
@@ -244,37 +273,6 @@ pub type MethodLifetime = Lifetime<Method>;
 /// Map a lifetime in a nested struct to the original lifetime defined
 /// in the method that it refers to.
 pub type MethodLifetimes = Lifetimes<Method>;
-
-impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
-    /// Returns a new [`LifetimeEnv`].
-    pub(super) fn new(
-        nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
-        num_lifetimes: usize,
-    ) -> Self {
-        Self {
-            nodes,
-            num_lifetimes,
-        }
-    }
-
-    /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
-    pub fn lifetimes(&self) -> Lifetimes<Kind> {
-        let indices = (0..self.num_lifetimes)
-            .map(|index| MaybeStatic::NonStatic(Lifetime::new(index)))
-            .collect();
-
-        Lifetimes { indices }
-    }
-
-    /// Returns a new [`SubtypeLifetimeVisitor`], which can visit all reachable
-    /// lifetimes
-    pub fn subtype_lifetimes_visitor<F>(&self, visit_fn: F) -> SubtypeLifetimeVisitor<'_, Kind, F>
-    where
-        F: FnMut(Lifetime<Kind>),
-    {
-        SubtypeLifetimeVisitor::new(self, visit_fn)
-    }
-}
 
 impl<Kind: LifetimeKind> Lifetime<Kind> {
     pub(super) fn new(index: usize) -> Self {
