@@ -22,7 +22,7 @@ final class RefList implements ffi.Finalizable {
   factory RefList.node(RefListParameter data) {
     core.List<Object> edge_b = [];
     final result = _RefList_node(data._underlying);
-    return RefList._(result, true, [], [edge_b]);
+    return RefList._(result, true, [], edge_b);
   }
 }
 

@@ -25,14 +25,14 @@ final class Foo implements ffi.Finalizable {
     final xView = x.utf8View;
     final result = _Foo_new(xView.pointer(temp), xView.length);
     temp.releaseAll();
-    return Foo._(result, true, [], [edge_a]);
+    return Foo._(result, true, [], edge_a);
   }
 
   Bar get getBar {
     core.List<Object> edge_a = [];
     core.List<Object> edge_b = [];
     final result = _Foo_get_bar(_underlying);
-    return Bar._(result, true, [], [edge_b, edge_a], [edge_a]);
+    return Bar._(result, true, [], edge_b, edge_a);
   }
 
   factory Foo.static_(String x) {
@@ -41,12 +41,11 @@ final class Foo implements ffi.Finalizable {
     final xView = x.utf8View;
     final result = _Foo_new_static(xView.pointer(temp), xView.length);
     temp.releaseAll();
-    return Foo._(result, true, [], [edge_a]);
+    return Foo._(result, true, [], edge_a);
   }
 
   BorrowedFieldsReturning get asReturning {
     core.List<Object> edge_a = [];
-    core.List<Object> edge_anon_0 = [];
     final result = _Foo_as_returning(_underlying);
     return BorrowedFieldsReturning._(result, []);
   }
@@ -56,7 +55,7 @@ final class Foo implements ffi.Finalizable {
     core.List<Object> edge_a = [];
     final result = _Foo_extract_from_fields(fields._pointer(temp));
     temp.releaseAll();
-    return Foo._(result, true, [], [edge_a]);
+    return Foo._(result, true, [], edge_a);
   }
 }
 

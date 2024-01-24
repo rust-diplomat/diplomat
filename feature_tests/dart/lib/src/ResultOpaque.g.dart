@@ -106,7 +106,6 @@ final class ResultOpaque implements ffi.Finalizable {
   }
 
   void assertInteger(int i) {
-    core.List<Object> edge_anon_0 = [];
     _ResultOpaque_assert_integer(_underlying, i);
   }
 }

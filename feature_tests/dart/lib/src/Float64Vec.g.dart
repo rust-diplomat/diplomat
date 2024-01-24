@@ -20,7 +20,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec(core.List<double> v) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
     final vView = v.float64View;
     final result = _Float64Vec_new(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -29,7 +28,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec.bool(core.List<bool> v) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
     final vView = v.boolView;
     final result = _Float64Vec_new_bool(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -38,7 +36,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec.i16(core.List<int> v) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
     final vView = v.int16View;
     final result = _Float64Vec_new_i16(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -47,7 +44,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec.u16(core.List<int> v) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
     final vView = v.uint16View;
     final result = _Float64Vec_new_u16(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -56,7 +52,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec.isize(core.List<int> v) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
     final vView = v.isizeView;
     final result = _Float64Vec_new_isize(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -65,7 +60,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec.usize(core.List<int> v) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
     final vView = v.usizeView;
     final result = _Float64Vec_new_usize(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -74,7 +68,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   factory Float64Vec.f64BeBytes(ByteBuffer v) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
     final vView = v;
     final result = _Float64Vec_new_f64_be_bytes(vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -83,8 +76,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   void fillSlice(core.List<double> v) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
-    core.List<Object> edge_anon_1 = [];
     final vView = v.float64View;
     _Float64Vec_fill_slice(_underlying, vView.pointer(temp), vView.length);
     temp.releaseAll();
@@ -92,8 +83,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   void setValue(core.List<double> newSlice) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_anon_0 = [];
-    core.List<Object> edge_anon_1 = [];
     final newSliceView = newSlice.float64View;
     _Float64Vec_set_value(_underlying, newSliceView.pointer(temp), newSliceView.length);
     temp.releaseAll();
@@ -101,7 +90,6 @@ final class Float64Vec implements ffi.Finalizable {
 
   @override
   String toString() {
-    core.List<Object> edge_anon_0 = [];
     final writeable = _Writeable();
     _Float64Vec_to_string(_underlying, writeable._underlying);
     return writeable.finalize();

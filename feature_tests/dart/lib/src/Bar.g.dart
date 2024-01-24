@@ -24,7 +24,7 @@ final class Bar implements ffi.Finalizable {
     core.List<Object> edge_b = [];
     core.List<Object> edge_a = [];
     final result = _Bar_foo(_underlying);
-    return Foo._(result, false, [edge_b, edge_a], [edge_a]);
+    return Foo._(result, false, edge_b, edge_a);
   }
 }
 

@@ -39,12 +39,10 @@ final class OptionOpaque implements ffi.Finalizable {
   }();
 
   void assertInteger(int i) {
-    core.List<Object> edge_anon_0 = [];
     _OptionOpaque_assert_integer(_underlying, i);
   }
 
   static bool optionOpaqueArgument(OptionOpaque? arg) {
-    core.List<Object> edge_anon_0 = [];
     final result = _OptionOpaque_option_opaque_argument(arg == null ? ffi.Pointer.fromAddress(0) : arg._underlying);
     return result;
   }
