@@ -890,9 +890,6 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             .map(|lt| self.lower_named_lifetime(lt))
             .collect::<Option<_>>()?;
 
-        Some(LifetimeEnv {
-            nodes,
-            num_lifetimes: ast.nodes.len(),
-        })
+        Some(LifetimeEnv::new(nodes, ast.nodes.len()))
     }
 }

@@ -21,7 +21,7 @@ pub(crate) const INLINE_NUM_LIFETIMES: usize = 4;
 #[derive(Debug)]
 pub struct LifetimeEnv<Kind> {
     /// List of named lifetimes in scope of the method, and their bounds
-    pub(super) nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
+    nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
 
     /// Only relevant for method LifetimeEnvs (otherwise this is nodes.len())
     ///
@@ -33,7 +33,7 @@ pub struct LifetimeEnv<Kind> {
     /// a named lifetime if it's < `nodes.len()`, or that it's an anonymous
     /// lifetime if it's < `num_lifetimes`. Otherwise, we'd have to make a
     /// distinction in `TypeLifetime` about which kind it refers to.
-    pub(super) num_lifetimes: usize,
+    num_lifetimes: usize,
 }
 
 impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
