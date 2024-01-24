@@ -3,7 +3,7 @@
 use super::lifetimes::{MaybeStatic, TypeLifetime};
 use super::{
     EnumPath, Everywhere, NonOptional, OpaquePath, Optional, OutputOnly, PrimitiveType, StructPath,
-    TyPosition, TypeContext,
+    StructPathLike, TyPosition, TypeContext,
 };
 use crate::ast;
 pub use ast::Mutability;
@@ -72,12 +72,13 @@ impl Type {
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
         }
     }
+}
 
-    #[allow(unused)] // wip lifetimes (#406)
+impl<P: TyPosition> Type<P> {
     pub(super) fn lifetimes(&self) -> &[MaybeStatic<TypeLifetime>] {
         match self {
             Type::Opaque(opaque) => opaque.lifetimes.as_slice(),
-            Type::Struct(struct_) => struct_.lifetimes.as_slice(),
+            Type::Struct(struct_) => struct_.lifetimes().as_slice(),
             Type::Slice(slice) => std::slice::from_ref(slice.lifetime()),
             _ => &[],
         }

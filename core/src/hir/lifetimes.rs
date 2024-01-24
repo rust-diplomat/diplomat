@@ -37,7 +37,7 @@ pub struct LifetimeEnv<Kind> {
 }
 
 impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
-    /// Format a lifetime indexing this env for use in code=
+    /// Format a lifetime indexing this env for use in code
     pub fn fmt_lifetime(&self, lt: &Lifetime<Kind>) -> Cow<str> {
         if let Some(lt) = self.nodes.get(lt.0) {
             Cow::from(lt.ident.as_str())
@@ -274,6 +274,13 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
 impl<Kind: LifetimeKind> Lifetime<Kind> {
     pub(super) fn new(index: usize) -> Self {
         Self(index, PhantomData)
+    }
+
+    /// Cast between lifetime kinds. See all_longer_lifetimes() as to why this can be necessary.
+    ///
+    /// Hopefully can be removed in the long run.
+    pub(super) fn cast<K2: LifetimeKind>(self) -> Lifetime<K2> {
+        Lifetime::new(self.0)
     }
 }
 
