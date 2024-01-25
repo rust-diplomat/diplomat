@@ -76,7 +76,8 @@ impl Type {
 }
 
 impl<P: TyPosition> Type<P> {
-    pub(super) fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<TypeLifetime>> + '_ {
+    /// Get all lifetimes "contained" in this type
+    pub fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<TypeLifetime>> + '_ {
         match self {
             Type::Opaque(opaque) => Either::Right(
                 opaque

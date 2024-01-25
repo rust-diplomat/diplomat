@@ -58,6 +58,17 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
     ///
     /// In the medium term we may want to get rid of Type vs Method lifetimes, OR
     /// make them a parameter on Type.
+    pub fn all_shorter_lifetimes<K2: LifetimeKind>(
+        &self,
+        lt: impl Borrow<Lifetime<K2>>,
+    ) -> impl Iterator<Item = Lifetime<Kind>> + '_ {
+        // we use Borrow here so that this can be used in templates where there's autoborrowing
+        let lt = *lt.borrow();
+        // longer = true, since we are looking for lifetimes this is longer than
+        LifetimeTransitivityIterator::new(self, lt.0, false)
+    }
+
+    /// Same as all_shorter_lifetimes but the other way
     pub fn all_longer_lifetimes<K2: LifetimeKind>(
         &self,
         lt: impl Borrow<Lifetime<K2>>,
@@ -114,7 +125,13 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
 #[derive(Debug)]
 pub(super) struct BoundedLifetime<Kind> {
     pub(super) ident: IdentBuf,
+    /// Lifetimes longer than this (not transitive)
+    ///
+    /// These are the inverse graph edges compared to `shorter`
     pub(super) longer: SmallVec<[Lifetime<Kind>; 2]>,
+    /// Lifetimes this is shorter than (not transitive)
+    ///
+    /// These match `'a: 'b + 'c` bounds
     pub(super) shorter: SmallVec<[Lifetime<Kind>; 2]>,
 }
 
@@ -377,6 +394,7 @@ struct LifetimeTransitivityIterator<'env, Kind> {
 }
 
 impl<'env, Kind: LifetimeKind> LifetimeTransitivityIterator<'env, Kind> {
+    // Longer is whether we are looking for lifetimes longer or shorter than this
     fn new(env: &'env LifetimeEnv<Kind>, starting: usize, longer: bool) -> Self {
         Self {
             env,

@@ -2,7 +2,8 @@ use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::lifetimes::{
-    self, LifetimeEnv, LifetimeKind, MaybeStatic, MethodLifetime, TypeLifetime, TypeLifetimes,
+    self, Lifetime, LifetimeEnv, LifetimeKind, MaybeStatic, MethodLifetime, TypeLifetime,
+    TypeLifetimes,
 };
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
@@ -199,8 +200,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
-        struct FieldInfo<'a> {
+        struct FieldInfo<'a, P: TyPosition> {
             name: Cow<'a, str>,
+            ty: &'a Type<P>,
             annotation: Option<&'static str>,
             ffi_cast_type_name: Cow<'a, str>,
             dart_type_name: Cow<'a, str>,
@@ -252,6 +254,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 FieldInfo {
                     name,
+                    ty: &field.ty,
                     annotation,
                     ffi_cast_type_name,
                     dart_type_name,
@@ -308,11 +311,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         #[derive(Template)]
         #[template(path = "dart/struct.dart.jinja", escape = "none")]
-        struct ImplTemplate<'a> {
+        struct ImplTemplate<'a, P: TyPosition> {
             type_name: &'a str,
             default_constructor: Option<String>,
             mutable: bool,
-            fields: Vec<FieldInfo<'a>>,
+            fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<MethodInfo<'a>>,
             docs: String,
             lifetimes: &'a LifetimeEnv<lifetimes::Type>,
@@ -342,6 +345,33 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
 
         let used_method_lifetimes = method.output.used_method_lifetimes();
+        let method_lifetimes_map = used_method_lifetimes
+            .iter()
+            .map(|lt| (*lt, Vec::new()))
+            .collect();
+        // todo transitivity
+
+        // let add_param_to_map = |p: hir::Param, param_name: &str| {
+        //     let mut found = false;
+        //     for lt in p.ty.lifetimes() {
+        //         if used_method_lifetimes.contains(lt) {
+        //             found = true;
+        //             break;
+        //         }
+        //     }
+        //     if !found {
+        //         return;
+        //     }
+        //     let edge = match p.ty {
+        //         hir::Type::Struct(_) => format!(
+        //             "..{param_name}._fields_for_lifetime_{}()",
+        //             method.lifetime_env.fmt_lifetime(lt)
+        //         ),
+        //         hir::Type::Slice(_) => format!("{param_name}View"),
+        //         _ => param_name.into(),
+        //     };
+        //     method_lifetimes_map[lt].push(edge);
+        // };
 
         let _guard = self.errors.set_context_method(
             self.formatter.fmt_type_name_diagnostics(id),
@@ -534,6 +564,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             return_expression,
             lifetimes: &method.lifetime_env,
             used_method_lifetimes,
+            method_lifetimes_map,
         })
     }
 
@@ -1013,5 +1044,48 @@ struct MethodInfo<'a> {
     return_expression: Option<Cow<'a, str>>,
 
     lifetimes: &'a LifetimeEnv<lifetimes::Method>,
+    /// Lifetimes used in the return type
     used_method_lifetimes: BTreeSet<MethodLifetime>,
+    /// Maps each (used) method lifetime to a list of parameters
+    /// it borrows from. The parameter list may contain the parameter name,
+    /// an internal slice View that was temporarily constructed, or
+    /// a spread of a struct's `_fields_for_lifetime_foo()` method.
+    method_lifetimes_map: BTreeMap<MethodLifetime, Vec<String>>,
+}
+
+// Helpers used in templates (Askama has restrictions on Rust syntax)
+
+/// Convert an iterator to btreeset
+fn iterator_to_btreeset<T: Ord>(i: impl Iterator<Item = T>) -> BTreeSet<T> {
+    i.collect()
+}
+
+/// Turn a set of lifetimes into a nice comma separated list
+fn display_lifetime_list<K: LifetimeKind>(
+    env: &LifetimeEnv<K>,
+    set: &BTreeSet<Lifetime<K>>,
+) -> String {
+    if set.len() <= 1 {
+        return String::new();
+    } else {
+        set.iter()
+            .map(|i| env.fmt_lifetime(i))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
+/// Does `ty` use any lifetime from `lifetimes`?
+fn does_type_use_lifetime_from_set<P: TyPosition>(
+    ty: &Type<P>,
+    lifetimes: &BTreeSet<TypeLifetime>,
+) -> bool {
+    for lt in ty.lifetimes() {
+        if let MaybeStatic::NonStatic(lt) = lt {
+            if lifetimes.contains(&lt) {
+                return true;
+            }
+        }
+    }
+    false
 }
