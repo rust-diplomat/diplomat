@@ -6,15 +6,23 @@
     final temp = ffi2.Arena();
     {%- endif %}
 
-    {%- for lifetime in m.lifetimes.all_lifetimes() %}
-    {%- if m.used_method_lifetimes.contains(lifetime) %}
-    core.List<Object> edge_{{m.lifetimes.fmt_lifetime(lifetime)}} = [];
-    {%- endif %}
-    {%- endfor %}
-
     {%- for slice_conversion in m.slice_conversions %}
     {{ slice_conversion }}
     {%- endfor %}
+
+    {%- for lifetime in m.lifetimes.all_lifetimes() %}
+    {%- if m.used_method_lifetimes.contains(lifetime) %}
+    {%- let lifetime_info = m.method_lifetimes_map.get(lifetime).unwrap() %}
+    // This lifetime edge depends on lifetimes: {% for longer in lifetime_info.all_longer_lifetimes.iter().copied() -%} {%- if !loop.first %}, {% endif -%} '{{m.lifetimes.fmt_lifetime(longer)}} {%- endfor %}
+    core.List<Object> edge_{{m.lifetimes.fmt_lifetime(lifetime)}} = [
+      {%- for incoming_edge in lifetime_info.incoming_edges.iter() %}
+      {%- if !loop.first %}, {% endif -%} {{incoming_edge}}
+      {%- endfor -%}
+    ];
+    {%- endif %}
+    {%- endfor %}
+
+
     {%- if m.method.is_writeable() %}
     final writeable = _Writeable();
     {%- endif %}

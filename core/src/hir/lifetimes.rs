@@ -83,7 +83,7 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
         self.num_lifetimes
     }
 
-    pub fn all_lifetimes(&self) -> impl Iterator<Item = Lifetime<Kind>> {
+    pub fn all_lifetimes(&self) -> impl ExactSizeIterator<Item = Lifetime<Kind>> {
         (0..self.num_lifetimes()).map(|i| Lifetime::new(i))
     }
 
@@ -306,7 +306,7 @@ impl<Kind: LifetimeKind> Lifetime<Kind> {
 
 impl<Kind: LifetimeKind> Lifetimes<Kind> {
     /// Returns an iterator over the contained [`Lifetime`]s.
-    pub fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<Lifetime<Kind>>> + '_ {
+    pub fn lifetimes(&self) -> impl ExactSizeIterator<Item = MaybeStatic<Lifetime<Kind>>> + '_ {
         self.indices.iter().copied()
     }
 
