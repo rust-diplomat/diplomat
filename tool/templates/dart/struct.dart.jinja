@@ -64,20 +64,19 @@ final class {{type_name}} {
 
   {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}
-    {%- let shorter = self::iterator_to_btreeset(lifetimes.all_shorter_lifetimes(l)) %}
+    {%- let longer = self::iterator_to_btreeset(lifetimes.all_longer_lifetimes(l)) %}
 
   // ignore: unused element
   // Append all fields corresponding to lifetime `'{{ltname}}` 
-  {%- if shorter.len() > 1 %}
-  // and lifetimes shorter than it (Lifetimes: {{self::display_lifetime_list(lifetimes, shorter)}})
+  {%- if longer.len() > 1 %}
+  // and lifetimes longer than it (Lifetimes: {{self::display_lifetime_list(lifetimes, longer)}})
+  // This is all fields that may be borrowed from if borrowing `'{{ltname}}`
   {%- endif %}
   core.List<Object> _fields_for_lifetime_{{ltname}}() {
     return [
-    {%- for field in fields %}
-      {%- if self::does_type_use_lifetime_from_set(field.ty, shorter) %}
+    {%- for field in self::iter_fields_with_lifetimes_from_set(fields, longer) %}
         {%- if !loop.first %}, {% endif -%}
         {{field.name}}
-      {%- endif -%}
     {%- endfor -%}
     ];
   }

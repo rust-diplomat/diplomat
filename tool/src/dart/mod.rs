@@ -200,16 +200,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
-        struct FieldInfo<'a, P: TyPosition> {
-            name: Cow<'a, str>,
-            ty: &'a Type<P>,
-            annotation: Option<&'static str>,
-            ffi_cast_type_name: Cow<'a, str>,
-            dart_type_name: Cow<'a, str>,
-            c_to_dart: Cow<'a, str>,
-            dart_to_c: Vec<String>,
-        }
-
         let fields = ty
             .fields
             .iter()
@@ -1053,6 +1043,21 @@ struct MethodInfo<'a> {
     method_lifetimes_map: BTreeMap<MethodLifetime, Vec<String>>,
 }
 
+struct MethodLifetimeInfo {
+    incoming_edges: Vec<String>,
+    all_longer_lifetimes: BTreeSet<MethodLifetime>,
+}
+
+struct FieldInfo<'a, P: TyPosition> {
+    name: Cow<'a, str>,
+    ty: &'a Type<P>,
+    annotation: Option<&'static str>,
+    ffi_cast_type_name: Cow<'a, str>,
+    dart_type_name: Cow<'a, str>,
+    c_to_dart: Cow<'a, str>,
+    dart_to_c: Vec<String>,
+}
+
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
 /// Convert an iterator to btreeset
@@ -1075,17 +1080,27 @@ fn display_lifetime_list<K: LifetimeKind>(
     }
 }
 
-/// Does `ty` use any lifetime from `lifetimes`?
-fn does_type_use_lifetime_from_set<P: TyPosition>(
-    ty: &Type<P>,
-    lifetimes: &BTreeSet<TypeLifetime>,
-) -> bool {
-    for lt in ty.lifetimes() {
-        if let MaybeStatic::NonStatic(lt) = lt {
-            if lifetimes.contains(&lt) {
-                return true;
+/// Iterate over fields, filtering by fields that actually use lifetimes from `lifetimes`
+fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
+    fields: &'a [FieldInfo<'a, P>],
+    lifetimes: &'a BTreeSet<TypeLifetime>,
+) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
+    /// Does `ty` use any lifetime from `lifetimes`?
+    fn does_type_use_lifetime_from_set<P: TyPosition>(
+        ty: &Type<P>,
+        lifetimes: &BTreeSet<TypeLifetime>,
+    ) -> bool {
+        for lt in ty.lifetimes() {
+            if let MaybeStatic::NonStatic(lt) = lt {
+                if lifetimes.contains(&lt) {
+                    return true;
+                }
             }
         }
+        false
     }
-    false
+
+    fields
+        .iter()
+        .filter(move |f| does_type_use_lifetime_from_set(&f.ty, lifetimes))
 }

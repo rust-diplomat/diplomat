@@ -13,6 +13,12 @@ pub mod ffi {
         c: &'a str,
     }
 
+    pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
+        field_a: &'a DiplomatStr16,
+        field_b: &'b DiplomatStr,
+        field_c: &'c str,
+    }
+
     pub struct BorrowedFieldsReturning<'a> {
         bytes: &'a DiplomatStr,
     }
