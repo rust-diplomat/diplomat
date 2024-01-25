@@ -7,7 +7,7 @@ use core::fmt::{self, Debug};
 use core::hash::Hash;
 use core::marker::PhantomData;
 use smallvec::{smallvec, SmallVec};
-use std::borrow::Cow;
+use std::borrow::{Borrow, Cow};
 
 /// Convenience const representing the number of lifetimes a [`LifetimeEnv`]
 /// can hold inline before needing to dynamically allocate.
@@ -38,7 +38,9 @@ pub struct LifetimeEnv<Kind> {
 
 impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
     /// Format a lifetime indexing this env for use in code
-    pub fn fmt_lifetime(&self, lt: &Lifetime<Kind>) -> Cow<str> {
+    pub fn fmt_lifetime(&self, lt: impl Borrow<Lifetime<Kind>>) -> Cow<str> {
+        // we use Borrow here so that this can be used in templates where there's autoborrowing
+        let lt = *lt.borrow();
         if let Some(lt) = self.nodes.get(lt.0) {
             Cow::from(lt.ident.as_str())
         } else if lt.0 < self.num_lifetimes {
@@ -49,6 +51,7 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
     }
 
     /// Get an iterator of all lifetimes that this must live as long as (including itself)
+    /// with the first lifetime always being returned first
     ///
     /// The kind *can* be different: e.g. the Type paths in a method signature will
     /// still have Lifetime<Type> even though they're in a method context.
@@ -57,8 +60,10 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
     /// make them a parameter on Type.
     pub fn all_longer_lifetimes<K2: LifetimeKind>(
         &self,
-        lt: Lifetime<K2>,
+        lt: impl Borrow<Lifetime<K2>>,
     ) -> impl Iterator<Item = Lifetime<Kind>> + '_ {
+        // we use Borrow here so that this can be used in templates where there's autoborrowing
+        let lt = *lt.borrow();
         LifetimeTransitivityIterator::new(self, lt.0, true)
     }
 

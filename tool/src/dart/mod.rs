@@ -743,7 +743,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         lifetime: TypeLifetime,
         lifetime_env: &LifetimeEnv<Kind>,
     ) -> Cow<'static, str> {
-        format!("edge_{}", lifetime_env.fmt_lifetime(&lifetime.cast())).into()
+        format!("edge_{}", lifetime_env.fmt_lifetime(lifetime.cast())).into()
     }
 
     /// Make a list of edge arrays, one for every lifetime in a TypeLifetimes
