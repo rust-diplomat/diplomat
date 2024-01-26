@@ -42,6 +42,18 @@ pub mod ffi {
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
             Box::new(Foo(fields.b))
         }
+
+        /// Test that the extraction logic correctly pins the right fields
+        pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x>(
+            bounds: BorrowedFieldsWithBounds<'x, 'y, 'z>,
+            another_string: &'a DiplomatStr,
+        ) -> Box<Self> {
+            if bounds.field_b.is_empty() {
+                Box::new(Self(another_string))
+            } else {
+                Box::new(Self(bounds.field_b))
+            }
+        }
     }
 
     // FIXME(#191): This test breaks the C++ codegen
