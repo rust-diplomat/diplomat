@@ -16,6 +16,7 @@ part 'AttrOpaque2.g.dart';
 part 'Bar.g.dart';
 part 'BorrowedFields.g.dart';
 part 'BorrowedFieldsReturning.g.dart';
+part 'BorrowedFieldsWithBounds.g.dart';
 part 'ContiguousEnum.g.dart';
 part 'ErrorEnum.g.dart';
 part 'ErrorStruct.g.dart';

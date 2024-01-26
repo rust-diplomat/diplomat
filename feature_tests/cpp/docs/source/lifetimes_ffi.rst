@@ -17,6 +17,15 @@
 
     .. cpp:member:: std::string_view bytes
 
+.. cpp:struct:: BorrowedFieldsWithBounds
+
+    .. cpp:member:: std::u16string_view field_a
+
+    .. cpp:member:: std::string_view field_b
+
+    .. cpp:member:: std::string_view field_c
+        Warning: Setting ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
+
 .. cpp:class:: Foo
 
     .. cpp:function:: static Foo new_(const std::string_view x)

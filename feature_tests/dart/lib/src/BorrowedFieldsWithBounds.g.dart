@@ -55,21 +55,23 @@ final class BorrowedFieldsWithBounds {
 
   // ignore: unused element
   // Append all fields corresponding to lifetime `'a`
+  // and lifetimes longer than it (Lifetimes: a, b, c)
+  // This is all fields that may be borrowed from if borrowing `'a`
   core.List<Object> _fields_for_lifetime_a() {
-    return [fieldA];
+    return [fieldA, fieldB, fieldC];
   }
 
   // ignore: unused element
   // Append all fields corresponding to lifetime `'b`
-  // and lifetimes shorter than it (Lifetimes: a, b)
+  // and lifetimes longer than it (Lifetimes: b, c)
+  // This is all fields that may be borrowed from if borrowing `'b`
   core.List<Object> _fields_for_lifetime_b() {
-    return [fieldA, fieldB];
+    return [fieldB, fieldC];
   }
 
   // ignore: unused element
   // Append all fields corresponding to lifetime `'c`
-  // and lifetimes shorter than it (Lifetimes: a, b, c)
   core.List<Object> _fields_for_lifetime_c() {
-    return [fieldA, fieldB, fieldC];
+    return [fieldC];
   }
 }

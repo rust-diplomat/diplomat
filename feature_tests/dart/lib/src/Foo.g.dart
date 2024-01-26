@@ -21,38 +21,44 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo(String x) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_a = [];
     final xView = x.utf8View;
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> edge_a = [xView];
     final result = _Foo_new(xView.pointer(temp), xView.length);
     temp.releaseAll();
     return Foo._(result, true, [], edge_a);
   }
 
   Bar get getBar {
-    core.List<Object> edge_a = [];
-    core.List<Object> edge_b = [];
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> edge_a = [this];
+    // This lifetime edge depends on lifetimes: 'a, 'b
+    core.List<Object> edge_b = [this];
     final result = _Foo_get_bar(_underlying);
     return Bar._(result, true, [], edge_b, edge_a);
   }
 
   factory Foo.static_(String x) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_a = [];
     final xView = x.utf8View;
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> edge_a = [];
     final result = _Foo_new_static(xView.pointer(temp), xView.length);
     temp.releaseAll();
     return Foo._(result, true, [], edge_a);
   }
 
   BorrowedFieldsReturning get asReturning {
-    core.List<Object> edge_a = [];
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> edge_a = [this];
     final result = _Foo_as_returning(_underlying);
     return BorrowedFieldsReturning._(result, []);
   }
 
   factory Foo.extractFromFields(BorrowedFields fields) {
     final temp = ffi2.Arena();
-    core.List<Object> edge_a = [];
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> edge_a = [...fields._fields_for_lifetime_a()];
     final result = _Foo_extract_from_fields(fields._pointer(temp));
     temp.releaseAll();
     return Foo._(result, true, [], edge_a);

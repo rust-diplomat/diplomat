@@ -21,8 +21,10 @@ final class Bar implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Bar_destroy));
 
   Foo get foo {
-    core.List<Object> edge_b = [];
-    core.List<Object> edge_a = [];
+    // This lifetime edge depends on lifetimes: 'b, 'a
+    core.List<Object> edge_b = [this];
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> edge_a = [this];
     final result = _Bar_foo(_underlying);
     return Foo._(result, false, edge_b, edge_a);
   }

@@ -52,4 +52,10 @@ final class BorrowedFields {
         this.b,
         this.c,
       ]);
+
+  // ignore: unused element
+  // Append all fields corresponding to lifetime `'a`
+  core.List<Object> _fields_for_lifetime_a() {
+    return [a, b, c];
+  }
 }

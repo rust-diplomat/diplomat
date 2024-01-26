@@ -36,4 +36,10 @@ final class BorrowedFieldsReturning {
   int get hashCode => Object.hashAll([
         this.bytes,
       ]);
+
+  // ignore: unused element
+  // Append all fields corresponding to lifetime `'a`
+  core.List<Object> _fields_for_lifetime_a() {
+    return [bytes];
+  }
 }

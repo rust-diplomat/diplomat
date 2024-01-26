@@ -17,6 +17,14 @@
 
     .. js:attribute:: bytes
 
+.. js:class:: BorrowedFieldsWithBounds
+
+    .. js:attribute:: field_a
+
+    .. js:attribute:: field_b
+
+    .. js:attribute:: field_c
+
 .. js:class:: Foo
 
     .. js:function:: new(x)
