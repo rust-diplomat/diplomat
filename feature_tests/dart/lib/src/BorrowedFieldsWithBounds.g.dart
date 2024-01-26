@@ -19,6 +19,7 @@ final class BorrowedFieldsWithBounds {
   BorrowedFieldsWithBounds({required this.fieldA, required this.fieldB, required this.fieldC});
 
   // ignore: unused_element
+  // Internal constructor from FFI.
   BorrowedFieldsWithBounds._(_BorrowedFieldsWithBoundsFfi underlying, core.List<Object> edge_a, core.List<Object> edge_b, core.List<Object> edge_c) :
     fieldA = core.String.fromCharCodes(underlying.fieldA._pointer.asTypedList(underlying.fieldA._length)),
     fieldB = Utf8Decoder().convert(underlying.fieldB._pointer.asTypedList(underlying.fieldB._length)),

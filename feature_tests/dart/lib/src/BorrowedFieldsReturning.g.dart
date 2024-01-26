@@ -15,6 +15,7 @@ final class BorrowedFieldsReturning {
   BorrowedFieldsReturning({required this.bytes});
 
   // ignore: unused_element
+  // Internal constructor from FFI.
   BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying, core.List<Object> edge_a) :
     bytes = Utf8Decoder().convert(underlying.bytes._pointer.asTypedList(underlying.bytes._length));
 

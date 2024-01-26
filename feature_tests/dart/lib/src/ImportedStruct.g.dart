@@ -19,6 +19,12 @@ final class ImportedStruct {
   ImportedStruct({required this.foo, required this.count});
 
   // ignore: unused_element
+  // Internal constructor from FFI.
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
   ImportedStruct._(_ImportedStructFfi underlying) :
     foo = UnimportedEnum.values[underlying.foo],
     count = underlying.count;
