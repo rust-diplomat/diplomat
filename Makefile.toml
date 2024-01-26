@@ -251,70 +251,70 @@ end
 [tasks.gen-feature]
 category = "Code generation"
 dependencies = [
-    "gen-feature-cpp",
-    "gen-feature-cpp2",
-    "gen-feature-c",
-    "gen-feature-c2",
-    "gen-feature-js",
-    "gen-feature-dotnet",
-    "gen-feature-dart",
+    "gen-cpp-feature",
+    "gen-cpp2-feature",
+    "gen-c-feature",
+    "gen-c2-feature",
+    "gen-js-feature",
+    "gen-dotnet-feature",
+    "gen-dart-feature",
 ]
 
 [tasks.gen-example]
 category = "Code generation"
 dependencies = [
-    "gen-example-cpp",
-    "gen-example-cpp2",
-    "gen-example-c",
-    "gen-example-c2",
-    "gen-example-js",
-    "gen-example-dart",
+    "gen-cpp-example",
+    "gen-cpp2-example",
+    "gen-c-example",
+    "gen-c2-example",
+    "gen-js-example",
+    "gen-dart-example",
 ]
 [tasks.gen-cpp]
 category = "Code generation"
 dependencies = [
-    "gen-feature-cpp",
-    "gen-example-cpp"
+    "gen-cpp-feature",
+    "gen-cpp-example"
 ]
 [tasks.gen-c]
 category = "Code generation"
 dependencies = [
-    "gen-feature-c",
-    "gen-example-c"
+    "gen-c-feature",
+    "gen-c-example"
 ]
 [tasks.gen-c2]
 category = "Code generation"
 dependencies = [
-    "gen-feature-c2",
-    "gen-example-c2"
+    "gen-c2-feature",
+    "gen-c2-example"
 ]
 [tasks.gen-cpp2]
 category = "Code generation"
 dependencies = [
-    "gen-feature-cpp2",
-    "gen-example-cpp2"
+    "gen-cpp2-feature",
+    "gen-cpp2-example"
 ]
 [tasks.gen-js]
 category = "Code generation"
 dependencies = [
-    "gen-feature-js",
-    "gen-example-js"
+    "gen-js-feature",
+    "gen-js-example"
 ]
 [tasks.gen-dotnet]
 category = "Code generation"
 dependencies = [
-    "gen-feature-dotnet",
+    "gen-dotnet-feature",
 ]
 [tasks.gen-dart]
 category = "Code generation"
 dependencies = [
-    "gen-feature-dart",
-    "gen-example-dart",
+    "gen-dart-feature",
+    "gen-dart-example",
 ]
 
 
 
-[tasks.gen-feature-cpp]
+[tasks.gen-cpp-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -324,7 +324,7 @@ generate_generic feature_tests cpp include docs/source
 '''
 
 
-[tasks.gen-example-cpp]
+[tasks.gen-cpp-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -333,7 +333,7 @@ exit_on_error true
 generate_generic example cpp include docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
 '''
 
-[tasks.gen-feature-c]
+[tasks.gen-c-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -342,7 +342,7 @@ exit_on_error true
 generate_generic feature_tests c include
 '''
 
-[tasks.gen-example-c]
+[tasks.gen-c-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -351,7 +351,7 @@ exit_on_error true
 generate_generic example c include
 '''
 
-[tasks.gen-feature-c2]
+[tasks.gen-c2-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -360,7 +360,7 @@ exit_on_error true
 generate_generic feature_tests c2 include
 '''
 
-[tasks.gen-example-c2]
+[tasks.gen-c2-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -369,7 +369,7 @@ exit_on_error true
 generate_generic example c2 include
 '''
 
-[tasks.gen-feature-cpp2]
+[tasks.gen-cpp2-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -378,7 +378,7 @@ exit_on_error true
 generate_generic feature_tests cpp2 include
 '''
 
-[tasks.gen-example-cpp2]
+[tasks.gen-cpp2-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -387,7 +387,7 @@ exit_on_error true
 generate_generic example cpp2 include
 '''
 
-[tasks.gen-feature-js]
+[tasks.gen-js-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -396,7 +396,7 @@ exit_on_error true
 generate_generic feature_tests js api docs/source
 '''
 
-[tasks.gen-example-js]
+[tasks.gen-js-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -405,7 +405,7 @@ exit_on_error true
 generate_generic example js lib/api lib/docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
 '''
 
-[tasks.gen-feature-dotnet]
+[tasks.gen-dotnet-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -414,7 +414,7 @@ exit_on_error true
 generate_generic feature_tests dotnet Lib/Generated "" "-l dotnet/dotnet-interop-conf.toml"
 '''
 
-[tasks.gen-feature-dart]
+[tasks.gen-dart-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -423,7 +423,7 @@ exit_on_error true
 generate_generic feature_tests dart lib/src
 '''
 
-[tasks.gen-example-dart]
+[tasks.gen-dart-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
