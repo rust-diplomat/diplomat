@@ -26,7 +26,7 @@ dependencies = [
 category = "Code generation"
 dependencies = [
     "gen-feature",
-    "gen-examples",
+    "gen-example",
 ]
 
 # Tests
@@ -260,45 +260,45 @@ dependencies = [
     "gen-feature-dart",
 ]
 
-[tasks.gen-examples]
+[tasks.gen-example]
 category = "Code generation"
 dependencies = [
-    "gen-examples-cpp",
-    "gen-examples-cpp2",
-    "gen-examples-c",
-    "gen-examples-c2",
-    "gen-examples-js",
-    "gen-examples-dart",
+    "gen-example-cpp",
+    "gen-example-cpp2",
+    "gen-example-c",
+    "gen-example-c2",
+    "gen-example-js",
+    "gen-example-dart",
 ]
 [tasks.gen-cpp]
 category = "Code generation"
 dependencies = [
     "gen-feature-cpp",
-    "gen-examples-cpp"
+    "gen-example-cpp"
 ]
 [tasks.gen-c]
 category = "Code generation"
 dependencies = [
     "gen-feature-c",
-    "gen-examples-c"
+    "gen-example-c"
 ]
 [tasks.gen-c2]
 category = "Code generation"
 dependencies = [
     "gen-feature-c2",
-    "gen-examples-c2"
+    "gen-example-c2"
 ]
 [tasks.gen-cpp2]
 category = "Code generation"
 dependencies = [
     "gen-feature-cpp2",
-    "gen-examples-cpp2"
+    "gen-example-cpp2"
 ]
 [tasks.gen-js]
 category = "Code generation"
 dependencies = [
     "gen-feature-js",
-    "gen-examples-js"
+    "gen-example-js"
 ]
 [tasks.gen-dotnet]
 category = "Code generation"
@@ -309,7 +309,7 @@ dependencies = [
 category = "Code generation"
 dependencies = [
     "gen-feature-dart",
-    "gen-examples-dart",
+    "gen-example-dart",
 ]
 
 
@@ -324,7 +324,7 @@ generate_generic feature_tests cpp include docs/source
 '''
 
 
-[tasks.gen-examples-cpp]
+[tasks.gen-example-cpp]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -342,7 +342,7 @@ exit_on_error true
 generate_generic feature_tests c include
 '''
 
-[tasks.gen-examples-c]
+[tasks.gen-example-c]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -360,7 +360,7 @@ exit_on_error true
 generate_generic feature_tests c2 include
 '''
 
-[tasks.gen-examples-c2]
+[tasks.gen-example-c2]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -378,7 +378,7 @@ exit_on_error true
 generate_generic feature_tests cpp2 include
 '''
 
-[tasks.gen-examples-cpp2]
+[tasks.gen-example-cpp2]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -396,7 +396,7 @@ exit_on_error true
 generate_generic feature_tests js api docs/source
 '''
 
-[tasks.gen-examples-js]
+[tasks.gen-example-js]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -423,7 +423,7 @@ exit_on_error true
 generate_generic feature_tests dart lib/src
 '''
 
-[tasks.gen-examples-dart]
+[tasks.gen-example-dart]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
@@ -440,7 +440,7 @@ category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-tool"]
 [tasks.build-example]
-description = "Build examples"
+description = "Build example"
 category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-example"]
