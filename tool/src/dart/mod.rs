@@ -334,6 +334,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             return None;
         }
 
+        // Lifetime handling code
+        //
+        // XXXManishearth aside from the actual parameter-edge-creation code this
+        // code can *probably* be generalized and made into an HIR utility. The struct
+        // stuff makes this complicated
+
+        // Lifetimes actually used in the output
         let used_method_lifetimes = method.output.used_method_lifetimes();
         let mut method_lifetimes_map: BTreeMap<_, _> = used_method_lifetimes
             .iter()
@@ -352,6 +359,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .collect();
 
         // Add a parameter to the method_lifetimes map for any lifetimes it references.
+        //
+        // This basically boils down to: For each lifetime that is actually relevant to borrowing in this method, check if that
+        // lifetime or lifetimes longer than it are used by this parameter. In other words, check if
+        // it is possible for data in the return type with this lifetime to have been borrowed from this parameter.
+        // If so, add code that will yield the ownership-relevant parts of this object to incoming_edges for that lifetime.
         let mut add_param_to_map = |ty: &hir::Type, param_name: &str| {
             if used_method_lifetimes.is_empty() {
                 return;
@@ -399,6 +411,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                             if method_lifetime.all_longer_lifetimes.contains(&lt.cast()) {
                                 let edge = if let hir::Type::Slice(..) = ty {
                                     // Slices make a temporary view type that needs to be attached
+                                    // XXXManishearth: this is the wrong variable. We need to grab on to the arena
+                                    // and also ensure it's not destroyed.
                                     format!("{param_name}View")
                                 } else {
                                     // Everything else makes a direct edge
@@ -607,7 +621,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_conversions,
             return_expression,
             lifetimes: &method.lifetime_env,
-            used_method_lifetimes,
             method_lifetimes_map,
         })
     }
@@ -1088,9 +1101,7 @@ struct MethodInfo<'a> {
     return_expression: Option<Cow<'a, str>>,
 
     lifetimes: &'a LifetimeEnv<lifetimes::Method>,
-    /// Lifetimes used in the return type
-    used_method_lifetimes: BTreeSet<MethodLifetime>,
-    /// Maps each (used) method lifetime to a list of parameters
+    /// Maps each (used in the output) method lifetime to a list of parameters
     /// it borrows from. The parameter list may contain the parameter name,
     /// an internal slice View that was temporarily constructed, or
     /// a spread of a struct's `_fields_for_lifetime_foo()` method.
@@ -1098,7 +1109,10 @@ struct MethodInfo<'a> {
 }
 
 struct MethodLifetimeInfo {
+    // Initializers for all inputs to the edge array from
     incoming_edges: Vec<String>,
+    // All lifetimes longer than this. When this lifetime is borrowed from, data corresponding to
+    // the other lifetimes may also be borrowed from.
     all_longer_lifetimes: BTreeSet<MethodLifetime>,
 }
 
@@ -1125,7 +1139,7 @@ fn display_lifetime_list<K: LifetimeKind>(
     set: &BTreeSet<Lifetime<K>>,
 ) -> String {
     if set.len() <= 1 {
-        return String::new();
+        String::new()
     } else {
         set.iter()
             .map(|i| env.fmt_lifetime(i))
@@ -1156,5 +1170,5 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
 
     fields
         .iter()
-        .filter(move |f| does_type_use_lifetime_from_set(&f.ty, lifetimes))
+        .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetimes))
 }
