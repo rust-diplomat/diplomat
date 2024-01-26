@@ -53,6 +53,13 @@
         Lifetimes: ``fields`` must live at least as long as the output.
 
 
+    .. cpp:function:: static Foo extract_from_bounds(BorrowedFieldsWithBounds bounds, const std::string_view another_string)
+
+        Test that the extraction logic correctly pins the right fields
+
+        Lifetimes: ``bounds``, ``another_string`` must live at least as long as the output.
+
+
 .. cpp:class:: One
 
     .. cpp:function:: static One transitivity(const One& hold, const One& nohold)

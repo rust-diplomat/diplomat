@@ -13,6 +13,7 @@
 #include "Bar.hpp"
 #include "BorrowedFields.hpp"
 #include "BorrowedFieldsReturning.hpp"
+#include "BorrowedFieldsWithBounds.hpp"
 #include "Foo.h"
 
 
@@ -40,6 +41,13 @@ inline BorrowedFieldsReturning Foo::as_returning() const {
 
 inline std::unique_ptr<Foo> Foo::extract_from_fields(BorrowedFields fields) {
   auto result = capi::Foo_extract_from_fields(fields.AsFFI());
+  return std::unique_ptr<Foo>(Foo::FromFFI(result));
+}
+
+inline std::unique_ptr<Foo> Foo::extract_from_bounds(BorrowedFieldsWithBounds bounds, std::string_view another_string) {
+  auto result = capi::Foo_extract_from_bounds(bounds.AsFFI(),
+    another_string.data(),
+    another_string.size());
   return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
 

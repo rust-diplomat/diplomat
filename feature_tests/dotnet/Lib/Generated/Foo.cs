@@ -110,6 +110,28 @@ public partial class Foo: IDisposable
     }
 
     /// <summary>
+    /// Test that the extraction logic correctly pins the right fields
+    /// </summary>
+    /// <returns>
+    /// A <c>Foo</c> allocated on Rust side.
+    /// </returns>
+    public static Foo ExtractFromBounds(BorrowedFieldsWithBounds bounds, string anotherString)
+    {
+        unsafe
+        {
+            byte[] anotherStringBuf = DiplomatUtils.StringToUtf8(anotherString);
+            nuint anotherStringBufLength = (nuint)anotherStringBuf.Length;
+            Raw.BorrowedFieldsWithBounds boundsRaw;
+            boundsRaw = bounds.AsFFI();
+            fixed (byte* anotherStringBufPtr = anotherStringBuf)
+            {
+                Raw.Foo* retVal = Raw.Foo.ExtractFromBounds(boundsRaw, anotherStringBufPtr, anotherStringBufLength);
+                return new Foo(retVal);
+            }
+        }
+    }
+
+    /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
     public unsafe Raw.Foo* AsFFI()

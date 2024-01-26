@@ -39,6 +39,11 @@
 
     .. js:function:: extract_from_fields(fields)
 
+    .. js:function:: extract_from_bounds(bounds, another_string)
+
+        Test that the extraction logic correctly pins the right fields
+
+
 .. js:class:: One
 
     .. js:function:: transitivity(hold, nohold)

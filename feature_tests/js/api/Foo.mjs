@@ -58,4 +58,20 @@ export class Foo {
     buf_field_c_arg_fields.garbageCollect();
     return diplomat_out;
   }
+
+  static extract_from_bounds(arg_bounds, arg_another_string) {
+    const field_field_a_arg_bounds = arg_bounds["field_a"];
+    const buf_field_field_a_arg_bounds = diplomatRuntime.DiplomatBuf.str16(wasm, field_field_a_arg_bounds);
+    const field_field_b_arg_bounds = arg_bounds["field_b"];
+    const buf_field_field_b_arg_bounds = diplomatRuntime.DiplomatBuf.str8(wasm, field_field_b_arg_bounds);
+    const field_field_c_arg_bounds = arg_bounds["field_c"];
+    const buf_field_field_c_arg_bounds = diplomatRuntime.DiplomatBuf.str8(wasm, field_field_c_arg_bounds);
+    const buf_arg_another_string = diplomatRuntime.DiplomatBuf.str8(wasm, arg_another_string);
+    const diplomat_out = new Foo(wasm.Foo_extract_from_bounds(buf_field_field_a_arg_bounds.ptr, buf_field_field_a_arg_bounds.size, buf_field_field_b_arg_bounds.ptr, buf_field_field_b_arg_bounds.size, buf_field_field_c_arg_bounds.ptr, buf_field_field_c_arg_bounds.size, buf_arg_another_string.ptr, buf_arg_another_string.size), true, [buf_arg_another_string, buf_field_field_b_arg_bounds]);
+    buf_field_field_a_arg_bounds.free();
+    buf_field_field_b_arg_bounds.garbageCollect();
+    buf_field_field_c_arg_bounds.free();
+    buf_arg_another_string.garbageCollect();
+    return diplomat_out;
+  }
 }

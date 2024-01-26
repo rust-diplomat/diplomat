@@ -63,6 +63,17 @@ final class Foo implements ffi.Finalizable {
     temp.releaseAll();
     return Foo._(result, true, [], edge_a);
   }
+
+  /// Test that the extraction logic correctly pins the right fields
+  factory Foo.extractFromBounds(BorrowedFieldsWithBounds bounds, String anotherString) {
+    final temp = ffi2.Arena();
+    final anotherStringView = anotherString.utf8View;
+    // This lifetime edge depends on lifetimes: 'a, 'y
+    core.List<Object> edge_a = [...bounds._fields_for_lifetime_b(), anotherStringView];
+    final result = _Foo_extract_from_bounds(bounds._pointer(temp), anotherStringView.pointer(temp), anotherStringView.length);
+    temp.releaseAll();
+    return Foo._(result, true, [], edge_a);
+  }
 }
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Foo_destroy')
@@ -88,3 +99,7 @@ external _BorrowedFieldsReturningFfi _Foo_as_returning(ffi.Pointer<ffi.Opaque> s
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(isLeaf: true, symbol: 'Foo_extract_from_fields')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_extract_from_fields(_BorrowedFieldsFfi fields);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsWithBoundsFfi, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_extract_from_bounds')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Foo_extract_from_bounds(_BorrowedFieldsWithBoundsFfi bounds, ffi.Pointer<ffi.Uint8> anotherStringData, int anotherStringLength);
