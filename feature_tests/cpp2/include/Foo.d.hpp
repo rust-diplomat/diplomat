@@ -10,11 +10,13 @@
 #include "diplomat_runtime.hpp"
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsReturning.d.hpp"
+#include "BorrowedFieldsWithBounds.d.hpp"
 #include "Foo.d.h"
 
 class Bar;
 struct BorrowedFields;
 struct BorrowedFieldsReturning;
+struct BorrowedFieldsWithBounds;
 
 
 class Foo {
@@ -29,6 +31,8 @@ public:
   inline BorrowedFieldsReturning as_returning() const;
 
   inline static std::unique_ptr<Foo> extract_from_fields(BorrowedFields fields);
+
+  inline static std::unique_ptr<Foo> extract_from_bounds(BorrowedFieldsWithBounds bounds, std::string_view another_string);
 
   inline const capi::Foo* AsFFI() const;
   inline capi::Foo* AsFFI();

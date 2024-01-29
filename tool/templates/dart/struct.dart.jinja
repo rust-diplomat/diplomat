@@ -26,7 +26,15 @@ final class {{type_name}} {
   {%- endmatch %}
 
   // ignore: unused_element
-  {{type_name}}._(_{{type_name}}Ffi underlying) : 
+  // Internal constructor from FFI.
+  {%- if lifetimes.all_lifetimes().len() == 0 %}
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
+  {%- endif %}
+  {{type_name}}._(_{{type_name}}Ffi underlying {%- for lifetime in lifetimes.all_lifetimes() -%} , core.List<Object> edge_{{lifetimes.fmt_lifetime(lifetime)}} {%- endfor -%}) :
     {%- for field in fields %}
     {{field.name}} = {{field.c_to_dart}}
     {%- if loop.last %};{% else %},{% endif -%}
@@ -60,6 +68,28 @@ final class {{type_name}} {
         this.{{field.name}},
       {%- endfor %}
       ]);
+
+
+  {%- for l in lifetimes.all_lifetimes() %}
+    {%- let ltname = lifetimes.fmt_lifetime(l) %}
+    {%- let longer = self::iterator_to_btreeset(lifetimes.all_longer_lifetimes(l)) %}
+
+  // ignore: unused element
+  // Append all fields corresponding to lifetime `'{{ltname}}` 
+  {%- if longer.len() > 1 %}
+  // and lifetimes longer than it (Lifetimes: {{self::display_lifetime_list(lifetimes, longer)}})
+  // This is all fields that may be borrowed from if borrowing `'{{ltname}}`
+  {%- endif %}
+  core.List<Object> _fields_for_lifetime_{{ltname}}() {
+    return [
+    {%- for field in self::iter_fields_with_lifetimes_from_set(fields, longer) %}
+        {%- if !loop.first %}, {% endif -%}
+        {{field.name}}
+    {%- endfor -%}
+    ];
+  }
+
+  {%- endfor %}
 }
 
 {%- for m in methods %}

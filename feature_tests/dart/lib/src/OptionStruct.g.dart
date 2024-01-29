@@ -20,11 +20,17 @@ final class OptionStruct {
   final OptionOpaque? d;
 
   // ignore: unused_element
+  // Internal constructor from FFI.
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
   OptionStruct._(_OptionStructFfi underlying) :
-    a = underlying.a.address == 0 ? null : OptionOpaque._(underlying.a, true),
-    b = underlying.b.address == 0 ? null : OptionOpaqueChar._(underlying.b, true),
+    a = underlying.a.address == 0 ? null : OptionOpaque._(underlying.a, true, []),
+    b = underlying.b.address == 0 ? null : OptionOpaqueChar._(underlying.b, true, []),
     c = underlying.c,
-    d = underlying.d.address == 0 ? null : OptionOpaque._(underlying.d, true);
+    d = underlying.d.address == 0 ? null : OptionOpaque._(underlying.d, true, []);
 
   // ignore: unused_element
   _OptionStructFfi _pointer(ffi.Allocator temp) {

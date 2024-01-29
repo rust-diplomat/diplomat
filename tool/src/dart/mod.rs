@@ -1,9 +1,14 @@
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
+use diplomat_core::hir::lifetimes::{
+    self, Lifetime, LifetimeEnv, LifetimeKind, MaybeStatic, MethodLifetime, TypeLifetime,
+    TypeLifetimes,
+};
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, OpaqueOwner, ReturnType, SelfType, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type,
+    TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
@@ -173,6 +178,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: &'a [MethodInfo<'a>],
             docs: String,
             destructor: String,
+            lifetimes: &'a LifetimeEnv<lifetimes::Type>,
         }
 
         ImplTemplate {
@@ -180,6 +186,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: methods.as_slice(),
             destructor,
             docs: self.formatter.fmt_docs(&ty.docs),
+            lifetimes: &ty.lifetimes,
         }
         .render()
         .unwrap()
@@ -193,15 +200,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
-        struct FieldInfo<'a> {
-            name: Cow<'a, str>,
-            annotation: Option<&'static str>,
-            ffi_cast_type_name: Cow<'a, str>,
-            dart_type_name: Cow<'a, str>,
-            c_to_dart: Cow<'a, str>,
-            dart_to_c: Vec<String>,
-        }
-
         let fields = ty
             .fields
             .iter()
@@ -222,8 +220,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let dart_type_name = self.gen_type_name(&field.ty);
 
-                let c_to_dart =
-                    self.gen_c_to_dart_for_type(&field.ty, format!("underlying.{name}").into());
+                let c_to_dart = self.gen_c_to_dart_for_type(
+                    &field.ty,
+                    format!("underlying.{name}").into(),
+                    &ty.lifetimes,
+                );
 
                 let dart_to_c = if !mutable {
                     vec![]
@@ -243,6 +244,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 FieldInfo {
                     name,
+                    ty: &field.ty,
                     annotation,
                     ffi_cast_type_name,
                     dart_type_name,
@@ -299,13 +301,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         #[derive(Template)]
         #[template(path = "dart/struct.dart.jinja", escape = "none")]
-        struct ImplTemplate<'a> {
+        struct ImplTemplate<'a, P: TyPosition> {
             type_name: &'a str,
             default_constructor: Option<String>,
             mutable: bool,
-            fields: Vec<FieldInfo<'a>>,
+            fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<MethodInfo<'a>>,
             docs: String,
+            lifetimes: &'a LifetimeEnv<lifetimes::Type>,
         }
 
         ImplTemplate {
@@ -315,6 +318,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             fields,
             methods,
             docs: self.formatter.fmt_docs(&ty.docs),
+            lifetimes: &ty.lifetimes,
         }
         .render()
         .unwrap()
@@ -329,6 +333,100 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         if method.attrs.disable {
             return None;
         }
+
+        // Lifetime handling code
+        //
+        // XXXManishearth aside from the actual parameter-edge-creation code this
+        // code can *probably* be generalized and made into an HIR utility. The struct
+        // stuff makes this complicated
+
+        // Lifetimes actually used in the output
+        let used_method_lifetimes = method.output.used_method_lifetimes();
+        let mut method_lifetimes_map: BTreeMap<_, _> = used_method_lifetimes
+            .iter()
+            .map(|lt| {
+                (
+                    *lt,
+                    MethodLifetimeInfo {
+                        incoming_edges: Vec::new(),
+                        all_longer_lifetimes: method
+                            .lifetime_env
+                            .all_longer_lifetimes(lt)
+                            .collect(),
+                    },
+                )
+            })
+            .collect();
+
+        // Add a parameter to the method_lifetimes map for any lifetimes it references.
+        //
+        // This basically boils down to: For each lifetime that is actually relevant to borrowing in this method, check if that
+        // lifetime or lifetimes longer than it are used by this parameter. In other words, check if
+        // it is possible for data in the return type with this lifetime to have been borrowed from this parameter.
+        // If so, add code that will yield the ownership-relevant parts of this object to incoming_edges for that lifetime.
+        let mut add_param_to_map = |ty: &hir::Type, param_name: &str| {
+            if used_method_lifetimes.is_empty() {
+                return;
+            }
+
+            // Structs have special handling: structs are purely Dart-side, so if you borrow
+            // from a struct, you really are borrowing from the internal fields.
+            if let hir::Type::Struct(s) = ty {
+                let def = s.resolve(self.tcx);
+                for method_lifetime in method_lifetimes_map.values_mut() {
+                    // Note that ty.lifetimes()/s.lifetimes() is lifetimes
+                    // in the *use* context, i.e. lifetimes on the Type that reference the
+                    // indices of the method's lifetime arrays. Their *order* references
+                    // the indices of the underlying struct def. We need to link the two,
+                    // since the _fields_for_lifetime_foo() methods are named after
+                    // the *def* context lifetime.
+                    //
+                    // Concretely, if we have struct `Foo<'a, 'b>` and our method
+                    // accepts `Foo<'x, 'y>`, we need to output _fields_for_lifetime_a()/b not x/y.
+                    let def_lifetimes = def.lifetimes.all_lifetimes();
+                    let use_lifetimes = s.lifetimes.lifetimes();
+                    assert_eq!(def_lifetimes.len(), use_lifetimes.len(), "lifetimes array found on struct def must match lifetime parameters accepted by struct");
+                    // the type lifetimes array
+                    for (def_lt, use_lt) in def_lifetimes.zip(use_lifetimes) {
+                        if let MaybeStatic::NonStatic(use_lt) = use_lt {
+                            if method_lifetime
+                                .all_longer_lifetimes
+                                .contains(&use_lt.cast())
+                            {
+                                let edge = format!(
+                                    "...{param_name}._fields_for_lifetime_{}()",
+                                    def.lifetimes.fmt_lifetime(def_lt)
+                                );
+                                method_lifetime.incoming_edges.push(edge);
+                                // Do *not* break the inner loop here: even if we found *one* matching lifetime
+                                // in this struct that may not be all of them, there may be some other fields that are borrowed
+                            }
+                        }
+                    }
+                }
+            } else {
+                for method_lifetime in method_lifetimes_map.values_mut() {
+                    for lt in ty.lifetimes() {
+                        if let MaybeStatic::NonStatic(lt) = lt {
+                            if method_lifetime.all_longer_lifetimes.contains(&lt.cast()) {
+                                let edge = if let hir::Type::Slice(..) = ty {
+                                    // Slices make a temporary view type that needs to be attached
+                                    // XXXManishearth: this is the wrong variable. We need to grab on to the arena
+                                    // and also ensure it's not destroyed.
+                                    format!("{param_name}View")
+                                } else {
+                                    // Everything else makes a direct edge
+                                    param_name.into()
+                                };
+                                method_lifetime.incoming_edges.push(edge);
+                                // Break the inner loop: we've already determined this
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        };
 
         let _guard = self.errors.set_context_method(
             self.formatter.fmt_type_name_diagnostics(id),
@@ -346,6 +444,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut needs_arena = false;
 
         if let Some(param_self) = method.param_self.as_ref() {
+            add_param_to_map(&param_self.ty.clone().into(), "this");
+
             param_types_ffi.push(self.gen_self_type_name_ffi(&param_self.ty, false));
             param_types_ffi_cast.push(self.gen_self_type_name_ffi(&param_self.ty, true));
             param_conversions.push(self.gen_dart_to_c_self(&param_self.ty));
@@ -359,6 +459,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
+            add_param_to_map(&param.ty, &param_name);
 
             param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
 
@@ -415,7 +516,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let return_type_ffi = self.gen_return_type_name_ffi(&method.output, false);
         let return_type_ffi_cast = self.gen_return_type_name_ffi(&method.output, true);
 
-        let return_expression = self.gen_c_to_dart_for_return_type(&method.output);
+        let return_expression =
+            self.gen_c_to_dart_for_return_type(&method.output, &method.lifetime_env);
 
         let params = param_decls_dart.join(", ");
 
@@ -518,6 +620,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             needs_arena,
             param_conversions,
             return_expression,
+            lifetimes: &method.lifetime_env,
+            method_lifetimes_map,
         })
     }
 
@@ -542,7 +646,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 ret.into_owned().into()
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(st);
+                let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -601,7 +705,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     .into()
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(st);
+                let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
@@ -719,11 +823,48 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
+    /// Generate the name of a single lifetime edge array
+    ///
+    /// FIXME(Manishearth): this may need to belong in  fmt.rs
+    fn gen_single_edge<Kind: LifetimeKind>(
+        &self,
+        lifetime: TypeLifetime,
+        lifetime_env: &LifetimeEnv<Kind>,
+    ) -> Cow<'static, str> {
+        format!("edge_{}", lifetime_env.fmt_lifetime(lifetime.cast())).into()
+    }
+
+    /// Make a list of edge arrays, one for every lifetime in a TypeLifetimes
+    ///
+    /// Will generate with a leading `, `, so will look something like `, edge_a, edge_b, ...`
+    fn gen_lifetimes_edge_list<Kind: LifetimeKind>(
+        &self,
+        lifetimes: &TypeLifetimes,
+        lifetime_env: &LifetimeEnv<Kind>,
+    ) -> String {
+        let mut ret = String::new();
+        for lt in lifetimes.lifetimes() {
+            if let MaybeStatic::NonStatic(lt) = lt {
+                // We only generate a single edge in the list per lifetime, despite transitivity
+                //
+                // This is because we plan to handle transitivity when constructing these edge arrays,
+                // e.g. if `'a: 'b`, `edge_a` will already contain the relevant bits from `edge_b`.
+                //
+                // This lets us do things like not generate edge_b if it's not actually relevant for returning.
+                write!(ret, ", {}", self.gen_single_edge(lt, lifetime_env)).unwrap();
+            } else {
+                write!(ret, ", []").unwrap();
+            }
+        }
+        ret
+    }
+
     /// Generates a Dart expression for a type.
-    fn gen_c_to_dart_for_type<P: TyPosition>(
+    fn gen_c_to_dart_for_type<P: TyPosition, Kind: LifetimeKind>(
         &mut self,
         ty: &Type<P>,
         var_name: Cow<'cx, str>,
+        lifetime_env: &LifetimeEnv<Kind>,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(..) => var_name,
@@ -731,17 +872,31 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
 
-                let owned = op.owner.is_owned();
-                if op.is_optional() {
-                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned})").into()
+                let (owned, self_edge) = if let Some(lt) = op.owner.lifetime() {
+                    if let MaybeStatic::NonStatic(lt) = lt {
+                        (false, self.gen_single_edge(lt, lifetime_env))
+                    } else {
+                        // 'statics are still not owned and should not register finalizers
+                        // but they also have no lifetime edges
+                        (false, "[]".into())
+                    }
                 } else {
-                    format!("{type_name}._({var_name}, {owned})").into()
+                    (true, "[]".into())
+                };
+                let edges = self.gen_lifetimes_edge_list(&op.lifetimes, lifetime_env);
+                if op.is_optional() {
+                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned}, {self_edge}{edges})").into()
+                } else {
+                    format!("{type_name}._({var_name}, {owned}, {self_edge}{edges})").into()
                 }
             }
             Type::Struct(ref st) => {
-                let id = P::id_for_path(st);
+                let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}._({var_name})").into()
+                // TODO (#406) use correct edges here
+                let edges = st.lifetimes().lifetimes().map(|_| ", []").collect::<Vec<_>>().join("");
+
+                format!("{type_name}._({var_name}{edges})").into()
             }
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 let id = e.tcx_id.into();
@@ -766,7 +921,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates a Dart expressions for a return type.
-    fn gen_c_to_dart_for_return_type(&mut self, result_ty: &ReturnType) -> Option<Cow<'cx, str>> {
+    fn gen_c_to_dart_for_return_type<Kind: LifetimeKind>(
+        &mut self,
+        result_ty: &ReturnType,
+        lifetime_env: &LifetimeEnv<Kind>,
+    ) -> Option<Cow<'cx, str>> {
         match *result_ty {
             ReturnType::Infallible(None) => None,
             ReturnType::Infallible(Some(SuccessType::Writeable)) => {
@@ -776,13 +935,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Infallible(Some(SuccessType::OutType(ref out_ty))) => Some(
                 format!(
                     "return {};",
-                    self.gen_c_to_dart_for_type(out_ty, "result".into())
+                    self.gen_c_to_dart_for_type(out_ty, "result".into(), lifetime_env)
                 )
                 .into(),
             ),
             ReturnType::Fallible(ref ok, ref err) => {
                 let err_conversion = match err {
-                    Some(o) => self.gen_c_to_dart_for_type(o, "result.union.err".into()),
+                    Some(o) => {
+                        self.gen_c_to_dart_for_type(o, "result.union.err".into(), lifetime_env)
+                    }
                     None => "VoidError()".into(),
                 };
                 let err_check =
@@ -791,7 +952,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // Note: the `writeable` variable is initialized in the template
                     Some(SuccessType::Writeable) => "writeable.finalize()".into(),
                     Some(SuccessType::OutType(o)) => {
-                        self.gen_c_to_dart_for_type(o, "result.union.ok".into())
+                        self.gen_c_to_dart_for_type(o, "result.union.ok".into(), lifetime_env)
                     }
                     None => return Some(err_check),
                     &Some(_) => unreachable!("unknown AST/HIR variant"),
@@ -938,4 +1099,76 @@ struct MethodInfo<'a> {
     /// the C function return value is saved to a variable named `result` or that the
     /// writeable, if present, is saved to a variable named `writeable`.
     return_expression: Option<Cow<'a, str>>,
+
+    lifetimes: &'a LifetimeEnv<lifetimes::Method>,
+    /// Maps each (used in the output) method lifetime to a list of parameters
+    /// it borrows from. The parameter list may contain the parameter name,
+    /// an internal slice View that was temporarily constructed, or
+    /// a spread of a struct's `_fields_for_lifetime_foo()` method.
+    method_lifetimes_map: BTreeMap<MethodLifetime, MethodLifetimeInfo>,
+}
+
+struct MethodLifetimeInfo {
+    // Initializers for all inputs to the edge array from
+    incoming_edges: Vec<String>,
+    // All lifetimes longer than this. When this lifetime is borrowed from, data corresponding to
+    // the other lifetimes may also be borrowed from.
+    all_longer_lifetimes: BTreeSet<MethodLifetime>,
+}
+
+struct FieldInfo<'a, P: TyPosition> {
+    name: Cow<'a, str>,
+    ty: &'a Type<P>,
+    annotation: Option<&'static str>,
+    ffi_cast_type_name: Cow<'a, str>,
+    dart_type_name: Cow<'a, str>,
+    c_to_dart: Cow<'a, str>,
+    dart_to_c: Vec<String>,
+}
+
+// Helpers used in templates (Askama has restrictions on Rust syntax)
+
+/// Convert an iterator to btreeset
+fn iterator_to_btreeset<T: Ord>(i: impl Iterator<Item = T>) -> BTreeSet<T> {
+    i.collect()
+}
+
+/// Turn a set of lifetimes into a nice comma separated list
+fn display_lifetime_list<K: LifetimeKind>(
+    env: &LifetimeEnv<K>,
+    set: &BTreeSet<Lifetime<K>>,
+) -> String {
+    if set.len() <= 1 {
+        String::new()
+    } else {
+        set.iter()
+            .map(|i| env.fmt_lifetime(i))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
+/// Iterate over fields, filtering by fields that actually use lifetimes from `lifetimes`
+fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
+    fields: &'a [FieldInfo<'a, P>],
+    lifetimes: &'a BTreeSet<TypeLifetime>,
+) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
+    /// Does `ty` use any lifetime from `lifetimes`?
+    fn does_type_use_lifetime_from_set<P: TyPosition>(
+        ty: &Type<P>,
+        lifetimes: &BTreeSet<TypeLifetime>,
+    ) -> bool {
+        for lt in ty.lifetimes() {
+            if let MaybeStatic::NonStatic(lt) = lt {
+                if lifetimes.contains(&lt) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fields
+        .iter()
+        .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetimes))
 }

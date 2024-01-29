@@ -19,7 +19,8 @@ final class BorrowedFields {
   BorrowedFields({required this.a, required this.b, required this.c});
 
   // ignore: unused_element
-  BorrowedFields._(_BorrowedFieldsFfi underlying) :
+  // Internal constructor from FFI.
+  BorrowedFields._(_BorrowedFieldsFfi underlying, core.List<Object> edge_a) :
     a = core.String.fromCharCodes(underlying.a._pointer.asTypedList(underlying.a._length)),
     b = Utf8Decoder().convert(underlying.b._pointer.asTypedList(underlying.b._length)),
     c = Utf8Decoder().convert(underlying.c._pointer.asTypedList(underlying.c._length));
@@ -52,4 +53,10 @@ final class BorrowedFields {
         this.b,
         this.c,
       ]);
+
+  // ignore: unused element
+  // Append all fields corresponding to lifetime `'a`
+  core.List<Object> _fields_for_lifetime_a() {
+    return [a, b, c];
+  }
 }

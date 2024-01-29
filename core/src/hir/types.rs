@@ -2,12 +2,13 @@
 
 use super::lifetimes::{MaybeStatic, TypeLifetime};
 use super::{
-    EnumPath, Everywhere, NonOptional, OpaquePath, Optional, OutputOnly, PrimitiveType, StructPath,
-    TyPosition, TypeContext,
+    EnumPath, Everywhere, NonOptional, OpaqueOwner, OpaquePath, Optional, OutputOnly,
+    PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext,
 };
 use crate::ast;
 pub use ast::Mutability;
 pub use ast::StringEncoding;
+use either::Either;
 
 /// Type that can only be used as an output.
 pub type OutType = Type<OutputOnly>;
@@ -72,14 +73,25 @@ impl Type {
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
         }
     }
+}
 
-    #[allow(unused)] // wip lifetimes (#406)
-    pub(super) fn lifetimes(&self) -> &[MaybeStatic<TypeLifetime>] {
+impl<P: TyPosition> Type<P> {
+    /// Get all lifetimes "contained" in this type
+    pub fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<TypeLifetime>> + '_ {
         match self {
-            Type::Opaque(opaque) => opaque.lifetimes.as_slice(),
-            Type::Struct(struct_) => struct_.lifetimes.as_slice(),
-            Type::Slice(slice) => std::slice::from_ref(slice.lifetime()),
-            _ => &[],
+            Type::Opaque(opaque) => Either::Right(
+                opaque
+                    .lifetimes
+                    .as_slice()
+                    .iter()
+                    .copied()
+                    .chain(opaque.owner.lifetime()),
+            ),
+            Type::Struct(struct_) => Either::Left(struct_.lifetimes().as_slice().iter().copied()),
+            Type::Slice(slice) => {
+                Either::Left(std::slice::from_ref(slice.lifetime()).iter().copied())
+            }
+            _ => Either::Left([].iter().copied()),
         }
     }
 }

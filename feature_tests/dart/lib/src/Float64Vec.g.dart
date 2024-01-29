@@ -8,7 +8,15 @@ part of 'lib.g.dart';
 final class Float64Vec implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  Float64Vec._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+
+  // Internal constructor from FFI.
+  // isOwned is whether this is owned (has finalizer) or not
+  // This also takes in a list of lifetime edges (including for &self borrows)
+  // corresponding to data this may borrow from. These should be flat arrays containing
+  // references to objects, and this object will hold on to them to keep them alive and
+  // maintain borrow validity.
+  Float64Vec._(this._underlying, bool isOwned, this._edge_self) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -21,7 +29,7 @@ final class Float64Vec implements ffi.Finalizable {
     final vView = v.float64View;
     final result = _Float64Vec_new(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return Float64Vec._(result, true);
+    return Float64Vec._(result, true, []);
   }
 
   factory Float64Vec.bool(core.List<bool> v) {
@@ -29,7 +37,7 @@ final class Float64Vec implements ffi.Finalizable {
     final vView = v.boolView;
     final result = _Float64Vec_new_bool(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return Float64Vec._(result, true);
+    return Float64Vec._(result, true, []);
   }
 
   factory Float64Vec.i16(core.List<int> v) {
@@ -37,7 +45,7 @@ final class Float64Vec implements ffi.Finalizable {
     final vView = v.int16View;
     final result = _Float64Vec_new_i16(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return Float64Vec._(result, true);
+    return Float64Vec._(result, true, []);
   }
 
   factory Float64Vec.u16(core.List<int> v) {
@@ -45,7 +53,7 @@ final class Float64Vec implements ffi.Finalizable {
     final vView = v.uint16View;
     final result = _Float64Vec_new_u16(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return Float64Vec._(result, true);
+    return Float64Vec._(result, true, []);
   }
 
   factory Float64Vec.isize(core.List<int> v) {
@@ -53,7 +61,7 @@ final class Float64Vec implements ffi.Finalizable {
     final vView = v.isizeView;
     final result = _Float64Vec_new_isize(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return Float64Vec._(result, true);
+    return Float64Vec._(result, true, []);
   }
 
   factory Float64Vec.usize(core.List<int> v) {
@@ -61,7 +69,7 @@ final class Float64Vec implements ffi.Finalizable {
     final vView = v.usizeView;
     final result = _Float64Vec_new_usize(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return Float64Vec._(result, true);
+    return Float64Vec._(result, true, []);
   }
 
   factory Float64Vec.f64BeBytes(ByteBuffer v) {
@@ -69,7 +77,7 @@ final class Float64Vec implements ffi.Finalizable {
     final vView = v;
     final result = _Float64Vec_new_f64_be_bytes(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return Float64Vec._(result, true);
+    return Float64Vec._(result, true, []);
   }
 
   void fillSlice(core.List<double> v) {

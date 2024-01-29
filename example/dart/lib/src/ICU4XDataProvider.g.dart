@@ -11,7 +11,15 @@ part of 'lib.g.dart';
 final class ICU4XDataProvider implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  ICU4XDataProvider._(this._underlying, bool isOwned) {
+  final core.List<Object> _edge_self;
+
+  // Internal constructor from FFI.
+  // isOwned is whether this is owned (has finalizer) or not
+  // This also takes in a list of lifetime edges (including for &self borrows)
+  // corresponding to data this may borrow from. These should be flat arrays containing
+  // references to objects, and this object will hold on to them to keep them alive and
+  // maintain borrow validity.
+  ICU4XDataProvider._(this._underlying, bool isOwned, this._edge_self) {
     if (isOwned) {
       _finalizer.attach(this, _underlying.cast());
     }
@@ -22,7 +30,7 @@ final class ICU4XDataProvider implements ffi.Finalizable {
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory ICU4XDataProvider.static_() {
     final result = _ICU4XDataProvider_new_static();
-    return ICU4XDataProvider._(result, true);
+    return ICU4XDataProvider._(result, true, []);
   }
 
   /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155

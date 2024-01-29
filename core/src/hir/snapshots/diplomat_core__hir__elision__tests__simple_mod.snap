@@ -100,6 +100,16 @@ TypeContext {
                 disable: false,
                 rename: None,
             },
+            lifetimes: LifetimeEnv {
+                nodes: [
+                    BoundedLifetime {
+                        ident: "a",
+                        longer: [],
+                        shorter: [],
+                    },
+                ],
+                num_lifetimes: 1,
+            },
         },
     ],
     structs: [
@@ -198,6 +208,16 @@ TypeContext {
                 disable: false,
                 rename: None,
             },
+            lifetimes: LifetimeEnv {
+                nodes: [
+                    BoundedLifetime {
+                        ident: "a",
+                        longer: [],
+                        shorter: [],
+                    },
+                ],
+                num_lifetimes: 1,
+            },
         },
     ],
     opaques: [
@@ -211,6 +231,16 @@ TypeContext {
             attrs: Attrs {
                 disable: false,
                 rename: None,
+            },
+            lifetimes: LifetimeEnv {
+                nodes: [
+                    BoundedLifetime {
+                        ident: "a",
+                        longer: [],
+                        shorter: [],
+                    },
+                ],
+                num_lifetimes: 1,
             },
         },
     ],

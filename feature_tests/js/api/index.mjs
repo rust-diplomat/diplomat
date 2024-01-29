@@ -5,6 +5,7 @@ export { AttrOpaque2 } from './AttrOpaque2.mjs';
 export { Bar } from './Bar.mjs';
 export { BorrowedFields } from './BorrowedFields.mjs';
 export { BorrowedFieldsReturning } from './BorrowedFieldsReturning.mjs';
+export { BorrowedFieldsWithBounds } from './BorrowedFieldsWithBounds.mjs';
 export { ContiguousEnum } from './ContiguousEnum.mjs';
 export { ErrorEnum } from './ErrorEnum.mjs';
 export { ErrorStruct } from './ErrorStruct.mjs';

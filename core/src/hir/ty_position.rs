@@ -1,3 +1,4 @@
+use super::lifetimes::{MaybeStatic, TypeLifetime, TypeLifetimes};
 use super::{
     Borrow, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructId, StructPath, TypeId,
 };
@@ -99,9 +100,7 @@ pub trait TyPosition: Debug + Copy {
 
     type StructId: Debug;
 
-    type StructPath: Debug;
-
-    fn id_for_path(p: &Self::StructPath) -> TypeId;
+    type StructPath: Debug + StructPathLike;
 }
 
 /// One of two types implementing [`TyPosition`], representing types that can be
@@ -125,10 +124,6 @@ impl TyPosition for Everywhere {
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
-
-    fn id_for_path(p: &Self::StructPath) -> TypeId {
-        p.tcx_id.into()
-    }
 }
 
 impl TyPosition for OutputOnly {
@@ -136,14 +131,33 @@ impl TyPosition for OutputOnly {
     type OpaqueOwnership = MaybeOwn;
     type StructId = OutStructId;
     type StructPath = ReturnableStructPath;
-    fn id_for_path(p: &Self::StructPath) -> TypeId {
-        match p {
+}
+
+pub trait StructPathLike {
+    fn lifetimes(&self) -> &TypeLifetimes;
+    fn id(&self) -> TypeId;
+}
+
+impl StructPathLike for StructPath {
+    fn lifetimes(&self) -> &TypeLifetimes {
+        &self.lifetimes
+    }
+    fn id(&self) -> TypeId {
+        self.tcx_id.into()
+    }
+}
+
+impl StructPathLike for ReturnableStructPath {
+    fn lifetimes(&self) -> &TypeLifetimes {
+        self.lifetimes()
+    }
+    fn id(&self) -> TypeId {
+        match self {
             ReturnableStructPath::Struct(p) => p.tcx_id.into(),
             ReturnableStructPath::OutStruct(p) => p.tcx_id.into(),
         }
     }
 }
-
 /// Abstraction over how a type can hold a pointer to an opaque.
 ///
 /// This trait is designed as a helper abstraction for the `OpaqueOwnership`
@@ -155,6 +169,9 @@ pub trait OpaqueOwner {
     fn mutability(&self) -> Option<Mutability>;
 
     fn is_owned(&self) -> bool;
+
+    /// Return the lifetime of the borrow, if any.
+    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>>;
 }
 
 impl OpaqueOwner for MaybeOwn {
@@ -171,6 +188,13 @@ impl OpaqueOwner for MaybeOwn {
             MaybeOwn::Borrow(_) => false,
         }
     }
+
+    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>> {
+        match self {
+            MaybeOwn::Own => None,
+            MaybeOwn::Borrow(b) => b.lifetime(),
+        }
+    }
 }
 
 impl OpaqueOwner for Borrow {
@@ -180,5 +204,9 @@ impl OpaqueOwner for Borrow {
 
     fn is_owned(&self) -> bool {
         false
+    }
+
+    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>> {
+        Some(self.lifetime)
     }
 }

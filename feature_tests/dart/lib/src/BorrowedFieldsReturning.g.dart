@@ -15,7 +15,8 @@ final class BorrowedFieldsReturning {
   BorrowedFieldsReturning({required this.bytes});
 
   // ignore: unused_element
-  BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying) :
+  // Internal constructor from FFI.
+  BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying, core.List<Object> edge_a) :
     bytes = Utf8Decoder().convert(underlying.bytes._pointer.asTypedList(underlying.bytes._length));
 
   // ignore: unused_element
@@ -36,4 +37,10 @@ final class BorrowedFieldsReturning {
   int get hashCode => Object.hashAll([
         this.bytes,
       ]);
+
+  // ignore: unused element
+  // Append all fields corresponding to lifetime `'a`
+  core.List<Object> _fields_for_lifetime_a() {
+    return [bytes];
+  }
 }

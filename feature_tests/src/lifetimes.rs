@@ -13,6 +13,12 @@ pub mod ffi {
         c: &'a str,
     }
 
+    pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
+        field_a: &'a DiplomatStr16,
+        field_b: &'b DiplomatStr,
+        field_c: &'c str,
+    }
+
     pub struct BorrowedFieldsReturning<'a> {
         bytes: &'a DiplomatStr,
     }
@@ -35,6 +41,18 @@ pub mod ffi {
 
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
             Box::new(Foo(fields.b))
+        }
+
+        /// Test that the extraction logic correctly pins the right fields
+        pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x>(
+            bounds: BorrowedFieldsWithBounds<'x, 'y, 'z>,
+            another_string: &'a DiplomatStr,
+        ) -> Box<Self> {
+            if bounds.field_b.is_empty() {
+                Box::new(Self(another_string))
+            } else {
+                Box::new(Self(bounds.field_b))
+            }
         }
     }
 

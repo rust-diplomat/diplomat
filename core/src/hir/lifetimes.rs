@@ -7,6 +7,7 @@ use core::fmt::{self, Debug};
 use core::hash::Hash;
 use core::marker::PhantomData;
 use smallvec::{smallvec, SmallVec};
+use std::borrow::{Borrow, Cow};
 
 /// Convenience const representing the number of lifetimes a [`LifetimeEnv`]
 /// can hold inline before needing to dynamically allocate.
@@ -22,6 +23,8 @@ pub struct LifetimeEnv<Kind> {
     /// List of named lifetimes in scope of the method, and their bounds
     nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
 
+    /// Only relevant for method LifetimeEnvs (otherwise this is nodes.len())
+    ///
     /// The number of named _and_ anonymous lifetimes in the method.
     /// We store the sum since it represents the upper bound on what indices
     /// are in range of the graph. If we make a [`MethodLifetimes`] with
@@ -33,13 +36,103 @@ pub struct LifetimeEnv<Kind> {
     num_lifetimes: usize,
 }
 
+impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
+    /// Format a lifetime indexing this env for use in code
+    pub fn fmt_lifetime(&self, lt: impl Borrow<Lifetime<Kind>>) -> Cow<str> {
+        // we use Borrow here so that this can be used in templates where there's autoborrowing
+        let lt = *lt.borrow();
+        if let Some(lt) = self.nodes.get(lt.0) {
+            Cow::from(lt.ident.as_str())
+        } else if lt.0 < self.num_lifetimes {
+            format!("anon_{}", lt.0 - self.nodes.len()).into()
+        } else {
+            panic!("Found out of range lifetime: Got {lt:?} for env with {} nodes and {} total lifetimes", self.nodes.len(), self.num_lifetimes);
+        }
+    }
+
+    /// Get an iterator of all lifetimes that this must live as long as (including itself)
+    /// with the first lifetime always being returned first
+    ///
+    /// The kind *can* be different: e.g. the Type paths in a method signature will
+    /// still have Lifetime<Type> even though they're in a method context.
+    ///
+    /// In the medium term we may want to get rid of Type vs Method lifetimes, OR
+    /// make them a parameter on Type.
+    pub fn all_shorter_lifetimes<K2: LifetimeKind>(
+        &self,
+        lt: impl Borrow<Lifetime<K2>>,
+    ) -> impl Iterator<Item = Lifetime<Kind>> + '_ {
+        // we use Borrow here so that this can be used in templates where there's autoborrowing
+        let lt = *lt.borrow();
+        // longer = true, since we are looking for lifetimes this is longer than
+        LifetimeTransitivityIterator::new(self, lt.0, false)
+    }
+
+    /// Same as all_shorter_lifetimes but the other way
+    pub fn all_longer_lifetimes<K2: LifetimeKind>(
+        &self,
+        lt: impl Borrow<Lifetime<K2>>,
+    ) -> impl Iterator<Item = Lifetime<Kind>> + '_ {
+        // we use Borrow here so that this can be used in templates where there's autoborrowing
+        let lt = *lt.borrow();
+        LifetimeTransitivityIterator::new(self, lt.0, true)
+    }
+
+    // List all named and unnamed lifetimes
+    pub fn num_lifetimes(&self) -> usize {
+        self.num_lifetimes
+    }
+
+    pub fn all_lifetimes(&self) -> impl ExactSizeIterator<Item = Lifetime<Kind>> {
+        (0..self.num_lifetimes()).map(|i| Lifetime::new(i))
+    }
+
+    /// Returns a new [`LifetimeEnv`].
+    pub(super) fn new(
+        nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
+        num_lifetimes: usize,
+    ) -> Self {
+        Self {
+            nodes,
+            num_lifetimes,
+        }
+    }
+
+    /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
+    pub fn lifetimes(&self) -> Lifetimes<Kind> {
+        let indices = (0..self.num_lifetimes)
+            .map(|index| MaybeStatic::NonStatic(Lifetime::new(index)))
+            .collect();
+
+        Lifetimes { indices }
+    }
+
+    /// Returns a new [`SubtypeLifetimeVisitor`], which can visit all reachable
+    /// lifetimes
+    pub fn subtype_lifetimes_visitor<F>(&self, visit_fn: F) -> SubtypeLifetimeVisitor<'_, Kind, F>
+    where
+        F: FnMut(Lifetime<Kind>),
+    {
+        SubtypeLifetimeVisitor::new(self, visit_fn)
+    }
+}
+
 /// A lifetime in a [`LifetimeEnv`], which keeps track of which lifetimes it's
 /// longer and shorter than.
+///
+/// Invariant: for a BoundedLifetime found inside a LifetimeEnv, all short/long connections
+/// should be bidirectional.
 #[derive(Debug)]
 pub(super) struct BoundedLifetime<Kind> {
-    ident: IdentBuf,
-    longer: SmallVec<[Lifetime<Kind>; 2]>,
-    shorter: SmallVec<[Lifetime<Kind>; 2]>,
+    pub(super) ident: IdentBuf,
+    /// Lifetimes longer than this (not transitive)
+    ///
+    /// These are the inverse graph edges compared to `shorter`
+    pub(super) longer: SmallVec<[Lifetime<Kind>; 2]>,
+    /// Lifetimes this is shorter than (not transitive)
+    ///
+    /// These match `'a: 'b + 'c` bounds
+    pub(super) shorter: SmallVec<[Lifetime<Kind>; 2]>,
 }
 
 impl<Kind> BoundedLifetime<Kind> {
@@ -198,46 +291,22 @@ pub type MethodLifetime = Lifetime<Method>;
 /// in the method that it refers to.
 pub type MethodLifetimes = Lifetimes<Method>;
 
-impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
-    /// Returns a new [`LifetimeEnv`].
-    pub(super) fn new(
-        nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
-        num_lifetimes: usize,
-    ) -> Self {
-        Self {
-            nodes,
-            num_lifetimes,
-        }
-    }
-
-    /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
-    pub fn lifetimes(&self) -> Lifetimes<Kind> {
-        let indices = (0..self.num_lifetimes)
-            .map(|index| MaybeStatic::NonStatic(Lifetime::new(index)))
-            .collect();
-
-        Lifetimes { indices }
-    }
-
-    /// Returns a new [`SubtypeLifetimeVisitor`], which can visit all reachable
-    /// lifetimes
-    pub fn subtype_lifetimes_visitor<F>(&self, visit_fn: F) -> SubtypeLifetimeVisitor<'_, Kind, F>
-    where
-        F: FnMut(Lifetime<Kind>),
-    {
-        SubtypeLifetimeVisitor::new(self, visit_fn)
-    }
-}
-
 impl<Kind: LifetimeKind> Lifetime<Kind> {
     pub(super) fn new(index: usize) -> Self {
         Self(index, PhantomData)
+    }
+
+    /// Cast between lifetime kinds. See all_longer_lifetimes() as to why this can be necessary.
+    ///
+    /// Hopefully can be removed in the long run.
+    pub fn cast<K2: LifetimeKind>(self) -> Lifetime<K2> {
+        Lifetime::new(self.0)
     }
 }
 
 impl<Kind: LifetimeKind> Lifetimes<Kind> {
     /// Returns an iterator over the contained [`Lifetime`]s.
-    pub(super) fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<Lifetime<Kind>>> + '_ {
+    pub fn lifetimes(&self) -> impl ExactSizeIterator<Item = MaybeStatic<Lifetime<Kind>>> + '_ {
         self.indices.iter().copied()
     }
 
@@ -314,5 +383,49 @@ impl TypeLifetimes {
             .collect();
 
         MethodLifetimes { indices }
+    }
+}
+
+struct LifetimeTransitivityIterator<'env, Kind> {
+    env: &'env LifetimeEnv<Kind>,
+    visited: Vec<bool>,
+    queue: Vec<usize>,
+    longer: bool,
+}
+
+impl<'env, Kind: LifetimeKind> LifetimeTransitivityIterator<'env, Kind> {
+    // Longer is whether we are looking for lifetimes longer or shorter than this
+    fn new(env: &'env LifetimeEnv<Kind>, starting: usize, longer: bool) -> Self {
+        Self {
+            env,
+            visited: vec![false; env.num_lifetimes()],
+            queue: vec![starting],
+            longer,
+        }
+    }
+}
+
+impl<'env, Kind: LifetimeKind> Iterator for LifetimeTransitivityIterator<'env, Kind> {
+    type Item = Lifetime<Kind>;
+
+    fn next(&mut self) -> Option<Lifetime<Kind>> {
+        while let Some(next) = self.queue.pop() {
+            if self.visited[next] {
+                continue;
+            }
+            self.visited[next] = true;
+
+            if let Some(named) = self.env.nodes.get(next) {
+                let edge_dir = if self.longer {
+                    &named.longer
+                } else {
+                    &named.shorter
+                };
+                self.queue.extend(edge_dir.iter().map(|i| i.0));
+            }
+
+            return Some(Lifetime::new(next));
+        }
+        None
     }
 }
