@@ -7,10 +7,10 @@ pub mod ffi {
     #[diplomat::transparent_convert]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
-    pub struct BorrowedFields<'a> {
-        a: &'a DiplomatStr16,
-        b: &'a DiplomatStr,
-        c: &'a str,
+    pub struct BorrowedFields<'x> {
+        a: &'x DiplomatStr16,
+        b: &'x DiplomatStr,
+        c: &'x str,
     }
 
     pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {

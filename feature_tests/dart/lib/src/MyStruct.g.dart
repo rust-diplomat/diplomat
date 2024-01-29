@@ -33,11 +33,6 @@ final class MyStruct {
 
   // ignore: unused_element
   // Internal constructor from FFI.
-  // This struct contains borrowed fields, so this takes in a list of
-  // "edges" corresponding to where each lifetime's data may have been borrowed from
-  // and passes it down to individual fields containing the borrow.
-  // This method does not attempt to handle any dependencies between lifetimes, the caller
-  // should handle this when constructing edge arrays.
   MyStruct._(_MyStructFfi underlying) :
     a = underlying.a,
     b = underlying.b,
@@ -89,8 +84,7 @@ final class MyStruct {
 
   int intoA() {
     final temp = ffi2.Arena();
-    final result = _MyStruct_into_a(_pointer(temp));
-    temp.releaseAll();
+    final result = _MyStruct_into_a(_pointer(temp));temp.releaseAll();
     return result;
   }
 

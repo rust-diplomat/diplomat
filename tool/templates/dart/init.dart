@@ -16,6 +16,9 @@ typedef Rune = int;
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
+// ignore: unused element
+final _arenaFinalizer = core.Finalizer<ffi2.Arena>((arena) => arena.releaseAll());
+
 /// An unspecified error value
 // ignore: unused_element
 class VoidError {

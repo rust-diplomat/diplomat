@@ -2,27 +2,16 @@
   /// {{m.docs.replace('\n', "\n  ")}}
   {%- endif %}
   {{ m.declaration }} {
-    {%- if m.needs_arena %}
-    final temp = ffi2.Arena();
-    {%- endif %}
+    {%- for arena in m.arenas %}
+    final {{arena}} = ffi2.Arena();
+    {%- if arena != "temp" %}
+    _arenaFinalizer.attach({{arena}}, {{arena}});
+    {%- endif -%}
+    {%- endfor %}
 
     {%- for slice_conversion in m.slice_conversions %}
     {{ slice_conversion }}
     {%- endfor %}
-
-    {%- for lifetime in m.lifetimes.all_lifetimes() %}
-    {%- let maybe_lifetime_info = m.method_lifetimes_map.get(lifetime) %}
-    {%- if maybe_lifetime_info.is_some() %}
-    {%- let lifetime_info = maybe_lifetime_info.unwrap() %}
-    // This lifetime edge depends on lifetimes: {% for longer in lifetime_info.all_longer_lifetimes.iter().copied() -%} {%- if !loop.first %}, {% endif -%} '{{m.lifetimes.fmt_lifetime(longer)}} {%- endfor %}
-    core.List<Object> edge_{{m.lifetimes.fmt_lifetime(lifetime)}} = [
-      {%- for incoming_edge in lifetime_info.incoming_edges.iter() %}
-      {%- if !loop.first %}, {% endif -%} {{incoming_edge}}
-      {%- endfor -%}
-    ];
-    {%- endif %}
-    {%- endfor %}
-
 
     {%- if m.method.is_writeable() %}
     final writeable = _Writeable();
@@ -36,9 +25,11 @@
         {{ param }}
         {%- endfor -%}
     );
-    {%- if m.needs_arena %}
+    {%- for arena in m.arenas %}
+    {%- if arena == "temp" -%}
     temp.releaseAll();
-    {%- endif %}
+    {%- endif -%}
+    {%- endfor %}
     {%- match m.return_expression %}
     {%- when Some with (statement) %}
     {{statement.replace('\n', "\n    ")}}

@@ -37,10 +37,18 @@ pub struct LifetimeEnv<Kind> {
 }
 
 impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
+    pub fn is_anon(&self, lt: &Lifetime<Kind>) -> bool {
+        if self.nodes.get(lt.0).is_some() {
+            false
+        } else if lt.0 < self.num_lifetimes {
+            true
+        } else {
+            panic!("Found out of range lifetime: Got {lt:?} for env with {} nodes and {} total lifetimes", self.nodes.len(), self.num_lifetimes);
+        }
+    }
+
     /// Format a lifetime indexing this env for use in code
-    pub fn fmt_lifetime(&self, lt: impl Borrow<Lifetime<Kind>>) -> Cow<str> {
-        // we use Borrow here so that this can be used in templates where there's autoborrowing
-        let lt = *lt.borrow();
+    pub fn fmt_lifetime(&self, lt: &Lifetime<Kind>) -> Cow<str> {
         if let Some(lt) = self.nodes.get(lt.0) {
             Cow::from(lt.ident.as_str())
         } else if lt.0 < self.num_lifetimes {

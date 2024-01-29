@@ -8,17 +8,18 @@ part of 'lib.g.dart';
 final class One implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  final core.List<Object> _edge_self;
-  final core.List<Object> _edge_a;
+  final core.List<Object> _edgeSelf;
+  // ignore: unused element
+  final core.List<Object> _edgeA;
 
   // Internal constructor from FFI.
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  One._(this._underlying, bool isOwned, this._edge_self, this._edge_a) {
-    if (isOwned) {
+  One._(this._underlying, {core.List<Object> edgeSelf = const [], required core.List<Object> edgeA}) : this._edgeSelf = edgeSelf, this._edgeA = edgeA {
+    if (this._edgeSelf.isEmpty) {
+      // Owned
       _finalizer.attach(this, _underlying.cast());
     }
   }
@@ -26,80 +27,58 @@ final class One implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_One_destroy));
 
   factory One.transitivity(One hold, One nohold) {
-    // This lifetime edge depends on lifetimes: 'a, 'b, 'c, 'd, 'e
-    core.List<Object> edge_a = [hold];
     final result = _One_transitivity(hold._underlying, nohold._underlying);
-    return One._(result, true, [], edge_a);
+    return One._(result, edgeA: [hold]);
   }
 
   factory One.cycle(Two hold, One nohold) {
-    // This lifetime edge depends on lifetimes: 'a, 'b, 'c
-    core.List<Object> edge_a = [hold];
     final result = _One_cycle(hold._underlying, nohold._underlying);
-    return One._(result, true, [], edge_a);
+    return One._(result, edgeA: [hold]);
   }
 
   factory One.manyDependents(One a, One b, Two c, Two d, Two nohold) {
-    // This lifetime edge depends on lifetimes: 'a, 'b, 'c, 'd
-    core.List<Object> edge_a = [a, b, c, d];
     final result = _One_many_dependents(a._underlying, b._underlying, c._underlying, d._underlying, nohold._underlying);
-    return One._(result, true, [], edge_a);
+    return One._(result, edgeA: [a, b, c, d]);
   }
 
   factory One.returnOutlivesParam(Two hold, One nohold) {
-    // This lifetime edge depends on lifetimes: 'long
-    core.List<Object> edge_long = [hold];
     final result = _One_return_outlives_param(hold._underlying, nohold._underlying);
-    return One._(result, true, [], edge_long);
+    return One._(result, edgeLong: [hold]);
   }
 
   factory One.diamondTop(One top, One left, One right, One bottom) {
-    // This lifetime edge depends on lifetimes: 'top, 'left, 'right, 'bottom
-    core.List<Object> edge_top = [top, left, right, bottom];
     final result = _One_diamond_top(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, true, [], edge_top);
+    return One._(result, edgeTop: [top, left, right, bottom]);
   }
 
   factory One.diamondLeft(One top, One left, One right, One bottom) {
-    // This lifetime edge depends on lifetimes: 'left, 'bottom
-    core.List<Object> edge_left = [left, bottom];
     final result = _One_diamond_left(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, true, [], edge_left);
+    return One._(result, edgeLeft: [left, bottom]);
   }
 
   factory One.diamondRight(One top, One left, One right, One bottom) {
-    // This lifetime edge depends on lifetimes: 'right, 'bottom
-    core.List<Object> edge_right = [right, bottom];
     final result = _One_diamond_right(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, true, [], edge_right);
+    return One._(result, edgeRight: [right, bottom]);
   }
 
   factory One.diamondBottom(One top, One left, One right, One bottom) {
-    // This lifetime edge depends on lifetimes: 'bottom
-    core.List<Object> edge_bottom = [bottom];
     final result = _One_diamond_bottom(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, true, [], edge_bottom);
+    return One._(result, edgeBottom: [bottom]);
   }
 
   factory One.diamondAndNestedTypes(One a, One b, One c, One d, One nohold) {
-    // This lifetime edge depends on lifetimes: 'a, 'b, 'c, 'd
-    core.List<Object> edge_a = [a, b, c, d];
     final result = _One_diamond_and_nested_types(a._underlying, b._underlying, c._underlying, d._underlying, nohold._underlying);
-    return One._(result, true, [], edge_a);
+    return One._(result, edgeA: [a, b, c, d]);
   }
 
   factory One.implicitBounds(One explicitHold, One implicitHold, One nohold) {
-    // This lifetime edge depends on lifetimes: 'a, 'b, 'c, 'd, 'x
-    core.List<Object> edge_a = [explicitHold, implicitHold];
     final result = _One_implicit_bounds(explicitHold._underlying, implicitHold._underlying, nohold._underlying);
-    return One._(result, true, [], edge_a);
+    return One._(result, edgeA: [explicitHold, implicitHold]);
   }
 
   factory One.implicitBoundsDeep(One explicit, One implicit1, One implicit2, One nohold) {
-    // This lifetime edge depends on lifetimes: 'a, 'b, 'c, 'd
-    core.List<Object> edge_a = [explicit, implicit1, implicit2];
     final result = _One_implicit_bounds_deep(explicit._underlying, implicit1._underlying, implicit2._underlying, nohold._underlying);
-    return One._(result, true, [], edge_a);
+    return One._(result, edgeA: [explicit, implicit1, implicit2]);
   }
 }
 

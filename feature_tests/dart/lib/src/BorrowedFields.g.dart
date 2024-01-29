@@ -15,12 +15,20 @@ final class BorrowedFields {
   String a;
   String b;
   String c;
+  // ignore: unused element
+  final core.List<Object> _edgeX;
 
-  BorrowedFields({required this.a, required this.b, required this.c});
+  BorrowedFields({required this.a, required this.b, required this.c}) : _edgeX = [];
 
   // ignore: unused_element
   // Internal constructor from FFI.
-  BorrowedFields._(_BorrowedFieldsFfi underlying, core.List<Object> edge_a) :
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
+  BorrowedFields._(_BorrowedFieldsFfi underlying, {required core.List<Object> edgeX}) :
+    _edgeX = edgeX,
     a = core.String.fromCharCodes(underlying.a._pointer.asTypedList(underlying.a._length)),
     b = Utf8Decoder().convert(underlying.b._pointer.asTypedList(underlying.b._length)),
     c = Utf8Decoder().convert(underlying.c._pointer.asTypedList(underlying.c._length));
@@ -53,10 +61,4 @@ final class BorrowedFields {
         this.b,
         this.c,
       ]);
-
-  // ignore: unused element
-  // Append all fields corresponding to lifetime `'a`
-  core.List<Object> _fields_for_lifetime_a() {
-    return [a, b, c];
-  }
 }

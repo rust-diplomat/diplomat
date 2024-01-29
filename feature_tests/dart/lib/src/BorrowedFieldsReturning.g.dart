@@ -11,12 +11,20 @@ final class _BorrowedFieldsReturningFfi extends ffi.Struct {
 
 final class BorrowedFieldsReturning {
   String bytes;
+  // ignore: unused element
+  final core.List<Object> _edgeA;
 
-  BorrowedFieldsReturning({required this.bytes});
+  BorrowedFieldsReturning({required this.bytes}) : _edgeA = [];
 
   // ignore: unused_element
   // Internal constructor from FFI.
-  BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying, core.List<Object> edge_a) :
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
+  BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying, {required core.List<Object> edgeA}) :
+    _edgeA = edgeA,
     bytes = Utf8Decoder().convert(underlying.bytes._pointer.asTypedList(underlying.bytes._length));
 
   // ignore: unused_element
@@ -37,10 +45,4 @@ final class BorrowedFieldsReturning {
   int get hashCode => Object.hashAll([
         this.bytes,
       ]);
-
-  // ignore: unused element
-  // Append all fields corresponding to lifetime `'a`
-  core.List<Object> _fields_for_lifetime_a() {
-    return [bytes];
-  }
 }

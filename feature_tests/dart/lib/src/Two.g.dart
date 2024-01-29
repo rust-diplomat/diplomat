@@ -8,18 +8,20 @@ part of 'lib.g.dart';
 final class Two implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  final core.List<Object> _edge_self;
-  final core.List<Object> _edge_a;
-  final core.List<Object> _edge_b;
+  final core.List<Object> _edgeSelf;
+  // ignore: unused element
+  final core.List<Object> _edgeA;
+  // ignore: unused element
+  final core.List<Object> _edgeB;
 
   // Internal constructor from FFI.
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  Two._(this._underlying, bool isOwned, this._edge_self, this._edge_a, this._edge_b) {
-    if (isOwned) {
+  Two._(this._underlying, {core.List<Object> edgeSelf = const [], required core.List<Object> edgeA, required core.List<Object> edgeB}) : this._edgeSelf = edgeSelf, this._edgeA = edgeA, this._edgeB = edgeB {
+    if (this._edgeSelf.isEmpty) {
+      // Owned
       _finalizer.attach(this, _underlying.cast());
     }
   }

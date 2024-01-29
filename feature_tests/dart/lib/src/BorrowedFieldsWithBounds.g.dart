@@ -15,12 +15,26 @@ final class BorrowedFieldsWithBounds {
   String fieldA;
   String fieldB;
   String fieldC;
+  // ignore: unused element
+  final core.List<Object> _edgeA;
+  // ignore: unused element
+  final core.List<Object> _edgeB;
+  // ignore: unused element
+  final core.List<Object> _edgeC;
 
-  BorrowedFieldsWithBounds({required this.fieldA, required this.fieldB, required this.fieldC});
+  BorrowedFieldsWithBounds({required this.fieldA, required this.fieldB, required this.fieldC}) : _edgeA = [], _edgeB = [], _edgeC = [];
 
   // ignore: unused_element
   // Internal constructor from FFI.
-  BorrowedFieldsWithBounds._(_BorrowedFieldsWithBoundsFfi underlying, core.List<Object> edge_a, core.List<Object> edge_b, core.List<Object> edge_c) :
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
+  BorrowedFieldsWithBounds._(_BorrowedFieldsWithBoundsFfi underlying, {required core.List<Object> edgeA, required core.List<Object> edgeB, required core.List<Object> edgeC}) :
+    _edgeA = edgeA,
+    _edgeB = edgeB,
+    _edgeC = edgeC,
     fieldA = core.String.fromCharCodes(underlying.fieldA._pointer.asTypedList(underlying.fieldA._length)),
     fieldB = Utf8Decoder().convert(underlying.fieldB._pointer.asTypedList(underlying.fieldB._length)),
     fieldC = Utf8Decoder().convert(underlying.fieldC._pointer.asTypedList(underlying.fieldC._length));
@@ -53,26 +67,4 @@ final class BorrowedFieldsWithBounds {
         this.fieldB,
         this.fieldC,
       ]);
-
-  // ignore: unused element
-  // Append all fields corresponding to lifetime `'a`
-  // and lifetimes longer than it (Lifetimes: a, b, c)
-  // This is all fields that may be borrowed from if borrowing `'a`
-  core.List<Object> _fields_for_lifetime_a() {
-    return [fieldA, fieldB, fieldC];
-  }
-
-  // ignore: unused element
-  // Append all fields corresponding to lifetime `'b`
-  // and lifetimes longer than it (Lifetimes: b, c)
-  // This is all fields that may be borrowed from if borrowing `'b`
-  core.List<Object> _fields_for_lifetime_b() {
-    return [fieldB, fieldC];
-  }
-
-  // ignore: unused element
-  // Append all fields corresponding to lifetime `'c`
-  core.List<Object> _fields_for_lifetime_c() {
-    return [fieldC];
-  }
 }
