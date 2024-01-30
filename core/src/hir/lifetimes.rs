@@ -429,3 +429,79 @@ impl<'env, Kind: LifetimeKind> Iterator for LifetimeTransitivityIterator<'env, K
         None
     }
 }
+
+/// Convenience type for linking the lifetimes found at a type *use* site (e.g. `&'c Foo<'a, 'b>`)
+/// with the lifetimes found at its *def* site (e.g. `struct Foo<'x, 'y>`).
+///
+/// Construct this by calling `.linked_lifetimes()` on a StructPath or OpaquePath
+pub struct LinkedLifetimes<'tcx> {
+    env: &'tcx LifetimeEnv<Type>,
+    self_lt: Option<MaybeStatic<TypeLifetime>>,
+    lifetimes: &'tcx TypeLifetimes,
+}
+
+impl<'tcx> LinkedLifetimes<'tcx> {
+    pub(crate) fn new(
+        env: &'tcx LifetimeEnv<Type>,
+        self_lt: Option<MaybeStatic<TypeLifetime>>,
+        lifetimes: &'tcx TypeLifetimes,
+    ) -> Self {
+        debug_assert_eq!(
+            lifetimes.lifetimes().len(),
+            env.all_lifetimes().len(),
+            "Should only link lifetimes between a type and its def"
+        );
+        Self {
+            env,
+            self_lt,
+            lifetimes,
+        }
+    }
+
+    /// The lifetime env at the def site. Def lifetimes should be resolved
+    /// against this.
+    pub fn def_env(&self) -> &'tcx LifetimeEnv<Type> {
+        self.env
+    }
+
+    /// Link lifetimes from the use site to lifetimes from the def site, only including
+    /// lifetimes found at the def site.
+    ///
+    /// This will *not* include the self-lifetime, i.e. for an opaque use site `&'c Foo<'a, 'b>`
+    /// this will not include `'c` (but you can obtain it from [`Self::self_lifetime()`]))
+    ///
+    /// The return iterator returns pairs of (use_lt, def_lt), in order.
+    ///
+    /// This behaves identically to [`Self::lifetimes_all()`] for `LinkedLifetimes` constructed
+    /// from anything other than a borrowing opaque.
+    pub fn lifetimes_def_only(
+        &self,
+    ) -> impl Iterator<Item = (MaybeStatic<TypeLifetime>, TypeLifetime)> + '_ {
+        self.lifetimes.lifetimes().zip(self.env.all_lifetimes())
+    }
+
+    /// If there is a self-lifetime (e.g. `'c` on `&'c Foo<'a, 'b>`), return it. This lifetime
+    /// isn't found at the def site.
+    pub fn self_lifetime(&self) -> Option<MaybeStatic<TypeLifetime>> {
+        self.self_lt
+    }
+
+    /// Link lifetimes from the use site to lifetimes from the def site, including self lifetimes.
+    ///
+    /// This returns Options since self-lifetimes do not map to anything at the def site.
+    ///
+    /// The return iterator returns pairs of (use_lt, def_lt), in order, with the first entry potentially being
+    /// the self lifetime (which has a def_lt of None).
+    ///
+    /// This behaves identically to [`Self::lifetimes_all()`] for `LinkedLifetimes` constructed
+    /// from anything other than a borrowing opaque.
+    pub fn lifetimes_all(
+        &self,
+    ) -> impl Iterator<Item = (MaybeStatic<TypeLifetime>, Option<TypeLifetime>)> + '_ {
+        self.self_lt.iter().map(|i| (*i, None)).chain(
+            self.lifetimes
+                .lifetimes()
+                .zip(self.env.all_lifetimes().map(Some)),
+        )
+    }
+}
