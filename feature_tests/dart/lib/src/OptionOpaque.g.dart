@@ -49,7 +49,7 @@ final class OptionOpaque implements ffi.Finalizable {
   }
 
   static bool optionOpaqueArgument(OptionOpaque? arg) {
-    final result = _OptionOpaque_option_opaque_argument(arg == null ? ffi.Pointer.fromAddress(0) : arg._underlying);
+    final result = _OptionOpaque_option_opaque_argument(arg?._underlying ?? ffi.Pointer.fromAddress(0));
     return result;
   }
 }
