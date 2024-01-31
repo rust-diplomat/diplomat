@@ -20,9 +20,13 @@ modules:
           attrs:
             cfg: []
     sub_modules: []
+    attrs:
+      cfg: []
   other:
     name: other
     imports: []
     declared_types: {}
     sub_modules: []
+    attrs:
+      cfg: []
 

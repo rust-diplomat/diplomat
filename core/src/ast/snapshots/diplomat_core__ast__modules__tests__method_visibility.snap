@@ -29,4 +29,6 @@ declared_types:
       attrs:
         cfg: []
 sub_modules: []
+attrs:
+  cfg: []
 
