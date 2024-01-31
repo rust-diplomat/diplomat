@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::convert::Infallible;
 use std::str::FromStr;
 use syn::parse::{Error as ParseError, Parse, ParseStream};
-use syn::{Attribute, Ident, LitStr, Meta, Token};
+use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, Token};
 
 /// The list of attributes on a type
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
@@ -19,6 +19,11 @@ pub struct Attrs {
     /// This isn't a regular attribute since AST backends do not handle regular attributes. Do not use
     /// in HIR backends,
     pub skip_if_unsupported: bool,
+
+    /// Renames to apply to the underlying C function. Can be found on methods, impls, and bridge modules, and is inherited.
+    ///
+    /// Has no effect on types.
+    pub c_rename: RenameAttr,
 }
 
 impl Attrs {
@@ -27,12 +32,14 @@ impl Attrs {
             Attr::Cfg(attr) => self.cfg.push(attr),
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
             Attr::SkipIfUnsupported => self.skip_if_unsupported = true,
+            Attr::CRename(rename) => self.c_rename.extend(&rename),
         }
     }
 
     /// Merge attributes that should be inherited from the parent
     pub(crate) fn merge_parent_attrs(&mut self, other: &Attrs) {
-        self.cfg.extend(other.cfg.iter().cloned())
+        self.cfg.extend(other.cfg.iter().cloned());
+        self.c_rename.extend(&other.c_rename);
     }
     pub(crate) fn add_attrs(&mut self, attrs: &[Attribute]) {
         for attr in syn_attr_to_ast_attr(attrs) {
@@ -56,12 +63,14 @@ enum Attr {
     Cfg(Attribute),
     DiplomatBackend(DiplomatBackendAttr),
     SkipIfUnsupported,
+    CRename(RenameAttr),
     // More goes here
 }
 
 fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ {
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
+    let crename_attr: syn::Path = syn::parse_str("diplomat::c_rename").unwrap();
     let skipast: syn::Path = syn::parse_str("diplomat::skip_if_unsupported").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
@@ -71,6 +80,8 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
                 a.parse_args()
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
+        } else if a.path() == &crename_attr {
+            Some(Attr::CRename(RenameAttr::from_syn(&a).unwrap()))
         } else if a.path() == &skipast {
             Some(Attr::SkipIfUnsupported)
         } else {
@@ -194,7 +205,7 @@ impl Parse for DiplomatBackendAttr {
 ///
 /// In the future this may support transformations like to_camel_case, etc,
 /// probably specified as a list like `#[diplomat::c_rename("foo{0}", to_camel_case)]`
-#[derive(Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize)]
 pub struct RenameAttr {
     pattern: Option<RenamePattern>,
 }
@@ -205,12 +216,7 @@ impl RenameAttr {
         if let Some(ref pattern) = self.pattern {
             let replacement = &pattern.replacement;
             if let Some(index) = pattern.insertion_index {
-                format!(
-                    "{}{name}{}",
-                    &replacement[..index],
-                    &replacement[index + 1..]
-                )
-                .into()
+                format!("{}{name}{}", &replacement[..index], &replacement[index..]).into()
             } else {
                 replacement.into()
             }
@@ -220,8 +226,8 @@ impl RenameAttr {
     }
 
     fn extend(&mut self, parent: &Self) {
-        // Patterns override each other
-        if parent.pattern.is_some() {
+        // Patterns override each other on inheritance
+        if self.pattern.is_none() {
             self.pattern = parent.pattern.clone();
         }
 
@@ -233,6 +239,28 @@ impl RenameAttr {
     fn from_pattern(s: &str) -> Self {
         Self {
             pattern: Some(s.parse().unwrap()),
+        }
+    }
+
+    fn from_syn(a: &Attribute) -> Result<Self, Cow<'static, str>> {
+        static C_RENAME_ERROR: &str = "#[diplomat::c_rename] must be given a string value";
+
+        match a.meta {
+            Meta::Path(..) => return Err(C_RENAME_ERROR.into()),
+            Meta::NameValue(ref nv) => {
+                // Support a shortcut `c_rename = "..."`
+                let Expr::Lit(ref lit) = nv.value else {
+                        return Err(C_RENAME_ERROR.into());
+                    };
+                let Lit::Str(ref lit) = lit.lit else {
+                        return Err(C_RENAME_ERROR.into());
+                    };
+                Ok(RenameAttr::from_pattern(&lit.value()))
+            }
+            // The full syntax to which we'll add more things in the future, `c_rename("")`
+            Meta::List(..) => a.parse_args().map_err(|e| {
+                format!("Failed to parse malformed #[diplomat::c_rename(...)]: {e}").into()
+            }),
         }
     }
 }
@@ -255,7 +283,16 @@ impl FromStr for RenamePattern {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+/// Meant to be used with Attribute::parse_args()
+impl Parse for RenameAttr {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        let value: LitStr = input.parse()?;
+        let attr = RenameAttr::from_pattern(&value.value());
+        Ok(attr)
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize)]
 struct RenamePattern {
     /// The string to replace with
     replacement: String,
@@ -270,7 +307,7 @@ mod tests {
 
     use syn;
 
-    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg};
+    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg, RenameAttr};
 
     #[test]
     fn test_cfgs() {
@@ -292,6 +329,16 @@ mod tests {
         let attr: syn::Attribute =
             syn::parse_quote!(#[diplomat::attr(any(cpp, has = "overloading"), namespacing)]);
         let attr: DiplomatBackendAttr = attr.parse_args().unwrap();
+        insta::assert_yaml_snapshot!(attr);
+    }
+
+    #[test]
+    fn test_rename() {
+        let attr: syn::Attribute = syn::parse_quote!(#[diplomat::c_rename = "foobar_{0}"]);
+        let attr = RenameAttr::from_syn(&attr).unwrap();
+        insta::assert_yaml_snapshot!(attr);
+        let attr: syn::Attribute = syn::parse_quote!(#[diplomat::c_rename("foobar_{0}")]);
+        let attr = RenameAttr::from_syn(&attr).unwrap();
         insta::assert_yaml_snapshot!(attr);
     }
 }
