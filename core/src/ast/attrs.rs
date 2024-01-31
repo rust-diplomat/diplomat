@@ -2,6 +2,9 @@
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
+use std::borrow::Cow;
+use std::convert::Infallible;
+use std::str::FromStr;
 use syn::parse::{Error as ParseError, Parse, ParseStream};
 use syn::{Attribute, Ident, LitStr, Meta, Token};
 
@@ -182,6 +185,83 @@ impl Parse for DiplomatBackendAttr {
         let meta = input.parse()?;
         Ok(Self { cfg, meta })
     }
+}
+
+/// A pattern for use in rename attributes, like `#[diplomat::c_rename]`
+///
+/// This can be parsed from a string, typically something like `icu4x_{0}`.
+/// It can have up to one {0} for replacement.
+///
+/// In the future this may support transformations like to_camel_case, etc,
+/// probably specified as a list like `#[diplomat::c_rename("foo{0}", to_camel_case)]`
+#[derive(Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub struct RenameAttr {
+    pattern: Option<RenamePattern>,
+}
+
+impl RenameAttr {
+    /// Apply all renames to a given string
+    pub fn apply<'a>(&'a self, name: &'a str) -> Cow<'a, str> {
+        if let Some(ref pattern) = self.pattern {
+            let replacement = &pattern.replacement;
+            if let Some(index) = pattern.insertion_index {
+                format!(
+                    "{}{name}{}",
+                    &replacement[..index],
+                    &replacement[index + 1..]
+                )
+                .into()
+            } else {
+                replacement.into()
+            }
+        } else {
+            name.into()
+        }
+    }
+
+    fn extend(&mut self, parent: &Self) {
+        // Patterns override each other
+        if parent.pattern.is_some() {
+            self.pattern = parent.pattern.clone();
+        }
+
+        // In the future if we support things like to_lower_case they may inherit separately
+        // from patterns.
+    }
+
+    /// From a replacement pattern, like "icu4x_{0}". Can have up to one {0} in it for substitution.
+    fn from_pattern(s: &str) -> Self {
+        Self {
+            pattern: Some(s.parse().unwrap()),
+        }
+    }
+}
+
+impl FromStr for RenamePattern {
+    type Err = Infallible;
+    fn from_str(s: &str) -> Result<Self, Infallible> {
+        if let Some(index) = s.find("{0}") {
+            let replacement = format!("{}{}", &s[..index], &s[index + 3..]);
+            Ok(Self {
+                replacement,
+                insertion_index: Some(index),
+            })
+        } else {
+            Ok(Self {
+                replacement: s.into(),
+                insertion_index: None,
+            })
+        }
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+struct RenamePattern {
+    /// The string to replace with
+    replacement: String,
+    /// The index in `replacement` in which to insert the original string. If None,
+    /// this is a pure rename
+    insertion_index: Option<usize>,
 }
 
 #[cfg(test)]
