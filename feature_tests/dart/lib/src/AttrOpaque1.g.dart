@@ -25,17 +25,17 @@ final class AttrOpaque1 implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_AttrOpaque1_destroy));
 
   int get method {
-    final result = _AttrOpaque1_method(_underlying);
+    final result = _namespace_AttrOpaque1_method(_underlying);
     return result;
   }
 
   int get crenamed {
-    final result = _AttrOpaque1_crenamed(_underlying);
+    final result = _renamed_in_c_only(_underlying);
     return result;
   }
 
   void methodDisabledcpp() {
-    _AttrOpaque1_method_disabledcpp(_underlying);
+    _namespace_AttrOpaque1_method_disabledcpp(_underlying);
   }
 }
 
@@ -43,14 +43,14 @@ final class AttrOpaque1 implements ffi.Finalizable {
 // ignore: non_constant_identifier_names
 external void _AttrOpaque1_destroy(ffi.Pointer<ffi.Void> self);
 
-@ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'AttrOpaque1_method')
+@ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method')
 // ignore: non_constant_identifier_names
-external int _AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
+external int _namespace_AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
 
-@ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'AttrOpaque1_crenamed')
+@ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'renamed_in_c_only')
 // ignore: non_constant_identifier_names
-external int _AttrOpaque1_crenamed(ffi.Pointer<ffi.Opaque> self);
+external int _renamed_in_c_only(ffi.Pointer<ffi.Opaque> self);
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'AttrOpaque1_method_disabledcpp')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method_disabledcpp')
 // ignore: non_constant_identifier_names
-external void _AttrOpaque1_method_disabledcpp(ffi.Pointer<ffi.Opaque> self);
+external void _namespace_AttrOpaque1_method_disabledcpp(ffi.Pointer<ffi.Opaque> self);
