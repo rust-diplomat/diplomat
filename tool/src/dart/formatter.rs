@@ -78,9 +78,8 @@ impl<'tcx> DartFormatter<'tcx> {
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
-        let candidate: Cow<'tcx, str> = if let Some(rename) = resolved.attrs().rename.as_ref() {
-            rename.into()
-        } else if let Some(strip_prefix) = self.strip_prefix.as_ref() {
+
+        let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
             resolved
                 .name()
                 .as_str()
@@ -95,7 +94,7 @@ impl<'tcx> DartFormatter<'tcx> {
             panic!("{candidate:?} is not a valid Dart type name. Please rename.");
         }
 
-        candidate
+        resolved.attrs().rename.apply(candidate)
     }
 
     /// Resolve and format a named type for use in diagnostics
@@ -106,11 +105,8 @@ impl<'tcx> DartFormatter<'tcx> {
 
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
-        if let Some(rename) = variant.attrs.rename.as_ref() {
-            rename.into()
-        } else {
-            variant.name.as_str().to_lower_camel_case().into()
-        }
+        let name = variant.name.as_str().to_lower_camel_case().into();
+        variant.attrs.rename.apply(name)
     }
 
     /// Format a field name or parameter name
@@ -126,15 +122,14 @@ impl<'tcx> DartFormatter<'tcx> {
     /// Format a method
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
         // TODO(#60): handle other keywords
-        if let Some(rename) = method.attrs.rename.as_ref() {
-            rename.into()
+
+        // TODO: we should give attrs.rename() control over the camelcasing
+        let name = method.name.as_str().to_lower_camel_case();
+        let name = method.attrs.rename.apply(name.into());
+        if INVALID_METHOD_NAMES.contains(&&*name) {
+            format!("{name}_").into()
         } else {
-            let name = method.name.as_str().to_lower_camel_case();
-            if INVALID_METHOD_NAMES.contains(&name.as_str()) {
-                format!("{name}_").into()
-            } else {
-                name.into()
-            }
+            name
         }
     }
 
