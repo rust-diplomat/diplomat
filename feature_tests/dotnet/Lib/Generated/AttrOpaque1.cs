@@ -29,6 +29,18 @@ public partial class AttrOpaque1: IDisposable
         _inner = handle;
     }
 
+    /// <returns>
+    /// A <c>AttrOpaque1</c> allocated on Rust side.
+    /// </returns>
+    public static AttrOpaque1 New()
+    {
+        unsafe
+        {
+            Raw.AttrOpaque1* retVal = Raw.AttrOpaque1.New();
+            return new AttrOpaque1(retVal);
+        }
+    }
+
     public byte Method()
     {
         unsafe

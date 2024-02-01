@@ -6,6 +6,10 @@ export class AttrOpaque1 {
 
   /**
    */
+  static new(): AttrOpaque1;
+
+  /**
+   */
   method(): u8;
 
   /**

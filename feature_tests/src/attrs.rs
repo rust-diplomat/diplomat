@@ -6,6 +6,10 @@ pub mod ffi {
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
+        pub fn new() -> Box<AttrOpaque1> {
+            Box::new(AttrOpaque1)
+        }
+
         #[diplomat::attr(cpp2, rename = "method_renamed")]
         pub fn method(&self) -> u8 {
             77

@@ -11,6 +11,9 @@
 
 .. cpp:class:: AttrOpaque1
 
+    .. cpp:function:: static AttrOpaque1 new_()
+
+
     .. cpp:function:: uint8_t method() const
 
 

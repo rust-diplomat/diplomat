@@ -15,6 +15,10 @@ export class AttrOpaque1 {
     }
   }
 
+  static new() {
+    return new AttrOpaque1(wasm.namespace_AttrOpaque1_new(), true, []);
+  }
+
   method() {
     return wasm.namespace_AttrOpaque1_method(this.underlying);
   }

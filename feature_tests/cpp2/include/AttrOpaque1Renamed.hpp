@@ -13,6 +13,11 @@
 #include "AttrOpaque1.h"
 
 
+inline std::unique_ptr<AttrOpaque1Renamed> AttrOpaque1Renamed::new_() {
+  auto result = capi::namespace_AttrOpaque1_new();
+  return std::unique_ptr<AttrOpaque1Renamed>(AttrOpaque1Renamed::FromFFI(result));
+}
+
 inline uint8_t AttrOpaque1Renamed::method_renamed() const {
   auto result = capi::namespace_AttrOpaque1_method(this->AsFFI());
   return result;

@@ -15,6 +15,8 @@ extern "C" {
 #endif // __cplusplus
 
 
+AttrOpaque1* namespace_AttrOpaque1_new();
+
 uint8_t namespace_AttrOpaque1_method(const AttrOpaque1* self);
 
 uint8_t renamed_in_c_only(const AttrOpaque1* self);

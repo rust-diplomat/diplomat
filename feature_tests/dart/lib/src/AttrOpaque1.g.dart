@@ -24,6 +24,11 @@ final class AttrOpaque1 implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_AttrOpaque1_destroy));
 
+  factory AttrOpaque1() {
+    final result = _namespace_AttrOpaque1_new();
+    return AttrOpaque1._(result, true, []);
+  }
+
   int get method {
     final result = _namespace_AttrOpaque1_method(_underlying);
     return result;
@@ -42,6 +47,10 @@ final class AttrOpaque1 implements ffi.Finalizable {
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'AttrOpaque1_destroy')
 // ignore: non_constant_identifier_names
 external void _AttrOpaque1_destroy(ffi.Pointer<ffi.Void> self);
+
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_new')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
 
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method')
 // ignore: non_constant_identifier_names

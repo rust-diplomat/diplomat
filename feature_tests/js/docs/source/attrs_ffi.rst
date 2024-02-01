@@ -5,6 +5,8 @@
 
 .. js:class:: AttrOpaque1
 
+    .. js:function:: new()
+
     .. js:method:: method()
 
     .. js:method:: crenamed()

@@ -16,6 +16,9 @@ public partial struct AttrOpaque1
 {
     private const string NativeLib = "diplomat_feature_tests";
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_new", ExactSpelling = true)]
+    public static unsafe extern AttrOpaque1* NamespaceNew();
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_method", ExactSpelling = true)]
     public static unsafe extern byte NamespaceMethod(AttrOpaque1* self);
 
