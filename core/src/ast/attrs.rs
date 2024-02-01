@@ -82,7 +82,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
         } else if a.path() == &crename_attr {
-            Some(Attr::CRename(RenameAttr::from_syn(a).unwrap()))
+            Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
         } else if a.path() == &skipast {
             Some(Attr::SkipIfUnsupported)
         } else {
@@ -272,10 +272,10 @@ impl RenameAttr {
         }
     }
 
-    fn from_syn(a: &Attribute) -> Result<Self, Cow<'static, str>> {
+    pub(crate) fn from_meta(meta: &Meta) -> Result<Self, Cow<'static, str>> {
         static C_RENAME_ERROR: &str = "#[diplomat::c_rename] must be given a string value";
 
-        match a.meta {
+        match meta {
             Meta::Path(..) => Err(C_RENAME_ERROR.into()),
             Meta::NameValue(ref nv) => {
                 // Support a shortcut `c_rename = "..."`
@@ -288,7 +288,7 @@ impl RenameAttr {
                 Ok(RenameAttr::from_pattern(&lit.value()))
             }
             // The full syntax to which we'll add more things in the future, `c_rename("")`
-            Meta::List(..) => a.parse_args().map_err(|e| {
+            Meta::List(list) => list.parse_args().map_err(|e| {
                 format!("Failed to parse malformed #[diplomat::c_rename(...)]: {e}").into()
             }),
         }
