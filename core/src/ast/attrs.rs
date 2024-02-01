@@ -234,7 +234,7 @@ pub struct RenameAttr {
 
 impl RenameAttr {
     /// Apply all renames to a given string
-    pub fn apply<'a>(&'a self, name: &'a str) -> Cow<'a, str> {
+    pub fn apply<'a>(&'a self, name: Cow<'a, str>) -> Cow<'a, str> {
         if let Some(ref pattern) = self.pattern {
             let replacement = &pattern.replacement;
             if let Some(index) = pattern.insertion_index {
@@ -243,7 +243,7 @@ impl RenameAttr {
                 replacement.into()
             }
         } else {
-            name.into()
+            name
         }
     }
 
