@@ -266,11 +266,11 @@ impl RenameAttr {
             Meta::NameValue(ref nv) => {
                 // Support a shortcut `c_rename = "..."`
                 let Expr::Lit(ref lit) = nv.value else {
-                        return Err(C_RENAME_ERROR.into());
-                    };
+                    return Err(C_RENAME_ERROR.into());
+                };
                 let Lit::Str(ref lit) = lit.lit else {
-                        return Err(C_RENAME_ERROR.into());
-                    };
+                    return Err(C_RENAME_ERROR.into());
+                };
                 Ok(RenameAttr::from_pattern(&lit.value()))
             }
             // The full syntax to which we'll add more things in the future, `c_rename("")`
