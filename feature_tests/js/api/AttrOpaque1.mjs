@@ -16,7 +16,11 @@ export class AttrOpaque1 {
   }
 
   method() {
-    wasm.AttrOpaque1_method(this.underlying);
+    return wasm.AttrOpaque1_method(this.underlying);
+  }
+
+  crenamed() {
+    return wasm.AttrOpaque1_crenamed(this.underlying);
   }
 
   method_disabledcpp() {

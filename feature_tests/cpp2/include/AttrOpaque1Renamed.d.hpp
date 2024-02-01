@@ -14,7 +14,9 @@
 class AttrOpaque1Renamed {
 public:
 
-  inline void method_renamed() const;
+  inline uint8_t method_renamed() const;
+
+  inline uint8_t crenamed() const;
 
   inline const capi::AttrOpaque1Renamed* AsFFI() const;
   inline capi::AttrOpaque1Renamed* AsFFI();

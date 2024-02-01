@@ -29,7 +29,7 @@ public partial class AttrOpaque1: IDisposable
         _inner = handle;
     }
 
-    public void Method()
+    public byte Method()
     {
         unsafe
         {
@@ -37,7 +37,21 @@ public partial class AttrOpaque1: IDisposable
             {
                 throw new ObjectDisposedException("AttrOpaque1");
             }
-            Raw.AttrOpaque1.Method(_inner);
+            byte retVal = Raw.AttrOpaque1.Method(_inner);
+            return retVal;
+        }
+    }
+
+    public byte Crenamed()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("AttrOpaque1");
+            }
+            byte retVal = Raw.AttrOpaque1.Crenamed(_inner);
+            return retVal;
         }
     }
 

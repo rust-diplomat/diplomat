@@ -22,7 +22,8 @@ struct AttrOpaque1Deleter {
 };
 class AttrOpaque1 {
  public:
-  void method() const;
+  uint8_t method() const;
+  uint8_t crenamed() const;
   void method_disabledcpp() const;
   inline const capi::AttrOpaque1* AsFFI() const { return this->inner.get(); }
   inline capi::AttrOpaque1* AsFFIMut() { return this->inner.get(); }
@@ -35,8 +36,11 @@ class AttrOpaque1 {
 };
 
 
-inline void AttrOpaque1::method() const {
-  capi::AttrOpaque1_method(this->inner.get());
+inline uint8_t AttrOpaque1::method() const {
+  return capi::AttrOpaque1_method(this->inner.get());
+}
+inline uint8_t AttrOpaque1::crenamed() const {
+  return capi::AttrOpaque1_crenamed(this->inner.get());
 }
 inline void AttrOpaque1::method_disabledcpp() const {
   capi::AttrOpaque1_method_disabledcpp(this->inner.get());

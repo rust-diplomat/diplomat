@@ -17,7 +17,10 @@ public partial struct AttrOpaque1
     private const string NativeLib = "diplomat_feature_tests";
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "AttrOpaque1_method", ExactSpelling = true)]
-    public static unsafe extern void Method(AttrOpaque1* self);
+    public static unsafe extern byte Method(AttrOpaque1* self);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "AttrOpaque1_crenamed", ExactSpelling = true)]
+    public static unsafe extern byte Crenamed(AttrOpaque1* self);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "AttrOpaque1_method_disabledcpp", ExactSpelling = true)]
     public static unsafe extern void MethodDisabledcpp(AttrOpaque1* self);

@@ -13,8 +13,14 @@
 #include "AttrOpaque1.h"
 
 
-inline void AttrOpaque1Renamed::method_renamed() const {
-  capi::AttrOpaque1_method(this->AsFFI());
+inline uint8_t AttrOpaque1Renamed::method_renamed() const {
+  auto result = capi::AttrOpaque1_method(this->AsFFI());
+  return result;
+}
+
+inline uint8_t AttrOpaque1Renamed::crenamed() const {
+  auto result = capi::AttrOpaque1_crenamed(this->AsFFI());
+  return result;
 }
 
 inline const capi::AttrOpaque1Renamed* AttrOpaque1Renamed::AsFFI() const {

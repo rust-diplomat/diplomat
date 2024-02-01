@@ -15,7 +15,9 @@ extern "C" {
 #endif // __cplusplus
 
 
-void AttrOpaque1_method(const AttrOpaque1* self);
+uint8_t AttrOpaque1_method(const AttrOpaque1* self);
+
+uint8_t AttrOpaque1_crenamed(const AttrOpaque1* self);
 
 void AttrOpaque1_method_disabledcpp(const AttrOpaque1* self);
 
