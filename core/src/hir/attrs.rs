@@ -37,10 +37,11 @@ impl Attrs {
         context: AttributeContext,
         errors: &mut Vec<LoweringError>,
     ) -> Self {
-        let mut this = Attrs::default();
-
-        // Backends must support this since it applies to the macro/C code.
-        this.c_rename = ast.c_rename.clone();
+        let mut this = Attrs {
+            // Backends must support this since it applies to the macro/C code.
+            c_rename: ast.c_rename.clone(),
+            ..Default::default()
+        };
 
         let support = validator.attrs_supported();
         for attr in &ast.attrs {

@@ -81,7 +81,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
         } else if a.path() == &crename_attr {
-            Some(Attr::CRename(RenameAttr::from_syn(&a).unwrap()))
+            Some(Attr::CRename(RenameAttr::from_syn(a).unwrap()))
         } else if a.path() == &skipast {
             Some(Attr::SkipIfUnsupported)
         } else {
@@ -262,7 +262,7 @@ impl RenameAttr {
         static C_RENAME_ERROR: &str = "#[diplomat::c_rename] must be given a string value";
 
         match a.meta {
-            Meta::Path(..) => return Err(C_RENAME_ERROR.into()),
+            Meta::Path(..) => Err(C_RENAME_ERROR.into()),
             Meta::NameValue(ref nv) => {
                 // Support a shortcut `c_rename = "..."`
                 let Expr::Lit(ref lit) = nv.value else {
