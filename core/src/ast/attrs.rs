@@ -97,12 +97,23 @@ impl Serialize for Attrs {
     {
         // 1 is the number of fields in the struct.
         let mut state = serializer.serialize_struct("Attrs", 1)?;
-        let cfg: Vec<_> = self
-            .cfg
-            .iter()
-            .map(|a| quote::quote!(#a).to_string())
-            .collect();
-        state.serialize_field("cfg", &cfg)?;
+        if !self.cfg.is_empty() {
+            let cfg: Vec<_> = self
+                .cfg
+                .iter()
+                .map(|a| quote::quote!(#a).to_string())
+                .collect();
+            state.serialize_field("cfg", &cfg)?;
+        }
+        if !self.attrs.is_empty() {
+            state.serialize_field("attrs", &self.attrs)?;
+        }
+        if self.skip_if_unsupported {
+            state.serialize_field("skip_if_unsupported", &self.skip_if_unsupported)?;
+        }
+        if !self.c_rename.is_empty() {
+            state.serialize_field("c_rename", &self.c_rename)?;
+        }
         state.end()
     }
 }
@@ -223,6 +234,11 @@ impl RenameAttr {
         } else {
             name.into()
         }
+    }
+
+    /// Whether this rename is empty and will perform no changes
+    fn is_empty(&self) -> bool {
+        self.pattern.is_none()
     }
 
     fn extend(&mut self, parent: &Self) {
