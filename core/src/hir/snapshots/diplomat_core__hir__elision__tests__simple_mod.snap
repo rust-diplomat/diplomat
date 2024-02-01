@@ -93,12 +93,18 @@ TypeContext {
                     attrs: Attrs {
                         disable: false,
                         rename: None,
+                        c_rename: RenameAttr {
+                            pattern: None,
+                        },
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
                 rename: None,
+                c_rename: RenameAttr {
+                    pattern: None,
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -201,12 +207,18 @@ TypeContext {
                     attrs: Attrs {
                         disable: false,
                         rename: None,
+                        c_rename: RenameAttr {
+                            pattern: None,
+                        },
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
                 rename: None,
+                c_rename: RenameAttr {
+                    pattern: None,
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -231,6 +243,9 @@ TypeContext {
             attrs: Attrs {
                 disable: false,
                 rename: None,
+                c_rename: RenameAttr {
+                    pattern: None,
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
