@@ -11,6 +11,7 @@
 
 #include "AttrOpaque1.h"
 
+class AttrOpaque1;
 
 /**
  * A destruction policy for using AttrOpaque1 with std::unique_ptr.
@@ -22,7 +23,9 @@ struct AttrOpaque1Deleter {
 };
 class AttrOpaque1 {
  public:
-  void method() const;
+  static AttrOpaque1 new_();
+  uint8_t method() const;
+  uint8_t crenamed() const;
   void method_disabledcpp() const;
   inline const capi::AttrOpaque1* AsFFI() const { return this->inner.get(); }
   inline capi::AttrOpaque1* AsFFIMut() { return this->inner.get(); }
@@ -35,10 +38,16 @@ class AttrOpaque1 {
 };
 
 
-inline void AttrOpaque1::method() const {
-  capi::AttrOpaque1_method(this->inner.get());
+inline AttrOpaque1 AttrOpaque1::new_() {
+  return AttrOpaque1(capi::namespace_AttrOpaque1_new());
+}
+inline uint8_t AttrOpaque1::method() const {
+  return capi::namespace_AttrOpaque1_method(this->inner.get());
+}
+inline uint8_t AttrOpaque1::crenamed() const {
+  return capi::renamed_in_c_only(this->inner.get());
 }
 inline void AttrOpaque1::method_disabledcpp() const {
-  capi::AttrOpaque1_method_disabledcpp(this->inner.get());
+  capi::namespace_AttrOpaque1_method_disabledcpp(this->inner.get());
 }
 #endif

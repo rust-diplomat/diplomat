@@ -7,11 +7,14 @@ use crate::hir::LoweringError;
 use quote::ToTokens;
 use syn::{LitStr, Meta};
 
+pub use crate::ast::attrs::RenameAttr;
+
 #[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct Attrs {
     pub disable: bool,
     pub rename: Option<String>,
+    pub c_rename: RenameAttr,
     // more to be added: rename, namespace, etc
 }
 
@@ -34,7 +37,12 @@ impl Attrs {
         context: AttributeContext,
         errors: &mut Vec<LoweringError>,
     ) -> Self {
-        let mut this = Attrs::default();
+        let mut this = Attrs {
+            // Backends must support this since it applies to the macro/C code.
+            c_rename: ast.c_rename.clone(),
+            ..Default::default()
+        };
+
         let support = validator.attrs_supported();
         for attr in &ast.attrs {
             if validator.satisfies_cfg(&attr.cfg) {
@@ -110,7 +118,7 @@ impl Attrs {
 pub struct BackendAttrSupport {
     pub disabling: bool,
     pub renaming: bool,
-    // more to be added: rename, namespace, etc
+    // more to be added: namespace, etc
 }
 
 /// Defined by backends when validating attributes

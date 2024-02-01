@@ -118,7 +118,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     /// cannot be added to it.
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
-        let ctype = self.cx.formatter.fmt_c_name(&type_name);
+        let ctype = self.cx.formatter.fmt_c_type_name(id);
 
         let methods = ty
             .methods
@@ -173,7 +173,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
-        let ctype = self.cx.formatter.fmt_c_name(&type_name);
+        let ctype = self.cx.formatter.fmt_c_type_name(id);
 
         let methods = ty
             .methods
@@ -228,7 +228,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
-        let ctype = self.cx.formatter.fmt_c_name(&type_name);
+        let ctype = self.cx.formatter.fmt_c_type_name(id);
 
         let field_decls = def
             .fields

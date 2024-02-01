@@ -14,12 +14,16 @@
 class AttrOpaque1Renamed {
 public:
 
-  inline void method_renamed() const;
+  inline static std::unique_ptr<AttrOpaque1Renamed> new_();
 
-  inline const capi::AttrOpaque1Renamed* AsFFI() const;
-  inline capi::AttrOpaque1Renamed* AsFFI();
-  inline static const AttrOpaque1Renamed* FromFFI(const capi::AttrOpaque1Renamed* ptr);
-  inline static AttrOpaque1Renamed* FromFFI(capi::AttrOpaque1Renamed* ptr);
+  inline uint8_t method_renamed() const;
+
+  inline uint8_t crenamed() const;
+
+  inline const capi::AttrOpaque1* AsFFI() const;
+  inline capi::AttrOpaque1* AsFFI();
+  inline static const AttrOpaque1Renamed* FromFFI(const capi::AttrOpaque1* ptr);
+  inline static AttrOpaque1Renamed* FromFFI(capi::AttrOpaque1* ptr);
   inline static void operator delete(void* ptr);
 private:
   AttrOpaque1Renamed() = delete;
