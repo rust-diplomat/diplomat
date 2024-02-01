@@ -365,10 +365,10 @@ mod tests {
     #[test]
     fn test_rename() {
         let attr: syn::Attribute = syn::parse_quote!(#[diplomat::c_rename = "foobar_{0}"]);
-        let attr = RenameAttr::from_syn(&attr).unwrap();
+        let attr = RenameAttr::from_meta(&attr.meta).unwrap();
         insta::assert_yaml_snapshot!(attr);
         let attr: syn::Attribute = syn::parse_quote!(#[diplomat::c_rename("foobar_{0}")]);
-        let attr = RenameAttr::from_syn(&attr).unwrap();
+        let attr = RenameAttr::from_meta(&attr.meta).unwrap();
         insta::assert_yaml_snapshot!(attr);
     }
 }

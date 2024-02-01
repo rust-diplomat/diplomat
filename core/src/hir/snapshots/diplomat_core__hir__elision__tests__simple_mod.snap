@@ -92,7 +92,9 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        rename: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
                         c_rename: RenameAttr {
                             pattern: None,
                         },
@@ -101,7 +103,9 @@ TypeContext {
             ],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
                 c_rename: RenameAttr {
                     pattern: None,
                 },
@@ -206,7 +210,9 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        rename: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
                         c_rename: RenameAttr {
                             pattern: None,
                         },
@@ -215,7 +221,9 @@ TypeContext {
             ],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
                 c_rename: RenameAttr {
                     pattern: None,
                 },
@@ -242,7 +250,9 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
                 c_rename: RenameAttr {
                     pattern: None,
                 },
