@@ -19,11 +19,11 @@ namespace capi {
 extern "C" {
 #endif
 
-uint8_t AttrOpaque1_method(const AttrOpaque1* self);
+uint8_t namespace_AttrOpaque1_method(const AttrOpaque1* self);
 
-uint8_t AttrOpaque1_crenamed(const AttrOpaque1* self);
+uint8_t renamed_in_c_only(const AttrOpaque1* self);
 
-void AttrOpaque1_method_disabledcpp(const AttrOpaque1* self);
+void namespace_AttrOpaque1_method_disabledcpp(const AttrOpaque1* self);
 void AttrOpaque1_destroy(AttrOpaque1* self);
 
 #ifdef __cplusplus

@@ -16,14 +16,14 @@ export class AttrOpaque1 {
   }
 
   method() {
-    return wasm.AttrOpaque1_method(this.underlying);
+    return wasm.namespace_AttrOpaque1_method(this.underlying);
   }
 
   crenamed() {
-    return wasm.AttrOpaque1_crenamed(this.underlying);
+    return wasm.renamed_in_c_only(this.underlying);
   }
 
   method_disabledcpp() {
-    wasm.AttrOpaque1_method_disabledcpp(this.underlying);
+    wasm.namespace_AttrOpaque1_method_disabledcpp(this.underlying);
   }
 }

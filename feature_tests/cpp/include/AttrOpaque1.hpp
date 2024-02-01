@@ -37,12 +37,12 @@ class AttrOpaque1 {
 
 
 inline uint8_t AttrOpaque1::method() const {
-  return capi::AttrOpaque1_method(this->inner.get());
+  return capi::namespace_AttrOpaque1_method(this->inner.get());
 }
 inline uint8_t AttrOpaque1::crenamed() const {
-  return capi::AttrOpaque1_crenamed(this->inner.get());
+  return capi::renamed_in_c_only(this->inner.get());
 }
 inline void AttrOpaque1::method_disabledcpp() const {
-  capi::AttrOpaque1_method_disabledcpp(this->inner.get());
+  capi::namespace_AttrOpaque1_method_disabledcpp(this->inner.get());
 }
 #endif
