@@ -14,7 +14,7 @@
 class AttrOpaque1Renamed {
 public:
 
-  inline static std::unique_ptr<AttrOpaque1Renamed> new_();
+  inline static std::unique_ptr<AttrOpaque1Renamed> totally_not_new();
 
   inline uint8_t method_renamed() const;
 

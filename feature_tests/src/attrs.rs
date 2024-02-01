@@ -6,6 +6,7 @@ pub mod ffi {
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
+        #[diplomat::attr(cpp2, rename = "totally_not_{0}")]
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }
