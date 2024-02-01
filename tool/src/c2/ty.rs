@@ -31,8 +31,8 @@ impl<'tcx> super::CContext<'tcx> {
         }
         for method in ty.methods() {
             if method.attrs.disable {
-                // Skip type if disabled
-                return;
+                // Skip method if disabled
+                continue;
             }
             let _guard = self.errors.set_context_method(
                 self.formatter.fmt_type_name_diagnostics(id),

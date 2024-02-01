@@ -118,7 +118,7 @@ impl Attrs {
 pub struct BackendAttrSupport {
     pub disabling: bool,
     pub renaming: bool,
-    // more to be added: rename, namespace, etc
+    // more to be added: namespace, etc
 }
 
 /// Defined by backends when validating attributes
