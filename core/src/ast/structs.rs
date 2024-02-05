@@ -1,7 +1,9 @@
 use serde::Serialize;
 
 use super::docs::Docs;
-use super::{Attrs, Ident, LifetimeEnv, Method, Mutability, PathType, TypeName};
+use super::{
+    AttrInheritContext, Attrs, Ident, LifetimeEnv, Method, Mutability, PathType, TypeName,
+};
 
 /// A struct declaration in an FFI module that is not opaque.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -39,7 +41,7 @@ impl Struct {
 
         let lifetimes = LifetimeEnv::from_struct_item(strct, &fields[..]);
         let mut attrs: Attrs = (&*strct.attrs).into();
-        attrs.merge_parent_attrs(parent_attrs);
+        attrs.merge_parent_attrs(parent_attrs, AttrInheritContext::Type);
         Struct {
             name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
@@ -70,7 +72,7 @@ impl OpaqueStruct {
     /// Extract a [`OpaqueStruct`] metadata value from an AST node.
     pub fn new(strct: &syn::ItemStruct, mutability: Mutability, parent_attrs: &Attrs) -> Self {
         let mut attrs: Attrs = (&*strct.attrs).into();
-        attrs.merge_parent_attrs(parent_attrs);
+        attrs.merge_parent_attrs(parent_attrs, AttrInheritContext::Type);
         OpaqueStruct {
             name: Ident::from(&strct.ident),
             docs: Docs::from_attrs(&strct.attrs),

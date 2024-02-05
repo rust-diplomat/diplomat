@@ -6,8 +6,8 @@ use serde::Serialize;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType,
-    RustLink, Struct, ValidityError,
+    AttrInheritContext, Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability,
+    OpaqueStruct, Path, PathType, RustLink, Struct, ValidityError,
 };
 use crate::environment::*;
 
@@ -168,8 +168,7 @@ impl Module {
                 Item::Enum(enm) => {
                     if analyze_types {
                         let ident = (&enm.ident).into();
-                        let mut enm = Enum::new(enm, &mod_attrs);
-                        enm.attrs.merge_parent_attrs(&mod_attrs);
+                        let enm = Enum::new(enm, &mod_attrs);
                         custom_types_by_name
                             .insert(ident, CustomType::Enum(enm));
                     }
@@ -184,7 +183,7 @@ impl Module {
                             _ => panic!("Self type not found"),
                         };
                         let mut impl_attrs = Attrs::from(&*imp.attrs);
-                        impl_attrs.merge_parent_attrs(&mod_attrs);
+                        impl_attrs.merge_parent_attrs(&mod_attrs, AttrInheritContext::Impl);
                         let mut new_methods = imp
                             .items
                             .iter()

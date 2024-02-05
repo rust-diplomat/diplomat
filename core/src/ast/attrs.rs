@@ -37,10 +37,10 @@ impl Attrs {
     }
 
     /// Merge attributes that should be inherited from the parent
-    pub(crate) fn merge_parent_attrs(&mut self, other: &Attrs) {
+    pub(crate) fn merge_parent_attrs(&mut self, other: &Attrs, context: AttrInheritContext) {
         self.cfg.extend(other.cfg.iter().cloned());
         self.abi_rename
-            .extend(&other.abi_rename, AttrExtendMode::Inherit);
+            .extend(&other.abi_rename, AttrExtendMode::Inherit(context));
     }
     pub(crate) fn add_attrs(&mut self, attrs: &[Attribute]) {
         for attr in syn_attr_to_ast_attr(attrs) {
@@ -215,9 +215,20 @@ impl Parse for DiplomatBackendAttr {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum AttrExtendMode {
     /// Prefer data from `self`, the data from `other` is only used if `self` is null
-    Inherit,
+    Inherit(AttrInheritContext),
     /// Prefer data from `other`, the data from `self` is only used if `other` is null
     Override,
+}
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub(crate) enum AttrInheritContext {
+    Variant,
+    Type,
+    Impl,
+    Method,
+    // Currently there's no way to feed an attribute to a Module, but such inheritance will
+    // likely apply during lowering for config defaults.
+    #[allow(unused)]
+    Module,
 }
 
 /// A pattern for use in rename attributes, like `#[diplomat::abi_rename]`
@@ -253,12 +264,20 @@ impl RenameAttr {
     }
 
     pub(crate) fn extend(&mut self, other: &Self, extend_mode: AttrExtendMode) {
-        if (extend_mode == AttrExtendMode::Inherit && self.pattern.is_none())
-            || (extend_mode == AttrExtendMode::Override && other.pattern.is_some())
-        {
-            // Copy over the new pattern either when inheriting (and self is empty)
-            // or when overriding (and other is nonempty)
-            self.pattern = other.pattern.clone();
+        use AttrInheritContext::*;
+        match extend_mode {
+            // variants and impls don't inherit rename patterns. A rename attribute on a bridge
+            // module will only inherit to types
+            AttrExtendMode::Inherit(Variant | Impl) => (),
+            // Only inherit when self is empty
+            AttrExtendMode::Inherit(_) if self.pattern.is_none() => {
+                self.pattern = other.pattern.clone();
+            }
+            // Only override when there is something to override with
+            AttrExtendMode::Override if other.pattern.is_some() => {
+                self.pattern = other.pattern.clone();
+            }
+            _ => (),
         }
 
         // In the future if we support things like to_lower_case they may inherit separately

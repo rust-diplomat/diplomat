@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use super::docs::Docs;
-use super::{Attrs, Ident, Method};
+use super::{AttrInheritContext, Attrs, Ident, Method};
 use quote::ToTokens;
 
 /// A fieldless enum declaration in an FFI module.
@@ -29,7 +29,7 @@ impl Enum {
         }
 
         let mut attrs: Attrs = (&*enm.attrs).into();
-        attrs.merge_parent_attrs(parent_attrs);
+        attrs.merge_parent_attrs(parent_attrs, AttrInheritContext::Type);
 
         Enum {
             name: (&enm.ident).into(),
@@ -54,12 +54,13 @@ impl Enum {
                         .unwrap_or_else(|| last_discriminant + 1);
 
                     last_discriminant = new_discriminant;
-
+                    let mut v_attrs: Attrs = (&*v.attrs).into();
+                    v_attrs.merge_parent_attrs(&attrs, AttrInheritContext::Variant);
                     (
                         (&v.ident).into(),
                         new_discriminant,
                         Docs::from_attrs(&v.attrs),
-                        (&*v.attrs).into(),
+                        v_attrs,
                     )
                 })
                 .collect(),

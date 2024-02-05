@@ -3,6 +3,7 @@
 /// types such as opaque structs, [`Box`], and [`Result`] with utilities
 /// for handling such types.
 pub mod attrs;
+pub(crate) use attrs::AttrInheritContext;
 pub use attrs::Attrs;
 
 mod methods;
