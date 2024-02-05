@@ -56,7 +56,7 @@ impl Method {
         let method_ident = &m.sig.ident;
         let concat_method_ident = format!("{self_ident}_{method_ident}");
         let extern_ident = syn::Ident::new(
-            &attrs.c_rename.apply(&concat_method_ident),
+            &attrs.c_rename.apply(concat_method_ident.into()),
             m.sig.ident.span(),
         );
 

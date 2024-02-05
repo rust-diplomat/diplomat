@@ -1,11 +1,10 @@
 //! #[diplomat::attr] and other attributes
 
 use crate::ast;
-use crate::ast::attrs::DiplomatBackendAttrCfg;
+use crate::ast::attrs::{AttrExtendMode, DiplomatBackendAttrCfg};
 use crate::hir::LoweringError;
 
-use quote::ToTokens;
-use syn::{LitStr, Meta};
+use syn::Meta;
 
 pub use crate::ast::attrs::RenameAttr;
 
@@ -13,7 +12,7 @@ pub use crate::ast::attrs::RenameAttr;
 #[derive(Clone, Default, Debug)]
 pub struct Attrs {
     pub disable: bool,
-    pub rename: Option<String>,
+    pub rename: RenameAttr,
     pub c_rename: RenameAttr,
     // more to be added: rename, namespace, etc
 }
@@ -46,65 +45,46 @@ impl Attrs {
         let support = validator.attrs_supported();
         for attr in &ast.attrs {
             if validator.satisfies_cfg(&attr.cfg) {
-                match &attr.meta {
-                    Meta::Path(p) => {
-                        if p.is_ident("disable") {
-                            if this.disable {
-                                errors.push(LoweringError::Other(
-                                    "Duplicate `disable` attribute".into(),
-                                ));
-                            } else if !support.disabling {
-                                errors.push(LoweringError::Other(format!(
-                                    "`disable` not supported in backend {}",
-                                    validator.primary_name()
-                                )))
-                            } else if context == AttributeContext::EnumVariant {
-                                errors.push(LoweringError::Other(
-                                    "`disable` cannot be used on enum variants".into(),
-                                ))
-                            } else {
-                                this.disable = true;
-                            }
-                        } else {
+                let path = attr.meta.path();
+
+                if path.is_ident("disable") {
+                    if let Meta::Path(_) = attr.meta {
+                        if this.disable {
+                            errors
+                                .push(LoweringError::Other("Duplicate `disable` attribute".into()));
+                        } else if !support.disabling {
                             errors.push(LoweringError::Other(format!(
-                                "Unknown diplomat attribute {p:?}: expected one of: `disable, rename`"
-                            )));
-                        }
-                    }
-                    Meta::NameValue(nv) => {
-                        let p = &nv.path;
-                        if p.is_ident("rename") {
-                            if this.rename.is_some() {
-                                errors.push(LoweringError::Other(
-                                    "Duplicate `rename` attribute".into(),
-                                ));
-                            } else if !support.renaming {
-                                errors.push(LoweringError::Other(format!(
-                                    "`rename` not supported in backend {}",
-                                    validator.primary_name()
-                                )))
-                            } else {
-                                let v = nv.value.to_token_stream();
-                                let l = syn::parse2::<LitStr>(v);
-                                if let Ok(ref l) = l {
-                                    this.rename = Some(l.value())
-                                } else {
-                                    errors.push(LoweringError::Other(format!(
-                                        "Found diplomat attribute {p:?}: expected string as `rename` argument"
-                                    )));
-                                }
-                            }
+                                "`disable` not supported in backend {}",
+                                validator.primary_name()
+                            )))
+                        } else if context == AttributeContext::EnumVariant {
+                            errors.push(LoweringError::Other(
+                                "`disable` cannot be used on enum variants".into(),
+                            ))
                         } else {
-                            errors.push(LoweringError::Other(format!(
-                                "Unknown diplomat attribute {p:?}: expected one of: `disable, rename`"
-                            )));
+                            this.disable = true;
                         }
+                    } else {
+                        errors.push(LoweringError::Other(
+                            "`disable` must be a simple path".into(),
+                        ))
                     }
-                    other => {
-                        errors.push(LoweringError::Other(format!(
-                            "Unknown diplomat attribute {other:?}: expected one of: `disable, rename`"
-                        )));
+                } else if path.is_ident("rename") {
+                    match RenameAttr::from_meta(&attr.meta) {
+                        Ok(rename) => {
+                            // We use the override extend mode: a single ast::Attrs
+                            // will have had these attributes inherited into the list by appending
+                            // to the end; so a later attribute in the list is more pertinent.
+                            this.rename.extend(&rename, AttrExtendMode::Override);
+                        }
+                        Err(e) => errors.push(LoweringError::Other(format!(
+                            "`rename` attr failed to parse: {e:?}"
+                        ))),
                     }
+                } else {
+                    errors.push(LoweringError::Other(format!(
+                        "Unknown diplomat attribute {path:?}: expected one of: `disable, rename`"
+                    )));
                 }
             }
         }

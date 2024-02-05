@@ -32,14 +32,15 @@ impl Attrs {
             Attr::Cfg(attr) => self.cfg.push(attr),
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
             Attr::SkipIfUnsupported => self.skip_if_unsupported = true,
-            Attr::CRename(rename) => self.c_rename.extend(&rename),
+            Attr::CRename(rename) => self.c_rename.extend(&rename, AttrExtendMode::Override),
         }
     }
 
     /// Merge attributes that should be inherited from the parent
     pub(crate) fn merge_parent_attrs(&mut self, other: &Attrs) {
         self.cfg.extend(other.cfg.iter().cloned());
-        self.c_rename.extend(&other.c_rename);
+        self.c_rename
+            .extend(&other.c_rename, AttrExtendMode::Inherit);
     }
     pub(crate) fn add_attrs(&mut self, attrs: &[Attribute]) {
         for attr in syn_attr_to_ast_attr(attrs) {
@@ -81,7 +82,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
         } else if a.path() == &crename_attr {
-            Some(Attr::CRename(RenameAttr::from_syn(a).unwrap()))
+            Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
         } else if a.path() == &skipast {
             Some(Attr::SkipIfUnsupported)
         } else {
@@ -209,6 +210,16 @@ impl Parse for DiplomatBackendAttr {
     }
 }
 
+/// When calling attr.extend(other), when both attributes specify
+/// some setting which one to prefer?
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub(crate) enum AttrExtendMode {
+    /// Prefer data from `self`, the data from `other` is only used if `self` is null
+    Inherit,
+    /// Prefer data from `other`, the data from `self` is only used if `other` is null
+    Override,
+}
+
 /// A pattern for use in rename attributes, like `#[diplomat::c_rename]`
 ///
 /// This can be parsed from a string, typically something like `icu4x_{0}`.
@@ -223,7 +234,7 @@ pub struct RenameAttr {
 
 impl RenameAttr {
     /// Apply all renames to a given string
-    pub fn apply<'a>(&'a self, name: &'a str) -> Cow<'a, str> {
+    pub fn apply<'a>(&'a self, name: Cow<'a, str>) -> Cow<'a, str> {
         if let Some(ref pattern) = self.pattern {
             let replacement = &pattern.replacement;
             if let Some(index) = pattern.insertion_index {
@@ -232,7 +243,7 @@ impl RenameAttr {
                 replacement.into()
             }
         } else {
-            name.into()
+            name
         }
     }
 
@@ -241,10 +252,13 @@ impl RenameAttr {
         self.pattern.is_none()
     }
 
-    fn extend(&mut self, parent: &Self) {
-        // Patterns override each other on inheritance
-        if self.pattern.is_none() {
-            self.pattern = parent.pattern.clone();
+    pub(crate) fn extend(&mut self, other: &Self, extend_mode: AttrExtendMode) {
+        if (extend_mode == AttrExtendMode::Inherit && self.pattern.is_none())
+            || (extend_mode == AttrExtendMode::Override && other.pattern.is_some())
+        {
+            // Copy over the new pattern either when inheriting (and self is empty)
+            // or when overriding (and other is nonempty)
+            self.pattern = other.pattern.clone();
         }
 
         // In the future if we support things like to_lower_case they may inherit separately
@@ -258,10 +272,10 @@ impl RenameAttr {
         }
     }
 
-    fn from_syn(a: &Attribute) -> Result<Self, Cow<'static, str>> {
+    pub(crate) fn from_meta(meta: &Meta) -> Result<Self, Cow<'static, str>> {
         static C_RENAME_ERROR: &str = "#[diplomat::c_rename] must be given a string value";
 
-        match a.meta {
+        match meta {
             Meta::Path(..) => Err(C_RENAME_ERROR.into()),
             Meta::NameValue(ref nv) => {
                 // Support a shortcut `c_rename = "..."`
@@ -274,7 +288,7 @@ impl RenameAttr {
                 Ok(RenameAttr::from_pattern(&lit.value()))
             }
             // The full syntax to which we'll add more things in the future, `c_rename("")`
-            Meta::List(..) => a.parse_args().map_err(|e| {
+            Meta::List(list) => list.parse_args().map_err(|e| {
                 format!("Failed to parse malformed #[diplomat::c_rename(...)]: {e}").into()
             }),
         }
@@ -351,10 +365,10 @@ mod tests {
     #[test]
     fn test_rename() {
         let attr: syn::Attribute = syn::parse_quote!(#[diplomat::c_rename = "foobar_{0}"]);
-        let attr = RenameAttr::from_syn(&attr).unwrap();
+        let attr = RenameAttr::from_meta(&attr.meta).unwrap();
         insta::assert_yaml_snapshot!(attr);
         let attr: syn::Attribute = syn::parse_quote!(#[diplomat::c_rename("foobar_{0}")]);
-        let attr = RenameAttr::from_syn(&attr).unwrap();
+        let attr = RenameAttr::from_meta(&attr.meta).unwrap();
         insta::assert_yaml_snapshot!(attr);
     }
 }

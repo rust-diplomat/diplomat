@@ -13,7 +13,7 @@
 #include "AttrOpaque1.h"
 
 
-inline std::unique_ptr<AttrOpaque1Renamed> AttrOpaque1Renamed::new_() {
+inline std::unique_ptr<AttrOpaque1Renamed> AttrOpaque1Renamed::totally_not_new() {
   auto result = capi::namespace_AttrOpaque1_new();
   return std::unique_ptr<AttrOpaque1Renamed>(AttrOpaque1Renamed::FromFFI(result));
 }
