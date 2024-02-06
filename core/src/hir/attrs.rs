@@ -11,11 +11,11 @@ pub use crate::ast::attrs::RenameAttr;
 #[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct Attrs {
-    /// This attribute is always inherited
+    /// This attribute is always inherited except to variants
     pub disable: bool,
-    /// This attribute is inherited except through methods
+    /// This attribute is inherited except through methods and variants
     pub rename: RenameAttr,
-    /// This attribute is inherited except through variants and impls
+    /// This attribute is inherited except through variants
     pub abi_rename: RenameAttr,
     // more to be added: namespace, etc
 }

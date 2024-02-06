@@ -8,14 +8,34 @@ use std::str::FromStr;
 use syn::parse::{Error as ParseError, Parse, ParseStream};
 use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, Token};
 
-/// The list of attributes on a type
+/// The list of attributes on a type. All attributes except `attrs` (HIR attrs) are
+/// potentially read by the diplomat macro and the AST backends, anything that is not should
+/// be added as an HIR attribute ([`crate::hir::Attrs`]).
+///
+/// # Inheritance
+///
+/// Attributes are typically "inherited": the attributes on a module
+/// apply to all types and methods with it, the attributes on an impl apply to all
+/// methods in it, and the attributes on an enum apply to all variants within it.
+/// This allows the user to specify a single attribute to affect multiple fields.
+///
+/// However, the details of inheritance are not always the same for each attribute. For example, rename attributes
+/// on a module only apply to the types within it (others methods would get doubly renamed).
+///
+/// Each attribute here documents its inheritance behavior. Note that the HIR attributes do not get inherited
+/// during AST construction, since at that time it's unclear which of those attributes are actually available.
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
 #[non_exhaustive]
 pub struct Attrs {
     /// The regular #[cfg()] attributes. Inherited, though the inheritance onto methods is the
     /// only relevant one here.
     pub cfg: Vec<Attribute>,
-    /// Inherited, but only during lowering. See hir::Attrs for details on which attributes are inherited
+    /// HIR backend attributes.
+    ///
+    /// Inherited, but only during lowering. See [`crate::hir::Attrs`] for details on which HIR attributes are inherited.
+    ///
+    /// During AST attribute inheritance, HIR backend attributes are copied over from impls to their methods since the HIR does
+    /// not see the impl blocks.
     pub attrs: Vec<DiplomatBackendAttr>,
     /// AST backends only. For using features that may panic AST backends, like returning references.
     ///
@@ -28,6 +48,7 @@ pub struct Attrs {
     /// Renames to apply to the underlying C symbol. Can be found on methods, impls, and bridge modules, and is inherited.
     ///
     /// Affects method names when inherited onto methods.
+    ///
     /// Affects destructor names when inherited onto types.
     ///
     /// Inherited.
