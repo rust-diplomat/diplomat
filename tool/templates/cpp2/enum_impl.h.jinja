@@ -2,7 +2,7 @@ inline {{type_name}}::{{type_name}}({{type_name}}::Value cpp_value) {
 	switch (cpp_value) {
 {%- for enum_variant in ty.variants %}
 		case {{fmt.fmt_enum_variant(enum_variant)}}:
-			value = {{fmt.fmt_c_enum_variant(type_name, enum_variant)}};
+			value = {{fmt.fmt_c_enum_variant(ctype, enum_variant)}};
 			break;
 {%- endfor %}
 		default:

@@ -304,15 +304,9 @@ impl RenameAttr {
     ) -> Self {
         let pattern = match context {
             // No inheritance from modules to method-likes for the rename attribute
-            AttrInheritContext::MethodOrImplFromModule
-                if !is_abi_rename =>
-            {
-                Default::default()
-            }
+            AttrInheritContext::MethodOrImplFromModule if !is_abi_rename => Default::default(),
             // No effect on variants
-            AttrInheritContext::Variant  => {
-                Default::default()
-            }
+            AttrInheritContext::Variant => Default::default(),
             _ => self.pattern.clone(),
         };
         // In the future if we support things like to_lower_case they may inherit separately
