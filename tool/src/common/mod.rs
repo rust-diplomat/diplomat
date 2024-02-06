@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 /// This type abstracts over files being written to.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct FileMap {
     // The context types exist as a way to avoid passing around a billion different
     // parameters. However, passing them around as &mut self restricts the amount of

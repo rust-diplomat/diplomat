@@ -13,36 +13,39 @@ final class _ImportedStructFfi extends ffi.Struct {
 }
 
 final class ImportedStruct {
-  final _ImportedStructFfi _underlying;
+  UnimportedEnum foo;
+  int count;
 
-  ImportedStruct._(this._underlying);
+  ImportedStruct({required this.foo, required this.count});
 
-  factory ImportedStruct() {
-    final pointer = ffi2.calloc<_ImportedStructFfi>();
-    final result = ImportedStruct._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
-  }
+  // ignore: unused_element
+  // Internal constructor from FFI.
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
+  ImportedStruct._(_ImportedStructFfi underlying) :
+    foo = UnimportedEnum.values[underlying.foo],
+    count = underlying.count;
 
-  UnimportedEnum get foo => UnimportedEnum.values[_underlying.foo];
-  set foo(UnimportedEnum foo) {
-    _underlying.foo = foo.index;
-  }
-
-  int get count => _underlying.count;
-  set count(int count) {
-    _underlying.count = count;
+  // ignore: unused_element
+  _ImportedStructFfi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_ImportedStructFfi>();
+    pointer.ref.foo = foo.index;
+    pointer.ref.count = count;
+    return pointer.ref;
   }
 
   @override
   bool operator ==(Object other) =>
       other is ImportedStruct &&
-      other._underlying.foo == _underlying.foo &&
-      other._underlying.count == _underlying.count;
+      other.foo == this.foo &&
+      other.count == this.count;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.foo,
-        _underlying.count,
+        this.foo,
+        this.count,
       ]);
 }

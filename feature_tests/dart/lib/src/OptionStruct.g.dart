@@ -14,31 +14,47 @@ final class _OptionStructFfi extends ffi.Struct {
 }
 
 final class OptionStruct {
-  final _OptionStructFfi _underlying;
+  final OptionOpaque? a;
+  final OptionOpaqueChar? b;
+  final int c;
+  final OptionOpaque? d;
 
-  OptionStruct._(this._underlying);
+  // ignore: unused_element
+  // Internal constructor from FFI.
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
+  OptionStruct._(_OptionStructFfi underlying) :
+    a = underlying.a.address == 0 ? null : OptionOpaque._(underlying.a, true, []),
+    b = underlying.b.address == 0 ? null : OptionOpaqueChar._(underlying.b, true, []),
+    c = underlying.c,
+    d = underlying.d.address == 0 ? null : OptionOpaque._(underlying.d, true, []);
 
-  OptionOpaque? get a => _underlying.a.address == 0 ? null : OptionOpaque._(_underlying.a);
-
-  OptionOpaqueChar? get b => _underlying.b.address == 0 ? null : OptionOpaqueChar._(_underlying.b);
-
-  int get c => _underlying.c;
-
-  OptionOpaque? get d => _underlying.d.address == 0 ? null : OptionOpaque._(_underlying.d);
+  // ignore: unused_element
+  _OptionStructFfi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_OptionStructFfi>();
+    pointer.ref.a = a?._underlying ?? ffi.Pointer.fromAddress(0);
+    pointer.ref.b = b?._underlying ?? ffi.Pointer.fromAddress(0);
+    pointer.ref.c = c;
+    pointer.ref.d = d?._underlying ?? ffi.Pointer.fromAddress(0);
+    return pointer.ref;
+  }
 
   @override
   bool operator ==(Object other) =>
       other is OptionStruct &&
-      other._underlying.a == _underlying.a &&
-      other._underlying.b == _underlying.b &&
-      other._underlying.c == _underlying.c &&
-      other._underlying.d == _underlying.d;
+      other.a == this.a &&
+      other.b == this.b &&
+      other.c == this.c &&
+      other.d == this.d;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.a,
-        _underlying.b,
-        _underlying.c,
-        _underlying.d,
+        this.a,
+        this.b,
+        this.c,
+        this.d,
       ]);
 }

@@ -1,5 +1,6 @@
 //! Type definitions for structs, output structs, opaque structs, and enums.
 
+use super::lifetimes::{self, LifetimeEnv};
 use super::{Attrs, Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
 use crate::ast::Docs;
 
@@ -30,6 +31,7 @@ pub struct StructDef<P: TyPosition = Everywhere> {
     pub fields: Vec<StructField<P>>,
     pub methods: Vec<Method>,
     pub attrs: Attrs,
+    pub lifetimes: LifetimeEnv<lifetimes::Type>,
 }
 
 /// A struct whose contents are opaque across the FFI boundary, and can only
@@ -47,6 +49,7 @@ pub struct OpaqueDef {
     pub name: IdentBuf,
     pub methods: Vec<Method>,
     pub attrs: Attrs,
+    pub lifetimes: LifetimeEnv<lifetimes::Type>,
 }
 
 /// The enum type.
@@ -89,6 +92,7 @@ impl<P: TyPosition> StructDef<P> {
         fields: Vec<StructField<P>>,
         methods: Vec<Method>,
         attrs: Attrs,
+        lifetimes: LifetimeEnv<lifetimes::Type>,
     ) -> Self {
         Self {
             docs,
@@ -96,17 +100,25 @@ impl<P: TyPosition> StructDef<P> {
             fields,
             methods,
             attrs,
+            lifetimes,
         }
     }
 }
 
 impl OpaqueDef {
-    pub(super) fn new(docs: Docs, name: IdentBuf, methods: Vec<Method>, attrs: Attrs) -> Self {
+    pub(super) fn new(
+        docs: Docs,
+        name: IdentBuf,
+        methods: Vec<Method>,
+        attrs: Attrs,
+        lifetimes: LifetimeEnv<lifetimes::Type>,
+    ) -> Self {
         Self {
             docs,
             name,
             methods,
             attrs,
+            lifetimes,
         }
     }
 }

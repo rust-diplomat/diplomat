@@ -1,7 +1,9 @@
 //! This module contains functions for formatting types
 
 use super::ty::ResultType;
-use diplomat_core::hir::{self, OpaqueOwner, StringEncoding, Type, TypeContext, TypeId};
+use diplomat_core::hir::{
+    self, OpaqueOwner, StringEncoding, StructPathLike, Type, TypeContext, TypeId,
+};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -76,7 +78,8 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn fmt_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
         let ty_name = self.fmt_type_name(ty);
         let method_name = method.name.as_str();
-        format!("{ty_name}_{method_name}")
+        let put_together = format!("{ty_name}_{method_name}");
+        method.attrs.abi_rename.apply(put_together.into()).into()
     }
 
     pub fn fmt_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
@@ -107,7 +110,7 @@ impl<'tcx> CFormatter<'tcx> {
                 };
                 format!("{ownership}{o_name}").into()
             }
-            Type::Struct(s) => self.fmt_type_name(P::id_for_path(s)),
+            Type::Struct(s) => self.fmt_type_name(s.id()),
             Type::Enum(e) => self.fmt_type_name(e.tcx_id.into()),
             Type::Slice(hir::Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "str_ref8".into(),
             Type::Slice(hir::Slice::Str(_, StringEncoding::Utf8)) => "str_refv8".into(),

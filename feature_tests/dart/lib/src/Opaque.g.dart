@@ -8,15 +8,25 @@ part of 'lib.g.dart';
 final class Opaque implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  Opaque._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  final core.List<Object> _edge_self;
+
+  // Internal constructor from FFI.
+  // isOwned is whether this is owned (has finalizer) or not
+  // This also takes in a list of lifetime edges (including for &self borrows)
+  // corresponding to data this may borrow from. These should be flat arrays containing
+  // references to objects, and this object will hold on to them to keep them alive and
+  // maintain borrow validity.
+  Opaque._(this._underlying, bool isOwned, this._edge_self) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Opaque_destroy));
 
   factory Opaque() {
     final result = _Opaque_new();
-    return Opaque._(result);
+    return Opaque._(result, true, []);
   }
 
   /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
@@ -25,7 +35,9 @@ final class Opaque implements ffi.Finalizable {
   ///
   /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
   void assertStruct(MyStruct s) {
-    _Opaque_assert_struct(_underlying, s._underlying);
+    final temp = ffi2.Arena();
+    _Opaque_assert_struct(_underlying, s._pointer(temp));
+    temp.releaseAll();
   }
 
   static final int returnsUsize = () {

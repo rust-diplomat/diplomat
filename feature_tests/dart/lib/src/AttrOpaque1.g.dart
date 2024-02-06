@@ -8,18 +8,39 @@ part of 'lib.g.dart';
 final class AttrOpaque1 implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  AttrOpaque1._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  final core.List<Object> _edge_self;
+
+  // Internal constructor from FFI.
+  // isOwned is whether this is owned (has finalizer) or not
+  // This also takes in a list of lifetime edges (including for &self borrows)
+  // corresponding to data this may borrow from. These should be flat arrays containing
+  // references to objects, and this object will hold on to them to keep them alive and
+  // maintain borrow validity.
+  AttrOpaque1._(this._underlying, bool isOwned, this._edge_self) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_AttrOpaque1_destroy));
 
-  void method() {
-    _AttrOpaque1_method(_underlying);
+  factory AttrOpaque1() {
+    final result = _namespace_AttrOpaque1_new();
+    return AttrOpaque1._(result, true, []);
+  }
+
+  int get method {
+    final result = _namespace_AttrOpaque1_method(_underlying);
+    return result;
+  }
+
+  int get abirenamed {
+    final result = _renamed_on_abi_only(_underlying);
+    return result;
   }
 
   void methodDisabledcpp() {
-    _AttrOpaque1_method_disabledcpp(_underlying);
+    _namespace_AttrOpaque1_method_disabledcpp(_underlying);
   }
 }
 
@@ -27,10 +48,18 @@ final class AttrOpaque1 implements ffi.Finalizable {
 // ignore: non_constant_identifier_names
 external void _AttrOpaque1_destroy(ffi.Pointer<ffi.Void> self);
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'AttrOpaque1_method')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_new')
 // ignore: non_constant_identifier_names
-external void _AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
+external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'AttrOpaque1_method_disabledcpp')
+@ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method')
 // ignore: non_constant_identifier_names
-external void _AttrOpaque1_method_disabledcpp(ffi.Pointer<ffi.Opaque> self);
+external int _namespace_AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
+
+@ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'renamed_on_abi_only')
+// ignore: non_constant_identifier_names
+external int _renamed_on_abi_only(ffi.Pointer<ffi.Opaque> self);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method_disabledcpp')
+// ignore: non_constant_identifier_names
+external void _namespace_AttrOpaque1_method_disabledcpp(ffi.Pointer<ffi.Opaque> self);

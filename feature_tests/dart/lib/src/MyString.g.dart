@@ -8,8 +8,18 @@ part of 'lib.g.dart';
 final class MyString implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  MyString._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  final core.List<Object> _edge_self;
+
+  // Internal constructor from FFI.
+  // isOwned is whether this is owned (has finalizer) or not
+  // This also takes in a list of lifetime edges (including for &self borrows)
+  // corresponding to data this may borrow from. These should be flat arrays containing
+  // references to objects, and this object will hold on to them to keep them alive and
+  // maintain borrow validity.
+  MyString._(this._underlying, bool isOwned, this._edge_self) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
@@ -19,7 +29,7 @@ final class MyString implements ffi.Finalizable {
     final vView = v.utf8View;
     final result = _MyString_new(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return MyString._(result);
+    return MyString._(result, true, []);
   }
 
   factory MyString.unsafe(String v) {
@@ -27,7 +37,7 @@ final class MyString implements ffi.Finalizable {
     final vView = v.utf8View;
     final result = _MyString_new_unsafe(vView.pointer(temp), vView.length);
     temp.releaseAll();
-    return MyString._(result);
+    return MyString._(result, true, []);
   }
 
   void setStr(String newStr) {

@@ -3,6 +3,7 @@
 
 .. cpp:class:: Bar
 
+
 .. cpp:struct:: BorrowedFields
 
     .. cpp:member:: std::u16string_view a
@@ -15,6 +16,15 @@
 .. cpp:struct:: BorrowedFieldsReturning
 
     .. cpp:member:: std::string_view bytes
+
+.. cpp:struct:: BorrowedFieldsWithBounds
+
+    .. cpp:member:: std::u16string_view field_a
+
+    .. cpp:member:: std::string_view field_b
+
+    .. cpp:member:: std::string_view field_c
+        Warning: Setting ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
 
 .. cpp:class:: Foo
 
@@ -41,6 +51,13 @@
     .. cpp:function:: static Foo extract_from_fields(BorrowedFields fields)
 
         Lifetimes: ``fields`` must live at least as long as the output.
+
+
+    .. cpp:function:: static Foo extract_from_bounds(BorrowedFieldsWithBounds bounds, const std::string_view another_string)
+
+        Test that the extraction logic correctly pins the right fields
+
+        Lifetimes: ``bounds``, ``another_string`` must live at least as long as the output.
 
 
 .. cpp:class:: One

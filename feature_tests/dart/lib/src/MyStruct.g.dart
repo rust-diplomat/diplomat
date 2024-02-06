@@ -23,75 +23,97 @@ final class _MyStructFfi extends ffi.Struct {
 }
 
 final class MyStruct {
-  final _MyStructFfi _underlying;
+  int a;
+  bool b;
+  int c;
+  int d;
+  int e;
+  Rune f;
+  MyEnum g;
 
-  MyStruct._(this._underlying);
+  // ignore: unused_element
+  // Internal constructor from FFI.
+  // This struct contains borrowed fields, so this takes in a list of
+  // "edges" corresponding to where each lifetime's data may have been borrowed from
+  // and passes it down to individual fields containing the borrow.
+  // This method does not attempt to handle any dependencies between lifetimes, the caller
+  // should handle this when constructing edge arrays.
+  MyStruct._(_MyStructFfi underlying) :
+    a = underlying.a,
+    b = underlying.b,
+    c = underlying.c,
+    d = underlying.d,
+    e = underlying.e,
+    f = underlying.f,
+    g = MyEnum.values.firstWhere((v) => v._underlying == underlying.g);
 
-  int get a => _underlying.a;
-  set a(int a) {
-    _underlying.a = a;
+  // ignore: unused_element
+  _MyStructFfi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_MyStructFfi>();
+    pointer.ref.a = a;
+    pointer.ref.b = b;
+    pointer.ref.c = c;
+    pointer.ref.d = d;
+    pointer.ref.e = e;
+    pointer.ref.f = f;
+    pointer.ref.g = g._underlying;
+    return pointer.ref;
   }
 
-  bool get b => _underlying.b;
-  set b(bool b) {
-    _underlying.b = b;
-  }
-
-  int get c => _underlying.c;
-  set c(int c) {
-    _underlying.c = c;
-  }
-
-  int get d => _underlying.d;
-  set d(int d) {
-    _underlying.d = d;
-  }
-
-  int get e => _underlying.e;
-  set e(int e) {
-    _underlying.e = e;
-  }
-
-  Rune get f => _underlying.f;
-  set f(Rune f) {
-    _underlying.f = f;
-  }
-
-  MyEnum get g => MyEnum.values.firstWhere((v) => v._underlying == _underlying.g);
-  set g(MyEnum g) {
-    _underlying.g = g._underlying;
-  }
-
-  factory MyStruct() {
+  factory MyStruct({int? a, bool? b, int? c, int? d, int? e, Rune? f, MyEnum? g}) {
     final result = _MyStruct_new();
-    return MyStruct._(result);
+    final dart = MyStruct._(result);
+    if (a != null) {
+      dart.a = a;
+    }
+    if (b != null) {
+      dart.b = b;
+    }
+    if (c != null) {
+      dart.c = c;
+    }
+    if (d != null) {
+      dart.d = d;
+    }
+    if (e != null) {
+      dart.e = e;
+    }
+    if (f != null) {
+      dart.f = f;
+    }
+    if (g != null) {
+      dart.g = g;
+    }
+    return dart;
   }
 
   int intoA() {
-    final result = _MyStruct_into_a(_underlying);
+    final temp = ffi2.Arena();
+    final result = _MyStruct_into_a(_pointer(temp));
+    temp.releaseAll();
     return result;
   }
 
   @override
   bool operator ==(Object other) =>
       other is MyStruct &&
-      other._underlying.a == _underlying.a &&
-      other._underlying.b == _underlying.b &&
-      other._underlying.c == _underlying.c &&
-      other._underlying.d == _underlying.d &&
-      other._underlying.e == _underlying.e &&
-      other._underlying.f == _underlying.f &&
-      other._underlying.g == _underlying.g;
+      other.a == this.a &&
+      other.b == this.b &&
+      other.c == this.c &&
+      other.d == this.d &&
+      other.e == this.e &&
+      other.f == this.f &&
+      other.g == this.g;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.a,
-        _underlying.b,
-        _underlying.c,
-        _underlying.d,
-        _underlying.e,
-        _underlying.f,
-        _underlying.g,
+        this.a,
+        this.b,
+        this.c,
+        this.d,
+        this.e,
+        this.f,
+        this.g,
       ]);
 }
 

@@ -1,8 +1,9 @@
+use super::lifetimes::{self, BoundedLifetime, Lifetime, LifetimeEnv, LifetimeKind};
 use super::{
     AttributeContext, AttributeValidator, Borrow, EnumDef, EnumPath, EnumVariant, IdentBuf,
-    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath,
-    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
-    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional,
+    OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf,
+    PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, SuccessType,
     Type,
 };
@@ -157,11 +158,14 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             AttributeContext::Opaque,
             self.errors,
         );
+        let lifetimes = self.lower_type_lifetime_env(&ast_opaque.lifetimes);
+
         Some(OpaqueDef::new(
             ast_opaque.docs.clone(),
             name?,
             methods?,
             attrs,
+            lifetimes?,
         ))
     }
 
@@ -204,12 +208,15 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             AttributeContext::Struct { out: false },
             self.errors,
         );
+        let lifetimes = self.lower_type_lifetime_env(&ast_struct.lifetimes);
+
         Some(StructDef::new(
             ast_struct.docs.clone(),
             name?,
             fields?,
             methods?,
             attrs,
+            lifetimes?,
         ))
     }
 
@@ -252,12 +259,15 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             AttributeContext::Struct { out: true },
             self.errors,
         );
+
+        let lifetimes = self.lower_type_lifetime_env(&ast_out_struct.lifetimes);
         Some(OutStructDef::new(
             ast_out_struct.docs.clone(),
             name?,
             fields?,
             methods?,
             attrs,
+            lifetimes?,
         ))
     }
 
@@ -816,7 +826,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         takes_writeable: bool,
         mut return_ltl: Option<ReturnLifetimeLowerer<'_>>,
         in_path: &ast::Path,
-    ) -> Option<(ReturnType, LifetimeEnv)> {
+    ) -> Option<(ReturnType, LifetimeEnv<lifetimes::Method>)> {
         let writeable_option = if takes_writeable {
             Some(SuccessType::Writeable)
         } else {
@@ -858,5 +868,38 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 .map(|ty| ReturnType::Infallible(Some(SuccessType::OutType(ty)))),
         }
         .and_then(|return_fallability| Some((return_fallability, return_ltl?.finish())))
+    }
+
+    fn lower_named_lifetime<Kind: LifetimeKind>(
+        &mut self,
+        lifetime: &ast::lifetimes::LifetimeNode,
+    ) -> Option<BoundedLifetime<Kind>> {
+        Some(BoundedLifetime {
+            ident: self.lower_ident(lifetime.lifetime.name(), "lifetime")?,
+            longer: lifetime.longer.iter().copied().map(Lifetime::new).collect(),
+            shorter: lifetime
+                .shorter
+                .iter()
+                .copied()
+                .map(Lifetime::new)
+                .collect(),
+        })
+    }
+
+    /// Lowers a lifetime env found on a type
+    ///
+    /// Should not be extended to return LifetimeEnv<Method>, which needs to use the lifetime
+    /// lowerers to handle elision.
+    fn lower_type_lifetime_env(
+        &mut self,
+        ast: &ast::LifetimeEnv,
+    ) -> Option<LifetimeEnv<lifetimes::Type>> {
+        let nodes = ast
+            .nodes
+            .iter()
+            .map(|lt| self.lower_named_lifetime(lt))
+            .collect::<Option<_>>()?;
+
+        Some(LifetimeEnv::new(nodes, ast.nodes.len()))
     }
 }

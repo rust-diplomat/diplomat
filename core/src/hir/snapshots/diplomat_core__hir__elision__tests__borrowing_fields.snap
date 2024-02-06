@@ -1,6 +1,6 @@
 ---
 source: core/src/hir/elision.rs
-expression: map
+expression: lt_to_borrowing_fields
 ---
 {
     Static: [
@@ -8,16 +8,12 @@ expression: map
         "_s",
     ],
     NonStatic(
-        MethodLifetime(
-            0,
-        ),
+        diplomat_core::hir::lifetimes::MethodLifetime(0),
     ): [
         "this.p_data",
     ],
     NonStatic(
-        MethodLifetime(
-            1,
-        ),
+        diplomat_core::hir::lifetimes::MethodLifetime(1),
     ): [
         "this.q_data",
         "this.inner.more_data",

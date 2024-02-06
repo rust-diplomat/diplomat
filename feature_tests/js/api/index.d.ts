@@ -5,6 +5,7 @@ export { AttrOpaque2 } from './AttrOpaque2';
 export { Bar } from './Bar';
 export { BorrowedFields } from './BorrowedFields';
 export { BorrowedFieldsReturning } from './BorrowedFieldsReturning';
+export { BorrowedFieldsWithBounds } from './BorrowedFieldsWithBounds';
 export { ContiguousEnum } from './ContiguousEnum';
 export { ErrorEnum } from './ErrorEnum';
 export { ErrorStruct } from './ErrorStruct';

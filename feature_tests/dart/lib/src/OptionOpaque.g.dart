@@ -8,20 +8,30 @@ part of 'lib.g.dart';
 final class OptionOpaque implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _underlying;
 
-  OptionOpaque._(this._underlying) {
-    _finalizer.attach(this, _underlying.cast());
+  final core.List<Object> _edge_self;
+
+  // Internal constructor from FFI.
+  // isOwned is whether this is owned (has finalizer) or not
+  // This also takes in a list of lifetime edges (including for &self borrows)
+  // corresponding to data this may borrow from. These should be flat arrays containing
+  // references to objects, and this object will hold on to them to keep them alive and
+  // maintain borrow validity.
+  OptionOpaque._(this._underlying, bool isOwned, this._edge_self) {
+    if (isOwned) {
+      _finalizer.attach(this, _underlying.cast());
+    }
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OptionOpaque_destroy));
 
   static OptionOpaque? new_(int i) {
     final result = _OptionOpaque_new(i);
-    return result.address == 0 ? null : OptionOpaque._(result);
+    return result.address == 0 ? null : OptionOpaque._(result, true, []);
   }
 
   static final OptionOpaque? none = () {
     final result = _OptionOpaque_new_none();
-    return result.address == 0 ? null : OptionOpaque._(result);
+    return result.address == 0 ? null : OptionOpaque._(result, true, []);
   }();
 
   static final OptionStruct? returns = () {
@@ -47,7 +57,7 @@ final class OptionOpaque implements ffi.Finalizable {
   }
 
   static bool optionOpaqueArgument(OptionOpaque? arg) {
-    final result = _OptionOpaque_option_opaque_argument(arg == null ? ffi.Pointer.fromAddress(0) : arg._underlying);
+    final result = _OptionOpaque_option_opaque_argument(arg?._underlying ?? ffi.Pointer.fromAddress(0));
     return result;
   }
 }

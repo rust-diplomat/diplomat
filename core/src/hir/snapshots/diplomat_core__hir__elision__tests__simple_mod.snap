@@ -19,12 +19,10 @@ TypeContext {
                     name: "inner",
                     ty: Opaque(
                         OpaquePath {
-                            lifetimes: TypeLifetimes {
+                            lifetimes: Lifetimes {
                                 indices: [
                                     NonStatic(
-                                        TypeLifetime(
-                                            0,
-                                        ),
+                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
                                     ),
                                 ],
                             },
@@ -48,7 +46,7 @@ TypeContext {
                     name: "new",
                     lifetime_env: LifetimeEnv {
                         nodes: [
-                            Lifetime {
+                            BoundedLifetime {
                                 ident: "a",
                                 longer: [],
                                 shorter: [],
@@ -63,9 +61,7 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        TypeLifetime(
-                                            0,
-                                        ),
+                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
                                     ),
                                     UnvalidatedUtf8,
                                 ),
@@ -78,12 +74,10 @@ TypeContext {
                                 Struct(
                                     OutStruct(
                                         StructPath {
-                                            lifetimes: TypeLifetimes {
+                                            lifetimes: Lifetimes {
                                                 indices: [
                                                     NonStatic(
-                                                        TypeLifetime(
-                                                            0,
-                                                        ),
+                                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
                                                     ),
                                                 ],
                                             },
@@ -98,13 +92,33 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        rename: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+            },
+            lifetimes: LifetimeEnv {
+                nodes: [
+                    BoundedLifetime {
+                        ident: "a",
+                        longer: [],
+                        shorter: [],
+                    },
+                ],
+                num_lifetimes: 1,
             },
         },
     ],
@@ -125,9 +139,7 @@ TypeContext {
                     ty: Slice(
                         Str(
                             NonStatic(
-                                TypeLifetime(
-                                    0,
-                                ),
+                                diplomat_core::hir::lifetimes::TypeLifetime(0),
                             ),
                             UnvalidatedUtf8,
                         ),
@@ -143,7 +155,7 @@ TypeContext {
                     name: "rustc_elision",
                     lifetime_env: LifetimeEnv {
                         nodes: [
-                            Lifetime {
+                            BoundedLifetime {
                                 ident: "a",
                                 longer: [],
                                 shorter: [],
@@ -155,12 +167,10 @@ TypeContext {
                         ParamSelf {
                             ty: Struct(
                                 StructPath {
-                                    lifetimes: TypeLifetimes {
+                                    lifetimes: Lifetimes {
                                         indices: [
                                             NonStatic(
-                                                TypeLifetime(
-                                                    0,
-                                                ),
+                                                diplomat_core::hir::lifetimes::TypeLifetime(0),
                                             ),
                                         ],
                                     },
@@ -177,9 +187,7 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        TypeLifetime(
-                                            1,
-                                        ),
+                                        diplomat_core::hir::lifetimes::TypeLifetime(1),
                                     ),
                                     UnvalidatedUtf8,
                                 ),
@@ -192,9 +200,7 @@ TypeContext {
                                 Slice(
                                     Str(
                                         NonStatic(
-                                            TypeLifetime(
-                                                1,
-                                            ),
+                                            diplomat_core::hir::lifetimes::TypeLifetime(1),
                                         ),
                                         UnvalidatedUtf8,
                                     ),
@@ -204,13 +210,33 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        rename: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+            },
+            lifetimes: LifetimeEnv {
+                nodes: [
+                    BoundedLifetime {
+                        ident: "a",
+                        longer: [],
+                        shorter: [],
+                    },
+                ],
+                num_lifetimes: 1,
             },
         },
     ],
@@ -224,7 +250,22 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+            },
+            lifetimes: LifetimeEnv {
+                nodes: [
+                    BoundedLifetime {
+                        ident: "a",
+                        longer: [],
+                        shorter: [],
+                    },
+                ],
+                num_lifetimes: 1,
             },
         },
     ],

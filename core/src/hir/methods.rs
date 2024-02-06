@@ -1,12 +1,14 @@
 //! Methods for types and navigating lifetimes within methods.
 
+use std::collections::BTreeSet;
 use std::fmt::{self, Write};
 
 use smallvec::SmallVec;
 
-use super::{
-    paths, Attrs, Docs, Ident, IdentBuf, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes,
-    OutType, SelfType, Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
+use super::{paths, Attrs, Docs, Ident, IdentBuf, OutType, SelfType, Slice, Type, TypeContext};
+
+use super::lifetimes::{
+    self, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes, TypeLifetime, TypeLifetimes,
 };
 
 /// A method exposed to Diplomat.
@@ -15,7 +17,7 @@ use super::{
 pub struct Method {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub lifetime_env: LifetimeEnv,
+    pub lifetime_env: LifetimeEnv<lifetimes::Method>,
 
     pub param_self: Option<ParamSelf>,
     pub params: Vec<Param>,
@@ -134,6 +136,37 @@ impl ReturnType {
             ReturnType::Option(_) => true,
         }
     }
+
+    /// Get the list of method lifetimes actually used by the method return type
+    ///
+    /// Most input lifetimes aren't actually used. An input lifetime is generated
+    /// for each borrowing parameter but is only important if we use it in the return.
+    pub fn used_method_lifetimes(&self) -> BTreeSet<MethodLifetime> {
+        let mut set = BTreeSet::new();
+
+        let mut add_to_set = |ty: &OutType| {
+            for lt in ty.lifetimes() {
+                if let MaybeStatic::NonStatic(lt) = lt {
+                    set.insert(lt.cast());
+                }
+            }
+        };
+
+        match self {
+            ReturnType::Infallible(Some(SuccessType::OutType(ref ty))) => add_to_set(ty),
+            ReturnType::Fallible(ref ok, ref err) => {
+                if let Some(SuccessType::OutType(ref ty)) = ok {
+                    add_to_set(ty)
+                }
+                if let Some(ref ty) = err {
+                    add_to_set(ty)
+                }
+            }
+            _ => (),
+        }
+
+        set
+    }
 }
 
 impl ParamSelf {
@@ -171,7 +204,7 @@ impl Method {
 
     /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> MethodLifetimes {
-        self.lifetime_env.method_lifetimes()
+        self.lifetime_env.lifetimes()
     }
 
     /// Returns a new [`BorrowingFieldVisitor`], which allocates memory to

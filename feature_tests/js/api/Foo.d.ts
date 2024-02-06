@@ -1,6 +1,7 @@
 import { Bar } from "./Bar";
 import { BorrowedFields } from "./BorrowedFields";
 import { BorrowedFieldsReturning } from "./BorrowedFieldsReturning";
+import { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds";
 
 /**
  */
@@ -25,4 +26,10 @@ export class Foo {
   /**
    */
   static extract_from_fields(fields: BorrowedFields): Foo;
+
+  /**
+
+   * Test that the extraction logic correctly pins the right fields
+   */
+  static extract_from_bounds(bounds: BorrowedFieldsWithBounds, another_string: string): Foo;
 }

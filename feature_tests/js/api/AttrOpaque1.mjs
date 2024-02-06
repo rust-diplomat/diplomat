@@ -15,11 +15,19 @@ export class AttrOpaque1 {
     }
   }
 
+  static new() {
+    return new AttrOpaque1(wasm.namespace_AttrOpaque1_new(), true, []);
+  }
+
   method() {
-    wasm.AttrOpaque1_method(this.underlying);
+    return wasm.namespace_AttrOpaque1_method(this.underlying);
+  }
+
+  abirenamed() {
+    return wasm.renamed_on_abi_only(this.underlying);
   }
 
   method_disabledcpp() {
-    wasm.AttrOpaque1_method_disabledcpp(this.underlying);
+    wasm.namespace_AttrOpaque1_method_disabledcpp(this.underlying);
   }
 }

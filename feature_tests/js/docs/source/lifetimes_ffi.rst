@@ -3,6 +3,8 @@
 
 .. js:class:: Bar
 
+    .. js:method:: foo()
+
 .. js:class:: BorrowedFields
 
     .. js:attribute:: a
@@ -14,6 +16,14 @@
 .. js:class:: BorrowedFieldsReturning
 
     .. js:attribute:: bytes
+
+.. js:class:: BorrowedFieldsWithBounds
+
+    .. js:attribute:: field_a
+
+    .. js:attribute:: field_b
+
+    .. js:attribute:: field_c
 
 .. js:class:: Foo
 
@@ -28,6 +38,11 @@
     .. js:method:: as_returning()
 
     .. js:function:: extract_from_fields(fields)
+
+    .. js:function:: extract_from_bounds(bounds, another_string)
+
+        Test that the extraction logic correctly pins the right fields
+
 
 .. js:class:: One
 

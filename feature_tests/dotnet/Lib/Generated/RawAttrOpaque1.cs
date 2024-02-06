@@ -16,11 +16,17 @@ public partial struct AttrOpaque1
 {
     private const string NativeLib = "diplomat_feature_tests";
 
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "AttrOpaque1_method", ExactSpelling = true)]
-    public static unsafe extern void Method(AttrOpaque1* self);
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_new", ExactSpelling = true)]
+    public static unsafe extern AttrOpaque1* NamespaceNew();
 
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "AttrOpaque1_method_disabledcpp", ExactSpelling = true)]
-    public static unsafe extern void MethodDisabledcpp(AttrOpaque1* self);
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_method", ExactSpelling = true)]
+    public static unsafe extern byte NamespaceMethod(AttrOpaque1* self);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "renamed_on_abi_only", ExactSpelling = true)]
+    public static unsafe extern byte RenamedOnAbiOnly(AttrOpaque1* self);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_method_disabledcpp", ExactSpelling = true)]
+    public static unsafe extern void NamespaceMethodDisabledcpp(AttrOpaque1* self);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "AttrOpaque1_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(AttrOpaque1* self);

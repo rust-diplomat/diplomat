@@ -31,6 +31,12 @@ public partial struct Foo
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_extract_from_fields", ExactSpelling = true)]
     public static unsafe extern Foo* ExtractFromFields(BorrowedFields fields);
 
+    /// <summary>
+    /// Test that the extraction logic correctly pins the right fields
+    /// </summary>
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_extract_from_bounds", ExactSpelling = true)]
+    public static unsafe extern Foo* ExtractFromBounds(BorrowedFieldsWithBounds bounds, byte* anotherString, nuint anotherStringSz);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Foo_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Foo* self);
 }

@@ -2,8 +2,11 @@
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
+use std::borrow::Cow;
+use std::convert::Infallible;
+use std::str::FromStr;
 use syn::parse::{Error as ParseError, Parse, ParseStream};
-use syn::{Attribute, Ident, LitStr, Meta, Token};
+use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, Token};
 
 /// The list of attributes on a type
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
@@ -11,19 +14,33 @@ use syn::{Attribute, Ident, LitStr, Meta, Token};
 pub struct Attrs {
     pub cfg: Vec<Attribute>,
     pub attrs: Vec<DiplomatBackendAttr>,
+    /// AST backends only. For using features that may panic AST backends, like returning references.
+    ///
+    /// This isn't a regular attribute since AST backends do not handle regular attributes. Do not use
+    /// in HIR backends,
+    pub skip_if_unsupported: bool,
+
+    /// Renames to apply to the underlying C symbol. Can be found on methods, impls, and bridge modules, and is inherited.
+    ///
+    /// Has no effect on types.
+    pub abi_rename: RenameAttr,
 }
 
 impl Attrs {
     fn add_attr(&mut self, attr: Attr) {
         match attr {
             Attr::Cfg(attr) => self.cfg.push(attr),
-            Attr::DiplomatBackendAttr(attr) => self.attrs.push(attr),
+            Attr::DiplomatBackend(attr) => self.attrs.push(attr),
+            Attr::SkipIfUnsupported => self.skip_if_unsupported = true,
+            Attr::CRename(rename) => self.abi_rename.extend(&rename, AttrExtendMode::Override),
         }
     }
 
     /// Merge attributes that should be inherited from the parent
     pub(crate) fn merge_parent_attrs(&mut self, other: &Attrs) {
-        self.cfg.extend(other.cfg.iter().cloned())
+        self.cfg.extend(other.cfg.iter().cloned());
+        self.abi_rename
+            .extend(&other.abi_rename, AttrExtendMode::Inherit);
     }
     pub(crate) fn add_attrs(&mut self, attrs: &[Attribute]) {
         for attr in syn_attr_to_ast_attr(attrs) {
@@ -45,21 +62,29 @@ impl From<&[Attribute]> for Attrs {
 
 enum Attr {
     Cfg(Attribute),
-    DiplomatBackendAttr(DiplomatBackendAttr),
+    DiplomatBackend(DiplomatBackendAttr),
+    SkipIfUnsupported,
+    CRename(RenameAttr),
     // More goes here
 }
 
 fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ {
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
+    let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
+    let skipast: syn::Path = syn::parse_str("diplomat::skip_if_unsupported").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
         } else if a.path() == &dattr_path {
-            Some(Attr::DiplomatBackendAttr(
+            Some(Attr::DiplomatBackend(
                 a.parse_args()
                     .expect("Failed to parse malformed diplomat::attr"),
             ))
+        } else if a.path() == &crename_attr {
+            Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
+        } else if a.path() == &skipast {
+            Some(Attr::SkipIfUnsupported)
         } else {
             None
         }
@@ -73,12 +98,23 @@ impl Serialize for Attrs {
     {
         // 1 is the number of fields in the struct.
         let mut state = serializer.serialize_struct("Attrs", 1)?;
-        let cfg: Vec<_> = self
-            .cfg
-            .iter()
-            .map(|a| quote::quote!(#a).to_string())
-            .collect();
-        state.serialize_field("cfg", &cfg)?;
+        if !self.cfg.is_empty() {
+            let cfg: Vec<_> = self
+                .cfg
+                .iter()
+                .map(|a| quote::quote!(#a).to_string())
+                .collect();
+            state.serialize_field("cfg", &cfg)?;
+        }
+        if !self.attrs.is_empty() {
+            state.serialize_field("attrs", &self.attrs)?;
+        }
+        if self.skip_if_unsupported {
+            state.serialize_field("skip_if_unsupported", &self.skip_if_unsupported)?;
+        }
+        if !self.abi_rename.is_empty() {
+            state.serialize_field("abi_rename", &self.abi_rename)?;
+        }
         state.end()
     }
 }
@@ -174,13 +210,134 @@ impl Parse for DiplomatBackendAttr {
     }
 }
 
+/// When calling attr.extend(other), when both attributes specify
+/// some setting which one to prefer?
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub(crate) enum AttrExtendMode {
+    /// Prefer data from `self`, the data from `other` is only used if `self` is null
+    Inherit,
+    /// Prefer data from `other`, the data from `self` is only used if `other` is null
+    Override,
+}
+
+/// A pattern for use in rename attributes, like `#[diplomat::abi_rename]`
+///
+/// This can be parsed from a string, typically something like `icu4x_{0}`.
+/// It can have up to one {0} for replacement.
+///
+/// In the future this may support transformations like to_camel_case, etc,
+/// probably specified as a list like `#[diplomat::abi_rename("foo{0}", to_camel_case)]`
+#[derive(Default, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize)]
+pub struct RenameAttr {
+    pattern: Option<RenamePattern>,
+}
+
+impl RenameAttr {
+    /// Apply all renames to a given string
+    pub fn apply<'a>(&'a self, name: Cow<'a, str>) -> Cow<'a, str> {
+        if let Some(ref pattern) = self.pattern {
+            let replacement = &pattern.replacement;
+            if let Some(index) = pattern.insertion_index {
+                format!("{}{name}{}", &replacement[..index], &replacement[index..]).into()
+            } else {
+                replacement.into()
+            }
+        } else {
+            name
+        }
+    }
+
+    /// Whether this rename is empty and will perform no changes
+    fn is_empty(&self) -> bool {
+        self.pattern.is_none()
+    }
+
+    pub(crate) fn extend(&mut self, other: &Self, extend_mode: AttrExtendMode) {
+        if (extend_mode == AttrExtendMode::Inherit && self.pattern.is_none())
+            || (extend_mode == AttrExtendMode::Override && other.pattern.is_some())
+        {
+            // Copy over the new pattern either when inheriting (and self is empty)
+            // or when overriding (and other is nonempty)
+            self.pattern = other.pattern.clone();
+        }
+
+        // In the future if we support things like to_lower_case they may inherit separately
+        // from patterns.
+    }
+
+    /// From a replacement pattern, like "icu4x_{0}". Can have up to one {0} in it for substitution.
+    fn from_pattern(s: &str) -> Self {
+        Self {
+            pattern: Some(s.parse().unwrap()),
+        }
+    }
+
+    pub(crate) fn from_meta(meta: &Meta) -> Result<Self, Cow<'static, str>> {
+        static ABI_RENAME_ERROR: &str = "#[diplomat::abi_rename] must be given a string value";
+
+        match meta {
+            Meta::Path(..) => Err(ABI_RENAME_ERROR.into()),
+            Meta::NameValue(ref nv) => {
+                // Support a shortcut `abi_rename = "..."`
+                let Expr::Lit(ref lit) = nv.value else {
+                    return Err(ABI_RENAME_ERROR.into());
+                };
+                let Lit::Str(ref lit) = lit.lit else {
+                    return Err(ABI_RENAME_ERROR.into());
+                };
+                Ok(RenameAttr::from_pattern(&lit.value()))
+            }
+            // The full syntax to which we'll add more things in the future, `abi_rename("")`
+            Meta::List(list) => list.parse_args().map_err(|e| {
+                format!("Failed to parse malformed #[diplomat::abi_rename(...)]: {e}").into()
+            }),
+        }
+    }
+}
+
+impl FromStr for RenamePattern {
+    type Err = Infallible;
+    fn from_str(s: &str) -> Result<Self, Infallible> {
+        if let Some(index) = s.find("{0}") {
+            let replacement = format!("{}{}", &s[..index], &s[index + 3..]);
+            Ok(Self {
+                replacement,
+                insertion_index: Some(index),
+            })
+        } else {
+            Ok(Self {
+                replacement: s.into(),
+                insertion_index: None,
+            })
+        }
+    }
+}
+
+/// Meant to be used with Attribute::parse_args()
+impl Parse for RenameAttr {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        let value: LitStr = input.parse()?;
+        let attr = RenameAttr::from_pattern(&value.value());
+        Ok(attr)
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize)]
+struct RenamePattern {
+    /// The string to replace with
+    replacement: String,
+    /// The index in `replacement` in which to insert the original string. If None,
+    /// this is a pure rename
+    insertion_index: Option<usize>,
+}
+
 #[cfg(test)]
 mod tests {
     use insta;
 
     use syn;
 
-    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg};
+    use super::{DiplomatBackendAttr, DiplomatBackendAttrCfg, RenameAttr};
 
     #[test]
     fn test_cfgs() {
@@ -202,6 +359,16 @@ mod tests {
         let attr: syn::Attribute =
             syn::parse_quote!(#[diplomat::attr(any(cpp, has = "overloading"), namespacing)]);
         let attr: DiplomatBackendAttr = attr.parse_args().unwrap();
+        insta::assert_yaml_snapshot!(attr);
+    }
+
+    #[test]
+    fn test_rename() {
+        let attr: syn::Attribute = syn::parse_quote!(#[diplomat::abi_rename = "foobar_{0}"]);
+        let attr = RenameAttr::from_meta(&attr.meta).unwrap();
+        insta::assert_yaml_snapshot!(attr);
+        let attr: syn::Attribute = syn::parse_quote!(#[diplomat::abi_rename("foobar_{0}")]);
+        let attr = RenameAttr::from_meta(&attr.meta).unwrap();
         insta::assert_yaml_snapshot!(attr);
     }
 }

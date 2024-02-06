@@ -14,11 +14,13 @@ typedef struct Bar Bar;
 #ifdef __cplusplus
 } // namespace capi
 #endif
+#include "Foo.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif
 
+const Foo* Bar_foo(const Bar* self);
 void Bar_destroy(Bar* self);
 
 #ifdef __cplusplus

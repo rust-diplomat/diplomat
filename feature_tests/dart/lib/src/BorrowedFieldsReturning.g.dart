@@ -10,32 +10,37 @@ final class _BorrowedFieldsReturningFfi extends ffi.Struct {
 }
 
 final class BorrowedFieldsReturning {
-  final _BorrowedFieldsReturningFfi _underlying;
+  String bytes;
 
-  BorrowedFieldsReturning._(this._underlying);
+  BorrowedFieldsReturning({required this.bytes});
 
-  factory BorrowedFieldsReturning() {
-    final pointer = ffi2.calloc<_BorrowedFieldsReturningFfi>();
-    final result = BorrowedFieldsReturning._(pointer.ref);
-    _callocFree.attach(result, pointer.cast());
-    return result;
-  }
+  // ignore: unused_element
+  // Internal constructor from FFI.
+  BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying, core.List<Object> edge_a) :
+    bytes = Utf8Decoder().convert(underlying.bytes._pointer.asTypedList(underlying.bytes._length));
 
-  String get bytes => Utf8Decoder().convert(_underlying.bytes._pointer.asTypedList(_underlying.bytes._length));
-  set bytes(String bytes) {
-    ffi2.calloc.free(_underlying.bytes._pointer);
+  // ignore: unused_element
+  _BorrowedFieldsReturningFfi _pointer(ffi.Allocator temp) {
+    final pointer = temp<_BorrowedFieldsReturningFfi>();
     final bytesView = bytes.utf8View;
-    _underlying.bytes._pointer = bytesView.pointer(ffi2.calloc);
-    _underlying.bytes._length = bytesView.length;
+    pointer.ref.bytes._pointer = bytesView.pointer(temp);
+    pointer.ref.bytes._length = bytesView.length;
+    return pointer.ref;
   }
 
   @override
   bool operator ==(Object other) =>
       other is BorrowedFieldsReturning &&
-      other._underlying.bytes == _underlying.bytes;
+      other.bytes == this.bytes;
 
   @override
   int get hashCode => Object.hashAll([
-        _underlying.bytes,
+        this.bytes,
       ]);
+
+  // ignore: unused element
+  // Append all fields corresponding to lifetime `'a`
+  core.List<Object> _fields_for_lifetime_a() {
+    return [bytes];
+  }
 }

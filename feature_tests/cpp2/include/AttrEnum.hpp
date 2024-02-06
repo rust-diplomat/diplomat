@@ -21,7 +21,7 @@ inline AttrEnum::AttrEnum(AttrEnum::Value cpp_value) {
     case B:
       value = capi::AttrEnum_B;
       break;
-    case CRenamed:
+    case CPPRenamed:
       value = capi::AttrEnum_C;
       break;
     default:
