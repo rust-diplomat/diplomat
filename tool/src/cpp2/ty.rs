@@ -174,6 +174,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
+        let dtor_name = self.cx.formatter.fmt_c_dtor_name(id);
 
         let methods = ty
             .methods
@@ -208,6 +209,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
+            dtor_name: &'a str,
             methods: &'a [MethodInfo<'a>],
         }
 
@@ -216,6 +218,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &self.cx.formatter,
             type_name: &type_name,
             ctype: &ctype,
+            dtor_name: &dtor_name,
             methods: methods.as_slice(),
         }
         .render_into(self.impl_header)

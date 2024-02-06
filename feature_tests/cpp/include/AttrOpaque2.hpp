@@ -17,7 +17,7 @@
  */
 struct AttrOpaque2Deleter {
   void operator()(capi::AttrOpaque2* l) const noexcept {
-    capi::AttrOpaque2_destroy(l);
+    capi::namespace_AttrOpaque2_destroy(l);
   }
 };
 class AttrOpaque2 {

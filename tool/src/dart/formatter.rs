@@ -71,8 +71,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_destructor_name(&self, id: TypeId) -> String {
-        let ty_name = self.c.fmt_type_name(id);
-        format!("{ty_name}_destroy")
+        self.c.fmt_dtor_name(id)
     }
 
     /// Resolve and format a named type for use in code

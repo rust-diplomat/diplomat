@@ -23,7 +23,7 @@ namespace capi {
 extern "C" {
 #endif
 
-void AttrEnum_destroy(AttrEnum* self);
+void namespace_AttrEnum_destroy(AttrEnum* self);
 
 #ifdef __cplusplus
 } // extern "C"

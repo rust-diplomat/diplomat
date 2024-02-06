@@ -19,7 +19,7 @@ namespace capi {
 extern "C" {
 #endif
 
-void AttrOpaque2_destroy(AttrOpaque2* self);
+void namespace_AttrOpaque2_destroy(AttrOpaque2* self);
 
 #ifdef __cplusplus
 } // extern "C"
