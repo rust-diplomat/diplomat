@@ -9,7 +9,7 @@
 
     .. js:method:: method()
 
-    .. js:method:: crenamed()
+    .. js:method:: abirenamed()
 
     .. js:method:: method_disabledcpp()
 

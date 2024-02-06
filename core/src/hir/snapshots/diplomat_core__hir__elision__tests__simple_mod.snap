@@ -95,7 +95,7 @@ TypeContext {
                         rename: RenameAttr {
                             pattern: None,
                         },
-                        c_rename: RenameAttr {
+                        abi_rename: RenameAttr {
                             pattern: None,
                         },
                     },
@@ -106,7 +106,7 @@ TypeContext {
                 rename: RenameAttr {
                     pattern: None,
                 },
-                c_rename: RenameAttr {
+                abi_rename: RenameAttr {
                     pattern: None,
                 },
             },
@@ -213,7 +213,7 @@ TypeContext {
                         rename: RenameAttr {
                             pattern: None,
                         },
-                        c_rename: RenameAttr {
+                        abi_rename: RenameAttr {
                             pattern: None,
                         },
                     },
@@ -224,7 +224,7 @@ TypeContext {
                 rename: RenameAttr {
                     pattern: None,
                 },
-                c_rename: RenameAttr {
+                abi_rename: RenameAttr {
                     pattern: None,
                 },
             },
@@ -253,7 +253,7 @@ TypeContext {
                 rename: RenameAttr {
                     pattern: None,
                 },
-                c_rename: RenameAttr {
+                abi_rename: RenameAttr {
                     pattern: None,
                 },
             },

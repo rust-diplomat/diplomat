@@ -13,7 +13,7 @@ pub use crate::ast::attrs::RenameAttr;
 pub struct Attrs {
     pub disable: bool,
     pub rename: RenameAttr,
-    pub c_rename: RenameAttr,
+    pub abi_rename: RenameAttr,
     // more to be added: rename, namespace, etc
 }
 
@@ -38,7 +38,7 @@ impl Attrs {
     ) -> Self {
         let mut this = Attrs {
             // Backends must support this since it applies to the macro/C code.
-            c_rename: ast.c_rename.clone(),
+            abi_rename: ast.abi_rename.clone(),
             ..Default::default()
         };
 

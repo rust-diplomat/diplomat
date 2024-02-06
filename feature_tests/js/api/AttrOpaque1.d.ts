@@ -14,7 +14,7 @@ export class AttrOpaque1 {
 
   /**
    */
-  crenamed(): u8;
+  abirenamed(): u8;
 
   /**
    */

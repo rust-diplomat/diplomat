@@ -34,8 +34,8 @@ final class AttrOpaque1 implements ffi.Finalizable {
     return result;
   }
 
-  int get crenamed {
-    final result = _renamed_in_c_only(_underlying);
+  int get abirenamed {
+    final result = _renamed_on_abi_only(_underlying);
     return result;
   }
 
@@ -56,9 +56,9 @@ external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
 // ignore: non_constant_identifier_names
 external int _namespace_AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
 
-@ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'renamed_in_c_only')
+@ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'renamed_on_abi_only')
 // ignore: non_constant_identifier_names
-external int _renamed_in_c_only(ffi.Pointer<ffi.Opaque> self);
+external int _renamed_on_abi_only(ffi.Pointer<ffi.Opaque> self);
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method_disabledcpp')
 // ignore: non_constant_identifier_names

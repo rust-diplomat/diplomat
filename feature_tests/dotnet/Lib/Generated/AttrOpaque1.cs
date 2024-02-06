@@ -54,7 +54,7 @@ public partial class AttrOpaque1: IDisposable
         }
     }
 
-    public byte Crenamed()
+    public byte Abirenamed()
     {
         unsafe
         {
@@ -62,7 +62,7 @@ public partial class AttrOpaque1: IDisposable
             {
                 throw new ObjectDisposedException("AttrOpaque1");
             }
-            byte retVal = Raw.AttrOpaque1.Crenamed(_inner);
+            byte retVal = Raw.AttrOpaque1.Abirenamed(_inner);
             return retVal;
         }
     }

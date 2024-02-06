@@ -18,7 +18,7 @@ public:
   enum Value {
     A,
     B,
-    CRenamed,
+    CPPRenamed,
   };
 
   inline AttrEnum(AttrEnum::Value cpp_value);
