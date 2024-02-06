@@ -187,7 +187,7 @@ impl Module {
                             _ => panic!("Self type not found"),
                         };
                         let mut impl_attrs = impl_parent_attrs.clone();
-                        impl_attrs.add_attrs(&*imp.attrs);
+                        impl_attrs.add_attrs(&imp.attrs);
                         let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
                         let mut new_methods = imp
                             .items

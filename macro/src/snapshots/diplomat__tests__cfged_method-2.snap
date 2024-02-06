@@ -15,8 +15,8 @@ mod ffi {
     }
     use diplomat_runtime::*;
     #[no_mangle]
-    #[cfg(feature = "foo")]
     #[cfg(feature = "bar")]
+    #[cfg(feature = "foo")]
     extern "C" fn Foo_bar(s: u8) {
         Foo::bar(s)
     }

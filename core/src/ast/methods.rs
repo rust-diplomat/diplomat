@@ -50,7 +50,7 @@ impl Method {
         impl_attrs: &Attrs,
     ) -> Method {
         let mut attrs = impl_attrs.clone();
-        attrs.add_attrs(&*m.attrs);
+        attrs.add_attrs(&m.attrs);
 
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;

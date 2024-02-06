@@ -29,7 +29,7 @@ impl Enum {
         }
 
         let mut attrs = parent_attrs.clone();
-        attrs.add_attrs(&*enm.attrs);
+        attrs.add_attrs(&enm.attrs);
         let variant_parent_attrs = attrs.attrs_for_inheritance(AttrInheritContext::Variant);
 
         Enum {
@@ -56,7 +56,7 @@ impl Enum {
 
                     last_discriminant = new_discriminant;
                     let mut v_attrs = variant_parent_attrs.clone();
-                    v_attrs.add_attrs(&*v.attrs);
+                    v_attrs.add_attrs(&v.attrs);
                     (
                         (&v.ident).into(),
                         new_discriminant,
