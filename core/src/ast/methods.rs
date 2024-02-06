@@ -3,8 +3,7 @@ use std::ops::ControlFlow;
 
 use super::docs::Docs;
 use super::{
-    AttrInheritContext, Attrs, Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName,
-    ValidityError,
+    Attrs, Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError,
 };
 use crate::Env;
 
@@ -50,8 +49,8 @@ impl Method {
         impl_generics: Option<&syn::Generics>,
         impl_attrs: &Attrs,
     ) -> Method {
-        let mut attrs: Attrs = (&*m.attrs).into();
-        attrs.merge_parent_attrs(impl_attrs, AttrInheritContext::Method);
+        let mut attrs = impl_attrs.clone();
+        attrs.add_attrs(&*m.attrs);
 
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;

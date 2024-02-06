@@ -131,6 +131,9 @@ impl Module {
 
         let mod_attrs: Attrs = (&*input.attrs).into();
 
+        let impl_parent_attrs: Attrs = mod_attrs.attrs_for_inheritance(AttrInheritContext::Impl);
+        let type_parent_attrs: Attrs = mod_attrs.attrs_for_inheritance(AttrInheritContext::Type);
+
         input
             .content
             .as_ref()
@@ -146,15 +149,15 @@ impl Module {
                 Item::Struct(strct) => {
                     if analyze_types {
                         let custom_type = match DiplomatStructAttribute::parse(&strct.attrs[..]) {
-                            Ok(None) => CustomType::Struct(Struct::new(strct, false, &mod_attrs)),
+                            Ok(None) => CustomType::Struct(Struct::new(strct, false, &type_parent_attrs)),
                             Ok(Some(DiplomatStructAttribute::Out)) => {
-                                CustomType::Struct(Struct::new(strct, true, &mod_attrs))
+                                CustomType::Struct(Struct::new(strct, true, &type_parent_attrs))
                             }
                             Ok(Some(DiplomatStructAttribute::Opaque)) => {
-                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Immutable, &mod_attrs))
+                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Immutable, &type_parent_attrs))
                             }
                             Ok(Some(DiplomatStructAttribute::OpaqueMut)) => {
-                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable, &mod_attrs))
+                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable, &type_parent_attrs))
                             }
                             Err(errors) => {
                                 panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
@@ -168,7 +171,7 @@ impl Module {
                 Item::Enum(enm) => {
                     if analyze_types {
                         let ident = (&enm.ident).into();
-                        let enm = Enum::new(enm, &mod_attrs);
+                        let enm = Enum::new(enm, &type_parent_attrs);
                         custom_types_by_name
                             .insert(ident, CustomType::Enum(enm));
                     }
@@ -182,8 +185,9 @@ impl Module {
                             syn::Type::Path(s) => PathType::from(s),
                             _ => panic!("Self type not found"),
                         };
-                        let mut impl_attrs = Attrs::from(&*imp.attrs);
-                        impl_attrs.merge_parent_attrs(&mod_attrs, AttrInheritContext::Impl);
+                        let mut impl_attrs = impl_parent_attrs.clone();
+                        impl_attrs.add_attrs(&*imp.attrs);
+                        let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::Method);
                         let mut new_methods = imp
                             .items
                             .iter()
@@ -192,7 +196,7 @@ impl Module {
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &impl_attrs))
+                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &method_parent_attrs))
                             .collect();
 
                         let self_ident = self_path.path.elements.last().unwrap();

@@ -1,7 +1,7 @@
 //! #[diplomat::attr] and other attributes
 
 use crate::ast;
-use crate::ast::attrs::{AttrExtendMode, DiplomatBackendAttrCfg};
+use crate::ast::attrs::DiplomatBackendAttrCfg;
 use crate::hir::LoweringError;
 
 use syn::Meta;
@@ -75,7 +75,7 @@ impl Attrs {
                             // We use the override extend mode: a single ast::Attrs
                             // will have had these attributes inherited into the list by appending
                             // to the end; so a later attribute in the list is more pertinent.
-                            this.rename.extend(&rename, AttrExtendMode::Override);
+                            this.rename.extend(&rename);
                         }
                         Err(e) => errors.push(LoweringError::Other(format!(
                             "`rename` attr failed to parse: {e:?}"

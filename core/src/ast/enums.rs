@@ -28,8 +28,9 @@ impl Enum {
             panic!("Enums cannot have generic parameters");
         }
 
-        let mut attrs: Attrs = (&*enm.attrs).into();
-        attrs.merge_parent_attrs(parent_attrs, AttrInheritContext::Type);
+        let mut attrs = parent_attrs.clone();
+        attrs.add_attrs(&*enm.attrs);
+        let variant_parent_attrs = attrs.attrs_for_inheritance(AttrInheritContext::Variant);
 
         Enum {
             name: (&enm.ident).into(),
@@ -54,8 +55,8 @@ impl Enum {
                         .unwrap_or_else(|| last_discriminant + 1);
 
                     last_discriminant = new_discriminant;
-                    let mut v_attrs: Attrs = (&*v.attrs).into();
-                    v_attrs.merge_parent_attrs(&attrs, AttrInheritContext::Variant);
+                    let mut v_attrs = variant_parent_attrs.clone();
+                    v_attrs.add_attrs(&*v.attrs);
                     (
                         (&v.ident).into(),
                         new_discriminant,

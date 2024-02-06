@@ -12,17 +12,24 @@ use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, Token};
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
 #[non_exhaustive]
 pub struct Attrs {
+    /// The regular #[cfg()] attributes. Inherited, though the inheritance onto methods is the
+    /// only relevant one here.
     pub cfg: Vec<Attribute>,
+    /// Inherited, but only during lowering. See hir::Attrs for details on which attributes are inherited
     pub attrs: Vec<DiplomatBackendAttr>,
     /// AST backends only. For using features that may panic AST backends, like returning references.
     ///
     /// This isn't a regular attribute since AST backends do not handle regular attributes. Do not use
     /// in HIR backends,
+    ///
+    /// Not inherited
     pub skip_if_unsupported: bool,
 
     /// Renames to apply to the underlying C symbol. Can be found on methods, impls, and bridge modules, and is inherited.
     ///
     /// Has no effect on types.
+    ///
+    /// Inherited, though not from modules to impls or from enums to enum variants
     pub abi_rename: RenameAttr,
 }
 
@@ -32,16 +39,23 @@ impl Attrs {
             Attr::Cfg(attr) => self.cfg.push(attr),
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
             Attr::SkipIfUnsupported => self.skip_if_unsupported = true,
-            Attr::CRename(rename) => self.abi_rename.extend(&rename, AttrExtendMode::Override),
+            Attr::CRename(rename) => self.abi_rename.extend(&rename),
         }
     }
 
-    /// Merge attributes that should be inherited from the parent
-    pub(crate) fn merge_parent_attrs(&mut self, other: &Attrs, context: AttrInheritContext) {
-        self.cfg.extend(other.cfg.iter().cloned());
-        self.abi_rename
-            .extend(&other.abi_rename, AttrExtendMode::Inherit(context));
+    /// Get a copy of these attributes for use in inheritance, masking out things
+    /// that should not be inherited
+    pub(crate) fn attrs_for_inheritance(&self, context: AttrInheritContext) -> Self {
+        Self {
+            cfg: self.cfg.clone(),
+            // These are inherited during lowering since that's when they're parsed
+            attrs: Vec::new(),
+            // HIR only, for methods only. not inherited
+            skip_if_unsupported: false,
+            abi_rename: self.abi_rename.attrs_for_inheritance(context),
+        }
     }
+
     pub(crate) fn add_attrs(&mut self, attrs: &[Attribute]) {
         for attr in syn_attr_to_ast_attr(attrs) {
             self.add_attr(attr)
@@ -210,15 +224,6 @@ impl Parse for DiplomatBackendAttr {
     }
 }
 
-/// When calling attr.extend(other), when both attributes specify
-/// some setting which one to prefer?
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub(crate) enum AttrExtendMode {
-    /// Prefer data from `self`, the data from `other` is only used if `self` is null
-    Inherit(AttrInheritContext),
-    /// Prefer data from `other`, the data from `self` is only used if `other` is null
-    Override,
-}
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum AttrInheritContext {
     Variant,
@@ -263,25 +268,25 @@ impl RenameAttr {
         self.pattern.is_none()
     }
 
-    pub(crate) fn extend(&mut self, other: &Self, extend_mode: AttrExtendMode) {
-        use AttrInheritContext::*;
-        match extend_mode {
-            // variants and impls don't inherit rename patterns. A rename attribute on a bridge
-            // module will only inherit to types
-            AttrExtendMode::Inherit(Variant | Impl) => (),
-            // Only inherit when self is empty
-            AttrExtendMode::Inherit(_) if self.pattern.is_none() => {
-                self.pattern = other.pattern.clone();
-            }
-            // Only override when there is something to override with
-            AttrExtendMode::Override if other.pattern.is_some() => {
-                self.pattern = other.pattern.clone();
-            }
-            _ => (),
+    pub(crate) fn extend(&mut self, other: &Self) {
+        if other.pattern.is_some() {
+            self.pattern = other.pattern.clone()
         }
 
         // In the future if we support things like to_lower_case they may inherit separately
         // from patterns.
+    }
+
+    /// Get a copy of these attributes for use in inheritance, masking out things
+    /// that should not be inherited
+    pub(crate) fn attrs_for_inheritance(&self, context: AttrInheritContext) -> Self {
+        let pattern = match context {
+            AttrInheritContext::Variant | AttrInheritContext::Impl => Default::default(),
+            _ => self.pattern.clone(),
+        };
+        // In the future if we support things like to_lower_case they may inherit separately
+        // from patterns.
+        Self { pattern }
     }
 
     /// From a replacement pattern, like "icu4x_{0}". Can have up to one {0} in it for substitution.
