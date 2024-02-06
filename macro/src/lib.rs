@@ -277,7 +277,7 @@ impl AttributeInfo {
                         || seg == "out"
                         || seg == "attr"
                         || seg == "skip_if_unsupported"
-                        || seg == "c_rename"
+                        || seg == "abi_rename"
                     {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes

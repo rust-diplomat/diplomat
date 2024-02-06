@@ -23,8 +23,8 @@ export class AttrOpaque1 {
     return wasm.namespace_AttrOpaque1_method(this.underlying);
   }
 
-  crenamed() {
-    return wasm.renamed_in_c_only(this.underlying);
+  abirenamed() {
+    return wasm.renamed_on_abi_only(this.underlying);
   }
 
   method_disabledcpp() {

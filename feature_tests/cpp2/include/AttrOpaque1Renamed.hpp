@@ -23,8 +23,8 @@ inline uint8_t AttrOpaque1Renamed::method_renamed() const {
   return result;
 }
 
-inline uint8_t AttrOpaque1Renamed::crenamed() const {
-  auto result = capi::renamed_in_c_only(this->AsFFI());
+inline uint8_t AttrOpaque1Renamed::abirenamed() const {
+  auto result = capi::renamed_on_abi_only(this->AsFFI());
   return result;
 }
 

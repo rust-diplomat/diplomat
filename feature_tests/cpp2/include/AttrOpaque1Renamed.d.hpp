@@ -18,7 +18,7 @@ public:
 
   inline uint8_t method_renamed() const;
 
-  inline uint8_t crenamed() const;
+  inline uint8_t abirenamed() const;
 
   inline const capi::AttrOpaque1* AsFFI() const;
   inline capi::AttrOpaque1* AsFFI();
