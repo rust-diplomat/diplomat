@@ -94,7 +94,7 @@ impl Module {
     }
 
     pub fn insert_all_types(&self, in_path: Path, out: &mut Env) {
-        let mut mod_symbols = ModuleEnv::default();
+        let mut mod_symbols = ModuleEnv::new(self.attrs.clone());
 
         self.imports.iter().for_each(|(path, name)| {
             mod_symbols.insert(name.clone(), ModSymbol::Alias(path.clone()));
@@ -274,7 +274,7 @@ impl File {
     /// Fuses all declared types into a single environment `HashMap`.
     pub fn all_types(&self) -> Env {
         let mut out = Env::default();
-        let mut top_symbols = ModuleEnv::default();
+        let mut top_symbols = ModuleEnv::new(Default::default());
 
         self.modules.values().for_each(|m| {
             m.insert_all_types(Path::empty(), &mut out);
