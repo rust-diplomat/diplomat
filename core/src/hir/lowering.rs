@@ -859,7 +859,9 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 } else {
                     // value type
                     self.errors.remove(self.errors.len() - 1);
-                    self.lower_out_type(value_ty, return_ltl.as_mut(), in_path).map(SuccessType::OutType).map(ReturnType::Option)
+                    self.lower_out_type(value_ty, return_ltl.as_mut(), in_path)
+                        .map(SuccessType::OutType)
+                        .map(ReturnType::Option)
                 }
             }
             ast::TypeName::Unit => Some(ReturnType::Infallible(writeable_option)),
