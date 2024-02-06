@@ -27,9 +27,10 @@ pub struct Attrs {
 
     /// Renames to apply to the underlying C symbol. Can be found on methods, impls, and bridge modules, and is inherited.
     ///
-    /// Has no effect on types.
+    /// Affects method names when inherited onto methods.
+    /// Affects destructor names when inherited onto types.
     ///
-    /// Inherited, though not from modules to impls or from enums to enum variants
+    /// Inherited.
     pub abi_rename: RenameAttr,
 }
 
@@ -46,13 +47,25 @@ impl Attrs {
     /// Get a copy of these attributes for use in inheritance, masking out things
     /// that should not be inherited
     pub(crate) fn attrs_for_inheritance(&self, context: AttrInheritContext) -> Self {
+        // These attributes are inherited during lowering (since that's when they're parsed)
+        //
+        // Except for impls: lowering has no concept of impls so these get inherited early. This
+        // is fine since impls have no inherent behavior and all attributes on impls are necessarily
+        // only there for inheritance
+        let attrs = if context == AttrInheritContext::MethodFromImpl {
+            self.attrs.clone()
+        } else {
+            Vec::new()
+        };
+
+        let abi_rename = self.abi_rename.attrs_for_inheritance(context, true);
         Self {
             cfg: self.cfg.clone(),
-            // These are inherited during lowering since that's when they're parsed
-            attrs: Vec::new(),
+
+            attrs,
             // HIR only, for methods only. not inherited
             skip_if_unsupported: false,
-            abi_rename: self.abi_rename.attrs_for_inheritance(context),
+            abi_rename,
         }
     }
 
@@ -228,8 +241,13 @@ impl Parse for DiplomatBackendAttr {
 pub(crate) enum AttrInheritContext {
     Variant,
     Type,
-    Impl,
-    Method,
+    /// When a method or an impl is inheriting from a module
+    MethodOrImplFromModule,
+    /// When a method is inheriting from an impl
+    ///
+    /// This distinction is made because HIR attributes are pre-inherited from the impl to the
+    /// method, so the boundary of "method inheriting from module" is different
+    MethodFromImpl,
     // Currently there's no way to feed an attribute to a Module, but such inheritance will
     // likely apply during lowering for config defaults.
     #[allow(unused)]
@@ -279,9 +297,22 @@ impl RenameAttr {
 
     /// Get a copy of these attributes for use in inheritance, masking out things
     /// that should not be inherited
-    pub(crate) fn attrs_for_inheritance(&self, context: AttrInheritContext) -> Self {
+    pub(crate) fn attrs_for_inheritance(
+        &self,
+        context: AttrInheritContext,
+        is_abi_rename: bool,
+    ) -> Self {
         let pattern = match context {
-            AttrInheritContext::Variant | AttrInheritContext::Impl => Default::default(),
+            // No inheritance from modules to method-likes for the rename attribute
+            AttrInheritContext::MethodOrImplFromModule
+                if !is_abi_rename =>
+            {
+                Default::default()
+            }
+            // No effect on variants
+            AttrInheritContext::Variant  => {
+                Default::default()
+            }
             _ => self.pattern.clone(),
         };
         // In the future if we support things like to_lower_case they may inherit separately

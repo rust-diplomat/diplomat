@@ -131,7 +131,8 @@ impl Module {
 
         let mod_attrs: Attrs = (&*input.attrs).into();
 
-        let impl_parent_attrs: Attrs = mod_attrs.attrs_for_inheritance(AttrInheritContext::Impl);
+        let impl_parent_attrs: Attrs =
+            mod_attrs.attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule);
         let type_parent_attrs: Attrs = mod_attrs.attrs_for_inheritance(AttrInheritContext::Type);
 
         input
@@ -187,7 +188,7 @@ impl Module {
                         };
                         let mut impl_attrs = impl_parent_attrs.clone();
                         impl_attrs.add_attrs(&*imp.attrs);
-                        let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::Method);
+                        let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
                         let mut new_methods = imp
                             .items
                             .iter()

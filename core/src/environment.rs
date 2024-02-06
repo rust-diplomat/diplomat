@@ -14,6 +14,7 @@ pub struct Env {
 #[derive(Clone)]
 pub struct ModuleEnv {
     pub(crate) module: BTreeMap<Ident, ModSymbol>,
+    #[cfg_attr(not(feature = "hir"), allow(unused))]
     pub(crate) attrs: Attrs,
 }
 
