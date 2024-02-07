@@ -277,6 +277,7 @@ impl AttributeInfo {
                         || seg == "out"
                         || seg == "attr"
                         || seg == "skip_if_unsupported"
+                        || seg == "abi_rename"
                     {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
@@ -303,8 +304,10 @@ impl AttributeInfo {
     }
 }
 
-fn gen_bridge(input: ItemMod) -> ItemMod {
+fn gen_bridge(mut input: ItemMod) -> ItemMod {
     let module = ast::Module::from_syn(&input, true);
+    // Clean out any diplomat attributes so Rust doesn't get mad
+    let _attrs = AttributeInfo::extract(&mut input.attrs);
     let (brace, mut new_contents) = input.content.unwrap();
 
     new_contents.push(parse2(quote! { use diplomat_runtime::*; }).unwrap());

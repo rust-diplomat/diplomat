@@ -66,6 +66,7 @@ pub struct Module {
     pub imports: Vec<(Path, Ident)>,
     pub declared_types: BTreeMap<Ident, CustomType>,
     pub sub_modules: Vec<Module>,
+    pub attrs: Attrs,
 }
 
 impl Module {
@@ -128,6 +129,8 @@ impl Module {
                 .iter()
                 .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge");
 
+        let mod_attrs: Attrs = (&*input.attrs).into();
+
         input
             .content
             .as_ref()
@@ -143,15 +146,15 @@ impl Module {
                 Item::Struct(strct) => {
                     if analyze_types {
                         let custom_type = match DiplomatStructAttribute::parse(&strct.attrs[..]) {
-                            Ok(None) => CustomType::Struct(Struct::new(strct, false)),
+                            Ok(None) => CustomType::Struct(Struct::new(strct, false, &mod_attrs)),
                             Ok(Some(DiplomatStructAttribute::Out)) => {
-                                CustomType::Struct(Struct::new(strct, true))
+                                CustomType::Struct(Struct::new(strct, true, &mod_attrs))
                             }
                             Ok(Some(DiplomatStructAttribute::Opaque)) => {
-                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Immutable))
+                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Immutable, &mod_attrs))
                             }
                             Ok(Some(DiplomatStructAttribute::OpaqueMut)) => {
-                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable))
+                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable, &mod_attrs))
                             }
                             Err(errors) => {
                                 panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
@@ -164,8 +167,11 @@ impl Module {
 
                 Item::Enum(enm) => {
                     if analyze_types {
+                        let ident = (&enm.ident).into();
+                        let mut enm = Enum::new(enm, &mod_attrs);
+                        enm.attrs.merge_parent_attrs(&mod_attrs);
                         custom_types_by_name
-                            .insert((&enm.ident).into(), CustomType::Enum(Enum::from(enm)));
+                            .insert(ident, CustomType::Enum(enm));
                     }
                 }
 
@@ -177,8 +183,8 @@ impl Module {
                             syn::Type::Path(s) => PathType::from(s),
                             _ => panic!("Self type not found"),
                         };
-                        let attrs = Attrs::from(&*imp.attrs);
-
+                        let mut impl_attrs = Attrs::from(&*imp.attrs);
+                        impl_attrs.merge_parent_attrs(&mod_attrs);
                         let mut new_methods = imp
                             .items
                             .iter()
@@ -187,7 +193,7 @@ impl Module {
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &attrs))
+                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &impl_attrs))
                             .collect();
 
                         let self_ident = self_path.path.elements.last().unwrap();
@@ -216,6 +222,7 @@ impl Module {
             imports,
             declared_types: custom_types_by_name,
             sub_modules,
+            attrs: mod_attrs,
         }
     }
 }

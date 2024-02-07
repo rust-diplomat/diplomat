@@ -230,9 +230,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     &Default::default(), // TODO?!!
                 );
 
-                let dart_to_c = if !mutable {
-                    vec![]
-                } else if let hir::Type::Slice(..) = &field.ty {
+                let dart_to_c = if let hir::Type::Slice(..) = &field.ty {
                     let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone());
                     vec![
                         format!("final {name}View = {view_expr};"),
@@ -845,7 +843,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!(
-                "{dart_name} == null ? ffi.Pointer.fromAddress(0) : {dart_name}._underlying"
+                // Note: {dart_name} == null ? 0 : {dart_name}.underlying
+                // will not work for struct fields since Dart can't guarantee the
+                // null check will be unchanged between the two accesses.
+                "{dart_name}?._underlying ?? ffi.Pointer.fromAddress(0)"
             )
             .into(),
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {

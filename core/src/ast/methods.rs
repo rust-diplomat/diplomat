@@ -49,10 +49,14 @@ impl Method {
         impl_generics: Option<&syn::Generics>,
         impl_attrs: &Attrs,
     ) -> Method {
+        let mut attrs: Attrs = (&*m.attrs).into();
+        attrs.merge_parent_attrs(impl_attrs);
+
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
+        let concat_method_ident = format!("{self_ident}_{method_ident}");
         let extern_ident = syn::Ident::new(
-            format!("{self_ident}_{method_ident}").as_str(),
+            &attrs.abi_rename.apply(concat_method_ident.into()),
             m.sig.ident.span(),
         );
 
@@ -90,9 +94,6 @@ impl Method {
             &all_params[..],
             return_ty.as_ref(),
         );
-
-        let mut attrs: Attrs = (&*m.attrs).into();
-        attrs.merge_parent_attrs(impl_attrs);
 
         Method {
             name: Ident::from(method_ident),

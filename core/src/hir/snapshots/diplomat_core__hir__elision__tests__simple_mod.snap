@@ -92,13 +92,23 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        rename: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -200,13 +210,23 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
-                        rename: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
                     },
                 },
             ],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -230,7 +250,12 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
-                rename: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
             },
             lifetimes: LifetimeEnv {
                 nodes: [

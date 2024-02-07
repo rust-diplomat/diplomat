@@ -16,9 +16,9 @@ pub struct Enum {
     pub attrs: Attrs,
 }
 
-impl From<&syn::ItemEnum> for Enum {
+impl Enum {
     /// Extract an [`Enum`] metadata value from an AST node.
-    fn from(enm: &syn::ItemEnum) -> Enum {
+    pub fn new(enm: &syn::ItemEnum, parent_attrs: &Attrs) -> Enum {
         let mut last_discriminant = -1;
         if !enm.generics.params.is_empty() {
             // Generic types are not allowed.
@@ -27,6 +27,9 @@ impl From<&syn::ItemEnum> for Enum {
             // and update the `CustomType::lifetimes` API accordingly.
             panic!("Enums cannot have generic parameters");
         }
+
+        let mut attrs: Attrs = (&*enm.attrs).into();
+        attrs.merge_parent_attrs(parent_attrs);
 
         Enum {
             name: (&enm.ident).into(),
@@ -61,7 +64,7 @@ impl From<&syn::ItemEnum> for Enum {
                 })
                 .collect(),
             methods: vec![],
-            attrs: (&*enm.attrs).into(),
+            attrs,
         }
     }
 }
@@ -80,15 +83,18 @@ mod tests {
         settings.set_sort_maps(true);
 
         settings.bind(|| {
-            insta::assert_yaml_snapshot!(Enum::from(&syn::parse_quote! {
-                /// Some docs.
-                #[diplomat::rust_link(foo::Bar, Enum)]
-                enum MyLocalEnum {
-                    Abc,
-                    /// Some more docs.
-                    Def
-                }
-            }));
+            insta::assert_yaml_snapshot!(Enum::new(
+                &syn::parse_quote! {
+                    /// Some docs.
+                    #[diplomat::rust_link(foo::Bar, Enum)]
+                    enum MyLocalEnum {
+                        Abc,
+                        /// Some more docs.
+                        Def
+                    }
+                },
+                &Default::default()
+            ));
         });
     }
 
@@ -98,16 +104,19 @@ mod tests {
         settings.set_sort_maps(true);
 
         settings.bind(|| {
-            insta::assert_yaml_snapshot!(Enum::from(&syn::parse_quote! {
-                /// Some docs.
-                #[diplomat::rust_link(foo::Bar, Enum)]
-                enum DiscriminantedEnum {
-                    Abc = -1,
-                    Def = 0,
-                    Ghi = 1,
-                    Jkl = 2,
-                }
-            }));
+            insta::assert_yaml_snapshot!(Enum::new(
+                &syn::parse_quote! {
+                    /// Some docs.
+                    #[diplomat::rust_link(foo::Bar, Enum)]
+                    enum DiscriminantedEnum {
+                        Abc = -1,
+                        Def = 0,
+                        Ghi = 1,
+                        Jkl = 2,
+                    }
+                },
+                &Default::default()
+            ));
         });
     }
 }

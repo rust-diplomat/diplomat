@@ -30,6 +30,10 @@ final class OptionStruct {
   // ignore: unused_element
   _OptionStructFfi _pointer(ffi.Allocator temp) {
     final pointer = temp<_OptionStructFfi>();
+    pointer.ref.a = a?._underlying ?? ffi.Pointer.fromAddress(0);
+    pointer.ref.b = b?._underlying ?? ffi.Pointer.fromAddress(0);
+    pointer.ref.c = c;
+    pointer.ref.d = d?._underlying ?? ffi.Pointer.fromAddress(0);
     return pointer.ref;
   }
 
