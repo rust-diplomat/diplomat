@@ -92,6 +92,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        namespace: None,
                         rename: RenameAttr {
                             pattern: None,
                         },
@@ -103,6 +104,7 @@ TypeContext {
             ],
             attrs: Attrs {
                 disable: false,
+                namespace: None,
                 rename: RenameAttr {
                     pattern: None,
                 },
@@ -210,6 +212,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        namespace: None,
                         rename: RenameAttr {
                             pattern: None,
                         },
@@ -221,6 +224,7 @@ TypeContext {
             ],
             attrs: Attrs {
                 disable: false,
+                namespace: None,
                 rename: RenameAttr {
                     pattern: None,
                 },
@@ -250,6 +254,7 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
+                namespace: None,
                 rename: RenameAttr {
                     pattern: None,
                 },
