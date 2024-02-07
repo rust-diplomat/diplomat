@@ -178,7 +178,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: &'a [MethodInfo<'a>],
             docs: String,
             destructor: String,
-            lifetimes: &'a LifetimeEnv<lifetimes::Type>,
+            lifetimes: &'a LifetimeEnv,
         }
 
         ImplTemplate {
@@ -306,7 +306,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<MethodInfo<'a>>,
             docs: String,
-            lifetimes: &'a LifetimeEnv<lifetimes::Type>,
+            lifetimes: &'a LifetimeEnv,
         }
 
         ImplTemplate {
@@ -827,10 +827,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     /// Generate the name of a single lifetime edge array
     ///
     /// FIXME(Manishearth): this may need to belong in  fmt.rs
-    fn gen_single_edge<Kind: LifetimeKind>(
+    fn gen_single_edge(
         &self,
         lifetime: TypeLifetime,
-        lifetime_env: &LifetimeEnv<Kind>,
+        lifetime_env: &LifetimeEnv,
     ) -> Cow<'static, str> {
         format!("edge_{}", lifetime_env.fmt_lifetime(lifetime.cast())).into()
     }
@@ -838,10 +838,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     /// Make a list of edge arrays, one for every lifetime in a TypeLifetimes
     ///
     /// Will generate with a leading `, `, so will look something like `, edge_a, edge_b, ...`
-    fn gen_lifetimes_edge_list<Kind: LifetimeKind>(
+    fn gen_lifetimes_edge_list(
         &self,
         lifetimes: &TypeLifetimes,
-        lifetime_env: &LifetimeEnv<Kind>,
+        lifetime_env: &LifetimeEnv,
     ) -> String {
         let mut ret = String::new();
         for lt in lifetimes.lifetimes() {
@@ -861,11 +861,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates a Dart expression for a type.
-    fn gen_c_to_dart_for_type<P: TyPosition, Kind: LifetimeKind>(
+    fn gen_c_to_dart_for_type<P: TyPosition>(
         &mut self,
         ty: &Type<P>,
         var_name: Cow<'cx, str>,
-        lifetime_env: &LifetimeEnv<Kind>,
+        lifetime_env: &LifetimeEnv,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(..) => var_name,
@@ -922,10 +922,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates a Dart expressions for a return type.
-    fn gen_c_to_dart_for_return_type<Kind: LifetimeKind>(
+    fn gen_c_to_dart_for_return_type(
         &mut self,
         result_ty: &ReturnType,
-        lifetime_env: &LifetimeEnv<Kind>,
+        lifetime_env: &LifetimeEnv,
     ) -> Option<Cow<'cx, str>> {
         match *result_ty {
             ReturnType::Infallible(None) => None,
@@ -1101,7 +1101,7 @@ struct MethodInfo<'a> {
     /// writeable, if present, is saved to a variable named `writeable`.
     return_expression: Option<Cow<'a, str>>,
 
-    lifetimes: &'a LifetimeEnv<lifetimes::Method>,
+    lifetimes: &'a LifetimeEnv,
     /// Maps each (used in the output) method lifetime to a list of parameters
     /// it borrows from. The parameter list may contain the parameter name,
     /// an internal slice View that was temporarily constructed, or
@@ -1135,10 +1135,7 @@ fn iterator_to_btreeset<T: Ord>(i: impl Iterator<Item = T>) -> BTreeSet<T> {
 }
 
 /// Turn a set of lifetimes into a nice comma separated list
-fn display_lifetime_list<K: LifetimeKind>(
-    env: &LifetimeEnv<K>,
-    set: &BTreeSet<Lifetime<K>>,
-) -> String {
+fn display_lifetime_list(env: &LifetimeEnv, set: &BTreeSet<Lifetime>) -> String {
     if set.len() <= 1 {
         String::new()
     } else {

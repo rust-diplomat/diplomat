@@ -863,7 +863,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         takes_writeable: bool,
         mut return_ltl: Option<ReturnLifetimeLowerer<'_>>,
         in_path: &ast::Path,
-    ) -> Option<(ReturnType, LifetimeEnv<lifetimes::Method>)> {
+    ) -> Option<(ReturnType, LifetimeEnv)> {
         let writeable_option = if takes_writeable {
             Some(SuccessType::Writeable)
         } else {
@@ -897,10 +897,10 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         .and_then(|return_fallability| Some((return_fallability, return_ltl?.finish())))
     }
 
-    fn lower_named_lifetime<Kind: LifetimeKind>(
+    fn lower_named_lifetime(
         &mut self,
         lifetime: &ast::lifetimes::LifetimeNode,
-    ) -> Option<BoundedLifetime<Kind>> {
+    ) -> Option<BoundedLifetime> {
         Some(BoundedLifetime {
             ident: self.lower_ident(lifetime.lifetime.name(), "lifetime")?,
             longer: lifetime.longer.iter().copied().map(Lifetime::new).collect(),
@@ -917,10 +917,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     ///
     /// Should not be extended to return LifetimeEnv<Method>, which needs to use the lifetime
     /// lowerers to handle elision.
-    fn lower_type_lifetime_env(
-        &mut self,
-        ast: &ast::LifetimeEnv,
-    ) -> Option<LifetimeEnv<lifetimes::Type>> {
+    fn lower_type_lifetime_env(&mut self, ast: &ast::LifetimeEnv) -> Option<LifetimeEnv> {
         let nodes = ast
             .nodes
             .iter()

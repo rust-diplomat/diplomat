@@ -17,7 +17,7 @@ use super::lifetimes::{
 pub struct Method {
     pub docs: Docs,
     pub name: IdentBuf,
-    pub lifetime_env: LifetimeEnv<lifetimes::Method>,
+    pub lifetime_env: LifetimeEnv,
 
     pub param_self: Option<ParamSelf>,
     pub params: Vec<Param>,

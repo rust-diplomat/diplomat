@@ -171,7 +171,7 @@ impl ElisionSource {
 pub(super) struct BaseLifetimeLowerer<'ast> {
     lifetime_env: &'ast ast::LifetimeEnv,
     self_lifetimes: Option<TypeLifetimes>,
-    nodes: SmallVec<[BoundedLifetime<lifetimes::Method>; super::lifetimes::INLINE_NUM_LIFETIMES]>,
+    nodes: SmallVec<[BoundedLifetime; super::lifetimes::INLINE_NUM_LIFETIMES]>,
     num_lifetimes: usize,
 }
 
@@ -345,7 +345,7 @@ impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
 
 impl<'ast> ReturnLifetimeLowerer<'ast> {
     /// Finalize the lifetimes in the method, returning the resulting [`LifetimeEnv`].
-    pub fn finish(self) -> LifetimeEnv<lifetimes::Method> {
+    pub fn finish(self) -> LifetimeEnv {
         LifetimeEnv::new(self.base.nodes, self.base.num_lifetimes)
     }
 }
