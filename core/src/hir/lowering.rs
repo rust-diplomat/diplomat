@@ -1,11 +1,10 @@
-use super::lifetimes::{self, BoundedLifetime, Lifetime, LifetimeEnv, LifetimeKind};
 use super::{
-    AttributeContext, AttributeValidator, Attrs, Borrow, EnumDef, EnumPath, EnumVariant, IdentBuf,
-    LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional,
-    OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf,
-    PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
-    SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, SuccessType,
-    Type,
+    AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, EnumDef, EnumPath,
+    EnumVariant, IdentBuf, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method,
+    NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField, OutStructPath,
+    OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType, ReturnLifetimeLowerer,
+    ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType, Slice, StructDef,
+    StructField, StructPath, SuccessType, Type,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};

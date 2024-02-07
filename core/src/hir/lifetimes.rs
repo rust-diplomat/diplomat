@@ -225,18 +225,6 @@ impl<T> MaybeStatic<T> {
     }
 }
 
-/// The [`LifetimeKind`] of [`Lifetimes`]
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-#[allow(clippy::exhaustive_structs)] // marker type
-pub struct Type;
-
-pub type Method = Type;
-
-/// Abstraction over where lifetimes can occur
-pub trait LifetimeKind: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {}
-
-impl LifetimeKind for Type {}
-
 /// A lifetime that exists as part of a type or method signature.
 ///
 /// This index only makes sense in the context of a surrounding type or method; since

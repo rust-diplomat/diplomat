@@ -5,15 +5,7 @@
 mod attrs;
 mod defs;
 mod elision;
-// We don't reexport this for two reasons.
-//
-// One is that these are somewhat more niche types and we don't want to clutter the main module too
-// much. You only need these if you're dealing with lifetimes, which not all backends may wish to
-// do.
-//
-// Two is that this module contains types named Type and Method which will conflict with others.
-pub mod lifetimes;
-pub use lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, LifetimeKind};
+mod lifetimes;
 mod lowering;
 mod methods;
 mod paths;
@@ -24,6 +16,7 @@ mod types;
 pub use attrs::*;
 pub use defs::*;
 pub(super) use elision::*;
+pub use lifetimes::*;
 pub(super) use lowering::*;
 pub use methods::*;
 pub use paths::*;

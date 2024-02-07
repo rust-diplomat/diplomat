@@ -3,8 +3,8 @@ use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type,
-    TypeDef, TypeId, Lifetime, LifetimeEnv, LifetimeKind, Lifetimes, MaybeStatic,
+    self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
+    StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
