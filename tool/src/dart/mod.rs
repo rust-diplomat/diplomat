@@ -234,12 +234,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone());
                     vec![
                         format!("final {name}View = {view_expr};"),
-                        format!("pointer.ref.{name}._pointer = {name}View.pointer(temp);"),
-                        format!("pointer.ref.{name}._length = {name}View.length;"),
+                        format!("struct.{name}._pointer = {name}View.pointer(temp);"),
+                        format!("struct.{name}._length = {name}View.length;"),
                     ]
                 } else {
                     vec![format!(
-                        "pointer.ref.{name} = {};",
+                        "struct.{name} = {};",
                         self.gen_dart_to_c_for_type(&field.ty, name.clone())
                     )]
                 };

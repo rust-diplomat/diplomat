@@ -6,7 +6,7 @@ final class {{type_name}} implements ffi.Finalizable {
 
   final core.List<Object> _edgeSelf;
   {%- for lifetime in lifetimes %}
-  // ignore: unused element
+  // ignore: unused_field
   final core.List<Object> _edge{{lifetime}};
   {%- endfor %}
 

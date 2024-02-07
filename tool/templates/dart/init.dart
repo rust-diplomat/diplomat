@@ -16,7 +16,7 @@ typedef Rune = int;
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
-// ignore: unused element
+// ignore: unused_element
 final _arenaFinalizer = core.Finalizer<ffi2.Arena>((arena) => arena.releaseAll());
 
 /// An unspecified error value
@@ -29,7 +29,7 @@ class VoidError {
   int get hashCode => 1;
 }
 
-extension _View on ByteBuffer {
+extension on ByteBuffer {
   // ignore: unused_element
   ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
     return alloc<ffi.Uint8>(length)..asTypedList(length).setRange(0, length, asUint8List());
@@ -38,19 +38,19 @@ extension _View on ByteBuffer {
   int get length => lengthInBytes;
 }
 
-extension _UtfViews on String {
+extension on String {
   // ignore: unused_element
   _Utf8View get utf8View => _Utf8View(this);
   // ignore: unused_element
   _Utf16View get utf16View => _Utf16View(this);
 }
 
-extension _NativeBoolViews on core.List<bool> {
+extension on core.List<bool> {
   // ignore: unused_element
   _BoolListView get boolView => _BoolListView(this);
 }
 
-extension _NativeIntViews on core.List<int> {
+extension on core.List<int> {
   // ignore: unused_element
   _Int8ListView get int8View => _Int8ListView(this);
   // ignore: unused_element
@@ -73,7 +73,7 @@ extension _NativeIntViews on core.List<int> {
   _UsizeListView get usizeView => _UsizeListView(this);
 }
 
-extension _NativeFloatViews on core.List<double> {
+extension on core.List<double> {
   // ignore: unused_element
   _Float32ListView get float32View => _Float32ListView(this);
   // ignore: unused_element

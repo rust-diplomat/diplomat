@@ -19,7 +19,7 @@ final class {{type_name}} {
   {%- endfor %}
 
   {%- for lifetime in lifetimes %}
-  // ignore: unused element
+  // ignore: unused_field
   final core.List<Object> _edge{{lifetime}};
   {%- endfor %}
 
@@ -30,7 +30,6 @@ final class {{type_name}} {
   {%- when None %}
   {%- endmatch %}
 
-  // ignore: unused_element
   // Internal constructor from FFI.
   {%- if lifetimes.len() != 0 %}
   // This struct contains borrowed fields, so this takes in a list of
@@ -39,6 +38,7 @@ final class {{type_name}} {
   // This method does not attempt to handle any dependencies between lifetimes, the caller
   // should handle this when constructing edge arrays.
   {%- endif %}
+  // ignore: unused_element
   {{type_name}}._(_{{type_name}}Ffi underlying {%- if !lifetimes.is_empty() %}, { {%- for lifetime in lifetimes -%}required core.List<Object> edge{{lifetime}}{% if !loop.last %}, {% endif %}{%- endfor -%}}{% endif %}) : 
     {%- for lifetime in lifetimes %}
     _edge{{lifetime}} = edge{{lifetime}},
@@ -50,13 +50,13 @@ final class {{type_name}} {
 
   // ignore: unused_element
   _{{type_name}}Ffi _pointer(ffi.Allocator temp) {
-    final pointer = temp<_{{type_name}}Ffi>();
+    final struct = ffi.Struct.create<_{{type_name}}Ffi>();
     {%- for field in fields %}
     {%- for statement in field.dart_to_c %}
     {{statement}}
     {%- endfor %}
     {%- endfor %}
-    return pointer.ref;
+    return struct;
   }
 
   {%- for m in methods %}
