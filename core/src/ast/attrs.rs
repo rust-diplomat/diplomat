@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::convert::Infallible;
 use std::str::FromStr;
 use syn::parse::{Error as ParseError, Parse, ParseStream};
-use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, Token};
+use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, MetaList, Token};
 
 /// The list of attributes on a type. All attributes except `attrs` (HIR attrs) are
 /// potentially read by the diplomat macro and the AST backends, anything that is not should
@@ -342,25 +342,15 @@ impl RenameAttr {
         }
     }
 
-    pub(crate) fn from_meta(meta: &Meta) -> Result<Self, Cow<'static, str>> {
-        static ABI_RENAME_ERROR: &str = "#[diplomat::abi_rename] must be given a string value";
+    pub(crate) fn from_meta(meta: &Meta) -> Result<Self, &'static str> {
+        let attr = StandardAttribute::from_meta(meta)
+            .map_err(|_| "#[diplomat::abi_rename] must be given a string value")?;
 
-        match meta {
-            Meta::Path(..) => Err(ABI_RENAME_ERROR.into()),
-            Meta::NameValue(ref nv) => {
-                // Support a shortcut `abi_rename = "..."`
-                let Expr::Lit(ref lit) = nv.value else {
-                    return Err(ABI_RENAME_ERROR.into());
-                };
-                let Lit::Str(ref lit) = lit.lit else {
-                    return Err(ABI_RENAME_ERROR.into());
-                };
-                Ok(RenameAttr::from_pattern(&lit.value()))
+        match attr {
+            StandardAttribute::String(s) => Ok(RenameAttr::from_pattern(&s)),
+            StandardAttribute::List(_) => {
+                Err("Failed to parse malformed #[diplomat::abi_rename(...)]: found list")
             }
-            // The full syntax to which we'll add more things in the future, `abi_rename("")`
-            Meta::List(list) => list.parse_args().map_err(|e| {
-                format!("Failed to parse malformed #[diplomat::abi_rename(...)]: {e}").into()
-            }),
         }
     }
 }
@@ -383,15 +373,6 @@ impl FromStr for RenamePattern {
     }
 }
 
-/// Meant to be used with Attribute::parse_args()
-impl Parse for RenameAttr {
-    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
-        let value: LitStr = input.parse()?;
-        let attr = RenameAttr::from_pattern(&value.value());
-        Ok(attr)
-    }
-}
-
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize)]
 struct RenamePattern {
     /// The string to replace with
@@ -399,6 +380,45 @@ struct RenamePattern {
     /// The index in `replacement` in which to insert the original string. If None,
     /// this is a pure rename
     insertion_index: Option<usize>,
+}
+
+/// Helper type for parsing standard attributes. A standard attribute typically will accept the forms:
+///
+/// - `#[attr = "foo"]` and `#[attr("foo")]` for a simple string
+/// - `#[attr(....)]` for a more complicated context
+///
+/// This allows attributes to parse simple string values without caring too much about the NameValue vs List representation
+/// and then attributes can choose to handle more complicated lists if they so desire.
+pub(crate) enum StandardAttribute<'a> {
+    String(String),
+    List(&'a MetaList),
+}
+
+impl<'a> StandardAttribute<'a> {
+    /// Parse from a Meta. Returns an error when no string value is specified in the path/namevalue forms.
+    pub(crate) fn from_meta(meta: &'a Meta) -> Result<Self, ()> {
+        match meta {
+            Meta::Path(..) => Err(()),
+            Meta::NameValue(ref nv) => {
+                // Support a shortcut `abi_rename = "..."`
+                let Expr::Lit(ref lit) = nv.value else {
+                    return Err(());
+                };
+                let Lit::Str(ref lit) = lit.lit else {
+                    return Err(());
+                };
+                Ok(Self::String(lit.value()))
+            }
+            // The full syntax to which we'll add more things in the future, `abi_rename("")`
+            Meta::List(list) => {
+                if let Ok(lit) = list.parse_args::<LitStr>() {
+                    Ok(Self::String(lit.value()))
+                } else {
+                    Ok(Self::List(list))
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
