@@ -19,7 +19,7 @@ pub(crate) const INLINE_NUM_LIFETIMES: usize = 4;
 // Not fully sure how that will look like yet, but the ideas of what this will do
 // is basically the same.
 #[derive(Debug)]
-pub struct LifetimeEnv<Kind> {
+pub struct LifetimeEnv<Kind = Type> {
     /// List of named lifetimes in scope of the method, and their bounds
     nodes: SmallVec<[BoundedLifetime<Kind>; INLINE_NUM_LIFETIMES]>,
 
@@ -123,7 +123,7 @@ impl<Kind: LifetimeKind> LifetimeEnv<Kind> {
 /// Invariant: for a BoundedLifetime found inside a LifetimeEnv, all short/long connections
 /// should be bidirectional.
 #[derive(Debug)]
-pub(super) struct BoundedLifetime<Kind> {
+pub(super) struct BoundedLifetime<Kind = Type> {
     pub(super) ident: IdentBuf,
     /// Lifetimes longer than this (not transitive)
     ///
@@ -230,16 +230,13 @@ impl<T> MaybeStatic<T> {
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[allow(clippy::exhaustive_structs)] // marker type
 pub struct Type;
-/// The [`LifetimeKind`] of [`MethodLifetimes`]
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-#[allow(clippy::exhaustive_structs)] // marker type
-pub struct Method;
+
+pub type Method = Type;
 
 /// Abstraction over where lifetimes can occur
 pub trait LifetimeKind: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOrd + Ord {}
 
 impl LifetimeKind for Type {}
-impl LifetimeKind for Method {}
 
 /// A lifetime that exists as part of a type or method signature (determined by
 /// Kind parameter, which will be one of [`LifetimeKind`]).
@@ -247,7 +244,7 @@ impl LifetimeKind for Method {}
 /// This index only makes sense in the context of a surrounding type or method; since
 /// this is essentially an index into that type/method's lifetime list.
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Lifetime<Kind>(usize, PhantomData<Kind>);
+pub struct Lifetime<Kind = Type>(usize, PhantomData<Kind>);
 
 impl<Kind> Debug for Lifetime<Kind> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -285,11 +282,11 @@ pub type TypeLifetimes = Lifetimes<Type>;
 ///
 /// This type is intended to be used as a key into a map to keep track of which
 /// borrowed fields depend on which method lifetimes.
-pub type MethodLifetime = Lifetime<Method>;
+pub type MethodLifetime = TypeLifetime;
 
 /// Map a lifetime in a nested struct to the original lifetime defined
 /// in the method that it refers to.
-pub type MethodLifetimes = Lifetimes<Method>;
+pub type MethodLifetimes = TypeLifetimes;
 
 impl<Kind: LifetimeKind> Lifetime<Kind> {
     pub(super) fn new(index: usize) -> Self {
