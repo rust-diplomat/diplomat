@@ -2,7 +2,7 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 const AttrOpaque2_box_destroy_registry = new FinalizationRegistry(underlying => {
-  wasm.AttrOpaque2_destroy(underlying);
+  wasm.namespace_AttrOpaque2_destroy(underlying);
 });
 
 export class AttrOpaque2 {

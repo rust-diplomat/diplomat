@@ -1,7 +1,7 @@
-#ifndef AttrEnum_HPP
-#define AttrEnum_HPP
+#ifndef CPPRenamedAttrEnum_HPP
+#define CPPRenamedAttrEnum_HPP
 
-#include "AttrEnum.d.hpp"
+#include "CPPRenamedAttrEnum.d.hpp"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -13,7 +13,7 @@
 #include "AttrEnum.h"
 
 
-inline AttrEnum::AttrEnum(AttrEnum::Value cpp_value) {
+inline CPPRenamedAttrEnum::CPPRenamedAttrEnum(CPPRenamedAttrEnum::Value cpp_value) {
   switch (cpp_value) {
     case A:
       value = capi::AttrEnum_A;
@@ -29,12 +29,12 @@ inline AttrEnum::AttrEnum(AttrEnum::Value cpp_value) {
   }
 }
 
-inline capi::AttrEnum AttrEnum::AsFFI() const {
+inline capi::AttrEnum CPPRenamedAttrEnum::AsFFI() const {
   return value;
 }
 
-inline AttrEnum AttrEnum::FromFFI(capi::AttrEnum c_enum) {
-  return AttrEnum(c_enum);
+inline CPPRenamedAttrEnum CPPRenamedAttrEnum::FromFFI(capi::AttrEnum c_enum) {
+  return CPPRenamedAttrEnum(c_enum);
 }
 
-#endif // AttrEnum_HPP
+#endif // CPPRenamedAttrEnum_HPP

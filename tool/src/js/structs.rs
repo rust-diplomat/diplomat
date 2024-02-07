@@ -143,7 +143,7 @@ pub fn gen_struct<W: fmt::Write>(
                 "const {}_box_destroy_registry = new FinalizationRegistry(underlying => {});",
                 opaque.name,
                 display::block(|mut f| {
-                    writeln!(f, "wasm.{}_destroy(underlying);", opaque.name)
+                    writeln!(f, "wasm.{}(underlying);", custom_type.dtor_name())
                 })
             )?;
             writeln!(out)?;

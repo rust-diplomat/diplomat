@@ -39,6 +39,7 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
         self.tcx.resolve_type(id).name().as_str().into()
     }
+
     /// Resolve and format the name of a type for use in header names: decl version
     //
     /// Enums can't be forward-declared in C, but we do want enums to have methods,
@@ -80,6 +81,13 @@ impl<'tcx> CFormatter<'tcx> {
         let method_name = method.name.as_str();
         let put_together = format!("{ty_name}_{method_name}");
         method.attrs.abi_rename.apply(put_together.into()).into()
+    }
+
+    /// Resolve and format a type's destructor
+    pub fn fmt_dtor_name(&self, ty: TypeId) -> String {
+        let ty_name = self.fmt_type_name(ty);
+        let renamed = self.tcx.resolve_type(ty).attrs().abi_rename.apply(ty_name);
+        format!("{renamed}_destroy")
     }
 
     pub fn fmt_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {

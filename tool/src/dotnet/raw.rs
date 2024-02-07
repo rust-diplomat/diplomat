@@ -118,8 +118,8 @@ pub fn gen<'ast>(
                 writeln!(out)?;
                 writeln!(
                     out,
-                    r#"[DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "{}_destroy", ExactSpelling = true)]"#,
-                    typ.name()
+                    r#"[DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "{}", ExactSpelling = true)]"#,
+                    typ.dtor_name()
                 )?;
                 writeln!(out, "public static unsafe extern void Destroy({}* self);", typ.name())
             })

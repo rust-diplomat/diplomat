@@ -410,7 +410,7 @@ mod tests {
             let m = crate::ast::Module::from_syn(&syn::parse_quote! { $($tokens)* }, true);
 
             let mut env = crate::Env::default();
-            let mut top_symbols = crate::ModuleEnv::default();
+            let mut top_symbols = crate::ModuleEnv::new(Default::default());
 
             m.insert_all_types(crate::ast::Path::empty(), &mut env);
             top_symbols.insert(m.name.clone(), crate::ast::ModSymbol::SubModule(m.name.clone()));

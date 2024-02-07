@@ -1,7 +1,7 @@
 //! #[diplomat::attr] and other attributes
 
 use crate::ast;
-use crate::ast::attrs::{AttrExtendMode, DiplomatBackendAttrCfg};
+use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg};
 use crate::hir::LoweringError;
 
 use syn::Meta;
@@ -11,10 +11,13 @@ pub use crate::ast::attrs::RenameAttr;
 #[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct Attrs {
+    /// This attribute is always inherited except to variants
     pub disable: bool,
+    /// This attribute is inherited except through methods and variants
     pub rename: RenameAttr,
+    /// This attribute is inherited except through variants
     pub abi_rename: RenameAttr,
-    // more to be added: rename, namespace, etc
+    // more to be added: namespace, etc
 }
 
 /// Where the attribute was found. Some attributes are only allowed in some contexts
@@ -27,6 +30,7 @@ pub enum AttributeContext {
     EnumVariant,
     Opaque,
     Method,
+    Module,
 }
 
 impl Attrs {
@@ -34,13 +38,13 @@ impl Attrs {
         ast: &ast::Attrs,
         validator: &(impl AttributeValidator + ?Sized),
         context: AttributeContext,
+        parent_attrs: &Attrs,
         errors: &mut Vec<LoweringError>,
     ) -> Self {
-        let mut this = Attrs {
-            // Backends must support this since it applies to the macro/C code.
-            abi_rename: ast.abi_rename.clone(),
-            ..Default::default()
-        };
+        let mut this = parent_attrs.clone();
+        // Backends must support this since it applies to the macro/C code.
+        // No special inheritance, was already appropriately inherited in AST
+        this.abi_rename = ast.abi_rename.clone();
 
         let support = validator.attrs_supported();
         for attr in &ast.attrs {
@@ -75,7 +79,7 @@ impl Attrs {
                             // We use the override extend mode: a single ast::Attrs
                             // will have had these attributes inherited into the list by appending
                             // to the end; so a later attribute in the list is more pertinent.
-                            this.rename.extend(&rename, AttrExtendMode::Override);
+                            this.rename.extend(&rename);
                         }
                         Err(e) => errors.push(LoweringError::Other(format!(
                             "`rename` attr failed to parse: {e:?}"
@@ -90,6 +94,24 @@ impl Attrs {
         }
 
         this
+    }
+
+    pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
+        let rename = self.rename.attrs_for_inheritance(context, false);
+
+        // Disabling shouldn't inherit to variants
+        let disable = if context == AttrInheritContext::Variant {
+            false
+        } else {
+            self.disable
+        };
+
+        Attrs {
+            disable,
+            rename,
+            // Was already inherited on the AST side
+            abi_rename: Default::default(),
+        }
     }
 }
 
@@ -131,9 +153,10 @@ pub trait AttributeValidator {
         &self,
         ast: &ast::Attrs,
         context: AttributeContext,
+        parent_attrs: &Attrs,
         errors: &mut Vec<LoweringError>,
     ) -> Attrs {
-        Attrs::from_ast(ast, self, context, errors)
+        Attrs::from_ast(ast, self, context, parent_attrs, errors)
     }
 }
 

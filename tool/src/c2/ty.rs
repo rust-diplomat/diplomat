@@ -191,11 +191,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_dtor(&mut self, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        write!(
-            self.impl_header,
-            "void {ty_name}_destroy({ty_name}* self);\n\n"
-        )
-        .unwrap();
+        let dtor_name = self.cx.formatter.fmt_dtor_name(id);
+        write!(self.impl_header, "void {dtor_name}({ty_name}* self);\n\n").unwrap();
     }
 
     pub fn gen_result(&mut self, name: &str, ty: ResultType) {

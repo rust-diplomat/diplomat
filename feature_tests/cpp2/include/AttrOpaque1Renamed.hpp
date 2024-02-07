@@ -45,7 +45,7 @@ inline AttrOpaque1Renamed* AttrOpaque1Renamed::FromFFI(capi::AttrOpaque1* ptr) {
 }
 
 inline void AttrOpaque1Renamed::operator delete(void* ptr) {
-  capi::AttrOpaque1_destroy(reinterpret_cast<capi::AttrOpaque1*>(ptr));
+  capi::namespace_AttrOpaque1_destroy(reinterpret_cast<capi::AttrOpaque1*>(ptr));
 }
 
 

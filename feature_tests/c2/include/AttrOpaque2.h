@@ -15,7 +15,7 @@ extern "C" {
 #endif // __cplusplus
 
 
-void AttrOpaque2_destroy(AttrOpaque2* self);
+void namespace_AttrOpaque2_destroy(AttrOpaque2* self);
 
 
 #ifdef __cplusplus
