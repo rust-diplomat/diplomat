@@ -43,27 +43,27 @@ final class One implements ffi.Finalizable {
 
   factory One.returnOutlivesParam(Two hold, One nohold) {
     final result = _One_return_outlives_param(hold._underlying, nohold._underlying);
-    return One._(result, edgeLong: [hold]);
+    return One._(result, edgeA: [hold]);
   }
 
   factory One.diamondTop(One top, One left, One right, One bottom) {
     final result = _One_diamond_top(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, edgeTop: [top, left, right, bottom]);
+    return One._(result, edgeA: [top, left, right, bottom]);
   }
 
   factory One.diamondLeft(One top, One left, One right, One bottom) {
     final result = _One_diamond_left(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, edgeLeft: [left, bottom]);
+    return One._(result, edgeA: [left, bottom]);
   }
 
   factory One.diamondRight(One top, One left, One right, One bottom) {
     final result = _One_diamond_right(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, edgeRight: [right, bottom]);
+    return One._(result, edgeA: [right, bottom]);
   }
 
   factory One.diamondBottom(One top, One left, One right, One bottom) {
     final result = _One_diamond_bottom(top._underlying, left._underlying, right._underlying, bottom._underlying);
-    return One._(result, edgeBottom: [bottom]);
+    return One._(result, edgeA: [bottom]);
   }
 
   factory One.diamondAndNestedTypes(One a, One b, One c, One d, One nohold) {

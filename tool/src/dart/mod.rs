@@ -884,7 +884,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
 
-                let edges = op.owner.lifetime().map(|lt| {
+                let linked = op.link_lifetimes(self.tcx);
+
+                let edges = linked.self_lifetime().map(|lt| {
                     if let MaybeStatic::NonStatic(lt) = lt {
                         format!("edgeSelf: [{}]", lifetime_info[&lt.cast()].incoming_edges.join(", ")).into()
                     } else {
@@ -893,10 +895,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         "edgeSelf: ['static']".into()
                     }
                 }).into_iter().chain(
-                    op.lifetimes.lifetimes().flat_map(|lt| {
+                    linked.lifetimes_def_only().flat_map(|(lt, lt_def)| {
                     if let MaybeStatic::NonStatic(lt) = lt {
-                        // TODO: This ain't right. We want the name that the lifetime has in the return type.
-                        let ident = lifetime_env.fmt_lifetime(&lt.cast()).to_upper_camel_case();
+                        let ident = linked.def_env().fmt_lifetime(&lt_def.cast()).to_upper_camel_case();
                         Some(format!("edge{ident}: [{}]", lifetime_info[&lt.cast()].incoming_edges.join(", ")).into())
                     } else {
                         None
@@ -914,10 +915,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
 
+                let linked = st.link_lifetimes(self.tcx);
+
                 let edges =
-                    st.lifetimes().lifetimes().flat_map(|lt| {
+                    linked.lifetimes_def_only().flat_map(|(lt, lt_def)| {
                     if let MaybeStatic::NonStatic(lt) = lt {
-                        let ident = lifetime_env.fmt_lifetime(&lt.cast()).to_upper_camel_case();
+                        let ident = linked.def_env().fmt_lifetime(&lt_def.cast()).to_upper_camel_case();
                         Some(format!("edge{ident}: [{}]", lifetime_info[&lt.cast()].incoming_edges.join(", ")).into())
                     } else {
                         None

@@ -28,7 +28,7 @@ final class RefList implements ffi.Finalizable {
 
   factory RefList.node(RefListParameter data) {
     final result = _RefList_node(data._underlying);
-    return RefList._(result, edgeB: [data]);
+    return RefList._(result, edgeA: [data]);
   }
 }
 

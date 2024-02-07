@@ -26,7 +26,7 @@ final class AttrOpaque1 implements ffi.Finalizable {
 
   factory AttrOpaque1() {
     final result = _namespace_AttrOpaque1_new();
-    return AttrOpaque1._(result, true, []);
+    return AttrOpaque1._(result);
   }
 
   int get method {
