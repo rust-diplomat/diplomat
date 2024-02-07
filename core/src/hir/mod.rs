@@ -13,7 +13,7 @@ mod elision;
 //
 // Two is that this module contains types named Type and Method which will conflict with others.
 pub mod lifetimes;
-pub use lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
+pub use lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, LifetimeKind};
 mod lowering;
 mod methods;
 mod paths;
