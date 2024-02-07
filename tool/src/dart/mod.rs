@@ -383,10 +383,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // the type lifetimes array
                     for (def_lt, use_lt) in def_lifetimes.zip(use_lifetimes) {
                         if let MaybeStatic::NonStatic(use_lt) = use_lt {
-                            if method_lifetime
-                                .all_longer_lifetimes
-                                .contains(&use_lt.cast())
-                            {
+                            if method_lifetime.all_longer_lifetimes.contains(&use_lt) {
                                 let edge = format!(
                                     "...{param_name}._fields_for_lifetime_{}()",
                                     def.lifetimes.fmt_lifetime(def_lt)
@@ -402,7 +399,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 for method_lifetime in method_lifetimes_map.values_mut() {
                     for lt in ty.lifetimes() {
                         if let MaybeStatic::NonStatic(lt) = lt {
-                            if method_lifetime.all_longer_lifetimes.contains(&lt.cast()) {
+                            if method_lifetime.all_longer_lifetimes.contains(&lt) {
                                 let edge = if let hir::Type::Slice(..) = ty {
                                     // Slices make a temporary view type that needs to be attached
                                     // XXXManishearth: this is the wrong variable. We need to grab on to the arena
@@ -824,7 +821,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     ///
     /// FIXME(Manishearth): this may need to belong in  fmt.rs
     fn gen_single_edge(&self, lifetime: Lifetime, lifetime_env: &LifetimeEnv) -> Cow<'static, str> {
-        format!("edge_{}", lifetime_env.fmt_lifetime(lifetime.cast())).into()
+        format!("edge_{}", lifetime_env.fmt_lifetime(lifetime)).into()
     }
 
     /// Make a list of edge arrays, one for every lifetime in a Lifetimes

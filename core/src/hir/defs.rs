@@ -1,6 +1,6 @@
 //! Type definitions for structs, output structs, opaque structs, and enums.
 
-use super::lifetimes::{self, LifetimeEnv};
+use super::lifetimes::LifetimeEnv;
 use super::{Attrs, Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
 use crate::ast::Docs;
 

@@ -7,7 +7,7 @@ use smallvec::SmallVec;
 
 use super::{paths, Attrs, Docs, Ident, IdentBuf, OutType, SelfType, Slice, Type, TypeContext};
 
-use super::lifetimes::{self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
+use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 
 /// A method exposed to Diplomat.
 #[derive(Debug)]
@@ -142,7 +142,7 @@ impl ReturnType {
         let mut add_to_set = |ty: &OutType| {
             for lt in ty.lifetimes() {
                 if let MaybeStatic::NonStatic(lt) = lt {
-                    set.insert(lt.cast());
+                    set.insert(lt);
                 }
             }
         };

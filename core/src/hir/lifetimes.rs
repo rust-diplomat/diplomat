@@ -3,9 +3,9 @@
 
 use super::IdentBuf;
 use crate::ast;
-use core::fmt::{self, Debug};
+use core::fmt::Debug;
 use core::hash::Hash;
-use core::marker::PhantomData;
+
 use smallvec::{smallvec, SmallVec};
 use std::borrow::{Borrow, Cow};
 
@@ -13,11 +13,7 @@ use std::borrow::{Borrow, Cow};
 /// can hold inline before needing to dynamically allocate.
 pub(crate) const INLINE_NUM_LIFETIMES: usize = 4;
 
-/// The lifetimes and bounds found on a method or type definition (determined by
-/// Kind parameter, which will be one of [`LifetimeKind`])
-// TODO(Quinn): This type is going to mainly be recycled from `ast::LifetimeEnv`.
-// Not fully sure how that will look like yet, but the ideas of what this will do
-// is basically the same.
+/// The lifetimes and bounds found on a method or type definition
 #[derive(Debug)]
 pub struct LifetimeEnv {
     /// List of named lifetimes in scope of the method, and their bounds
@@ -32,7 +28,7 @@ pub struct LifetimeEnv {
     /// `Lifetime`s will fall into this range, and we'll know that it's
     /// a named lifetime if it's < `nodes.len()`, or that it's an anonymous
     /// lifetime if it's < `num_lifetimes`. Otherwise, we'd have to make a
-    /// distinction in `Lifetime` about which kind it refers to.
+    /// distinction in `Lifetime` about which context it's in.
     num_lifetimes: usize,
 }
 
@@ -52,12 +48,7 @@ impl LifetimeEnv {
 
     /// Get an iterator of all lifetimes that this must live as long as (including itself)
     /// with the first lifetime always being returned first
-    ///
-    /// The kind *can* be different: e.g. the Type paths in a method signature will
-    /// still have Lifetime<Type> even though they're in a method context.
-    ///
-    /// In the medium term we may want to get rid of Type vs Method lifetimes, OR
-    /// make them a parameter on Type.
+
     pub fn all_shorter_lifetimes(
         &self,
         lt: impl Borrow<Lifetime>,
@@ -84,7 +75,7 @@ impl LifetimeEnv {
     }
 
     pub fn all_lifetimes(&self) -> impl ExactSizeIterator<Item = Lifetime> {
-        (0..self.num_lifetimes()).map(|i| Lifetime::new(i))
+        (0..self.num_lifetimes()).map(Lifetime::new)
     }
 
     /// Returns a new [`LifetimeEnv`].
@@ -225,15 +216,14 @@ impl<T> MaybeStatic<T> {
     }
 }
 
-/// A lifetime that exists as part of a type or method signature.
+/// A lifetime that exists as part of a type name, struct signature, or method signature.
 ///
 /// This index only makes sense in the context of a surrounding type or method; since
 /// this is essentially an index into that type/method's lifetime list.
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct Lifetime(usize);
 
-/// A set of lifetimes found on a type name or method signature (determined by
-/// Kind parameter, which will be one of [`LifetimeKind`])
+/// A set of lifetimes found on a type name, struct signature, or method signature
 #[derive(Clone, Debug)]
 pub struct Lifetimes {
     indices: SmallVec<[MaybeStatic<Lifetime>; 2]>,
@@ -242,13 +232,6 @@ pub struct Lifetimes {
 impl Lifetime {
     pub(super) fn new(index: usize) -> Self {
         Self(index)
-    }
-
-    /// Cast between lifetime kinds. See all_longer_lifetimes() as to why this can be necessary.
-    ///
-    /// Hopefully can be removed in the long run.
-    pub fn cast(self) -> Self {
-        Lifetime::new(self.0)
     }
 }
 
