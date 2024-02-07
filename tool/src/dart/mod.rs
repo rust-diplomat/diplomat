@@ -2,8 +2,7 @@ use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::lifetimes::{
-    self, Lifetime, LifetimeEnv, LifetimeKind, MaybeStatic, MethodLifetime, TypeLifetime,
-    TypeLifetimes,
+    self, Lifetime, LifetimeEnv, LifetimeKind, Lifetimes, MaybeStatic,
 };
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
@@ -345,7 +344,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .map(|lt| {
                 (
                     *lt,
-                    MethodLifetimeInfo {
+                    LifetimeInfo {
                         incoming_edges: Vec::new(),
                         all_longer_lifetimes: method
                             .lifetime_env
@@ -827,22 +826,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     /// Generate the name of a single lifetime edge array
     ///
     /// FIXME(Manishearth): this may need to belong in  fmt.rs
-    fn gen_single_edge(
-        &self,
-        lifetime: TypeLifetime,
-        lifetime_env: &LifetimeEnv,
-    ) -> Cow<'static, str> {
+    fn gen_single_edge(&self, lifetime: Lifetime, lifetime_env: &LifetimeEnv) -> Cow<'static, str> {
         format!("edge_{}", lifetime_env.fmt_lifetime(lifetime.cast())).into()
     }
 
-    /// Make a list of edge arrays, one for every lifetime in a TypeLifetimes
+    /// Make a list of edge arrays, one for every lifetime in a Lifetimes
     ///
     /// Will generate with a leading `, `, so will look something like `, edge_a, edge_b, ...`
-    fn gen_lifetimes_edge_list(
-        &self,
-        lifetimes: &TypeLifetimes,
-        lifetime_env: &LifetimeEnv,
-    ) -> String {
+    fn gen_lifetimes_edge_list(&self, lifetimes: &Lifetimes, lifetime_env: &LifetimeEnv) -> String {
         let mut ret = String::new();
         for lt in lifetimes.lifetimes() {
             if let MaybeStatic::NonStatic(lt) = lt {
@@ -1106,15 +1097,15 @@ struct MethodInfo<'a> {
     /// it borrows from. The parameter list may contain the parameter name,
     /// an internal slice View that was temporarily constructed, or
     /// a spread of a struct's `_fields_for_lifetime_foo()` method.
-    method_lifetimes_map: BTreeMap<MethodLifetime, MethodLifetimeInfo>,
+    method_lifetimes_map: BTreeMap<Lifetime, LifetimeInfo>,
 }
 
-struct MethodLifetimeInfo {
+struct LifetimeInfo {
     // Initializers for all inputs to the edge array from
     incoming_edges: Vec<String>,
     // All lifetimes longer than this. When this lifetime is borrowed from, data corresponding to
     // the other lifetimes may also be borrowed from.
-    all_longer_lifetimes: BTreeSet<MethodLifetime>,
+    all_longer_lifetimes: BTreeSet<Lifetime>,
 }
 
 struct FieldInfo<'a, P: TyPosition> {
@@ -1149,12 +1140,12 @@ fn display_lifetime_list(env: &LifetimeEnv, set: &BTreeSet<Lifetime>) -> String 
 /// Iterate over fields, filtering by fields that actually use lifetimes from `lifetimes`
 fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
     fields: &'a [FieldInfo<'a, P>],
-    lifetimes: &'a BTreeSet<TypeLifetime>,
+    lifetimes: &'a BTreeSet<Lifetime>,
 ) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
     /// Does `ty` use any lifetime from `lifetimes`?
     fn does_type_use_lifetime_from_set<P: TyPosition>(
         ty: &Type<P>,
-        lifetimes: &BTreeSet<TypeLifetime>,
+        lifetimes: &BTreeSet<Lifetime>,
     ) -> bool {
         for lt in ty.lifetimes() {
             if let MaybeStatic::NonStatic(lt) = lt {

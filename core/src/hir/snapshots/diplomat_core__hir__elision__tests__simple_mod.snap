@@ -22,7 +22,7 @@ TypeContext {
                             lifetimes: Lifetimes {
                                 indices: [
                                     NonStatic(
-                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
+                                        diplomat_core::hir::lifetimes::Lifetime(0),
                                     ),
                                 ],
                             },
@@ -61,7 +61,7 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
+                                        diplomat_core::hir::lifetimes::Lifetime(0),
                                     ),
                                     UnvalidatedUtf8,
                                 ),
@@ -77,7 +77,7 @@ TypeContext {
                                             lifetimes: Lifetimes {
                                                 indices: [
                                                     NonStatic(
-                                                        diplomat_core::hir::lifetimes::TypeLifetime(0),
+                                                        diplomat_core::hir::lifetimes::Lifetime(0),
                                                     ),
                                                 ],
                                             },
@@ -141,7 +141,7 @@ TypeContext {
                     ty: Slice(
                         Str(
                             NonStatic(
-                                diplomat_core::hir::lifetimes::TypeLifetime(0),
+                                diplomat_core::hir::lifetimes::Lifetime(0),
                             ),
                             UnvalidatedUtf8,
                         ),
@@ -172,7 +172,7 @@ TypeContext {
                                     lifetimes: Lifetimes {
                                         indices: [
                                             NonStatic(
-                                                diplomat_core::hir::lifetimes::TypeLifetime(0),
+                                                diplomat_core::hir::lifetimes::Lifetime(0),
                                             ),
                                         ],
                                     },
@@ -189,7 +189,7 @@ TypeContext {
                             ty: Slice(
                                 Str(
                                     NonStatic(
-                                        diplomat_core::hir::lifetimes::TypeLifetime(1),
+                                        diplomat_core::hir::lifetimes::Lifetime(1),
                                     ),
                                     UnvalidatedUtf8,
                                 ),
@@ -202,7 +202,7 @@ TypeContext {
                                 Slice(
                                     Str(
                                         NonStatic(
-                                            diplomat_core::hir::lifetimes::TypeLifetime(1),
+                                            diplomat_core::hir::lifetimes::Lifetime(1),
                                         ),
                                         UnvalidatedUtf8,
                                     ),

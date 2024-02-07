@@ -8,12 +8,12 @@ expression: lt_to_borrowing_fields
         "_s",
     ],
     NonStatic(
-        diplomat_core::hir::lifetimes::MethodLifetime(0),
+        diplomat_core::hir::lifetimes::Lifetime(0),
     ): [
         "this.p_data",
     ],
     NonStatic(
-        diplomat_core::hir::lifetimes::MethodLifetime(1),
+        diplomat_core::hir::lifetimes::Lifetime(1),
     ): [
         "this.q_data",
         "this.inner.more_data",

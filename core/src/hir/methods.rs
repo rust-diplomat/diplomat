@@ -7,9 +7,7 @@ use smallvec::SmallVec;
 
 use super::{paths, Attrs, Docs, Ident, IdentBuf, OutType, SelfType, Slice, Type, TypeContext};
 
-use super::lifetimes::{
-    self, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes, TypeLifetime, TypeLifetimes,
-};
+use super::lifetimes::{self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 
 /// A method exposed to Diplomat.
 #[derive(Debug)]
@@ -78,8 +76,8 @@ pub struct BorrowingFieldVisitor<'m> {
 
 /// Non-recursive input-output types that contain lifetimes
 enum BorrowingFieldVisitorLeaf {
-    Opaque(ParentId, MaybeStatic<MethodLifetime>, MethodLifetimes),
-    Slice(ParentId, MaybeStatic<MethodLifetime>),
+    Opaque(ParentId, MaybeStatic<Lifetime>, Lifetimes),
+    Slice(ParentId, MaybeStatic<Lifetime>),
 }
 
 /// A leaf of a lifetime tree capable of tracking its parents.
@@ -138,7 +136,7 @@ impl ReturnType {
     ///
     /// Most input lifetimes aren't actually used. An input lifetime is generated
     /// for each borrowing parameter but is only important if we use it in the return.
-    pub fn used_method_lifetimes(&self) -> BTreeSet<MethodLifetime> {
+    pub fn used_method_lifetimes(&self) -> BTreeSet<Lifetime> {
         let mut set = BTreeSet::new();
 
         let mut add_to_set = |ty: &OutType| {
@@ -199,8 +197,8 @@ impl Method {
         self.output.is_writeable()
     }
 
-    /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
-    pub fn method_lifetimes(&self) -> MethodLifetimes {
+    /// Returns a fresh [`Lifetimes`] corresponding to `self`.
+    pub fn method_lifetimes(&self) -> Lifetimes {
         self.lifetime_env.lifetimes()
     }
 
@@ -241,7 +239,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
     /// Visits every borrowing field and method lifetime that it uses.
     ///
     /// The idea is that you could use this to construct a mapping from
-    /// `MethodLifetime`s to `BorrowingField`s. We choose to use a visitor
+    /// `Lifetime`s to `BorrowingField`s. We choose to use a visitor
     /// pattern to avoid having to
     ///
     /// This would be convenient in the JavaScript backend where if you're
@@ -256,7 +254,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
     /// contain 'a}".
     pub fn visit_borrowing_fields<'a, F>(&'a self, mut visit: F)
     where
-        F: FnMut(MaybeStatic<MethodLifetime>, BorrowingField<'a>),
+        F: FnMut(MaybeStatic<Lifetime>, BorrowingField<'a>),
     {
         for leaf in self.leaves.iter() {
             let borrowing_field = BorrowingField {
@@ -358,7 +356,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
         ty: &'m Type,
         tcx: &'m TypeContext,
         parent: ParentId,
-        method_lifetimes: &MethodLifetimes,
+        method_lifetimes: &Lifetimes,
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {
@@ -384,10 +382,10 @@ impl<'m> BorrowingFieldVisitor<'m> {
 
     /// Add an opaque as a leaf during construction of a [`BorrowingFieldsVisitor`].
     fn visit_opaque(
-        lifetimes: &'m TypeLifetimes,
-        borrow: &'m MaybeStatic<TypeLifetime>,
+        lifetimes: &'m Lifetimes,
+        borrow: &'m MaybeStatic<Lifetime>,
         parent: ParentId,
-        method_lifetimes: &MethodLifetimes,
+        method_lifetimes: &Lifetimes,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {
         let method_borrow_lifetime =
@@ -404,7 +402,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
     fn visit_slice(
         slice: &Slice,
         parent: ParentId,
-        method_lifetimes: &MethodLifetimes,
+        method_lifetimes: &Lifetimes,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {
         let method_lifetime = slice
@@ -419,7 +417,7 @@ impl<'m> BorrowingFieldVisitor<'m> {
         ty: &paths::StructPath,
         tcx: &'m TypeContext,
         parent: ParentId,
-        method_lifetimes: &MethodLifetimes,
+        method_lifetimes: &Lifetimes,
         parents: &mut SmallVec<[(Option<ParentId>, &'m Ident); 4]>,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {

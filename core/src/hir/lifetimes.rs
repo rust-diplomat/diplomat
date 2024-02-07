@@ -27,12 +27,12 @@ pub struct LifetimeEnv {
     ///
     /// The number of named _and_ anonymous lifetimes in the method.
     /// We store the sum since it represents the upper bound on what indices
-    /// are in range of the graph. If we make a [`MethodLifetimes`] with
-    /// `num_lifetimes` entries, then `TypeLifetime`s that convert into
-    /// `MethodLifetime`s will fall into this range, and we'll know that it's
+    /// are in range of the graph. If we make a [`Lifetimes`] with
+    /// `num_lifetimes` entries, then `Lifetime`s that convert into
+    /// `Lifetime`s will fall into this range, and we'll know that it's
     /// a named lifetime if it's < `nodes.len()`, or that it's an anonymous
     /// lifetime if it's < `num_lifetimes`. Otherwise, we'd have to make a
-    /// distinction in `TypeLifetime` about which kind it refers to.
+    /// distinction in `Lifetime` about which kind it refers to.
     num_lifetimes: usize,
 }
 
@@ -98,7 +98,7 @@ impl LifetimeEnv {
         }
     }
 
-    /// Returns a fresh [`MethodLifetimes`] corresponding to `self`.
+    /// Returns a fresh [`Lifetimes`] corresponding to `self`.
     pub fn lifetimes(&self) -> Lifetimes {
         let indices = (0..self.num_lifetimes)
             .map(|index| MaybeStatic::NonStatic(Lifetime::new(index)))
@@ -190,7 +190,7 @@ where
     }
 }
 
-/// Wrapper type for `TypeLifetime` and `MethodLifetime`, indicating that it may
+/// Wrapper type for `Lifetime` and `Lifetime`, indicating that it may
 /// be the `'static` lifetime.
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[allow(clippy::exhaustive_enums)] // this will only ever have two variants
@@ -225,7 +225,7 @@ impl<T> MaybeStatic<T> {
     }
 }
 
-/// The [`LifetimeKind`] of [`TypeLifetimes`]
+/// The [`LifetimeKind`] of [`Lifetimes`]
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[allow(clippy::exhaustive_structs)] // marker type
 pub struct Type;
@@ -237,8 +237,7 @@ pub trait LifetimeKind: Copy + Clone + Debug + Hash + PartialEq + Eq + PartialOr
 
 impl LifetimeKind for Type {}
 
-/// A lifetime that exists as part of a type or method signature (determined by
-/// Kind parameter, which will be one of [`LifetimeKind`]).
+/// A lifetime that exists as part of a type or method signature.
 ///
 /// This index only makes sense in the context of a surrounding type or method; since
 /// this is essentially an index into that type/method's lifetime list.
@@ -251,35 +250,6 @@ pub struct Lifetime(usize);
 pub struct Lifetimes {
     indices: SmallVec<[MaybeStatic<Lifetime>; 2]>,
 }
-
-/// A lifetime that exists as part of a type signature.
-///
-/// This type can be mapped to a [`MethodLifetime`] by using the
-/// [`TypeLifetime::as_method_lifetime`] method.
-pub type TypeLifetime = Lifetime;
-
-/// A set of lifetimes that exist as generic arguments on [`StructPath`]s,
-/// [`OutStructPath`]s, and [`OpaquePath`]s.
-///
-/// By itself, `TypeLifetimes` isn't very useful. However, it can be combined with
-/// a [`MethodLifetimes`] using [`TypeLifetimes::as_method_lifetimes`] to get the lifetimes
-/// in the scope of a method it appears in.
-///
-/// [`StructPath`]: super::StructPath
-/// [`OutStructPath`]: super::OutStructPath
-/// [`OpaquePath`]: super::OpaquePath
-pub type TypeLifetimes = Lifetimes;
-
-/// A lifetime that exists as part of a method signature, e.g. `'a` or an
-/// anonymous lifetime.
-///
-/// This type is intended to be used as a key into a map to keep track of which
-/// borrowed fields depend on which method lifetimes.
-pub type MethodLifetime = TypeLifetime;
-
-/// Map a lifetime in a nested struct to the original lifetime defined
-/// in the method that it refers to.
-pub type MethodLifetimes = TypeLifetimes;
 
 impl Lifetime {
     pub(super) fn new(index: usize) -> Self {
@@ -305,8 +275,8 @@ impl Lifetimes {
     }
 }
 
-impl TypeLifetime {
-    /// Returns a [`TypeLifetime`] from its AST counterparts.
+impl Lifetime {
+    /// Returns a [`Lifetime`] from its AST counterparts.
     pub(super) fn from_ast(named: &ast::NamedLifetime, lifetime_env: &ast::LifetimeEnv) -> Self {
         let index = lifetime_env
             .id(named)
@@ -314,33 +284,30 @@ impl TypeLifetime {
         Self::new(index)
     }
 
-    /// Returns a new [`MaybeStatic<MethodLifetime>`] representing `self` in the
+    /// Returns a new [`MaybeStatic<Lifetime>`] representing `self` in the
     /// scope of the method that it appears in.
     ///
     /// For example, if we have some `Foo<'a>` type with a field `&'a Bar`, then
     /// we can call this on the `'a` on the field. If `Foo` was `Foo<'static>`
     /// in the method, then this will return `MaybeStatic::Static`. But if it
     /// was `Foo<'b>`, then this will return `MaybeStatic::NonStatic` containing
-    /// the `MethodLifetime` corresponding to `'b`.
-    pub fn as_method_lifetime(
-        self,
-        method_lifetimes: &MethodLifetimes,
-    ) -> MaybeStatic<MethodLifetime> {
+    /// the `Lifetime` corresponding to `'b`.
+    pub fn as_method_lifetime(self, method_lifetimes: &Lifetimes) -> MaybeStatic<Lifetime> {
         method_lifetimes.indices[self.0]
     }
 }
 
-impl TypeLifetimes {
+impl Lifetimes {
     pub(super) fn from_fn<F>(lifetimes: &[ast::Lifetime], lower_fn: F) -> Self
     where
-        F: FnMut(&ast::Lifetime) -> MaybeStatic<TypeLifetime>,
+        F: FnMut(&ast::Lifetime) -> MaybeStatic<Lifetime>,
     {
         Self {
             indices: lifetimes.iter().map(lower_fn).collect(),
         }
     }
 
-    /// Returns a new [`MethodLifetimes`] representing the lifetimes in the scope
+    /// Returns a new [`Lifetimes`] representing the lifetimes in the scope
     /// of the method this type appears in.
     ///
     /// # Examples
@@ -355,15 +322,15 @@ impl TypeLifetimes {
     ///
     /// fn bar<'x, 'y>(arg: Foo<'x, 'y>) {}
     /// ```
-    /// Here, `Foo` will have a [`TypeLifetimes`] containing `['a, 'b]`,
-    /// and `bar` will have a [`MethodLifetimes`] containing `{'x: 'x, 'y: 'y}`.
+    /// Here, `Foo` will have a [`Lifetimes`] containing `['a, 'b]`,
+    /// and `bar` will have a [`Lifetimes`] containing `{'x: 'x, 'y: 'y}`.
     /// When we enter the scope of `Foo` as a type, we use this method to combine
-    /// the two to get a new [`MethodLifetimes`] representing the mapping from
+    /// the two to get a new [`Lifetimes`] representing the mapping from
     /// lifetimes in `Foo`'s scope to lifetimes in `bar`s scope: `{'a: 'x, 'b: 'y}`.
     ///
     /// This tells us that `arg.alice` has lifetime `'x` in the method, and
     /// that `arg.bob` has lifetime `'y`.
-    pub fn as_method_lifetimes(&self, method_lifetimes: &MethodLifetimes) -> MethodLifetimes {
+    pub fn as_method_lifetimes(&self, method_lifetimes: &Lifetimes) -> Lifetimes {
         let indices = self
             .indices
             .iter()
@@ -372,7 +339,7 @@ impl TypeLifetimes {
             })
             .collect();
 
-        MethodLifetimes { indices }
+        Lifetimes { indices }
     }
 }
 
@@ -426,15 +393,15 @@ impl<'env> Iterator for LifetimeTransitivityIterator<'env> {
 /// Construct this by calling `.linked_lifetimes()` on a StructPath or OpaquePath
 pub struct LinkedLifetimes<'tcx> {
     env: &'tcx LifetimeEnv,
-    self_lt: Option<MaybeStatic<TypeLifetime>>,
-    lifetimes: &'tcx TypeLifetimes,
+    self_lt: Option<MaybeStatic<Lifetime>>,
+    lifetimes: &'tcx Lifetimes,
 }
 
 impl<'tcx> LinkedLifetimes<'tcx> {
     pub(crate) fn new(
         env: &'tcx LifetimeEnv,
-        self_lt: Option<MaybeStatic<TypeLifetime>>,
-        lifetimes: &'tcx TypeLifetimes,
+        self_lt: Option<MaybeStatic<Lifetime>>,
+        lifetimes: &'tcx Lifetimes,
     ) -> Self {
         debug_assert_eq!(
             lifetimes.lifetimes().len(),
@@ -466,13 +433,13 @@ impl<'tcx> LinkedLifetimes<'tcx> {
     /// from anything other than a borrowing opaque.
     pub fn lifetimes_def_only(
         &self,
-    ) -> impl Iterator<Item = (MaybeStatic<TypeLifetime>, TypeLifetime)> + '_ {
+    ) -> impl Iterator<Item = (MaybeStatic<Lifetime>, Lifetime)> + '_ {
         self.lifetimes.lifetimes().zip(self.env.all_lifetimes())
     }
 
     /// If there is a self-lifetime (e.g. `'c` on `&'c Foo<'a, 'b>`), return it. This lifetime
     /// isn't found at the def site.
-    pub fn self_lifetime(&self) -> Option<MaybeStatic<TypeLifetime>> {
+    pub fn self_lifetime(&self) -> Option<MaybeStatic<Lifetime>> {
         self.self_lt
     }
 
@@ -487,7 +454,7 @@ impl<'tcx> LinkedLifetimes<'tcx> {
     /// from anything other than a borrowing opaque.
     pub fn lifetimes_all(
         &self,
-    ) -> impl Iterator<Item = (MaybeStatic<TypeLifetime>, Option<TypeLifetime>)> + '_ {
+    ) -> impl Iterator<Item = (MaybeStatic<Lifetime>, Option<Lifetime>)> + '_ {
         self.self_lt.iter().map(|i| (*i, None)).chain(
             self.lifetimes
                 .lifetimes()
