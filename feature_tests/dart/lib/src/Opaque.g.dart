@@ -33,7 +33,8 @@ final class Opaque implements ffi.Finalizable {
   /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
   void assertStruct(MyStruct s) {
     final temp = ffi2.Arena();
-    _Opaque_assert_struct(_underlying, s._pointer(temp));temp.releaseAll();
+    _Opaque_assert_struct(_underlying, s._toFfi(temp));
+    temp.releaseAll();
   }
 
   static final int returnsUsize = () {

@@ -24,21 +24,24 @@ final class MyString implements ffi.Finalizable {
   factory MyString(String v) {
     final temp = ffi2.Arena();
     final vView = v.utf8View;
-    final result = _MyString_new(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _MyString_new(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return MyString._(result);
   }
 
   factory MyString.unsafe(String v) {
     final temp = ffi2.Arena();
     final vView = v.utf8View;
-    final result = _MyString_new_unsafe(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _MyString_new_unsafe(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return MyString._(result);
   }
 
   void setStr(String newStr) {
     final temp = ffi2.Arena();
     final newStrView = newStr.utf8View;
-    _MyString_set_str(_underlying, newStrView.pointer(temp), newStrView.length);temp.releaseAll();
+    _MyString_set_str(_underlying, newStrView.toFfi(temp), newStrView.length);
+    temp.releaseAll();
   }
 
   String get getStr {

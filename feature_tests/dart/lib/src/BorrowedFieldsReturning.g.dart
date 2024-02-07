@@ -25,10 +25,10 @@ final class BorrowedFieldsReturning {
     bytes = Utf8Decoder().convert(underlying.bytes._pointer.asTypedList(underlying.bytes._length));
 
   // ignore: unused_element
-  _BorrowedFieldsReturningFfi _pointer(ffi.Allocator temp) {
+  _BorrowedFieldsReturningFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_BorrowedFieldsReturningFfi>();
     final bytesView = bytes.utf8View;
-    struct.bytes._pointer = bytesView.pointer(temp);
+    struct.bytes._pointer = bytesView.toFfi(temp);
     struct.bytes._length = bytesView.length;
     return struct;
   }

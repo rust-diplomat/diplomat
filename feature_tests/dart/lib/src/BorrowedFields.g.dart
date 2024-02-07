@@ -31,16 +31,16 @@ final class BorrowedFields {
     c = Utf8Decoder().convert(underlying.c._pointer.asTypedList(underlying.c._length));
 
   // ignore: unused_element
-  _BorrowedFieldsFfi _pointer(ffi.Allocator temp) {
+  _BorrowedFieldsFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_BorrowedFieldsFfi>();
     final aView = a.utf16View;
-    struct.a._pointer = aView.pointer(temp);
+    struct.a._pointer = aView.toFfi(temp);
     struct.a._length = aView.length;
     final bView = b.utf8View;
-    struct.b._pointer = bView.pointer(temp);
+    struct.b._pointer = bView.toFfi(temp);
     struct.b._length = bView.length;
     final cView = c.utf8View;
-    struct.c._pointer = cView.pointer(temp);
+    struct.c._pointer = cView.toFfi(temp);
     struct.c._length = cView.length;
     return struct;
   }

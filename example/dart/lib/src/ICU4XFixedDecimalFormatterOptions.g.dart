@@ -20,7 +20,7 @@ final class ICU4XFixedDecimalFormatterOptions {
     someOtherConfig = underlying.someOtherConfig;
 
   // ignore: unused_element
-  _ICU4XFixedDecimalFormatterOptionsFfi _pointer(ffi.Allocator temp) {
+  _ICU4XFixedDecimalFormatterOptionsFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_ICU4XFixedDecimalFormatterOptionsFfi>();
     struct.groupingStrategy = groupingStrategy.index;
     struct.someOtherConfig = someOtherConfig;

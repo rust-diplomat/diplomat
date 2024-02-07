@@ -234,7 +234,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone());
                     vec![
                         format!("final {name}View = {view_expr};"),
-                        format!("struct.{name}._pointer = {name}View.pointer(temp);"),
+                        format!("struct.{name}._pointer = {name}View.toFfi(temp);"),
                         format!("struct.{name}._length = {name}View.length;"),
                     ]
                 } else {
@@ -519,7 +519,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     MaybeStatic::Static => "/* leak */ ffi2.calloc".into(),
                 };
 
-                param_conversions.push(format!("{param_name}View.pointer({arena})",).into());
+                param_conversions.push(format!("{param_name}View.toFfi({arena})",).into());
                 param_conversions.push(format!("{param_name}View.length").into());
             } else {
                 if matches!(param.ty, hir::Type::Struct(..)) {
@@ -828,7 +828,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_dart_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => "index".into(),
-            SelfType::Struct(..) => "_pointer(temp)".into(),
+            SelfType::Struct(..) => "_toFfi(temp)".into(),
             SelfType::Opaque(..) | SelfType::Enum(..) => "_underlying".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -852,7 +852,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 format!("{dart_name}.index").into()
             }
-            Type::Struct(..) => format!("{dart_name}._pointer(temp)").into(),
+            Type::Struct(..) => format!("{dart_name}._toFfi(temp)").into(),
             Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._underlying").into(),
             Type::Slice(hir::Slice::Str(
                 _,

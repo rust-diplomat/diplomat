@@ -27,7 +27,7 @@ final class Foo implements ffi.Finalizable {
     final allocA = ffi2.Arena();
     _arenaFinalizer.attach(allocA, allocA);
     final xView = x.utf8View;
-    final result = _Foo_new(xView.pointer(allocA), xView.length);
+    final result = _Foo_new(xView.toFfi(allocA), xView.length);
     return Foo._(result, edgeA: [allocA]);
   }
 
@@ -38,7 +38,7 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo.static_(String x) {
     final xView = x.utf8View;
-    final result = _Foo_new_static(xView.pointer(/* leak */ ffi2.calloc), xView.length);
+    final result = _Foo_new_static(xView.toFfi(/* leak */ ffi2.calloc), xView.length);
     return Foo._(result, edgeA: []);
   }
 
@@ -49,7 +49,8 @@ final class Foo implements ffi.Finalizable {
 
   factory Foo.extractFromFields(BorrowedFields fields) {
     final temp = ffi2.Arena();
-    final result = _Foo_extract_from_fields(fields._pointer(temp));temp.releaseAll();
+    final result = _Foo_extract_from_fields(fields._toFfi(temp));
+    temp.releaseAll();
     return Foo._(result, edgeA: [...fields._edgeX]);
   }
 
@@ -59,7 +60,8 @@ final class Foo implements ffi.Finalizable {
     _arenaFinalizer.attach(allocA, allocA);
     final temp = ffi2.Arena();
     final anotherStringView = anotherString.utf8View;
-    final result = _Foo_extract_from_bounds(bounds._pointer(temp), anotherStringView.pointer(allocA), anotherStringView.length);temp.releaseAll();
+    final result = _Foo_extract_from_bounds(bounds._toFfi(temp), anotherStringView.toFfi(allocA), anotherStringView.length);
+    temp.releaseAll();
     return Foo._(result, edgeA: [...bounds._edgeB, allocA]);
   }
 }

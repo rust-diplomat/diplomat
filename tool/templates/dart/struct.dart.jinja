@@ -49,7 +49,7 @@ final class {{type_name}} {
     {%- endfor %}
 
   // ignore: unused_element
-  _{{type_name}}Ffi _pointer(ffi.Allocator temp) {
+  _{{type_name}}Ffi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_{{type_name}}Ffi>();
     {%- for field in fields %}
     {%- for statement in field.dart_to_c %}

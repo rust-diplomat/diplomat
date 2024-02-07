@@ -22,7 +22,7 @@ final class ErrorStruct {
     j = underlying.j;
 
   // ignore: unused_element
-  _ErrorStructFfi _pointer(ffi.Allocator temp) {
+  _ErrorStructFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_ErrorStructFfi>();
     struct.i = i;
     struct.j = j;

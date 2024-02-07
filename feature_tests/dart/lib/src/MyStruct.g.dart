@@ -40,7 +40,7 @@ final class MyStruct {
     g = MyEnum.values.firstWhere((v) => v._underlying == underlying.g);
 
   // ignore: unused_element
-  _MyStructFfi _pointer(ffi.Allocator temp) {
+  _MyStructFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_MyStructFfi>();
     struct.a = a;
     struct.b = b;
@@ -81,7 +81,8 @@ final class MyStruct {
 
   int intoA() {
     final temp = ffi2.Arena();
-    final result = _MyStruct_into_a(_pointer(temp));temp.releaseAll();
+    final result = _MyStruct_into_a(_toFfi(temp));
+    temp.releaseAll();
     return result;
   }
 

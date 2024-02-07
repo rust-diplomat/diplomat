@@ -22,7 +22,7 @@ final class ImportedStruct {
     count = underlying.count;
 
   // ignore: unused_element
-  _ImportedStructFfi _pointer(ffi.Allocator temp) {
+  _ImportedStructFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_ImportedStructFfi>();
     struct.foo = foo.index;
     struct.count = count;

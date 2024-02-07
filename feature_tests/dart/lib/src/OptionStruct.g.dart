@@ -25,7 +25,7 @@ final class OptionStruct {
     d = underlying.d.address == 0 ? null : OptionOpaque._(underlying.d);
 
   // ignore: unused_element
-  _OptionStructFfi _pointer(ffi.Allocator temp) {
+  _OptionStructFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_OptionStructFfi>();
     struct.a = a?._underlying ?? ffi.Pointer.fromAddress(0);
     struct.b = b?._underlying ?? ffi.Pointer.fromAddress(0);

@@ -37,16 +37,16 @@ final class BorrowedFieldsWithBounds {
     fieldC = Utf8Decoder().convert(underlying.fieldC._pointer.asTypedList(underlying.fieldC._length));
 
   // ignore: unused_element
-  _BorrowedFieldsWithBoundsFfi _pointer(ffi.Allocator temp) {
+  _BorrowedFieldsWithBoundsFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_BorrowedFieldsWithBoundsFfi>();
     final fieldAView = fieldA.utf16View;
-    struct.fieldA._pointer = fieldAView.pointer(temp);
+    struct.fieldA._pointer = fieldAView.toFfi(temp);
     struct.fieldA._length = fieldAView.length;
     final fieldBView = fieldB.utf8View;
-    struct.fieldB._pointer = fieldBView.pointer(temp);
+    struct.fieldB._pointer = fieldBView.toFfi(temp);
     struct.fieldB._length = fieldBView.length;
     final fieldCView = fieldC.utf8View;
-    struct.fieldC._pointer = fieldCView.pointer(temp);
+    struct.fieldC._pointer = fieldCView.toFfi(temp);
     struct.fieldC._length = fieldCView.length;
     return struct;
   }

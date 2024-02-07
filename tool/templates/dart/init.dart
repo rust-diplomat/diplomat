@@ -31,7 +31,7 @@ class VoidError {
 
 extension on ByteBuffer {
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint8> toFfi(ffi.Allocator alloc) {
     return alloc<ffi.Uint8>(length)..asTypedList(length).setRange(0, length, asUint8List());
   }
 
@@ -87,7 +87,7 @@ class _Utf8View {
   // Copies
   _Utf8View(String string) : _codeUnits = Utf8Encoder().convert(string);
 
-  ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint8> toFfi(ffi.Allocator alloc) {
     // Copies
     return alloc<ffi.Uint8>(length)..asTypedList(length).setRange(0, length, _codeUnits);
   }
@@ -101,7 +101,7 @@ class _Utf16View {
 
   _Utf16View(String string) : _codeUnits = string.codeUnits;
 
-  ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint16> toFfi(ffi.Allocator alloc) {
     // Copies
     return alloc<ffi.Uint16>(length)..asTypedList(length).setRange(0, length, _codeUnits);
   }
@@ -116,7 +116,7 @@ class _BoolListView{
   _BoolListView(this._values);
 
   // Copies
-  ffi.Pointer<ffi.Bool> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Bool> toFfi(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Bool>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = _values[i];
@@ -133,7 +133,7 @@ class _Int8ListView {
   _Int8ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Int8> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Int8> toFfi(ffi.Allocator alloc) {
     return alloc<ffi.Int8>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -146,7 +146,7 @@ class _Int16ListView {
   _Int16ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Int16> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Int16> toFfi(ffi.Allocator alloc) {
     return alloc<ffi.Int16>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -159,7 +159,7 @@ class _Int32ListView {
   _Int32ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Int32> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Int32> toFfi(ffi.Allocator alloc) {
     return alloc<ffi.Int32>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -172,7 +172,7 @@ class _Int64ListView {
   _Int64ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Int64> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Int64> toFfi(ffi.Allocator alloc) {
     return alloc<ffi.Int64>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -186,7 +186,7 @@ class _IsizeListView {
   _IsizeListView(this._values);
 
   // Copies
-  ffi.Pointer<ffi.IntPtr> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.IntPtr> toFfi(ffi.Allocator alloc) {
     final pointer = alloc<ffi.IntPtr>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = _values[i];
@@ -203,7 +203,7 @@ class _Uint8ListView {
   _Uint8ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint8> toFfi(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Uint8>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = min(255, max(0, _values[i]));
@@ -220,7 +220,7 @@ class _Uint16ListView {
   _Uint16ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint16> toFfi(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Uint16>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = min(65535, max(0, _values[i]));
@@ -237,7 +237,7 @@ class _Uint32ListView {
   _Uint32ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint32> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint32> toFfi(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Uint32>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = min(4294967295, max(0, _values[i]));
@@ -254,7 +254,7 @@ class _Uint64ListView {
   _Uint64ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint64> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint64> toFfi(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Uint64>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = max(0, _values[i]);
@@ -272,7 +272,7 @@ class _UsizeListView {
   _UsizeListView(this._values);
 
   // Copies
-  ffi.Pointer<ffi.Size> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Size> toFfi(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Size>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = max(0, _values[i]);
@@ -289,7 +289,7 @@ class _Float32ListView {
   _Float32ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Float> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Float> toFfi(ffi.Allocator alloc) {
     return alloc<ffi.Float>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -302,7 +302,7 @@ class _Float64ListView {
   _Float64ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Double> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Double> toFfi(ffi.Allocator alloc) {
     return alloc<ffi.Double>(length)..asTypedList(length).setRange(0, length, _values);
   }
 

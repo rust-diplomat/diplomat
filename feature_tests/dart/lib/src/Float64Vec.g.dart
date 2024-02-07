@@ -24,62 +24,71 @@ final class Float64Vec implements ffi.Finalizable {
   factory Float64Vec(core.List<double> v) {
     final temp = ffi2.Arena();
     final vView = v.float64View;
-    final result = _Float64Vec_new(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _Float64Vec_new(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return Float64Vec._(result);
   }
 
   factory Float64Vec.bool(core.List<bool> v) {
     final temp = ffi2.Arena();
     final vView = v.boolView;
-    final result = _Float64Vec_new_bool(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _Float64Vec_new_bool(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return Float64Vec._(result);
   }
 
   factory Float64Vec.i16(core.List<int> v) {
     final temp = ffi2.Arena();
     final vView = v.int16View;
-    final result = _Float64Vec_new_i16(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _Float64Vec_new_i16(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return Float64Vec._(result);
   }
 
   factory Float64Vec.u16(core.List<int> v) {
     final temp = ffi2.Arena();
     final vView = v.uint16View;
-    final result = _Float64Vec_new_u16(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _Float64Vec_new_u16(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return Float64Vec._(result);
   }
 
   factory Float64Vec.isize(core.List<int> v) {
     final temp = ffi2.Arena();
     final vView = v.isizeView;
-    final result = _Float64Vec_new_isize(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _Float64Vec_new_isize(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return Float64Vec._(result);
   }
 
   factory Float64Vec.usize(core.List<int> v) {
     final temp = ffi2.Arena();
     final vView = v.usizeView;
-    final result = _Float64Vec_new_usize(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _Float64Vec_new_usize(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return Float64Vec._(result);
   }
 
   factory Float64Vec.f64BeBytes(ByteBuffer v) {
     final temp = ffi2.Arena();
     final vView = v;
-    final result = _Float64Vec_new_f64_be_bytes(vView.pointer(temp), vView.length);temp.releaseAll();
+    final result = _Float64Vec_new_f64_be_bytes(vView.toFfi(temp), vView.length);
+    temp.releaseAll();
     return Float64Vec._(result);
   }
 
   void fillSlice(core.List<double> v) {
     final temp = ffi2.Arena();
     final vView = v.float64View;
-    _Float64Vec_fill_slice(_underlying, vView.pointer(temp), vView.length);temp.releaseAll();
+    _Float64Vec_fill_slice(_underlying, vView.toFfi(temp), vView.length);
+    temp.releaseAll();
   }
 
   void setValue(core.List<double> newSlice) {
     final temp = ffi2.Arena();
     final newSliceView = newSlice.float64View;
-    _Float64Vec_set_value(_underlying, newSliceView.pointer(temp), newSliceView.length);temp.releaseAll();
+    _Float64Vec_set_value(_underlying, newSliceView.toFfi(temp), newSliceView.length);
+    temp.releaseAll();
   }
 
   @override
