@@ -1,4 +1,4 @@
-use super::lifetimes::{MaybeStatic, TypeLifetime, TypeLifetimes};
+use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
     Borrow, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructId, StructPath, TypeId,
 };
@@ -134,12 +134,12 @@ impl TyPosition for OutputOnly {
 }
 
 pub trait StructPathLike {
-    fn lifetimes(&self) -> &TypeLifetimes;
+    fn lifetimes(&self) -> &Lifetimes;
     fn id(&self) -> TypeId;
 }
 
 impl StructPathLike for StructPath {
-    fn lifetimes(&self) -> &TypeLifetimes {
+    fn lifetimes(&self) -> &Lifetimes {
         &self.lifetimes
     }
     fn id(&self) -> TypeId {
@@ -148,7 +148,7 @@ impl StructPathLike for StructPath {
 }
 
 impl StructPathLike for ReturnableStructPath {
-    fn lifetimes(&self) -> &TypeLifetimes {
+    fn lifetimes(&self) -> &Lifetimes {
         self.lifetimes()
     }
     fn id(&self) -> TypeId {
@@ -171,7 +171,7 @@ pub trait OpaqueOwner {
     fn is_owned(&self) -> bool;
 
     /// Return the lifetime of the borrow, if any.
-    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>>;
+    fn lifetime(&self) -> Option<MaybeStatic<Lifetime>>;
 }
 
 impl OpaqueOwner for MaybeOwn {
@@ -189,7 +189,7 @@ impl OpaqueOwner for MaybeOwn {
         }
     }
 
-    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>> {
+    fn lifetime(&self) -> Option<MaybeStatic<Lifetime>> {
         match self {
             MaybeOwn::Own => None,
             MaybeOwn::Borrow(b) => b.lifetime(),
@@ -206,7 +206,7 @@ impl OpaqueOwner for Borrow {
         false
     }
 
-    fn lifetime(&self) -> Option<MaybeStatic<TypeLifetime>> {
+    fn lifetime(&self) -> Option<MaybeStatic<Lifetime>> {
         Some(self.lifetime)
     }
 }
