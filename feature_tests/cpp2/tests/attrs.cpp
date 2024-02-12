@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../include/AttrOpaque1Renamed.hpp"
 #include "../include/CPPRenamedAttrEnum.hpp"
+#include "../include/Unnamespaced.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
@@ -15,4 +16,8 @@ int main(int argc, char *argv[]) {
     std::cout<<"Renamed function at "<<renamed<<std::endl;
 
     ns::CPPRenamedAttrEnum e = ns::CPPRenamedAttrEnum::A;
+
+    std::unique_ptr<Unnamespaced> un = Unnamespaced::make(e);
+    un->use_namespaced(*r);
+    r->use_unnamespaced(*un);
 }

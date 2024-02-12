@@ -27,6 +27,8 @@ pub mod ffi {
         pub fn method_disabledcpp(&self) {
             println!("disabled in cpp");
         }
+
+        pub fn use_unnamespaced(&self, _un: &Unnamespaced) {}
     }
 
     #[diplomat::opaque]
@@ -38,5 +40,18 @@ pub mod ffi {
         B,
         #[diplomat::attr(cpp2, rename = "CPPRenamed")]
         C,
+    }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(cpp2, namespace = "")]
+    #[diplomat::attr(cpp2, rename = "Unnamespaced")]
+    pub struct Unnamespaced;
+
+    impl Unnamespaced {
+        pub fn make(e: AttrEnum) -> Box<Self> {
+            Box::new(Self)
+        }
+
+        pub fn use_namespaced(&self, _n: &AttrOpaque1) {}
     }
 }
