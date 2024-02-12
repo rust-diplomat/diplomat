@@ -118,6 +118,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     /// cannot be added to it.
     pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
+        let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
 
         let methods = ty
@@ -134,6 +135,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &'a str,
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
+            type_name_unnamespaced: &'a str,
         }
 
         DeclTemplate {
@@ -142,6 +145,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
+            namespace: ty.attrs.namespace.as_ref().map(|x| &**x),
+            type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -154,6 +159,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &'a str,
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
+            type_name_unnamespaced: &'a str,
         }
 
         ImplTemplate {
@@ -162,6 +168,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
+            type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -173,6 +180,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
+        let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
         let dtor_name = self.cx.formatter.fmt_c_dtor_name(id);
 
@@ -190,6 +198,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &'a str,
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
+            type_name_unnamespaced: &'a str,
         }
 
         DeclTemplate {
@@ -198,6 +208,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
+            namespace: ty.attrs.namespace.as_ref().map(|x| &**x),
+            type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -231,6 +243,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
+        let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
 
         let field_decls = def
@@ -266,6 +279,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &'a str,
             fields: &'a [NamedType<'a>],
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
+            type_name_unnamespaced: &'a str,
         }
 
         DeclTemplate {
@@ -275,6 +290,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &ctype,
             fields: field_decls.as_slice(),
             methods: methods.as_slice(),
+            namespace: def.attrs.namespace.as_ref().map(|x| &**x),
+            type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.decl_header)
         .unwrap();

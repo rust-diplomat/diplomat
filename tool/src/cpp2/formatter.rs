@@ -24,14 +24,27 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    /// Resolve and format a named type for use in code
-    pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
+    /// Resolve and format a named type for use in code (without the namespace)
+    pub fn fmt_type_name_unnamespaced(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
 
         resolved
             .attrs()
             .rename
             .apply(resolved.name().as_str().into())
+    }
+    /// Resolve and format a named type for use in code
+    pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
+        let resolved = self.c.tcx().resolve_type(id);
+        let name = resolved
+            .attrs()
+            .rename
+            .apply(resolved.name().as_str().into());
+        if let Some(ref ns) = resolved.attrs().namespace {
+            format!("{ns}::{name}").into()
+        } else {
+            name
+        }
     }
 
     /// Resolve and format a named type for use in diagnostics
@@ -42,12 +55,12 @@ impl<'tcx> Cpp2Formatter<'tcx> {
 
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
-        let type_name = self.fmt_type_name(id);
+        let type_name = self.fmt_type_name_unnamespaced(id);
         format!("{type_name}.d.hpp")
     }
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
-        let type_name = self.fmt_type_name(id);
+        let type_name = self.fmt_type_name_unnamespaced(id);
         format!("{type_name}.hpp")
     }
 
