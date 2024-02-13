@@ -49,7 +49,7 @@ pub mod ffi {
     pub struct Unnamespaced;
 
     impl Unnamespaced {
-        pub fn make(e: AttrEnum) -> Box<Self> {
+        pub fn make(_e: AttrEnum) -> Box<Self> {
             Box::new(Self)
         }
 
