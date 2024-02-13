@@ -10,6 +10,10 @@
 #include "diplomat_runtime.hpp"
 #include "AttrOpaque1.d.h"
 
+class Unnamespaced;namespace ns {
+class AttrOpaque1Renamed;
+}
+
 
 namespace ns {
 class AttrOpaque1Renamed {
@@ -20,6 +24,8 @@ public:
   inline uint8_t method_renamed() const;
 
   inline uint8_t abirenamed() const;
+
+  inline void use_unnamespaced(const Unnamespaced& _un) const;
 
   inline const capi::AttrOpaque1* AsFFI() const;
   inline capi::AttrOpaque1* AsFFI();

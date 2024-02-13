@@ -11,6 +11,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "AttrOpaque1.h"
+#include "Unnamespaced.hpp"
 
 
 inline std::unique_ptr<ns::AttrOpaque1Renamed> ns::AttrOpaque1Renamed::totally_not_new() {
@@ -26,6 +27,11 @@ inline uint8_t ns::AttrOpaque1Renamed::method_renamed() const {
 inline uint8_t ns::AttrOpaque1Renamed::abirenamed() const {
   auto result = capi::renamed_on_abi_only(this->AsFFI());
   return result;
+}
+
+inline void ns::AttrOpaque1Renamed::use_unnamespaced(const Unnamespaced& _un) const {
+  capi::namespace_AttrOpaque1_use_unnamespaced(this->AsFFI(),
+    _un.AsFFI());
 }
 
 inline const capi::AttrOpaque1* ns::AttrOpaque1Renamed::AsFFI() const {
