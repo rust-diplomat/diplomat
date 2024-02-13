@@ -25,3 +25,4 @@ export { RefListParameter } from './RefListParameter';
 export { ResultOpaque } from './ResultOpaque';
 export { Two } from './Two';
 export { UnimportedEnum } from './UnimportedEnum';
+export { Unnamespaced } from './Unnamespaced';

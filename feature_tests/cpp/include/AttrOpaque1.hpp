@@ -12,6 +12,8 @@
 #include "AttrOpaque1.h"
 
 class AttrOpaque1;
+class Unnamespaced;
+#include "AttrEnum.hpp"
 
 /**
  * A destruction policy for using AttrOpaque1 with std::unique_ptr.
@@ -27,6 +29,8 @@ class AttrOpaque1 {
   uint8_t method() const;
   uint8_t abirenamed() const;
   void method_disabledcpp() const;
+  void use_unnamespaced(const Unnamespaced& _un) const;
+  void use_namespaced(AttrEnum _n) const;
   inline const capi::AttrOpaque1* AsFFI() const { return this->inner.get(); }
   inline capi::AttrOpaque1* AsFFIMut() { return this->inner.get(); }
   inline explicit AttrOpaque1(capi::AttrOpaque1* i) : inner(i) {}
@@ -37,6 +41,7 @@ class AttrOpaque1 {
   std::unique_ptr<capi::AttrOpaque1, AttrOpaque1Deleter> inner;
 };
 
+#include "Unnamespaced.hpp"
 
 inline AttrOpaque1 AttrOpaque1::new_() {
   return AttrOpaque1(capi::namespace_AttrOpaque1_new());
@@ -49,5 +54,11 @@ inline uint8_t AttrOpaque1::abirenamed() const {
 }
 inline void AttrOpaque1::method_disabledcpp() const {
   capi::namespace_AttrOpaque1_method_disabledcpp(this->inner.get());
+}
+inline void AttrOpaque1::use_unnamespaced(const Unnamespaced& _un) const {
+  capi::namespace_AttrOpaque1_use_unnamespaced(this->inner.get(), _un.AsFFI());
+}
+inline void AttrOpaque1::use_namespaced(AttrEnum _n) const {
+  capi::namespace_AttrOpaque1_use_namespaced(this->inner.get(), static_cast<capi::AttrEnum>(_n));
 }
 #endif

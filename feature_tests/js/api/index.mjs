@@ -25,3 +25,4 @@ export { RefListParameter } from './RefListParameter.mjs';
 export { ResultOpaque } from './ResultOpaque.mjs';
 export { Two } from './Two.mjs';
 export { UnimportedEnum } from './UnimportedEnum.mjs';
+export { Unnamespaced } from './Unnamespaced.mjs';

@@ -1,5 +1,6 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
+import { AttrEnum_js_to_rust, AttrEnum_rust_to_js } from "./AttrEnum.mjs"
 
 const AttrOpaque1_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.namespace_AttrOpaque1_destroy(underlying);
@@ -29,5 +30,13 @@ export class AttrOpaque1 {
 
   method_disabledcpp() {
     wasm.namespace_AttrOpaque1_method_disabledcpp(this.underlying);
+  }
+
+  use_unnamespaced(arg__un) {
+    wasm.namespace_AttrOpaque1_use_unnamespaced(this.underlying, arg__un.underlying);
+  }
+
+  use_namespaced(arg__n) {
+    wasm.namespace_AttrOpaque1_use_namespaced(this.underlying, AttrEnum_js_to_rust[arg__n]);
   }
 }

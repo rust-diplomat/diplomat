@@ -79,6 +79,38 @@ public partial class AttrOpaque1: IDisposable
         }
     }
 
+    public void UseUnnamespaced(Unnamespaced un)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("AttrOpaque1");
+            }
+            Raw.Unnamespaced* unRaw;
+            unRaw = un.AsFFI();
+            if (unRaw == null)
+            {
+                throw new ObjectDisposedException("Unnamespaced");
+            }
+            Raw.AttrOpaque1.UseUnnamespaced(_inner, unRaw);
+        }
+    }
+
+    public void UseNamespaced(AttrEnum n)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("AttrOpaque1");
+            }
+            Raw.AttrEnum nRaw;
+            nRaw = (Raw.AttrEnum)n;
+            Raw.AttrOpaque1.UseNamespaced(_inner, nRaw);
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
