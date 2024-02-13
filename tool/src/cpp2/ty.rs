@@ -1,4 +1,4 @@
-use super::header::{Forward, Header};
+use super::header::Header;
 use super::Cpp2Context;
 use super::Cpp2Formatter;
 use askama::Template;
@@ -15,6 +15,7 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             return;
         }
         let type_name = self.formatter.fmt_type_name(id);
+        let type_name_unnamespaced = self.formatter.fmt_type_name(id);
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
@@ -39,8 +40,8 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         // a header will get its own forwards and includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        context.decl_header.forwards.remove(&*type_name);
-        context.impl_header.forwards.remove(&*type_name);
+        context.decl_header.rm_forward(ty, &*type_name_unnamespaced);
+        context.impl_header.rm_forward(ty, &*type_name_unnamespaced);
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
@@ -410,8 +411,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(op_id);
+                let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(op_id);
+                let def = self.cx.tcx.resolve_type(op_id);
 
-                if self.cx.tcx.resolve_type(op_id).attrs().disable {
+                if def.attrs().disable {
                     self.cx
                         .errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
@@ -429,8 +432,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ret = ret.into_owned().into();
 
                 self.decl_header
-                    .forwards
-                    .insert(Forward::Class(type_name.into_owned()));
+                    .append_forward(def, &type_name_unnamespaced);
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_impl_header_path(op_id));
@@ -439,14 +441,16 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Struct(ref st) => {
                 let id = st.id();
                 let type_name = self.cx.formatter.fmt_type_name(id);
-                if self.cx.tcx.resolve_type(id).attrs().disable {
+                let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
+                let def = self.cx.tcx.resolve_type(id);
+                if def.attrs().disable {
                     self.cx
                         .errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
-                self.decl_header.forwards.insert(Forward::Struct(
-                    self.cx.formatter.fmt_type_name(id).into_owned(),
-                ));
+
+                self.decl_header
+                    .append_forward(def, &type_name_unnamespaced);
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
@@ -458,14 +462,16 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.cx.formatter.fmt_type_name(id);
-                if self.cx.tcx.resolve_type(id).attrs().disable {
+                let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
+                let def = self.cx.tcx.resolve_type(id);
+                if def.attrs().disable {
                     self.cx
                         .errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
-                self.decl_header.forwards.insert(Forward::EnumStruct(
-                    self.cx.formatter.fmt_type_name(id).into_owned(),
-                ));
+
+                self.decl_header
+                    .append_forward(def, &type_name_unnamespaced);
                 self.decl_header
                     .includes
                     .insert(self.cx.formatter.fmt_decl_header_path(id));
