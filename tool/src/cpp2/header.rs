@@ -1,6 +1,6 @@
 use askama::Template;
 use diplomat_core::hir::TypeDef;
-use std::borrow::{Cow};
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{self, Write};
 
