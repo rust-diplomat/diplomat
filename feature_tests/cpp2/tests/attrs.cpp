@@ -20,4 +20,5 @@ int main(int argc, char *argv[]) {
     std::unique_ptr<Unnamespaced> un = Unnamespaced::make(e);
     un->use_namespaced(*r);
     r->use_unnamespaced(*un);
+    r->use_namespaced(e);
 }

@@ -9,9 +9,11 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "AttrOpaque1.d.h"
+#include "CPPRenamedAttrEnum.d.hpp"
 
 class Unnamespaced;namespace ns {
 class AttrOpaque1Renamed;
+class CPPRenamedAttrEnum;
 }
 
 
@@ -26,6 +28,8 @@ public:
   inline uint8_t abirenamed() const;
 
   inline void use_unnamespaced(const Unnamespaced& _un) const;
+
+  inline void use_namespaced(ns::CPPRenamedAttrEnum _n) const;
 
   inline const capi::AttrOpaque1* AsFFI() const;
   inline capi::AttrOpaque1* AsFFI();

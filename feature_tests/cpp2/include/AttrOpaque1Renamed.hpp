@@ -11,6 +11,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "AttrOpaque1.h"
+#include "CPPRenamedAttrEnum.hpp"
 #include "Unnamespaced.hpp"
 
 
@@ -32,6 +33,11 @@ inline uint8_t ns::AttrOpaque1Renamed::abirenamed() const {
 inline void ns::AttrOpaque1Renamed::use_unnamespaced(const Unnamespaced& _un) const {
   capi::namespace_AttrOpaque1_use_unnamespaced(this->AsFFI(),
     _un.AsFFI());
+}
+
+inline void ns::AttrOpaque1Renamed::use_namespaced(ns::CPPRenamedAttrEnum _n) const {
+  capi::namespace_AttrOpaque1_use_namespaced(this->AsFFI(),
+    _n.AsFFI());
 }
 
 inline const capi::AttrOpaque1* ns::AttrOpaque1Renamed::AsFFI() const {

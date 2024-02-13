@@ -29,6 +29,7 @@ pub mod ffi {
         }
 
         pub fn use_unnamespaced(&self, _un: &Unnamespaced) {}
+        pub fn use_namespaced(&self, _n: AttrEnum) {}
     }
 
     #[diplomat::opaque]
