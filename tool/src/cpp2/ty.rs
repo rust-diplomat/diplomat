@@ -14,7 +14,7 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             // Skip type if disabled
             return;
         }
-        let type_name = self.formatter.fmt_type_name(id);
+        let _type_name = self.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.fmt_type_name(id);
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
@@ -40,8 +40,8 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         // a header will get its own forwards and includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        context.decl_header.rm_forward(ty, &*type_name_unnamespaced);
-        context.impl_header.rm_forward(ty, &*type_name_unnamespaced);
+        context.decl_header.rm_forward(ty, &type_name_unnamespaced);
+        context.impl_header.rm_forward(ty, &type_name_unnamespaced);
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
@@ -146,7 +146,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
-            namespace: ty.attrs.namespace.as_ref().map(|x| &**x),
+            namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.decl_header)
@@ -209,7 +209,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
-            namespace: ty.attrs.namespace.as_ref().map(|x| &**x),
+            namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.decl_header)
@@ -291,7 +291,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &ctype,
             fields: field_decls.as_slice(),
             methods: methods.as_slice(),
-            namespace: def.attrs.namespace.as_ref().map(|x| &**x),
+            namespace: def.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.decl_header)

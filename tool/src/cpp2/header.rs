@@ -1,6 +1,6 @@
 use askama::Template;
 use diplomat_core::hir::TypeDef;
-use std::borrow::{Borrow, Cow};
+use std::borrow::{Cow};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{self, Write};
 
@@ -96,10 +96,10 @@ impl Header {
     pub fn rm_forward(&mut self, def: TypeDef, ty_name_unnamespaced: &str) {
         let ns = &def.attrs().namespace;
         let forward = Self::forward_for(def, ty_name_unnamespaced);
-        if let Some(ns_table) = self.forwards.get_mut(&ns) {
+        if let Some(ns_table) = self.forwards.get_mut(ns) {
             ns_table.remove(&forward);
             if ns_table.is_empty() {
-                self.forwards.remove(&ns);
+                self.forwards.remove(ns);
             }
         }
     }
