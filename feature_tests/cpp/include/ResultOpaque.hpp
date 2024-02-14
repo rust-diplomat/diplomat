@@ -82,7 +82,7 @@ inline diplomat::result<ResultOpaque, std::monostate> ResultOpaque::new_failing_
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.ok));
   } else {
-    diplomat_result_out_value = diplomat::Err(std::monostate());
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
   }
   return diplomat_result_out_value;
 }
@@ -101,7 +101,7 @@ inline diplomat::result<std::monostate, ResultOpaque> ResultOpaque::new_in_err(i
   auto diplomat_result_raw_out_value = capi::ResultOpaque_new_in_err(i);
   diplomat::result<std::monostate, ResultOpaque> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok(std::monostate());
+    diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());
   } else {
     diplomat_result_out_value = diplomat::Err<ResultOpaque>(ResultOpaque(diplomat_result_raw_out_value.err));
   }
@@ -113,7 +113,7 @@ inline diplomat::result<int32_t, std::monostate> ResultOpaque::new_int(int32_t i
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<int32_t>(diplomat_result_raw_out_value.ok);
   } else {
-    diplomat_result_out_value = diplomat::Err(std::monostate());
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
   }
   return diplomat_result_out_value;
 }
