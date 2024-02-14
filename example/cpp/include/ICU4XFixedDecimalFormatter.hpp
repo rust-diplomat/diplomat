@@ -76,7 +76,7 @@ inline diplomat::result<ICU4XFixedDecimalFormatter, std::monostate> ICU4XFixedDe
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<ICU4XFixedDecimalFormatter>(ICU4XFixedDecimalFormatter(diplomat_result_raw_out_value.ok));
   } else {
-    diplomat_result_out_value = diplomat::Err(std::monostate());
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
   }
   return diplomat_result_out_value;
 }

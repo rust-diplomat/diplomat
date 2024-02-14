@@ -75,9 +75,9 @@ template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &to_writer);
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok(std::monostate());
+    diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());
   } else {
-    diplomat_result_out_value = diplomat::Err(std::monostate());
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
   }
   return diplomat_result_out_value;
 }
@@ -87,9 +87,9 @@ inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_strin
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok(std::monostate());
+    diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());
   } else {
-    diplomat_result_out_value = diplomat::Err(std::monostate());
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
   }
   return diplomat_result_out_value.replace_ok(std::move(diplomat_writeable_string));
 }
