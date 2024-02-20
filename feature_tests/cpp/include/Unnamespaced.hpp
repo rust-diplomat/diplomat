@@ -25,7 +25,7 @@ struct UnnamespacedDeleter {
 };
 class Unnamespaced {
  public:
-  static Unnamespaced make(AttrEnum e);
+  static Unnamespaced make(AttrEnum _e);
   void use_namespaced(const AttrOpaque1& _n) const;
   inline const capi::Unnamespaced* AsFFI() const { return this->inner.get(); }
   inline capi::Unnamespaced* AsFFIMut() { return this->inner.get(); }
@@ -39,8 +39,8 @@ class Unnamespaced {
 
 #include "AttrOpaque1.hpp"
 
-inline Unnamespaced Unnamespaced::make(AttrEnum e) {
-  return Unnamespaced(capi::namespace_Unnamespaced_make(static_cast<capi::AttrEnum>(e)));
+inline Unnamespaced Unnamespaced::make(AttrEnum _e) {
+  return Unnamespaced(capi::namespace_Unnamespaced_make(static_cast<capi::AttrEnum>(_e)));
 }
 inline void Unnamespaced::use_namespaced(const AttrOpaque1& _n) const {
   capi::namespace_Unnamespaced_use_namespaced(this->inner.get(), _n.AsFFI());

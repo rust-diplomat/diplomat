@@ -19,7 +19,7 @@ extern "C" {
 #endif // __cplusplus
 
 
-Unnamespaced* namespace_Unnamespaced_make(AttrEnum e);
+Unnamespaced* namespace_Unnamespaced_make(AttrEnum _e);
 
 void namespace_Unnamespaced_use_namespaced(const Unnamespaced* self, const AttrOpaque1* _n);
 

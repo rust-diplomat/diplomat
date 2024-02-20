@@ -33,7 +33,7 @@
 
 .. cpp:class:: Unnamespaced
 
-    .. cpp:function:: static Unnamespaced make(AttrEnum e)
+    .. cpp:function:: static Unnamespaced make(AttrEnum _e)
 
 
     .. cpp:function:: void use_namespaced(const AttrOpaque1& _n) const

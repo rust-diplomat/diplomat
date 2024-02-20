@@ -7,7 +7,7 @@ export class Unnamespaced {
 
   /**
    */
-  static make(e: AttrEnum): Unnamespaced;
+  static make(_e: AttrEnum): Unnamespaced;
 
   /**
    */

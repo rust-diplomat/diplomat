@@ -19,7 +19,7 @@ class CPPRenamedAttrEnum;
 class Unnamespaced {
 public:
 
-  inline static std::unique_ptr<Unnamespaced> make(ns::CPPRenamedAttrEnum e);
+  inline static std::unique_ptr<Unnamespaced> make(ns::CPPRenamedAttrEnum _e);
 
   inline void use_namespaced(const ns::AttrOpaque1Renamed& _n) const;
 

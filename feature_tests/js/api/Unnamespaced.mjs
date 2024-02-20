@@ -16,8 +16,8 @@ export class Unnamespaced {
     }
   }
 
-  static make(arg_e) {
-    return new Unnamespaced(wasm.namespace_Unnamespaced_make(AttrEnum_js_to_rust[arg_e]), true, []);
+  static make(arg__e) {
+    return new Unnamespaced(wasm.namespace_Unnamespaced_make(AttrEnum_js_to_rust[arg__e]), true, []);
   }
 
   use_namespaced(arg__n) {

@@ -21,6 +21,6 @@
 
 .. js:class:: Unnamespaced
 
-    .. js:function:: make(e)
+    .. js:function:: make(_e)
 
     .. js:method:: use_namespaced(_n)

@@ -15,8 +15,8 @@
 #include "Unnamespaced.h"
 
 
-inline std::unique_ptr<Unnamespaced> Unnamespaced::make(ns::CPPRenamedAttrEnum e) {
-  auto result = capi::namespace_Unnamespaced_make(e.AsFFI());
+inline std::unique_ptr<Unnamespaced> Unnamespaced::make(ns::CPPRenamedAttrEnum _e) {
+  auto result = capi::namespace_Unnamespaced_make(_e.AsFFI());
   return std::unique_ptr<Unnamespaced>(Unnamespaced::FromFFI(result));
 }
 
