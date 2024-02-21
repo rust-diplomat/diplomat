@@ -55,16 +55,6 @@ typedef Rune = int;
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
-/// An unspecified error value
-// ignore: unused_element
-class VoidError {
-  @override
-  bool operator ==(Object other) => other is VoidError;
-
-  @override
-  int get hashCode => 1;
-}
-
 extension _View on ByteBuffer {
   // ignore: unused_element
   ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {

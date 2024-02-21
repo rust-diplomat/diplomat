@@ -15,12 +15,12 @@ int main(int argc, char *argv[]) {
     simple_assert_eq("bar error", (int)bar.AsFFI(), (int)ErrorEnum(ErrorEnum::Bar).AsFFI());
 
     auto unit_err = ResultOpaque::new_failing_unit();
-    simple_assert("unit error", unit_err.is_err())
+    simple_assert("unit error", !unit_err.has_value())
 
     auto struc = ResultOpaque::new_failing_struct(109).err().value();
     simple_assert_eq("struct error", struc.i, 109);
 
-    auto integer = ResultOpaque::new_int(109).ok().value();
+    auto integer = ResultOpaque::new_int(109).value();
     simple_assert_eq("int ok", integer, 109);
 
     auto in_err = ResultOpaque::new_in_err(198).err().value();

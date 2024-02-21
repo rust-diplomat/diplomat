@@ -16,7 +16,7 @@ public:
 
   inline static std::unique_ptr<ICU4XDataProvider> new_static();
 
-  inline static diplomat::result<std::monostate, std::monostate> returns_result();
+  inline static std::optional<std::monostate> returns_result();
 
   inline const capi::ICU4XDataProvider* AsFFI() const;
   inline capi::ICU4XDataProvider* AsFFI();

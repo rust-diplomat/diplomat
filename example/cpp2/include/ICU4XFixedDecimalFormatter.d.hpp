@@ -20,7 +20,7 @@ struct ICU4XFixedDecimalFormatterOptions;
 class ICU4XFixedDecimalFormatter {
 public:
 
-  inline static diplomat::result<std::unique_ptr<ICU4XFixedDecimalFormatter>, std::monostate> try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatterOptions options);
+  inline static std::optional<std::unique_ptr<ICU4XFixedDecimalFormatter>> try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatterOptions options);
 
   inline std::string format_write(const ICU4XFixedDecimal& value) const;
 

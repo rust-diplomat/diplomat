@@ -575,22 +575,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     SuccessType::OutType(o) => self.gen_type_name(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
-                    None => "std::monostate".into(),
-                };
-                let ret: Cow<str> =
-                    format!("diplomat::result<{ok_type_name}, {err_type_name}>").into();
-                ret
-            }
-            ReturnType::Option(ref ty) => {
-                let ty_name = match ty {
-                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
-                    SuccessType::OutType(o) => self.gen_type_name(o),
-                    SuccessType::Unit => "std::monostate".into(),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
-                self.cx.formatter.fmt_optional(&ty_name).into()
+                match err {
+                    Some(o) => format!("diplomat::result<{ok_type_name}, {err_type_name}>", err_type_name = self.gen_type_name(o)).into(),
+                    None => self.cx.formatter.fmt_optional(&ok_type_name).into(),
+                }
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -701,10 +689,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     SuccessType::OutType(ref o) => self.gen_type_name(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
-                    None => "std::monostate".into(),
-                };
                 let ok_conversion = match ok {
                     // Note: the `output` variable is a string initialized in the template
                     SuccessType::Writeable => "std::move(output)".into(),
@@ -712,30 +696,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     SuccessType::OutType(ref o) => self.gen_c_to_cpp_for_type(o, ok_path.into()),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                let err_conversion = match err {
-                    Some(o) => self.gen_c_to_cpp_for_type(o, err_path.into()),
-                    None => "".into(),
-                };
-                Some(
-                    format!("{var_name}.is_ok ? diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Ok<{ok_type_name}>({ok_conversion})) : diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Err<{err_type_name}>({err_conversion}))").into()
-                )
-            }
-            ReturnType::Option(ref ty) => {
-                let value_path = format!("{var_name}.ok");
-                let type_name = match ty {
-                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
-                    SuccessType::OutType(o) => self.gen_type_name(o),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
-                let conversion = match ty {
-                    // Note: the `output` variable is a string initialized in the template
-                    SuccessType::Writeable => "std::move(output)".into(),
-                    SuccessType::OutType(o) => self.gen_c_to_cpp_for_type(o, value_path.into()),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
-                Some(
-                    format!("{var_name}.is_ok ? std::optional<{type_name}>({conversion}) : std::nullopt").into()
-                )
+
+                match err {
+                    Some(o) => {
+                        let err_type_name = self.gen_type_name(o);
+                        let err_conversion = self.gen_c_to_cpp_for_type(o, err_path.into());
+                        Some(
+                            format!("{var_name}.is_ok ? diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Ok<{ok_type_name}>({ok_conversion})) : diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Err<{err_type_name}>({err_conversion}))").into()
+                        )
+                    }
+                    None => {
+                        Some(
+                            format!("{var_name}.is_ok ? std::optional<{ok_type_name}>({ok_conversion}) : std::nullopt").into()
+                        )
+                    }
+                }
+
+                
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }

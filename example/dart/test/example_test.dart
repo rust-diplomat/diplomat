@@ -18,8 +18,8 @@ void main() {
 
     final dataProvider = ICU4XDataProvider.static_();
 
-    final fdf = ICU4XFixedDecimalFormatter(
-        locale, dataProvider, ICU4XFixedDecimalFormatterOptions());
+    final fdf = ICU4XFixedDecimalFormatter.tryNew(
+        locale, dataProvider, ICU4XFixedDecimalFormatterOptions())!;
 
     expect(fdf.formatWrite(myDecimal), "১২.৩");
   });

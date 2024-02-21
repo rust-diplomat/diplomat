@@ -524,7 +524,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             } else if params.is_empty()
                 && !matches!(
                     method.output,
-                    hir::ReturnType::Fallible(..) | hir::ReturnType::Infallible(SuccessType::Unit)
+                    hir::ReturnType::Fallible(_, Some(_))
+                        | hir::ReturnType::Infallible(SuccessType::Unit)
                 )
                 && return_ty != "bool"
             {
@@ -570,6 +571,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         } else if method.name.as_str() == "to_string"
             && method.output.is_writeable()
             && params.is_empty()
+            && return_ty == "String"
         {
             "@override\n  String toString()".to_string()
         } else if method.name.as_str() == "get"
@@ -584,15 +586,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         let mut docs = self.formatter.fmt_docs(&method.docs);
 
-        if let hir::ReturnType::Fallible(_, e) = &method.output {
+        if let hir::ReturnType::Fallible(_, Some(e)) = &method.output {
             write!(
                 &mut docs,
                 "\n///\n/// Throws [{}] on failure.",
-                &if let Some(e) = e {
-                    self.gen_type_name(e)
-                } else {
-                    "VoidError".into()
-                },
+                self.gen_type_name(e)
             )
             .unwrap();
         }
@@ -666,17 +664,22 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'cx, str> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit)
-            | ReturnType::Fallible(SuccessType::Unit, _) => self.formatter.fmt_void().into(),
+            | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
             ReturnType::Infallible(SuccessType::Writeable)
-            | ReturnType::Fallible(SuccessType::Writeable, _) => self.formatter.fmt_string().into(),
+            | ReturnType::Fallible(SuccessType::Writeable, Some(_)) => {
+                self.formatter.fmt_string().into()
+            }
             ReturnType::Infallible(SuccessType::OutType(ref o))
-            | ReturnType::Fallible(SuccessType::OutType(ref o), _) => self.gen_type_name(o),
-            ReturnType::Option(SuccessType::Writeable) => self
+            | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_type_name(o),
+            ReturnType::Fallible(SuccessType::Writeable, None) => self
                 .formatter
                 .fmt_nullable(self.formatter.fmt_string())
                 .into(),
-            ReturnType::Option(SuccessType::Unit) => todo!(),
-            ReturnType::Option(SuccessType::OutType(ref o)) => {
+            ReturnType::Fallible(SuccessType::Unit, None) => self
+                .formatter
+                .fmt_primitive_as_ffi(hir::PrimitiveType::Bool, true)
+                .into(),
+            ReturnType::Fallible(SuccessType::OutType(ref o), None) => {
                 self.formatter.fmt_nullable(&self.gen_type_name(o)).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
@@ -755,7 +758,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Fallible(ref ok, ref err) => {
                 self.gen_result(ok.as_type(), err.as_ref()).into()
             }
-            ReturnType::Option(ref ty) => self.gen_result(ty.as_type(), None).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -927,38 +929,40 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 )
                 .into(),
             ),
+            // Special case Result<(), ()> to bool
+            ReturnType::Fallible(SuccessType::Unit, None) => Some("return result.isOk;".into()),
             ReturnType::Fallible(ref ok, ref err) => {
-                let err_conversion = match err {
-                    Some(o) => {
-                        self.gen_c_to_dart_for_type(o, "result.union.err".into(), lifetime_env)
+                let err_check = format!(
+                    "if (!result.isOk) {{\n  {}\n}}\n",
+                    match err {
+                        Some(e) => format!(
+                            "throw {};",
+                            self.gen_c_to_dart_for_type(e, "result.union.err".into(), lifetime_env)
+                        ),
+                        None => "return null;".into(),
                     }
-                    None => "VoidError()".into(),
-                };
-                let err_check =
-                    format!("if (!result.isOk) {{\n  throw {err_conversion};\n}}").into();
-                let ok_conversion = match ok {
-                    // Note: the `writeable` variable is initialized in the template
-                    SuccessType::Writeable => "writeable.finalize()".into(),
-                    SuccessType::OutType(o) => {
-                        self.gen_c_to_dart_for_type(o, "result.union.ok".into(), lifetime_env)
-                    }
-                    SuccessType::Unit => return Some(err_check),
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
-                Some(format!("{err_check}\nreturn {ok_conversion};").into())
-            }
-            ReturnType::Option(ref ty) => {
-                let ok_conversion = match ty {
-                    // Note: the `writeable` variable is initialized in the template
-                    SuccessType::Writeable => "writeable.finalize()".into(),
-                    SuccessType::OutType(o) => {
-                        self.gen_c_to_dart_for_type(o, "result.union.ok".into(), lifetime_env)
-                    }
-                    _ => unreachable!("unknown AST/HIR variant"),
-                };
+                );
+
                 Some(
-                    format!("if (!result.isOk) {{\n  return null;\n}}\nreturn {ok_conversion};")
-                        .into(),
+                    match ok {
+                        // Note: the `writeable` variable is initialized in the template
+                        SuccessType::Writeable => {
+                            format!("{err_check}return writeable.finalize();")
+                        }
+                        SuccessType::OutType(o) => {
+                            format!(
+                                "{err_check}return {};",
+                                self.gen_c_to_dart_for_type(
+                                    o,
+                                    "result.union.ok".into(),
+                                    lifetime_env
+                                )
+                            )
+                        }
+                        SuccessType::Unit => err_check,
+                        _ => unreachable!("unknown AST/HIR variant"),
+                    }
+                    .into(),
                 )
             }
             _ => unreachable!("unknown AST/HIR variant"),

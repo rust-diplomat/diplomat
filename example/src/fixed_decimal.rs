@@ -23,6 +23,7 @@ pub mod ffi {
         /// Format the [`ICU4XFixedDecimal`] as a string.
         #[diplomat::rust_link(fixed_decimal::FixedDecimal::write_to, FnInStruct)]
         #[allow(clippy::result_unit_err)]
+        #[diplomat::attr(dart, disable)] // not allowed to be fallible in Dart
         pub fn to_string(&self, to: &mut DiplomatWriteable) -> Result<(), ()> {
             self.0.write_to(to).map_err(|_| ())
         }

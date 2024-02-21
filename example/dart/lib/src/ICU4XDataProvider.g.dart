@@ -34,13 +34,9 @@ final class ICU4XDataProvider implements ffi.Finalizable {
   }
 
   /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
-  ///
-  /// Throws [VoidError] on failure.
-  static void returnsResult() {
+  static bool returnsResult() {
     final result = _ICU4XDataProvider_returns_result();
-    if (!result.isOk) {
-      throw VoidError();
-    }
+    return result.isOk;
   }
 }
 
