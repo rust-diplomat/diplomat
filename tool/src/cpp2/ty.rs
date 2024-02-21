@@ -14,7 +14,6 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             // Skip type if disabled
             return;
         }
-        let _type_name = self.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.fmt_type_name(id);
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let mut decl_header = Header::new(decl_header_path.clone());
