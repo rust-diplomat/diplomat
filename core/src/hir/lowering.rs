@@ -868,18 +868,18 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         mut return_ltl: ReturnLifetimeLowerer<'_>,
         in_path: &ast::Path,
     ) -> Result<(ReturnType, LifetimeEnv), ()> {
-        let writeable_option = if takes_writeable {
-            Some(SuccessType::Writeable)
+        let writeable_or_unit = if takes_writeable {
+            SuccessType::Writeable
         } else {
-            None
+            SuccessType::Unit
         };
         match return_type.unwrap_or(&ast::TypeName::Unit) {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
                 let ok_ty = match ok_ty.as_ref() {
-                    ast::TypeName::Unit => Ok(writeable_option),
+                    ast::TypeName::Unit => Ok(writeable_or_unit),
                     ty => self
                         .lower_out_type(ty, &mut return_ltl, in_path)
-                        .map(|ty| Some(SuccessType::OutType(ty))),
+                        .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
@@ -891,10 +891,10 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                     _ => Err(()),
                 }
             }
-            ast::TypeName::Unit => Ok(ReturnType::Infallible(writeable_option)),
+            ast::TypeName::Unit => Ok(ReturnType::Infallible(writeable_or_unit)),
             ty => self
                 .lower_out_type(ty, &mut return_ltl, in_path)
-                .map(|ty| ReturnType::Infallible(Some(SuccessType::OutType(ty)))),
+                .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
         .map(|r_ty| (r_ty, return_ltl.finish()))
     }
