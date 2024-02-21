@@ -1,6 +1,6 @@
 //! Types that can be exposed in Diplomat APIs.
 
-use super::lifetimes::{MaybeStatic, TypeLifetime};
+use super::lifetimes::{Lifetime, MaybeStatic};
 use super::{
     EnumPath, Everywhere, NonOptional, OpaqueOwner, OpaquePath, Optional, OutputOnly,
     PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext,
@@ -37,7 +37,7 @@ pub enum SelfType {
 #[non_exhaustive]
 pub enum Slice {
     /// A string slice, e.g. `&DiplomatStr`.
-    Str(MaybeStatic<TypeLifetime>, StringEncoding),
+    Str(MaybeStatic<Lifetime>, StringEncoding),
 
     /// A primitive slice, e.g. `&mut [u8]`.
     Primitive(Borrow, PrimitiveType),
@@ -54,7 +54,7 @@ pub enum Slice {
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
 pub struct Borrow {
-    pub lifetime: MaybeStatic<TypeLifetime>,
+    pub lifetime: MaybeStatic<Lifetime>,
     pub mutability: Mutability,
 }
 
@@ -77,7 +77,7 @@ impl Type {
 
 impl<P: TyPosition> Type<P> {
     /// Get all lifetimes "contained" in this type
-    pub fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<TypeLifetime>> + '_ {
+    pub fn lifetimes(&self) -> impl Iterator<Item = MaybeStatic<Lifetime>> + '_ {
         match self {
             Type::Opaque(opaque) => Either::Right(
                 opaque
@@ -109,9 +109,9 @@ impl SelfType {
 }
 
 impl Slice {
-    /// Returns the [`TypeLifetime`] contained in either the `Str` or `Primitive`
+    /// Returns the [`Lifetime`] contained in either the `Str` or `Primitive`
     /// variant.
-    pub fn lifetime(&self) -> &MaybeStatic<TypeLifetime> {
+    pub fn lifetime(&self) -> &MaybeStatic<Lifetime> {
         match self {
             Slice::Str(lifetime, ..) => lifetime,
             Slice::Primitive(reference, ..) => &reference.lifetime,
@@ -120,7 +120,7 @@ impl Slice {
 }
 
 impl Borrow {
-    pub(super) fn new(lifetime: MaybeStatic<TypeLifetime>, mutability: Mutability) -> Self {
+    pub(super) fn new(lifetime: MaybeStatic<Lifetime>, mutability: Mutability) -> Self {
         Self {
             lifetime,
             mutability,

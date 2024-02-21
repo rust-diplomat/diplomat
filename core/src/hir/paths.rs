@@ -1,4 +1,4 @@
-use super::lifetimes::{LinkedLifetimes, TypeLifetimes};
+use super::lifetimes::{Lifetimes, LinkedLifetimes};
 use super::{
     Borrow, EnumDef, EnumId, Everywhere, OpaqueDef, OpaqueId, OpaqueOwner, OutStructDef,
     OutputOnly, ReturnableStructDef, StructDef, TyPosition, TypeContext,
@@ -19,7 +19,7 @@ pub type OutStructPath = StructPath<OutputOnly>;
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct StructPath<P: TyPosition = Everywhere> {
-    pub lifetimes: TypeLifetimes,
+    pub lifetimes: Lifetimes,
     pub tcx_id: P::StructId,
 }
 
@@ -40,7 +40,7 @@ pub struct StructPath<P: TyPosition = Everywhere> {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct OpaquePath<Opt, Owner> {
-    pub lifetimes: TypeLifetimes,
+    pub lifetimes: Lifetimes,
     pub optional: Opt,
     pub owner: Owner,
     pub tcx_id: OpaqueId,
@@ -118,7 +118,7 @@ impl ReturnableStructPath {
         }
     }
 
-    pub(crate) fn lifetimes(&self) -> &TypeLifetimes {
+    pub(crate) fn lifetimes(&self) -> &Lifetimes {
         match self {
             Self::Struct(p) => &p.lifetimes,
             Self::OutStruct(p) => &p.lifetimes,
@@ -137,7 +137,7 @@ impl ReturnableStructPath {
 
 impl<P: TyPosition> StructPath<P> {
     /// Returns a new [`EnumPath`].
-    pub(super) fn new(lifetimes: TypeLifetimes, tcx_id: P::StructId) -> Self {
+    pub(super) fn new(lifetimes: Lifetimes, tcx_id: P::StructId) -> Self {
         Self { lifetimes, tcx_id }
     }
 }
@@ -173,12 +173,7 @@ impl OutStructPath {
 
 impl<Opt, Owner> OpaquePath<Opt, Owner> {
     /// Returns a new [`EnumPath`].
-    pub(super) fn new(
-        lifetimes: TypeLifetimes,
-        optional: Opt,
-        owner: Owner,
-        tcx_id: OpaqueId,
-    ) -> Self {
+    pub(super) fn new(lifetimes: Lifetimes, optional: Opt, owner: Owner, tcx_id: OpaqueId) -> Self {
         Self {
             lifetimes,
             optional,

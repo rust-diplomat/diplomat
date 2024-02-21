@@ -96,14 +96,12 @@
 //!
 //! [Nomicon]: https://doc.rust-lang.org/nomicon/lifetime-elision.html
 
-use super::lifetimes::{
-    self, BoundedLifetime, LifetimeEnv, MaybeStatic, MethodLifetime, TypeLifetime, TypeLifetimes,
-};
+use super::lifetimes::{BoundedLifetime, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 use super::LoweringContext;
 use crate::ast;
 use smallvec::SmallVec;
 
-/// Lower [`ast::Lifetime`]s to [`TypeLifetime`]s.
+/// Lower [`ast::Lifetime`]s to [`Lifetime`]s.
 ///
 /// This helper traits allows the [`lower_type`] and [`lower_out_type`] methods
 /// to abstractly lower lifetimes without concern for what sort of tracking
@@ -111,12 +109,12 @@ use smallvec::SmallVec;
 /// when visiting lifetimes in the input.
 pub trait LifetimeLowerer {
     /// Lowers an [`ast::Lifetime`].
-    fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> MaybeStatic<TypeLifetime>;
+    fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> MaybeStatic<Lifetime>;
 
     /// Lowers a slice of [`ast::Lifetime`]s by calling
     /// [`LifetimeLowerer::lower_lifetime`] repeatedly.
-    fn lower_lifetimes(&mut self, lifetimes: &[ast::Lifetime]) -> TypeLifetimes {
-        TypeLifetimes::from_fn(lifetimes, |lifetime| self.lower_lifetime(lifetime))
+    fn lower_lifetimes(&mut self, lifetimes: &[ast::Lifetime]) -> Lifetimes {
+        Lifetimes::from_fn(lifetimes, |lifetime| self.lower_lifetime(lifetime))
     }
 
     /// Lowers a slice of [`ast::Lifetime`], where the strategy may vary depending
@@ -129,7 +127,7 @@ pub trait LifetimeLowerer {
     /// Additionally, elision inferences knows to not search inside the generics
     /// of `Self` types for candidate lifetimes to correspond to elided lifetimes
     /// in the output.
-    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> TypeLifetimes;
+    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> Lifetimes;
 }
 
 /// A state machine for tracking which lifetime in a function's parameters
@@ -139,16 +137,16 @@ enum ElisionSource {
     /// No borrows in the input, no elision.
     NoBorrows,
     /// `&self` or `&mut self`, elision allowed.
-    SelfParam(MaybeStatic<TypeLifetime>),
+    SelfParam(MaybeStatic<Lifetime>),
     /// One param contains a borrow, elision allowed.
-    OneParam(MaybeStatic<TypeLifetime>),
+    OneParam(MaybeStatic<Lifetime>),
     /// Multiple borrows and no self borrow, no elision.
     MultipleBorrows,
 }
 
 impl ElisionSource {
     /// Potentially transition to a new state.
-    fn visit_lifetime(&mut self, lifetime: MaybeStatic<TypeLifetime>) {
+    fn visit_lifetime(&mut self, lifetime: MaybeStatic<Lifetime>) {
         match self {
             ElisionSource::NoBorrows => *self = ElisionSource::OneParam(lifetime),
             ElisionSource::SelfParam(_) => {
@@ -170,8 +168,8 @@ impl ElisionSource {
 /// lifetimes, and caching lifetimes of `Self`.
 pub(super) struct BaseLifetimeLowerer<'ast> {
     lifetime_env: &'ast ast::LifetimeEnv,
-    self_lifetimes: Option<TypeLifetimes>,
-    nodes: SmallVec<[BoundedLifetime<lifetimes::Method>; super::lifetimes::INLINE_NUM_LIFETIMES]>,
+    self_lifetimes: Option<Lifetimes>,
+    nodes: SmallVec<[BoundedLifetime; super::lifetimes::INLINE_NUM_LIFETIMES]>,
     num_lifetimes: usize,
 }
 
@@ -211,21 +209,21 @@ pub(super) struct ReturnLifetimeLowerer<'ast> {
 }
 
 impl<'ast> BaseLifetimeLowerer<'ast> {
-    /// Returns a [`TypeLifetime`] representing a new anonymous lifetime, and
+    /// Returns a [`Lifetime`] representing a new anonymous lifetime, and
     /// pushes it to the nodes vector.
-    fn new_elided(&mut self) -> TypeLifetime {
+    fn new_elided(&mut self) -> Lifetime {
         let index = self.num_lifetimes;
         self.num_lifetimes += 1;
-        TypeLifetime::new(index)
+        Lifetime::new(index)
     }
 
     /// Lowers a single [`ast::Lifetime`]. If the lifetime is elided, then a fresh
     /// [`ImplicitLifetime`] is generated.
-    fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> MaybeStatic<TypeLifetime> {
+    fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> MaybeStatic<Lifetime> {
         match lifetime {
             ast::Lifetime::Static => MaybeStatic::Static,
             ast::Lifetime::Named(named) => {
-                MaybeStatic::NonStatic(TypeLifetime::from_ast(named, self.lifetime_env))
+                MaybeStatic::NonStatic(Lifetime::from_ast(named, self.lifetime_env))
             }
             ast::Lifetime::Anonymous => MaybeStatic::NonStatic(self.new_elided()),
         }
@@ -233,11 +231,11 @@ impl<'ast> BaseLifetimeLowerer<'ast> {
 
     /// Retrieves the cached  `Self` lifetimes, or caches newly generated
     /// lifetimes and returns those.
-    fn self_lifetimes_or_new(&mut self, ast_lifetimes: &[ast::Lifetime]) -> TypeLifetimes {
+    fn self_lifetimes_or_new(&mut self, ast_lifetimes: &[ast::Lifetime]) -> Lifetimes {
         if let Some(lifetimes) = &self.self_lifetimes {
             lifetimes.clone()
         } else {
-            let lifetimes = TypeLifetimes::from_fn(ast_lifetimes, |lt| self.lower_lifetime(lt));
+            let lifetimes = Lifetimes::from_fn(ast_lifetimes, |lt| self.lower_lifetime(lt));
             self.self_lifetimes = Some(lifetimes.clone());
             lifetimes
         }
@@ -255,16 +253,8 @@ impl<'ast> SelfParamLifetimeLowerer<'ast> {
                 (Some(lifetime), Some(hir_nodes)) => {
                     hir_nodes.push(BoundedLifetime::new(
                         lifetime,
-                        ast_node
-                            .longer
-                            .iter()
-                            .map(|i| MethodLifetime::new(*i))
-                            .collect(),
-                        ast_node
-                            .shorter
-                            .iter()
-                            .map(|i| MethodLifetime::new(*i))
-                            .collect(),
+                        ast_node.longer.iter().map(|i| Lifetime::new(*i)).collect(),
+                        ast_node.shorter.iter().map(|i| Lifetime::new(*i)).collect(),
                     ));
                 }
                 _ => hir_nodes = None,
@@ -292,7 +282,7 @@ impl<'ast> SelfParamLifetimeLowerer<'ast> {
     pub fn lower_self_ref(
         mut self,
         lifetime: &ast::Lifetime,
-    ) -> (MaybeStatic<TypeLifetime>, ParamLifetimeLowerer<'ast>) {
+    ) -> (MaybeStatic<Lifetime>, ParamLifetimeLowerer<'ast>) {
         let self_lifetime = self.base.lower_lifetime(lifetime);
 
         (
@@ -328,13 +318,13 @@ impl<'ast> ParamLifetimeLowerer<'ast> {
 }
 
 impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
-    fn lower_lifetime(&mut self, borrow: &ast::Lifetime) -> MaybeStatic<TypeLifetime> {
+    fn lower_lifetime(&mut self, borrow: &ast::Lifetime) -> MaybeStatic<Lifetime> {
         let lifetime = self.base.lower_lifetime(borrow);
         self.elision_source.visit_lifetime(lifetime);
         lifetime
     }
 
-    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> TypeLifetimes {
+    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> Lifetimes {
         if is_self {
             self.base.self_lifetimes_or_new(lifetimes)
         } else {
@@ -345,17 +335,17 @@ impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
 
 impl<'ast> ReturnLifetimeLowerer<'ast> {
     /// Finalize the lifetimes in the method, returning the resulting [`LifetimeEnv`].
-    pub fn finish(self) -> LifetimeEnv<lifetimes::Method> {
+    pub fn finish(self) -> LifetimeEnv {
         LifetimeEnv::new(self.base.nodes, self.base.num_lifetimes)
     }
 }
 
 impl<'ast> LifetimeLowerer for ReturnLifetimeLowerer<'ast> {
-    fn lower_lifetime(&mut self, borrow: &ast::Lifetime) -> MaybeStatic<TypeLifetime> {
+    fn lower_lifetime(&mut self, borrow: &ast::Lifetime) -> MaybeStatic<Lifetime> {
         match borrow {
             ast::Lifetime::Static => MaybeStatic::Static,
             ast::Lifetime::Named(named) => {
-                MaybeStatic::NonStatic(TypeLifetime::from_ast(named, self.base.lifetime_env))
+                MaybeStatic::NonStatic(Lifetime::from_ast(named, self.base.lifetime_env))
             }
             ast::Lifetime::Anonymous => match self.elision_source {
                 ElisionSource::SelfParam(lifetime) | ElisionSource::OneParam(lifetime) => lifetime,
@@ -369,7 +359,7 @@ impl<'ast> LifetimeLowerer for ReturnLifetimeLowerer<'ast> {
         }
     }
 
-    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> TypeLifetimes {
+    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> Lifetimes {
         if is_self {
             self.base.self_lifetimes_or_new(lifetimes)
         } else {
@@ -379,19 +369,17 @@ impl<'ast> LifetimeLowerer for ReturnLifetimeLowerer<'ast> {
 }
 
 impl LifetimeLowerer for &ast::LifetimeEnv {
-    fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> MaybeStatic<TypeLifetime> {
+    fn lower_lifetime(&mut self, lifetime: &ast::Lifetime) -> MaybeStatic<Lifetime> {
         match lifetime {
             ast::Lifetime::Static => MaybeStatic::Static,
-            ast::Lifetime::Named(named) => {
-                MaybeStatic::NonStatic(TypeLifetime::from_ast(named, self))
-            }
+            ast::Lifetime::Named(named) => MaybeStatic::NonStatic(Lifetime::from_ast(named, self)),
             ast::Lifetime::Anonymous => {
                 panic!("anonymous lifetime inside struct, this shouldn't pass rustc's checks")
             }
         }
     }
 
-    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], _: bool) -> TypeLifetimes {
+    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], _: bool) -> Lifetimes {
         self.lower_lifetimes(lifetimes)
     }
 }
@@ -410,7 +398,7 @@ mod tests {
             let m = crate::ast::Module::from_syn(&syn::parse_quote! { $($tokens)* }, true);
 
             let mut env = crate::Env::default();
-            let mut top_symbols = crate::ModuleEnv::default();
+            let mut top_symbols = crate::ModuleEnv::new(Default::default());
 
             m.insert_all_types(crate::ast::Path::empty(), &mut env);
             top_symbols.insert(m.name.clone(), crate::ast::ModSymbol::SubModule(m.name.clone()));

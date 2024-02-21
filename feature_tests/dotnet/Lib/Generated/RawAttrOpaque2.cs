@@ -16,6 +16,6 @@ public partial struct AttrOpaque2
 {
     private const string NativeLib = "diplomat_feature_tests";
 
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "AttrOpaque2_destroy", ExactSpelling = true)]
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque2_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(AttrOpaque2* self);
 }

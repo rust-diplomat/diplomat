@@ -39,8 +39,8 @@ pub fn gen_struct<W: fmt::Write>(
                 let mut deleter_operator_body = indented(&mut deleter_body).with_str("  ");
                 writeln!(
                     &mut deleter_operator_body,
-                    "capi::{}_destroy(l);",
-                    custom_type.name()
+                    "capi::{}(l);",
+                    custom_type.dtor_name()
                 )?;
                 writeln!(&mut deleter_body, "}}")?;
                 writeln!(out, "}};")?;

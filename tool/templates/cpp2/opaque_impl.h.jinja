@@ -27,7 +27,7 @@ inline {{mut_ptr}} {{type_name}}::FromFFI({{mut_cptr}} ptr) {
 }
 
 inline void {{type_name}}::operator delete(void* ptr) {
-	{{ctype}}_destroy(reinterpret_cast<{{mut_cptr}}>(ptr));
+	{{dtor_name}}(reinterpret_cast<{{mut_cptr}}>(ptr));
 }
 
 

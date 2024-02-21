@@ -393,10 +393,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
             new_contents.push(gen_custom_type_method(custom_type, m));
         });
 
-        let destroy_ident = Ident::new(
-            format!("{}_destroy", custom_type.name()).as_str(),
-            Span::call_site(),
-        );
+        let destroy_ident = Ident::new(custom_type.dtor_name().as_str(), Span::call_site());
 
         let type_ident = custom_type.name().to_syn();
 

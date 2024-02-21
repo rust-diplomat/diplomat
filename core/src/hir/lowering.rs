@@ -1,12 +1,12 @@
-use super::lifetimes::{self, BoundedLifetime, Lifetime, LifetimeEnv, LifetimeKind};
 use super::{
-    AttributeContext, AttributeValidator, Borrow, EnumDef, EnumPath, EnumVariant, IdentBuf,
-    LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional,
-    OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf,
-    PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
-    SelfParamLifetimeLowerer, SelfType, Slice, StructDef, StructField, StructPath, SuccessType,
-    Type,
+    AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, EnumDef, EnumPath,
+    EnumVariant, IdentBuf, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method,
+    NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField, OutStructPath,
+    OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType, ReturnLifetimeLowerer,
+    ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType, Slice, StructDef,
+    StructField, StructPath, SuccessType, Type,
 };
+use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
 use core::fmt;
 use strck_ident::IntoCk;
@@ -35,10 +35,21 @@ impl fmt::Display for LoweringError {
 }
 
 pub(super) struct LoweringContext<'ast, 'errors> {
-    pub lookup_id: &'ast LookupId<'ast>,
+    pub lookup_id: LookupId<'ast>,
     pub errors: &'errors mut Vec<LoweringError>,
     pub env: &'ast Env,
     pub attr_validator: Box<dyn AttributeValidator>,
+}
+
+/// An item and the info needed to
+pub(crate) struct ItemAndInfo<'ast, Ast> {
+    pub(crate) item: &'ast Ast,
+    pub(crate) in_path: &'ast ast::Path,
+    /// Any parent attributes resolved from the module, for a type context
+    pub(crate) ty_parent_attrs: Attrs,
+
+    /// Any parent attributes resolved from the module, for a method context
+    pub(crate) method_parent_attrs: Attrs,
 }
 
 impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
@@ -62,15 +73,15 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     }
 
     /// Lowers multiple items at once
-    fn lower_all<Ast, Hir>(
+    fn lower_all<Ast: 'static, Hir>(
         &mut self,
-        ast_defs: &[(&ast::Path, &'ast Ast)],
-        lower: impl Fn(&mut Self, &'ast Ast, &ast::Path) -> Option<Hir>,
+        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, Ast>>,
+        lower: impl Fn(&mut Self, ItemAndInfo<'ast, Ast>) -> Option<Hir>,
     ) -> Option<Vec<Hir>> {
         let mut hir_types = Some(Vec::with_capacity(ast_defs.len()));
 
-        for (in_path, ast_def) in ast_defs {
-            let hir_type = lower(self, ast_def, in_path);
+        for def in ast_defs {
+            let hir_type = lower(self, def);
 
             match (hir_type, &mut hir_types) {
                 (Some(hir_type), Some(hir_types)) => hir_types.push(hir_type),
@@ -83,39 +94,47 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
 
     pub(super) fn lower_all_enums(
         &mut self,
-        ast_defs: &[(&ast::Path, &'ast ast::Enum)],
+        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Enum>>,
     ) -> Option<Vec<EnumDef>> {
         self.lower_all(ast_defs, Self::lower_enum)
     }
     pub(super) fn lower_all_structs(
         &mut self,
-        ast_defs: &[(&ast::Path, &'ast ast::Struct)],
+        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Struct>>,
     ) -> Option<Vec<StructDef>> {
         self.lower_all(ast_defs, Self::lower_struct)
     }
     pub(super) fn lower_all_out_structs(
         &mut self,
-        ast_defs: &[(&ast::Path, &'ast ast::Struct)],
+        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Struct>>,
     ) -> Option<Vec<OutStructDef>> {
         self.lower_all(ast_defs, Self::lower_out_struct)
     }
     pub(super) fn lower_all_opaques(
         &mut self,
-        ast_defs: &[(&ast::Path, &'ast ast::OpaqueStruct)],
+        ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::OpaqueStruct>>,
     ) -> Option<Vec<OpaqueDef>> {
         self.lower_all(ast_defs, Self::lower_opaque)
     }
 
-    fn lower_enum(&mut self, ast_enum: &'ast ast::Enum, in_path: &ast::Path) -> Option<EnumDef> {
+    fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Option<EnumDef> {
+        let ast_enum = item.item;
         let name = self.lower_ident(&ast_enum.name, "enum name");
+        let attrs = self.attr_validator.attr_from_ast(
+            &ast_enum.attrs,
+            AttributeContext::Enum,
+            &item.ty_parent_attrs,
+            self.errors,
+        );
 
         let mut variants = Some(Vec::with_capacity(ast_enum.variants.len()));
-
+        let variant_parent_attrs = attrs.for_inheritance(AttrInheritContext::Variant);
         for (ident, discriminant, docs, attrs) in ast_enum.variants.iter() {
             let name = self.lower_ident(ident, "enum variant");
             let attrs = self.attr_validator.attr_from_ast(
                 attrs,
                 AttributeContext::EnumVariant,
+                &variant_parent_attrs,
                 self.errors,
             );
             match (name, &mut variants) {
@@ -131,10 +150,11 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             }
         }
 
-        let methods = self.lower_all_methods(&ast_enum.methods[..], in_path);
-        let attrs =
-            self.attr_validator
-                .attr_from_ast(&ast_enum.attrs, AttributeContext::Enum, self.errors);
+        let methods = self.lower_all_methods(
+            &ast_enum.methods[..],
+            item.in_path,
+            &item.method_parent_attrs,
+        );
 
         Some(EnumDef::new(
             ast_enum.docs.clone(),
@@ -145,17 +165,19 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         ))
     }
 
-    fn lower_opaque(
-        &mut self,
-        ast_opaque: &'ast ast::OpaqueStruct,
-        in_path: &ast::Path,
-    ) -> Option<OpaqueDef> {
+    fn lower_opaque(&mut self, item: ItemAndInfo<'ast, ast::OpaqueStruct>) -> Option<OpaqueDef> {
+        let ast_opaque = item.item;
         let name = self.lower_ident(&ast_opaque.name, "opaque name");
 
-        let methods = self.lower_all_methods(&ast_opaque.methods[..], in_path);
+        let methods = self.lower_all_methods(
+            &ast_opaque.methods[..],
+            item.in_path,
+            &item.method_parent_attrs,
+        );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_opaque.attrs,
             AttributeContext::Opaque,
+            &item.ty_parent_attrs,
             self.errors,
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_opaque.lifetimes);
@@ -169,11 +191,8 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         ))
     }
 
-    fn lower_struct(
-        &mut self,
-        ast_struct: &'ast ast::Struct,
-        in_path: &ast::Path,
-    ) -> Option<StructDef> {
+    fn lower_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Option<StructDef> {
+        let ast_struct = item.item;
         let name = self.lower_ident(&ast_struct.name, "struct name");
 
         let fields = if ast_struct.fields.is_empty() {
@@ -187,7 +206,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
 
             for (name, ty, docs) in ast_struct.fields.iter() {
                 let name = self.lower_ident(name, "struct field name");
-                let ty = self.lower_type(ty, Some(&mut &ast_struct.lifetimes), in_path);
+                let ty = self.lower_type(ty, Some(&mut &ast_struct.lifetimes), item.in_path);
 
                 match (name, ty, &mut fields) {
                     (Some(name), Some(ty), Some(fields)) => fields.push(StructField {
@@ -202,10 +221,15 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             fields
         };
 
-        let methods = self.lower_all_methods(&ast_struct.methods[..], in_path);
+        let methods = self.lower_all_methods(
+            &ast_struct.methods[..],
+            item.in_path,
+            &item.method_parent_attrs,
+        );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_struct.attrs,
             AttributeContext::Struct { out: false },
+            &item.ty_parent_attrs,
             self.errors,
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_struct.lifetimes);
@@ -220,11 +244,8 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         ))
     }
 
-    fn lower_out_struct(
-        &mut self,
-        ast_out_struct: &'ast ast::Struct,
-        in_path: &ast::Path,
-    ) -> Option<OutStructDef> {
+    fn lower_out_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Option<OutStructDef> {
+        let ast_out_struct = item.item;
         let name = self.lower_ident(&ast_out_struct.name, "out-struct name");
 
         let fields = if ast_out_struct.fields.is_empty() {
@@ -238,7 +259,8 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
 
             for (name, ty, docs) in ast_out_struct.fields.iter() {
                 let name = self.lower_ident(name, "out-struct field name");
-                let ty = self.lower_out_type(ty, Some(&mut &ast_out_struct.lifetimes), in_path);
+                let ty =
+                    self.lower_out_type(ty, Some(&mut &ast_out_struct.lifetimes), item.in_path);
 
                 match (name, ty, &mut fields) {
                     (Some(name), Some(ty), Some(fields)) => fields.push(OutStructField {
@@ -253,10 +275,15 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             fields
         };
 
-        let methods = self.lower_all_methods(&ast_out_struct.methods[..], in_path);
+        let methods = self.lower_all_methods(
+            &ast_out_struct.methods[..],
+            item.in_path,
+            &item.method_parent_attrs,
+        );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_out_struct.attrs,
             AttributeContext::Struct { out: true },
+            &item.ty_parent_attrs,
             self.errors,
         );
 
@@ -274,7 +301,12 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     /// Lowers an [`ast::Method`]s an [`hir::Method`].
     ///
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
-    fn lower_method(&mut self, method: &'ast ast::Method, in_path: &ast::Path) -> Option<Method> {
+    fn lower_method(
+        &mut self,
+        method: &'ast ast::Method,
+        in_path: &ast::Path,
+        method_parent_attrs: &Attrs,
+    ) -> Option<Method> {
         let name = self.lower_ident(&method.name, "method name");
 
         let (ast_params, takes_writeable) = match method.params.split_last() {
@@ -307,9 +339,12 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             in_path,
         )?;
 
-        let attrs =
-            self.attr_validator
-                .attr_from_ast(&method.attrs, AttributeContext::Enum, self.errors);
+        let attrs = self.attr_validator.attr_from_ast(
+            &method.attrs,
+            AttributeContext::Enum,
+            method_parent_attrs,
+            self.errors,
+        );
         Some(Method {
             docs: method.docs.clone(),
             name: name?,
@@ -328,11 +363,12 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         &mut self,
         ast_methods: &'ast [ast::Method],
         in_path: &ast::Path,
+        method_parent_attrs: &Attrs,
     ) -> Option<Vec<Method>> {
         let mut methods = Some(Vec::with_capacity(ast_methods.len()));
 
         for method in ast_methods {
-            let method = self.lower_method(method, in_path);
+            let method = self.lower_method(method, in_path, method_parent_attrs);
             match (method, &mut methods) {
                 (Some(method), Some(methods)) => {
                     methods.push(method);
@@ -826,7 +862,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         takes_writeable: bool,
         mut return_ltl: Option<ReturnLifetimeLowerer<'_>>,
         in_path: &ast::Path,
-    ) -> Option<(ReturnType, LifetimeEnv<lifetimes::Method>)> {
+    ) -> Option<(ReturnType, LifetimeEnv)> {
         let writeable_option = if takes_writeable {
             Some(SuccessType::Writeable)
         } else {
@@ -872,10 +908,10 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         .and_then(|return_fallability| Some((return_fallability, return_ltl?.finish())))
     }
 
-    fn lower_named_lifetime<Kind: LifetimeKind>(
+    fn lower_named_lifetime(
         &mut self,
         lifetime: &ast::lifetimes::LifetimeNode,
-    ) -> Option<BoundedLifetime<Kind>> {
+    ) -> Option<BoundedLifetime> {
         Some(BoundedLifetime {
             ident: self.lower_ident(lifetime.lifetime.name(), "lifetime")?,
             longer: lifetime.longer.iter().copied().map(Lifetime::new).collect(),
@@ -892,10 +928,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     ///
     /// Should not be extended to return LifetimeEnv<Method>, which needs to use the lifetime
     /// lowerers to handle elision.
-    fn lower_type_lifetime_env(
-        &mut self,
-        ast: &ast::LifetimeEnv,
-    ) -> Option<LifetimeEnv<lifetimes::Type>> {
+    fn lower_type_lifetime_env(&mut self, ast: &ast::LifetimeEnv) -> Option<LifetimeEnv> {
         let nodes = ast
             .nodes
             .iter()

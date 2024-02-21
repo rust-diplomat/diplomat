@@ -201,7 +201,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             } else {
                 writeln!(
                     out,
-                    "  {wrapped_value_id} = diplomat::Ok(std::monostate());"
+                    "  {wrapped_value_id} = diplomat::Ok<std::monostate>(std::monostate());"
                 )
                 .unwrap();
             };
@@ -227,7 +227,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             } else {
                 writeln!(
                     out,
-                    "  {wrapped_value_id} = diplomat::Err(std::monostate());"
+                    "  {wrapped_value_id} = diplomat::Err<std::monostate>(std::monostate());"
                 )
                 .unwrap();
             };

@@ -1,9 +1,11 @@
 //! Store all the types contained in the HIR.
 
+use super::lowering::ItemAndInfo;
 use super::{
-    AttributeValidator, EnumDef, LoweringContext, LoweringError, OpaqueDef, OutStructDef,
-    StructDef, TypeDef,
+    AttributeContext, AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError,
+    OpaqueDef, OutStructDef, StructDef, TypeDef,
 };
+use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
 use crate::{ast, Env};
@@ -124,18 +126,53 @@ impl TypeContext {
 
         let mut errors = Vec::with_capacity(0);
 
-        for (path, _, sym) in env.iter_items() {
-            if let ast::ModSymbol::CustomType(custom_type) = sym {
-                match custom_type {
-                    ast::CustomType::Struct(strct) => {
-                        if strct.output_only {
-                            ast_out_structs.push((path, strct));
-                        } else {
-                            ast_structs.push((path, strct));
+        for (path, mod_env) in env.iter_modules() {
+            let mod_attrs = Attrs::from_ast(
+                &mod_env.attrs,
+                &attr_validator,
+                AttributeContext::Module,
+                &Default::default(),
+                &mut errors,
+            );
+            let ty_attrs = mod_attrs.for_inheritance(AttrInheritContext::Type);
+            let method_attrs =
+                mod_attrs.for_inheritance(AttrInheritContext::MethodOrImplFromModule);
+
+            for sym in mod_env.items() {
+                if let ast::ModSymbol::CustomType(custom_type) = sym {
+                    match custom_type {
+                        ast::CustomType::Struct(strct) => {
+                            let item = ItemAndInfo {
+                                item: strct,
+                                in_path: path,
+                                ty_parent_attrs: ty_attrs.clone(),
+                                method_parent_attrs: method_attrs.clone(),
+                            };
+                            if strct.output_only {
+                                ast_out_structs.push(item);
+                            } else {
+                                ast_structs.push(item);
+                            }
+                        }
+                        ast::CustomType::Opaque(opaque) => {
+                            let item = ItemAndInfo {
+                                item: opaque,
+                                in_path: path,
+                                ty_parent_attrs: ty_attrs.clone(),
+                                method_parent_attrs: method_attrs.clone(),
+                            };
+                            ast_opaques.push(item)
+                        }
+                        ast::CustomType::Enum(enm) => {
+                            let item = ItemAndInfo {
+                                item: enm,
+                                in_path: path,
+                                ty_parent_attrs: ty_attrs.clone(),
+                                method_parent_attrs: method_attrs.clone(),
+                            };
+                            ast_enums.push(item)
                         }
                     }
-                    ast::CustomType::Opaque(opaque) => ast_opaques.push((path, opaque)),
-                    ast::CustomType::Enum(enm) => ast_enums.push((path, enm)),
                 }
             }
         }
@@ -149,16 +186,16 @@ impl TypeContext {
         let attr_validator = Box::new(attr_validator);
 
         let mut ctx = LoweringContext {
-            lookup_id: &lookup_id,
+            lookup_id,
             env,
             errors: &mut errors,
             attr_validator,
         };
 
-        let out_structs = ctx.lower_all_out_structs(&ast_out_structs[..]);
-        let structs = ctx.lower_all_structs(&ast_structs[..]);
-        let opaques = ctx.lower_all_opaques(&ast_opaques[..]);
-        let enums = ctx.lower_all_enums(&ast_enums[..]);
+        let out_structs = ctx.lower_all_out_structs(ast_out_structs.into_iter());
+        let structs = ctx.lower_all_structs(ast_structs.into_iter());
+        let opaques = ctx.lower_all_opaques(ast_opaques.into_iter());
+        let enums = ctx.lower_all_enums(ast_enums.into_iter());
 
         match (out_structs, structs, opaques, enums) {
             (Some(out_structs), Some(structs), Some(opaques), Some(enums)) => {
@@ -197,31 +234,31 @@ pub(super) struct LookupId<'ast> {
 impl<'ast> LookupId<'ast> {
     /// Returns a new [`LookupId`].
     fn new(
-        out_structs: &[(&ast::Path, &'ast ast::Struct)],
-        structs: &[(&ast::Path, &'ast ast::Struct)],
-        opaques: &[(&ast::Path, &'ast ast::OpaqueStruct)],
-        enums: &[(&ast::Path, &'ast ast::Enum)],
+        out_structs: &[ItemAndInfo<'ast, ast::Struct>],
+        structs: &[ItemAndInfo<'ast, ast::Struct>],
+        opaques: &[ItemAndInfo<'ast, ast::OpaqueStruct>],
+        enums: &[ItemAndInfo<'ast, ast::Enum>],
     ) -> Self {
         Self {
             out_struct_map: out_structs
                 .iter()
                 .enumerate()
-                .map(|(index, (_, strct))| (*strct, OutStructId(index)))
+                .map(|(index, item)| (item.item, OutStructId(index)))
                 .collect(),
             struct_map: structs
                 .iter()
                 .enumerate()
-                .map(|(index, (_, strct))| (*strct, StructId(index)))
+                .map(|(index, item)| (item.item, StructId(index)))
                 .collect(),
             opaque_map: opaques
                 .iter()
                 .enumerate()
-                .map(|(index, (_, opaque))| (*opaque, OpaqueId(index)))
+                .map(|(index, item)| (item.item, OpaqueId(index)))
                 .collect(),
             enum_map: enums
                 .iter()
                 .enumerate()
-                .map(|(index, (_, enm))| (*enm, EnumId(index)))
+                .map(|(index, item)| (item.item, EnumId(index)))
                 .collect(),
         }
     }

@@ -38,8 +38,8 @@ impl Struct {
             .collect();
 
         let lifetimes = LifetimeEnv::from_struct_item(strct, &fields[..]);
-        let mut attrs: Attrs = (&*strct.attrs).into();
-        attrs.merge_parent_attrs(parent_attrs);
+        let mut attrs = parent_attrs.clone();
+        attrs.add_attrs(&strct.attrs);
         Struct {
             name: (&strct.ident).into(),
             docs: Docs::from_attrs(&strct.attrs),
@@ -69,8 +69,8 @@ pub struct OpaqueStruct {
 impl OpaqueStruct {
     /// Extract a [`OpaqueStruct`] metadata value from an AST node.
     pub fn new(strct: &syn::ItemStruct, mutability: Mutability, parent_attrs: &Attrs) -> Self {
-        let mut attrs: Attrs = (&*strct.attrs).into();
-        attrs.merge_parent_attrs(parent_attrs);
+        let mut attrs = parent_attrs.clone();
+        attrs.add_attrs(&strct.attrs);
         OpaqueStruct {
             name: Ident::from(&strct.ident),
             docs: Docs::from_attrs(&strct.attrs),

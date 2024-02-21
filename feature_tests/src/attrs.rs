@@ -1,5 +1,6 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "namespace_{0}"]
+#[diplomat::attr(cpp2, rename = "CPPRenamed{0}")]
 pub mod ffi {
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, rename = "AttrOpaque1Renamed")]

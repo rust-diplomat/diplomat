@@ -6,8 +6,8 @@ use serde::Serialize;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType,
-    RustLink, Struct, ValidityError,
+    AttrInheritContext, Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability,
+    OpaqueStruct, Path, PathType, RustLink, Struct, ValidityError,
 };
 use crate::environment::*;
 
@@ -94,7 +94,7 @@ impl Module {
     }
 
     pub fn insert_all_types(&self, in_path: Path, out: &mut Env) {
-        let mut mod_symbols = ModuleEnv::default();
+        let mut mod_symbols = ModuleEnv::new(self.attrs.clone());
 
         self.imports.iter().for_each(|(path, name)| {
             mod_symbols.insert(name.clone(), ModSymbol::Alias(path.clone()));
@@ -131,6 +131,10 @@ impl Module {
 
         let mod_attrs: Attrs = (&*input.attrs).into();
 
+        let impl_parent_attrs: Attrs =
+            mod_attrs.attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule);
+        let type_parent_attrs: Attrs = mod_attrs.attrs_for_inheritance(AttrInheritContext::Type);
+
         input
             .content
             .as_ref()
@@ -146,15 +150,15 @@ impl Module {
                 Item::Struct(strct) => {
                     if analyze_types {
                         let custom_type = match DiplomatStructAttribute::parse(&strct.attrs[..]) {
-                            Ok(None) => CustomType::Struct(Struct::new(strct, false, &mod_attrs)),
+                            Ok(None) => CustomType::Struct(Struct::new(strct, false, &type_parent_attrs)),
                             Ok(Some(DiplomatStructAttribute::Out)) => {
-                                CustomType::Struct(Struct::new(strct, true, &mod_attrs))
+                                CustomType::Struct(Struct::new(strct, true, &type_parent_attrs))
                             }
                             Ok(Some(DiplomatStructAttribute::Opaque)) => {
-                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Immutable, &mod_attrs))
+                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Immutable, &type_parent_attrs))
                             }
                             Ok(Some(DiplomatStructAttribute::OpaqueMut)) => {
-                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable, &mod_attrs))
+                                CustomType::Opaque(OpaqueStruct::new(strct, Mutability::Mutable, &type_parent_attrs))
                             }
                             Err(errors) => {
                                 panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
@@ -168,8 +172,7 @@ impl Module {
                 Item::Enum(enm) => {
                     if analyze_types {
                         let ident = (&enm.ident).into();
-                        let mut enm = Enum::new(enm, &mod_attrs);
-                        enm.attrs.merge_parent_attrs(&mod_attrs);
+                        let enm = Enum::new(enm, &type_parent_attrs);
                         custom_types_by_name
                             .insert(ident, CustomType::Enum(enm));
                     }
@@ -183,8 +186,9 @@ impl Module {
                             syn::Type::Path(s) => PathType::from(s),
                             _ => panic!("Self type not found"),
                         };
-                        let mut impl_attrs = Attrs::from(&*imp.attrs);
-                        impl_attrs.merge_parent_attrs(&mod_attrs);
+                        let mut impl_attrs = impl_parent_attrs.clone();
+                        impl_attrs.add_attrs(&imp.attrs);
+                        let method_parent_attrs = impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
                         let mut new_methods = imp
                             .items
                             .iter()
@@ -193,7 +197,7 @@ impl Module {
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &impl_attrs))
+                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &method_parent_attrs))
                             .collect();
 
                         let self_ident = self_path.path.elements.last().unwrap();
@@ -271,7 +275,7 @@ impl File {
     /// Fuses all declared types into a single environment `HashMap`.
     pub fn all_types(&self) -> Env {
         let mut out = Env::default();
-        let mut top_symbols = ModuleEnv::default();
+        let mut top_symbols = ModuleEnv::new(Default::default());
 
         self.modules.values().for_each(|m| {
             m.insert_all_types(Path::empty(), &mut out);

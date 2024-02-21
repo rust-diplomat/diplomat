@@ -62,13 +62,15 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
         variant.attrs.rename.apply(variant.name.as_str().into())
     }
+
+    /// Format the name of a c enum variant given the c name of the type it is on.
+    /// This will be namespaced if the ctype is, else not
     pub fn fmt_c_enum_variant<'a>(
         &self,
-        ident: &'a str,
+        ctype: &'a str,
         variant: &'tcx hir::EnumVariant,
     ) -> Cow<'tcx, str> {
-        let c_variant_name = self.c.fmt_enum_variant(ident, variant);
-        format!("capi::{c_variant_name}").into()
+        self.c.fmt_enum_variant(ctype, variant)
     }
     /// Format a field name or parameter name
     // might need splitting in the future if we decide to support renames here
@@ -158,7 +160,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
         format!("capi::{}", self.c.fmt_method_name(ty, method)).into()
     }
-
+    pub fn fmt_c_dtor_name<'a>(&self, ty: TypeId) -> Cow<'a, str> {
+        format!("capi::{}", self.c.fmt_dtor_name(ty)).into()
+    }
     /// Get the primitive type as a C type
     pub fn fmt_primitive_as_c(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
         self.c.fmt_primitive_as_c(prim)

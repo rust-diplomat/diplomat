@@ -145,7 +145,7 @@ fn gen_struct_header(
         writeln!(out)?;
     }
 
-    write!(out, "void {}_destroy(", typ.name())?;
+    write!(out, "void {}(", typ.dtor_name())?;
     gen_type(
         &ast::TypeName::Box(Box::new(ast::TypeName::Named(ast::PathType::new(
             ast::Path::empty().sub_path(typ.name().clone()),
