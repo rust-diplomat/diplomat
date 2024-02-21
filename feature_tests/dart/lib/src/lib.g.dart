@@ -345,6 +345,19 @@ class _Float64ListView {
   int get length => _values.length;
 }
 
+class _FinalizedArena {
+  final ffi2.Arena arena;
+  static final core.Finalizer<ffi2.Arena> _finalizer = core.Finalizer((arena) => arena.releaseAll());
+
+  _FinalizedArena.fromArena(this.arena);
+
+  factory _FinalizedArena.make() {
+    final arena = ffi2.Arena();
+    final wrapper = _FinalizedArena.fromArena(arena);
+    _finalizer.attach(wrapper, arena);
+    return wrapper;
+  }
+}
 final class _ResultInt32OpaqueUnion extends ffi.Union {
   @ffi.Int32()
   external int ok;
