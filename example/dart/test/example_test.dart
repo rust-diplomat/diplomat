@@ -6,7 +6,7 @@ void main() {
     final myDecimal = ICU4XFixedDecimal.new(123);
 
     myDecimal.multiplyPow10(-1);
-    expect(myDecimal.toString(), "12.3");
+    expect(myDecimal.toStringFallible(), "12.3");
   });
 
   test("format a fixed decimal", () {
