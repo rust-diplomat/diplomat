@@ -8,6 +8,7 @@
 
     {%- for (slice , view_expr) in m.slice_params %}
     final {{slice}}View = {{view_expr}};
+    final {{slice}}Arena = _FinalizedArena.make();
     {%- endfor %}
 
     {%- for lifetime in m.lifetimes.all_lifetimes() %}

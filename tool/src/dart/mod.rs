@@ -401,10 +401,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         if let MaybeStatic::NonStatic(lt) = lt {
                             if method_lifetime.all_longer_lifetimes.contains(&lt) {
                                 let edge = if let hir::Type::Slice(..) = ty {
-                                    // Slices make a temporary view type that needs to be attached
-                                    // XXXManishearth: this is the wrong variable. We need to grab on to the arena
-                                    // and also ensure it's not destroyed.
-                                    format!("{param_name}View")
+                                    // Slices make an arena with a finalizer that needs to be attached
+                                    format!("{param_name}Arena")
                                 } else {
                                     // Everything else makes a direct edge
                                     param_name.into()
@@ -469,9 +467,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone());
 
-                param_conversions.push(format!("{param_name}View.pointer(temp)").into());
+                param_conversions
+                    .push(format!("{param_name}View.pointer({param_name}Arena.arena)").into());
                 param_conversions.push(format!("{param_name}View.length").into());
-                needs_arena = true;
                 slice_params.push((param_name, view_expr));
             } else {
                 if matches!(param.ty, hir::Type::Struct(..)) {
