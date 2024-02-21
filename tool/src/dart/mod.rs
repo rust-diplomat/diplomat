@@ -446,7 +446,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
         }
 
-        let mut slice_conversions = Vec::new();
+        let mut slice_params = Vec::new();
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
@@ -469,10 +469,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone());
 
-                slice_conversions.push(format!("final {param_name}View = {view_expr};"));
-                needs_arena = true;
                 param_conversions.push(format!("{param_name}View.pointer(temp)").into());
                 param_conversions.push(format!("{param_name}View.length").into());
+                needs_arena = true;
+                slice_params.push((param_name, view_expr));
             } else {
                 if matches!(param.ty, hir::Type::Struct(..)) {
                     needs_arena = true;
@@ -607,7 +607,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_names_ffi,
             return_type_ffi,
             return_type_ffi_cast,
-            slice_conversions,
+            slice_params,
             needs_arena,
             param_conversions,
             return_expression,
@@ -1072,8 +1072,8 @@ struct MethodInfo<'a> {
     return_type_ffi: Cow<'a, str>,
     return_type_ffi_cast: Cow<'a, str>,
 
-    /// Conversion code for Dart arguments to slice helper structs
-    slice_conversions: Vec<String>,
+    /// All slice parameters, and their conversion code
+    slice_params: Vec<(Cow<'a, str>, Cow<'a, str>)>,
     /// The invocation of the Rust method might need temporary allocations,
     /// for which we use a Dart Arena type.
     needs_arena: bool,

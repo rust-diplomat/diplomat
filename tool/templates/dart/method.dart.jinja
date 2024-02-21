@@ -6,8 +6,8 @@
     final temp = ffi2.Arena();
     {%- endif %}
 
-    {%- for slice_conversion in m.slice_conversions %}
-    {{ slice_conversion }}
+    {%- for (slice , view_expr) in m.slice_params %}
+    final {{slice}}View = {{view_expr}};
     {%- endfor %}
 
     {%- for lifetime in m.lifetimes.all_lifetimes() %}
