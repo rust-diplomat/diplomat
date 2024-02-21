@@ -690,9 +690,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 let ok_type_name = match ok {
                     SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
-                    SuccessType::OutType(ref o) => self.gen_type_name(o),
+                    SuccessType::OutType(o) => self.gen_type_name(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
+
                 let ok_conversion = match ok {
                     // Note: the `output` variable is a string initialized in the template
                     SuccessType::Writeable => "std::move(output)".into(),
