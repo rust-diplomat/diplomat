@@ -25,23 +25,26 @@ final class MyString implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
 
   factory MyString(String v) {
+    final temp = ffi2.Arena();
     final vView = v.utf8View;
-    final vArena = _FinalizedArena.make();
-    final result = _MyString_new(vView.pointer(vArena.arena), vView.length);
+    final result = _MyString_new(vView.pointer(temp), vView.length);
+    temp.releaseAll();
     return MyString._(result, true, []);
   }
 
   factory MyString.unsafe(String v) {
+    final temp = ffi2.Arena();
     final vView = v.utf8View;
-    final vArena = _FinalizedArena.make();
-    final result = _MyString_new_unsafe(vView.pointer(vArena.arena), vView.length);
+    final result = _MyString_new_unsafe(vView.pointer(temp), vView.length);
+    temp.releaseAll();
     return MyString._(result, true, []);
   }
 
   void setStr(String newStr) {
+    final temp = ffi2.Arena();
     final newStrView = newStr.utf8View;
-    final newStrArena = _FinalizedArena.make();
-    _MyString_set_str(_underlying, newStrView.pointer(newStrArena.arena), newStrView.length);
+    _MyString_set_str(_underlying, newStrView.pointer(temp), newStrView.length);
+    temp.releaseAll();
   }
 
   String get getStr {

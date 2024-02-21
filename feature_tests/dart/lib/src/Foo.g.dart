@@ -44,11 +44,12 @@ final class Foo implements ffi.Finalizable {
   }
 
   factory Foo.static_(String x) {
+    final temp = ffi2.Arena();
     final xView = x.utf8View;
-    final xArena = _FinalizedArena.make();
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> edge_a = [];
-    final result = _Foo_new_static(xView.pointer(xArena.arena), xView.length);
+    final result = _Foo_new_static(xView.pointer(temp), xView.length);
+    temp.releaseAll();
     return Foo._(result, true, [], edge_a);
   }
 
