@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 use std::fmt::{self, Write};
+use std::ops::Deref;
 
 use smallvec::SmallVec;
 
@@ -29,14 +30,15 @@ pub struct Method {
 pub enum SuccessType {
     Writeable,
     OutType(OutType),
+    Unit,
 }
 
 /// Whether or not the method returns a value or a result.
 #[derive(Debug)]
 #[allow(clippy::exhaustive_enums)] // this only exists for fallible/infallible, breaking changes for more complex returns are ok
 pub enum ReturnType {
-    Infallible(Option<SuccessType>),
-    Fallible(Option<SuccessType>, Option<OutType>),
+    Infallible(SuccessType),
+    Fallible(SuccessType, Option<OutType>),
 }
 
 /// The `self` parameter of a method.
@@ -92,44 +94,42 @@ pub struct BorrowingField<'m> {
 }
 
 impl SuccessType {
-    /// Returns `true` if it's writeable, otherwise `false`.
+    /// Returns whether the variant is `Writeable`.
     pub fn is_writeable(&self) -> bool {
         matches!(self, SuccessType::Writeable)
     }
 
-    /// Returns a return type, if it's not a writeable.
+    /// Returns whether the variant is `Unit`.
+    pub fn is_unit(&self) -> bool {
+        matches!(self, SuccessType::Unit)
+    }
+
     pub fn as_type(&self) -> Option<&OutType> {
         match self {
-            SuccessType::Writeable => None,
             SuccessType::OutType(ty) => Some(ty),
+            _ => None,
+        }
+    }
+}
+
+impl Deref for ReturnType {
+    type Target = SuccessType;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            ReturnType::Infallible(ret) | ReturnType::Fallible(ret, _) => ret,
         }
     }
 }
 
 impl ReturnType {
-    /// Returns `true` if it's writeable, otherwise `false`.
-    pub fn is_writeable(&self) -> bool {
-        self.return_type()
-            .map(SuccessType::is_writeable)
-            .unwrap_or(false)
-    }
-
-    /// Returns the [`ReturnOk`] value, whether it's the single return type or
-    /// the `Ok` variant of a result.
-    pub fn return_type(&self) -> Option<&SuccessType> {
-        match self {
-            ReturnType::Infallible(ret) | ReturnType::Fallible(ret, _) => ret.as_ref(),
-        }
-    }
-
-    /// Returns `true` if the FFI function returns a value (such that it may be assigned to a variable).
-    pub fn returns_value(&self) -> bool {
-        match self {
-            ReturnType::Fallible(_, _) => true,
-            ReturnType::Infallible(Some(SuccessType::OutType(_))) => true,
-            ReturnType::Infallible(Some(SuccessType::Writeable)) => false,
-            ReturnType::Infallible(None) => false,
-        }
+    /// Returns `true` if the FFI function returns `void`. Not that this is different from `is_unit`,
+    /// which will be true for `DiplomatResult<(), E>` and false for infallible writeable.
+    pub fn is_ffi_unit(&self) -> bool {
+        matches!(
+            self,
+            ReturnType::Infallible(SuccessType::Unit | SuccessType::Writeable)
+        )
     }
 
     /// Get the list of method lifetimes actually used by the method return type
@@ -148,9 +148,9 @@ impl ReturnType {
         };
 
         match self {
-            ReturnType::Infallible(Some(SuccessType::OutType(ref ty))) => add_to_set(ty),
+            ReturnType::Infallible(SuccessType::OutType(ref ty)) => add_to_set(ty),
             ReturnType::Fallible(ref ok, ref err) => {
-                if let Some(SuccessType::OutType(ref ty)) = ok {
+                if let SuccessType::OutType(ref ty) = ok {
                     add_to_set(ty)
                 }
                 if let Some(ref ty) = err {
@@ -191,12 +191,6 @@ impl Param {
 }
 
 impl Method {
-    /// Returns `true` if the method takes a writeable as an out parameter,
-    /// otherwise `false`.
-    pub fn is_writeable(&self) -> bool {
-        self.output.is_writeable()
-    }
-
     /// Returns a fresh [`Lifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> Lifetimes {
         self.lifetime_env.lifetimes()

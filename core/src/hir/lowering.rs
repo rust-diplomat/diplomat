@@ -55,19 +55,19 @@ pub(crate) struct ItemAndInfo<'ast, Ast> {
 impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     /// Lowers an [`ast::Ident`]s into an [`hir::IdentBuf`].
     ///
-    /// If there are any errors, they're pushed to `errors` and `None` is returned.
+    /// If there are any errors, they're pushed to `errors` and `Err` is returned.
     pub(super) fn lower_ident(
         &mut self,
         ident: &ast::Ident,
         context: &'static str,
-    ) -> Option<IdentBuf> {
+    ) -> Result<IdentBuf, ()> {
         match ident.as_str().ck() {
-            Ok(name) => Some(name.to_owned()),
+            Ok(name) => Ok(name.to_owned()),
             Err(e) => {
                 self.errors.push(LoweringError::Other(format!(
                     "Ident `{ident}` from {context} could not be turned into a Rust ident: {e}"
                 )));
-                None
+                Err(())
             }
         }
     }
@@ -76,16 +76,16 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     fn lower_all<Ast: 'static, Hir>(
         &mut self,
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, Ast>>,
-        lower: impl Fn(&mut Self, ItemAndInfo<'ast, Ast>) -> Option<Hir>,
-    ) -> Option<Vec<Hir>> {
-        let mut hir_types = Some(Vec::with_capacity(ast_defs.len()));
+        lower: impl Fn(&mut Self, ItemAndInfo<'ast, Ast>) -> Result<Hir, ()>,
+    ) -> Result<Vec<Hir>, ()> {
+        let mut hir_types = Ok(Vec::with_capacity(ast_defs.len()));
 
         for def in ast_defs {
             let hir_type = lower(self, def);
 
             match (hir_type, &mut hir_types) {
-                (Some(hir_type), Some(hir_types)) => hir_types.push(hir_type),
-                _ => hir_types = None,
+                (Ok(hir_type), Ok(hir_types)) => hir_types.push(hir_type),
+                _ => hir_types = Err(()),
             }
         }
 
@@ -95,29 +95,29 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     pub(super) fn lower_all_enums(
         &mut self,
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Enum>>,
-    ) -> Option<Vec<EnumDef>> {
+    ) -> Result<Vec<EnumDef>, ()> {
         self.lower_all(ast_defs, Self::lower_enum)
     }
     pub(super) fn lower_all_structs(
         &mut self,
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Struct>>,
-    ) -> Option<Vec<StructDef>> {
+    ) -> Result<Vec<StructDef>, ()> {
         self.lower_all(ast_defs, Self::lower_struct)
     }
     pub(super) fn lower_all_out_structs(
         &mut self,
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Struct>>,
-    ) -> Option<Vec<OutStructDef>> {
+    ) -> Result<Vec<OutStructDef>, ()> {
         self.lower_all(ast_defs, Self::lower_out_struct)
     }
     pub(super) fn lower_all_opaques(
         &mut self,
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::OpaqueStruct>>,
-    ) -> Option<Vec<OpaqueDef>> {
+    ) -> Result<Vec<OpaqueDef>, ()> {
         self.lower_all(ast_defs, Self::lower_opaque)
     }
 
-    fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Option<EnumDef> {
+    fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Result<EnumDef, ()> {
         let ast_enum = item.item;
         let name = self.lower_ident(&ast_enum.name, "enum name");
         let attrs = self.attr_validator.attr_from_ast(
@@ -127,7 +127,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             self.errors,
         );
 
-        let mut variants = Some(Vec::with_capacity(ast_enum.variants.len()));
+        let mut variants = Ok(Vec::with_capacity(ast_enum.variants.len()));
         let variant_parent_attrs = attrs.for_inheritance(AttrInheritContext::Variant);
         for (ident, discriminant, docs, attrs) in ast_enum.variants.iter() {
             let name = self.lower_ident(ident, "enum variant");
@@ -138,7 +138,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 self.errors,
             );
             match (name, &mut variants) {
-                (Some(name), Some(variants)) => {
+                (Ok(name), Ok(variants)) => {
                     variants.push(EnumVariant {
                         docs: docs.clone(),
                         name,
@@ -146,7 +146,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                         attrs,
                     });
                 }
-                _ => variants = None,
+                _ => variants = Err(()),
             }
         }
 
@@ -156,7 +156,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             &item.method_parent_attrs,
         );
 
-        Some(EnumDef::new(
+        Ok(EnumDef::new(
             ast_enum.docs.clone(),
             name?,
             variants?,
@@ -165,7 +165,10 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         ))
     }
 
-    fn lower_opaque(&mut self, item: ItemAndInfo<'ast, ast::OpaqueStruct>) -> Option<OpaqueDef> {
+    fn lower_opaque(
+        &mut self,
+        item: ItemAndInfo<'ast, ast::OpaqueStruct>,
+    ) -> Result<OpaqueDef, ()> {
         let ast_opaque = item.item;
         let name = self.lower_ident(&ast_opaque.name, "opaque name");
 
@@ -182,7 +185,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_opaque.lifetimes);
 
-        Some(OpaqueDef::new(
+        Ok(OpaqueDef::new(
             ast_opaque.docs.clone(),
             name?,
             methods?,
@@ -191,7 +194,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         ))
     }
 
-    fn lower_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Option<StructDef> {
+    fn lower_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Result<StructDef, ()> {
         let ast_struct = item.item;
         let name = self.lower_ident(&ast_struct.name, "struct name");
 
@@ -200,21 +203,21 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 "struct `{}` is a ZST because it has no fields",
                 ast_struct.name
             )));
-            None
+            Err(())
         } else {
-            let mut fields = Some(Vec::with_capacity(ast_struct.fields.len()));
+            let mut fields = Ok(Vec::with_capacity(ast_struct.fields.len()));
 
             for (name, ty, docs) in ast_struct.fields.iter() {
                 let name = self.lower_ident(name, "struct field name");
-                let ty = self.lower_type(ty, Some(&mut &ast_struct.lifetimes), item.in_path);
+                let ty = self.lower_type(ty, &mut &ast_struct.lifetimes, item.in_path);
 
                 match (name, ty, &mut fields) {
-                    (Some(name), Some(ty), Some(fields)) => fields.push(StructField {
+                    (Ok(name), Ok(ty), Ok(fields)) => fields.push(StructField {
                         docs: docs.clone(),
                         name,
                         ty,
                     }),
-                    _ => fields = None,
+                    _ => fields = Err(()),
                 }
             }
 
@@ -234,7 +237,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_struct.lifetimes);
 
-        Some(StructDef::new(
+        Ok(StructDef::new(
             ast_struct.docs.clone(),
             name?,
             fields?,
@@ -244,7 +247,10 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         ))
     }
 
-    fn lower_out_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Option<OutStructDef> {
+    fn lower_out_struct(
+        &mut self,
+        item: ItemAndInfo<'ast, ast::Struct>,
+    ) -> Result<OutStructDef, ()> {
         let ast_out_struct = item.item;
         let name = self.lower_ident(&ast_out_struct.name, "out-struct name");
 
@@ -253,22 +259,21 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 "struct `{}` is a ZST because it has no fields",
                 ast_out_struct.name
             )));
-            None
+            Err(())
         } else {
-            let mut fields = Some(Vec::with_capacity(ast_out_struct.fields.len()));
+            let mut fields = Ok(Vec::with_capacity(ast_out_struct.fields.len()));
 
             for (name, ty, docs) in ast_out_struct.fields.iter() {
                 let name = self.lower_ident(name, "out-struct field name");
-                let ty =
-                    self.lower_out_type(ty, Some(&mut &ast_out_struct.lifetimes), item.in_path);
+                let ty = self.lower_out_type(ty, &mut &ast_out_struct.lifetimes, item.in_path);
 
                 match (name, ty, &mut fields) {
-                    (Some(name), Some(ty), Some(fields)) => fields.push(OutStructField {
+                    (Ok(name), Ok(ty), Ok(fields)) => fields.push(OutStructField {
                         docs: docs.clone(),
                         name,
                         ty,
                     }),
-                    _ => fields = None,
+                    _ => fields = Err(()),
                 }
             }
 
@@ -288,7 +293,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         );
 
         let lifetimes = self.lower_type_lifetime_env(&ast_out_struct.lifetimes);
-        Some(OutStructDef::new(
+        Ok(OutStructDef::new(
             ast_out_struct.docs.clone(),
             name?,
             fields?,
@@ -306,7 +311,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         method: &'ast ast::Method,
         in_path: &ast::Path,
         method_parent_attrs: &Attrs,
-    ) -> Option<Method> {
+    ) -> Result<Method, ()> {
         let name = self.lower_ident(&method.name, "method name");
 
         let (ast_params, takes_writeable) = match method.params.split_last() {
@@ -314,23 +319,17 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             _ => (&method.params[..], false),
         };
 
-        let self_param_ltl = SelfParamLifetimeLowerer::new(&method.lifetime_env, self);
+        let self_param_ltl = SelfParamLifetimeLowerer::new(&method.lifetime_env, self)?;
 
         let (param_self, param_ltl) = if let Some(self_param) = method.self_param.as_ref() {
-            self.lower_self_param(self_param, self_param_ltl, &method.full_path_name, in_path)
-                .map(|(param_self, param_ltl)| (Some(Some(param_self)), Some(param_ltl)))
-                .unwrap_or((None, None))
+            let (param_self, param_ltl) =
+                self.lower_self_param(self_param, self_param_ltl, &method.full_path_name, in_path)?;
+            (Some(param_self), param_ltl)
         } else {
-            (
-                Some(None),
-                self_param_ltl.map(SelfParamLifetimeLowerer::no_self_ref),
-            )
+            (None, SelfParamLifetimeLowerer::no_self_ref(self_param_ltl))
         };
 
-        let (params, return_ltl) = self
-            .lower_many_params(ast_params, param_ltl, in_path)
-            .map(|(params, return_ltl)| (Some(params), Some(return_ltl)))
-            .unwrap_or((None, None));
+        let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, in_path)?;
 
         let (output, lifetime_env) = self.lower_return_type(
             method.return_type.as_ref(),
@@ -345,12 +344,13 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             method_parent_attrs,
             self.errors,
         );
-        Some(Method {
+
+        Ok(Method {
             docs: method.docs.clone(),
             name: name?,
             lifetime_env,
-            param_self: param_self?,
-            params: params?,
+            param_self,
+            params,
             output,
             attrs,
         })
@@ -364,16 +364,16 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         ast_methods: &'ast [ast::Method],
         in_path: &ast::Path,
         method_parent_attrs: &Attrs,
-    ) -> Option<Vec<Method>> {
-        let mut methods = Some(Vec::with_capacity(ast_methods.len()));
+    ) -> Result<Vec<Method>, ()> {
+        let mut methods = Ok(Vec::with_capacity(ast_methods.len()));
 
         for method in ast_methods {
             let method = self.lower_method(method, in_path, method_parent_attrs);
             match (method, &mut methods) {
-                (Some(method), Some(methods)) => {
+                (Ok(method), Ok(methods)) => {
                     methods.push(method);
                 }
-                _ => methods = None,
+                _ => methods = Err(()),
             }
         }
 
@@ -383,24 +383,24 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     /// Lowers an [`ast::TypeName`]s into a [`hir::Type`].
     ///
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
-    fn lower_type<L: LifetimeLowerer>(
+    fn lower_type(
         &mut self,
         ty: &ast::TypeName,
-        ltl: Option<&mut L>,
+        ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
-    ) -> Option<Type> {
+    ) -> Result<Type, ()> {
         match ty {
-            ast::TypeName::Primitive(prim) => Some(Type::Primitive(PrimitiveType::from_ast(*prim))),
+            ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
-                            let lifetimes = ltl?.lower_generics(&path.lifetimes[..], ty.is_self());
+                            let lifetimes = ltl.lower_generics(&path.lifetimes[..], ty.is_self());
 
-                            Some(Type::Struct(StructPath::new(lifetimes, tcx_id)))
+                            Ok(Type::Struct(StructPath::new(lifetimes, tcx_id)))
                         } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                             self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
-                            None
+                            Err(())
                         } else {
                             unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
                         }
@@ -409,21 +409,21 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                         self.errors.push(LoweringError::Other(format!(
                             "Opaque passed by value in input: {path}"
                         )));
-                        None
+                        Err(())
                     }
                     ast::CustomType::Enum(enm) => {
                         let tcx_id = self.lookup_id.resolve_enum(enm).expect(
                             "can't find enum in lookup map, which contains all enums from env",
                         );
 
-                        Some(Type::Enum(EnumPath::new(tcx_id)))
+                        Ok(Type::Enum(EnumPath::new(tcx_id)))
                     }
                 }
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
+                        ast::CustomType::Opaque(opaque) => {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes =
                                 ltl.lower_generics(&path.lifetimes[..], ref_ty.is_self());
@@ -431,22 +431,22 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
-                            Type::Opaque(OpaquePath::new(
+                            Ok(Type::Opaque(OpaquePath::new(
                                 lifetimes,
                                 Optional(false),
                                 borrow,
                                 tcx_id,
-                            ))
-                        }),
+                            )))
+                        }
                         _ => {
                             self.errors.push(LoweringError::Other(format!("found &T in input where T is a custom type, but not opaque. T = {ref_ty}")));
-                            None
+                            Err(())
                         }
                     }
                 }
                 _ => {
                     self.errors.push(LoweringError::Other(format!("found &T in input where T isn't a custom type and therefore not opaque. T = {ref_ty}")));
-                    None
+                    Err(())
                 }
             },
             ast::TypeName::Box(box_ty) => {
@@ -459,72 +459,76 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 }
                 _ => LoweringError::Other(format!("found Box<T> in input where T isn't a custom type. T = {box_ty}")),
             });
-                None
+                Err(())
             }
             ast::TypeName::Option(opt_ty) => {
                 match opt_ty.as_ref() {
-                ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
-                    ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
-                            let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                            let lifetimes = ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
-                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                    ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref()
+                    {
+                        ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path
+                            .resolve(in_path, self.env)
+                        {
+                            ast::CustomType::Opaque(opaque) => {
+                                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                                let lifetimes =
+                                    ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
+                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                                     "can't find opaque in lookup map, which contains all opaques from env",
                                 );
 
-                            Type::Opaque(OpaquePath::new(
-                                lifetimes,
-                                Optional(true),
-                                borrow,
-                                tcx_id,
-                            ))
-                        }),
+                                Ok(Type::Opaque(OpaquePath::new(
+                                    lifetimes,
+                                    Optional(true),
+                                    borrow,
+                                    tcx_id,
+                                )))
+                            }
+                            _ => {
+                                self.errors.push(LoweringError::Other(format!("found Option<&T> in input where T is a custom type, but it's not opaque. T = {ref_ty}")));
+                                Err(())
+                            }
+                        },
                         _ => {
-                            self.errors.push(LoweringError::Other(format!("found Option<&T> in input where T is a custom type, but it's not opaque. T = {ref_ty}")));
-                            None
+                            self.errors.push(LoweringError::Other(format!("found Option<&T> in input, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                            Err(())
                         }
                     },
-                    _ => {
-                        self.errors.push(LoweringError::Other(format!("found Option<&T> in input, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
-                        None
+                    ast::TypeName::Box(box_ty) => {
+                        // we could see whats in the box here too
+                        self.errors.push(LoweringError::Other(format!("found Option<Box<T>> in input, but box isn't allowed in inputs. T = {box_ty}")));
+                        Err(())
                     }
-                },
-                ast::TypeName::Box(box_ty) => {
-                    // we could see whats in the box here too
-                    self.errors.push(LoweringError::Other(format!("found Option<Box<T>> in input, but box isn't allowed in inputs. T = {box_ty}")));
-                    None
+                    _ => {
+                        self.errors.push(LoweringError::Other(format!("found Option<T> in input, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = {opt_ty}")));
+                        Err(())
+                    }
                 }
-                _ => {
-                    self.errors.push(LoweringError::Other(format!("found Option<T> in input, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = {opt_ty}")));
-                    None
-                }
-            }
             }
             ast::TypeName::Result(_, _, _) => {
                 self.errors.push(LoweringError::Other(
                     "Results can only appear as the top-level return type of methods".into(),
                 ));
-                None
+                Err(())
             }
             ast::TypeName::Writeable => {
                 self.errors.push(LoweringError::Other(
                     "Writeables can only appear as the last parameter of a method".into(),
                 ));
-                None
+                Err(())
             }
-            ast::TypeName::StrReference(lifetime, encoding) => Some(Type::Slice(Slice::Str(
-                ltl?.lower_lifetime(lifetime),
+            ast::TypeName::StrReference(lifetime, encoding) => Ok(Type::Slice(Slice::Str(
+                ltl.lower_lifetime(lifetime),
                 *encoding,
             ))),
             ast::TypeName::PrimitiveSlice(lifetime, mutability, prim) => {
-                let borrow = Borrow::new(ltl?.lower_lifetime(lifetime), *mutability);
+                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                 let prim = PrimitiveType::from_ast(*prim);
 
-                Some(Type::Slice(Slice::Primitive(borrow, prim)))
+                Ok(Type::Slice(Slice::Primitive(borrow, prim)))
             }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
-                None
+                Err(())
             }
         }
     }
@@ -532,27 +536,27 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     /// Lowers an [`ast::TypeName`]s into an [`hir::OutType`].
     ///
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
-    fn lower_out_type<L: LifetimeLowerer>(
+    fn lower_out_type(
         &mut self,
         ty: &ast::TypeName,
-        ltl: Option<&mut L>,
+        ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
-    ) -> Option<OutType> {
+    ) -> Result<OutType, ()> {
         match ty {
             ast::TypeName::Primitive(prim) => {
-                Some(OutType::Primitive(PrimitiveType::from_ast(*prim)))
+                Ok(OutType::Primitive(PrimitiveType::from_ast(*prim)))
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
-                        let lifetimes = ltl?.lower_generics(&path.lifetimes, ty.is_self());
+                        let lifetimes = ltl.lower_generics(&path.lifetimes, ty.is_self());
 
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
-                            Some(OutType::Struct(ReturnableStructPath::Struct(
+                            Ok(OutType::Struct(ReturnableStructPath::Struct(
                                 StructPath::new(lifetimes, tcx_id),
                             )))
                         } else if let Some(tcx_id) = self.lookup_id.resolve_out_struct(strct) {
-                            Some(OutType::Struct(ReturnableStructPath::OutStruct(
+                            Ok(OutType::Struct(ReturnableStructPath::OutStruct(
                                 OutStructPath::new(lifetimes, tcx_id),
                             )))
                         } else {
@@ -563,64 +567,64 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                         self.errors.push(LoweringError::Other(format!(
                             "Opaque passed by value in input: {path}"
                         )));
-                        None
+                        Err(())
                     }
                     ast::CustomType::Enum(enm) => {
                         let tcx_id = self.lookup_id.resolve_enum(enm).expect(
                             "can't find enum in lookup map, which contains all enums from env",
                         );
 
-                        Some(OutType::Enum(EnumPath::new(tcx_id)))
+                        Ok(OutType::Enum(EnumPath::new(tcx_id)))
                     }
                 }
             }
             ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
+                        ast::CustomType::Opaque(opaque) => {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
                             let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
-                            OutType::Opaque(OpaquePath::new(
+                            Ok(OutType::Opaque(OpaquePath::new(
                                 lifetimes,
                                 Optional(false),
                                 MaybeOwn::Borrow(borrow),
                                 tcx_id,
-                            ))
-                        }),
+                            )))
+                        }
                         _ => {
                             self.errors.push(LoweringError::Other(format!("found &T in output where T is a custom type, but not opaque. T = {ref_ty}")));
-                            None
+                            Err(())
                         }
                     }
                 }
                 _ => {
                     self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}")));
-                    None
+                    Err(())
                 }
             },
             ast::TypeName::Box(box_ty) => match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
+                        ast::CustomType::Opaque(opaque) => {
                             let lifetimes = ltl.lower_generics(&path.lifetimes, box_ty.is_self());
                             let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
-                            OutType::Opaque(OpaquePath::new(
+                            Ok(OutType::Opaque(OpaquePath::new(
                                 lifetimes,
                                 Optional(false),
                                 MaybeOwn::Own,
                                 tcx_id,
-                            ))
-                        }),
+                            )))
+                        }
                         _ => {
                             self.errors.push(LoweringError::Other(format!("found Box<T> in output where T is a custom type but not opaque. non-opaques can't be behind pointers. T = {path}")));
-                            None
+                            Err(())
                         }
                     }
                 }
@@ -628,36 +632,37 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                     self.errors.push(LoweringError::Other(format!(
                         "found Box<T> in output where T isn't a custom type. T = {box_ty}"
                     )));
-                    None
+                    Err(())
                 }
             },
             ast::TypeName::Option(opt_ty) => match opt_ty.as_ref() {
                 ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => ltl.map(|ltl| {
-                            let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                            let lifetimes = ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
-                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                            ast::CustomType::Opaque(opaque) => {
+                                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                                let lifetimes =
+                                    ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
+                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                                 "can't find opaque in lookup map, which contains all opaques from env",
                             );
 
-                            OutType::Opaque(OpaquePath::new(
-                                lifetimes,
-                                Optional(true),
-                                MaybeOwn::Borrow(borrow),
-                                tcx_id,
-                            ))
-                        }),
-                        _ => {
-                            self.errors.push(LoweringError::Other(format!("found Option<&T> where T is a custom type, but it's not opaque. T = {ref_ty}")));
-                            None
+                                Ok(OutType::Opaque(OpaquePath::new(
+                                    lifetimes,
+                                    Optional(true),
+                                    MaybeOwn::Borrow(borrow),
+                                    tcx_id,
+                                )))
+                            }
+                            _ => {
+                                self.errors.push(LoweringError::Other(format!("found Option<&T> where T is a custom type, but it's not opaque. T = {ref_ty}")));
+                                Err(())
+                            }
                         }
-                    }
                     }
                     _ => {
                         self.errors.push(LoweringError::Other(format!("found Option<&T>, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
-                        None
+                        Err(())
                     }
                 },
                 ast::TypeName::Box(box_ty) => match box_ty.as_ref() {
@@ -665,12 +670,12 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
                                 let lifetimes =
-                                    ltl?.lower_generics(&path.lifetimes, box_ty.is_self());
+                                    ltl.lower_generics(&path.lifetimes, box_ty.is_self());
                                 let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
-                                Some(OutType::Opaque(OpaquePath::new(
+                                Ok(OutType::Opaque(OpaquePath::new(
                                     lifetimes,
                                     Optional(true),
                                     MaybeOwn::Own,
@@ -679,45 +684,45 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                             }
                             _ => {
                                 self.errors.push(LoweringError::Other(format!("found Option<Box<T>> where T is a custom type, but it's not opaque. T = {box_ty}")));
-                                None
+                                Err(())
                             }
                         }
                     }
                     _ => {
                         self.errors.push(LoweringError::Other(format!("found Option<Box<T>>, but T isn't a custom type and therefore not opaque. T = {box_ty}")));
-                        None
+                        Err(())
                     }
                 },
                 _ => {
-                    self.errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = {opt_ty}")));
-                    None
+                    self.errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> requires that T is a reference to an opaque. T = {opt_ty}")));
+                    Err(())
                 }
             },
             ast::TypeName::Result(_, _, _) => {
                 self.errors.push(LoweringError::Other(
                     "Results can only appear as the top-level return type of methods".into(),
                 ));
-                None
+                Err(())
             }
             ast::TypeName::Writeable => {
                 self.errors.push(LoweringError::Other(
                     "Writeables can only appear as the last parameter of a method".into(),
                 ));
-                None
+                Err(())
             }
-            ast::TypeName::StrReference(lifetime, encoding) => Some(OutType::Slice(Slice::Str(
-                ltl?.lower_lifetime(lifetime),
+            ast::TypeName::StrReference(lifetime, encoding) => Ok(OutType::Slice(Slice::Str(
+                ltl.lower_lifetime(lifetime),
                 *encoding,
             ))),
             ast::TypeName::PrimitiveSlice(lifetime, mutability, prim) => {
-                let borrow = Borrow::new(ltl?.lower_lifetime(lifetime), *mutability);
+                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                 let prim = PrimitiveType::from_ast(*prim);
 
-                Some(OutType::Slice(Slice::Primitive(borrow, prim)))
+                Ok(OutType::Slice(Slice::Primitive(borrow, prim)))
             }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
-                None
+                Err(())
             }
         }
     }
@@ -728,18 +733,18 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     fn lower_self_param(
         &mut self,
         self_param: &ast::SelfParam,
-        self_param_ltl: Option<SelfParamLifetimeLowerer<'ast>>,
+        self_param_ltl: SelfParamLifetimeLowerer<'ast>,
         method_full_path: &ast::Ident, // for better error msg
         in_path: &ast::Path,
-    ) -> Option<(ParamSelf, ParamLifetimeLowerer<'ast>)> {
+    ) -> Result<(ParamSelf, ParamLifetimeLowerer<'ast>), ()> {
         match self_param.path_type.resolve(in_path, self.env) {
             ast::CustomType::Struct(strct) => {
                 if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                     if self_param.reference.is_some() {
                         self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a reference to a struct as a self parameter, which isn't allowed")));
-                        None
+                        Err(())
                     } else {
-                        let mut param_ltl = self_param_ltl?.no_self_ref();
+                        let mut param_ltl = self_param_ltl.no_self_ref();
 
                         // Even if we explicitly write out the type of `self` like
                         // `self: Foo<'a>`, the `'a` is still not considered for
@@ -747,7 +752,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                         let type_lifetimes =
                             param_ltl.lower_generics(&self_param.path_type.lifetimes[..], true);
 
-                        Some((
+                        Ok((
                             ParamSelf::new(SelfType::Struct(StructPath::new(
                                 type_lifetimes,
                                 tcx_id,
@@ -758,10 +763,10 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                     if let Some((lifetime, _)) = &self_param.reference {
                         self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed. Also, it's behind a reference, `{lifetime}`, but only opaques can be behind references")));
-                        None
+                        Err(())
                     } else {
                         self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed")));
-                        None
+                        Err(())
                     }
                 } else {
                     unreachable!(
@@ -777,11 +782,11 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                     .expect("opaque is in env");
 
                 if let Some((lifetime, mutability)) = &self_param.reference {
-                    let (borrow_lifetime, mut param_ltl) = self_param_ltl?.lower_self_ref(lifetime);
+                    let (borrow_lifetime, mut param_ltl) = self_param_ltl.lower_self_ref(lifetime);
                     let borrow = Borrow::new(borrow_lifetime, *mutability);
                     let lifetimes = param_ltl.lower_generics(&self_param.path_type.lifetimes, true);
 
-                    Some((
+                    Ok((
                         ParamSelf::new(SelfType::Opaque(OpaquePath::new(
                             lifetimes,
                             NonOptional,
@@ -792,15 +797,15 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                     ))
                 } else {
                     self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an opaque by value as the self parameter, but opaques as inputs must be behind refs")));
-                    None
+                    Err(())
                 }
             }
             ast::CustomType::Enum(enm) => {
                 let tcx_id = self.lookup_id.resolve_enum(enm).expect("enum is in env");
 
-                Some((
+                Ok((
                     ParamSelf::new(SelfType::Enum(EnumPath::new(tcx_id))),
-                    self_param_ltl?.no_self_ref(),
+                    self_param_ltl.no_self_ref(),
                 ))
             }
         }
@@ -812,16 +817,16 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     ///
     /// Note that this expects that if there was a writeable param at the end in
     /// the method, it's not passed into here.
-    fn lower_param<L: LifetimeLowerer>(
+    fn lower_param(
         &mut self,
         param: &ast::Param,
-        ltl: Option<&mut L>,
+        ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
-    ) -> Option<Param> {
+    ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
         let ty = self.lower_type(&param.ty, ltl, in_path);
 
-        Some(Param::new(name?, ty?))
+        Ok(Param::new(name?, ty?))
     }
 
     /// Lowers many [`ast::Param`]s into a vector of [`hir::Param`]s.
@@ -834,23 +839,23 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     fn lower_many_params(
         &mut self,
         ast_params: &[ast::Param],
-        mut param_ltl: Option<ParamLifetimeLowerer<'ast>>,
+        mut param_ltl: ParamLifetimeLowerer<'ast>,
         in_path: &ast::Path,
-    ) -> Option<(Vec<Param>, ReturnLifetimeLowerer<'ast>)> {
-        let mut params = Some(Vec::with_capacity(ast_params.len()));
+    ) -> Result<(Vec<Param>, ReturnLifetimeLowerer<'ast>), ()> {
+        let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
         for param in ast_params {
-            let param = self.lower_param(param, param_ltl.as_mut(), in_path);
+            let param = self.lower_param(param, &mut param_ltl, in_path);
 
             match (param, &mut params) {
-                (Some(param), Some(params)) => {
+                (Ok(param), Ok(params)) => {
                     params.push(param);
                 }
-                _ => params = None,
+                _ => params = Err(()),
             }
         }
 
-        Some((params?, param_ltl?.into_return_ltl()))
+        Ok((params?, param_ltl.into_return_ltl()))
     }
 
     /// Lowers the return type of an [`ast::Method`] into a [`hir::ReturnFallability`].
@@ -860,47 +865,45 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         &mut self,
         return_type: Option<&ast::TypeName>,
         takes_writeable: bool,
-        mut return_ltl: Option<ReturnLifetimeLowerer<'_>>,
+        mut return_ltl: ReturnLifetimeLowerer<'_>,
         in_path: &ast::Path,
-    ) -> Option<(ReturnType, LifetimeEnv)> {
-        let writeable_option = if takes_writeable {
-            Some(SuccessType::Writeable)
+    ) -> Result<(ReturnType, LifetimeEnv), ()> {
+        let writeable_or_unit = if takes_writeable {
+            SuccessType::Writeable
         } else {
-            None
+            SuccessType::Unit
         };
         match return_type.unwrap_or(&ast::TypeName::Unit) {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
                 let ok_ty = match ok_ty.as_ref() {
-                    ast::TypeName::Unit => Some(writeable_option),
+                    ast::TypeName::Unit => Ok(writeable_or_unit),
                     ty => self
-                        .lower_out_type(ty, return_ltl.as_mut(), in_path)
-                        .map(|ty| Some(SuccessType::OutType(ty))),
+                        .lower_out_type(ty, &mut return_ltl, in_path)
+                        .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
-                    ast::TypeName::Unit => Some(None),
-                    ty => self
-                        .lower_out_type(ty, return_ltl.as_mut(), in_path)
-                        .map(Some),
+                    ast::TypeName::Unit => Ok(None),
+                    ty => self.lower_out_type(ty, &mut return_ltl, in_path).map(Some),
                 };
 
                 match (ok_ty, err_ty) {
-                    (Some(ok_ty), Some(err_ty)) => Some(ReturnType::Fallible(ok_ty, err_ty)),
-                    _ => None,
+                    (Ok(ok_ty), Ok(err_ty)) => Ok(ReturnType::Fallible(ok_ty, err_ty)),
+                    _ => Err(()),
                 }
             }
-            ast::TypeName::Unit => Some(ReturnType::Infallible(writeable_option)),
+            ast::TypeName::Unit => Ok(ReturnType::Infallible(writeable_or_unit)),
             ty => self
-                .lower_out_type(ty, return_ltl.as_mut(), in_path)
-                .map(|ty| ReturnType::Infallible(Some(SuccessType::OutType(ty)))),
+                .lower_out_type(ty, &mut return_ltl, in_path)
+                .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
-        .and_then(|return_fallability| Some((return_fallability, return_ltl?.finish())))
+        .map(|r_ty| (r_ty, return_ltl.finish()))
     }
 
     fn lower_named_lifetime(
         &mut self,
         lifetime: &ast::lifetimes::LifetimeNode,
-    ) -> Option<BoundedLifetime> {
-        Some(BoundedLifetime {
+    ) -> Result<BoundedLifetime, ()> {
+        Ok(BoundedLifetime {
             ident: self.lower_ident(lifetime.lifetime.name(), "lifetime")?,
             longer: lifetime.longer.iter().copied().map(Lifetime::new).collect(),
             shorter: lifetime
@@ -916,13 +919,13 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     ///
     /// Should not be extended to return LifetimeEnv<Method>, which needs to use the lifetime
     /// lowerers to handle elision.
-    fn lower_type_lifetime_env(&mut self, ast: &ast::LifetimeEnv) -> Option<LifetimeEnv> {
+    fn lower_type_lifetime_env(&mut self, ast: &ast::LifetimeEnv) -> Result<LifetimeEnv, ()> {
         let nodes = ast
             .nodes
             .iter()
             .map(|lt| self.lower_named_lifetime(lt))
-            .collect::<Option<_>>()?;
+            .collect::<Result<_, ()>>()?;
 
-        Some(LifetimeEnv::new(nodes, ast.nodes.len()))
+        Ok(LifetimeEnv::new(nodes, ast.nodes.len()))
     }
 }

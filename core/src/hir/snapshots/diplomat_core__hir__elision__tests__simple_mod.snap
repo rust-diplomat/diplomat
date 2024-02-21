@@ -73,25 +73,23 @@ TypeContext {
                         },
                     ],
                     output: Infallible(
-                        Some(
-                            OutType(
-                                Struct(
-                                    OutStruct(
-                                        StructPath {
-                                            lifetimes: Lifetimes {
-                                                indices: [
-                                                    NonStatic(
-                                                        Lifetime(
-                                                            0,
-                                                        ),
+                        OutType(
+                            Struct(
+                                OutStruct(
+                                    StructPath {
+                                        lifetimes: Lifetimes {
+                                            indices: [
+                                                NonStatic(
+                                                    Lifetime(
+                                                        0,
                                                     ),
-                                                ],
-                                            },
-                                            tcx_id: OutStructId(
-                                                0,
-                                            ),
+                                                ),
+                                            ],
                                         },
-                                    ),
+                                        tcx_id: OutStructId(
+                                            0,
+                                        ),
+                                    },
                                 ),
                             ),
                         ),
@@ -209,17 +207,15 @@ TypeContext {
                         },
                     ],
                     output: Infallible(
-                        Some(
-                            OutType(
-                                Slice(
-                                    Str(
-                                        NonStatic(
-                                            Lifetime(
-                                                1,
-                                            ),
+                        OutType(
+                            Slice(
+                                Str(
+                                    NonStatic(
+                                        Lifetime(
+                                            1,
                                         ),
-                                        UnvalidatedUtf8,
                                     ),
+                                    UnvalidatedUtf8,
                                 ),
                             ),
                         ),

@@ -24,10 +24,10 @@
     {%- endfor %}
 
 
-    {%- if m.method.is_writeable() %}
+    {%- if m.method.output.is_writeable() %}
     final writeable = _Writeable();
     {%- endif %}
-    {%- if m.method.output.returns_value() %}
+    {%- if !m.method.output.is_ffi_unit() %}
     final result = {% else %}
     {% endif -%}
     _{{ m.c_method_name -}}(
