@@ -40,7 +40,9 @@ pub struct Header {
     pub includes: BTreeSet<String>,
     /// The decl file corresponding to this impl file. Empty if this is not an impl file.
     pub decl_include: Option<String>,
-    /// The struct forward decls necessary
+    /// The struct forward decls necessary.
+    ///
+    /// The keys on this map are the namespaces (None = root namespace)
     ///
     /// Example:
     /// ```c
