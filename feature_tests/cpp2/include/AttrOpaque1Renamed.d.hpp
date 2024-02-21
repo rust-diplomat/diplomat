@@ -11,7 +11,8 @@
 #include "AttrOpaque1.d.h"
 #include "CPPRenamedAttrEnum.d.hpp"
 
-class Unnamespaced;namespace ns {
+class Unnamespaced;
+namespace ns {
 class AttrOpaque1Renamed;
 class CPPRenamedAttrEnum;
 }

@@ -10,6 +10,7 @@
 #include "diplomat_runtime.hpp"
 #include "CPPRenamedAttrEnum.d.hpp"
 #include "Unnamespaced.d.h"
+
 namespace ns {
 class AttrOpaque1Renamed;
 class CPPRenamedAttrEnum;

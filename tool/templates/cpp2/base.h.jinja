@@ -20,7 +20,7 @@
 
 {%~ if forwards.len() > 0 %}
 {%- for namespace_forward in forwards %}
-{%- if let Some(ns) = namespace_forward.0 -%}
+{%- if let Some(ns) = namespace_forward.0 %}
 namespace {{ns}} {
 {%- endif-%}
 {%- for forward in namespace_forward.1 %}
