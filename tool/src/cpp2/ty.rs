@@ -576,7 +576,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 match err {
-                    Some(o) => format!("diplomat::result<{ok_type_name}, {err_type_name}>", err_type_name = self.gen_type_name(o)).into(),
+                    Some(o) => format!(
+                        "diplomat::result<{ok_type_name}, {err_type_name}>",
+                        err_type_name = self.gen_type_name(o)
+                    )
+                    .into(),
                     None => self.cx.formatter.fmt_optional(&ok_type_name).into(),
                 }
             }
@@ -711,8 +715,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         )
                     }
                 }
-
-                
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
