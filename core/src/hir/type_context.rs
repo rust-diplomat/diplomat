@@ -198,7 +198,7 @@ impl TypeContext {
         let enums = ctx.lower_all_enums(ast_enums.into_iter());
 
         match (out_structs, structs, opaques, enums) {
-            (Some(out_structs), Some(structs), Some(opaques), Some(enums)) => {
+            (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums)) => {
                 assert!(
                     errors.is_empty(),
                     "All lowering succeeded but still found error messages: {errors:?}"

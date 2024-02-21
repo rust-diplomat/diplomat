@@ -244,20 +244,23 @@ impl<'ast> BaseLifetimeLowerer<'ast> {
 
 impl<'ast> SelfParamLifetimeLowerer<'ast> {
     /// Returns a new [`SelfParamLifetimeLowerer`].
-    pub fn new(lifetime_env: &'ast ast::LifetimeEnv, ctx: &mut LoweringContext) -> Option<Self> {
-        let mut hir_nodes = Some(SmallVec::new());
+    pub fn new(
+        lifetime_env: &'ast ast::LifetimeEnv,
+        ctx: &mut LoweringContext,
+    ) -> Result<Self, ()> {
+        let mut hir_nodes = Ok(SmallVec::new());
 
         for ast_node in lifetime_env.nodes.iter() {
             let lifetime = ctx.lower_ident(ast_node.lifetime.name(), "named lifetime");
             match (lifetime, &mut hir_nodes) {
-                (Some(lifetime), Some(hir_nodes)) => {
+                (Ok(lifetime), Ok(hir_nodes)) => {
                     hir_nodes.push(BoundedLifetime::new(
                         lifetime,
                         ast_node.longer.iter().map(|i| Lifetime::new(*i)).collect(),
                         ast_node.shorter.iter().map(|i| Lifetime::new(*i)).collect(),
                     ));
                 }
-                _ => hir_nodes = None,
+                _ => hir_nodes = Err(()),
             }
         }
 

@@ -133,26 +133,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         }
 
         let return_ty: Cow<str> = match method.output {
-            ReturnType::Infallible(None) => "void".into(),
-            ReturnType::Infallible(Some(ref ty)) => match ty {
-                SuccessType::Writeable => {
-                    param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
-                    "void".into()
-                }
-                SuccessType::OutType(o) => self.gen_ty_name(o, false),
-                &_ => unreachable!("unknown AST/HIR variant"),
-            },
+            ReturnType::Infallible(SuccessType::Unit) => "void".into(),
+            ReturnType::Infallible(SuccessType::Writeable) => {
+                param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
+                "void".into()
+            }
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, false),
             ReturnType::Fallible(ref ok, ref err) => {
                 let (ok_type_name, ok_ty) = match ok {
-                    Some(SuccessType::Writeable) => {
+                    SuccessType::Writeable => {
                         param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
                         ("void".into(), None)
                     }
-                    None => ("void".into(), None),
-                    Some(SuccessType::OutType(o)) => {
+                    SuccessType::Unit => ("void".into(), None),
+                    SuccessType::OutType(o) => {
                         (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
                     }
-                    &Some(_) => unreachable!("unknown AST/HIR variant"),
+                    _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
                     Some(o) => self.cx.formatter.fmt_type_name_uniquely(o),
@@ -181,6 +178,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     SuccessType::OutType(o) => {
                         (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
                     }
+                    SuccessType::Unit => ("void".into(), None),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 // todo push to results set
@@ -194,6 +192,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     .insert(result_name.clone(), (ty, None));
                 result_name.into()
             }
+            _ => unreachable!("unknown AST/HIR variant"),
         };
 
         let mut params = String::new();

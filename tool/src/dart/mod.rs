@@ -484,7 +484,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
         }
 
-        if method.is_writeable() {
+        if method.output.is_writeable() {
             param_conversions.push("writeable._underlying".into());
             param_types_ffi.push(
                 self.formatter
@@ -524,7 +524,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             } else if params.is_empty()
                 && !matches!(
                     method.output,
-                    hir::ReturnType::Fallible(..) | hir::ReturnType::Infallible(None)
+                    hir::ReturnType::Fallible(..) | hir::ReturnType::Infallible(SuccessType::Unit)
                 )
                 && return_ty != "bool"
             {
@@ -541,7 +541,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         // Getter
         } else if method.params.is_empty()
             // Returns some value
-            && method.output.return_type().is_some()
+            && !method.output.is_unit()
             // If it returns a bool it has be a `isFoo`, otherwise the bool might be a success flag of a side effect
             && (return_ty != "bool" || method.name.as_str().starts_with("is"))
             // Conversions are not getters according to the style guide
@@ -556,7 +556,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         // Setter
         } else if method.name.as_str().starts_with("set_")
             && method.params.len() == 1
-            && method.output.return_type().is_none()
+            && method.output.is_unit()
             // The corresponding getter exists, as required by the style guide
             && self
                 .tcx
@@ -573,7 +573,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         {
             "@override\n  String toString()".to_string()
         } else if method.name.as_str() == "get"
-            && method.output.return_type().is_some()
+            && !method.output.is_unit()
             && method.params.len() == 1
         {
             format!("{return_ty} operator []({params})")
@@ -665,24 +665,21 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     /// Generates a return type's Dart type.
     fn gen_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'cx, str> {
         match *result_ty {
-            ReturnType::Infallible(None) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(Some(ref ty)) => match ty {
-                SuccessType::Writeable => self.formatter.fmt_string().into(),
-                SuccessType::OutType(o) => self.gen_type_name(o),
-                &_ => unreachable!("unknown AST/HIR variant"),
-            },
-            ReturnType::Fallible(ref ok, _) => match ok {
-                Some(SuccessType::Writeable) => self.formatter.fmt_string().into(),
-                None => self.formatter.fmt_void().into(),
-                Some(SuccessType::OutType(o)) => self.gen_type_name(o),
-                &Some(_) => unreachable!("unknown AST/HIR variant"),
-            },
-            ReturnType::Option(ref ok) => match ok {
-                SuccessType::Writeable => self.formatter.fmt_nullable(self.formatter.fmt_string()),
-                SuccessType::OutType(o) => self.formatter.fmt_nullable(&self.gen_type_name(o)),
-                _ => unreachable!("unknown AST/HIR variant"),
+            ReturnType::Infallible(SuccessType::Unit)
+            | ReturnType::Fallible(SuccessType::Unit, _) => self.formatter.fmt_void().into(),
+            ReturnType::Infallible(SuccessType::Writeable)
+            | ReturnType::Fallible(SuccessType::Writeable, _) => self.formatter.fmt_string().into(),
+            ReturnType::Infallible(SuccessType::OutType(ref o))
+            | ReturnType::Fallible(SuccessType::OutType(ref o), _) => self.gen_type_name(o),
+            ReturnType::Option(SuccessType::Writeable) => self
+                .formatter
+                .fmt_nullable(self.formatter.fmt_string())
+                .into(),
+            ReturnType::Option(SuccessType::Unit) => todo!(),
+            ReturnType::Option(SuccessType::OutType(ref o)) => {
+                self.formatter.fmt_nullable(&self.gen_type_name(o)).into()
             }
-            .into(),
+            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
@@ -736,32 +733,30 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     /// Generates the Dart FFI type name of a return type.
     fn gen_return_type_name_ffi(&mut self, result_ty: &ReturnType, cast: bool) -> Cow<'cx, str> {
         match *result_ty {
-            ReturnType::Infallible(None) => if cast {
+            ReturnType::Infallible(SuccessType::Unit) => if cast {
                 self.formatter.fmt_void()
             } else {
                 self.formatter.fmt_ffi_void()
             }
             .into(),
-            ReturnType::Infallible(Some(ref ty)) => match ty {
-                SuccessType::Writeable => if cast {
-                    self.formatter.fmt_void()
+            ReturnType::Infallible(SuccessType::Writeable) => if cast {
+                self.formatter.fmt_void()
+            } else {
+                self.formatter.fmt_ffi_void()
+            }
+            .into(),
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => {
+                if let hir::OutType::Slice(s) = o {
+                    self.gen_slice(s).into()
                 } else {
-                    self.formatter.fmt_ffi_void()
+                    self.gen_type_name_ffi(o, cast)
                 }
-                .into(),
-                SuccessType::OutType(o) => {
-                    if let hir::OutType::Slice(s) = o {
-                        self.gen_slice(s).into()
-                    } else {
-                        self.gen_type_name_ffi(o, cast)
-                    }
-                }
-                &_ => unreachable!("unknown AST/HIR variant"),
-            },
-            ReturnType::Fallible(ref ok, ref err) => self
-                .gen_result(ok.as_ref().and_then(SuccessType::as_type), err.as_ref())
-                .into(),
+            }
+            ReturnType::Fallible(ref ok, ref err) => {
+                self.gen_result(ok.as_type(), err.as_ref()).into()
+            }
             ReturnType::Option(ref ty) => self.gen_result(ty.as_type(), None).into(),
+            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
@@ -920,12 +915,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         lifetime_env: &LifetimeEnv,
     ) -> Option<Cow<'cx, str>> {
         match *result_ty {
-            ReturnType::Infallible(None) => None,
-            ReturnType::Infallible(Some(SuccessType::Writeable)) => {
+            ReturnType::Infallible(SuccessType::Unit) => None,
+            ReturnType::Infallible(SuccessType::Writeable) => {
                 // Note: the `writeable` variable is initialized in the template
                 Some("return writeable.finalize();".into())
             }
-            ReturnType::Infallible(Some(SuccessType::OutType(ref out_ty))) => Some(
+            ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => Some(
                 format!(
                     "return {};",
                     self.gen_c_to_dart_for_type(out_ty, "result".into(), lifetime_env)
@@ -943,12 +938,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     format!("if (!result.isOk) {{\n  throw {err_conversion};\n}}").into();
                 let ok_conversion = match ok {
                     // Note: the `writeable` variable is initialized in the template
-                    Some(SuccessType::Writeable) => "writeable.finalize()".into(),
-                    Some(SuccessType::OutType(o)) => {
+                    SuccessType::Writeable => "writeable.finalize()".into(),
+                    SuccessType::OutType(o) => {
                         self.gen_c_to_dart_for_type(o, "result.union.ok".into(), lifetime_env)
                     }
-                    None => return Some(err_check),
-                    &Some(_) => unreachable!("unknown AST/HIR variant"),
+                    SuccessType::Unit => return Some(err_check),
+                    _ => unreachable!("unknown AST/HIR variant"),
                 };
                 Some(format!("{err_check}\nreturn {ok_conversion};").into())
             }
@@ -966,7 +961,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         .into(),
                 )
             }
-            ReturnType::Infallible(Some(_)) => unreachable!("unknown AST/HIR variant"),
+            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
