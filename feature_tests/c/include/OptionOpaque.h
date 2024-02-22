@@ -14,6 +14,7 @@ typedef struct OptionOpaque OptionOpaque;
 #ifdef __cplusplus
 } // namespace capi
 #endif
+#include "diplomat_result_OptionStruct_void.h"
 #include "OptionStruct.h"
 #ifdef __cplusplus
 namespace capi {
@@ -23,6 +24,8 @@ extern "C" {
 OptionOpaque* OptionOpaque_new(int32_t i);
 
 OptionOpaque* OptionOpaque_new_none();
+
+diplomat_result_OptionStruct_void OptionOpaque_returns();
 
 OptionStruct OptionOpaque_new_struct();
 

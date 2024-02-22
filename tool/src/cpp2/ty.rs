@@ -579,9 +579,16 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     Some(o) => self.gen_type_name(o),
                     None => "std::monostate".into(),
                 };
-                let ret: Cow<str> =
-                    format!("diplomat::result<{ok_type_name}, {err_type_name}>").into();
-                ret
+                format!("diplomat::result<{ok_type_name}, {err_type_name}>").into()
+            }
+            ReturnType::Nullable(ref ty) => {
+                let type_name = match ty {
+                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                    SuccessType::Unit => "std::monostate".into(),
+                    SuccessType::OutType(o) => self.gen_type_name(o),
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+                self.cx.formatter.fmt_optional(&type_name).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -684,8 +691,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 Some(self.gen_c_to_cpp_for_type(out_ty, var_name))
             }
             ReturnType::Fallible(ref ok, ref err) => {
-                let ok_path = format!("{var_name}.ok");
-                let err_path = format!("{var_name}.err");
                 let ok_type_name = match ok {
                     SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
@@ -700,16 +705,38 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     // Note: the `output` variable is a string initialized in the template
                     SuccessType::Writeable => "std::move(output)".into(),
                     SuccessType::Unit => "".into(),
-                    SuccessType::OutType(ref o) => self.gen_c_to_cpp_for_type(o, ok_path.into()),
+                    SuccessType::OutType(ref o) => {
+                        self.gen_c_to_cpp_for_type(o, format!("{var_name}.ok").into())
+                    }
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_conversion = match err {
-                    Some(o) => self.gen_c_to_cpp_for_type(o, err_path.into()),
+                    Some(o) => self.gen_c_to_cpp_for_type(o, format!("{var_name}.err").into()),
                     None => "".into(),
                 };
                 Some(
                     format!("{var_name}.is_ok ? diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Ok<{ok_type_name}>({ok_conversion})) : diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Err<{err_type_name}>({err_conversion}))").into()
                 )
+            }
+            ReturnType::Nullable(ref ty) => {
+                let type_name = match ty {
+                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                    SuccessType::Unit => "std::monostate".into(),
+                    SuccessType::OutType(o) => self.gen_type_name(o),
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+
+                let conversion = match ty {
+                    // Note: the `output` variable is a string initialized in the template
+                    SuccessType::Writeable => "std::move(output)".into(),
+                    SuccessType::Unit => "".into(),
+                    SuccessType::OutType(ref o) => {
+                        self.gen_c_to_cpp_for_type(o, format!("{var_name}.ok").into())
+                    }
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+
+                Some(format!("{var_name}.is_ok ? std::optional<{type_name}>({conversion}) : std::nullopt").into())
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }

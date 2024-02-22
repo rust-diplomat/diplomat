@@ -127,7 +127,19 @@ fn gen_type_inner<W: fmt::Write>(
                 )?;
             }
 
-            _ => unreachable!("unknown AST/HIR variant"),
+            underlying => {
+                write!(out, "std::optional<")?;
+                gen_type_inner(
+                    underlying,
+                    in_path,
+                    ref_type,
+                    env,
+                    library_config,
+                    in_struct,
+                    out,
+                )?;
+                write!(out, ">")?;
+            }
         },
 
         ast::TypeName::Result(ok, err, _) => {

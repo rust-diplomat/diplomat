@@ -7,6 +7,8 @@
 
     .. js:function:: new_none()
 
+    .. js:function:: returns()
+
     .. js:function:: new_struct()
 
     .. js:function:: new_struct_nones()

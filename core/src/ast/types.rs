@@ -108,7 +108,7 @@ impl CustomType {
         match self {
             CustomType::Struct(strct) => {
                 for (_, field, _) in strct.fields.iter() {
-                    field.check_validity(in_path, env, errors);
+                    field.check_validity(in_path, env, errors, false);
                 }
 
                 // check for ZSTs
@@ -797,19 +797,39 @@ impl TypeName {
         }
     }
 
-    // Disallow non-pointer containing Option<T> inside struct fields and Result
-    fn check_option(&self, errors: &mut Vec<ValidityError>) {
+    // Disallow non-pointer containing Option<T> in non-return position
+    fn check_option(&self, errors: &mut Vec<ValidityError>, is_return_position: bool) {
         match self {
-            TypeName::Reference(.., underlying) => underlying.check_option(errors),
-            TypeName::Box(underlying) => underlying.check_option(errors),
+            TypeName::Reference(.., underlying) => underlying.check_option(errors, false),
+            TypeName::Box(underlying) => underlying.check_option(errors, false),
             TypeName::Option(underlying) => {
-                if !underlying.is_pointer() {
-                    errors.push(ValidityError::OptionNotContainingPointer(self.clone()))
+                if !underlying.is_pointer() && !is_return_position {
+                    errors.push(ValidityError::OptionNotInReturnPosition(self.clone()))
+                } else {
+                    underlying.check_option(errors, false);
                 }
             }
             TypeName::Result(ok, err, _) => {
-                ok.check_option(errors);
-                err.check_option(errors);
+                ok.check_option(errors, false);
+                err.check_option(errors, false);
+            }
+            _ => {}
+        }
+    }
+
+    // Disallow Result in non-return position
+    fn check_result(&self, errors: &mut Vec<ValidityError>, is_return_position: bool) {
+        match self {
+            TypeName::Reference(.., underlying) => underlying.check_result(errors, false),
+            TypeName::Box(underlying) => underlying.check_result(errors, false),
+            TypeName::Option(underlying) => underlying.check_result(errors, false),
+            TypeName::Result(ok, err, _) => {
+                if !is_return_position {
+                    errors.push(ValidityError::ResultNotInReturnPosition(self.clone()))
+                } else {
+                    ok.check_result(errors, false);
+                    err.check_result(errors, false);
+                }
             }
             _ => {}
         }
@@ -827,9 +847,11 @@ impl TypeName {
         in_path: &Path,
         env: &Env,
         errors: &mut Vec<ValidityError>,
+        is_return_position: bool,
     ) {
         self.check_opaque(in_path, env, false, errors);
-        self.check_option(errors);
+        self.check_option(errors, is_return_position);
+        self.check_result(errors, is_return_position);
     }
 
     /// Checks the validity of return types.
@@ -845,7 +867,7 @@ impl TypeName {
         env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
-        self.check_validity(in_path, env, errors);
+        self.check_validity(in_path, env, errors, true);
         self.check_lifetime_elision(self, in_path, env, errors);
     }
 

@@ -86,9 +86,8 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.c.fmt_ptr(ident, mutability)
     }
 
-    #[allow(dead_code)]
-    pub fn fmt_optional<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        format!("std::optional<{ident}>").into()
+    pub fn fmt_optional(&self, ident: &str) -> String {
+        format!("std::optional<{ident}>")
     }
 
     pub fn fmt_borrowed<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {

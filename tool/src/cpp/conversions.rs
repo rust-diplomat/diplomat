@@ -131,7 +131,45 @@ pub fn gen_rust_to_cpp<W: Write>(
                 wrapped_value_id
             }
 
-            _ => todo!(),
+            underlying => {
+                let raw_value_id = format!("diplomat_result_raw_{path}");
+                writeln!(out, "auto {raw_value_id} = {cpp};").unwrap();
+                let wrapped_value_id = format!("diplomat_result_{path}");
+                let result_ty = super::types::gen_type(
+                    &ast::TypeName::Option(Box::new(underlying.clone())),
+                    in_path,
+                    None,
+                    env,
+                    library_config,
+                    false,
+                )
+                .unwrap();
+                writeln!(out, "{result_ty} {wrapped_value_id};").unwrap();
+
+                writeln!(out, "if ({raw_value_id}.is_ok) {{").unwrap();
+                let value_expr = gen_rust_to_cpp(
+                    &format!("{raw_value_id}.ok"),
+                    path,
+                    underlying,
+                    in_path,
+                    env,
+                    library_config,
+                    out,
+                );
+                let underlying_type =
+                    super::types::gen_type(underlying, in_path, None, env, library_config, false)
+                        .unwrap();
+                writeln!(
+                    out,
+                    "  {wrapped_value_id} = std::optional<{underlying_type}>({value_expr});"
+                )
+                .unwrap();
+                writeln!(out, "}} else {{").unwrap();
+                writeln!(out, "  {wrapped_value_id} = std::nullopt;").unwrap();
+                writeln!(out, "}}").unwrap();
+
+                wrapped_value_id
+            }
         },
 
         ast::TypeName::Result(ok, err, _) => {

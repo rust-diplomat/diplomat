@@ -8,6 +8,7 @@
 #include "diplomat_runtime.h"
 #include "OptionStruct.d.h"
 #include "OptionStruct.h"
+#include "diplomat_result_OptionStruct_void.d.h"
 
 #include "OptionOpaque.d.h"
 
@@ -20,6 +21,8 @@ extern "C" {
 OptionOpaque* OptionOpaque_new(int32_t i);
 
 OptionOpaque* OptionOpaque_new_none();
+
+diplomat_result_OptionStruct_void OptionOpaque_returns();
 
 OptionStruct OptionOpaque_new_struct();
 

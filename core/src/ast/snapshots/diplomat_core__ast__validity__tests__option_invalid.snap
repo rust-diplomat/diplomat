@@ -2,8 +2,9 @@
 source: core/src/ast/validity.rs
 expression: output
 ---
-A non-reference type was found inside an Option<T>: Option<u8>
-A non-reference type was found inside an Option<T>: Option<Option<u16>>
-A non-reference type was found inside an Option<T>: Option<char>
-A non-reference type was found inside an Option<T>: Option<u16>
+An Option was found in an unsupported location: Option<u8>
+An Option was found in an unsupported location: Option<Option<u16>>
+An Option was found in an unsupported location: Option<char>
+A Result was found in an unsupported location: Result<Option<char>, u8>
+An Option was found in an unsupported location: Option<u16>
 

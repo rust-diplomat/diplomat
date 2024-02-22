@@ -891,6 +891,16 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                     _ => Err(()),
                 }
             }
+            ty @ ast::TypeName::Option(value_ty) => match &**value_ty {
+                ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
+                    .lower_out_type(ty, &mut return_ltl, in_path)
+                    .map(SuccessType::OutType)
+                    .map(ReturnType::Infallible),
+                _ => self
+                    .lower_out_type(value_ty, &mut return_ltl, in_path)
+                    .map(SuccessType::OutType)
+                    .map(ReturnType::Nullable),
+            },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(writeable_or_unit)),
             ty => self
                 .lower_out_type(ty, &mut return_ltl, in_path)

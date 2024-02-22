@@ -34,6 +34,14 @@ final class OptionOpaque implements ffi.Finalizable {
     return result.address == 0 ? null : OptionOpaque._(result, true, []);
   }();
 
+  static final OptionStruct? returns = () {
+    final result = _OptionOpaque_returns();
+    if (!result.isOk) {
+      return null;
+    }
+    return OptionStruct._(result.union.ok);
+  }();
+
   static final OptionStruct struct = () {
     final result = _OptionOpaque_new_struct();
     return OptionStruct._(result);
@@ -65,6 +73,10 @@ external ffi.Pointer<ffi.Opaque> _OptionOpaque_new(int i);
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'OptionOpaque_new_none')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OptionOpaque_new_none();
+
+@ffi.Native<_ResultOptionStructFfiVoid Function()>(isLeaf: true, symbol: 'OptionOpaque_returns')
+// ignore: non_constant_identifier_names
+external _ResultOptionStructFfiVoid _OptionOpaque_returns();
 
 @ffi.Native<_OptionStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_new_struct')
 // ignore: non_constant_identifier_names

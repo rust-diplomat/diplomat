@@ -15,6 +15,10 @@ export class OptionOpaque {
 
   /**
    */
+  static returns(): OptionStruct | undefined;
+
+  /**
+   */
   static new_struct(): OptionStruct;
 
   /**

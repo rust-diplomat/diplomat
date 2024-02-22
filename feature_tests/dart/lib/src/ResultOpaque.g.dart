@@ -57,16 +57,13 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._(result.union.ok, true, []);
   }
 
-  /// 
-  ///
-  /// Throws [VoidError] on failure.
-  factory ResultOpaque.failingUnit() {
+  static final ResultOpaque? failingUnit = () {
     final result = _ResultOpaque_new_failing_unit();
     if (!result.isOk) {
-      throw VoidError();
+      return null;
     }
     return ResultOpaque._(result.union.ok, true, []);
-  }
+  }();
 
   /// 
   ///
@@ -87,15 +84,13 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ResultOpaque._(result.union.err, true, []);
     }
+    
   }
 
-  /// 
-  ///
-  /// Throws [VoidError] on failure.
-  static int newInt(int i) {
+  static int? newInt(int i) {
     final result = _ResultOpaque_new_int(i);
     if (!result.isOk) {
-      throw VoidError();
+      return null;
     }
     return result.union.ok;
   }

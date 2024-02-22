@@ -44,8 +44,16 @@ pub fn gen_type<W: fmt::Write>(
             ast::TypeName::Box(_) | ast::TypeName::Reference(..) => {
                 gen_type(underlying.as_ref(), in_path, env, out)?;
             }
-
-            _ => unreachable!("Cannot have non-pointer types inside Option"),
+            // Non-reference Options are DiplomatResult<_, ()>
+            _ => write!(
+                out,
+                "{}",
+                name_for_type(&ast::TypeName::Result(
+                    underlying.clone(),
+                    Box::new(ast::TypeName::Unit),
+                    true
+                ))
+            )?,
         },
 
         ast::TypeName::Result(_, _, _) => {

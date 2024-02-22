@@ -64,6 +64,22 @@ public partial class OptionOpaque: IDisposable
     /// <returns>
     /// A <c>OptionStruct</c> allocated on C# side.
     /// </returns>
+    public static OptionStruct? Returns()
+    {
+        unsafe
+        {
+            Options without a pointer type are not yet supported retVal = Raw.OptionOpaque.Returns();
+            if (retVal == null)
+            {
+                return null;
+            }
+            return new OptionStruct(retVal);
+        }
+    }
+
+    /// <returns>
+    /// A <c>OptionStruct</c> allocated on C# side.
+    /// </returns>
     public static OptionStruct NewStruct()
     {
         unsafe

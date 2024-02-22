@@ -65,7 +65,18 @@ pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> 
             }
         }
 
-        ast::TypeName::Option(underlying) => return_type_form(underlying, in_path, env),
+        ast::TypeName::Option(underlying) => match underlying.as_ref() {
+            ast::TypeName::Box(..) | ast::TypeName::Reference(..) => {
+                return_type_form(underlying, in_path, env)
+            }
+            _ => {
+                if return_type_form(underlying, in_path, env) == ReturnTypeForm::Empty {
+                    ReturnTypeForm::Scalar
+                } else {
+                    ReturnTypeForm::Complex
+                }
+            }
+        },
 
         ast::TypeName::Unit => ReturnTypeForm::Empty,
 

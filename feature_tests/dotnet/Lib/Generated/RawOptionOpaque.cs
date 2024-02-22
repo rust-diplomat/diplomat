@@ -22,6 +22,9 @@ public partial struct OptionOpaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_new_none", ExactSpelling = true)]
     public static unsafe extern OptionOpaque* NewNone();
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_returns", ExactSpelling = true)]
+    public static unsafe extern Options without a pointer type are not yet supported Returns();
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_new_struct", ExactSpelling = true)]
     public static unsafe extern OptionStruct NewStruct();
 
