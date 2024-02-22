@@ -26,12 +26,11 @@ final class Foo implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Foo_destroy));
 
   factory Foo(String x) {
-    final temp = ffi2.Arena();
     final xView = x.utf8View;
+    final xArena = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> edge_a = [xView];
-    final result = _Foo_new(xView.pointer(temp), xView.length);
-    temp.releaseAll();
+    core.List<Object> edge_a = [xArena];
+    final result = _Foo_new(xView.pointer(xArena.arena), xView.length);
     return Foo._(result, true, [], edge_a);
   }
 
@@ -74,9 +73,10 @@ final class Foo implements ffi.Finalizable {
   factory Foo.extractFromBounds(BorrowedFieldsWithBounds bounds, String anotherString) {
     final temp = ffi2.Arena();
     final anotherStringView = anotherString.utf8View;
+    final anotherStringArena = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'a, 'y
-    core.List<Object> edge_a = [...bounds._fields_for_lifetime_b(), anotherStringView];
-    final result = _Foo_extract_from_bounds(bounds._pointer(temp), anotherStringView.pointer(temp), anotherStringView.length);
+    core.List<Object> edge_a = [...bounds._fields_for_lifetime_b(), anotherStringArena];
+    final result = _Foo_extract_from_bounds(bounds._pointer(temp), anotherStringView.pointer(anotherStringArena.arena), anotherStringView.length);
     temp.releaseAll();
     return Foo._(result, true, [], edge_a);
   }

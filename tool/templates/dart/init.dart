@@ -305,3 +305,12 @@ class _Float64ListView {
 
   int get length => _values.length;
 }
+
+class _FinalizedArena {
+  final ffi2.Arena arena;
+  static final core.Finalizer<ffi2.Arena> _finalizer = core.Finalizer((arena) => arena.releaseAll());
+
+  _FinalizedArena() : this.arena = ffi2.Arena() {
+    _finalizer.attach(this, this.arena);
+  }
+}

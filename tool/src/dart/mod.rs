@@ -352,7 +352,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             })
             .collect();
 
-        // Add a parameter to the method_lifetimes map for any lifetimes it references.
+        // Add a parameter to the method_lifetimes map for any lifetimes it references. Returns true if the lifetime is referenced.
         //
         // This basically boils down to: For each lifetime that is actually relevant to borrowing in this method, check if that
         // lifetime or lifetimes longer than it are used by this parameter. In other words, check if
@@ -360,8 +360,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         // If so, add code that will yield the ownership-relevant parts of this object to incoming_edges for that lifetime.
         let mut add_param_to_map = |ty: &hir::Type, param_name: &str| {
             if used_method_lifetimes.is_empty() {
-                return;
+                return false;
             }
+            let mut edges_pushed = false;
 
             // Structs have special handling: structs are purely Dart-side, so if you borrow
             // from a struct, you really are borrowing from the internal fields.
@@ -389,6 +390,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                                     def.lifetimes.fmt_lifetime(def_lt)
                                 );
                                 method_lifetime.incoming_edges.push(edge);
+                                edges_pushed = true;
                                 // Do *not* break the inner loop here: even if we found *one* matching lifetime
                                 // in this struct that may not be all of them, there may be some other fields that are borrowed
                             }
@@ -401,15 +403,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         if let MaybeStatic::NonStatic(lt) = lt {
                             if method_lifetime.all_longer_lifetimes.contains(&lt) {
                                 let edge = if let hir::Type::Slice(..) = ty {
-                                    // Slices make a temporary view type that needs to be attached
-                                    // XXXManishearth: this is the wrong variable. We need to grab on to the arena
-                                    // and also ensure it's not destroyed.
-                                    format!("{param_name}View")
+                                    // Slices make an arena with a finalizer that needs to be attached
+                                    format!("{param_name}Arena")
                                 } else {
                                     // Everything else makes a direct edge
                                     param_name.into()
                                 };
                                 method_lifetime.incoming_edges.push(edge);
+                                edges_pushed = true;
                                 // Break the inner loop: we've already determined this
                                 break;
                             }
@@ -417,6 +418,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     }
                 }
             }
+
+            // return true if the number of edges changed
+            edges_pushed
         };
 
         let _guard = self.errors.set_context_method(
@@ -432,7 +436,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut param_names_ffi = Vec::new();
         let mut param_conversions = Vec::new();
 
-        let mut needs_arena = false;
+        let mut needs_temp_arena = false;
 
         if let Some(param_self) = method.param_self.as_ref() {
             add_param_to_map(&param_self.ty.clone().into(), "this");
@@ -442,15 +446,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_conversions.push(self.gen_dart_to_c_self(&param_self.ty));
             param_names_ffi.push("self".into());
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
-                needs_arena = true;
+                needs_temp_arena = true;
             }
         }
 
-        let mut slice_conversions = Vec::new();
+        let mut slice_params = Vec::new();
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
-            add_param_to_map(&param.ty, &param_name);
+            let is_borrowed = add_param_to_map(&param.ty, &param_name);
 
             param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
 
@@ -469,13 +473,24 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone());
 
-                slice_conversions.push(format!("final {param_name}View = {view_expr};"));
-                needs_arena = true;
-                param_conversions.push(format!("{param_name}View.pointer(temp)").into());
+                if is_borrowed {
+                    // Slices borrowed in the return value use a custom arena that gets generated in the template via slice_params
+                    param_conversions
+                        .push(format!("{param_name}View.pointer({param_name}Arena.arena)").into());
+                } else {
+                    // Everyone else uses the temporary arena that keeps stuff alive until the method is called
+                    param_conversions.push(format!("{param_name}View.pointer(temp)").into());
+                    needs_temp_arena = true;
+                }
                 param_conversions.push(format!("{param_name}View.length").into());
+                slice_params.push(SliceParam {
+                    param_name,
+                    view_expr,
+                    is_borrowed,
+                });
             } else {
                 if matches!(param.ty, hir::Type::Struct(..)) {
-                    needs_arena = true;
+                    needs_temp_arena = true;
                 }
                 param_types_ffi.push(param_type_ffi);
                 param_types_ffi_cast.push(param_type_ffi_cast);
@@ -607,8 +622,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_names_ffi,
             return_type_ffi,
             return_type_ffi_cast,
-            slice_conversions,
-            needs_arena,
+            slice_params,
+            needs_temp_arena,
             param_conversions,
             return_expression,
             lifetimes: &method.lifetime_env,
@@ -1065,11 +1080,11 @@ struct MethodInfo<'a> {
     return_type_ffi: Cow<'a, str>,
     return_type_ffi_cast: Cow<'a, str>,
 
-    /// Conversion code for Dart arguments to slice helper structs
-    slice_conversions: Vec<String>,
+    /// All slice parameters, and their conversion code
+    slice_params: Vec<SliceParam<'a>>,
     /// The invocation of the Rust method might need temporary allocations,
     /// for which we use a Dart Arena type.
-    needs_arena: bool,
+    needs_temp_arena: bool,
 
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
@@ -1085,6 +1100,15 @@ struct MethodInfo<'a> {
     /// an internal slice View that was temporarily constructed, or
     /// a spread of a struct's `_fields_for_lifetime_foo()` method.
     method_lifetimes_map: BTreeMap<Lifetime, LifetimeInfo>,
+}
+
+struct SliceParam<'a> {
+    /// The name of the parameter
+    param_name: Cow<'a, str>,
+    /// How to convert the Dart type into a view
+    view_expr: Cow<'a, str>,
+    /// Whether it is borrowed
+    is_borrowed: bool,
 }
 
 struct LifetimeInfo {
