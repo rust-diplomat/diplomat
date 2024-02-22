@@ -139,7 +139,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 "void".into()
             }
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, false),
-            ReturnType::Fallible(ref ok, ref err) => {
+            ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
+                // Result<T, ()> and Option<T> are the same on the ABI
+                let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
+                    Some(e)
+                } else {
+                    None
+                };
                 let (ok_type_name, ok_ty) = match ok {
                     SuccessType::Writeable => {
                         param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
@@ -166,7 +172,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 self.cx
                     .result_store
                     .borrow_mut()
-                    .insert(result_name.clone(), (ok_ty, err.as_ref()));
+                    .insert(result_name.clone(), (ok_ty, err));
                 result_name.into()
             }
             _ => unreachable!("unknown AST/HIR variant"),

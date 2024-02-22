@@ -39,6 +39,7 @@ pub enum SuccessType {
 pub enum ReturnType {
     Infallible(SuccessType),
     Fallible(SuccessType, Option<OutType>),
+    Nullable(SuccessType),
 }
 
 /// The `self` parameter of a method.
@@ -117,7 +118,7 @@ impl Deref for ReturnType {
 
     fn deref(&self) -> &Self::Target {
         match self {
-            ReturnType::Infallible(ret) | ReturnType::Fallible(ret, _) => ret,
+            ReturnType::Infallible(ret) | ReturnType::Fallible(ret, _) | Self::Nullable(ret) => ret,
         }
     }
 }
@@ -148,7 +149,8 @@ impl ReturnType {
         };
 
         match self {
-            ReturnType::Infallible(SuccessType::OutType(ref ty)) => add_to_set(ty),
+            ReturnType::Infallible(SuccessType::OutType(ref ty))
+            | ReturnType::Nullable(SuccessType::OutType(ref ty)) => add_to_set(ty),
             ReturnType::Fallible(ref ok, ref err) => {
                 if let SuccessType::OutType(ref ty) = ok {
                     add_to_set(ty)

@@ -671,15 +671,18 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             ReturnType::Infallible(SuccessType::OutType(ref o))
             | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_type_name(o),
-            ReturnType::Fallible(SuccessType::Writeable, None) => self
+            ReturnType::Fallible(SuccessType::Writeable, None)
+            | ReturnType::Nullable(SuccessType::Writeable) => self
                 .formatter
                 .fmt_nullable(self.formatter.fmt_string())
                 .into(),
-            ReturnType::Fallible(SuccessType::Unit, None) => self
+            ReturnType::Fallible(SuccessType::Unit, None)
+            | ReturnType::Nullable(SuccessType::Unit) => self
                 .formatter
                 .fmt_primitive_as_ffi(hir::PrimitiveType::Bool, true)
                 .into(),
-            ReturnType::Fallible(SuccessType::OutType(ref o), None) => {
+            ReturnType::Fallible(SuccessType::OutType(ref o), None)
+            | ReturnType::Nullable(SuccessType::OutType(ref o)) => {
                 self.formatter.fmt_nullable(&self.gen_type_name(o)).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
@@ -758,6 +761,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Fallible(ref ok, ref err) => {
                 self.gen_result(ok.as_type(), err.as_ref()).into()
             }
+            ReturnType::Nullable(ref ok) => self.gen_result(ok.as_type(), None).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -929,17 +933,18 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 )
                 .into(),
             ),
-            // Special case Result<(), ()> to bool
-            ReturnType::Fallible(SuccessType::Unit, None) => Some("return result.isOk;".into()),
-            ReturnType::Fallible(ref ok, ref err) => {
+            // Special case Result<(), ()> and Option<()> to bool
+            ReturnType::Fallible(SuccessType::Unit, None)
+            | ReturnType::Nullable(SuccessType::Unit) => Some("return result.isOk;".into()),
+            ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 let err_check = format!(
                     "if (!result.isOk) {{\n  {}\n}}\n",
-                    match err {
-                        Some(e) => format!(
+                    match result_ty {
+                        ReturnType::Fallible(_, Some(e)) => format!(
                             "throw {};",
                             self.gen_c_to_dart_for_type(e, "result.union.err".into(), lifetime_env)
                         ),
-                        None => "return null;".into(),
+                        _ => "return null;".into(),
                     }
                 );
 

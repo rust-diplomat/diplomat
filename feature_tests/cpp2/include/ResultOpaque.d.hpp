@@ -25,13 +25,13 @@ public:
 
   inline static diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> new_failing_bar();
 
-  inline static std::optional<std::unique_ptr<ResultOpaque>> new_failing_unit();
+  inline static diplomat::result<std::unique_ptr<ResultOpaque>, std::monostate> new_failing_unit();
 
   inline static diplomat::result<std::unique_ptr<ResultOpaque>, ErrorStruct> new_failing_struct(int32_t i);
 
   inline static diplomat::result<std::monostate, std::unique_ptr<ResultOpaque>> new_in_err(int32_t i);
 
-  inline static std::optional<int32_t> new_int(int32_t i);
+  inline static diplomat::result<int32_t, std::monostate> new_int(int32_t i);
 
   inline static diplomat::result<ErrorEnum, std::unique_ptr<ResultOpaque>> new_in_enum_err(int32_t i);
 
