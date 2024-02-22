@@ -310,12 +310,8 @@ class _FinalizedArena {
   final ffi2.Arena arena;
   static final core.Finalizer<ffi2.Arena> _finalizer = core.Finalizer((arena) => arena.releaseAll());
 
-  _FinalizedArena.fromArena(this.arena);
-
-  factory _FinalizedArena.make() {
-    final arena = ffi2.Arena();
-    final wrapper = _FinalizedArena.fromArena(arena);
-    _finalizer.attach(wrapper, arena);
-    return wrapper;
+  _FinalizedArena() : this.arena = ffi2.Arena() {
+    _finalizer.attach(this, this.arena);
   }
+}
 }
