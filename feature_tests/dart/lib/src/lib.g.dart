@@ -353,7 +353,7 @@ class _FinalizedArena {
     _finalizer.attach(this, this.arena);
   }
 }
-}
+
 final class _ResultInt32OpaqueUnion extends ffi.Union {
   @ffi.Int32()
   external int ok;

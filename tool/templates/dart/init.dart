@@ -314,4 +314,3 @@ class _FinalizedArena {
     _finalizer.attach(this, this.arena);
   }
 }
-}

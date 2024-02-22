@@ -333,7 +333,7 @@ class _FinalizedArena {
     _finalizer.attach(this, this.arena);
   }
 }
-}
+
 final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
 }

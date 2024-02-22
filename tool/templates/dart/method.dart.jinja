@@ -9,7 +9,7 @@
     {%- for slice in m.slice_params %}
     final {{slice.param_name}}View = {{slice.view_expr}};
     {%- if slice.is_borrowed %}
-    final {{slice.param_name}}Arena = _FinalizedArena.make();
+    final {{slice.param_name}}Arena = _FinalizedArena();
     {%- endif %}
     {%- endfor %}
 
