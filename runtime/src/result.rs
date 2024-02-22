@@ -7,7 +7,8 @@ union DiplomatResultValue<T, E> {
 }
 
 /// A [`Result`]-like type that can be passed across the FFI boundary
-/// as a value. Used internally to return [`Result`]s from functions.
+/// as a value. Used internally to return [`Result`]s and [`Option`]s
+/// from functions.
 #[repr(C)]
 pub struct DiplomatResult<T, E> {
     value: DiplomatResultValue<T, E>,

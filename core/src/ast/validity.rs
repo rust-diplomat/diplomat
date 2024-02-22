@@ -25,12 +25,18 @@ pub enum ValidityError {
         )
     )]
     NonOpaqueBehindRef(TypeName),
-    /// A non-reference type was found inside an `Option<T>`.
+    /// An Option was found in an unsupported location
     #[cfg_attr(
         feature = "displaydoc",
-        displaydoc("A non-reference type was found inside an Option<T>: {0}")
+        displaydoc("An Option was found in an unsupported location: {0}")
     )]
-    OptionNotContainingPointer(TypeName),
+    OptionNotInReturnPosition(TypeName),
+    /// A Result was found in an unsupported location
+    #[cfg_attr(
+        feature = "displaydoc",
+        displaydoc("A Result was found in an unsupported location: {0}")
+    )]
+    ResultNotInReturnPosition(TypeName),
     /// A return type contains elided lifetimes.
     #[cfg_attr(
         feature = "displaydoc",
@@ -170,6 +176,10 @@ mod tests {
 
                     }
                     pub fn do_thing2(opt: Option<u16>) {
+
+                    }
+
+                    pub fn do_thing3() -> Option<u16> {
 
                     }
                 }

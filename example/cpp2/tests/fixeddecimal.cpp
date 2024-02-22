@@ -6,15 +6,15 @@
 int main(int argc, char *argv[]) {
     std::unique_ptr<ICU4XFixedDecimal> fd = ICU4XFixedDecimal::new_(123);
 
-    simple_assert("constructing FixedDecimal", fd->to_string().has_value());
+    simple_assert("constructing FixedDecimal", !fd->to_string().is_err());
 
-    std::string fd_out = fd->to_string().value();
+    std::string fd_out = fd->to_string().ok().value();
 
     simple_assert_eq("Stringifying FixedDecimal", fd_out, "123");
 
     fd->multiply_pow10(-1);
 
-    fd_out = fd->to_string().value();
+    fd_out = fd->to_string().ok().value();
 
     simple_assert_eq("Multiplying FixedDecimal", fd_out, "12.3");
 
@@ -30,9 +30,9 @@ int main(int argc, char *argv[]) {
 
     auto fdf = ICU4XFixedDecimalFormatter::try_new(*locale, *data_provider, ICU4XFixedDecimalFormatterOptions::default_());
 
-    simple_assert("Formatting FixedDecimal", fdf.has_value());
+    simple_assert("Formatting FixedDecimal", fdf.is_ok());
 
-    std::string fdf_out = std::move(fdf).value()->format_write(*fd);
+    std::string fdf_out = std::move(fdf).ok().value()->format_write(*fd);
 
     simple_assert_eq("Formatting FixedDecimal", fdf_out, "১২.৩");
 

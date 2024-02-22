@@ -14,10 +14,6 @@ pub use writeable::DiplomatWriteable;
 mod result;
 pub use result::DiplomatResult;
 
-/// An [`Option`]-like type that can be passed across the FFI boundary
-/// as a value. Used internally to return [`Option`]s from functions.
-pub type DiplomatOption<T> = DiplomatResult<T, ()>;
-
 /// Like [`char`], but unvalidated.
 pub type DiplomatChar = u32;
 
