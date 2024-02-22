@@ -481,7 +481,10 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                     writeln!(f, "const {diplomat_receive_buffer} = wasm.diplomat_alloc({size}, {align});")?;
                                     writeln!(f, "{};", self.invocation.complex(&diplomat_receive_buffer))?;
                                     writeln!(f, "const is_ok = diplomatRuntime.resultFlag(wasm, {diplomat_receive_buffer}, {flag_offset});")?;
-                                    writeln!(f, "if (!is_ok) return null;")?;
+                                    writeln!(f, "if (!is_ok) {{")?;
+                                    writeln!(f, "  wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
+                                    writeln!(f, "  return null;")?;
+                                    writeln!(f, "}}")?;
                                     writeln!(f, "const value = {};", UnderlyingIntoJs {
                                         inner: inner.as_ref(),
                                         underlying: Underlying::Binding(&diplomat_receive_buffer, None),

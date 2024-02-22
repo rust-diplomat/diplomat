@@ -35,7 +35,10 @@ export class OptionOpaque {
       const diplomat_receive_buffer = wasm.diplomat_alloc(17, 4);
       wasm.OptionOpaque_returns(diplomat_receive_buffer);
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 16);
-      if (!is_ok) return null;
+      if (!is_ok) {
+        wasm.diplomat_free(diplomat_receive_buffer, 17, 4);
+        return null;
+      }
       const value = new OptionStruct(diplomat_receive_buffer);
       wasm.diplomat_free(diplomat_receive_buffer, 17, 4);
       return value;
