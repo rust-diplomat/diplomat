@@ -362,17 +362,17 @@ impl<'env> Iterator for LifetimeTransitivityIterator<'env> {
 /// with the lifetimes found at its *def* site (e.g. `struct Foo<'x, 'y>`).
 ///
 /// Construct this by calling `.linked_lifetimes()` on a StructPath or OpaquePath
-pub struct LinkedLifetimes<'tcx> {
+pub struct LinkedLifetimes<'def, 'tcx> {
     env: &'tcx LifetimeEnv,
     self_lt: Option<MaybeStatic<Lifetime>>,
-    lifetimes: &'tcx Lifetimes,
+    lifetimes: &'def Lifetimes,
 }
 
-impl<'tcx> LinkedLifetimes<'tcx> {
+impl<'def, 'tcx> LinkedLifetimes<'def, 'tcx> {
     pub(crate) fn new(
         env: &'tcx LifetimeEnv,
         self_lt: Option<MaybeStatic<Lifetime>>,
-        lifetimes: &'tcx Lifetimes,
+        lifetimes: &'def Lifetimes,
     ) -> Self {
         debug_assert_eq!(
             lifetimes.lifetimes().len(),

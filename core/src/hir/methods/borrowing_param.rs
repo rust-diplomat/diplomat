@@ -103,7 +103,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
         // Structs have special handling: structs are purely Dart-side, so if you borrow
         // from a struct, you really are borrowing from the internal fields.
         if let hir::Type::Struct(s) = ty {
-            let def = s.resolve(self.tcx);
+            let link = s.link_lifetimes(self.tcx);
             for method_lifetime in self.borrow_map.values_mut() {
                 // Note that ty.lifetimes()/s.lifetimes() is lifetimes
                 // in the *use* context, i.e. lifetimes on the Type that reference the
@@ -114,16 +114,14 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                 //
                 // Concretely, if we have struct `Foo<'a, 'b>` and our method
                 // accepts `Foo<'x, 'y>`, we need to output _fields_for_lifetime_a()/b not x/y.
-                let def_lifetimes = def.lifetimes.all_lifetimes();
-                let use_lifetimes = s.lifetimes.lifetimes();
-                assert_eq!(def_lifetimes.len(), use_lifetimes.len(), "lifetimes array found on struct def must match lifetime parameters accepted by struct");
-                // the type lifetimes array
-                for (def_lt, use_lt) in def_lifetimes.zip(use_lifetimes) {
+                //
+                // This is a struct so lifetimes_def_only() is fine to call
+                for (use_lt, def_lt) in link.lifetimes_def_only() {
                     if let MaybeStatic::NonStatic(use_lt) = use_lt {
                         if method_lifetime.all_longer_lifetimes.contains(&use_lt) {
                             let edge = LifetimeEdge {
                                 param_name: param_name.into(),
-                                kind: LifetimeEdgeKind::StructLifetime(&def.lifetimes, def_lt),
+                                kind: LifetimeEdgeKind::StructLifetime(link.def_env(), def_lt),
                             };
                             method_lifetime.incoming_edges.push(edge);
                             edges_pushed = true;

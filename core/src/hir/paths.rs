@@ -127,7 +127,7 @@ impl ReturnableStructPath {
 
     /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
     /// for more information.
-    pub fn link_lifetimes<'tcx>(&'tcx self, tcx: &'tcx TypeContext) -> LinkedLifetimes<'tcx> {
+    pub fn link_lifetimes<'def, 'tcx>(&'def self, tcx: &'tcx TypeContext) -> LinkedLifetimes<'def, 'tcx> {
         match self {
             Self::Struct(p) => p.link_lifetimes(tcx),
             Self::OutStruct(p) => p.link_lifetimes(tcx),
@@ -149,7 +149,7 @@ impl StructPath {
 
     /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
     /// for more information.
-    pub fn link_lifetimes<'tcx>(&'tcx self, tcx: &'tcx TypeContext) -> LinkedLifetimes<'tcx> {
+    pub fn link_lifetimes<'def, 'tcx>(&'def self, tcx: &'tcx TypeContext) -> LinkedLifetimes<'def, 'tcx> {
         let struc = self.resolve(tcx);
         let env = &struc.lifetimes;
         LinkedLifetimes::new(env, None, &self.lifetimes)
@@ -164,7 +164,7 @@ impl OutStructPath {
 
     /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
     /// for more information.
-    pub fn link_lifetimes<'tcx>(&'tcx self, tcx: &'tcx TypeContext) -> LinkedLifetimes<'tcx> {
+    pub fn link_lifetimes<'def, 'tcx>(&'def self, tcx: &'tcx TypeContext) -> LinkedLifetimes<'def, 'tcx> {
         let struc = self.resolve(tcx);
         let env = &struc.lifetimes;
         LinkedLifetimes::new(env, None, &self.lifetimes)
@@ -191,7 +191,7 @@ impl<Opt, Owner> OpaquePath<Opt, Owner> {
 impl<Opt, Owner: OpaqueOwner> OpaquePath<Opt, Owner> {
     /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
     /// for more information.
-    pub fn link_lifetimes<'tcx>(&'tcx self, tcx: &'tcx TypeContext) -> LinkedLifetimes<'tcx> {
+    pub fn link_lifetimes<'def, 'tcx>(&'def self, tcx: &'tcx TypeContext) -> LinkedLifetimes<'def, 'tcx> {
         let opaque = self.resolve(tcx);
         let env = &opaque.lifetimes;
         LinkedLifetimes::new(env, self.owner.lifetime(), &self.lifetimes)
