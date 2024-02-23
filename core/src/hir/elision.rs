@@ -512,7 +512,7 @@ mod tests {
                 .push(DebugBorrowingField(bf));
         });
 
-        struct DebugBorrowingField<'m>(crate::hir::BorrowingField<'m>);
+        struct DebugBorrowingField<'m>(crate::hir::borrowing_field::BorrowingField<'m>);
 
         impl<'m> fmt::Debug for DebugBorrowingField<'m> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
