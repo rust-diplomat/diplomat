@@ -7,7 +7,7 @@ mod defs;
 mod elision;
 mod lifetimes;
 mod lowering;
-mod methods;
+pub mod methods;
 mod paths;
 mod primitives;
 mod ty_position;

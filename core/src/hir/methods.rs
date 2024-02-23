@@ -8,8 +8,10 @@ use super::{Attrs, Docs, Ident, IdentBuf, OutType, SelfType, Type, TypeContext};
 use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 
 use borrowing_field::BorrowingFieldVisitor;
+use borrowing_param::BorrowingParamVisitor;
 
 pub mod borrowing_field;
+pub mod borrowing_param;
 
 /// A method exposed to Diplomat.
 #[derive(Debug)]
@@ -160,6 +162,18 @@ impl Method {
     /// Returns a fresh [`Lifetimes`] corresponding to `self`.
     pub fn method_lifetimes(&self) -> Lifetimes {
         self.lifetime_env.lifetimes()
+    }
+
+    /// Returns a new [`BorrowingParamVisitor`], which can *shallowly* link output lifetimes
+    /// to the parameters they borrow from.
+    ///
+    /// This is useful for backends which wish to have lifetime codegen for methods only handle the local
+    /// method lifetime, and delegate to generated code on structs for handling the internals of struct lifetimes.
+    pub fn borrowing_param_visitor<'tcx>(
+        &'tcx self,
+        tcx: &'tcx TypeContext,
+    ) -> BorrowingParamVisitor<'tcx> {
+        BorrowingParamVisitor::new(self, tcx)
     }
 
     /// Returns a new [`BorrowingFieldVisitor`], which allocates memory to
