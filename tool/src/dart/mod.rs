@@ -1,6 +1,9 @@
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
+use diplomat_core::hir::methods::borrowing_param::{
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind,
+};
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
@@ -328,100 +331,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             return None;
         }
 
-        // Lifetime handling code
-        //
-        // XXXManishearth aside from the actual parameter-edge-creation code this
-        // code can *probably* be generalized and made into an HIR utility. The struct
-        // stuff makes this complicated
-
-        // Lifetimes actually used in the output
-        let used_method_lifetimes = method.output.used_method_lifetimes();
-        let mut method_lifetimes_map: BTreeMap<_, _> = used_method_lifetimes
-            .iter()
-            .map(|lt| {
-                (
-                    *lt,
-                    LifetimeInfo {
-                        incoming_edges: Vec::new(),
-                        all_longer_lifetimes: method
-                            .lifetime_env
-                            .all_longer_lifetimes(lt)
-                            .collect(),
-                    },
-                )
-            })
-            .collect();
-
-        // Add a parameter to the method_lifetimes map for any lifetimes it references. Returns true if the lifetime is referenced.
-        //
-        // This basically boils down to: For each lifetime that is actually relevant to borrowing in this method, check if that
-        // lifetime or lifetimes longer than it are used by this parameter. In other words, check if
-        // it is possible for data in the return type with this lifetime to have been borrowed from this parameter.
-        // If so, add code that will yield the ownership-relevant parts of this object to incoming_edges for that lifetime.
-        let mut add_param_to_map = |ty: &hir::Type, param_name: &str| {
-            if used_method_lifetimes.is_empty() {
-                return false;
-            }
-            let mut edges_pushed = false;
-
-            // Structs have special handling: structs are purely Dart-side, so if you borrow
-            // from a struct, you really are borrowing from the internal fields.
-            if let hir::Type::Struct(s) = ty {
-                let def = s.resolve(self.tcx);
-                for method_lifetime in method_lifetimes_map.values_mut() {
-                    // Note that ty.lifetimes()/s.lifetimes() is lifetimes
-                    // in the *use* context, i.e. lifetimes on the Type that reference the
-                    // indices of the method's lifetime arrays. Their *order* references
-                    // the indices of the underlying struct def. We need to link the two,
-                    // since the _fields_for_lifetime_foo() methods are named after
-                    // the *def* context lifetime.
-                    //
-                    // Concretely, if we have struct `Foo<'a, 'b>` and our method
-                    // accepts `Foo<'x, 'y>`, we need to output _fields_for_lifetime_a()/b not x/y.
-                    let def_lifetimes = def.lifetimes.all_lifetimes();
-                    let use_lifetimes = s.lifetimes.lifetimes();
-                    assert_eq!(def_lifetimes.len(), use_lifetimes.len(), "lifetimes array found on struct def must match lifetime parameters accepted by struct");
-                    // the type lifetimes array
-                    for (def_lt, use_lt) in def_lifetimes.zip(use_lifetimes) {
-                        if let MaybeStatic::NonStatic(use_lt) = use_lt {
-                            if method_lifetime.all_longer_lifetimes.contains(&use_lt) {
-                                let edge = format!(
-                                    "...{param_name}._fields_for_lifetime_{}()",
-                                    def.lifetimes.fmt_lifetime(def_lt)
-                                );
-                                method_lifetime.incoming_edges.push(edge);
-                                edges_pushed = true;
-                                // Do *not* break the inner loop here: even if we found *one* matching lifetime
-                                // in this struct that may not be all of them, there may be some other fields that are borrowed
-                            }
-                        }
-                    }
-                }
-            } else {
-                for method_lifetime in method_lifetimes_map.values_mut() {
-                    for lt in ty.lifetimes() {
-                        if let MaybeStatic::NonStatic(lt) = lt {
-                            if method_lifetime.all_longer_lifetimes.contains(&lt) {
-                                let edge = if let hir::Type::Slice(..) = ty {
-                                    // Slices make an arena with a finalizer that needs to be attached
-                                    format!("{param_name}Arena")
-                                } else {
-                                    // Everything else makes a direct edge
-                                    param_name.into()
-                                };
-                                method_lifetime.incoming_edges.push(edge);
-                                edges_pushed = true;
-                                // Break the inner loop: we've already determined this
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // return true if the number of edges changed
-            edges_pushed
-        };
+        let mut visitor = method.borrowing_param_visitor(self.tcx);
 
         let _guard = self.errors.set_context_method(
             self.formatter.fmt_type_name_diagnostics(id),
@@ -439,7 +349,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut needs_temp_arena = false;
 
         if let Some(param_self) = method.param_self.as_ref() {
-            add_param_to_map(&param_self.ty.clone().into(), "this");
+            visitor.visit_param(&param_self.ty.clone().into(), "this");
 
             param_types_ffi.push(self.gen_self_type_name_ffi(&param_self.ty, false));
             param_types_ffi_cast.push(self.gen_self_type_name_ffi(&param_self.ty, true));
@@ -454,7 +364,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
-            let is_borrowed = add_param_to_map(&param.ty, &param_name);
+            let is_borrowed = visitor.visit_param(&param.ty, &param_name);
 
             param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
 
@@ -625,7 +535,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_conversions,
             return_expression,
             lifetimes: &method.lifetime_env,
-            method_lifetimes_map,
+            method_lifetimes_map: visitor.borrow_map(),
         })
     }
 
@@ -1131,7 +1041,7 @@ struct MethodInfo<'a> {
     /// it borrows from. The parameter list may contain the parameter name,
     /// an internal slice View that was temporarily constructed, or
     /// a spread of a struct's `_fields_for_lifetime_foo()` method.
-    method_lifetimes_map: BTreeMap<Lifetime, LifetimeInfo>,
+    method_lifetimes_map: BTreeMap<Lifetime, BorrowedLifetimeInfo<'a>>,
 }
 
 struct SliceParam<'a> {
@@ -1141,14 +1051,6 @@ struct SliceParam<'a> {
     view_expr: Cow<'a, str>,
     /// Whether it is borrowed
     is_borrowed: bool,
-}
-
-struct LifetimeInfo {
-    // Initializers for all inputs to the edge array from
-    incoming_edges: Vec<String>,
-    // All lifetimes longer than this. When this lifetime is borrowed from, data corresponding to
-    // the other lifetimes may also be borrowed from.
-    all_longer_lifetimes: BTreeSet<Lifetime>,
 }
 
 struct FieldInfo<'a, P: TyPosition> {
@@ -1177,6 +1079,22 @@ fn display_lifetime_list(env: &LifetimeEnv, set: &BTreeSet<Lifetime>) -> String 
             .map(|i| env.fmt_lifetime(i))
             .collect::<Vec<_>>()
             .join(", ")
+    }
+}
+
+fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
+    let param_name = &edge.param_name;
+    match edge.kind {
+        // Opaque parameters are just retained as edges
+        LifetimeEdgeKind::OpaqueParam => param_name.into(),
+        // Slice parameters make an arena which is retained as an edge
+        LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
+        // We extract the edge-relevant fields for a borrowed struct lifetime
+        LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
+            "...{param_name}._fields_for_lifetime_{}()",
+            def_env.fmt_lifetime(def_lt)
+        )
+        .into(),
     }
 }
 

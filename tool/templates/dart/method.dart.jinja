@@ -20,7 +20,7 @@
     // This lifetime edge depends on lifetimes: {% for longer in lifetime_info.all_longer_lifetimes.iter().copied() -%} {%- if !loop.first %}, {% endif -%} '{{m.lifetimes.fmt_lifetime(longer)}} {%- endfor %}
     core.List<Object> edge_{{m.lifetimes.fmt_lifetime(lifetime)}} = [
       {%- for incoming_edge in lifetime_info.incoming_edges.iter() %}
-      {%- if !loop.first %}, {% endif -%} {{incoming_edge}}
+      {%- if !loop.first %}, {% endif -%} {{self::display_lifetime_edge(incoming_edge)}}
       {%- endfor -%}
     ];
     {%- endif %}
