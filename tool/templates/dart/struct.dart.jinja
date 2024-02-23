@@ -41,7 +41,20 @@ final class {{type_name}} {
     {%- endfor %}
 
   // ignore: unused_element
-  _{{type_name}}Ffi _pointer(ffi.Allocator temp) {
+  {%- if lifetimes.all_lifetimes().len() != 0 %}
+  // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
+  // be constructed here, and can be appended to any relevant lifetime arrays here. append_array_for_<lifetime> accepts a list
+  // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
+  // output arrays. Null means that
+  {%- endif %}
+  _{{type_name}}Ffi _pointer(ffi.Allocator temp
+    {%- if lifetimes.all_lifetimes().len() != 0 -%}
+    , {
+    {%- for l in lifetimes.all_lifetimes() %}{% if !loop.first %}, {% endif %}core.List<core.List<Object>>? append_array_for_{{lifetimes.fmt_lifetime(l)}}
+    {%- endfor -%}
+    }
+    {%- endif -%}
+  ) {
     final pointer = temp<_{{type_name}}Ffi>();
     {%- for field in fields %}
     {%- for statement in field.dart_to_c %}

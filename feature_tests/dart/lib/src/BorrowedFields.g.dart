@@ -26,7 +26,11 @@ final class BorrowedFields {
     c = Utf8Decoder().convert(underlying.c._pointer.asTypedList(underlying.c._length));
 
   // ignore: unused_element
-  _BorrowedFieldsFfi _pointer(ffi.Allocator temp) {
+  // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
+  // be constructed here, and can be appended to any relevant lifetime arrays here. append_array_for_<lifetime> accepts a list
+  // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
+  // output arrays. Null means that
+  _BorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_a}) {
     final pointer = temp<_BorrowedFieldsFfi>();
     final aView = a.utf16View;
     pointer.ref.a._pointer = aView.pointer(temp);
