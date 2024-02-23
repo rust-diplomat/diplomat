@@ -1,9 +1,7 @@
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
-use diplomat_core::hir::methods::borrowing_param::{
-    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind,
-};
+use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind};
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
