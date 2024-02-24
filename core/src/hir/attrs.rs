@@ -105,6 +105,7 @@ impl Attrs {
                         continue;
                     }
                     match StandardAttribute::from_meta(&attr.meta) {
+                        Ok(StandardAttribute::String(s)) if s.is_empty() => this.namespace = None,
                         Ok(StandardAttribute::String(s)) => this.namespace = Some(s),
                         Ok(_) | Err(_) => {
                             errors.push(LoweringError::Other(

@@ -13,4 +13,14 @@
 
     .. js:method:: method_disabledcpp()
 
+    .. js:method:: use_unnamespaced(_un)
+
+    .. js:method:: use_namespaced(_n)
+
 .. js:class:: AttrOpaque2
+
+.. js:class:: Unnamespaced
+
+    .. js:function:: make(_e)
+
+    .. js:method:: use_namespaced(_n)

@@ -1,4 +1,7 @@
-struct {{type_name}} {
+{%- if let Some(ns) = namespace -%}
+namespace {{ns}} {
+{%endif-%}
+struct {{type_name_unnamespaced}} {
 {%- for field in fields %}
 	{{field.type_name}} {{field.var_name}};
 {%- endfor %}
@@ -9,4 +12,6 @@ struct {{type_name}} {
 	inline static {{type_name}} FromFFI({{ctype}} c_struct);
 };
 
-
+{% if namespace.is_some() -%}
+}
+{%-endif%}

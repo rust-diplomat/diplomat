@@ -1,4 +1,4 @@
-inline {{type_name}}::{{type_name}}({{type_name}}::Value cpp_value) {
+inline {{type_name}}::{{type_name_unnamespaced}}({{type_name}}::Value cpp_value) {
 	switch (cpp_value) {
 {%- for enum_variant in ty.variants %}
 		case {{fmt.fmt_enum_variant(enum_variant)}}:

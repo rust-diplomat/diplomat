@@ -11,6 +11,7 @@
 #include "AttrEnum.d.h"
 
 
+namespace ns {
 class CPPRenamedAttrEnum {
   capi::AttrEnum value;
 
@@ -21,12 +22,12 @@ public:
     CPPRenamed,
   };
 
-  inline CPPRenamedAttrEnum(CPPRenamedAttrEnum::Value cpp_value);
+  inline CPPRenamedAttrEnum(ns::CPPRenamedAttrEnum::Value cpp_value);
   inline CPPRenamedAttrEnum(capi::AttrEnum c_enum) : value(c_enum) {};
 
   inline capi::AttrEnum AsFFI() const;
-  inline static CPPRenamedAttrEnum FromFFI(capi::AttrEnum c_enum);
+  inline static ns::CPPRenamedAttrEnum FromFFI(capi::AttrEnum c_enum);
 };
 
-
+}
 #endif // CPPRenamedAttrEnum_D_HPP

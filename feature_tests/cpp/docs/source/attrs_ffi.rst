@@ -23,4 +23,18 @@
     .. cpp:function:: void method_disabledcpp() const
 
 
+    .. cpp:function:: void use_unnamespaced(const Unnamespaced& _un) const
+
+
+    .. cpp:function:: void use_namespaced(AttrEnum _n) const
+
+
 .. cpp:class:: AttrOpaque2
+
+.. cpp:class:: Unnamespaced
+
+    .. cpp:function:: static Unnamespaced make(AttrEnum _e)
+
+
+    .. cpp:function:: void use_namespaced(const AttrOpaque1& _n) const
+

@@ -1,6 +1,7 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "namespace_{0}"]
 #[diplomat::attr(cpp2, rename = "CPPRenamed{0}")]
+#[diplomat::attr(cpp2, namespace = "ns")]
 pub mod ffi {
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, rename = "AttrOpaque1Renamed")]
@@ -26,6 +27,9 @@ pub mod ffi {
         pub fn method_disabledcpp(&self) {
             println!("disabled in cpp");
         }
+
+        pub fn use_unnamespaced(&self, _un: &Unnamespaced) {}
+        pub fn use_namespaced(&self, _n: AttrEnum) {}
     }
 
     #[diplomat::opaque]
@@ -37,5 +41,18 @@ pub mod ffi {
         B,
         #[diplomat::attr(cpp2, rename = "CPPRenamed")]
         C,
+    }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(cpp2, namespace = "")]
+    #[diplomat::attr(cpp2, rename = "Unnamespaced")]
+    pub struct Unnamespaced;
+
+    impl Unnamespaced {
+        pub fn make(_e: AttrEnum) -> Box<Self> {
+            Box::new(Self)
+        }
+
+        pub fn use_namespaced(&self, _n: &AttrOpaque1) {}
     }
 }

@@ -28,6 +28,12 @@ public partial struct AttrOpaque1
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_method_disabledcpp", ExactSpelling = true)]
     public static unsafe extern void NamespaceMethodDisabledcpp(AttrOpaque1* self);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_use_unnamespaced", ExactSpelling = true)]
+    public static unsafe extern void NamespaceUseUnnamespaced(AttrOpaque1* self, Unnamespaced* un);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_use_namespaced", ExactSpelling = true)]
+    public static unsafe extern void NamespaceUseNamespaced(AttrOpaque1* self, AttrEnum n);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(AttrOpaque1* self);
 }

@@ -36,6 +36,7 @@ part 'RefListParameter.g.dart';
 part 'ResultOpaque.g.dart';
 part 'Two.g.dart';
 part 'UnimportedEnum.g.dart';
+part 'Unnamespaced.g.dart';
 
 /// A [Rune] is a Unicode code point, such as `a`, or `💡`.
 /// 
