@@ -1093,6 +1093,7 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
             def_env.fmt_lifetime(def_lt)
         )
         .into(),
+        _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
 }
 

@@ -26,11 +26,15 @@ pub struct BorrowingParamVisitor<'tcx> {
 }
 
 /// A single lifetime "edge" from a parameter to a value
+#[non_exhaustive]
+#[derive(Clone, Debug)]
 pub struct LifetimeEdge<'tcx> {
     pub param_name: String,
     pub kind: LifetimeEdgeKind<'tcx>,
 }
 
+#[non_exhaustive]
+#[derive(Copy, Clone, Debug)]
 pub enum LifetimeEdgeKind<'tcx> {
     /// Just an opaque parameter directly being borrowed.
     OpaqueParam,
@@ -43,6 +47,8 @@ pub enum LifetimeEdgeKind<'tcx> {
     StructLifetime(&'tcx LifetimeEnv, Lifetime),
 }
 
+#[non_exhaustive]
+#[derive(Clone, Debug)]
 pub struct BorrowedLifetimeInfo<'tcx> {
     // Initializers for all inputs to the edge array from parameters, except for slices (slices get handled
     // differently)
