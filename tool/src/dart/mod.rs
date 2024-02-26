@@ -1,7 +1,9 @@
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
-use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind};
+use diplomat_core::hir::borrowing_param::{
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo,
+};
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
@@ -362,14 +364,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
-            let is_borrowed = visitor.visit_param(&param.ty, &param_name);
+            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
             param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
 
             let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
             let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
 
-            if let hir::Type::Slice(..) = &param.ty {
+            if let hir::Type::Slice(..) = param.ty {
                 // Two args on the ABI: pointer and size
                 param_types_ffi.push(self.formatter.fmt_pointer(&param_type_ffi).into());
                 param_types_ffi_cast.push(self.formatter.fmt_pointer(&param_type_ffi_cast).into());
@@ -380,6 +382,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 param_names_ffi.push(format!("{param_name}Length").into());
 
                 let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone());
+
+                let is_borrowed = match param_borrow_kind {
+                    ParamBorrowInfo::TemporarySlice => false,
+                    ParamBorrowInfo::BorrowedSlice => true,
+                    _ => unreachable!(
+                        "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
+                    ),
+                };
 
                 if is_borrowed {
                     // Slices borrowed in the return value use a custom arena that gets generated in the template via slice_params
@@ -397,7 +407,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     is_borrowed,
                 });
             } else {
-                if matches!(param.ty, hir::Type::Struct(..)) {
+                if let hir::Type::Struct(..) = param.ty {
                     needs_temp_arena = true;
                 }
                 param_types_ffi.push(param_type_ffi);

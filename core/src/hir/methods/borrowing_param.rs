@@ -94,23 +94,28 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
         self.borrow_map
     }
 
-    /// Processes a parameter, adding it to the borrow_map for any lifetimes it references. Returns true if the lifetime is referenced.
+    /// Processes a parameter, adding it to the borrow_map for any lifetimes it references. Returns further information about the type of borrow.
     ///
     /// This basically boils down to: For each lifetime that is actually relevant to borrowing in this method, check if that
     /// lifetime or lifetimes longer than it are used by this parameter. In other words, check if
     /// it is possible for data in the return type with this lifetime to have been borrowed from this parameter.
     /// If so, add code that will yield the ownership-relevant parts of this object to incoming_edges for that lifetime.
-    pub fn visit_param(&mut self, ty: &hir::Type, param_name: &str) -> bool {
+    pub fn visit_param(&mut self, ty: &hir::Type, param_name: &str) -> ParamBorrowInfo<'tcx> {
+        let mut is_borrowed = false;
         if self.used_method_lifetimes.is_empty() {
-            return false;
+            if let hir::Type::Slice(..) = *ty {
+                return ParamBorrowInfo::TemporarySlice;
+            } else {
+                return ParamBorrowInfo::NotBorrowed;
+            }
         }
-        let mut edges_pushed = false;
 
         // Structs have special handling: structs are purely Dart-side, so if you borrow
         // from a struct, you really are borrowing from the internal fields.
         if let hir::Type::Struct(s) = ty {
+            let mut borowed_method_lifetime_map = BTreeMap::<Lifetime, BTreeSet<Lifetime>>::new();
             let link = s.link_lifetimes(self.tcx);
-            for method_lifetime in self.borrow_map.values_mut() {
+            for (method_lifetime, method_lifetime_info) in &mut self.borrow_map {
                 // Note that ty.lifetimes()/s.lifetimes() is lifetimes
                 // in the *use* context, i.e. lifetimes on the Type that reference the
                 // indices of the method's lifetime arrays. Their *order* references
@@ -124,18 +129,32 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                 // This is a struct so lifetimes_def_only() is fine to call
                 for (use_lt, def_lt) in link.lifetimes_def_only() {
                     if let MaybeStatic::NonStatic(use_lt) = use_lt {
-                        if method_lifetime.all_longer_lifetimes.contains(&use_lt) {
+                        if method_lifetime_info.all_longer_lifetimes.contains(&use_lt) {
                             let edge = LifetimeEdge {
                                 param_name: param_name.into(),
                                 kind: LifetimeEdgeKind::StructLifetime(link.def_env(), def_lt),
                             };
-                            method_lifetime.incoming_edges.push(edge);
-                            edges_pushed = true;
+                            method_lifetime_info.incoming_edges.push(edge);
+
+                            is_borrowed = true;
+
+                            borowed_method_lifetime_map
+                                .entry(*method_lifetime)
+                                .or_default()
+                                .insert(def_lt);
                             // Do *not* break the inner loop here: even if we found *one* matching lifetime
                             // in this struct that may not be all of them, there may be some other fields that are borrowed
                         }
                     }
                 }
+            }
+            if is_borrowed {
+                ParamBorrowInfo::Struct(StructBorrowInfo {
+                    env: link.def_env(),
+                    borowed_method_lifetime_map,
+                })
+            } else {
+                ParamBorrowInfo::NotBorrowed
             }
         } else {
             for method_lifetime in self.borrow_map.values_mut() {
@@ -154,16 +173,44 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                             };
 
                             method_lifetime.incoming_edges.push(edge);
-                            edges_pushed = true;
+                            is_borrowed = true;
                             // Break the inner loop: we've already determined this
                             break;
                         }
                     }
                 }
             }
+            match (is_borrowed, ty) {
+                (true, &hir::Type::Slice(..)) => ParamBorrowInfo::BorrowedSlice,
+                (false, &hir::Type::Slice(..)) => ParamBorrowInfo::TemporarySlice,
+                (false, _) => ParamBorrowInfo::NotBorrowed,
+                (true, _) => ParamBorrowInfo::BorrowedOpaque,
+            }
         }
-
-        // return true if the number of edges changed
-        edges_pushed
     }
+}
+
+/// Information relevant to borrowing for producing conversions
+#[derive(Clone, Debug)]
+pub enum ParamBorrowInfo<'tcx> {
+    /// No borrowing constraints. This means the parameter
+    /// is not borrowed by the output and also does not need temporary borrows
+    NotBorrowed,
+    /// A slice that is not borrowed by the output (but will still need temporary allocation)
+    TemporarySlice,
+    /// A slice that is borrowed by the output
+    BorrowedSlice,
+    /// A struct parameter that is borrowed by the output
+    Struct(StructBorrowInfo<'tcx>),
+    /// An opaque type that is borrowed
+    BorrowedOpaque,
+}
+
+/// Information about the lifetimes of a struct parameter that are borrowed by a method output
+#[derive(Clone, Debug)]
+pub struct StructBorrowInfo<'tcx> {
+    /// This is the struct's lifetime environment
+    pub env: &'tcx LifetimeEnv,
+    /// A map from (borrow-relevant) method lifetimes to lifetime parameters on the struct it borrows from
+    pub borowed_method_lifetime_map: BTreeMap<Lifetime, BTreeSet<Lifetime>>,
 }
