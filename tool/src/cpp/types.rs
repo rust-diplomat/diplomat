@@ -128,7 +128,7 @@ fn gen_type_inner<W: fmt::Write>(
             }
 
             underlying => {
-                write!(out, "std::optional<")?;
+                write!(out, "diplomat::result<")?;
                 gen_type_inner(
                     underlying,
                     in_path,
@@ -138,7 +138,7 @@ fn gen_type_inner<W: fmt::Write>(
                     in_struct,
                     out,
                 )?;
-                write!(out, ">")?;
+                write!(out, ", std::monostate>")?;
             }
         },
 
