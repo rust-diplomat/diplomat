@@ -19,14 +19,14 @@ export class OptionOpaque {
   static new(arg_i) {
     return (() => {
       const option_ptr = wasm.OptionOpaque_new(arg_i);
-      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr, true, []);
+      return (option_ptr == 0) ? undefined : new OptionOpaque(option_ptr, true, []);
     })();
   }
 
   static new_none() {
     return (() => {
       const option_ptr = wasm.OptionOpaque_new_none();
-      return (option_ptr == 0) ? null : new OptionOpaque(option_ptr, true, []);
+      return (option_ptr == 0) ? undefined : new OptionOpaque(option_ptr, true, []);
     })();
   }
 
@@ -37,7 +37,7 @@ export class OptionOpaque {
       const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 16);
       if (!is_ok) {
         wasm.diplomat_free(diplomat_receive_buffer, 17, 4);
-        return null;
+        return;
       }
       const value = new OptionStruct(diplomat_receive_buffer);
       wasm.diplomat_free(diplomat_receive_buffer, 17, 4);
