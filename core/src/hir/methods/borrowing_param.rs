@@ -6,9 +6,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::hir::{self, Method, TypeContext};
+use crate::hir::{self, Method, StructDef, TyPosition, TypeContext};
 
 use crate::hir::lifetimes::{Lifetime, LifetimeEnv, MaybeStatic};
+use crate::hir::ty_position::StructPathLike;
 
 /// A visitor for processing method parameters/returns and understanding their borrowing relationships, shallowly.
 ///
@@ -19,8 +20,6 @@ use crate::hir::lifetimes::{Lifetime, LifetimeEnv, MaybeStatic};
 /// Obtain from [`Method::borrowing_param_visitor()`].
 pub struct BorrowingParamVisitor<'tcx> {
     tcx: &'tcx TypeContext,
-    #[allow(unused)] // to be used later
-    method: &'tcx Method,
     used_method_lifetimes: BTreeSet<Lifetime>,
     borrow_map: BTreeMap<Lifetime, BorrowedLifetimeInfo<'tcx>>,
 }
@@ -78,7 +77,6 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
             .collect();
         BorrowingParamVisitor {
             tcx,
-            method,
             used_method_lifetimes,
             borrow_map,
         }
@@ -206,11 +204,61 @@ pub enum ParamBorrowInfo<'tcx> {
     BorrowedOpaque,
 }
 
-/// Information about the lifetimes of a struct parameter that are borrowed by a method output
+/// Information about the lifetimes of a struct parameter that are borrowed by a method output or by a wrapping struct
 #[derive(Clone, Debug)]
 pub struct StructBorrowInfo<'tcx> {
     /// This is the struct's lifetime environment
     pub env: &'tcx LifetimeEnv,
-    /// A map from (borrow-relevant) struct lifetimes to lifetimes in the method that may flow from it
+    /// A map from (borrow-relevant) struct lifetimes to lifetimes in the method (or wrapping struct) that may flow from it
     pub borrowed_struct_lifetime_map: BTreeMap<Lifetime, BTreeSet<Lifetime>>,
+}
+
+impl<'tcx> StructBorrowInfo<'tcx> {
+    /// Get borrowing info for a struct field, if it does indeed borrow
+    pub fn compute_for_struct_field<P: TyPosition>(
+        struc: &StructDef<P>,
+        field: &P::StructPath,
+        tcx: &'tcx TypeContext,
+    ) -> Option<Self> {
+        if field.lifetimes().as_slice().is_empty() {
+            return None;
+        }
+
+        let mut borrowed_struct_lifetime_map = BTreeMap::<Lifetime, BTreeSet<Lifetime>>::new();
+
+        let link = field.link_lifetimes(tcx);
+
+        for outer_lt in struc.lifetimes.all_lifetimes() {
+            // TODO (manishearth): we call all_longer_lifetimes a lot. we should precalculate
+            // for each struct
+            let longer: BTreeSet<_> = struc.lifetimes.all_longer_lifetimes(outer_lt).collect();
+            // Note that field.lifetimes()
+            // in the *use* context, i.e. lifetimes on the Type that reference the
+            // indices of the outer struct's lifetime arrays. Their *order* references
+            // the indices of the underlying struct def. We need to link the two,
+            // since the _fields_for_lifetime_foo() methods are named after
+            // the *def* context lifetime.
+            //
+            // This is a struct so lifetimes_def_only() is fine to call
+            for (use_lt, def_lt) in link.lifetimes_def_only() {
+                if let MaybeStatic::NonStatic(use_lt) = use_lt {
+                    if longer.contains(&use_lt) {
+                        borrowed_struct_lifetime_map
+                            .entry(def_lt)
+                            .or_default()
+                            .insert(outer_lt);
+                    }
+                }
+            }
+        }
+        if borrowed_struct_lifetime_map.is_empty() {
+            // if the inner struct is only statics
+            None
+        } else {
+            Some(StructBorrowInfo {
+                env: link.def_env(),
+                borrowed_struct_lifetime_map,
+            })
+        }
+    }
 }

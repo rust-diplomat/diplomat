@@ -233,9 +233,20 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         format!("pointer.ref.{name}._length = {name}View.length;"),
                     ]
                 } else {
+                    let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+                        StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
+                            |param_info| StructBorrowContext {
+                                use_env: &ty.lifetimes,
+                                param_info,
+                                is_method: false,
+                            },
+                        )
+                    } else {
+                        None
+                    };
                     vec![format!(
                         "pointer.ref.{name} = {};",
-                        self.gen_dart_to_c_for_type(&field.ty, name.clone(), None)
+                        self.gen_dart_to_c_for_type(&field.ty, name.clone(), struct_borrow_info)
                     )]
                 };
 
@@ -415,6 +426,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         Some(StructBorrowContext {
                             use_env: &method.lifetime_env,
                             param_info,
+                            is_method: true,
                         })
                     } else {
                         None
@@ -782,6 +794,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     ) -> Cow<'cx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
+            let edge_variable_expr = if info.is_method {
+                "edge_"
+            } else {
+                "...?append_array_for_"
+            };
             for (def_lt, use_lts) in info.param_info.borrowed_struct_lifetime_map {
                 write!(
                     &mut params,
@@ -791,9 +808,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 .unwrap();
                 let mut maybe_comma = "";
                 for use_lt in use_lts {
+                    // Generate stuff like `, edge_a` or for struct fields, `, ...?append_array_for_a`
                     write!(
                         &mut params,
-                        "{maybe_comma}edge_{}",
+                        "{maybe_comma}{edge_variable_expr}{}",
                         info.use_env.fmt_lifetime(use_lt)
                     )
                     .unwrap();
@@ -1181,6 +1199,11 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
 
 /// Context about a struct being borrowed when doing dart-to-c conversions
 struct StructBorrowContext<'tcx> {
+    /// Is this in a method or struct?
+    ///
+    /// Methods generate things like `[edge_a, edge_b]`
+    /// whereas structs do `[...?append_array_for_a, ...?append_array_for_b]`
+    is_method: bool,
     use_env: &'tcx LifetimeEnv,
     param_info: StructBorrowInfo<'tcx>,
 }

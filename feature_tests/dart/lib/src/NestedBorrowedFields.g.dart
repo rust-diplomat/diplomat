@@ -32,9 +32,9 @@ final class NestedBorrowedFields {
   // output arrays. Null means that
   _NestedBorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_x, core.List<core.List<Object>>? append_array_for_y, core.List<core.List<Object>>? append_array_for_z}) {
     final pointer = temp<_NestedBorrowedFieldsFfi>();
-    pointer.ref.fields = fields._pointer(temp);
-    pointer.ref.bounds = bounds._pointer(temp);
-    pointer.ref.bounds2 = bounds2._pointer(temp);
+    pointer.ref.fields = fields._pointer(temp, append_array_for_a: [...?append_array_for_x]);
+    pointer.ref.bounds = bounds._pointer(temp, append_array_for_a: [...?append_array_for_x], append_array_for_b: [...?append_array_for_x, ...?append_array_for_y], append_array_for_c: [...?append_array_for_x, ...?append_array_for_y]);
+    pointer.ref.bounds2 = bounds2._pointer(temp, append_array_for_a: [...?append_array_for_z], append_array_for_b: [...?append_array_for_z], append_array_for_c: [...?append_array_for_z]);
     return pointer.ref;
   }
 

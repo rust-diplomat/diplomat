@@ -1,6 +1,7 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
-    Borrow, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructId, StructPath, TypeId,
+    Borrow, LinkedLifetimes, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructId,
+    StructPath, TypeContext, TypeId,
 };
 use core::fmt::Debug;
 
@@ -136,6 +137,13 @@ impl TyPosition for OutputOnly {
 pub trait StructPathLike {
     fn lifetimes(&self) -> &Lifetimes;
     fn id(&self) -> TypeId;
+
+    /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
+    /// for more information.
+    fn link_lifetimes<'def, 'tcx>(
+        &'def self,
+        tcx: &'tcx TypeContext,
+    ) -> LinkedLifetimes<'def, 'tcx>;
 }
 
 impl StructPathLike for StructPath {
@@ -144,6 +152,15 @@ impl StructPathLike for StructPath {
     }
     fn id(&self) -> TypeId {
         self.tcx_id.into()
+    }
+
+    fn link_lifetimes<'def, 'tcx>(
+        &'def self,
+        tcx: &'tcx TypeContext,
+    ) -> LinkedLifetimes<'def, 'tcx> {
+        let struc = self.resolve(tcx);
+        let env = &struc.lifetimes;
+        LinkedLifetimes::new(env, None, &self.lifetimes)
     }
 }
 
@@ -155,6 +172,16 @@ impl StructPathLike for ReturnableStructPath {
         match self {
             ReturnableStructPath::Struct(p) => p.tcx_id.into(),
             ReturnableStructPath::OutStruct(p) => p.tcx_id.into(),
+        }
+    }
+
+    fn link_lifetimes<'def, 'tcx>(
+        &'def self,
+        tcx: &'tcx TypeContext,
+    ) -> LinkedLifetimes<'def, 'tcx> {
+        match self {
+            Self::Struct(p) => p.link_lifetimes(tcx),
+            Self::OutStruct(p) => p.link_lifetimes(tcx),
         }
     }
 }
