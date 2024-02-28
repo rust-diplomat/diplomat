@@ -161,11 +161,15 @@ pub fn gen_rust_to_cpp<W: Write>(
                         .unwrap();
                 writeln!(
                     out,
-                    "  {wrapped_value_id} = std::optional<{underlying_type}>({value_expr});"
+                    "  {wrapped_value_id} = diplomat::Ok<{underlying_type}>({value_expr});"
                 )
                 .unwrap();
                 writeln!(out, "}} else {{").unwrap();
-                writeln!(out, "  {wrapped_value_id} = std::nullopt;").unwrap();
+                writeln!(
+                    out,
+                    "  {wrapped_value_id} = diplomat::Err<std::monostate>(std::monostate());"
+                )
+                .unwrap();
                 writeln!(out, "}}").unwrap();
 
                 wrapped_value_id
