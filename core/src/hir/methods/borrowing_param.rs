@@ -113,7 +113,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
         // Structs have special handling: structs are purely Dart-side, so if you borrow
         // from a struct, you really are borrowing from the internal fields.
         if let hir::Type::Struct(s) = ty {
-            let mut borowed_method_lifetime_map = BTreeMap::<Lifetime, BTreeSet<Lifetime>>::new();
+            let mut borrowed_struct_lifetime_map = BTreeMap::<Lifetime, BTreeSet<Lifetime>>::new();
             let link = s.link_lifetimes(self.tcx);
             for (method_lifetime, method_lifetime_info) in &mut self.borrow_map {
                 // Note that ty.lifetimes()/s.lifetimes() is lifetimes
@@ -138,10 +138,10 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
 
                             is_borrowed = true;
 
-                            borowed_method_lifetime_map
-                                .entry(*method_lifetime)
+                            borrowed_struct_lifetime_map
+                                .entry(def_lt)
                                 .or_default()
-                                .insert(def_lt);
+                                .insert(*method_lifetime);
                             // Do *not* break the inner loop here: even if we found *one* matching lifetime
                             // in this struct that may not be all of them, there may be some other fields that are borrowed
                         }
@@ -151,7 +151,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
             if is_borrowed {
                 ParamBorrowInfo::Struct(StructBorrowInfo {
                     env: link.def_env(),
-                    borowed_method_lifetime_map,
+                    borrowed_struct_lifetime_map,
                 })
             } else {
                 ParamBorrowInfo::NotBorrowed
@@ -211,6 +211,6 @@ pub enum ParamBorrowInfo<'tcx> {
 pub struct StructBorrowInfo<'tcx> {
     /// This is the struct's lifetime environment
     pub env: &'tcx LifetimeEnv,
-    /// A map from (borrow-relevant) method lifetimes to lifetime parameters on the struct it borrows from
-    pub borowed_method_lifetime_map: BTreeMap<Lifetime, BTreeSet<Lifetime>>,
+    /// A map from (borrow-relevant) struct lifetimes to lifetimes in the method that may flow from it
+    pub borrowed_struct_lifetime_map: BTreeMap<Lifetime, BTreeSet<Lifetime>>,
 }

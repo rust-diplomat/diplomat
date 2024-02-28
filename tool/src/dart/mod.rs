@@ -2,7 +2,7 @@ use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::borrowing_param::{
-    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo,
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
@@ -226,7 +226,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 );
 
                 let dart_to_c = if let hir::Type::Slice(..) = &field.ty {
-                    let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone());
+                    let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone(), None);
                     vec![
                         format!("final {name}View = {view_expr};"),
                         format!("pointer.ref.{name}._pointer = {name}View.pointer(temp);"),
@@ -235,7 +235,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 } else {
                     vec![format!(
                         "pointer.ref.{name} = {};",
-                        self.gen_dart_to_c_for_type(&field.ty, name.clone())
+                        self.gen_dart_to_c_for_type(&field.ty, name.clone(), None)
                     )]
                 };
 
@@ -381,7 +381,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 param_types_ffi_cast.push(self.formatter.fmt_usize(true).into());
                 param_names_ffi.push(format!("{param_name}Length").into());
 
-                let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone());
+                let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone(), None);
 
                 let is_borrowed = match param_borrow_kind {
                     ParamBorrowInfo::TemporarySlice => false,
@@ -410,9 +410,22 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 if let hir::Type::Struct(..) = param.ty {
                     needs_temp_arena = true;
                 }
+                let struct_borrow_info =
+                    if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
+                        Some(StructBorrowContext {
+                            use_env: &method.lifetime_env,
+                            param_info,
+                        })
+                    } else {
+                        None
+                    };
                 param_types_ffi.push(param_type_ffi);
                 param_types_ffi_cast.push(param_type_ffi_cast);
-                param_conversions.push(self.gen_dart_to_c_for_type(&param.ty, param_name.clone()));
+                param_conversions.push(self.gen_dart_to_c_for_type(
+                    &param.ty,
+                    param_name.clone(),
+                    struct_borrow_info,
+                ));
                 param_names_ffi.push(param_name);
             }
         }
@@ -723,10 +736,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates an FFI expression for a type.
+    ///
+    /// For struct parameters borrowed by the output, `struct_borrow_info` is a map of
     fn gen_dart_to_c_for_type<P: TyPosition>(
         &mut self,
         ty: &Type<P>,
         dart_name: Cow<'cx, str>,
+        struct_borrow_info: Option<StructBorrowContext<'cx>>,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
@@ -740,7 +756,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 format!("{dart_name}.index").into()
             }
-            Type::Struct(..) => format!("{dart_name}._pointer(temp)").into(),
+            Type::Struct(..) => self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info),
             Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._underlying").into(),
             Type::Slice(hir::Slice::Str(
                 _,
@@ -756,6 +772,37 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
+    }
+
+    /// Generates an FFI expression for a struct
+    fn gen_dart_to_c_for_struct_type(
+        &mut self,
+        dart_name: Cow<'cx, str>,
+        struct_borrow_info: Option<StructBorrowContext<'cx>>,
+    ) -> Cow<'cx, str> {
+        let mut params = String::new();
+        if let Some(info) = struct_borrow_info {
+            for (def_lt, use_lts) in info.param_info.borrowed_struct_lifetime_map {
+                write!(
+                    &mut params,
+                    ", append_array_for_{}: [",
+                    info.param_info.env.fmt_lifetime(def_lt)
+                )
+                .unwrap();
+                let mut maybe_comma = "";
+                for use_lt in use_lts {
+                    write!(
+                        &mut params,
+                        "{maybe_comma}edge_{}",
+                        info.use_env.fmt_lifetime(use_lt)
+                    )
+                    .unwrap();
+                    maybe_comma = ", ";
+                }
+                write!(&mut params, "]").unwrap();
+            }
+        }
+        format!("{dart_name}._pointer(temp{params})").into()
     }
 
     /// Generate the name of a single lifetime edge array
@@ -1130,4 +1177,10 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
     fields
         .iter()
         .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetimes))
+}
+
+/// Context about a struct being borrowed when doing dart-to-c conversions
+struct StructBorrowContext<'tcx> {
+    use_env: &'tcx LifetimeEnv,
+    param_info: StructBorrowInfo<'tcx>,
 }
