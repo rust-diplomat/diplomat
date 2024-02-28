@@ -7,7 +7,7 @@ test("Verify option methods", t => {
     o.assert_integer(5);
 
     const on = OptionOpaque.new_none();
-    t.assert(on === null);
+    t.assert(!on);
 
     const s = OptionOpaque.new_struct();
 
@@ -17,8 +17,8 @@ test("Verify option methods", t => {
     s.d.assert_integer(926535);
 
     const sn = OptionOpaque.new_struct_nones();
-    t.assert(sn.a === null);
-    t.assert(sn.b === null);
+    t.assert(!sn.a);
+    t.assert(!sn.b);
     t.is(sn.c, 908);
-    t.assert(sn.d === null);
+    t.assert(!sn.d);
 });

@@ -455,7 +455,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                             writeln!(f, "const {option_ptr} = {};", self.invocation.scalar())?;
                             writeln!(
                                 f,
-                                "return ({option_ptr} == 0) ? null : {};",
+                                "return ({option_ptr} == 0) ? undefined : {};",
                                 Pointer {
                                     inner,
                                     underlying: Underlying::Binding(&option_ptr, None),
@@ -471,7 +471,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                             ReturnTypeForm::Scalar =>
                              display::iife(|mut f| {
                                 writeln!(f, "const is_ok = {} == 1;", self.invocation.scalar())?;
-                                writeln!(f, "if (!is_ok) return null;")
+                                writeln!(f, "if (!is_ok) return;")
                             })
                             .fmt(f),
                             ReturnTypeForm::Complex => {
@@ -483,7 +483,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
                                     writeln!(f, "const is_ok = diplomatRuntime.resultFlag(wasm, {diplomat_receive_buffer}, {flag_offset});")?;
                                     writeln!(f, "if (!is_ok) {{")?;
                                     writeln!(f, "  wasm.diplomat_free({diplomat_receive_buffer}, {size}, {align});")?;
-                                    writeln!(f, "  return null;")?;
+                                    writeln!(f, "  return;")?;
                                     writeln!(f, "}}")?;
                                     writeln!(f, "const value = {};", UnderlyingIntoJs {
                                         inner: inner.as_ref(),
@@ -811,7 +811,7 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
                     )?;
                     writeln!(
                         f,
-                        "return ({option_ptr} == 0) ? null : {};",
+                        "return ({option_ptr} == 0) ? undefined : {};",
                         Pointer {
                             inner,
                             underlying: Underlying::Binding(&option_ptr, None),
