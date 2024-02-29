@@ -26,6 +26,7 @@ part 'ImportedStruct.g.dart';
 part 'MyEnum.g.dart';
 part 'MyString.g.dart';
 part 'MyStruct.g.dart';
+part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
 part 'Opaque.g.dart';
 part 'OptionOpaque.g.dart';

@@ -56,6 +56,13 @@ pub mod ffi {
         }
     }
 
+
+    pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
+        fields: BorrowedFields<'x>,
+        bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,
+        bounds2: BorrowedFieldsWithBounds<'z, 'z, 'z>
+    }
+
     // FIXME(#191): This test breaks the C++ codegen
     impl<'b, 'a: 'b> Bar<'b, 'a> {
         #[diplomat::skip_if_unsupported]
