@@ -29,11 +29,13 @@ final class NestedBorrowedFields {
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. append_array_for_<lifetime> accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
-  // output arrays. Null means that
+  // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
+  //
+  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure append_array_for_foo contains everything append_array_for_bar does.
   _NestedBorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_x, core.List<core.List<Object>>? append_array_for_y, core.List<core.List<Object>>? append_array_for_z}) {
     final pointer = temp<_NestedBorrowedFieldsFfi>();
     pointer.ref.fields = fields._pointer(temp, append_array_for_a: [...?append_array_for_x]);
-    pointer.ref.bounds = bounds._pointer(temp, append_array_for_a: [...?append_array_for_x], append_array_for_b: [...?append_array_for_x, ...?append_array_for_y], append_array_for_c: [...?append_array_for_x, ...?append_array_for_y]);
+    pointer.ref.bounds = bounds._pointer(temp, append_array_for_a: [...?append_array_for_x], append_array_for_b: [...?append_array_for_y], append_array_for_c: [...?append_array_for_y]);
     pointer.ref.bounds2 = bounds2._pointer(temp, append_array_for_a: [...?append_array_for_z], append_array_for_b: [...?append_array_for_z], append_array_for_c: [...?append_array_for_z]);
     return pointer.ref;
   }
@@ -53,21 +55,31 @@ final class NestedBorrowedFields {
       ]);
 
   // ignore: unused element
-  // Append all fields corresponding to lifetime `'x`
-  // and lifetimes longer than it (Lifetimes: x, y)
-  // This is all fields that may be borrowed from if borrowing `'x`
+  // Append all fields corresponding to lifetime `'x` 
+  // without handling lifetime dependencies (this is the job of the caller)
+  // This is all fields that may be borrowed from if borrowing `'x`,
+  // assuming that there are no `'other: x`. bounds. In case of such bounds,
+  // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_x() {
     return [fields, bounds];
   }
 
   // ignore: unused element
-  // Append all fields corresponding to lifetime `'y`
+  // Append all fields corresponding to lifetime `'y` 
+  // without handling lifetime dependencies (this is the job of the caller)
+  // This is all fields that may be borrowed from if borrowing `'y`,
+  // assuming that there are no `'other: y`. bounds. In case of such bounds,
+  // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_y() {
     return [bounds];
   }
 
   // ignore: unused element
-  // Append all fields corresponding to lifetime `'z`
+  // Append all fields corresponding to lifetime `'z` 
+  // without handling lifetime dependencies (this is the job of the caller)
+  // This is all fields that may be borrowed from if borrowing `'z`,
+  // assuming that there are no `'other: z`. bounds. In case of such bounds,
+  // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_z() {
     return [bounds2];
   }

@@ -29,7 +29,9 @@ final class BorrowedFieldsWithBounds {
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. append_array_for_<lifetime> accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
-  // output arrays. Null means that
+  // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
+  //
+  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure append_array_for_foo contains everything append_array_for_bar does.
   _BorrowedFieldsWithBoundsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_a, core.List<core.List<Object>>? append_array_for_b, core.List<core.List<Object>>? append_array_for_c}) {
     final pointer = temp<_BorrowedFieldsWithBoundsFfi>();
     final fieldAView = fieldA.utf16View;
@@ -83,23 +85,31 @@ final class BorrowedFieldsWithBounds {
       ]);
 
   // ignore: unused element
-  // Append all fields corresponding to lifetime `'a`
-  // and lifetimes longer than it (Lifetimes: a, b, c)
-  // This is all fields that may be borrowed from if borrowing `'a`
+  // Append all fields corresponding to lifetime `'a` 
+  // without handling lifetime dependencies (this is the job of the caller)
+  // This is all fields that may be borrowed from if borrowing `'a`,
+  // assuming that there are no `'other: a`. bounds. In case of such bounds,
+  // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_a() {
-    return [fieldA, fieldB, fieldC];
+    return [fieldA];
   }
 
   // ignore: unused element
-  // Append all fields corresponding to lifetime `'b`
-  // and lifetimes longer than it (Lifetimes: b, c)
-  // This is all fields that may be borrowed from if borrowing `'b`
+  // Append all fields corresponding to lifetime `'b` 
+  // without handling lifetime dependencies (this is the job of the caller)
+  // This is all fields that may be borrowed from if borrowing `'b`,
+  // assuming that there are no `'other: b`. bounds. In case of such bounds,
+  // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_b() {
-    return [fieldB, fieldC];
+    return [fieldB];
   }
 
   // ignore: unused element
-  // Append all fields corresponding to lifetime `'c`
+  // Append all fields corresponding to lifetime `'c` 
+  // without handling lifetime dependencies (this is the job of the caller)
+  // This is all fields that may be borrowed from if borrowing `'c`,
+  // assuming that there are no `'other: c`. bounds. In case of such bounds,
+  // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_c() {
     return [fieldC];
   }

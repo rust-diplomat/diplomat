@@ -1161,23 +1161,6 @@ struct FieldInfo<'a, P: TyPosition> {
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
-/// Convert an iterator to btreeset
-fn iterator_to_btreeset<T: Ord>(i: impl Iterator<Item = T>) -> BTreeSet<T> {
-    i.collect()
-}
-
-/// Turn a set of lifetimes into a nice comma separated list
-fn display_lifetime_list(env: &LifetimeEnv, set: &BTreeSet<Lifetime>) -> String {
-    if set.len() <= 1 {
-        String::new()
-    } else {
-        set.iter()
-            .map(|i| env.fmt_lifetime(i))
-            .collect::<Vec<_>>()
-            .join(", ")
-    }
-}
-
 fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     let param_name = &edge.param_name;
     match edge.kind {
@@ -1198,16 +1181,13 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
 /// Iterate over fields, filtering by fields that actually use lifetimes from `lifetimes`
 fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
     fields: &'a [FieldInfo<'a, P>],
-    lifetimes: &'a BTreeSet<Lifetime>,
+    lifetime: &'a Lifetime,
 ) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
     /// Does `ty` use any lifetime from `lifetimes`?
-    fn does_type_use_lifetime_from_set<P: TyPosition>(
-        ty: &Type<P>,
-        lifetimes: &BTreeSet<Lifetime>,
-    ) -> bool {
+    fn does_type_use_lifetime_from_set<P: TyPosition>(ty: &Type<P>, lifetime: &Lifetime) -> bool {
         for lt in ty.lifetimes() {
             if let MaybeStatic::NonStatic(lt) = lt {
-                if lifetimes.contains(&lt) {
+                if lt == *lifetime {
                     return true;
                 }
             }
@@ -1217,7 +1197,7 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
 
     fields
         .iter()
-        .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetimes))
+        .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetime))
 }
 
 /// Context about a struct being borrowed when doing dart-to-c conversions
