@@ -3,6 +3,81 @@
 //! This is useful for backends which wish to figure out the borrowing relationships between parameters
 //! and return values,
 //! and then delegate how lifetimes get mapped to fields to the codegen for those types respectively.
+//!
+//!
+//! # Typical usage
+//!
+//! In managed languages, to ensure the GC doesn't prematurely clean up the borrowed-from object,
+//! we use the technique of stashing a borrowed-from object as a field of a borrowed-to object.
+//! This is called a "lifetime edge" (since it's an edge in the GC graph). An "edge array" is typically
+//! a stash of all the edges on an object, or all the edges corresponding to a particular lifetime.
+//!
+//! This stashing is primarily driven by method codegen, which is where actual borrow relationships can be set up.
+//!
+//! Typically, codegen for a method should instantiate a [`BorrowedParamVisitor`] and uses it to [`BorrowedParamVisitor::visit_param()`] each input parameter to determine if it needs to be linked into an edge.
+//! Whilst doing so, it may return useful [`ParamBorrowInfo`] which provides additional information on handling structs and slices. More on structs later.
+//! At the end of the visiting, [`BorrowedLifetimeInfo::borrow_map()`] can be called to get a list of relevant input edges: each lifetime that participates in borrowing,
+//! and a list of parameter names that it borrows from.
+//!
+//! This visitor will automatically handle transitive lifetime relationships as well.
+//!
+//! These edges should be put together into "edge arrays" which then get passed down to output types, handling transitive lifetimes as necessary.
+//!
+//! ## Method codegen for slices
+//!
+//! Slices are strange: in managed languages a host slice will not be a Rust slice, unlike other borrowed host values (a borrowed host opaque is just a borrowed Rust
+//! opaque). We need to convert these across the boundary by allocating a temporary arena or something.
+//!
+//! If the slice doesn't participate in borrowing, this is easy: just allocate a temporary arena. However, if not, we need to allocate an arena with a finalizer (or something similar)
+//! and add that arena to the edge instead. [`LifetimeEdgeKind`] has special handling for this.
+//!
+//! Whether or not the slice participates in borrowing is found out from the [`ParamBorrowInfo`] returned by [`BorrowedParamVisitor::visit_param()`].
+//!
+//! # Method codegen for struct params
+//!
+//! Structs can contain many lifetimes and have relationships between them. Generally, a Diplomat struct is a "bag of stuff"; it is converted to a host value that is structlike, with fields
+//! individually converted.
+//!
+//! Diplomat enforces that struct lifetime bounds never imply additional bounds on methods during HIR validation, so the relationships between struct
+//! lifetimes are not relevant for code here (and as such you should hopefully never need to call [`LifetimeEnv::all_longer_lifetimes()`])
+//! for a struct env).
+//!
+//! The borrowing technique in this module allows a lot of things to be delegated to structs. As will be explained below, structs will have:
+//!
+//! - A `fields_for_lifetime_foo()` set of methods that returns all non-slice fields corresponding to a lifetime
+//! - "append array" outparams for stashing edges when converting from host-to-Rust
+//! - Some way of passing down edge arrays to individual borrowed fields when constructing Rust-to-host
+//!
+//! In methods, when constructing the edge arrays, `fields_for_lifetime_foo()` for every borrowed param can be appended to each
+//! one whenever [`LifetimeEdgeKind::StructLifetime`] asks you to do so. The code needs to handle lifetime
+//! transitivity, since the struct will not be doing so. Fortunately the edges produced by [`BorrowedParamVisitor`] already do so.
+//!
+//! Then, when converting structs host-to-Rust, every edge array relevant to a struct lifetime should be passed in for an append array. Append arrays
+//! are nested arrays: they are an array of edge arrays. The struct will append further things to the edge array.
+//!
+//! Finally, when converting Rust-to-host, if producing a struct, make sure to pass in all the edge arrays.
+//!
+//! # Struct codegen
+//!
+//! At a high level, struct codegen needs to deal with lifetimes in three places:
+//!
+//! - A `fields_for_lifetime_foo()` set of methods that returns all non-slice fields corresponding to a lifetime
+//! - "append array" outparams for stashing edges when converting from host-to-Rust
+//! - Some way of passing down edge arrays to individual borrowed fields when constructing Rust-to-host
+//!
+//! The backend may choose to handle just slices via append arrays, or handle all borrowing there, in which case `fields_for_lifetime_foo()` isn't necessary.
+//!
+//! `fields_for_lifetime_foo()` should return an iterator/list/etc corresponding to each field that *directly* borrows from lifetime foo.
+//! This may include calling `fields_for_lifetime_bar()` on fields that are themselves structs. As mentioned previously, lifetime relationships
+//! are handled by methods and don't need to be dealt with here. There are no helpers for doing this but it's just a matter of
+//! filtering for fields using the lifetime, except for handling nested structs ([`StructBorrowInfo::compute_for_struct_field()`])
+//!
+//! Append arrays are similarly straightforward: for each lifetime on the struct, the host-to-Rust constructor should accept a list of edge arrays. For slice fields,
+//! if the appropriate list is nonempty, the slice's arena edge should be appended to all of the edge arrays in it. These arrays should also be passed down to struct fields
+//! appropriately: [`StructBorrowInfo::compute_for_struct_field()`] is super helpful for getting a list edges something should get passed down to.
+//!
+//! Finally, when converting Rust-to-host, the relevant lifetime edges should be proxied down to the final host type constructors who can stash them wherever needed.
+//! This is one again a matter of filtering fields by the lifetimes they use, and for nested structs you can use [`StructBorrowInfo::compute_for_struct_field()`].
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -190,6 +265,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
 
 /// Information relevant to borrowing for producing conversions
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub enum ParamBorrowInfo<'tcx> {
     /// No borrowing constraints. This means the parameter
     /// is not borrowed by the output and also does not need temporary borrows
@@ -206,6 +282,7 @@ pub enum ParamBorrowInfo<'tcx> {
 
 /// Information about the lifetimes of a struct parameter that are borrowed by a method output or by a wrapping struct
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct StructBorrowInfo<'tcx> {
     /// This is the struct's lifetime environment
     pub env: &'tcx LifetimeEnv,

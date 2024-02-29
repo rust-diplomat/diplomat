@@ -243,8 +243,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         ret.push(format!("  {name}Arena = {name}FinalizedArena.arena;"));
                         ret.push(format!("  for(final edge in append_array_for_{lt_name}) {{"));
                         ret.push(format!("    edge.add({name}FinalizedArena);"));
-                        ret.push(format!("  }}"));
-                        ret.push(format!("}}"));
+                        ret.push("  }".to_string());
+                        ret.push("}".to_string());
 
                         ret.push(format!(
                             "pointer.ref.{name}._pointer = {name}View.pointer({name}Arena);"

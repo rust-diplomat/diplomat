@@ -301,7 +301,7 @@ impl TypeContext {
                         format!("comes from source type's '{def_longer_name}: '{def_name}")
                     } else {
                         // This case is technically already handled in the lifetime lowerer, we're being careful
-                        format!("comes from &-ref's lifetime in parameter")
+                        "comes from &-ref's lifetime in parameter".into()
                     };
                     errors.push(LoweringError::Other(format!("{ty_name}::{method_name} should explicitly include this \
                                         lifetime bound from param {param_name}: '{use_longer_name}: '{use_name} ({def_cause})")))
