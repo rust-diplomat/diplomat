@@ -33,14 +33,38 @@ final class BorrowedFields {
   _BorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_a}) {
     final pointer = temp<_BorrowedFieldsFfi>();
     final aView = a.utf16View;
-    pointer.ref.a._pointer = aView.pointer(temp);
     pointer.ref.a._length = aView.length;
+    var aArena = temp;
+    if (append_array_for_a != null && !append_array_for_a.isEmpty) {
+      final aFinalizedArena = _FinalizedArena();
+      aArena = aFinalizedArena.arena;
+      for(final edge in append_array_for_a) {
+        edge.add(aFinalizedArena);
+      }
+    }
+    pointer.ref.a._pointer = aView.pointer(aArena);
     final bView = b.utf8View;
-    pointer.ref.b._pointer = bView.pointer(temp);
     pointer.ref.b._length = bView.length;
+    var bArena = temp;
+    if (append_array_for_a != null && !append_array_for_a.isEmpty) {
+      final bFinalizedArena = _FinalizedArena();
+      bArena = bFinalizedArena.arena;
+      for(final edge in append_array_for_a) {
+        edge.add(bFinalizedArena);
+      }
+    }
+    pointer.ref.b._pointer = bView.pointer(bArena);
     final cView = c.utf8View;
-    pointer.ref.c._pointer = cView.pointer(temp);
     pointer.ref.c._length = cView.length;
+    var cArena = temp;
+    if (append_array_for_a != null && !append_array_for_a.isEmpty) {
+      final cFinalizedArena = _FinalizedArena();
+      cArena = cFinalizedArena.arena;
+      for(final edge in append_array_for_a) {
+        edge.add(cFinalizedArena);
+      }
+    }
+    pointer.ref.c._pointer = cView.pointer(cArena);
     return pointer.ref;
   }
 

@@ -27,8 +27,16 @@ final class BorrowedFieldsReturning {
   _BorrowedFieldsReturningFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_a}) {
     final pointer = temp<_BorrowedFieldsReturningFfi>();
     final bytesView = bytes.utf8View;
-    pointer.ref.bytes._pointer = bytesView.pointer(temp);
     pointer.ref.bytes._length = bytesView.length;
+    var bytesArena = temp;
+    if (append_array_for_a != null && !append_array_for_a.isEmpty) {
+      final bytesFinalizedArena = _FinalizedArena();
+      bytesArena = bytesFinalizedArena.arena;
+      for(final edge in append_array_for_a) {
+        edge.add(bytesFinalizedArena);
+      }
+    }
+    pointer.ref.bytes._pointer = bytesView.pointer(bytesArena);
     return pointer.ref;
   }
 

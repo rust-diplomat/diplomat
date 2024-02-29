@@ -225,13 +225,36 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     &ty.lifetimes,
                 );
 
-                let dart_to_c = if let hir::Type::Slice(..) = &field.ty {
+                let dart_to_c = if let hir::Type::Slice(slice) = &field.ty {
                     let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone(), None);
-                    vec![
+                    let mut ret = vec![
                         format!("final {name}View = {view_expr};"),
-                        format!("pointer.ref.{name}._pointer = {name}View.pointer(temp);"),
                         format!("pointer.ref.{name}._length = {name}View.length;"),
-                    ]
+                    ];
+
+                    // We do not need to handle lifetime transitivity here: Methods already resolve
+                    // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
+                    // are explicitly specified on methods.
+                    if let MaybeStatic::NonStatic(lt) = slice.lifetime() {
+                        ret.push(format!("var {name}Arena = temp;"));
+                        let lt_name = ty.lifetimes.fmt_lifetime(lt);
+                        ret.push(format!("if (append_array_for_{lt_name} != null && !append_array_for_{lt_name}.isEmpty) {{"));
+                        ret.push(format!("  final {name}FinalizedArena = _FinalizedArena();"));
+                        ret.push(format!("  {name}Arena = {name}FinalizedArena.arena;"));
+                        ret.push(format!("  for(final edge in append_array_for_{lt_name}) {{"));
+                        ret.push(format!("    edge.add({name}FinalizedArena);"));
+                        ret.push(format!("  }}"));
+                        ret.push(format!("}}"));
+
+                        ret.push(format!(
+                            "pointer.ref.{name}._pointer = {name}View.pointer({name}Arena);"
+                        ));
+                    } else {
+                        ret.push(format!(
+                            "pointer.ref.{name}._pointer = {name}View.pointer(temp);"
+                        ));
+                    }
+                    ret
                 } else {
                     let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
                         StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
