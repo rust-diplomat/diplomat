@@ -78,6 +78,11 @@ impl LifetimeEnv {
         (0..self.num_lifetimes()).map(Lifetime::new)
     }
 
+    /// Get the bounds for a named lifetime (none for unnamed lifetimes)
+    pub(super) fn get_bounds(&self, named_lifetime: Lifetime) -> Option<&BoundedLifetime> {
+        self.nodes.get(named_lifetime.0)
+    }
+
     /// Returns a new [`LifetimeEnv`].
     pub(super) fn new(
         nodes: SmallVec<[BoundedLifetime; INLINE_NUM_LIFETIMES]>,
@@ -384,6 +389,15 @@ impl<'def, 'tcx> LinkedLifetimes<'def, 'tcx> {
             self_lt,
             lifetimes,
         }
+    }
+
+    /// Takes a lifetime at the def site and produces one at the use site
+    pub fn def_to_use(&self, def_lt: Lifetime) -> MaybeStatic<Lifetime> {
+        *self
+            .lifetimes
+            .as_slice()
+            .get(def_lt.0)
+            .expect("All def site lifetimes must be used!")
     }
 
     /// The lifetime env at the def site. Def lifetimes should be resolved

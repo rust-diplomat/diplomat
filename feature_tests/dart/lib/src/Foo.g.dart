@@ -74,9 +74,9 @@ final class Foo implements ffi.Finalizable {
     final temp = ffi2.Arena();
     final anotherStringView = anotherString.utf8View;
     final anotherStringArena = _FinalizedArena();
-    // This lifetime edge depends on lifetimes: 'a, 'y
-    core.List<Object> edge_a = [...bounds._fields_for_lifetime_b(), anotherStringArena];
-    final result = _Foo_extract_from_bounds(bounds._pointer(temp, append_array_for_b: [edge_a]), anotherStringView.pointer(anotherStringArena.arena), anotherStringView.length);
+    // This lifetime edge depends on lifetimes: 'a, 'y, 'z
+    core.List<Object> edge_a = [...bounds._fields_for_lifetime_b(), ...bounds._fields_for_lifetime_c(), anotherStringArena];
+    final result = _Foo_extract_from_bounds(bounds._pointer(temp, append_array_for_b: [edge_a], append_array_for_c: [edge_a]), anotherStringView.pointer(anotherStringArena.arena), anotherStringView.length);
     temp.releaseAll();
     return Foo._(result, true, [], edge_a);
   }
