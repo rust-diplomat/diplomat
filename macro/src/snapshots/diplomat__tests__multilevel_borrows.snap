@@ -28,11 +28,15 @@ mod ffi {
     extern "C" fn Baz_destroy<'x: 'y, 'y>(this: Box<Baz<'x, 'y>>) {}
     #[no_mangle]
     extern "C" fn Foo_new<'a>(x_diplomat_data: *const u8, x_diplomat_len: usize) -> Box<Foo<'a>> {
-        Foo::new(unsafe {
-            core::str::from_utf8_unchecked(core::slice::from_raw_parts(
-                x_diplomat_data,
-                x_diplomat_len,
-            ))
+        Foo::new(if x_diplomat_len == 0 {
+            Default::default()
+        } else {
+            unsafe {
+                core::str::from_utf8_unchecked(core::slice::from_raw_parts(
+                    x_diplomat_data,
+                    x_diplomat_len,
+                ))
+            }
         })
     }
     #[no_mangle]

@@ -37,10 +37,10 @@ pub enum SelfType {
 #[non_exhaustive]
 pub enum Slice {
     /// A string slice, e.g. `&DiplomatStr`.
-    Str(MaybeStatic<Lifetime>, StringEncoding),
+    Str(Option<MaybeStatic<Lifetime>>, StringEncoding),
 
-    /// A primitive slice, e.g. `&mut [u8]`.
-    Primitive(Borrow, PrimitiveType),
+    /// A primitive slice, e.g. `&mut [u8]` or `Box<[usize]>
+    Primitive(Option<Borrow>, PrimitiveType),
 }
 
 // For now, the lifetime in not optional. This is because when you have references
@@ -88,9 +88,12 @@ impl<P: TyPosition> Type<P> {
                     .chain(opaque.owner.lifetime()),
             ),
             Type::Struct(struct_) => Either::Left(struct_.lifetimes().as_slice().iter().copied()),
-            Type::Slice(slice) => {
-                Either::Left(std::slice::from_ref(slice.lifetime()).iter().copied())
-            }
+            Type::Slice(slice) => Either::Left(
+                slice
+                    .lifetime()
+                    .map(|lt| std::slice::from_ref(lt).iter().copied())
+                    .unwrap_or([].iter().copied()),
+            ),
             _ => Either::Left([].iter().copied()),
         }
     }
@@ -121,10 +124,11 @@ impl SelfType {
 impl Slice {
     /// Returns the [`Lifetime`] contained in either the `Str` or `Primitive`
     /// variant.
-    pub fn lifetime(&self) -> &MaybeStatic<Lifetime> {
+    pub fn lifetime(&self) -> Option<&MaybeStatic<Lifetime>> {
         match self {
-            Slice::Str(lifetime, ..) => lifetime,
-            Slice::Primitive(reference, ..) => &reference.lifetime,
+            Slice::Str(lifetime, ..) => lifetime.as_ref(),
+            Slice::Primitive(Some(reference), ..) => Some(&reference.lifetime),
+            Slice::Primitive(..) => None,
         }
     }
 }

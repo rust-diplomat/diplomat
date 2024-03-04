@@ -542,15 +542,14 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 Err(())
             }
             ast::TypeName::StrReference(lifetime, encoding) => Ok(Type::Slice(Slice::Str(
-                ltl.lower_lifetime(lifetime),
+                lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt)),
                 *encoding,
             ))),
-            ast::TypeName::PrimitiveSlice(lifetime, mutability, prim) => {
-                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                let prim = PrimitiveType::from_ast(*prim);
-
-                Ok(Type::Slice(Slice::Primitive(borrow, prim)))
-            }
+            ast::TypeName::PrimitiveSlice(lm, prim) => Ok(Type::Slice(Slice::Primitive(
+                lm.as_ref()
+                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
+                PrimitiveType::from_ast(*prim),
+            ))),
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
@@ -736,15 +735,14 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                 Err(())
             }
             ast::TypeName::StrReference(lifetime, encoding) => Ok(OutType::Slice(Slice::Str(
-                ltl.lower_lifetime(lifetime),
+                lifetime.as_ref().map(|l| ltl.lower_lifetime(l)),
                 *encoding,
             ))),
-            ast::TypeName::PrimitiveSlice(lifetime, mutability, prim) => {
-                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                let prim = PrimitiveType::from_ast(*prim);
-
-                Ok(OutType::Slice(Slice::Primitive(borrow, prim)))
-            }
+            ast::TypeName::PrimitiveSlice(lm, prim) => Ok(OutType::Slice(Slice::Primitive(
+                lm.as_ref()
+                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
+                PrimitiveType::from_ast(*prim),
+            ))),
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())

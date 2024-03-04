@@ -114,7 +114,7 @@ pub fn gen_value_js_to_rust<'env>(
     entries: &mut BTreeMap<&'env ast::NamedLifetime, Vec<Argument<'env>>>,
 ) {
     match typ {
-        ast::TypeName::StrReference(lifetime, ..) | ast::TypeName::PrimitiveSlice(lifetime, ..) => {
+        ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
             let param_name_buf = Argument::DiplomatBuf(param_name.clone());
             // TODO: turn `gen_value_js_to_rust` into a struct and add a
             // `display_slice` method so we can use the `SliceKind` type here to
@@ -140,16 +140,28 @@ pub fn gen_value_js_to_rust<'env>(
             invocation_params.push(format!("{param_name_buf}.ptr"));
             invocation_params.push(format!("{param_name_buf}.size"));
 
-            if let Some(named) = lifetime
-                .as_named()
-                .and_then(|current| borrowed_current_to_root.get(current))
-            {
-                post_logic.push(format!("{param_name_buf}.garbageCollect();"));
-                entries.entry(named).or_default().push(param_name_buf);
-            } else if lifetime == &ast::Lifetime::Static {
-                post_logic.push(format!("{param_name_buf}.leak();"));
+            let lifetime = match typ {
+                ast::TypeName::StrReference(Some(lifetime), ..) => Some(lifetime),
+                ast::TypeName::StrReference(None, ..) => None,
+                ast::TypeName::PrimitiveSlice(Some((lifetime, _)), ..) => Some(lifetime),
+                ast::TypeName::PrimitiveSlice(None, ..) => None,
+                _ => unreachable!(),
+            };
+
+            if let Some(lifetime) = lifetime {
+                if let Some(named) = lifetime
+                    .as_named()
+                    .and_then(|current| borrowed_current_to_root.get(current))
+                {
+                    post_logic.push(format!("{param_name_buf}.garbageCollect();"));
+                    entries.entry(named).or_default().push(param_name_buf);
+                } else if lifetime == &ast::Lifetime::Static {
+                    post_logic.push(format!("{param_name_buf}.leak();"));
+                } else {
+                    post_logic.push(format!("{param_name_buf}.free();"));
+                }
             } else {
-                post_logic.push(format!("{param_name_buf}.free();"));
+                // ownership is transferred to Rust, no need to leak, free, or GC
             }
         }
         ast::TypeName::Primitive(ast::PrimitiveType::char) => {

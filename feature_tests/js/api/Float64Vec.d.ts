@@ -33,6 +33,18 @@ export class Float64Vec {
 
   /**
    */
+  static new_from_owned(v: Float64Array): Float64Vec;
+
+  /**
+   */
+  as_boxed_slice(): Float64Array;
+
+  /**
+   */
+  as_slice(): Float64Array;
+
+  /**
+   */
   fill_slice(v: Float64Array): void;
 
   /**

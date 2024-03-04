@@ -17,6 +17,10 @@ mod ffi {
             Box::new(Self(v.to_string()))
         }
 
+        pub fn new_owned(v: Box<DiplomatStr>) -> Box<MyString> {
+            Box::new(Self(String::from_utf8(v.into()).unwrap()))
+        }
+
         #[diplomat::attr(supports = accessors, setter = "str")]
         pub fn set_str(&mut self, new_str: &DiplomatStr) {
             self.0 = String::from_utf8(new_str.to_owned()).unwrap();
@@ -33,6 +37,7 @@ mod ffi {
     struct Float64Vec(Vec<f64>);
 
     impl Float64Vec {
+        #[diplomat::attr(dart, disable)]
         #[diplomat::attr(supports = constructors, constructor)]
         pub fn new(v: &[f64]) -> Box<Float64Vec> {
             Box::new(Self(v.to_vec()))
@@ -70,6 +75,22 @@ mod ffi {
                     .map(|b| f64::from_be_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]))
                     .collect(),
             ))
+        }
+
+        #[diplomat::attr(not(dart), disable)]
+        #[diplomat::attr(supports = constructors, constructor)]
+        pub fn new_from_owned(v: Box<[f64]>) -> Box<Float64Vec> {
+            Box::new(Self(v.into()))
+        }
+
+        #[diplomat::attr(supports = accessors, getter = "asBoxedSlice")]
+        pub fn as_boxed_slice(&self) -> Box<[f64]> {
+            self.0.clone().into()
+        }
+
+        #[diplomat::attr(supports = accessors, getter = "asSlice")]
+        pub fn as_slice<'a>(&'a self) -> &'a [f64] {
+            &self.0
         }
 
         pub fn fill_slice(&self, v: &mut [f64]) {

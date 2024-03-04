@@ -124,7 +124,10 @@ impl<'tcx> CFormatter<'tcx> {
             Type::Slice(hir::Slice::Str(_, StringEncoding::Utf8)) => "str_refv8".into(),
             Type::Slice(hir::Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => "str_ref16".into(),
             Type::Slice(hir::Slice::Primitive(borrow, p)) => {
-                let constness = borrow.mutability.if_mut_else("", "const_");
+                let constness = borrow
+                    .map(|b| b.mutability)
+                    .unwrap_or(hir::Mutability::Mutable)
+                    .if_mut_else("", "const_");
                 let prim = self.fmt_primitive_as_c(*p);
                 format!("ref_{constness}prim_slice_{prim}").into()
             }
