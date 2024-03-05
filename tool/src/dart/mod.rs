@@ -264,7 +264,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     (vec![format!(
                         "pointer.ref.{name} = {};",
                         dart_to_c
-                    )], struct_borrow_info)
+                    )], struct_borrow_info.map(|s| s.param_info))
                 };
 
                 FieldInfo {
@@ -1154,7 +1154,7 @@ struct FieldInfo<'a, P: TyPosition> {
     c_to_dart: Cow<'a, str>,
     dart_to_c: Vec<String>,
     /// If this is a struct field that borrows, the borrowing information for that field.
-    maybe_struct_borrow_info: Option<StructBorrowContext<'a>>,
+    maybe_struct_borrow_info: Option<StructBorrowInfo<'a>>,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
@@ -1198,6 +1198,16 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
         .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetime))
 }
 
+fn iter_def_lifetimes_matching_use_lt<'a>(
+    use_lt: &'a Lifetime,
+    info: &'a StructBorrowInfo,
+) -> impl Iterator<Item = Lifetime> + 'a {
+    info.borrowed_struct_lifetime_map
+        .iter()
+        .filter(|(_def_lt, use_lts)| use_lts.contains(use_lt))
+        .map(|(def_lt, _use_lts)| def_lt)
+        .copied()
+}
 /// Context about a struct being borrowed when doing dart-to-c conversions
 struct StructBorrowContext<'tcx> {
     /// Is this in a method or struct?

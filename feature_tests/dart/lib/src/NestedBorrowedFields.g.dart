@@ -61,7 +61,7 @@ final class NestedBorrowedFields {
   // assuming that there are no `'other: x`. bounds. In case of such bounds,
   // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_x() {
-    return [fields, bounds];
+    return [...fields._fields_for_lifetime_a(), ...bounds._fields_for_lifetime_a()];
   }
 
   // ignore: unused element
@@ -71,7 +71,7 @@ final class NestedBorrowedFields {
   // assuming that there are no `'other: y`. bounds. In case of such bounds,
   // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_y() {
-    return [bounds];
+    return [...bounds._fields_for_lifetime_b(), ...bounds._fields_for_lifetime_c()];
   }
 
   // ignore: unused element
@@ -81,6 +81,6 @@ final class NestedBorrowedFields {
   // assuming that there are no `'other: z`. bounds. In case of such bounds,
   // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_z() {
-    return [bounds2];
+    return [...bounds2._fields_for_lifetime_a(), ...bounds2._fields_for_lifetime_b(), ...bounds2._fields_for_lifetime_c()];
   }
 }
