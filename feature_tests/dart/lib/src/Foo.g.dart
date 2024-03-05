@@ -86,26 +86,32 @@ final class Foo implements ffi.Finalizable {
 // ignore: non_constant_identifier_names
 external void _Foo_destroy(ffi.Pointer<ffi.Void> self);
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_new(ffi.Pointer<ffi.Uint8> xData, int xLength);
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_get_bar')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_get_bar(ffi.Pointer<ffi.Opaque> self);
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_new_static')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_new_static(ffi.Pointer<ffi.Uint8> xData, int xLength);
 
+@meta.ResourceIdentifier()
 @ffi.Native<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_as_returning')
 // ignore: non_constant_identifier_names
 external _BorrowedFieldsReturningFfi _Foo_as_returning(ffi.Pointer<ffi.Opaque> self);
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(isLeaf: true, symbol: 'Foo_extract_from_fields')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_extract_from_fields(_BorrowedFieldsFfi fields);
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsWithBoundsFfi, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Foo_extract_from_bounds')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_extract_from_bounds(_BorrowedFieldsWithBoundsFfi bounds, ffi.Pointer<ffi.Uint8> anotherStringData, int anotherStringLength);

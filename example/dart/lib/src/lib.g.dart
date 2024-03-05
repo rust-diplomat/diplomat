@@ -10,6 +10,7 @@ import 'dart:ffi' as ffi;
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart' as ffi2 show Arena, calloc;
+import 'package:meta/meta.dart' as meta;
 part 'ICU4XDataProvider.g.dart';
 part 'ICU4XFixedDecimal.g.dart';
 part 'ICU4XFixedDecimalFormatter.g.dart';
