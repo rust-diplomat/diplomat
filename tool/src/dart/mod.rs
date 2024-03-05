@@ -225,7 +225,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     &ty.lifetimes,
                 );
 
-                let dart_to_c = if let hir::Type::Slice(slice) = &field.ty {
+                let (dart_to_c, maybe_struct_borrow_info) = if let hir::Type::Slice(slice) = &field.ty {
                     let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone(), None);
                     let mut ret = vec![
                         format!("final {name}View = {view_expr};"),
@@ -247,7 +247,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                             "pointer.ref.{name}._pointer = {name}View.pointer(temp);"
                         ));
                     }
-                    ret
+                    (ret, None)
                 } else {
                     let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
                         StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
@@ -260,10 +260,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     } else {
                         None
                     };
-                    vec![format!(
+                    let dart_to_c = self.gen_dart_to_c_for_type(&field.ty, name.clone(), struct_borrow_info.as_ref());
+                    (vec![format!(
                         "pointer.ref.{name} = {};",
-                        self.gen_dart_to_c_for_type(&field.ty, name.clone(), struct_borrow_info)
-                    )]
+                        dart_to_c
+                    )], struct_borrow_info.map(|s| s.param_info))
                 };
 
                 FieldInfo {
@@ -274,6 +275,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     dart_type_name,
                     c_to_dart,
                     dart_to_c,
+                    maybe_struct_borrow_info
                 }
             })
             .collect::<Vec<_>>();
@@ -452,7 +454,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 param_conversions.push(self.gen_dart_to_c_for_type(
                     &param.ty,
                     param_name.clone(),
-                    struct_borrow_info,
+                    struct_borrow_info.as_ref(),
                 ));
                 param_names_ffi.push(param_name);
             }
@@ -770,7 +772,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         &mut self,
         ty: &Type<P>,
         dart_name: Cow<'cx, str>,
-        struct_borrow_info: Option<StructBorrowContext<'cx>>,
+        struct_borrow_info: Option<&StructBorrowContext<'cx>>,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
@@ -806,11 +808,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_dart_to_c_for_struct_type(
         &mut self,
         dart_name: Cow<'cx, str>,
-        struct_borrow_info: Option<StructBorrowContext<'cx>>,
+        struct_borrow_info: Option<&StructBorrowContext<'cx>>,
     ) -> Cow<'cx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
-            for (def_lt, use_lts) in info.param_info.borrowed_struct_lifetime_map {
+            for (def_lt, use_lts) in &info.param_info.borrowed_struct_lifetime_map {
                 write!(
                     &mut params,
                     ", {}AppendArray: [",
@@ -896,8 +898,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Struct(ref st) => {
                 let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
-                // TODO (#406) use correct edges here
-                let edges = st.lifetimes().lifetimes().map(|_| ", []").collect::<Vec<_>>().join("");
+                let mut edges = String::new();
+                for lt in st.lifetimes().lifetimes() {
+                    if let MaybeStatic::NonStatic(lt) = lt {
+                        write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
+                    } else {
+                        write!(&mut edges, ", []").unwrap();
+                    }
+                }
 
                 format!("{type_name}._({var_name}{edges})").into()
             }
@@ -1145,6 +1153,8 @@ struct FieldInfo<'a, P: TyPosition> {
     dart_type_name: Cow<'a, str>,
     c_to_dart: Cow<'a, str>,
     dart_to_c: Vec<String>,
+    /// If this is a struct field that borrows, the borrowing information for that field.
+    maybe_struct_borrow_info: Option<StructBorrowInfo<'a>>,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
@@ -1188,6 +1198,16 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
         .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetime))
 }
 
+fn iter_def_lifetimes_matching_use_lt<'a>(
+    use_lt: &'a Lifetime,
+    info: &'a StructBorrowInfo,
+) -> impl Iterator<Item = Lifetime> + 'a {
+    info.borrowed_struct_lifetime_map
+        .iter()
+        .filter(|(_def_lt, use_lts)| use_lts.contains(use_lt))
+        .map(|(def_lt, _use_lts)| def_lt)
+        .copied()
+}
 /// Context about a struct being borrowed when doing dart-to-c conversions
 struct StructBorrowContext<'tcx> {
     /// Is this in a method or struct?
