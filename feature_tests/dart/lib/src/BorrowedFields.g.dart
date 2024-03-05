@@ -20,7 +20,7 @@ final class BorrowedFields {
 
   // ignore: unused_element
   // Internal constructor from FFI.
-  BorrowedFields._(_BorrowedFieldsFfi underlying, core.List<Object> edge_a) :
+  BorrowedFields._(_BorrowedFieldsFfi underlying, core.List<Object> aEdges) :
     a = core.String.fromCharCodes(underlying.a._pointer.asTypedList(underlying.a._length)),
     b = Utf8Decoder().convert(underlying.b._pointer.asTypedList(underlying.b._length)),
     c = Utf8Decoder().convert(underlying.c._pointer.asTypedList(underlying.c._length));

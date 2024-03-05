@@ -810,11 +810,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     ) -> Cow<'cx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
-            let edge_variable_expr = if info.is_method {
-                "edge_"
-            } else {
-                "...?append_array_for_"
-            };
             for (def_lt, use_lts) in info.param_info.borrowed_struct_lifetime_map {
                 write!(
                     &mut params,
@@ -824,13 +819,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 .unwrap();
                 let mut maybe_comma = "";
                 for use_lt in use_lts {
-                    // Generate stuff like `, edge_a` or for struct fields, `, ...?append_array_for_a`
-                    write!(
-                        &mut params,
-                        "{maybe_comma}{edge_variable_expr}{}",
-                        info.use_env.fmt_lifetime(use_lt)
-                    )
-                    .unwrap();
+                    // Generate stuff like `, aEdges` or for struct fields, `, ...?append_array_for_a`
+                    let lt = info.use_env.fmt_lifetime(use_lt);
+                    if info.is_method {
+                        write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
+                    } else {
+                        write!(&mut params, "{maybe_comma}...?append_array_for_{lt}",).unwrap();
+                    }
                     maybe_comma = ", ";
                 }
                 write!(&mut params, "]").unwrap();
@@ -843,12 +838,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     ///
     /// FIXME(Manishearth): this may need to belong in  fmt.rs
     fn gen_single_edge(&self, lifetime: Lifetime, lifetime_env: &LifetimeEnv) -> Cow<'static, str> {
-        format!("edge_{}", lifetime_env.fmt_lifetime(lifetime)).into()
+        format!("{}Edges", lifetime_env.fmt_lifetime(lifetime)).into()
     }
 
     /// Make a list of edge arrays, one for every lifetime in a Lifetimes
     ///
-    /// Will generate with a leading `, `, so will look something like `, edge_a, edge_b, ...`
+    /// Will generate with a leading `, `, so will look something like `, aEdges, bEdges, ...`
     fn gen_lifetimes_edge_list(&self, lifetimes: &Lifetimes, lifetime_env: &LifetimeEnv) -> String {
         let mut ret = String::new();
         for lt in lifetimes.lifetimes() {
@@ -856,9 +851,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 // We only generate a single edge in the list per lifetime, despite transitivity
                 //
                 // This is because we plan to handle transitivity when constructing these edge arrays,
-                // e.g. if `'a: 'b`, `edge_a` will already contain the relevant bits from `edge_b`.
+                // e.g. if `'a: 'b`, `aEdges` will already contain the relevant bits from `bEdges`.
                 //
-                // This lets us do things like not generate edge_b if it's not actually relevant for returning.
+                // This lets us do things like not generate bEdges if it's not actually relevant for returning.
                 write!(ret, ", {}", self.gen_single_edge(lt, lifetime_env)).unwrap();
             } else {
                 write!(ret, ", []").unwrap();
@@ -1197,7 +1192,7 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
 struct StructBorrowContext<'tcx> {
     /// Is this in a method or struct?
     ///
-    /// Methods generate things like `[edge_a, edge_b]`
+    /// Methods generate things like `[aEdges, bEdges]`
     /// whereas structs do `[...?append_array_for_a, ...?append_array_for_b]`
     is_method: bool,
     use_env: &'tcx LifetimeEnv,

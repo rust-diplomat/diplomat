@@ -322,6 +322,13 @@ class _FinalizedArena {
   _FinalizedArena() : this.arena = ffi2.Arena() {
     _finalizer.attach(this, this.arena);
   }
+  // Construct
+  _FinalizedArena.withLifetime(core.List<core.List<Object>> appendArrayForLifetime) : this.arena = ffi2.Arena() {
+    _finalizer.attach(this, this.arena);
+    for (final edge in appendArrayForLifetime) {
+      edge.add(this);
+    }
+  }
 }
 
 final class _ResultOpaqueVoidUnion extends ffi.Union {

@@ -16,7 +16,7 @@ final class BorrowedFieldsReturning {
 
   // ignore: unused_element
   // Internal constructor from FFI.
-  BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying, core.List<Object> edge_a) :
+  BorrowedFieldsReturning._(_BorrowedFieldsReturningFfi underlying, core.List<Object> aEdges) :
     bytes = Utf8Decoder().convert(underlying.bytes._pointer.asTypedList(underlying.bytes._length));
 
   // ignore: unused_element

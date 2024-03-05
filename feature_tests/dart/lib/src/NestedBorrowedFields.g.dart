@@ -20,7 +20,7 @@ final class NestedBorrowedFields {
 
   // ignore: unused_element
   // Internal constructor from FFI.
-  NestedBorrowedFields._(_NestedBorrowedFieldsFfi underlying, core.List<Object> edge_x, core.List<Object> edge_y, core.List<Object> edge_z) :
+  NestedBorrowedFields._(_NestedBorrowedFieldsFfi underlying, core.List<Object> xEdges, core.List<Object> yEdges, core.List<Object> zEdges) :
     fields = BorrowedFields._(underlying.fields, []),
     bounds = BorrowedFieldsWithBounds._(underlying.bounds, [], [], []),
     bounds2 = BorrowedFieldsWithBounds._(underlying.bounds2, [], [], []);
