@@ -236,15 +236,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
                     // are explicitly specified on methods.
                     if let MaybeStatic::NonStatic(lt) = slice.lifetime() {
-                        ret.push(format!("var {name}Arena = temp;"));
                         let lt_name = ty.lifetimes.fmt_lifetime(lt);
-                        ret.push(format!("if (append_array_for_{lt_name} != null && !append_array_for_{lt_name}.isEmpty) {{"));
-                        ret.push(format!("  final {name}FinalizedArena = _FinalizedArena();"));
-                        ret.push(format!("  {name}Arena = {name}FinalizedArena.arena;"));
-                        ret.push(format!("  for(final edge in append_array_for_{lt_name}) {{"));
-                        ret.push(format!("    edge.add({name}FinalizedArena);"));
-                        ret.push("  }".to_string());
-                        ret.push("}".to_string());
+                        ret.push(format!("final {name}Arena = (append_array_for_{lt_name} != null && !append_array_for_{lt_name}.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_{lt_name}).arena : temp;"));
 
                         ret.push(format!(
                             "pointer.ref.{name}._pointer = {name}View.pointer({name}Arena);"

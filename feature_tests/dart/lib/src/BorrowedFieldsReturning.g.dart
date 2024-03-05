@@ -28,14 +28,7 @@ final class BorrowedFieldsReturning {
     final pointer = temp<_BorrowedFieldsReturningFfi>();
     final bytesView = bytes.utf8View;
     pointer.ref.bytes._length = bytesView.length;
-    var bytesArena = temp;
-    if (append_array_for_a != null && !append_array_for_a.isEmpty) {
-      final bytesFinalizedArena = _FinalizedArena();
-      bytesArena = bytesFinalizedArena.arena;
-      for(final edge in append_array_for_a) {
-        edge.add(bytesFinalizedArena);
-      }
-    }
+    final bytesArena = (append_array_for_a != null && !append_array_for_a.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_a).arena : temp;
     pointer.ref.bytes._pointer = bytesView.pointer(bytesArena);
     return pointer.ref;
   }

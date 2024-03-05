@@ -36,36 +36,15 @@ final class BorrowedFieldsWithBounds {
     final pointer = temp<_BorrowedFieldsWithBoundsFfi>();
     final fieldAView = fieldA.utf16View;
     pointer.ref.fieldA._length = fieldAView.length;
-    var fieldAArena = temp;
-    if (append_array_for_a != null && !append_array_for_a.isEmpty) {
-      final fieldAFinalizedArena = _FinalizedArena();
-      fieldAArena = fieldAFinalizedArena.arena;
-      for(final edge in append_array_for_a) {
-        edge.add(fieldAFinalizedArena);
-      }
-    }
+    final fieldAArena = (append_array_for_a != null && !append_array_for_a.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_a).arena : temp;
     pointer.ref.fieldA._pointer = fieldAView.pointer(fieldAArena);
     final fieldBView = fieldB.utf8View;
     pointer.ref.fieldB._length = fieldBView.length;
-    var fieldBArena = temp;
-    if (append_array_for_b != null && !append_array_for_b.isEmpty) {
-      final fieldBFinalizedArena = _FinalizedArena();
-      fieldBArena = fieldBFinalizedArena.arena;
-      for(final edge in append_array_for_b) {
-        edge.add(fieldBFinalizedArena);
-      }
-    }
+    final fieldBArena = (append_array_for_b != null && !append_array_for_b.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_b).arena : temp;
     pointer.ref.fieldB._pointer = fieldBView.pointer(fieldBArena);
     final fieldCView = fieldC.utf8View;
     pointer.ref.fieldC._length = fieldCView.length;
-    var fieldCArena = temp;
-    if (append_array_for_c != null && !append_array_for_c.isEmpty) {
-      final fieldCFinalizedArena = _FinalizedArena();
-      fieldCArena = fieldCFinalizedArena.arena;
-      for(final edge in append_array_for_c) {
-        edge.add(fieldCFinalizedArena);
-      }
-    }
+    final fieldCArena = (append_array_for_c != null && !append_array_for_c.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_c).arena : temp;
     pointer.ref.fieldC._pointer = fieldCView.pointer(fieldCArena);
     return pointer.ref;
   }
