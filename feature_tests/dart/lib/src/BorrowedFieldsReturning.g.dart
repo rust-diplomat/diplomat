@@ -24,11 +24,11 @@ final class BorrowedFieldsReturning {
   // be constructed here, and can be appended to any relevant lifetime arrays here. append_array_for_<lifetime> accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
-  _BorrowedFieldsReturningFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_a}) {
+  _BorrowedFieldsReturningFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray}) {
     final pointer = temp<_BorrowedFieldsReturningFfi>();
     final bytesView = bytes.utf8View;
     pointer.ref.bytes._length = bytesView.length;
-    final bytesArena = (append_array_for_a != null && !append_array_for_a.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_a).arena : temp;
+    final bytesArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
     pointer.ref.bytes._pointer = bytesView.pointer(bytesArena);
     return pointer.ref;
   }

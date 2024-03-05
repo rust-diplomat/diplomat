@@ -237,7 +237,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // are explicitly specified on methods.
                     if let MaybeStatic::NonStatic(lt) = slice.lifetime() {
                         let lt_name = ty.lifetimes.fmt_lifetime(lt);
-                        ret.push(format!("final {name}Arena = (append_array_for_{lt_name} != null && !append_array_for_{lt_name}.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_{lt_name}).arena : temp;"));
+                        ret.push(format!("final {name}Arena = ({lt_name}AppendArray != null && !{lt_name}AppendArray.isEmpty) ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp;"));
 
                         ret.push(format!(
                             "pointer.ref.{name}._pointer = {name}View.pointer({name}Arena);"
@@ -813,18 +813,18 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             for (def_lt, use_lts) in info.param_info.borrowed_struct_lifetime_map {
                 write!(
                     &mut params,
-                    ", append_array_for_{}: [",
+                    ", {}AppendArray: [",
                     info.param_info.env.fmt_lifetime(def_lt)
                 )
                 .unwrap();
                 let mut maybe_comma = "";
                 for use_lt in use_lts {
-                    // Generate stuff like `, aEdges` or for struct fields, `, ...?append_array_for_a`
+                    // Generate stuff like `, aEdges` or for struct fields, `, ...?aAppendArray`
                     let lt = info.use_env.fmt_lifetime(use_lt);
                     if info.is_method {
                         write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
                     } else {
-                        write!(&mut params, "{maybe_comma}...?append_array_for_{lt}",).unwrap();
+                        write!(&mut params, "{maybe_comma}...?{lt}AppendArray",).unwrap();
                     }
                     maybe_comma = ", ";
                 }
@@ -1193,7 +1193,7 @@ struct StructBorrowContext<'tcx> {
     /// Is this in a method or struct?
     ///
     /// Methods generate things like `[aEdges, bEdges]`
-    /// whereas structs do `[...?append_array_for_a, ...?append_array_for_b]`
+    /// whereas structs do `[...?aAppendArray, ...?bAppendArray]`
     is_method: bool,
     use_env: &'tcx LifetimeEnv,
     param_info: StructBorrowInfo<'tcx>,

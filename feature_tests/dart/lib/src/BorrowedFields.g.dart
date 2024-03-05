@@ -30,19 +30,19 @@ final class BorrowedFields {
   // be constructed here, and can be appended to any relevant lifetime arrays here. append_array_for_<lifetime> accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
-  _BorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_a}) {
+  _BorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray}) {
     final pointer = temp<_BorrowedFieldsFfi>();
     final aView = a.utf16View;
     pointer.ref.a._length = aView.length;
-    final aArena = (append_array_for_a != null && !append_array_for_a.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_a).arena : temp;
+    final aArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
     pointer.ref.a._pointer = aView.pointer(aArena);
     final bView = b.utf8View;
     pointer.ref.b._length = bView.length;
-    final bArena = (append_array_for_a != null && !append_array_for_a.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_a).arena : temp;
+    final bArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
     pointer.ref.b._pointer = bView.pointer(bArena);
     final cView = c.utf8View;
     pointer.ref.c._length = cView.length;
-    final cArena = (append_array_for_a != null && !append_array_for_a.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_a).arena : temp;
+    final cArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
     pointer.ref.c._pointer = cView.pointer(cArena);
     return pointer.ref;
   }

@@ -31,20 +31,20 @@ final class BorrowedFieldsWithBounds {
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
   //
-  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure append_array_for_foo contains everything append_array_for_bar does.
-  _BorrowedFieldsWithBoundsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_a, core.List<core.List<Object>>? append_array_for_b, core.List<core.List<Object>>? append_array_for_c}) {
+  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
+  _BorrowedFieldsWithBoundsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray, core.List<core.List<Object>>? bAppendArray, core.List<core.List<Object>>? cAppendArray}) {
     final pointer = temp<_BorrowedFieldsWithBoundsFfi>();
     final fieldAView = fieldA.utf16View;
     pointer.ref.fieldA._length = fieldAView.length;
-    final fieldAArena = (append_array_for_a != null && !append_array_for_a.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_a).arena : temp;
+    final fieldAArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
     pointer.ref.fieldA._pointer = fieldAView.pointer(fieldAArena);
     final fieldBView = fieldB.utf8View;
     pointer.ref.fieldB._length = fieldBView.length;
-    final fieldBArena = (append_array_for_b != null && !append_array_for_b.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_b).arena : temp;
+    final fieldBArena = (bAppendArray != null && !bAppendArray.isEmpty) ? _FinalizedArena.withLifetime(bAppendArray).arena : temp;
     pointer.ref.fieldB._pointer = fieldBView.pointer(fieldBArena);
     final fieldCView = fieldC.utf8View;
     pointer.ref.fieldC._length = fieldCView.length;
-    final fieldCArena = (append_array_for_c != null && !append_array_for_c.isEmpty) ? _FinalizedArena.withLifetime(append_array_for_c).arena : temp;
+    final fieldCArena = (cAppendArray != null && !cAppendArray.isEmpty) ? _FinalizedArena.withLifetime(cAppendArray).arena : temp;
     pointer.ref.fieldC._pointer = fieldCView.pointer(fieldCArena);
     return pointer.ref;
   }

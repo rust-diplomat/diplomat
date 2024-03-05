@@ -49,13 +49,13 @@ final class {{type_name}} {
 
   {%- if lifetimes.all_lifetimes().len() > 1 %}
   //
-  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure append_array_for_foo contains everything append_array_for_bar does.
+  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
   {%- endif%}
   {%- endif %}
   _{{type_name}}Ffi _pointer(ffi.Allocator temp
     {%- if lifetimes.all_lifetimes().len() != 0 -%}
     , {
-    {%- for l in lifetimes.all_lifetimes() %}{% if !loop.first %}, {% endif %}core.List<core.List<Object>>? append_array_for_{{lifetimes.fmt_lifetime(l)}}
+    {%- for l in lifetimes.all_lifetimes() %}{% if !loop.first %}, {% endif %}core.List<core.List<Object>>? {{lifetimes.fmt_lifetime(l)}}AppendArray
     {%- endfor -%}
     }
     {%- endif -%}

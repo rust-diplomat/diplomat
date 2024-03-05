@@ -31,12 +31,12 @@ final class NestedBorrowedFields {
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
   //
-  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure append_array_for_foo contains everything append_array_for_bar does.
-  _NestedBorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? append_array_for_x, core.List<core.List<Object>>? append_array_for_y, core.List<core.List<Object>>? append_array_for_z}) {
+  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
+  _NestedBorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? xAppendArray, core.List<core.List<Object>>? yAppendArray, core.List<core.List<Object>>? zAppendArray}) {
     final pointer = temp<_NestedBorrowedFieldsFfi>();
-    pointer.ref.fields = fields._pointer(temp, append_array_for_a: [...?append_array_for_x]);
-    pointer.ref.bounds = bounds._pointer(temp, append_array_for_a: [...?append_array_for_x], append_array_for_b: [...?append_array_for_y], append_array_for_c: [...?append_array_for_y]);
-    pointer.ref.bounds2 = bounds2._pointer(temp, append_array_for_a: [...?append_array_for_z], append_array_for_b: [...?append_array_for_z], append_array_for_c: [...?append_array_for_z]);
+    pointer.ref.fields = fields._pointer(temp, aAppendArray: [...?xAppendArray]);
+    pointer.ref.bounds = bounds._pointer(temp, aAppendArray: [...?xAppendArray], bAppendArray: [...?yAppendArray], cAppendArray: [...?yAppendArray]);
+    pointer.ref.bounds2 = bounds2._pointer(temp, aAppendArray: [...?zAppendArray], bAppendArray: [...?zAppendArray], cAppendArray: [...?zAppendArray]);
     return pointer.ref;
   }
 
