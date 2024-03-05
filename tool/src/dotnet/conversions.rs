@@ -66,6 +66,7 @@ pub fn to_idiomatic_object<W: fmt::Write>(
         ast::TypeName::Option(opt) => {
             to_idiomatic_object(env, opt.as_ref(), in_path, input_var_name, out)
         }
+        ast::TypeName::PrimitiveSlice(..) => out.write_str(input_var_name),
         _ => {
             let name = gen_type_name_to_string(typ, in_path, env)?;
             match typ {

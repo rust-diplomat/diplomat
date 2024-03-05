@@ -794,6 +794,7 @@ fn requires_null_check(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> b
             requires_null_check(reference.as_ref(), in_path, env)
         }
         ast::TypeName::Option(opt) => requires_null_check(opt.as_ref(), in_path, env),
+        ast::TypeName::PrimitiveSlice(_, _, _) => true,
         _ => match typ {
             ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
                 match path_type.resolve(in_path, env) {
