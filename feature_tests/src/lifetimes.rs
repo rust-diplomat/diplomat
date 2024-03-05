@@ -44,7 +44,7 @@ pub mod ffi {
         }
 
         /// Test that the extraction logic correctly pins the right fields
-        pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x>(
+        pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x + 'y>(
             bounds: BorrowedFieldsWithBounds<'x, 'y, 'z>,
             another_string: &'a DiplomatStr,
         ) -> Box<Self> {
@@ -54,6 +54,12 @@ pub mod ffi {
                 Box::new(Self(bounds.field_b))
             }
         }
+    }
+
+    pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
+        fields: BorrowedFields<'x>,
+        bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,
+        bounds2: BorrowedFieldsWithBounds<'z, 'z, 'z>,
     }
 
     // FIXME(#191): This test breaks the C++ codegen
@@ -94,7 +100,7 @@ pub mod ffi {
         }
 
         // Holds: [a, b, c, d]
-        pub fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b, 'x, 'y>(
+        pub fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b + 'x, 'x, 'y>(
             a: &'x One<'a>,
             b: &'b One<'a>,
             c: &Two<'x, 'c>,

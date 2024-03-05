@@ -20,23 +20,30 @@ final class BorrowedFields {
 
   // ignore: unused_element
   // Internal constructor from FFI.
-  BorrowedFields._(_BorrowedFieldsFfi underlying, core.List<Object> edge_a) :
+  BorrowedFields._(_BorrowedFieldsFfi underlying, core.List<Object> aEdges) :
     a = core.String.fromCharCodes(underlying.a._pointer.asTypedList(underlying.a._length)),
     b = Utf8Decoder().convert(underlying.b._pointer.asTypedList(underlying.b._length)),
     c = Utf8Decoder().convert(underlying.c._pointer.asTypedList(underlying.c._length));
 
   // ignore: unused_element
-  _BorrowedFieldsFfi _pointer(ffi.Allocator temp) {
+  // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
+  // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
+  // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
+  // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
+  _BorrowedFieldsFfi _pointer(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray}) {
     final pointer = temp<_BorrowedFieldsFfi>();
     final aView = a.utf16View;
-    pointer.ref.a._pointer = aView.pointer(temp);
     pointer.ref.a._length = aView.length;
+    final aArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
+    pointer.ref.a._pointer = aView.pointer(aArena);
     final bView = b.utf8View;
-    pointer.ref.b._pointer = bView.pointer(temp);
     pointer.ref.b._length = bView.length;
+    final bArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
+    pointer.ref.b._pointer = bView.pointer(bArena);
     final cView = c.utf8View;
-    pointer.ref.c._pointer = cView.pointer(temp);
     pointer.ref.c._length = cView.length;
+    final cArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
+    pointer.ref.c._pointer = cView.pointer(cArena);
     return pointer.ref;
   }
 
@@ -55,7 +62,11 @@ final class BorrowedFields {
       ]);
 
   // ignore: unused element
-  // Append all fields corresponding to lifetime `'a`
+  // Append all fields corresponding to lifetime `'a` 
+  // without handling lifetime dependencies (this is the job of the caller)
+  // This is all fields that may be borrowed from if borrowing `'a`,
+  // assuming that there are no `'other: a`. bounds. In case of such bounds,
+  // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_a() {
     return [a, b, c];
   }

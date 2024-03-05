@@ -60,6 +60,14 @@
         Lifetimes: ``bounds``, ``another_string`` must live at least as long as the output.
 
 
+.. cpp:struct:: NestedBorrowedFields
+
+    .. cpp:member:: BorrowedFields fields
+
+    .. cpp:member:: BorrowedFieldsWithBounds bounds
+
+    .. cpp:member:: BorrowedFieldsWithBounds bounds2
+
 .. cpp:class:: One
 
     .. cpp:function:: static One transitivity(const One& hold, const One& nohold)

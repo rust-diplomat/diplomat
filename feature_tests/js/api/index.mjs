@@ -15,6 +15,7 @@ export { ImportedStruct } from './ImportedStruct.mjs';
 export { MyEnum } from './MyEnum.mjs';
 export { MyString } from './MyString.mjs';
 export { MyStruct } from './MyStruct.mjs';
+export { NestedBorrowedFields } from './NestedBorrowedFields.mjs';
 export { One } from './One.mjs';
 export { Opaque } from './Opaque.mjs';
 export { OptionOpaque } from './OptionOpaque.mjs';

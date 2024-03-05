@@ -130,6 +130,20 @@ impl ReturnType {
 
         set
     }
+
+    pub fn with_contained_types(&self, mut f: impl FnMut(&OutType)) {
+        match self {
+            Self::Infallible(SuccessType::OutType(o))
+            | Self::Nullable(SuccessType::OutType(o))
+            | Self::Fallible(SuccessType::OutType(o), None) => f(o),
+            Self::Fallible(SuccessType::OutType(o), Some(o2)) => {
+                f(o);
+                f(o2)
+            }
+            Self::Fallible(_, Some(o)) => f(o),
+            _ => (),
+        }
+    }
 }
 
 impl ParamSelf {

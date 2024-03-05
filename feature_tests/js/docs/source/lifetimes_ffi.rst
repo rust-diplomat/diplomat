@@ -44,6 +44,14 @@
         Test that the extraction logic correctly pins the right fields
 
 
+.. js:class:: NestedBorrowedFields
+
+    .. js:attribute:: fields
+
+    .. js:attribute:: bounds
+
+    .. js:attribute:: bounds2
+
 .. js:class:: One
 
     .. js:function:: transitivity(hold, nohold)

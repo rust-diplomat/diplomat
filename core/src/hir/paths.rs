@@ -124,18 +124,6 @@ impl ReturnableStructPath {
             Self::OutStruct(p) => &p.lifetimes,
         }
     }
-
-    /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
-    /// for more information.
-    pub fn link_lifetimes<'def, 'tcx>(
-        &'def self,
-        tcx: &'tcx TypeContext,
-    ) -> LinkedLifetimes<'def, 'tcx> {
-        match self {
-            Self::Struct(p) => p.link_lifetimes(tcx),
-            Self::OutStruct(p) => p.link_lifetimes(tcx),
-        }
-    }
 }
 
 impl<P: TyPosition> StructPath<P> {
@@ -148,17 +136,6 @@ impl StructPath {
     /// Returns the [`StructDef`] that this path references.
     pub fn resolve<'tcx>(&self, tcx: &'tcx TypeContext) -> &'tcx StructDef {
         tcx.resolve_struct(self.tcx_id)
-    }
-
-    /// Get a map of lifetimes used on this path to lifetimes as named in the def site. See [`LinkedLifetimes`]
-    /// for more information.
-    pub fn link_lifetimes<'def, 'tcx>(
-        &'def self,
-        tcx: &'tcx TypeContext,
-    ) -> LinkedLifetimes<'def, 'tcx> {
-        let struc = self.resolve(tcx);
-        let env = &struc.lifetimes;
-        LinkedLifetimes::new(env, None, &self.lifetimes)
     }
 }
 

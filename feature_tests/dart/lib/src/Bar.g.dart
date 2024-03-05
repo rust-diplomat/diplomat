@@ -28,11 +28,11 @@ final class Bar implements ffi.Finalizable {
 
   Foo get foo {
     // This lifetime edge depends on lifetimes: 'b, 'a
-    core.List<Object> edge_b = [this];
+    core.List<Object> bEdges = [this];
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> edge_a = [this];
+    core.List<Object> aEdges = [this];
     final result = _Bar_foo(_underlying);
-    return Foo._(result, false, edge_b, edge_a);
+    return Foo._(result, false, bEdges, aEdges);
   }
 }
 

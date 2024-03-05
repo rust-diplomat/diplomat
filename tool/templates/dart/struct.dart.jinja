@@ -34,14 +34,32 @@ final class {{type_name}} {
   // This method does not attempt to handle any dependencies between lifetimes, the caller
   // should handle this when constructing edge arrays.
   {%- endif %}
-  {{type_name}}._(_{{type_name}}Ffi underlying {%- for lifetime in lifetimes.all_lifetimes() -%} , core.List<Object> edge_{{lifetimes.fmt_lifetime(lifetime)}} {%- endfor -%}) :
+  {{type_name}}._(_{{type_name}}Ffi underlying {%- for lifetime in lifetimes.all_lifetimes() -%} , core.List<Object> {{lifetimes.fmt_lifetime(lifetime)}}Edges {%- endfor -%}) :
     {%- for field in fields %}
     {{field.name}} = {{field.c_to_dart}}
     {%- if loop.last %};{% else %},{% endif -%}
     {%- endfor %}
 
   // ignore: unused_element
-  _{{type_name}}Ffi _pointer(ffi.Allocator temp) {
+  {%- if lifetimes.all_lifetimes().len() != 0 %}
+  // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
+  // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
+  // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
+  // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
+
+  {%- if lifetimes.all_lifetimes().len() > 1 %}
+  //
+  // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
+  {%- endif%}
+  {%- endif %}
+  _{{type_name}}Ffi _pointer(ffi.Allocator temp
+    {%- if lifetimes.all_lifetimes().len() != 0 -%}
+    , {
+    {%- for l in lifetimes.all_lifetimes() %}{% if !loop.first %}, {% endif %}core.List<core.List<Object>>? {{lifetimes.fmt_lifetime(l)}}AppendArray
+    {%- endfor -%}
+    }
+    {%- endif -%}
+  ) {
     final pointer = temp<_{{type_name}}Ffi>();
     {%- for field in fields %}
     {%- for statement in field.dart_to_c %}
@@ -72,17 +90,16 @@ final class {{type_name}} {
 
   {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}
-    {%- let longer = self::iterator_to_btreeset(lifetimes.all_longer_lifetimes(l)) %}
 
   // ignore: unused element
   // Append all fields corresponding to lifetime `'{{ltname}}` 
-  {%- if longer.len() > 1 %}
-  // and lifetimes longer than it (Lifetimes: {{self::display_lifetime_list(lifetimes, longer)}})
-  // This is all fields that may be borrowed from if borrowing `'{{ltname}}`
-  {%- endif %}
+  // without handling lifetime dependencies (this is the job of the caller)
+  // This is all fields that may be borrowed from if borrowing `'{{ltname}}`,
+  // assuming that there are no `'other: {{ltname}}`. bounds. In case of such bounds,
+  // the caller should take care to also call _fields_for_lifetime_other()
   core.List<Object> _fields_for_lifetime_{{ltname}}() {
     return [
-    {%- for field in self::iter_fields_with_lifetimes_from_set(fields, longer) %}
+    {%- for field in self::iter_fields_with_lifetimes_from_set(fields, l) %}
         {%- if !loop.first %}, {% endif -%}
         {{field.name}}
     {%- endfor -%}

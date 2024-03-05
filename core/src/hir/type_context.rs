@@ -1,14 +1,16 @@
 //! Store all the types contained in the HIR.
 
 use super::lowering::ItemAndInfo;
+use super::ty_position::StructPathLike;
 use super::{
     AttributeContext, AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError,
-    OpaqueDef, OutStructDef, StructDef, TypeDef,
+    MaybeStatic, OpaqueDef, OutStructDef, StructDef, TypeDef,
 };
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
 use crate::{ast, Env};
+use core::fmt::Display;
 use smallvec::SmallVec;
 use std::collections::HashMap;
 use std::ops::Index;
@@ -199,20 +201,111 @@ impl TypeContext {
 
         match (out_structs, structs, opaques, enums) {
             (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums)) => {
-                assert!(
-                    errors.is_empty(),
-                    "All lowering succeeded but still found error messages: {errors:?}"
-                );
-                Ok(Self {
+                let res = Self {
                     out_structs,
                     structs,
                     opaques,
                     enums,
-                })
+                };
+                assert!(
+                    errors.is_empty(),
+                    "All lowering succeeded but still found error messages: {errors:?}"
+                );
+                res.validate(&mut errors);
+                if !errors.is_empty() {
+                    return Err(errors);
+                }
+                Ok(res)
             }
             _ => {
                 assert!(!errors.is_empty(), "Lowering failed without error messages");
                 Err(errors)
+            }
+        }
+    }
+
+    /// Run validation phase
+    ///
+    /// Currently validates that methods are not inheriting any transitive bounds from parameters
+    ///    Todo: Automatically insert these bounds during HIR construction in a second phase
+    fn validate(&self, errors: &mut Vec<LoweringError>) {
+        // Lifetime validity check
+        for (_id, ty) in self.all_types() {
+            for method in ty.methods() {
+                for param in &method.params {
+                    self.validate_ty_in_method(errors, &ty, &param.name, &param.ty, method);
+                }
+
+                method.output.with_contained_types(|out_ty| {
+                    self.validate_ty_in_method(errors, &ty, "return type", out_ty, method)
+                })
+            }
+        }
+    }
+
+    /// Ensure that a given method's input our output type does not implicitly introduce bounds that are not
+    /// already specified on the method
+    fn validate_ty_in_method<P: hir::TyPosition>(
+        &self,
+        errors: &mut Vec<LoweringError>,
+        ty: &hir::TypeDef,
+        param_name: impl Display,
+        param_ty: &hir::Type<P>,
+        method: &hir::Method,
+    ) {
+        let linked = match &param_ty {
+            hir::Type::Opaque(p) => p.link_lifetimes(self),
+            hir::Type::Struct(p) => p.link_lifetimes(self),
+            _ => return,
+        };
+
+        for (use_lt, def_lt) in linked.lifetimes_all() {
+            let MaybeStatic::NonStatic(use_lt) = use_lt else {
+                continue;
+            };
+            let Some(use_bounds) = &method.lifetime_env.get_bounds(use_lt) else {
+                continue;
+            };
+            let use_longer_lifetimes = &use_bounds.longer;
+            let anchor;
+            let def_longer_lifetimes = if let Some(def_lt) = def_lt {
+                let Some(def_bounds) = &linked.def_env().get_bounds(def_lt) else {
+                    continue;
+                };
+                &def_bounds.longer
+            } else {
+                anchor = linked.def_env().all_lifetimes().collect();
+                &anchor
+            };
+
+            for def_longer in def_longer_lifetimes {
+                let MaybeStatic::NonStatic(corresponding_use) = linked.def_to_use(*def_longer)
+                else {
+                    continue;
+                };
+
+                // In the case of stuff like <'a, 'a> passed to Foo<'x, 'y: 'x> the bound
+                // is trivially fulfilled
+                if corresponding_use == use_lt {
+                    continue;
+                }
+
+                if !use_longer_lifetimes.contains(&corresponding_use) {
+                    let ty_name = &ty.name();
+                    let method_name = &method.name;
+                    let use_name = method.lifetime_env.fmt_lifetime(use_lt);
+                    let use_longer_name = method.lifetime_env.fmt_lifetime(corresponding_use);
+                    let def_cause = if let Some(def_lt) = def_lt {
+                        let def_name = linked.def_env().fmt_lifetime(def_lt);
+                        let def_longer_name = linked.def_env().fmt_lifetime(def_longer);
+                        format!("comes from source type's '{def_longer_name}: '{def_name}")
+                    } else {
+                        // This case is technically already handled in the lifetime lowerer, we're being careful
+                        "comes from &-ref's lifetime in parameter".into()
+                    };
+                    errors.push(LoweringError::Other(format!("{ty_name}::{method_name} should explicitly include this \
+                                        lifetime bound from param {param_name}: '{use_longer_name}: '{use_name} ({def_cause})")))
+                }
             }
         }
     }
@@ -301,5 +394,65 @@ impl From<OpaqueId> for TypeId {
 impl From<EnumId> for TypeId {
     fn from(x: EnumId) -> Self {
         TypeId::Enum(x)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::hir;
+    use std::fmt::Write;
+
+    macro_rules! uitest_validity {
+        ($($file:tt)*) => {
+            let parsed: syn::File = syn::parse_quote! { $($file)* };
+            let custom_types = crate::ast::File::from(&parsed);
+            let env = custom_types.all_types();
+
+            let errors = custom_types.check_validity(&env);
+
+            let mut output = String::new();
+            for error in errors {
+                writeln!(&mut output, "AST ERROR: {error}").unwrap();
+            }
+
+            let attr_validator = hir::BasicAttributeValidator::new("tests");
+            match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(_context) => (),
+                Err(e) => {
+                    for err in e {
+                        writeln!(&mut output, "Lowering error: {err}").unwrap();
+                    }
+                }
+            };
+            insta::with_settings!({}, {
+                insta::assert_display_snapshot!(output)
+            });
+        }
+    }
+
+    #[test]
+    fn test_required_implied_bounds() {
+        uitest_validity! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct Foo<'a, 'b: 'a, 'c: 'b> (&'a u8, &'b u8, &'c u8);
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+
+                #[diplomat::opaque]
+                struct OneLifetime<'a>(&'a u8);
+
+                impl Opaque {
+                    pub fn use_foo<'x, 'y, 'z>(&self, foo: &Foo<'x, 'y, 'z>) {}
+                    pub fn return_foo<'x, 'y, 'z>(&'x self) -> Box<Foo<'x, 'y, 'z>> {}
+                    pub fn return_result_foo<'x, 'y, 'z>(&'x self) -> Result<Box<Foo<'x, 'y, 'z>>, ()> {}
+                    // This doesn't actually error since the lowerer inserts the implicit bound
+                    pub fn implied_ref_bound<'a, 'b>(&self, one_lt: &'a OneLifetime<'b>) {}
+                }
+            }
+        }
     }
 }

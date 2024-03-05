@@ -303,4 +303,11 @@ class _FinalizedArena {
   _FinalizedArena() : this.arena = ffi2.Arena() {
     _finalizer.attach(this, this.arena);
   }
+  // Construct
+  _FinalizedArena.withLifetime(core.List<core.List<Object>> lifetimeAppendArray) : this.arena = ffi2.Arena() {
+    _finalizer.attach(this, this.arena);
+    for (final edge in lifetimeAppendArray) {
+      edge.add(this);
+    }
+  }
 }

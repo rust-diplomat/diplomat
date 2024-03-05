@@ -26,6 +26,7 @@ part 'ImportedStruct.g.dart';
 part 'MyEnum.g.dart';
 part 'MyString.g.dart';
 part 'MyStruct.g.dart';
+part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
 part 'Opaque.g.dart';
 part 'OptionOpaque.g.dart';
@@ -342,6 +343,13 @@ class _FinalizedArena {
 
   _FinalizedArena() : this.arena = ffi2.Arena() {
     _finalizer.attach(this, this.arena);
+  }
+  // Construct
+  _FinalizedArena.withLifetime(core.List<core.List<Object>> lifetimeAppendArray) : this.arena = ffi2.Arena() {
+    _finalizer.attach(this, this.arena);
+    for (final edge in lifetimeAppendArray) {
+      edge.add(this);
+    }
   }
 }
 

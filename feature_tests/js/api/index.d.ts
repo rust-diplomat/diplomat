@@ -15,6 +15,7 @@ export { ImportedStruct } from './ImportedStruct';
 export { MyEnum } from './MyEnum';
 export { MyString } from './MyString';
 export { MyStruct } from './MyStruct';
+export { NestedBorrowedFields } from './NestedBorrowedFields';
 export { One } from './One';
 export { Opaque } from './Opaque';
 export { OptionOpaque } from './OptionOpaque';

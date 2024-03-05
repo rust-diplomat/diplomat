@@ -1,7 +1,9 @@
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
-use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind};
+use diplomat_core::hir::borrowing_param::{
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
+};
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
@@ -223,17 +225,44 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     &ty.lifetimes,
                 );
 
-                let dart_to_c = if let hir::Type::Slice(..) = &field.ty {
-                    let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone());
-                    vec![
+                let dart_to_c = if let hir::Type::Slice(slice) = &field.ty {
+                    let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone(), None);
+                    let mut ret = vec![
                         format!("final {name}View = {view_expr};"),
-                        format!("pointer.ref.{name}._pointer = {name}View.pointer(temp);"),
                         format!("pointer.ref.{name}._length = {name}View.length;"),
-                    ]
+                    ];
+
+                    // We do not need to handle lifetime transitivity here: Methods already resolve
+                    // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
+                    // are explicitly specified on methods.
+                    if let MaybeStatic::NonStatic(lt) = slice.lifetime() {
+                        let lt_name = ty.lifetimes.fmt_lifetime(lt);
+                        ret.push(format!("final {name}Arena = ({lt_name}AppendArray != null && !{lt_name}AppendArray.isEmpty) ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp;"));
+
+                        ret.push(format!(
+                            "pointer.ref.{name}._pointer = {name}View.pointer({name}Arena);"
+                        ));
+                    } else {
+                        ret.push(format!(
+                            "pointer.ref.{name}._pointer = {name}View.pointer(temp);"
+                        ));
+                    }
+                    ret
                 } else {
+                    let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
+                        StructBorrowInfo::compute_for_struct_field(ty, path, self.tcx).map(
+                            |param_info| StructBorrowContext {
+                                use_env: &ty.lifetimes,
+                                param_info,
+                                is_method: false,
+                            },
+                        )
+                    } else {
+                        None
+                    };
                     vec![format!(
                         "pointer.ref.{name} = {};",
-                        self.gen_dart_to_c_for_type(&field.ty, name.clone())
+                        self.gen_dart_to_c_for_type(&field.ty, name.clone(), struct_borrow_info)
                     )]
                 };
 
@@ -362,14 +391,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
-            let is_borrowed = visitor.visit_param(&param.ty, &param_name);
+            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
             param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
 
             let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
             let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
 
-            if let hir::Type::Slice(..) = &param.ty {
+            if let hir::Type::Slice(..) = param.ty {
                 // Two args on the ABI: pointer and size
                 param_types_ffi.push(self.formatter.fmt_pointer(&param_type_ffi).into());
                 param_types_ffi_cast.push(self.formatter.fmt_pointer(&param_type_ffi_cast).into());
@@ -379,7 +408,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 param_types_ffi_cast.push(self.formatter.fmt_usize(true).into());
                 param_names_ffi.push(format!("{param_name}Length").into());
 
-                let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone());
+                let view_expr = self.gen_dart_to_c_for_type(&param.ty, param_name.clone(), None);
+
+                let is_borrowed = match param_borrow_kind {
+                    ParamBorrowInfo::TemporarySlice => false,
+                    ParamBorrowInfo::BorrowedSlice => true,
+                    _ => unreachable!(
+                        "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
+                    ),
+                };
 
                 if is_borrowed {
                     // Slices borrowed in the return value use a custom arena that gets generated in the template via slice_params
@@ -397,12 +434,26 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     is_borrowed,
                 });
             } else {
-                if matches!(param.ty, hir::Type::Struct(..)) {
+                if let hir::Type::Struct(..) = param.ty {
                     needs_temp_arena = true;
                 }
+                let struct_borrow_info =
+                    if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
+                        Some(StructBorrowContext {
+                            use_env: &method.lifetime_env,
+                            param_info,
+                            is_method: true,
+                        })
+                    } else {
+                        None
+                    };
                 param_types_ffi.push(param_type_ffi);
                 param_types_ffi_cast.push(param_type_ffi_cast);
-                param_conversions.push(self.gen_dart_to_c_for_type(&param.ty, param_name.clone()));
+                param_conversions.push(self.gen_dart_to_c_for_type(
+                    &param.ty,
+                    param_name.clone(),
+                    struct_borrow_info,
+                ));
                 param_names_ffi.push(param_name);
             }
         }
@@ -713,10 +764,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates an FFI expression for a type.
+    ///
+    /// For struct parameters borrowed by the output, `struct_borrow_info` is a map of
     fn gen_dart_to_c_for_type<P: TyPosition>(
         &mut self,
         ty: &Type<P>,
         dart_name: Cow<'cx, str>,
+        struct_borrow_info: Option<StructBorrowContext<'cx>>,
     ) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
@@ -730,7 +784,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 format!("{dart_name}.index").into()
             }
-            Type::Struct(..) => format!("{dart_name}._pointer(temp)").into(),
+            Type::Struct(..) => self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info),
             Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._underlying").into(),
             Type::Slice(hir::Slice::Str(
                 _,
@@ -748,16 +802,48 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
+    /// Generates an FFI expression for a struct
+    fn gen_dart_to_c_for_struct_type(
+        &mut self,
+        dart_name: Cow<'cx, str>,
+        struct_borrow_info: Option<StructBorrowContext<'cx>>,
+    ) -> Cow<'cx, str> {
+        let mut params = String::new();
+        if let Some(info) = struct_borrow_info {
+            for (def_lt, use_lts) in info.param_info.borrowed_struct_lifetime_map {
+                write!(
+                    &mut params,
+                    ", {}AppendArray: [",
+                    info.param_info.env.fmt_lifetime(def_lt)
+                )
+                .unwrap();
+                let mut maybe_comma = "";
+                for use_lt in use_lts {
+                    // Generate stuff like `, aEdges` or for struct fields, `, ...?aAppendArray`
+                    let lt = info.use_env.fmt_lifetime(use_lt);
+                    if info.is_method {
+                        write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
+                    } else {
+                        write!(&mut params, "{maybe_comma}...?{lt}AppendArray",).unwrap();
+                    }
+                    maybe_comma = ", ";
+                }
+                write!(&mut params, "]").unwrap();
+            }
+        }
+        format!("{dart_name}._pointer(temp{params})").into()
+    }
+
     /// Generate the name of a single lifetime edge array
     ///
     /// FIXME(Manishearth): this may need to belong in  fmt.rs
     fn gen_single_edge(&self, lifetime: Lifetime, lifetime_env: &LifetimeEnv) -> Cow<'static, str> {
-        format!("edge_{}", lifetime_env.fmt_lifetime(lifetime)).into()
+        format!("{}Edges", lifetime_env.fmt_lifetime(lifetime)).into()
     }
 
     /// Make a list of edge arrays, one for every lifetime in a Lifetimes
     ///
-    /// Will generate with a leading `, `, so will look something like `, edge_a, edge_b, ...`
+    /// Will generate with a leading `, `, so will look something like `, aEdges, bEdges, ...`
     fn gen_lifetimes_edge_list(&self, lifetimes: &Lifetimes, lifetime_env: &LifetimeEnv) -> String {
         let mut ret = String::new();
         for lt in lifetimes.lifetimes() {
@@ -765,9 +851,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 // We only generate a single edge in the list per lifetime, despite transitivity
                 //
                 // This is because we plan to handle transitivity when constructing these edge arrays,
-                // e.g. if `'a: 'b`, `edge_a` will already contain the relevant bits from `edge_b`.
+                // e.g. if `'a: 'b`, `aEdges` will already contain the relevant bits from `bEdges`.
                 //
-                // This lets us do things like not generate edge_b if it's not actually relevant for returning.
+                // This lets us do things like not generate bEdges if it's not actually relevant for returning.
                 write!(ret, ", {}", self.gen_single_edge(lt, lifetime_env)).unwrap();
             } else {
                 write!(ret, ", []").unwrap();
@@ -1063,23 +1149,6 @@ struct FieldInfo<'a, P: TyPosition> {
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
-/// Convert an iterator to btreeset
-fn iterator_to_btreeset<T: Ord>(i: impl Iterator<Item = T>) -> BTreeSet<T> {
-    i.collect()
-}
-
-/// Turn a set of lifetimes into a nice comma separated list
-fn display_lifetime_list(env: &LifetimeEnv, set: &BTreeSet<Lifetime>) -> String {
-    if set.len() <= 1 {
-        String::new()
-    } else {
-        set.iter()
-            .map(|i| env.fmt_lifetime(i))
-            .collect::<Vec<_>>()
-            .join(", ")
-    }
-}
-
 fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     let param_name = &edge.param_name;
     match edge.kind {
@@ -1100,16 +1169,13 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
 /// Iterate over fields, filtering by fields that actually use lifetimes from `lifetimes`
 fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
     fields: &'a [FieldInfo<'a, P>],
-    lifetimes: &'a BTreeSet<Lifetime>,
+    lifetime: &'a Lifetime,
 ) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
     /// Does `ty` use any lifetime from `lifetimes`?
-    fn does_type_use_lifetime_from_set<P: TyPosition>(
-        ty: &Type<P>,
-        lifetimes: &BTreeSet<Lifetime>,
-    ) -> bool {
+    fn does_type_use_lifetime_from_set<P: TyPosition>(ty: &Type<P>, lifetime: &Lifetime) -> bool {
         for lt in ty.lifetimes() {
             if let MaybeStatic::NonStatic(lt) = lt {
-                if lifetimes.contains(&lt) {
+                if lt == *lifetime {
                     return true;
                 }
             }
@@ -1119,5 +1185,16 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
 
     fields
         .iter()
-        .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetimes))
+        .filter(move |f| does_type_use_lifetime_from_set(f.ty, lifetime))
+}
+
+/// Context about a struct being borrowed when doing dart-to-c conversions
+struct StructBorrowContext<'tcx> {
+    /// Is this in a method or struct?
+    ///
+    /// Methods generate things like `[aEdges, bEdges]`
+    /// whereas structs do `[...?aAppendArray, ...?bAppendArray]`
+    is_method: bool,
+    use_env: &'tcx LifetimeEnv,
+    param_info: StructBorrowInfo<'tcx>,
 }
