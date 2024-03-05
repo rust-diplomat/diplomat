@@ -55,18 +55,22 @@ final class Opaque implements ffi.Finalizable {
 // ignore: non_constant_identifier_names
 external void _Opaque_destroy(ffi.Pointer<ffi.Void> self);
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'Opaque_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Opaque_new();
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>(isLeaf: true, symbol: 'Opaque_assert_struct')
 // ignore: non_constant_identifier_names
 external void _Opaque_assert_struct(ffi.Pointer<ffi.Opaque> self, _MyStructFfi s);
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Size Function()>(isLeaf: true, symbol: 'Opaque_returns_usize')
 // ignore: non_constant_identifier_names
 external int _Opaque_returns_usize();
 
+@meta.ResourceIdentifier()
 @ffi.Native<_ImportedStructFfi Function()>(isLeaf: true, symbol: 'Opaque_returns_imported')
 // ignore: non_constant_identifier_names
 external _ImportedStructFfi _Opaque_returns_imported();

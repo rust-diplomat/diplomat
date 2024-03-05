@@ -41,6 +41,7 @@ final class ICU4XLocale implements ffi.Finalizable {
 // ignore: non_constant_identifier_names
 external void _ICU4XLocale_destroy(ffi.Pointer<ffi.Void> self);
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'ICU4XLocale_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _ICU4XLocale_new(ffi.Pointer<ffi.Uint8> nameData, int nameLength);

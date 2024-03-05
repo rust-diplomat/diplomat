@@ -66,6 +66,8 @@ pub fn run<'cx>(
     directives
         .insert(formatter.fmt_import("package:ffi/ffi.dart", Some("as ffi2 show Arena, calloc")));
     directives.insert(formatter.fmt_import("dart:typed_data", None));
+    directives.insert(formatter.fmt_import("package:meta/meta.dart", Some("as meta")));
+
     files.add_file(
         formatter.fmt_file_name("lib"),
         render_class(

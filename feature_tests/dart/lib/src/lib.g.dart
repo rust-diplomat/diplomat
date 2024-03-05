@@ -10,6 +10,7 @@ import 'dart:ffi' as ffi;
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart' as ffi2 show Arena, calloc;
+import 'package:meta/meta.dart' as meta;
 part 'AttrEnum.g.dart';
 part 'AttrOpaque1.g.dart';
 part 'AttrOpaque2.g.dart';
