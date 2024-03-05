@@ -57,7 +57,7 @@ final class Foo implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Foo_as_returning(_underlying);
-    return BorrowedFieldsReturning._(result, []);
+    return BorrowedFieldsReturning._(result, aEdges);
   }
 
   factory Foo.extractFromFields(BorrowedFields fields) {

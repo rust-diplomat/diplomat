@@ -896,8 +896,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Struct(ref st) => {
                 let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
-                // TODO (#406) use correct edges here
-                let edges = st.lifetimes().lifetimes().map(|_| ", []").collect::<Vec<_>>().join("");
+                let mut edges = String::new();
+                for lt in st.lifetimes().lifetimes() {
+                    if let MaybeStatic::NonStatic(lt) = lt {
+                        write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
+                    } else {
+                        write!(&mut edges, ", []").unwrap();
+                    }
+                }
 
                 format!("{type_name}._({var_name}{edges})").into()
             }

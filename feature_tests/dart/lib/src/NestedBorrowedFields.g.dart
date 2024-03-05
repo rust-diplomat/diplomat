@@ -21,9 +21,9 @@ final class NestedBorrowedFields {
   // ignore: unused_element
   // Internal constructor from FFI.
   NestedBorrowedFields._(_NestedBorrowedFieldsFfi underlying, core.List<Object> xEdges, core.List<Object> yEdges, core.List<Object> zEdges) :
-    fields = BorrowedFields._(underlying.fields, []),
-    bounds = BorrowedFieldsWithBounds._(underlying.bounds, [], [], []),
-    bounds2 = BorrowedFieldsWithBounds._(underlying.bounds2, [], [], []);
+    fields = BorrowedFields._(underlying.fields, xEdges),
+    bounds = BorrowedFieldsWithBounds._(underlying.bounds, xEdges, yEdges, yEdges),
+    bounds2 = BorrowedFieldsWithBounds._(underlying.bounds2, zEdges, zEdges, zEdges);
 
   // ignore: unused_element
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
