@@ -62,6 +62,7 @@ final class OptionOpaque implements ffi.Finalizable {
   }
 }
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OptionOpaque_destroy')
 // ignore: non_constant_identifier_names
 external void _OptionOpaque_destroy(ffi.Pointer<ffi.Void> self);

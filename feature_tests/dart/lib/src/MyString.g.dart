@@ -54,6 +54,7 @@ final class MyString implements ffi.Finalizable {
   }
 }
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'MyString_destroy')
 // ignore: non_constant_identifier_names
 external void _MyString_destroy(ffi.Pointer<ffi.Void> self);

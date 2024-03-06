@@ -25,6 +25,7 @@ final class RefListParameter implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_RefListParameter_destroy));
 }
 
+@meta.ResourceIdentifier()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'RefListParameter_destroy')
 // ignore: non_constant_identifier_names
 external void _RefListParameter_destroy(ffi.Pointer<ffi.Void> self);
