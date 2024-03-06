@@ -50,17 +50,17 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XFixedDecimalFormatter_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatter_destroy')
 // ignore: non_constant_identifier_names
 external void _ICU4XFixedDecimalFormatter_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XFixedDecimalFormatter_try_new')
 @ffi.Native<_ResultOpaqueVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, _ICU4XFixedDecimalFormatterOptionsFfi)>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatter_try_new')
 // ignore: non_constant_identifier_names
 external _ResultOpaqueVoid _ICU4XFixedDecimalFormatter_try_new(ffi.Pointer<ffi.Opaque> locale, ffi.Pointer<ffi.Opaque> provider, _ICU4XFixedDecimalFormatterOptionsFfi options);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XFixedDecimalFormatter_format_write')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatter_format_write')
 // ignore: non_constant_identifier_names
 external void _ICU4XFixedDecimalFormatter_format_write(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> value, ffi.Pointer<ffi.Opaque> writeable);

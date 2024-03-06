@@ -54,27 +54,27 @@ final class MyString implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('MyString_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'MyString_destroy')
 // ignore: non_constant_identifier_names
 external void _MyString_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('MyString_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new(ffi.Pointer<ffi.Uint8> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('MyString_new_unsafe')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_unsafe')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new_unsafe(ffi.Pointer<ffi.Uint8> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('MyString_set_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_set_str')
 // ignore: non_constant_identifier_names
 external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Uint8> newStrData, int newStrLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('MyString_get_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_str')
 // ignore: non_constant_identifier_names
 external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);

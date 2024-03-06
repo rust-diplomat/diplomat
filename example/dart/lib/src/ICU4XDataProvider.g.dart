@@ -40,17 +40,17 @@ final class ICU4XDataProvider implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XDataProvider_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XDataProvider_destroy')
 // ignore: non_constant_identifier_names
 external void _ICU4XDataProvider_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XDataProvider_new_static')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'ICU4XDataProvider_new_static')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _ICU4XDataProvider_new_static();
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XDataProvider_returns_result')
 @ffi.Native<_ResultVoidVoid Function()>(isLeaf: true, symbol: 'ICU4XDataProvider_returns_result')
 // ignore: non_constant_identifier_names
 external _ResultVoidVoid _ICU4XDataProvider_returns_result();
