@@ -3,8 +3,8 @@
 use super::lowering::ItemAndInfo;
 use super::ty_position::StructPathLike;
 use super::{
-    AttributeContext, AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError,
-    MaybeStatic, OpaqueDef, OutStructDef, StructDef, TypeDef,
+    AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError, MaybeStatic, OpaqueDef,
+    OutStructDef, StructDef, TypeDef,
 };
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
@@ -132,7 +132,6 @@ impl TypeContext {
             let mod_attrs = Attrs::from_ast(
                 &mod_env.attrs,
                 &attr_validator,
-                AttributeContext::Module,
                 &Default::default(),
                 &mut errors,
             );
@@ -144,11 +143,17 @@ impl TypeContext {
                 if let ast::ModSymbol::CustomType(custom_type) = sym {
                     match custom_type {
                         ast::CustomType::Struct(strct) => {
+                            let id = if strct.output_only {
+                                TypeId::OutStruct(OutStructId(ast_out_structs.len()))
+                            } else {
+                                TypeId::Struct(StructId(ast_structs.len()))
+                            };
                             let item = ItemAndInfo {
                                 item: strct,
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
+                                id,
                             };
                             if strct.output_only {
                                 ast_out_structs.push(item);
@@ -162,6 +167,7 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
+                                id: TypeId::Opaque(OpaqueId(ast_opaques.len())),
                             };
                             ast_opaques.push(item)
                         }
@@ -171,6 +177,7 @@ impl TypeContext {
                                 in_path: path,
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
+                                id: TypeId::Enum(EnumId(ast_enums.len())),
                             };
                             ast_enums.push(item)
                         }

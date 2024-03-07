@@ -2,7 +2,7 @@
 
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
-use crate::hir::LoweringError;
+use crate::hir::{EnumVariant, LoweringError, Method, TypeDef, TypeId};
 
 use syn::Meta;
 
@@ -38,13 +38,11 @@ pub enum SpecialMethod {
 /// Where the attribute was found. Some attributes are only allowed in some contexts
 /// (e.g. namespaces cannot be specified on methods)
 #[non_exhaustive] // might add module attrs in the future
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum AttributeContext {
-    Struct { out: bool },
-    Enum,
-    EnumVariant,
-    Opaque,
-    Method,
+#[derive(Copy, Clone, Debug)]
+pub enum AttributeContext<'a> {
+    Type(TypeDef<'a>),
+    EnumVariant(&'a EnumVariant),
+    Method(&'a Method, TypeId),
     Module,
 }
 
@@ -52,7 +50,6 @@ impl Attrs {
     pub fn from_ast(
         ast: &ast::Attrs,
         validator: &(impl AttributeValidator + ?Sized),
-        context: AttributeContext,
         parent_attrs: &Attrs,
         errors: &mut Vec<LoweringError>,
     ) -> Self {
@@ -76,10 +73,6 @@ impl Attrs {
                             errors.push(LoweringError::Other(format!(
                                 "`disable` not supported in backend {backend}"
                             )))
-                        } else if context == AttributeContext::EnumVariant {
-                            errors.push(LoweringError::Other(
-                                "`disable` cannot be used on enum variants".into(),
-                            ))
                         } else {
                             this.disable = true;
                         }
@@ -107,15 +100,6 @@ impl Attrs {
                         )));
                         continue;
                     }
-                    if matches!(
-                        context,
-                        AttributeContext::Method | AttributeContext::EnumVariant
-                    ) {
-                        errors.push(LoweringError::Other(
-                            "`namespace` can only be used on types".to_string(),
-                        ));
-                        continue;
-                    }
                     match StandardAttribute::from_meta(&attr.meta) {
                         Ok(StandardAttribute::String(s)) if s.is_empty() => this.namespace = None,
                         Ok(StandardAttribute::String(s)) => this.namespace = Some(s),
@@ -135,6 +119,38 @@ impl Attrs {
         }
 
         this
+    }
+
+    pub(crate) fn validate(
+        &self,
+        validator: &(impl AttributeValidator + ?Sized),
+        context: AttributeContext,
+        errors: &mut Vec<LoweringError>,
+    ) {
+        // use an exhaustive destructure so new attributes are handled
+        let Attrs {
+            disable,
+            namespace,
+            rename: _,
+            abi_rename: _,
+        } = &self;
+
+        if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
+            errors.push(LoweringError::Other(
+                "`disable` cannot be used on enum variants".into(),
+            ))
+        }
+
+        if namespace.is_some()
+            && matches!(
+                context,
+                AttributeContext::Method(..) | AttributeContext::EnumVariant(..)
+            )
+        {
+            errors.push(LoweringError::Other(
+                "`namespace` can only be used on types".to_string(),
+            ));
+        }
     }
 
     pub(crate) fn for_inheritance(&self, context: AttrInheritContext) -> Attrs {
@@ -208,11 +224,15 @@ pub trait AttributeValidator {
     fn attr_from_ast(
         &self,
         ast: &ast::Attrs,
-        context: AttributeContext,
         parent_attrs: &Attrs,
         errors: &mut Vec<LoweringError>,
     ) -> Attrs {
-        Attrs::from_ast(ast, self, context, parent_attrs, errors)
+        Attrs::from_ast(ast, self, parent_attrs, errors)
+    }
+
+    // Provided: validates an attribute in the context in which it was constructed
+    fn validate(&self, attrs: &Attrs, context: AttributeContext, errors: &mut Vec<LoweringError>) {
+        attrs.validate(self, context, errors)
     }
 }
 
