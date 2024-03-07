@@ -12,6 +12,7 @@ final class _ICU4XFixedDecimalFormatterOptionsFfi extends ffi.Struct {
 final class ICU4XFixedDecimalFormatterOptions {
   ICU4XFixedDecimalGroupingStrategy groupingStrategy;
   bool someOtherConfig;
+
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
   // and passes it down to individual fields containing the borrow.
@@ -21,6 +22,7 @@ final class ICU4XFixedDecimalFormatterOptions {
   ICU4XFixedDecimalFormatterOptions._fromFfi(_ICU4XFixedDecimalFormatterOptionsFfi ffi) :
     groupingStrategy = ICU4XFixedDecimalGroupingStrategy.values[ffi.groupingStrategy],
     someOtherConfig = ffi.someOtherConfig;
+
   // ignore: unused_element
   _ICU4XFixedDecimalFormatterOptionsFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_ICU4XFixedDecimalFormatterOptionsFfi>();

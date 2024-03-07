@@ -25,13 +25,13 @@ final class {{type_name}} {
   {%- when None %}
   {%- endmatch %}
 
-  {%- if lifetimes.all_lifetimes().len() == 0 %}
+  {% if lifetimes.all_lifetimes().len() == 0 -%}
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
   // and passes it down to individual fields containing the borrow.
   // This method does not attempt to handle any dependencies between lifetimes, the caller
   // should handle this when constructing edge arrays.
-  {%- endif %}
+  {% endif -%}
   // ignore: unused_element
   {{type_name}}._fromFfi(_{{type_name}}Ffi ffi {%- for lifetime in lifetimes.all_lifetimes() -%} , core.List<Object> {{lifetimes.fmt_lifetime(lifetime)}}Edges {%- endfor -%}) :
     {%- for field in fields %}
@@ -39,22 +39,21 @@ final class {{type_name}} {
     {%- if loop.last %};{% else %},{% endif -%}
     {%- endfor %}
 
-  {%- if lifetimes.all_lifetimes().len() != 0 %}
+  {% if lifetimes.all_lifetimes().len() != 0 -%}
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
-
   {%- if lifetimes.all_lifetimes().len() > 1 %}
   //
   // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
   {%- endif%}
-  {%- endif %}
+  {% endif -%}
   // ignore: unused_element
   _{{type_name}}Ffi _toFfi(ffi.Allocator temp
     {%- if lifetimes.all_lifetimes().len() != 0 -%}
     , {
-    {%- for l in lifetimes.all_lifetimes() %}{% if !loop.first %}, {% endif %}core.List<core.List<Object>>? {{lifetimes.fmt_lifetime(l)}}AppendArray
+    {%- for l in lifetimes.all_lifetimes() %}{% if !loop.first %}, {% endif %}core.List<core.List<Object>> {{lifetimes.fmt_lifetime(l)}}AppendArray = const []
     {%- endfor -%}
     }
     {%- endif -%}

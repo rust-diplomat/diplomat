@@ -14,30 +14,29 @@ final class BorrowedFields {
   String c;
 
   BorrowedFields({required this.a, required this.b, required this.c});
+
   // ignore: unused_element
   BorrowedFields._fromFfi(_BorrowedFieldsFfi ffi, core.List<Object> aEdges) :
     a = core.String.fromCharCodes(ffi.a._data.asTypedList(ffi.a._length)),
     b = Utf8Decoder().convert(ffi.b._data.asTypedList(ffi.b._length)),
     c = Utf8Decoder().convert(ffi.c._data.asTypedList(ffi.c._length));
+
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
   // ignore: unused_element
-  _BorrowedFieldsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray}) {
+  _BorrowedFieldsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowedFieldsFfi>();
     final aView = a.utf16View;
     struct.a._length = aView.length;
-    final aArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    struct.a._data = aView.allocIn(aArena);
+    struct.a._data = aView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
     final bView = b.utf8View;
     struct.b._length = bView.length;
-    final bArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    struct.b._data = bView.allocIn(bArena);
+    struct.b._data = bView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
     final cView = c.utf8View;
     struct.c._length = cView.length;
-    final cArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    struct.c._data = cView.allocIn(cArena);
+    struct.c._data = cView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
     return struct;
   }
 

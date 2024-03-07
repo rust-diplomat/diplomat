@@ -14,6 +14,7 @@ final class ImportedStruct {
   int count;
 
   ImportedStruct({required this.foo, required this.count});
+
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
   // and passes it down to individual fields containing the borrow.
@@ -23,6 +24,7 @@ final class ImportedStruct {
   ImportedStruct._fromFfi(_ImportedStructFfi ffi) :
     foo = UnimportedEnum.values[ffi.foo],
     count = ffi.count;
+
   // ignore: unused_element
   _ImportedStructFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_ImportedStructFfi>();

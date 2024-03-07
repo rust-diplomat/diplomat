@@ -14,6 +14,7 @@ final class ErrorStruct {
   int j;
 
   ErrorStruct({required this.i, required this.j});
+
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
   // and passes it down to individual fields containing the borrow.
@@ -23,6 +24,7 @@ final class ErrorStruct {
   ErrorStruct._fromFfi(_ErrorStructFfi ffi) :
     i = ffi.i,
     j = ffi.j;
+
   // ignore: unused_element
   _ErrorStructFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_ErrorStructFfi>();

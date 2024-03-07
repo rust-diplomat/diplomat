@@ -27,6 +27,7 @@ final class MyStruct {
   int e;
   Rune f;
   MyEnum g;
+
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
   // and passes it down to individual fields containing the borrow.
@@ -41,6 +42,7 @@ final class MyStruct {
     e = ffi.e,
     f = ffi.f,
     g = MyEnum.values.firstWhere((v) => v._ffi == ffi.g);
+
   // ignore: unused_element
   _MyStructFfi _toFfi(ffi.Allocator temp) {
     final struct = ffi.Struct.create<_MyStructFfi>();

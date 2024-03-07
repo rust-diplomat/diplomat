@@ -239,10 +239,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // are explicitly specified on methods.
                     if let MaybeStatic::NonStatic(lt) = slice.lifetime() {
                         let lt_name = ty.lifetimes.fmt_lifetime(lt);
-                        ret.push(format!("final {name}Arena = ({lt_name}AppendArray != null && !{lt_name}AppendArray.isEmpty) ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp;"));
-
                         ret.push(format!(
-                            "struct.{name}._data = {name}View.allocIn({name}Arena);"
+                            "struct.{name}._data = {name}View.allocIn({lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp);"
                         ));
                     } else {
                         ret.push(format!(
@@ -821,12 +819,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 .unwrap();
                 let mut maybe_comma = "";
                 for use_lt in use_lts {
-                    // Generate stuff like `, aEdges` or for struct fields, `, ...?aAppendArray`
+                    // Generate stuff like `, aEdges` or for struct fields, `, ...aAppendArray`
                     let lt = info.use_env.fmt_lifetime(use_lt);
                     if info.is_method {
                         write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
                     } else {
-                        write!(&mut params, "{maybe_comma}...?{lt}AppendArray",).unwrap();
+                        write!(&mut params, "{maybe_comma}...{lt}AppendArray",).unwrap();
                     }
                     maybe_comma = ", ";
                 }
@@ -1208,12 +1206,13 @@ fn iter_def_lifetimes_matching_use_lt<'a>(
         .map(|(def_lt, _use_lts)| def_lt)
         .copied()
 }
+
 /// Context about a struct being borrowed when doing dart-to-c conversions
 struct StructBorrowContext<'tcx> {
     /// Is this in a method or struct?
     ///
     /// Methods generate things like `[aEdges, bEdges]`
-    /// whereas structs do `[...?aAppendArray, ...?bAppendArray]`
+    /// whereas structs do `[...aAppendArray, ...bAppendArray]`
     is_method: bool,
     use_env: &'tcx LifetimeEnv,
     param_info: StructBorrowInfo<'tcx>,

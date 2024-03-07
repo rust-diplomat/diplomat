@@ -14,11 +14,13 @@ final class BorrowedFieldsWithBounds {
   String fieldC;
 
   BorrowedFieldsWithBounds({required this.fieldA, required this.fieldB, required this.fieldC});
+
   // ignore: unused_element
   BorrowedFieldsWithBounds._fromFfi(_BorrowedFieldsWithBoundsFfi ffi, core.List<Object> aEdges, core.List<Object> bEdges, core.List<Object> cEdges) :
     fieldA = core.String.fromCharCodes(ffi.fieldA._data.asTypedList(ffi.fieldA._length)),
     fieldB = Utf8Decoder().convert(ffi.fieldB._data.asTypedList(ffi.fieldB._length)),
     fieldC = Utf8Decoder().convert(ffi.fieldC._data.asTypedList(ffi.fieldC._length));
+
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
@@ -26,20 +28,17 @@ final class BorrowedFieldsWithBounds {
   //
   // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
   // ignore: unused_element
-  _BorrowedFieldsWithBoundsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray, core.List<core.List<Object>>? bAppendArray, core.List<core.List<Object>>? cAppendArray}) {
+  _BorrowedFieldsWithBoundsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const [], core.List<core.List<Object>> bAppendArray = const [], core.List<core.List<Object>> cAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowedFieldsWithBoundsFfi>();
     final fieldAView = fieldA.utf16View;
     struct.fieldA._length = fieldAView.length;
-    final fieldAArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    struct.fieldA._data = fieldAView.allocIn(fieldAArena);
+    struct.fieldA._data = fieldAView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
     final fieldBView = fieldB.utf8View;
     struct.fieldB._length = fieldBView.length;
-    final fieldBArena = (bAppendArray != null && !bAppendArray.isEmpty) ? _FinalizedArena.withLifetime(bAppendArray).arena : temp;
-    struct.fieldB._data = fieldBView.allocIn(fieldBArena);
+    struct.fieldB._data = fieldBView.allocIn(bAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(bAppendArray).arena : temp);
     final fieldCView = fieldC.utf8View;
     struct.fieldC._length = fieldCView.length;
-    final fieldCArena = (cAppendArray != null && !cAppendArray.isEmpty) ? _FinalizedArena.withLifetime(cAppendArray).arena : temp;
-    struct.fieldC._data = fieldCView.allocIn(fieldCArena);
+    struct.fieldC._data = fieldCView.allocIn(cAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(cAppendArray).arena : temp);
     return struct;
   }
 

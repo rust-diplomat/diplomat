@@ -10,20 +10,21 @@ final class BorrowedFieldsReturning {
   String bytes;
 
   BorrowedFieldsReturning({required this.bytes});
+
   // ignore: unused_element
   BorrowedFieldsReturning._fromFfi(_BorrowedFieldsReturningFfi ffi, core.List<Object> aEdges) :
     bytes = Utf8Decoder().convert(ffi.bytes._data.asTypedList(ffi.bytes._length));
+
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
   // ignore: unused_element
-  _BorrowedFieldsReturningFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray}) {
+  _BorrowedFieldsReturningFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowedFieldsReturningFfi>();
     final bytesView = bytes.utf8View;
     struct.bytes._length = bytesView.length;
-    final bytesArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    struct.bytes._data = bytesView.allocIn(bytesArena);
+    struct.bytes._data = bytesView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
     return struct;
   }
 

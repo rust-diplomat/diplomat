@@ -14,11 +14,13 @@ final class NestedBorrowedFields {
   BorrowedFieldsWithBounds bounds2;
 
   NestedBorrowedFields({required this.fields, required this.bounds, required this.bounds2});
+
   // ignore: unused_element
   NestedBorrowedFields._fromFfi(_NestedBorrowedFieldsFfi ffi, core.List<Object> xEdges, core.List<Object> yEdges, core.List<Object> zEdges) :
     fields = BorrowedFields._fromFfi(ffi.fields, xEdges),
     bounds = BorrowedFieldsWithBounds._fromFfi(ffi.bounds, xEdges, yEdges, yEdges),
     bounds2 = BorrowedFieldsWithBounds._fromFfi(ffi.bounds2, zEdges, zEdges, zEdges);
+
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
@@ -26,11 +28,11 @@ final class NestedBorrowedFields {
   //
   // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
   // ignore: unused_element
-  _NestedBorrowedFieldsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>>? xAppendArray, core.List<core.List<Object>>? yAppendArray, core.List<core.List<Object>>? zAppendArray}) {
+  _NestedBorrowedFieldsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> xAppendArray = const [], core.List<core.List<Object>> yAppendArray = const [], core.List<core.List<Object>> zAppendArray = const []}) {
     final struct = ffi.Struct.create<_NestedBorrowedFieldsFfi>();
-    struct.fields = fields._toFfi(temp, aAppendArray: [...?xAppendArray]);
-    struct.bounds = bounds._toFfi(temp, aAppendArray: [...?xAppendArray], bAppendArray: [...?yAppendArray], cAppendArray: [...?yAppendArray]);
-    struct.bounds2 = bounds2._toFfi(temp, aAppendArray: [...?zAppendArray], bAppendArray: [...?zAppendArray], cAppendArray: [...?zAppendArray]);
+    struct.fields = fields._toFfi(temp, aAppendArray: [...xAppendArray]);
+    struct.bounds = bounds._toFfi(temp, aAppendArray: [...xAppendArray], bAppendArray: [...yAppendArray], cAppendArray: [...yAppendArray]);
+    struct.bounds2 = bounds2._toFfi(temp, aAppendArray: [...zAppendArray], bAppendArray: [...zAppendArray], cAppendArray: [...zAppendArray]);
     return struct;
   }
 
