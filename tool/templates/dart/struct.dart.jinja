@@ -25,48 +25,46 @@ final class {{type_name}} {
   {%- when None %}
   {%- endmatch %}
 
-  // ignore: unused_element
-  // Internal constructor from FFI.
-  {%- if lifetimes.all_lifetimes().len() == 0 %}
+  {% if lifetimes.all_lifetimes().len() == 0 -%}
   // This struct contains borrowed fields, so this takes in a list of
   // "edges" corresponding to where each lifetime's data may have been borrowed from
   // and passes it down to individual fields containing the borrow.
   // This method does not attempt to handle any dependencies between lifetimes, the caller
   // should handle this when constructing edge arrays.
-  {%- endif %}
-  {{type_name}}._(_{{type_name}}Ffi underlying {%- for lifetime in lifetimes.all_lifetimes() -%} , core.List<Object> {{lifetimes.fmt_lifetime(lifetime)}}Edges {%- endfor -%}) :
+  {% endif -%}
+  // ignore: unused_element
+  {{type_name}}._fromFfi(_{{type_name}}Ffi ffi {%- for lifetime in lifetimes.all_lifetimes() -%} , core.List<Object> {{lifetimes.fmt_lifetime(lifetime)}}Edges {%- endfor -%}) :
     {%- for field in fields %}
     {{field.name}} = {{field.c_to_dart}}
     {%- if loop.last %};{% else %},{% endif -%}
     {%- endfor %}
 
-  // ignore: unused_element
-  {%- if lifetimes.all_lifetimes().len() != 0 %}
+  {% if lifetimes.all_lifetimes().len() != 0 -%}
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
   // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
-
   {%- if lifetimes.all_lifetimes().len() > 1 %}
   //
   // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
   {%- endif%}
-  {%- endif %}
-  _{{type_name}}Ffi _pointer(ffi.Allocator temp
+  {% endif -%}
+  // ignore: unused_element
+  _{{type_name}}Ffi _toFfi(ffi.Allocator temp
     {%- if lifetimes.all_lifetimes().len() != 0 -%}
     , {
-    {%- for l in lifetimes.all_lifetimes() %}{% if !loop.first %}, {% endif %}core.List<core.List<Object>>? {{lifetimes.fmt_lifetime(l)}}AppendArray
+    {%- for l in lifetimes.all_lifetimes() %}{% if !loop.first %}, {% endif %}core.List<core.List<Object>> {{lifetimes.fmt_lifetime(l)}}AppendArray = const []
     {%- endfor -%}
     }
     {%- endif -%}
   ) {
-    final pointer = temp<_{{type_name}}Ffi>();
+    final struct = ffi.Struct.create<_{{type_name}}Ffi>();
     {%- for field in fields %}
     {%- for statement in field.dart_to_c %}
     {{statement}}
     {%- endfor %}
     {%- endfor %}
-    return pointer.ref;
+    return struct;
   }
 
   {%- for m in methods %}
@@ -91,27 +89,25 @@ final class {{type_name}} {
   {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}
 
-  // ignore: unused element
-  // Append all fields corresponding to lifetime `'{{ltname}}` 
+  // Return all fields corresponding to lifetime `'{{ltname}}` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'{{ltname}}`,
   // assuming that there are no `'other: {{ltname}}`. bounds. In case of such bounds,
-  // the caller should take care to also call _fields_for_lifetime_other()
-  core.List<Object> _fields_for_lifetime_{{ltname}}() {
-    return [
+  // the caller should take care to also call _fieldsForLifetimeOther
+  // ignore: unused_element
+  core.List<Object> get _fieldsForLifetime{{ltname.to_uppercase()}} => [
     {%- for field in self::iter_fields_with_lifetimes_from_set(fields, l) %}
         {%- if !loop.first %}, {% endif -%}
         {%- if let Some(st) = field.maybe_struct_borrow_info -%}
           {%- for def_lt in self::iter_def_lifetimes_matching_use_lt(l, st) -%}
           {%- if !loop.first %}, {% endif -%}
-          ...{{field.name}}._fields_for_lifetime_{{st.env.fmt_lifetime(def_lt)}}()
+          ...{{field.name}}._fieldsForLifetime{{st.env.fmt_lifetime(def_lt).to_uppercase()}}
           {%- endfor -%}
         {%- else -%}
           {{field.name}}
         {%- endif -%}
     {%- endfor -%}
     ];
-  }
 
   {%- endfor %}
 }

@@ -11,7 +11,7 @@ enum {{type_name}} {
 {%- endfor %}
   {%- if !is_contiguous %}
 
-  int get _underlying {
+  int get _ffi {
     switch (this) {
       {%- for enum_variant in ty.variants %}
       case {{fmt.fmt_enum_variant(enum_variant)}}:

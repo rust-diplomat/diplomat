@@ -1,11 +1,11 @@
 final class _Writeable {
-  final ffi.Pointer<ffi.Opaque> _underlying;
+  final ffi.Pointer<ffi.Opaque> _ffi;
 
-  _Writeable() : _underlying = _diplomat_buffer_writeable_create(0);
+  _Writeable() : _ffi = _diplomat_buffer_writeable_create(0);
   
   String finalize() {
-    final string = Utf8Decoder().convert(_diplomat_buffer_writeable_get_bytes(_underlying).asTypedList(_diplomat_buffer_writeable_len(_underlying)));
-    _diplomat_buffer_writeable_destroy(_underlying);
+    final string = Utf8Decoder().convert(_diplomat_buffer_writeable_get_bytes(_ffi).asTypedList(_diplomat_buffer_writeable_len(_ffi)));
+    _diplomat_buffer_writeable_destroy(_ffi);
     return string;
   }
 }

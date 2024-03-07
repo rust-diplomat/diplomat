@@ -1,6 +1,5 @@
 import 'package:feature_tests/lib.dart';
 import 'package:test/test.dart';
-import 'package:path/path.dart' as path;
 import 'dart:typed_data';
 
 void main() {

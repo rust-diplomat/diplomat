@@ -38,6 +38,14 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_lifetime_edge_array(
+        &self,
+        lifetime: hir::Lifetime,
+        lifetime_env: &hir::LifetimeEnv,
+    ) -> Cow<'static, str> {
+        format!("{}Edges", lifetime_env.fmt_lifetime(lifetime)).into()
+    }
+
     pub fn fmt_file_name(&self, name: &str) -> String {
         format!("{name}.g.dart")
     }
