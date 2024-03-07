@@ -51,22 +51,22 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XFixedDecimal_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XFixedDecimal_destroy')
 // ignore: non_constant_identifier_names
 external void _ICU4XFixedDecimal_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XFixedDecimal_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'ICU4XFixedDecimal_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _ICU4XFixedDecimal_new(int v);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XFixedDecimal_multiply_pow10')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int16)>(isLeaf: true, symbol: 'ICU4XFixedDecimal_multiply_pow10')
 // ignore: non_constant_identifier_names
 external void _ICU4XFixedDecimal_multiply_pow10(ffi.Pointer<ffi.Opaque> self, int power);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XFixedDecimal_to_string')
 @ffi.Native<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'ICU4XFixedDecimal_to_string')
 // ignore: non_constant_identifier_names
 external _ResultVoidVoid _ICU4XFixedDecimal_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);

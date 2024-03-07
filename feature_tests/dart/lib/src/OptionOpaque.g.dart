@@ -62,42 +62,42 @@ final class OptionOpaque implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('OptionOpaque_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OptionOpaque_destroy')
 // ignore: non_constant_identifier_names
 external void _OptionOpaque_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('OptionOpaque_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'OptionOpaque_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OptionOpaque_new(int i);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('OptionOpaque_new_none')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'OptionOpaque_new_none')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OptionOpaque_new_none();
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('OptionOpaque_returns')
 @ffi.Native<_ResultOptionStructFfiVoid Function()>(isLeaf: true, symbol: 'OptionOpaque_returns')
 // ignore: non_constant_identifier_names
 external _ResultOptionStructFfiVoid _OptionOpaque_returns();
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('OptionOpaque_new_struct')
 @ffi.Native<_OptionStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_new_struct')
 // ignore: non_constant_identifier_names
 external _OptionStructFfi _OptionOpaque_new_struct();
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('OptionOpaque_new_struct_nones')
 @ffi.Native<_OptionStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_new_struct_nones')
 // ignore: non_constant_identifier_names
 external _OptionStructFfi _OptionOpaque_new_struct_nones();
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('OptionOpaque_assert_integer')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'OptionOpaque_assert_integer')
 // ignore: non_constant_identifier_names
 external void _OptionOpaque_assert_integer(ffi.Pointer<ffi.Opaque> self, int i);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('OptionOpaque_option_opaque_argument')
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_opaque_argument')
 // ignore: non_constant_identifier_names
 external bool _OptionOpaque_option_opaque_argument(ffi.Pointer<ffi.Opaque> arg);

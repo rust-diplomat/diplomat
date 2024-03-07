@@ -117,12 +117,12 @@ final class MyStruct {
       ]);
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('MyStruct_new')
 @ffi.Native<_MyStructFfi Function()>(isLeaf: true, symbol: 'MyStruct_new')
 // ignore: non_constant_identifier_names
 external _MyStructFfi _MyStruct_new();
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('MyStruct_into_a')
 @ffi.Native<ffi.Uint8 Function(_MyStructFfi)>(isLeaf: true, symbol: 'MyStruct_into_a')
 // ignore: non_constant_identifier_names
 external int _MyStruct_into_a(_MyStructFfi self);

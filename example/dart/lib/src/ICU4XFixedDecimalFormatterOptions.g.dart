@@ -60,7 +60,7 @@ final class ICU4XFixedDecimalFormatterOptions {
       ]);
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('ICU4XFixedDecimalFormatterOptions_default')
 @ffi.Native<_ICU4XFixedDecimalFormatterOptionsFfi Function()>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatterOptions_default')
 // ignore: non_constant_identifier_names
 external _ICU4XFixedDecimalFormatterOptionsFfi _ICU4XFixedDecimalFormatterOptions_default();

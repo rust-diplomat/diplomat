@@ -52,37 +52,37 @@ final class AttrOpaque1 implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('namespace_AttrOpaque1_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_AttrOpaque1_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('namespace_AttrOpaque1_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_AttrOpaque1_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_AttrOpaque1_new();
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('namespace_AttrOpaque1_method')
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method')
 // ignore: non_constant_identifier_names
 external int _namespace_AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('renamed_on_abi_only')
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'renamed_on_abi_only')
 // ignore: non_constant_identifier_names
 external int _renamed_on_abi_only(ffi.Pointer<ffi.Opaque> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('namespace_AttrOpaque1_method_disabledcpp')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method_disabledcpp')
 // ignore: non_constant_identifier_names
 external void _namespace_AttrOpaque1_method_disabledcpp(ffi.Pointer<ffi.Opaque> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('namespace_AttrOpaque1_use_unnamespaced')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_use_unnamespaced')
 // ignore: non_constant_identifier_names
 external void _namespace_AttrOpaque1_use_unnamespaced(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> un);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('namespace_AttrOpaque1_use_namespaced')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_use_namespaced')
 // ignore: non_constant_identifier_names
 external void _namespace_AttrOpaque1_use_namespaced(ffi.Pointer<ffi.Opaque> self, int n);

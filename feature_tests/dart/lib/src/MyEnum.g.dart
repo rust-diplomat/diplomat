@@ -41,7 +41,7 @@ enum MyEnum {
   }
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('MyEnum_into_value')
 @ffi.Native<ffi.Int8 Function(ffi.Int32)>(isLeaf: true, symbol: 'MyEnum_into_value')
 // ignore: non_constant_identifier_names
 external int _MyEnum_into_value(int self);

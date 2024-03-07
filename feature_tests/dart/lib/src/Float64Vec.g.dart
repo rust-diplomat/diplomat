@@ -102,57 +102,57 @@ final class Float64Vec implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_destroy')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Float64Vec_destroy')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_new')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Double>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new(ffi.Pointer<ffi.Double> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_new_bool')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Bool>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_bool')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_bool(ffi.Pointer<ffi.Bool> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_new_i16')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Int16>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_i16')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_i16(ffi.Pointer<ffi.Int16> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_new_u16')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint16>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_u16')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_u16(ffi.Pointer<ffi.Uint16> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_new_isize')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.IntPtr>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_isize')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_isize(ffi.Pointer<ffi.IntPtr> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_new_usize')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Size>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_usize')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_usize(ffi.Pointer<ffi.Size> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_new_f64_be_bytes')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_f64_be_bytes')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_f64_be_bytes(ffi.Pointer<ffi.Uint8> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_fill_slice')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Double>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_fill_slice')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_fill_slice(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Double> vData, int vLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_set_value')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Double>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_set_value')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_set_value(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Double> newSliceData, int newSliceLength);
 
-@meta.ResourceIdentifier()
+@meta.ResourceIdentifier('Float64Vec_to_string')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_to_string')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);
