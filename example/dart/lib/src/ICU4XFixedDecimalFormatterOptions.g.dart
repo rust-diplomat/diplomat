@@ -23,10 +23,10 @@ final class ICU4XFixedDecimalFormatterOptions {
     someOtherConfig = ffi.someOtherConfig;
   // ignore: unused_element
   _ICU4XFixedDecimalFormatterOptionsFfi _toFfi(ffi.Allocator temp) {
-    final pointer = temp<_ICU4XFixedDecimalFormatterOptionsFfi>();
-    pointer.ref.groupingStrategy = groupingStrategy.index;
-    pointer.ref.someOtherConfig = someOtherConfig;
-    return pointer.ref;
+    final struct = ffi.Struct.create<_ICU4XFixedDecimalFormatterOptionsFfi>();
+    struct.groupingStrategy = groupingStrategy.index;
+    struct.someOtherConfig = someOtherConfig;
+    return struct;
   }
 
   factory ICU4XFixedDecimalFormatterOptions({ICU4XFixedDecimalGroupingStrategy? groupingStrategy, bool? someOtherConfig}) {

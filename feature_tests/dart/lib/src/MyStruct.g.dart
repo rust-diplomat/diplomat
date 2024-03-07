@@ -43,15 +43,15 @@ final class MyStruct {
     g = MyEnum.values.firstWhere((v) => v._ffi == ffi.g);
   // ignore: unused_element
   _MyStructFfi _toFfi(ffi.Allocator temp) {
-    final pointer = temp<_MyStructFfi>();
-    pointer.ref.a = a;
-    pointer.ref.b = b;
-    pointer.ref.c = c;
-    pointer.ref.d = d;
-    pointer.ref.e = e;
-    pointer.ref.f = f;
-    pointer.ref.g = g._ffi;
-    return pointer.ref;
+    final struct = ffi.Struct.create<_MyStructFfi>();
+    struct.a = a;
+    struct.b = b;
+    struct.c = c;
+    struct.d = d;
+    struct.e = e;
+    struct.f = f;
+    struct.g = g._ffi;
+    return struct;
   }
 
   factory MyStruct({int? a, bool? b, int? c, int? d, int? e, Rune? f, MyEnum? g}) {

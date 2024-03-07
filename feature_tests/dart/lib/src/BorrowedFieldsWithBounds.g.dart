@@ -27,20 +27,20 @@ final class BorrowedFieldsWithBounds {
   // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
   // ignore: unused_element
   _BorrowedFieldsWithBoundsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray, core.List<core.List<Object>>? bAppendArray, core.List<core.List<Object>>? cAppendArray}) {
-    final pointer = temp<_BorrowedFieldsWithBoundsFfi>();
+    final struct = ffi.Struct.create<_BorrowedFieldsWithBoundsFfi>();
     final fieldAView = fieldA.utf16View;
-    pointer.ref.fieldA._length = fieldAView.length;
+    struct.fieldA._length = fieldAView.length;
     final fieldAArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    pointer.ref.fieldA._data = fieldAView.allocIn(fieldAArena);
+    struct.fieldA._data = fieldAView.allocIn(fieldAArena);
     final fieldBView = fieldB.utf8View;
-    pointer.ref.fieldB._length = fieldBView.length;
+    struct.fieldB._length = fieldBView.length;
     final fieldBArena = (bAppendArray != null && !bAppendArray.isEmpty) ? _FinalizedArena.withLifetime(bAppendArray).arena : temp;
-    pointer.ref.fieldB._data = fieldBView.allocIn(fieldBArena);
+    struct.fieldB._data = fieldBView.allocIn(fieldBArena);
     final fieldCView = fieldC.utf8View;
-    pointer.ref.fieldC._length = fieldCView.length;
+    struct.fieldC._length = fieldCView.length;
     final fieldCArena = (cAppendArray != null && !cAppendArray.isEmpty) ? _FinalizedArena.withLifetime(cAppendArray).arena : temp;
-    pointer.ref.fieldC._data = fieldCView.allocIn(fieldCArena);
-    return pointer.ref;
+    struct.fieldC._data = fieldCView.allocIn(fieldCArena);
+    return struct;
   }
 
   @override

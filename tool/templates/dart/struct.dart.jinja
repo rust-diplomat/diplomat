@@ -59,13 +59,13 @@ final class {{type_name}} {
     }
     {%- endif -%}
   ) {
-    final pointer = temp<_{{type_name}}Ffi>();
+    final struct = ffi.Struct.create<_{{type_name}}Ffi>();
     {%- for field in fields %}
     {%- for statement in field.dart_to_c %}
     {{statement}}
     {%- endfor %}
     {%- endfor %}
-    return pointer.ref;
+    return struct;
   }
 
   {%- for m in methods %}

@@ -28,12 +28,12 @@ final class OptionStruct {
     d = ffi.d.address == 0 ? null : OptionOpaque._fromFfi(ffi.d, true, []);
   // ignore: unused_element
   _OptionStructFfi _toFfi(ffi.Allocator temp) {
-    final pointer = temp<_OptionStructFfi>();
-    pointer.ref.a = a?._ffi ?? ffi.Pointer.fromAddress(0);
-    pointer.ref.b = b?._ffi ?? ffi.Pointer.fromAddress(0);
-    pointer.ref.c = c;
-    pointer.ref.d = d?._ffi ?? ffi.Pointer.fromAddress(0);
-    return pointer.ref;
+    final struct = ffi.Struct.create<_OptionStructFfi>();
+    struct.a = a?._ffi ?? ffi.Pointer.fromAddress(0);
+    struct.b = b?._ffi ?? ffi.Pointer.fromAddress(0);
+    struct.c = c;
+    struct.d = d?._ffi ?? ffi.Pointer.fromAddress(0);
+    return struct;
   }
 
   @override

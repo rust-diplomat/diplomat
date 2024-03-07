@@ -25,20 +25,20 @@ final class BorrowedFields {
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
   // ignore: unused_element
   _BorrowedFieldsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray}) {
-    final pointer = temp<_BorrowedFieldsFfi>();
+    final struct = ffi.Struct.create<_BorrowedFieldsFfi>();
     final aView = a.utf16View;
-    pointer.ref.a._length = aView.length;
+    struct.a._length = aView.length;
     final aArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    pointer.ref.a._data = aView.allocIn(aArena);
+    struct.a._data = aView.allocIn(aArena);
     final bView = b.utf8View;
-    pointer.ref.b._length = bView.length;
+    struct.b._length = bView.length;
     final bArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    pointer.ref.b._data = bView.allocIn(bArena);
+    struct.b._data = bView.allocIn(bArena);
     final cView = c.utf8View;
-    pointer.ref.c._length = cView.length;
+    struct.c._length = cView.length;
     final cArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    pointer.ref.c._data = cView.allocIn(cArena);
-    return pointer.ref;
+    struct.c._data = cView.allocIn(cArena);
+    return struct;
   }
 
   @override

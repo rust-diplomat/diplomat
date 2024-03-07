@@ -231,7 +231,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone(), None);
                     let mut ret = vec![
                         format!("final {name}View = {view_expr};"),
-                        format!("pointer.ref.{name}._length = {name}View.length;"),
+                        format!("struct.{name}._length = {name}View.length;"),
                     ];
 
                     // We do not need to handle lifetime transitivity here: Methods already resolve
@@ -242,11 +242,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         ret.push(format!("final {name}Arena = ({lt_name}AppendArray != null && !{lt_name}AppendArray.isEmpty) ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp;"));
 
                         ret.push(format!(
-                            "pointer.ref.{name}._data = {name}View.allocIn({name}Arena);"
+                            "struct.{name}._data = {name}View.allocIn({name}Arena);"
                         ));
                     } else {
                         ret.push(format!(
-                            "pointer.ref.{name}._data = {name}View.allocIn(temp);"
+                            "struct.{name}._data = {name}View.allocIn(temp);"
                         ));
                     }
                     (ret, None)
@@ -264,7 +264,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     };
                     let dart_to_c = self.gen_dart_to_c_for_type(&field.ty, name.clone(), struct_borrow_info.as_ref());
                     (vec![format!(
-                        "pointer.ref.{name} = {};",
+                        "struct.{name} = {};",
                         dart_to_c
                     )], struct_borrow_info.map(|s| s.param_info))
                 };

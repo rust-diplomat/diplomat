@@ -27,11 +27,11 @@ final class NestedBorrowedFields {
   // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
   // ignore: unused_element
   _NestedBorrowedFieldsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>>? xAppendArray, core.List<core.List<Object>>? yAppendArray, core.List<core.List<Object>>? zAppendArray}) {
-    final pointer = temp<_NestedBorrowedFieldsFfi>();
-    pointer.ref.fields = fields._toFfi(temp, aAppendArray: [...?xAppendArray]);
-    pointer.ref.bounds = bounds._toFfi(temp, aAppendArray: [...?xAppendArray], bAppendArray: [...?yAppendArray], cAppendArray: [...?yAppendArray]);
-    pointer.ref.bounds2 = bounds2._toFfi(temp, aAppendArray: [...?zAppendArray], bAppendArray: [...?zAppendArray], cAppendArray: [...?zAppendArray]);
-    return pointer.ref;
+    final struct = ffi.Struct.create<_NestedBorrowedFieldsFfi>();
+    struct.fields = fields._toFfi(temp, aAppendArray: [...?xAppendArray]);
+    struct.bounds = bounds._toFfi(temp, aAppendArray: [...?xAppendArray], bAppendArray: [...?yAppendArray], cAppendArray: [...?yAppendArray]);
+    struct.bounds2 = bounds2._toFfi(temp, aAppendArray: [...?zAppendArray], bAppendArray: [...?zAppendArray], cAppendArray: [...?zAppendArray]);
+    return struct;
   }
 
   @override

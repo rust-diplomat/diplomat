@@ -19,12 +19,12 @@ final class BorrowedFieldsReturning {
   // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
   // ignore: unused_element
   _BorrowedFieldsReturningFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>>? aAppendArray}) {
-    final pointer = temp<_BorrowedFieldsReturningFfi>();
+    final struct = ffi.Struct.create<_BorrowedFieldsReturningFfi>();
     final bytesView = bytes.utf8View;
-    pointer.ref.bytes._length = bytesView.length;
+    struct.bytes._length = bytesView.length;
     final bytesArena = (aAppendArray != null && !aAppendArray.isEmpty) ? _FinalizedArena.withLifetime(aAppendArray).arena : temp;
-    pointer.ref.bytes._data = bytesView.allocIn(bytesArena);
-    return pointer.ref;
+    struct.bytes._data = bytesView.allocIn(bytesArena);
+    return struct;
   }
 
   @override

@@ -25,10 +25,10 @@ final class ImportedStruct {
     count = ffi.count;
   // ignore: unused_element
   _ImportedStructFfi _toFfi(ffi.Allocator temp) {
-    final pointer = temp<_ImportedStructFfi>();
-    pointer.ref.foo = foo.index;
-    pointer.ref.count = count;
-    return pointer.ref;
+    final struct = ffi.Struct.create<_ImportedStructFfi>();
+    struct.foo = foo.index;
+    struct.count = count;
+    return struct;
   }
 
   @override

@@ -25,10 +25,10 @@ final class ErrorStruct {
     j = ffi.j;
   // ignore: unused_element
   _ErrorStructFfi _toFfi(ffi.Allocator temp) {
-    final pointer = temp<_ErrorStructFfi>();
-    pointer.ref.i = i;
-    pointer.ref.j = j;
-    return pointer.ref;
+    final struct = ffi.Struct.create<_ErrorStructFfi>();
+    struct.i = i;
+    struct.j = j;
+    return struct;
   }
 
   @override
