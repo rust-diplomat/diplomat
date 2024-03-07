@@ -25,22 +25,22 @@ pub struct TypeContext {
 }
 
 /// Key used to index into a [`TypeContext`] representing a struct.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructId(usize);
 
 /// Key used to index into a [`TypeContext`] representing an out struct.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OutStructId(usize);
 
 /// Key used to index into a [`TypeContext`] representing a opaque.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OpaqueId(usize);
 
 /// Key used to index into a [`TypeContext`] representing an enum.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EnumId(usize);
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[non_exhaustive]
 pub enum TypeId {
     Struct(StructId),

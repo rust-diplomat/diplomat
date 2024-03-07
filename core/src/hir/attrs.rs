@@ -2,7 +2,7 @@
 
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
-use crate::hir::{EnumVariant, LoweringError, Method, TypeDef, TypeId};
+use crate::hir::{EnumVariant, LoweringError, Method, ReturnType, SuccessType, TypeDef, TypeId};
 
 use syn::Meta;
 
@@ -20,7 +20,9 @@ pub struct Attrs {
     pub rename: RenameAttr,
     /// This attribute is inherited except through variants
     pub abi_rename: RenameAttr,
-    // more to be added: namespace, etc
+    /// This attribute does not participate in inheritance and must always
+    /// be specified on individual methods
+    pub special_method: Option<SpecialMethod>,
 }
 
 /// Attributes that mark methods as "special"
@@ -63,56 +65,104 @@ impl Attrs {
         for attr in &ast.attrs {
             if validator.satisfies_cfg(&attr.cfg) {
                 let path = attr.meta.path();
-
-                if path.is_ident("disable") {
-                    if let Meta::Path(_) = attr.meta {
-                        if this.disable {
-                            errors
-                                .push(LoweringError::Other("Duplicate `disable` attribute".into()));
-                        } else if !support.disabling {
-                            errors.push(LoweringError::Other(format!(
-                                "`disable` not supported in backend {backend}"
-                            )))
+                if let Some(path) = path.get_ident() {
+                    if path == "disable" {
+                        if let Meta::Path(_) = attr.meta {
+                            if this.disable {
+                                errors.push(LoweringError::Other(
+                                    "Duplicate `disable` attribute".into(),
+                                ));
+                            } else if !support.disabling {
+                                errors.push(LoweringError::Other(format!(
+                                    "`disable` not supported in backend {backend}"
+                                )))
+                            } else {
+                                this.disable = true;
+                            }
                         } else {
-                            this.disable = true;
-                        }
-                    } else {
-                        errors.push(LoweringError::Other(
-                            "`disable` must be a simple path".into(),
-                        ))
-                    }
-                } else if path.is_ident("rename") {
-                    match RenameAttr::from_meta(&attr.meta) {
-                        Ok(rename) => {
-                            // We use the override extend mode: a single ast::Attrs
-                            // will have had these attributes inherited into the list by appending
-                            // to the end; so a later attribute in the list is more pertinent.
-                            this.rename.extend(&rename);
-                        }
-                        Err(e) => errors.push(LoweringError::Other(format!(
-                            "`rename` attr failed to parse: {e:?}"
-                        ))),
-                    }
-                } else if path.is_ident("namespace") {
-                    if !support.namespacing {
-                        errors.push(LoweringError::Other(format!(
-                            "`namespace` not supported in backend {backend}"
-                        )));
-                        continue;
-                    }
-                    match StandardAttribute::from_meta(&attr.meta) {
-                        Ok(StandardAttribute::String(s)) if s.is_empty() => this.namespace = None,
-                        Ok(StandardAttribute::String(s)) => this.namespace = Some(s),
-                        Ok(_) | Err(_) => {
                             errors.push(LoweringError::Other(
-                                "`namespace` must have a single string parameter".to_string(),
-                            ));
+                                "`disable` must be a simple path".into(),
+                            ))
+                        }
+                    } else if path == "rename" {
+                        match RenameAttr::from_meta(&attr.meta) {
+                            Ok(rename) => {
+                                // We use the override extend mode: a single ast::Attrs
+                                // will have had these attributes inherited into the list by appending
+                                // to the end; so a later attribute in the list is more pertinent.
+                                this.rename.extend(&rename);
+                            }
+                            Err(e) => errors.push(LoweringError::Other(format!(
+                                "`rename` attr failed to parse: {e:?}"
+                            ))),
+                        }
+                    } else if path == "namespace" {
+                        if !support.namespacing {
+                            errors.push(LoweringError::Other(format!(
+                                "`namespace` not supported in backend {backend}"
+                            )));
                             continue;
                         }
+                        match StandardAttribute::from_meta(&attr.meta) {
+                            Ok(StandardAttribute::String(s)) if s.is_empty() => {
+                                this.namespace = None
+                            }
+                            Ok(StandardAttribute::String(s)) => this.namespace = Some(s),
+                            Ok(_) | Err(_) => {
+                                errors.push(LoweringError::Other(
+                                    "`namespace` must have a single string parameter".to_string(),
+                                ));
+                                continue;
+                            }
+                        }
+                    } else if path == "constructor" || path == "stringifier" || path == "comparison"
+                    {
+                        if let Some(ref existing) = this.special_method {
+                            errors.push(LoweringError::Other(format!(
+                            "Multiple special method markers found on the same method, found {path} and {existing:?}"
+                        )));
+                            continue;
+                        }
+                        let kind = if path == "constructor" {
+                            SpecialMethod::Constructor
+                        } else if path == "stringifier" {
+                            SpecialMethod::Stringifier
+                        } else {
+                            SpecialMethod::Comparison
+                        };
+
+                        this.special_method = Some(kind);
+                    } else if path == "named_constructor" || path == "getter" || path == "setter" {
+                        if let Some(ref existing) = this.special_method {
+                            errors.push(LoweringError::Other(format!(
+                            "Multiple special method markers found on the same method, found {path} and {existing:?}"
+                        )));
+                            continue;
+                        }
+                        let kind = if path == "named_constructor" {
+                            SpecialMethod::NamedConstructor
+                        } else if path == "getter" {
+                            SpecialMethod::Getter
+                        } else {
+                            SpecialMethod::Setter
+                        };
+                        match StandardAttribute::from_meta(&attr.meta) {
+                            Ok(StandardAttribute::String(s)) => this.special_method = Some(kind(s)),
+                            Ok(_) | Err(_) => {
+                                errors.push(LoweringError::Other(format!(
+                                    "`{path}` must have a single string parameter",
+                                )));
+                                continue;
+                            }
+                        }
+                    } else {
+                        errors.push(LoweringError::Other(format!(
+                        "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter`"
+                    )));
                     }
                 } else {
                     errors.push(LoweringError::Other(format!(
-                        "Unknown diplomat attribute {path:?}: expected one of: `disable, rename`"
+                        "Unknown diplomat attribute {path:?}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter`"
                     )));
                 }
             }
@@ -121,6 +171,7 @@ impl Attrs {
         this
     }
 
+    /// Validate that this attribute is allowed in this context
     pub(crate) fn validate(
         &self,
         validator: &(impl AttributeValidator + ?Sized),
@@ -133,12 +184,83 @@ impl Attrs {
             namespace,
             rename: _,
             abi_rename: _,
+            special_method,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
             errors.push(LoweringError::Other(
                 "`disable` cannot be used on enum variants".into(),
             ))
+        }
+
+        if let Some(ref special) = special_method {
+            if let AttributeContext::Method(method, self_id) = context {
+                match special {
+                    SpecialMethod::Constructor | SpecialMethod::NamedConstructor(..) => {
+                        let output = method.output.success_type();
+                        match method.output {
+                            ReturnType::Infallible(_) => (),
+                            ReturnType::Fallible(..) => {
+                                if !validator.attrs_supported().fallible_constructors {
+                                    errors.push(LoweringError::Other(format!(
+                                        "This backend doesn't support fallible constructors"
+                                    )))
+                                }
+                            }
+                            ReturnType::Nullable(..) => {
+                                errors.push(LoweringError::Other(format!("Diplomat doesn't support turning nullable methods into constructors")));
+                            }
+                        }
+
+                        if let SuccessType::OutType(t) = &output {
+                            if t.id() != Some(self_id) {
+                                errors.push(LoweringError::Other(format!(
+                                    "Constructors must return Self!"
+                                )));
+                            }
+                        } else {
+                            errors.push(LoweringError::Other(format!(
+                                "Constructors must return Self!"
+                            )));
+                        }
+                    }
+                    SpecialMethod::Getter(_) => {
+                        if !method.params.is_empty() {
+                            errors
+                                .push(LoweringError::Other("Getter cannot have parameters".into()));
+                        }
+
+                        // Currently does not forbid nullable getters, could if desired
+                    }
+
+                    SpecialMethod::Setter(_) => {
+                        if !matches!(method.output.success_type(), SuccessType::Unit) {
+                            errors.push(LoweringError::Other("Setters must return unit".into()));
+                        }
+                        if method.params.len() != 1 {
+                            errors.push(LoweringError::Other(
+                                "Setter must have exactly one parameter".into(),
+                            ))
+                        }
+
+                        // Currently does not forbid fallible setters, could if desired
+                    }
+                    SpecialMethod::Stringifier => {
+                        if !method.params.is_empty() {
+                            errors
+                                .push(LoweringError::Other("Getter cannot have parameters".into()));
+                        }
+                        if !matches!(method.output.success_type(), SuccessType::Writeable) {
+                            errors.push(LoweringError::Other(
+                                "Stringifier must return Writeable".into(),
+                            ));
+                        }
+                    }
+                    _ => todo!("Diplomat doesn't yet support {special:?}"),
+                }
+            } else {
+                errors.push(LoweringError::Other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))
+            }
         }
 
         if namespace.is_some()
@@ -177,6 +299,8 @@ impl Attrs {
             namespace,
             // Was already inherited on the AST side
             abi_rename: Default::default(),
+            // Never inherited
+            special_method: None,
         }
     }
 }
@@ -189,6 +313,7 @@ pub struct BackendAttrSupport {
     pub namespacing: bool,
     pub constructors: bool,
     pub named_constructors: bool,
+    pub fallible_constructors: bool,
     pub accessors: bool,
     pub stringifiers: bool,
     pub comparison_overload: bool,
