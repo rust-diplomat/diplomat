@@ -394,9 +394,32 @@ impl AttributeValidator for BasicAttributeValidator {
             || self.other_backend_names.iter().any(|n| n == backend_name)
     }
     fn is_name_value(&self, name: &str, value: &str) -> bool {
-        // TODO: is_name_value should automatically proxy checks for `supports = constructors` etc from
-        // BackendAttrSupport
-        if let Some(ref nv) = self.is_name_value {
+        if name == "supports" {
+            // destructure so new fields are forced to be added
+            let BackendAttrSupport {
+                disabling,
+                renaming,
+                namespacing,
+                constructors,
+                named_constructors,
+                fallible_constructors,
+                accessors,
+                stringifiers,
+                comparison_overload,
+            } = self.support;
+            match value {
+                "disabling" => disabling,
+                "renaming" => renaming,
+                "namespacing" => namespacing,
+                "constructors" => constructors,
+                "named_constructors" => named_constructors,
+                "fallible_constructors" => fallible_constructors,
+                "accessors" => accessors,
+                "stringifiers" => stringifiers,
+                "comparison_overload" => comparison_overload,
+                _ => false,
+            }
+        } else if let Some(ref nv) = self.is_name_value {
             nv(name, value)
         } else {
             false
