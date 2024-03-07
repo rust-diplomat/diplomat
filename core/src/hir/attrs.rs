@@ -23,6 +23,18 @@ pub struct Attrs {
     // more to be added: namespace, etc
 }
 
+/// Attributes that mark methods as "special"
+#[non_exhaustive]
+#[derive(Clone, Debug)]
+pub enum SpecialMethod {
+    Constructor,
+    NamedConstructor(String),
+    Getter(String),
+    Setter(String),
+    Stringifier,
+    Comparison,
+}
+
 /// Where the attribute was found. Some attributes are only allowed in some contexts
 /// (e.g. namespaces cannot be specified on methods)
 #[non_exhaustive] // might add module attrs in the future
@@ -159,6 +171,11 @@ pub struct BackendAttrSupport {
     pub disabling: bool,
     pub renaming: bool,
     pub namespacing: bool,
+    pub constructors: bool,
+    pub named_constructors: bool,
+    pub accessors: bool,
+    pub stringifiers: bool,
+    pub comparison_overload: bool,
     // more to be added: namespace, etc
 }
 
@@ -232,6 +249,8 @@ impl AttributeValidator for BasicAttributeValidator {
             || self.other_backend_names.iter().any(|n| n == backend_name)
     }
     fn is_name_value(&self, name: &str, value: &str) -> bool {
+        // TODO: is_name_value should automatically proxy checks for `supports = constructors` etc from
+        // BackendAttrSupport
         if let Some(ref nv) = self.is_name_value {
             nv(name, value)
         } else {
