@@ -102,9 +102,9 @@ impl ReturnType {
     /// The "main" return type of this function: the Ok, Some, or regular type
     pub fn success_type(&self) -> &SuccessType {
         match &self {
-            Self::Infallible(s) => &s,
-            Self::Fallible(s, _) => &s,
-            Self::Nullable(s) => &s,
+            Self::Infallible(s) => s,
+            Self::Fallible(s, _) => s,
+            Self::Nullable(s) => s,
         }
     }
 

@@ -202,26 +202,27 @@ impl Attrs {
                             ReturnType::Infallible(_) => (),
                             ReturnType::Fallible(..) => {
                                 if !validator.attrs_supported().fallible_constructors {
-                                    errors.push(LoweringError::Other(format!(
+                                    errors.push(LoweringError::Other(
                                         "This backend doesn't support fallible constructors"
-                                    )))
+                                            .to_string(),
+                                    ))
                                 }
                             }
                             ReturnType::Nullable(..) => {
-                                errors.push(LoweringError::Other(format!("Diplomat doesn't support turning nullable methods into constructors")));
+                                errors.push(LoweringError::Other("Diplomat doesn't support turning nullable methods into constructors".to_string()));
                             }
                         }
 
                         if let SuccessType::OutType(t) = &output {
                             if t.id() != Some(self_id) {
-                                errors.push(LoweringError::Other(format!(
-                                    "Constructors must return Self!"
-                                )));
+                                errors.push(LoweringError::Other(
+                                    "Constructors must return Self!".to_string(),
+                                ));
                             }
                         } else {
-                            errors.push(LoweringError::Other(format!(
-                                "Constructors must return Self!"
-                            )));
+                            errors.push(LoweringError::Other(
+                                "Constructors must return Self!".to_string(),
+                            ));
                         }
                     }
                     SpecialMethod::Getter(_) => {
