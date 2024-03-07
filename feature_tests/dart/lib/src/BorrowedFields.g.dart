@@ -54,13 +54,11 @@ final class BorrowedFields {
         this.c,
       ]);
 
-  // Append all fields corresponding to lifetime `'a` 
+  // Return all fields corresponding to lifetime `'a` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'a`,
   // assuming that there are no `'other: a`. bounds. In case of such bounds,
-  // the caller should take care to also call _fields_for_lifetime_other()
+  // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
-  core.List<Object> _fields_for_lifetime_a() {
-    return [a, b, c];
-  }
+  core.List<Object> get _fieldsForLifetimeA => [a, b, c];
 }

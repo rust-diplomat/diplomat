@@ -62,7 +62,7 @@ final class Foo implements ffi.Finalizable {
   factory Foo.extractFromFields(BorrowedFields fields) {
     final temp = ffi2.Arena();
     // This lifetime edge depends on lifetimes: 'a
-    core.List<Object> aEdges = [...fields._fields_for_lifetime_a()];
+    core.List<Object> aEdges = [...fields._fieldsForLifetimeA];
     final result = _Foo_extract_from_fields(fields._toFfi(temp, aAppendArray: [aEdges]));
     temp.releaseAll();
     return Foo._fromFfi(result, true, [], aEdges);
@@ -74,7 +74,7 @@ final class Foo implements ffi.Finalizable {
     final anotherStringView = anotherString.utf8View;
     final anotherStringArena = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'a, 'y, 'z
-    core.List<Object> aEdges = [...bounds._fields_for_lifetime_b(), ...bounds._fields_for_lifetime_c(), anotherStringArena];
+    core.List<Object> aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringArena];
     final result = _Foo_extract_from_bounds(bounds._toFfi(temp, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherStringView.allocIn(anotherStringArena.arena), anotherStringView.length);
     temp.releaseAll();
     return Foo._fromFfi(result, true, [], aEdges);

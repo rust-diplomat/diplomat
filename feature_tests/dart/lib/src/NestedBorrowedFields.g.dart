@@ -50,33 +50,27 @@ final class NestedBorrowedFields {
         this.bounds2,
       ]);
 
-  // Append all fields corresponding to lifetime `'x` 
+  // Return all fields corresponding to lifetime `'x` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'x`,
   // assuming that there are no `'other: x`. bounds. In case of such bounds,
-  // the caller should take care to also call _fields_for_lifetime_other()
+  // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
-  core.List<Object> _fields_for_lifetime_x() {
-    return [...fields._fields_for_lifetime_a(), ...bounds._fields_for_lifetime_a()];
-  }
+  core.List<Object> get _fieldsForLifetimeX => [...fields._fieldsForLifetimeA, ...bounds._fieldsForLifetimeA];
 
-  // Append all fields corresponding to lifetime `'y` 
+  // Return all fields corresponding to lifetime `'y` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'y`,
   // assuming that there are no `'other: y`. bounds. In case of such bounds,
-  // the caller should take care to also call _fields_for_lifetime_other()
+  // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
-  core.List<Object> _fields_for_lifetime_y() {
-    return [...bounds._fields_for_lifetime_b(), ...bounds._fields_for_lifetime_c()];
-  }
+  core.List<Object> get _fieldsForLifetimeY => [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
 
-  // Append all fields corresponding to lifetime `'z` 
+  // Return all fields corresponding to lifetime `'z` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'z`,
   // assuming that there are no `'other: z`. bounds. In case of such bounds,
-  // the caller should take care to also call _fields_for_lifetime_other()
+  // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
-  core.List<Object> _fields_for_lifetime_z() {
-    return [...bounds2._fields_for_lifetime_a(), ...bounds2._fields_for_lifetime_b(), ...bounds2._fields_for_lifetime_c()];
-  }
+  core.List<Object> get _fieldsForLifetimeZ => [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
 }

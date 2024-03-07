@@ -56,33 +56,27 @@ final class BorrowedFieldsWithBounds {
         this.fieldC,
       ]);
 
-  // Append all fields corresponding to lifetime `'a` 
+  // Return all fields corresponding to lifetime `'a` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'a`,
   // assuming that there are no `'other: a`. bounds. In case of such bounds,
-  // the caller should take care to also call _fields_for_lifetime_other()
+  // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
-  core.List<Object> _fields_for_lifetime_a() {
-    return [fieldA];
-  }
+  core.List<Object> get _fieldsForLifetimeA => [fieldA];
 
-  // Append all fields corresponding to lifetime `'b` 
+  // Return all fields corresponding to lifetime `'b` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'b`,
   // assuming that there are no `'other: b`. bounds. In case of such bounds,
-  // the caller should take care to also call _fields_for_lifetime_other()
+  // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
-  core.List<Object> _fields_for_lifetime_b() {
-    return [fieldB];
-  }
+  core.List<Object> get _fieldsForLifetimeB => [fieldB];
 
-  // Append all fields corresponding to lifetime `'c` 
+  // Return all fields corresponding to lifetime `'c` 
   // without handling lifetime dependencies (this is the job of the caller)
   // This is all fields that may be borrowed from if borrowing `'c`,
   // assuming that there are no `'other: c`. bounds. In case of such bounds,
-  // the caller should take care to also call _fields_for_lifetime_other()
+  // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
-  core.List<Object> _fields_for_lifetime_c() {
-    return [fieldC];
-  }
+  core.List<Object> get _fieldsForLifetimeC => [fieldC];
 }

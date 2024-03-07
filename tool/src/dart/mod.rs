@@ -1130,7 +1130,7 @@ struct MethodInfo<'a> {
     /// Maps each (used in the output) method lifetime to a list of parameters
     /// it borrows from. The parameter list may contain the parameter name,
     /// an internal slice View that was temporarily constructed, or
-    /// a spread of a struct's `_fields_for_lifetime_foo()` method.
+    /// a spread of a struct's `_fiellsForLifetimeFoo` getter.
     method_lifetimes_map: BTreeMap<Lifetime, BorrowedLifetimeInfo<'a>>,
 }
 
@@ -1166,8 +1166,8 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
         LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
         // We extract the edge-relevant fields for a borrowed struct lifetime
         LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
-            "...{param_name}._fields_for_lifetime_{}()",
-            def_env.fmt_lifetime(def_lt)
+            "...{param_name}._fieldsForLifetime{}",
+            def_env.fmt_lifetime(def_lt).to_uppercase(),
         )
         .into(),
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
