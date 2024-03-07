@@ -12,13 +12,12 @@ final class ICU4XLocale implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _selfEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  ICU4XLocale._fromFfi(this._ffi, bool isOwned, this._selfEdge) {
-    if (isOwned) {
+  ICU4XLocale._fromFfi(this._ffi, this._selfEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
@@ -31,7 +30,7 @@ final class ICU4XLocale implements ffi.Finalizable {
     final nameView = name.utf8View;
     final result = _ICU4XLocale_new(nameView.allocIn(temp), nameView.length);
     temp.releaseAll();
-    return ICU4XLocale._fromFfi(result, true, []);
+    return ICU4XLocale._fromFfi(result, []);
   }
 }
 

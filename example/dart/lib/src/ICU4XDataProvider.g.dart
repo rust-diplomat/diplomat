@@ -12,13 +12,12 @@ final class ICU4XDataProvider implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _selfEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  ICU4XDataProvider._fromFfi(this._ffi, bool isOwned, this._selfEdge) {
-    if (isOwned) {
+  ICU4XDataProvider._fromFfi(this._ffi, this._selfEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
@@ -28,7 +27,7 @@ final class ICU4XDataProvider implements ffi.Finalizable {
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory ICU4XDataProvider.static_() {
     final result = _ICU4XDataProvider_new_static();
-    return ICU4XDataProvider._fromFfi(result, true, []);
+    return ICU4XDataProvider._fromFfi(result, []);
   }
 
   /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155

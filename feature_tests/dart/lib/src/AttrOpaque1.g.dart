@@ -9,13 +9,12 @@ final class AttrOpaque1 implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _selfEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  AttrOpaque1._fromFfi(this._ffi, bool isOwned, this._selfEdge) {
-    if (isOwned) {
+  AttrOpaque1._fromFfi(this._ffi, this._selfEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
@@ -24,7 +23,7 @@ final class AttrOpaque1 implements ffi.Finalizable {
 
   factory AttrOpaque1() {
     final result = _namespace_AttrOpaque1_new();
-    return AttrOpaque1._fromFfi(result, true, []);
+    return AttrOpaque1._fromFfi(result, []);
   }
 
   int get method {

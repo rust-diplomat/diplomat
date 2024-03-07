@@ -11,13 +11,12 @@ final class Foo implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _aEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  Foo._fromFfi(this._ffi, bool isOwned, this._selfEdge, this._aEdge) {
-    if (isOwned) {
+  Foo._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
@@ -30,7 +29,7 @@ final class Foo implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [xArena];
     final result = _Foo_new(xView.allocIn(xArena.arena), xView.length);
-    return Foo._fromFfi(result, true, [], aEdges);
+    return Foo._fromFfi(result, [], aEdges);
   }
 
   Bar get getBar {
@@ -39,7 +38,7 @@ final class Foo implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a, 'b
     core.List<Object> bEdges = [this];
     final result = _Foo_get_bar(_ffi);
-    return Bar._fromFfi(result, true, [], bEdges, aEdges);
+    return Bar._fromFfi(result, [], bEdges, aEdges);
   }
 
   factory Foo.static_(String x) {
@@ -49,7 +48,7 @@ final class Foo implements ffi.Finalizable {
     core.List<Object> aEdges = [];
     final result = _Foo_new_static(xView.allocIn(temp), xView.length);
     temp.releaseAll();
-    return Foo._fromFfi(result, true, [], aEdges);
+    return Foo._fromFfi(result, [], aEdges);
   }
 
   BorrowedFieldsReturning get asReturning {
@@ -65,7 +64,7 @@ final class Foo implements ffi.Finalizable {
     core.List<Object> aEdges = [...fields._fieldsForLifetimeA];
     final result = _Foo_extract_from_fields(fields._toFfi(temp, aAppendArray: [aEdges]));
     temp.releaseAll();
-    return Foo._fromFfi(result, true, [], aEdges);
+    return Foo._fromFfi(result, [], aEdges);
   }
 
   /// Test that the extraction logic correctly pins the right fields
@@ -77,7 +76,7 @@ final class Foo implements ffi.Finalizable {
     core.List<Object> aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringArena];
     final result = _Foo_extract_from_bounds(bounds._toFfi(temp, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherStringView.allocIn(anotherStringArena.arena), anotherStringView.length);
     temp.releaseAll();
-    return Foo._fromFfi(result, true, [], aEdges);
+    return Foo._fromFfi(result, [], aEdges);
   }
 }
 

@@ -9,13 +9,12 @@ final class ResultOpaque implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _selfEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  ResultOpaque._fromFfi(this._ffi, bool isOwned, this._selfEdge) {
-    if (isOwned) {
+  ResultOpaque._fromFfi(this._ffi, this._selfEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
@@ -30,7 +29,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
-    return ResultOpaque._fromFfi(result.union.ok, true, []);
+    return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
   /// 
@@ -41,7 +40,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
-    return ResultOpaque._fromFfi(result.union.ok, true, []);
+    return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
   /// 
@@ -52,7 +51,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
     }
-    return ResultOpaque._fromFfi(result.union.ok, true, []);
+    return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
   static final ResultOpaque? failingUnit = () {
@@ -60,7 +59,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       return null;
     }
-    return ResultOpaque._fromFfi(result.union.ok, true, []);
+    return ResultOpaque._fromFfi(result.union.ok, []);
   }();
 
   /// 
@@ -71,7 +70,7 @@ final class ResultOpaque implements ffi.Finalizable {
     if (!result.isOk) {
       throw ErrorStruct._fromFfi(result.union.err);
     }
-    return ResultOpaque._fromFfi(result.union.ok, true, []);
+    return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
   /// 
@@ -80,7 +79,7 @@ final class ResultOpaque implements ffi.Finalizable {
   static void newInErr(int i) {
     final result = _ResultOpaque_new_in_err(i);
     if (!result.isOk) {
-      throw ResultOpaque._fromFfi(result.union.err, true, []);
+      throw ResultOpaque._fromFfi(result.union.err, []);
     }
     
   }
@@ -99,7 +98,7 @@ final class ResultOpaque implements ffi.Finalizable {
   static ErrorEnum newInEnumErr(int i) {
     final result = _ResultOpaque_new_in_enum_err(i);
     if (!result.isOk) {
-      throw ResultOpaque._fromFfi(result.union.err, true, []);
+      throw ResultOpaque._fromFfi(result.union.err, []);
     }
     return ErrorEnum.values[result.union.ok];
   }

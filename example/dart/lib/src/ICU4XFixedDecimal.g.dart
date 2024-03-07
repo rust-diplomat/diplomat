@@ -10,13 +10,12 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _selfEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  ICU4XFixedDecimal._fromFfi(this._ffi, bool isOwned, this._selfEdge) {
-    if (isOwned) {
+  ICU4XFixedDecimal._fromFfi(this._ffi, this._selfEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
@@ -26,7 +25,7 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   /// Construct an [`ICU4XFixedDecimal`] from an integer.
   factory ICU4XFixedDecimal(int v) {
     final result = _ICU4XFixedDecimal_new(v);
-    return ICU4XFixedDecimal._fromFfi(result, true, []);
+    return ICU4XFixedDecimal._fromFfi(result, []);
   }
 
   /// Multiply the [`ICU4XFixedDecimal`] by a given power of ten.

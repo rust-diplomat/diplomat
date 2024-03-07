@@ -237,16 +237,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // We do not need to handle lifetime transitivity here: Methods already resolve
                     // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
                     // are explicitly specified on methods.
-                    if let MaybeStatic::NonStatic(lt) = slice.lifetime() {
-                        let lt_name = ty.lifetimes.fmt_lifetime(lt);
-                        ret.push(format!(
-                            "struct.{name}._data = {name}View.allocIn({lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp);"
-                        ));
-                    } else {
-                        ret.push(format!(
-                            "struct.{name}._data = {name}View.allocIn(temp);"
-                        ));
-                    }
+                    let MaybeStatic::NonStatic(lt) = slice.lifetime() else {
+                        panic!("'static not supported in Dart");
+                    };
+                    ret.push(format!(
+                        "struct.{name}._data = {name}View.allocIn({lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp);",
+                        lt_name = ty.lifetimes.fmt_lifetime(lt),
+                    ));
                     (ret, None)
                 } else {
                     let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
@@ -834,34 +831,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         format!("{dart_name}._toFfi(temp{params})").into()
     }
 
-    /// Generate the name of a single lifetime edge array
-    ///
-    /// FIXME(Manishearth): this may need to belong in  fmt.rs
-    fn gen_single_edge(&self, lifetime: Lifetime, lifetime_env: &LifetimeEnv) -> Cow<'static, str> {
-        format!("{}Edges", lifetime_env.fmt_lifetime(lifetime)).into()
-    }
-
-    /// Make a list of edge arrays, one for every lifetime in a Lifetimes
-    ///
-    /// Will generate with a leading `, `, so will look something like `, aEdges, bEdges, ...`
-    fn gen_lifetimes_edge_list(&self, lifetimes: &Lifetimes, lifetime_env: &LifetimeEnv) -> String {
-        let mut ret = String::new();
-        for lt in lifetimes.lifetimes() {
-            if let MaybeStatic::NonStatic(lt) = lt {
-                // We only generate a single edge in the list per lifetime, despite transitivity
-                //
-                // This is because we plan to handle transitivity when constructing these edge arrays,
-                // e.g. if `'a: 'b`, `aEdges` will already contain the relevant bits from `bEdges`.
-                //
-                // This lets us do things like not generate bEdges if it's not actually relevant for returning.
-                write!(ret, ", {}", self.gen_single_edge(lt, lifetime_env)).unwrap();
-            } else {
-                write!(ret, ", []").unwrap();
-            }
-        }
-        ret
-    }
-
     /// Generates a Dart expression for a type.
     fn gen_c_to_dart_for_type<P: TyPosition>(
         &mut self,
@@ -875,22 +844,32 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
 
-                let (owned, self_edge) = if let Some(lt) = op.owner.lifetime() {
-                    if let MaybeStatic::NonStatic(lt) = lt {
-                        (false, self.gen_single_edge(lt, lifetime_env))
-                    } else {
-                        // 'statics are still not owned and should not register finalizers
-                        // but they also have no lifetime edges
-                        (false, "[]".into())
-                    }
+                let mut edges = if let Some(lt) = op.owner.lifetime() {
+                    let MaybeStatic::NonStatic(lt) = lt else  {
+                        panic!("'static not supported in Dart")
+                    };
+                    self.formatter.fmt_lifetime_edge_array(lt, lifetime_env).into_owned()
                 } else {
-                    (true, "[]".into())
+                    "[]".into()
                 };
-                let edges = self.gen_lifetimes_edge_list(&op.lifetimes, lifetime_env);
+
+                for lt in op.lifetimes.lifetimes() {
+                    let MaybeStatic::NonStatic(lt) = lt else {
+                        panic!("'static not supported in Dart");
+                    };
+                    // We only generate a single edge in the list per lifetime, despite transitivity
+                    //
+                    // This is because we plan to handle transitivity when constructing these edge arrays,
+                    // e.g. if `'a: 'b`, `aEdges` will already contain the relevant bits from `bEdges`.
+                    //
+                    // This lets us do things like not generate bEdges if it's not actually relevant for returning.
+                    write!(edges, ", {}", self.formatter.fmt_lifetime_edge_array(lt, lifetime_env)).unwrap();
+                }
+
                 if op.is_optional() {
-                    format!("{var_name}.address == 0 ? null : {type_name}._fromFfi({var_name}, {owned}, {self_edge}{edges})").into()
+                    format!("{var_name}.address == 0 ? null : {type_name}._fromFfi({var_name}, {edges})").into()
                 } else {
-                    format!("{type_name}._fromFfi({var_name}, {owned}, {self_edge}{edges})").into()
+                    format!("{type_name}._fromFfi({var_name}, {edges})").into()
                 }
             }
             Type::Struct(ref st) => {
@@ -898,11 +877,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 let mut edges = String::new();
                 for lt in st.lifetimes().lifetimes() {
-                    if let MaybeStatic::NonStatic(lt) = lt {
-                        write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
-                    } else {
-                        write!(&mut edges, ", []").unwrap();
-                    }
+                    let MaybeStatic::NonStatic(lt) = lt else  {
+                        panic!("'static not supported in Dart")
+                    };
+                    write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
                 }
 
                 format!("{type_name}._fromFfi({var_name}{edges})").into()
@@ -1181,14 +1159,12 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
 ) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
     /// Does `ty` use any lifetime from `lifetimes`?
     fn does_type_use_lifetime_from_set<P: TyPosition>(ty: &Type<P>, lifetime: &Lifetime) -> bool {
-        for lt in ty.lifetimes() {
-            if let MaybeStatic::NonStatic(lt) = lt {
-                if lt == *lifetime {
-                    return true;
-                }
-            }
-        }
-        false
+        ty.lifetimes().any(|lt| {
+            let MaybeStatic::NonStatic(lt) = lt else {
+                panic!("'static not supported in Dart");
+            };
+            lt == *lifetime
+        })
     }
 
     fields

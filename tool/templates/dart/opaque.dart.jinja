@@ -13,13 +13,12 @@ final class {{type_name}} implements ffi.Finalizable {
   final core.List<Object> _{{lifetimes.fmt_lifetime(lifetime)}}Edge;
   {%- endfor %}
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  {{type_name}}._fromFfi(this._ffi, bool isOwned, this._selfEdge {%- for lifetime in lifetimes.all_lifetimes() -%} , this._{{lifetimes.fmt_lifetime(lifetime)}}Edge {%- endfor -%}) {
-    if (isOwned) {
+  {{type_name}}._fromFfi(this._ffi, this._selfEdge {%- for lifetime in lifetimes.all_lifetimes() -%} , this._{{lifetimes.fmt_lifetime(lifetime)}}Edge {%- endfor -%}) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }

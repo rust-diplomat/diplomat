@@ -9,13 +9,12 @@ final class MyString implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _selfEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  MyString._fromFfi(this._ffi, bool isOwned, this._selfEdge) {
-    if (isOwned) {
+  MyString._fromFfi(this._ffi, this._selfEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
@@ -27,7 +26,7 @@ final class MyString implements ffi.Finalizable {
     final vView = v.utf8View;
     final result = _MyString_new(vView.allocIn(temp), vView.length);
     temp.releaseAll();
-    return MyString._fromFfi(result, true, []);
+    return MyString._fromFfi(result, []);
   }
 
   factory MyString.unsafe(String v) {
@@ -35,7 +34,7 @@ final class MyString implements ffi.Finalizable {
     final vView = v.utf8View;
     final result = _MyString_new_unsafe(vView.allocIn(temp), vView.length);
     temp.releaseAll();
-    return MyString._fromFfi(result, true, []);
+    return MyString._fromFfi(result, []);
   }
 
   void setStr(String newStr) {

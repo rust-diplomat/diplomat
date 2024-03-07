@@ -13,13 +13,12 @@ final class Bar implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _aEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  Bar._fromFfi(this._ffi, bool isOwned, this._selfEdge, this._bEdge, this._aEdge) {
-    if (isOwned) {
+  Bar._fromFfi(this._ffi, this._selfEdge, this._bEdge, this._aEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
@@ -32,7 +31,7 @@ final class Bar implements ffi.Finalizable {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Bar_foo(_ffi);
-    return Foo._fromFfi(result, false, bEdges, aEdges);
+    return Foo._fromFfi(result, bEdges, aEdges);
   }
 }
 

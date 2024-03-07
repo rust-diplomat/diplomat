@@ -23,10 +23,10 @@ final class OptionStruct {
   // should handle this when constructing edge arrays.
   // ignore: unused_element
   OptionStruct._fromFfi(_OptionStructFfi ffi) :
-    a = ffi.a.address == 0 ? null : OptionOpaque._fromFfi(ffi.a, true, []),
-    b = ffi.b.address == 0 ? null : OptionOpaqueChar._fromFfi(ffi.b, true, []),
+    a = ffi.a.address == 0 ? null : OptionOpaque._fromFfi(ffi.a, []),
+    b = ffi.b.address == 0 ? null : OptionOpaqueChar._fromFfi(ffi.b, []),
     c = ffi.c,
-    d = ffi.d.address == 0 ? null : OptionOpaque._fromFfi(ffi.d, true, []);
+    d = ffi.d.address == 0 ? null : OptionOpaque._fromFfi(ffi.d, []);
 
   // ignore: unused_element
   _OptionStructFfi _toFfi(ffi.Allocator temp) {

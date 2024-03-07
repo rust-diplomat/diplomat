@@ -13,13 +13,12 @@ final class Two implements ffi.Finalizable {
   // ignore: unused_field
   final core.List<Object> _bEdge;
 
-  // isOwned is whether this is owned (has finalizer) or not
-  // This also takes in a list of lifetime edges (including for &self borrows)
+  // This takes in a list of lifetime edges (including for &self borrows)
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  Two._fromFfi(this._ffi, bool isOwned, this._selfEdge, this._aEdge, this._bEdge) {
-    if (isOwned) {
+  Two._fromFfi(this._ffi, this._selfEdge, this._aEdge, this._bEdge) {
+    if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
   }
