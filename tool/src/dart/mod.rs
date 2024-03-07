@@ -6,8 +6,8 @@ use diplomat_core::hir::borrowing_param::{
 };
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
-    StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, StructPathLike,
+    SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
