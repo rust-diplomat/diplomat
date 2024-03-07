@@ -223,7 +223,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let c_to_dart = self.gen_c_to_dart_for_type(
                     &field.ty,
-                    format!("underlying.{name}").into(),
+                    format!("ffi.{name}").into(),
                     &ty.lifetimes,
                 );
 
@@ -242,11 +242,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         ret.push(format!("final {name}Arena = ({lt_name}AppendArray != null && !{lt_name}AppendArray.isEmpty) ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp;"));
 
                         ret.push(format!(
-                            "pointer.ref.{name}._pointer = {name}View.pointer({name}Arena);"
+                            "pointer.ref.{name}._data = {name}View.allocIn({name}Arena);"
                         ));
                     } else {
                         ret.push(format!(
-                            "pointer.ref.{name}._pointer = {name}View.pointer(temp);"
+                            "pointer.ref.{name}._data = {name}View.allocIn(temp);"
                         ));
                     }
                     (ret, None)
@@ -303,7 +303,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     format!("factory {type_name}({{{args}}})", args = args.join(", "));
 
                 let mut r = String::new();
-                writeln!(&mut r, "final dart = {type_name}._(result);").unwrap();
+                writeln!(&mut r, "final dart = {type_name}._fromFfi(result);").unwrap();
                 for field in &fields {
                     let name = &field.name;
                     writeln!(&mut r, "if ({name} != null) {{").unwrap();
@@ -425,10 +425,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 if is_borrowed {
                     // Slices borrowed in the return value use a custom arena that gets generated in the template via slice_params
                     param_conversions
-                        .push(format!("{param_name}View.pointer({param_name}Arena.arena)").into());
+                        .push(format!("{param_name}View.allocIn({param_name}Arena.arena)").into());
                 } else {
                     // Everyone else uses the temporary arena that keeps stuff alive until the method is called
-                    param_conversions.push(format!("{param_name}View.pointer(temp)").into());
+                    param_conversions.push(format!("{param_name}View.allocIn(temp)").into());
                     needs_temp_arena = true;
                 }
                 param_conversions.push(format!("{param_name}View.length").into());
@@ -463,7 +463,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
 
         if method.output.is_writeable() {
-            param_conversions.push("writeable._underlying".into());
+            param_conversions.push("writeable._ffi".into());
             param_types_ffi.push(
                 self.formatter
                     .fmt_pointer(self.formatter.fmt_opaque())
@@ -761,8 +761,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_dart_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => "index".into(),
-            SelfType::Struct(..) => "_pointer(temp)".into(),
-            SelfType::Opaque(..) | SelfType::Enum(..) => "_underlying".into(),
+            SelfType::Struct(..) => "_toFfi(temp)".into(),
+            SelfType::Opaque(..) | SelfType::Enum(..) => "_ffi".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -779,17 +779,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!(
-                // Note: {dart_name} == null ? 0 : {dart_name}.underlying
-                // will not work for struct fields since Dart can't guarantee the
-                // null check will be unchanged between the two accesses.
-                "{dart_name}?._underlying ?? ffi.Pointer.fromAddress(0)"
+                // Use coalescing to only evaluate `{dart_name}` once
+                "{dart_name}?._ffi ?? ffi.Pointer.fromAddress(0)"
             )
             .into(),
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 format!("{dart_name}.index").into()
             }
             Type::Struct(..) => self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info),
-            Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._underlying").into(),
+            Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._ffi").into(),
             Type::Slice(hir::Slice::Str(
                 _,
                 hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
@@ -835,7 +833,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 write!(&mut params, "]").unwrap();
             }
         }
-        format!("{dart_name}._pointer(temp{params})").into()
+        format!("{dart_name}._toFfi(temp{params})").into()
     }
 
     /// Generate the name of a single lifetime edge array
@@ -892,9 +890,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 };
                 let edges = self.gen_lifetimes_edge_list(&op.lifetimes, lifetime_env);
                 if op.is_optional() {
-                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned}, {self_edge}{edges})").into()
+                    format!("{var_name}.address == 0 ? null : {type_name}._fromFfi({var_name}, {owned}, {self_edge}{edges})").into()
                 } else {
-                    format!("{type_name}._({var_name}, {owned}, {self_edge}{edges})").into()
+                    format!("{type_name}._fromFfi({var_name}, {owned}, {self_edge}{edges})").into()
                 }
             }
             Type::Struct(ref st) => {
@@ -909,7 +907,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     }
                 }
 
-                format!("{type_name}._({var_name}{edges})").into()
+                format!("{type_name}._fromFfi({var_name}{edges})").into()
             }
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 let id = e.tcx_id.into();
@@ -919,16 +917,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}.values.firstWhere((v) => v._underlying == {var_name})").into()
+                format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
             // As we only get borrowed slices from the FFI, we always have to copy.
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8)) =>
-                format!("Utf8Decoder().convert({var_name}._pointer.asTypedList({var_name}._length))").into(),
+                format!("Utf8Decoder().convert({var_name}._data.asTypedList({var_name}._length))").into(),
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) =>
-                format!("core.String.fromCharCodes({var_name}._pointer.asTypedList({var_name}._length))").into(),
+                format!("core.String.fromCharCodes({var_name}._data.asTypedList({var_name}._length))").into(),
             Type::Slice(hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_))) =>
-                format!("core.Iterable.generate({var_name}._length).map((i) => {var_name}._pointer[i]).toList(growable: false)").into(),
-            Type::Slice(..) => format!("{var_name}._pointer.asTypedList({var_name}._length)").into(),
+                format!("core.Iterable.generate({var_name}._length).map((i) => {var_name}._data[i]).toList(growable: false)").into(),
+            Type::Slice(..) => format!("{var_name}._data.asTypedList({var_name}._length)").into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
