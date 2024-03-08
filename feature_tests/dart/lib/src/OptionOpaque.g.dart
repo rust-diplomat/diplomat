@@ -26,7 +26,7 @@ final class OptionOpaque implements ffi.Finalizable {
     return result.address == 0 ? null : OptionOpaque._fromFfi(result, []);
   }
 
-  static final OptionOpaque? newNone = () {
+  static final OptionOpaque? none = () {
     final result = _OptionOpaque_new_none();
     return result.address == 0 ? null : OptionOpaque._fromFfi(result, []);
   }();
@@ -39,12 +39,12 @@ final class OptionOpaque implements ffi.Finalizable {
     return OptionStruct._fromFfi(result.union.ok);
   }();
 
-  static final OptionStruct newStruct = () {
+  static final OptionStruct struct = () {
     final result = _OptionOpaque_new_struct();
     return OptionStruct._fromFfi(result);
   }();
 
-  static final OptionStruct newStructNones = () {
+  static final OptionStruct structNones = () {
     final result = _OptionOpaque_new_struct_nones();
     return OptionStruct._fromFfi(result);
   }();

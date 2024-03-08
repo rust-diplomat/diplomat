@@ -35,7 +35,7 @@ final class ResultOpaque implements ffi.Finalizable {
   /// 
   ///
   /// Throws [ErrorEnum] on failure.
-  factory ResultOpaque.newFailingFoo() {
+  factory ResultOpaque.failingFoo() {
     final result = _ResultOpaque_new_failing_foo();
     if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
@@ -46,7 +46,7 @@ final class ResultOpaque implements ffi.Finalizable {
   /// 
   ///
   /// Throws [ErrorEnum] on failure.
-  factory ResultOpaque.newFailingBar() {
+  factory ResultOpaque.failingBar() {
     final result = _ResultOpaque_new_failing_bar();
     if (!result.isOk) {
       throw ErrorEnum.values[result.union.err];
@@ -54,7 +54,7 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
-  static final ResultOpaque? newFailingUnit = () {
+  static final ResultOpaque? failingUnit = () {
     final result = _ResultOpaque_new_failing_unit();
     if (!result.isOk) {
       return null;
@@ -65,7 +65,7 @@ final class ResultOpaque implements ffi.Finalizable {
   /// 
   ///
   /// Throws [ErrorStruct] on failure.
-  factory ResultOpaque.newFailingStruct(int i) {
+  factory ResultOpaque.failingStruct(int i) {
     final result = _ResultOpaque_new_failing_struct(i);
     if (!result.isOk) {
       throw ErrorStruct._fromFfi(result.union.err);

@@ -145,6 +145,10 @@ impl<'tcx> DartFormatter<'tcx> {
         let name = name
             .trim_start_matches("try_")
             .trim_start_matches("try")
+            .trim_start_matches("new_")
+            .trim_start_matches("new")
+            .trim_start_matches("create_")
+            .trim_start_matches("create")
             .to_lower_camel_case();
 
         if name.is_empty() {

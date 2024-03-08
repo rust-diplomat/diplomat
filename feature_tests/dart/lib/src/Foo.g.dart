@@ -41,7 +41,7 @@ final class Foo implements ffi.Finalizable {
     return Bar._fromFfi(result, [], bEdges, aEdges);
   }
 
-  factory Foo.newStatic(String x) {
+  factory Foo.static_(String x) {
     final temp = ffi2.Arena();
     final xView = x.utf8View;
     // This lifetime edge depends on lifetimes: 'a
