@@ -30,9 +30,9 @@ pub struct Attrs {
 #[derive(Clone, Debug)]
 pub enum SpecialMethod {
     Constructor,
-    NamedConstructor(String),
-    Getter(String),
-    Setter(String),
+    NamedConstructor(Option<String>),
+    Getter(Option<String>),
+    Setter(Option<String>),
     Stringifier,
     Comparison,
 }
@@ -147,10 +147,13 @@ impl Attrs {
                             SpecialMethod::Setter
                         };
                         match StandardAttribute::from_meta(&attr.meta) {
-                            Ok(StandardAttribute::String(s)) => this.special_method = Some(kind(s)),
+                            Ok(StandardAttribute::String(s)) => {
+                                this.special_method = Some(kind(Some(s)))
+                            }
+                            Ok(StandardAttribute::Empty) => this.special_method = Some(kind(None)),
                             Ok(_) | Err(_) => {
                                 errors.push(LoweringError::Other(format!(
-                                    "`{path}` must have a single string parameter",
+                                    "`{path}` must have a single string parameter or no parameter",
                                 )));
                                 continue;
                             }

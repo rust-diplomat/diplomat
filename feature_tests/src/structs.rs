@@ -35,6 +35,7 @@ pub mod ffi {
     }
 
     impl Opaque {
+        #[diplomat::attr(supports = constructors, constructor)]
         pub fn new() -> Box<Opaque> {
             Box::new(Opaque("".into()))
         }
@@ -64,6 +65,7 @@ pub mod ffi {
     }
 
     impl MyStruct {
+        #[diplomat::attr(supports = constructors, constructor)]
         pub fn new() -> MyStruct {
             MyStruct {
                 a: 17,

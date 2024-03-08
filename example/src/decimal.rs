@@ -36,6 +36,7 @@ pub mod ffi {
     }
 
     impl ICU4XFixedDecimalFormatterOptions {
+        #[diplomat::attr(supports = constructors, constructor)]
         pub fn default() -> Self {
             Self {
                 grouping_strategy: ICU4XFixedDecimalGroupingStrategy::Auto,
@@ -47,6 +48,7 @@ pub mod ffi {
     impl ICU4XFixedDecimalFormatter {
         /// Creates a new [`ICU4XFixedDecimalFormatter`] from locale data.
         #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter::try_new, FnInStruct)]
+        // TODO constructors: this should ideally be a constructor too
         pub fn try_new(
             locale: &ICU4XLocale,
             provider: &ICU4XDataProvider,

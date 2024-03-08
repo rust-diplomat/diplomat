@@ -142,12 +142,13 @@ impl<'tcx> DartFormatter<'tcx> {
 
     pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
         let mut name = self.fmt_method_name(method).into_owned();
-        for prefix in ["try", "create", "new_", "new", "default_", "default", "get"] {
-            name = name
-                .strip_prefix(prefix)
-                .map(|s| s.to_lower_camel_case())
-                .unwrap_or(name);
+        for prefix in [
+            "try_", "try", "create_", "create", "new_", "new", "default_", "default", "get_", "get",
+        ] {
+            name = name.trim_start_matches(prefix).into();
         }
+
+        name = name.to_lower_camel_case();
 
         if name.is_empty() {
             None
@@ -158,9 +159,14 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_setter_name(&self, method: &hir::Method) -> String {
+    pub fn fmt_accessor_name(&self, method: &hir::Method) -> String {
         let name = &*self.fmt_method_name(method);
-        let name = name.strip_prefix("set").unwrap().to_lower_camel_case();
+        let name = name
+            .trim_start_matches("set_")
+            .trim_start_matches("set")
+            .trim_start_matches("get_")
+            .trim_start_matches("get")
+            .to_lower_camel_case();
 
         if INVALID_FIELD_NAMES.contains(&name.as_str()) {
             format!("{name}_")

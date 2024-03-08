@@ -9,16 +9,19 @@ pub mod ffi {
 
     impl AttrOpaque1 {
         #[diplomat::attr(cpp2, rename = "totally_not_{0}")]
+        #[diplomat::attr(supports = constructors, constructor)]
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }
 
         #[diplomat::attr(cpp2, rename = "method_renamed")]
+        #[diplomat::attr(supports = accessors, getter = "method")]
         pub fn method(&self) -> u8 {
             77
         }
 
         #[diplomat::abi_rename("renamed_on_abi_only")]
+        #[diplomat::attr(supports = accessors, getter = "abirenamed")]
         pub fn abirenamed(&self) -> u8 {
             123
         }
@@ -49,6 +52,7 @@ pub mod ffi {
     pub struct Unnamespaced;
 
     impl Unnamespaced {
+        #[diplomat::attr(supports = constructors, named_constructor)]
         pub fn make(_e: AttrEnum) -> Box<Self> {
             Box::new(Self)
         }

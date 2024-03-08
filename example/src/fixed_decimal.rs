@@ -10,6 +10,7 @@ pub mod ffi {
 
     impl ICU4XFixedDecimal {
         /// Construct an [`ICU4XFixedDecimal`] from an integer.
+        #[diplomat::attr(supports = constructors, constructor)]
         pub fn new(v: i32) -> Box<ICU4XFixedDecimal> {
             Box::new(ICU4XFixedDecimal(FixedDecimal::from(v)))
         }
