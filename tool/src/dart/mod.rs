@@ -502,10 +502,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 SpecialMethod::Getter(name) => {
                     if let Some(name) = name {
-                        format!("get {name}({params})")
+                        format!("{return_ty} get {name}")
                     } else {
                         let name = self.formatter.fmt_accessor_name(method);
-                        format!("get {name}({params})")
+                        format!("{return_ty} get {name}")
                     }
                 }
                 SpecialMethod::Setter(name) => {
