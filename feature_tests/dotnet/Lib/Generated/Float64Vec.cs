@@ -201,6 +201,19 @@ public partial class Float64Vec: IDisposable
         }
     }
 
+    public double[] Borrow()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            Raw.double[] retVal = Raw.Float64Vec.Borrow(_inner);
+            return expected named type name, found `&'a [f64]`;
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

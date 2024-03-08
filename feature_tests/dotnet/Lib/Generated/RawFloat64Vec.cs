@@ -46,6 +46,9 @@ public partial struct Float64Vec
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_to_string", ExactSpelling = true)]
     public static unsafe extern void ToString(Float64Vec* self, DiplomatWriteable* w);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_borrow", ExactSpelling = true)]
+    public static unsafe extern double[] Borrow(Float64Vec* self);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Float64Vec* self);
 }

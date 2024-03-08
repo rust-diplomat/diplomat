@@ -46,13 +46,13 @@ final class ICU4XFixedDecimalFormatterOptions {
   @override
   bool operator ==(Object other) =>
       other is ICU4XFixedDecimalFormatterOptions &&
-      other.groupingStrategy == this.groupingStrategy &&
-      other.someOtherConfig == this.someOtherConfig;
+      other.groupingStrategy == groupingStrategy &&
+      other.someOtherConfig == someOtherConfig;
 
   @override
   int get hashCode => Object.hashAll([
-        this.groupingStrategy,
-        this.someOtherConfig,
+        groupingStrategy,
+        someOtherConfig,
       ]);
 }
 

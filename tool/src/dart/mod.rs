@@ -845,10 +845,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 let mut edges = if let Some(lt) = op.owner.lifetime() {
-                    let MaybeStatic::NonStatic(lt) = lt else  {
+                    let MaybeStatic::NonStatic(lt) = lt else {
                         panic!("'static not supported in Dart")
                     };
-                    self.formatter.fmt_lifetime_edge_array(lt, lifetime_env).into_owned()
+                    self.formatter
+                        .fmt_lifetime_edge_array(lt, lifetime_env)
+                        .into_owned()
                 } else {
                     "[]".into()
                 };
@@ -863,7 +865,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // e.g. if `'a: 'b`, `aEdges` will already contain the relevant bits from `bEdges`.
                     //
                     // This lets us do things like not generate bEdges if it's not actually relevant for returning.
-                    write!(edges, ", {}", self.formatter.fmt_lifetime_edge_array(lt, lifetime_env)).unwrap();
+                    write!(
+                        edges,
+                        ", {}",
+                        self.formatter.fmt_lifetime_edge_array(lt, lifetime_env)
+                    )
+                    .unwrap();
                 }
 
                 if op.is_optional() {
@@ -877,7 +884,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 let mut edges = String::new();
                 for lt in st.lifetimes().lifetimes() {
-                    let MaybeStatic::NonStatic(lt) = lt else  {
+                    let MaybeStatic::NonStatic(lt) = lt else {
                         panic!("'static not supported in Dart")
                     };
                     write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
@@ -895,14 +902,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
-            // As we only get borrowed slices from the FFI, we always have to copy.
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8)) =>
-                format!("Utf8Decoder().convert({var_name}._data.asTypedList({var_name}._length))").into(),
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) =>
-                format!("core.String.fromCharCodes({var_name}._data.asTypedList({var_name}._length))").into(),
-            Type::Slice(hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_))) =>
-                format!("core.Iterable.generate({var_name}._length).map((i) => {var_name}._data[i]).toList(growable: false)").into(),
-            Type::Slice(..) => format!("{var_name}._data.asTypedList({var_name}._length)").into(),
+            Type::Slice(slice) => {
+                let MaybeStatic::NonStatic(lifetime) = slice.lifetime() else {
+                    panic!("'static not supported in Dart");
+                };
+                format!(
+                    "{var_name}._toDart({}Edges)",
+                    lifetime_env.fmt_lifetime(lifetime)
+                )
+                .into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -993,16 +1002,55 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
+        let dart_ty = match slice {
+            hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_list_type(*p),
+            hir::Slice::Str(..) => self.formatter.fmt_string(),
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
+        let to_dart = match slice {
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => [
+                "// Do not have to keep lifetimeEdges alive, because this copies",
+                "return Utf8Decoder().convert(_data.asTypedList(_length));",
+            ].as_slice(),
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => [
+                "// Do not have to keep lifetimeEdges alive, because this copies",
+                "return core.String.fromCharCodes(_data.asTypedList(_length));",
+            ].as_slice(),
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => [
+                "// Do not have to keep lifetimeEdges alive, because this copies",
+                "return core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);",
+            ].as_slice(),
+            hir::Slice::Primitive(_, _) => [
+                "final r = _data.asTypedList(_length);",
+                "_nopFree.attach(r, lifetimeEdges);",
+                "return r;"
+            ].as_slice(),
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
         #[derive(askama::Template)]
         #[template(path = "dart/slice.dart.jinja", escape = "none")]
-        struct SliceTemplate {
-            ffi_type: &'static str,
-            slice_ty: &'static str,
+        struct SliceTemplate<'a> {
+            ffi_type: &'a str,
+            slice_ty: &'a str,
+            dart_ty: &'a str,
+            to_dart: &'a [&'a str],
         }
 
         self.helper_classes.insert(
             slice_ty.into(),
-            SliceTemplate { ffi_type, slice_ty }.render().unwrap(),
+            SliceTemplate {
+                ffi_type,
+                slice_ty,
+                dart_ty,
+                to_dart,
+            }
+            .render()
+            .unwrap(),
         );
 
         slice_ty

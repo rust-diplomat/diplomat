@@ -36,12 +36,12 @@ final class ErrorStruct {
   @override
   bool operator ==(Object other) =>
       other is ErrorStruct &&
-      other.i == this.i &&
-      other.j == this.j;
+      other.i == i &&
+      other.j == j;
 
   @override
   int get hashCode => Object.hashAll([
-        this.i,
-        this.j,
+        i,
+        j,
       ]);
 }

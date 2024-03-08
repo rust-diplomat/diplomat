@@ -41,16 +41,16 @@ final class OptionStruct {
   @override
   bool operator ==(Object other) =>
       other is OptionStruct &&
-      other.a == this.a &&
-      other.b == this.b &&
-      other.c == this.c &&
-      other.d == this.d;
+      other.a == a &&
+      other.b == b &&
+      other.c == c &&
+      other.d == d;
 
   @override
   int get hashCode => Object.hashAll([
-        this.a,
-        this.b,
-        this.c,
-        this.d,
+        a,
+        b,
+        c,
+        d,
       ]);
 }

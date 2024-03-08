@@ -17,9 +17,9 @@ final class BorrowedFields {
 
   // ignore: unused_element
   BorrowedFields._fromFfi(_BorrowedFieldsFfi ffi, core.List<Object> aEdges) :
-    a = core.String.fromCharCodes(ffi.a._data.asTypedList(ffi.a._length)),
-    b = Utf8Decoder().convert(ffi.b._data.asTypedList(ffi.b._length)),
-    c = Utf8Decoder().convert(ffi.c._data.asTypedList(ffi.c._length));
+    a = ffi.a._toDart(aEdges),
+    b = ffi.b._toDart(aEdges),
+    c = ffi.c._toDart(aEdges);
 
   // If this struct contains any slices, their lifetime-edge-relevant objects (typically _FinalizedArenas) will only
   // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
@@ -43,15 +43,15 @@ final class BorrowedFields {
   @override
   bool operator ==(Object other) =>
       other is BorrowedFields &&
-      other.a == this.a &&
-      other.b == this.b &&
-      other.c == this.c;
+      other.a == a &&
+      other.b == b &&
+      other.c == c;
 
   @override
   int get hashCode => Object.hashAll([
-        this.a,
-        this.b,
-        this.c,
+        a,
+        b,
+        c,
       ]);
 
   // Return all fields corresponding to lifetime `'a` 

@@ -38,6 +38,8 @@ void Float64Vec_fill_slice(const Float64Vec* self, double* v_data, size_t v_len)
 void Float64Vec_set_value(Float64Vec* self, const double* new_slice_data, size_t new_slice_len);
 
 void Float64Vec_to_string(const Float64Vec* self, DiplomatWriteable* w);
+
+DiplomatF64View Float64Vec_borrow(const Float64Vec* self);
 void Float64Vec_destroy(Float64Vec* self);
 
 #ifdef __cplusplus

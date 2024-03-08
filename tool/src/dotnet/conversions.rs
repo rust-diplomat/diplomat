@@ -80,7 +80,7 @@ pub fn to_idiomatic_object<W: fmt::Write>(
                         &_ => unreachable!("unknown AST/HIR variant"),
                     }
                 }
-                other => panic!("expected named type name, found `{}`", other),
+                other => write!(out, "expected named type name, found `{}`", other),
             }
         }
     }

@@ -34,6 +34,11 @@ class Float64Vec {
   void set_value(const diplomat::span<const double> new_slice);
   template<typename W> void to_string_to_writeable(W& w) const;
   std::string to_string() const;
+
+  /**
+   * Lifetimes: `this` must live at least as long as the output.
+   */
+  const diplomat::span<const double> borrow() const;
   inline const capi::Float64Vec* AsFFI() const { return this->inner.get(); }
   inline capi::Float64Vec* AsFFIMut() { return this->inner.get(); }
   inline explicit Float64Vec(capi::Float64Vec* i) : inner(i) {}
@@ -81,5 +86,10 @@ inline std::string Float64Vec::to_string() const {
   capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
   capi::Float64Vec_to_string(this->inner.get(), &diplomat_writeable_out);
   return diplomat_writeable_string;
+}
+inline const diplomat::span<const double> Float64Vec::borrow() const {
+  capi::DiplomatF64View diplomat_slice_raw_out_value = capi::Float64Vec_borrow(this->inner.get());
+  diplomat::span<const double> slice(diplomat_slice_raw_out_value.data, diplomat_slice_raw_out_value.len);
+  return slice;
 }
 #endif

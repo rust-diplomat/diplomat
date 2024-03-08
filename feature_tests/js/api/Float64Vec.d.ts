@@ -42,4 +42,8 @@ export class Float64Vec {
   /**
    */
   to_string(): string;
+
+  /**
+   */
+  borrow(): Float64Array;
 }

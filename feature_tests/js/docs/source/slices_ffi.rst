@@ -23,6 +23,8 @@
 
     .. js:method:: to_string()
 
+    .. js:method:: borrow()
+
 .. js:class:: MyString
 
     .. js:function:: new(v)

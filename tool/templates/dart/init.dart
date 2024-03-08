@@ -16,19 +16,21 @@ typedef Rune = int;
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
+final _nopFree = core.Finalizer((nothing) => {});
+
 // ignore: unused_element
 class _FinalizedArena {
   final ffi2.Arena arena;
   static final core.Finalizer<ffi2.Arena> _finalizer = core.Finalizer((arena) => arena.releaseAll());
 
   // ignore: unused_element
-  _FinalizedArena() : this.arena = ffi2.Arena() {
-    _finalizer.attach(this, this.arena);
+  _FinalizedArena() : arena = ffi2.Arena() {
+    _finalizer.attach(this, arena);
   }
 
   // ignore: unused_element
-  _FinalizedArena.withLifetime(core.List<core.List<Object>> lifetimeAppendArray) : this.arena = ffi2.Arena() {
-    _finalizer.attach(this, this.arena);
+  _FinalizedArena.withLifetime(core.List<core.List<Object>> lifetimeAppendArray) : arena = ffi2.Arena() {
+    _finalizer.attach(this, arena);
     for (final edge in lifetimeAppendArray) {
       edge.add(this);
     }

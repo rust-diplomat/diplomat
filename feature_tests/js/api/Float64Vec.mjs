@@ -81,4 +81,14 @@ export class Float64Vec {
       return wasm.Float64Vec_to_string(this.underlying, writeable);
     });
   }
+
+  borrow() {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+      wasm.Float64Vec_borrow(diplomat_receive_buffer, this.underlying);
+      const [ptr, size] = new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2);
+      wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+      return Float64Array.from(new Float64Array(wasm.memory.buffer, ptr, size));
+    })();
+  }
 }

@@ -75,6 +75,11 @@ inline std::string Float64Vec::to_string() const {
   return output;
 }
 
+inline diplomat::span<const double> Float64Vec::borrow() const {
+  auto result = capi::Float64Vec_borrow(this->AsFFI());
+  return diplomat::span<const double>(result_data, result_size);
+}
+
 inline const capi::Float64Vec* Float64Vec::AsFFI() const {
   return reinterpret_cast<const capi::Float64Vec*>(this);
 }

@@ -36,12 +36,12 @@ final class ImportedStruct {
   @override
   bool operator ==(Object other) =>
       other is ImportedStruct &&
-      other.foo == this.foo &&
-      other.count == this.count;
+      other.foo == foo &&
+      other.count == count;
 
   @override
   int get hashCode => Object.hashAll([
-        this.foo,
-        this.count,
+        foo,
+        count,
       ]);
 }

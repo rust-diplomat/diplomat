@@ -39,15 +39,15 @@ final class NestedBorrowedFields {
   @override
   bool operator ==(Object other) =>
       other is NestedBorrowedFields &&
-      other.fields == this.fields &&
-      other.bounds == this.bounds &&
-      other.bounds2 == this.bounds2;
+      other.fields == fields &&
+      other.bounds == bounds &&
+      other.bounds2 == bounds2;
 
   @override
   int get hashCode => Object.hashAll([
-        this.fields,
-        this.bounds,
-        this.bounds2,
+        fields,
+        bounds,
+        bounds2,
       ]);
 
   // Return all fields corresponding to lifetime `'x` 

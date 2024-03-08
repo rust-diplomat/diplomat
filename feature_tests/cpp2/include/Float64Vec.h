@@ -35,6 +35,8 @@ void Float64Vec_set_value(Float64Vec* self, const double* new_slice_data, size_t
 
 void Float64Vec_to_string(const Float64Vec* self, DiplomatWriteable* writeable);
 
+struct { const double* data; size_t len; } Float64Vec_borrow(const Float64Vec* self);
+
 void Float64Vec_destroy(Float64Vec* self);
 
 

@@ -97,6 +97,13 @@ final class Float64Vec implements ffi.Finalizable {
     _Float64Vec_to_string(_ffi, writeable._ffi);
     return writeable.finalize();
   }
+
+  core.List<double> get borrow {
+    // This lifetime edge depends on lifetimes: 'a
+    core.List<Object> aEdges = [this];
+    final result = _Float64Vec_borrow(_ffi);
+    return result._toDart(aEdges);
+  }
 }
 
 @meta.ResourceIdentifier('Float64Vec_destroy')
@@ -153,3 +160,8 @@ external void _Float64Vec_set_value(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ff
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_to_string')
 // ignore: non_constant_identifier_names
 external void _Float64Vec_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);
+
+@meta.ResourceIdentifier('Float64Vec_borrow')
+@ffi.Native<_SliceDouble Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_borrow')
+// ignore: non_constant_identifier_names
+external _SliceDouble _Float64Vec_borrow(ffi.Pointer<ffi.Opaque> self);
