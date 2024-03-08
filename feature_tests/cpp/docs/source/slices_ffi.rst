@@ -36,6 +36,11 @@
     .. cpp:function:: std::string to_string() const
 
 
+    .. cpp:function:: const diplomat::span<const double> borrow() const
+
+        Lifetimes: ``this`` must live at least as long as the output.
+
+
 .. cpp:class:: MyString
 
     .. cpp:function:: static MyString new_(const std::string_view v)

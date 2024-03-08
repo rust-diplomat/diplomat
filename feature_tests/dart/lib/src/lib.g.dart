@@ -55,19 +55,21 @@ typedef Rune = int;
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
+final _nopFree = core.Finalizer((nothing) => {});
+
 // ignore: unused_element
 class _FinalizedArena {
   final ffi2.Arena arena;
   static final core.Finalizer<ffi2.Arena> _finalizer = core.Finalizer((arena) => arena.releaseAll());
 
   // ignore: unused_element
-  _FinalizedArena() : this.arena = ffi2.Arena() {
-    _finalizer.attach(this, this.arena);
+  _FinalizedArena() : arena = ffi2.Arena() {
+    _finalizer.attach(this, arena);
   }
 
   // ignore: unused_element
-  _FinalizedArena.withLifetime(core.List<core.List<Object>> lifetimeAppendArray) : this.arena = ffi2.Arena() {
-    _finalizer.attach(this, this.arena);
+  _FinalizedArena.withLifetime(core.List<core.List<Object>> lifetimeAppendArray) : arena = ffi2.Arena() {
+    _finalizer.attach(this, arena);
     for (final edge in lifetimeAppendArray) {
       edge.add(this);
     }
@@ -440,6 +442,38 @@ final class _ResultVoidOpaque extends ffi.Struct {
   external bool isOk;
 }
 
+final class _SliceDouble extends ffi.Struct {
+  external ffi.Pointer<ffi.Double> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceDouble || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  core.List<double> _toDart(core.List<Object> lifetimeEdges) {
+    final r = _data.asTypedList(_length);
+    _nopFree.attach(r, lifetimeEdges);
+    return r;
+  }
+}
+
 final class _SliceUtf16 extends ffi.Struct {
   external ffi.Pointer<ffi.Uint16> _data;
 
@@ -464,6 +498,11 @@ final class _SliceUtf16 extends ffi.Struct {
   // This is cheap
   @override
   int get hashCode => _length.hashCode;
+
+  String _toDart(core.List<Object> lifetimeEdges) {
+    // Do not have to keep lifetimeEdges alive, because this copies
+    return core.String.fromCharCodes(_data.asTypedList(_length));
+  }
 }
 
 final class _SliceUtf8 extends ffi.Struct {
@@ -490,6 +529,11 @@ final class _SliceUtf8 extends ffi.Struct {
   // This is cheap
   @override
   int get hashCode => _length.hashCode;
+
+  String _toDart(core.List<Object> lifetimeEdges) {
+    // Do not have to keep lifetimeEdges alive, because this copies
+    return Utf8Decoder().convert(_data.asTypedList(_length));
+  }
 }
 
 final class _Writeable {

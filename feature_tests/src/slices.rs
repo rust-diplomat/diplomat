@@ -72,5 +72,10 @@ mod ffi {
         pub fn to_string(&self, w: &mut DiplomatWriteable) {
             write!(w, "{:?}", self.0).unwrap();
         }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn borrow<'a>(&'a self) -> &'a [f64] {
+            &self.0
+        }
     }
 }

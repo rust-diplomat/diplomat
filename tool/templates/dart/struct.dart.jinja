@@ -75,13 +75,13 @@ final class {{type_name}} {
   bool operator ==(Object other) =>
       other is {{type_name}}
       {%- for field in fields %} &&
-      other.{{field.name}} == this.{{field.name}}
+      other.{{field.name}} == {% if field.name == "other" %}this.{% endif %}{{field.name}}
       {%- endfor %};
 
   @override
   int get hashCode => Object.hashAll([
       {%- for field in fields %}
-        this.{{field.name}},
+        {{field.name}},
       {%- endfor %}
       ]);
 

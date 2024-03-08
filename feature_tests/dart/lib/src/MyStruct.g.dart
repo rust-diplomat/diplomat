@@ -93,23 +93,23 @@ final class MyStruct {
   @override
   bool operator ==(Object other) =>
       other is MyStruct &&
-      other.a == this.a &&
-      other.b == this.b &&
-      other.c == this.c &&
-      other.d == this.d &&
-      other.e == this.e &&
-      other.f == this.f &&
-      other.g == this.g;
+      other.a == a &&
+      other.b == b &&
+      other.c == c &&
+      other.d == d &&
+      other.e == e &&
+      other.f == f &&
+      other.g == g;
 
   @override
   int get hashCode => Object.hashAll([
-        this.a,
-        this.b,
-        this.c,
-        this.d,
-        this.e,
-        this.f,
-        this.g,
+        a,
+        b,
+        c,
+        d,
+        e,
+        f,
+        g,
       ]);
 }
 
