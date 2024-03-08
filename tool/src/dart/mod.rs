@@ -6,8 +6,8 @@ use diplomat_core::hir::borrowing_param::{
 };
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
-    SpecialMethod, StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, SpecialMethod,
+    StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
@@ -516,7 +516,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                         format!("set {name}({params})")
                     }
                 }
-                SpecialMethod::Stringifier => format!("@override\n  String toString()"),
+                SpecialMethod::Stringifier => "@override\n  String toString()".into(),
                 SpecialMethod::Comparison => unreachable!("Dart does not support comparisons yet"),
                 _ => unimplemented!("Found unknown special method type {special:?}"),
             }

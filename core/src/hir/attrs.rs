@@ -10,7 +10,7 @@ pub use crate::ast::attrs::RenameAttr;
 
 /// Diplomat attribute that can be specified on items, methods, and enum variants. These
 /// can be used to control the codegen in a particular backend.
-/// 
+///
 /// Most of these are specified via `#[diplomat::attr(some cfg here, attrname)]`, where `some cfg here`
 /// can be used to pick which backends something applies to.
 #[non_exhaustive]
