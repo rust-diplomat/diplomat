@@ -197,6 +197,11 @@ impl Attrs {
             if let AttributeContext::Method(method, self_id) = context {
                 match special {
                     SpecialMethod::Constructor | SpecialMethod::NamedConstructor(..) => {
+                        if method.param_self.is_some() {
+                            errors.push(LoweringError::Other(
+                                "Constructors must not accept a self parameter".to_string(),
+                            ))
+                        }
                         let output = method.output.success_type();
                         match method.output {
                             ReturnType::Infallible(_) => (),
