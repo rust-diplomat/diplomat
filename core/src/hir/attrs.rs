@@ -8,18 +8,33 @@ use syn::Meta;
 
 pub use crate::ast::attrs::RenameAttr;
 
+/// Diplomat attribute that can be specified on items, methods, and enum variants. These
+/// can be used to control the codegen in a particular backend.
+/// 
+/// Most of these are specified via `#[diplomat::attr(some cfg here, attrname)]`, where `some cfg here`
+/// can be used to pick which backends something applies to.
 #[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct Attrs {
+    /// "disable" this item: do not generate code for it in the backend
+    ///
     /// This attribute is always inherited except to variants
     pub disable: bool,
-    /// An optional namespace.
+    /// An optional namespace. None is equivalent to the root namespace.
+    ///
     /// This attribute is inherited to types (and is not allowed elsewhere)
     pub namespace: Option<String>,
+    /// Rename this item/method/variant
+    ///
     /// This attribute is inherited except through methods and variants (and is not allowed on variants)
     pub rename: RenameAttr,
+    /// Rename this item in the C ABI. This *must* be respected by backends.
+    ///
     /// This attribute is inherited except through variants
     pub abi_rename: RenameAttr,
+    /// This method is "special": it should generate something other than a regular method on the other side.
+    /// This can be something like a constructor, an accessor, a stringifier etc.
+    ///
     /// This attribute does not participate in inheritance and must always
     /// be specified on individual methods
     pub special_method: Option<SpecialMethod>,
@@ -29,11 +44,29 @@ pub struct Attrs {
 #[non_exhaustive]
 #[derive(Clone, Debug)]
 pub enum SpecialMethod {
+    /// A constructor.
+    ///
+    /// Must return Self (or Result<Self> for backends with `fallible_constructors` enabled )
     Constructor,
+    /// A named constructor, with optional name. If the name isn't specified, it will be derived
+    /// from the method name
+    ///
+    /// Must return Self (or Result<Self> for backends with `fallible_constructors` enabled )
     NamedConstructor(Option<String>),
+
+    /// A getter, with optional name. If the name isn't specified, it will be derived
+    /// from the method name
+    ///
+    /// Must have no parameters and must return something.
     Getter(Option<String>),
+    /// A setter, with optional name. If the name isn't specified, it will be derived
+    /// from the method name
+    ///
+    /// Must have no return type (aside from potentially a `Result<(), _>`) and must have one parameter
     Setter(Option<String>),
+    /// A stringifier. Must have no parameters and return a string (writeable)
     Stringifier,
+    /// A comparison operator. Currently unsupported
     Comparison,
 }
 
