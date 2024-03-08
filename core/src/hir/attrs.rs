@@ -96,7 +96,14 @@ impl Attrs {
         let support = validator.attrs_supported();
         let backend = validator.primary_name();
         for attr in &ast.attrs {
-            if validator.satisfies_cfg(&attr.cfg) {
+            let satisfies = match validator.satisfies_cfg(&attr.cfg) {
+                Ok(satisfies) => satisfies,
+                Err(e) => {
+                    errors.push(e);
+                    continue;
+                }
+            };
+            if satisfies {
                 let path = attr.meta.path();
                 if let Some(path) = path.get_ident() {
                     if path == "disable" {
@@ -371,20 +378,34 @@ pub trait AttributeValidator {
     /// are multiple backends for a language)
     fn is_backend(&self, backend_name: &str) -> bool;
     /// does this backend satisfy cfg(name = value)?
-    fn is_name_value(&self, name: &str, value: &str) -> bool;
+    fn is_name_value(&self, name: &str, value: &str) -> Result<bool, LoweringError>;
     /// What backedn attrs does this support?
     fn attrs_supported(&self) -> BackendAttrSupport;
 
     /// Provided, checks if type satisfies a `DiplomatBackendAttrCfg`
-    fn satisfies_cfg(&self, cfg: &DiplomatBackendAttrCfg) -> bool {
-        match *cfg {
-            DiplomatBackendAttrCfg::Not(ref c) => !self.satisfies_cfg(c),
-            DiplomatBackendAttrCfg::Any(ref cs) => cs.iter().any(|c| self.satisfies_cfg(c)),
-            DiplomatBackendAttrCfg::All(ref cs) => cs.iter().all(|c| self.satisfies_cfg(c)),
+    fn satisfies_cfg(&self, cfg: &DiplomatBackendAttrCfg) -> Result<bool, LoweringError> {
+        Ok(match *cfg {
+            DiplomatBackendAttrCfg::Not(ref c) => !self.satisfies_cfg(c)?,
+            DiplomatBackendAttrCfg::Any(ref cs) => {
+                for c in cs {
+                    if self.satisfies_cfg(c)? {
+                        return Ok(true);
+                    }
+                }
+                false
+            }
+            DiplomatBackendAttrCfg::All(ref cs) => {
+                for c in cs {
+                    if !self.satisfies_cfg(c)? {
+                        return Ok(false);
+                    }
+                }
+                true
+            }
             DiplomatBackendAttrCfg::Star => true,
             DiplomatBackendAttrCfg::BackendName(ref n) => self.is_backend(n),
-            DiplomatBackendAttrCfg::NameValue(ref n, ref v) => self.is_name_value(n, v),
-        }
+            DiplomatBackendAttrCfg::NameValue(ref n, ref v) => self.is_name_value(n, v)?,
+        })
     }
 
     // Provided, constructs an attribute
@@ -435,8 +456,8 @@ impl AttributeValidator for BasicAttributeValidator {
         self.backend_name == backend_name
             || self.other_backend_names.iter().any(|n| n == backend_name)
     }
-    fn is_name_value(&self, name: &str, value: &str) -> bool {
-        if name == "supports" {
+    fn is_name_value(&self, name: &str, value: &str) -> Result<bool, LoweringError> {
+        Ok(if name == "supports" {
             // destructure so new fields are forced to be added
             let BackendAttrSupport {
                 disabling,
@@ -459,13 +480,17 @@ impl AttributeValidator for BasicAttributeValidator {
                 "accessors" => accessors,
                 "stringifiers" => stringifiers,
                 "comparison_overload" => comparison_overload,
-                _ => false,
+                _ => {
+                    return Err(LoweringError::Other(format!(
+                        "Unknown supports = value found: {value}"
+                    )))
+                }
             }
         } else if let Some(ref nv) = self.is_name_value {
             nv(name, value)
         } else {
             false
-        }
+        })
     }
     fn attrs_supported(&self) -> BackendAttrSupport {
         self.support
