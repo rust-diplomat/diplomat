@@ -23,7 +23,7 @@ final class RefList implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_RefList_destroy));
 
-  static RefList node(RefListParameter data) {
+  factory RefList.node(RefListParameter data) {
     // This lifetime edge depends on lifetimes: 'b
     core.List<Object> bEdges = [data];
     final result = _RefList_node(data._ffi);

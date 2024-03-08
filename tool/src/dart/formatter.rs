@@ -141,14 +141,11 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
-        let mut name = self.fmt_method_name(method).into_owned();
-        for prefix in [
-            "try_", "try", "create_", "create", "new_", "new", "default_", "default", "get_", "get",
-        ] {
-            name = name.trim_start_matches(prefix).into();
-        }
-
-        name = name.to_lower_camel_case();
+        let name = self.fmt_method_name(method).into_owned();
+        let name = name
+            .trim_start_matches("try_")
+            .trim_start_matches("try")
+            .to_lower_camel_case();
 
         if name.is_empty() {
             None
