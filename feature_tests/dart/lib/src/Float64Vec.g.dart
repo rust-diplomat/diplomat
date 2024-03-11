@@ -98,7 +98,7 @@ final class Float64Vec implements ffi.Finalizable {
     return writeable.finalize();
   }
 
-  core.List<double> get borrow {
+  core.List<double> borrow() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Float64Vec_borrow(_ffi);

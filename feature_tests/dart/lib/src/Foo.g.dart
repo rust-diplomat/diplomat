@@ -32,7 +32,7 @@ final class Foo implements ffi.Finalizable {
     return Foo._fromFfi(result, [], aEdges);
   }
 
-  Bar get getBar {
+  Bar get bar {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     // This lifetime edge depends on lifetimes: 'a, 'b
@@ -51,7 +51,7 @@ final class Foo implements ffi.Finalizable {
     return Foo._fromFfi(result, [], aEdges);
   }
 
-  BorrowedFieldsReturning get asReturning {
+  BorrowedFieldsReturning asReturning() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _Foo_as_returning(_ffi);

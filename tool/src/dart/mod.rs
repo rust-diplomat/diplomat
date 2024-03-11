@@ -6,8 +6,8 @@ use diplomat_core::hir::borrowing_param::{
 };
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, StructPathLike,
-    SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, SpecialMethod,
+    StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
@@ -485,16 +485,44 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         let params = param_decls_dart.join(", ");
 
-        let declaration = if method.param_self.is_none() {
-            // Constructor
-            if return_ty == type_name {
-                if let Some(name) = self.formatter.fmt_constructor_name(method) {
-                    format!("factory {type_name}.{name}({params})")
-                } else {
-                    format!("factory {type_name}({params})")
+        let declaration = if let Some(special) = &method.attrs.special_method {
+            // The rename infrastructure doesn't currently act on named ctors/getters/setters
+            // but *could* in the future when it gains support for camelcasing/etc
+            match &special {
+                SpecialMethod::Constructor => format!("factory {type_name}({params})"),
+                SpecialMethod::NamedConstructor(name) => {
+                    if let Some(name) = name {
+                        format!("factory {type_name}.{name}({params})")
+                    } else {
+                        let name = self.formatter.fmt_constructor_name(method);
+                        let name =
+                            name.unwrap_or_else(|| self.formatter.fmt_method_name(method).into());
+                        format!("factory {type_name}.{name}({params})")
+                    }
                 }
+                SpecialMethod::Getter(name) => {
+                    if let Some(name) = name {
+                        format!("{return_ty} get {name}")
+                    } else {
+                        let name = self.formatter.fmt_accessor_name(method);
+                        format!("{return_ty} get {name}")
+                    }
+                }
+                SpecialMethod::Setter(name) => {
+                    if let Some(name) = name {
+                        format!("set {name}({params})")
+                    } else {
+                        let name = self.formatter.fmt_accessor_name(method);
+                        format!("set {name}({params})")
+                    }
+                }
+                SpecialMethod::Stringifier => "@override\n  String toString()".into(),
+                SpecialMethod::Comparison => unreachable!("Dart does not support comparisons yet"),
+                _ => unimplemented!("Found unknown special method type {special:?}"),
+            }
+        } else if method.param_self.is_none() {
             // Static field
-            } else if params.is_empty()
+            if params.is_empty()
                 && !matches!(
                     method.output,
                     hir::ReturnType::Fallible(_, Some(_))
@@ -512,41 +540,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let method_name = self.formatter.fmt_method_name(method);
                 format!("static {return_ty} {method_name}({params})")
             }
-        // Getter
-        } else if method.params.is_empty()
-            // Returns some value
-            && !method.output.is_unit()
-            // If it returns a bool it has be a `isFoo`, otherwise the bool might be a success flag of a side effect
-            && (return_ty != "bool" || method.name.as_str().starts_with("is"))
-            // Conversions are not getters according to the style guide
-            && !(method.name.as_str().starts_with("to") || method.name.as_str().starts_with("into"))
-            // Mutates
-            && !method.name.as_str().starts_with("enable")
-            // Clone and build are not getters according to the style guide, and next is usually not pure
-            && !["clone", "next", "build"].contains(&method.name.as_str())
-        {
-            let method_name = self.formatter.fmt_method_name(method);
-            format!("{return_ty} get {method_name}")
-        // Setter
-        } else if method.name.as_str().starts_with("set_")
-            && method.params.len() == 1
-            && method.output.is_unit()
-            // The corresponding getter exists, as required by the style guide
-            && self
-                .tcx
-                .resolve_type(id)
-                .methods()
-                .iter()
-                .any(|m| m.name.as_str() == method.name.as_str().strip_prefix("set_").unwrap())
-        {
-            let method_name = self.formatter.fmt_setter_name(method);
-            format!("set {method_name}({params})")
-        } else if method.name.as_str() == "to_string"
-            && method.output.is_writeable()
-            && params.is_empty()
-            && return_ty == "String"
-        {
-            "@override\n  String toString()".to_string()
+        // Indexer
         } else if method.name.as_str() == "get"
             && !method.output.is_unit()
             && method.params.len() == 1

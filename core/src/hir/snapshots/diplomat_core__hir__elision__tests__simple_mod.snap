@@ -103,6 +103,7 @@ TypeContext {
                         abi_rename: RenameAttr {
                             pattern: None,
                         },
+                        special_method: None,
                     },
                 },
             ],
@@ -115,6 +116,7 @@ TypeContext {
                 abi_rename: RenameAttr {
                     pattern: None,
                 },
+                special_method: None,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -229,6 +231,7 @@ TypeContext {
                         abi_rename: RenameAttr {
                             pattern: None,
                         },
+                        special_method: None,
                     },
                 },
             ],
@@ -241,6 +244,7 @@ TypeContext {
                 abi_rename: RenameAttr {
                     pattern: None,
                 },
+                special_method: None,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -271,6 +275,7 @@ TypeContext {
                 abi_rename: RenameAttr {
                     pattern: None,
                 },
+                special_method: None,
             },
             lifetimes: LifetimeEnv {
                 nodes: [

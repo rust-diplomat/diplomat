@@ -4,7 +4,7 @@ use super::{
     NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField, OutStructPath,
     OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType, ReturnLifetimeLowerer,
     ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType, Slice, StructDef,
-    StructField, StructPath, SuccessType, Type,
+    StructField, StructPath, SuccessType, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -50,6 +50,7 @@ pub(crate) struct ItemAndInfo<'ast, Ast> {
 
     /// Any parent attributes resolved from the module, for a method context
     pub(crate) method_parent_attrs: Attrs,
+    pub(crate) id: TypeId,
 }
 
 impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
@@ -120,31 +121,31 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
     fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Result<EnumDef, ()> {
         let ast_enum = item.item;
         let name = self.lower_ident(&ast_enum.name, "enum name");
-        let attrs = self.attr_validator.attr_from_ast(
-            &ast_enum.attrs,
-            AttributeContext::Enum,
-            &item.ty_parent_attrs,
-            self.errors,
-        );
+        let attrs =
+            self.attr_validator
+                .attr_from_ast(&ast_enum.attrs, &item.ty_parent_attrs, self.errors);
 
         let mut variants = Ok(Vec::with_capacity(ast_enum.variants.len()));
         let variant_parent_attrs = attrs.for_inheritance(AttrInheritContext::Variant);
         for (ident, discriminant, docs, attrs) in ast_enum.variants.iter() {
             let name = self.lower_ident(ident, "enum variant");
-            let attrs = self.attr_validator.attr_from_ast(
-                attrs,
-                AttributeContext::EnumVariant,
-                &variant_parent_attrs,
-                self.errors,
-            );
+            let attrs =
+                self.attr_validator
+                    .attr_from_ast(attrs, &variant_parent_attrs, self.errors);
             match (name, &mut variants) {
                 (Ok(name), Ok(variants)) => {
-                    variants.push(EnumVariant {
+                    let variant = EnumVariant {
                         docs: docs.clone(),
                         name,
                         discriminant: *discriminant,
                         attrs,
-                    });
+                    };
+                    self.attr_validator.validate(
+                        &variant.attrs,
+                        AttributeContext::EnumVariant(&variant),
+                        self.errors,
+                    );
+                    variants.push(variant);
                 }
                 _ => variants = Err(()),
             }
@@ -154,15 +155,18 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             &ast_enum.methods[..],
             item.in_path,
             &item.method_parent_attrs,
+            item.id,
         );
 
-        Ok(EnumDef::new(
-            ast_enum.docs.clone(),
-            name?,
-            variants?,
-            methods?,
-            attrs,
-        ))
+        let def = EnumDef::new(ast_enum.docs.clone(), name?, variants?, methods?, attrs);
+
+        self.attr_validator.validate(
+            &def.attrs,
+            AttributeContext::Type(TypeDef::from(&def)),
+            self.errors,
+        );
+
+        Ok(def)
     }
 
     fn lower_opaque(
@@ -176,22 +180,22 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             &ast_opaque.methods[..],
             item.in_path,
             &item.method_parent_attrs,
+            item.id,
         );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_opaque.attrs,
-            AttributeContext::Opaque,
             &item.ty_parent_attrs,
             self.errors,
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_opaque.lifetimes);
 
-        Ok(OpaqueDef::new(
-            ast_opaque.docs.clone(),
-            name?,
-            methods?,
-            attrs,
-            lifetimes?,
-        ))
+        let def = OpaqueDef::new(ast_opaque.docs.clone(), name?, methods?, attrs, lifetimes?);
+        self.attr_validator.validate(
+            &def.attrs,
+            AttributeContext::Type(TypeDef::from(&def)),
+            self.errors,
+        );
+        Ok(def)
     }
 
     fn lower_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Result<StructDef, ()> {
@@ -228,23 +232,30 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             &ast_struct.methods[..],
             item.in_path,
             &item.method_parent_attrs,
+            item.id,
         );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_struct.attrs,
-            AttributeContext::Struct { out: false },
             &item.ty_parent_attrs,
             self.errors,
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_struct.lifetimes);
 
-        Ok(StructDef::new(
+        let def = StructDef::new(
             ast_struct.docs.clone(),
             name?,
             fields?,
             methods?,
             attrs,
             lifetimes?,
-        ))
+        );
+
+        self.attr_validator.validate(
+            &def.attrs,
+            AttributeContext::Type(TypeDef::from(&def)),
+            self.errors,
+        );
+        Ok(def)
     }
 
     fn lower_out_struct(
@@ -284,23 +295,30 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             &ast_out_struct.methods[..],
             item.in_path,
             &item.method_parent_attrs,
+            item.id,
         );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_out_struct.attrs,
-            AttributeContext::Struct { out: true },
             &item.ty_parent_attrs,
             self.errors,
         );
 
         let lifetimes = self.lower_type_lifetime_env(&ast_out_struct.lifetimes);
-        Ok(OutStructDef::new(
+        let def = OutStructDef::new(
             ast_out_struct.docs.clone(),
             name?,
             fields?,
             methods?,
             attrs,
             lifetimes?,
-        ))
+        );
+
+        self.attr_validator.validate(
+            &def.attrs,
+            AttributeContext::Type(TypeDef::from(&def)),
+            self.errors,
+        );
+        Ok(def)
     }
 
     /// Lowers an [`ast::Method`]s an [`hir::Method`].
@@ -311,6 +329,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         method: &'ast ast::Method,
         in_path: &ast::Path,
         method_parent_attrs: &Attrs,
+        self_id: TypeId,
     ) -> Result<Method, ()> {
         let name = self.lower_ident(&method.name, "method name");
 
@@ -338,14 +357,11 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             in_path,
         )?;
 
-        let attrs = self.attr_validator.attr_from_ast(
-            &method.attrs,
-            AttributeContext::Enum,
-            method_parent_attrs,
-            self.errors,
-        );
+        let attrs =
+            self.attr_validator
+                .attr_from_ast(&method.attrs, method_parent_attrs, self.errors);
 
-        Ok(Method {
+        let method = Method {
             docs: method.docs.clone(),
             name: name?,
             lifetime_env,
@@ -353,7 +369,15 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             params,
             output,
             attrs,
-        })
+        };
+
+        self.attr_validator.validate(
+            &method.attrs,
+            AttributeContext::Method(&method, self_id),
+            self.errors,
+        );
+
+        Ok(method)
     }
 
     /// Lowers many [`ast::Method`]s into a vector of [`hir::Method`]s.
@@ -364,11 +388,12 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         ast_methods: &'ast [ast::Method],
         in_path: &ast::Path,
         method_parent_attrs: &Attrs,
+        self_id: TypeId,
     ) -> Result<Vec<Method>, ()> {
         let mut methods = Ok(Vec::with_capacity(ast_methods.len()));
 
         for method in ast_methods {
-            let method = self.lower_method(method, in_path, method_parent_attrs);
+            let method = self.lower_method(method, in_path, method_parent_attrs, self_id);
             match (method, &mut methods) {
                 (Ok(method), Ok(methods)) => {
                     methods.push(method);

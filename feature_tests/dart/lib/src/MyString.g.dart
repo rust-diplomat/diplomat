@@ -37,14 +37,14 @@ final class MyString implements ffi.Finalizable {
     return MyString._fromFfi(result, []);
   }
 
-  void setStr(String newStr) {
+  set str(String newStr) {
     final temp = ffi2.Arena();
     final newStrView = newStr.utf8View;
     _MyString_set_str(_ffi, newStrView.allocIn(temp), newStrView.length);
     temp.releaseAll();
   }
 
-  String get getStr {
+  String get str {
     final writeable = _Writeable();
     _MyString_get_str(_ffi, writeable._ffi);
     return writeable.finalize();

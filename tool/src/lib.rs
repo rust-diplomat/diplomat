@@ -86,6 +86,11 @@ pub fn gen(
             let mut attr_validator = hir::BasicAttributeValidator::new("dart");
             attr_validator.support.renaming = true;
             attr_validator.support.disabling = true;
+            attr_validator.support.constructors = true;
+            attr_validator.support.named_constructors = true;
+            attr_validator.support.fallible_constructors = true;
+            attr_validator.support.accessors = true;
+            attr_validator.support.stringifiers = true;
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {

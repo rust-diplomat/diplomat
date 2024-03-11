@@ -3,7 +3,7 @@
 use super::lifetimes::{Lifetime, MaybeStatic};
 use super::{
     EnumPath, Everywhere, NonOptional, OpaqueOwner, OpaquePath, Optional, OutputOnly,
-    PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext,
+    PrimitiveType, StructPath, StructPathLike, TyPosition, TypeContext, TypeId,
 };
 use crate::ast;
 pub use ast::Mutability;
@@ -93,6 +93,16 @@ impl<P: TyPosition> Type<P> {
             }
             _ => Either::Left([].iter().copied()),
         }
+    }
+
+    // For custom types, get the type id
+    pub fn id(&self) -> Option<TypeId> {
+        Some(match self {
+            Self::Opaque(p) => TypeId::Opaque(p.tcx_id),
+            Self::Enum(p) => TypeId::Enum(p.tcx_id),
+            Self::Struct(p) => p.id(),
+            _ => return None,
+        })
     }
 }
 

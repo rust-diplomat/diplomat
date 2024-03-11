@@ -351,6 +351,9 @@ impl RenameAttr {
             StandardAttribute::List(_) => {
                 Err("Failed to parse malformed #[diplomat::abi_rename(...)]: found list")
             }
+            StandardAttribute::Empty => {
+                Err("Failed to parse malformed #[diplomat::abi_rename(...)]: found no parameters")
+            }
         }
     }
 }
@@ -386,19 +389,21 @@ struct RenamePattern {
 ///
 /// - `#[attr = "foo"]` and `#[attr("foo")]` for a simple string
 /// - `#[attr(....)]` for a more complicated context
+/// - `#[attr]` for a "defaulting" context
 ///
 /// This allows attributes to parse simple string values without caring too much about the NameValue vs List representation
 /// and then attributes can choose to handle more complicated lists if they so desire.
 pub(crate) enum StandardAttribute<'a> {
     String(String),
     List(&'a MetaList),
+    Empty,
 }
 
 impl<'a> StandardAttribute<'a> {
     /// Parse from a Meta. Returns an error when no string value is specified in the path/namevalue forms.
     pub(crate) fn from_meta(meta: &'a Meta) -> Result<Self, ()> {
         match meta {
-            Meta::Path(..) => Err(()),
+            Meta::Path(..) => Ok(Self::Empty),
             Meta::NameValue(ref nv) => {
                 // Support a shortcut `abi_rename = "..."`
                 let Expr::Lit(ref lit) = nv.value else {
