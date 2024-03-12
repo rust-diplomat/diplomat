@@ -429,8 +429,11 @@ mod tests {
             let errors = custom_types.check_validity(&env);
 
             let mut output = String::new();
-            for error in errors {
-                writeln!(&mut output, "AST ERROR: {error}").unwrap();
+            if !errors.is_empty() {
+                for error in errors {
+                    writeln!(&mut output, "AST ERROR: {error}").unwrap();
+                }
+                panic!("Found AST errors");
             }
 
             let attr_validator = hir::BasicAttributeValidator::new("tests");
@@ -474,6 +477,7 @@ mod tests {
         }
     }
 
+    /// This is a buch of tests put together
     #[test]
     fn test_basic_lowering() {
         uitest_lowering! {
@@ -526,6 +530,7 @@ mod tests {
             }
         }
     }
+
 
 
     #[test]
@@ -684,4 +689,5 @@ mod tests {
             }
         };
     }
+
 }

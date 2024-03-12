@@ -74,6 +74,8 @@ pub fn gen(
             // These errors are not blocking, and HIR may produce better errors.
             eprintln!("AST error: {e}");
         }
+
+        std::process::exit(1);
     }
 
     let mut out_texts: HashMap<String, String> = HashMap::new();
