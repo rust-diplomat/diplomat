@@ -37,7 +37,7 @@ mod ffi {
     struct Float64Vec(Vec<f64>);
 
     impl Float64Vec {
-        #[diplomat::attr(dart, disable)]
+        #[diplomat::attr(not(supports = memory_sharing), disable)]
         #[diplomat::attr(supports = constructors, constructor)]
         pub fn new(v: &[f64]) -> Box<Float64Vec> {
             Box::new(Self(v.to_vec()))
@@ -77,7 +77,7 @@ mod ffi {
             ))
         }
 
-        #[diplomat::attr(not(dart), disable)]
+        #[diplomat::attr(supports = memory_sharing, disable)]
         #[diplomat::attr(supports = constructors, constructor)]
         pub fn new_from_owned(v: Box<[f64]>) -> Box<Float64Vec> {
             Box::new(Self(v.into()))

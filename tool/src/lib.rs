@@ -133,6 +133,7 @@ pub fn gen(
                 attr_validator.support.namespacing = true;
             }
 
+            attr_validator.support.memory_sharing = true;
             attr_validator.support.disabling = true;
             // cpp-c2 is a testing backend, we're not going to treat it as a real c/cpp backend
             // since the ast-cpp backend doesn't know about attributes.

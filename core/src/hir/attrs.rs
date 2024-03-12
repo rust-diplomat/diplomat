@@ -366,6 +366,7 @@ pub struct BackendAttrSupport {
     pub accessors: bool,
     pub stringifiers: bool,
     pub comparison_overload: bool,
+    pub memory_sharing: bool,
     // more to be added: namespace, etc
 }
 
@@ -469,6 +470,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 accessors,
                 stringifiers,
                 comparison_overload,
+                memory_sharing,
             } = self.support;
             match value {
                 "disabling" => disabling,
@@ -480,6 +482,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "accessors" => accessors,
                 "stringifiers" => stringifiers,
                 "comparison_overload" => comparison_overload,
+                "memory_sharing" => memory_sharing,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
