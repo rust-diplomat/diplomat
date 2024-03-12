@@ -1,10 +1,13 @@
 use super::TypeName;
 
+/// Errors that must happen during AST validation
 #[cfg_attr(feature = "displaydoc", derive(displaydoc::Display))]
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum ValidityError {
     /// A return type contains elided lifetimes.
+    ///
+    /// This is necessary during AST validation since HIR lifetime lowering will fail otherwise.
     #[cfg_attr(
         feature = "displaydoc",
         displaydoc("A return type contains elided lifetimes, which aren't yet supported: {sub_type} in {full_type}")
