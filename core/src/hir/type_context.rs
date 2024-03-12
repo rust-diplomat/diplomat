@@ -531,8 +531,6 @@ mod tests {
         }
     }
 
-
-
     #[test]
     fn test_opaque_ffi() {
         uitest_lowering! {
@@ -689,5 +687,4 @@ mod tests {
             }
         };
     }
-
 }

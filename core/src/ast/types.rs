@@ -105,20 +105,6 @@ impl CustomType {
         env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
-        match self {
-            CustomType::Struct(strct) => {
-                for (_, field, _) in strct.fields.iter() {
-                    field.check_validity(in_path, env, errors, false);
-                }
-
-
-            }
-            CustomType::Opaque(_) => {}
-            CustomType::Enum(e) => {
-
-            }
-        }
-
         for method in self.methods().iter() {
             method.check_validity(in_path, env, errors);
         }
@@ -761,84 +747,6 @@ impl TypeName {
         transitivity.finish()
     }
 
-    fn check_opaque<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &Env,
-        behind_reference: bool,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        match self {
-            TypeName::Reference(.., underlying) => {
-                underlying.check_opaque(in_path, env, true, errors)
-            }
-            TypeName::Box(underlying) => underlying.check_opaque(in_path, env, true, errors),
-            TypeName::Option(underlying) => underlying.check_opaque(in_path, env, false, errors),
-            TypeName::Result(ok, err, _) => {
-                ok.check_opaque(in_path, env, false, errors);
-                err.check_opaque(in_path, env, false, errors);
-            }
-            TypeName::Named(path_type) => {
-            }
-            _ => {}
-        }
-    }
-
-    // Disallow non-pointer containing Option<T> in non-return position
-    fn check_option(&self, errors: &mut Vec<ValidityError>, is_return_position: bool) {
-        match self {
-            TypeName::Reference(.., underlying) => underlying.check_option(errors, false),
-            TypeName::Box(underlying) => underlying.check_option(errors, false),
-            TypeName::Option(underlying) => {
-                if !underlying.is_pointer() && !is_return_position {
-                } else {
-                    underlying.check_option(errors, false);
-                }
-            }
-            TypeName::Result(ok, err, _) => {
-                ok.check_option(errors, false);
-                err.check_option(errors, false);
-            }
-            _ => {}
-        }
-    }
-
-    // Disallow Result in non-return position
-    fn check_result(&self, errors: &mut Vec<ValidityError>, is_return_position: bool) {
-        match self {
-            TypeName::Reference(.., underlying) => underlying.check_result(errors, false),
-            TypeName::Box(underlying) => underlying.check_result(errors, false),
-            TypeName::Option(underlying) => underlying.check_result(errors, false),
-            TypeName::Result(ok, err, _) => {
-                if !is_return_position {
-                } else {
-                    ok.check_result(errors, false);
-                    err.check_result(errors, false);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference, and that non-opaque custom types are *never* behind
-    /// references or boxes.
-    ///
-    /// Also checks that there are no elided lifetimes in the return type.
-    ///
-    /// Errors are pushed into the `errors` vector.
-    pub fn check_validity<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-        is_return_position: bool,
-    ) {
-        self.check_opaque(in_path, env, false, errors);
-        self.check_option(errors, is_return_position);
-        self.check_result(errors, is_return_position);
-    }
-
     /// Checks the validity of return types.
     ///
     /// This is equivalent to `TypeName::check_validity`, but it also ensures
@@ -852,7 +760,6 @@ impl TypeName {
         env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
-        self.check_validity(in_path, env, errors, true);
         self.check_lifetime_elision(self, in_path, env, errors);
     }
 

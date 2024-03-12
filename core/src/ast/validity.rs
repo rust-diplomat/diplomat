@@ -1,4 +1,4 @@
-use super::{Ident, Path, TypeName};
+use super::TypeName;
 
 #[cfg_attr(feature = "displaydoc", derive(displaydoc::Display))]
 #[derive(Debug, Clone)]
