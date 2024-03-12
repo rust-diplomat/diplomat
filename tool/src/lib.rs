@@ -71,9 +71,11 @@ pub fn gen(
     let errors = diplomat_file.check_validity(&env);
     if !errors.is_empty() {
         for e in errors {
-            eprintln!("{e}");
+            // These errors are not blocking, and HIR may produce better errors.
+            eprintln!("AST error: {e}");
         }
-        panic!();
+
+        std::process::exit(1);
     }
 
     let mut out_texts: HashMap<String, String> = HashMap::new();
@@ -94,8 +96,8 @@ pub fn gen(
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
-                    for err in e {
-                        eprintln!("Lowering error: {}", err);
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
                     }
                     std::process::exit(1);
                 }
@@ -140,8 +142,8 @@ pub fn gen(
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
-                    for err in e {
-                        eprintln!("Lowering error: {err}");
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
                     }
                     std::process::exit(1);
                 }

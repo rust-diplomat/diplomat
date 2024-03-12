@@ -1,43 +1,13 @@
-use super::{Ident, Path, TypeName};
+use super::TypeName;
 
+/// Errors that must happen during AST validation
 #[cfg_attr(feature = "displaydoc", derive(displaydoc::Display))]
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum ValidityError {
-    /// An oqaue type crosses the FFI boundary as a value.
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("An opaque type crossed the FFI boundary as a value: {0}")
-    )]
-    OpaqueAsValue(TypeName),
-    /// A non-oquare zero-sized struct or enum has been defined.
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("A non-opaque zero-sized struct or enum has been defined: {0}")
-    )]
-    NonOpaqueZST(Path),
-    /// A non-opaque type was found behind a `Box` or reference.
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc(
-            "A non-opaque type was found behind a Box or reference, these can \
-               only be handled by-move as they get converted at the FFI boundary: {0}"
-        )
-    )]
-    NonOpaqueBehindRef(TypeName),
-    /// An Option was found in an unsupported location
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("An Option was found in an unsupported location: {0}")
-    )]
-    OptionNotInReturnPosition(TypeName),
-    /// A Result was found in an unsupported location
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("A Result was found in an unsupported location: {0}")
-    )]
-    ResultNotInReturnPosition(TypeName),
     /// A return type contains elided lifetimes.
+    ///
+    /// This is necessary during AST validation since HIR lifetime lowering will fail otherwise.
     #[cfg_attr(
         feature = "displaydoc",
         displaydoc("A return type contains elided lifetimes, which aren't yet supported: {sub_type} in {full_type}")
@@ -46,12 +16,6 @@ pub enum ValidityError {
         full_type: TypeName,
         sub_type: TypeName,
     },
-    /// An alias or submodule was found instead of a custom type.
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("An alias or submodule was found instead of a custom type with the name {0}.")
-    )]
-    PathTypeNameConflict(Ident),
 }
 
 #[cfg(test)]
@@ -77,157 +41,20 @@ mod tests {
     }
 
     #[test]
-    fn test_opaque_ffi() {
+    fn test_lifetime_in_return() {
         uitest_validity! {
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::opaque]
-                struct MyOpaqueStruct(UnknownType);
-
-                impl MyOpaqueStruct {
-                    pub fn new() -> Box<MyOpaqueStruct> {}
-                    pub fn new_broken() -> MyOpaqueStruct {}
-                    pub fn do_thing(&self) {}
-                    pub fn do_thing_broken(self) {}
-                    pub fn broken_differently(&self, x: &MyOpaqueStruct) {}
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn opaque_checks_with_safe_use() {
-        uitest_validity! {
-            #[diplomat::bridge]
-            mod ffi {
-                struct NonOpaqueStruct {}
-
-                impl NonOpaqueStruct {
-                    fn new(x: i32) -> NonOpaqueStruct {
-                        unimplemented!();
-                    }
-                }
-
-                #[diplomat::opaque]
-                struct OpaqueStruct {}
-
-                impl OpaqueStruct {
-                    pub fn new() -> Box<OpaqueStruct> {
-                        unimplemented!();
-                    }
-
-                    pub fn get_i32(&self) -> i32 {
-                        unimplemented!()
-                    }
-                }
-            }
-        };
-    }
-
-    #[test]
-    fn opaque_checks_with_error() {
-        uitest_validity! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque]
-                struct OpaqueStruct {}
-
-                impl OpaqueStruct {
-                    pub fn new() -> OpaqueStruct {
-                        unimplemented!();
-                    }
-
-                    pub fn get_i32(self) -> i32 {
-                        unimplemented!()
-                    }
-                }
-            }
-        };
-    }
-
-    #[test]
-    fn zst_non_opaque() {
-        uitest_validity! {
-            #[diplomat::bridge]
-            mod ffi {
-                struct OpaqueStruct;
-
-                enum OpaqueEnum {}
-            }
-        };
-    }
-
-    #[test]
-    fn option_invalid() {
-        uitest_validity! {
-            #[diplomat::bridge]
-            mod ffi {
-                use diplomat_runtime::DiplomatResult;
-                struct Foo {
-                    field: Option<u8>,
-                }
-
-                impl Foo {
-                    pub fn do_thing(opt: Option<Option<u16>>) {
-
-                    }
-
-                    pub fn do_thing2(opt: DiplomatResult<Option<DiplomatChar>, u8>) {
-
-                    }
-                    pub fn do_thing2(opt: Option<u16>) {
-
-                    }
-
-                    pub fn do_thing3() -> Option<u16> {
-
-                    }
-                }
-            }
-        };
-    }
-
-    #[test]
-    fn option_valid() {
-        uitest_validity! {
-            #[diplomat::bridge]
-            mod ffi {
-                struct Foo {
-                    field: Option<Box<u8>>,
-                }
-
-                impl Foo {
-                    pub fn do_thing(opt: Option<Box<u32>>) {
-
-                    }
-                    pub fn do_thing2(opt: Option<&u32>) {
-
-                    }
-                }
-            }
-        };
-    }
-
-    #[test]
-    fn non_opaque_move() {
-        uitest_validity! {
-            #[diplomat::bridge]
-            mod ffi {
-                struct NonOpaque {
-                    num: u8,
-                }
-
-                impl NonOpaque {
-                    pub fn foo(&self) {}
-                }
-
                 #[diplomat::opaque]
                 struct Opaque;
 
+                struct Foo<'a> {
+                    x: &'a Opaque,
+                }
+
                 impl Opaque {
-                    pub fn bar<'a>(&'a self) -> &'a NonOpaque {}
-                    pub fn baz<'a>(&'a self, x: &'a NonOpaque) {}
-                    pub fn quux(&self) -> Box<NonOpaque> {}
+                    pub fn returns_self(&self) -> &Self {}
+                    pub fn returns_foo(&self) -> Foo {}
                 }
             }
         };

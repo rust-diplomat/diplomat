@@ -1,6 +1,6 @@
 //! Store all the types contained in the HIR.
 
-use super::lowering::ItemAndInfo;
+use super::lowering::{ErrorAndContext, ErrorStore, ItemAndInfo};
 use super::ty_position::StructPathLike;
 use super::{
     AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError, MaybeStatic, OpaqueDef,
@@ -117,18 +117,24 @@ impl TypeContext {
     }
 
     /// Lower the AST to the HIR while simultaneously performing validation.
-    pub fn from_ast(
-        env: &Env,
+    pub fn from_ast<'ast>(
+        env: &'ast Env,
         attr_validator: impl AttributeValidator + 'static,
-    ) -> Result<Self, Vec<LoweringError>> {
+    ) -> Result<Self, Vec<ErrorAndContext>> {
         let mut ast_out_structs = SmallVec::<[_; 16]>::new();
         let mut ast_structs = SmallVec::<[_; 16]>::new();
         let mut ast_opaques = SmallVec::<[_; 16]>::new();
         let mut ast_enums = SmallVec::<[_; 16]>::new();
 
-        let mut errors = Vec::with_capacity(0);
+        let mut errors = ErrorStore::default();
 
         for (path, mod_env) in env.iter_modules() {
+            errors.set_item(
+                path.elements
+                    .last()
+                    .map(|m| m.as_str())
+                    .unwrap_or("root module"),
+            );
             let mod_attrs = Attrs::from_ast(
                 &mod_env.attrs,
                 &attr_validator,
@@ -197,7 +203,7 @@ impl TypeContext {
         let mut ctx = LoweringContext {
             lookup_id,
             env,
-            errors: &mut errors,
+            errors,
             attr_validator,
         };
 
@@ -215,18 +221,24 @@ impl TypeContext {
                     enums,
                 };
                 assert!(
-                    errors.is_empty(),
-                    "All lowering succeeded but still found error messages: {errors:?}"
+                    ctx.errors.is_empty(),
+                    "All lowering succeeded but still found error messages: {:?}",
+                    ctx.errors.take_errors()
                 );
-                res.validate(&mut errors);
-                if !errors.is_empty() {
-                    return Err(errors);
+
+                ctx.errors.set_item("(validation)");
+                res.validate(&mut ctx.errors);
+                if !ctx.errors.is_empty() {
+                    return Err(ctx.errors.take_errors());
                 }
                 Ok(res)
             }
             _ => {
-                assert!(!errors.is_empty(), "Lowering failed without error messages");
-                Err(errors)
+                assert!(
+                    !ctx.errors.is_empty(),
+                    "Lowering failed without error messages"
+                );
+                Err(ctx.errors.take_errors())
             }
         }
     }
@@ -235,16 +247,18 @@ impl TypeContext {
     ///
     /// Currently validates that methods are not inheriting any transitive bounds from parameters
     ///    Todo: Automatically insert these bounds during HIR construction in a second phase
-    fn validate(&self, errors: &mut Vec<LoweringError>) {
+    fn validate<'hir>(&'hir self, errors: &mut ErrorStore<'hir>) {
         // Lifetime validity check
         for (_id, ty) in self.all_types() {
+            errors.set_item(ty.name().as_str());
             for method in ty.methods() {
+                errors.set_subitem(method.name.as_str());
                 for param in &method.params {
-                    self.validate_ty_in_method(errors, &ty, &param.name, &param.ty, method);
+                    self.validate_ty_in_method(errors, &param.name, &param.ty, method);
                 }
 
                 method.output.with_contained_types(|out_ty| {
-                    self.validate_ty_in_method(errors, &ty, "return type", out_ty, method)
+                    self.validate_ty_in_method(errors, "return type", out_ty, method)
                 })
             }
         }
@@ -254,8 +268,7 @@ impl TypeContext {
     /// already specified on the method
     fn validate_ty_in_method<P: hir::TyPosition>(
         &self,
-        errors: &mut Vec<LoweringError>,
-        ty: &hir::TypeDef,
+        errors: &mut ErrorStore,
         param_name: impl Display,
         param_ty: &hir::Type<P>,
         method: &hir::Method,
@@ -298,8 +311,6 @@ impl TypeContext {
                 }
 
                 if !use_longer_lifetimes.contains(&corresponding_use) {
-                    let ty_name = &ty.name();
-                    let method_name = &method.name;
                     let use_name = method.lifetime_env.fmt_lifetime(use_lt);
                     let use_longer_name = method.lifetime_env.fmt_lifetime(corresponding_use);
                     let def_cause = if let Some(def_lt) = def_lt {
@@ -310,7 +321,7 @@ impl TypeContext {
                         // This case is technically already handled in the lifetime lowerer, we're being careful
                         "comes from &-ref's lifetime in parameter".into()
                     };
-                    errors.push(LoweringError::Other(format!("{ty_name}::{method_name} should explicitly include this \
+                    errors.push(LoweringError::Other(format!("Method should explicitly include this \
                                         lifetime bound from param {param_name}: '{use_longer_name}: '{use_name} ({def_cause})")))
                 }
             }
@@ -409,7 +420,7 @@ mod tests {
     use crate::hir;
     use std::fmt::Write;
 
-    macro_rules! uitest_validity {
+    macro_rules! uitest_lowering {
         ($($file:tt)*) => {
             let parsed: syn::File = syn::parse_quote! { $($file)* };
             let custom_types = crate::ast::File::from(&parsed);
@@ -418,16 +429,19 @@ mod tests {
             let errors = custom_types.check_validity(&env);
 
             let mut output = String::new();
-            for error in errors {
-                writeln!(&mut output, "AST ERROR: {error}").unwrap();
+            if !errors.is_empty() {
+                for error in errors {
+                    writeln!(&mut output, "AST ERROR: {error}").unwrap();
+                }
+                panic!("Found AST errors");
             }
 
             let attr_validator = hir::BasicAttributeValidator::new("tests");
             match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
-                    for err in e {
-                        writeln!(&mut output, "Lowering error: {err}").unwrap();
+                    for (ctx, err) in e {
+                        writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
                     }
                 }
             };
@@ -439,7 +453,7 @@ mod tests {
 
     #[test]
     fn test_required_implied_bounds() {
-        uitest_validity! {
+        uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::opaque]
@@ -461,5 +475,216 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// This is a buch of tests put together
+    #[test]
+    fn test_basic_lowering() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod other_ffi {
+
+                struct Foo {
+                    field: u8
+                }
+
+                #[diplomat::out]
+                struct OutStruct {
+                    field: Box<OtherOpaque>,
+                }
+
+                #[diplomat::opaque]
+                struct OtherOpaque;
+            }
+            #[diplomat::bridge]
+            mod ffi {
+                use crate::other_ffi::{Foo, OutStruct, OtherOpaque};
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                struct EmptyStruct;
+
+                enum EmptyEnum {}
+
+                struct InStructWithOutField {
+                    field: Box<OtherOpaque>,
+                    out_struct: OutStruct,
+                }
+
+                struct BadStructFields {
+                    field1: Option<u8>,
+                    field2: Result<u8, u8>,
+                }
+
+                impl Opaque {
+                    pub fn use_foo_ref(&self, foo: &Foo) {}
+                    pub fn return_foo_box(&self) -> Box<Foo> {}
+                    pub fn use_self(self) {}
+                    pub fn return_self(self) -> Self {}
+                    pub fn use_opaque_owned(&self, opaque: OtherOpaque) {}
+                    pub fn return_opaque_owned(&self) -> OtherOpaque {}
+                    pub fn use_out_as_in(&self, out: OutStruct) {}
+                }
+
+            }
+        }
+    }
+
+    #[test]
+    fn test_opaque_ffi() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct MyOpaqueStruct(UnknownType);
+
+                impl MyOpaqueStruct {
+                    pub fn new() -> Box<MyOpaqueStruct> {}
+                    pub fn new_broken() -> MyOpaqueStruct {}
+                    pub fn do_thing(&self) {}
+                    pub fn do_thing_broken(self) {}
+                    pub fn broken_differently(&self, x: &MyOpaqueStruct) {}
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn opaque_checks_with_safe_use() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct NonOpaqueStruct {}
+
+                impl NonOpaqueStruct {
+                    fn new(x: i32) -> NonOpaqueStruct {
+                        unimplemented!();
+                    }
+                }
+
+                #[diplomat::opaque]
+                struct OpaqueStruct {}
+
+                impl OpaqueStruct {
+                    pub fn new() -> Box<OpaqueStruct> {
+                        unimplemented!();
+                    }
+
+                    pub fn get_i32(&self) -> i32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+    }
+
+    #[test]
+    fn opaque_checks_with_error() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct OpaqueStruct {}
+
+                impl OpaqueStruct {
+                    pub fn new() -> OpaqueStruct {
+                        unimplemented!();
+                    }
+
+                    pub fn get_i32(self) -> i32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+    }
+
+    #[test]
+    fn zst_non_opaque() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct OpaqueStruct;
+
+                enum OpaqueEnum {}
+            }
+        };
+    }
+
+    #[test]
+    fn option_invalid() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatResult;
+                struct Foo {
+                    field: Option<u8>,
+                }
+
+                impl Foo {
+                    pub fn do_thing(opt: Option<Option<u16>>) {
+
+                    }
+
+                    pub fn do_thing2(opt: DiplomatResult<Option<DiplomatChar>, u8>) {
+
+                    }
+                    pub fn do_thing2(opt: Option<u16>) {
+
+                    }
+
+                    pub fn do_thing3() -> Option<u16> {
+
+                    }
+                }
+            }
+        };
+    }
+
+    #[test]
+    fn option_valid() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct Foo {
+                    field: Option<Box<u8>>,
+                }
+
+                impl Foo {
+                    pub fn do_thing(opt: Option<Box<u32>>) {
+
+                    }
+                    pub fn do_thing2(opt: Option<&u32>) {
+
+                    }
+                }
+            }
+        };
+    }
+
+    #[test]
+    fn non_opaque_move() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                struct NonOpaque {
+                    num: u8,
+                }
+
+                impl NonOpaque {
+                    pub fn foo(&self) {}
+                }
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                impl Opaque {
+                    pub fn bar<'a>(&'a self) -> &'a NonOpaque {}
+                    pub fn baz<'a>(&'a self, x: &'a NonOpaque) {}
+                    pub fn quux(&self) -> Box<NonOpaque> {}
+                }
+            }
+        };
     }
 }

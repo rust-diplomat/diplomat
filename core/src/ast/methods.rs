@@ -193,17 +193,6 @@ impl Method {
         env: &Env,
         errors: &mut Vec<ValidityError>,
     ) {
-        // validity check that if the self type is nonopaque, that it is
-        // behind a reference
-        if let Some(ref self_param) = self.self_param {
-            self_param
-                .to_typename()
-                .check_validity(in_path, env, errors, false);
-        }
-        for m in self.params.iter() {
-            // Do we need to check the validity of the input types?
-            m.ty.check_validity(in_path, env, errors, false);
-        }
         if let Some(ref t) = self.return_type {
             t.check_return_type_validity(in_path, env, errors);
         }
