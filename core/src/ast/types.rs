@@ -785,13 +785,6 @@ impl TypeName {
                 err.check_opaque(in_path, env, false, errors);
             }
             TypeName::Named(path_type) => {
-                if let CustomType::Opaque(_) = path_type.resolve(in_path, env) {
-                    if !behind_reference {
-                        errors.push(ValidityError::OpaqueAsValue(self.clone()))
-                    }
-                } else if behind_reference {
-                    errors.push(ValidityError::NonOpaqueBehindRef(self.clone()))
-                }
             }
             _ => {}
         }

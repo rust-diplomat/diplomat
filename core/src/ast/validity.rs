@@ -4,27 +4,12 @@ use super::{Ident, Path, TypeName};
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum ValidityError {
-    /// An oqaue type crosses the FFI boundary as a value.
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("An opaque type crossed the FFI boundary as a value: {0}")
-    )]
-    OpaqueAsValue(TypeName),
     /// A non-oquare zero-sized struct or enum has been defined.
     #[cfg_attr(
         feature = "displaydoc",
         displaydoc("A non-opaque zero-sized struct or enum has been defined: {0}")
     )]
     NonOpaqueZST(Path),
-    /// A non-opaque type was found behind a `Box` or reference.
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc(
-            "A non-opaque type was found behind a Box or reference, these can \
-               only be handled by-move as they get converted at the FFI boundary: {0}"
-        )
-    )]
-    NonOpaqueBehindRef(TypeName),
     /// An Option was found in an unsupported location
     #[cfg_attr(
         feature = "displaydoc",
