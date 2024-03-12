@@ -94,8 +94,8 @@ pub fn gen(
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
-                    for err in e {
-                        eprintln!("Lowering error: {}", err);
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
                     }
                     std::process::exit(1);
                 }
@@ -140,8 +140,8 @@ pub fn gen(
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
-                    for err in e {
-                        eprintln!("Lowering error: {err}");
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
                     }
                     std::process::exit(1);
                 }

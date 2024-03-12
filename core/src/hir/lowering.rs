@@ -34,9 +34,73 @@ impl fmt::Display for LoweringError {
     }
 }
 
-pub(super) struct LoweringContext<'ast, 'errors> {
+#[derive(Default, Clone)]
+pub struct ErrorContext {
+    item: String,
+    subitem: Option<String>,
+}
+
+impl fmt::Display for ErrorContext {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Some(ref subitem) = self.subitem {
+            write!(f, "{}::{subitem}", self.item)
+        } else {
+            self.item.fmt(f)
+        }
+    }
+}
+
+impl fmt::Debug for ErrorContext {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(self, f)
+    }
+}
+
+/// An error store, which one can push errors to. It keeps track of the
+/// current "context" for the error, usually a type or a type::method. `'tree`
+/// is the AST/HIR tree it is temporarily borrowing from for the context.
+#[derive(Default)]
+pub struct ErrorStore<'tree> {
+    /// The errors
+    errors: Vec<ErrorAndContext>,
+    /// The current context (types, modules)
+    item: &'tree str,
+    /// The current sub-item context (methods, etc)
+    subitem: Option<&'tree str>,
+}
+
+pub type ErrorAndContext = (ErrorContext, LoweringError);
+
+impl<'tree> ErrorStore<'tree> {
+    /// Push an error to the error store
+    pub fn push(&mut self, error: LoweringError) {
+        let context = ErrorContext {
+            item: self.item.into(),
+            subitem: self.subitem.map(|s| s.into()),
+        };
+        self.errors.push((context, error));
+    }
+
+    pub(super) fn take_errors(&mut self) -> Vec<ErrorAndContext> {
+        core::mem::take(&mut self.errors)
+    }
+
+    pub(super) fn is_empty(&self) -> bool {
+        self.errors.is_empty()
+    }
+
+    pub(super) fn set_item(&mut self, item: &'tree str) {
+        self.item = item;
+        self.subitem = None;
+    }
+    pub(super) fn set_subitem(&mut self, subitem: &'tree str) {
+        self.subitem = Some(subitem);
+    }
+}
+
+pub(super) struct LoweringContext<'ast> {
     pub lookup_id: LookupId<'ast>,
-    pub errors: &'errors mut Vec<LoweringError>,
+    pub errors: ErrorStore<'ast>,
     pub env: &'ast Env,
     pub attr_validator: Box<dyn AttributeValidator>,
 }
@@ -53,7 +117,7 @@ pub(crate) struct ItemAndInfo<'ast, Ast> {
     pub(crate) id: TypeId,
 }
 
-impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
+impl<'ast> LoweringContext<'ast> {
     /// Lowers an [`ast::Ident`]s into an [`hir::IdentBuf`].
     ///
     /// If there are any errors, they're pushed to `errors` and `Err` is returned.
@@ -120,10 +184,13 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
 
     fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Result<EnumDef, ()> {
         let ast_enum = item.item;
+        self.errors.set_item(ast_enum.name.as_str());
         let name = self.lower_ident(&ast_enum.name, "enum name");
-        let attrs =
-            self.attr_validator
-                .attr_from_ast(&ast_enum.attrs, &item.ty_parent_attrs, self.errors);
+        let attrs = self.attr_validator.attr_from_ast(
+            &ast_enum.attrs,
+            &item.ty_parent_attrs,
+            &mut self.errors,
+        );
 
         let mut variants = Ok(Vec::with_capacity(ast_enum.variants.len()));
         let variant_parent_attrs = attrs.for_inheritance(AttrInheritContext::Variant);
@@ -131,7 +198,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
             let name = self.lower_ident(ident, "enum variant");
             let attrs =
                 self.attr_validator
-                    .attr_from_ast(attrs, &variant_parent_attrs, self.errors);
+                    .attr_from_ast(attrs, &variant_parent_attrs, &mut self.errors);
             match (name, &mut variants) {
                 (Ok(name), Ok(variants)) => {
                     let variant = EnumVariant {
@@ -143,7 +210,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
                     self.attr_validator.validate(
                         &variant.attrs,
                         AttributeContext::EnumVariant(&variant),
-                        self.errors,
+                        &mut self.errors,
                     );
                     variants.push(variant);
                 }
@@ -163,7 +230,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         self.attr_validator.validate(
             &def.attrs,
             AttributeContext::Type(TypeDef::from(&def)),
-            self.errors,
+            &mut self.errors,
         );
 
         Ok(def)
@@ -174,6 +241,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         item: ItemAndInfo<'ast, ast::OpaqueStruct>,
     ) -> Result<OpaqueDef, ()> {
         let ast_opaque = item.item;
+        self.errors.set_item(ast_opaque.name.as_str());
         let name = self.lower_ident(&ast_opaque.name, "opaque name");
 
         let methods = self.lower_all_methods(
@@ -185,7 +253,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         let attrs = self.attr_validator.attr_from_ast(
             &ast_opaque.attrs,
             &item.ty_parent_attrs,
-            self.errors,
+            &mut self.errors,
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_opaque.lifetimes);
 
@@ -193,13 +261,14 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         self.attr_validator.validate(
             &def.attrs,
             AttributeContext::Type(TypeDef::from(&def)),
-            self.errors,
+            &mut self.errors,
         );
         Ok(def)
     }
 
     fn lower_struct(&mut self, item: ItemAndInfo<'ast, ast::Struct>) -> Result<StructDef, ()> {
         let ast_struct = item.item;
+        self.errors.set_item(ast_struct.name.as_str());
         let name = self.lower_ident(&ast_struct.name, "struct name");
 
         let fields = if ast_struct.fields.is_empty() {
@@ -237,7 +306,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         let attrs = self.attr_validator.attr_from_ast(
             &ast_struct.attrs,
             &item.ty_parent_attrs,
-            self.errors,
+            &mut self.errors,
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_struct.lifetimes);
 
@@ -253,7 +322,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         self.attr_validator.validate(
             &def.attrs,
             AttributeContext::Type(TypeDef::from(&def)),
-            self.errors,
+            &mut self.errors,
         );
         Ok(def)
     }
@@ -263,6 +332,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         item: ItemAndInfo<'ast, ast::Struct>,
     ) -> Result<OutStructDef, ()> {
         let ast_out_struct = item.item;
+        self.errors.set_item(ast_out_struct.name.as_str());
         let name = self.lower_ident(&ast_out_struct.name, "out-struct name");
 
         let fields = if ast_out_struct.fields.is_empty() {
@@ -300,7 +370,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         let attrs = self.attr_validator.attr_from_ast(
             &ast_out_struct.attrs,
             &item.ty_parent_attrs,
-            self.errors,
+            &mut self.errors,
         );
 
         let lifetimes = self.lower_type_lifetime_env(&ast_out_struct.lifetimes);
@@ -316,7 +386,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         self.attr_validator.validate(
             &def.attrs,
             AttributeContext::Type(TypeDef::from(&def)),
-            self.errors,
+            &mut self.errors,
         );
         Ok(def)
     }
@@ -331,6 +401,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         method_parent_attrs: &Attrs,
         self_id: TypeId,
     ) -> Result<Method, ()> {
+        self.errors.set_subitem(method.name.as_str());
         let name = self.lower_ident(&method.name, "method name");
 
         let (ast_params, takes_writeable) = match method.params.split_last() {
@@ -359,7 +430,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
 
         let attrs =
             self.attr_validator
-                .attr_from_ast(&method.attrs, method_parent_attrs, self.errors);
+                .attr_from_ast(&method.attrs, method_parent_attrs, &mut self.errors);
 
         let method = Method {
             docs: method.docs.clone(),
@@ -374,7 +445,7 @@ impl<'ast, 'errors> LoweringContext<'ast, 'errors> {
         self.attr_validator.validate(
             &method.attrs,
             AttributeContext::Method(&method, self_id),
-            self.errors,
+            &mut self.errors,
         );
 
         Ok(method)
