@@ -71,9 +71,9 @@ pub fn gen(
     let errors = diplomat_file.check_validity(&env);
     if !errors.is_empty() {
         for e in errors {
-            eprintln!("{e}");
+            // These errors are not blocking, and HIR may produce better errors.
+            eprintln!("AST error: {e}");
         }
-        panic!();
     }
 
     let mut out_texts: HashMap<String, String> = HashMap::new();

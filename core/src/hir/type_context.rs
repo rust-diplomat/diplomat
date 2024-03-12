@@ -420,7 +420,7 @@ mod tests {
     use crate::hir;
     use std::fmt::Write;
 
-    macro_rules! uitest_validity {
+    macro_rules! uitest_lowering {
         ($($file:tt)*) => {
             let parsed: syn::File = syn::parse_quote! { $($file)* };
             let custom_types = crate::ast::File::from(&parsed);
@@ -450,7 +450,7 @@ mod tests {
 
     #[test]
     fn test_required_implied_bounds() {
-        uitest_validity! {
+        uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
                 #[diplomat::opaque]
@@ -470,6 +470,50 @@ mod tests {
                     // This doesn't actually error since the lowerer inserts the implicit bound
                     pub fn implied_ref_bound<'a, 'b>(&self, one_lt: &'a OneLifetime<'b>) {}
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn test_basic_lowering() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod other_ffi {
+
+                struct Foo {
+                    field: u8
+                }
+
+                #[diplomat::out]
+                struct OutStruct {
+                    field: Box<OtherOpaque>,
+                }
+
+                #[diplomat::opaque]
+                struct OtherOpaque;
+            }
+            #[diplomat::bridge]
+            mod ffi {
+                use crate::other_ffi::{Foo, OutStruct, OtherOpaque};
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+
+                struct InStructWithOutField {
+                    field: Box<OtherOpaque>,
+                    out_struct: OutStruct,
+                }
+                impl Opaque {
+                    pub fn use_foo_ref(&self, foo: &Foo) {}
+                    pub fn return_foo_box(&self) -> Box<Foo> {}
+                    pub fn use_self(self) {}
+                    pub fn return_self(self) -> Self {}
+                    pub fn use_opaque_owned(&self, opaque: OtherOpaque) {}
+                    pub fn return_opaque_owned(&self) -> OtherOpaque {}
+                    pub fn use_out_as_in(&self, out: OutStruct) {}
+                }
+
             }
         }
     }

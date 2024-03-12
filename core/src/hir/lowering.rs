@@ -503,7 +503,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                     ast::CustomType::Opaque(_) => {
                         self.errors.push(LoweringError::Other(format!(
-                            "Opaque passed by value in input: {path}"
+                            "Opaque passed by value: {path}"
                         )));
                         Err(())
                     }
