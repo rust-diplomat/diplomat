@@ -4,24 +4,6 @@ use super::{Ident, Path, TypeName};
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum ValidityError {
-    /// A non-oquare zero-sized struct or enum has been defined.
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("A non-opaque zero-sized struct or enum has been defined: {0}")
-    )]
-    NonOpaqueZST(Path),
-    /// An Option was found in an unsupported location
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("An Option was found in an unsupported location: {0}")
-    )]
-    OptionNotInReturnPosition(TypeName),
-    /// A Result was found in an unsupported location
-    #[cfg_attr(
-        feature = "displaydoc",
-        displaydoc("A Result was found in an unsupported location: {0}")
-    )]
-    ResultNotInReturnPosition(TypeName),
     /// A return type contains elided lifetimes.
     #[cfg_attr(
         feature = "displaydoc",

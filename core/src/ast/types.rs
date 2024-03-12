@@ -111,17 +111,11 @@ impl CustomType {
                     field.check_validity(in_path, env, errors, false);
                 }
 
-                // check for ZSTs
-                if !strct.fields.iter().any(|f| !f.1.is_zst()) {
-                    errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
-                }
+
             }
             CustomType::Opaque(_) => {}
             CustomType::Enum(e) => {
-                // check for ZSTs
-                if e.variants.is_empty() {
-                    errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
-                }
+
             }
         }
 
@@ -797,7 +791,6 @@ impl TypeName {
             TypeName::Box(underlying) => underlying.check_option(errors, false),
             TypeName::Option(underlying) => {
                 if !underlying.is_pointer() && !is_return_position {
-                    errors.push(ValidityError::OptionNotInReturnPosition(self.clone()))
                 } else {
                     underlying.check_option(errors, false);
                 }
@@ -818,7 +811,6 @@ impl TypeName {
             TypeName::Option(underlying) => underlying.check_result(errors, false),
             TypeName::Result(ok, err, _) => {
                 if !is_return_position {
-                    errors.push(ValidityError::ResultNotInReturnPosition(self.clone()))
                 } else {
                     ok.check_result(errors, false);
                     err.check_result(errors, false);

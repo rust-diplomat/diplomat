@@ -499,11 +499,20 @@ mod tests {
                 #[diplomat::opaque]
                 struct Opaque;
 
+                struct EmptyStruct;
+
+                enum EmptyEnum {}
 
                 struct InStructWithOutField {
                     field: Box<OtherOpaque>,
                     out_struct: OutStruct,
                 }
+
+                struct BadStructFields {
+                    field1: Option<u8>,
+                    field2: Result<u8, u8>,
+                }
+
                 impl Opaque {
                     pub fn use_foo_ref(&self, foo: &Foo) {}
                     pub fn return_foo_box(&self) -> Box<Foo> {}
