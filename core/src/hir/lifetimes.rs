@@ -283,6 +283,11 @@ impl Lifetimes {
         }
     }
 
+    /// Append an additional lifetime. Used to tack on anon lifetimes
+    pub(super) fn append_lifetime(&mut self, lifetime: MaybeStatic<Lifetime>) {
+        self.indices.push(lifetime)
+    }
+
     /// Returns a new [`Lifetimes`] representing the lifetimes in the scope
     /// of the method this type appears in.
     ///

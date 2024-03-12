@@ -136,6 +136,20 @@ impl TypeContext {
         env: &'ast Env,
         attr_validator: impl AttributeValidator + 'static,
     ) -> Result<Self, Vec<ErrorAndContext>> {
+        let (mut ctx, hir) = Self::from_ast_without_validation(env, attr_validator)?;
+        ctx.errors.set_item("(validation)");
+        hir.validate(&mut ctx.errors);
+        if !ctx.errors.is_empty() {
+            return Err(ctx.errors.take_errors());
+        }
+        Ok(hir)
+    }
+
+    /// Lower the AST to the HIR, without validation. For testing
+    pub(super) fn from_ast_without_validation<'ast>(
+        env: &'ast Env,
+        attr_validator: impl AttributeValidator + 'static,
+    ) -> Result<(LoweringContext, Self), Vec<ErrorAndContext>> {
         let mut ast_out_structs = SmallVec::<[_; 16]>::new();
         let mut ast_structs = SmallVec::<[_; 16]>::new();
         let mut ast_opaques = SmallVec::<[_; 16]>::new();
@@ -240,13 +254,7 @@ impl TypeContext {
                     "All lowering succeeded but still found error messages: {:?}",
                     ctx.errors.take_errors()
                 );
-
-                ctx.errors.set_item("(validation)");
-                res.validate(&mut ctx.errors);
-                if !ctx.errors.is_empty() {
-                    return Err(ctx.errors.take_errors());
-                }
-                Ok(res)
+                Ok((ctx, res))
             }
             _ => {
                 assert!(
@@ -740,7 +748,7 @@ mod tests {
 
                 impl Opaque {
                     pub fn returns_self(&self) -> &Self {}
-                    // pub fn returns_foo(&self) -> Foo {}
+                    pub fn returns_foo(&self) -> Foo {}
                 }
             }
         };
