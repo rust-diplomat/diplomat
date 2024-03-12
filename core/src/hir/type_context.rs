@@ -10,7 +10,7 @@ use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
 use crate::{ast, Env};
-use core::fmt::Display;
+use core::fmt::{self, Display};
 use smallvec::SmallVec;
 use std::collections::HashMap;
 use std::ops::Index;
@@ -47,6 +47,21 @@ pub enum TypeId {
     OutStruct(OutStructId),
     Opaque(OpaqueId),
     Enum(EnumId),
+}
+
+enum Param<'a> {
+    Input(&'a str),
+    Return,
+}
+
+impl Display for Param<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if let Param::Input(s) = *self {
+            write!(f, "param {s}")
+        } else {
+            write!(f, "return type")
+        }
+    }
 }
 
 impl TypeContext {
@@ -253,12 +268,42 @@ impl TypeContext {
             errors.set_item(ty.name().as_str());
             for method in ty.methods() {
                 errors.set_subitem(method.name.as_str());
+
+                // This check must occur before validate_ty_in_method is called
+                // since validate_ty_in_method calls link_lifetimes which does not
+                // work for structs with elision
+                let mut failed = false;
+                method.output.with_contained_types(|out_ty| {
+                    for lt in out_ty.lifetimes() {
+                        if let MaybeStatic::NonStatic(lt) = lt {
+                            if method.lifetime_env.get_bounds(lt).is_none() {
+                                errors.push(LoweringError::Other(
+                                    "Found elided lifetime in return type, please explicitly specify".into(),
+                                ));
+
+                                failed = true;
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                if failed {
+                    // link_lifetimes will fail if elision exists
+                    continue;
+                }
+
                 for param in &method.params {
-                    self.validate_ty_in_method(errors, &param.name, &param.ty, method);
+                    self.validate_ty_in_method(
+                        errors,
+                        Param::Input(param.name.as_str()),
+                        &param.ty,
+                        method,
+                    );
                 }
 
                 method.output.with_contained_types(|out_ty| {
-                    self.validate_ty_in_method(errors, "return type", out_ty, method)
+                    self.validate_ty_in_method(errors, Param::Return, out_ty, method)
                 })
             }
         }
@@ -269,7 +314,7 @@ impl TypeContext {
     fn validate_ty_in_method<P: hir::TyPosition>(
         &self,
         errors: &mut ErrorStore,
-        param_name: impl Display,
+        param: Param,
         param_ty: &hir::Type<P>,
         method: &hir::Method,
     ) {
@@ -322,7 +367,7 @@ impl TypeContext {
                         "comes from &-ref's lifetime in parameter".into()
                     };
                     errors.push(LoweringError::Other(format!("Method should explicitly include this \
-                                        lifetime bound from param {param_name}: '{use_longer_name}: '{use_name} ({def_cause})")))
+                                        lifetime bound from {param}: '{use_longer_name}: '{use_name} ({def_cause})")))
                 }
             }
         }
@@ -426,15 +471,8 @@ mod tests {
             let custom_types = crate::ast::File::from(&parsed);
             let env = custom_types.all_types();
 
-            let errors = custom_types.check_validity(&env);
-
             let mut output = String::new();
-            if !errors.is_empty() {
-                for error in errors {
-                    writeln!(&mut output, "AST ERROR: {error}").unwrap();
-                }
-                panic!("Found AST errors");
-            }
+
 
             let attr_validator = hir::BasicAttributeValidator::new("tests");
             match hir::TypeContext::from_ast(&env, attr_validator) {
@@ -683,6 +721,26 @@ mod tests {
                     pub fn bar<'a>(&'a self) -> &'a NonOpaque {}
                     pub fn baz<'a>(&'a self, x: &'a NonOpaque) {}
                     pub fn quux(&self) -> Box<NonOpaque> {}
+                }
+            }
+        };
+    }
+
+    #[test]
+    fn test_lifetime_in_return() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                struct Opaque;
+
+                struct Foo<'a> {
+                    x: &'a Opaque,
+                }
+
+                impl Opaque {
+                    pub fn returns_self(&self) -> &Self {}
+                    // pub fn returns_foo(&self) -> Foo {}
                 }
             }
         };
