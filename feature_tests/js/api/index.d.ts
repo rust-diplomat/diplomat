@@ -6,6 +6,7 @@ export { Bar } from './Bar';
 export { BorrowedFields } from './BorrowedFields';
 export { BorrowedFieldsReturning } from './BorrowedFieldsReturning';
 export { BorrowedFieldsWithBounds } from './BorrowedFieldsWithBounds';
+export { Comparable } from './Comparable';
 export { ContiguousEnum } from './ContiguousEnum';
 export { ErrorEnum } from './ErrorEnum';
 export { ErrorStruct } from './ErrorStruct';

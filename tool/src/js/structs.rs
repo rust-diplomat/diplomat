@@ -486,6 +486,7 @@ pub fn gen_ts_type<W: fmt::Write>(
                 write!(out, "{prim}")?;
             }
         },
+        ast::TypeName::Ordering => write!(out, "i8")?,
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             let name = path_type.resolve(in_path, env).name();
             out.write_str(name.as_str())?;

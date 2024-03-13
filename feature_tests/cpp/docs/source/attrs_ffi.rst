@@ -31,6 +31,14 @@
 
 .. cpp:class:: AttrOpaque2
 
+.. cpp:class:: Comparable
+
+    .. cpp:function:: static Comparable new_(uint8_t int)
+
+
+    .. cpp:function:: int8_t cmp(const Comparable& other) const
+
+
 .. cpp:class:: Unnamespaced
 
     .. cpp:function:: static Unnamespaced make(AttrEnum _e)
