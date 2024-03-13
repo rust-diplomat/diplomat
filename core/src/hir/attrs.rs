@@ -167,10 +167,25 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "constructor" {
+                            if !support.constructors {
+                                errors.push(LoweringError::Other(format!(
+                                    "constructor not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Constructor
                         } else if path == "stringifier" {
+                            if !support.stringifiers {
+                                errors.push(LoweringError::Other(format!(
+                                    "stringifier not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Stringifier
                         } else {
+                            if !support.comparison_overload {
+                                errors.push(LoweringError::Other(format!(
+                                    "comparison overload not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Comparison
                         };
 
@@ -183,10 +198,25 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "named_constructor" {
+                            if !support.named_constructors {
+                                errors.push(LoweringError::Other(format!(
+                                    "named constructors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::NamedConstructor
                         } else if path == "getter" {
+                            if !support.accessors {
+                                errors.push(LoweringError::Other(format!(
+                                    "accessors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Getter
                         } else {
+                            if !support.accessors {
+                                errors.push(LoweringError::Other(format!(
+                                    "accessors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Setter
                         };
                         match StandardAttribute::from_meta(&attr.meta) {
