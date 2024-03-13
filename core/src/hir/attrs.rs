@@ -2,8 +2,8 @@
 
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
+use crate::hir::lowering::ErrorStore;
 use crate::hir::{EnumVariant, LoweringError, Method, ReturnType, SuccessType, TypeDef, TypeId};
-
 use syn::Meta;
 
 pub use crate::ast::attrs::RenameAttr;
@@ -86,7 +86,7 @@ impl Attrs {
         ast: &ast::Attrs,
         validator: &(impl AttributeValidator + ?Sized),
         parent_attrs: &Attrs,
-        errors: &mut Vec<LoweringError>,
+        errors: &mut ErrorStore,
     ) -> Self {
         let mut this = parent_attrs.clone();
         // Backends must support this since it applies to the macro/C code.
@@ -219,7 +219,7 @@ impl Attrs {
         &self,
         validator: &(impl AttributeValidator + ?Sized),
         context: AttributeContext,
-        errors: &mut Vec<LoweringError>,
+        errors: &mut ErrorStore,
     ) {
         // use an exhaustive destructure so new attributes are handled
         let Attrs {
@@ -414,13 +414,13 @@ pub trait AttributeValidator {
         &self,
         ast: &ast::Attrs,
         parent_attrs: &Attrs,
-        errors: &mut Vec<LoweringError>,
+        errors: &mut ErrorStore,
     ) -> Attrs {
         Attrs::from_ast(ast, self, parent_attrs, errors)
     }
 
     // Provided: validates an attribute in the context in which it was constructed
-    fn validate(&self, attrs: &Attrs, context: AttributeContext, errors: &mut Vec<LoweringError>) {
+    fn validate(&self, attrs: &Attrs, context: AttributeContext, errors: &mut ErrorStore) {
         attrs.validate(self, context, errors)
     }
 }
