@@ -356,6 +356,10 @@ pub enum TypeName {
     Unit,
     /// The `Self` type.
     SelfType(PathType),
+    /// std::cmp::Ordering or core::cmp::Ordering
+    ///
+    /// The path must be present! Ordering will be parsed as an AST type!
+    Ordering,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -374,6 +378,7 @@ impl TypeName {
             TypeName::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
+            TypeName::Ordering => syn::Type::Path(syn::parse_str("i8").unwrap()),
             TypeName::Named(name) | TypeName::SelfType(name) => {
                 // Self also gets expanded instead of turning into `Self` because
                 // this code is used to generate the `extern "C"` functions, which
@@ -575,13 +580,19 @@ impl TypeName {
                 )
             }
             syn::Type::Path(p) => {
+                let p_len = p.path.segments.len();
                 if let Some(primitive) = p
                     .path
                     .get_ident()
                     .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                 {
                     TypeName::Primitive(*primitive)
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
+                } else if p_len >= 2
+                    && p.path.segments[p_len - 2].ident == "cmp"
+                    && p.path.segments[p_len - 1].ident == "Ordering"
+                {
+                    TypeName::Ordering
+                } else if p_len == 1 && p.path.segments[0].ident == "Box" {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
                         if let GenericArgument::Type(syn::Type::Slice(slice)) = &type_args.args[0] {
@@ -608,7 +619,7 @@ impl TypeName {
                     } else {
                         panic!("Expected angle brackets for Box type")
                     }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Option" {
+                } else if p_len == 1 && p.path.segments[0].ident == "Option" {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
                         if let GenericArgument::Type(tpe) = &type_args.args[0] {
@@ -619,13 +630,13 @@ impl TypeName {
                     } else {
                         panic!("Expected angle brackets for Option type")
                     }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Self" {
+                } else if p_len == 1 && p.path.segments[0].ident == "Self" {
                     if let Some(self_path_type) = self_path_type {
                         TypeName::SelfType(self_path_type)
                     } else {
                         panic!("Cannot have `Self` type outside of a method");
                     }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Result"
+                } else if p_len == 1 && p.path.segments[0].ident == "Result"
                     || is_runtime_type(p, "DiplomatResult")
                 {
                     if let PathArguments::AngleBracketed(type_args) =
@@ -797,6 +808,7 @@ impl fmt::Display for TypeName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
+            TypeName::Ordering => write!(f, "Ordering"),
             TypeName::Named(p) | TypeName::SelfType(p) => p.fmt(f),
             TypeName::Reference(lifetime, mutability, typ) => {
                 write!(f, "{}{typ}", ReferenceDisplay(lifetime, mutability))

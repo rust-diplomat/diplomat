@@ -1,10 +1,10 @@
 use super::{
     AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, EnumDef, EnumPath,
-    EnumVariant, IdentBuf, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method,
-    NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField, OutStructPath,
-    OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType, ReturnLifetimeLowerer,
-    ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType, Slice, StructDef,
-    StructField, StructPath, SuccessType, Type, TypeDef, TypeId,
+    EnumVariant, IdentBuf, IntType, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn,
+    Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
+    OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
+    ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
+    Slice, SpecialMethod, StructDef, StructField, StructPath, SuccessType, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -346,7 +346,8 @@ impl<'ast> LoweringContext<'ast> {
 
             for (name, ty, docs) in ast_out_struct.fields.iter() {
                 let name = self.lower_ident(name, "out-struct field name");
-                let ty = self.lower_out_type(ty, &mut &ast_out_struct.lifetimes, item.in_path);
+                let ty =
+                    self.lower_out_type(ty, &mut &ast_out_struct.lifetimes, item.in_path, true);
 
                 match (name, ty, &mut fields) {
                     (Ok(name), Ok(ty), Ok(fields)) => fields.push(OutStructField {
@@ -432,7 +433,7 @@ impl<'ast> LoweringContext<'ast> {
             self.attr_validator
                 .attr_from_ast(&method.attrs, method_parent_attrs, &mut self.errors);
 
-        let method = Method {
+        let hir_method = Method {
             docs: method.docs.clone(),
             name: name?,
             lifetime_env,
@@ -443,12 +444,28 @@ impl<'ast> LoweringContext<'ast> {
         };
 
         self.attr_validator.validate(
-            &method.attrs,
-            AttributeContext::Method(&method, self_id),
+            &hir_method.attrs,
+            AttributeContext::Method(&hir_method, self_id),
             &mut self.errors,
         );
 
-        Ok(method)
+        let is_comparison = matches!(
+            hir_method.attrs.special_method,
+            Some(SpecialMethod::Comparison)
+        );
+        if let Some(ast::TypeName::Ordering) = method.return_type {
+            if !is_comparison {
+                self.errors.push(LoweringError::Other("Found comparison return type in method not marked as #[diplomat::attr(.., comparison)]".into()));
+                return Err(());
+            }
+        } else if is_comparison {
+            self.errors.push(LoweringError::Other(
+                "Found comparison method that does not return cmp::Ordering".into(),
+            ));
+            return Err(());
+        }
+
+        Ok(hir_method)
     }
 
     /// Lowers many [`ast::Method`]s into a vector of [`hir::Method`]s.
@@ -487,6 +504,10 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Type, ()> {
         match ty {
             ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
+            ast::TypeName::Ordering => {
+                self.errors.push(LoweringError::Other(format!("Found cmp::Ordering in parameter or struct field, it is only allowed in return types")));
+                Err(())
+            }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
@@ -646,10 +667,21 @@ impl<'ast> LoweringContext<'ast> {
         ty: &ast::TypeName,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
+        in_struct: bool,
     ) -> Result<OutType, ()> {
         match ty {
             ast::TypeName::Primitive(prim) => {
                 Ok(OutType::Primitive(PrimitiveType::from_ast(*prim)))
+            }
+            ast::TypeName::Ordering => {
+                if in_struct {
+                    self.errors.push(LoweringError::Other(format!(
+                        "Found cmp::Ordering in struct field, it is only allowed in return types"
+                    )));
+                    Err(())
+                } else {
+                    Ok(Type::Primitive(PrimitiveType::Int(IntType::I8)))
+                }
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
@@ -1004,12 +1036,14 @@ impl<'ast> LoweringContext<'ast> {
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(writeable_or_unit),
                     ty => self
-                        .lower_out_type(ty, &mut return_ltl, in_path)
+                        .lower_out_type(ty, &mut return_ltl, in_path, false)
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
-                    ty => self.lower_out_type(ty, &mut return_ltl, in_path).map(Some),
+                    ty => self
+                        .lower_out_type(ty, &mut return_ltl, in_path, false)
+                        .map(Some),
                 };
 
                 match (ok_ty, err_ty) {
@@ -1019,17 +1053,17 @@ impl<'ast> LoweringContext<'ast> {
             }
             ty @ ast::TypeName::Option(value_ty) => match &**value_ty {
                 ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
-                    .lower_out_type(ty, &mut return_ltl, in_path)
+                    .lower_out_type(ty, &mut return_ltl, in_path, false)
                     .map(SuccessType::OutType)
                     .map(ReturnType::Infallible),
                 _ => self
-                    .lower_out_type(value_ty, &mut return_ltl, in_path)
+                    .lower_out_type(value_ty, &mut return_ltl, in_path, false)
                     .map(SuccessType::OutType)
                     .map(ReturnType::Nullable),
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(writeable_or_unit)),
             ty => self
-                .lower_out_type(ty, &mut return_ltl, in_path)
+                .lower_out_type(ty, &mut return_ltl, in_path, false)
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
         .map(|r_ty| (r_ty, return_ltl.finish()))

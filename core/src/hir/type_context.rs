@@ -311,7 +311,7 @@ impl TypeContext {
                 }
 
                 method.output.with_contained_types(|out_ty| {
-                    self.validate_ty_in_method(errors, Param::Return, out_ty, method)
+                    self.validate_ty_in_method(errors, Param::Return, out_ty, method);
                 })
             }
         }
