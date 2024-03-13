@@ -344,6 +344,7 @@ impl Attrs {
                                 "Comparator must have single parameter".into(),
                             ));
                         }
+                        // In the long run we can actually support heterogeneous comparators. Not a priority right now.
                         const COMPARATOR_ERROR: &str =
                             "Comparator's parameter must be identical to self";
                         if let Some(ref selfty) = method.param_self {

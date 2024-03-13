@@ -240,6 +240,9 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
                 quote! { -> diplomat_runtime::DiplomatResult<#ok, #err> },
                 quote! { .into() },
             )
+        } else if let ast::TypeName::Ordering = return_type {
+            let return_type_syn = return_type.to_syn();
+            (quote! { -> #return_type_syn }, quote! { as i8 })
         } else if let ast::TypeName::Option(ty) = return_type {
             match ty.as_ref() {
                 // pass by reference, Option becomes null

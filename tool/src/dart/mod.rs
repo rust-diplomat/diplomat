@@ -527,7 +527,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     }
                 }
                 SpecialMethod::Stringifier => "@override\n  String toString()".into(),
-                SpecialMethod::Comparison => unreachable!("Dart does not support comparisons yet"),
+                SpecialMethod::Comparison => format!("int compareTo({type_name} other)"),
                 _ => unimplemented!("Found unknown special method type {special:?}"),
             }
         } else if method.param_self.is_none() {
@@ -1257,6 +1257,15 @@ fn iter_def_lifetimes_matching_use_lt<'a>(
         .filter(|(_def_lt, use_lts)| use_lts.contains(use_lt))
         .map(|(def_lt, _use_lts)| def_lt)
         .copied()
+}
+
+fn has_comparison_method(methods: &[MethodInfo]) -> bool {
+    methods.iter().any(|m| {
+        matches!(
+            m.method.attrs.special_method,
+            Some(SpecialMethod::Comparison)
+        )
+    })
 }
 
 /// Context about a struct being borrowed when doing dart-to-c conversions
