@@ -488,7 +488,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.cx.formatter.fmt_primitive_as_c(p);
-                let ret = self.cx.formatter.fmt_borrowed_slice(&ret, b.mutability);
+                let ret = self.cx.formatter.fmt_borrowed_slice(
+                    &ret,
+                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                );
                 ret.into_owned().into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
@@ -688,10 +691,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let prim_name = self.cx.formatter.fmt_primitive_as_c(p);
-                let span = self
-                    .cx
-                    .formatter
-                    .fmt_borrowed_slice(&prim_name, b.mutability);
+                let span = self.cx.formatter.fmt_borrowed_slice(
+                    &prim_name,
+                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                );
                 format!("{span}({var_name}_data, {var_name}_size)").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),

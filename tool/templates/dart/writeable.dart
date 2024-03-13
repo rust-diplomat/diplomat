@@ -10,7 +10,6 @@ final class _Writeable {
   }
 }
 
-  
 @meta.ResourceIdentifier('diplomat_buffer_writeable_create')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Size)>(symbol: 'diplomat_buffer_writeable_create', isLeaf: true)
 // ignore: non_constant_identifier_names

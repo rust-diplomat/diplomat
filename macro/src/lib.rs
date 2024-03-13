@@ -49,8 +49,11 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 colon_token: syn::token::Colon(Span::call_site()),
                 ty: Box::new(
                     parse2({
-                        if let ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, _) =
-                            &param.ty
+                        if let ast::TypeName::PrimitiveSlice(
+                            Some((_, ast::Mutability::Mutable)) | None,
+                            _,
+                        )
+                        | ast::TypeName::StrReference(None, ..) = &param.ty
                         {
                             quote! { *mut #data_type }
                         } else {
@@ -103,34 +106,65 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                 Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site());
             let len_ident = Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site());
 
-            let tokens = if let ast::TypeName::PrimitiveSlice(_, mutability, _) = &param.ty {
-                match mutability {
-                    ast::Mutability::Mutable => quote! {
+            let tokens = if let ast::TypeName::PrimitiveSlice(lm, _) = &param.ty {
+                match lm {
+                    Some((_, ast::Mutability::Mutable)) => quote! {
                         if #len_ident == 0 {
                             &mut []
                         } else {
                             unsafe { core::slice::from_raw_parts_mut(#data_ident, #len_ident) }
                         }
                     },
-                    ast::Mutability::Immutable => quote! {
+                    Some((_, ast::Mutability::Immutable)) => quote! {
                         if #len_ident == 0 {
                             &[]
                         } else {
                             unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
                         }
                     },
+                    None => quote! {
+                        if #len_ident == 0 {
+                            Default::default()
+                        } else {
+                            unsafe { alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident)) }
+                        }
+                    },
                 }
-            } else if let ast::TypeName::StrReference(_, ast::StringEncoding::Utf8) = &param.ty {
-                // The FFI guarantees this, by either validating, or communicating this requirement to the user.
-                quote! {unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(#data_ident, #len_ident))} }
-            } else {
+            } else if let ast::TypeName::StrReference(Some(_), encoding) = &param.ty {
+                let encode = match encoding {
+                    ast::StringEncoding::Utf8 => quote! {
+                        // The FFI guarantees this, by either validating, or communicating this requirement to the user.
+                        unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(#data_ident, #len_ident)) }
+                    },
+                    _ => quote! {
+                        unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
+                    },
+                };
                 quote! {
                     if #len_ident == 0 {
-                        &[]
+                        Default::default()
                     } else {
-                        unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
+                        #encode
                     }
                 }
+            } else if let ast::TypeName::StrReference(None, encoding) = &param.ty {
+                let encode = match encoding {
+                    ast::StringEncoding::Utf8 => quote! {
+                        unsafe { core::str::from_boxed_utf8_unchecked(alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident))) }
+                    },
+                    _ => quote! {
+                        unsafe { alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident)) }
+                    },
+                };
+                quote! {
+                    if #len_ident == 0 {
+                        Default::default()
+                    } else {
+                        #encode
+                    }
+                }
+            } else {
+                unreachable!();
             };
             expanded_params.push(parse2(tokens).unwrap());
         }
@@ -572,6 +606,44 @@ mod tests {
 
                     impl Foo {
                         pub fn fill_slice(s: &mut [f64]) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn method_taking_owned_slice() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        pub fn fill_slice(s: Box<[u16]>) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn method_taking_owned_str() {
+        insta::assert_display_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        pub fn something_with_str(s: Box<str>) {
                             unimplemented!()
                         }
                     }

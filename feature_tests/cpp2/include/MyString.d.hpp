@@ -18,6 +18,8 @@ public:
 
   inline static std::unique_ptr<MyString> new_unsafe(std::string_view v);
 
+  inline static std::unique_ptr<MyString> new_owned(std::string_view v);
+
   inline void set_str(std::string_view new_str);
 
   inline std::string get_str() const;

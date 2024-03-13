@@ -33,6 +33,12 @@ Float64Vec* Float64Vec_new_usize(const size_t* v_data, size_t v_len);
 
 Float64Vec* Float64Vec_new_f64_be_bytes(const uint8_t* v_data, size_t v_len);
 
+Float64Vec* Float64Vec_new_from_owned(double* v_data, size_t v_len);
+
+DiplomatF64Array Float64Vec_as_boxed_slice(const Float64Vec* self);
+
+DiplomatF64View Float64Vec_as_slice(const Float64Vec* self);
+
 void Float64Vec_fill_slice(const Float64Vec* self, double* v_data, size_t v_len);
 
 void Float64Vec_set_value(Float64Vec* self, const double* new_slice_data, size_t new_slice_len);

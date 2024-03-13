@@ -92,11 +92,11 @@ pub fn gen_method<W: fmt::Write>(
             &param.ty
         {
             write!(out, "const char16_t* {0}_data, size_t {0}_len", param.name)?;
-        } else if let ast::TypeName::PrimitiveSlice(_, mutability, prim) = &param.ty {
+        } else if let ast::TypeName::PrimitiveSlice(lm, prim) = &param.ty {
             write!(
                 out,
                 "{0}{1}* {2}_data, size_t {2}_len",
-                if mutability.is_immutable() {
+                if matches!(lm, Some((_, ast::Mutability::Immutable))) {
                     "const "
                 } else {
                     ""

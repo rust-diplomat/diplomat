@@ -346,10 +346,12 @@ pub enum TypeName {
     /// A `Result<T, E>` or `diplomat_runtime::DiplomatWriteable` type. If the bool is true, it's `Result`
     Result(Box<TypeName>, Box<TypeName>, bool),
     Writeable,
-    /// A `&DiplomatStr` type.
-    StrReference(Lifetime, StringEncoding),
-    /// A `&[T]` type, where `T` is a primitive.
-    PrimitiveSlice(Lifetime, Mutability, PrimitiveType),
+    /// A `&DiplomatStr` or `Box<DiplomatStr>` type.
+    /// Owned strings don't have a lifetime.
+    StrReference(Option<Lifetime>, StringEncoding),
+    /// A `&[T]` or `Box<[T]>` type, where `T` is a primitive.
+    /// Owned slices don't have a lifetime or mutability.
+    PrimitiveSlice(Option<(Lifetime, Mutability)>, PrimitiveType),
     /// The `()` type.
     Unit,
     /// The `Self` type.
@@ -467,26 +469,34 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8) => {
                 syn::parse_str(&format!(
                     "{}DiplomatStr",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 ))
                 .unwrap()
             }
-            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf16) => {
                 syn::parse_str(&format!(
                     "{}DiplomatStr16",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 ))
                 .unwrap()
             }
-            TypeName::StrReference(lifetime, StringEncoding::Utf8) => syn::parse_str(&format!(
-                "{}str",
-                ReferenceDisplay(lifetime, &Mutability::Immutable)
-            ))
+            TypeName::StrReference(Some(lifetime), StringEncoding::Utf8) => syn::parse_str(
+                &format!("{}str", ReferenceDisplay(lifetime, &Mutability::Immutable)),
+            )
             .unwrap(),
-            TypeName::PrimitiveSlice(lifetime, mutability, name) => {
+            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8) => {
+                syn::parse_str("Box<DiplomatStr>").unwrap()
+            }
+            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16) => {
+                syn::parse_str("Box<DiplomatStr16>").unwrap()
+            }
+            TypeName::StrReference(None, StringEncoding::Utf8) => {
+                syn::parse_str("Box<str>").unwrap()
+            }
+            TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
                     "{}[{}]",
@@ -495,6 +505,11 @@ impl TypeName {
                 );
                 syn::parse_str(&formatted_str).unwrap()
             }
+            TypeName::PrimitiveSlice(None, name) => syn::parse_str(&format!(
+                "Box<[{}]>",
+                PRIMITIVE_TO_STRING.get(name).unwrap()
+            ))
+            .unwrap(),
             TypeName::Unit => syn::parse_quote! {
                 ()
             },
@@ -510,8 +525,8 @@ impl TypeName {
     /// - If the type is a path with a single element [`Result`], returns a [`TypeName::Result`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::DiplomatResult`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
-    /// - If the type is a reference to `DiplomatStr`, returns a [`TypeName::StrReference`]
-    /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
+    /// - If the type is a owned or borrowed string type, returns a [`TypeName::StrReference`]
+    /// - If the type is a owned or borrowed slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
     /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
     pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathType>) -> TypeName {
@@ -526,11 +541,17 @@ impl TypeName {
                         panic!("mutable string references are disallowed");
                     }
                     if name == "DiplomatStr" {
-                        return TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8);
+                        return TypeName::StrReference(
+                            Some(lifetime),
+                            StringEncoding::UnvalidatedUtf8,
+                        );
                     } else if name == "DiplomatStr16" {
-                        return TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16);
+                        return TypeName::StrReference(
+                            Some(lifetime),
+                            StringEncoding::UnvalidatedUtf16,
+                        );
                     } else if name == "str" {
-                        return TypeName::StrReference(lifetime, StringEncoding::Utf8);
+                        return TypeName::StrReference(Some(lifetime), StringEncoding::Utf8);
                     }
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
@@ -540,7 +561,10 @@ impl TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(lifetime, mutability, *primitive);
+                            return TypeName::PrimitiveSlice(
+                                Some((lifetime, mutability)),
+                                *primitive,
+                            );
                         }
                     }
                 }
@@ -560,8 +584,24 @@ impl TypeName {
                 } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
-                            TypeName::Box(Box::new(TypeName::from_syn(tpe, self_path_type)))
+                        if let GenericArgument::Type(syn::Type::Slice(slice)) = &type_args.args[0] {
+                            if let TypeName::Primitive(p) =
+                                TypeName::from_syn(&slice.elem, self_path_type)
+                            {
+                                TypeName::PrimitiveSlice(None, p)
+                            } else {
+                                panic!("Owned slices only support primitives.")
+                            }
+                        } else if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                            if tpe.to_token_stream().to_string() == "DiplomatStr" {
+                                TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8)
+                            } else if tpe.to_token_stream().to_string() == "DiplomatStr16" {
+                                TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16)
+                            } else if tpe.to_token_stream().to_string() == "str" {
+                                TypeName::StrReference(None, StringEncoding::Utf8)
+                            } else {
+                                TypeName::Box(Box::new(TypeName::from_syn(tpe, self_path_type)))
+                            }
                         } else {
                             panic!("Expected first type argument for Box to be a type")
                         }
@@ -652,8 +692,10 @@ impl TypeName {
                 ok.visit_lifetimes(visit)?;
                 err.visit_lifetimes(visit)
             }
-            TypeName::StrReference(lt, ..) => visit(lt, LifetimeOrigin::StrReference),
-            TypeName::PrimitiveSlice(lt, ..) => visit(lt, LifetimeOrigin::PrimitiveSlice),
+            TypeName::StrReference(Some(lt), ..) => visit(lt, LifetimeOrigin::StrReference),
+            TypeName::PrimitiveSlice(Some((lt, _)), ..) => {
+                visit(lt, LifetimeOrigin::PrimitiveSlice)
+            }
             _ => ControlFlow::Continue(()),
         }
     }
@@ -765,30 +807,40 @@ impl fmt::Display for TypeName {
                 write!(f, "Result<{ok}, {err}>")
             }
             TypeName::Writeable => "DiplomatWriteable".fmt(f),
-            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8) => {
                 write!(
                     f,
                     "{}DiplomatStr",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }
-            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf16) => {
                 write!(
                     f,
                     "{}DiplomatStr16",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }
-            TypeName::StrReference(lifetime, StringEncoding::Utf8) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::Utf8) => {
                 write!(
                     f,
                     "{}str",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }
-            TypeName::PrimitiveSlice(lifetime, mutability, typ) => {
+            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8) => {
+                write!(f, "Box<DiplomatStr>")
+            }
+            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16) => {
+                write!(f, "Box<DiplomatStr16>")
+            }
+            TypeName::StrReference(None, StringEncoding::Utf8) => {
+                write!(f, "Box<str>")
+            }
+            TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ) => {
                 write!(f, "{}[{typ}]", ReferenceDisplay(lifetime, mutability))
             }
+            TypeName::PrimitiveSlice(None, typ) => write!(f, "Box<[{typ}]>"),
             TypeName::Unit => "()".fmt(f),
         }
     }

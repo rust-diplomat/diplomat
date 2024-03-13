@@ -271,7 +271,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             .unwrap();
             "slice".into()
         }
-        ast::TypeName::PrimitiveSlice(_lt, mutability, prim) => {
+        ast::TypeName::PrimitiveSlice(Some((_lt, mutability)), prim) => {
             assert!(mutability.is_immutable());
             let raw_value_id = format!("diplomat_slice_raw_{path}");
             let mut prim_caps = prim.to_string();
@@ -283,6 +283,22 @@ pub fn gen_rust_to_cpp<W: Write>(
             writeln!(
                 out,
                 "{span}<const {prim}> slice({raw_value_id}.data, {raw_value_id}.len);"
+            )
+            .unwrap();
+            "slice".into()
+        }
+        ast::TypeName::PrimitiveSlice(None, prim) => {
+            let raw_value_id = format!("diplomat_slice_raw_{path}");
+            let mut prim_caps = prim.to_string();
+            prim_caps.get_mut(0..1).unwrap().make_ascii_uppercase();
+            let span = &library_config.span.expr;
+            let prim = crate::c::types::c_type_for_prim(prim);
+            writeln!(out, "capi::Diplomat{prim_caps}View {raw_value_id} = {cpp};").unwrap();
+
+            // TODO: how to indicate ownership of the span?
+            writeln!(
+                out,
+                "{span}<mut {prim}> slice({raw_value_id}.data, {raw_value_id}.len);"
             )
             .unwrap();
             "slice".into()

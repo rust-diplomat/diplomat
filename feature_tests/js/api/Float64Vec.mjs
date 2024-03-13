@@ -64,6 +64,31 @@ export class Float64Vec {
     return diplomat_out;
   }
 
+  static new_from_owned(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "f64");
+    return new Float64Vec(wasm.Float64Vec_new_from_owned(buf_arg_v.ptr, buf_arg_v.size), true, []);
+  }
+
+  as_boxed_slice() {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+      wasm.Float64Vec_as_boxed_slice(diplomat_receive_buffer, this.underlying);
+      const [ptr, size] = new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2);
+      wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+      return Float64Array.from(new Float64Array(wasm.memory.buffer, ptr, size));
+    })();
+  }
+
+  as_slice() {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+      wasm.Float64Vec_as_slice(diplomat_receive_buffer, this.underlying);
+      const [ptr, size] = new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2);
+      wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+      return Float64Array.from(new Float64Array(wasm.memory.buffer, ptr, size));
+    })();
+  }
+
   fill_slice(arg_v) {
     const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "f64");
     wasm.Float64Vec_fill_slice(this.underlying, buf_arg_v.ptr, buf_arg_v.size);

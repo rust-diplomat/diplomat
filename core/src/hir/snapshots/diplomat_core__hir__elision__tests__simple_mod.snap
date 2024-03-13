@@ -62,9 +62,11 @@ TypeContext {
                             name: "s",
                             ty: Slice(
                                 Str(
-                                    NonStatic(
-                                        Lifetime(
-                                            0,
+                                    Some(
+                                        NonStatic(
+                                            Lifetime(
+                                                0,
+                                            ),
                                         ),
                                     ),
                                     UnvalidatedUtf8,
@@ -146,9 +148,11 @@ TypeContext {
                     name: "s",
                     ty: Slice(
                         Str(
-                            NonStatic(
-                                Lifetime(
-                                    0,
+                            Some(
+                                NonStatic(
+                                    Lifetime(
+                                        0,
+                                    ),
                                 ),
                             ),
                             UnvalidatedUtf8,
@@ -198,9 +202,11 @@ TypeContext {
                             name: "s",
                             ty: Slice(
                                 Str(
-                                    NonStatic(
-                                        Lifetime(
-                                            1,
+                                    Some(
+                                        NonStatic(
+                                            Lifetime(
+                                                1,
+                                            ),
                                         ),
                                     ),
                                     UnvalidatedUtf8,
@@ -212,9 +218,11 @@ TypeContext {
                         OutType(
                             Slice(
                                 Str(
-                                    NonStatic(
-                                        Lifetime(
-                                            1,
+                                    Some(
+                                        NonStatic(
+                                            Lifetime(
+                                                1,
+                                            ),
                                         ),
                                     ),
                                     UnvalidatedUtf8,

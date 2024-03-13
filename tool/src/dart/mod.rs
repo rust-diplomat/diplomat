@@ -237,13 +237,19 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // We do not need to handle lifetime transitivity here: Methods already resolve
                     // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
                     // are explicitly specified on methods.
-                    let MaybeStatic::NonStatic(lt) = slice.lifetime() else {
-                        panic!("'static not supported in Dart");
-                    };
-                    ret.push(format!(
-                        "struct.{name}._data = {name}View.allocIn({lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp);",
-                        lt_name = ty.lifetimes.fmt_lifetime(lt),
-                    ));
+                    if let Some(lt) = slice.lifetime() {
+                        let MaybeStatic::NonStatic(lt) = lt else {
+                            panic!("'static not supported in Dart");
+                        };
+                        ret.push(format!(
+                            "struct.{name}._data = {name}View.allocIn({lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp);",
+                            lt_name = ty.lifetimes.fmt_lifetime(lt),
+                        ));
+                    } else {
+                        ret.push(format!(
+                            "struct.{name}._data = {name}View.allocIn(_RustAlloc());"
+                        ));
+                    }
                     (ret, None)
                 } else {
                     let struct_borrow_info = if let hir::Type::Struct(path) = &field.ty {
@@ -397,7 +403,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
             let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
 
-            if let hir::Type::Slice(..) = param.ty {
+            if let hir::Type::Slice(slice) = param.ty {
                 // Two args on the ABI: pointer and size
                 param_types_ffi.push(self.formatter.fmt_pointer(&param_type_ffi).into());
                 param_types_ffi_cast.push(self.formatter.fmt_pointer(&param_type_ffi_cast).into());
@@ -421,6 +427,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     // Slices borrowed in the return value use a custom arena that gets generated in the template via slice_params
                     param_conversions
                         .push(format!("{param_name}View.allocIn({param_name}Arena.arena)").into());
+                } else if slice.lifetime().is_none() {
+                    // Owned slices use the Rust allocator
+                    param_conversions
+                        .push(format!("{param_name}View.allocIn(_RustAlloc())").into());
                 } else {
                     // Everyone else uses the temporary arena that keeps stuff alive until the method is called
                     param_conversions.push(format!("{param_name}View.allocIn(temp)").into());
@@ -896,16 +906,18 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
-            Type::Slice(slice) => {
-                let MaybeStatic::NonStatic(lifetime) = slice.lifetime() else {
+            Type::Slice(slice) => if let Some(lt) = slice.lifetime() {
+                let MaybeStatic::NonStatic(lifetime) = lt else {
                     panic!("'static not supported in Dart");
                 };
                 format!(
                     "{var_name}._toDart({}Edges)",
                     lifetime_env.fmt_lifetime(lifetime)
                 )
-                .into()
+            } else {
+                format!("{var_name}._toDart([])")
             }
+            .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -1006,23 +1018,45 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             hir::Slice::Str(
                 _,
                 hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            ) => [
-                "// Do not have to keep lifetimeEdges alive, because this copies",
-                "return Utf8Decoder().convert(_data.asTypedList(_length));",
-            ].as_slice(),
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => [
-                "// Do not have to keep lifetimeEdges alive, because this copies",
-                "return core.String.fromCharCodes(_data.asTypedList(_length));",
-            ].as_slice(),
-            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => [
-                "// Do not have to keep lifetimeEdges alive, because this copies",
-                "return core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);",
-            ].as_slice(),
-            hir::Slice::Primitive(_, _) => [
-                "final r = _data.asTypedList(_length);",
-                "_nopFree.attach(r, lifetimeEdges);",
+            ) => vec![
+                "final r = Utf8Decoder().convert(_data.asTypedList(_length));",
+                "if (lifetimeEdges.isEmpty) {",
+                "  _diplomat_free(_data.cast(), _length, 1);", 
+                "}",
                 "return r;"
-            ].as_slice(),
+            ],
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => vec![
+                "final r = core.String.fromCharCodes(_data.asTypedList(_length));",
+                "if (lifetimeEdges.isEmpty) {",
+                "  _diplomat_free(_data.cast(), _length * 2, 2);", 
+                "}",
+                "return r;"
+            ],
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => vec![
+                "final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);",
+                "if (lifetimeEdges.isEmpty) {",
+                "  _diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());", 
+                "}",
+                "return r;"
+            ],
+            hir::Slice::Primitive(_, p) =>
+                vec![
+                "final r = _data.asTypedList(_length);",
+                "if (lifetimeEdges.isEmpty) {",
+                match p {
+                    hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Char | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::I8) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length, align: 1));",
+                    hir::PrimitiveType::Int(hir::IntType::U16 | hir::IntType::I16) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 2, align: 2));",
+                    hir::PrimitiveType::Int(hir::IntType::U32 | hir::IntType::I32) | hir::PrimitiveType::Float(hir::FloatType::F32) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 4, align: 4));",
+                    hir::PrimitiveType::Int(hir::IntType::U64 | hir::IntType::I64) | hir::PrimitiveType::Float(hir::FloatType::F64) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 8, align: 8));",
+                    hir::PrimitiveType::IntSize(..) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * ffi.sizeOf<ffi.Size>(), align: ffi.sizeOf<ffi.Size>()));",
+                    hir::PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+                },
+                "} else {",
+                "  // Keep lifetimeEdges alive",
+                "  _nopFree.attach(r, lifetimeEdges);",
+                "}",
+                "return r;"
+            ],
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
@@ -1041,7 +1075,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 ffi_type,
                 slice_ty,
                 dart_ty,
-                to_dart,
+                to_dart: &to_dart,
             }
             .render()
             .unwrap(),

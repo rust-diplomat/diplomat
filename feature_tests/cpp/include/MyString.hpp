@@ -29,6 +29,7 @@ class MyString {
    * Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
    */
   static MyString new_unsafe(const std::string_view v);
+  static MyString new_owned(const std::string_view v);
   void set_str(const std::string_view new_str);
   template<typename W> void get_str_to_writeable(W& writeable) const;
   std::string get_str() const;
@@ -48,6 +49,9 @@ inline MyString MyString::new_(const std::string_view v) {
 }
 inline MyString MyString::new_unsafe(const std::string_view v) {
   return MyString(capi::MyString_new_unsafe(v.data(), v.size()));
+}
+inline MyString MyString::new_owned(const std::string_view v) {
+  return MyString(capi::MyString_new_owned(v.data(), v.size()));
 }
 inline void MyString::set_str(const std::string_view new_str) {
   capi::MyString_set_str(this->inner.get(), new_str.data(), new_str.size());

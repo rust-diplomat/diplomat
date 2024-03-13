@@ -30,7 +30,14 @@ class Float64Vec {
   static Float64Vec new_isize(const diplomat::span<const intptr_t> v);
   static Float64Vec new_usize(const diplomat::span<const size_t> v);
   static Float64Vec new_f64_be_bytes(const diplomat::span<const uint8_t> v);
-  void fill_slice(diplomat::span<const double> v) const;
+  static Float64Vec new_from_owned(const diplomat::span<double> v);
+  const diplomat::span<double> as_boxed_slice() const;
+
+  /**
+   * Lifetimes: `this` must live at least as long as the output.
+   */
+  const diplomat::span<const double> as_slice() const;
+  void fill_slice(const diplomat::span<double> v) const;
   void set_value(const diplomat::span<const double> new_slice);
   template<typename W> void to_string_to_writeable(W& w) const;
   std::string to_string() const;
@@ -71,7 +78,20 @@ inline Float64Vec Float64Vec::new_usize(const diplomat::span<const size_t> v) {
 inline Float64Vec Float64Vec::new_f64_be_bytes(const diplomat::span<const uint8_t> v) {
   return Float64Vec(capi::Float64Vec_new_f64_be_bytes(v.data(), v.size()));
 }
-inline void Float64Vec::fill_slice(diplomat::span<const double> v) const {
+inline Float64Vec Float64Vec::new_from_owned(const diplomat::span<double> v) {
+  return Float64Vec(capi::Float64Vec_new_from_owned(v.data(), v.size()));
+}
+inline const diplomat::span<double> Float64Vec::as_boxed_slice() const {
+  capi::DiplomatF64View diplomat_slice_raw_out_value = capi::Float64Vec_as_boxed_slice(this->inner.get());
+  diplomat::span<mut double> slice(diplomat_slice_raw_out_value.data, diplomat_slice_raw_out_value.len);
+  return slice;
+}
+inline const diplomat::span<const double> Float64Vec::as_slice() const {
+  capi::DiplomatF64View diplomat_slice_raw_out_value = capi::Float64Vec_as_slice(this->inner.get());
+  diplomat::span<const double> slice(diplomat_slice_raw_out_value.data, diplomat_slice_raw_out_value.len);
+  return slice;
+}
+inline void Float64Vec::fill_slice(const diplomat::span<double> v) const {
   capi::Float64Vec_fill_slice(this->inner.get(), v.data(), v.size());
 }
 inline void Float64Vec::set_value(const diplomat::span<const double> new_slice) {

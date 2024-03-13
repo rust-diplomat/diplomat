@@ -55,7 +55,33 @@ typedef Rune = int;
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
+// ignore: unused_element
 final _nopFree = core.Finalizer((nothing) => {});
+
+// ignore: unused_element
+final _rustFree = core.Finalizer((({ffi.Pointer<ffi.Void> pointer, int bytes, int align}) record) => _diplomat_free(record.pointer, record.bytes, record.align));
+
+final class _RustAlloc implements ffi.Allocator {
+  @override
+  ffi.Pointer<T> allocate<T extends ffi.NativeType>(int byteCount, {int? alignment}) {
+      return _diplomat_alloc(byteCount, alignment ?? 1).cast();
+  }
+
+  void free(ffi.Pointer<ffi.NativeType> pointer) {
+    throw 'Internal error: should not deallocate in Rust memory';
+  }
+}
+
+@meta.ResourceIdentifier('diplomat_alloc')
+@ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Size, ffi.Size)>(symbol: 'diplomat_alloc', isLeaf: true)
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Void> _diplomat_alloc(int len, int align);
+
+@meta.ResourceIdentifier('diplomat_free')
+@ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Void>, ffi.Size, ffi.Size)>(symbol: 'diplomat_free', isLeaf: true)
+// ignore: non_constant_identifier_names
+external int _diplomat_free(ffi.Pointer<ffi.Void> ptr, int len, int align);
+
 
 // ignore: unused_element
 class _FinalizedArena {
@@ -469,7 +495,12 @@ final class _SliceDouble extends ffi.Struct {
 
   core.List<double> _toDart(core.List<Object> lifetimeEdges) {
     final r = _data.asTypedList(_length);
-    _nopFree.attach(r, lifetimeEdges);
+    if (lifetimeEdges.isEmpty) {
+      _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 8, align: 8));
+    } else {
+      // Keep lifetimeEdges alive
+      _nopFree.attach(r, lifetimeEdges);
+    }
     return r;
   }
 }
@@ -500,8 +531,11 @@ final class _SliceUtf16 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   String _toDart(core.List<Object> lifetimeEdges) {
-    // Do not have to keep lifetimeEdges alive, because this copies
-    return core.String.fromCharCodes(_data.asTypedList(_length));
+    final r = core.String.fromCharCodes(_data.asTypedList(_length));
+    if (lifetimeEdges.isEmpty) {
+      _diplomat_free(_data.cast(), _length * 2, 2);
+    }
+    return r;
   }
 }
 
@@ -531,8 +565,11 @@ final class _SliceUtf8 extends ffi.Struct {
   int get hashCode => _length.hashCode;
 
   String _toDart(core.List<Object> lifetimeEdges) {
-    // Do not have to keep lifetimeEdges alive, because this copies
-    return Utf8Decoder().convert(_data.asTypedList(_length));
+    final r = Utf8Decoder().convert(_data.asTypedList(_length));
+    if (lifetimeEdges.isEmpty) {
+      _diplomat_free(_data.cast(), _length, 1);
+    }
+    return r;
   }
 }
 
@@ -548,7 +585,6 @@ final class _Writeable {
   }
 }
 
-  
 @meta.ResourceIdentifier('diplomat_buffer_writeable_create')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Size)>(symbol: 'diplomat_buffer_writeable_create', isLeaf: true)
 // ignore: non_constant_identifier_names

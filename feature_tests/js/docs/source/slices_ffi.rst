@@ -17,6 +17,12 @@
 
     .. js:function:: new_f64_be_bytes(v)
 
+    .. js:function:: new_from_owned(v)
+
+    .. js:method:: as_boxed_slice()
+
+    .. js:method:: as_slice()
+
     .. js:method:: fill_slice(v)
 
     .. js:method:: set_value(new_slice)
@@ -30,6 +36,8 @@
     .. js:function:: new(v)
 
     .. js:function:: new_unsafe(v)
+
+    .. js:function:: new_owned(v)
 
     .. js:method:: set_str(new_str)
 
