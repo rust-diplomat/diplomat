@@ -519,7 +519,7 @@ impl<'ast> LoweringContext<'ast> {
         match ty {
             ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Ordering => {
-                self.errors.push(LoweringError::Other(format!("Found cmp::Ordering in parameter or struct field, it is only allowed in return types")));
+                self.errors.push(LoweringError::Other("Found cmp::Ordering in parameter or struct field, it is only allowed in return types".to_string()));
                 Err(())
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
@@ -689,9 +689,10 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::Ordering => {
                 if in_struct {
-                    self.errors.push(LoweringError::Other(format!(
+                    self.errors.push(LoweringError::Other(
                         "Found cmp::Ordering in struct field, it is only allowed in return types"
-                    )));
+                            .to_string(),
+                    ));
                     Err(())
                 } else {
                     Ok(Type::Primitive(PrimitiveType::Int(IntType::I8)))

@@ -348,9 +348,9 @@ impl Attrs {
                         const COMPARATOR_ERROR: &str =
                             "Comparator's parameter must be identical to self";
                         if let Some(ref selfty) = method.param_self {
-                            if let Some(ref param) = method.params.first() {
+                            if let Some(param) = method.params.first() {
                                 match (&selfty.ty, &param.ty) {
-                                    (&SelfType::Opaque(ref p), &Type::Opaque(ref p2)) => {
+                                    (SelfType::Opaque(p), Type::Opaque(p2)) => {
                                         if p.tcx_id != p2.tcx_id {
                                             errors.push(LoweringError::Other(
                                                 COMPARATOR_ERROR.into(),
@@ -373,14 +373,14 @@ impl Attrs {
                                             ));
                                         }
                                     }
-                                    (&SelfType::Struct(ref p), &Type::Struct(ref p2)) => {
+                                    (SelfType::Struct(p), Type::Struct(p2)) => {
                                         if p.tcx_id != p2.tcx_id {
                                             errors.push(LoweringError::Other(
                                                 COMPARATOR_ERROR.into(),
                                             ));
                                         }
                                     }
-                                    (&SelfType::Enum(ref p), &Type::Enum(ref p2)) => {
+                                    (SelfType::Enum(p), Type::Enum(p2)) => {
                                         if p.tcx_id != p2.tcx_id {
                                             errors.push(LoweringError::Other(
                                                 COMPARATOR_ERROR.into(),
