@@ -218,14 +218,18 @@ impl<'ast> LoweringContext<'ast> {
             }
         }
 
-        let methods = self.lower_all_methods(
-            &ast_enum.methods[..],
-            item.in_path,
-            &item.method_parent_attrs,
-            item.id,
-        );
+        let methods = if attrs.disable {
+            Vec::new()
+        } else {
+            self.lower_all_methods(
+                &ast_enum.methods[..],
+                item.in_path,
+                &item.method_parent_attrs,
+                item.id,
+            )?
+        };
 
-        let def = EnumDef::new(ast_enum.docs.clone(), name?, variants?, methods?, attrs);
+        let def = EnumDef::new(ast_enum.docs.clone(), name?, variants?, methods, attrs);
 
         self.attr_validator.validate(
             &def.attrs,
@@ -244,20 +248,24 @@ impl<'ast> LoweringContext<'ast> {
         self.errors.set_item(ast_opaque.name.as_str());
         let name = self.lower_ident(&ast_opaque.name, "opaque name");
 
-        let methods = self.lower_all_methods(
-            &ast_opaque.methods[..],
-            item.in_path,
-            &item.method_parent_attrs,
-            item.id,
-        );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_opaque.attrs,
             &item.ty_parent_attrs,
             &mut self.errors,
         );
+        let methods = if attrs.disable {
+            Vec::new()
+        } else {
+            self.lower_all_methods(
+                &ast_opaque.methods[..],
+                item.in_path,
+                &item.method_parent_attrs,
+                item.id,
+            )?
+        };
         let lifetimes = self.lower_type_lifetime_env(&ast_opaque.lifetimes);
 
-        let def = OpaqueDef::new(ast_opaque.docs.clone(), name?, methods?, attrs, lifetimes?);
+        let def = OpaqueDef::new(ast_opaque.docs.clone(), name?, methods, attrs, lifetimes?);
         self.attr_validator.validate(
             &def.attrs,
             AttributeContext::Type(TypeDef::from(&def)),
@@ -296,13 +304,6 @@ impl<'ast> LoweringContext<'ast> {
 
             fields
         };
-
-        let methods = self.lower_all_methods(
-            &ast_struct.methods[..],
-            item.in_path,
-            &item.method_parent_attrs,
-            item.id,
-        );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_struct.attrs,
             &item.ty_parent_attrs,
@@ -310,11 +311,21 @@ impl<'ast> LoweringContext<'ast> {
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_struct.lifetimes);
 
+        let methods = if attrs.disable {
+            Vec::new()
+        } else {
+            self.lower_all_methods(
+                &ast_struct.methods[..],
+                item.in_path,
+                &item.method_parent_attrs,
+                item.id,
+            )?
+        };
         let def = StructDef::new(
             ast_struct.docs.clone(),
             name?,
             fields?,
-            methods?,
+            methods,
             attrs,
             lifetimes?,
         );
@@ -361,25 +372,28 @@ impl<'ast> LoweringContext<'ast> {
 
             fields
         };
-
-        let methods = self.lower_all_methods(
-            &ast_out_struct.methods[..],
-            item.in_path,
-            &item.method_parent_attrs,
-            item.id,
-        );
         let attrs = self.attr_validator.attr_from_ast(
             &ast_out_struct.attrs,
             &item.ty_parent_attrs,
             &mut self.errors,
         );
+        let methods = if attrs.disable {
+            Vec::new()
+        } else {
+            self.lower_all_methods(
+                &ast_out_struct.methods[..],
+                item.in_path,
+                &item.method_parent_attrs,
+                item.id,
+            )?
+        };
 
         let lifetimes = self.lower_type_lifetime_env(&ast_out_struct.lifetimes);
         let def = OutStructDef::new(
             ast_out_struct.docs.clone(),
             name?,
             fields?,
-            methods?,
+            methods,
             attrs,
             lifetimes?,
         );
