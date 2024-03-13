@@ -37,7 +37,7 @@ pub enum SelfType {
 #[non_exhaustive]
 pub enum Slice {
     /// A string slice, e.g. `&DiplomatStr` or `Box<DiplomatStr>`.
-    /// 
+    ///
     /// Owned slices are useful for garbage-collected languages that have to
     /// reallocate into non-gc memory anyway.
     Str(Option<MaybeStatic<Lifetime>>, StringEncoding),
