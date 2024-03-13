@@ -36,10 +36,16 @@ pub enum SelfType {
 #[derive(Copy, Clone, Debug)]
 #[non_exhaustive]
 pub enum Slice {
-    /// A string slice, e.g. `&DiplomatStr`.
+    /// A string slice, e.g. `&DiplomatStr` or `Box<DiplomatStr>`.
+    /// 
+    /// Owned slices are useful for garbage-collected languages that have to
+    /// reallocate into non-gc memory anyway.
     Str(Option<MaybeStatic<Lifetime>>, StringEncoding),
 
-    /// A primitive slice, e.g. `&mut [u8]` or `Box<[usize]>
+    /// A primitive slice, e.g. `&mut [u8]` or `Box<[usize]>`.
+    ///
+    /// Owned slices are useful for garbage-collected languages that have to
+    /// reallocate into non-gc memory anyway.
     Primitive(Option<Borrow>, PrimitiveType),
 }
 
