@@ -249,11 +249,10 @@ impl TypeContext {
                     opaques,
                     enums,
                 };
-                assert!(
-                    ctx.errors.is_empty(),
-                    "All lowering succeeded but still found error messages: {:?}",
-                    ctx.errors.take_errors()
-                );
+
+                if !ctx.errors.is_empty() {
+                    return Err(ctx.errors.take_errors());
+                }
                 Ok((ctx, res))
             }
             _ => {

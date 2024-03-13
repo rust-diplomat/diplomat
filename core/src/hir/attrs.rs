@@ -4,7 +4,8 @@ use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
 use crate::hir::{
-    EnumVariant, LoweringError, Method, ReturnType, SelfType, SuccessType, Type, TypeDef, TypeId,
+    EnumVariant, LoweringError, Method, Mutability, ReturnType, SelfType, SuccessType, Type,
+    TypeDef, TypeId,
 };
 use syn::Meta;
 
@@ -324,6 +325,22 @@ impl Attrs {
                                                 COMPARATOR_ERROR.into(),
                                             ));
                                         }
+
+                                        if p.owner.mutability != Mutability::Immutable
+                                            || p2.owner.mutability != Mutability::Immutable
+                                        {
+                                            errors.push(LoweringError::Other(
+                                                "comparators must accept immutable parameters"
+                                                    .into(),
+                                            ));
+                                        }
+
+                                        if p2.optional.0 {
+                                            errors.push(LoweringError::Other(
+                                                "comparators must accept non-optional parameters"
+                                                    .into(),
+                                            ));
+                                        }
                                     }
                                     (&SelfType::Struct(ref p), &Type::Struct(ref p2)) => {
                                         if p.tcx_id != p2.tcx_id {
@@ -411,6 +428,23 @@ pub struct BackendAttrSupport {
     pub comparison_overload: bool,
     pub memory_sharing: bool,
     // more to be added: namespace, etc
+}
+
+impl BackendAttrSupport {
+    #[cfg(test)]
+    fn all_true() -> Self {
+        Self {
+            disabling: true,
+            renaming: true,
+            namespacing: true,
+            constructors: true,
+            named_constructors: true,
+            fallible_constructors: true,
+            accessors: true,
+            stringifiers: true,
+            comparison_overload: true,
+        }
+    }
 }
 
 /// Defined by backends when validating attributes
@@ -540,5 +574,102 @@ impl AttributeValidator for BasicAttributeValidator {
     }
     fn attrs_supported(&self) -> BackendAttrSupport {
         self.support
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::hir;
+    use std::fmt::Write;
+
+    macro_rules! uitest_lowering_attr {
+        ($($file:tt)*) => {
+            let parsed: syn::File = syn::parse_quote! { $($file)* };
+            let custom_types = crate::ast::File::from(&parsed);
+            let env = custom_types.all_types();
+
+            let mut output = String::new();
+
+
+            let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+            attr_validator.support = hir::BackendAttrSupport::all_true();
+            match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(_context) => (),
+                Err(e) => {
+                    for (ctx, err) in e {
+                        writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                    }
+                }
+            };
+            insta::with_settings!({}, {
+                insta::assert_display_snapshot!(output)
+            });
+        }
+    }
+
+    #[test]
+    fn test_comparator() {
+        uitest_lowering_attr! {
+            #[diplomat::bridge]
+            mod ffi {
+                use std::cmp;
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                struct Struct {
+                    field: u8
+                }
+
+
+                impl Opaque {
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_static(other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_none(&self) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_othertype(other: Struct) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_badreturn(&self, other: &Opaque) -> u8 {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_correct(&self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    pub fn comparison_unmarked(&self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    pub fn ordering_wrong(&self, other: cmp::Ordering) {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_mut(&self, other: &mut Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_opt(&self, other: Option<&Opaque>) -> cmp::Ordering {
+                        todo!()
+                    }
+                }
+
+                impl Struct {
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_other(self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
+                        todo!()
+                    }
+                }
+            }
+        }
     }
 }
