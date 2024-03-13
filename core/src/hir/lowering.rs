@@ -491,7 +491,11 @@ impl<'ast> LoweringContext<'ast> {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
-                            let lifetimes = ltl.lower_generics(&path.lifetimes[..], ty.is_self());
+                            let lifetimes = ltl.lower_generics(
+                                &path.lifetimes[..],
+                                &strct.lifetimes,
+                                ty.is_self(),
+                            );
 
                             Ok(Type::Struct(StructPath::new(lifetimes, tcx_id)))
                         } else if self.lookup_id.resolve_out_struct(strct).is_some() {
@@ -521,8 +525,11 @@ impl<'ast> LoweringContext<'ast> {
                     match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                            let lifetimes =
-                                ltl.lower_generics(&path.lifetimes[..], ref_ty.is_self());
+                            let lifetimes = ltl.lower_generics(
+                                &path.lifetimes[..],
+                                &opaque.lifetimes,
+                                ref_ty.is_self(),
+                            );
                             let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
@@ -566,8 +573,11 @@ impl<'ast> LoweringContext<'ast> {
                         {
                             ast::CustomType::Opaque(opaque) => {
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                                let lifetimes =
-                                    ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
+                                let lifetimes = ltl.lower_generics(
+                                    &path.lifetimes,
+                                    &opaque.lifetimes,
+                                    ref_ty.is_self(),
+                                );
                                 let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                                     "can't find opaque in lookup map, which contains all opaques from env",
                                 );
@@ -645,7 +655,8 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
-                        let lifetimes = ltl.lower_generics(&path.lifetimes, ty.is_self());
+                        let lifetimes =
+                            ltl.lower_generics(&path.lifetimes, &strct.lifetimes, ty.is_self());
 
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                             Ok(OutType::Struct(ReturnableStructPath::Struct(
@@ -679,7 +690,11 @@ impl<'ast> LoweringContext<'ast> {
                     match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => {
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                            let lifetimes = ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
+                            let lifetimes = ltl.lower_generics(
+                                &path.lifetimes,
+                                &opaque.lifetimes,
+                                ref_ty.is_self(),
+                            );
                             let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
@@ -706,7 +721,11 @@ impl<'ast> LoweringContext<'ast> {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => {
-                            let lifetimes = ltl.lower_generics(&path.lifetimes, box_ty.is_self());
+                            let lifetimes = ltl.lower_generics(
+                                &path.lifetimes,
+                                &opaque.lifetimes,
+                                box_ty.is_self(),
+                            );
                             let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
@@ -737,8 +756,11 @@ impl<'ast> LoweringContext<'ast> {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                                let lifetimes =
-                                    ltl.lower_generics(&path.lifetimes, ref_ty.is_self());
+                                let lifetimes = ltl.lower_generics(
+                                    &path.lifetimes,
+                                    &opaque.lifetimes,
+                                    ref_ty.is_self(),
+                                );
                                 let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                                 "can't find opaque in lookup map, which contains all opaques from env",
                             );
@@ -765,8 +787,11 @@ impl<'ast> LoweringContext<'ast> {
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
-                                let lifetimes =
-                                    ltl.lower_generics(&path.lifetimes, box_ty.is_self());
+                                let lifetimes = ltl.lower_generics(
+                                    &path.lifetimes,
+                                    &opaque.lifetimes,
+                                    box_ty.is_self(),
+                                );
                                 let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
@@ -845,8 +870,11 @@ impl<'ast> LoweringContext<'ast> {
                         // Even if we explicitly write out the type of `self` like
                         // `self: Foo<'a>`, the `'a` is still not considered for
                         // elision according to rustc, so is_self=true.
-                        let type_lifetimes =
-                            param_ltl.lower_generics(&self_param.path_type.lifetimes[..], true);
+                        let type_lifetimes = param_ltl.lower_generics(
+                            &self_param.path_type.lifetimes[..],
+                            &strct.lifetimes,
+                            true,
+                        );
 
                         Ok((
                             ParamSelf::new(SelfType::Struct(StructPath::new(
@@ -880,7 +908,11 @@ impl<'ast> LoweringContext<'ast> {
                 if let Some((lifetime, mutability)) = &self_param.reference {
                     let (borrow_lifetime, mut param_ltl) = self_param_ltl.lower_self_ref(lifetime);
                     let borrow = Borrow::new(borrow_lifetime, *mutability);
-                    let lifetimes = param_ltl.lower_generics(&self_param.path_type.lifetimes, true);
+                    let lifetimes = param_ltl.lower_generics(
+                        &self_param.path_type.lifetimes,
+                        &opaque.lifetimes,
+                        true,
+                    );
 
                     Ok((
                         ParamSelf::new(SelfType::Opaque(OpaquePath::new(

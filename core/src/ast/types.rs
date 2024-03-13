@@ -10,7 +10,7 @@ use std::ops::ControlFlow;
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
-    OpaqueStruct, Path, RustLink, Struct, ValidityError,
+    OpaqueStruct, Path, RustLink, Struct,
 };
 use crate::Env;
 
@@ -86,27 +86,6 @@ impl CustomType {
             CustomType::Struct(strct) => Some(&strct.lifetimes),
             CustomType::Opaque(strct) => Some(&strct.lifetimes),
             CustomType::Enum(_) => None,
-        }
-    }
-
-    /// Performs various validity checks:
-    ///
-    /// - Checks that any references to opaque structs in parameters or return values
-    ///   are always behind a box or reference, and that non-opaque custom types are *never* behind
-    ///   references or boxes. The latter check is needed because non-opaque custom types typically get
-    ///   *converted* at the FFI boundary.
-    /// - Ensures that we are not exporting any non-opaque zero-sized types
-    /// - Ensures that Options only contain boxes and references
-    ///
-    /// Errors are pushed into the `errors` vector.
-    pub fn check_validity<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        for method in self.methods().iter() {
-            method.check_validity(in_path, env, errors);
         }
     }
 }
@@ -745,86 +724,6 @@ impl TypeName {
             ControlFlow::Continue(())
         });
         transitivity.finish()
-    }
-
-    /// Checks the validity of return types.
-    ///
-    /// This is equivalent to `TypeName::check_validity`, but it also ensures
-    /// that the type doesn't elide any lifetimes.
-    ///
-    /// Once we decide to support lifetime elision in return types, this function
-    /// will probably be removed.
-    pub fn check_return_type_validity(
-        &self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        self.check_lifetime_elision(self, in_path, env, errors);
-    }
-
-    /// Checks that there aren't any elided lifetimes.
-    fn check_lifetime_elision(
-        &self,
-        full_type: &Self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        match self {
-            TypeName::Named(path_type) | TypeName::SelfType(path_type) => {
-                let (_path, custom) = path_type.resolve_with_path(in_path, env);
-                if let Some(lifetimes) = custom.lifetimes() {
-                    let lifetimes_provided = path_type
-                        .lifetimes
-                        .iter()
-                        .filter(|lt| !matches!(lt, Lifetime::Anonymous))
-                        .count();
-
-                    if lifetimes_provided != lifetimes.len() {
-                        // There's a discrepency between the number of declared
-                        // lifetimes and the number of lifetimes provided in
-                        // the return type, so there must have been elision.
-                        errors.push(ValidityError::LifetimeElisionInReturn {
-                            full_type: full_type.clone(),
-                            sub_type: self.clone(),
-                        });
-                    } else {
-                        // The struct was written with the number of lifetimes
-                        // that it was declared with, so we're good.
-                    }
-                } else {
-                    // `CustomType::Enum`, which doesn't have any lifetimes.
-                    // We already checked that enums don't have generics in
-                    // core.
-                }
-            }
-            TypeName::Reference(lifetime, _, ty) => {
-                if let Lifetime::Anonymous = lifetime {
-                    errors.push(ValidityError::LifetimeElisionInReturn {
-                        full_type: full_type.clone(),
-                        sub_type: self.clone(),
-                    });
-                }
-
-                ty.check_lifetime_elision(full_type, in_path, env, errors);
-            }
-            TypeName::Box(ty) | TypeName::Option(ty) => {
-                ty.check_lifetime_elision(full_type, in_path, env, errors)
-            }
-            TypeName::Result(ok, err, _) => {
-                ok.check_lifetime_elision(full_type, in_path, env, errors);
-                err.check_lifetime_elision(full_type, in_path, env, errors);
-            }
-            TypeName::StrReference(Lifetime::Anonymous, ..)
-            | TypeName::PrimitiveSlice(Lifetime::Anonymous, ..) => {
-                errors.push(ValidityError::LifetimeElisionInReturn {
-                    full_type: full_type.clone(),
-                    sub_type: self.clone(),
-                });
-            }
-            _ => {}
-        }
     }
 
     pub fn is_zst(&self) -> bool {

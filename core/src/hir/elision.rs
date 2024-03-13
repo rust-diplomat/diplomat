@@ -113,8 +113,21 @@ pub trait LifetimeLowerer {
 
     /// Lowers a slice of [`ast::Lifetime`]s by calling
     /// [`LifetimeLowerer::lower_lifetime`] repeatedly.
-    fn lower_lifetimes(&mut self, lifetimes: &[ast::Lifetime]) -> Lifetimes {
-        Lifetimes::from_fn(lifetimes, |lifetime| self.lower_lifetime(lifetime))
+    ///
+
+    /// `type_generics` is the full list of generics on the type definition of the type
+    /// this lifetimes list is found on (needed for generating anon lifetimes)
+    fn lower_lifetimes(
+        &mut self,
+        lifetimes: &[ast::Lifetime],
+        type_generics: &ast::LifetimeEnv,
+    ) -> Lifetimes {
+        let mut lifetimes = Lifetimes::from_fn(lifetimes, |lifetime| self.lower_lifetime(lifetime));
+
+        for _ in lifetimes.as_slice().len()..type_generics.nodes.len() {
+            lifetimes.append_lifetime(self.lower_lifetime(&ast::Lifetime::Anonymous))
+        }
+        lifetimes
     }
 
     /// Lowers a slice of [`ast::Lifetime`], where the strategy may vary depending
@@ -127,7 +140,16 @@ pub trait LifetimeLowerer {
     /// Additionally, elision inferences knows to not search inside the generics
     /// of `Self` types for candidate lifetimes to correspond to elided lifetimes
     /// in the output.
-    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> Lifetimes;
+    ///
+    /// `type_generics` is the full list of generics on the type definition of the type
+    /// this generics list is found on (needed for generating anon lifetimes)
+
+    fn lower_generics(
+        &mut self,
+        lifetimes: &[ast::Lifetime],
+        type_generics: &ast::LifetimeEnv,
+        is_self: bool,
+    ) -> Lifetimes;
 }
 
 /// A state machine for tracking which lifetime in a function's parameters
@@ -327,11 +349,16 @@ impl<'ast> LifetimeLowerer for ParamLifetimeLowerer<'ast> {
         lifetime
     }
 
-    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> Lifetimes {
+    fn lower_generics(
+        &mut self,
+        lifetimes: &[ast::Lifetime],
+        type_generics: &ast::LifetimeEnv,
+        is_self: bool,
+    ) -> Lifetimes {
         if is_self {
             self.base.self_lifetimes_or_new(lifetimes)
         } else {
-            self.lower_lifetimes(lifetimes)
+            self.lower_lifetimes(lifetimes, type_generics)
         }
     }
 }
@@ -362,11 +389,16 @@ impl<'ast> LifetimeLowerer for ReturnLifetimeLowerer<'ast> {
         }
     }
 
-    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], is_self: bool) -> Lifetimes {
+    fn lower_generics(
+        &mut self,
+        lifetimes: &[ast::Lifetime],
+        type_generics: &ast::LifetimeEnv,
+        is_self: bool,
+    ) -> Lifetimes {
         if is_self {
             self.base.self_lifetimes_or_new(lifetimes)
         } else {
-            self.lower_lifetimes(lifetimes)
+            self.lower_lifetimes(lifetimes, type_generics)
         }
     }
 }
@@ -382,8 +414,13 @@ impl LifetimeLowerer for &ast::LifetimeEnv {
         }
     }
 
-    fn lower_generics(&mut self, lifetimes: &[ast::Lifetime], _: bool) -> Lifetimes {
-        self.lower_lifetimes(lifetimes)
+    fn lower_generics(
+        &mut self,
+        lifetimes: &[ast::Lifetime],
+        type_generics: &ast::LifetimeEnv,
+        _: bool,
+    ) -> Lifetimes {
+        self.lower_lifetimes(lifetimes, type_generics)
     }
 }
 
@@ -408,7 +445,10 @@ mod tests {
 
             env.insert(crate::ast::Path::empty(), top_symbols);
 
-            let tcx = crate::hir::TypeContext::from_ast(&env, crate::hir::BasicAttributeValidator::new("test-backend")).unwrap();
+            // Don't run validation: it will error on elision. We want this code to support
+            // elision even if we don't actually allow it, since good diagnostics involve understanding
+            // broken code.
+            let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, crate::hir::BasicAttributeValidator::new("test-backend")).unwrap();
 
             tcx
         }}
@@ -459,6 +499,40 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_elision_in_struct() {
+        let tcx = tcx! {
+            mod ffi {
+                #[diplomat::opaque]
+                struct Opaque;
+
+                #[diplomat::opaque]
+                struct Opaque2<'a>(&'a str);
+
+                impl Opaque {
+                    // This should have two elided lifetimes
+                    pub fn elided(&self, x: &Opaque2) {
+
+                    }
+                }
+            }
+        };
+
+        let method = &tcx
+            .opaques()
+            .iter()
+            .find(|def| def.name == "Opaque")
+            .unwrap()
+            .methods[0];
+
+        assert_eq!(
+            method.lifetime_env.num_lifetimes(),
+            3,
+            "elided() must have three anon lifetimes"
+        );
+        insta::assert_debug_snapshot!(method);
     }
 
     #[test]

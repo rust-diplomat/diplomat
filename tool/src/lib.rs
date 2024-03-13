@@ -68,16 +68,6 @@ pub fn gen(
     let diplomat_file = ast::File::from(&lib_file);
     let env = diplomat_file.all_types();
 
-    let errors = diplomat_file.check_validity(&env);
-    if !errors.is_empty() {
-        for e in errors {
-            // These errors are not blocking, and HIR may produce better errors.
-            eprintln!("AST error: {e}");
-        }
-
-        std::process::exit(1);
-    }
-
     let mut out_texts: HashMap<String, String> = HashMap::new();
 
     let mut errors_found = false;
