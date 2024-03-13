@@ -3,7 +3,9 @@
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
-use crate::hir::{EnumVariant, LoweringError, Method, ReturnType, SuccessType, TypeDef, TypeId};
+use crate::hir::{
+    EnumVariant, LoweringError, Method, ReturnType, SelfType, SuccessType, Type, TypeDef, TypeId,
+};
 use syn::Meta;
 
 pub use crate::ast::attrs::RenameAttr;
@@ -305,7 +307,48 @@ impl Attrs {
                             ));
                         }
                     }
-                    _ => todo!("Diplomat doesn't yet support {special:?}"),
+                    SpecialMethod::Comparison => {
+                        if method.params.len() != 1 {
+                            errors.push(LoweringError::Other(
+                                "Comparator must have single parameter".into(),
+                            ));
+                        }
+                        const COMPARATOR_ERROR: &str =
+                            "Comparator's parameter must be identical to self";
+                        if let Some(ref selfty) = method.param_self {
+                            if let Some(ref param) = method.params.first() {
+                                match (&selfty.ty, &param.ty) {
+                                    (&SelfType::Opaque(ref p), &Type::Opaque(ref p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+                                    }
+                                    (&SelfType::Struct(ref p), &Type::Struct(ref p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+                                    }
+                                    (&SelfType::Enum(ref p), &Type::Enum(ref p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+                                    }
+                                    _ => {
+                                        errors.push(LoweringError::Other(COMPARATOR_ERROR.into()));
+                                    }
+                                }
+                            }
+                        } else {
+                            errors
+                                .push(LoweringError::Other("Comparator must be non-static".into()));
+                        }
+                    }
                 }
             } else {
                 errors.push(LoweringError::Other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))
