@@ -181,7 +181,7 @@ impl Attrs {
                             }
                             SpecialMethod::Stringifier
                         } else {
-                            if !support.comparison_overload {
+                            if !support.comparators {
                                 errors.push(LoweringError::Other(format!(
                                     "comparison overload not supported in backend {backend}"
                                 )))
@@ -456,7 +456,7 @@ pub struct BackendAttrSupport {
     pub fallible_constructors: bool,
     pub accessors: bool,
     pub stringifiers: bool,
-    pub comparison_overload: bool,
+    pub comparators: bool,
     pub memory_sharing: bool,
     // more to be added: namespace, etc
 }
@@ -473,7 +473,8 @@ impl BackendAttrSupport {
             fallible_constructors: true,
             accessors: true,
             stringifiers: true,
-            comparison_overload: true,
+            comparators: true,
+            memory_sharing: true,
         }
     }
 }
@@ -577,7 +578,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 fallible_constructors,
                 accessors,
                 stringifiers,
-                comparison_overload,
+                comparators,
                 memory_sharing,
             } = self.support;
             match value {
@@ -589,7 +590,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "fallible_constructors" => fallible_constructors,
                 "accessors" => accessors,
                 "stringifiers" => stringifiers,
-                "comparison_overload" => comparison_overload,
+                "comparators" => comparators,
                 "memory_sharing" => memory_sharing,
                 _ => {
                     return Err(LoweringError::Other(format!(
