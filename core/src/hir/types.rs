@@ -39,13 +39,19 @@ pub enum Slice {
     /// A string slice, e.g. `&DiplomatStr` or `Box<DiplomatStr>`.
     ///
     /// Owned slices are useful for garbage-collected languages that have to
-    /// reallocate into non-gc memory anyway.
+    /// reallocate into non-gc memory anyway. For example for Dart it's more
+    /// efficient to accept `Box<str>` than to accept `&str` and then
+    /// allocate in Rust, as Dart will have to create the `Box<str`> to
+    /// pass `&str` anyway.
     Str(Option<MaybeStatic<Lifetime>>, StringEncoding),
 
     /// A primitive slice, e.g. `&mut [u8]` or `Box<[usize]>`.
     ///
     /// Owned slices are useful for garbage-collected languages that have to
-    /// reallocate into non-gc memory anyway.
+    /// reallocate into non-gc memory anyway. For example for Dart it's more
+    /// efficient to accept `Box<[bool]>` than to accept `&[bool]` and then
+    /// allocate in Rust, as Dart will have to create the `Box<[bool]`> to
+    /// pass `&[bool]` anyway.
     Primitive(Option<Borrow>, PrimitiveType),
 }
 
