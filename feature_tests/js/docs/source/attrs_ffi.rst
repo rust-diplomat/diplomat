@@ -19,6 +19,12 @@
 
 .. js:class:: AttrOpaque2
 
+.. js:class:: Comparable
+
+    .. js:function:: new(int)
+
+    .. js:method:: cmp(other)
+
 .. js:class:: Unnamespaced
 
     .. js:function:: make(_e)

@@ -59,4 +59,18 @@ pub mod ffi {
 
         pub fn use_namespaced(&self, _n: &AttrOpaque1) {}
     }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = comparators), disable)]
+    pub struct Comparable(u8);
+
+    impl Comparable {
+        pub fn new(int: u8) -> Box<Self> {
+            Box::new(Self(int))
+        }
+        #[diplomat::attr(*, comparison)]
+        pub fn cmp(&self, other: &Comparable) -> core::cmp::Ordering {
+            self.0.cmp(&other.0)
+        }
+    }
 }

@@ -83,6 +83,7 @@ pub fn gen(
             attr_validator.support.fallible_constructors = true;
             attr_validator.support.accessors = true;
             attr_validator.support.stringifiers = true;
+            attr_validator.support.comparators = true;
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {

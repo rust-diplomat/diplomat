@@ -3,7 +3,10 @@
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
-use crate::hir::{EnumVariant, LoweringError, Method, ReturnType, SuccessType, TypeDef, TypeId};
+use crate::hir::{
+    EnumVariant, LoweringError, Method, Mutability, ReturnType, SelfType, SuccessType, Type,
+    TypeDef, TypeId,
+};
 use syn::Meta;
 
 pub use crate::ast::attrs::RenameAttr;
@@ -164,10 +167,25 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "constructor" {
+                            if !support.constructors {
+                                errors.push(LoweringError::Other(format!(
+                                    "constructor not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Constructor
                         } else if path == "stringifier" {
+                            if !support.stringifiers {
+                                errors.push(LoweringError::Other(format!(
+                                    "stringifier not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Stringifier
                         } else {
+                            if !support.comparators {
+                                errors.push(LoweringError::Other(format!(
+                                    "comparison overload not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Comparison
                         };
 
@@ -180,10 +198,25 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "named_constructor" {
+                            if !support.named_constructors {
+                                errors.push(LoweringError::Other(format!(
+                                    "named constructors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::NamedConstructor
                         } else if path == "getter" {
+                            if !support.accessors {
+                                errors.push(LoweringError::Other(format!(
+                                    "accessors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Getter
                         } else {
+                            if !support.accessors {
+                                errors.push(LoweringError::Other(format!(
+                                    "accessors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Setter
                         };
                         match StandardAttribute::from_meta(&attr.meta) {
@@ -305,7 +338,65 @@ impl Attrs {
                             ));
                         }
                     }
-                    _ => todo!("Diplomat doesn't yet support {special:?}"),
+                    SpecialMethod::Comparison => {
+                        if method.params.len() != 1 {
+                            errors.push(LoweringError::Other(
+                                "Comparator must have single parameter".into(),
+                            ));
+                        }
+                        // In the long run we can actually support heterogeneous comparators. Not a priority right now.
+                        const COMPARATOR_ERROR: &str =
+                            "Comparator's parameter must be identical to self";
+                        if let Some(ref selfty) = method.param_self {
+                            if let Some(param) = method.params.first() {
+                                match (&selfty.ty, &param.ty) {
+                                    (SelfType::Opaque(p), Type::Opaque(p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+
+                                        if p.owner.mutability != Mutability::Immutable
+                                            || p2.owner.mutability != Mutability::Immutable
+                                        {
+                                            errors.push(LoweringError::Other(
+                                                "comparators must accept immutable parameters"
+                                                    .into(),
+                                            ));
+                                        }
+
+                                        if p2.optional.0 {
+                                            errors.push(LoweringError::Other(
+                                                "comparators must accept non-optional parameters"
+                                                    .into(),
+                                            ));
+                                        }
+                                    }
+                                    (SelfType::Struct(p), Type::Struct(p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+                                    }
+                                    (SelfType::Enum(p), Type::Enum(p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+                                    }
+                                    _ => {
+                                        errors.push(LoweringError::Other(COMPARATOR_ERROR.into()));
+                                    }
+                                }
+                            }
+                        } else {
+                            errors
+                                .push(LoweringError::Other("Comparator must be non-static".into()));
+                        }
+                    }
                 }
             } else {
                 errors.push(LoweringError::Other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))
@@ -365,9 +456,27 @@ pub struct BackendAttrSupport {
     pub fallible_constructors: bool,
     pub accessors: bool,
     pub stringifiers: bool,
-    pub comparison_overload: bool,
+    pub comparators: bool,
     pub memory_sharing: bool,
     // more to be added: namespace, etc
+}
+
+impl BackendAttrSupport {
+    #[cfg(test)]
+    fn all_true() -> Self {
+        Self {
+            disabling: true,
+            renaming: true,
+            namespacing: true,
+            constructors: true,
+            named_constructors: true,
+            fallible_constructors: true,
+            accessors: true,
+            stringifiers: true,
+            comparators: true,
+            memory_sharing: true,
+        }
+    }
 }
 
 /// Defined by backends when validating attributes
@@ -469,7 +578,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 fallible_constructors,
                 accessors,
                 stringifiers,
-                comparison_overload,
+                comparators,
                 memory_sharing,
             } = self.support;
             match value {
@@ -481,7 +590,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "fallible_constructors" => fallible_constructors,
                 "accessors" => accessors,
                 "stringifiers" => stringifiers,
-                "comparison_overload" => comparison_overload,
+                "comparators" => comparators,
                 "memory_sharing" => memory_sharing,
                 _ => {
                     return Err(LoweringError::Other(format!(
@@ -497,5 +606,102 @@ impl AttributeValidator for BasicAttributeValidator {
     }
     fn attrs_supported(&self) -> BackendAttrSupport {
         self.support
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::hir;
+    use std::fmt::Write;
+
+    macro_rules! uitest_lowering_attr {
+        ($($file:tt)*) => {
+            let parsed: syn::File = syn::parse_quote! { $($file)* };
+            let custom_types = crate::ast::File::from(&parsed);
+            let env = custom_types.all_types();
+
+            let mut output = String::new();
+
+
+            let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+            attr_validator.support = hir::BackendAttrSupport::all_true();
+            match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(_context) => (),
+                Err(e) => {
+                    for (ctx, err) in e {
+                        writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                    }
+                }
+            };
+            insta::with_settings!({}, {
+                insta::assert_display_snapshot!(output)
+            });
+        }
+    }
+
+    #[test]
+    fn test_comparator() {
+        uitest_lowering_attr! {
+            #[diplomat::bridge]
+            mod ffi {
+                use std::cmp;
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                struct Struct {
+                    field: u8
+                }
+
+
+                impl Opaque {
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_static(other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_none(&self) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_othertype(other: Struct) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_badreturn(&self, other: &Opaque) -> u8 {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_correct(&self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    pub fn comparison_unmarked(&self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    pub fn ordering_wrong(&self, other: cmp::Ordering) {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_mut(&self, other: &mut Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_opt(&self, other: Option<&Opaque>) -> cmp::Ordering {
+                        todo!()
+                    }
+                }
+
+                impl Struct {
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_other(self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
+                        todo!()
+                    }
+                }
+            }
+        }
     }
 }

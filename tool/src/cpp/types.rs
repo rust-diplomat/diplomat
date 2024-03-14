@@ -201,6 +201,10 @@ fn gen_type_inner<W: fmt::Write>(
         ast::TypeName::Unit => {
             write!(out, "void")?;
         }
+
+        ast::TypeName::Ordering => {
+            write!(out, "int8_t")?;
+        }
         &_ => unreachable!("unknown AST/HIR variant"),
     }
 

@@ -249,11 +249,10 @@ impl TypeContext {
                     opaques,
                     enums,
                 };
-                assert!(
-                    ctx.errors.is_empty(),
-                    "All lowering succeeded but still found error messages: {:?}",
-                    ctx.errors.take_errors()
-                );
+
+                if !ctx.errors.is_empty() {
+                    return Err(ctx.errors.take_errors());
+                }
                 Ok((ctx, res))
             }
             _ => {
@@ -311,7 +310,7 @@ impl TypeContext {
                 }
 
                 method.output.with_contained_types(|out_ty| {
-                    self.validate_ty_in_method(errors, Param::Return, out_ty, method)
+                    self.validate_ty_in_method(errors, Param::Return, out_ty, method);
                 })
             }
         }

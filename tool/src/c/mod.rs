@@ -267,6 +267,7 @@ pub fn gen_includes<W: fmt::Write>(
         ast::TypeName::StrReference(..) => {}
         ast::TypeName::PrimitiveSlice(..) => {}
         ast::TypeName::Unit => {}
+        ast::TypeName::Ordering => {}
         &_ => unreachable!("unknown AST/HIR variant"),
     }
 

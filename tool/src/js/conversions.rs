@@ -398,7 +398,7 @@ pub struct InvocationIntoJs<'base> {
 impl fmt::Display for InvocationIntoJs<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.typ {
-            ast::TypeName::Primitive(..) => self.invocation.scalar().fmt(f),
+            ast::TypeName::Primitive(..) | ast::TypeName::Ordering => self.invocation.scalar().fmt(f),
             ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
                 match self.base.resolve_type(path_type) {
                     ast::CustomType::Struct(strct) => {
