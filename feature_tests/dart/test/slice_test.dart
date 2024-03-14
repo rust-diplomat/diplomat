@@ -31,4 +31,9 @@ void main() {
   test("bytes", () {
     expect(Float64Vec.f64BeBytes(Uint8List.fromList([64, 40, 174, 20, 122, 225, 71, 174]).buffer).toString(), "[12.34]");
   });
+
+  test("strings", () {
+    final s = MyString.newFromFirst(["foo", "bar"]);
+    expect(s.str, "foo");
+  });
 }

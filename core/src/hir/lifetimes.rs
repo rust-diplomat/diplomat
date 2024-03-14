@@ -235,7 +235,7 @@ pub struct Lifetimes {
 }
 
 impl Lifetime {
-    pub(super) fn new(index: usize) -> Self {
+    pub(super) const fn new(index: usize) -> Self {
         Self(index)
     }
 }

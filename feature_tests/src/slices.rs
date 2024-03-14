@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 mod ffi {
-    use diplomat_runtime::DiplomatWriteable;
+    use diplomat_runtime::{DiplomatStr, DiplomatWriteable};
     use std::fmt::Write as _;
 
     #[diplomat::opaque]
@@ -19,6 +19,10 @@ mod ffi {
 
         pub fn new_owned(v: Box<DiplomatStr>) -> Box<MyString> {
             Box::new(Self(String::from_utf8(v.into()).unwrap()))
+        }
+
+        pub fn new_from_first(v: &[&DiplomatStr]) -> Box<MyString> {
+            Box::new(Self(core::str::from_utf8(v[0]).unwrap().into()))
         }
 
         #[diplomat::attr(supports = accessors, setter = "str")]

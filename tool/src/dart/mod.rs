@@ -30,18 +30,26 @@ pub fn run<'cx>(
     let mut directives = BTreeSet::default();
     let mut helper_classes = BTreeMap::default();
 
+    let mut tgcx = TyGenContext {
+        tcx,
+        errors: &errors,
+        helper_classes: &mut helper_classes,
+        formatter: &formatter,
+    };
+
+    // Needed for ListStringView
+    tgcx.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
+    tgcx.gen_slice(&hir::Slice::Str(
+        None,
+        hir::StringEncoding::UnvalidatedUtf16,
+    ));
+
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             continue;
         }
 
-        let (file_name, body) = TyGenContext {
-            tcx,
-            errors: &errors,
-            helper_classes: &mut helper_classes,
-            formatter: &formatter,
-        }
-        .gen(id);
+        let (file_name, body) = tgcx.gen(id);
 
         directives.insert(formatter.fmt_part(&file_name));
 
@@ -633,6 +641,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
+            Type::Slice(hir::Slice::Strs(..)) => "core.List<core.String>".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -709,6 +718,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_as_ffi(p, false).into()
             }
+            Type::Slice(hir::Slice::Strs(encoding)) => match encoding {
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => "_SliceUtf8",
+                _ => "_SliceUtf16",
+            }
+            .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -787,13 +801,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             Type::Struct(..) => self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info),
             Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._ffi").into(),
-            Type::Slice(hir::Slice::Str(
-                _,
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            )) => format!("{dart_name}.utf8View").into(),
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                format!("{dart_name}.utf16View").into()
+            Type::Slice(hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding)) => {
+                match encoding {
+                    hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+                        format!("{dart_name}.utf8View")
+                    }
+                    _ => format!("{dart_name}.utf16View"),
+                }
             }
+            .into(),
             Type::Slice(hir::Slice::Primitive(_, p)) => format!(
                 "{dart_name}{view}",
                 view = self.formatter.fmt_primitive_list_view(p)

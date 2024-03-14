@@ -21,7 +21,7 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
             | ast::StringEncoding::UnvalidatedUtf16
             | ast::StringEncoding::Utf8,
         )
-        | ast::TypeName::PrimitiveSlice(..) => {
+        | ast::TypeName::PrimitiveSlice(..) | ast::TypeName::StrSlice(..) => {
             let data_type = if let ast::TypeName::PrimitiveSlice(.., prim) = &param.ty {
                 ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
             } else if let ast::TypeName::StrReference(
@@ -34,6 +34,11 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 &param.ty
             {
                 quote! { u16 }
+            } else if let ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8) = &param.ty {
+                // TODO: this is not an ABI-stable type!
+                quote! { &[u8] }
+            } else if let ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf16) = &param.ty {
+                quote! { &[u16] }
             } else {
                 unreachable!()
             };
@@ -101,7 +106,7 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
 
 fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
     match &param.ty {
-        ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
+        ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) | ast::TypeName::StrSlice(..) => {
             let data_ident =
                 Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site());
             let len_ident = Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site());
@@ -161,6 +166,14 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                         Default::default()
                     } else {
                         #encode
+                    }
+                }
+            } else if let ast::TypeName::StrSlice(_) = &param.ty {
+                quote! {
+                    if #len_ident == 0 {
+                        &[]
+                    } else {
+                        unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
                     }
                 }
             } else {
