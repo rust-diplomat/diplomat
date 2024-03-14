@@ -852,13 +852,13 @@ impl fmt::Display for TypeName {
                 write!(f, "Box<str>")
             }
             TypeName::StrSlice(StringEncoding::UnvalidatedUtf8) => {
-                write!(f, "Box<[&DiplomatStr]>")
+                write!(f, "&[&DiplomatStr]")
             }
             TypeName::StrSlice(StringEncoding::UnvalidatedUtf16) => {
-                write!(f, "Box<[&DiplomatStr16]>")
+                write!(f, "&[&DiplomatStr16]")
             }
             TypeName::StrSlice(StringEncoding::Utf8) => {
-                write!(f, "Box<[&str]>")
+                write!(f, "&[&str]")
             }
             TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ) => {
                 write!(f, "{}[{typ}]", ReferenceDisplay(lifetime, mutability))
