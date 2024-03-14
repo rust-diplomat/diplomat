@@ -73,14 +73,23 @@ pub enum SpecialMethod {
     Comparison,
 }
 
+/// For special methods that affect type semantics, whether this type has this method.
+///
+/// This will likely only contain a subset of special methods, but feel free to add more as needed.
+#[derive(Debug, Default)]
+#[non_exhaustive]
+pub struct SpecialMethodPresence {
+    pub comparator: bool,
+}
+
 /// Where the attribute was found. Some attributes are only allowed in some contexts
 /// (e.g. namespaces cannot be specified on methods)
 #[non_exhaustive] // might add module attrs in the future
-#[derive(Copy, Clone, Debug)]
-pub enum AttributeContext<'a> {
+#[derive(Debug)]
+pub enum AttributeContext<'a, 'b> {
     Type(TypeDef<'a>),
     EnumVariant(&'a EnumVariant),
-    Method(&'a Method, TypeId),
+    Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
     Module,
 }
 
@@ -251,7 +260,7 @@ impl Attrs {
     pub(crate) fn validate(
         &self,
         validator: &(impl AttributeValidator + ?Sized),
-        context: AttributeContext,
+        mut context: AttributeContext,
         errors: &mut ErrorStore,
     ) {
         // use an exhaustive destructure so new attributes are handled
@@ -270,7 +279,9 @@ impl Attrs {
         }
 
         if let Some(ref special) = special_method {
-            if let AttributeContext::Method(method, self_id) = context {
+            if let AttributeContext::Method(method, self_id, ref mut special_method_presence) =
+                context
+            {
                 match special {
                     SpecialMethod::Constructor | SpecialMethod::NamedConstructor(..) => {
                         if method.param_self.is_some() {
@@ -344,6 +355,12 @@ impl Attrs {
                                 "Comparator must have single parameter".into(),
                             ));
                         }
+                        if special_method_presence.comparator {
+                            errors.push(LoweringError::Other(
+                                "Cannot define two comparators on the same type".into(),
+                            ));
+                        }
+                        special_method_presence.comparator = true;
                         // In the long run we can actually support heterogeneous comparators. Not a priority right now.
                         const COMPARATOR_ERROR: &str =
                             "Comparator's parameter must be identical to self";
