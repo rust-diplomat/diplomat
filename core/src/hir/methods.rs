@@ -28,7 +28,7 @@ pub struct Method {
 }
 
 /// Type that the method returns.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum SuccessType {
     Writeable,
