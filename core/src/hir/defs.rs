@@ -211,4 +211,13 @@ impl<'tcx> TypeDef<'tcx> {
             Self::Enum(ty) => &ty.attrs,
         }
     }
+
+    pub fn special_method_presence(&self) -> &'tcx SpecialMethodPresence {
+        match *self {
+            Self::Struct(ty) => &ty.special_method_presence,
+            Self::OutStruct(ty) => &ty.special_method_presence,
+            Self::Opaque(ty) => &ty.special_method_presence,
+            Self::Enum(ty) => &ty.special_method_presence,
+        }
+    }
 }

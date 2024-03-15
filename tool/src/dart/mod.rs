@@ -538,6 +538,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 SpecialMethod::Stringifier => "@override\n  String toString()".into(),
                 SpecialMethod::Comparison => format!("int compareTo({type_name} other)"),
+                SpecialMethod::Iterator => {
+                    format!("{return_ty} _iteratorNext({params})")
+                }
+                SpecialMethod::Iterable => {
+                    format!("{return_ty} get iterator")
+                }
                 _ => unimplemented!("Found unknown special method type {special:?}"),
             }
         } else if method.param_self.is_none() {
@@ -609,7 +615,29 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         info.comparator = special_method_presence.comparator;
 
+        if let Some(ref val) = special_method_presence.iterator {
+            info.iterator = Some(self.gen_success_ty(&val))
+        }
+        if let Some(ref iterator) = special_method_presence.iterable {
+            let iterator_def = self.tcx.resolve_type(*iterator);
+            let Some(ref val) = iterator_def.special_method_presence().iterator else {
+                self.errors
+                    .push_error("Found iterable not returning an iterator type".into());
+                return info;
+            };
+            info.iterable = Some(self.gen_success_ty(&val))
+        }
+
         info
+    }
+
+    fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'cx, str> {
+        match out_ty {
+            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::OutType(o) => self.gen_type_name(o),
+            SuccessType::Unit => self.formatter.fmt_void().into(),
+            _ => unreachable!(),
+        }
     }
 
     /// Generates a type's Dart type.

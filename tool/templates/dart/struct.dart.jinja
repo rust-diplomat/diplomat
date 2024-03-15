@@ -12,7 +12,9 @@ final class _{{type_name}}Ffi extends ffi.Struct {
 {% if !docs.is_empty() -%}
 /// {{docs}}
 {% endif -%}
-final class {{type_name}} {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
+final class {{type_name}}
+   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
+   {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
 
   {%- for field in fields %}
   {% if !mutable -%} final {% endif -%} {{field.dart_type_name}} {{field.name}};
