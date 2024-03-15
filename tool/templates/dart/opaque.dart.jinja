@@ -1,7 +1,8 @@
 {% if !docs.is_empty() -%}
 /// {{docs}}
 {% endif -%}
-final class {{type_name}} implements ffi.Finalizable {%- if def.special_method_presence.comparator -%}, core.Comparable<{{type_name}}> {%- endif %} {
+final class {{type_name}} implements ffi.Finalizable
+  {%- if special.comparator -%}, core.Comparable<{{type_name}}> {%- endif %} {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
