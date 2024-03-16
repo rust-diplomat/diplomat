@@ -214,14 +214,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             };
             param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
             param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone(), None));
+            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
             param_names_ffi.push(param_name);
         }
 
         let params = param_decls_kt.join(", ");
 
         let return_ty = self.gen_return_type_name(&method.output);
-        let return_type_ffi = self.gen_return_type_name_ffi(&method.output);
 
         let declaration = format!(
             "fun {}({}): {return_ty}",
@@ -328,7 +327,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             };
             param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
             param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone(), None));
+            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
             param_names_ffi.push(param_name);
         }
 

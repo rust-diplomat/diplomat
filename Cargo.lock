@@ -221,11 +221,13 @@ dependencies = [
  "askama",
  "clap",
  "colored",
+ "diplomat",
  "diplomat_core",
  "displaydoc",
  "heck",
  "indenter",
  "insta",
+ "proc-macro2",
  "pulldown-cmark",
  "quote",
  "serde",
@@ -812,9 +814,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.67"
+version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d433d9f1a3e8c1263d9456598b16fec66f4acc9a74dacffd35c7bb09b3a1328"
+checksum = "e835ff2298f5721608eb1a980ecaee1aef2c132bf95ecc026a11b7bf3c01c02e"
 dependencies = [
  "unicode-ident",
 ]
