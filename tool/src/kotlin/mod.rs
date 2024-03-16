@@ -640,8 +640,6 @@ mod test {
         let (_, rendered) =
             ty_gen_cx.gen_opaque_def(opaque_def, type_id, &type_name, "dev.gigapixel", "somelib");
         println!("{rendered}");
-
-        assert!(false, "True")
     }
 
     #[test]

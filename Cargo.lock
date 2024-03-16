@@ -221,7 +221,6 @@ dependencies = [
  "askama",
  "clap",
  "colored",
- "diplomat",
  "diplomat_core",
  "displaydoc",
  "heck",

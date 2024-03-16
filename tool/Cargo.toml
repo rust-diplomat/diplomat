@@ -31,6 +31,5 @@ askama = "0.12"
 
 [dev-dependencies]
 insta = { version = "1.7.1", features = [ "backtrace" ] }
-diplomat = { path = "../macro", version = "0.7.0"}
 quote = "1.0"
 proc-macro2 = "1.0.79"
