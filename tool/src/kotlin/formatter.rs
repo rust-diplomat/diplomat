@@ -17,8 +17,7 @@ pub(super) struct KotlinFormatter<'tcx> {
     strip_prefix: Option<String>,
 }
 
-const INVALID_METHOD_NAMES: &[&str] = &["new", "static", "default"];
-const INVALID_FIELD_NAMES: &[&str] = &["new", "static", "default"];
+const INVALID_METHOD_NAMES: &[&str] = &["new", "static", "default", "private", "internal"];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> KotlinFormatter<'tcx> {
@@ -29,17 +28,8 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_docs(&self) -> String {
-        // todo: fix this
-        "Don't do it".to_string()
-    }
-
     pub fn fmt_void(&self) -> &'static str {
         "Unit"
-    }
-
-    pub fn fmt_destructor_name(&self, id: TypeId) -> String {
-        format!("{}_destroy", self.fmt_type_name(id))
     }
 
     pub fn fmt_string(&self) -> &'static str {
@@ -48,12 +38,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
         self.c.fmt_method_name(ty, method).into()
-    }
-
-    /// Resolve and format a named type for use in diagnostics
-    /// (don't apply rename rules and such)
-    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.c.fmt_type_name_diagnostics(id)
     }
 
     pub fn fmt_primitive_as_ffi(&self, prim: hir::PrimitiveType) -> &'static str {
@@ -87,35 +71,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
             format!("{name}_").into()
         } else {
             name
-        }
-    }
-
-    pub fn fmt_setter_name(&self, method: &hir::Method) -> String {
-        let name = &*self.fmt_method_name(method);
-        let name = name.strip_prefix("set").unwrap().to_lower_camel_case();
-
-        if INVALID_FIELD_NAMES.contains(&name.as_str()) {
-            format!("{name}_")
-        } else {
-            name
-        }
-    }
-
-    pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
-        let mut name = self.fmt_method_name(method).into_owned();
-        for prefix in ["try", "create", "new_", "new", "default_", "default", "get"] {
-            name = name
-                .strip_prefix(prefix)
-                .map(|s| s.to_lower_camel_case())
-                .unwrap_or(name);
-        }
-
-        if name.is_empty() {
-            None
-        } else if INVALID_METHOD_NAMES.contains(&name.as_str()) {
-            Some(format!("{name}_"))
-        } else {
-            Some(name)
         }
     }
 
