@@ -12,7 +12,7 @@ use formatter::KotlinFormatter;
 
 use crate::common::{ErrorStore, FileMap};
 
-pub fn run<'cx>(tcx: &'cx TypeContext, domain: &str, lib_name: &str) -> FileMap {
+pub fn run(tcx: &TypeContext, domain: &str, lib_name: &str) -> FileMap {
     let formatter = KotlinFormatter::new(tcx, None);
 
     let files = FileMap::default();
