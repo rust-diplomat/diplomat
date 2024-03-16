@@ -1,0 +1,38 @@
+package {{package_name}}
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
+
+
+interface {{type_name}}Lib: Library {
+    fun {{type_name}}_destroy(handle: Long)
+
+    
+    {%- for m in native_methods %}
+    {{m.declaration}}
+    {%- endfor %}
+}
+
+class {{type_name}} internal constructor (internal val handle: Long) {
+
+    private class {{type_name}}Cleaner(val handle: Long, val lib: {{type_name}}Lib) : Runnable {
+        override fun run() {
+            lib.{{type_name}}_destroy(handle)
+        }
+    }
+
+    companion object {
+        val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
+        val lib: {{type_name}}Lib = Native.load("{{lib_name}}", libClass)
+
+{%- for m in companion_methods %}
+{% include "companion_method.kt.jinja" %}
+{%- endfor %}
+    }
+
+  {%- for m in self_methods %}
+{% include "self_method.kt.jinja" %}
+  {%- endfor %}
+
+}
+

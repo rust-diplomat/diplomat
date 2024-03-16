@@ -1,0 +1,5 @@
+
+    val handle = returnVal
+    val returnOpaque = {{return_type_name}}(handle)
+    CLEANER.register(returnOpaque, {{return_type_name}}Cleaner(returnOpaque.handle, {{return_type_name}}.lib));
+    return returnOpaque

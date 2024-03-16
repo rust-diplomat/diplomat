@@ -1,0 +1,15 @@
+
+    {{ m.declaration }} {
+        val returnVal = lib.{{ m.native_method_name -}}(
+            {%- for param in m.param_conversions %}
+            {%- if loop.first %}{% else %}, {% endif -%}
+            {{ param }}
+            {%- endfor -%}
+        );
+        {%- match m.return_expression %}
+        {%- when Some with (statement) %}
+        {{statement.replace('\n', "\n    ")}}
+        {%- when None %}
+        {%- endmatch %}
+    }
+
