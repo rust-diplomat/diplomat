@@ -1,19 +1,18 @@
 use askama::Template;
-use diplomat_core::hir::borrowing_param::{ParamBorrowInfo, StructBorrowInfo};
+use diplomat_core::hir::borrowing_param::{ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, borrowing_param::BorrowedLifetimeInfo, Lifetime, LifetimeEnv, Method, SelfType,
+    self, LifetimeEnv, Method, SelfType,
     TyPosition, Type, TypeContext, TypeId,
 };
-use diplomat_core::hir::{Borrow, OpaqueDef, OpaquePath, ReturnType, StructPathLike, SuccessType};
+use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
 
-use std::collections::BTreeSet;
-use std::fmt::{Display, Write};
+use std::fmt::{Write};
 use std::{borrow::Cow, collections::BTreeMap};
 
 mod formatter;
 use formatter::KotlinFormatter;
 
-use crate::common::{ErrorStore, FileMap};
+use crate::common::{ErrorStore};
 
 struct TyGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
@@ -173,7 +172,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut param_names_ffi = Vec::with_capacity(method.params.len());
         let mut param_conversions = Vec::with_capacity(method.params.len());
 
-        let b = match self_type {
+        match self_type {
             SelfType::Opaque(o) => match o.owner.mutability {
                 hir::Mutability::Mutable => todo!("don't support mutable borrows yet"),
                 hir::Mutability::Immutable => {

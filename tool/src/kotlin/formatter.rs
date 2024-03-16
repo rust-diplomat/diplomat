@@ -1,5 +1,4 @@
 use crate::c2::CFormatter;
-use diplomat_core::ast::{DocsUrlGenerator, MarkdownStyle};
 use diplomat_core::hir::{self, Docs, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
@@ -32,7 +31,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_docs(&self, docs: &Docs) -> String {
         // todo: fix this
-        format!("Don't do it")
+        "Don't do it".to_string()
     }
 
     pub fn fmt_void(&self) -> &'static str {
@@ -58,7 +57,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_primitive_as_ffi(&self, prim: hir::PrimitiveType) -> &'static str {
-        use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
+        use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
         match prim {
             PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Char",
@@ -146,7 +145,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_pointer(&self) -> String {
-        format!("Pointer")
+        "Pointer".to_string()
     }
 
     pub fn fmt_usize(&self, cast: bool) -> &'static str {
@@ -164,7 +163,7 @@ pub mod test {
 
     use super::KotlinFormatter;
     use diplomat_core::{
-        ast::{self, from_items},
+        ast::{self},
         hir::{self, TypeContext},
     };
     use proc_macro2::TokenStream;
