@@ -1,5 +1,5 @@
 use crate::c2::CFormatter;
-use diplomat_core::hir::{self, Docs, TypeContext, TypeId};
+use diplomat_core::hir::{self, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -29,7 +29,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_docs(&self, docs: &Docs) -> String {
+    pub fn fmt_docs(&self) -> String {
         // todo: fix this
         "Don't do it".to_string()
     }

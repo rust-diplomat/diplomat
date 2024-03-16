@@ -85,8 +85,19 @@ pub fn gen(
     match target_language {
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "kotlin" => {
-            // kotlin::run(&tcx);
-            todo!()
+            let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
+            attr_validator.support.renaming = true;
+            attr_validator.support.disabling = true;
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(context) => context,
+                Err(e) => {
+                    for err in e {
+                        eprintln!("Lowering error: {}", err);
+                    }
+                    std::process::exit(1);
+                }
+            };
+            out_texts = kotlin::run(&tcx, "dev.gigapixel", "somelib").take_files();
         }
         "dart" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("dart");

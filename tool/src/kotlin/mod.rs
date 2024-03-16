@@ -1,18 +1,109 @@
 use askama::Template;
-use diplomat_core::hir::borrowing_param::{ParamBorrowInfo};
+use diplomat_core::hir::borrowing_param::ParamBorrowInfo;
 use diplomat_core::hir::{
-    self, LifetimeEnv, Method, SelfType,
-    TyPosition, Type, TypeContext, TypeId,
+    self, LifetimeEnv, Method, SelfType, TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
 
-use std::fmt::{Write};
 use std::{borrow::Cow, collections::BTreeMap};
 
 mod formatter;
 use formatter::KotlinFormatter;
 
-use crate::common::{ErrorStore};
+use crate::common::{ErrorStore, FileMap};
+
+pub fn run<'cx>(tcx: &'cx TypeContext, domain: &str, lib_name: &str) -> FileMap {
+    let formatter = KotlinFormatter::new(tcx, None);
+
+    let files = FileMap::default();
+    let errors = ErrorStore::default();
+
+    let mut helper_classes = BTreeMap::default();
+    let mut ty_gen_cx = TyGenContext {
+        tcx,
+        errors: &errors,
+        helper_classes: &mut helper_classes,
+        formatter: &formatter,
+    };
+
+    for (id, ty) in tcx.all_types() {
+        let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
+        if ty.attrs().disable {
+            continue;
+        }
+        if let TypeDef::Opaque(o) = ty {
+            let type_name = o.name.to_string();
+
+            let (file_name, body) = ty_gen_cx.gen_opaque_def(o, id, &type_name, domain, lib_name);
+
+            files.add_file(format!("src/main/kotlin/{file_name}"), body);
+        }
+    }
+
+    #[derive(Template)]
+    #[template(path = "kotlin/DiplomatStr.java.jinja", escape = "none")]
+    struct JavaTypes<'a> {
+        domain: &'a str,
+        lib_name: &'a str,
+    }
+
+    let java_types = JavaTypes { domain, lib_name }
+        .render()
+        .expect("Failed to render java types");
+
+    files.add_file(
+        format!(
+            "src/main/java/{}/{lib_name}/DiplomatStr.java",
+            domain.replace('.', "/")
+        ),
+        java_types,
+    );
+
+    #[derive(Template)]
+    #[template(path = "kotlin/build.gradle.kts.jinja", escape = "none")]
+    struct Build<'a> {
+        domain: &'a str,
+        lib_name: &'a str,
+    }
+
+    let build = Build { domain, lib_name }
+        .render()
+        .expect("Failed to render build file");
+
+    files.add_file("build.gradle.kts".to_string(), build);
+
+    #[derive(Template)]
+    #[template(path = "kotlin/settings.gradle.kts.jinja", escape = "none")]
+    struct Settings<'a> {
+        lib_name: &'a str,
+    }
+    let settings = Settings { lib_name }
+        .render()
+        .expect("Failed to render settings file");
+
+    files.add_file("settings.gradle.kts".to_string(), settings);
+
+    #[derive(Template)]
+    #[template(path = "kotlin/init.kt.jinja", escape = "none")]
+    struct Init<'a> {
+        domain: &'a str,
+        lib_name: &'a str,
+    }
+
+    let init = Init { domain, lib_name }
+        .render()
+        .expect("Failed to lib top level file");
+
+    files.add_file(
+        format!(
+            "src/main/kotlin/{}/{lib_name}/Lib.kt",
+            domain.replace('.', "/")
+        ),
+        init,
+    );
+
+    files
+}
 
 struct TyGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
@@ -164,6 +255,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         type_name: &str,
         self_type: &'cx SelfType,
     ) -> SelfMethodInfo<'cx> {
+        eprintln!("method: {}", method.name);
         let mut visitor = method.borrowing_param_visitor(self.tcx);
         let native_method_name = self.formatter.fmt_c_method_name(id, method);
 
@@ -351,7 +443,18 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         })
     }
 
-    fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, id: TypeId, type_name: &str) -> String {
+    fn gen_opaque_def(
+        &mut self,
+        ty: &'cx hir::OpaqueDef,
+        id: TypeId,
+        type_name: &str,
+        domain: &str,
+        lib_name: &str,
+    ) -> (String, String) {
+        println!("OpaqueDef: {}", ty.name);
+        for method in ty.methods.iter() {
+            println!("Method: {}", method.name);
+        }
         let native_methods = ty
             .methods
             .iter()
@@ -379,32 +482,30 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .flat_map(|method| self.gen_companion_method_info(id, method))
             .collect::<Vec<_>>();
 
-        let destructor = self.formatter.fmt_destructor_name(id);
-
         #[derive(Template)]
         #[template(path = "kotlin/opaque.kt.jinja", escape = "none")]
         struct ImplTemplate<'a> {
-            package_name: &'a str,
+            domain: &'a str,
             lib_name: &'a str,
             type_name: &'a str,
             self_methods: &'a [SelfMethodInfo<'a>],
             companion_methods: &'a [CompanionMethodInfo<'a>],
             native_methods: &'a [NativeMethodInfo<'a>],
-            destructor: String,
-            // lifetimes: &'a LifetimeEnv,
         }
 
-        ImplTemplate {
-            package_name: "dev.gigapixel.tok4j",
-            lib_name: "somelib",
-            type_name,
-            self_methods: self_methods.as_ref(),
-            companion_methods: companion_methods.as_ref(),
-            native_methods: native_methods.as_ref(),
-            destructor,
-        }
-        .render()
-        .unwrap()
+        (
+            format!("{}/{lib_name}/{type_name}.kt", domain.replace('.', "/")),
+            ImplTemplate {
+                domain,
+                lib_name,
+                type_name,
+                self_methods: self_methods.as_ref(),
+                companion_methods: companion_methods.as_ref(),
+                native_methods: native_methods.as_ref(),
+            }
+            .render()
+            .expect("failed to generate struct"),
+        )
     }
 
     // fn render(&self) -> Option<String> {
@@ -536,7 +637,8 @@ mod test {
             helper_classes: &mut helper_classes,
         };
         let type_name = opaque_def.name.to_string();
-        let rendered = ty_gen_cx.gen_opaque_def(opaque_def, type_id, &type_name);
+        let (_, rendered) =
+            ty_gen_cx.gen_opaque_def(opaque_def, type_id, &type_name, "dev.gigapixel", "somelib");
         println!("{rendered}");
 
         assert!(false, "True")
