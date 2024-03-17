@@ -73,4 +73,30 @@ pub mod ffi {
             self.0.cmp(&other.0)
         }
     }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterables), disable)]
+    pub struct MyIterable(Vec<u8>);
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
+
+    impl MyIterable {
+
+        pub fn new(x: &[u8]) -> Box<Self> {
+            Box::new(Self(x.into()))
+        }
+        #[diplomat::attr(*, iterable)]
+        pub fn iter<'a>(&'a self) -> Box<MyIterator<'a>> {
+            Box::new(MyIterator(self.0.iter()))
+        }
+    }
+
+    impl<'a> MyIterator<'a> {
+        #[diplomat::attr(*, iterator)]
+        pub fn next(&mut self) -> Option<u8> {
+            self.0.next().copied()
+        }
+    }
 }
