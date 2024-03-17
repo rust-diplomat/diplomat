@@ -25,6 +25,16 @@
 
     .. js:method:: cmp(other)
 
+.. js:class:: MyIterable
+
+    .. js:function:: new(x)
+
+    .. js:method:: iter()
+
+.. js:class:: MyIterator
+
+    .. js:method:: next()
+
 .. js:class:: Unnamespaced
 
     .. js:function:: make(_e)

@@ -14,6 +14,8 @@ export { Float64Vec } from './Float64Vec';
 export { Foo } from './Foo';
 export { ImportedStruct } from './ImportedStruct';
 export { MyEnum } from './MyEnum';
+export { MyIterable } from './MyIterable';
+export { MyIterator } from './MyIterator';
 export { MyString } from './MyString';
 export { MyStruct } from './MyStruct';
 export { NestedBorrowedFields } from './NestedBorrowedFields';
