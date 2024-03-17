@@ -115,19 +115,31 @@ impl TypeContext {
         }
     }
 
-    pub(crate) fn resolve_out_struct(&self, id: OutStructId) -> &OutStructDef {
+    /// Helper methods for resolving different IDs.
+    ///
+    /// Prefer using `resolve_type()` for simplicity.
+    pub fn resolve_out_struct(&self, id: OutStructId) -> &OutStructDef {
         self.out_structs.index(id.0)
     }
 
-    pub(crate) fn resolve_struct(&self, id: StructId) -> &StructDef {
+    /// Helper methods for resolving different IDs.
+    ///
+    /// Prefer using `resolve_type()` for simplicity.
+    pub fn resolve_struct(&self, id: StructId) -> &StructDef {
         self.structs.index(id.0)
     }
 
-    pub(crate) fn resolve_opaque(&self, id: OpaqueId) -> &OpaqueDef {
+    /// Helper methods for resolving different IDs.
+    ///
+    /// Prefer using `resolve_type()` for simplicity.
+    pub fn resolve_opaque(&self, id: OpaqueId) -> &OpaqueDef {
         self.opaques.index(id.0)
     }
 
-    pub(crate) fn resolve_enum(&self, id: EnumId) -> &EnumDef {
+    /// Helper methods for resolving different IDs.
+    ///
+    /// Prefer using `resolve_type()` for simplicity.
+    pub fn resolve_enum(&self, id: EnumId) -> &EnumDef {
         self.enums.index(id.0)
     }
 

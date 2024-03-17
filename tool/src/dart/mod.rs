@@ -616,16 +616,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         info.comparator = special_method_presence.comparator;
 
         if let Some(ref val) = special_method_presence.iterator {
-            info.iterator = Some(self.gen_success_ty(&val))
+            info.iterator = Some(self.gen_success_ty(val))
         }
         if let Some(ref iterator) = special_method_presence.iterable {
-            let iterator_def = self.tcx.resolve_type(*iterator);
-            let Some(ref val) = iterator_def.special_method_presence().iterator else {
+            let iterator_def = self.tcx.resolve_opaque(*iterator);
+            let Some(ref val) = iterator_def.special_method_presence.iterator else {
                 self.errors
                     .push_error("Found iterable not returning an iterator type".into());
                 return info;
             };
-            info.iterable = Some(self.gen_success_ty(&val))
+            info.iterable = Some(self.gen_success_ty(val))
         }
 
         info

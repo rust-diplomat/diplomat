@@ -4,8 +4,8 @@ use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
 use crate::hir::{
-    EnumVariant, LoweringError, Method, Mutability, ReturnType, SelfType, SuccessType, Type,
-    TypeDef, TypeId,
+    EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
+    Type, TypeDef, TypeId,
 };
 use syn::Meta;
 
@@ -88,7 +88,7 @@ pub struct SpecialMethodPresence {
     pub iterator: Option<SuccessType>,
     /// If it is an iterable, the iterator type it returns (*not* the type it iterates over,
     /// perform lookup on that type to access)
-    pub iterable: Option<TypeId>,
+    pub iterable: Option<OpaqueId>,
 }
 
 /// Where the attribute was found. Some attributes are only allowed in some contexts
@@ -452,7 +452,21 @@ impl Attrs {
                                 "Iterators cannot take parameters".into(),
                             ))
                         }
-                        if method.param_self.is_none() {
+                        // In theory we could support struct and enum iterators. The benefit is slight:
+                        // it generates probably inefficient code whilst being rather weird when it comes to the
+                        // "structs and enums convert across the boundary" norm for backends.
+                        //
+                        // Essentially, the `&mut self` behavior won't work right.
+                        //
+                        // Furthermore, in some backends (like Dart) defining an iterator may requiring adding fields,
+                        // which may not be possible for enums, and would still be an odd-one-out field for structs.g s
+                        if let Some(this) = &method.param_self {
+                            if !matches!(this.ty, SelfType::Opaque(..)) {
+                                errors.push(LoweringError::Other(
+                                    "Iterators only allowed on opaques".into(),
+                                ))
+                            }
+                        } else {
                             errors.push(LoweringError::Other("Iterators must take self".into()))
                         }
 
@@ -486,11 +500,11 @@ impl Attrs {
 
                         match method.output.success_type() {
                             SuccessType::OutType(ty) => {
-                                if let Some(id) = ty.id() {
+                                if let Some(TypeId::Opaque(id)) = ty.id() {
                                     special_method_presence.iterable = Some(id);
                                 } else {
                                     errors.push(LoweringError::Other(
-                                        "Iterables must return a custom type".into(),
+                                        "Iterables must return a custom opaque type".into(),
                                     ))
                                 }
                             }
