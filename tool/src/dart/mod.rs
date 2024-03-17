@@ -611,9 +611,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         &mut self,
         special_method_presence: &SpecialMethodPresence,
     ) -> SpecialMethodGenInfo<'cx> {
-        let mut info = SpecialMethodGenInfo::default();
-
-        info.comparator = special_method_presence.comparator;
+        let mut info = SpecialMethodGenInfo {
+            comparator: special_method_presence.comparator,
+            ..Default::default()
+        };
 
         if let Some(ref val) = special_method_presence.iterator {
             info.iterator = Some(self.gen_success_ty(val))
