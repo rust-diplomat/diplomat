@@ -14,7 +14,7 @@ use either::Either;
 pub type OutType = Type<OutputOnly>;
 
 /// Type that may be used as input or output.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum Type<P: TyPosition = Everywhere> {
     Primitive(PrimitiveType),

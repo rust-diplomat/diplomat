@@ -7,7 +7,7 @@ use diplomat_core::hir::borrowing_param::{
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, SpecialMethod,
-    StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
@@ -140,6 +140,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
+        let special = self.gen_special_method_info(&ty.special_method_presence);
+
         #[derive(Template)]
         #[template(path = "dart/enum.dart.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -149,7 +151,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: &'a [MethodInfo<'a>],
             docs: String,
             is_contiguous: bool,
-            def: &'a hir::EnumDef,
+            special: SpecialMethodGenInfo<'a>,
         }
 
         ImplTemplate {
@@ -159,7 +161,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: methods.as_slice(),
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
-            def: ty,
+            special,
         }
         .render()
         .unwrap()
@@ -173,6 +175,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .collect::<Vec<_>>();
 
         let destructor = self.formatter.fmt_destructor_name(id);
+        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
         #[template(path = "dart/opaque.dart.jinja", escape = "none")]
@@ -182,7 +185,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             docs: String,
             destructor: String,
             lifetimes: &'a LifetimeEnv,
-            def: &'a hir::OpaqueDef,
+            special: SpecialMethodGenInfo<'a>,
         }
 
         ImplTemplate {
@@ -191,7 +194,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             destructor,
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
-            def: ty,
+            special,
         }
         .render()
         .unwrap()
@@ -292,6 +295,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .iter()
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
+        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         // Non-out structs need to be constructible in Dart
         let default_constructor = if !is_out {
@@ -342,7 +346,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: Vec<MethodInfo<'a>>,
             docs: String,
             lifetimes: &'a LifetimeEnv,
-            def: &'a hir::StructDef<P>,
+            special: SpecialMethodGenInfo<'a>,
         }
 
         ImplTemplate {
@@ -353,7 +357,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods,
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
-            def: ty,
+            special,
         }
         .render()
         .unwrap()
@@ -534,6 +538,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 SpecialMethod::Stringifier => "@override\n  String toString()".into(),
                 SpecialMethod::Comparison => format!("int compareTo({type_name} other)"),
+                SpecialMethod::Iterator => {
+                    format!("{return_ty} _iteratorNext({params})")
+                }
+                SpecialMethod::Iterable => {
+                    format!("{return_ty} get iterator")
+                }
                 _ => unimplemented!("Found unknown special method type {special:?}"),
             }
         } else if method.param_self.is_none() {
@@ -595,6 +605,40 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             lifetimes: &method.lifetime_env,
             method_lifetimes_map: visitor.borrow_map(),
         })
+    }
+
+    fn gen_special_method_info(
+        &mut self,
+        special_method_presence: &SpecialMethodPresence,
+    ) -> SpecialMethodGenInfo<'cx> {
+        let mut info = SpecialMethodGenInfo {
+            comparator: special_method_presence.comparator,
+            ..Default::default()
+        };
+
+        if let Some(ref val) = special_method_presence.iterator {
+            info.iterator = Some(self.gen_success_ty(val))
+        }
+        if let Some(ref iterator) = special_method_presence.iterable {
+            let iterator_def = self.tcx.resolve_opaque(*iterator);
+            let Some(ref val) = iterator_def.special_method_presence.iterator else {
+                self.errors
+                    .push_error("Found iterable not returning an iterator type".into());
+                return info;
+            };
+            info.iterable = Some(self.gen_success_ty(val))
+        }
+
+        info
+    }
+
+    fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'cx, str> {
+        match out_ty {
+            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::OutType(o) => self.gen_type_name(o),
+            SuccessType::Unit => self.formatter.fmt_void().into(),
+            _ => unreachable!(),
+        }
     }
 
     /// Generates a type's Dart type.
@@ -1274,4 +1318,14 @@ struct StructBorrowContext<'tcx> {
     is_method: bool,
     use_env: &'tcx LifetimeEnv,
     param_info: StructBorrowInfo<'tcx>,
+}
+
+#[derive(Default)]
+struct SpecialMethodGenInfo<'a> {
+    /// Whether it is a comparator
+    comparator: bool,
+    /// Whether it is an iterator, and the type it iterates over
+    iterator: Option<Cow<'a, str>>,
+    /// Whether it is an iterable, and the type it iterates over
+    iterable: Option<Cow<'a, str>>,
 }

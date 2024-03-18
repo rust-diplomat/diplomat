@@ -4,8 +4,8 @@ use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
 use crate::hir::{
-    EnumVariant, LoweringError, Method, Mutability, ReturnType, SelfType, SuccessType, Type,
-    TypeDef, TypeId,
+    EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
+    Type, TypeDef, TypeId,
 };
 use syn::Meta;
 
@@ -71,6 +71,10 @@ pub enum SpecialMethod {
     Stringifier,
     /// A comparison operator. Currently unsupported
     Comparison,
+    /// An iterator (a type that is mutated to produce new values)
+    Iterator,
+    /// An iterable (a type that can produce an iterator)
+    Iterable,
 }
 
 /// For special methods that affect type semantics, whether this type has this method.
@@ -80,6 +84,11 @@ pub enum SpecialMethod {
 #[non_exhaustive]
 pub struct SpecialMethodPresence {
     pub comparator: bool,
+    /// If it is an iterator, the type it iterates over
+    pub iterator: Option<SuccessType>,
+    /// If it is an iterable, the iterator type it returns (*not* the type it iterates over,
+    /// perform lookup on that type to access)
+    pub iterable: Option<OpaqueId>,
 }
 
 /// Where the attribute was found. Some attributes are only allowed in some contexts
@@ -167,7 +176,11 @@ impl Attrs {
                                 continue;
                             }
                         }
-                    } else if path == "constructor" || path == "stringifier" || path == "comparison"
+                    } else if path == "constructor"
+                        || path == "stringifier"
+                        || path == "comparison"
+                        || path == "iterable"
+                        || path == "iterator"
                     {
                         if let Some(ref existing) = this.special_method {
                             errors.push(LoweringError::Other(format!(
@@ -189,6 +202,20 @@ impl Attrs {
                                 )))
                             }
                             SpecialMethod::Stringifier
+                        } else if path == "iterable" {
+                            if !support.iterables {
+                                errors.push(LoweringError::Other(format!(
+                                    "iterable not supported in backend {backend}"
+                                )))
+                            }
+                            SpecialMethod::Iterable
+                        } else if path == "iterator" {
+                            if !support.iterators {
+                                errors.push(LoweringError::Other(format!(
+                                    "iterator not supported in backend {backend}"
+                                )))
+                            }
+                            SpecialMethod::Iterator
                         } else {
                             if !support.comparators {
                                 errors.push(LoweringError::Other(format!(
@@ -414,6 +441,78 @@ impl Attrs {
                                 .push(LoweringError::Other("Comparator must be non-static".into()));
                         }
                     }
+                    SpecialMethod::Iterator => {
+                        if special_method_presence.iterator.is_some() {
+                            errors.push(LoweringError::Other(
+                                "Cannot mark type as iterator twice".into(),
+                            ));
+                        }
+                        if !method.params.is_empty() {
+                            errors.push(LoweringError::Other(
+                                "Iterators cannot take parameters".into(),
+                            ))
+                        }
+                        // In theory we could support struct and enum iterators. The benefit is slight:
+                        // it generates probably inefficient code whilst being rather weird when it comes to the
+                        // "structs and enums convert across the boundary" norm for backends.
+                        //
+                        // Essentially, the `&mut self` behavior won't work right.
+                        //
+                        // Furthermore, in some backends (like Dart) defining an iterator may requiring adding fields,
+                        // which may not be possible for enums, and would still be an odd-one-out field for structs.g s
+                        if let Some(this) = &method.param_self {
+                            if !matches!(this.ty, SelfType::Opaque(..)) {
+                                errors.push(LoweringError::Other(
+                                    "Iterators only allowed on opaques".into(),
+                                ))
+                            }
+                        } else {
+                            errors.push(LoweringError::Other("Iterators must take self".into()))
+                        }
+
+                        if let ReturnType::Nullable(ref o) = method.output {
+                            if let SuccessType::Unit = o {
+                                errors.push(LoweringError::Other(
+                                    "Iterator method must return something".into(),
+                                ));
+                            }
+                            special_method_presence.iterator = Some(o.clone());
+                        } else {
+                            errors.push(LoweringError::Other(
+                                "Iterator method must return nullable value".into(),
+                            ));
+                        }
+                    }
+                    SpecialMethod::Iterable => {
+                        if special_method_presence.iterable.is_some() {
+                            errors.push(LoweringError::Other(
+                                "Cannot mark type as iterable twice".into(),
+                            ));
+                        }
+                        if !method.params.is_empty() {
+                            errors.push(LoweringError::Other(
+                                "Iterables cannot take parameters".into(),
+                            ))
+                        }
+                        if method.param_self.is_none() {
+                            errors.push(LoweringError::Other("Iterables must take self".into()))
+                        }
+
+                        match method.output.success_type() {
+                            SuccessType::OutType(ty) => {
+                                if let Some(TypeId::Opaque(id)) = ty.id() {
+                                    special_method_presence.iterable = Some(id);
+                                } else {
+                                    errors.push(LoweringError::Other(
+                                        "Iterables must return a custom opaque type".into(),
+                                    ))
+                                }
+                            }
+                            _ => errors.push(LoweringError::Other(
+                                "Iterables must return a custom type".into(),
+                            )),
+                        }
+                    }
                 }
             } else {
                 errors.push(LoweringError::Other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))
@@ -475,6 +574,8 @@ pub struct BackendAttrSupport {
     pub stringifiers: bool,
     pub comparators: bool,
     pub memory_sharing: bool,
+    pub iterators: bool,
+    pub iterables: bool,
     // more to be added: namespace, etc
 }
 
@@ -492,6 +593,8 @@ impl BackendAttrSupport {
             stringifiers: true,
             comparators: true,
             memory_sharing: true,
+            iterators: true,
+            iterables: true,
         }
     }
 }
@@ -597,6 +700,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 stringifiers,
                 comparators,
                 memory_sharing,
+                iterators,
+                iterables,
             } = self.support;
             match value {
                 "disabling" => disabling,
@@ -609,6 +714,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 "stringifiers" => stringifiers,
                 "comparators" => comparators,
                 "memory_sharing" => memory_sharing,
+                "iterators" => iterators,
+                "iterables" => iterables,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -717,6 +824,61 @@ mod tests {
                     pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
                         todo!()
                     }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_iterator() {
+        uitest_lowering_attr! {
+            #[diplomat::bridge]
+            mod ffi {
+
+                #[diplomat::opaque]
+                struct Opaque(Vec<u8>);
+                #[diplomat::opaque]
+                struct OpaqueIterator<'a>(std::slice::Iter<'a>);
+
+
+                impl Opaque {
+                    #[diplomat::attr(*, iterable)]
+                    pub fn iterable<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
+                        Box::new(OpaqueIterator(self.0.iter()))
+                    }
+                }
+
+                impl OpaqueIterator {
+                    #[diplomat::attr(*, iterator)]
+                    pub fn next(&mut self) -> Option<u8> {
+                        self.0.next()
+                    }
+                }
+
+                #[diplomat::opaque]
+                struct Broken;
+
+                impl Broken {
+                    #[diplomat::attr(*, iterable)]
+                    pub fn iterable_no_return(&self) {}
+                    #[diplomat::attr(*, iterable)]
+                    pub fn iterable_no_self() -> Box<BrokenIterator> { todo!() }
+
+                    #[diplomat::attr(*, iterable)]
+                    pub fn iterable_non_custom(&self) -> u8 { todo!() }
+                }
+
+                #[diplomat::opaque]
+                struct BrokenIterator;
+
+                impl BrokenIterator {
+                    #[diplomat::attr(*, iterator)]
+                    pub fn iterator_no_return(&self) {}
+                    #[diplomat::attr(*, iterator)]
+                    pub fn iterator_no_self() -> Option<u8> { todo!() }
+
+                    #[diplomat::attr(*, iterator)]
+                    pub fn iterator_no_option(&self) -> u8 { todo!() }
                 }
             }
         }

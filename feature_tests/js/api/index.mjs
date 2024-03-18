@@ -14,6 +14,8 @@ export { Float64Vec } from './Float64Vec.mjs';
 export { Foo } from './Foo.mjs';
 export { ImportedStruct } from './ImportedStruct.mjs';
 export { MyEnum } from './MyEnum.mjs';
+export { MyIterable } from './MyIterable.mjs';
+export { MyIterator } from './MyIterator.mjs';
 export { MyString } from './MyString.mjs';
 export { MyStruct } from './MyStruct.mjs';
 export { NestedBorrowedFields } from './NestedBorrowedFields.mjs';

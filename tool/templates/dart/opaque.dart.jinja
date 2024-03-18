@@ -1,7 +1,10 @@
 {% if !docs.is_empty() -%}
 /// {{docs}}
 {% endif -%}
-final class {{type_name}} implements ffi.Finalizable {%- if def.special_method_presence.comparator -%}, core.Comparable<{{type_name}}> {%- endif %} {
+final class {{type_name}} 
+  {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %} implements ffi.Finalizable
+  {%- if special.comparator -%}, core.Comparable<{{type_name}}> {%- endif %}
+  {%- if let Some(it) = special.iterator %}, core.Iterator<{{it}}> {%- endif %} {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
@@ -25,6 +28,20 @@ final class {{type_name}} implements ffi.Finalizable {%- if def.special_method_p
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_{{destructor}}));
 
+
+  {%- if let Some(it) = special.iterator %}
+  {{it}}? _current;
+
+  {# This is allowed to throw when called before moveNext or after unsuccessful moveNext()
+    and is what the stdlib does, e.g. https://github.com/dart-lang/sdk/blob/main/tools/dom/src/_ListIterators.dart#L31 #}
+  {{it}} get current => _current as {{it}};
+
+  bool moveNext() {
+    _current = _iteratorNext();
+    return _current != null;
+  }
+
+  {%- endif %}
   {%- for m in methods %}
 {% include "method.dart.jinja" %}
   {%- endfor %}
