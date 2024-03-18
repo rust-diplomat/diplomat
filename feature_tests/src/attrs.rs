@@ -83,6 +83,7 @@ pub mod ffi {
     pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
 
     impl MyIterable {
+        #[diplomat::attr(supports = constructors, constructor)]
         pub fn new(x: &[u8]) -> Box<Self> {
             Box::new(Self(x.into()))
         }

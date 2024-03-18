@@ -29,11 +29,7 @@ final class MyIterator implements ffi.Finalizable, core.Iterator<int> {
 
   bool moveNext() {
     _current = _iteratorNext();
-    if (_current != null) {
-      return true;
-    } else {
-      return false;
-    }
+    return _current != null;
   }
 
   int? _iteratorNext() {

@@ -32,17 +32,13 @@ final class {{type_name}}
   {%- if let Some(it) = special.iterator %}
   {{it}}? _current;
 
-  {# This is allowed to throw when called before or after successful moveNext()
+  {# This is allowed to throw when called before moveNext or after unsuccessful moveNext()
     and is what the stdlib does, e.g. https://github.com/dart-lang/sdk/blob/main/tools/dom/src/_ListIterators.dart#L31 #}
   {{it}} get current => _current as {{it}};
 
   bool moveNext() {
     _current = _iteratorNext();
-    if (_current != null) {
-      return true;
-    } else {
-      return false;
-    }
+    return _current != null;
   }
 
   {%- endif %}
