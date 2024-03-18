@@ -1,7 +1,9 @@
 //! Type definitions for structs, output structs, opaque structs, and enums.
 
 use super::lifetimes::LifetimeEnv;
-use super::{Attrs, Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
+use super::{
+    Attrs, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition, Type,
+};
 use crate::ast::Docs;
 
 #[non_exhaustive]
@@ -32,6 +34,7 @@ pub struct StructDef<P: TyPosition = Everywhere> {
     pub methods: Vec<Method>,
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
+    pub special_method_presence: SpecialMethodPresence,
 }
 
 /// A struct whose contents are opaque across the FFI boundary, and can only
@@ -50,6 +53,7 @@ pub struct OpaqueDef {
     pub methods: Vec<Method>,
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
+    pub special_method_presence: SpecialMethodPresence,
 }
 
 /// The enum type.
@@ -61,6 +65,7 @@ pub struct EnumDef {
     pub variants: Vec<EnumVariant>,
     pub methods: Vec<Method>,
     pub attrs: Attrs,
+    pub special_method_presence: SpecialMethodPresence,
 }
 
 /// A field on a [`OutStruct`]s.
@@ -93,6 +98,7 @@ impl<P: TyPosition> StructDef<P> {
         methods: Vec<Method>,
         attrs: Attrs,
         lifetimes: LifetimeEnv,
+        special_method_presence: SpecialMethodPresence,
     ) -> Self {
         Self {
             docs,
@@ -101,6 +107,7 @@ impl<P: TyPosition> StructDef<P> {
             methods,
             attrs,
             lifetimes,
+            special_method_presence,
         }
     }
 }
@@ -112,6 +119,7 @@ impl OpaqueDef {
         methods: Vec<Method>,
         attrs: Attrs,
         lifetimes: LifetimeEnv,
+        special_method_presence: SpecialMethodPresence,
     ) -> Self {
         Self {
             docs,
@@ -119,6 +127,7 @@ impl OpaqueDef {
             methods,
             attrs,
             lifetimes,
+            special_method_presence,
         }
     }
 }
@@ -130,6 +139,7 @@ impl EnumDef {
         variants: Vec<EnumVariant>,
         methods: Vec<Method>,
         attrs: Attrs,
+        special_method_presence: SpecialMethodPresence,
     ) -> Self {
         Self {
             docs,
@@ -137,6 +147,7 @@ impl EnumDef {
             variants,
             methods,
             attrs,
+            special_method_presence,
         }
     }
 }

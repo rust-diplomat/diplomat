@@ -4,7 +4,8 @@ use super::{
     Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
     OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
     ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
-    Slice, SpecialMethod, StructDef, StructField, StructPath, SuccessType, Type, TypeDef, TypeId,
+    Slice, SpecialMethod, SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType,
+    Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::{ast, Env};
@@ -218,6 +219,7 @@ impl<'ast> LoweringContext<'ast> {
             }
         }
 
+        let mut special_method_presence = SpecialMethodPresence::default();
         let methods = if attrs.disable {
             Vec::new()
         } else {
@@ -226,10 +228,18 @@ impl<'ast> LoweringContext<'ast> {
                 item.in_path,
                 &item.method_parent_attrs,
                 item.id,
+                &mut special_method_presence,
             )?
         };
 
-        let def = EnumDef::new(ast_enum.docs.clone(), name?, variants?, methods, attrs);
+        let def = EnumDef::new(
+            ast_enum.docs.clone(),
+            name?,
+            variants?,
+            methods,
+            attrs,
+            special_method_presence,
+        );
 
         self.attr_validator.validate(
             &def.attrs,
@@ -253,6 +263,7 @@ impl<'ast> LoweringContext<'ast> {
             &item.ty_parent_attrs,
             &mut self.errors,
         );
+        let mut special_method_presence = SpecialMethodPresence::default();
         let methods = if attrs.disable {
             Vec::new()
         } else {
@@ -261,11 +272,19 @@ impl<'ast> LoweringContext<'ast> {
                 item.in_path,
                 &item.method_parent_attrs,
                 item.id,
+                &mut special_method_presence,
             )?
         };
         let lifetimes = self.lower_type_lifetime_env(&ast_opaque.lifetimes);
 
-        let def = OpaqueDef::new(ast_opaque.docs.clone(), name?, methods, attrs, lifetimes?);
+        let def = OpaqueDef::new(
+            ast_opaque.docs.clone(),
+            name?,
+            methods,
+            attrs,
+            lifetimes?,
+            special_method_presence,
+        );
         self.attr_validator.validate(
             &def.attrs,
             AttributeContext::Type(TypeDef::from(&def)),
@@ -311,6 +330,7 @@ impl<'ast> LoweringContext<'ast> {
         );
         let lifetimes = self.lower_type_lifetime_env(&ast_struct.lifetimes);
 
+        let mut special_method_presence = SpecialMethodPresence::default();
         let methods = if attrs.disable {
             Vec::new()
         } else {
@@ -319,6 +339,7 @@ impl<'ast> LoweringContext<'ast> {
                 item.in_path,
                 &item.method_parent_attrs,
                 item.id,
+                &mut special_method_presence,
             )?
         };
         let def = StructDef::new(
@@ -328,6 +349,7 @@ impl<'ast> LoweringContext<'ast> {
             methods,
             attrs,
             lifetimes?,
+            special_method_presence,
         );
 
         self.attr_validator.validate(
@@ -377,6 +399,7 @@ impl<'ast> LoweringContext<'ast> {
             &item.ty_parent_attrs,
             &mut self.errors,
         );
+        let mut special_method_presence = SpecialMethodPresence::default();
         let methods = if attrs.disable {
             Vec::new()
         } else {
@@ -385,6 +408,7 @@ impl<'ast> LoweringContext<'ast> {
                 item.in_path,
                 &item.method_parent_attrs,
                 item.id,
+                &mut special_method_presence,
             )?
         };
 
@@ -396,6 +420,7 @@ impl<'ast> LoweringContext<'ast> {
             methods,
             attrs,
             lifetimes?,
+            special_method_presence,
         );
 
         self.attr_validator.validate(
@@ -415,6 +440,7 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
         method_parent_attrs: &Attrs,
         self_id: TypeId,
+        special_method_presence: &mut SpecialMethodPresence,
     ) -> Result<Method, ()> {
         self.errors.set_subitem(method.name.as_str());
         let name = self.lower_ident(&method.name, "method name");
@@ -459,7 +485,7 @@ impl<'ast> LoweringContext<'ast> {
 
         self.attr_validator.validate(
             &hir_method.attrs,
-            AttributeContext::Method(&hir_method, self_id),
+            AttributeContext::Method(&hir_method, self_id, special_method_presence),
             &mut self.errors,
         );
 
@@ -491,11 +517,18 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
         method_parent_attrs: &Attrs,
         self_id: TypeId,
+        special_method_presence: &mut SpecialMethodPresence,
     ) -> Result<Vec<Method>, ()> {
         let mut methods = Ok(Vec::with_capacity(ast_methods.len()));
 
         for method in ast_methods {
-            let method = self.lower_method(method, in_path, method_parent_attrs, self_id);
+            let method = self.lower_method(
+                method,
+                in_path,
+                method_parent_attrs,
+                self_id,
+                special_method_presence,
+            );
             match (method, &mut methods) {
                 (Ok(method), Ok(methods)) => {
                     methods.push(method);

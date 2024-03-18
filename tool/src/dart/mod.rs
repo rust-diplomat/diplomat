@@ -149,6 +149,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: &'a [MethodInfo<'a>],
             docs: String,
             is_contiguous: bool,
+            def: &'a hir::EnumDef,
         }
 
         ImplTemplate {
@@ -158,6 +159,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: methods.as_slice(),
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
+            def: ty,
         }
         .render()
         .unwrap()
@@ -180,6 +182,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             docs: String,
             destructor: String,
             lifetimes: &'a LifetimeEnv,
+            def: &'a hir::OpaqueDef,
         }
 
         ImplTemplate {
@@ -188,6 +191,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             destructor,
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
+            def: ty,
         }
         .render()
         .unwrap()
@@ -338,6 +342,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: Vec<MethodInfo<'a>>,
             docs: String,
             lifetimes: &'a LifetimeEnv,
+            def: &'a hir::StructDef<P>,
         }
 
         ImplTemplate {
@@ -348,6 +353,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods,
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
+            def: ty,
         }
         .render()
         .unwrap()
@@ -1257,15 +1263,6 @@ fn iter_def_lifetimes_matching_use_lt<'a>(
         .filter(|(_def_lt, use_lts)| use_lts.contains(use_lt))
         .map(|(def_lt, _use_lts)| def_lt)
         .copied()
-}
-
-fn has_comparison_method(methods: &[MethodInfo]) -> bool {
-    methods.iter().any(|m| {
-        matches!(
-            m.method.attrs.special_method,
-            Some(SpecialMethod::Comparison)
-        )
-    })
 }
 
 /// Context about a struct being borrowed when doing dart-to-c conversions
