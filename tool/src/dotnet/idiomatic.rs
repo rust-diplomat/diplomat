@@ -313,9 +313,7 @@ fn gen_method(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
-    if method.attrs.skip_if_unsupported
-        && matches!(method.return_type, Some(ast::TypeName::Reference(..)))
-    {
+    if method.attrs.skip_if_ast {
         // We don't support returning references
         return Ok(());
     }

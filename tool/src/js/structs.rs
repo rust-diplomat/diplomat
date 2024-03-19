@@ -204,6 +204,10 @@ fn gen_method<W: fmt::Write>(
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
+    if method.attrs.skip_if_ast {
+        return Ok(());
+    }
+
     let is_writeable = method.is_writeable_out();
 
     let mut pre_stmts = vec![];
@@ -540,6 +544,10 @@ fn gen_ts_method_declaration<W: fmt::Write>(
     docs_url_gen: Option<&ast::DocsUrlGenerator>,
     out: &mut W,
 ) -> fmt::Result {
+    if method.attrs.skip_if_ast {
+        return Ok(());
+    }
+
     if let Some(docs_url_gen) = docs_url_gen {
         write!(
             out,

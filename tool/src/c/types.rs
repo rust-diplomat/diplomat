@@ -79,6 +79,14 @@ pub fn gen_type<W: fmt::Write>(
                 None => write!(out, "Diplomat{prim}Array")?,
             }
         }
+        ast::TypeName::StrSlice(encoding) => write!(
+            out,
+            "{}",
+            match encoding {
+                ast::StringEncoding::UnvalidatedUtf16 => "DiplomatUtf16StrsView",
+                _ => "DiplomatUtf8StrsView",
+            }
+        )?,
         ast::TypeName::Unit => write!(out, "void")?,
 
         ast::TypeName::Ordering => write!(out, "int8_t")?,

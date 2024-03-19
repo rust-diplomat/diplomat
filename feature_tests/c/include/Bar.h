@@ -19,8 +19,6 @@ typedef struct Bar Bar;
 namespace capi {
 extern "C" {
 #endif
-
-const Foo* Bar_foo(const Bar* self);
 void Bar_destroy(Bar* self);
 
 #ifdef __cplusplus

@@ -694,6 +694,7 @@ impl<'ast> LoweringContext<'ast> {
                 lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt)),
                 *encoding,
             ))),
+            ast::TypeName::StrSlice(encoding) => Ok(Type::Slice(Slice::Strs(*encoding))),
             ast::TypeName::PrimitiveSlice(lm, prim) => Ok(Type::Slice(Slice::Primitive(
                 lm.as_ref()
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
@@ -914,6 +915,12 @@ impl<'ast> LoweringContext<'ast> {
                 lifetime.as_ref().map(|l| ltl.lower_lifetime(l)),
                 *encoding,
             ))),
+            ast::TypeName::StrSlice(..) => {
+                self.errors.push(LoweringError::Other(
+                    "String slices can only be an input type".into(),
+                ));
+                Err(())
+            }
             ast::TypeName::PrimitiveSlice(lm, prim) => Ok(OutType::Slice(Slice::Primitive(
                 lm.as_ref()
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),

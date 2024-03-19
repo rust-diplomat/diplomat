@@ -46,6 +46,9 @@ pub fn gen<'ast>(
     out: &mut CodeWriter,
 ) -> fmt::Result {
     for method in typ.methods() {
+        if method.attrs.skip_if_ast {
+            continue;
+        }
         for param in &method.params {
             collect_results(&param.ty, in_path, env, results);
             collect_errors(&param.ty, in_path, env, errors);
@@ -182,6 +185,10 @@ fn gen_method(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
+    if method.attrs.skip_if_ast {
+        return Ok(());
+    }
+
     writeln!(out)?;
 
     gen_doc_block(

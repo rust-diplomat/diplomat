@@ -479,12 +479,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     .insert(self.cx.formatter.fmt_impl_header_path(id));
                 type_name
             }
-            Type::Slice(hir::Slice::Str(
-                _,
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            )) => self.cx.formatter.fmt_borrowed_utf8_str(),
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                self.cx.formatter.fmt_borrowed_utf16_str()
+            Type::Slice(hir::Slice::Str(_, encoding)) => {
+                self.cx.formatter.fmt_borrowed_str(encoding)
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.cx.formatter.fmt_primitive_as_c(p);
@@ -494,6 +490,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 );
                 ret.into_owned().into()
             }
+            Type::Slice(hir::Slice::Strs(encoding)) => format!(
+                "diplomat::span<const {}>",
+                self.cx.formatter.fmt_borrowed_str(encoding)
+            )
+            .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -571,7 +572,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
-            Type::Slice(hir::Slice::Str(..)) | Type::Slice(hir::Slice::Primitive(..)) => {
+            Type::Slice(..) => {
                 vec![
                     PartiallyNamedExpression {
                         suffix: "_data".into(),
@@ -678,15 +679,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 // Note: The impl file is imported in gen_type_name().
                 format!("{type_name}::FromFFI({var_name})").into()
             }
-            Type::Slice(hir::Slice::Str(
-                _,
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            )) => {
-                let string_view = self.cx.formatter.fmt_borrowed_utf8_str();
-                format!("{string_view}({var_name}_data, {var_name}_size)").into()
-            }
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                let string_view = self.cx.formatter.fmt_borrowed_utf16_str();
+            Type::Slice(hir::Slice::Str(_, encoding)) => {
+                let string_view = self.cx.formatter.fmt_borrowed_str(encoding);
                 format!("{string_view}({var_name}_data, {var_name}_size)").into()
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {

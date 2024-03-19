@@ -177,10 +177,7 @@ fn gen_method<W: fmt::Write>(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
-    if method.attrs.skip_if_unsupported
-        && matches!(method.return_type, Some(ast::TypeName::Reference(..)))
-    {
-        // We don't support returning references
+    if method.attrs.skip_if_ast {
         return Ok(());
     }
     // This method should rearrange the writeable

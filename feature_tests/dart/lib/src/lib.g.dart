@@ -121,6 +121,13 @@ extension on String {
   _Utf16View get utf16View => _Utf16View(this);
 }
 
+extension on core.List<String> {
+  // ignore: unused_element
+  _ListUtf8View get utf8View => _ListUtf8View(this);
+  // ignore: unused_element
+  _ListUtf16View get utf16View => _ListUtf16View(this);
+}
+
 extension on core.List<bool> {
   // ignore: unused_element
   _BoolListView get boolView => _BoolListView(this);
@@ -186,7 +193,48 @@ class _Utf16View {
 }
 
 // ignore: unused_element
-class _BoolListView{
+class _ListUtf8View {
+  final core.List<String> _strings;
+
+  // Copies
+  _ListUtf8View(this._strings);
+
+  ffi.Pointer<_SliceUtf8> allocIn(ffi.Allocator alloc) {
+    final slice = alloc<_SliceUtf8>(length);
+    for (var i = 0; i < length; i++) {
+      final codeUnits = Utf8Encoder().convert(_strings[i]);
+      final str = alloc<ffi.Uint8>(codeUnits.length)..asTypedList(codeUnits.length).setRange(0, codeUnits.length, codeUnits);
+      slice[i]._data = str;
+      slice[i]._length = codeUnits.length;
+    }
+    return slice;
+  }
+
+  int get length => _strings.length;
+}
+
+// ignore: unused_element
+class _ListUtf16View {
+  final core.List<String> _strings;
+
+  _ListUtf16View(this._strings);
+
+  ffi.Pointer<_SliceUtf16> allocIn(ffi.Allocator alloc) {
+    final slice = alloc<_SliceUtf16>(length);
+    for (var i = 0; i < length; i++) {
+      final codeUnits = _strings[i].codeUnits;
+      final str = alloc<ffi.Uint16>(codeUnits.length)..asTypedList(codeUnits.length).setRange(0, codeUnits.length, codeUnits);
+      slice[i]._data = str;
+      slice[i]._length = codeUnits.length;
+    }
+    return slice;
+  }
+
+  int get length => _strings.length;
+}
+
+// ignore: unused_element
+class _BoolListView {
   final core.List<bool> _values;
 
   _BoolListView(this._values);
