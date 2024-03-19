@@ -164,7 +164,6 @@ pub fn gen_method_docs<W: fmt::Write>(
         // We don't support returning references
         return Ok(());
     }
-    
 
     writeln!(out)?;
 
