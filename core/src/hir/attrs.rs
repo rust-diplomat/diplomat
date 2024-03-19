@@ -3,7 +3,10 @@
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
-use crate::hir::{EnumVariant, LoweringError, Method, ReturnType, SuccessType, TypeDef, TypeId};
+use crate::hir::{
+    EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
+    Type, TypeDef, TypeId,
+};
 use syn::Meta;
 
 pub use crate::ast::attrs::RenameAttr;
@@ -68,16 +71,34 @@ pub enum SpecialMethod {
     Stringifier,
     /// A comparison operator. Currently unsupported
     Comparison,
+    /// An iterator (a type that is mutated to produce new values)
+    Iterator,
+    /// An iterable (a type that can produce an iterator)
+    Iterable,
+}
+
+/// For special methods that affect type semantics, whether this type has this method.
+///
+/// This will likely only contain a subset of special methods, but feel free to add more as needed.
+#[derive(Debug, Default)]
+#[non_exhaustive]
+pub struct SpecialMethodPresence {
+    pub comparator: bool,
+    /// If it is an iterator, the type it iterates over
+    pub iterator: Option<SuccessType>,
+    /// If it is an iterable, the iterator type it returns (*not* the type it iterates over,
+    /// perform lookup on that type to access)
+    pub iterable: Option<OpaqueId>,
 }
 
 /// Where the attribute was found. Some attributes are only allowed in some contexts
 /// (e.g. namespaces cannot be specified on methods)
 #[non_exhaustive] // might add module attrs in the future
-#[derive(Copy, Clone, Debug)]
-pub enum AttributeContext<'a> {
+#[derive(Debug)]
+pub enum AttributeContext<'a, 'b> {
     Type(TypeDef<'a>),
     EnumVariant(&'a EnumVariant),
-    Method(&'a Method, TypeId),
+    Method(&'a Method, TypeId, &'b mut SpecialMethodPresence),
     Module,
 }
 
@@ -155,7 +176,11 @@ impl Attrs {
                                 continue;
                             }
                         }
-                    } else if path == "constructor" || path == "stringifier" || path == "comparison"
+                    } else if path == "constructor"
+                        || path == "stringifier"
+                        || path == "comparison"
+                        || path == "iterable"
+                        || path == "iterator"
                     {
                         if let Some(ref existing) = this.special_method {
                             errors.push(LoweringError::Other(format!(
@@ -164,10 +189,39 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "constructor" {
+                            if !support.constructors {
+                                errors.push(LoweringError::Other(format!(
+                                    "constructor not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Constructor
                         } else if path == "stringifier" {
+                            if !support.stringifiers {
+                                errors.push(LoweringError::Other(format!(
+                                    "stringifier not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Stringifier
+                        } else if path == "iterable" {
+                            if !support.iterables {
+                                errors.push(LoweringError::Other(format!(
+                                    "iterable not supported in backend {backend}"
+                                )))
+                            }
+                            SpecialMethod::Iterable
+                        } else if path == "iterator" {
+                            if !support.iterators {
+                                errors.push(LoweringError::Other(format!(
+                                    "iterator not supported in backend {backend}"
+                                )))
+                            }
+                            SpecialMethod::Iterator
                         } else {
+                            if !support.comparators {
+                                errors.push(LoweringError::Other(format!(
+                                    "comparison overload not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Comparison
                         };
 
@@ -180,10 +234,25 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "named_constructor" {
+                            if !support.named_constructors {
+                                errors.push(LoweringError::Other(format!(
+                                    "named constructors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::NamedConstructor
                         } else if path == "getter" {
+                            if !support.accessors {
+                                errors.push(LoweringError::Other(format!(
+                                    "accessors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Getter
                         } else {
+                            if !support.accessors {
+                                errors.push(LoweringError::Other(format!(
+                                    "accessors not supported in backend {backend}"
+                                )))
+                            }
                             SpecialMethod::Setter
                         };
                         match StandardAttribute::from_meta(&attr.meta) {
@@ -218,7 +287,7 @@ impl Attrs {
     pub(crate) fn validate(
         &self,
         validator: &(impl AttributeValidator + ?Sized),
-        context: AttributeContext,
+        mut context: AttributeContext,
         errors: &mut ErrorStore,
     ) {
         // use an exhaustive destructure so new attributes are handled
@@ -237,7 +306,9 @@ impl Attrs {
         }
 
         if let Some(ref special) = special_method {
-            if let AttributeContext::Method(method, self_id) = context {
+            if let AttributeContext::Method(method, self_id, ref mut special_method_presence) =
+                context
+            {
                 match special {
                     SpecialMethod::Constructor | SpecialMethod::NamedConstructor(..) => {
                         if method.param_self.is_some() {
@@ -305,7 +376,143 @@ impl Attrs {
                             ));
                         }
                     }
-                    _ => todo!("Diplomat doesn't yet support {special:?}"),
+                    SpecialMethod::Comparison => {
+                        if method.params.len() != 1 {
+                            errors.push(LoweringError::Other(
+                                "Comparator must have single parameter".into(),
+                            ));
+                        }
+                        if special_method_presence.comparator {
+                            errors.push(LoweringError::Other(
+                                "Cannot define two comparators on the same type".into(),
+                            ));
+                        }
+                        special_method_presence.comparator = true;
+                        // In the long run we can actually support heterogeneous comparators. Not a priority right now.
+                        const COMPARATOR_ERROR: &str =
+                            "Comparator's parameter must be identical to self";
+                        if let Some(ref selfty) = method.param_self {
+                            if let Some(param) = method.params.first() {
+                                match (&selfty.ty, &param.ty) {
+                                    (SelfType::Opaque(p), Type::Opaque(p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+
+                                        if p.owner.mutability != Mutability::Immutable
+                                            || p2.owner.mutability != Mutability::Immutable
+                                        {
+                                            errors.push(LoweringError::Other(
+                                                "comparators must accept immutable parameters"
+                                                    .into(),
+                                            ));
+                                        }
+
+                                        if p2.optional.0 {
+                                            errors.push(LoweringError::Other(
+                                                "comparators must accept non-optional parameters"
+                                                    .into(),
+                                            ));
+                                        }
+                                    }
+                                    (SelfType::Struct(p), Type::Struct(p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+                                    }
+                                    (SelfType::Enum(p), Type::Enum(p2)) => {
+                                        if p.tcx_id != p2.tcx_id {
+                                            errors.push(LoweringError::Other(
+                                                COMPARATOR_ERROR.into(),
+                                            ));
+                                        }
+                                    }
+                                    _ => {
+                                        errors.push(LoweringError::Other(COMPARATOR_ERROR.into()));
+                                    }
+                                }
+                            }
+                        } else {
+                            errors
+                                .push(LoweringError::Other("Comparator must be non-static".into()));
+                        }
+                    }
+                    SpecialMethod::Iterator => {
+                        if special_method_presence.iterator.is_some() {
+                            errors.push(LoweringError::Other(
+                                "Cannot mark type as iterator twice".into(),
+                            ));
+                        }
+                        if !method.params.is_empty() {
+                            errors.push(LoweringError::Other(
+                                "Iterators cannot take parameters".into(),
+                            ))
+                        }
+                        // In theory we could support struct and enum iterators. The benefit is slight:
+                        // it generates probably inefficient code whilst being rather weird when it comes to the
+                        // "structs and enums convert across the boundary" norm for backends.
+                        //
+                        // Essentially, the `&mut self` behavior won't work right.
+                        //
+                        // Furthermore, in some backends (like Dart) defining an iterator may requiring adding fields,
+                        // which may not be possible for enums, and would still be an odd-one-out field for structs.g s
+                        if let Some(this) = &method.param_self {
+                            if !matches!(this.ty, SelfType::Opaque(..)) {
+                                errors.push(LoweringError::Other(
+                                    "Iterators only allowed on opaques".into(),
+                                ))
+                            }
+                        } else {
+                            errors.push(LoweringError::Other("Iterators must take self".into()))
+                        }
+
+                        if let ReturnType::Nullable(ref o) = method.output {
+                            if let SuccessType::Unit = o {
+                                errors.push(LoweringError::Other(
+                                    "Iterator method must return something".into(),
+                                ));
+                            }
+                            special_method_presence.iterator = Some(o.clone());
+                        } else {
+                            errors.push(LoweringError::Other(
+                                "Iterator method must return nullable value".into(),
+                            ));
+                        }
+                    }
+                    SpecialMethod::Iterable => {
+                        if special_method_presence.iterable.is_some() {
+                            errors.push(LoweringError::Other(
+                                "Cannot mark type as iterable twice".into(),
+                            ));
+                        }
+                        if !method.params.is_empty() {
+                            errors.push(LoweringError::Other(
+                                "Iterables cannot take parameters".into(),
+                            ))
+                        }
+                        if method.param_self.is_none() {
+                            errors.push(LoweringError::Other("Iterables must take self".into()))
+                        }
+
+                        match method.output.success_type() {
+                            SuccessType::OutType(ty) => {
+                                if let Some(TypeId::Opaque(id)) = ty.id() {
+                                    special_method_presence.iterable = Some(id);
+                                } else {
+                                    errors.push(LoweringError::Other(
+                                        "Iterables must return a custom opaque type".into(),
+                                    ))
+                                }
+                            }
+                            _ => errors.push(LoweringError::Other(
+                                "Iterables must return a custom type".into(),
+                            )),
+                        }
+                    }
                 }
             } else {
                 errors.push(LoweringError::Other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))
@@ -365,9 +572,31 @@ pub struct BackendAttrSupport {
     pub fallible_constructors: bool,
     pub accessors: bool,
     pub stringifiers: bool,
-    pub comparison_overload: bool,
+    pub comparators: bool,
     pub memory_sharing: bool,
+    pub iterators: bool,
+    pub iterables: bool,
     // more to be added: namespace, etc
+}
+
+impl BackendAttrSupport {
+    #[cfg(test)]
+    fn all_true() -> Self {
+        Self {
+            disabling: true,
+            renaming: true,
+            namespacing: true,
+            constructors: true,
+            named_constructors: true,
+            fallible_constructors: true,
+            accessors: true,
+            stringifiers: true,
+            comparators: true,
+            memory_sharing: true,
+            iterators: true,
+            iterables: true,
+        }
+    }
 }
 
 /// Defined by backends when validating attributes
@@ -469,8 +698,10 @@ impl AttributeValidator for BasicAttributeValidator {
                 fallible_constructors,
                 accessors,
                 stringifiers,
-                comparison_overload,
+                comparators,
                 memory_sharing,
+                iterators,
+                iterables,
             } = self.support;
             match value {
                 "disabling" => disabling,
@@ -481,8 +712,10 @@ impl AttributeValidator for BasicAttributeValidator {
                 "fallible_constructors" => fallible_constructors,
                 "accessors" => accessors,
                 "stringifiers" => stringifiers,
-                "comparison_overload" => comparison_overload,
+                "comparators" => comparators,
                 "memory_sharing" => memory_sharing,
+                "iterators" => iterators,
+                "iterables" => iterables,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -497,5 +730,157 @@ impl AttributeValidator for BasicAttributeValidator {
     }
     fn attrs_supported(&self) -> BackendAttrSupport {
         self.support
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::hir;
+    use std::fmt::Write;
+
+    macro_rules! uitest_lowering_attr {
+        ($($file:tt)*) => {
+            let parsed: syn::File = syn::parse_quote! { $($file)* };
+            let custom_types = crate::ast::File::from(&parsed);
+            let env = custom_types.all_types();
+
+            let mut output = String::new();
+
+
+            let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+            attr_validator.support = hir::BackendAttrSupport::all_true();
+            match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(_context) => (),
+                Err(e) => {
+                    for (ctx, err) in e {
+                        writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                    }
+                }
+            };
+            insta::with_settings!({}, {
+                insta::assert_display_snapshot!(output)
+            });
+        }
+    }
+
+    #[test]
+    fn test_comparator() {
+        uitest_lowering_attr! {
+            #[diplomat::bridge]
+            mod ffi {
+                use std::cmp;
+
+                #[diplomat::opaque]
+                struct Opaque;
+
+                struct Struct {
+                    field: u8
+                }
+
+
+                impl Opaque {
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_static(other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_none(&self) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_othertype(other: Struct) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparator_badreturn(&self, other: &Opaque) -> u8 {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_correct(&self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    pub fn comparison_unmarked(&self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    pub fn ordering_wrong(&self, other: cmp::Ordering) {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_mut(&self, other: &mut Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_opt(&self, other: Option<&Opaque>) -> cmp::Ordering {
+                        todo!()
+                    }
+                }
+
+                impl Struct {
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_other(self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, comparison)]
+                    pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_iterator() {
+        uitest_lowering_attr! {
+            #[diplomat::bridge]
+            mod ffi {
+
+                #[diplomat::opaque]
+                struct Opaque(Vec<u8>);
+                #[diplomat::opaque]
+                struct OpaqueIterator<'a>(std::slice::Iter<'a>);
+
+
+                impl Opaque {
+                    #[diplomat::attr(*, iterable)]
+                    pub fn iterable<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
+                        Box::new(OpaqueIterator(self.0.iter()))
+                    }
+                }
+
+                impl OpaqueIterator {
+                    #[diplomat::attr(*, iterator)]
+                    pub fn next(&mut self) -> Option<u8> {
+                        self.0.next()
+                    }
+                }
+
+                #[diplomat::opaque]
+                struct Broken;
+
+                impl Broken {
+                    #[diplomat::attr(*, iterable)]
+                    pub fn iterable_no_return(&self) {}
+                    #[diplomat::attr(*, iterable)]
+                    pub fn iterable_no_self() -> Box<BrokenIterator> { todo!() }
+
+                    #[diplomat::attr(*, iterable)]
+                    pub fn iterable_non_custom(&self) -> u8 { todo!() }
+                }
+
+                #[diplomat::opaque]
+                struct BrokenIterator;
+
+                impl BrokenIterator {
+                    #[diplomat::attr(*, iterator)]
+                    pub fn iterator_no_return(&self) {}
+                    #[diplomat::attr(*, iterator)]
+                    pub fn iterator_no_self() -> Option<u8> { todo!() }
+
+                    #[diplomat::attr(*, iterator)]
+                    pub fn iterator_no_option(&self) -> u8 { todo!() }
+                }
+            }
+        }
     }
 }

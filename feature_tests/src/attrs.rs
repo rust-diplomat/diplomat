@@ -59,4 +59,44 @@ pub mod ffi {
 
         pub fn use_namespaced(&self, _n: &AttrOpaque1) {}
     }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = comparators), disable)]
+    pub struct Comparable(u8);
+
+    impl Comparable {
+        pub fn new(int: u8) -> Box<Self> {
+            Box::new(Self(int))
+        }
+        #[diplomat::attr(*, comparison)]
+        pub fn cmp(&self, other: &Comparable) -> core::cmp::Ordering {
+            self.0.cmp(&other.0)
+        }
+    }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterables), disable)]
+    pub struct MyIterable(Vec<u8>);
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
+
+    impl MyIterable {
+        #[diplomat::attr(supports = constructors, constructor)]
+        pub fn new(x: &[u8]) -> Box<Self> {
+            Box::new(Self(x.into()))
+        }
+        #[diplomat::attr(*, iterable)]
+        pub fn iter<'a>(&'a self) -> Box<MyIterator<'a>> {
+            Box::new(MyIterator(self.0.iter()))
+        }
+    }
+
+    impl<'a> MyIterator<'a> {
+        #[diplomat::attr(*, iterator)]
+        pub fn next(&mut self) -> Option<u8> {
+            self.0.next().copied()
+        }
+    }
 }

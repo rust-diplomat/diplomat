@@ -63,6 +63,9 @@ pub fn gen_type_name(
         ast::TypeName::PrimitiveSlice(.., prim) => {
             write!(out, "{}[]", type_name_for_prim(prim))
         }
+        ast::TypeName::Ordering => {
+            write!(out, "sbyte")
+        }
 
         ast::TypeName::Unit => {
             write!(out, "void")

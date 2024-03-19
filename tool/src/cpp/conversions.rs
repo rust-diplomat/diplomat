@@ -240,7 +240,7 @@ pub fn gen_rust_to_cpp<W: Write>(
             wrapped_value_id
         }
 
-        ast::TypeName::Primitive(_) => cpp.to_string(),
+        ast::TypeName::Primitive(_) | ast::TypeName::Ordering => cpp.to_string(),
         ast::TypeName::Reference(_, _, _) => {
             todo!("Returning references from Rust to C++ is not currently supported")
         }

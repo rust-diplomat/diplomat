@@ -15,6 +15,7 @@ part 'Bar.g.dart';
 part 'BorrowedFields.g.dart';
 part 'BorrowedFieldsReturning.g.dart';
 part 'BorrowedFieldsWithBounds.g.dart';
+part 'Comparable.g.dart';
 part 'ContiguousEnum.g.dart';
 part 'ErrorEnum.g.dart';
 part 'ErrorStruct.g.dart';
@@ -22,6 +23,8 @@ part 'Float64Vec.g.dart';
 part 'Foo.g.dart';
 part 'ImportedStruct.g.dart';
 part 'MyEnum.g.dart';
+part 'MyIterable.g.dart';
+part 'MyIterator.g.dart';
 part 'MyString.g.dart';
 part 'MyStruct.g.dart';
 part 'NestedBorrowedFields.g.dart';
@@ -500,6 +503,18 @@ final class _ResultOptionStructFfiVoidUnion extends ffi.Union {
 
 final class _ResultOptionStructFfiVoid extends ffi.Struct {
   external _ResultOptionStructFfiVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
+final class _ResultUint8VoidUnion extends ffi.Union {
+  @ffi.Uint8()
+  external int ok;
+}
+
+final class _ResultUint8Void extends ffi.Struct {
+  external _ResultUint8VoidUnion union;
 
   @ffi.Bool()
   external bool isOk;

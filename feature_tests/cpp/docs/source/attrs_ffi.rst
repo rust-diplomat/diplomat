@@ -31,6 +31,29 @@
 
 .. cpp:class:: AttrOpaque2
 
+.. cpp:class:: Comparable
+
+    .. cpp:function:: static Comparable new_(uint8_t int)
+
+
+    .. cpp:function:: int8_t cmp(const Comparable& other) const
+
+
+.. cpp:class:: MyIterable
+
+    .. cpp:function:: static MyIterable new_(const diplomat::span<const uint8_t> x)
+
+
+    .. cpp:function:: MyIterator iter() const
+
+        Lifetimes: ``this`` must live at least as long as the output.
+
+
+.. cpp:class:: MyIterator
+
+    .. cpp:function:: diplomat::result<uint8_t, std::monostate> next()
+
+
 .. cpp:class:: Unnamespaced
 
     .. cpp:function:: static Unnamespaced make(AttrEnum _e)

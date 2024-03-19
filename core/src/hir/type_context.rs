@@ -115,19 +115,31 @@ impl TypeContext {
         }
     }
 
-    pub(crate) fn resolve_out_struct(&self, id: OutStructId) -> &OutStructDef {
+    /// Helper methods for resolving different IDs.
+    ///
+    /// Prefer using `resolve_type()` for simplicity.
+    pub fn resolve_out_struct(&self, id: OutStructId) -> &OutStructDef {
         self.out_structs.index(id.0)
     }
 
-    pub(crate) fn resolve_struct(&self, id: StructId) -> &StructDef {
+    /// Helper methods for resolving different IDs.
+    ///
+    /// Prefer using `resolve_type()` for simplicity.
+    pub fn resolve_struct(&self, id: StructId) -> &StructDef {
         self.structs.index(id.0)
     }
 
-    pub(crate) fn resolve_opaque(&self, id: OpaqueId) -> &OpaqueDef {
+    /// Helper methods for resolving different IDs.
+    ///
+    /// Prefer using `resolve_type()` for simplicity.
+    pub fn resolve_opaque(&self, id: OpaqueId) -> &OpaqueDef {
         self.opaques.index(id.0)
     }
 
-    pub(crate) fn resolve_enum(&self, id: EnumId) -> &EnumDef {
+    /// Helper methods for resolving different IDs.
+    ///
+    /// Prefer using `resolve_type()` for simplicity.
+    pub fn resolve_enum(&self, id: EnumId) -> &EnumDef {
         self.enums.index(id.0)
     }
 
@@ -249,11 +261,10 @@ impl TypeContext {
                     opaques,
                     enums,
                 };
-                assert!(
-                    ctx.errors.is_empty(),
-                    "All lowering succeeded but still found error messages: {:?}",
-                    ctx.errors.take_errors()
-                );
+
+                if !ctx.errors.is_empty() {
+                    return Err(ctx.errors.take_errors());
+                }
                 Ok((ctx, res))
             }
             _ => {
@@ -311,7 +322,7 @@ impl TypeContext {
                 }
 
                 method.output.with_contained_types(|out_ty| {
-                    self.validate_ty_in_method(errors, Param::Return, out_ty, method)
+                    self.validate_ty_in_method(errors, Param::Return, out_ty, method);
                 })
             }
         }

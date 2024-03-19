@@ -130,6 +130,11 @@ TypeContext {
                 ],
                 num_lifetimes: 1,
             },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                iterator: None,
+                iterable: None,
+            },
         },
     ],
     structs: [
@@ -264,6 +269,11 @@ TypeContext {
                 ],
                 num_lifetimes: 1,
             },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                iterator: None,
+                iterable: None,
+            },
         },
     ],
     opaques: [
@@ -294,6 +304,11 @@ TypeContext {
                     },
                 ],
                 num_lifetimes: 1,
+            },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                iterator: None,
+                iterable: None,
             },
         },
     ],
