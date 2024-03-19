@@ -349,7 +349,7 @@ impl AttributeInfo {
                     } else if seg == "rust_link"
                         || seg == "out"
                         || seg == "attr"
-                        || seg == "ski_if_ast"
+                        || seg == "skip_if_ast"
                         || seg == "abi_rename"
                     {
                         // diplomat-tool reads these, not diplomat::bridge.
