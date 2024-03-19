@@ -16,7 +16,4 @@ export class Bar {
     }
   }
 
-  foo() {
-    return new Foo(wasm.Bar_foo(this.underlying), false, [this]);
-  }
 }

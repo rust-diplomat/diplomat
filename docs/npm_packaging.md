@@ -1,6 +1,6 @@
 # Publishing Diplomat bindings for your Rust library on NPM
 
-This guide is heavily inspired by https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/getting-started/manual-setup.html.
+This guide is heavily inspired by https://rustwasm.github.io/documents/wasm-pack/tutorials/npm-browser-packages/getting-started/manual-setup.html.
 
 ## Step 1. Create Diplomat bindings
 It's recommended to decouple your Diplomat bindings from your Rust library.
