@@ -34,6 +34,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
+    #[diplomat::attr(cpp2, disable)]
     pub struct AttrOpaque2;
 
     pub enum AttrEnum {
