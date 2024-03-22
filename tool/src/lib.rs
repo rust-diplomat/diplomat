@@ -97,7 +97,7 @@ pub fn gen(
                     std::process::exit(1);
                 }
             };
-            out_texts = kotlin::run(&tcx, "dev.gigapixel", "somelib").take_files();
+            out_texts = kotlin::run(&tcx, library_config).take_files();
         }
         "dart" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("dart");

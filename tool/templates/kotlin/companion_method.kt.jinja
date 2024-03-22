@@ -8,7 +8,7 @@
             );
             {%- match m.return_expression %}
             {%- when Some with (statement) %}
-            {{statement.replace('\n', "\n    ")}}
+            {{statement|indent(8)}}
             {%- when None %}
             {%- endmatch %}
         }

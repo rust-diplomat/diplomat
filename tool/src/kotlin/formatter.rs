@@ -5,12 +5,6 @@ use std::borrow::Cow;
 
 /// This type mediates all formatting
 ///
-/// All identifiers from the HIR should go through here before being formatted
-/// into the output: This makes it easy to handle reserved words or add rename support
-///
-/// If you find yourself needing an identifier formatted in a context not yet available here, please add a new method
-///
-/// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub(super) struct KotlinFormatter<'tcx> {
     c: CFormatter<'tcx>,
@@ -97,14 +91,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
 
         resolved.attrs().rename.apply(candidate)
-    }
-
-    pub fn fmt_pointer(&self) -> String {
-        "Pointer".to_string()
-    }
-
-    pub fn fmt_usize(&self, cast: bool) -> &'static str {
-        self.fmt_primitive_as_ffi(hir::PrimitiveType::IntSize(hir::IntSizeType::Usize))
     }
 
     pub fn fmt_nullable(&self, ident: &str) -> String {

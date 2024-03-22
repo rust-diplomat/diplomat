@@ -4,9 +4,14 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
+    #[diplomat::attr(kotlin, disable)]
     pub struct Opaque(String);
 
+    #[diplomat::opaque]
+    pub struct OtherOpaque(String);
+
     #[derive(Debug, PartialEq, Eq)]
+    #[diplomat::attr(kotlin, disable)]
     pub enum MyEnum {
         A = -2,
         B = -1,
@@ -17,6 +22,7 @@ pub mod ffi {
     }
 
     #[derive(Debug, PartialEq, Eq)]
+    #[diplomat::attr(kotlin, disable)]
     pub enum ContiguousEnum {
         C = 0,
         D = 1,
@@ -24,6 +30,7 @@ pub mod ffi {
         F = 3,
     }
 
+    #[diplomat::attr(kotlin, disable)]
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -52,8 +59,19 @@ pub mod ffi {
             412
         }
 
+        #[diplomat::attr(kotlin, disable)]
         pub fn returns_imported() -> ImportedStruct {
             unimplemented!()
+        }
+    }
+
+    impl OtherOpaque {
+        pub fn from_usize(i: usize) -> Box<OtherOpaque> {
+            Box::new(OtherOpaque(format!("{i}")))
+        }
+
+        pub fn get_len_and_add(&self, i: usize) -> usize {
+            self.0.len() + i
         }
     }
 

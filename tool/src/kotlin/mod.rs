@@ -1,28 +1,39 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::ParamBorrowInfo;
-use diplomat_core::hir::{
-    self, LifetimeEnv, Method, SelfType, TyPosition, Type, TypeContext, TypeDef, TypeId,
-};
+use diplomat_core::hir::{self, Method, SelfType, TyPosition, Type, TypeContext, TypeDef, TypeId};
 use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
 
-use std::{borrow::Cow, collections::BTreeMap};
+use std::borrow::Cow;
+use std::path::Path;
 
 mod formatter;
 use formatter::KotlinFormatter;
 
 use crate::common::{ErrorStore, FileMap};
+use serde::{Deserialize, Serialize};
 
-pub fn run(tcx: &TypeContext, domain: &str, lib_name: &str) -> FileMap {
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct KotlinConfig {
+    domain: String,
+    lib_name: String,
+}
+
+pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
+    let conf_path = conf_path.expect("Kotlin library needs to be called with config");
+
+    let conf_str = std::fs::read_to_string(conf_path)
+        .unwrap_or_else(|err| panic!("Failed to open config file {conf_path:?}: {err}"));
+    let KotlinConfig { domain, lib_name } = toml::from_str::<KotlinConfig>(&conf_str)
+        .expect("Failed to parse config. Required fields are `domain` and `lib_name`");
+
     let formatter = KotlinFormatter::new(tcx, None);
 
     let files = FileMap::default();
     let errors = ErrorStore::default();
 
-    let mut helper_classes = BTreeMap::default();
     let mut ty_gen_cx = TyGenContext {
         tcx,
         errors: &errors,
-        helper_classes: &mut helper_classes,
         formatter: &formatter,
     };
 
@@ -34,7 +45,7 @@ pub fn run(tcx: &TypeContext, domain: &str, lib_name: &str) -> FileMap {
         if let TypeDef::Opaque(o) = ty {
             let type_name = o.name.to_string();
 
-            let (file_name, body) = ty_gen_cx.gen_opaque_def(o, id, &type_name, domain, lib_name);
+            let (file_name, body) = ty_gen_cx.gen_opaque_def(o, id, &type_name, &domain, &lib_name);
 
             files.add_file(format!("src/main/kotlin/{file_name}"), body);
         }
@@ -47,9 +58,12 @@ pub fn run(tcx: &TypeContext, domain: &str, lib_name: &str) -> FileMap {
         lib_name: &'a str,
     }
 
-    let java_types = JavaTypes { domain, lib_name }
-        .render()
-        .expect("Failed to render java types");
+    let java_types = JavaTypes {
+        domain: &domain,
+        lib_name: &lib_name,
+    }
+    .render()
+    .expect("Failed to render java types");
 
     files.add_file(
         format!(
@@ -66,9 +80,12 @@ pub fn run(tcx: &TypeContext, domain: &str, lib_name: &str) -> FileMap {
         lib_name: &'a str,
     }
 
-    let build = Build { domain, lib_name }
-        .render()
-        .expect("Failed to render build file");
+    let build = Build {
+        domain: &domain,
+        lib_name: &lib_name,
+    }
+    .render()
+    .expect("Failed to render build file");
 
     files.add_file("build.gradle.kts".to_string(), build);
 
@@ -77,9 +94,11 @@ pub fn run(tcx: &TypeContext, domain: &str, lib_name: &str) -> FileMap {
     struct Settings<'a> {
         lib_name: &'a str,
     }
-    let settings = Settings { lib_name }
-        .render()
-        .expect("Failed to render settings file");
+    let settings = Settings {
+        lib_name: &lib_name,
+    }
+    .render()
+    .expect("Failed to render settings file");
 
     files.add_file("settings.gradle.kts".to_string(), settings);
 
@@ -90,9 +109,12 @@ pub fn run(tcx: &TypeContext, domain: &str, lib_name: &str) -> FileMap {
         lib_name: &'a str,
     }
 
-    let init = Init { domain, lib_name }
-        .render()
-        .expect("Failed to lib top level file");
+    let init = Init {
+        domain: &domain,
+        lib_name: &lib_name,
+    }
+    .render()
+    .expect("Failed to lib top level file");
 
     files.add_file(
         format!(
@@ -109,7 +131,6 @@ struct TyGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
     formatter: &'a KotlinFormatter<'cx>,
     errors: &'a ErrorStore<'cx, String>,
-    helper_classes: &'a mut BTreeMap<String, String>,
 }
 
 impl<'a, 'cx> TyGenContext<'a, 'cx> {
@@ -144,19 +165,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_kt_to_c_for_type(&self, ty: &Type, name: Cow<'cx, str>) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(_) => name,
-            Type::Opaque(_) => todo!("don't support opaque types not in self position"),
+            Type::Opaque(_) => todo!("can't even"),
             Type::Struct(_) => todo!("don't support structs yet"),
             Type::Enum(_) => todo!("don't support enums yet"),
             Type::Slice(_) => todo!("don't support slices yet"),
             _ => todo!(),
         }
-    }
-    fn gen_c_to_kt_for_return_type(
-        &self,
-        out: &ReturnType,
-        lt_env: &LifetimeEnv,
-    ) -> Option<Cow<'cx, str>> {
-        todo!()
     }
 
     fn gen_return_type_name_ffi(&self, out: &ReturnType) -> Cow<'cx, str> {
@@ -194,19 +208,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 todo!("Structs not supported yet")
             }
             Type::Slice(_) => todo!("slices not supported yet"),
-            _ => unreachable!("unknown AST/HIR variant"),
-        }
-    }
-    // compared to dart we're omitting the cast.
-    fn gen_self_type_name_ffi(&self, ty: &SelfType) -> Cow<'cx, str> {
-        todo!()
-    }
-
-    fn gen_kotlin_to_c_self(&self, ty: &SelfType) -> Cow<'cx, str> {
-        match *ty {
-            SelfType::Enum(..) => panic!("enums unsupported"),
-            SelfType::Struct(..) => panic!("strucst unsupported"),
-            SelfType::Opaque(..) => "handle".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -252,10 +253,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         &mut self,
         id: TypeId,
         method: &'cx hir::Method,
-        type_name: &str,
         self_type: &'cx SelfType,
     ) -> SelfMethodInfo<'cx> {
-        eprintln!("method: {}", method.name);
         let mut visitor = method.borrowing_param_visitor(self.tcx);
         let native_method_name = self.formatter.fmt_c_method_name(id, method);
 
@@ -328,11 +327,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
-    fn gen_native_method_info(
-        &mut self,
-        id: TypeId,
-        method: &'cx hir::Method,
-    ) -> NativeMethodInfo<'cx> {
+    fn gen_native_method_info(&mut self, id: TypeId, method: &'cx hir::Method) -> NativeMethodInfo {
         let mut param_decls = Vec::with_capacity(method.params.len());
 
         let mut visitor = method.borrowing_param_visitor(self.tcx);
@@ -371,7 +366,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let return_ty = self.gen_return_type_name_ffi(&method.output);
 
         NativeMethodInfo {
-            method,
             declaration: format!("fun {native_method}({params}): {return_ty}"),
         }
     }
@@ -436,8 +430,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         Some(CompanionMethodInfo {
             declaration,
             native_method_name,
-            param_types_ffi,
-            param_names_ffi,
             param_conversions,
             return_expression,
         })
@@ -451,10 +443,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         domain: &str,
         lib_name: &str,
     ) -> (String, String) {
-        println!("OpaqueDef: {}", ty.name);
-        for method in ty.methods.iter() {
-            println!("Method: {}", method.name);
-        }
         let native_methods = ty
             .methods
             .iter()
@@ -470,9 +458,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     .as_ref()
                     .map(|self_param| (&self_param.ty, method))
             })
-            .map(|(self_param, method)| {
-                self.gen_self_method_info(id, method, type_name, self_param)
-            })
+            .map(|(self_param, method)| self.gen_self_method_info(id, method, self_param))
             .collect::<Vec<_>>();
 
         let companion_methods = ty
@@ -490,7 +476,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             type_name: &'a str,
             self_methods: &'a [SelfMethodInfo<'a>],
             companion_methods: &'a [CompanionMethodInfo<'a>],
-            native_methods: &'a [NativeMethodInfo<'a>],
+            native_methods: &'a [NativeMethodInfo],
         }
 
         (
@@ -507,10 +493,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .expect("failed to generate struct"),
         )
     }
-
-    // fn render(&self) -> Option<String> {
-    //     todo!()
-    // }
 
     fn gen_type_name<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
@@ -546,16 +528,13 @@ struct SelfMethodInfo<'a> {
     /// The C method name
     native_method_name: Cow<'a, str>,
 
-    // The types for the FFI declaration. The uncast types are the types
-    // from the `dart:ffi` package, the cast types are native Dart types.
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
     // todo: slice params and lifetimes
     return_expression: Option<Cow<'a, str>>,
 }
 
-struct NativeMethodInfo<'a> {
-    method: &'a hir::Method,
+struct NativeMethodInfo {
     declaration: String,
 }
 
@@ -563,9 +542,6 @@ struct CompanionMethodInfo<'a> {
     declaration: String,
     /// The C method name
     native_method_name: Cow<'a, str>,
-
-    param_types_ffi: Vec<Cow<'a, str>>,
-    param_names_ffi: Vec<Cow<'a, str>>,
 
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
@@ -627,21 +603,15 @@ mod test {
             panic!("We should only have one opaque def in there")
         };
 
-        let mut helper_classes = BTreeMap::new();
         let eror_store = ErrorStore::default();
         let formatter = KotlinFormatter::new(&tcx, None);
         let mut ty_gen_cx = TyGenContext {
             tcx: &tcx,
             formatter: &formatter,
             errors: &eror_store,
-            helper_classes: &mut helper_classes,
         };
         let type_name = opaque_def.name.to_string();
-        let (_, rendered) =
-            ty_gen_cx.gen_opaque_def(opaque_def, type_id, &type_name, "dev.gigapixel", "somelib");
-        println!("{rendered}");
+        // test that we can render and that it doesn't panic
+        ty_gen_cx.gen_opaque_def(opaque_def, type_id, &type_name, "dev.gigapixel", "somelib");
     }
-
-    #[test]
-    fn test_type_name() {}
 }
