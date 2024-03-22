@@ -3,3 +3,5 @@ libsomelib.dylib
 .gradle/
 build/
 gradle/
+gradlew
+gradlew.bat
