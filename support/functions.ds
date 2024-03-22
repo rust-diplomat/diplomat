@@ -47,6 +47,7 @@ fn generate_generic
     exit_on_error true
 
     rm -r "${backend}/${output_folder}"
+    mkdir "${backend}/${output_folder}"
     # we do a /.. so that cases where output_folder is multiple folders down
     # end up copying to the right path
     mv "tmp/${output_folder}" "${backend}/${output_folder}/.."
