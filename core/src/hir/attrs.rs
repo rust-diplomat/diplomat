@@ -758,7 +758,7 @@ mod tests {
                 }
             };
             insta::with_settings!({}, {
-                insta::assert_display_snapshot!(output)
+                insta::assert_snapshot!(output)
             });
         }
     }
