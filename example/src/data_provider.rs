@@ -11,6 +11,7 @@ pub mod ffi {
         #[diplomat::rust_link(icu_testdata::get_static_provider, Fn)]
         #[diplomat::attr(supports = named_constructors, named_constructor)]
         pub fn new_static() -> Box<ICU4XDataProvider> {
+            #[allow(deprecated)]
             let provider = icu_testdata::any();
             Box::new(ICU4XDataProvider(Box::new(provider)))
         }
