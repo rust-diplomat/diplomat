@@ -21,7 +21,7 @@ syn-inline-mod = "0.6.0"
 quote = "1.0"
 indenter = "0.3.3"
 pulldown-cmark = "0.8.0"
-clap = { features = ["color", "derive", "std", "suggestions"], version = "3.2.2" }
+clap = { features = ["color", "derive", "std", "suggestions"], version = "4.5.3" }
 colored = "2.0"
 serde = { features = ["derive"], version = "1.0.130" }
 toml = "0.5.8"
@@ -30,4 +30,4 @@ displaydoc = "0.2"
 askama = "0.12"
 
 [dev-dependencies]
-insta = { version = "1.7.1", features = [ "backtrace" ] }
+insta = { version = "1.7.1", features = [ "yaml" ] }

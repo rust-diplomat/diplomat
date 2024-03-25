@@ -564,7 +564,7 @@ mod tests {
 
     #[test]
     fn method_taking_str() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -583,7 +583,7 @@ mod tests {
 
     #[test]
     fn method_taking_slice() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -602,7 +602,7 @@ mod tests {
 
     #[test]
     fn method_taking_mutable_slice() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -621,7 +621,7 @@ mod tests {
 
     #[test]
     fn method_taking_owned_slice() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -640,7 +640,7 @@ mod tests {
 
     #[test]
     fn method_taking_owned_str() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -659,7 +659,7 @@ mod tests {
 
     #[test]
     fn mod_with_enum() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     enum Abc {
@@ -681,7 +681,7 @@ mod tests {
 
     #[test]
     fn mod_with_writeable_result() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -700,7 +700,7 @@ mod tests {
 
     #[test]
     fn mod_with_rust_result() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -719,7 +719,7 @@ mod tests {
 
     #[test]
     fn multilevel_borrows() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]
@@ -754,7 +754,7 @@ mod tests {
 
     #[test]
     fn self_params() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]
@@ -777,7 +777,7 @@ mod tests {
 
     #[test]
     fn cfged_method() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -794,7 +794,7 @@ mod tests {
             .to_string()
         ));
 
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -815,7 +815,7 @@ mod tests {
 
     #[test]
     fn cfgd_struct() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]

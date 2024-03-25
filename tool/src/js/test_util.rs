@@ -17,13 +17,13 @@ macro_rules! test_file {
 
         for out in out_texts.keys() {
             insta::with_settings!({ snapshot_suffix => out.clone() }, {
-                insta::assert_display_snapshot!(out_texts.get(out).unwrap())
+                insta::assert_snapshot!(out_texts.get(out).unwrap())
             });
         }
 
         for out in out_docs.keys() {
             insta::with_settings!({ snapshot_suffix => out.clone() }, {
-                insta::assert_display_snapshot!(out_docs.get(out).unwrap())
+                insta::assert_snapshot!(out_docs.get(out).unwrap())
             });
         }
     }
