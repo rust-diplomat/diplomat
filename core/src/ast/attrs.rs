@@ -395,7 +395,7 @@ struct RenamePattern {
 /// and then attributes can choose to handle more complicated lists if they so desire.
 pub(crate) enum StandardAttribute<'a> {
     String(String),
-    List(&'a MetaList),
+    List(#[allow(dead_code)] &'a MetaList),
     Empty,
 }
 
