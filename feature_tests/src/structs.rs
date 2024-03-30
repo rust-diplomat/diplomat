@@ -1,6 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
     use crate::imports::ffi::ImportedStruct;
+    use std::sync::Mutex;
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
@@ -8,7 +9,7 @@ pub mod ffi {
     pub struct Opaque(String);
 
     #[diplomat::opaque]
-    pub struct OtherOpaque(String);
+    pub struct OtherOpaque(Mutex<String>);
 
     #[derive(Debug, PartialEq, Eq)]
     #[diplomat::attr(kotlin, disable)]
@@ -59,19 +60,45 @@ pub mod ffi {
             412
         }
 
-        #[diplomat::attr(kotlin, disable)]
         pub fn returns_imported() -> ImportedStruct {
             unimplemented!()
         }
     }
 
     impl OtherOpaque {
-        pub fn from_usize(i: usize) -> Box<OtherOpaque> {
-            Box::new(OtherOpaque(format!("{i}")))
+        pub fn from_usize(number: usize) -> Box<OtherOpaque> {
+            Box::new(OtherOpaque(Mutex::new(format!("{number}"))))
         }
 
-        pub fn get_len_and_add(&self, i: usize) -> usize {
-            self.0.len() + i
+        pub fn change(&self, number: usize) {
+            let mut guard = self.0.lock().expect("Failed to lock mutex");
+            *guard = format!("{number}");
+        }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn borrow<'a>(&'a self) -> &'a OtherOpaque {
+            self
+        }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn borrow_other<'a>(other: &'a OtherOpaque) -> &'a OtherOpaque {
+            other
+        }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn borrow_self_or_other<'a>(&'a self, other: &'a OtherOpaque) -> &'a OtherOpaque {
+            let guard = self.0.lock().expect("Failed to lock mutext");
+            if guard.len() % 2 == 0 {
+                self
+            } else {
+                other
+            }
+        }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn get_len_and_add(&self, other: usize) -> usize {
+            let guard = self.0.lock().expect("Failed to lock mutex");
+            guard.len() + other
         }
     }
 

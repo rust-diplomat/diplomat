@@ -1,5 +1,14 @@
 
+    val selfEdges: List<Any> = listOf({%- for self_edge in self_edges%}{%- if !loop.first %}, {% endif -%}{{self_edge}}{%- endfor %})
+    {%- for borrow in borrows %}
+    val {{borrow.lt}}Edges: List<Any> = listOf({%- for param in borrow.params %}{%- if !loop.first %}, {% endif -%}{{param}}{%- endfor %})
+    {%- endfor %}
     val handle = returnVal
-    val returnOpaque = {{return_type_name}}(handle)
-    CLEANER.register(returnOpaque, {{return_type_name}}Cleaner(returnOpaque.handle, {{return_type_name}}.lib));
+    val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !borrows.is_empty() %}{%- for borrow in borrows %}, {{borrow.lt}}Edges{%- endfor %}{% endif -%})
+    {%- if is_owned %}
+    CLEANER.register(returnOpaque, {{return_type_name}}Cleaner(handle, {{return_type_name}}.lib));
+    {% else %}
+    
+    {% endif -%}
     return returnOpaque
+

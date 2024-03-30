@@ -1,7 +1,6 @@
 package {{domain}}.{{lib_name}};
 import com.sun.jna.Library
 import com.sun.jna.Native
-import com.sun.jna.Pointer
 
 
 interface {{type_name}}Lib: Library {
@@ -13,9 +12,16 @@ interface {{type_name}}Lib: Library {
     {%- endfor %}
 }
 
-class {{type_name}} internal constructor (internal val handle: Long) {
+class {{type_name}} internal constructor (
+    internal val handle: Long,
+    internal val selfEdges: List<Any>{% if !lifetimes.is_empty() %},
+    {%- for lt in lifetimes %}
+    internal val {{lt}}Edges: List<Any>,
+    {%- endfor %}
+    {% endif -%}
+) {
 
-    private class {{type_name}}Cleaner(val handle: Long, val lib: {{type_name}}Lib) : Runnable {
+    internal class {{type_name}}Cleaner(val handle: Long, val lib: {{type_name}}Lib) : Runnable {
         override fun run() {
             lib.{{type_name}}_destroy(handle)
         }
