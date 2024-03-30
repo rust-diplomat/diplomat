@@ -28,7 +28,6 @@ pub mod ffi {
         bytes: &'a DiplomatStr,
     }
     impl<'a> Foo<'a> {
-        #[diplomat::attr(kotlin, disable)]
         pub fn new(x: &'a DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }
