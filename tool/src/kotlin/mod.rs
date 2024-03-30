@@ -369,11 +369,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-            assert!(
-                matches!(param_borrow_kind, ParamBorrowInfo::NotBorrowed),
-                "Only support non-borrown non-self params... for now. Received {param_borrow_kind:?}"
-            );
-
             let param_type_ffi = self.gen_type_name_ffi(&param.ty);
 
             // todo: rethink this
@@ -436,11 +431,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
-
-            // assert!(
-            //     matches!(param_borrow_kind, ParamBorrowInfo::NotBorrowed),
-            //     "Only support non-borrown non-self params... for now. Received {param_borrow_kind:?}"
-            // );
 
             if let hir::Type::Slice(..) = param.ty {
                 todo!("Slices not supported yet");

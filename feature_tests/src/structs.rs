@@ -86,6 +86,16 @@ pub mod ffi {
         }
 
         #[allow(clippy::needless_lifetimes)]
+        pub fn borrow_self_or_other<'a>(&'a self, other: &'a OtherOpaque) -> &'a OtherOpaque {
+            let guard = self.0.lock().expect("Failed to lock mutext");
+            if guard.len() % 2 == 0 {
+                self
+            } else {
+                other
+            }
+        }
+
+        #[allow(clippy::needless_lifetimes)]
         pub fn get_len_and_add(&self, other: usize) -> usize {
             let guard = self.0.lock().expect("Failed to lock mutex");
             guard.len() + other

@@ -9,6 +9,7 @@ interface OtherOpaqueLib: Library {
     fun OtherOpaque_change(handle: Long, number: Long): Unit
     fun OtherOpaque_borrow(handle: Long): Long
     fun OtherOpaque_borrow_other(other: Long): Long
+    fun OtherOpaque_borrow_self_or_other(handle: Long, other: Long): Long
     fun OtherOpaque_get_len_and_add(handle: Long, other: Long): Long
 }
 
@@ -57,6 +58,17 @@ class OtherOpaque internal constructor (
         val returnVal = lib.OtherOpaque_borrow(handle);
         
         val selfEdges: List<Any> = listOf(this)
+        val handle = returnVal
+        val returnOpaque = OtherOpaque(handle, selfEdges)
+        
+        return returnOpaque
+    
+    }
+
+    fun borrowSelfOrOther(other: OtherOpaque): OtherOpaque {
+        val returnVal = lib.OtherOpaque_borrow_self_or_other(handle, other.handle);
+        
+        val selfEdges: List<Any> = listOf(this, other)
         val handle = returnVal
         val returnOpaque = OtherOpaque(handle, selfEdges)
         
