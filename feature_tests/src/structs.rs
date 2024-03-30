@@ -59,19 +59,29 @@ pub mod ffi {
             412
         }
 
-        #[diplomat::attr(kotlin, disable)]
         pub fn returns_imported() -> ImportedStruct {
             unimplemented!()
         }
     }
 
     impl OtherOpaque {
-        pub fn from_usize(i: usize) -> Box<OtherOpaque> {
-            Box::new(OtherOpaque(format!("{i}")))
+        pub fn from_usize(number: usize) -> Box<OtherOpaque> {
+            Box::new(OtherOpaque(format!("{number}")))
         }
 
-        pub fn get_len_and_add(&self, i: usize) -> usize {
-            self.0.len() + i
+        #[allow(clippy::needless_lifetimes)]
+        pub fn borrow<'a>(&'a self) -> &'a OtherOpaque {
+            self
+        }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn borrow_other<'a>(other: &'a OtherOpaque) -> &'a OtherOpaque {
+            other
+        }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn get_len_and_add(&self, other: usize) -> usize {
+            self.0.len() + other
         }
     }
 
