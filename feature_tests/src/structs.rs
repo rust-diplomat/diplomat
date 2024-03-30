@@ -1,6 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
     use crate::imports::ffi::ImportedStruct;
+    use std::sync::Mutex;
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
@@ -8,7 +9,7 @@ pub mod ffi {
     pub struct Opaque(String);
 
     #[diplomat::opaque]
-    pub struct OtherOpaque(String);
+    pub struct OtherOpaque(Mutex<String>);
 
     #[derive(Debug, PartialEq, Eq)]
     #[diplomat::attr(kotlin, disable)]
@@ -66,7 +67,12 @@ pub mod ffi {
 
     impl OtherOpaque {
         pub fn from_usize(number: usize) -> Box<OtherOpaque> {
-            Box::new(OtherOpaque(format!("{number}")))
+            Box::new(OtherOpaque(Mutex::new(format!("{number}"))))
+        }
+
+        pub fn change(&self, number: usize) {
+            let mut guard = self.0.lock().expect("Failed to lock mutex");
+            *guard = format!("{number}");
         }
 
         #[allow(clippy::needless_lifetimes)]
@@ -81,7 +87,8 @@ pub mod ffi {
 
         #[allow(clippy::needless_lifetimes)]
         pub fn get_len_and_add(&self, other: usize) -> usize {
-            self.0.len() + other
+            let guard = self.0.lock().expect("Failed to lock mutex");
+            guard.len() + other
         }
     }
 

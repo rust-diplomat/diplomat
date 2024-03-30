@@ -6,6 +6,7 @@ import com.sun.jna.Native
 interface OtherOpaqueLib: Library {
     fun OtherOpaque_destroy(handle: Long)
     fun OtherOpaque_from_usize(number: Long): Long
+    fun OtherOpaque_change(handle: Long, number: Long): Unit
     fun OtherOpaque_borrow(handle: Long): Long
     fun OtherOpaque_borrow_other(other: Long): Long
     fun OtherOpaque_get_len_and_add(handle: Long, other: Long): Long
@@ -46,6 +47,10 @@ class OtherOpaque internal constructor (
             return returnOpaque
 
         }
+    }
+
+    fun change(number: Long): Unit {
+        val returnVal = lib.OtherOpaque_change(handle, number);
     }
 
     fun borrow(): OtherOpaque {
