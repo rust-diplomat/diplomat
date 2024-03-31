@@ -11,6 +11,7 @@ class OtherOpaqueTest {
        val borrowed = otherOpaque.borrow()
        borrowed.change(1234)
        assertEquals(otherOpaque.getLenAndAdd(4), 8)
+       Result
    }
 
     @Test
