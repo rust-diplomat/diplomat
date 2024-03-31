@@ -25,4 +25,15 @@ class OtherOpaqueTest {
         val borrowed2 = otherOpaqueEvenLen.borrowSelfOrOther(otherOpaqueOddLen)
         assertEquals(borrowed2.getLenAndAdd(0), 3)
     }
+
+    @Test
+    fun testStrReturn() {
+        val opaque = OtherOpaque.fromUsize(356)
+        val str = opaque.dummyStr()
+
+        assertEquals(
+            "A const str with non byte char: 餐 which is a DiplomatChar,",
+            str.asString()
+        )
+    }
 }
