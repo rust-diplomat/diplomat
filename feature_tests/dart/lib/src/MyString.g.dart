@@ -43,6 +43,14 @@ final class MyString implements ffi.Finalizable {
     return MyString._fromFfi(result, []);
   }
 
+  static MyString newFromFirst(core.List<core.String> v) {
+    final temp = ffi2.Arena();
+    final vView = v.utf8View;
+    final result = _MyString_new_from_first(vView.allocIn(temp), vView.length);
+    temp.releaseAll();
+    return MyString._fromFfi(result, []);
+  }
+
   set str(String newStr) {
     final temp = ffi2.Arena();
     final newStrView = newStr.utf8View;
@@ -76,6 +84,11 @@ external ffi.Pointer<ffi.Opaque> _MyString_new_unsafe(ffi.Pointer<ffi.Uint8> vDa
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_owned')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new_owned(ffi.Pointer<ffi.Uint8> vData, int vLength);
+
+@meta.ResourceIdentifier('MyString_new_from_first')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<_SliceUtf8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_from_first')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _MyString_new_from_first(ffi.Pointer<_SliceUtf8> vData, int vLength);
 
 @meta.ResourceIdentifier('MyString_set_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_set_str')

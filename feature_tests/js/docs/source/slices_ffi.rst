@@ -41,6 +41,8 @@
 
     .. js:function:: new_owned(v)
 
+    .. js:function:: new_from_first(v)
+
     .. js:method:: set_str(new_str)
 
     .. js:method:: get_str()

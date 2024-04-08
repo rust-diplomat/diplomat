@@ -41,6 +41,7 @@
     .. cpp:function:: void set_value(const diplomat::span<const double> new_slice)
 
 
+
     .. cpp:function:: template<typename W> void to_string_to_writeable(W& w) const
 
 
@@ -69,6 +70,7 @@
 
 
     .. cpp:function:: void set_str(const std::string_view new_str)
+
 
 
     .. cpp:function:: template<typename W> void get_str_to_writeable(W& writeable) const

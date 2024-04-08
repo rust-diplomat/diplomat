@@ -137,7 +137,6 @@ fn gen_struct_header(
     writeln!(out, "#endif")?;
 
     for method in typ.methods() {
-        writeln!(out)?;
         gen_method(method, in_path, env, out)?;
     }
 
@@ -268,6 +267,7 @@ pub fn gen_includes<W: fmt::Write>(
         ast::TypeName::PrimitiveSlice(..) => {}
         ast::TypeName::Unit => {}
         ast::TypeName::Ordering => {}
+        ast::TypeName::StrSlice(..) => {}
         &_ => unreachable!("unknown AST/HIR variant"),
     }
 

@@ -352,6 +352,8 @@ pub enum TypeName {
     /// A `&[T]` or `Box<[T]>` type, where `T` is a primitive.
     /// Owned slices don't have a lifetime or mutability.
     PrimitiveSlice(Option<(Lifetime, Mutability)>, PrimitiveType),
+    /// `&[&DiplomatStr]`
+    StrSlice(StringEncoding),
     /// The `()` type.
     Unit,
     /// The `Self` type.
@@ -501,6 +503,13 @@ impl TypeName {
             TypeName::StrReference(None, StringEncoding::Utf8) => {
                 syn::parse_str("Box<str>").unwrap()
             }
+            TypeName::StrSlice(StringEncoding::UnvalidatedUtf8) => {
+                syn::parse_str("&[&DiplomatStr]").unwrap()
+            }
+            TypeName::StrSlice(StringEncoding::UnvalidatedUtf16) => {
+                syn::parse_str("&[&DiplomatStr16]").unwrap()
+            }
+            TypeName::StrSlice(StringEncoding::Utf8) => syn::parse_str("&[&str]").unwrap(),
             TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
@@ -571,6 +580,11 @@ impl TypeName {
                                 *primitive,
                             );
                         }
+                    }
+                    if let TypeName::StrReference(Some(Lifetime::Anonymous), encoding) =
+                        TypeName::from_syn(&slice.elem, self_path_type.clone())
+                    {
+                        return TypeName::StrSlice(encoding);
                     }
                 }
                 TypeName::Reference(
@@ -848,6 +862,15 @@ impl fmt::Display for TypeName {
             }
             TypeName::StrReference(None, StringEncoding::Utf8) => {
                 write!(f, "Box<str>")
+            }
+            TypeName::StrSlice(StringEncoding::UnvalidatedUtf8) => {
+                write!(f, "&[&DiplomatStr]")
+            }
+            TypeName::StrSlice(StringEncoding::UnvalidatedUtf16) => {
+                write!(f, "&[&DiplomatStr16]")
+            }
+            TypeName::StrSlice(StringEncoding::Utf8) => {
+                write!(f, "&[&str]")
             }
             TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ) => {
                 write!(f, "{}[{typ}]", ReferenceDisplay(lifetime, mutability))

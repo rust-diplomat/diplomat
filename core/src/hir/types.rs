@@ -53,6 +53,12 @@ pub enum Slice {
     /// allocate in Rust, as Dart will have to create the `Box<[bool]`> to
     /// pass `&[bool]` anyway.
     Primitive(Option<Borrow>, PrimitiveType),
+
+    /// A `&[&DiplomatStr]]`. This type of slice always needs to be
+    /// allocated before passing it into Rust, as it has to conform to the
+    /// Rust ABI. In other languages this is the idiomatic list of string
+    /// views, i.e. `std::span<std::string_view>` or `core.List<core.String>`.
+    Strs(StringEncoding),
 }
 
 // For now, the lifetime in not optional. This is because when you have references
@@ -141,6 +147,10 @@ impl Slice {
             Slice::Str(lifetime, ..) => lifetime.as_ref(),
             Slice::Primitive(Some(reference), ..) => Some(&reference.lifetime),
             Slice::Primitive(..) => None,
+            Slice::Strs(..) => Some({
+                const X: MaybeStatic<Lifetime> = MaybeStatic::NonStatic(Lifetime::new(usize::MAX));
+                &X
+            }),
         }
     }
 }
