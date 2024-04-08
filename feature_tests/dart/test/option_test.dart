@@ -7,7 +7,7 @@ void main() {
 
     expect(OptionOpaque.newNone(), null);
 
-    final s = OptionOpaque.struct;
+    final s = OptionOpaque.struct();
     s.a!.assertInteger(101);
     s.b!.assertChar('餐'.runes.first);
     expect(s.c, 904);
