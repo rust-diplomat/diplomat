@@ -116,4 +116,19 @@ export class Float64Vec {
       return Float64Array.from(new Float64Array(wasm.memory.buffer, ptr, size));
     })();
   }
+
+  get(arg_i) {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(9, 8);
+      wasm.Float64Vec_get(diplomat_receive_buffer, this.underlying, arg_i);
+      const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8);
+      if (!is_ok) {
+        wasm.diplomat_free(diplomat_receive_buffer, 9, 8);
+        return;
+      }
+      const value = (new Float64Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+      wasm.diplomat_free(diplomat_receive_buffer, 9, 8);
+      return value;
+    })();
+  }
 }

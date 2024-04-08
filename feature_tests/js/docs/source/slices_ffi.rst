@@ -31,6 +31,8 @@
 
     .. js:method:: borrow()
 
+    .. js:method:: get(i)
+
 .. js:class:: MyString
 
     .. js:function:: new(v)

@@ -505,76 +505,34 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         let params = param_decls_dart.join(", ");
 
-        let declaration = if let Some(special) = &method.attrs.special_method {
-            // The rename infrastructure doesn't currently act on named ctors/getters/setters
-            // but *could* in the future when it gains support for camelcasing/etc
-            match &special {
-                SpecialMethod::Constructor => format!("factory {type_name}({params})"),
-                SpecialMethod::NamedConstructor(name) => {
-                    if let Some(name) = name {
-                        format!("factory {type_name}.{name}({params})")
-                    } else {
-                        let name = self.formatter.fmt_constructor_name(method);
-                        let name =
-                            name.unwrap_or_else(|| self.formatter.fmt_method_name(method).into());
-                        format!("factory {type_name}.{name}({params})")
-                    }
-                }
-                SpecialMethod::Getter(name) => {
-                    if let Some(name) = name {
-                        format!("{return_ty} get {name}")
-                    } else {
-                        let name = self.formatter.fmt_accessor_name(method);
-                        format!("{return_ty} get {name}")
-                    }
-                }
-                SpecialMethod::Setter(name) => {
-                    if let Some(name) = name {
-                        format!("set {name}({params})")
-                    } else {
-                        let name = self.formatter.fmt_accessor_name(method);
-                        format!("set {name}({params})")
-                    }
-                }
-                SpecialMethod::Stringifier => "@override\n  String toString()".into(),
-                SpecialMethod::Comparison => format!("int compareTo({type_name} other)"),
-                SpecialMethod::Iterator => {
-                    format!("{return_ty} _iteratorNext({params})")
-                }
-                SpecialMethod::Iterable => {
-                    format!("{return_ty} get iterator")
-                }
-                _ => unimplemented!("Found unknown special method type {special:?}"),
-            }
-        } else if method.param_self.is_none() {
-            // Static field
-            if params.is_empty()
-                && !matches!(
-                    method.output,
-                    hir::ReturnType::Fallible(_, Some(_))
-                        | hir::ReturnType::Infallible(SuccessType::Unit)
-                )
-                && return_ty != "bool"
-            {
-                let method_name = self
-                    .formatter
-                    .fmt_constructor_name(method)
-                    .unwrap_or("singleton".into());
-                format!("static final {return_ty} {method_name} = ()")
-            // Static method
-            } else {
-                let method_name = self.formatter.fmt_method_name(method);
-                format!("static {return_ty} {method_name}({params})")
-            }
-        // Indexer
-        } else if method.name.as_str() == "get"
-            && !method.output.is_unit()
-            && method.params.len() == 1
-        {
-            format!("{return_ty} operator []({params})")
-        } else {
-            let method_name = self.formatter.fmt_method_name(method);
-            format!("{return_ty} {method_name}({params})")
+        let declaration = match &method.attrs.special_method {
+            Some(SpecialMethod::Constructor) => format!("factory {type_name}({params})"),
+            Some(SpecialMethod::NamedConstructor(name)) => format!(
+                "factory {type_name}.{}({params})",
+                self.formatter.fmt_constructor_name(name, method)
+            ),
+            Some(SpecialMethod::Getter(name)) => format!(
+                "{return_ty} get {}",
+                self.formatter.fmt_accessor_name(name, method)
+            ),
+            Some(SpecialMethod::Setter(name)) => format!(
+                "set {}({params})",
+                self.formatter.fmt_accessor_name(name, method)
+            ),
+            Some(SpecialMethod::Stringifier) => "@override\n  String toString()".into(),
+            Some(SpecialMethod::Comparison) => format!("int compareTo({type_name} other)"),
+            Some(SpecialMethod::Iterator) => format!("{return_ty} _iteratorNext({params})"),
+            Some(SpecialMethod::Iterable) => format!("{return_ty} get iterator"),
+            Some(SpecialMethod::Indexer) => format!("{return_ty} operator []({params})"),
+            None if method.param_self.is_none() => format!(
+                "static {return_ty} {}({params})",
+                self.formatter.fmt_method_name(method)
+            ),
+            None => format!(
+                "{return_ty} {}({params})",
+                self.formatter.fmt_method_name(method)
+            ),
+            Some(special) => unimplemented!("Found unknown special method type {special:?}"),
         };
 
         let mut docs = self.formatter.fmt_docs(&method.docs);

@@ -37,15 +37,15 @@ final class Opaque implements ffi.Finalizable {
     temp.releaseAll();
   }
 
-  static final int returnsUsize = () {
+  static int returnsUsize() {
     final result = _Opaque_returns_usize();
     return result;
-  }();
+  }
 
-  static final ImportedStruct returnsImported = () {
+  static ImportedStruct returnsImported() {
     final result = _Opaque_returns_imported();
     return ImportedStruct._fromFfi(result);
-  }();
+  }
 }
 
 @meta.ResourceIdentifier('Opaque_destroy')

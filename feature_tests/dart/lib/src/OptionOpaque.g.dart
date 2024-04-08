@@ -26,28 +26,28 @@ final class OptionOpaque implements ffi.Finalizable {
     return result.address == 0 ? null : OptionOpaque._fromFfi(result, []);
   }
 
-  static final OptionOpaque? none = () {
+  static OptionOpaque? newNone() {
     final result = _OptionOpaque_new_none();
     return result.address == 0 ? null : OptionOpaque._fromFfi(result, []);
-  }();
+  }
 
-  static final OptionStruct? returns = () {
+  static OptionStruct? returns() {
     final result = _OptionOpaque_returns();
     if (!result.isOk) {
       return null;
     }
     return OptionStruct._fromFfi(result.union.ok);
-  }();
+  }
 
-  static final OptionStruct struct = () {
+  static OptionStruct newStruct() {
     final result = _OptionOpaque_new_struct();
     return OptionStruct._fromFfi(result);
-  }();
+  }
 
-  static final OptionStruct structNones = () {
+  static OptionStruct newStructNones() {
     final result = _OptionOpaque_new_struct_nones();
     return OptionStruct._fromFfi(result);
-  }();
+  }
 
   void assertInteger(int i) {
     _OptionOpaque_assert_integer(_ffi, i);

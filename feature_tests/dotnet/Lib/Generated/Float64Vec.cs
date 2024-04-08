@@ -256,6 +256,23 @@ public partial class Float64Vec: IDisposable
         }
     }
 
+    public double? Get(nuint i)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            Options without a pointer type are not yet supported retVal = Raw.Float64Vec.Get(_inner, i);
+            if (retVal == null)
+            {
+                return null;
+            }
+            return retVal;
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>

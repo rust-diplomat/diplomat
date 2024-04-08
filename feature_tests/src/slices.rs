@@ -110,5 +110,10 @@ mod ffi {
         pub fn borrow<'a>(&'a self) -> &'a [f64] {
             &self.0
         }
+
+        #[diplomat::attr(supports = indexing, indexer)]
+        pub fn get(&self, i: usize) -> Option<f64> {
+            self.0.get(i).copied()
+        }
     }
 }

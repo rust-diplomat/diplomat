@@ -22,10 +22,10 @@ final class MyIterator implements ffi.Finalizable, core.Iterator<int> {
   }
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIterator_destroy));
+
   int? _current;
 
-  
-  int get current => _current as int;
+  int get current => _current!;
 
   bool moveNext() {
     _current = _iteratorNext();

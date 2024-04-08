@@ -58,6 +58,9 @@ public partial struct Float64Vec
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_borrow", ExactSpelling = true)]
     public static unsafe extern double[] Borrow(Float64Vec* self);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_get", ExactSpelling = true)]
+    public static unsafe extern Options without a pointer type are not yet supported Get(Float64Vec* self, nuint i);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Float64Vec* self);
 }

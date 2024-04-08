@@ -40,6 +40,8 @@ public:
 
   inline diplomat::span<const double> borrow() const;
 
+  inline std::optional<double> get(size_t i) const;
+
   inline const capi::Float64Vec* AsFFI() const;
   inline capi::Float64Vec* AsFFI();
   inline static const Float64Vec* FromFFI(const capi::Float64Vec* ptr);

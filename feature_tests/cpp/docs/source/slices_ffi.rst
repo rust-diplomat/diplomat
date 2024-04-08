@@ -52,6 +52,9 @@
         Lifetimes: ``this`` must live at least as long as the output.
 
 
+    .. cpp:function:: diplomat::result<double, std::monostate> get(size_t i) const
+
+
 .. cpp:class:: MyString
 
     .. cpp:function:: static MyString new_(const std::string_view v)
