@@ -487,19 +487,20 @@ impl Attrs {
                                 ));
                             }
                             special_method_presence.iterator = Some(o.clone());
-                        } else if let ReturnType::Infallible(
-                            SuccessType::OutType(crate::hir::OutType::Opaque(
+                        } else if let ReturnType::Infallible(SuccessType::OutType(
+                            crate::hir::OutType::Opaque(
                                 ref o @ crate::hir::OpaquePath {
                                     optional: crate::hir::Optional(true),
                                     ..
                                 },
-                            )),
-                        ) = method.output
+                            ),
+                        )) = method.output
                         {
                             let mut o = o.clone();
                             o.optional = crate::hir::Optional(false);
-                            
-                            special_method_presence.iterator = Some(SuccessType::OutType(crate::hir::OutType::Opaque(o)));
+
+                            special_method_presence.iterator =
+                                Some(SuccessType::OutType(crate::hir::OutType::Opaque(o)));
                         } else {
                             errors.push(LoweringError::Other(
                                 "Iterator method must return nullable value".into(),
