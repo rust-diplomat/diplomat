@@ -7,13 +7,13 @@ void main() {
 
     expect(OptionOpaque.newNone(), null);
 
-    final s = OptionOpaque.struct();
+    final s = OptionOpaque.newStruct();
     s.a!.assertInteger(101);
     s.b!.assertChar('餐'.runes.first);
     expect(s.c, 904);
     s.d!.assertInteger(926535);
 
-    final sn = OptionOpaque.structNones();
+    final sn = OptionOpaque.newStructNones();
     expect(sn.a, null);
     expect(sn.b, null);
     expect(sn.c, 908);
