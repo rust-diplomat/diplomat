@@ -1,3 +1,4 @@
+import { usize, f64 } from "./diplomat-runtime"
 
 /**
  */
@@ -58,4 +59,8 @@ export class Float64Vec {
   /**
    */
   borrow(): Float64Array;
+
+  /**
+   */
+  get(i: usize): f64 | undefined;
 }

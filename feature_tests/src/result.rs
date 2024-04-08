@@ -21,22 +21,23 @@ pub mod ffi {
             Ok(Box::new(ResultOpaque(i)))
         }
 
-        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor)]
+        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor = "failing_foo")]
         pub fn new_failing_foo() -> Result<Box<ResultOpaque>, ErrorEnum> {
             Err(ErrorEnum::Foo)
         }
 
-        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor)]
+        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor = "failing_bar")]
         pub fn new_failing_bar() -> Result<Box<ResultOpaque>, ErrorEnum> {
             Err(ErrorEnum::Bar)
         }
 
         // TODO constructors: this should ideally be a constructor too
+        #[diplomat::attr(dart, rename = "failing_unit")]
         pub fn new_failing_unit() -> Result<Box<ResultOpaque>, ()> {
             Err(())
         }
 
-        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor)]
+        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor = "failing_struct")]
         pub fn new_failing_struct(i: i32) -> Result<Box<ResultOpaque>, ErrorStruct> {
             Err(ErrorStruct { i, j: 12 })
         }

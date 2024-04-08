@@ -54,13 +54,13 @@ final class ResultOpaque implements ffi.Finalizable {
     return ResultOpaque._fromFfi(result.union.ok, []);
   }
 
-  static final ResultOpaque? failingUnit = () {
+  static ResultOpaque? failingUnit() {
     final result = _ResultOpaque_new_failing_unit();
     if (!result.isOk) {
       return null;
     }
     return ResultOpaque._fromFfi(result.union.ok, []);
-  }();
+  }
 
   /// 
   ///

@@ -127,46 +127,39 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     /// Format a method
-    pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
+    pub fn fmt_method_name(&self, method: &hir::Method) -> String {
         // TODO(#60): handle other keywords
-
-        // TODO: we should give attrs.rename() control over the camelcasing
-        let name = method.name.as_str().to_lower_camel_case();
-        let name = method.attrs.rename.apply(name.into());
+        let name = method
+            .attrs
+            .rename
+            .apply(method.name.as_str().into())
+            .to_lower_camel_case();
         if INVALID_METHOD_NAMES.contains(&&*name) {
-            format!("{name}_").into()
+            format!("{name}_")
         } else {
             name
         }
     }
 
-    pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
-        let name = self.fmt_method_name(method).into_owned();
-        let name = name
-            .trim_start_matches("try_")
-            .trim_start_matches("try")
-            .trim_start_matches("new_")
-            .trim_start_matches("new")
-            .trim_start_matches("create_")
-            .trim_start_matches("create")
+    pub fn fmt_constructor_name(&self, name: &Option<String>, method: &hir::Method) -> String {
+        let name = method
+            .attrs
+            .rename
+            .apply(name.as_deref().unwrap_or(method.name.as_str()).into())
             .to_lower_camel_case();
 
-        if name.is_empty() {
-            None
-        } else if INVALID_METHOD_NAMES.contains(&name.as_str()) {
-            Some(format!("{name}_"))
+        if INVALID_METHOD_NAMES.contains(&name.as_str()) {
+            format!("{name}_")
         } else {
-            Some(name)
+            name
         }
     }
 
-    pub fn fmt_accessor_name(&self, method: &hir::Method) -> String {
-        let name = &*self.fmt_method_name(method);
-        let name = name
-            .trim_start_matches("set_")
-            .trim_start_matches("set")
-            .trim_start_matches("get_")
-            .trim_start_matches("get")
+    pub fn fmt_accessor_name(&self, name: &Option<String>, method: &hir::Method) -> String {
+        let name = method
+            .attrs
+            .rename
+            .apply(name.as_deref().unwrap_or(method.name.as_str()).into())
             .to_lower_camel_case();
 
         if INVALID_FIELD_NAMES.contains(&name.as_str()) {

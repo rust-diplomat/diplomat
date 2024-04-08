@@ -28,12 +28,12 @@ pub mod ffi {
             Box::new(Foo(x))
         }
 
-        #[diplomat::attr(supports = accessors, getter)]
+        #[diplomat::attr(supports = accessors, getter = "bar")]
         pub fn get_bar<'b>(&'b self) -> Box<Bar<'b, 'a>> {
             Box::new(Bar(self))
         }
 
-        #[diplomat::attr(supports = constructors, named_constructor)]
+        #[diplomat::attr(supports = constructors, named_constructor = "static")]
         pub fn new_static(x: &'static DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }

@@ -75,6 +75,8 @@ pub enum SpecialMethod {
     Iterator,
     /// An iterable (a type that can produce an iterator)
     Iterable,
+    /// Indexes into the type using an integer
+    Indexer,
 }
 
 /// For special methods that affect type semantics, whether this type has this method.
@@ -181,6 +183,7 @@ impl Attrs {
                         || path == "comparison"
                         || path == "iterable"
                         || path == "iterator"
+                        || path == "indexer"
                     {
                         if let Some(ref existing) = this.special_method {
                             errors.push(LoweringError::Other(format!(
@@ -216,6 +219,13 @@ impl Attrs {
                                 )))
                             }
                             SpecialMethod::Iterator
+                        } else if path == "indexer" {
+                            if !support.indexing {
+                                errors.push(LoweringError::Other(format!(
+                                    "indexing not supported in backend {backend}"
+                                )))
+                            }
+                            SpecialMethod::Indexer
                         } else {
                             if !support.comparators {
                                 errors.push(LoweringError::Other(format!(
@@ -269,12 +279,12 @@ impl Attrs {
                         }
                     } else {
                         errors.push(LoweringError::Other(format!(
-                        "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter`"
+                        "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
                     )));
                     }
                 } else {
                     errors.push(LoweringError::Other(format!(
-                        "Unknown diplomat attribute {path:?}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter`"
+                        "Unknown diplomat attribute {path:?}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
                     )));
                 }
             }
@@ -513,6 +523,17 @@ impl Attrs {
                             )),
                         }
                     }
+                    SpecialMethod::Indexer => {
+                        if method.params.len() != 1 {
+                            errors.push(LoweringError::Other(
+                                "Indexer must have exactly one parameter".into(),
+                            ));
+                        }
+
+                        if method.output.success_type().is_unit() {
+                            errors.push(LoweringError::Other("Indexer must return a value".into()));
+                        }
+                    }
                 }
             } else {
                 errors.push(LoweringError::Other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))
@@ -576,6 +597,7 @@ pub struct BackendAttrSupport {
     pub memory_sharing: bool,
     pub iterators: bool,
     pub iterables: bool,
+    pub indexing: bool,
     // more to be added: namespace, etc
 }
 
@@ -595,6 +617,7 @@ impl BackendAttrSupport {
             memory_sharing: true,
             iterators: true,
             iterables: true,
+            indexing: true,
         }
     }
 }
@@ -702,6 +725,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 memory_sharing,
                 iterators,
                 iterables,
+                indexing,
             } = self.support;
             match value {
                 "disabling" => disabling,
@@ -716,6 +740,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "memory_sharing" => memory_sharing,
                 "iterators" => iterators,
                 "iterables" => iterables,
+                "indexing" => indexing,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

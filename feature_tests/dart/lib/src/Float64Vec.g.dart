@@ -114,6 +114,14 @@ final class Float64Vec implements ffi.Finalizable {
     final result = _Float64Vec_borrow(_ffi);
     return result._toDart(aEdges);
   }
+
+  double? operator [](int i) {
+    final result = _Float64Vec_get(_ffi, i);
+    if (!result.isOk) {
+      return null;
+    }
+    return result.union.ok;
+  }
 }
 
 @meta.ResourceIdentifier('Float64Vec_destroy')
@@ -185,3 +193,8 @@ external void _Float64Vec_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ff
 @ffi.Native<_SliceDouble Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_borrow')
 // ignore: non_constant_identifier_names
 external _SliceDouble _Float64Vec_borrow(ffi.Pointer<ffi.Opaque> self);
+
+@meta.ResourceIdentifier('Float64Vec_get')
+@ffi.Native<_ResultDoubleVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_get')
+// ignore: non_constant_identifier_names
+external _ResultDoubleVoid _Float64Vec_get(ffi.Pointer<ffi.Opaque> self, int i);

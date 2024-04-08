@@ -46,6 +46,7 @@ class Float64Vec {
    * Lifetimes: `this` must live at least as long as the output.
    */
   const diplomat::span<const double> borrow() const;
+  diplomat::result<double, std::monostate> get(size_t i) const;
   inline const capi::Float64Vec* AsFFI() const { return this->inner.get(); }
   inline capi::Float64Vec* AsFFIMut() { return this->inner.get(); }
   inline explicit Float64Vec(capi::Float64Vec* i) : inner(i) {}
@@ -111,5 +112,15 @@ inline const diplomat::span<const double> Float64Vec::borrow() const {
   capi::DiplomatF64View diplomat_slice_raw_out_value = capi::Float64Vec_borrow(this->inner.get());
   diplomat::span<const double> slice(diplomat_slice_raw_out_value.data, diplomat_slice_raw_out_value.len);
   return slice;
+}
+inline diplomat::result<double, std::monostate> Float64Vec::get(size_t i) const {
+  auto diplomat_result_raw_out_value = capi::Float64Vec_get(this->inner.get(), i);
+  diplomat::result<double, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok<double>(diplomat_result_raw_out_value.ok);
+  } else {
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
+  }
+  return diplomat_result_out_value;
 }
 #endif

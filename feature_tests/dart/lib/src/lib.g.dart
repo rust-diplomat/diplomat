@@ -385,6 +385,18 @@ class _Float64ListView {
   int get length => _values.length;
 }
 
+final class _ResultDoubleVoidUnion extends ffi.Union {
+  @ffi.Double()
+  external double ok;
+}
+
+final class _ResultDoubleVoid extends ffi.Struct {
+  external _ResultDoubleVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
 final class _ResultInt32OpaqueUnion extends ffi.Union {
   @ffi.Int32()
   external int ok;

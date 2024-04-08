@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "diplomat_result_double_void.d.h"
 
 #include "Float64Vec.d.h"
 
@@ -40,6 +41,8 @@ void Float64Vec_set_value(Float64Vec* self, const double* new_slice_data, size_t
 void Float64Vec_to_string(const Float64Vec* self, DiplomatWriteable* writeable);
 
 struct { const double* data; size_t len; } Float64Vec_borrow(const Float64Vec* self);
+
+diplomat_result_double_void Float64Vec_get(const Float64Vec* self, size_t i);
 
 void Float64Vec_destroy(Float64Vec* self);
 
