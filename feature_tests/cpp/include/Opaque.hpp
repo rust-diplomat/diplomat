@@ -37,6 +37,7 @@ class Opaque {
   void assert_struct(MyStruct s) const;
   static size_t returns_usize();
   static ImportedStruct returns_imported();
+  static int8_t cmp();
   inline const capi::Opaque* AsFFI() const { return this->inner.get(); }
   inline capi::Opaque* AsFFIMut() { return this->inner.get(); }
   inline explicit Opaque(capi::Opaque* i) : inner(i) {}
@@ -63,5 +64,8 @@ inline size_t Opaque::returns_usize() {
 inline ImportedStruct Opaque::returns_imported() {
   capi::ImportedStruct diplomat_raw_struct_out_value = capi::Opaque_returns_imported();
   return ImportedStruct{ .foo = std::move(static_cast<UnimportedEnum>(diplomat_raw_struct_out_value.foo)), .count = std::move(diplomat_raw_struct_out_value.count) };
+}
+inline int8_t Opaque::cmp() {
+  return capi::Opaque_cmp();
 }
 #endif

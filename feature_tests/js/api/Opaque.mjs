@@ -46,4 +46,8 @@ export class Opaque {
       return out;
     })();
   }
+
+  static cmp() {
+    return wasm.Opaque_cmp();
+  }
 }

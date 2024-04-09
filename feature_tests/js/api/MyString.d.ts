@@ -15,7 +15,6 @@ export class MyString {
    */
   static new_owned(v: string): MyString;
 
-
   /**
    */
   set_str(new_str: string): void;

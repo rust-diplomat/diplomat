@@ -27,4 +27,8 @@ export class Opaque {
   /**
    */
   static returns_imported(): ImportedStruct;
+
+  /**
+   */
+  static cmp(): i8;
 }

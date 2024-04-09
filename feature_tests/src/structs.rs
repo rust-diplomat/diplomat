@@ -56,6 +56,10 @@ pub mod ffi {
         pub fn returns_imported() -> ImportedStruct {
             unimplemented!()
         }
+
+        pub fn cmp() -> core::cmp::Ordering {
+            unimplemented!()
+        }
     }
 
     impl MyEnum {

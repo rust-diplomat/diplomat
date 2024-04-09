@@ -46,6 +46,11 @@ final class Opaque implements ffi.Finalizable {
     final result = _Opaque_returns_imported();
     return ImportedStruct._fromFfi(result);
   }
+
+  static int cmp() {
+    final result = _Opaque_cmp();
+    return result;
+  }
 }
 
 @meta.ResourceIdentifier('Opaque_destroy')
@@ -72,3 +77,8 @@ external int _Opaque_returns_usize();
 @ffi.Native<_ImportedStructFfi Function()>(isLeaf: true, symbol: 'Opaque_returns_imported')
 // ignore: non_constant_identifier_names
 external _ImportedStructFfi _Opaque_returns_imported();
+
+@meta.ResourceIdentifier('Opaque_cmp')
+@ffi.Native<ffi.Int8 Function()>(isLeaf: true, symbol: 'Opaque_cmp')
+// ignore: non_constant_identifier_names
+external int _Opaque_cmp();

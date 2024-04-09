@@ -493,12 +493,7 @@ impl<'ast> LoweringContext<'ast> {
             hir_method.attrs.special_method,
             Some(SpecialMethod::Comparison)
         );
-        if let Some(ast::TypeName::Ordering) = method.return_type {
-            if !is_comparison {
-                self.errors.push(LoweringError::Other("Found comparison return type in method not marked as #[diplomat::attr(.., comparison)]".into()));
-                return Err(());
-            }
-        } else if is_comparison {
+        if is_comparison && method.return_type != Some(ast::TypeName::Ordering) {
             self.errors.push(LoweringError::Other(
                 "Found comparison method that does not return cmp::Ordering".into(),
             ));
