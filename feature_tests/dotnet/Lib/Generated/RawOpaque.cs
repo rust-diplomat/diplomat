@@ -36,6 +36,9 @@ public partial struct Opaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_returns_imported", ExactSpelling = true)]
     public static unsafe extern ImportedStruct ReturnsImported();
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_cmp", ExactSpelling = true)]
+    public static unsafe extern sbyte Cmp();
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Opaque* self);
 }

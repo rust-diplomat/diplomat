@@ -15,5 +15,4 @@ export class Bar {
       Bar_box_destroy_registry.register(this, underlying);
     }
   }
-
 }

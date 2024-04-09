@@ -1,5 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
+    use std::mem::uninitialized;
+
     use crate::imports::ffi::ImportedStruct;
 
     #[diplomat::opaque]
@@ -54,6 +56,10 @@ pub mod ffi {
         }
 
         pub fn returns_imported() -> ImportedStruct {
+            unimplemented!()
+        }
+
+        pub fn cmp() -> core::cmp::Ordering {
             unimplemented!()
         }
     }

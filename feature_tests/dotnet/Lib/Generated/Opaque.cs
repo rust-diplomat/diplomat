@@ -84,6 +84,15 @@ public partial class Opaque: IDisposable
         }
     }
 
+    public static sbyte Cmp()
+    {
+        unsafe
+        {
+            Raw.sbyte retVal = Raw.Opaque.Cmp();
+            return expected named type name, found `Ordering`;
+        }
+    }
+
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
