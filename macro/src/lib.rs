@@ -35,14 +35,16 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 &param.ty
             {
                 quote! { u16 }
-            } else if let ast::TypeName::StrSlice(
-                ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
-            ) = &param.ty
+            } else if let ast::TypeName::StrSlice(ast::StringEncoding::Utf8) = &param.ty {
+                // TODO: this is not an ABI-stable type!
+                quote! { &str }
+            } else if let ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf8) = &param.ty
             {
                 // TODO: this is not an ABI-stable type!
                 quote! { &[u8] }
             } else if let ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf16) = &param.ty
             {
+                // TODO: this is not an ABI-stable type!
                 quote! { &[u16] }
             } else {
                 unreachable!()
