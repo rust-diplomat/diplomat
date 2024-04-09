@@ -30,6 +30,11 @@ final class Comparable implements ffi.Finalizable, core.Comparable<Comparable> {
     final result = _namespace_Comparable_cmp(_ffi, other._ffi);
     return result;
   }
+
+  @override
+  bool operator ==(Object other) => other is Comparable && compareTo(other) == 0;
+  @override
+  int get hashCode => 42; // Cannot get hash from Rust, so a constant is the only correct impl
 }
 
 @meta.ResourceIdentifier('namespace_Comparable_destroy')

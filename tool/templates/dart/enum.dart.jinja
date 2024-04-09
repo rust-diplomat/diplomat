@@ -26,6 +26,14 @@ enum {{type_name}}
   {%- for m in methods %}
 {% include "method.dart.jinja" %}
   {%-endfor %}
+
+  {%- if special.comparator %}
+
+  @override
+  bool operator ==(Object other) => other is {{type_name}} && compareTo(other) == 0;
+  @override
+  int get hashCode => 42; // Cannot get hash from Rust, so a constant is the only correct impl
+  {%- endif %}
 }
 
 {%- for m in methods %}
