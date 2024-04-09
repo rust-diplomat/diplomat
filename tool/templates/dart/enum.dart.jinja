@@ -28,6 +28,7 @@ enum {{type_name}}
   {%-endfor %}
 
   {%- if special.comparator %}
+
   @override
   bool operator ==(Object other) => other is {{type_name}} && compareTo(other) == 0;
   @override

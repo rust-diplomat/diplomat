@@ -30,6 +30,7 @@ final class Comparable implements ffi.Finalizable, core.Comparable<Comparable> {
     final result = _namespace_Comparable_cmp(_ffi, other._ffi);
     return result;
   }
+
   @override
   bool operator ==(Object other) => other is Comparable && compareTo(other) == 0;
   @override
