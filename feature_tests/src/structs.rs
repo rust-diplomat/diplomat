@@ -1,7 +1,5 @@
 #[diplomat::bridge]
 pub mod ffi {
-    use std::mem::uninitialized;
-
     use crate::imports::ffi::ImportedStruct;
 
     #[diplomat::opaque]
