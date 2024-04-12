@@ -1,0 +1,20 @@
+package {{domain}}.{{lib_name}};
+ 
+import com.sun.jna.Memory;
+import com.sun.jna.Pointer;
+import com.sun.jna.Structure;
+
+
+public class DiplomatWriteable extends Structure {
+    public Pointer context;
+    public Memory buf;
+    public int len;
+    public int cap;
+
+
+    public Pointer grow;
+    // public GrowFunc grow;
+    public Pointer flush;
+    // public FlushFunc grow;
+}
+

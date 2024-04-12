@@ -1,5 +1,8 @@
 
     {{ m.declaration }} {
+        {% if m.writeable_return %}
+        val writeable = DW.lib.diplomat_buffer_writeable_create(0)
+        {% endif %}
         val returnVal = lib.{{ m.native_method_name -}}(
             {%- for param in m.param_conversions %}
             {%- if loop.first %}{% else %}, {% endif -%}
@@ -8,7 +11,7 @@
         );
         {%- match m.return_expression %}
         {%- when Some with (statement) %}
-        {{statement.replace('\n', "\n    ")}}
+        {{statement|indent(4)}}
         {%- when None %}
         {%- endmatch %}
     }

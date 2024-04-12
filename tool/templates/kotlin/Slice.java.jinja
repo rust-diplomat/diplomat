@@ -1,10 +1,9 @@
-package {{domain}}.{{lib_name}};
+package {{domain}}{{lib_name}};
+
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 
-import java.util.List;
-
-public class DiplomatStr extends Structure implements Structure.ByValue {
+public class Slice extends Structure implements Structure.ByValue {
     public Pointer data; // Pointer to const char
     public long len; // size_t
 
@@ -13,4 +12,6 @@ public class DiplomatStr extends Structure implements Structure.ByValue {
     protected List<String> getFieldOrder() {
         return List.of("data", "len");
     }
+
 }
+

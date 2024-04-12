@@ -27,7 +27,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_string(&self) -> &'static str {
-        "DiplomatStr"
+        "String"
     }
 
     pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {

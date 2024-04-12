@@ -2,7 +2,8 @@ use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
     self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaquePath, SelfType, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    OpaquePath, SelfType, Slice, StringEncoding, StructPathLike, TyPosition, Type, TypeContext,
+    TypeDef, TypeId,
 };
 use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
 
@@ -56,13 +57,13 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
     }
 
     #[derive(Template)]
-    #[template(path = "kotlin/DiplomatStr.java.jinja", escape = "none")]
-    struct JavaTypes<'a> {
+    #[template(path = "kotlin/DiplomatWriteable.java.jinja", escape = "none")]
+    struct DiplomatWriteableTpl<'a> {
         domain: &'a str,
         lib_name: &'a str,
     }
 
-    let java_types = JavaTypes {
+    let java_types = DiplomatWriteableTpl {
         domain: &domain,
         lib_name: &lib_name,
     }
@@ -71,7 +72,29 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
 
     files.add_file(
         format!(
-            "src/main/java/{}/{lib_name}/DiplomatStr.java",
+            "src/main/java/{}/{lib_name}/DiplomatWriteable.java",
+            domain.replace('.', "/")
+        ),
+        java_types,
+    );
+
+    #[derive(Template)]
+    #[template(path = "kotlin/Slice.java.jinja", escape = "none")]
+    struct SliceTpl<'a> {
+        domain: &'a str,
+        lib_name: &'a str,
+    }
+
+    let java_types = SliceTpl {
+        domain: &domain,
+        lib_name: &lib_name,
+    }
+    .render()
+    .expect("Failed to render java types");
+
+    files.add_file(
+        format!(
+            "src/main/java/{}/{lib_name}/Slice.java",
             domain.replace('.', "/")
         ),
         java_types,
@@ -180,7 +203,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             Type::Struct(_) => todo!("don't support structs yet"),
             Type::Enum(_) => todo!("don't support enums yet"),
-            Type::Slice(_) => todo!("don't support slices yet"),
+            // Type::Slice(_) => todo!("don't support slices yet"),
+            Type::Slice(Slice::Str(_,_)) => format!("PrimitiveArrayTools.String").into(),
+            Type::Slice(Slice::Primitive(_,_)) => "String".into(),
             _ => todo!(),
         }
     }
@@ -188,14 +213,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_return_type_name_ffi(&self, out: &ReturnType) -> Cow<'cx, str> {
         match *out {
             ReturnType::Infallible(SuccessType::Unit) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Writeable) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => {
-                if let hir::OutType::Slice(_) = o {
-                    todo!("slices not supported yet")
-                } else {
-                    self.gen_type_name_ffi(o)
-                }
-            }
+            ReturnType::Infallible(SuccessType::Writeable) => "String".into(),
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name_ffi(o),
             ReturnType::Fallible(_, _) => {
                 todo!("Fallible return types not supported yet")
                 // self.gen_result(ok.as_type(), err.as_ref()).into()
@@ -219,7 +238,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(_) => {
                 todo!("Structs not supported yet")
             }
-            Type::Slice(_) => todo!("slices not supported yet"),
+            Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "DiplomatStr".into(),
+            Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => "DiplomatStr".into(),
+            Type::Slice(Slice::Str(_, StringEncoding::Utf8)) => "DiplomatStr".into(),
+            Type::Slice(Slice::Primitive(_, _)) => todo!("primitive slices not supported yet"),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -298,6 +320,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .expect("Failed to render opaque return block")
     }
 
+    const WRITEABLE_RETURN: &'static str = r#"
+    val returnString = DW.writeableToString(writeable)
+    DW.lib.diplomat_buffer_writeable_destroy(writeable)
+    return returnString
+"#;
+
     fn gen_return<'d>(
         &'d self,
         method: &'d Method,
@@ -305,7 +333,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     ) -> Option<String> {
         match &method.output {
             ReturnType::Infallible(res) => match res {
-                SuccessType::Writeable => todo!("writeable not yet supported"),
+                SuccessType::Writeable => Some(Self::WRITEABLE_RETURN.into()),
                 SuccessType::OutType(o) => match o {
                     Type::Primitive(_) => Some("return returnVal".into()),
                     Type::Opaque(opaque_path) => {
@@ -321,7 +349,15 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     }
                     Type::Struct(_) => todo!("structs not yet supported"),
                     Type::Enum(_) => todo!("enums not yet supported"),
-                    Type::Slice(_) => todo!("slices not yet supported"),
+                    Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => {
+                        todo!("don't support slice returns");
+                    }
+                    Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => {
+                        todo!("don't support slice returns");
+                    }
+                    Type::Slice(_) => {
+                        todo!("don't support slice returns");
+                    }
                     _ => todo!(),
                 },
                 SuccessType::Unit => None,
@@ -364,6 +400,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             _ => todo!(),
         };
 
+        println!("debug method {native_method_name}");
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
 
@@ -371,23 +408,22 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
             let param_type_ffi = self.gen_type_name_ffi(&param.ty);
 
-            // todo: rethink this
-            if let hir::Type::Slice(..) = param.ty {
-                todo!("Slices not supported yet");
-            }
-            /*
-            if let hir::Type::Struct(..) = param.ty {
-                needs_temp_arena = true;
-            }*/
             if let ParamBorrowInfo::Struct(_) = param_borrow_kind {
                 todo!("support struct borrows")
             };
             param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
+            println!("debug param_type {param_type_ffi}");
             param_types_ffi.push(param_type_ffi);
             param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
             param_names_ffi.push(param_name);
         }
-
+        let writeable_return = matches!(
+            &method.output,
+            ReturnType::Infallible(SuccessType::Writeable)
+        );
+        if writeable_return {
+            param_conversions.push("writeable".into());
+        }
         let params = param_decls_kt.join(", ");
 
         let return_ty = self.gen_return_type_name(&method.output);
@@ -408,6 +444,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_conversions,
             return_expression,
             lifetime_env: &method.lifetime_env,
+            writeable_return,
         }
     }
 
@@ -432,9 +469,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-            if let hir::Type::Slice(..) = param.ty {
-                todo!("Slices not supported yet");
-            }
+            // if let hir::Type::Slice(..) = param.ty {
+            //     todo!("Slices not supported yet");
+            // }
             if let ParamBorrowInfo::Struct(_) = param_borrow_kind {
                 todo!("support struct borrows")
             };
@@ -498,6 +535,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_names_ffi.push(param_name);
         }
 
+        let writeable_return = matches!(
+            &method.output,
+            ReturnType::Infallible(SuccessType::Writeable)
+        );
+        if writeable_return {
+            param_conversions.push("writeable".into());
+        }
+
         let params = param_decls_kt.join(", ");
 
         let return_ty = self.gen_return_type_name(&method.output);
@@ -518,6 +563,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             param_conversions,
             return_expression,
             lifetime_env: &method.lifetime_env,
+            writeable_return,
         })
     }
 
@@ -659,6 +705,7 @@ struct SelfMethodInfo<'a> {
     // todo: slice params and lifetimes
     return_expression: Option<Cow<'a, str>>,
     lifetime_env: &'a LifetimeEnv,
+    writeable_return: bool,
 }
 
 struct NativeMethodInfo {
@@ -675,6 +722,7 @@ struct CompanionMethodInfo<'a> {
     // todo: slice params and lifetimes, not this should only take self borrows
     return_expression: Option<Cow<'a, str>>,
     lifetime_env: &'a LifetimeEnv,
+    writeable_return: bool,
 }
 
 #[cfg(test)]
@@ -746,10 +794,19 @@ mod test {
                     }
 
 
+                    pub fn borrow3<'a>(&'a self, other: &'a mut DiplomatWriteable) {
+                        todo!()
+                    }
+
                     pub fn borrow<'a>(other: &'a MyOpaqueStruct<'b>) -> Box<BorrowWrapper<'b, 'a>> {
                         Box::new(BorrowWrapper {
                             my_opaque: other.as_ref()
                         })
+                    }
+
+
+                    pub fn string_stuff<'a, 'c>(&'a self,  some_str: &'c DiplomatStr)  -> &'c MyOpaqueStruct<'b> {
+                        self.0.as_ref()
                     }
 
                 }

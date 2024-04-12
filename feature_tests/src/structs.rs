@@ -1,5 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
+    use diplomat_runtime::DiplomatStr16;
+
     use crate::imports::ffi::ImportedStruct;
     use std::sync::Mutex;
 
@@ -10,6 +12,9 @@ pub mod ffi {
 
     #[diplomat::opaque]
     pub struct OtherOpaque(Mutex<String>);
+
+    #[diplomat::opaque]
+    pub struct Utf16Wrap(Vec<u16>);
 
     #[derive(Debug, PartialEq, Eq)]
     #[diplomat::attr(kotlin, disable)]
@@ -99,6 +104,26 @@ pub mod ffi {
         pub fn get_len_and_add(&self, other: usize) -> usize {
             let guard = self.0.lock().expect("Failed to lock mutex");
             guard.len() + other
+        }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn dummy_str<'a>(&'a self) -> &'a DiplomatStr {
+            "A const str with non byte char: 餐 which is a DiplomatChar,".as_bytes()
+        }
+
+        #[allow(clippy::needless_lifetimes)]
+        pub fn wrapper<'a>(&'a self) -> Box<Utf16Wrap> {
+            let chars = "A const str with non byte char: 𐐷 which is a DiplomatChar,"
+                .encode_utf16()
+                .collect();
+            Box::new(Utf16Wrap(chars))
+        }
+    }
+
+    impl Utf16Wrap {
+        #[allow(clippy::needless_lifetimes)]
+        pub fn borrow_cont<'a>(&'a self) -> &'a DiplomatStr16 {
+            &self.0
         }
     }
 

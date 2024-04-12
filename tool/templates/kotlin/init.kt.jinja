@@ -1,4 +1,188 @@
 package {{domain}}.{{lib_name}};
 
+import java.lang.foreign.MemorySegment
+import java.lang.foreign.SegmentAllocator
+import java.lang.foreign.ValueLayout
+
 val CLEANER = java.lang.ref.Cleaner.create()
+
+internal class DiplomatStr private constructor( internal val mem: MemorySegment) {
+
+    internal fun ptrAddr(): Long {
+        return mem.address().toRawLongValue()
+    }
+
+    companion object {
+        fun fromString(arena: SegmentAllocator, string: String): DiplomatStr {
+            val len = string.byteInputStream().available()
+            val mem = arena.allocate(len.toLong())
+            return DiplomatStr(mem)
+        }
+
+    }
+}
+
+internal class Utf16Str private constructor( internal val mem: MemorySegment) {
+
+    internal fun ptrAddr(): Long {
+        return mem.address().toRawLongValue()
+    }
+
+    companion object {
+        fun fromString(arena: SegmentAllocator, string: String): Utf16Str {
+            val mem = arena.allocate(string.length.toLong())
+            var index = 0L
+            for (char in string.iterator()) {
+                mem.setAtIndex(ValueLayout.JAVA_SHORT, index, char.code.toShort())
+                index += 1L
+            }
+            return Utf16Str(mem)
+        }
+    }
+}
+
+interface DiplomatWriteableLib: Library {
+    fun diplomat_buffer_writeable_create(size: Long): DiplomatWriteable
+    fun diplomat_buffer_writeable_get_bytes(diplomatWriteable: DiplomatWriteable): Pointer
+    fun diplomat_buffer_writeable_len(diplomatWriteable: DiplomatWriteable): Long
+    fun diplomat_buffer_writeable_destroy(diplomatWriteable: DiplomatWriteable)
+
+}
+
+object DW {
+
+    val libClass: Class<DiplomatWriteableLib> = DiplomatWriteableLib::class.java
+    val lib: DiplomatWriteableLib = Native.load("somelib", libClass)
+
+    fun writeableToString (writeable: DiplomatWriteable): String {
+        val pointer = lib.diplomat_buffer_writeable_get_bytes(writeable)
+        val bytes = pointer.getByteArray(0, writeable.len)
+        return bytes.toString()
+    }
+}
+
+internal object PrimitiveArrayTools {
+    fun native(boolArray: BooleanArray): Memory {
+        val mem = Memory(boolArray.size.toLong())
+        val ptr = mem.share(0)
+        val byteArray = boolArray.map {if (it) 1.toByte() else 0.toByte() }.toByteArray()
+        ptr.write(0, byteArray, 0, byteArray.size)
+        return mem
+    }
+
+
+    fun native(byteArray: ByteArray): Memory {
+        val mem = Memory(byteArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, byteArray, 0, byteArray.size)
+        return mem
+    }
+    fun native(uByteArray: UByteArray): Memory {
+        val byteArray = uByteArray.asByteArray()
+        val mem = Memory(byteArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, byteArray, 0, byteArray.size)
+        return mem
+    }
+
+    fun native(shortArray: ShortArray): Memory {
+        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, shortArray, 0, shortArray.size)
+        return mem
+    }
+
+    fun native(uShortArray: UShortArray): Memory {
+        val shortArray = uShortArray.asShortArray()
+        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, shortArray, 0, shortArray.size)
+        return mem
+    }
+
+    fun native(intArray: IntArray): Memory {
+        val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, intArray, 0, intArray.size)
+        return mem
+    }
+
+    fun native(uIntArray: UIntArray): Memory {
+        val intArray = uIntArray.asIntArray()
+        val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, intArray, 0, intArray.size)
+        return mem
+    }
+
+
+    fun native(longArray: LongArray): Memory {
+        val mem = Memory(Long.SIZE_BYTES * longArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, longArray, 0, longArray.size)
+        return mem
+    }
+
+    fun native(uLongArray: ULongArray): Memory {
+        val shortArray = uLongArray.asLongArray()
+        val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, shortArray, 0, shortArray.size)
+        return mem
+    }
+
+    fun native(floatArray: FloatArray): Memory {
+        val mem = Memory(Float.SIZE_BYTES * floatArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, floatArray, 0, floatArray.size)
+        return mem
+    }
+
+    fun native(doubleArray: DoubleArray): Memory {
+        val mem = Memory(Double.SIZE_BYTES * doubleArray.size.toLong())
+        val ptr = mem.share(0)
+        ptr.write(0, doubleArray, 0, doubleArray.size)
+        return mem
+    }
+
+    fun getByteArray(slice: Slice): ByteArray {
+        return slice.data.getByteArray(0, slice.len.toInt())
+    }
+
+    fun getUByteArray(slice: Slice): UByteArray {
+        return slice.data.getByteArray(0, slice.len.toInt()).asUByteArray()
+    }
+
+    fun getIntArray(slice: Slice): IntArray {
+        return slice.data.getIntArray(0, slice.len.toInt())
+    }
+
+    fun getUIntArray(slice: Slice): UIntArray {
+        return slice.data.getIntArray(0, slice.len.toInt()).asUIntArray()
+    }
+
+    fun getShortArray(slice: Slice): ShortArray{
+        return slice.data.getShortArray(0, slice.len.toInt())
+    }
+
+    fun getUShortArray(slice: Slice): UShortArray{
+        return slice.data.getShortArray(0, slice.len.toInt()).asUShortArray()
+    }
+
+    fun getLongArray (slice: Slice): LongArray {
+        return slice.data.getLongArray(0, slice.len.toInt())
+    }
+
+    fun getULongArray (slice: Slice): ULongArray {
+        return slice.data.getLongArray(0, slice.len.toInt()).asULongArray()
+    }
+
+    fun getFloatArray (slice: Slice): FloatArray {
+        return slice.data.getFloatArray(0, slice.len.toInt())
+    }
+
+    fun getDoubleArray (slice: Slice): DoubleArray {
+        return slice.data.getDoubleArray(0, slice.len.toInt())
+    }
+}
 
