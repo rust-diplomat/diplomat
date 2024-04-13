@@ -33,7 +33,7 @@ class OtherOpaqueTest {
 
         assertEquals(
             "A const str with non byte char: 餐 which is a DiplomatChar,",
-            str.asString()
+            str
         )
     }
 }
