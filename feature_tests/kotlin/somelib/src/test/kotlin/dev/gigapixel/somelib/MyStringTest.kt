@@ -17,7 +17,6 @@ class MyStringTest {
         // used to verify correct function of codepoints beyond U+FFFF
         val ancientEgyptian = "\uD80C\uDD6E\uD80C\uDDCC  \uD80C\uDDBC\uD80C\uDC00  \uD80C\uDE7B\uD80D\uDC30\uD80C\uDFDB"
         myString.setStr(ancientEgyptian)
-        println(ancientEgyptian)
         assertEquals(ancientEgyptian, myString.getStr())
     }
 }
