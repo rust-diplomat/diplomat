@@ -1,5 +1,4 @@
 #[diplomat::bridge]
-#[diplomat::attr(kotlin, disable)]
 mod ffi {
     use diplomat_runtime::DiplomatWriteable;
     use std::fmt::Write as _;
