@@ -12,5 +12,12 @@ class MyStringTest {
         val ukrainian = "І це українською мовою"
         myString.setStr(ukrainian)
         assertEquals(ukrainian, myString.getStr())
+        // this should be ancient egyptian for "his brother elder"
+        // transcribed from the wikipedia article on "a tale of two brothers
+        // used to verify correct function of codepoints beyond U+FFFF
+        val ancientEgyptian = "\uD80C\uDD6E\uD80C\uDDCC  \uD80C\uDDBC\uD80C\uDC00  \uD80C\uDE7B\uD80D\uDC30\uD80C\uDFDB"
+        myString.setStr(ancientEgyptian)
+        println(ancientEgyptian)
+        assertEquals(ancientEgyptian, myString.getStr())
     }
 }
