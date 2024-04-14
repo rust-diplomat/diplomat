@@ -4,15 +4,15 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class OtherOpaqueTest {
-   @Test
-   fun testLoad() {
-       val otherOpaque = OtherOpaque.fromUsize(356)
-       assertEquals(otherOpaque.getLenAndAdd(4), 7)
-       val borrowed = otherOpaque.borrow()
-       borrowed.change(1234)
-       assertEquals(otherOpaque.getLenAndAdd(4), 8)
-       Result
-   }
+    @Test
+    fun testLoad() {
+        val otherOpaque = OtherOpaque.fromUsize(356)
+        assertEquals(otherOpaque.getLenAndAdd(4), 7)
+        val borrowed = otherOpaque.borrow()
+        borrowed.change(1234)
+        assertEquals(otherOpaque.getLenAndAdd(4), 8)
+        Result
+    }
 
     @Test
     fun testMultiBorrow() {
@@ -39,7 +39,7 @@ class OtherOpaqueTest {
         val newStr = opaque.wrapper().borrowCont()
         assertEquals(
             "A const str with non byte char: 𐐷 which is a DiplomatChar,",
-                    newStr
+            newStr
         )
     }
 }
