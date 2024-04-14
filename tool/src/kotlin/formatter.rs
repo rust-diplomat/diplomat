@@ -49,10 +49,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
-        use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
+        use diplomat_core::hir::{FloatType, IntType};
         match prim {
             PrimitiveType::Bool => "Boolean",
-            PrimitiveType::Char => "Char",
+            PrimitiveType::Char => "Int",
             PrimitiveType::Int(IntType::I8) => "Byte",
             PrimitiveType::Int(IntType::I16) => "Short",
             PrimitiveType::Int(IntType::I32) => "Int",
