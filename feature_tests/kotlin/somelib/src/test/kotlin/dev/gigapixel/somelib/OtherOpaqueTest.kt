@@ -35,5 +35,11 @@ class OtherOpaqueTest {
             "A const str with non byte char: 餐 which is a DiplomatChar,",
             str
         )
+
+        val newStr = opaque.wrapper().borrowCont()
+        assertEquals(
+            "A const str with non byte char: 𐐷 which is a DiplomatChar,",
+                    newStr
+        )
     }
 }

@@ -1,6 +1,7 @@
 package {{domain}}.{{lib_name}};
 import com.sun.jna.Library
 import com.sun.jna.Native
+import com.sun.jna.Pointer
 
 
 interface {{type_name}}Lib: Library {
@@ -31,14 +32,10 @@ class {{type_name}} internal constructor (
         val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
         val lib: {{type_name}}Lib = Native.load("{{lib_name}}", libClass)
 
-{%- for m in companion_methods %}
-{% include "companion_method.kt.jinja" %}
-{%- endfor %}
+{%- for m in companion_methods %}{{m|indent(8)}}{%- endfor %}
     }
 
-  {%- for m in self_methods %}
-{% include "self_method.kt.jinja" %}
-  {%- endfor %}
+{%- for m in self_methods %}{{m|indent(4)}}{%- endfor %}
 
 }
 

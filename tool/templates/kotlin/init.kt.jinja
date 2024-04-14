@@ -1,154 +1,158 @@
 package {{domain}}.{{lib_name}};
 
-import java.lang.foreign.MemorySegment
-import java.lang.foreign.SegmentAllocator
-import java.lang.foreign.ValueLayout
+import com.sun.jna.Library
+import com.sun.jna.Memory
+import com.sun.jna.Native
+import com.sun.jna.Pointer
 
 val CLEANER = java.lang.ref.Cleaner.create()
 
-internal class DiplomatStr private constructor( internal val mem: MemorySegment) {
-
-    internal fun ptrAddr(): Long {
-        return mem.address().toRawLongValue()
-    }
-
-    companion object {
-        fun fromString(arena: SegmentAllocator, string: String): DiplomatStr {
-            val len = string.byteInputStream().available()
-            val mem = arena.allocate(len.toLong())
-            return DiplomatStr(mem)
-        }
-
-    }
-}
-
-internal class Utf16Str private constructor( internal val mem: MemorySegment) {
-
-    internal fun ptrAddr(): Long {
-        return mem.address().toRawLongValue()
-    }
-
-    companion object {
-        fun fromString(arena: SegmentAllocator, string: String): Utf16Str {
-            val mem = arena.allocate(string.length.toLong())
-            var index = 0L
-            for (char in string.iterator()) {
-                mem.setAtIndex(ValueLayout.JAVA_SHORT, index, char.code.toShort())
-                index += 1L
-            }
-            return Utf16Str(mem)
-        }
-    }
-}
 
 interface DiplomatWriteableLib: Library {
-    fun diplomat_buffer_writeable_create(size: Long): DiplomatWriteable
-    fun diplomat_buffer_writeable_get_bytes(diplomatWriteable: DiplomatWriteable): Pointer
-    fun diplomat_buffer_writeable_len(diplomatWriteable: DiplomatWriteable): Long
-    fun diplomat_buffer_writeable_destroy(diplomatWriteable: DiplomatWriteable)
-
+    fun diplomat_buffer_writeable_create(size: Long): Pointer 
+    fun diplomat_buffer_writeable_get_bytes(diplomatWriteable: Pointer): Pointer
+    fun diplomat_buffer_writeable_len(diplomatWriteable: Pointer): Long
+    fun diplomat_buffer_writeable_destroy(diplomatWriteable: Pointer)
 }
 
 object DW {
 
     val libClass: Class<DiplomatWriteableLib> = DiplomatWriteableLib::class.java
-    val lib: DiplomatWriteableLib = Native.load("somelib", libClass)
+    val lib: DiplomatWriteableLib = Native.load("{{lib_name}}", libClass)
 
-    fun writeableToString (writeable: DiplomatWriteable): String {
+    fun writeableToString (writeable: Pointer): String {
         val pointer = lib.diplomat_buffer_writeable_get_bytes(writeable)
-        val bytes = pointer.getByteArray(0, writeable.len)
-        return bytes.toString()
+        val len = lib.diplomat_buffer_writeable_len(writeable)
+        val bytes = pointer.getByteArray(0, len.toInt())
+        return bytes.decodeToString()
     }
 }
-
 internal object PrimitiveArrayTools {
-    fun native(boolArray: BooleanArray): Memory {
+    fun native(boolArray: BooleanArray): Pair<Memory, Slice> {
         val mem = Memory(boolArray.size.toLong())
         val ptr = mem.share(0)
         val byteArray = boolArray.map {if (it) 1.toByte() else 0.toByte() }.toByteArray()
         ptr.write(0, byteArray, 0, byteArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = byteArray.size.toLong()
+        return Pair(mem, slice)
     }
 
-
-    fun native(byteArray: ByteArray): Memory {
+    fun native(byteArray: ByteArray):  Pair<Memory, Slice>{
         val mem = Memory(byteArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, byteArray, 0, byteArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = byteArray.size.toLong()
+        return Pair(mem, slice)
     }
-    fun native(uByteArray: UByteArray): Memory {
+
+    @ExperimentalUnsignedTypes
+    fun native(uByteArray: UByteArray): Pair<Memory, Slice> {
         val byteArray = uByteArray.asByteArray()
         val mem = Memory(byteArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, byteArray, 0, byteArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = uByteArray.size.toLong()
+        return Pair(mem, slice)
     }
 
-    fun native(shortArray: ShortArray): Memory {
+    fun native(shortArray: ShortArray): Pair<Memory, Slice> {
         val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, shortArray, 0, shortArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = shortArray.size.toLong()
+        return Pair(mem, slice)
     }
 
-    fun native(uShortArray: UShortArray): Memory {
+    @ExperimentalUnsignedTypes
+    fun native(uShortArray: UShortArray): Pair<Memory, Slice> {
         val shortArray = uShortArray.asShortArray()
         val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, shortArray, 0, shortArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = uShortArray.size.toLong()
+        return Pair(mem, slice)
     }
 
-    fun native(intArray: IntArray): Memory {
+    fun native(intArray: IntArray): Pair<Memory, Slice> {
         val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, intArray, 0, intArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = intArray.size.toLong()
+        return Pair(mem, slice)
     }
 
-    fun native(uIntArray: UIntArray): Memory {
+    @ExperimentalUnsignedTypes
+    fun native(uIntArray: UIntArray): Pair<Memory, Slice> {
         val intArray = uIntArray.asIntArray()
         val mem = Memory(Int.SIZE_BYTES * intArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, intArray, 0, intArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = uIntArray.size.toLong()
+        return Pair(mem, slice)
     }
 
 
-    fun native(longArray: LongArray): Memory {
+    fun native(longArray: LongArray): Pair<Memory, Slice> {
         val mem = Memory(Long.SIZE_BYTES * longArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, longArray, 0, longArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = longArray.size.toLong()
+        return Pair(mem, slice)
     }
 
-    fun native(uLongArray: ULongArray): Memory {
+    @ExperimentalUnsignedTypes
+    fun native(uLongArray: ULongArray): Pair<Memory, Slice> {
         val shortArray = uLongArray.asLongArray()
         val mem = Memory(Short.SIZE_BYTES * shortArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, shortArray, 0, shortArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = uLongArray.size.toLong()
+        return Pair(mem, slice)
     }
 
-    fun native(floatArray: FloatArray): Memory {
+    fun native(floatArray: FloatArray): Pair<Memory, Slice> {
         val mem = Memory(Float.SIZE_BYTES * floatArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, floatArray, 0, floatArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = floatArray.size.toLong()
+        return Pair(mem, slice)
     }
 
-    fun native(doubleArray: DoubleArray): Memory {
+    fun native(doubleArray: DoubleArray): Pair<Memory, Slice> {
         val mem = Memory(Double.SIZE_BYTES * doubleArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, doubleArray, 0, doubleArray.size)
-        return mem
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = doubleArray.size.toLong()
+        return Pair(mem, slice)
     }
 
     fun getByteArray(slice: Slice): ByteArray {
         return slice.data.getByteArray(0, slice.len.toInt())
     }
 
+    @ExperimentalUnsignedTypes
     fun getUByteArray(slice: Slice): UByteArray {
         return slice.data.getByteArray(0, slice.len.toInt()).asUByteArray()
     }
@@ -157,6 +161,7 @@ internal object PrimitiveArrayTools {
         return slice.data.getIntArray(0, slice.len.toInt())
     }
 
+    @ExperimentalUnsignedTypes
     fun getUIntArray(slice: Slice): UIntArray {
         return slice.data.getIntArray(0, slice.len.toInt()).asUIntArray()
     }
@@ -165,6 +170,7 @@ internal object PrimitiveArrayTools {
         return slice.data.getShortArray(0, slice.len.toInt())
     }
 
+    @ExperimentalUnsignedTypes
     fun getUShortArray(slice: Slice): UShortArray{
         return slice.data.getShortArray(0, slice.len.toInt()).asUShortArray()
     }
@@ -173,6 +179,7 @@ internal object PrimitiveArrayTools {
         return slice.data.getLongArray(0, slice.len.toInt())
     }
 
+    @ExperimentalUnsignedTypes
     fun getULongArray (slice: Slice): ULongArray {
         return slice.data.getLongArray(0, slice.len.toInt()).asULongArray()
     }
@@ -184,5 +191,26 @@ internal object PrimitiveArrayTools {
     fun getDoubleArray (slice: Slice): DoubleArray {
         return slice.data.getDoubleArray(0, slice.len.toInt())
     }
-}
 
+    fun readUtf8(str: String): Pair<Memory, Slice> {
+        return native(str.toByteArray())
+    }
+
+    @ExperimentalUnsignedTypes
+    fun readUtf16(str: String): Pair<Memory, Slice> {
+        return native(str.map {it.code.toUShort()}.toUShortArray())
+    }
+
+    fun getUtf8(slice: Slice): String {
+        val byteArray = slice.data.getByteArray(0, slice.len.toInt())
+
+        return byteArray.decodeToString()
+    }
+
+    fun getUtf16(slice: Slice): String {
+        val shortArray = slice.data.getShortArray(0, slice.len.toInt())
+        val charArray = shortArray.map { it.toInt().toChar() }.joinToString(  "")
+
+        return charArray
+    }
+}

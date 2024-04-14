@@ -1,5 +1,9 @@
 use crate::c2::CFormatter;
-use diplomat_core::hir::{self, TypeContext, TypeId};
+use diplomat_core::hir::{
+    self,
+    borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
+    PrimitiveType, Type, TypeContext, TypeId,
+};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -11,7 +15,9 @@ pub(super) struct KotlinFormatter<'tcx> {
     strip_prefix: Option<String>,
 }
 
-const INVALID_METHOD_NAMES: &[&str] = &["new", "static", "default", "private", "internal"];
+const INVALID_METHOD_NAMES: &[&str] = &[
+    "new", "static", "default", "private", "internal", "toString",
+];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> KotlinFormatter<'tcx> {
@@ -30,11 +36,19 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "String"
     }
 
+    pub fn fmt_primitive_slice(&self, ty: PrimitiveType) -> String {
+        format!("{}Array", self.fmt_primitive_as_ffi(ty))
+    }
+
+    pub fn fmt_return_slice(&self) -> &'static str {
+        "Slice"
+    }
+
     pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
         self.c.fmt_method_name(ty, method).into()
     }
 
-    pub fn fmt_primitive_as_ffi(&self, prim: hir::PrimitiveType) -> &'static str {
+    pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntType, PrimitiveType};
         match prim {
             PrimitiveType::Bool => "Boolean",
@@ -51,7 +65,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             PrimitiveType::IntSize(_) => "Long", // this feels wrong
             PrimitiveType::Float(FloatType::F32) => "Float",
             PrimitiveType::Float(FloatType::F64) => "Double",
-            PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+            PrimitiveType::Int128(_) => panic!("i128 not supported in Kotlin"),
         }
     }
 
@@ -70,6 +84,21 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_param_name<'a>(&self, ident: &'a str) -> Cow<'a, str> {
         ident.to_lower_camel_case().into()
+    }
+
+    pub fn fmt_borrow<'a>(&self, edge: &LifetimeEdge<'a>) -> Cow<'a, str> {
+        let LifetimeEdge {
+            param_name,
+            kind: ty,
+            ..
+        } = edge;
+        let type_change = match ty {
+            LifetimeEdgeKind::OpaqueParam => "",
+            LifetimeEdgeKind::SliceParam => "Mem",
+            LifetimeEdgeKind::StructLifetime(_, _) => panic!("Don't support structs yet"),
+            _ => panic!("unsupported lifetime kind"),
+        };
+        format!("{}{type_change}", self.fmt_param_name(param_name)).into()
     }
 
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {

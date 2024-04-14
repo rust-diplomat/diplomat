@@ -1,4 +1,5 @@
 use askama::Template;
+use diplomat_core::ast::SelfParam;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
     self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
@@ -55,28 +56,6 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
             files.add_file(format!("src/main/kotlin/{file_name}"), body);
         }
     }
-
-    #[derive(Template)]
-    #[template(path = "kotlin/DiplomatWriteable.java.jinja", escape = "none")]
-    struct DiplomatWriteableTpl<'a> {
-        domain: &'a str,
-        lib_name: &'a str,
-    }
-
-    let java_types = DiplomatWriteableTpl {
-        domain: &domain,
-        lib_name: &lib_name,
-    }
-    .render()
-    .expect("Failed to render java types");
-
-    files.add_file(
-        format!(
-            "src/main/java/{}/{lib_name}/DiplomatWriteable.java",
-            domain.replace('.', "/")
-        ),
-        java_types,
-    );
 
     #[derive(Template)]
     #[template(path = "kotlin/Slice.java.jinja", escape = "none")]
@@ -203,9 +182,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             Type::Struct(_) => todo!("don't support structs yet"),
             Type::Enum(_) => todo!("don't support enums yet"),
-            // Type::Slice(_) => todo!("don't support slices yet"),
-            Type::Slice(Slice::Str(_,_)) => format!("PrimitiveArrayTools.String").into(),
-            Type::Slice(Slice::Primitive(_,_)) => "String".into(),
+            Type::Slice(_) => format!("{name}Slice").into(),
             _ => todo!(),
         }
     }
@@ -213,7 +190,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_return_type_name_ffi(&self, out: &ReturnType) -> Cow<'cx, str> {
         match *out {
             ReturnType::Infallible(SuccessType::Unit) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Writeable) => "String".into(),
+            ReturnType::Infallible(SuccessType::Writeable) => self.formatter.fmt_void().into(),
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name_ffi(o),
             ReturnType::Fallible(_, _) => {
                 todo!("Fallible return types not supported yet")
@@ -238,10 +215,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(_) => {
                 todo!("Structs not supported yet")
             }
-            Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "DiplomatStr".into(),
-            Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => "DiplomatStr".into(),
-            Type::Slice(Slice::Str(_, StringEncoding::Utf8)) => "DiplomatStr".into(),
-            Type::Slice(Slice::Primitive(_, _)) => todo!("primitive slices not supported yet"),
+            Type::Slice(_) => "Slice".into(),
+            // Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "DiplomatStr".into(),
+            // Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "DiplomatStr".into(),
+            // Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => "DiplomatStr".into(),
+            // Type::Slice(Slice::Str(_, StringEncoding::Utf8)) => "DiplomatStr".into(),
+            // Type::Slice(Slice::Primitive(_, _)) => "Pointer".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -253,14 +232,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         lifetimes: &'d Lifetimes,
         method_lifetimes_map: MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
+        cleanups: &[Cow<'d, str>],
     ) -> String {
         #[derive(Template)]
         #[template(path = "kotlin/opaqueReturn.kt.jinja", escape = "none")]
-        struct OpaqueReturn<'b> {
+        struct OpaqueReturn<'a, 'b> {
             return_type_name: Cow<'b, str>,
             borrows: Vec<ParamsForLt<'b>>,
             is_owned: bool,
             self_edges: Vec<Cow<'b, str>>,
+            cleanups: &'a [Cow<'b, str>],
         }
 
         struct ParamsForLt<'c> {
@@ -279,7 +260,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     param
                         .incoming_edges
                         .iter()
-                        .map(|edge| self.formatter.fmt_param_name(edge.param_name.as_ref()))
+                        .map(|edge| self.formatter.fmt_borrow(edge))
                         .collect(),
                 )
             }
@@ -303,7 +284,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let other_params = lt_info
                     .incoming_edges
                     .iter()
-                    .map(|edge| self.formatter.fmt_param_name(edge.param_name.as_ref()));
+                    .map(|edge| self.formatter.fmt_borrow(edge));
                 let params = other_params.collect();
                 Some(ParamsForLt { lt, params })
             })
@@ -314,6 +295,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             borrows,
             is_owned,
             self_edges,
+            cleanups,
         };
         opaque_return
             .render()
@@ -321,15 +303,36 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     const WRITEABLE_RETURN: &'static str = r#"
-    val returnString = DW.writeableToString(writeable)
-    DW.lib.diplomat_buffer_writeable_destroy(writeable)
-    return returnString
-"#;
+val returnString = DW.writeableToString(writeable)
+DW.lib.diplomat_buffer_writeable_destroy(writeable)
+return returnString"#;
+
+    fn gen_slice_retrn<'d>(&'d self, slice_ty: &'d Slice) -> String {
+        match slice_ty {
+            Slice::Str(_, enc) => match enc {
+                StringEncoding::UnvalidatedUtf16 => {
+                    "    return PrimitiveArrayTools.getUtf16(returnVal)".into()
+                }
+                StringEncoding::UnvalidatedUtf8 => {
+                    "    return PrimitiveArrayTools.getUtf8(returnVal)".into()
+                }
+                StringEncoding::Utf8 => "    return PrimitiveArrayTools.getUtf8(returnVal)".into(),
+                _ => todo!(),
+            },
+            Slice::Primitive(_, prim_ty) => {
+                let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
+                format!("    return PrimitiveArrayTools.get{prim_ty}Array(returnVal)")
+            }
+
+            _ => todo!(),
+        }
+    }
 
     fn gen_return<'d>(
         &'d self,
         method: &'d Method,
         method_lifetimes_map: MethodLtMap<'d>,
+        cleanups: &[Cow<'d, str>],
     ) -> Option<String> {
         match &method.output {
             ReturnType::Infallible(res) => match res {
@@ -345,19 +348,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                             lifetimes,
                             method_lifetimes_map,
                             &method.lifetime_env,
+                            cleanups,
                         ))
                     }
                     Type::Struct(_) => todo!("structs not yet supported"),
                     Type::Enum(_) => todo!("enums not yet supported"),
-                    Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => {
-                        todo!("don't support slice returns");
-                    }
-                    Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => {
-                        todo!("don't support slice returns");
-                    }
-                    Type::Slice(_) => {
-                        todo!("don't support slice returns");
-                    }
+                    Type::Slice(slc) => Some(self.gen_slice_retrn(slc)),
                     _ => todo!(),
                 },
                 SuccessType::Unit => None,
@@ -367,13 +363,40 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Nullable(_) => todo!("nullable returns not yet supported"),
         }
     }
+    fn gen_slice_conv(&self, kt_param_name: Cow<'cx, str>, slice_type: Slice) -> Cow<'cx, str> {
+        #[derive(Template)]
+        #[template(path = "kotlin/SliceConv.kt.jinja", escape = "none")]
+        struct SliceConv<'d> {
+            slice_method: Cow<'d, str>,
+            kt_param_name: Cow<'d, str>,
+        }
+        let slice_method = match slice_type {
+            Slice::Str(_, StringEncoding::UnvalidatedUtf16) => "readUtf16".into(),
+            Slice::Str(_, _) => "readUtf8".into(),
+            Slice::Primitive(_, _) => "native".into(),
+            _ => panic!("Unsupported slice type"),
+        };
 
-    fn gen_self_method_info(
+        let slice_conv = SliceConv {
+            kt_param_name,
+            slice_method,
+        };
+        slice_conv
+            .render()
+            .expect("Failed to render slice method")
+            .into()
+    }
+
+    fn gen_cleanup(&self, param_name: Cow<'cx, str>) -> Cow<'cx, str> {
+        format!("{param_name}Mem.close()").into()
+    }
+
+    fn gen_method(
         &mut self,
         id: TypeId,
         method: &'cx hir::Method,
-        self_type: &'cx SelfType,
-    ) -> SelfMethodInfo<'cx> {
+        self_type: Option<&'cx SelfType>,
+    ) -> String {
         let mut visitor = method.borrowing_param_visitor(self.tcx);
         let native_method_name = self.formatter.fmt_c_method_name(id, method);
 
@@ -381,38 +404,52 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut param_types_ffi = Vec::with_capacity(method.params.len());
         let mut param_names_ffi = Vec::with_capacity(method.params.len());
         let mut param_conversions = Vec::with_capacity(method.params.len());
+        let mut slice_conversions = Vec::with_capacity(method.params.len());
+        let mut cleanups = Vec::with_capacity(method.params.len());
 
         match self_type {
-            SelfType::Opaque(o) => match o.owner.mutability {
-                hir::Mutability::Mutable => todo!("don't support mutable borrows yet"),
-                hir::Mutability::Immutable => {
-                    let param_type = "Long".into();
-                    let param_name: Cow<'_, str> = "handle".into();
-                    visitor.visit_param(&self_type.clone().into(), "this");
+            Some(st @ SelfType::Opaque(_)) => {
+                // match o.owner.mutability {
+                // hir::Mutability::Mutable => todo!("don't support mutable borrows yet"),
+                // hir::Mutability::Immutable => {
+                let param_type = "Long".into();
+                let param_name: Cow<'_, str> = "handle".into();
+                visitor.visit_param(&st.clone().into(), "this");
 
-                    param_types_ffi.push(param_type);
-                    param_conversions.push(param_name.clone());
-                    param_names_ffi.push(param_name);
-                }
-            },
-            SelfType::Struct(_) => todo!("structs not supported yet"),
-            SelfType::Enum(_) => todo!("enums not supported yed"),
+                param_types_ffi.push(param_type);
+                param_conversions.push(param_name.clone());
+                param_names_ffi.push(param_name);
+                // }
+            }
+            Some(SelfType::Struct(_)) => todo!("structs not supported yet"),
+            Some(SelfType::Enum(_)) => todo!("enums not supported yed"),
+            None => (),
             _ => todo!(),
         };
 
-        println!("debug method {native_method_name}");
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
 
-            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
-
             let param_type_ffi = self.gen_type_name_ffi(&param.ty);
 
-            if let ParamBorrowInfo::Struct(_) = param_borrow_kind {
-                todo!("support struct borrows")
-            };
+            if let Type::Slice(slice) = param.ty {
+                slice_conversions.push(self.gen_slice_conv(param_name.clone(), slice));
+
+                let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
+
+                match param_borrow_kind {
+                    ParamBorrowInfo::Struct(_) => todo!("support struct borrows"),
+                    ParamBorrowInfo::TemporarySlice => {
+                        cleanups.push(self.gen_cleanup(param_name.clone()));
+                    }
+                    ParamBorrowInfo::BorrowedSlice => (),
+                    ParamBorrowInfo::BorrowedOpaque => (),
+                    ParamBorrowInfo::NotBorrowed => (),
+                    _ => todo!(),
+                };
+            }
+
             param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
-            println!("debug param_type {param_type_ffi}");
             param_types_ffi.push(param_type_ffi);
             param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
             param_names_ffi.push(param_name);
@@ -435,17 +472,21 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         );
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
-            .gen_return(method, method_lifetimes_map)
+            .gen_return(method, method_lifetimes_map, cleanups.as_ref())
             .map(From::from);
 
-        SelfMethodInfo {
+        MethodTpl {
             declaration,
             native_method_name,
             param_conversions,
             return_expression,
             lifetime_env: &method.lifetime_env,
             writeable_return,
+            slice_conversions,
+            cleanups,
         }
+        .render()
+        .expect("Failed to render string for method")
     }
 
     fn gen_native_method_info(&mut self, id: TypeId, method: &'cx hir::Method) -> NativeMethodInfo {
@@ -455,10 +496,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         if let Some(param_self) = method.param_self.as_ref() {
             match &param_self.ty {
-                SelfType::Opaque(o) => match o.owner.mutability {
-                    hir::Mutability::Mutable => todo!("don't support mutable borrows yet"),
-                    hir::Mutability::Immutable => param_decls.push("handle: Long".into()),
-                },
+                SelfType::Opaque(_) => param_decls.push("handle: Long".into()),
                 SelfType::Struct(_) => todo!("structs not supported yet"),
                 SelfType::Enum(_) => todo!("enums not supported yed"),
                 _ => todo!(),
@@ -480,6 +518,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.gen_native_type_name(&param.ty)
             ));
         }
+        if let ReturnType::Infallible(SuccessType::Writeable) = method.output {
+            param_decls.push("writeable: Pointer".into())
+        }
         let params = param_decls.join(", ");
         let native_method = self.formatter.fmt_c_method_name(id, method);
         let return_ty = self.gen_return_type_name_ffi(&method.output);
@@ -487,84 +528,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         NativeMethodInfo {
             declaration: format!("fun {native_method}({params}): {return_ty}"),
         }
-    }
-
-    fn gen_companion_method_info(
-        &mut self,
-        id: TypeId,
-        method: &'cx hir::Method,
-    ) -> Option<CompanionMethodInfo<'cx>> {
-        assert!(method.param_self.is_none());
-        if method.attrs.disable {
-            return None;
-        }
-        let mut visitor = method.borrowing_param_visitor(self.tcx);
-        let native_method_name = self.formatter.fmt_c_method_name(id, method);
-
-        let mut param_decls_kt = Vec::with_capacity(method.params.len());
-        let mut param_types_ffi = Vec::with_capacity(method.params.len());
-        let mut param_names_ffi = Vec::with_capacity(method.params.len());
-        let mut param_conversions = Vec::with_capacity(method.params.len());
-
-        for param in method.params.iter() {
-            let param_name = self.formatter.fmt_param_name(param.name.as_str());
-
-            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
-
-            // assert!(
-            //     matches!(param_borrow_kind, ParamBorrowInfo::NotBorrowed),
-            //     "Only support non-borrown non-self params... for now. Received {param_borrow_kind:?}"
-            // );
-
-            let param_type_ffi = self.gen_type_name_ffi(&param.ty);
-
-            // todo: rethink this
-            if let hir::Type::Slice(..) = param.ty {
-                todo!("Slices not supported yet");
-            }
-            /*
-            if let hir::Type::Struct(..) = param.ty {
-                needs_temp_arena = true;
-            }*/
-            if let ParamBorrowInfo::Struct(_) = param_borrow_kind {
-                todo!("support struct borrows")
-            };
-            param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
-            param_types_ffi.push(param_type_ffi);
-            param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
-            param_names_ffi.push(param_name);
-        }
-
-        let writeable_return = matches!(
-            &method.output,
-            ReturnType::Infallible(SuccessType::Writeable)
-        );
-        if writeable_return {
-            param_conversions.push("writeable".into());
-        }
-
-        let params = param_decls_kt.join(", ");
-
-        let return_ty = self.gen_return_type_name(&method.output);
-
-        let declaration = format!(
-            "fun {}({}): {return_ty}",
-            self.formatter.fmt_method_name(method),
-            params
-        );
-        let method_lifetimes_map = visitor.borrow_map();
-        let return_expression = self
-            .gen_return(method, method_lifetimes_map)
-            .map(From::from);
-
-        Some(CompanionMethodInfo {
-            declaration,
-            native_method_name,
-            param_conversions,
-            return_expression,
-            lifetime_env: &method.lifetime_env,
-            writeable_return,
-        })
     }
 
     fn gen_opaque_def(
@@ -590,14 +553,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     .as_ref()
                     .map(|self_param| (&self_param.ty, method))
             })
-            .map(|(self_param, method)| self.gen_self_method_info(id, method, self_param))
+            .map(|(self_param, method)| self.gen_method(id, method, Some(self_param)))
             .collect::<Vec<_>>();
 
         let companion_methods = ty
             .methods
             .iter()
             .filter(|method| method.param_self.is_none())
-            .flat_map(|method| self.gen_companion_method_info(id, method))
+            .map(|method| self.gen_method(id, method, None))
             .collect::<Vec<_>>();
 
         let lifetimes = ty
@@ -617,8 +580,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             domain: &'a str,
             lib_name: &'a str,
             type_name: &'a str,
-            self_methods: &'a [SelfMethodInfo<'a>],
-            companion_methods: &'a [CompanionMethodInfo<'a>],
+            self_methods: &'a [String],
+            companion_methods: &'a [String],
             native_methods: &'a [NativeMethodInfo],
             lifetimes: Vec<Cow<'a, str>>,
         }
@@ -650,10 +613,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 panic!("don't support structs yet: {type_name:?}")
             }
             Type::Enum(_) => panic!("don't support enums yet"),
-            Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().into(),
-            Type::Slice(hir::Slice::Primitive(_, _)) => {
-                panic!("don't support primitive slices yet")
-            }
+            Type::Slice(_) => "Slice".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -685,8 +645,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             Type::Enum(_) => panic!("don't support enums yet"),
             Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().into(),
-            Type::Slice(hir::Slice::Primitive(_, _)) => {
-                panic!("don't support primitive slices yet")
+            Type::Slice(hir::Slice::Primitive(_, ty)) => {
+                self.formatter.fmt_primitive_slice(ty).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -694,6 +654,23 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 }
 
 type MethodLtMap<'a> = BTreeMap<Lifetime, BorrowedLifetimeInfo<'a>>;
+
+#[derive(Template)]
+#[template(path = "kotlin/Method.kt.jinja", escape = "none")]
+struct MethodTpl<'a> {
+    declaration: String,
+    /// The C method name
+    native_method_name: Cow<'a, str>,
+
+    /// Conversion code for each parameter
+    param_conversions: Vec<Cow<'a, str>>,
+    // todo: slice params and lifetimes
+    return_expression: Option<Cow<'a, str>>,
+    lifetime_env: &'a LifetimeEnv,
+    writeable_return: bool,
+    slice_conversions: Vec<Cow<'a, str>>,
+    cleanups: Vec<Cow<'a, str>>,
+}
 
 struct SelfMethodInfo<'a> {
     declaration: String,
@@ -706,6 +683,8 @@ struct SelfMethodInfo<'a> {
     return_expression: Option<Cow<'a, str>>,
     lifetime_env: &'a LifetimeEnv,
     writeable_return: bool,
+    slice_conversions: Vec<Cow<'a, str>>,
+    cleanups: Vec<Cow<'a, str>>,
 }
 
 struct NativeMethodInfo {
@@ -806,6 +785,11 @@ mod test {
 
 
                     pub fn string_stuff<'a, 'c>(&'a self,  some_str: &'c DiplomatStr)  -> &'c MyOpaqueStruct<'b> {
+                        self.0.as_ref()
+                    }
+
+
+                    pub fn string_stuff_2<'a, 'c>(&'a self,  some_str: &'c DiplomatStr)  -> &'a MyOpaqueStruct<'b> {
                         self.0.as_ref()
                     }
 
