@@ -153,10 +153,10 @@ pub mod test {
         match hir::TypeContext::from_ast(&env, attr_validator) {
             Ok(context) => context,
             Err(e) => {
-                for err in e {
+                for (cx, err) in e {
                     eprintln!("Lowering error: {}", err);
                 }
-                panic!()
+                panic!("Failed to create context")
             }
         }
     }

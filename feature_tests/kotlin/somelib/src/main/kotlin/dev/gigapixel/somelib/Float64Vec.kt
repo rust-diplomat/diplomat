@@ -13,9 +13,13 @@ interface Float64VecLib: Library {
     fun Float64Vec_new_isize(v: Slice): Long
     fun Float64Vec_new_usize(v: Slice): Long
     fun Float64Vec_new_f64_be_bytes(v: Slice): Long
+    fun Float64Vec_new_from_owned(v: Slice): Long
+    fun Float64Vec_as_boxed_slice(handle: Long): Slice
+    fun Float64Vec_as_slice(handle: Long): Slice
     fun Float64Vec_fill_slice(handle: Long, v: Slice): Unit
     fun Float64Vec_set_value(handle: Long, newSlice: Slice): Unit
     fun Float64Vec_to_string(handle: Long, writeable: Pointer): Unit
+    fun Float64Vec_borrow(handle: Long): Slice
 }
 
 class Float64Vec internal constructor (
@@ -129,6 +133,32 @@ class Float64Vec internal constructor (
             return returnOpaque
         
         }
+        fun newFromOwned(v: DoubleArray): Float64Vec {
+        
+            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            
+            val returnVal = lib.Float64Vec_new_from_owned(vSlice);
+        
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal
+            val returnOpaque = Float64Vec(handle, selfEdges)
+            CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
+            vMem.close()
+            return returnOpaque
+        
+        }
+    }
+    fun asBoxedSlice(): DoubleArray {
+    
+        
+        val returnVal = lib.Float64Vec_as_boxed_slice(handle);
+        return PrimitiveArrayTools.getDoubleArray(returnVal)
+    }
+    fun asSlice(): DoubleArray {
+    
+        
+        val returnVal = lib.Float64Vec_as_slice(handle);
+        return PrimitiveArrayTools.getDoubleArray(returnVal)
     }
     fun fillSlice(v: DoubleArray): Unit {
     
@@ -150,6 +180,12 @@ class Float64Vec internal constructor (
         val returnString = DW.writeableToString(writeable)
         DW.lib.diplomat_buffer_writeable_destroy(writeable)
         return returnString
+    }
+    fun borrow(): DoubleArray {
+    
+        
+        val returnVal = lib.Float64Vec_borrow(handle);
+        return PrimitiveArrayTools.getDoubleArray(returnVal)
     }
 
 }

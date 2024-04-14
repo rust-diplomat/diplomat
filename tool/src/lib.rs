@@ -82,9 +82,10 @@ pub fn gen(
             attr_validator.support.disabling = true;
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
+
                 Err(e) => {
-                    for err in e {
-                        eprintln!("Lowering error: {}", err);
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
                     }
                     std::process::exit(1);
                 }

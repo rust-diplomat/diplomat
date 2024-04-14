@@ -2,10 +2,10 @@
 #[diplomat::abi_rename = "namespace_{0}"]
 #[diplomat::attr(cpp2, rename = "CPPRenamed{0}")]
 #[diplomat::attr(cpp2, namespace = "ns")]
-#[diplomat::attr(kotlin, disable)]
 pub mod ffi {
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, rename = "AttrOpaque1Renamed")]
+    #[diplomat::attr(kotlin, disable)]
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
@@ -38,6 +38,7 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, disable)]
+    #[diplomat::attr(kotlin, disable)]
     pub struct AttrOpaque2;
 
     pub enum AttrEnum {
@@ -50,6 +51,7 @@ pub mod ffi {
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, namespace = "")]
     #[diplomat::attr(cpp2, rename = "Unnamespaced")]
+    #[diplomat::attr(kotlin, disable)]
     pub struct Unnamespaced;
 
     impl Unnamespaced {

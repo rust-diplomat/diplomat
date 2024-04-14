@@ -367,7 +367,11 @@ return returnString"#;
             Slice::Str(_, StringEncoding::UnvalidatedUtf16) => "readUtf16".into(),
             Slice::Str(_, _) => "readUtf8".into(),
             Slice::Primitive(_, _) => "native".into(),
-            _ => panic!("Unsupported slice type"),
+            _ => {
+                self.errors
+                    .push_error("Found unsupported slice type".into());
+                "".into()
+            }
         };
 
         let slice_conv = SliceConv {
@@ -473,10 +477,8 @@ return returnString"#;
             native_method_name,
             param_conversions,
             return_expression,
-            lifetime_env: &method.lifetime_env,
             writeable_return,
             slice_conversions,
-            cleanups,
         }
         .render()
         .expect("Failed to render string for method")
@@ -607,6 +609,7 @@ return returnString"#;
             }
             Type::Enum(_) => panic!("don't support enums yet"),
             Type::Slice(_) => "Slice".into(),
+
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -641,6 +644,12 @@ return returnString"#;
             Type::Slice(hir::Slice::Primitive(_, ty)) => {
                 self.formatter.fmt_primitive_slice(ty).into()
             }
+
+            Type::Slice(hir::Slice::Strs(_)) => {
+                self.errors
+                    .push_error("don't support slices of strings yet".into());
+                "".into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -657,44 +666,13 @@ struct MethodTpl<'a> {
 
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
-    // todo: slice params and lifetimes
     return_expression: Option<Cow<'a, str>>,
-    lifetime_env: &'a LifetimeEnv,
     writeable_return: bool,
     slice_conversions: Vec<Cow<'a, str>>,
-    cleanups: Vec<Cow<'a, str>>,
-}
-
-struct SelfMethodInfo<'a> {
-    declaration: String,
-    /// The C method name
-    native_method_name: Cow<'a, str>,
-
-    /// Conversion code for each parameter
-    param_conversions: Vec<Cow<'a, str>>,
-    // todo: slice params and lifetimes
-    return_expression: Option<Cow<'a, str>>,
-    lifetime_env: &'a LifetimeEnv,
-    writeable_return: bool,
-    slice_conversions: Vec<Cow<'a, str>>,
-    cleanups: Vec<Cow<'a, str>>,
 }
 
 struct NativeMethodInfo {
     declaration: String,
-}
-
-struct CompanionMethodInfo<'a> {
-    declaration: String,
-    /// The C method name
-    native_method_name: Cow<'a, str>,
-
-    /// Conversion code for each parameter
-    param_conversions: Vec<Cow<'a, str>>,
-    // todo: slice params and lifetimes, not this should only take self borrows
-    return_expression: Option<Cow<'a, str>>,
-    lifetime_env: &'a LifetimeEnv,
-    writeable_return: bool,
 }
 
 #[cfg(test)]

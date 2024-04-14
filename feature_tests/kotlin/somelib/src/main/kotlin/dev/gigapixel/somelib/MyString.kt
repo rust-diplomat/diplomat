@@ -8,6 +8,7 @@ interface MyStringLib: Library {
     fun MyString_destroy(handle: Long)
     fun MyString_new(v: Slice): Long
     fun MyString_new_unsafe(v: Slice): Long
+    fun MyString_new_owned(v: Slice): Long
     fun MyString_set_str(handle: Long, newStr: Slice): Unit
     fun MyString_get_str(handle: Long, writeable: Pointer): Unit
 }
@@ -44,6 +45,20 @@ class MyString internal constructor (
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
             
             val returnVal = lib.MyString_new_unsafe(vSlice);
+        
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal
+            val returnOpaque = MyString(handle, selfEdges)
+            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
+            vMem.close()
+            return returnOpaque
+        
+        }
+        fun newOwned(v: String): MyString {
+        
+            val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
+            
+            val returnVal = lib.MyString_new_owned(vSlice);
         
             val selfEdges: List<Any> = listOf()
             val handle = returnVal
