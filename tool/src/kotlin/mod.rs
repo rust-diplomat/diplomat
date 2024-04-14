@@ -194,11 +194,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name_ffi(o),
             ReturnType::Fallible(_, _) => {
                 todo!("Fallible return types not supported yet")
-                // self.gen_result(ok.as_type(), err.as_ref()).into()
             }
             ReturnType::Nullable(_) => {
                 todo!("nullable return types not supported")
-                // self.gen_result(ok.as_type(), None).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -216,11 +214,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 todo!("Structs not supported yet")
             }
             Type::Slice(_) => "Slice".into(),
-            // Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "DiplomatStr".into(),
-            // Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "DiplomatStr".into(),
-            // Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => "DiplomatStr".into(),
-            // Type::Slice(Slice::Str(_, StringEncoding::Utf8)) => "DiplomatStr".into(),
-            // Type::Slice(Slice::Primitive(_, _)) => "Pointer".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
