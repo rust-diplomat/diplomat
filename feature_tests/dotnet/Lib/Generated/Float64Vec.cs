@@ -141,6 +141,48 @@ public partial class Float64Vec: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// </returns>
+    public static Float64Vec NewFromOwned(double[] v)
+    {
+        unsafe
+        {
+            nuint vLength = (nuint)v.Length;
+            fixed (double* vPtr = v)
+            {
+                Raw.Float64Vec* retVal = Raw.Float64Vec.NewFromOwned(vPtr, vLength);
+                return new Float64Vec(retVal);
+            }
+        }
+    }
+
+    public double[] AsBoxedSlice()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            Raw.double[] retVal = Raw.Float64Vec.AsBoxedSlice(_inner);
+            return expected named type name, found `Box<[f64]>`;
+        }
+    }
+
+    public double[] AsSlice()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            Raw.double[] retVal = Raw.Float64Vec.AsSlice(_inner);
+            return expected named type name, found `&'a [f64]`;
+        }
+    }
+
     public void FillSlice(double[] v)
     {
         unsafe
@@ -197,6 +239,36 @@ public partial class Float64Vec: IDisposable
             Raw.Float64Vec.ToString(_inner, &writeable);
             string retVal = writeable.ToUnicode();
             writeable.Dispose();
+            return retVal;
+        }
+    }
+
+    public double[] Borrow()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            Raw.double[] retVal = Raw.Float64Vec.Borrow(_inner);
+            return expected named type name, found `&'a [f64]`;
+        }
+    }
+
+    public double? Get(nuint i)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Float64Vec");
+            }
+            Options without a pointer type are not yet supported retVal = Raw.Float64Vec.Get(_inner, i);
+            if (retVal == null)
+            {
+                return null;
+            }
             return retVal;
         }
     }

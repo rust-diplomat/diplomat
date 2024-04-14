@@ -233,10 +233,11 @@ impl<'m> BorrowingFieldVisitor<'m> {
         method_lifetimes: &Lifetimes,
         leaves: &mut SmallVec<[BorrowingFieldVisitorLeaf; 8]>,
     ) {
-        let method_lifetime = slice
-            .lifetime()
-            .flat_map_nonstatic(|lt| lt.as_method_lifetime(method_lifetimes));
-        leaves.push(BorrowingFieldVisitorLeaf::Slice(parent, method_lifetime));
+        if let Some(lifetime) = slice.lifetime() {
+            let method_lifetime =
+                lifetime.flat_map_nonstatic(|lt| lt.as_method_lifetime(method_lifetimes));
+            leaves.push(BorrowingFieldVisitorLeaf::Slice(parent, method_lifetime));
+        }
     }
 
     /// Add a struct as a parent and recurse down leaves during construction of a

@@ -28,11 +28,19 @@ public:
 
   inline static std::unique_ptr<Float64Vec> new_f64_be_bytes(diplomat::span<const uint8_t> v);
 
+  inline diplomat::span<double> as_boxed_slice() const;
+
+  inline diplomat::span<const double> as_slice() const;
+
   inline void fill_slice(diplomat::span<double> v) const;
 
   inline void set_value(diplomat::span<const double> new_slice);
 
   inline std::string to_string() const;
+
+  inline diplomat::span<const double> borrow() const;
+
+  inline std::optional<double> get(size_t i) const;
 
   inline const capi::Float64Vec* AsFFI() const;
   inline capi::Float64Vec* AsFFI();

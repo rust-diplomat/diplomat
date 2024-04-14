@@ -68,15 +68,28 @@ pub fn gen_type<W: fmt::Write>(
         ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
             write!(out, "DiplomatU16View")?
         }
-        ast::TypeName::PrimitiveSlice(_lt, mutability, prim) => {
-            if mutability.is_mutable() {
-                panic!("Mutable slices in structs not supported");
-            }
+        ast::TypeName::PrimitiveSlice(lm, prim) => {
             let mut prim = prim.to_string();
             prim.get_mut(0..1).unwrap().make_ascii_uppercase();
-            write!(out, "Diplomat{prim}View")?;
+            match lm {
+                Some((_, ast::Mutability::Mutable)) => {
+                    panic!("Mutable borrowed slices in structs not supported")
+                }
+                Some((_, ast::Mutability::Immutable)) => write!(out, "Diplomat{prim}View")?,
+                None => write!(out, "Diplomat{prim}Array")?,
+            }
         }
+        ast::TypeName::StrSlice(encoding) => write!(
+            out,
+            "{}",
+            match encoding {
+                ast::StringEncoding::UnvalidatedUtf16 => "DiplomatUtf16StrsView",
+                _ => "DiplomatUtf8StrsView",
+            }
+        )?,
         ast::TypeName::Unit => write!(out, "void")?,
+
+        ast::TypeName::Ordering => write!(out, "int8_t")?,
         &_ => unreachable!("unknown AST/HIR variant"),
     }
 
@@ -118,11 +131,11 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
         ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
             ast::Ident::from("str_ref16")
         }
-        ast::TypeName::PrimitiveSlice(_lt, ast::Mutability::Mutable, prim) => {
-            ast::Ident::from(format!("ref_mut_prim_slice_{}", c_type_for_prim(prim)))
-        }
-        ast::TypeName::PrimitiveSlice(_lt, ast::Mutability::Immutable, prim) => {
+        ast::TypeName::PrimitiveSlice(Some((_, ast::Mutability::Immutable)), prim) => {
             ast::Ident::from(format!("ref_prim_slice_{}", c_type_for_prim(prim)))
+        }
+        ast::TypeName::PrimitiveSlice(_, prim) => {
+            ast::Ident::from(format!("ref_mut_prim_slice_{}", c_type_for_prim(prim)))
         }
         ast::TypeName::Unit => ast::Ident::from("void"),
         &_ => unreachable!("unknown AST/HIR variant"),

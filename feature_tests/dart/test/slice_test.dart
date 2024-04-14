@@ -1,6 +1,5 @@
 import 'package:feature_tests/lib.dart';
 import 'package:test/test.dart';
-import 'package:path/path.dart' as path;
 import 'dart:typed_data';
 
 void main() {
@@ -31,5 +30,10 @@ void main() {
 
   test("bytes", () {
     expect(Float64Vec.f64BeBytes(Uint8List.fromList([64, 40, 174, 20, 122, 225, 71, 174]).buffer).toString(), "[12.34]");
+  });
+
+  test("strings", () {
+    final s = MyString.newFromFirst(["foo", "bar"]);
+    expect(s.str, "foo");
   });
 }

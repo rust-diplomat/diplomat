@@ -35,6 +35,11 @@ inline ImportedStruct Opaque::returns_imported() {
   return ImportedStruct::FromFFI(result);
 }
 
+inline int8_t Opaque::cmp() {
+  auto result = capi::Opaque_cmp();
+  return result;
+}
+
 inline const capi::Opaque* Opaque::AsFFI() const {
   return reinterpret_cast<const capi::Opaque*>(this);
 }

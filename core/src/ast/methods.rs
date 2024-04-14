@@ -2,10 +2,7 @@ use serde::Serialize;
 use std::ops::ControlFlow;
 
 use super::docs::Docs;
-use super::{
-    Attrs, Ident, Lifetime, LifetimeEnv, Mutability, Path, PathType, TypeName, ValidityError,
-};
-use crate::Env;
+use super::{Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathType, TypeName};
 
 /// A method declared in the `impl` associated with an FFI struct.
 /// Includes both static and non-static methods, which can be distinguished
@@ -186,29 +183,6 @@ impl Method {
         }
     }
 
-    /// Performs type-specific validity checks (see [TypeName::check_validity()])
-    pub fn check_validity<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        // validity check that if the self type is nonopaque, that it is
-        // behind a reference
-        if let Some(ref self_param) = self.self_param {
-            self_param
-                .to_typename()
-                .check_validity(in_path, env, errors, false);
-        }
-        for m in self.params.iter() {
-            // Do we need to check the validity of the input types?
-            m.ty.check_validity(in_path, env, errors, false);
-        }
-        if let Some(ref t) = self.return_type {
-            t.check_return_type_validity(in_path, env, errors);
-        }
-    }
-
     /// Checks whether the method qualifies for special writeable handling.
     /// To qualify, a method must:
     ///  - not return any value
@@ -384,9 +358,7 @@ mod tests {
 
     use syn;
 
-    use crate::ast::Ident;
-
-    use super::{Attrs, Method, Path, PathType};
+    use crate::ast::{Attrs, Ident, Method, Path, PathType};
 
     #[test]
     fn static_methods() {

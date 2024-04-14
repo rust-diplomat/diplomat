@@ -28,7 +28,7 @@ pub struct Method {
 }
 
 /// Type that the method returns.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum SuccessType {
     Writeable,
@@ -97,6 +97,15 @@ impl ReturnType {
             self,
             ReturnType::Infallible(SuccessType::Unit | SuccessType::Writeable)
         )
+    }
+
+    /// The "main" return type of this function: the Ok, Some, or regular type
+    pub fn success_type(&self) -> &SuccessType {
+        match &self {
+            Self::Infallible(s) => s,
+            Self::Fallible(s, _) => s,
+            Self::Nullable(s) => s,
+        }
     }
 
     /// Get the list of method lifetimes actually used by the method return type

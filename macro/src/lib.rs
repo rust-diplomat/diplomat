@@ -21,7 +21,8 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
             | ast::StringEncoding::UnvalidatedUtf16
             | ast::StringEncoding::Utf8,
         )
-        | ast::TypeName::PrimitiveSlice(..) => {
+        | ast::TypeName::PrimitiveSlice(..)
+        | ast::TypeName::StrSlice(..) => {
             let data_type = if let ast::TypeName::PrimitiveSlice(.., prim) = &param.ty {
                 ast::TypeName::Primitive(*prim).to_syn().to_token_stream()
             } else if let ast::TypeName::StrReference(
@@ -34,6 +35,17 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 &param.ty
             {
                 quote! { u16 }
+            } else if let ast::TypeName::StrSlice(ast::StringEncoding::Utf8) = &param.ty {
+                // TODO: this is not an ABI-stable type!
+                quote! { &str }
+            } else if let ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf8) = &param.ty
+            {
+                // TODO: this is not an ABI-stable type!
+                quote! { &[u8] }
+            } else if let ast::TypeName::StrSlice(ast::StringEncoding::UnvalidatedUtf16) = &param.ty
+            {
+                // TODO: this is not an ABI-stable type!
+                quote! { &[u16] }
             } else {
                 unreachable!()
             };
@@ -49,8 +61,11 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 colon_token: syn::token::Colon(Span::call_site()),
                 ty: Box::new(
                     parse2({
-                        if let ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, _) =
-                            &param.ty
+                        if let ast::TypeName::PrimitiveSlice(
+                            Some((_, ast::Mutability::Mutable)) | None,
+                            _,
+                        )
+                        | ast::TypeName::StrReference(None, ..) = &param.ty
                         {
                             quote! { *mut #data_type }
                         } else {
@@ -98,32 +113,71 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
 
 fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
     match &param.ty {
-        ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
+        ast::TypeName::StrReference(..)
+        | ast::TypeName::PrimitiveSlice(..)
+        | ast::TypeName::StrSlice(..) => {
             let data_ident =
                 Ident::new(&format!("{}_diplomat_data", param.name), Span::call_site());
             let len_ident = Ident::new(&format!("{}_diplomat_len", param.name), Span::call_site());
 
-            let tokens = if let ast::TypeName::PrimitiveSlice(_, mutability, _) = &param.ty {
-                match mutability {
-                    ast::Mutability::Mutable => quote! {
+            let tokens = if let ast::TypeName::PrimitiveSlice(lm, _) = &param.ty {
+                match lm {
+                    Some((_, ast::Mutability::Mutable)) => quote! {
                         if #len_ident == 0 {
                             &mut []
                         } else {
                             unsafe { core::slice::from_raw_parts_mut(#data_ident, #len_ident) }
                         }
                     },
-                    ast::Mutability::Immutable => quote! {
+                    Some((_, ast::Mutability::Immutable)) => quote! {
                         if #len_ident == 0 {
                             &[]
                         } else {
                             unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
                         }
                     },
+                    None => quote! {
+                        if #len_ident == 0 {
+                            Default::default()
+                        } else {
+                            unsafe { alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident)) }
+                        }
+                    },
                 }
-            } else if let ast::TypeName::StrReference(_, ast::StringEncoding::Utf8) = &param.ty {
-                // The FFI guarantees this, by either validating, or communicating this requirement to the user.
-                quote! {unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(#data_ident, #len_ident))} }
-            } else {
+            } else if let ast::TypeName::StrReference(Some(_), encoding) = &param.ty {
+                let encode = match encoding {
+                    ast::StringEncoding::Utf8 => quote! {
+                        // The FFI guarantees this, by either validating, or communicating this requirement to the user.
+                        unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(#data_ident, #len_ident)) }
+                    },
+                    _ => quote! {
+                        unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
+                    },
+                };
+                quote! {
+                    if #len_ident == 0 {
+                        Default::default()
+                    } else {
+                        #encode
+                    }
+                }
+            } else if let ast::TypeName::StrReference(None, encoding) = &param.ty {
+                let encode = match encoding {
+                    ast::StringEncoding::Utf8 => quote! {
+                        unsafe { core::str::from_boxed_utf8_unchecked(alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident))) }
+                    },
+                    _ => quote! {
+                        unsafe { alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(#data_ident, #len_ident)) }
+                    },
+                };
+                quote! {
+                    if #len_ident == 0 {
+                        Default::default()
+                    } else {
+                        #encode
+                    }
+                }
+            } else if let ast::TypeName::StrSlice(_) = &param.ty {
                 quote! {
                     if #len_ident == 0 {
                         &[]
@@ -131,6 +185,8 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
                         unsafe { core::slice::from_raw_parts(#data_ident, #len_ident) }
                     }
                 }
+            } else {
+                unreachable!();
             };
             expanded_params.push(parse2(tokens).unwrap());
         }
@@ -206,6 +262,9 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
                 quote! { -> diplomat_runtime::DiplomatResult<#ok, #err> },
                 quote! { .into() },
             )
+        } else if let ast::TypeName::Ordering = return_type {
+            let return_type_syn = return_type.to_syn();
+            (quote! { -> #return_type_syn }, quote! { as i8 })
         } else if let ast::TypeName::Option(ty) = return_type {
             match ty.as_ref() {
                 // pass by reference, Option becomes null
@@ -292,7 +351,7 @@ impl AttributeInfo {
                     } else if seg == "rust_link"
                         || seg == "out"
                         || seg == "attr"
-                        || seg == "skip_if_unsupported"
+                        || seg == "skip_if_ast"
                         || seg == "abi_rename"
                     {
                         // diplomat-tool reads these, not diplomat::bridge.
@@ -527,7 +586,7 @@ mod tests {
 
     #[test]
     fn method_taking_str() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -546,7 +605,7 @@ mod tests {
 
     #[test]
     fn method_taking_slice() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -565,7 +624,7 @@ mod tests {
 
     #[test]
     fn method_taking_mutable_slice() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -583,8 +642,46 @@ mod tests {
     }
 
     #[test]
+    fn method_taking_owned_slice() {
+        insta::assert_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        pub fn fill_slice(s: Box<[u16]>) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
+    fn method_taking_owned_str() {
+        insta::assert_snapshot!(rustfmt_code(
+            &gen_bridge(parse_quote! {
+                mod ffi {
+                    struct Foo {}
+
+                    impl Foo {
+                        pub fn something_with_str(s: Box<str>) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+            .to_string()
+        ));
+    }
+
+    #[test]
     fn mod_with_enum() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     enum Abc {
@@ -606,7 +703,7 @@ mod tests {
 
     #[test]
     fn mod_with_writeable_result() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -625,7 +722,7 @@ mod tests {
 
     #[test]
     fn mod_with_rust_result() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -644,7 +741,7 @@ mod tests {
 
     #[test]
     fn multilevel_borrows() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]
@@ -679,7 +776,7 @@ mod tests {
 
     #[test]
     fn self_params() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]
@@ -702,7 +799,7 @@ mod tests {
 
     #[test]
     fn cfged_method() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -719,7 +816,7 @@ mod tests {
             .to_string()
         ));
 
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
@@ -740,7 +837,7 @@ mod tests {
 
     #[test]
     fn cfgd_struct() {
-        insta::assert_display_snapshot!(rustfmt_code(
+        insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     #[diplomat::opaque]

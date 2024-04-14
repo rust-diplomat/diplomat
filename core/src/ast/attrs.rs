@@ -43,7 +43,7 @@ pub struct Attrs {
     /// in HIR backends,
     ///
     /// Not inherited
-    pub skip_if_unsupported: bool,
+    pub skip_if_ast: bool,
 
     /// Renames to apply to the underlying C symbol. Can be found on methods, impls, and bridge modules, and is inherited.
     ///
@@ -60,7 +60,7 @@ impl Attrs {
         match attr {
             Attr::Cfg(attr) => self.cfg.push(attr),
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
-            Attr::SkipIfUnsupported => self.skip_if_unsupported = true,
+            Attr::SkipIfAst => self.skip_if_ast = true,
             Attr::CRename(rename) => self.abi_rename.extend(&rename),
         }
     }
@@ -85,7 +85,7 @@ impl Attrs {
 
             attrs,
             // HIR only, for methods only. not inherited
-            skip_if_unsupported: false,
+            skip_if_ast: false,
             abi_rename,
         }
     }
@@ -111,7 +111,7 @@ impl From<&[Attribute]> for Attrs {
 enum Attr {
     Cfg(Attribute),
     DiplomatBackend(DiplomatBackendAttr),
-    SkipIfUnsupported,
+    SkipIfAst,
     CRename(RenameAttr),
     // More goes here
 }
@@ -120,7 +120,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
-    let skipast: syn::Path = syn::parse_str("diplomat::skip_if_unsupported").unwrap();
+    let skipast: syn::Path = syn::parse_str("diplomat::skip_if_ast").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
@@ -132,7 +132,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
         } else if a.path() == &crename_attr {
             Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
         } else if a.path() == &skipast {
-            Some(Attr::SkipIfUnsupported)
+            Some(Attr::SkipIfAst)
         } else {
             None
         }
@@ -157,8 +157,8 @@ impl Serialize for Attrs {
         if !self.attrs.is_empty() {
             state.serialize_field("attrs", &self.attrs)?;
         }
-        if self.skip_if_unsupported {
-            state.serialize_field("skip_if_unsupported", &self.skip_if_unsupported)?;
+        if self.skip_if_ast {
+            state.serialize_field("skip_if_ast", &self.skip_if_ast)?;
         }
         if !self.abi_rename.is_empty() {
             state.serialize_field("abi_rename", &self.abi_rename)?;
@@ -351,6 +351,9 @@ impl RenameAttr {
             StandardAttribute::List(_) => {
                 Err("Failed to parse malformed #[diplomat::abi_rename(...)]: found list")
             }
+            StandardAttribute::Empty => {
+                Err("Failed to parse malformed #[diplomat::abi_rename(...)]: found no parameters")
+            }
         }
     }
 }
@@ -386,19 +389,21 @@ struct RenamePattern {
 ///
 /// - `#[attr = "foo"]` and `#[attr("foo")]` for a simple string
 /// - `#[attr(....)]` for a more complicated context
+/// - `#[attr]` for a "defaulting" context
 ///
 /// This allows attributes to parse simple string values without caring too much about the NameValue vs List representation
 /// and then attributes can choose to handle more complicated lists if they so desire.
 pub(crate) enum StandardAttribute<'a> {
     String(String),
-    List(&'a MetaList),
+    List(#[allow(dead_code)] &'a MetaList),
+    Empty,
 }
 
 impl<'a> StandardAttribute<'a> {
     /// Parse from a Meta. Returns an error when no string value is specified in the path/namevalue forms.
     pub(crate) fn from_meta(meta: &'a Meta) -> Result<Self, ()> {
         match meta {
-            Meta::Path(..) => Err(()),
+            Meta::Path(..) => Ok(Self::Empty),
             Meta::NameValue(ref nv) => {
                 // Support a shortcut `abi_rename = "..."`
                 let Expr::Lit(ref lit) = nv.value else {

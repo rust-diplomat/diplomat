@@ -48,6 +48,7 @@ pub mod ffi {
     }
 
     impl Opaque {
+        #[diplomat::attr(supports = constructors, constructor)]
         pub fn new() -> Box<Opaque> {
             Box::new(Opaque("".into()))
         }
@@ -66,6 +67,10 @@ pub mod ffi {
         }
 
         pub fn returns_imported() -> ImportedStruct {
+            unimplemented!()
+        }
+
+        pub fn cmp() -> core::cmp::Ordering {
             unimplemented!()
         }
     }
@@ -134,6 +139,7 @@ pub mod ffi {
     }
 
     impl MyStruct {
+        #[diplomat::attr(supports = constructors, constructor)]
         pub fn new() -> MyStruct {
             MyStruct {
                 a: 17,

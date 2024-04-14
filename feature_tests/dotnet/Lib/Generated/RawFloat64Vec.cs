@@ -37,6 +37,15 @@ public partial struct Float64Vec
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new_f64_be_bytes", ExactSpelling = true)]
     public static unsafe extern Float64Vec* NewF64BeBytes(byte* v, nuint vSz);
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_new_from_owned", ExactSpelling = true)]
+    public static unsafe extern Float64Vec* NewFromOwned(double* v, nuint vSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_as_boxed_slice", ExactSpelling = true)]
+    public static unsafe extern double[] AsBoxedSlice(Float64Vec* self);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_as_slice", ExactSpelling = true)]
+    public static unsafe extern double[] AsSlice(Float64Vec* self);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_fill_slice", ExactSpelling = true)]
     public static unsafe extern void FillSlice(Float64Vec* self, double* v, nuint vSz);
 
@@ -45,6 +54,12 @@ public partial struct Float64Vec
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_to_string", ExactSpelling = true)]
     public static unsafe extern void ToString(Float64Vec* self, DiplomatWriteable* w);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_borrow", ExactSpelling = true)]
+    public static unsafe extern double[] Borrow(Float64Vec* self);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_get", ExactSpelling = true)]
+    public static unsafe extern Options without a pointer type are not yet supported Get(Float64Vec* self, nuint i);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(Float64Vec* self);

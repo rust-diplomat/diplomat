@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use crate::c2::CFormatter;
-use diplomat_core::hir::{self, TypeContext, TypeId};
+use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -142,14 +142,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_borrowed_utf8_str(&self) -> Cow<'static, str> {
+    pub fn fmt_borrowed_str(&self, encoding: StringEncoding) -> Cow<'static, str> {
         // TODO: This needs to change if an abstraction other than std::u8string_view is used
-        "std::string_view".into()
-    }
-
-    pub fn fmt_borrowed_utf16_str(&self) -> Cow<'static, str> {
-        // TODO: This needs to change if an abstraction other than std::u16string_view is used
-        "std::u16string_view".into()
+        match encoding {
+            StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8 => "std::string_view".into(),
+            StringEncoding::UnvalidatedUtf16 => "std::u16string_view".into(),
+            _ => unreachable!(),
+        }
     }
 
     pub fn fmt_owned_str(&self) -> Cow<'static, str> {

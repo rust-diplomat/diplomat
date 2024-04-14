@@ -55,6 +55,16 @@ inline std::unique_ptr<Float64Vec> Float64Vec::new_f64_be_bytes(diplomat::span<c
   return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
 }
 
+inline diplomat::span<double> Float64Vec::as_boxed_slice() const {
+  auto result = capi::Float64Vec_as_boxed_slice(this->AsFFI());
+  return diplomat::span<double>(result_data, result_size);
+}
+
+inline diplomat::span<const double> Float64Vec::as_slice() const {
+  auto result = capi::Float64Vec_as_slice(this->AsFFI());
+  return diplomat::span<const double>(result_data, result_size);
+}
+
 inline void Float64Vec::fill_slice(diplomat::span<double> v) const {
   capi::Float64Vec_fill_slice(this->AsFFI(),
     v.data(),
@@ -73,6 +83,17 @@ inline std::string Float64Vec::to_string() const {
   capi::Float64Vec_to_string(this->AsFFI(),
     &writeable);
   return output;
+}
+
+inline diplomat::span<const double> Float64Vec::borrow() const {
+  auto result = capi::Float64Vec_borrow(this->AsFFI());
+  return diplomat::span<const double>(result_data, result_size);
+}
+
+inline std::optional<double> Float64Vec::get(size_t i) const {
+  auto result = capi::Float64Vec_get(this->AsFFI(),
+    i);
+  return result.is_ok ? std::optional<double>(result.ok) : std::nullopt;
 }
 
 inline const capi::Float64Vec* Float64Vec::AsFFI() const {

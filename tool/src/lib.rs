@@ -70,14 +70,6 @@ pub fn gen(
     let diplomat_file = ast::File::from(&lib_file);
     let env = diplomat_file.all_types();
 
-    let errors = diplomat_file.check_validity(&env);
-    if !errors.is_empty() {
-        for e in errors {
-            eprintln!("{e}");
-        }
-        panic!();
-    }
-
     let mut out_texts: HashMap<String, String> = HashMap::new();
 
     let mut errors_found = false;
@@ -103,11 +95,20 @@ pub fn gen(
             let mut attr_validator = hir::BasicAttributeValidator::new("dart");
             attr_validator.support.renaming = true;
             attr_validator.support.disabling = true;
+            attr_validator.support.constructors = true;
+            attr_validator.support.named_constructors = true;
+            attr_validator.support.fallible_constructors = true;
+            attr_validator.support.accessors = true;
+            attr_validator.support.stringifiers = true;
+            attr_validator.support.comparators = true;
+            attr_validator.support.iterators = true;
+            attr_validator.support.iterables = true;
+            attr_validator.support.indexing = true;
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
-                    for err in e {
-                        eprintln!("Lowering error: {}", err);
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
                     }
                     std::process::exit(1);
                 }
@@ -145,6 +146,7 @@ pub fn gen(
                 attr_validator.support.namespacing = true;
             }
 
+            attr_validator.support.memory_sharing = true;
             attr_validator.support.disabling = true;
             // cpp-c2 is a testing backend, we're not going to treat it as a real c/cpp backend
             // since the ast-cpp backend doesn't know about attributes.
@@ -152,8 +154,8 @@ pub fn gen(
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
-                    for err in e {
-                        eprintln!("Lowering error: {err}");
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
                     }
                     std::process::exit(1);
                 }

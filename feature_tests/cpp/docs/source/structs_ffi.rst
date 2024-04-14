@@ -69,3 +69,6 @@
 
     .. cpp:function:: static ImportedStruct returns_imported()
 
+
+    .. cpp:function:: static int8_t cmp()
+

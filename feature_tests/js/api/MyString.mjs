@@ -29,6 +29,11 @@ export class MyString {
     return diplomat_out;
   }
 
+  static new_owned(arg_v) {
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.str8(wasm, arg_v);
+    return new MyString(wasm.MyString_new_owned(buf_arg_v.ptr, buf_arg_v.size), true, []);
+  }
+
   set_str(arg_new_str) {
     const buf_arg_new_str = diplomatRuntime.DiplomatBuf.str8(wasm, arg_new_str);
     wasm.MyString_set_str(this.underlying, buf_arg_new_str.ptr, buf_arg_new_str.size);

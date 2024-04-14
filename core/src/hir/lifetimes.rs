@@ -235,7 +235,7 @@ pub struct Lifetimes {
 }
 
 impl Lifetime {
-    pub(super) fn new(index: usize) -> Self {
+    pub(super) const fn new(index: usize) -> Self {
         Self(index)
     }
 }
@@ -281,6 +281,11 @@ impl Lifetimes {
         Self {
             indices: lifetimes.iter().map(lower_fn).collect(),
         }
+    }
+
+    /// Append an additional lifetime. Used to tack on anon lifetimes
+    pub(super) fn append_lifetime(&mut self, lifetime: MaybeStatic<Lifetime>) {
+        self.indices.push(lifetime)
     }
 
     /// Returns a new [`Lifetimes`] representing the lifetimes in the scope

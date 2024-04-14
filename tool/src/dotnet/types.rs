@@ -63,6 +63,9 @@ pub fn gen_type_name(
         ast::TypeName::PrimitiveSlice(.., prim) => {
             write!(out, "{}[]", type_name_for_prim(prim))
         }
+        ast::TypeName::Ordering => {
+            write!(out, "sbyte")
+        }
 
         ast::TypeName::Unit => {
             write!(out, "void")
@@ -122,12 +125,16 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
         ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf16) => {
             ast::Ident::from("RefMutPrimSliceU16")
         }
-        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => ast::Ident::from(
-            format!("RefMutPrimSlice{}", prim.to_string().to_upper_camel_case()),
-        ),
-        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Immutable, prim) => ast::Ident::from(
-            format!("RefPrimSlice{}", prim.to_string().to_upper_camel_case()),
-        ),
+        ast::TypeName::PrimitiveSlice(Some((_, ast::Mutability::Immutable)), prim) => {
+            ast::Ident::from(format!(
+                "RefPrimSlice{}",
+                prim.to_string().to_upper_camel_case()
+            ))
+        }
+        ast::TypeName::PrimitiveSlice(_, prim) => ast::Ident::from(format!(
+            "RefMutPrimSlice{}",
+            prim.to_string().to_upper_camel_case()
+        )),
         ast::TypeName::Unit => ast::Ident::from("Void"),
         &_ => unreachable!("unknown AST/HIR variant"),
     }

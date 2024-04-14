@@ -260,10 +260,26 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
             Type::Slice(hir::Slice::Primitive(b, p)) if !is_struct => {
                 let prim = self.cx.formatter.fmt_primitive_as_c(*p);
-                let ptr_type = self.cx.formatter.fmt_ptr(&prim, b.mutability);
+                let ptr_type = self.cx.formatter.fmt_ptr(
+                    &prim,
+                    b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
+                );
                 vec![
                     (
                         format!("{ptr_type}").into(),
+                        format!("{param_name}_data").into(),
+                    ),
+                    ("size_t".into(), format!("{param_name}_len").into()),
+                ]
+            }
+            Type::Slice(hir::Slice::Strs(encoding)) => {
+                vec![
+                    (
+                        match encoding {
+                            hir::StringEncoding::UnvalidatedUtf16 => "DiplomatStrs16View*",
+                            _ => "DiplomatStrs8View*",
+                        }
+                        .into(),
                         format!("{param_name}_data").into(),
                     ),
                     ("size_t".into(), format!("{param_name}_len").into()),
@@ -335,6 +351,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     ) => "char".into(),
                     hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "char16_t".into(),
                     hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
+                    hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => {
+                        "DiplomatStrs16View".into()
+                    }
+                    hir::Slice::Strs(_) => "DiplomatStrs8View".into(),
                     &_ => unreachable!("unknown AST/HIR variant"),
                 };
                 (

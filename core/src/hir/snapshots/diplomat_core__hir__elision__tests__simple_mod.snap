@@ -62,9 +62,11 @@ TypeContext {
                             name: "s",
                             ty: Slice(
                                 Str(
-                                    NonStatic(
-                                        Lifetime(
-                                            0,
+                                    Some(
+                                        NonStatic(
+                                            Lifetime(
+                                                0,
+                                            ),
                                         ),
                                     ),
                                     UnvalidatedUtf8,
@@ -103,6 +105,7 @@ TypeContext {
                         abi_rename: RenameAttr {
                             pattern: None,
                         },
+                        special_method: None,
                     },
                 },
             ],
@@ -115,6 +118,7 @@ TypeContext {
                 abi_rename: RenameAttr {
                     pattern: None,
                 },
+                special_method: None,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -125,6 +129,11 @@ TypeContext {
                     },
                 ],
                 num_lifetimes: 1,
+            },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                iterator: None,
+                iterable: None,
             },
         },
     ],
@@ -144,9 +153,11 @@ TypeContext {
                     name: "s",
                     ty: Slice(
                         Str(
-                            NonStatic(
-                                Lifetime(
-                                    0,
+                            Some(
+                                NonStatic(
+                                    Lifetime(
+                                        0,
+                                    ),
                                 ),
                             ),
                             UnvalidatedUtf8,
@@ -196,9 +207,11 @@ TypeContext {
                             name: "s",
                             ty: Slice(
                                 Str(
-                                    NonStatic(
-                                        Lifetime(
-                                            1,
+                                    Some(
+                                        NonStatic(
+                                            Lifetime(
+                                                1,
+                                            ),
                                         ),
                                     ),
                                     UnvalidatedUtf8,
@@ -210,9 +223,11 @@ TypeContext {
                         OutType(
                             Slice(
                                 Str(
-                                    NonStatic(
-                                        Lifetime(
-                                            1,
+                                    Some(
+                                        NonStatic(
+                                            Lifetime(
+                                                1,
+                                            ),
                                         ),
                                     ),
                                     UnvalidatedUtf8,
@@ -229,6 +244,7 @@ TypeContext {
                         abi_rename: RenameAttr {
                             pattern: None,
                         },
+                        special_method: None,
                     },
                 },
             ],
@@ -241,6 +257,7 @@ TypeContext {
                 abi_rename: RenameAttr {
                     pattern: None,
                 },
+                special_method: None,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -251,6 +268,11 @@ TypeContext {
                     },
                 ],
                 num_lifetimes: 1,
+            },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                iterator: None,
+                iterable: None,
             },
         },
     ],
@@ -271,6 +293,7 @@ TypeContext {
                 abi_rename: RenameAttr {
                     pattern: None,
                 },
+                special_method: None,
             },
             lifetimes: LifetimeEnv {
                 nodes: [
@@ -281,6 +304,11 @@ TypeContext {
                     },
                 ],
                 num_lifetimes: 1,
+            },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                iterator: None,
+                iterable: None,
             },
         },
     ],

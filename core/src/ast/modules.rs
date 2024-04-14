@@ -7,7 +7,7 @@ use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
     AttrInheritContext, Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability,
-    OpaqueStruct, Path, PathType, RustLink, Struct, ValidityError,
+    OpaqueStruct, Path, PathType, RustLink, Struct,
 };
 use crate::environment::*;
 
@@ -70,16 +70,6 @@ pub struct Module {
 }
 
 impl Module {
-    pub fn check_validity(&self, in_path: &Path, env: &Env, errors: &mut Vec<ValidityError>) {
-        self.declared_types.values().for_each(|t| {
-            t.check_validity(&in_path.sub_path(self.name.clone()), env, errors);
-        });
-
-        self.sub_modules.iter().for_each(|t| {
-            t.check_validity(&in_path.sub_path(self.name.clone()), env, errors);
-        });
-    }
-
     pub fn all_rust_links(&self) -> HashSet<&RustLink> {
         let mut rust_links = self
             .declared_types
@@ -261,17 +251,6 @@ pub struct File {
 }
 
 impl File {
-    /// Performs all necessary validity checks and returns any errors
-    ///
-    /// Environment should be passed in from `.all_types()`
-    pub fn check_validity(&self, env: &Env) -> Vec<ValidityError> {
-        let mut errors = vec![];
-        self.modules
-            .values()
-            .for_each(|t| t.check_validity(&Path::empty(), env, &mut errors));
-        errors
-    }
-
     /// Fuses all declared types into a single environment `HashMap`.
     pub fn all_types(&self) -> Env {
         let mut out = Env::default();

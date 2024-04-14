@@ -130,7 +130,6 @@ pub fn gen_struct<W: fmt::Write>(
                     )?;
 
                     for method in strct.methods.iter() {
-                        writeln!(f)?;
                         gen_method(method, in_path, env, &mut f)?;
                     }
                     Ok(())
@@ -174,7 +173,6 @@ pub fn gen_struct<W: fmt::Write>(
                     )?;
 
                     for method in opaque.methods.iter() {
-                        writeln!(f)?;
                         gen_method(method, in_path, env, &mut f)?;
                     }
 
@@ -204,6 +202,11 @@ fn gen_method<W: fmt::Write>(
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
+    if method.attrs.skip_if_ast {
+        return Ok(());
+    }
+    writeln!(out)?;
+
     let is_writeable = method.is_writeable_out();
 
     let mut pre_stmts = vec![];
@@ -453,7 +456,6 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
                 }
 
                 for method in custom_type.methods() {
-                    writeln!(f)?;
                     gen_ts_method_declaration(method, in_path, env, docs_url_gen, &mut f)?;
                 }
                 Ok(())
@@ -486,6 +488,7 @@ pub fn gen_ts_type<W: fmt::Write>(
                 write!(out, "{prim}")?;
             }
         },
+        ast::TypeName::Ordering => write!(out, "i8")?,
         ast::TypeName::Named(path_type) | ast::TypeName::SelfType(path_type) => {
             let name = path_type.resolve(in_path, env).name();
             out.write_str(name.as_str())?;
@@ -539,6 +542,11 @@ fn gen_ts_method_declaration<W: fmt::Write>(
     docs_url_gen: Option<&ast::DocsUrlGenerator>,
     out: &mut W,
 ) -> fmt::Result {
+    if method.attrs.skip_if_ast {
+        return Ok(());
+    }
+    writeln!(out)?;
+
     if let Some(docs_url_gen) = docs_url_gen {
         write!(
             out,

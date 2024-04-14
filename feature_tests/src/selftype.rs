@@ -8,6 +8,7 @@ mod ffi {
     struct RefList<'a>((&'a RefListParameter, Option<Box<Self>>));
 
     impl<'b> RefList<'b> {
+        #[diplomat::attr(supports = named_constructors, named_constructor)]
         pub fn node(data: &'b RefListParameter) -> Box<Self> {
             Box::new(RefList((data, None)))
         }

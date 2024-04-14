@@ -43,3 +43,5 @@
     .. js:function:: returns_usize()
 
     .. js:function:: returns_imported()
+
+    .. js:function:: cmp()

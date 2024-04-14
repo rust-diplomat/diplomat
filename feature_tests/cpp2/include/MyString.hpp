@@ -25,6 +25,18 @@ inline std::unique_ptr<MyString> MyString::new_unsafe(std::string_view v) {
   return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }
 
+inline std::unique_ptr<MyString> MyString::new_owned(std::string_view v) {
+  auto result = capi::MyString_new_owned(v.data(),
+    v.size());
+  return std::unique_ptr<MyString>(MyString::FromFFI(result));
+}
+
+inline std::unique_ptr<MyString> MyString::new_from_first(diplomat::span<const std::string_view> v) {
+  auto result = capi::MyString_new_from_first(v.data(),
+    v.size());
+  return std::unique_ptr<MyString>(MyString::FromFFI(result));
+}
+
 inline void MyString::set_str(std::string_view new_str) {
   capi::MyString_set_str(this->AsFFI(),
     new_str.data(),

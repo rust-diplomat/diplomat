@@ -10,7 +10,7 @@ use std::ops::ControlFlow;
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
-    OpaqueStruct, Path, RustLink, Struct, ValidityError,
+    OpaqueStruct, Path, RustLink, Struct,
 };
 use crate::Env;
 
@@ -86,47 +86,6 @@ impl CustomType {
             CustomType::Struct(strct) => Some(&strct.lifetimes),
             CustomType::Opaque(strct) => Some(&strct.lifetimes),
             CustomType::Enum(_) => None,
-        }
-    }
-
-    /// Performs various validity checks:
-    ///
-    /// - Checks that any references to opaque structs in parameters or return values
-    ///   are always behind a box or reference, and that non-opaque custom types are *never* behind
-    ///   references or boxes. The latter check is needed because non-opaque custom types typically get
-    ///   *converted* at the FFI boundary.
-    /// - Ensures that we are not exporting any non-opaque zero-sized types
-    /// - Ensures that Options only contain boxes and references
-    ///
-    /// Errors are pushed into the `errors` vector.
-    pub fn check_validity<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        match self {
-            CustomType::Struct(strct) => {
-                for (_, field, _) in strct.fields.iter() {
-                    field.check_validity(in_path, env, errors, false);
-                }
-
-                // check for ZSTs
-                if !strct.fields.iter().any(|f| !f.1.is_zst()) {
-                    errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
-                }
-            }
-            CustomType::Opaque(_) => {}
-            CustomType::Enum(e) => {
-                // check for ZSTs
-                if e.variants.is_empty() {
-                    errors.push(ValidityError::NonOpaqueZST(self.self_path(in_path)))
-                }
-            }
-        }
-
-        for method in self.methods().iter() {
-            method.check_validity(in_path, env, errors);
         }
     }
 }
@@ -387,14 +346,22 @@ pub enum TypeName {
     /// A `Result<T, E>` or `diplomat_runtime::DiplomatWriteable` type. If the bool is true, it's `Result`
     Result(Box<TypeName>, Box<TypeName>, bool),
     Writeable,
-    /// A `&DiplomatStr` type.
-    StrReference(Lifetime, StringEncoding),
-    /// A `&[T]` type, where `T` is a primitive.
-    PrimitiveSlice(Lifetime, Mutability, PrimitiveType),
+    /// A `&DiplomatStr` or `Box<DiplomatStr>` type.
+    /// Owned strings don't have a lifetime.
+    StrReference(Option<Lifetime>, StringEncoding),
+    /// A `&[T]` or `Box<[T]>` type, where `T` is a primitive.
+    /// Owned slices don't have a lifetime or mutability.
+    PrimitiveSlice(Option<(Lifetime, Mutability)>, PrimitiveType),
+    /// `&[&DiplomatStr]`
+    StrSlice(StringEncoding),
     /// The `()` type.
     Unit,
     /// The `Self` type.
     SelfType(PathType),
+    /// std::cmp::Ordering or core::cmp::Ordering
+    ///
+    /// The path must be present! Ordering will be parsed as an AST type!
+    Ordering,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -413,6 +380,7 @@ impl TypeName {
             TypeName::Primitive(name) => {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
+            TypeName::Ordering => syn::Type::Path(syn::parse_str("i8").unwrap()),
             TypeName::Named(name) | TypeName::SelfType(name) => {
                 // Self also gets expanded instead of turning into `Self` because
                 // this code is used to generate the `extern "C"` functions, which
@@ -508,26 +476,41 @@ impl TypeName {
             TypeName::Writeable => syn::parse_quote! {
                 diplomat_runtime::DiplomatWriteable
             },
-            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8) => {
                 syn::parse_str(&format!(
                     "{}DiplomatStr",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 ))
                 .unwrap()
             }
-            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf16) => {
                 syn::parse_str(&format!(
                     "{}DiplomatStr16",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 ))
                 .unwrap()
             }
-            TypeName::StrReference(lifetime, StringEncoding::Utf8) => syn::parse_str(&format!(
-                "{}str",
-                ReferenceDisplay(lifetime, &Mutability::Immutable)
-            ))
+            TypeName::StrReference(Some(lifetime), StringEncoding::Utf8) => syn::parse_str(
+                &format!("{}str", ReferenceDisplay(lifetime, &Mutability::Immutable)),
+            )
             .unwrap(),
-            TypeName::PrimitiveSlice(lifetime, mutability, name) => {
+            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8) => {
+                syn::parse_str("Box<DiplomatStr>").unwrap()
+            }
+            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16) => {
+                syn::parse_str("Box<DiplomatStr16>").unwrap()
+            }
+            TypeName::StrReference(None, StringEncoding::Utf8) => {
+                syn::parse_str("Box<str>").unwrap()
+            }
+            TypeName::StrSlice(StringEncoding::UnvalidatedUtf8) => {
+                syn::parse_str("&[&DiplomatStr]").unwrap()
+            }
+            TypeName::StrSlice(StringEncoding::UnvalidatedUtf16) => {
+                syn::parse_str("&[&DiplomatStr16]").unwrap()
+            }
+            TypeName::StrSlice(StringEncoding::Utf8) => syn::parse_str("&[&str]").unwrap(),
+            TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
                 let formatted_str = format!(
                     "{}[{}]",
@@ -536,6 +519,11 @@ impl TypeName {
                 );
                 syn::parse_str(&formatted_str).unwrap()
             }
+            TypeName::PrimitiveSlice(None, name) => syn::parse_str(&format!(
+                "Box<[{}]>",
+                PRIMITIVE_TO_STRING.get(name).unwrap()
+            ))
+            .unwrap(),
             TypeName::Unit => syn::parse_quote! {
                 ()
             },
@@ -551,8 +539,8 @@ impl TypeName {
     /// - If the type is a path with a single element [`Result`], returns a [`TypeName::Result`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::DiplomatResult`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
-    /// - If the type is a reference to `DiplomatStr`, returns a [`TypeName::StrReference`]
-    /// - If the type is a reference to a slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
+    /// - If the type is a owned or borrowed string type, returns a [`TypeName::StrReference`]
+    /// - If the type is a owned or borrowed slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
     /// - Otherwise, assume that the reference is to a [`CustomType`] in either the current module or another one, returns a [`TypeName::Named`]
     pub fn from_syn(ty: &syn::Type, self_path_type: Option<PathType>) -> TypeName {
@@ -567,11 +555,17 @@ impl TypeName {
                         panic!("mutable string references are disallowed");
                     }
                     if name == "DiplomatStr" {
-                        return TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8);
+                        return TypeName::StrReference(
+                            Some(lifetime),
+                            StringEncoding::UnvalidatedUtf8,
+                        );
                     } else if name == "DiplomatStr16" {
-                        return TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16);
+                        return TypeName::StrReference(
+                            Some(lifetime),
+                            StringEncoding::UnvalidatedUtf16,
+                        );
                     } else if name == "str" {
-                        return TypeName::StrReference(lifetime, StringEncoding::Utf8);
+                        return TypeName::StrReference(Some(lifetime), StringEncoding::Utf8);
                     }
                 }
                 if let syn::Type::Slice(slice) = &*r.elem {
@@ -581,8 +575,16 @@ impl TypeName {
                             .get_ident()
                             .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                         {
-                            return TypeName::PrimitiveSlice(lifetime, mutability, *primitive);
+                            return TypeName::PrimitiveSlice(
+                                Some((lifetime, mutability)),
+                                *primitive,
+                            );
                         }
+                    }
+                    if let TypeName::StrReference(Some(Lifetime::Anonymous), encoding) =
+                        TypeName::from_syn(&slice.elem, self_path_type.clone())
+                    {
+                        return TypeName::StrSlice(encoding);
                     }
                 }
                 TypeName::Reference(
@@ -592,24 +594,46 @@ impl TypeName {
                 )
             }
             syn::Type::Path(p) => {
+                let p_len = p.path.segments.len();
                 if let Some(primitive) = p
                     .path
                     .get_ident()
                     .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
                 {
                     TypeName::Primitive(*primitive)
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Box" {
+                } else if p_len >= 2
+                    && p.path.segments[p_len - 2].ident == "cmp"
+                    && p.path.segments[p_len - 1].ident == "Ordering"
+                {
+                    TypeName::Ordering
+                } else if p_len == 1 && p.path.segments[0].ident == "Box" {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
-                            TypeName::Box(Box::new(TypeName::from_syn(tpe, self_path_type)))
+                        if let GenericArgument::Type(syn::Type::Slice(slice)) = &type_args.args[0] {
+                            if let TypeName::Primitive(p) =
+                                TypeName::from_syn(&slice.elem, self_path_type)
+                            {
+                                TypeName::PrimitiveSlice(None, p)
+                            } else {
+                                panic!("Owned slices only support primitives.")
+                            }
+                        } else if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                            if tpe.to_token_stream().to_string() == "DiplomatStr" {
+                                TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8)
+                            } else if tpe.to_token_stream().to_string() == "DiplomatStr16" {
+                                TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16)
+                            } else if tpe.to_token_stream().to_string() == "str" {
+                                TypeName::StrReference(None, StringEncoding::Utf8)
+                            } else {
+                                TypeName::Box(Box::new(TypeName::from_syn(tpe, self_path_type)))
+                            }
                         } else {
                             panic!("Expected first type argument for Box to be a type")
                         }
                     } else {
                         panic!("Expected angle brackets for Box type")
                     }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Option" {
+                } else if p_len == 1 && p.path.segments[0].ident == "Option" {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
                         if let GenericArgument::Type(tpe) = &type_args.args[0] {
@@ -620,13 +644,13 @@ impl TypeName {
                     } else {
                         panic!("Expected angle brackets for Option type")
                     }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Self" {
+                } else if p_len == 1 && p.path.segments[0].ident == "Self" {
                     if let Some(self_path_type) = self_path_type {
                         TypeName::SelfType(self_path_type)
                     } else {
                         panic!("Cannot have `Self` type outside of a method");
                     }
-                } else if p.path.segments.len() == 1 && p.path.segments[0].ident == "Result"
+                } else if p_len == 1 && p.path.segments[0].ident == "Result"
                     || is_runtime_type(p, "DiplomatResult")
                 {
                     if let PathArguments::AngleBracketed(type_args) =
@@ -693,8 +717,10 @@ impl TypeName {
                 ok.visit_lifetimes(visit)?;
                 err.visit_lifetimes(visit)
             }
-            TypeName::StrReference(lt, ..) => visit(lt, LifetimeOrigin::StrReference),
-            TypeName::PrimitiveSlice(lt, ..) => visit(lt, LifetimeOrigin::PrimitiveSlice),
+            TypeName::StrReference(Some(lt), ..) => visit(lt, LifetimeOrigin::StrReference),
+            TypeName::PrimitiveSlice(Some((lt, _)), ..) => {
+                visit(lt, LifetimeOrigin::PrimitiveSlice)
+            }
             _ => ControlFlow::Continue(()),
         }
     }
@@ -767,174 +793,6 @@ impl TypeName {
         transitivity.finish()
     }
 
-    fn check_opaque<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &Env,
-        behind_reference: bool,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        match self {
-            TypeName::Reference(.., underlying) => {
-                underlying.check_opaque(in_path, env, true, errors)
-            }
-            TypeName::Box(underlying) => underlying.check_opaque(in_path, env, true, errors),
-            TypeName::Option(underlying) => underlying.check_opaque(in_path, env, false, errors),
-            TypeName::Result(ok, err, _) => {
-                ok.check_opaque(in_path, env, false, errors);
-                err.check_opaque(in_path, env, false, errors);
-            }
-            TypeName::Named(path_type) => {
-                if let CustomType::Opaque(_) = path_type.resolve(in_path, env) {
-                    if !behind_reference {
-                        errors.push(ValidityError::OpaqueAsValue(self.clone()))
-                    }
-                } else if behind_reference {
-                    errors.push(ValidityError::NonOpaqueBehindRef(self.clone()))
-                }
-            }
-            _ => {}
-        }
-    }
-
-    // Disallow non-pointer containing Option<T> in non-return position
-    fn check_option(&self, errors: &mut Vec<ValidityError>, is_return_position: bool) {
-        match self {
-            TypeName::Reference(.., underlying) => underlying.check_option(errors, false),
-            TypeName::Box(underlying) => underlying.check_option(errors, false),
-            TypeName::Option(underlying) => {
-                if !underlying.is_pointer() && !is_return_position {
-                    errors.push(ValidityError::OptionNotInReturnPosition(self.clone()))
-                } else {
-                    underlying.check_option(errors, false);
-                }
-            }
-            TypeName::Result(ok, err, _) => {
-                ok.check_option(errors, false);
-                err.check_option(errors, false);
-            }
-            _ => {}
-        }
-    }
-
-    // Disallow Result in non-return position
-    fn check_result(&self, errors: &mut Vec<ValidityError>, is_return_position: bool) {
-        match self {
-            TypeName::Reference(.., underlying) => underlying.check_result(errors, false),
-            TypeName::Box(underlying) => underlying.check_result(errors, false),
-            TypeName::Option(underlying) => underlying.check_result(errors, false),
-            TypeName::Result(ok, err, _) => {
-                if !is_return_position {
-                    errors.push(ValidityError::ResultNotInReturnPosition(self.clone()))
-                } else {
-                    ok.check_result(errors, false);
-                    err.check_result(errors, false);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    /// Checks that any references to opaque structs in parameters or return values
-    /// are always behind a box or reference, and that non-opaque custom types are *never* behind
-    /// references or boxes.
-    ///
-    /// Also checks that there are no elided lifetimes in the return type.
-    ///
-    /// Errors are pushed into the `errors` vector.
-    pub fn check_validity<'a>(
-        &'a self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-        is_return_position: bool,
-    ) {
-        self.check_opaque(in_path, env, false, errors);
-        self.check_option(errors, is_return_position);
-        self.check_result(errors, is_return_position);
-    }
-
-    /// Checks the validity of return types.
-    ///
-    /// This is equivalent to `TypeName::check_validity`, but it also ensures
-    /// that the type doesn't elide any lifetimes.
-    ///
-    /// Once we decide to support lifetime elision in return types, this function
-    /// will probably be removed.
-    pub fn check_return_type_validity(
-        &self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        self.check_validity(in_path, env, errors, true);
-        self.check_lifetime_elision(self, in_path, env, errors);
-    }
-
-    /// Checks that there aren't any elided lifetimes.
-    fn check_lifetime_elision(
-        &self,
-        full_type: &Self,
-        in_path: &Path,
-        env: &Env,
-        errors: &mut Vec<ValidityError>,
-    ) {
-        match self {
-            TypeName::Named(path_type) | TypeName::SelfType(path_type) => {
-                let (_path, custom) = path_type.resolve_with_path(in_path, env);
-                if let Some(lifetimes) = custom.lifetimes() {
-                    let lifetimes_provided = path_type
-                        .lifetimes
-                        .iter()
-                        .filter(|lt| !matches!(lt, Lifetime::Anonymous))
-                        .count();
-
-                    if lifetimes_provided != lifetimes.len() {
-                        // There's a discrepency between the number of declared
-                        // lifetimes and the number of lifetimes provided in
-                        // the return type, so there must have been elision.
-                        errors.push(ValidityError::LifetimeElisionInReturn {
-                            full_type: full_type.clone(),
-                            sub_type: self.clone(),
-                        });
-                    } else {
-                        // The struct was written with the number of lifetimes
-                        // that it was declared with, so we're good.
-                    }
-                } else {
-                    // `CustomType::Enum`, which doesn't have any lifetimes.
-                    // We already checked that enums don't have generics in
-                    // core.
-                }
-            }
-            TypeName::Reference(lifetime, _, ty) => {
-                if let Lifetime::Anonymous = lifetime {
-                    errors.push(ValidityError::LifetimeElisionInReturn {
-                        full_type: full_type.clone(),
-                        sub_type: self.clone(),
-                    });
-                }
-
-                ty.check_lifetime_elision(full_type, in_path, env, errors);
-            }
-            TypeName::Box(ty) | TypeName::Option(ty) => {
-                ty.check_lifetime_elision(full_type, in_path, env, errors)
-            }
-            TypeName::Result(ok, err, _) => {
-                ok.check_lifetime_elision(full_type, in_path, env, errors);
-                err.check_lifetime_elision(full_type, in_path, env, errors);
-            }
-            TypeName::StrReference(Lifetime::Anonymous, ..)
-            | TypeName::PrimitiveSlice(Lifetime::Anonymous, ..) => {
-                errors.push(ValidityError::LifetimeElisionInReturn {
-                    full_type: full_type.clone(),
-                    sub_type: self.clone(),
-                });
-            }
-            _ => {}
-        }
-    }
-
     pub fn is_zst(&self) -> bool {
         // check_zst() prevents non-unit types from being ZSTs
         matches!(*self, TypeName::Unit)
@@ -964,6 +822,7 @@ impl fmt::Display for TypeName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
+            TypeName::Ordering => write!(f, "Ordering"),
             TypeName::Named(p) | TypeName::SelfType(p) => p.fmt(f),
             TypeName::Reference(lifetime, mutability, typ) => {
                 write!(f, "{}{typ}", ReferenceDisplay(lifetime, mutability))
@@ -974,30 +833,49 @@ impl fmt::Display for TypeName {
                 write!(f, "Result<{ok}, {err}>")
             }
             TypeName::Writeable => "DiplomatWriteable".fmt(f),
-            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf8) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8) => {
                 write!(
                     f,
                     "{}DiplomatStr",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }
-            TypeName::StrReference(lifetime, StringEncoding::UnvalidatedUtf16) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf16) => {
                 write!(
                     f,
                     "{}DiplomatStr16",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }
-            TypeName::StrReference(lifetime, StringEncoding::Utf8) => {
+            TypeName::StrReference(Some(lifetime), StringEncoding::Utf8) => {
                 write!(
                     f,
                     "{}str",
                     ReferenceDisplay(lifetime, &Mutability::Immutable)
                 )
             }
-            TypeName::PrimitiveSlice(lifetime, mutability, typ) => {
+            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8) => {
+                write!(f, "Box<DiplomatStr>")
+            }
+            TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16) => {
+                write!(f, "Box<DiplomatStr16>")
+            }
+            TypeName::StrReference(None, StringEncoding::Utf8) => {
+                write!(f, "Box<str>")
+            }
+            TypeName::StrSlice(StringEncoding::UnvalidatedUtf8) => {
+                write!(f, "&[&DiplomatStr]")
+            }
+            TypeName::StrSlice(StringEncoding::UnvalidatedUtf16) => {
+                write!(f, "&[&DiplomatStr16]")
+            }
+            TypeName::StrSlice(StringEncoding::Utf8) => {
+                write!(f, "&[&str]")
+            }
+            TypeName::PrimitiveSlice(Some((lifetime, mutability)), typ) => {
                 write!(f, "{}[{typ}]", ReferenceDisplay(lifetime, mutability))
             }
+            TypeName::PrimitiveSlice(None, typ) => write!(f, "Box<[{typ}]>"),
             TypeName::Unit => "()".fmt(f),
         }
     }

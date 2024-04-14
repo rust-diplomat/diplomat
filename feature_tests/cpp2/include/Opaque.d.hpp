@@ -27,6 +27,8 @@ public:
 
   inline static ImportedStruct returns_imported();
 
+  inline static int8_t cmp();
+
   inline const capi::Opaque* AsFFI() const;
   inline capi::Opaque* AsFFI();
   inline static const Opaque* FromFFI(const capi::Opaque* ptr);

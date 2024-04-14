@@ -6,8 +6,8 @@ use diplomat_core::hir::borrowing_param::{
 };
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, Lifetime, LifetimeEnv, Lifetimes, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
-    StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, SpecialMethod,
+    SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
@@ -30,18 +30,26 @@ pub fn run<'cx>(
     let mut directives = BTreeSet::default();
     let mut helper_classes = BTreeMap::default();
 
+    let mut tgcx = TyGenContext {
+        tcx,
+        errors: &errors,
+        helper_classes: &mut helper_classes,
+        formatter: &formatter,
+    };
+
+    // Needed for ListStringView
+    tgcx.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
+    tgcx.gen_slice(&hir::Slice::Str(
+        None,
+        hir::StringEncoding::UnvalidatedUtf16,
+    ));
+
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             continue;
         }
 
-        let (file_name, body) = TyGenContext {
-            tcx,
-            errors: &errors,
-            helper_classes: &mut helper_classes,
-            formatter: &formatter,
-        }
-        .gen(id);
+        let (file_name, body) = tgcx.gen(id);
 
         directives.insert(formatter.fmt_part(&file_name));
 
@@ -140,6 +148,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
+        let special = self.gen_special_method_info(&ty.special_method_presence);
+
         #[derive(Template)]
         #[template(path = "dart/enum.dart.jinja", escape = "none")]
         struct ImplTemplate<'a> {
@@ -149,6 +159,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: &'a [MethodInfo<'a>],
             docs: String,
             is_contiguous: bool,
+            special: SpecialMethodGenInfo<'a>,
         }
 
         ImplTemplate {
@@ -158,6 +169,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: methods.as_slice(),
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
+            special,
         }
         .render()
         .unwrap()
@@ -171,6 +183,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .collect::<Vec<_>>();
 
         let destructor = self.formatter.fmt_destructor_name(id);
+        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
         #[template(path = "dart/opaque.dart.jinja", escape = "none")]
@@ -180,6 +193,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             docs: String,
             destructor: String,
             lifetimes: &'a LifetimeEnv,
+            special: SpecialMethodGenInfo<'a>,
         }
 
         ImplTemplate {
@@ -188,6 +202,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             destructor,
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
+            special,
         }
         .render()
         .unwrap()
@@ -223,7 +238,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 let c_to_dart = self.gen_c_to_dart_for_type(
                     &field.ty,
-                    format!("underlying.{name}").into(),
+                    format!("ffi.{name}").into(),
                     &ty.lifetimes,
                 );
 
@@ -231,22 +246,23 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     let view_expr = self.gen_dart_to_c_for_type(&field.ty, name.clone(), None);
                     let mut ret = vec![
                         format!("final {name}View = {view_expr};"),
-                        format!("pointer.ref.{name}._length = {name}View.length;"),
+                        format!("struct.{name}._length = {name}View.length;"),
                     ];
 
                     // We do not need to handle lifetime transitivity here: Methods already resolve
                     // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
                     // are explicitly specified on methods.
-                    if let MaybeStatic::NonStatic(lt) = slice.lifetime() {
-                        let lt_name = ty.lifetimes.fmt_lifetime(lt);
-                        ret.push(format!("final {name}Arena = ({lt_name}AppendArray != null && !{lt_name}AppendArray.isEmpty) ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp;"));
-
+                    if let Some(lt) = slice.lifetime() {
+                        let MaybeStatic::NonStatic(lt) = lt else {
+                            panic!("'static not supported in Dart");
+                        };
                         ret.push(format!(
-                            "pointer.ref.{name}._pointer = {name}View.pointer({name}Arena);"
+                            "struct.{name}._data = {name}View.allocIn({lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp);",
+                            lt_name = ty.lifetimes.fmt_lifetime(lt),
                         ));
                     } else {
                         ret.push(format!(
-                            "pointer.ref.{name}._pointer = {name}View.pointer(temp);"
+                            "struct.{name}._data = {name}View.allocIn(_RustAlloc());"
                         ));
                     }
                     (ret, None)
@@ -264,7 +280,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     };
                     let dart_to_c = self.gen_dart_to_c_for_type(&field.ty, name.clone(), struct_borrow_info.as_ref());
                     (vec![format!(
-                        "pointer.ref.{name} = {};",
+                        "struct.{name} = {};",
                         dart_to_c
                     )], struct_borrow_info.map(|s| s.param_info))
                 };
@@ -287,6 +303,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .iter()
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
+        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         // Non-out structs need to be constructible in Dart
         let default_constructor = if !is_out {
@@ -303,7 +320,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     format!("factory {type_name}({{{args}}})", args = args.join(", "));
 
                 let mut r = String::new();
-                writeln!(&mut r, "final dart = {type_name}._(result);").unwrap();
+                writeln!(&mut r, "final dart = {type_name}._fromFfi(result);").unwrap();
                 for field in &fields {
                     let name = &field.name;
                     writeln!(&mut r, "if ({name} != null) {{").unwrap();
@@ -337,6 +354,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods: Vec<MethodInfo<'a>>,
             docs: String,
             lifetimes: &'a LifetimeEnv,
+            special: SpecialMethodGenInfo<'a>,
         }
 
         ImplTemplate {
@@ -347,6 +365,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             methods,
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
+            special,
         }
         .render()
         .unwrap()
@@ -402,7 +421,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
             let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
 
-            if let hir::Type::Slice(..) = param.ty {
+            if let hir::Type::Slice(slice) = param.ty {
                 // Two args on the ABI: pointer and size
                 param_types_ffi.push(self.formatter.fmt_pointer(&param_type_ffi).into());
                 param_types_ffi_cast.push(self.formatter.fmt_pointer(&param_type_ffi_cast).into());
@@ -425,10 +444,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 if is_borrowed {
                     // Slices borrowed in the return value use a custom arena that gets generated in the template via slice_params
                     param_conversions
-                        .push(format!("{param_name}View.pointer({param_name}Arena.arena)").into());
+                        .push(format!("{param_name}View.allocIn({param_name}Arena.arena)").into());
+                } else if slice.lifetime().is_none() {
+                    // Owned slices use the Rust allocator
+                    param_conversions
+                        .push(format!("{param_name}View.allocIn(_RustAlloc())").into());
                 } else {
                     // Everyone else uses the temporary arena that keeps stuff alive until the method is called
-                    param_conversions.push(format!("{param_name}View.pointer(temp)").into());
+                    param_conversions.push(format!("{param_name}View.allocIn(temp)").into());
                     needs_temp_arena = true;
                 }
                 param_conversions.push(format!("{param_name}View.length").into());
@@ -463,7 +486,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
 
         if method.output.is_writeable() {
-            param_conversions.push("writeable._underlying".into());
+            param_conversions.push("writeable._ffi".into());
             param_types_ffi.push(
                 self.formatter
                     .fmt_pointer(self.formatter.fmt_opaque())
@@ -490,76 +513,34 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         let params = param_decls_dart.join(", ");
 
-        let declaration = if method.param_self.is_none() {
-            // Constructor
-            if return_ty == type_name {
-                if let Some(name) = self.formatter.fmt_constructor_name(method) {
-                    format!("factory {type_name}.{name}({params})")
-                } else {
-                    format!("factory {type_name}({params})")
-                }
-            // Static field
-            } else if params.is_empty()
-                && !matches!(
-                    method.output,
-                    hir::ReturnType::Fallible(_, Some(_))
-                        | hir::ReturnType::Infallible(SuccessType::Unit)
-                )
-                && return_ty != "bool"
-            {
-                let method_name = self
-                    .formatter
-                    .fmt_constructor_name(method)
-                    .unwrap_or("singleton".into());
-                format!("static final {return_ty} {method_name} = ()")
-            // Static method
-            } else {
-                let method_name = self.formatter.fmt_method_name(method);
-                format!("static {return_ty} {method_name}({params})")
-            }
-        // Getter
-        } else if method.params.is_empty()
-            // Returns some value
-            && !method.output.is_unit()
-            // If it returns a bool it has be a `isFoo`, otherwise the bool might be a success flag of a side effect
-            && (return_ty != "bool" || method.name.as_str().starts_with("is"))
-            // Conversions are not getters according to the style guide
-            && !(method.name.as_str().starts_with("to") || method.name.as_str().starts_with("into"))
-            // Mutates
-            && !method.name.as_str().starts_with("enable")
-            // Clone and build are not getters according to the style guide, and next is usually not pure
-            && !["clone", "next", "build"].contains(&method.name.as_str())
-        {
-            let method_name = self.formatter.fmt_method_name(method);
-            format!("{return_ty} get {method_name}")
-        // Setter
-        } else if method.name.as_str().starts_with("set_")
-            && method.params.len() == 1
-            && method.output.is_unit()
-            // The corresponding getter exists, as required by the style guide
-            && self
-                .tcx
-                .resolve_type(id)
-                .methods()
-                .iter()
-                .any(|m| m.name.as_str() == method.name.as_str().strip_prefix("set_").unwrap())
-        {
-            let method_name = self.formatter.fmt_setter_name(method);
-            format!("set {method_name}({params})")
-        } else if method.name.as_str() == "to_string"
-            && method.output.is_writeable()
-            && params.is_empty()
-            && return_ty == "String"
-        {
-            "@override\n  String toString()".to_string()
-        } else if method.name.as_str() == "get"
-            && !method.output.is_unit()
-            && method.params.len() == 1
-        {
-            format!("{return_ty} operator []({params})")
-        } else {
-            let method_name = self.formatter.fmt_method_name(method);
-            format!("{return_ty} {method_name}({params})")
+        let declaration = match &method.attrs.special_method {
+            Some(SpecialMethod::Constructor) => format!("factory {type_name}({params})"),
+            Some(SpecialMethod::NamedConstructor(name)) => format!(
+                "factory {type_name}.{}({params})",
+                self.formatter.fmt_constructor_name(name, method)
+            ),
+            Some(SpecialMethod::Getter(name)) => format!(
+                "{return_ty} get {}",
+                self.formatter.fmt_accessor_name(name, method)
+            ),
+            Some(SpecialMethod::Setter(name)) => format!(
+                "set {}({params})",
+                self.formatter.fmt_accessor_name(name, method)
+            ),
+            Some(SpecialMethod::Stringifier) => "@override\n  String toString()".into(),
+            Some(SpecialMethod::Comparison) => format!("int compareTo({type_name} other)"),
+            Some(SpecialMethod::Iterator) => format!("{return_ty} _iteratorNext({params})"),
+            Some(SpecialMethod::Iterable) => format!("{return_ty} get iterator"),
+            Some(SpecialMethod::Indexer) => format!("{return_ty} operator []({params})"),
+            None if method.param_self.is_none() => format!(
+                "static {return_ty} {}({params})",
+                self.formatter.fmt_method_name(method)
+            ),
+            None => format!(
+                "{return_ty} {}({params})",
+                self.formatter.fmt_method_name(method)
+            ),
+            Some(special) => unimplemented!("Found unknown special method type {special:?}"),
         };
 
         let mut docs = self.formatter.fmt_docs(&method.docs);
@@ -590,6 +571,40 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             lifetimes: &method.lifetime_env,
             method_lifetimes_map: visitor.borrow_map(),
         })
+    }
+
+    fn gen_special_method_info(
+        &mut self,
+        special_method_presence: &SpecialMethodPresence,
+    ) -> SpecialMethodGenInfo<'cx> {
+        let mut info = SpecialMethodGenInfo {
+            comparator: special_method_presence.comparator,
+            ..Default::default()
+        };
+
+        if let Some(ref val) = special_method_presence.iterator {
+            info.iterator = Some(self.gen_success_ty(val))
+        }
+        if let Some(ref iterator) = special_method_presence.iterable {
+            let iterator_def = self.tcx.resolve_opaque(*iterator);
+            let Some(ref val) = iterator_def.special_method_presence.iterator else {
+                self.errors
+                    .push_error("Found iterable not returning an iterator type".into());
+                return info;
+            };
+            info.iterable = Some(self.gen_success_ty(val))
+        }
+
+        info
+    }
+
+    fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'cx, str> {
+        match out_ty {
+            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::OutType(o) => self.gen_type_name(o),
+            SuccessType::Unit => self.formatter.fmt_void().into(),
+            _ => unreachable!(),
+        }
     }
 
     /// Generates a type's Dart type.
@@ -634,6 +649,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
+            Type::Slice(hir::Slice::Strs(..)) => "core.List<core.String>".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -710,6 +726,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Slice(hir::Slice::Primitive(_, p)) => {
                 self.formatter.fmt_primitive_as_ffi(p, false).into()
             }
+            Type::Slice(hir::Slice::Strs(encoding)) => match encoding {
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => "_SliceUtf8",
+                _ => "_SliceUtf16",
+            }
+            .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -761,8 +782,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_dart_to_c_self(&self, ty: &SelfType) -> Cow<'static, str> {
         match *ty {
             SelfType::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => "index".into(),
-            SelfType::Struct(..) => "_pointer(temp)".into(),
-            SelfType::Opaque(..) | SelfType::Enum(..) => "_underlying".into(),
+            SelfType::Struct(..) => "_toFfi(temp)".into(),
+            SelfType::Opaque(..) | SelfType::Enum(..) => "_ffi".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -779,24 +800,24 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         match *ty {
             Type::Primitive(..) => dart_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!(
-                // Note: {dart_name} == null ? 0 : {dart_name}.underlying
-                // will not work for struct fields since Dart can't guarantee the
-                // null check will be unchanged between the two accesses.
-                "{dart_name}?._underlying ?? ffi.Pointer.fromAddress(0)"
+                // Use coalescing to only evaluate `{dart_name}` once
+                "{dart_name}?._ffi ?? ffi.Pointer.fromAddress(0)"
             )
             .into(),
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 format!("{dart_name}.index").into()
             }
             Type::Struct(..) => self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info),
-            Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._underlying").into(),
-            Type::Slice(hir::Slice::Str(
-                _,
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            )) => format!("{dart_name}.utf8View").into(),
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                format!("{dart_name}.utf16View").into()
+            Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._ffi").into(),
+            Type::Slice(hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding)) => {
+                match encoding {
+                    hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+                        format!("{dart_name}.utf8View")
+                    }
+                    _ => format!("{dart_name}.utf16View"),
+                }
             }
+            .into(),
             Type::Slice(hir::Slice::Primitive(_, p)) => format!(
                 "{dart_name}{view}",
                 view = self.formatter.fmt_primitive_list_view(p)
@@ -823,47 +844,19 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 .unwrap();
                 let mut maybe_comma = "";
                 for use_lt in use_lts {
-                    // Generate stuff like `, aEdges` or for struct fields, `, ...?aAppendArray`
+                    // Generate stuff like `, aEdges` or for struct fields, `, ...aAppendArray`
                     let lt = info.use_env.fmt_lifetime(use_lt);
                     if info.is_method {
                         write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
                     } else {
-                        write!(&mut params, "{maybe_comma}...?{lt}AppendArray",).unwrap();
+                        write!(&mut params, "{maybe_comma}...{lt}AppendArray",).unwrap();
                     }
                     maybe_comma = ", ";
                 }
                 write!(&mut params, "]").unwrap();
             }
         }
-        format!("{dart_name}._pointer(temp{params})").into()
-    }
-
-    /// Generate the name of a single lifetime edge array
-    ///
-    /// FIXME(Manishearth): this may need to belong in  fmt.rs
-    fn gen_single_edge(&self, lifetime: Lifetime, lifetime_env: &LifetimeEnv) -> Cow<'static, str> {
-        format!("{}Edges", lifetime_env.fmt_lifetime(lifetime)).into()
-    }
-
-    /// Make a list of edge arrays, one for every lifetime in a Lifetimes
-    ///
-    /// Will generate with a leading `, `, so will look something like `, aEdges, bEdges, ...`
-    fn gen_lifetimes_edge_list(&self, lifetimes: &Lifetimes, lifetime_env: &LifetimeEnv) -> String {
-        let mut ret = String::new();
-        for lt in lifetimes.lifetimes() {
-            if let MaybeStatic::NonStatic(lt) = lt {
-                // We only generate a single edge in the list per lifetime, despite transitivity
-                //
-                // This is because we plan to handle transitivity when constructing these edge arrays,
-                // e.g. if `'a: 'b`, `aEdges` will already contain the relevant bits from `bEdges`.
-                //
-                // This lets us do things like not generate bEdges if it's not actually relevant for returning.
-                write!(ret, ", {}", self.gen_single_edge(lt, lifetime_env)).unwrap();
-            } else {
-                write!(ret, ", []").unwrap();
-            }
-        }
-        ret
+        format!("{dart_name}._toFfi(temp{params})").into()
     }
 
     /// Generates a Dart expression for a type.
@@ -879,22 +872,39 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
 
-                let (owned, self_edge) = if let Some(lt) = op.owner.lifetime() {
-                    if let MaybeStatic::NonStatic(lt) = lt {
-                        (false, self.gen_single_edge(lt, lifetime_env))
-                    } else {
-                        // 'statics are still not owned and should not register finalizers
-                        // but they also have no lifetime edges
-                        (false, "[]".into())
-                    }
+                let mut edges = if let Some(lt) = op.owner.lifetime() {
+                    let MaybeStatic::NonStatic(lt) = lt else {
+                        panic!("'static not supported in Dart")
+                    };
+                    self.formatter
+                        .fmt_lifetime_edge_array(lt, lifetime_env)
+                        .into_owned()
                 } else {
-                    (true, "[]".into())
+                    "[]".into()
                 };
-                let edges = self.gen_lifetimes_edge_list(&op.lifetimes, lifetime_env);
+
+                for lt in op.lifetimes.lifetimes() {
+                    let MaybeStatic::NonStatic(lt) = lt else {
+                        panic!("'static not supported in Dart");
+                    };
+                    // We only generate a single edge in the list per lifetime, despite transitivity
+                    //
+                    // This is because we plan to handle transitivity when constructing these edge arrays,
+                    // e.g. if `'a: 'b`, `aEdges` will already contain the relevant bits from `bEdges`.
+                    //
+                    // This lets us do things like not generate bEdges if it's not actually relevant for returning.
+                    write!(
+                        edges,
+                        ", {}",
+                        self.formatter.fmt_lifetime_edge_array(lt, lifetime_env)
+                    )
+                    .unwrap();
+                }
+
                 if op.is_optional() {
-                    format!("{var_name}.address == 0 ? null : {type_name}._({var_name}, {owned}, {self_edge}{edges})").into()
+                    format!("{var_name}.address == 0 ? null : {type_name}._fromFfi({var_name}, {edges})").into()
                 } else {
-                    format!("{type_name}._({var_name}, {owned}, {self_edge}{edges})").into()
+                    format!("{type_name}._fromFfi({var_name}, {edges})").into()
                 }
             }
             Type::Struct(ref st) => {
@@ -902,14 +912,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 let mut edges = String::new();
                 for lt in st.lifetimes().lifetimes() {
-                    if let MaybeStatic::NonStatic(lt) = lt {
-                        write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
-                    } else {
-                        write!(&mut edges, ", []").unwrap();
-                    }
+                    let MaybeStatic::NonStatic(lt) = lt else {
+                        panic!("'static not supported in Dart")
+                    };
+                    write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
                 }
 
-                format!("{type_name}._({var_name}{edges})").into()
+                format!("{type_name}._fromFfi({var_name}{edges})").into()
             }
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 let id = e.tcx_id.into();
@@ -919,16 +928,20 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("{type_name}.values.firstWhere((v) => v._underlying == {var_name})").into()
+                format!("{type_name}.values.firstWhere((v) => v._ffi == {var_name})").into()
             }
-            // As we only get borrowed slices from the FFI, we always have to copy.
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8)) =>
-                format!("Utf8Decoder().convert({var_name}._pointer.asTypedList({var_name}._length))").into(),
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) =>
-                format!("core.String.fromCharCodes({var_name}._pointer.asTypedList({var_name}._length))").into(),
-            Type::Slice(hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_))) =>
-                format!("core.Iterable.generate({var_name}._length).map((i) => {var_name}._pointer[i]).toList(growable: false)").into(),
-            Type::Slice(..) => format!("{var_name}._pointer.asTypedList({var_name}._length)").into(),
+            Type::Slice(slice) => if let Some(lt) = slice.lifetime() {
+                let MaybeStatic::NonStatic(lifetime) = lt else {
+                    panic!("'static not supported in Dart");
+                };
+                format!(
+                    "{var_name}._toDart({}Edges)",
+                    lifetime_env.fmt_lifetime(lifetime)
+                )
+            } else {
+                format!("{var_name}._toDart([])")
+            }
+            .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -1019,16 +1032,77 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
+        let dart_ty = match slice {
+            hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_list_type(*p),
+            hir::Slice::Str(..) => self.formatter.fmt_string(),
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
+        let to_dart = match slice {
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => vec![
+                "final r = Utf8Decoder().convert(_data.asTypedList(_length));",
+                "if (lifetimeEdges.isEmpty) {",
+                "  _diplomat_free(_data.cast(), _length, 1);", 
+                "}",
+                "return r;"
+            ],
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => vec![
+                "final r = core.String.fromCharCodes(_data.asTypedList(_length));",
+                "if (lifetimeEdges.isEmpty) {",
+                "  _diplomat_free(_data.cast(), _length * 2, 2);", 
+                "}",
+                "return r;"
+            ],
+            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => vec![
+                "final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);",
+                "if (lifetimeEdges.isEmpty) {",
+                "  _diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());", 
+                "}",
+                "return r;"
+            ],
+            hir::Slice::Primitive(_, p) =>
+                vec![
+                "final r = _data.asTypedList(_length);",
+                "if (lifetimeEdges.isEmpty) {",
+                match p {
+                    hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Char | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::I8) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length, align: 1));",
+                    hir::PrimitiveType::Int(hir::IntType::U16 | hir::IntType::I16) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 2, align: 2));",
+                    hir::PrimitiveType::Int(hir::IntType::U32 | hir::IntType::I32) | hir::PrimitiveType::Float(hir::FloatType::F32) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 4, align: 4));",
+                    hir::PrimitiveType::Int(hir::IntType::U64 | hir::IntType::I64) | hir::PrimitiveType::Float(hir::FloatType::F64) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 8, align: 8));",
+                    hir::PrimitiveType::IntSize(..) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * ffi.sizeOf<ffi.Size>(), align: ffi.sizeOf<ffi.Size>()));",
+                    hir::PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+                },
+                "} else {",
+                "  // Keep lifetimeEdges alive",
+                "  _nopFree.attach(r, lifetimeEdges);",
+                "}",
+                "return r;"
+            ],
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
         #[derive(askama::Template)]
         #[template(path = "dart/slice.dart.jinja", escape = "none")]
-        struct SliceTemplate {
-            ffi_type: &'static str,
-            slice_ty: &'static str,
+        struct SliceTemplate<'a> {
+            ffi_type: &'a str,
+            slice_ty: &'a str,
+            dart_ty: &'a str,
+            to_dart: &'a [&'a str],
         }
 
         self.helper_classes.insert(
             slice_ty.into(),
-            SliceTemplate { ffi_type, slice_ty }.render().unwrap(),
+            SliceTemplate {
+                ffi_type,
+                slice_ty,
+                dart_ty,
+                to_dart: &to_dart,
+            }
+            .render()
+            .unwrap(),
         );
 
         slice_ty
@@ -1134,7 +1208,7 @@ struct MethodInfo<'a> {
     /// Maps each (used in the output) method lifetime to a list of parameters
     /// it borrows from. The parameter list may contain the parameter name,
     /// an internal slice View that was temporarily constructed, or
-    /// a spread of a struct's `_fields_for_lifetime_foo()` method.
+    /// a spread of a struct's `_fiellsForLifetimeFoo` getter.
     method_lifetimes_map: BTreeMap<Lifetime, BorrowedLifetimeInfo<'a>>,
 }
 
@@ -1170,8 +1244,8 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
         LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
         // We extract the edge-relevant fields for a borrowed struct lifetime
         LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
-            "...{param_name}._fields_for_lifetime_{}()",
-            def_env.fmt_lifetime(def_lt)
+            "...{param_name}._fieldsForLifetime{}",
+            def_env.fmt_lifetime(def_lt).to_uppercase(),
         )
         .into(),
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
@@ -1185,14 +1259,12 @@ fn iter_fields_with_lifetimes_from_set<'a, P: TyPosition>(
 ) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
     /// Does `ty` use any lifetime from `lifetimes`?
     fn does_type_use_lifetime_from_set<P: TyPosition>(ty: &Type<P>, lifetime: &Lifetime) -> bool {
-        for lt in ty.lifetimes() {
-            if let MaybeStatic::NonStatic(lt) = lt {
-                if lt == *lifetime {
-                    return true;
-                }
-            }
-        }
-        false
+        ty.lifetimes().any(|lt| {
+            let MaybeStatic::NonStatic(lt) = lt else {
+                panic!("'static not supported in Dart");
+            };
+            lt == *lifetime
+        })
     }
 
     fields
@@ -1210,13 +1282,24 @@ fn iter_def_lifetimes_matching_use_lt<'a>(
         .map(|(def_lt, _use_lts)| def_lt)
         .copied()
 }
+
 /// Context about a struct being borrowed when doing dart-to-c conversions
 struct StructBorrowContext<'tcx> {
     /// Is this in a method or struct?
     ///
     /// Methods generate things like `[aEdges, bEdges]`
-    /// whereas structs do `[...?aAppendArray, ...?bAppendArray]`
+    /// whereas structs do `[...aAppendArray, ...bAppendArray]`
     is_method: bool,
     use_env: &'tcx LifetimeEnv,
     param_info: StructBorrowInfo<'tcx>,
+}
+
+#[derive(Default)]
+struct SpecialMethodGenInfo<'a> {
+    /// Whether it is a comparator
+    comparator: bool,
+    /// Whether it is an iterator, and the type it iterates over
+    iterator: Option<Cow<'a, str>>,
+    /// Whether it is an iterable, and the type it iterates over
+    iterable: Option<Cow<'a, str>>,
 }

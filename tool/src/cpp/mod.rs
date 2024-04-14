@@ -345,7 +345,9 @@ fn gen_includes<W: fmt::Write>(
         ast::TypeName::Writeable => {}
         ast::TypeName::StrReference(..) => {}
         ast::TypeName::PrimitiveSlice(..) => {}
+        ast::TypeName::StrSlice(..) => {}
         ast::TypeName::Unit => {}
+        ast::TypeName::Ordering => {}
         &_ => unreachable!("unknown AST/HIR variant"),
     }
 

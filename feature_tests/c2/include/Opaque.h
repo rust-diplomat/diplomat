@@ -27,6 +27,8 @@ size_t Opaque_returns_usize();
 
 ImportedStruct Opaque_returns_imported();
 
+int8_t Opaque_cmp();
+
 void Opaque_destroy(Opaque* self);
 
 

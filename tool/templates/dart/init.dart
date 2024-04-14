@@ -16,28 +16,82 @@ typedef Rune = int;
 // ignore: unused_element
 final _callocFree = core.Finalizer(ffi2.calloc.free);
 
-extension _View on ByteBuffer {
+// ignore: unused_element
+final _nopFree = core.Finalizer((nothing) => {});
+
+// ignore: unused_element
+final _rustFree = core.Finalizer((({ffi.Pointer<ffi.Void> pointer, int bytes, int align}) record) => _diplomat_free(record.pointer, record.bytes, record.align));
+
+final class _RustAlloc implements ffi.Allocator {
+  @override
+  ffi.Pointer<T> allocate<T extends ffi.NativeType>(int byteCount, {int? alignment}) {
+      return _diplomat_alloc(byteCount, alignment ?? 1).cast();
+  }
+
+  void free(ffi.Pointer<ffi.NativeType> pointer) {
+    throw 'Internal error: should not deallocate in Rust memory';
+  }
+}
+
+@meta.ResourceIdentifier('diplomat_alloc')
+@ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Size, ffi.Size)>(symbol: 'diplomat_alloc', isLeaf: true)
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Void> _diplomat_alloc(int len, int align);
+
+@meta.ResourceIdentifier('diplomat_free')
+@ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Void>, ffi.Size, ffi.Size)>(symbol: 'diplomat_free', isLeaf: true)
+// ignore: non_constant_identifier_names
+external int _diplomat_free(ffi.Pointer<ffi.Void> ptr, int len, int align);
+
+
+// ignore: unused_element
+class _FinalizedArena {
+  final ffi2.Arena arena;
+  static final core.Finalizer<ffi2.Arena> _finalizer = core.Finalizer((arena) => arena.releaseAll());
+
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
+  _FinalizedArena() : arena = ffi2.Arena() {
+    _finalizer.attach(this, arena);
+  }
+
+  // ignore: unused_element
+  _FinalizedArena.withLifetime(core.List<core.List<Object>> lifetimeAppendArray) : arena = ffi2.Arena() {
+    _finalizer.attach(this, arena);
+    for (final edge in lifetimeAppendArray) {
+      edge.add(this);
+    }
+  }
+}
+
+extension on ByteBuffer {
+  // ignore: unused_element
+  ffi.Pointer<ffi.Uint8> allocIn(ffi.Allocator alloc) {
     return alloc<ffi.Uint8>(length)..asTypedList(length).setRange(0, length, asUint8List());
   }
 
   int get length => lengthInBytes;
 }
 
-extension _UtfViews on String {
+extension on String {
   // ignore: unused_element
   _Utf8View get utf8View => _Utf8View(this);
   // ignore: unused_element
   _Utf16View get utf16View => _Utf16View(this);
 }
 
-extension _NativeBoolViews on core.List<bool> {
+extension on core.List<String> {
+  // ignore: unused_element
+  _ListUtf8View get utf8View => _ListUtf8View(this);
+  // ignore: unused_element
+  _ListUtf16View get utf16View => _ListUtf16View(this);
+}
+
+extension on core.List<bool> {
   // ignore: unused_element
   _BoolListView get boolView => _BoolListView(this);
 }
 
-extension _NativeIntViews on core.List<int> {
+extension on core.List<int> {
   // ignore: unused_element
   _Int8ListView get int8View => _Int8ListView(this);
   // ignore: unused_element
@@ -60,7 +114,7 @@ extension _NativeIntViews on core.List<int> {
   _UsizeListView get usizeView => _UsizeListView(this);
 }
 
-extension _NativeFloatViews on core.List<double> {
+extension on core.List<double> {
   // ignore: unused_element
   _Float32ListView get float32View => _Float32ListView(this);
   // ignore: unused_element
@@ -74,7 +128,7 @@ class _Utf8View {
   // Copies
   _Utf8View(String string) : _codeUnits = Utf8Encoder().convert(string);
 
-  ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint8> allocIn(ffi.Allocator alloc) {
     // Copies
     return alloc<ffi.Uint8>(length)..asTypedList(length).setRange(0, length, _codeUnits);
   }
@@ -88,7 +142,7 @@ class _Utf16View {
 
   _Utf16View(String string) : _codeUnits = string.codeUnits;
 
-  ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint16> allocIn(ffi.Allocator alloc) {
     // Copies
     return alloc<ffi.Uint16>(length)..asTypedList(length).setRange(0, length, _codeUnits);
   }
@@ -97,13 +151,54 @@ class _Utf16View {
 }
 
 // ignore: unused_element
-class _BoolListView{
+class _ListUtf8View {
+  final core.List<String> _strings;
+
+  // Copies
+  _ListUtf8View(this._strings);
+
+  ffi.Pointer<_SliceUtf8> allocIn(ffi.Allocator alloc) {
+    final slice = alloc<_SliceUtf8>(length);
+    for (var i = 0; i < length; i++) {
+      final codeUnits = Utf8Encoder().convert(_strings[i]);
+      final str = alloc<ffi.Uint8>(codeUnits.length)..asTypedList(codeUnits.length).setRange(0, codeUnits.length, codeUnits);
+      slice[i]._data = str;
+      slice[i]._length = codeUnits.length;
+    }
+    return slice;
+  }
+
+  int get length => _strings.length;
+}
+
+// ignore: unused_element
+class _ListUtf16View {
+  final core.List<String> _strings;
+
+  _ListUtf16View(this._strings);
+
+  ffi.Pointer<_SliceUtf16> allocIn(ffi.Allocator alloc) {
+    final slice = alloc<_SliceUtf16>(length);
+    for (var i = 0; i < length; i++) {
+      final codeUnits = _strings[i].codeUnits;
+      final str = alloc<ffi.Uint16>(codeUnits.length)..asTypedList(codeUnits.length).setRange(0, codeUnits.length, codeUnits);
+      slice[i]._data = str;
+      slice[i]._length = codeUnits.length;
+    }
+    return slice;
+  }
+
+  int get length => _strings.length;
+}
+
+// ignore: unused_element
+class _BoolListView {
   final core.List<bool> _values;
 
   _BoolListView(this._values);
 
   // Copies
-  ffi.Pointer<ffi.Bool> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Bool> allocIn(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Bool>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = _values[i];
@@ -120,7 +215,7 @@ class _Int8ListView {
   _Int8ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Int8> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Int8> allocIn(ffi.Allocator alloc) {
     return alloc<ffi.Int8>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -133,7 +228,7 @@ class _Int16ListView {
   _Int16ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Int16> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Int16> allocIn(ffi.Allocator alloc) {
     return alloc<ffi.Int16>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -146,7 +241,7 @@ class _Int32ListView {
   _Int32ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Int32> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Int32> allocIn(ffi.Allocator alloc) {
     return alloc<ffi.Int32>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -159,7 +254,7 @@ class _Int64ListView {
   _Int64ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Int64> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Int64> allocIn(ffi.Allocator alloc) {
     return alloc<ffi.Int64>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -173,7 +268,7 @@ class _IsizeListView {
   _IsizeListView(this._values);
 
   // Copies
-  ffi.Pointer<ffi.IntPtr> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.IntPtr> allocIn(ffi.Allocator alloc) {
     final pointer = alloc<ffi.IntPtr>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = _values[i];
@@ -190,7 +285,7 @@ class _Uint8ListView {
   _Uint8ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint8> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint8> allocIn(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Uint8>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = min(255, max(0, _values[i]));
@@ -207,7 +302,7 @@ class _Uint16ListView {
   _Uint16ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint16> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint16> allocIn(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Uint16>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = min(65535, max(0, _values[i]));
@@ -224,7 +319,7 @@ class _Uint32ListView {
   _Uint32ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint32> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint32> allocIn(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Uint32>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = min(4294967295, max(0, _values[i]));
@@ -241,7 +336,7 @@ class _Uint64ListView {
   _Uint64ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint64> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Uint64> allocIn(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Uint64>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = max(0, _values[i]);
@@ -259,7 +354,7 @@ class _UsizeListView {
   _UsizeListView(this._values);
 
   // Copies
-  ffi.Pointer<ffi.Size> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Size> allocIn(ffi.Allocator alloc) {
     final pointer = alloc<ffi.Size>(_values.length);
     for (var i = 0; i < _values.length; i++) {
       pointer[i] = max(0, _values[i]);
@@ -276,7 +371,7 @@ class _Float32ListView {
   _Float32ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Float> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Float> allocIn(ffi.Allocator alloc) {
     return alloc<ffi.Float>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
@@ -289,25 +384,9 @@ class _Float64ListView {
   _Float64ListView(this._values);
 
   // ignore: unused_element
-  ffi.Pointer<ffi.Double> pointer(ffi.Allocator alloc) {
+  ffi.Pointer<ffi.Double> allocIn(ffi.Allocator alloc) {
     return alloc<ffi.Double>(length)..asTypedList(length).setRange(0, length, _values);
   }
 
   int get length => _values.length;
-}
-
-class _FinalizedArena {
-  final ffi2.Arena arena;
-  static final core.Finalizer<ffi2.Arena> _finalizer = core.Finalizer((arena) => arena.releaseAll());
-
-  _FinalizedArena() : this.arena = ffi2.Arena() {
-    _finalizer.attach(this, this.arena);
-  }
-  // Construct
-  _FinalizedArena.withLifetime(core.List<core.List<Object>> lifetimeAppendArray) : this.arena = ffi2.Arena() {
-    _finalizer.attach(this, this.arena);
-    for (final edge in lifetimeAppendArray) {
-      edge.add(this);
-    }
-  }
 }

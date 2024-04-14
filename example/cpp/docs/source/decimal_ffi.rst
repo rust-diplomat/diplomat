@@ -15,6 +15,7 @@
         See the `Rust documentation for try_new <https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new>`__ for more information.
 
 
+
     .. cpp:function:: template<typename W> void format_write_to_writeable(const ICU4XFixedDecimal& value, W& write) const
 
         Formats a :cpp:class:`ICU4XFixedDecimal` to a string.

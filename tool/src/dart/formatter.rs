@@ -38,6 +38,14 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_lifetime_edge_array(
+        &self,
+        lifetime: hir::Lifetime,
+        lifetime_env: &hir::LifetimeEnv,
+    ) -> Cow<'static, str> {
+        format!("{}Edges", lifetime_env.fmt_lifetime(lifetime)).into()
+    }
+
     pub fn fmt_file_name(&self, name: &str) -> String {
         format!("{name}.g.dart")
     }
@@ -119,40 +127,40 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     /// Format a method
-    pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
+    pub fn fmt_method_name(&self, method: &hir::Method) -> String {
         // TODO(#60): handle other keywords
-
-        // TODO: we should give attrs.rename() control over the camelcasing
-        let name = method.name.as_str().to_lower_camel_case();
-        let name = method.attrs.rename.apply(name.into());
+        let name = method
+            .attrs
+            .rename
+            .apply(method.name.as_str().into())
+            .to_lower_camel_case();
         if INVALID_METHOD_NAMES.contains(&&*name) {
-            format!("{name}_").into()
+            format!("{name}_")
         } else {
             name
         }
     }
 
-    pub fn fmt_constructor_name(&self, method: &hir::Method) -> Option<String> {
-        let mut name = self.fmt_method_name(method).into_owned();
-        for prefix in ["try", "create", "new_", "new", "default_", "default", "get"] {
-            name = name
-                .strip_prefix(prefix)
-                .map(|s| s.to_lower_camel_case())
-                .unwrap_or(name);
-        }
+    pub fn fmt_constructor_name(&self, name: &Option<String>, method: &hir::Method) -> String {
+        let name = method
+            .attrs
+            .rename
+            .apply(name.as_deref().unwrap_or(method.name.as_str()).into())
+            .to_lower_camel_case();
 
-        if name.is_empty() {
-            None
-        } else if INVALID_METHOD_NAMES.contains(&name.as_str()) {
-            Some(format!("{name}_"))
+        if INVALID_METHOD_NAMES.contains(&name.as_str()) {
+            format!("{name}_")
         } else {
-            Some(name)
+            name
         }
     }
 
-    pub fn fmt_setter_name(&self, method: &hir::Method) -> String {
-        let name = &*self.fmt_method_name(method);
-        let name = name.strip_prefix("set").unwrap().to_lower_camel_case();
+    pub fn fmt_accessor_name(&self, name: &Option<String>, method: &hir::Method) -> String {
+        let name = method
+            .attrs
+            .rename
+            .apply(name.as_deref().unwrap_or(method.name.as_str()).into())
+            .to_lower_camel_case();
 
         if INVALID_FIELD_NAMES.contains(&name.as_str()) {
             format!("{name}_")

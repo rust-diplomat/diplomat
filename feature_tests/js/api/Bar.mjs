@@ -15,8 +15,4 @@ export class Bar {
       Bar_box_destroy_registry.register(this, underlying);
     }
   }
-
-  foo() {
-    return new Foo(wasm.Bar_foo(this.underlying), false, [this]);
-  }
 }

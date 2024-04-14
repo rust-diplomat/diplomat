@@ -1,5 +1,5 @@
 final class {{slice_ty}} extends ffi.Struct {
-  external ffi.Pointer<{{ffi_type}}> _pointer;
+  external ffi.Pointer<{{ffi_type}}> _data;
 
   @ffi.Size()
   external int _length;
@@ -12,7 +12,7 @@ final class {{slice_ty}} extends ffi.Struct {
     }
 
     for (var i = 0; i < _length; i++) {
-      if (other._pointer[i] != _pointer[i]) {
+      if (other._data[i] != _data[i]) {
         return false;
       }
     }
@@ -22,4 +22,10 @@ final class {{slice_ty}} extends ffi.Struct {
   // This is cheap
   @override
   int get hashCode => _length.hashCode;
+
+  {{dart_ty}} _toDart(core.List<Object> lifetimeEdges) {
+    {%- for statement in to_dart %}
+    {{statement}}
+    {%- endfor %}
+  }
 }

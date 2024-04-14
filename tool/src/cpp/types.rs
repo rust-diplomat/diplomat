@@ -180,16 +180,7 @@ fn gen_type_inner<W: fmt::Write>(
             write!(out, "{maybe_const}{}", library_config.string_view16.expr)?;
         }
 
-        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Mutable, prim) => {
-            write!(
-                out,
-                "{}<const {}>",
-                library_config.span.expr,
-                crate::c::types::c_type_for_prim(prim)
-            )?;
-        }
-
-        ast::TypeName::PrimitiveSlice(_, ast::Mutability::Immutable, prim) => {
+        ast::TypeName::PrimitiveSlice(Some((_, ast::Mutability::Immutable)), prim) => {
             write!(
                 out,
                 "const {}<const {}>",
@@ -198,8 +189,21 @@ fn gen_type_inner<W: fmt::Write>(
             )?;
         }
 
+        ast::TypeName::PrimitiveSlice(_, prim) => {
+            write!(
+                out,
+                "const {}<{}>",
+                library_config.span.expr,
+                crate::c::types::c_type_for_prim(prim)
+            )?;
+        }
+
         ast::TypeName::Unit => {
             write!(out, "void")?;
+        }
+
+        ast::TypeName::Ordering => {
+            write!(out, "int8_t")?;
         }
         &_ => unreachable!("unknown AST/HIR variant"),
     }

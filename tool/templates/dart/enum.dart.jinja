@@ -1,7 +1,9 @@
 {% if !docs.is_empty() -%}
 /// {{docs}}
 {% endif -%}
-enum {{type_name}} {
+enum {{type_name}}
+   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
+   {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
 {%- for enum_variant in ty.variants %}
   {% if !enum_variant.docs.is_empty() -%}
   /// {{fmt.fmt_docs(enum_variant.docs).replace('\n', "\n  ") }}
@@ -11,7 +13,7 @@ enum {{type_name}} {
 {%- endfor %}
   {%- if !is_contiguous %}
 
-  int get _underlying {
+  int get _ffi {
     switch (this) {
       {%- for enum_variant in ty.variants %}
       case {{fmt.fmt_enum_variant(enum_variant)}}:
@@ -24,6 +26,14 @@ enum {{type_name}} {
   {%- for m in methods %}
 {% include "method.dart.jinja" %}
   {%-endfor %}
+
+  {%- if special.comparator %}
+
+  @override
+  bool operator ==(Object other) => other is {{type_name}} && compareTo(other) == 0;
+  @override
+  int get hashCode => 42; // Cannot get hash from Rust, so a constant is the only correct impl
+  {%- endif %}
 }
 
 {%- for m in methods %}
