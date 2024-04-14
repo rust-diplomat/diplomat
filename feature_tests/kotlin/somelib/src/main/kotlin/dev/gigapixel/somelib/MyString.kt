@@ -8,6 +8,7 @@ interface MyStringLib: Library {
     fun MyString_destroy(handle: Long)
     fun MyString_new(v: Slice): Long
     fun MyString_new_unsafe(v: Slice): Long
+    fun MyString_set_str(handle: Long, newStr: Slice): Unit
     fun MyString_get_str(handle: Long, writeable: Pointer): Unit
 }
 
@@ -52,6 +53,12 @@ class MyString internal constructor (
             return returnOpaque
         
         }
+    }
+    fun setStr(newStr: String): Unit {
+    
+        val (newStrMem, newStrSlice) = PrimitiveArrayTools.readUtf8(newStr)
+        
+        val returnVal = lib.MyString_set_str(handle, newStrSlice);
     }
     fun getStr(): String {
     

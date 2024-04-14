@@ -15,9 +15,9 @@ mod ffi {
             Box::new(Self(v.to_string()))
         }
 
-        // pub fn set_str(&mut self, new_str: &DiplomatStr) {
-        //     self.0 = String::from_utf8(new_str.to_owned()).unwrap();
-        // }
+        pub fn set_str(&mut self, new_str: &DiplomatStr) {
+            self.0 = String::from_utf8(new_str.to_owned()).unwrap();
+        }
 
         pub fn get_str(&self, writeable: &mut DiplomatWriteable) {
             let _ = write!(writeable, "{}", self.0);
