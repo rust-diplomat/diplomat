@@ -213,4 +213,58 @@ internal object PrimitiveArrayTools {
 
         return charArray
     }
+
+    fun readUtf8s(array: Array<String>): Pair<List<Memory>, Slice> {
+        val sliceSize = Slice.SIZE
+        val mem = Memory(sliceSize * array.size.toLong())
+        val ptr = mem.share(0)
+        val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
+            val (mem, slice) = readUtf8(str)
+            ptr.setPointer(idx * sliceSize, slice.data)
+            ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len)
+            mem
+        }
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = array.size.toLong()
+        return Pair(mems + mem, slice)
+    }
+
+    fun readUtf16s(array: Array<String>): Pair<List<Memory>, Slice> {
+        val sliceSize = Slice.SIZE
+        val mem = Memory(sliceSize * array.size.toLong())
+        val ptr = mem.share(0)
+        val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
+            val (mem, slice) = readUtf16(str)
+            ptr.setPointer(idx * sliceSize, slice.data)
+            ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len)
+            mem
+        }
+        val slice = Slice()
+        slice.data = ptr
+        slice.len = array.size.toLong()
+        return Pair(mems + mem, slice)
+    }
+
+    fun getUtf16s(slice: Slice): List<String> {
+        return (0..slice.len).map { idx ->
+            val thisSlice = Slice()
+            val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
+            val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
+            thisSlice.data = thisPtr
+            thisSlice.len = thisLen
+            getUtf16(thisSlice)
+        }
+    }
+
+    fun getUtf8s(slice: Slice): List<String> {
+        return (0..slice.len).map { idx ->
+            val thisSlice = Slice()
+            val thisPtr = Pointer(slice.data.getLong(idx * Slice.SIZE))
+            val thisLen = slice.data.getLong(idx * Slice.SIZE + Long.SIZE_BYTES)
+            thisSlice.data = thisPtr
+            thisSlice.len = thisLen
+            getUtf8(thisSlice)
+        }
+    }
 }

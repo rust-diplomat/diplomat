@@ -40,6 +40,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
         format!("{}Array", self.fmt_primitive_as_ffi(ty))
     }
 
+    pub fn fmt_str_slices(&self) -> &'static str {
+        "Array<String>"
+    }
+
     pub fn fmt_return_slice(&self) -> &'static str {
         "Slice"
     }

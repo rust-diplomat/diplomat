@@ -21,10 +21,10 @@ mod ffi {
             Box::new(Self(String::from_utf8(v.into()).unwrap()))
         }
 
-        // #[diplomat::skip_if_ast]
-        // pub fn new_from_first(v: &[&DiplomatStr]) -> Box<MyString> {
-        //     Box::new(Self(core::str::from_utf8(v[0]).unwrap().into()))
-        // }
+        #[diplomat::skip_if_ast]
+        pub fn new_from_first(v: &[&DiplomatStr]) -> Box<MyString> {
+            Box::new(Self(core::str::from_utf8(v[0]).unwrap().into()))
+        }
 
         #[diplomat::attr(supports = accessors, setter = "str")]
         pub fn set_str(&mut self, new_str: &DiplomatStr) {

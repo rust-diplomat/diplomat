@@ -367,6 +367,8 @@ return returnString"#;
             Slice::Str(_, StringEncoding::UnvalidatedUtf16) => "readUtf16".into(),
             Slice::Str(_, _) => "readUtf8".into(),
             Slice::Primitive(_, _) => "native".into(),
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => "readUtf16s".into(),
+            Slice::Strs(_) => "readUtf8s".into(),
             _ => {
                 self.errors
                     .push_error("Found unsupported slice type".into());
@@ -384,8 +386,13 @@ return returnString"#;
             .into()
     }
 
-    fn gen_cleanup(&self, param_name: Cow<'cx, str>) -> Cow<'cx, str> {
-        format!("{param_name}Mem.close()").into()
+    fn gen_cleanup(&self, param_name: Cow<'cx, str>, slice: Slice) -> Cow<'cx, str> {
+        match slice {
+            Slice::Str(_, _) => format!("{param_name}Mem.close()").into(),
+            Slice::Primitive(_, _) => format!("{param_name}Mem.close()").into(),
+            Slice::Strs(_) => format!("{param_name}Mem.forEach {{it.close()}}").into(),
+            _ => todo!(),
+        }
     }
 
     fn gen_method(
@@ -437,7 +444,7 @@ return returnString"#;
                 match param_borrow_kind {
                     ParamBorrowInfo::Struct(_) => todo!("support struct borrows"),
                     ParamBorrowInfo::TemporarySlice => {
-                        cleanups.push(self.gen_cleanup(param_name.clone()));
+                        cleanups.push(self.gen_cleanup(param_name.clone(), slice));
                     }
                     ParamBorrowInfo::BorrowedSlice => (),
                     ParamBorrowInfo::BorrowedOpaque => (),
@@ -645,11 +652,7 @@ return returnString"#;
                 self.formatter.fmt_primitive_slice(ty).into()
             }
 
-            Type::Slice(hir::Slice::Strs(_)) => {
-                self.errors
-                    .push_error("don't support slices of strings yet".into());
-                "".into()
-            }
+            Type::Slice(hir::Slice::Strs(_)) => self.formatter.fmt_str_slices().into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
