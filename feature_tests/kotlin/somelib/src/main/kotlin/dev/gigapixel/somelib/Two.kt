@@ -4,7 +4,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 
 
-interface TwoLib: Library {
+internal interface TwoLib: Library {
     fun Two_destroy(handle: Long)
 }
 
@@ -22,8 +22,8 @@ class Two internal constructor (
     }
 
     companion object {
-        val libClass: Class<TwoLib> = TwoLib::class.java
-        val lib: TwoLib = Native.load("somelib", libClass)
+        internal val libClass: Class<TwoLib> = TwoLib::class.java
+        internal val lib: TwoLib = Native.load("somelib", libClass)
     }
 
 }

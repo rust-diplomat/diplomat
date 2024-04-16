@@ -182,7 +182,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
             Type::Struct(_) => todo!("don't support structs yet"),
             Type::Enum(_) => todo!("don't support enums yet"),
-            Type::Slice(_) => format!("{name}Slice").into(),
+            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => format!("{name}Slice").into(),
+            Type::Slice( _) => format!("{name}Slice").into(),
             _ => todo!(),
         }
     }
@@ -300,9 +301,11 @@ val returnString = DW.writeableToString(writeable)
 DW.lib.diplomat_buffer_writeable_destroy(writeable)
 return returnString"#;
 
+    const BOXED_SLICE_RETURN: &'static str =  "    return OwnedSlice(returnVal) // this will not be cleaned. It's ownership must be passed to native for cleanup";
+
     fn gen_slice_retrn<'d>(&'d self, slice_ty: &'d Slice) -> String {
         match slice_ty {
-            Slice::Str(_, enc) => match enc {
+            Slice::Str(Some(_), enc) => match enc {
                 StringEncoding::UnvalidatedUtf16 => {
                     "    return PrimitiveArrayTools.getUtf16(returnVal)".into()
                 }
@@ -312,10 +315,17 @@ return returnString"#;
                 StringEncoding::Utf8 => "    return PrimitiveArrayTools.getUtf8(returnVal)".into(),
                 _ => todo!(),
             },
-            Slice::Primitive(_, prim_ty) => {
+            Slice::Str(None, enc) => match enc {
+                StringEncoding::UnvalidatedUtf16 => Self::BOXED_SLICE_RETURN.into(),
+                StringEncoding::UnvalidatedUtf8 => Self::BOXED_SLICE_RETURN.into(),
+                StringEncoding::Utf8 => Self::BOXED_SLICE_RETURN.into(),
+                _ => todo!(),
+            },
+            Slice::Primitive(Some(_), prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
                 format!("    return PrimitiveArrayTools.get{prim_ty}Array(returnVal)")
             }
+            Slice::Primitive(None, _) => Self::BOXED_SLICE_RETURN.into(),
 
             _ => todo!(),
         }
@@ -362,35 +372,40 @@ return returnString"#;
         struct SliceConv<'d> {
             slice_method: Cow<'d, str>,
             kt_param_name: Cow<'d, str>,
+            closeable: bool,
         }
-        let slice_method = match slice_type {
-            Slice::Str(_, StringEncoding::UnvalidatedUtf16) => "readUtf16".into(),
-            Slice::Str(_, _) => "readUtf8".into(),
-            Slice::Primitive(_, _) => "native".into(),
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => "readUtf16s".into(),
-            Slice::Strs(_) => "readUtf8s".into(),
+        let (slice_method, closeable): (Cow<'cx, str>, bool) = match slice_type {
+            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("readUtf16".into(), true),
+            Slice::Str(Some(_), _) => ("readUtf8".into(), true),
+            Slice::Str(None, _) => ("getSlice".into(), false),
+            Slice::Primitive(Some(_), _) => ("native".into(), true),
+            Slice::Primitive(None, _) => ("getSlice".into(), false),
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("readUtf16s".into(), true),
+            Slice::Strs(_) => ("readUtf8s".into(), true),
             _ => {
                 self.errors
                     .push_error("Found unsupported slice type".into());
-                "".into()
+                ("".into(), false)
             }
         };
 
-        let slice_conv = SliceConv {
+        SliceConv {
             kt_param_name,
             slice_method,
-        };
-        slice_conv
-            .render()
-            .expect("Failed to render slice method")
-            .into()
+            closeable,
+        }
+        .render()
+        .expect("Failed to render slice method")
+        .into()
     }
 
-    fn gen_cleanup(&self, param_name: Cow<'cx, str>, slice: Slice) -> Cow<'cx, str> {
+    fn gen_cleanup(&self, param_name: Cow<'cx, str>, slice: Slice) -> Option<Cow<'cx, str>> {
         match slice {
-            Slice::Str(_, _) => format!("{param_name}Mem.close()").into(),
-            Slice::Primitive(_, _) => format!("{param_name}Mem.close()").into(),
-            Slice::Strs(_) => format!("{param_name}Mem.forEach {{it.close()}}").into(),
+            Slice::Str(Some(_), _) => Some(format!("{param_name}Mem.close()").into()),
+            Slice::Str(_, _) => None,
+            Slice::Primitive(Some(_), _) => Some(format!("{param_name}Mem.close()").into()),
+            Slice::Primitive(_, _) => None,
+            Slice::Strs(_) => Some(format!("{param_name}Mem.forEach {{it.close()}}").into()),
             _ => todo!(),
         }
     }
@@ -410,6 +425,7 @@ return returnString"#;
         let mut param_conversions = Vec::with_capacity(method.params.len());
         let mut slice_conversions = Vec::with_capacity(method.params.len());
         let mut cleanups = Vec::with_capacity(method.params.len());
+        let mut comments = String::new();
 
         match self_type {
             Some(st @ SelfType::Opaque(_)) => {
@@ -444,7 +460,9 @@ return returnString"#;
                 match param_borrow_kind {
                     ParamBorrowInfo::Struct(_) => todo!("support struct borrows"),
                     ParamBorrowInfo::TemporarySlice => {
-                        cleanups.push(self.gen_cleanup(param_name.clone(), slice));
+                        if let Some(cleanup) = self.gen_cleanup(param_name.clone(), slice) {
+                            cleanups.push(cleanup)
+                        }
                     }
                     ParamBorrowInfo::BorrowedSlice => (),
                     ParamBorrowInfo::BorrowedOpaque => (),
@@ -479,7 +497,9 @@ return returnString"#;
             .gen_return(method, method_lifetimes_map, cleanups.as_ref())
             .map(From::from);
 
+        let comment = "// some comment".into();
         MethodTpl {
+            comment,
             declaration,
             native_method_name,
             param_conversions,
@@ -647,9 +667,13 @@ return returnString"#;
                 panic!("don't support structs yet: {type_name:?}")
             }
             Type::Enum(_) => panic!("don't support enums yet"),
-            Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().into(),
-            Type::Slice(hir::Slice::Primitive(_, ty)) => {
+            Type::Slice(hir::Slice::Str(Some(_), _)) => self.formatter.fmt_string().into(),
+            Type::Slice(hir::Slice::Str(None, ty)) => self.formatter.fmt_owned_slice_str(ty).into(),
+            Type::Slice(hir::Slice::Primitive(Some(_), ty)) => {
                 self.formatter.fmt_primitive_slice(ty).into()
+            }
+            Type::Slice(hir::Slice::Primitive(None, ty)) => {
+                self.formatter.fmt_owned_slice_primitive(ty).into()
             }
 
             Type::Slice(hir::Slice::Strs(_)) => self.formatter.fmt_str_slices().into(),
@@ -663,6 +687,7 @@ type MethodLtMap<'a> = BTreeMap<Lifetime, BorrowedLifetimeInfo<'a>>;
 #[derive(Template)]
 #[template(path = "kotlin/Method.kt.jinja", escape = "none")]
 struct MethodTpl<'a> {
+    comment: String,
     declaration: String,
     /// The C method name
     native_method_name: Cow<'a, str>,

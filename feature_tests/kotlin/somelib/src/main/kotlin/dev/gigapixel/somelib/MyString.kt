@@ -4,7 +4,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 
 
-interface MyStringLib: Library {
+internal interface MyStringLib: Library {
     fun MyString_destroy(handle: Long)
     fun MyString_new(v: Slice): Long
     fun MyString_new_unsafe(v: Slice): Long
@@ -12,6 +12,7 @@ interface MyStringLib: Library {
     fun MyString_new_from_first(v: Slice): Long
     fun MyString_set_str(handle: Long, newStr: Slice): Unit
     fun MyString_get_str(handle: Long, writeable: Pointer): Unit
+    fun MyString_get_boxed_str(handle: Long): Slice
 }
 
 class MyString internal constructor (
@@ -25,8 +26,8 @@ class MyString internal constructor (
     }
 
     companion object {
-        val libClass: Class<MyStringLib> = MyStringLib::class.java
-        val lib: MyStringLib = Native.load("somelib", libClass)
+        internal val libClass: Class<MyStringLib> = MyStringLib::class.java
+        internal val lib: MyStringLib = Native.load("somelib", libClass)
         fun new_(v: String): MyString {
         
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
@@ -55,9 +56,9 @@ class MyString internal constructor (
             return returnOpaque
         
         }
-        fun newOwned(v: String): MyString {
+        fun newOwned(v: OwnedSlice<Utf8>): MyString {
         
-            val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
+            val vSlice = PrimitiveArrayTools.getSlice(v)
             
             val returnVal = lib.MyString_new_owned(vSlice);
         
@@ -65,7 +66,7 @@ class MyString internal constructor (
             val handle = returnVal
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vMem.close()
+            
             return returnOpaque
         
         }
@@ -98,6 +99,12 @@ class MyString internal constructor (
         val returnString = DW.writeableToString(writeable)
         DW.lib.diplomat_buffer_writeable_destroy(writeable)
         return returnString
+    }
+    fun getBoxedStr(): OwnedSlice<Utf8> {
+    
+        
+        val returnVal = lib.MyString_get_boxed_str(handle);
+        return OwnedSlice(returnVal) // this will not be cleaned. It's ownership must be passed to native for cleanup
     }
 
 }

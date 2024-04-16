@@ -1,2 +1,2 @@
 
-val ({{kt_param_name}}Mem, {{kt_param_name}}Slice) = PrimitiveArrayTools.{{slice_method}}({{kt_param_name}})
+val {% if closeable %}({{kt_param_name}}Mem, {{kt_param_name}}Slice){% else %}{{kt_param_name}}Slice{% endif %} = PrimitiveArrayTools.{{slice_method}}({{kt_param_name}})

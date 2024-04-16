@@ -36,6 +36,11 @@ mod ffi {
             let _ = write!(writeable, "{}", self.0);
             writeable.flush();
         }
+
+        #[diplomat::attr(supports = accessors, getter = "str")]
+        pub fn get_boxed_str(&self) -> Box<str> {
+            self.0.as_str().into()
+        }
     }
 
     #[diplomat::opaque]

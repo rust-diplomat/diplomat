@@ -4,6 +4,8 @@ import com.sun.jna.Library
 import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
+import java.util.concurrent.atomic.AtomicBoolean
+
 
 val CLEANER = java.lang.ref.Cleaner.create()
 
@@ -267,4 +269,36 @@ internal object PrimitiveArrayTools {
             getUtf8(thisSlice)
         }
     }
+
+    internal fun <V: SliceType> getSlice(ownedSlice: OwnedSlice<V>): Slice {
+        if (ownedSlice.owned.compareAndSet(true, false)) {
+            return ownedSlice.slice
+        } else {
+            throw RuntimeException("Owned slice can only be acquired once")
+        }
+    }
+}
+
+sealed interface SliceType
+
+data object Bool: SliceType
+data object U8 : SliceType
+data object I8 : SliceType
+data object U16 : SliceType
+data object I16 : SliceType
+data object U32 : SliceType
+data object I32 : SliceType
+data object U64 : SliceType
+data object I64 : SliceType
+data object F32 : SliceType
+data object F64 : SliceType
+data object Utf8 : SliceType
+data object Utf16 : SliceType
+
+/**
+ * This represents an owned slice. The only way to ensure that it is cleaned up is by
+ * passing to a method that consumes the owned value
+ */
+class OwnedSlice<V: SliceType> internal constructor (internal val slice: Slice) {
+    internal val owned: AtomicBoolean = AtomicBoolean(true)
 }

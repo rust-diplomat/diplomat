@@ -4,7 +4,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 
 
-interface OtherOpaqueLib: Library {
+internal interface OtherOpaqueLib: Library {
     fun OtherOpaque_destroy(handle: Long)
     fun OtherOpaque_from_usize(number: Long): Long
     fun OtherOpaque_change(handle: Long, number: Long): Unit
@@ -27,8 +27,8 @@ class OtherOpaque internal constructor (
     }
 
     companion object {
-        val libClass: Class<OtherOpaqueLib> = OtherOpaqueLib::class.java
-        val lib: OtherOpaqueLib = Native.load("somelib", libClass)
+        internal val libClass: Class<OtherOpaqueLib> = OtherOpaqueLib::class.java
+        internal val lib: OtherOpaqueLib = Native.load("somelib", libClass)
         fun fromUsize(number: Long): OtherOpaque {
         
             

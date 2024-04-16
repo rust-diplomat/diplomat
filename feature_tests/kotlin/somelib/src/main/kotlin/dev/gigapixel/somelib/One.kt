@@ -4,7 +4,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 
 
-interface OneLib: Library {
+internal interface OneLib: Library {
     fun One_destroy(handle: Long)
     fun One_transitivity(hold: Long, nohold: Long): Long
     fun One_cycle(hold: Long, nohold: Long): Long
@@ -32,8 +32,8 @@ class One internal constructor (
     }
 
     companion object {
-        val libClass: Class<OneLib> = OneLib::class.java
-        val lib: OneLib = Native.load("somelib", libClass)
+        internal val libClass: Class<OneLib> = OneLib::class.java
+        internal val lib: OneLib = Native.load("somelib", libClass)
         fun transitivity(hold: One, nohold: One): One {
         
             

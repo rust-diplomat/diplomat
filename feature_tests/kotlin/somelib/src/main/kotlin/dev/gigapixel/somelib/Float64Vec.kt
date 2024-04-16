@@ -4,7 +4,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 
 
-interface Float64VecLib: Library {
+internal interface Float64VecLib: Library {
     fun Float64Vec_destroy(handle: Long)
     fun Float64Vec_new(v: Slice): Long
     fun Float64Vec_new_bool(v: Slice): Long
@@ -33,8 +33,8 @@ class Float64Vec internal constructor (
     }
 
     companion object {
-        val libClass: Class<Float64VecLib> = Float64VecLib::class.java
-        val lib: Float64VecLib = Native.load("somelib", libClass)
+        internal val libClass: Class<Float64VecLib> = Float64VecLib::class.java
+        internal val lib: Float64VecLib = Native.load("somelib", libClass)
         fun new_(v: DoubleArray): Float64Vec {
         
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
@@ -133,9 +133,9 @@ class Float64Vec internal constructor (
             return returnOpaque
         
         }
-        fun newFromOwned(v: DoubleArray): Float64Vec {
+        fun newFromOwned(v: OwnedSlice<F64>): Float64Vec {
         
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            val vSlice = PrimitiveArrayTools.getSlice(v)
             
             val returnVal = lib.Float64Vec_new_from_owned(vSlice);
         
@@ -143,16 +143,16 @@ class Float64Vec internal constructor (
             val handle = returnVal
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
+            
             return returnOpaque
         
         }
     }
-    fun asBoxedSlice(): DoubleArray {
+    fun asBoxedSlice(): OwnedSlice<F64> {
     
         
         val returnVal = lib.Float64Vec_as_boxed_slice(handle);
-        return PrimitiveArrayTools.getDoubleArray(returnVal)
+        return OwnedSlice(returnVal) // this will not be cleaned. It's ownership must be passed to native for cleanup
     }
     fun asSlice(): DoubleArray {
     
