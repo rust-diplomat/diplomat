@@ -4,6 +4,7 @@ import com.sun.jna.Library
 import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
+import com.sun.jna.Structure
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -301,4 +302,19 @@ data object Utf16 : SliceType
  */
 class OwnedSlice<V: SliceType> internal constructor (internal val slice: Slice) {
     internal val owned: AtomicBoolean = AtomicBoolean(true)
+}
+
+class Slice: Structure(), Structure.ByValue {
+
+    @JvmField var data: Pointer = Pointer(0)// Pointer to const char
+    @JvmField var len: Long = 0 // size_t
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("data", "len")
+    }
+
+    companion object {
+        var SIZE: Long = Native.getNativeSize(Slice::class.java).toLong()
+    }
 }

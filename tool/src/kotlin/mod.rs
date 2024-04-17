@@ -58,28 +58,6 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
     }
 
     #[derive(Template)]
-    #[template(path = "kotlin/Slice.java.jinja", escape = "none")]
-    struct SliceTpl<'a> {
-        domain: &'a str,
-        lib_name: &'a str,
-    }
-
-    let java_types = SliceTpl {
-        domain: &domain,
-        lib_name: &lib_name,
-    }
-    .render()
-    .expect("Failed to render java types");
-
-    files.add_file(
-        format!(
-            "src/main/java/{}/{lib_name}/Slice.java",
-            domain.replace('.', "/")
-        ),
-        java_types,
-    );
-
-    #[derive(Template)]
     #[template(path = "kotlin/build.gradle.kts.jinja", escape = "none")]
     struct Build<'a> {
         domain: &'a str,
