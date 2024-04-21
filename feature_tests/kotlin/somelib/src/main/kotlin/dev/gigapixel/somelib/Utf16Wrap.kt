@@ -24,7 +24,6 @@ class Utf16Wrap internal constructor (
         internal val lib: Utf16WrapLib = Native.load("somelib", libClass)
     }
     fun borrowCont(): String {
-    
         
         val returnVal = lib.Utf16Wrap_borrow_cont(handle);
         return PrimitiveArrayTools.getUtf16(returnVal)

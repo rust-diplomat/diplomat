@@ -1,0 +1,8 @@
+
+{%- for borrow in borrows %}
+val {{borrow.lt}}Edges: List<Any> = listOf({%- for param in borrow.params %}{%- if !loop.first %}, {% endif -%}{{param}}{%- endfor %})
+{%- endfor %}
+val returnStruct = {{return_type_name}}(returnVal{% if !borrows.is_empty() %}{%- for borrow in borrows %}, {{borrow.lt}}Edges{%- endfor %}{% endif -%})
+{%- for cleanup in cleanups %}{{cleanup|indent(4)}}{% endfor %}
+return returnStruct 
+

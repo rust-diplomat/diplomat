@@ -30,7 +30,6 @@ class OtherOpaque internal constructor (
         internal val libClass: Class<OtherOpaqueLib> = OtherOpaqueLib::class.java
         internal val lib: OtherOpaqueLib = Native.load("somelib", libClass)
         fun fromUsize(number: Long): OtherOpaque {
-        
             
             val returnVal = lib.OtherOpaque_from_usize(number);
         
@@ -43,11 +42,10 @@ class OtherOpaque internal constructor (
         
         }
         fun borrowOther(other: OtherOpaque): OtherOpaque {
-        
             
             val returnVal = lib.OtherOpaque_borrow_other(other.handle);
         
-            val selfEdges: List<Any> = listOf()
+            val selfEdges: List<Any> = listOf(other)
             val handle = returnVal
             val returnOpaque = OtherOpaque(handle, selfEdges)
             
@@ -56,12 +54,10 @@ class OtherOpaque internal constructor (
         }
     }
     fun change(number: Long): Unit {
-    
         
         val returnVal = lib.OtherOpaque_change(handle, number);
     }
     fun borrow(): OtherOpaque {
-    
         
         val returnVal = lib.OtherOpaque_borrow(handle);
     
@@ -73,11 +69,10 @@ class OtherOpaque internal constructor (
     
     }
     fun borrowSelfOrOther(other: OtherOpaque): OtherOpaque {
-    
         
         val returnVal = lib.OtherOpaque_borrow_self_or_other(handle, other.handle);
     
-        val selfEdges: List<Any> = listOf(this)
+        val selfEdges: List<Any> = listOf(this, other)
         val handle = returnVal
         val returnOpaque = OtherOpaque(handle, selfEdges)
         
@@ -85,19 +80,16 @@ class OtherOpaque internal constructor (
     
     }
     fun getLenAndAdd(other: Long): Long {
-    
         
         val returnVal = lib.OtherOpaque_get_len_and_add(handle, other);
     return returnVal
     }
     fun dummyStr(): String {
-    
         
         val returnVal = lib.OtherOpaque_dummy_str(handle);
         return PrimitiveArrayTools.getUtf8(returnVal)
     }
     fun wrapper(): Utf16Wrap {
-    
         
         val returnVal = lib.OtherOpaque_wrapper(handle);
     

@@ -29,7 +29,6 @@ class MyString internal constructor (
         internal val libClass: Class<MyStringLib> = MyStringLib::class.java
         internal val lib: MyStringLib = Native.load("somelib", libClass)
         fun new_(v: String): MyString {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
             
             val returnVal = lib.MyString_new(vSlice);
@@ -43,7 +42,6 @@ class MyString internal constructor (
         
         }
         fun newUnsafe(v: String): MyString {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
             
             val returnVal = lib.MyString_new_unsafe(vSlice);
@@ -57,7 +55,6 @@ class MyString internal constructor (
         
         }
         fun newOwned(v: OwnedSlice<Utf8>): MyString {
-        
             val vSlice = PrimitiveArrayTools.getSlice(v)
             
             val returnVal = lib.MyString_new_owned(vSlice);
@@ -71,7 +68,6 @@ class MyString internal constructor (
         
         }
         fun newFromFirst(v: Array<String>): MyString {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8s(v)
             
             val returnVal = lib.MyString_new_from_first(vSlice);
@@ -86,13 +82,11 @@ class MyString internal constructor (
         }
     }
     fun setStr(newStr: String): Unit {
-    
         val (newStrMem, newStrSlice) = PrimitiveArrayTools.readUtf8(newStr)
         
         val returnVal = lib.MyString_set_str(handle, newStrSlice);
     }
     fun getStr(): String {
-    
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)
         val returnVal = lib.MyString_get_str(handle, writeable);
     
@@ -101,7 +95,6 @@ class MyString internal constructor (
         return returnString
     }
     fun getBoxedStr(): OwnedSlice<Utf8> {
-    
         
         val returnVal = lib.MyString_get_boxed_str(handle);
         return OwnedSlice(returnVal) // this will not be cleaned. It's ownership must be passed to native for cleanup

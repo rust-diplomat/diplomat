@@ -1,29 +1,24 @@
 #[diplomat::bridge]
 pub mod ffi {
     #[diplomat::opaque]
-    #[diplomat::attr(kotlin, disable)]
     pub struct Foo<'a>(&'a DiplomatStr);
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
-    #[diplomat::attr(kotlin, disable)]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
-    #[diplomat::attr(kotlin, disable)]
     pub struct BorrowedFields<'a> {
         a: &'a DiplomatStr16,
         b: &'a DiplomatStr,
         c: &'a str,
     }
 
-    #[diplomat::attr(kotlin, disable)]
     pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
         field_a: &'a DiplomatStr16,
         field_b: &'b DiplomatStr,
         field_c: &'c str,
     }
 
-    #[diplomat::attr(kotlin, disable)]
     pub struct BorrowedFieldsReturning<'a> {
         bytes: &'a DiplomatStr,
     }
@@ -66,7 +61,6 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(kotlin, disable)]
     pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
         fields: BorrowedFields<'x>,
         bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,

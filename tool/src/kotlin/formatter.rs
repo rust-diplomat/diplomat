@@ -2,15 +2,17 @@ use crate::c2::CFormatter;
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
-    FloatType, IntType, PrimitiveType, StringEncoding, Type, TypeContext, TypeId,
+    FloatType, IntSizeType, IntType, PrimitiveType, Slice, StringEncoding, StructPathLike, Type,
+    TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
-use std::borrow::Cow;
+use std::{borrow::Cow, iter::once};
 
 /// This type mediates all formatting
 ///
 /// of C types and methods.
 pub(super) struct KotlinFormatter<'tcx> {
+    tcx: &'tcx TypeContext,
     c: CFormatter<'tcx>,
     strip_prefix: Option<String>,
 }
@@ -23,6 +25,7 @@ const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 impl<'tcx> KotlinFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, strip_prefix: Option<String>) -> Self {
         Self {
+            tcx,
             c: CFormatter::new(tcx),
             strip_prefix,
         }
@@ -39,7 +42,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     fn slice_prim(&self, ty: PrimitiveType) -> &'static str {
         match ty {
             PrimitiveType::Bool => "Bool",
-            PrimitiveType::Char => "I16",
+            PrimitiveType::Char => "I32",
             PrimitiveType::Byte => "I8",
             PrimitiveType::Int(IntType::I8) => "I8",
             PrimitiveType::Int(IntType::U8) => "U8",
@@ -81,16 +84,11 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "Array<String>"
     }
 
-    pub fn fmt_return_slice(&self) -> &'static str {
-        "Slice"
-    }
-
     pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
         self.c.fmt_method_name(ty, method).into()
     }
 
     pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
-        use diplomat_core::hir::{FloatType, IntType};
         match prim {
             PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Int",
@@ -103,7 +101,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             PrimitiveType::Int(IntType::U32) => "UInt",
             PrimitiveType::Int(IntType::U64) => "ULong",
             PrimitiveType::Byte => "Byte",
-            PrimitiveType::IntSize(_) => "Long", // this feels wrong
+            PrimitiveType::IntSize(_) => "Long",
             PrimitiveType::Float(FloatType::F32) => "Float",
             PrimitiveType::Float(FloatType::F64) => "Double",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Kotlin"),
@@ -113,7 +111,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
     pub fn fmt_method_name<'a>(&self, method: &'a hir::Method) -> Cow<'a, str> {
         // TODO(#60): handle other keywords
 
-        // TODO: we should give attrs.rename() control over the camelcasing
         let name = method.name.as_str().to_lower_camel_case();
         let name = method.attrs.rename.apply(name.into());
         if INVALID_METHOD_NAMES.contains(&&*name) {
@@ -123,7 +120,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_param_name<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+    pub fn fmt_param_name<'a>(&self, ident: &'a str) -> Cow<'tcx, str> {
         ident.to_lower_camel_case().into()
     }
 
@@ -133,13 +130,147 @@ impl<'tcx> KotlinFormatter<'tcx> {
             kind: ty,
             ..
         } = edge;
-        let type_change = match ty {
-            LifetimeEdgeKind::OpaqueParam => "",
-            LifetimeEdgeKind::SliceParam => "Mem",
-            LifetimeEdgeKind::StructLifetime(_, _) => panic!("Don't support structs yet"),
+        let param_name = self.fmt_param_name(param_name).to_string();
+        match ty {
+            LifetimeEdgeKind::OpaqueParam => param_name.into(),
+            LifetimeEdgeKind::SliceParam => format!("{param_name}Mem").into(),
+            LifetimeEdgeKind::StructLifetime(lt_env, lt) => {
+                let lt = lt_env.fmt_lifetime(lt);
+                format!("{param_name}.{lt}Edges").into()
+            }
             _ => panic!("unsupported lifetime kind"),
-        };
-        format!("{}{type_change}", self.fmt_param_name(param_name)).into()
+        }
+    }
+
+    pub fn fmt_field_name<'a>(&'a self, ident: &'a str) -> Cow<'tcx, str> {
+        self.fmt_param_name(ident)
+    }
+
+    pub fn fmt_field_default<'a>(&'a self, ty: &'a Type) -> Cow<'tcx, str> {
+        match ty {
+            Type::Primitive(prim) => match prim {
+                PrimitiveType::Float(FloatType::F32) => "0.0F",
+                PrimitiveType::Float(FloatType::F64) => "0.0",
+                _ => "0",
+            }
+            .into(),
+            Type::Opaque(_) => "Pointer(0)".into(),
+            Type::Struct(s) => {
+                let field_type_name: &str = self.tcx.resolve_type(s.id()).name().as_ref();
+                format!("{field_type_name}Native()").into()
+            }
+            Type::Enum(_) => todo!("Need to support enums"),
+            Type::Slice(_) => "Slice()".into(),
+            ty => unreachable!("reached struct field that can't be handled: {ty:?}"),
+        }
+    }
+
+    pub fn fmt_struct_field_native_to_kt<'a>(
+        &'a self,
+        field_name: &'a str,
+        ty: &'a Type,
+    ) -> Cow<'tcx, str> {
+        match ty {
+            Type::Primitive(prim) => match prim {
+                PrimitiveType::Bool => format!("nativeStruct.{field_name} > 0").into(),
+                PrimitiveType::Int(IntType::U8) => {
+                    format!("nativeStruct.{field_name}.toUByte()").into()
+                }
+                PrimitiveType::Int(IntType::U16) => {
+                    format!("nativeStruct.{field_name}.toUShort()").into()
+                }
+                PrimitiveType::Int(IntType::U32) => {
+                    format!("nativeStruct.{field_name}.toUInt()").into()
+                }
+                PrimitiveType::Int(IntType::U64) => {
+                    format!("nativeStruct.{field_name}.toULong()").into()
+                }
+                PrimitiveType::IntSize(IntSizeType::Usize) => {
+                    format!("nativeStruct.{field_name}.toULong()").into()
+                }
+                PrimitiveType::Int128(_) => panic!("128 bit ints not supported"),
+                _ => format!("nativeStruct.{field_name}").into(),
+            },
+            Type::Opaque(opaque) => {
+                let lt_list: String = once("listOf()")
+                    .chain(opaque.lifetimes.lifetimes().map(|_| "listOf()"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let ty_name =
+                    self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
+                format!(
+                    "{ty_name}(Pointer.nativeValue(nativeStruct.{field_name}), listOf(), {lt_list})"
+                )
+                .into()
+            }
+            Type::Struct(strct) => {
+                let ty_name =
+                    self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
+                let lt_list: String = strct
+                    .lifetimes
+                    .lifetimes()
+                    .map(|_| ", listOf()")
+                    .collect::<String>();
+                format!("{ty_name}(nativeStruct.{field_name}{lt_list})").into()
+            }
+            Type::Enum(_) => todo!(),
+            Type::Slice(Slice::Primitive(_, prim)) => format!(
+                "PrimitiveArrayTools.get{}Array(nativeStruct.{field_name})",
+                self.fmt_primitive_as_ffi(*prim)
+            )
+            .into(),
+            Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => {
+                format!("PrimitiveArrayTools.getUtf16(nativeStruct.{field_name})").into()
+            }
+            Type::Slice(Slice::Str(_, _)) => {
+                format!("PrimitiveArrayTools.getUtf8(nativeStruct.{field_name})").into()
+            }
+            Type::Slice(Slice::Strs(StringEncoding::UnvalidatedUtf16)) => {
+                format!("PrimitiveArrayTools.getUt16s(nativeStruct.{field_name})").into()
+            }
+            Type::Slice(Slice::Strs(_)) => {
+                format!("PrimitiveArrayTools.getUt16s(nativeStruct.{field_name})").into()
+            }
+            _ => todo!(),
+        }
+    }
+
+    pub fn fmt_struct_field_type_kt<'a>(&'a self, ty: &'a Type) -> Cow<'tcx, str> {
+        match ty {
+            Type::Primitive(prim) => self.fmt_primitive_as_ffi(*prim).into(),
+            Type::Opaque(_) => {
+                self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"))
+            }
+            Type::Struct(_) => {
+                self.fmt_type_name(ty.id().expect("Failed to get type id for struct"))
+            }
+            Type::Enum(_) => todo!(),
+            Type::Slice(Slice::Primitive(_, prim)) => {
+                format!("{}Array", self.fmt_primitive_as_ffi(*prim)).into()
+            }
+            Type::Slice(Slice::Str(_, _)) => "String".into(),
+            Type::Slice(Slice::Strs(_)) => "List<String>".into(),
+            _ => todo!(),
+        }
+    }
+
+    pub fn fmt_struct_field_type_native<'a>(&'a self, ty: &'a Type) -> Cow<'tcx, str> {
+        match ty {
+            Type::Primitive(PrimitiveType::Bool) => "Byte".into(),
+            Type::Primitive(PrimitiveType::Int(IntType::U8)) => "Byte".into(),
+            Type::Primitive(PrimitiveType::Int(IntType::U16)) => "Short".into(),
+            Type::Primitive(PrimitiveType::Int(IntType::U32)) => "Int".into(),
+            Type::Primitive(PrimitiveType::Int(IntType::U64)) => "Long".into(),
+            Type::Primitive(PrimitiveType::IntSize(_)) => "Long".into(),
+            Type::Primitive(prim) => self.fmt_primitive_as_ffi(*prim).into(),
+            Type::Opaque(_) => "Pointer".into(),
+            Type::Struct(s) => {
+                format!("{}Native", self.tcx.resolve_type(s.id()).name().as_str()).into()
+            }
+            Type::Enum(_) => todo!("Need to support enums"),
+            Type::Slice(_) => "Slice".into(),
+            ty => unreachable!("reached struct field that can't be handled: {ty:?}"),
+        }
     }
 
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {

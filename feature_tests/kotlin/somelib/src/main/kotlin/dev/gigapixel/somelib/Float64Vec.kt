@@ -36,7 +36,6 @@ class Float64Vec internal constructor (
         internal val libClass: Class<Float64VecLib> = Float64VecLib::class.java
         internal val lib: Float64VecLib = Native.load("somelib", libClass)
         fun new_(v: DoubleArray): Float64Vec {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new(vSlice);
@@ -50,7 +49,6 @@ class Float64Vec internal constructor (
         
         }
         fun newBool(v: BooleanArray): Float64Vec {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_bool(vSlice);
@@ -64,7 +62,6 @@ class Float64Vec internal constructor (
         
         }
         fun newI16(v: ShortArray): Float64Vec {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_i16(vSlice);
@@ -78,7 +75,6 @@ class Float64Vec internal constructor (
         
         }
         fun newU16(v: UShortArray): Float64Vec {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_u16(vSlice);
@@ -92,7 +88,6 @@ class Float64Vec internal constructor (
         
         }
         fun newIsize(v: LongArray): Float64Vec {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_isize(vSlice);
@@ -106,7 +101,6 @@ class Float64Vec internal constructor (
         
         }
         fun newUsize(v: LongArray): Float64Vec {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_usize(vSlice);
@@ -120,7 +114,6 @@ class Float64Vec internal constructor (
         
         }
         fun newF64BeBytes(v: ByteArray): Float64Vec {
-        
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_f64_be_bytes(vSlice);
@@ -134,7 +127,6 @@ class Float64Vec internal constructor (
         
         }
         fun newFromOwned(v: OwnedSlice<F64>): Float64Vec {
-        
             val vSlice = PrimitiveArrayTools.getSlice(v)
             
             val returnVal = lib.Float64Vec_new_from_owned(vSlice);
@@ -149,31 +141,26 @@ class Float64Vec internal constructor (
         }
     }
     fun asBoxedSlice(): OwnedSlice<F64> {
-    
         
         val returnVal = lib.Float64Vec_as_boxed_slice(handle);
         return OwnedSlice(returnVal) // this will not be cleaned. It's ownership must be passed to native for cleanup
     }
     fun asSlice(): DoubleArray {
-    
         
         val returnVal = lib.Float64Vec_as_slice(handle);
         return PrimitiveArrayTools.getDoubleArray(returnVal)
     }
     fun fillSlice(v: DoubleArray): Unit {
-    
         val (vMem, vSlice) = PrimitiveArrayTools.native(v)
         
         val returnVal = lib.Float64Vec_fill_slice(handle, vSlice);
     }
     fun setValue(newSlice: DoubleArray): Unit {
-    
         val (newSliceMem, newSliceSlice) = PrimitiveArrayTools.native(newSlice)
         
         val returnVal = lib.Float64Vec_set_value(handle, newSliceSlice);
     }
     fun toString_(): String {
-    
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)
         val returnVal = lib.Float64Vec_to_string(handle, writeable);
     
@@ -182,7 +169,6 @@ class Float64Vec internal constructor (
         return returnString
     }
     fun borrow(): DoubleArray {
-    
         
         val returnVal = lib.Float64Vec_borrow(handle);
         return PrimitiveArrayTools.getDoubleArray(returnVal)

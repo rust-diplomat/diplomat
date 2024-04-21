@@ -1,10 +1,9 @@
 use askama::Template;
-use diplomat_core::ast::SelfParam;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
     self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaquePath, SelfType, Slice, StringEncoding, StructPathLike, TyPosition, Type, TypeContext,
-    TypeDef, TypeId,
+    OpaquePath, ReturnableStructDef, SelfType, Slice, StringEncoding, StructField, StructPathLike,
+    TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
 
@@ -52,6 +51,15 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
             let type_name = o.name.to_string();
 
             let (file_name, body) = ty_gen_cx.gen_opaque_def(o, id, &type_name, &domain, &lib_name);
+
+            files.add_file(format!("src/main/kotlin/{file_name}"), body);
+        }
+
+        if let TypeDef::Struct(struct_def) = ty {
+            let type_name = struct_def.name.to_string();
+
+            let (file_name, body) =
+                ty_gen_cx.gen_struct_def(struct_def, id, &type_name, &domain, &lib_name);
 
             files.add_file(format!("src/main/kotlin/{file_name}"), body);
         }
@@ -158,7 +166,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     Mutability::Mutable => panic!("Not comfortable with mutable access in the JVM just yet. We'll add some mutexes to the code gen"),
                 }
             }
-            Type::Struct(_) => todo!("don't support structs yet"),
+            Type::Struct(_) => format!("{name}.nativeStruct").into(),
             Type::Enum(_) => todo!("don't support enums yet"),
             Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => format!("{name}Slice").into(),
             Type::Slice( _) => format!("{name}Slice").into(),
@@ -186,11 +194,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
             Type::Opaque(_) => "Long".into(),
 
-            Type::Struct(_) => {
-                todo!("Structs not supported yet")
+            Type::Struct(ref strct) => {
+                let type_id = strct.id();
+                let resolved = self.tcx.resolve_type(type_id);
+                format!("{}Native", resolved.name()).into()
             }
             Type::Enum(_) => {
-                todo!("Structs not supported yet")
+                todo!("Enums not supported yet")
             }
             Type::Slice(_) => "Slice".into(),
             _ => unreachable!("unknown AST/HIR variant"),
@@ -226,16 +236,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             MaybeOwn::Borrow(Borrow {
                 lifetime: MaybeStatic::NonStatic(lt),
                 ..
-            }) => {
-                let param = method_lifetimes_map.get(&lt)?;
-                Some(
-                    param
-                        .incoming_edges
-                        .iter()
-                        .map(|edge| self.formatter.fmt_borrow(edge))
-                        .collect(),
-                )
-            }
+            }) => Some(
+                method_lifetimes_map
+                    .get(&lt)
+                    .iter()
+                    .flat_map(|param| param.incoming_edges.iter())
+                    .map(move |edge| self.formatter.fmt_borrow(edge))
+                    .collect(),
+            ),
             _ => None,
         };
 
@@ -246,21 +254,20 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let borrows = lifetimes
             .lifetimes()
             .filter_map(|lt| {
-                let (lt_info, lt) = match lt {
+                let lt = match lt {
                     MaybeStatic::Static => return None,
-                    MaybeStatic::NonStatic(lt) => (
-                        method_lifetimes_map.get(&lt)?,
-                        lifetime_env.fmt_lifetime(lt),
-                    ),
+                    MaybeStatic::NonStatic(lt) => lt,
                 };
-                let other_params = lt_info
-                    .incoming_edges
+                let params = method_lifetimes_map
+                    .get(&lt)
                     .iter()
-                    .map(|edge| self.formatter.fmt_borrow(edge));
-                let params = other_params.collect();
+                    .flat_map(|got| got.incoming_edges.iter())
+                    .map(|edge| self.formatter.fmt_borrow(edge))
+                    .collect();
+                let lt = lifetime_env.fmt_lifetime(lt);
                 Some(ParamsForLt { lt, params })
             })
-            .collect();
+            .collect::<Vec<_>>();
 
         let opaque_return = OpaqueReturn {
             return_type_name,
@@ -309,6 +316,62 @@ return returnString"#;
         }
     }
 
+    fn gen_struct_return<'d>(
+        &'d self,
+        struct_def: &'d ReturnableStructDef,
+        // ownership: MaybeOwn,
+        lifetimes: &'d Lifetimes,
+        method_lifetimes_map: MethodLtMap<'d>,
+        lifetime_env: &'d LifetimeEnv,
+        cleanups: &[Cow<'d, str>],
+    ) -> String {
+        #[derive(Template)]
+        #[template(path = "kotlin/StructReturn.kt.jinja", escape = "none")]
+        struct StructReturn<'a, 'b> {
+            return_type_name: Cow<'b, str>,
+            borrows: Vec<ParamsForLt<'b>>,
+            cleanups: &'a [Cow<'b, str>],
+        }
+
+        struct ParamsForLt<'c> {
+            lt: Cow<'c, str>,
+            params: Vec<Cow<'c, str>>,
+        }
+
+        let return_type_name = match struct_def {
+            ReturnableStructDef::Struct(strct) => strct.name.to_string().into(),
+            ReturnableStructDef::OutStruct(out_strct) => out_strct.name.to_string().into(),
+            _ => todo!(),
+        };
+
+        let borrows = lifetimes
+            .lifetimes()
+            .filter_map(|lt| {
+                let lt = match lt {
+                    MaybeStatic::Static => return None,
+                    MaybeStatic::NonStatic(lt) => lt,
+                };
+                let params = method_lifetimes_map
+                    .get(&lt)
+                    .iter()
+                    .flat_map(|got| got.incoming_edges.iter())
+                    .map(|edge| self.formatter.fmt_borrow(edge))
+                    .collect();
+                let lt = lifetime_env.fmt_lifetime(lt);
+                Some(ParamsForLt { lt, params })
+            })
+            .collect::<Vec<_>>();
+
+        let opaque_return = StructReturn {
+            return_type_name,
+            borrows,
+            cleanups,
+        };
+        opaque_return
+            .render()
+            .expect("Failed to render opaque return block")
+    }
+
     fn gen_return<'d>(
         &'d self,
         method: &'d Method,
@@ -332,7 +395,16 @@ return returnString"#;
                             cleanups,
                         ))
                     }
-                    Type::Struct(_) => todo!("structs not yet supported"),
+                    Type::Struct(strct) => {
+                        let lifetimes = strct.lifetimes();
+                        Some(self.gen_struct_return(
+                            &strct.resolve(self.tcx),
+                            lifetimes,
+                            method_lifetimes_map,
+                            &method.lifetime_env,
+                            cleanups,
+                        ))
+                    }
                     Type::Enum(_) => todo!("enums not yet supported"),
                     Type::Slice(slc) => Some(self.gen_slice_retrn(slc)),
                     _ => todo!(),
@@ -403,13 +475,9 @@ return returnString"#;
         let mut param_conversions = Vec::with_capacity(method.params.len());
         let mut slice_conversions = Vec::with_capacity(method.params.len());
         let mut cleanups = Vec::with_capacity(method.params.len());
-        let mut comments = String::new();
 
         match self_type {
             Some(st @ SelfType::Opaque(_)) => {
-                // match o.owner.mutability {
-                // hir::Mutability::Mutable => todo!("don't support mutable borrows yet"),
-                // hir::Mutability::Immutable => {
                 let param_type = "Long".into();
                 let param_name: Cow<'_, str> = "handle".into();
                 visitor.visit_param(&st.clone().into(), "this");
@@ -417,9 +485,17 @@ return returnString"#;
                 param_types_ffi.push(param_type);
                 param_conversions.push(param_name.clone());
                 param_names_ffi.push(param_name);
-                // }
             }
-            Some(SelfType::Struct(_)) => todo!("structs not supported yet"),
+            Some(st @ SelfType::Struct(s)) => {
+                let param_type =
+                    format!("{}Native", self.tcx.resolve_struct(s.tcx_id).name.as_str()).into();
+                let param_name: Cow<'_, str> = "nativeStruct".into();
+                visitor.visit_param(&st.clone().into(), "this");
+
+                param_types_ffi.push(param_type);
+                param_conversions.push(param_name.clone());
+                param_names_ffi.push(param_name);
+            }
             Some(SelfType::Enum(_)) => todo!("enums not supported yed"),
             None => (),
             _ => todo!(),
@@ -430,23 +506,30 @@ return returnString"#;
 
             let param_type_ffi = self.gen_type_name_ffi(&param.ty);
 
-            if let Type::Slice(slice) = param.ty {
-                slice_conversions.push(self.gen_slice_conv(param_name.clone(), slice));
+            match param.ty {
+                Type::Slice(slice) => {
+                    slice_conversions.push(self.gen_slice_conv(param_name.clone(), slice));
 
-                let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
+                    let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-                match param_borrow_kind {
-                    ParamBorrowInfo::Struct(_) => todo!("support struct borrows"),
-                    ParamBorrowInfo::TemporarySlice => {
-                        if let Some(cleanup) = self.gen_cleanup(param_name.clone(), slice) {
-                            cleanups.push(cleanup)
+                    match param_borrow_kind {
+                        ParamBorrowInfo::Struct(_) => (),
+                        ParamBorrowInfo::TemporarySlice => {
+                            if let Some(cleanup) = self.gen_cleanup(param_name.clone(), slice) {
+                                cleanups.push(cleanup)
+                            }
                         }
-                    }
-                    ParamBorrowInfo::BorrowedSlice => (),
-                    ParamBorrowInfo::BorrowedOpaque => (),
-                    ParamBorrowInfo::NotBorrowed => (),
-                    _ => todo!(),
-                };
+                        ParamBorrowInfo::BorrowedSlice => (),
+                        ParamBorrowInfo::BorrowedOpaque => (),
+                        ParamBorrowInfo::NotBorrowed => (),
+                        _ => todo!(),
+                    };
+                }
+
+                Type::Struct(_) | Type::Opaque(_) => {
+                    visitor.visit_param(&param.ty, &param_name);
+                }
+                _ => (),
             }
 
             param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
@@ -475,9 +558,8 @@ return returnString"#;
             .gen_return(method, method_lifetimes_map, cleanups.as_ref())
             .map(From::from);
 
-        let comment = "// some comment".into();
         MethodTpl {
-            comment,
+            // todo: comment,
             declaration,
             native_method_name,
             param_conversions,
@@ -497,7 +579,10 @@ return returnString"#;
         if let Some(param_self) = method.param_self.as_ref() {
             match &param_self.ty {
                 SelfType::Opaque(_) => param_decls.push("handle: Long".into()),
-                SelfType::Struct(_) => todo!("structs not supported yet"),
+                SelfType::Struct(s) => param_decls.push(format!(
+                    "nativeStruct: {}Native",
+                    self.tcx.resolve_struct(s.tcx_id).name.as_str()
+                )),
                 SelfType::Enum(_) => todo!("enums not supported yed"),
                 _ => todo!(),
             }
@@ -505,14 +590,8 @@ return returnString"#;
         for param in method.params.iter() {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
 
-            let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
+            visitor.visit_param(&param.ty, &param_name);
 
-            // if let hir::Type::Slice(..) = param.ty {
-            //     todo!("Slices not supported yet");
-            // }
-            if let ParamBorrowInfo::Struct(_) = param_borrow_kind {
-                todo!("support struct borrows")
-            };
             param_decls.push(format!(
                 "{param_name}: {}",
                 self.gen_native_type_name(&param.ty)
@@ -602,15 +681,112 @@ return returnString"#;
         )
     }
 
+    fn gen_struct_def(
+        &mut self,
+        ty: &'cx hir::StructDef,
+        id: TypeId,
+        type_name: &str,
+        domain: &str,
+        lib_name: &str,
+    ) -> (String, String) {
+        let native_methods = ty
+            .methods
+            .iter()
+            .map(|method| self.gen_native_method_info(id, method))
+            .collect::<Vec<_>>();
+
+        let self_methods = ty
+            .methods
+            .iter()
+            .filter_map(|method| {
+                method
+                    .param_self
+                    .as_ref()
+                    .map(|self_param| (&self_param.ty, method))
+            })
+            .map(|(self_param, method)| self.gen_method(id, method, Some(self_param)))
+            .collect::<Vec<_>>();
+
+        let companion_methods = ty
+            .methods
+            .iter()
+            .filter(|method| method.param_self.is_none())
+            .map(|method| self.gen_method(id, method, None))
+            .collect::<Vec<_>>();
+
+        let lifetimes = ty
+            .lifetimes
+            .lifetimes()
+            .lifetimes()
+            .filter_map(|lt| match lt {
+                MaybeStatic::Static => None,
+                MaybeStatic::NonStatic(lt) => Some(lt),
+            })
+            .map(|lt| ty.lifetimes.fmt_lifetime(lt))
+            .collect();
+
+        struct StructFieldDef<'d> {
+            name: Cow<'d, str>,
+            ffi_type_default: Cow<'d, str>,
+            ffi_cast_type_name: Cow<'d, str>,
+            field_type: Cow<'d, str>,
+            native_to_kt: Cow<'d, str>,
+        }
+
+        #[derive(Template)]
+        #[template(path = "kotlin/Struct.kt.jinja", escape = "none")]
+        struct ImplTemplate<'a> {
+            domain: &'a str,
+            lib_name: &'a str,
+            type_name: &'a str,
+            fields: Vec<StructFieldDef<'a>>,
+            self_methods: &'a [String],
+            companion_methods: &'a [String],
+            native_methods: &'a [NativeMethodInfo],
+            lifetimes: Vec<Cow<'a, str>>,
+        }
+
+        let fields = ty
+            .fields
+            .iter()
+            .map(|field: &StructField| {
+                let field_name = self.formatter.fmt_field_name(field.name.as_str());
+                StructFieldDef {
+                    name: field_name.clone(),
+                    ffi_type_default: self.formatter.fmt_field_default(&field.ty),
+                    ffi_cast_type_name: self.formatter.fmt_struct_field_type_native(&field.ty),
+                    field_type: self.formatter.fmt_struct_field_type_kt(&field.ty),
+                    native_to_kt: self
+                        .formatter
+                        .fmt_struct_field_native_to_kt(field_name.as_ref(), &field.ty),
+                }
+            })
+            .collect();
+
+        (
+            format!("{}/{lib_name}/{type_name}.kt", domain.replace('.', "/"),),
+            ImplTemplate {
+                domain,
+                lib_name,
+                type_name,
+                fields,
+                self_methods: self_methods.as_ref(),
+                companion_methods: companion_methods.as_ref(),
+                native_methods: native_methods.as_ref(),
+                lifetimes,
+            }
+            .render()
+            .expect("Failed to render struct template"),
+        )
+    }
+
     fn gen_native_type_name<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
             Type::Opaque(_) => "Long".into(),
             Type::Struct(ref strct) => {
                 let op_id = strct.id();
-                let type_name = self.formatter.fmt_type_name(op_id);
-
-                panic!("don't support structs yet: {type_name:?}")
+                format!("{}Native", self.formatter.fmt_type_name(op_id)).into()
             }
             Type::Enum(_) => panic!("don't support enums yet"),
             Type::Slice(_) => "Slice".into(),
@@ -640,9 +816,7 @@ return returnString"#;
             }
             Type::Struct(ref strct) => {
                 let op_id = strct.id();
-                let type_name = self.formatter.fmt_type_name(op_id);
-
-                panic!("don't support structs yet: {type_name:?}")
+                self.formatter.fmt_type_name(op_id)
             }
             Type::Enum(_) => panic!("don't support enums yet"),
             Type::Slice(hir::Slice::Str(Some(_), _)) => self.formatter.fmt_string().into(),
@@ -665,7 +839,7 @@ type MethodLtMap<'a> = BTreeMap<Lifetime, BorrowedLifetimeInfo<'a>>;
 #[derive(Template)]
 #[template(path = "kotlin/Method.kt.jinja", escape = "none")]
 struct MethodTpl<'a> {
-    comment: String,
+    // todo: comment: String,
     declaration: String,
     /// The C method name
     native_method_name: Cow<'a, str>,
@@ -691,6 +865,65 @@ mod test {
 
     use super::formatter::test::new_tcx;
     use super::{formatter::KotlinFormatter, TyGenContext};
+
+    #[test]
+    fn test_struct() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+
+
+                #[diplomat::opaque]
+                pub struct Opaque {
+                    string: String
+                }
+
+                pub struct OtherNariveStruct {
+                    i: i32,
+                }
+
+                pub struct MyNativeStruct<'b> {
+                    a: bool,
+                    b: i8,
+                    c: u8,
+                    d: i16,
+                    e: u16,
+                    f: i32,
+                    g: u32,
+                    h: i64,
+                    i: u64,
+                    j: DiplomatChar,
+                    k: f32,
+                    l: f64,
+                    m: &'b [f64],
+                    n: &'b Opaque,
+                }
+
+                impl<'b> MyNativeStruct<'b> {
+                    pub fn new() -> MyNativeStruct<'b> {
+                        todo!()
+                    }
+                }
+            }
+        };
+
+        let tcx = new_tcx(tk_stream);
+        let mut all_types = tcx.all_types();
+        while let Some((type_id, TypeDef::Struct(strct))) = all_types.next() {
+            let error_store = ErrorStore::default();
+            let formatter = KotlinFormatter::new(&tcx, None);
+            let mut ty_gen_cx = TyGenContext {
+                tcx: &tcx,
+                formatter: &formatter,
+                errors: &error_store,
+            };
+            let type_name = strct.name.to_string();
+            // test that we can render and that it doesn't panic
+            let (_, boop) =
+                ty_gen_cx.gen_struct_def(strct, type_id, &type_name, "dev.gigapixel", "somelib");
+            println!("{boop}")
+        }
+    }
 
     #[test]
     fn test_test() {

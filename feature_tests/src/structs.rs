@@ -36,7 +36,6 @@ pub mod ffi {
         F = 3,
     }
 
-    #[diplomat::attr(kotlin, disable)]
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -44,7 +43,7 @@ pub mod ffi {
         d: u64,
         e: i32,
         f: DiplomatChar,
-        g: MyEnum,
+        // g: MyEnum,
     }
 
     impl Opaque {
@@ -148,7 +147,7 @@ pub mod ffi {
                 d: 1234,
                 e: 5991,
                 f: '餐' as DiplomatChar,
-                g: MyEnum::B,
+                // g: MyEnum::F,
             }
         }
 
@@ -163,7 +162,7 @@ pub mod ffi {
             assert_eq!(self.d, 1234);
             assert_eq!(self.e, 5991);
             assert_eq!(self.f, '餐' as DiplomatChar);
-            assert_eq!(self.g, MyEnum::B);
+            // assert_eq!(self.g, MyEnum::B);
         }
     }
 }

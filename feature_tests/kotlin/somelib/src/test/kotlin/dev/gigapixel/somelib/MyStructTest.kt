@@ -7,6 +7,6 @@ class MyStructTest {
     @Test
     fun testMyStruct() {
         val struct: MyStruct = MyStruct.new_()
-        assertEquals(struct.a, 17)
+        assertEquals(struct.a, 17.toUByte())
     }
 }
