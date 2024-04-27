@@ -280,30 +280,6 @@ internal object PrimitiveArrayTools {
     }
 }
 
-sealed interface SliceType
-
-data object Bool: SliceType
-data object U8 : SliceType
-data object I8 : SliceType
-data object U16 : SliceType
-data object I16 : SliceType
-data object U32 : SliceType
-data object I32 : SliceType
-data object U64 : SliceType
-data object I64 : SliceType
-data object F32 : SliceType
-data object F64 : SliceType
-data object Utf8 : SliceType
-data object Utf16 : SliceType
-
-/**
- * This represents an owned slice. The only way to ensure that it is cleaned up is by
- * passing to a method that consumes the owned value
- */
-class OwnedSlice<V: SliceType> internal constructor (internal val slice: Slice) {
-    internal val owned: AtomicBoolean = AtomicBoolean(true)
-}
-
 class Slice: Structure(), Structure.ByValue {
 
     @JvmField var data: Pointer = Pointer(0)// Pointer to const char
