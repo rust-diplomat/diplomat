@@ -54,8 +54,8 @@ class MyString internal constructor (
             return returnOpaque
         
         }
-        fun newOwned(v: OwnedSlice<Utf8>): MyString {
-            val vSlice = PrimitiveArrayTools.getSlice(v)
+        fun newOwned(v: String): MyString {
+            val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
             
             val returnVal = lib.MyString_new_owned(vSlice);
         
@@ -94,10 +94,12 @@ class MyString internal constructor (
         DW.lib.diplomat_buffer_writeable_destroy(writeable)
         return returnString
     }
-    fun getBoxedStr(): OwnedSlice<Utf8> {
+    fun getBoxedStr(): String {
         
         val returnVal = lib.MyString_get_boxed_str(handle);
-        return OwnedSlice(returnVal) // this will not be cleaned. It's ownership must be passed to native for cleanup
+    val string = PrimitiveArrayTools.getUtf8(returnVal)
+        Native.free(Pointer.nativeValue(returnVal.data))
+        return string
     }
 
 }

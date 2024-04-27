@@ -126,8 +126,8 @@ class Float64Vec internal constructor (
             return returnOpaque
         
         }
-        fun newFromOwned(v: OwnedSlice<F64>): Float64Vec {
-            val vSlice = PrimitiveArrayTools.getSlice(v)
+        fun newFromOwned(v: DoubleArray): Float64Vec {
+            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_from_owned(vSlice);
         
@@ -140,10 +140,12 @@ class Float64Vec internal constructor (
         
         }
     }
-    fun asBoxedSlice(): OwnedSlice<F64> {
+    fun asBoxedSlice(): DoubleArray {
         
         val returnVal = lib.Float64Vec_as_boxed_slice(handle);
-        return OwnedSlice(returnVal) // this will not be cleaned. It's ownership must be passed to native for cleanup
+    val string = PrimitiveArrayTools.getDoubleArray(returnVal)
+        Native.free(Pointer.nativeValue(returnVal.data))
+        return string
     }
     fun asSlice(): DoubleArray {
         

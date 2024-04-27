@@ -1,9 +1,9 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaquePath, ReturnableStructDef, SelfType, Slice, StringEncoding, StructField, StructPathLike,
-    TyPosition, Type, TypeContext, TypeDef, TypeId,
+    self, Borrow, IntType, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method,
+    Mutability, OpaquePath, PrimitiveType, ReturnableStructDef, SelfType, Slice, StringEncoding,
+    StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
 
@@ -294,7 +294,13 @@ val returnString = DW.writeableToString(writeable)
 DW.lib.diplomat_buffer_writeable_destroy(writeable)
 return returnString"#;
 
-    const BOXED_SLICE_RETURN: &'static str =  "    return OwnedSlice(returnVal) // this will not be cleaned. It's ownership must be passed to native for cleanup";
+    fn boxed_slice_return(encoding: &str) -> String {
+        format!(
+            r#"val string = PrimitiveArrayTools.get{encoding}(returnVal)
+Native.free(Pointer.nativeValue(returnVal.data))
+return string"#
+        )
+    }
 
     fn gen_slice_retrn<'d>(&'d self, slice_ty: &'d Slice) -> String {
         match slice_ty {
@@ -309,16 +315,20 @@ return returnString"#;
                 _ => todo!(),
             },
             Slice::Str(None, enc) => match enc {
-                StringEncoding::UnvalidatedUtf16 => Self::BOXED_SLICE_RETURN.into(),
-                StringEncoding::UnvalidatedUtf8 => Self::BOXED_SLICE_RETURN.into(),
-                StringEncoding::Utf8 => Self::BOXED_SLICE_RETURN.into(),
+                StringEncoding::UnvalidatedUtf16 => Self::boxed_slice_return("Utf16"),
+                StringEncoding::UnvalidatedUtf8 => Self::boxed_slice_return("Utf8"),
+                StringEncoding::Utf8 => Self::boxed_slice_return("Utf8"),
                 _ => todo!(),
             },
             Slice::Primitive(Some(_), prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
                 format!("    return PrimitiveArrayTools.get{prim_ty}Array(returnVal)")
             }
-            Slice::Primitive(None, _) => Self::BOXED_SLICE_RETURN.into(),
+            Slice::Primitive(None, prim_ty) => {
+                let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
+                let prim_ty_array = format!("{prim_ty}Array");
+                Self::boxed_slice_return(prim_ty_array.as_str())
+            }
 
             _ => todo!(),
         }
@@ -433,11 +443,9 @@ return returnString"#;
             closeable: bool,
         }
         let (slice_method, closeable): (Cow<'cx, str>, bool) = match slice_type {
-            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("readUtf16".into(), true),
-            Slice::Str(Some(_), _) => ("readUtf8".into(), true),
-            Slice::Str(None, _) => ("getSlice".into(), false),
-            Slice::Primitive(Some(_), _) => ("native".into(), true),
-            Slice::Primitive(None, _) => ("getSlice".into(), false),
+            Slice::Str(_, StringEncoding::UnvalidatedUtf16) => ("readUtf16".into(), true),
+            Slice::Str(_, _) => ("readUtf8".into(), true),
+            Slice::Primitive(_, _) => ("native".into(), true),
             Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("readUtf16s".into(), true),
             Slice::Strs(_) => ("readUtf8s".into(), true),
             _ => {
@@ -943,13 +951,9 @@ return returnString"#;
                 self.formatter.fmt_type_name(op_id)
             }
             Type::Enum(ref enum_def) => self.formatter.fmt_type_name(enum_def.tcx_id.into()),
-            Type::Slice(hir::Slice::Str(Some(_), _)) => self.formatter.fmt_string().into(),
-            Type::Slice(hir::Slice::Str(None, ty)) => self.formatter.fmt_owned_slice_str(ty).into(),
-            Type::Slice(hir::Slice::Primitive(Some(_), ty)) => {
+            Type::Slice(hir::Slice::Str(_, _)) => self.formatter.fmt_string().into(),
+            Type::Slice(hir::Slice::Primitive(_, ty)) => {
                 self.formatter.fmt_primitive_slice(ty).into()
-            }
-            Type::Slice(hir::Slice::Primitive(None, ty)) => {
-                self.formatter.fmt_owned_slice_primitive(ty).into()
             }
 
             Type::Slice(hir::Slice::Strs(_)) => self.formatter.fmt_str_slices().into(),
