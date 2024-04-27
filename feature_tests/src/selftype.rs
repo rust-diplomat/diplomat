@@ -1,5 +1,4 @@
 #[diplomat::bridge]
-#[diplomat::attr(kotlin, disable)]
 mod ffi {
     #[diplomat::opaque]
     struct RefListParameter;

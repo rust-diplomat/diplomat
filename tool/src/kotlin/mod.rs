@@ -9,6 +9,7 @@ use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::iter::once;
 use std::path::Path;
 
 mod formatter;
@@ -60,6 +61,15 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
 
             let (file_name, body) =
                 ty_gen_cx.gen_struct_def(struct_def, id, &type_name, &domain, &lib_name);
+
+            files.add_file(format!("src/main/kotlin/{file_name}"), body);
+        }
+
+        if let TypeDef::Enum(enum_def) = ty {
+            let type_name = enum_def.name.to_string();
+
+            let (file_name, body) =
+                ty_gen_cx.gen_enum_def(enum_def, id, &type_name, &domain, &lib_name);
 
             files.add_file(format!("src/main/kotlin/{file_name}"), body);
         }
@@ -167,7 +177,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
             }
             Type::Struct(_) => format!("{name}.nativeStruct").into(),
-            Type::Enum(_) => todo!("don't support enums yet"),
+            Type::Enum(_) => format!("{name}.toNative()").into(),
             Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => format!("{name}Slice").into(),
             Type::Slice( _) => format!("{name}Slice").into(),
             _ => todo!(),
@@ -199,9 +209,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let resolved = self.tcx.resolve_type(type_id);
                 format!("{}Native", resolved.name()).into()
             }
-            Type::Enum(_) => {
-                todo!("Enums not supported yet")
-            }
+            Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -471,7 +479,6 @@ return returnString"#;
 
         let mut param_decls_kt = Vec::with_capacity(method.params.len());
         let mut param_types_ffi = Vec::with_capacity(method.params.len());
-        let mut param_names_ffi = Vec::with_capacity(method.params.len());
         let mut param_conversions = Vec::with_capacity(method.params.len());
         let mut slice_conversions = Vec::with_capacity(method.params.len());
         let mut cleanups = Vec::with_capacity(method.params.len());
@@ -484,19 +491,21 @@ return returnString"#;
 
                 param_types_ffi.push(param_type);
                 param_conversions.push(param_name.clone());
-                param_names_ffi.push(param_name);
             }
             Some(st @ SelfType::Struct(s)) => {
                 let param_type =
                     format!("{}Native", self.tcx.resolve_struct(s.tcx_id).name.as_str()).into();
                 let param_name: Cow<'_, str> = "nativeStruct".into();
                 visitor.visit_param(&st.clone().into(), "this");
-
                 param_types_ffi.push(param_type);
                 param_conversions.push(param_name.clone());
-                param_names_ffi.push(param_name);
             }
-            Some(SelfType::Enum(_)) => todo!("enums not supported yed"),
+            Some(SelfType::Enum(_)) => {
+                let param_type = "Int".into();
+                let param_conversion: Cow<'_, str> = "this.toNative()".into();
+                param_types_ffi.push(param_type);
+                param_conversions.push(param_conversion.clone());
+            }
             None => (),
             _ => todo!(),
         };
@@ -535,7 +544,6 @@ return returnString"#;
             param_decls_kt.push(format!("{param_name}: {}", self.gen_type_name(&param.ty)));
             param_types_ffi.push(param_type_ffi);
             param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
-            param_names_ffi.push(param_name);
         }
         let writeable_return = matches!(
             &method.output,
@@ -583,7 +591,7 @@ return returnString"#;
                     "nativeStruct: {}Native",
                     self.tcx.resolve_struct(s.tcx_id).name.as_str()
                 )),
-                SelfType::Enum(_) => todo!("enums not supported yed"),
+                SelfType::Enum(_) => param_decls.push("inner: Int".into()),
                 _ => todo!(),
             }
         };
@@ -780,6 +788,122 @@ return returnString"#;
         )
     }
 
+    fn gen_enum_def(
+        &mut self,
+        ty: &'cx hir::EnumDef,
+        id: TypeId,
+        type_name: &str,
+        domain: &str,
+        lib_name: &str,
+    ) -> (String, String) {
+        let native_methods = ty
+            .methods
+            .iter()
+            .map(|method| self.gen_native_method_info(id, method))
+            .collect::<Vec<_>>();
+
+        let self_methods = ty
+            .methods
+            .iter()
+            .filter_map(|method| {
+                method
+                    .param_self
+                    .as_ref()
+                    .map(|self_param| (&self_param.ty, method))
+            })
+            .map(|(self_param, method)| self.gen_method(id, method, Some(self_param)))
+            .collect::<Vec<_>>();
+
+        let companion_methods = ty
+            .methods
+            .iter()
+            .filter(|method| method.param_self.is_none())
+            .map(|method| self.gen_method(id, method, None))
+            .collect::<Vec<_>>();
+
+        #[derive(Clone, Debug)]
+        struct NonContiguousEnumVariant<'d> {
+            index: i32,
+            name: Cow<'d, str>,
+        }
+
+        #[derive(Clone, Debug)]
+        enum EnumVariants<'d> {
+            Contiguous(Vec<Cow<'d, str>>),
+            NonContiguous(Vec<NonContiguousEnumVariant<'d>>),
+        }
+
+        impl<'d> EnumVariants<'d> {
+            fn new(ty: &'d hir::EnumDef) -> Self {
+                let n_variants = ty.variants.len();
+                ty.variants.iter().enumerate().fold(
+                    EnumVariants::Contiguous(Vec::with_capacity(n_variants)),
+                    |variants, (i, v)| match variants {
+                        EnumVariants::Contiguous(mut vec) if i as isize == v.discriminant => {
+                            vec.push(v.name.as_str().into());
+                            EnumVariants::Contiguous(vec)
+                        }
+
+                        EnumVariants::Contiguous(vec) => {
+                            let new_vec = vec
+                                .into_iter()
+                                .enumerate()
+                                .map(|(index, name)| NonContiguousEnumVariant {
+                                    name,
+                                    index: index as i32,
+                                })
+                                .chain(once(NonContiguousEnumVariant {
+                                    name: v.name.as_str().into(),
+                                    index: v.discriminant as i32,
+                                }))
+                                .collect();
+
+                            EnumVariants::NonContiguous(new_vec)
+                        }
+                        EnumVariants::NonContiguous(mut vec) => {
+                            vec.push(NonContiguousEnumVariant {
+                                index: v.discriminant as i32,
+                                name: v.name.as_str().into(),
+                            });
+                            EnumVariants::NonContiguous(vec)
+                        }
+                    },
+                )
+            }
+        }
+
+        #[derive(Template)]
+        #[template(path = "kotlin/Enum.kt.jinja", escape = "none")]
+        struct EnumDef<'d> {
+            lib_name: Cow<'d, str>,
+            domain: Cow<'d, str>,
+            type_name: Cow<'d, str>,
+            variants: &'d EnumVariants<'d>,
+            self_methods: &'d [String],
+            companion_methods: &'d [String],
+            native_methods: &'d [NativeMethodInfo],
+        }
+
+        let variants = EnumVariants::new(ty);
+
+        let enum_def = EnumDef {
+            lib_name: lib_name.into(),
+            domain: domain.into(),
+            type_name: type_name.into(),
+            variants: &variants,
+            self_methods: self_methods.as_ref(),
+            companion_methods: companion_methods.as_ref(),
+            native_methods: native_methods.as_ref(),
+        }
+        .render()
+        .unwrap_or_else(|err| panic!("Failed to render Enum {{type_name}}\n\tcause: {err}"));
+
+        (
+            format!("{}/{lib_name}/{type_name}.kt", domain.replace('.', "/"),),
+            enum_def,
+        )
+    }
+
     fn gen_native_type_name<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
@@ -788,7 +912,7 @@ return returnString"#;
                 let op_id = strct.id();
                 format!("{}Native", self.formatter.fmt_type_name(op_id)).into()
             }
-            Type::Enum(_) => panic!("don't support enums yet"),
+            Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
 
             _ => unreachable!("unknown AST/HIR variant"),
@@ -818,7 +942,7 @@ return returnString"#;
                 let op_id = strct.id();
                 self.formatter.fmt_type_name(op_id)
             }
-            Type::Enum(_) => panic!("don't support enums yet"),
+            Type::Enum(ref enum_def) => self.formatter.fmt_type_name(enum_def.tcx_id.into()),
             Type::Slice(hir::Slice::Str(Some(_), _)) => self.formatter.fmt_string().into(),
             Type::Slice(hir::Slice::Str(None, ty)) => self.formatter.fmt_owned_slice_str(ty).into(),
             Type::Slice(hir::Slice::Primitive(Some(_), ty)) => {
@@ -865,6 +989,58 @@ mod test {
 
     use super::formatter::test::new_tcx;
     use super::{formatter::KotlinFormatter, TyGenContext};
+
+    #[test]
+    fn test_enum() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+
+                pub enum Cont {
+                    A,
+                    B,
+                    C,
+                    D,
+                }
+
+                pub enum ContNumbered {
+                    Alpha=0,
+                    Beta=1,
+                    Gamma=2,
+                }
+
+                pub enum NonCont {
+                    Aleph=0,
+                    Bet=1,
+                    Tav=22,
+                }
+
+                pub enum Neg {
+                    Neg3=-3,
+                    Neg1=-1,
+                    Thirteen=13,
+                }
+
+            }
+        };
+
+        let tcx = new_tcx(tk_stream);
+        let mut all_types = tcx.all_types();
+        while let Some((type_id, TypeDef::Enum(enum_def))) = all_types.next() {
+            let error_store = ErrorStore::default();
+            let formatter = KotlinFormatter::new(&tcx, None);
+            let mut ty_gen_cx = TyGenContext {
+                tcx: &tcx,
+                formatter: &formatter,
+                errors: &error_store,
+            };
+            let type_name = enum_def.name.to_string();
+            // test that we can render and that it doesn't panic
+            let (_, boop) =
+                ty_gen_cx.gen_enum_def(enum_def, type_id, &type_name, "dev.gigapixel", "somelib");
+            println!("{boop}")
+        }
+    }
 
     #[test]
     fn test_struct() {

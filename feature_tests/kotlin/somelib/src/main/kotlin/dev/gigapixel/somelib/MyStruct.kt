@@ -23,10 +23,12 @@ class MyStructNative: Structure(), Structure.ByValue {
     var e: Int = 0;
     @JvmField
     var f: Int = 0;
+    @JvmField
+    var g: Int = MyEnum.default().toNative();
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("a", "b", "c", "d", "e", "f")
+        return listOf("a", "b", "c", "d", "e", "f", "g")
     }
 }
 
@@ -38,6 +40,7 @@ class MyStruct internal constructor (
     val d: ULong = nativeStruct.d.toULong()
     val e: Int = nativeStruct.e
     val f: Int = nativeStruct.f
+    val g: MyEnum = MyEnum.fromNative(nativeStruct.g)
 
     companion object {
         internal val libClass: Class<MyStructLib> = MyStructLib::class.java

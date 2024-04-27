@@ -156,10 +156,13 @@ impl<'tcx> KotlinFormatter<'tcx> {
             .into(),
             Type::Opaque(_) => "Pointer(0)".into(),
             Type::Struct(s) => {
-                let field_type_name: &str = self.tcx.resolve_type(s.id()).name().as_ref();
+                let field_type_name: &str = self.tcx.resolve_struct(s.tcx_id).name.as_ref();
                 format!("{field_type_name}Native()").into()
             }
-            Type::Enum(_) => todo!("Need to support enums"),
+            Type::Enum(enum_def) => {
+                let field_type_name: &str = self.tcx.resolve_enum(enum_def.tcx_id).name.as_ref();
+                format!("{field_type_name}.default().toNative()").into()
+            }
             Type::Slice(_) => "Slice()".into(),
             ty => unreachable!("reached struct field that can't be handled: {ty:?}"),
         }
@@ -213,7 +216,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
                     .collect::<String>();
                 format!("{ty_name}(nativeStruct.{field_name}{lt_list})").into()
             }
-            Type::Enum(_) => todo!(),
+            Type::Enum(enum_path) => {
+                let field_type_name: &str = self.tcx.resolve_enum(enum_path.tcx_id).name.as_ref();
+                format!("{field_type_name}.fromNative(nativeStruct.{field_name})").into()
+            }
             Type::Slice(Slice::Primitive(_, prim)) => format!(
                 "PrimitiveArrayTools.get{}Array(nativeStruct.{field_name})",
                 self.fmt_primitive_as_ffi(*prim)
@@ -244,7 +250,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             Type::Struct(_) => {
                 self.fmt_type_name(ty.id().expect("Failed to get type id for struct"))
             }
-            Type::Enum(_) => todo!(),
+            Type::Enum(_) => self.fmt_type_name(ty.id().expect("Failed to get type id for enum")),
             Type::Slice(Slice::Primitive(_, prim)) => {
                 format!("{}Array", self.fmt_primitive_as_ffi(*prim)).into()
             }
@@ -267,7 +273,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             Type::Struct(s) => {
                 format!("{}Native", self.tcx.resolve_type(s.id()).name().as_str()).into()
             }
-            Type::Enum(_) => todo!("Need to support enums"),
+            Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
             ty => unreachable!("reached struct field that can't be handled: {ty:?}"),
         }

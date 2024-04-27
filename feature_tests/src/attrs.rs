@@ -38,9 +38,9 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, disable)]
-    #[diplomat::attr(kotlin, disable)]
     pub struct AttrOpaque2;
 
+    #[diplomat::attr(kotlin, disable)]
     pub enum AttrEnum {
         A,
         B,
