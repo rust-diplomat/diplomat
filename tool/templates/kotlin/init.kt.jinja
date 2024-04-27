@@ -270,14 +270,6 @@ internal object PrimitiveArrayTools {
             getUtf8(thisSlice)
         }
     }
-
-    internal fun <V: SliceType> getSlice(ownedSlice: OwnedSlice<V>): Slice {
-        if (ownedSlice.owned.compareAndSet(true, false)) {
-            return ownedSlice.slice
-        } else {
-            throw RuntimeException("Owned slice can only be acquired once")
-        }
-    }
 }
 
 class Slice: Structure(), Structure.ByValue {
