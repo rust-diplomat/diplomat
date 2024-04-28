@@ -10,6 +10,9 @@ internal interface AttrOpaque2Lib: Library {
 
 class AttrOpaque2 internal constructor (
     internal val handle: Long,
+
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
     internal class AttrOpaque2Cleaner(val handle: Long, val lib: AttrOpaque2Lib) : Runnable {

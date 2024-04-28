@@ -24,6 +24,9 @@ internal interface Float64VecLib: Library {
 
 class Float64Vec internal constructor (
     internal val handle: Long,
+
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
     internal class Float64VecCleaner(val handle: Long, val lib: Float64VecLib) : Runnable {

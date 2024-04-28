@@ -11,6 +11,9 @@ internal interface Utf16WrapLib: Library {
 
 class Utf16Wrap internal constructor (
     internal val handle: Long,
+
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
     internal class Utf16WrapCleaner(val handle: Long, val lib: Utf16WrapLib) : Runnable {

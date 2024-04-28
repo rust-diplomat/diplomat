@@ -5,9 +5,9 @@ import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
-import java.util.concurrent.atomic.AtomicBoolean
 
 
+// We spawn a cleaner for the library which is responsible for cleaning opaque types.
 val CLEANER = java.lang.ref.Cleaner.create()
 
 
@@ -30,7 +30,10 @@ object DW {
         return bytes.decodeToString()
     }
 }
+
+
 internal object PrimitiveArrayTools {
+
     fun native(boolArray: BooleanArray): Pair<Memory, Slice> {
         val mem = Memory(boolArray.size.toLong())
         val ptr = mem.share(0)

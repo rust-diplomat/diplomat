@@ -17,6 +17,9 @@ internal interface MyStringLib: Library {
 
 class MyString internal constructor (
     internal val handle: Long,
+
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
     internal class MyStringCleaner(val handle: Long, val lib: MyStringLib) : Runnable {

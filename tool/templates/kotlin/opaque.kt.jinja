@@ -15,6 +15,9 @@ internal interface {{type_name}}Lib: Library {
 
 class {{type_name}} internal constructor (
     internal val handle: Long,
+
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
     internal val selfEdges: List<Any>{% if !lifetimes.is_empty() %},
     {%- for lt in lifetimes %}
     internal val {{lt}}Edges: List<Any>,

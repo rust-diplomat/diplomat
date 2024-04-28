@@ -10,6 +10,9 @@ internal interface RefListParameterLib: Library {
 
 class RefListParameter internal constructor (
     internal val handle: Long,
+
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
     internal class RefListParameterCleaner(val handle: Long, val lib: RefListParameterLib) : Runnable {

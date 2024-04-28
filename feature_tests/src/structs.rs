@@ -144,7 +144,7 @@ pub mod ffi {
                 d: 1234,
                 e: 5991,
                 f: '餐' as DiplomatChar,
-                g: MyEnum::F,
+                g: MyEnum::B,
             }
         }
 

@@ -225,7 +225,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         cleanups: &[Cow<'d, str>],
     ) -> String {
         #[derive(Template)]
-        #[template(path = "kotlin/opaqueReturn.kt.jinja", escape = "none")]
+        #[template(path = "kotlin/OpaqueReturn.kt.jinja", escape = "none")]
         struct OpaqueReturn<'a, 'b> {
             return_type_name: Cow<'b, str>,
             borrows: Vec<ParamsForLt<'b>>,
@@ -670,7 +670,7 @@ return string"#
             .collect();
 
         #[derive(Template)]
-        #[template(path = "kotlin/opaque.kt.jinja", escape = "none")]
+        #[template(path = "kotlin/Opaque.kt.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             domain: &'a str,
             lib_name: &'a str,
