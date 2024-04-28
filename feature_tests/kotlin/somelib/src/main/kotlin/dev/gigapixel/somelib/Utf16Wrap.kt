@@ -7,6 +7,7 @@ import com.sun.jna.Pointer
 internal interface Utf16WrapLib: Library {
     fun Utf16Wrap_destroy(handle: Long)
     fun Utf16Wrap_borrow_cont(handle: Long): Slice
+    fun Utf16Wrap_owned(handle: Long): Slice
 }
 
 class Utf16Wrap internal constructor (
@@ -30,6 +31,13 @@ class Utf16Wrap internal constructor (
         
         val returnVal = lib.Utf16Wrap_borrow_cont(handle);
         return PrimitiveArrayTools.getUtf16(returnVal)
+    }
+    fun owned(): String {
+        
+        val returnVal = lib.Utf16Wrap_owned(handle);
+        val string = PrimitiveArrayTools.getUtf16(returnVal)
+        Native.free(Pointer.nativeValue(returnVal.data))
+        return string
     }
 
 }

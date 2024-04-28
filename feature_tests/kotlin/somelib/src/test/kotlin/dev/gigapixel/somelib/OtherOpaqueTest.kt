@@ -31,15 +31,18 @@ class OtherOpaqueTest {
         val opaque = OtherOpaque.fromUsize(356)
         val str = opaque.dummyStr()
 
-        assertEquals(
-            "A const str with non byte char: 餐 which is a DiplomatChar,",
-            str
-        )
+        assertEquals("A const str with non byte char: 餐 which is a DiplomatChar,", str)
 
-        val newStr = opaque.wrapper().borrowCont()
-        assertEquals(
-            "A const str with non byte char: 𐐷 which is a DiplomatChar,",
-            newStr
-        )
+        val wrapper = opaque.wrapper()
+        val newStr = wrapper.borrowCont()
+        val testStr = "A const str with non byte char: 𐐷 which is a DiplomatChar,"
+        assertEquals(testStr, newStr)
+
+        for (it in 0..10_000_000) {
+            wrapper.owned()
+        }
+
+        val ownedStr = wrapper.owned()
+        assertEquals(testStr, ownedStr)
     }
 }

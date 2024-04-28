@@ -146,7 +146,7 @@ class Float64Vec internal constructor (
     fun asBoxedSlice(): DoubleArray {
         
         val returnVal = lib.Float64Vec_as_boxed_slice(handle);
-    val string = PrimitiveArrayTools.getDoubleArray(returnVal)
+        val string = PrimitiveArrayTools.getDoubleArray(returnVal)
         Native.free(Pointer.nativeValue(returnVal.data))
         return string
     }

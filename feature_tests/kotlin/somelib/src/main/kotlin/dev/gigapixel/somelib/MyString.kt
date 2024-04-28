@@ -100,7 +100,7 @@ class MyString internal constructor (
     fun getBoxedStr(): String {
         
         val returnVal = lib.MyString_get_boxed_str(handle);
-    val string = PrimitiveArrayTools.getUtf8(returnVal)
+        val string = PrimitiveArrayTools.getUtf8(returnVal)
         Native.free(Pointer.nativeValue(returnVal.data))
         return string
     }
