@@ -128,6 +128,13 @@ pub mod ffi {
         }
     }
 
+    impl Utf16Wrap {
+        #[allow(clippy::needless_lifetimes)]
+        pub fn owned<'a>(&'a self) -> Box<DiplomatStr16> {
+            self.0.clone().into()
+        }
+    }
+
     impl MyEnum {
         pub fn into_value(self) -> i8 {
             self as i8

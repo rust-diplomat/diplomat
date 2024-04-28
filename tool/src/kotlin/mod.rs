@@ -296,7 +296,7 @@ return returnString"#;
 
     fn boxed_slice_return(encoding: &str) -> String {
         format!(
-            r#"val string = PrimitiveArrayTools.get{encoding}(returnVal)
+            r#"    val string = PrimitiveArrayTools.get{encoding}(returnVal)
 Native.free(Pointer.nativeValue(returnVal.data))
 return string"#
         )
