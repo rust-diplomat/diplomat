@@ -1,0 +1,19 @@
+class ResultDoubleOpaqueUnion: Union() {
+    @JvmField
+    var ok: Double = 0.0
+    @JvmField
+    var err: Pointer = Pointer(0)
+}
+
+class ResultDoubleOpaque: Structure(), Structure.ByValue  {
+    @JvmField
+    var union: ResultDoubleOpaqueUnion = ResultDoubleOpaqueUnion()
+
+    @JvmField
+    var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
