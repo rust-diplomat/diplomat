@@ -38,6 +38,7 @@ mod ffi {
         }
 
         #[diplomat::attr(supports = accessors, getter = "str")]
+        #[diplomat::skip_if_ast]
         pub fn get_boxed_str(&self) -> Box<str> {
             self.0.as_str().into()
         }
@@ -121,10 +122,9 @@ mod ffi {
             &self.0
         }
 
-        // #[diplomat::attr(kotlin, disable)]
-        // #[diplomat::attr(supports = indexing, indexer)]
-        // pub fn get(&self, i: usize) -> Option<f64> {
-        //     self.0.get(i).copied()
-        // }
+        #[diplomat::attr(supports = indexing, indexer)]
+        pub fn get(&self, i: usize) -> Option<f64> {
+            self.0.get(i).copied()
+        }
     }
 }

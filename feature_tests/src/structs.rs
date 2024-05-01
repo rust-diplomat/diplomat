@@ -1,3 +1,4 @@
+#[allow(clippy::needless_lifetimes)]
 #[diplomat::bridge]
 pub mod ffi {
     use diplomat_runtime::DiplomatStr16;
@@ -10,7 +11,7 @@ pub mod ffi {
     pub struct Opaque(String);
 
     #[diplomat::opaque]
-    pub struct OtherOpaque(Mutex<String>);
+    pub struct OpaqueMutexedString(Mutex<String>);
 
     #[diplomat::opaque]
     pub struct Utf16Wrap(Vec<u16>);
@@ -71,9 +72,9 @@ pub mod ffi {
         }
     }
 
-    impl OtherOpaque {
-        pub fn from_usize(number: usize) -> Box<OtherOpaque> {
-            Box::new(OtherOpaque(Mutex::new(format!("{number}"))))
+    impl OpaqueMutexedString {
+        pub fn from_usize(number: usize) -> Box<OpaqueMutexedString> {
+            Box::new(OpaqueMutexedString(Mutex::new(format!("{number}"))))
         }
 
         pub fn change(&self, number: usize) {
@@ -81,19 +82,22 @@ pub mod ffi {
             *guard = format!("{number}");
         }
 
-        #[allow(clippy::needless_lifetimes)]
-        pub fn borrow<'a>(&'a self) -> &'a OtherOpaque {
+        #[diplomat::skip_if_ast]
+        pub fn borrow<'a>(&'a self) -> &'a OpaqueMutexedString {
             self
         }
 
-        #[allow(clippy::needless_lifetimes)]
-        pub fn borrow_other<'a>(other: &'a OtherOpaque) -> &'a OtherOpaque {
+        #[diplomat::skip_if_ast]
+        pub fn borrow_other<'a>(other: &'a OpaqueMutexedString) -> &'a OpaqueMutexedString {
             other
         }
 
-        #[allow(clippy::needless_lifetimes)]
-        pub fn borrow_self_or_other<'a>(&'a self, other: &'a OtherOpaque) -> &'a OtherOpaque {
-            let guard = self.0.lock().expect("Failed to lock mutext");
+        #[diplomat::skip_if_ast]
+        pub fn borrow_self_or_other<'a>(
+            &'a self,
+            other: &'a OpaqueMutexedString,
+        ) -> &'a OpaqueMutexedString {
+            let guard = self.0.lock().expect("Failed to lock mutex");
             if guard.len() % 2 == 0 {
                 self
             } else {
@@ -101,18 +105,15 @@ pub mod ffi {
             }
         }
 
-        #[allow(clippy::needless_lifetimes)]
         pub fn get_len_and_add(&self, other: usize) -> usize {
             let guard = self.0.lock().expect("Failed to lock mutex");
             guard.len() + other
         }
 
-        #[allow(clippy::needless_lifetimes)]
         pub fn dummy_str<'a>(&'a self) -> &'a DiplomatStr {
             "A const str with non byte char: 餐 which is a DiplomatChar,".as_bytes()
         }
 
-        #[allow(clippy::needless_lifetimes)]
         pub fn wrapper<'a>(&'a self) -> Box<Utf16Wrap> {
             let chars = "A const str with non byte char: 𐐷 which is a DiplomatChar,"
                 .encode_utf16()
@@ -122,14 +123,12 @@ pub mod ffi {
     }
 
     impl Utf16Wrap {
-        #[allow(clippy::needless_lifetimes)]
         pub fn borrow_cont<'a>(&'a self) -> &'a DiplomatStr16 {
             &self.0
         }
     }
 
     impl Utf16Wrap {
-        #[allow(clippy::needless_lifetimes)]
         pub fn owned<'a>(&'a self) -> Box<DiplomatStr16> {
             self.0.clone().into()
         }

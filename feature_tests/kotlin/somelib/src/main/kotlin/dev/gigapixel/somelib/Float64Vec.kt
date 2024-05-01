@@ -20,6 +20,7 @@ internal interface Float64VecLib: Library {
     fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
     fun Float64Vec_to_string(handle: Pointer, writeable: Pointer): Unit
     fun Float64Vec_borrow(handle: Pointer): Slice
+    fun Float64Vec_get(handle: Pointer, i: Long): Double?
 }
 
 class Float64Vec internal constructor (
@@ -177,6 +178,16 @@ class Float64Vec internal constructor (
         
         val returnVal = lib.Float64Vec_borrow(handle);
         return PrimitiveArrayTools.getDoubleArray(returnVal)
+    }
+    fun get(i: Long): Double? {
+        
+        val returnVal = lib.Float64Vec_get(handle, i);
+    
+        if (returnVal == null) {
+            return null
+        } else {
+                return returnVal
+        }
     }
 
 }

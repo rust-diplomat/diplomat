@@ -92,6 +92,7 @@ dependencies = [
     "test-cpp2-feature",
     "test-wasm-feature",
     "test-dart-feature",
+    "test-kotlin-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -269,6 +270,7 @@ dependencies = [
     "gen-js-feature",
     "gen-dotnet-feature",
     "gen-dart-feature",
+    "gen-kotlin-feature",
 ]
 
 [tasks.gen-example]
