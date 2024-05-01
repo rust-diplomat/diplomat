@@ -49,12 +49,14 @@ fn generate_generic
     echo ${output.stdout}
     exit_on_error true
 
-    subdirectory 
-
     rm -r "${backend}/${output_folder}${subdirectory}"
     # we do a /.. so that cases where output_folder is multiple folders down
     # end up copying to the right path
     mv "tmp/${output_folder}${subdirectory}" "${backend}/${output_folder}${subdirectory}/.."
+    if not ${subdirectory_is_empty}
+        rm -r "tmp/${backend}/${output_folder}"
+    end
+
     if not ${docs_folder_is_empty}
         rm -r "${backend}/${docs_folder}"
         mv "tmp/${docs_folder}" "${backend}/${docs_folder}/.."
