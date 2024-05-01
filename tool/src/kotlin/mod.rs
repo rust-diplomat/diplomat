@@ -2,10 +2,10 @@ use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
     self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaqueOwner, OpaquePath, Optional, OutputOnly, ReturnableStructDef, SelfType, Slice,
-    StringEncoding, StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    OpaquePath, Optional, ReturnableStructDef, SelfType, Slice, StringEncoding, StructField,
+    StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
-use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
+use diplomat_core::hir::{ReturnType, SuccessType};
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
