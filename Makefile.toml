@@ -455,7 +455,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests kotlin "somelib" "" "-l kt-conf.toml"
+generate_generic feature_tests kotlin "somelib" "" "-l diplomat-kt-conf.toml"
 '''
 
 # Build deps
