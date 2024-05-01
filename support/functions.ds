@@ -54,7 +54,7 @@ fn generate_generic
     # end up copying to the right path
     mv "tmp/${output_folder}${subdirectory}" "${backend}/${output_folder}${subdirectory}/.."
     if not ${subdirectory_is_empty}
-        rm -r "tmp/${backend}/${output_folder}"
+        rm -r "tmp/${output_folder}"
     end
 
     if not ${docs_folder_is_empty}
