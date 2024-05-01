@@ -449,6 +449,9 @@ exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example dart lib/src
 '''
+
+# this task generates all of the kotlin code but does not copy generated project files over 
+# we only copy the generated main src files to preserve the tests
 [tasks.gen-kotlin-feature]
 category = "Code generation"
 script_runner = "@duckscript"

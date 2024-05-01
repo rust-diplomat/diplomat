@@ -1,4 +1,4 @@
-# Usage: generate_generic <feature_tests or example> <backend name> <output folder name> <optional docs folder> <optional additional args> <optional subdirectory for copy>
+# Usage: generate_generic <feature_tests or example> <backend name> <output folder name> <optional docs folder> <optional additional args> <optional subdirectory for copying over>
 fn generate_generic
     exit_on_error true
 
@@ -7,7 +7,9 @@ fn generate_generic
     output_folder = set ${3}
     docs_folder = set ${4}
     addl_args = set ${5}
+
     # We allow copying only a portion of the generated code to maintain test code
+    # for backends which generate a whole project
     subdirectory = set ${6}
 
     path_is_empty = is_empty ${path}
