@@ -39,43 +39,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "String"
     }
 
-    fn slice_prim(&self, ty: PrimitiveType) -> &'static str {
-        match ty {
-            PrimitiveType::Bool => "Bool",
-            PrimitiveType::Char => "I32",
-            PrimitiveType::Byte => "I8",
-            PrimitiveType::Int(IntType::I8) => "I8",
-            PrimitiveType::Int(IntType::U8) => "U8",
-            PrimitiveType::Int(IntType::I16) => "I16",
-            PrimitiveType::Int(IntType::U16) => "U16",
-            PrimitiveType::Int(IntType::I32) => "I32",
-            PrimitiveType::Int(IntType::U32) => "U32",
-            PrimitiveType::Int(IntType::I64) => "I64",
-            PrimitiveType::Int(IntType::U64) => "U64",
-            PrimitiveType::IntSize(_) => panic!("Sized int types not supported in slices"),
-            PrimitiveType::Int128(_) => panic!("128 bit ints not supported in slices"),
-            PrimitiveType::Float(FloatType::F32) => "F32",
-            PrimitiveType::Float(FloatType::F64) => "F64",
-        }
-    }
-
-    fn slice_str(&self, ty: StringEncoding) -> &'static str {
-        match ty {
-            StringEncoding::UnvalidatedUtf8 => "Utf8",
-            StringEncoding::UnvalidatedUtf16 => "Utf16",
-            StringEncoding::Utf8 => "Utf8",
-            _ => panic!("Unsupported encoding"),
-        }
-    }
-
-    pub fn fmt_owned_slice_str(&self, ty: StringEncoding) -> String {
-        format!("OwnedSlice<{}>", self.slice_str(ty))
-    }
-
-    pub fn fmt_owned_slice_primitive(&self, ty: PrimitiveType) -> String {
-        format!("OwnedSlice<{}>", self.slice_prim(ty))
-    }
-
     pub fn fmt_primitive_slice(&self, ty: PrimitiveType) -> String {
         format!("{}Array", self.fmt_primitive_as_ffi(ty))
     }
@@ -359,7 +322,7 @@ pub mod test {
         match hir::TypeContext::from_ast(&env, attr_validator) {
             Ok(context) => context,
             Err(e) => {
-                for (cx, err) in e {
+                for (_cx, err) in e {
                     eprintln!("Lowering error: {}", err);
                 }
                 panic!("Failed to create context")

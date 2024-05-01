@@ -1,9 +1,9 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method,
-    Mutability, OpaquePath, ReturnableStructDef, SelfType, Slice, StringEncoding,
-    StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
+    OpaqueOwner, OpaquePath, Optional, OutputOnly, ReturnableStructDef, SelfType, Slice,
+    StringEncoding, StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
 
@@ -232,14 +232,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
     fn gen_opaque_return<'d>(
         &'d self,
-        opaque_def: &'d OpaqueDef,
-        ownership: MaybeOwn,
-        lifetimes: &'d Lifetimes,
+        opaque_path: &'d OpaquePath<Optional, MaybeOwn>,
         method_lifetimes_map: MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
         cleanups: &[Cow<'d, str>],
-        optional: bool,
     ) -> String {
+        let opaque_def = opaque_path.resolve(self.tcx);
+
+        let ownership = opaque_path.owner;
+        let lifetimes = &opaque_path.lifetimes;
+        let optional = opaque_path.is_optional();
         #[derive(Template)]
         #[template(path = "kotlin/OpaqueReturn.kt.jinja", escape = "none")]
         struct OpaqueReturn<'a, 'b> {
@@ -420,20 +422,12 @@ return string"#
             SuccessType::OutType(o) => match o {
                 // todo: unsigned need to be handled
                 Type::Primitive(_) => Some("    return returnVal".into()),
-                Type::Opaque(opaque_path) => {
-                    let ownership = opaque_path.owner;
-                    let lifetimes = &opaque_path.lifetimes;
-                    let optional = opaque_path.is_optional();
-                    Some(self.gen_opaque_return(
-                        opaque_path.resolve(self.tcx),
-                        ownership,
-                        lifetimes,
-                        method_lifetimes_map,
-                        &method.lifetime_env,
-                        cleanups,
-                        optional,
-                    ))
-                }
+                Type::Opaque(opaque_path) => Some(self.gen_opaque_return(
+                    opaque_path,
+                    method_lifetimes_map,
+                    &method.lifetime_env,
+                    cleanups,
+                )),
                 Type::Struct(strct) => {
                     let lifetimes = strct.lifetimes();
                     Some(self.gen_struct_return(
@@ -644,7 +638,7 @@ if (returnVal == null) {{
 
         if let Some(param_self) = method.param_self.as_ref() {
             match &param_self.ty {
-                SelfType::Opaque(op) => param_decls.push("handle: Pointer".into()),
+                SelfType::Opaque(_) => param_decls.push("handle: Pointer".into()),
                 SelfType::Struct(s) => param_decls.push(format!(
                     "nativeStruct: {}Native",
                     self.tcx.resolve_struct(s.tcx_id).name.as_str()
