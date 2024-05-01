@@ -5,11 +5,11 @@ import com.sun.jna.Pointer
 
 
 internal interface TwoLib: Library {
-    fun Two_destroy(handle: Long)
+    fun Two_destroy(handle: Pointer)
 }
 
 class Two internal constructor (
-    internal val handle: Long,
+    internal val handle: Pointer,
 
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
@@ -18,7 +18,7 @@ class Two internal constructor (
     internal val bEdges: List<Any>,
     ) {
 
-    internal class TwoCleaner(val handle: Long, val lib: TwoLib) : Runnable {
+    internal class TwoCleaner(val handle: Pointer, val lib: TwoLib) : Runnable {
         override fun run() {
             lib.Two_destroy(handle)
         }

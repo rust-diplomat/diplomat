@@ -5,12 +5,12 @@ import com.sun.jna.Pointer
 
 
 internal interface RefListLib: Library {
-    fun RefList_destroy(handle: Long)
-    fun RefList_node(data: Long): Long
+    fun RefList_destroy(handle: Pointer)
+    fun RefList_node(data: Pointer): Pointer
 }
 
 class RefList internal constructor (
-    internal val handle: Long,
+    internal val handle: Pointer,
 
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
@@ -18,7 +18,7 @@ class RefList internal constructor (
     internal val aEdges: List<Any>,
     ) {
 
-    internal class RefListCleaner(val handle: Long, val lib: RefListLib) : Runnable {
+    internal class RefListCleaner(val handle: Pointer, val lib: RefListLib) : Runnable {
         override fun run() {
             lib.RefList_destroy(handle)
         }
@@ -33,7 +33,7 @@ class RefList internal constructor (
         
             val selfEdges: List<Any> = listOf()
             val bEdges: List<Any> = listOf(data)
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = RefList(handle, selfEdges, bEdges)
             CLEANER.register(returnOpaque, RefList.RefListCleaner(handle, RefList.lib));
             

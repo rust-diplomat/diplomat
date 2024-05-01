@@ -5,12 +5,12 @@ import com.sun.jna.Pointer
 
 
 internal interface BarLib: Library {
-    fun Bar_destroy(handle: Long)
-    fun Bar_foo(handle: Long): Long
+    fun Bar_destroy(handle: Pointer)
+    fun Bar_foo(handle: Pointer): Pointer
 }
 
 class Bar internal constructor (
-    internal val handle: Long,
+    internal val handle: Pointer,
 
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
@@ -19,7 +19,7 @@ class Bar internal constructor (
     internal val aEdges: List<Any>,
     ) {
 
-    internal class BarCleaner(val handle: Long, val lib: BarLib) : Runnable {
+    internal class BarCleaner(val handle: Pointer, val lib: BarLib) : Runnable {
         override fun run() {
             lib.Bar_destroy(handle)
         }
@@ -35,7 +35,7 @@ class Bar internal constructor (
     
         val selfEdges: List<Any> = listOf(this)
         val aEdges: List<Any> = listOf(this)
-        val handle = returnVal
+        val handle = returnVal 
         val returnOpaque = Foo(handle, selfEdges, aEdges)
         
         return returnOpaque

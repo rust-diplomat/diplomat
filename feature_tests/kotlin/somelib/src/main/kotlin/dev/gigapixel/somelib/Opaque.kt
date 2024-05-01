@@ -5,22 +5,22 @@ import com.sun.jna.Pointer
 
 
 internal interface OpaqueLib: Library {
-    fun Opaque_destroy(handle: Long)
-    fun Opaque_new(): Long
-    fun Opaque_assert_struct(handle: Long, s: MyStructNative): Unit
+    fun Opaque_destroy(handle: Pointer)
+    fun Opaque_new(): Pointer
+    fun Opaque_assert_struct(handle: Pointer, s: MyStructNative): Unit
     fun Opaque_returns_usize(): Long
     fun Opaque_returns_imported(): ImportedStructNative
     fun Opaque_cmp(): Byte
 }
 
 class Opaque internal constructor (
-    internal val handle: Long,
+    internal val handle: Pointer,
 
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
-    internal class OpaqueCleaner(val handle: Long, val lib: OpaqueLib) : Runnable {
+    internal class OpaqueCleaner(val handle: Pointer, val lib: OpaqueLib) : Runnable {
         override fun run() {
             lib.Opaque_destroy(handle)
         }
@@ -34,7 +34,7 @@ class Opaque internal constructor (
             val returnVal = lib.Opaque_new();
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
             

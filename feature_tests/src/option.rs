@@ -1,5 +1,4 @@
 #[diplomat::bridge]
-#[diplomat::attr(kotlin, disable)]
 pub mod ffi {
     #[diplomat::opaque]
     pub struct OptionOpaque(i32);

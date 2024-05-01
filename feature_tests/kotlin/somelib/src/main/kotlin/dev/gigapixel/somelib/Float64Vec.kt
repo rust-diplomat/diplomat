@@ -5,31 +5,31 @@ import com.sun.jna.Pointer
 
 
 internal interface Float64VecLib: Library {
-    fun Float64Vec_destroy(handle: Long)
-    fun Float64Vec_new(v: Slice): Long
-    fun Float64Vec_new_bool(v: Slice): Long
-    fun Float64Vec_new_i16(v: Slice): Long
-    fun Float64Vec_new_u16(v: Slice): Long
-    fun Float64Vec_new_isize(v: Slice): Long
-    fun Float64Vec_new_usize(v: Slice): Long
-    fun Float64Vec_new_f64_be_bytes(v: Slice): Long
-    fun Float64Vec_new_from_owned(v: Slice): Long
-    fun Float64Vec_as_boxed_slice(handle: Long): Slice
-    fun Float64Vec_as_slice(handle: Long): Slice
-    fun Float64Vec_fill_slice(handle: Long, v: Slice): Unit
-    fun Float64Vec_set_value(handle: Long, newSlice: Slice): Unit
-    fun Float64Vec_to_string(handle: Long, writeable: Pointer): Unit
-    fun Float64Vec_borrow(handle: Long): Slice
+    fun Float64Vec_destroy(handle: Pointer)
+    fun Float64Vec_new(v: Slice): Pointer
+    fun Float64Vec_new_bool(v: Slice): Pointer
+    fun Float64Vec_new_i16(v: Slice): Pointer
+    fun Float64Vec_new_u16(v: Slice): Pointer
+    fun Float64Vec_new_isize(v: Slice): Pointer
+    fun Float64Vec_new_usize(v: Slice): Pointer
+    fun Float64Vec_new_f64_be_bytes(v: Slice): Pointer
+    fun Float64Vec_new_from_owned(v: Slice): Pointer
+    fun Float64Vec_as_boxed_slice(handle: Pointer): Slice
+    fun Float64Vec_as_slice(handle: Pointer): Slice
+    fun Float64Vec_fill_slice(handle: Pointer, v: Slice): Unit
+    fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
+    fun Float64Vec_to_string(handle: Pointer, writeable: Pointer): Unit
+    fun Float64Vec_borrow(handle: Pointer): Slice
 }
 
 class Float64Vec internal constructor (
-    internal val handle: Long,
+    internal val handle: Pointer,
 
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
-    internal class Float64VecCleaner(val handle: Long, val lib: Float64VecLib) : Runnable {
+    internal class Float64VecCleaner(val handle: Pointer, val lib: Float64VecLib) : Runnable {
         override fun run() {
             lib.Float64Vec_destroy(handle)
         }
@@ -44,7 +44,7 @@ class Float64Vec internal constructor (
             val returnVal = lib.Float64Vec_new(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
@@ -57,7 +57,7 @@ class Float64Vec internal constructor (
             val returnVal = lib.Float64Vec_new_bool(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
@@ -70,7 +70,7 @@ class Float64Vec internal constructor (
             val returnVal = lib.Float64Vec_new_i16(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
@@ -83,7 +83,7 @@ class Float64Vec internal constructor (
             val returnVal = lib.Float64Vec_new_u16(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
@@ -96,7 +96,7 @@ class Float64Vec internal constructor (
             val returnVal = lib.Float64Vec_new_isize(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
@@ -109,7 +109,7 @@ class Float64Vec internal constructor (
             val returnVal = lib.Float64Vec_new_usize(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
@@ -122,7 +122,7 @@ class Float64Vec internal constructor (
             val returnVal = lib.Float64Vec_new_f64_be_bytes(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
@@ -135,7 +135,7 @@ class Float64Vec internal constructor (
             val returnVal = lib.Float64Vec_new_from_owned(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             

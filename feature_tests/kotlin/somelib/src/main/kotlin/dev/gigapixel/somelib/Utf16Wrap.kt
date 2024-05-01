@@ -5,19 +5,19 @@ import com.sun.jna.Pointer
 
 
 internal interface Utf16WrapLib: Library {
-    fun Utf16Wrap_destroy(handle: Long)
-    fun Utf16Wrap_borrow_cont(handle: Long): Slice
-    fun Utf16Wrap_owned(handle: Long): Slice
+    fun Utf16Wrap_destroy(handle: Pointer)
+    fun Utf16Wrap_borrow_cont(handle: Pointer): Slice
+    fun Utf16Wrap_owned(handle: Pointer): Slice
 }
 
 class Utf16Wrap internal constructor (
-    internal val handle: Long,
+    internal val handle: Pointer,
 
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
-    internal class Utf16WrapCleaner(val handle: Long, val lib: Utf16WrapLib) : Runnable {
+    internal class Utf16WrapCleaner(val handle: Pointer, val lib: Utf16WrapLib) : Runnable {
         override fun run() {
             lib.Utf16Wrap_destroy(handle)
         }

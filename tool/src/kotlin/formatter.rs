@@ -2,8 +2,8 @@ use crate::c2::CFormatter;
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
-    FloatType, IntSizeType, IntType, PrimitiveType, Slice, StringEncoding, StructPathLike, Type,
-    TypeContext, TypeId,
+    FloatType, IntSizeType, IntType, PrimitiveType, Slice, StringEncoding, StructPathLike,
+    TyPosition, Type, TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
@@ -146,7 +146,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         self.fmt_param_name(ident)
     }
 
-    pub fn fmt_field_default<'a>(&'a self, ty: &'a Type) -> Cow<'tcx, str> {
+    pub fn fmt_field_default<'a, P: TyPosition>(&'a self, ty: &'a Type<P>) -> Cow<'tcx, str> {
         match ty {
             Type::Primitive(prim) => match prim {
                 PrimitiveType::Float(FloatType::F32) => "0.0F",
@@ -154,9 +154,14 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 _ => "0",
             }
             .into(),
-            Type::Opaque(_) => "Pointer(0)".into(),
+            Type::Opaque(op) => if op.is_optional() {
+                "null"
+            } else {
+                "Pointer(0)" // Aren't these the same thing?
+            }
+            .into(),
             Type::Struct(s) => {
-                let field_type_name: &str = self.tcx.resolve_struct(s.tcx_id).name.as_ref();
+                let field_type_name: &str = self.tcx.resolve_type(s.id()).name().as_ref();
                 format!("{field_type_name}Native()").into()
             }
             Type::Enum(enum_def) => {
@@ -168,10 +173,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_struct_field_native_to_kt<'a>(
+    pub fn fmt_struct_field_native_to_kt<'a, P: TyPosition>(
         &'a self,
         field_name: &'a str,
-        ty: &'a Type,
+        ty: &'a Type<P>,
     ) -> Cow<'tcx, str> {
         match ty {
             Type::Primitive(prim) => match prim {
@@ -201,16 +206,24 @@ impl<'tcx> KotlinFormatter<'tcx> {
                     .join(", ");
                 let ty_name =
                     self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
-                format!(
-                    "{ty_name}(Pointer.nativeValue(nativeStruct.{field_name}), listOf(), {lt_list})"
-                )
+                if opaque.is_optional() {
+                    format!(
+                        r#"if (nativeStruct.{field_name} == null) {{
+        null
+    }} else {{
+        {ty_name}(nativeStruct.{field_name}!!, {lt_list})
+    }}"#
+                    )
+                } else {
+                    format!("{ty_name}(nativeStruct.{field_name}, {lt_list})")
+                }
                 .into()
             }
             Type::Struct(strct) => {
                 let ty_name =
                     self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
                 let lt_list: String = strct
-                    .lifetimes
+                    .lifetimes()
                     .lifetimes()
                     .map(|_| ", listOf()")
                     .collect::<String>();
@@ -241,11 +254,20 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_struct_field_type_kt<'a>(&'a self, ty: &'a Type) -> Cow<'tcx, str> {
+    pub fn fmt_struct_field_type_kt<'a, P: TyPosition>(
+        &'a self,
+        ty: &'a Type<P>,
+    ) -> Cow<'tcx, str> {
         match ty {
             Type::Primitive(prim) => self.fmt_primitive_as_ffi(*prim).into(),
-            Type::Opaque(_) => {
-                self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"))
+            Type::Opaque(op) => {
+                // todo: optional
+                let optional = if op.is_optional() { "?" } else { "" };
+                format!(
+                    "{}{optional}",
+                    self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"))
+                )
+                .into()
             }
             Type::Struct(_) => {
                 self.fmt_type_name(ty.id().expect("Failed to get type id for struct"))
@@ -260,7 +282,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_struct_field_type_native<'a>(&'a self, ty: &'a Type) -> Cow<'tcx, str> {
+    pub fn fmt_struct_field_type_native<'a, P: TyPosition>(
+        &'a self,
+        ty: &'a Type<P>,
+    ) -> Cow<'tcx, str> {
         match ty {
             Type::Primitive(PrimitiveType::Bool) => "Byte".into(),
             Type::Primitive(PrimitiveType::Int(IntType::U8)) => "Byte".into(),
@@ -269,7 +294,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
             Type::Primitive(PrimitiveType::Int(IntType::U64)) => "Long".into(),
             Type::Primitive(PrimitiveType::IntSize(_)) => "Long".into(),
             Type::Primitive(prim) => self.fmt_primitive_as_ffi(*prim).into(),
-            Type::Opaque(_) => "Pointer".into(),
+            Type::Opaque(op) => {
+                let optional = if op.is_optional() { "?" } else { "" };
+                format!("Pointer{optional}").into()
+            }
             Type::Struct(s) => {
                 format!("{}Native", self.tcx.resolve_type(s.id()).name().as_str()).into()
             }

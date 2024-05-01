@@ -5,7 +5,7 @@ import com.sun.jna.Pointer
 
 
 internal interface {{type_name}}Lib: Library {
-    fun {{type_name}}_destroy(handle: Long)
+    fun {{type_name}}_destroy(handle: Pointer)
 
     
     {%- for m in native_methods %}
@@ -14,7 +14,7 @@ internal interface {{type_name}}Lib: Library {
 }
 
 class {{type_name}} internal constructor (
-    internal val handle: Long,
+    internal val handle: Pointer,
 
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
@@ -25,7 +25,7 @@ class {{type_name}} internal constructor (
     {% endif -%}
 ) {
 
-    internal class {{type_name}}Cleaner(val handle: Long, val lib: {{type_name}}Lib) : Runnable {
+    internal class {{type_name}}Cleaner(val handle: Pointer, val lib: {{type_name}}Lib) : Runnable {
         override fun run() {
             lib.{{type_name}}_destroy(handle)
         }

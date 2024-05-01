@@ -5,24 +5,24 @@ import com.sun.jna.Pointer
 
 
 internal interface MyStringLib: Library {
-    fun MyString_destroy(handle: Long)
-    fun MyString_new(v: Slice): Long
-    fun MyString_new_unsafe(v: Slice): Long
-    fun MyString_new_owned(v: Slice): Long
-    fun MyString_new_from_first(v: Slice): Long
-    fun MyString_set_str(handle: Long, newStr: Slice): Unit
-    fun MyString_get_str(handle: Long, writeable: Pointer): Unit
-    fun MyString_get_boxed_str(handle: Long): Slice
+    fun MyString_destroy(handle: Pointer)
+    fun MyString_new(v: Slice): Pointer
+    fun MyString_new_unsafe(v: Slice): Pointer
+    fun MyString_new_owned(v: Slice): Pointer
+    fun MyString_new_from_first(v: Slice): Pointer
+    fun MyString_set_str(handle: Pointer, newStr: Slice): Unit
+    fun MyString_get_str(handle: Pointer, writeable: Pointer): Unit
+    fun MyString_get_boxed_str(handle: Pointer): Slice
 }
 
 class MyString internal constructor (
-    internal val handle: Long,
+    internal val handle: Pointer,
 
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>) {
 
-    internal class MyStringCleaner(val handle: Long, val lib: MyStringLib) : Runnable {
+    internal class MyStringCleaner(val handle: Pointer, val lib: MyStringLib) : Runnable {
         override fun run() {
             lib.MyString_destroy(handle)
         }
@@ -37,7 +37,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
             vMem.close()
@@ -50,7 +50,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new_unsafe(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
             vMem.close()
@@ -63,7 +63,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new_owned(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
             
@@ -76,7 +76,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new_from_first(vSlice);
         
             val selfEdges: List<Any> = listOf()
-            val handle = returnVal
+            val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
             vMem.forEach {it.close()}

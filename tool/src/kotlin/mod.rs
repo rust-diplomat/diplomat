@@ -56,6 +56,14 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
             files.add_file(format!("src/main/kotlin/{file_name}"), body);
         }
 
+        if let TypeDef::OutStruct(o) = ty {
+            let type_name = o.name.to_string();
+
+            let (file_name, body) = ty_gen_cx.gen_struct_def(o, id, &type_name, &domain, &lib_name);
+
+            files.add_file(format!("src/main/kotlin/{file_name}"), body);
+        }
+
         if let TypeDef::Struct(struct_def) = ty {
             let type_name = struct_def.name.to_string();
 
@@ -167,19 +175,19 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_kt_to_c_for_type(&self, ty: &Type, name: Cow<'cx, str>) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(_) => name,
-            Type::Opaque(OpaquePath {
-                owner,
-                ..
-            }) => {
+            Type::Opaque(ref op @ OpaquePath { owner, .. }) => {
+                let optional = if op.is_optional() { "?" } else { "" };
                 match owner.mutability {
-                    Mutability::Immutable => format!("{name}.handle").into(),
+                    Mutability::Immutable => format!("{name}{optional}.handle").into(),
                     Mutability::Mutable => panic!("Not comfortable with mutable access in the JVM just yet. We'll add some mutexes to the code gen"),
                 }
             }
             Type::Struct(_) => format!("{name}.nativeStruct").into(),
             Type::Enum(_) => format!("{name}.toNative()").into(),
-            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => format!("{name}Slice").into(),
-            Type::Slice( _) => format!("{name}Slice").into(),
+            Type::Slice(Slice::Str(None, _)) | Type::Slice(Slice::Primitive(None, _)) => {
+                format!("{name}Slice").into()
+            }
+            Type::Slice(_) => format!("{name}Slice").into(),
             _ => todo!(),
         }
     }
@@ -192,8 +200,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             ReturnType::Fallible(_, _) => {
                 todo!("Fallible return types not supported yet")
             }
-            ReturnType::Nullable(_) => {
-                todo!("nullable return types not supported")
+            ReturnType::Nullable(SuccessType::Unit | SuccessType::Writeable) => {
+                format!("{}?", self.formatter.fmt_void()).into()
+            }
+
+            ReturnType::Nullable(SuccessType::OutType(ref o)) => {
+                format!("{}?", self.gen_type_name_ffi(o)).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -202,7 +214,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_type_name_ffi<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
-            Type::Opaque(_) => "Long".into(),
+            Type::Opaque(ref op) => {
+                let optional = if op.is_optional() { "?" } else { "" };
+                format!("Pointer{optional}").into()
+            }
 
             Type::Struct(ref strct) => {
                 let type_id = strct.id();
@@ -223,6 +238,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         method_lifetimes_map: MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
         cleanups: &[Cow<'d, str>],
+        optional: bool,
     ) -> String {
         #[derive(Template)]
         #[template(path = "kotlin/OpaqueReturn.kt.jinja", escape = "none")]
@@ -232,6 +248,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             is_owned: bool,
             self_edges: Vec<Cow<'b, str>>,
             cleanups: &'a [Cow<'b, str>],
+            optional: bool,
         }
 
         struct ParamsForLt<'c> {
@@ -283,6 +300,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             is_owned,
             self_edges,
             cleanups,
+            optional,
         };
         opaque_return
             .render()
@@ -390,6 +408,54 @@ return string"#
             .expect("Failed to render opaque return block")
     }
 
+    fn gen_infallible_return<'d>(
+        &'d self,
+        res: &'d SuccessType,
+        method: &'d Method,
+        method_lifetimes_map: MethodLtMap<'d>,
+        cleanups: &[Cow<'d, str>],
+    ) -> Option<String> {
+        match res {
+            SuccessType::Writeable => Some(Self::WRITEABLE_RETURN.into()),
+            SuccessType::OutType(o) => match o {
+                // todo: unsigned need to be handled
+                Type::Primitive(_) => Some("return returnVal".into()),
+                Type::Opaque(opaque_path) => {
+                    let ownership = opaque_path.owner;
+                    let lifetimes = &opaque_path.lifetimes;
+                    let optional = opaque_path.is_optional();
+                    Some(self.gen_opaque_return(
+                        opaque_path.resolve(self.tcx),
+                        ownership,
+                        lifetimes,
+                        method_lifetimes_map,
+                        &method.lifetime_env,
+                        cleanups,
+                        optional,
+                    ))
+                }
+                Type::Struct(strct) => {
+                    let lifetimes = strct.lifetimes();
+                    Some(self.gen_struct_return(
+                        &strct.resolve(self.tcx),
+                        lifetimes,
+                        method_lifetimes_map,
+                        &method.lifetime_env,
+                        cleanups,
+                    ))
+                }
+                Type::Enum(enm) => {
+                    let return_type = enm.resolve(self.tcx);
+                    Some(format!("return {}.fromNative(returnVal)", return_type.name))
+                }
+                Type::Slice(slc) => Some(self.gen_slice_retrn(slc)),
+                _ => todo!(),
+            },
+            SuccessType::Unit => None,
+            _ => todo!(),
+        }
+    }
+
     fn gen_return<'d>(
         &'d self,
         method: &'d Method,
@@ -397,41 +463,22 @@ return string"#
         cleanups: &[Cow<'d, str>],
     ) -> Option<String> {
         match &method.output {
-            ReturnType::Infallible(res) => match res {
-                SuccessType::Writeable => Some(Self::WRITEABLE_RETURN.into()),
-                SuccessType::OutType(o) => match o {
-                    Type::Primitive(_) => Some("return returnVal".into()),
-                    Type::Opaque(opaque_path) => {
-                        let ownership = opaque_path.owner;
-                        let lifetimes = &opaque_path.lifetimes;
-                        Some(self.gen_opaque_return(
-                            opaque_path.resolve(self.tcx),
-                            ownership,
-                            lifetimes,
-                            method_lifetimes_map,
-                            &method.lifetime_env,
-                            cleanups,
-                        ))
-                    }
-                    Type::Struct(strct) => {
-                        let lifetimes = strct.lifetimes();
-                        Some(self.gen_struct_return(
-                            &strct.resolve(self.tcx),
-                            lifetimes,
-                            method_lifetimes_map,
-                            &method.lifetime_env,
-                            cleanups,
-                        ))
-                    }
-                    Type::Enum(_) => todo!("enums not yet supported"),
-                    Type::Slice(slc) => Some(self.gen_slice_retrn(slc)),
-                    _ => todo!(),
-                },
-                SuccessType::Unit => None,
-                _ => todo!(),
-            },
+            ReturnType::Infallible(res) => {
+                self.gen_infallible_return(res, method, method_lifetimes_map, cleanups)
+            }
             ReturnType::Fallible(_, _) => todo!("fallible returns not yet supported"),
-            ReturnType::Nullable(_) => todo!("nullable returns not yet supported"),
+            ReturnType::Nullable(res) => self
+                .gen_infallible_return(res, method, method_lifetimes_map, cleanups)
+                .map(|return_val| {
+                    format!(
+                        r#"
+if (returnVal == null) {{
+    return null
+}} else {{
+    {return_val}
+}}"#,
+                    )
+                }),
         }
     }
     fn gen_slice_conv(&self, kt_param_name: Cow<'cx, str>, slice_type: Slice) -> Cow<'cx, str> {
@@ -493,7 +540,7 @@ return string"#
 
         match self_type {
             Some(st @ SelfType::Opaque(_)) => {
-                let param_type = "Long".into();
+                let param_type = "Pointer".into();
                 let param_name: Cow<'_, str> = "handle".into();
                 visitor.visit_param(&st.clone().into(), "this");
 
@@ -594,7 +641,7 @@ return string"#
 
         if let Some(param_self) = method.param_self.as_ref() {
             match &param_self.ty {
-                SelfType::Opaque(_) => param_decls.push("handle: Long".into()),
+                SelfType::Opaque(op) => param_decls.push("handle: Pointer".into()),
                 SelfType::Struct(s) => param_decls.push(format!(
                     "nativeStruct: {}Native",
                     self.tcx.resolve_struct(s.tcx_id).name.as_str()
@@ -697,9 +744,9 @@ return string"#
         )
     }
 
-    fn gen_struct_def(
+    fn gen_struct_def<P: TyPosition>(
         &mut self,
-        ty: &'cx hir::StructDef,
+        ty: &'cx hir::StructDef<P>,
         id: TypeId,
         type_name: &str,
         domain: &str,
@@ -765,7 +812,7 @@ return string"#
         let fields = ty
             .fields
             .iter()
-            .map(|field: &StructField| {
+            .map(|field: &StructField<P>| {
                 let field_name = self.formatter.fmt_field_name(field.name.as_str());
                 StructFieldDef {
                     name: field_name.clone(),
@@ -915,7 +962,10 @@ return string"#
     fn gen_native_type_name<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
-            Type::Opaque(_) => "Long".into(),
+            Type::Opaque(ref op) => {
+                let optional = if op.is_optional() { "?" } else { "" };
+                format!("Pointer{optional}").into()
+            }
             Type::Struct(ref strct) => {
                 let op_id = strct.id();
                 format!("{}Native", self.formatter.fmt_type_name(op_id)).into()
