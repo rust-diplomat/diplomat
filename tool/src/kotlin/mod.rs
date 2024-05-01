@@ -419,7 +419,7 @@ return string"#
             SuccessType::Writeable => Some(Self::WRITEABLE_RETURN.into()),
             SuccessType::OutType(o) => match o {
                 // todo: unsigned need to be handled
-                Type::Primitive(_) => Some("return returnVal".into()),
+                Type::Primitive(_) => Some("    return returnVal".into()),
                 Type::Opaque(opaque_path) => {
                     let ownership = opaque_path.owner;
                     let lifetimes = &opaque_path.lifetimes;
@@ -446,7 +446,10 @@ return string"#
                 }
                 Type::Enum(enm) => {
                     let return_type = enm.resolve(self.tcx);
-                    Some(format!("return {}.fromNative(returnVal)", return_type.name))
+                    Some(format!(
+                        "    return {}.fromNative(returnVal)",
+                        return_type.name
+                    ))
                 }
                 Type::Slice(slc) => Some(self.gen_slice_retrn(slc)),
                 _ => todo!(),

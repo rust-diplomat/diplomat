@@ -85,7 +85,7 @@ class OtherOpaque internal constructor (
     fun getLenAndAdd(other: Long): Long {
         
         val returnVal = lib.OtherOpaque_get_len_and_add(handle, other);
-    return returnVal
+        return returnVal
     }
     fun dummyStr(): String {
         

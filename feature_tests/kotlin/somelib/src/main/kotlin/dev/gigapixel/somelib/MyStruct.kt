@@ -58,7 +58,7 @@ class MyStruct internal constructor (
     fun intoA(): UByte {
         
         val returnVal = lib.MyStruct_into_a(nativeStruct);
-    return returnVal
+        return returnVal
     }
 
 }

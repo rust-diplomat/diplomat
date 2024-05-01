@@ -139,6 +139,10 @@ pub mod ffi {
         pub fn into_value(self) -> i8 {
             self as i8
         }
+
+        pub fn a() -> MyEnum {
+            MyEnum::A
+        }
     }
 
     impl MyStruct {

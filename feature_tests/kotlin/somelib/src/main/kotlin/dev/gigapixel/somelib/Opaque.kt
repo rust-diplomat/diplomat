@@ -44,7 +44,7 @@ class Opaque internal constructor (
         fun returnsUsize(): Long {
             
             val returnVal = lib.Opaque_returns_usize();
-        return returnVal
+            return returnVal
         }
         fun returnsImported(): ImportedStruct {
             
@@ -57,7 +57,7 @@ class Opaque internal constructor (
         fun cmp(): Byte {
             
             val returnVal = lib.Opaque_cmp();
-        return returnVal
+            return returnVal
         }
     }
     fun assertStruct(s: MyStruct): Unit {
