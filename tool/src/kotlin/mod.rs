@@ -1,8 +1,8 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, Borrow, IntType, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method,
-    Mutability, OpaquePath, PrimitiveType, ReturnableStructDef, SelfType, Slice, StringEncoding,
+    self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method,
+    Mutability, OpaquePath, ReturnableStructDef, SelfType, Slice, StringEncoding,
     StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
