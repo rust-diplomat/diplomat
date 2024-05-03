@@ -74,6 +74,12 @@ dependencies = [
     "test-dart-example",
     "test-dart-feature",
 ]
+[tasks.test-kotlin]
+category = "Tests"
+dependencies = [
+    "test-kotlin-example",
+    "test-kotlin-feature",
+]
 [tasks.test-example]
 category = "Tests"
 dependencies = [
@@ -83,6 +89,7 @@ dependencies = [
     "test-c2-example",
     "test-wasm-example",
     "test-dart-example",
+    "test-kotlin-example",
 ]
 
 [tasks.test-feature]
@@ -293,6 +300,7 @@ dependencies = [
     "gen-c2-example",
     "gen-js-example",
     "gen-dart-example",
+    "gen-kotlin-example",
 ]
 [tasks.gen-cpp]
 category = "Code generation"
@@ -339,6 +347,7 @@ dependencies = [
 category = "Code generation"
 dependencies = [
     "gen-kotlin-feature",
+    "gen-kotlin-example",
 ]
 
 
