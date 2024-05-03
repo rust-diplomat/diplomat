@@ -27,6 +27,8 @@ extern "C" {
 #endif
 
 int8_t MyEnum_into_value(MyEnum self);
+
+MyEnum MyEnum_get_a();
 void MyEnum_destroy(MyEnum* self);
 
 #ifdef __cplusplus

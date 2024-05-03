@@ -1,0 +1,16 @@
+
+{{ declaration }} {
+{%- for slice_conv in slice_conversions %}{{slice_conv|indent(4)}}{% endfor %}
+    {% if writeable_return %}val writeable = DW.lib.diplomat_buffer_writeable_create(0){% endif %}
+    val returnVal = lib.{{ native_method_name -}}(
+        {%- for param in param_conversions %}
+        {%- if loop.first %}{% else %}, {% endif -%}
+        {{ param }}
+        {%- endfor -%}
+    );
+{%- match return_expression %}
+{%- when Some with (statement) %}
+{{statement|indent(4)}}
+{%- when None %}
+{%- endmatch %}
+}

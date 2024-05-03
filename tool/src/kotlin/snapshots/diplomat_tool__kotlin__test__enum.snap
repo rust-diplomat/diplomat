@@ -1,0 +1,34 @@
+---
+source: tool/src/kotlin/mod.rs
+expression: enum_code
+---
+package dev.gigapixel.somelib
+
+import com.sun.jna.Library
+import com.sun.jna.Native
+
+internal interface ContLib: Library {
+}
+enum class Cont {
+    A,
+    B,
+    C,
+    D;
+
+    fun toNative(): Int {
+        return this.ordinal
+    }
+
+
+    companion object {
+        internal val libClass: Class<ContLib> = ContLib::class.java
+        internal val lib: ContLib = Native.load("somelib", libClass) 
+        fun fromNative(native: Int): Cont {
+            return Cont.entries[native]
+        }
+
+        fun default(): Cont {
+            return A
+        }
+    }
+}

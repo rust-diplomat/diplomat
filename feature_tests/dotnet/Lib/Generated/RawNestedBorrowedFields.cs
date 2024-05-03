@@ -21,4 +21,7 @@ public partial struct NestedBorrowedFields
     public BorrowedFieldsWithBounds bounds;
 
     public BorrowedFieldsWithBounds bounds2;
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "NestedBorrowedFields_from_bar_and_foo_and_strings", ExactSpelling = true)]
+    public static unsafe extern NestedBorrowedFields FromBarAndFooAndStrings(Bar* bar, Foo* foo, ushort* dstr16X, nuint dstr16XSz, ushort* dstr16Z, nuint dstr16ZSz, ushort* utf8StrY, nuint utf8StrYSz, ushort* utf8StrZ, nuint utf8StrZSz);
 }

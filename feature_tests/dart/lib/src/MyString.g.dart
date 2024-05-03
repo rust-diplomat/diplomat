@@ -63,6 +63,11 @@ final class MyString implements ffi.Finalizable {
     _MyString_get_str(_ffi, writeable._ffi);
     return writeable.finalize();
   }
+
+  String getBoxedStr() {
+    final result = _MyString_get_boxed_str(_ffi);
+    return result._toDart([]);
+  }
 }
 
 @meta.ResourceIdentifier('MyString_destroy')
@@ -99,3 +104,8 @@ external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Ui
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_str')
 // ignore: non_constant_identifier_names
 external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);
+
+@meta.ResourceIdentifier('MyString_get_boxed_str')
+@ffi.Native<_SliceUtf8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_boxed_str')
+// ignore: non_constant_identifier_names
+external _SliceUtf8 _MyString_get_boxed_str(ffi.Pointer<ffi.Opaque> self);

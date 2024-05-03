@@ -7,6 +7,8 @@
 
     .. js:method:: into_value()
 
+    .. js:function:: get_a()
+
 .. js:class:: MyStruct
 
     .. js:attribute:: a
@@ -45,3 +47,27 @@
     .. js:function:: returns_imported()
 
     .. js:function:: cmp()
+
+.. js:class:: OpaqueMutexedString
+
+    .. js:function:: from_usize(number)
+
+    .. js:method:: change(number)
+
+    .. js:method:: borrow()
+
+    .. js:function:: borrow_other(other)
+
+    .. js:method:: borrow_self_or_other(other)
+
+    .. js:method:: get_len_and_add(other)
+
+    .. js:method:: dummy_str()
+
+    .. js:method:: wrapper()
+
+.. js:class:: Utf16Wrap
+
+    .. js:method:: borrow_cont()
+
+    .. js:method:: owned()

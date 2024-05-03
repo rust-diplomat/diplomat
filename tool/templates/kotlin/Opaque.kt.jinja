@@ -1,0 +1,44 @@
+package {{domain}}.{{lib_name}};
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
+
+
+internal interface {{type_name}}Lib: Library {
+    fun {{type_name}}_destroy(handle: Pointer)
+
+    
+    {%- for m in native_methods %}
+    {{m.declaration}}
+    {%- endfor %}
+}
+
+class {{type_name}} internal constructor (
+    internal val handle: Pointer,
+
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
+    internal val selfEdges: List<Any>{% if !lifetimes.is_empty() %},
+    {%- for lt in lifetimes %}
+    internal val {{lt}}Edges: List<Any>,
+    {%- endfor %}
+    {% endif -%}
+) {
+
+    internal class {{type_name}}Cleaner(val handle: Pointer, val lib: {{type_name}}Lib) : Runnable {
+        override fun run() {
+            lib.{{type_name}}_destroy(handle)
+        }
+    }
+
+    companion object {
+        internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
+        internal val lib: {{type_name}}Lib = Native.load("{{lib_name}}", libClass)
+
+{%- for m in companion_methods %}{{m|indent(8)}}{%- endfor %}
+    }
+
+{%- for m in self_methods %}{{m|indent(4)}}{%- endfor %}
+
+}
+

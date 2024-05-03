@@ -92,6 +92,7 @@ dependencies = [
     "test-cpp2-feature",
     "test-wasm-feature",
     "test-dart-feature",
+    "test-kotlin-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -221,6 +222,17 @@ exec --fail-on-error dart --enable-experiment=native-assets pub get
 exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
+[tasks.test-kotlin-feature]
+category = "Tests"
+script_runner = "@duckscript"
+dependencies = ["build-feature"]
+script = '''
+exit_on_error true
+cp target/debug/libdiplomat_feature_tests.dylib feature_tests/kotlin/somelib/libsomelib.dylib
+cd feature_tests/kotlin/somelib
+exec --fail-on-error gradle test --warning-mode all
+'''
+
 [tasks.test-c2-example-self-contained]
 category = "Tests"
 dependencies = ["build-example"]
@@ -258,6 +270,7 @@ dependencies = [
     "gen-js-feature",
     "gen-dotnet-feature",
     "gen-dart-feature",
+    "gen-kotlin-feature",
 ]
 
 [tasks.gen-example]
@@ -310,6 +323,11 @@ category = "Code generation"
 dependencies = [
     "gen-dart-feature",
     "gen-dart-example",
+]
+[tasks.gen-kotlin]
+category = "Code generation"
+dependencies = [
+    "gen-kotlin-feature",
 ]
 
 
@@ -430,6 +448,17 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example dart lib/src
+'''
+
+# this task generates all of the kotlin code but does not copy generated project files over 
+# we only copy the generated main src files to preserve the tests
+[tasks.gen-kotlin-feature]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
 '''
 
 # Build deps

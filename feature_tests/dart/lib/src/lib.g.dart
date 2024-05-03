@@ -30,6 +30,7 @@ part 'MyStruct.g.dart';
 part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
 part 'Opaque.g.dart';
+part 'OpaqueMutexedString.g.dart';
 part 'OptionOpaque.g.dart';
 part 'OptionOpaqueChar.g.dart';
 part 'OptionStruct.g.dart';
@@ -39,6 +40,7 @@ part 'ResultOpaque.g.dart';
 part 'Two.g.dart';
 part 'UnimportedEnum.g.dart';
 part 'Unnamespaced.g.dart';
+part 'Utf16Wrap.g.dart';
 
 /// A [Rune] is a Unicode code point, such as `a`, or `💡`.
 /// 

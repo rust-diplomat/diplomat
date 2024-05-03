@@ -23,6 +23,50 @@ public partial class NestedBorrowedFields
         _inner = data;
     }
 
+    /// <returns>
+    /// A <c>NestedBorrowedFields</c> allocated on C# side.
+    /// </returns>
+    public static NestedBorrowedFields FromBarAndFooAndStrings(Bar bar, Foo foo, ushort[] dstr16X, ushort[] dstr16Z, string utf8StrY, string utf8StrZ)
+    {
+        unsafe
+        {
+            byte[] dstr16XBuf = DiplomatUtils.StringToUtf8(dstr16X);
+            byte[] dstr16ZBuf = DiplomatUtils.StringToUtf8(dstr16Z);
+            byte[] utf8StrYBuf = DiplomatUtils.StringToUtf8(utf8StrY);
+            byte[] utf8StrZBuf = DiplomatUtils.StringToUtf8(utf8StrZ);
+            nuint dstr16XBufLength = (nuint)dstr16XBuf.Length;
+            nuint dstr16ZBufLength = (nuint)dstr16ZBuf.Length;
+            nuint utf8StrYBufLength = (nuint)utf8StrYBuf.Length;
+            nuint utf8StrZBufLength = (nuint)utf8StrZBuf.Length;
+            Raw.Bar* barRaw;
+            barRaw = bar.AsFFI();
+            if (barRaw == null)
+            {
+                throw new ObjectDisposedException("Bar");
+            }
+            Raw.Foo* fooRaw;
+            fooRaw = foo.AsFFI();
+            if (fooRaw == null)
+            {
+                throw new ObjectDisposedException("Foo");
+            }
+            fixed (byte* dstr16XBufPtr = dstr16XBuf)
+            {
+                fixed (byte* dstr16ZBufPtr = dstr16ZBuf)
+                {
+                    fixed (byte* utf8StrYBufPtr = utf8StrYBuf)
+                    {
+                        fixed (byte* utf8StrZBufPtr = utf8StrZBuf)
+                        {
+                            Raw.NestedBorrowedFields retVal = Raw.NestedBorrowedFields.FromBarAndFooAndStrings(barRaw, fooRaw, dstr16XBufPtr, dstr16XBufLength, dstr16ZBufPtr, dstr16ZBufLength, utf8StrYBufPtr, utf8StrYBufLength, utf8StrZBufPtr, utf8StrZBufLength);
+                            return new NestedBorrowedFields(retVal);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Returns a copy of the underlying raw representation.
     /// </summary>

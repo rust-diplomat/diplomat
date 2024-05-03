@@ -1,0 +1,22 @@
+
+val selfEdges: List<Any> = {% if self_edges.is_empty() -%}
+listOf()
+{%- else -%}
+{%- for self_edge in self_edges%}{%- if !loop.first %} + {% endif -%}{{self_edge}}{%- endfor %}
+{%- endif -%}
+{%- for borrow in borrows %}
+val {{borrow.lt}}Edges: List<Any> = {% if borrow.params.is_empty() -%}
+listOf()
+{%- else -%}
+{% for param in borrow.params %}{%- if !loop.first %} + {% endif -%}{{param}}{%- endfor %}
+{%- endif -%}
+{%- endfor %}
+val handle = returnVal {% if optional %}?: return null{% endif %}
+val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !borrows.is_empty() %}{%- for borrow in borrows %}, {{borrow.lt}}Edges{%- endfor %}{% endif -%})
+{%- if is_owned %}
+CLEANER.register(returnOpaque, {{return_type_name}}.{{return_type_name}}Cleaner(handle, {{return_type_name}}.lib));
+{% else %}
+{% endif -%}
+{% for cleanup in cleanups %}{{cleanup|indent(4)}}{% endfor %}
+return returnOpaque
+

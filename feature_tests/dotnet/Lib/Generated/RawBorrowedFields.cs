@@ -21,4 +21,7 @@ public partial struct BorrowedFields
     public string b;
 
     public string c;
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "BorrowedFields_from_bar_and_strings", ExactSpelling = true)]
+    public static unsafe extern BorrowedFields FromBarAndStrings(Bar* bar, ushort* dstr16, nuint dstr16Sz, ushort* utf8Str, nuint utf8StrSz);
 }

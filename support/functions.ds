@@ -1,4 +1,17 @@
-# Usage: generate_generic <feature_tests or example> <backend name> <output folder name> <optional docs folder> <optional additional args>
+# Usage: generate_generic <feature_tests or example> <backend name> <output folder name> <optional docs folder> <optional additional args> <optional preserve_subdirectory for copying over>
+# If a backend generates a whole project then you can choose to only copy over a certain subdirectory
+# by passing  it as the preserve_subdirectory argument. For example the kotlin backend creates an entire
+# project. To not overwrite project files or committed tests in kotlin you can run
+# ```sh
+# generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
+# ```
+# which only copies over the contents of `src/main/kotlin` from the tmp folder. Whereas
+# ```sh
+# generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" 
+# ```
+# will copy over all project files and delete the old ones including the tests.
+# note: if you make changes to the project file generation, then you should 
+# commit those changes (just make sure you checkout the test files)
 fn generate_generic
     exit_on_error true
 
@@ -8,11 +21,16 @@ fn generate_generic
     docs_folder = set ${4}
     addl_args = set ${5}
 
+    # We allow copying only a portion of the generated code to maintain test code
+    # for backends which generate a whole project
+    preserve_subdirectory = set ${6}
+
     path_is_empty = is_empty ${path}
     backend_is_empty = is_empty ${backend}
     output_folder_is_empty = is_empty ${output_folder}
     docs_folder_is_empty = is_empty ${docs_folder}
     addl_args_is_empty = is_empty ${addl_args}
+    subdirectory_is_empty = is_empty ${preserve_subdirectory}
     if ${path_is_empty} or ${backend_is_empty} or ${output_folder_is_empty}
         trigger_error "Must have at least three non empty arguments"
     end
@@ -46,10 +64,14 @@ fn generate_generic
     echo ${output.stdout}
     exit_on_error true
 
-    rm -r "${backend}/${output_folder}"
+    rm -r "${backend}/${output_folder}${preserve_subdirectory}"
     # we do a /.. so that cases where output_folder is multiple folders down
     # end up copying to the right path
-    mv "tmp/${output_folder}" "${backend}/${output_folder}/.."
+    mv "tmp/${output_folder}${preserve_subdirectory}" "${backend}/${output_folder}${preserve_subdirectory}/.."
+    if not ${subdirectory_is_empty}
+        rm -r "tmp/${output_folder}"
+    end
+
     if not ${docs_folder_is_empty}
         rm -r "${backend}/${docs_folder}"
         mv "tmp/${docs_folder}" "${backend}/${docs_folder}/.."

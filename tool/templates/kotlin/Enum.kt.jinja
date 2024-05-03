@@ -1,0 +1,66 @@
+package {{domain}}.{{lib_name}}
+
+import com.sun.jna.Library
+import com.sun.jna.Native
+
+internal interface {{type_name}}Lib: Library {
+
+    {%- for m in native_methods %}
+    {{m.declaration}}
+    {%- endfor %}
+}
+{% let variants_for_decl = variants -%}
+{%- let variants_for_native = variants -%}
+enum class {{type_name}}
+{%- match variants_for_decl -%}
+{%- when EnumVariants::NonContiguous with (variants) %}(val inner: Int) {
+    {%- for variant in variants %}
+    {{variant.name}}({{variant.index}}){% if !loop.last %},{% else %};{% endif %}
+    {%- endfor %}
+
+    fun toNative(): Int {
+        return this.inner
+    }
+{%- when EnumVariants::Contiguous with (variants) %} {
+    {%- for variant in variants %}
+    {{variant}}{% if !loop.last %},{% else %};{% endif %}
+    {%- endfor %}
+
+    fun toNative(): Int {
+        return this.ordinal
+    }
+{%- endmatch %}
+
+
+    companion object {
+        internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
+        internal val lib: {{type_name}}Lib = Native.load("somelib", libClass)
+
+        {%- match (variants_for_native) %}
+        {%- when EnumVariants::NonContiguous with (variants) %}
+        fun fromNative(native: Int): {{type_name}} {
+            return when (native) {
+                {%- for variant in variants %}
+                {{variant.index}} -> {{variant.name}}
+                {%- endfor %}
+                else -> throw RuntimeException("Failed to find variant ${native} of type {{type_name}}")
+            }
+        }
+
+        fun default(): {{type_name}} {
+            return {{variants[0].name}}
+        }
+        {%- when EnumVariants::Contiguous with (variants) %} 
+        fun fromNative(native: Int): {{type_name}} {
+            return {{type_name}}.entries[native]
+        }
+
+        fun default(): {{type_name}} {
+            return {{variants[0]}}
+        }
+        {%- endmatch %}
+{%- for m in companion_methods %}{{m|indent(8)}}{%- endfor %}
+    }
+
+{%- for m in self_methods %}{{m|indent(4)}}{%- endfor %}
+}

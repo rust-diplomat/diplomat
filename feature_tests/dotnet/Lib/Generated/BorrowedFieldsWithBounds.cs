@@ -23,6 +23,34 @@ public partial class BorrowedFieldsWithBounds
         _inner = data;
     }
 
+    /// <returns>
+    /// A <c>BorrowedFieldsWithBounds</c> allocated on C# side.
+    /// </returns>
+    public static BorrowedFieldsWithBounds FromFooAndStrings(Foo foo, ushort[] dstr16X, string utf8StrZ)
+    {
+        unsafe
+        {
+            byte[] dstr16XBuf = DiplomatUtils.StringToUtf8(dstr16X);
+            byte[] utf8StrZBuf = DiplomatUtils.StringToUtf8(utf8StrZ);
+            nuint dstr16XBufLength = (nuint)dstr16XBuf.Length;
+            nuint utf8StrZBufLength = (nuint)utf8StrZBuf.Length;
+            Raw.Foo* fooRaw;
+            fooRaw = foo.AsFFI();
+            if (fooRaw == null)
+            {
+                throw new ObjectDisposedException("Foo");
+            }
+            fixed (byte* dstr16XBufPtr = dstr16XBuf)
+            {
+                fixed (byte* utf8StrZBufPtr = utf8StrZBuf)
+                {
+                    Raw.BorrowedFieldsWithBounds retVal = Raw.BorrowedFieldsWithBounds.FromFooAndStrings(fooRaw, dstr16XBufPtr, dstr16XBufLength, utf8StrZBufPtr, utf8StrZBufLength);
+                    return new BorrowedFieldsWithBounds(retVal);
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Returns a copy of the underlying raw representation.
     /// </summary>
