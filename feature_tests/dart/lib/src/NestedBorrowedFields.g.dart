@@ -36,6 +36,25 @@ final class NestedBorrowedFields {
     return struct;
   }
 
+  static NestedBorrowedFields fromBarAndFooAndStrings(Bar bar, Foo foo, String dstr16X, String dstr16Z, String utf8StrY, String utf8StrZ) {
+    final dstr16XView = dstr16X.utf16View;
+    final dstr16XArena = _FinalizedArena();
+    final dstr16ZView = dstr16Z.utf16View;
+    final dstr16ZArena = _FinalizedArena();
+    final utf8StrYView = utf8StrY.utf8View;
+    final utf8StrYArena = _FinalizedArena();
+    final utf8StrZView = utf8StrZ.utf8View;
+    final utf8StrZArena = _FinalizedArena();
+    // This lifetime edge depends on lifetimes: 'x, 'y
+    core.List<Object> xEdges = [bar, dstr16XArena, utf8StrYArena];
+    // This lifetime edge depends on lifetimes: 'y
+    core.List<Object> yEdges = [bar, utf8StrYArena];
+    // This lifetime edge depends on lifetimes: 'z
+    core.List<Object> zEdges = [foo, dstr16ZArena, utf8StrZArena];
+    final result = _NestedBorrowedFields_from_bar_and_foo_and_strings(bar._ffi, foo._ffi, dstr16XView.allocIn(dstr16XArena.arena), dstr16XView.length, dstr16ZView.allocIn(dstr16ZArena.arena), dstr16ZView.length, utf8StrYView.allocIn(utf8StrYArena.arena), utf8StrYView.length, utf8StrZView.allocIn(utf8StrZArena.arena), utf8StrZView.length);
+    return NestedBorrowedFields._fromFfi(result, xEdges, yEdges, zEdges);
+  }
+
   @override
   bool operator ==(Object other) =>
       other is NestedBorrowedFields &&
@@ -74,3 +93,8 @@ final class NestedBorrowedFields {
   // ignore: unused_element
   core.List<Object> get _fieldsForLifetimeZ => [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
 }
+
+@meta.ResourceIdentifier('NestedBorrowedFields_from_bar_and_foo_and_strings')
+@ffi.Native<_NestedBorrowedFieldsFfi Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint16>, ffi.Size, ffi.Pointer<ffi.Uint16>, ffi.Size, ffi.Pointer<ffi.Uint8>, ffi.Size, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'NestedBorrowedFields_from_bar_and_foo_and_strings')
+// ignore: non_constant_identifier_names
+external _NestedBorrowedFieldsFfi _NestedBorrowedFields_from_bar_and_foo_and_strings(ffi.Pointer<ffi.Opaque> bar, ffi.Pointer<ffi.Opaque> foo, ffi.Pointer<ffi.Uint16> dstr16XData, int dstr16XLength, ffi.Pointer<ffi.Uint16> dstr16ZData, int dstr16ZLength, ffi.Pointer<ffi.Uint8> utf8StrYData, int utf8StrYLength, ffi.Pointer<ffi.Uint8> utf8StrZData, int utf8StrZLength);

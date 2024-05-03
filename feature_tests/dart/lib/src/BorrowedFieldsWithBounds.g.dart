@@ -42,6 +42,21 @@ final class BorrowedFieldsWithBounds {
     return struct;
   }
 
+  static BorrowedFieldsWithBounds fromFooAndStrings(Foo foo, String dstr16X, String utf8StrZ) {
+    final dstr16XView = dstr16X.utf16View;
+    final dstr16XArena = _FinalizedArena();
+    final utf8StrZView = utf8StrZ.utf8View;
+    final utf8StrZArena = _FinalizedArena();
+    // This lifetime edge depends on lifetimes: 'x, 'y, 'z
+    core.List<Object> xEdges = [foo, dstr16XArena, utf8StrZArena];
+    // This lifetime edge depends on lifetimes: 'y, 'z
+    core.List<Object> yEdges = [foo, utf8StrZArena];
+    // This lifetime edge depends on lifetimes: 'z
+    core.List<Object> zEdges = [utf8StrZArena];
+    final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16XView.allocIn(dstr16XArena.arena), dstr16XView.length, utf8StrZView.allocIn(utf8StrZArena.arena), utf8StrZView.length);
+    return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
+  }
+
   @override
   bool operator ==(Object other) =>
       other is BorrowedFieldsWithBounds &&
@@ -80,3 +95,8 @@ final class BorrowedFieldsWithBounds {
   // ignore: unused_element
   core.List<Object> get _fieldsForLifetimeC => [fieldC];
 }
+
+@meta.ResourceIdentifier('BorrowedFieldsWithBounds_from_foo_and_strings')
+@ffi.Native<_BorrowedFieldsWithBoundsFfi Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Uint16>, ffi.Size, ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'BorrowedFieldsWithBounds_from_foo_and_strings')
+// ignore: non_constant_identifier_names
+external _BorrowedFieldsWithBoundsFfi _BorrowedFieldsWithBounds_from_foo_and_strings(ffi.Pointer<ffi.Opaque> foo, ffi.Pointer<ffi.Uint16> dstr16XData, int dstr16XLength, ffi.Pointer<ffi.Uint8> utf8StrZData, int utf8StrZLength);

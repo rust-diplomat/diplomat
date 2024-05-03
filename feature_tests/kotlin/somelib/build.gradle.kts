@@ -6,7 +6,7 @@ plugins {
 
 
 
-group = "dev.gigapixel"
+group = "dev.diplomattest"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -23,7 +23,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            groupId = "dev.gigapixel"
+            groupId = "dev.diplomattest"
             artifactId = "somelib"
             version = "1.0-SNAPSHOT"
 

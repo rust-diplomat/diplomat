@@ -230,7 +230,7 @@ script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.dylib feature_tests/kotlin/somelib/libsomelib.dylib
 cd feature_tests/kotlin/somelib
-exec --fail-on-error gradle test
+exec --fail-on-error gradle test --warning-mode all
 '''
 
 [tasks.test-c2-example-self-contained]
@@ -449,13 +449,16 @@ exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example dart lib/src
 '''
+
+# this task generates all of the kotlin code but does not copy generated project files over 
+# we only copy the generated main src files to preserve the tests
 [tasks.gen-kotlin-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests kotlin "somelib" "" "-l kt-conf.toml"
+generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
 '''
 
 # Build deps

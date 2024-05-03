@@ -1,14 +1,14 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, Borrow, IntType, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method,
-    Mutability, OpaquePath, PrimitiveType, ReturnableStructDef, SelfType, Slice, StringEncoding,
-    StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
+    OpaquePath, Optional, ReturnableStructDef, SelfType, Slice, StringEncoding, StructField,
+    StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
-use diplomat_core::hir::{OpaqueDef, ReturnType, SuccessType};
+use diplomat_core::hir::{ReturnType, SuccessType};
 
 use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::iter::once;
 use std::path::Path;
 
@@ -232,14 +232,16 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
     fn gen_opaque_return<'d>(
         &'d self,
-        opaque_def: &'d OpaqueDef,
-        ownership: MaybeOwn,
-        lifetimes: &'d Lifetimes,
+        opaque_path: &'d OpaquePath<Optional, MaybeOwn>,
         method_lifetimes_map: MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
         cleanups: &[Cow<'d, str>],
-        optional: bool,
     ) -> String {
+        let opaque_def = opaque_path.resolve(self.tcx);
+
+        let ownership = opaque_path.owner;
+        let lifetimes = &opaque_path.lifetimes;
+        let optional = opaque_path.is_optional();
         #[derive(Template)]
         #[template(path = "kotlin/OpaqueReturn.kt.jinja", escape = "none")]
         struct OpaqueReturn<'a, 'b> {
@@ -420,20 +422,12 @@ return string"#
             SuccessType::OutType(o) => match o {
                 // todo: unsigned need to be handled
                 Type::Primitive(_) => Some("    return returnVal".into()),
-                Type::Opaque(opaque_path) => {
-                    let ownership = opaque_path.owner;
-                    let lifetimes = &opaque_path.lifetimes;
-                    let optional = opaque_path.is_optional();
-                    Some(self.gen_opaque_return(
-                        opaque_path.resolve(self.tcx),
-                        ownership,
-                        lifetimes,
-                        method_lifetimes_map,
-                        &method.lifetime_env,
-                        cleanups,
-                        optional,
-                    ))
-                }
+                Type::Opaque(opaque_path) => Some(self.gen_opaque_return(
+                    opaque_path,
+                    method_lifetimes_map,
+                    &method.lifetime_env,
+                    cleanups,
+                )),
                 Type::Struct(strct) => {
                     let lifetimes = strct.lifetimes();
                     Some(self.gen_struct_return(
@@ -644,7 +638,7 @@ if (returnVal == null) {{
 
         if let Some(param_self) = method.param_self.as_ref() {
             match &param_self.ty {
-                SelfType::Opaque(op) => param_decls.push("handle: Pointer".into()),
+                SelfType::Opaque(_) => param_decls.push("handle: Pointer".into()),
                 SelfType::Struct(s) => param_decls.push(format!(
                     "nativeStruct: {}Native",
                     self.tcx.resolve_struct(s.tcx_id).name.as_str()
@@ -780,7 +774,7 @@ if (returnVal == null) {{
             .map(|method| self.gen_method(id, method, None))
             .collect::<Vec<_>>();
 
-        let lifetimes = ty
+        let lifetimes_set: HashSet<Lifetime> = ty
             .lifetimes
             .lifetimes()
             .lifetimes()
@@ -788,6 +782,10 @@ if (returnVal == null) {{
                 MaybeStatic::Static => None,
                 MaybeStatic::NonStatic(lt) => Some(lt),
             })
+            .collect();
+        let lifetimes = lifetimes_set
+            .iter()
+            .copied()
             .map(|lt| ty.lifetimes.fmt_lifetime(lt))
             .collect();
 
@@ -817,14 +815,17 @@ if (returnVal == null) {{
             .iter()
             .map(|field: &StructField<P>| {
                 let field_name = self.formatter.fmt_field_name(field.name.as_str());
+
                 StructFieldDef {
                     name: field_name.clone(),
                     ffi_type_default: self.formatter.fmt_field_default(&field.ty),
                     ffi_cast_type_name: self.formatter.fmt_struct_field_type_native(&field.ty),
                     field_type: self.formatter.fmt_struct_field_type_kt(&field.ty),
-                    native_to_kt: self
-                        .formatter
-                        .fmt_struct_field_native_to_kt(field_name.as_ref(), &field.ty),
+                    native_to_kt: self.formatter.fmt_struct_field_native_to_kt(
+                        field_name.as_ref(),
+                        &ty.lifetimes,
+                        &field.ty,
+                    ),
                 }
             })
             .collect();
@@ -1083,7 +1084,10 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        while let Some((type_id, TypeDef::Enum(enum_def))) = all_types.next() {
+        if let (type_id, TypeDef::Enum(enum_def)) = all_types
+            .next()
+            .expect("Failed to generate first opaque def")
+        {
             let error_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
             let mut ty_gen_cx = TyGenContext {
@@ -1093,9 +1097,9 @@ mod test {
             };
             let type_name = enum_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, boop) =
+            let (_, enum_code) =
                 ty_gen_cx.gen_enum_def(enum_def, type_id, &type_name, "dev.gigapixel", "somelib");
-            println!("{boop}")
+            insta::assert_snapshot!(enum_code)
         }
     }
 
@@ -1142,7 +1146,10 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        while let Some((type_id, TypeDef::Struct(strct))) = all_types.next() {
+        if let (type_id, TypeDef::Struct(strct)) = all_types
+            .next()
+            .expect("Failed to generate first opaque def")
+        {
             let error_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
             let mut ty_gen_cx = TyGenContext {
@@ -1152,14 +1159,14 @@ mod test {
             };
             let type_name = strct.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, boop) =
+            let (_, struct_code) =
                 ty_gen_cx.gen_struct_def(strct, type_id, &type_name, "dev.gigapixel", "somelib");
-            println!("{boop}")
+            insta::assert_snapshot!(struct_code)
         }
     }
 
     #[test]
-    fn test_test() {
+    fn test_opaque_gen() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -1242,7 +1249,10 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        while let Some((type_id, TypeDef::Opaque(opaque_def))) = all_types.next() {
+        if let (type_id, TypeDef::Opaque(opaque_def)) = all_types
+            .next()
+            .expect("Failed to generate first opaque def")
+        {
             let eror_store = ErrorStore::default();
             let formatter = KotlinFormatter::new(&tcx, None);
             let mut ty_gen_cx = TyGenContext {
@@ -1252,14 +1262,14 @@ mod test {
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, boop) = ty_gen_cx.gen_opaque_def(
+            let (_, result) = ty_gen_cx.gen_opaque_def(
                 opaque_def,
                 type_id,
                 &type_name,
                 "dev.gigapixel",
                 "somelib",
             );
-            println!("{boop}")
+            insta::assert_snapshot!(result)
         }
     }
 }

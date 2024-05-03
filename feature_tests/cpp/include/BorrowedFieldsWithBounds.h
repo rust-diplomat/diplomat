@@ -18,11 +18,13 @@ typedef struct BorrowedFieldsWithBounds {
 #ifdef __cplusplus
 } // namespace capi
 #endif
+#include "Foo.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
 #endif
 
+BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo* foo, const char16_t* dstr16_x_data, size_t dstr16_x_len, const char* utf8_str_z_data, size_t utf8_str_z_len);
 void BorrowedFieldsWithBounds_destroy(BorrowedFieldsWithBounds* self);
 
 #ifdef __cplusplus

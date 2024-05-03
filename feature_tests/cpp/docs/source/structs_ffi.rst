@@ -28,6 +28,9 @@
     .. cpp:function:: int8_t into_value()
 
 
+    .. cpp:function:: static MyEnum a()
+
+
 .. cpp:struct:: MyStruct
 
     .. cpp:member:: uint8_t a
@@ -71,4 +74,33 @@
 
 
     .. cpp:function:: static int8_t cmp()
+
+
+.. cpp:class:: OpaqueMutexedString
+
+    .. cpp:function:: static OpaqueMutexedString from_usize(size_t number)
+
+
+    .. cpp:function:: void change(size_t number) const
+
+
+    .. cpp:function:: size_t get_len_and_add(size_t other) const
+
+
+    .. cpp:function:: const std::string_view dummy_str() const
+
+        Lifetimes: ``this`` must live at least as long as the output.
+
+
+    .. cpp:function:: Utf16Wrap wrapper() const
+
+
+.. cpp:class:: Utf16Wrap
+
+    .. cpp:function:: const std::u16string_view borrow_cont() const
+
+        Lifetimes: ``this`` must live at least as long as the output.
+
+
+    .. cpp:function:: const std::u16string_view owned() const
 

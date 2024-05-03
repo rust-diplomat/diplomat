@@ -11,7 +11,17 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "BorrowedFieldsWithBounds.h"
+#include "Foo.hpp"
 
+
+inline BorrowedFieldsWithBounds BorrowedFieldsWithBounds::from_foo_and_strings(const Foo& foo, std::u16string_view dstr16_x, std::string_view utf8_str_z) {
+  auto result = capi::BorrowedFieldsWithBounds_from_foo_and_strings(foo.AsFFI(),
+    dstr16_x.data(),
+    dstr16_x.size(),
+    utf8_str_z.data(),
+    utf8_str_z.size());
+  return BorrowedFieldsWithBounds::FromFFI(result);
+}
 
 
 inline capi::BorrowedFieldsWithBounds BorrowedFieldsWithBounds::AsFFI() const {

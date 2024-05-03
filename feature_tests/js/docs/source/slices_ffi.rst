@@ -46,3 +46,5 @@
     .. js:method:: set_str(new_str)
 
     .. js:method:: get_str()
+
+    .. js:method:: get_boxed_str()
