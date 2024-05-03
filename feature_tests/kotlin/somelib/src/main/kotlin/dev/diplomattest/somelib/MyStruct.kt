@@ -51,7 +51,7 @@ class MyStruct internal constructor (
             val returnVal = lib.MyStruct_new();
         
             val returnStruct = MyStruct(returnVal)
-            return returnStruct 
+            return returnStruct
         
         }
     }

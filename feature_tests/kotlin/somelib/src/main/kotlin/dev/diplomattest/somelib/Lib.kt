@@ -5,6 +5,7 @@ import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
+import com.sun.jna.Union
 
 
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
@@ -289,3 +290,145 @@ class Slice: Structure(), Structure.ByValue {
         var SIZE: Long = Native.getNativeSize(Slice::class.java).toLong()
     }
 }
+
+sealed interface Res<T, E>
+class Ok<T, E>(val inner: T) : Res<T, E>
+class Err<T, E>(val inner: E) : Res<T, E>
+
+
+fun <T> Res<T, Throwable>.reThrow(): T {
+    return when (this) {
+        is Ok -> this.inner
+        is Err -> throw this.inner
+    }
+}
+
+fun <T, E> Res<T, E>.wrapErrAndThrow(): T {
+    return when (this) {
+        is Ok -> this.inner
+        is Err -> throw RuntimeException("Received error ${this.inner}")
+    }
+}
+
+fun <T, E> T.ok(): Res<T, E> {
+    return Ok(this)
+}
+
+fun <T, E> E.err(): Res<T, E> {
+    return Err(this)
+}
+
+class ResultPointerIntUnion: Union() {
+    @JvmField
+        var ok: Pointer = Pointer(0)
+    
+    @JvmField
+        var err: Int = ErrorEnum.default().toNative()
+    }
+    
+    class ResultPointerInt: Structure(), Structure.ByValue  {
+        @JvmField
+        var union: ResultPointerIntUnion = ResultPointerIntUnion()
+    
+        @JvmField
+        var isOk: Byte = 0
+    
+        // Define the fields of the struct
+        override fun getFieldOrder(): List<String> {
+            return listOf("union", "isOk")
+        }
+    }
+class ResultPointerErrorStructNativeUnion: Union() {
+    @JvmField
+        var ok: Pointer = Pointer(0)
+    
+    @JvmField
+        var err: ErrorStructNative = ErrorStructNative()
+    }
+    
+    class ResultPointerErrorStructNative: Structure(), Structure.ByValue  {
+        @JvmField
+        var union: ResultPointerErrorStructNativeUnion = ResultPointerErrorStructNativeUnion()
+    
+        @JvmField
+        var isOk: Byte = 0
+    
+        // Define the fields of the struct
+        override fun getFieldOrder(): List<String> {
+            return listOf("union", "isOk")
+        }
+    }
+class ResultIntUnitUnion: Union() {
+    @JvmField
+        var ok: Int = 0
+    
+    }
+    
+    class ResultIntUnit: Structure(), Structure.ByValue  {
+        @JvmField
+        var union: ResultIntUnitUnion = ResultIntUnitUnion()
+    
+        @JvmField
+        var isOk: Byte = 0
+    
+        // Define the fields of the struct
+        override fun getFieldOrder(): List<String> {
+            return listOf("union", "isOk")
+        }
+    }
+class ResultPointerUnitUnion: Union() {
+    @JvmField
+        var ok: Pointer = Pointer(0)
+    
+    }
+    
+    class ResultPointerUnit: Structure(), Structure.ByValue  {
+        @JvmField
+        var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
+    
+        @JvmField
+        var isOk: Byte = 0
+    
+        // Define the fields of the struct
+        override fun getFieldOrder(): List<String> {
+            return listOf("union", "isOk")
+        }
+    }
+class ResultUnitPointerUnion: Union() {
+    @JvmField
+        var err: Pointer = Pointer(0)
+    }
+    
+    class ResultUnitPointer: Structure(), Structure.ByValue  {
+        @JvmField
+        var union: ResultUnitPointerUnion = ResultUnitPointerUnion()
+    
+        @JvmField
+        var isOk: Byte = 0
+    
+        // Define the fields of the struct
+        override fun getFieldOrder(): List<String> {
+            return listOf("union", "isOk")
+        }
+    }
+class ResultIntPointerUnion: Union() {
+    @JvmField
+        var ok: Int = ErrorEnum.default().toNative()
+    
+    @JvmField
+        var err: Pointer = Pointer(0)
+    }
+    
+    class ResultIntPointer: Structure(), Structure.ByValue  {
+        @JvmField
+        var union: ResultIntPointerUnion = ResultIntPointerUnion()
+    
+        @JvmField
+        var isOk: Byte = 0
+    
+        // Define the fields of the struct
+        override fun getFieldOrder(): List<String> {
+            return listOf("union", "isOk")
+        }
+    }
+

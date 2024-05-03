@@ -88,6 +88,7 @@ class MyString internal constructor (
         val (newStrMem, newStrSlice) = PrimitiveArrayTools.readUtf8(newStr)
         
         val returnVal = lib.MyString_set_str(handle, newStrSlice);
+    
     }
     fun getStr(): String {
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)

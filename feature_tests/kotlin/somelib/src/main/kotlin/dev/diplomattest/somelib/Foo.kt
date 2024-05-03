@@ -108,7 +108,7 @@ class Foo internal constructor (
     
         val aEdges: List<Any> = listOf(this)
         val returnStruct = BorrowedFieldsReturning(returnVal, aEdges)
-        return returnStruct 
+        return returnStruct
     
     }
 

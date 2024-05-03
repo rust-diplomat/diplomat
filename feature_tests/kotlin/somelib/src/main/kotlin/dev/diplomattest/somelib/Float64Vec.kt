@@ -160,11 +160,13 @@ class Float64Vec internal constructor (
         val (vMem, vSlice) = PrimitiveArrayTools.native(v)
         
         val returnVal = lib.Float64Vec_fill_slice(handle, vSlice);
+    
     }
     fun setValue(newSlice: DoubleArray): Unit {
         val (newSliceMem, newSliceSlice) = PrimitiveArrayTools.native(newSlice)
         
         val returnVal = lib.Float64Vec_set_value(handle, newSliceSlice);
+    
     }
     fun toString_(): String {
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)

@@ -25,8 +25,8 @@ class BorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue {
 
 class BorrowedFieldsWithBounds internal constructor (
     internal val nativeStruct: BorrowedFieldsWithBoundsNative,
-    internal val aEdges: List<Any>,
     internal val bEdges: List<Any>,
+    internal val aEdges: List<Any>,
     internal val cEdges: List<Any>
     ) {
     val fieldA: String = PrimitiveArrayTools.getUtf16(nativeStruct.fieldA)
@@ -47,7 +47,7 @@ class BorrowedFieldsWithBounds internal constructor (
             val yEdges: List<Any> = listOf(foo) + listOf(utf8StrZMem)
             val zEdges: List<Any> = listOf(utf8StrZMem)
             val returnStruct = BorrowedFieldsWithBounds(returnVal, xEdges, yEdges, zEdges)
-            return returnStruct 
+            return returnStruct
         
         }
     }

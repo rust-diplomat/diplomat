@@ -5,6 +5,7 @@ import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
+import com.sun.jna.Union
 
 
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
@@ -289,3 +290,35 @@ class Slice: Structure(), Structure.ByValue {
         var SIZE: Long = Native.getNativeSize(Slice::class.java).toLong()
     }
 }
+
+sealed interface Res<T, E>
+class Ok<T, E>(val inner: T) : Res<T, E>
+class Err<T, E>(val inner: E) : Res<T, E>
+
+
+fun <T> Res<T, Throwable>.reThrow(): T {
+    return when (this) {
+        is Ok -> this.inner
+        is Err -> throw this.inner
+    }
+}
+
+fun <T, E> Res<T, E>.wrapErrAndThrow(): T {
+    return when (this) {
+        is Ok -> this.inner
+        is Err -> throw RuntimeException("Received error ${this.inner}")
+    }
+}
+
+fun <T, E> T.ok(): Res<T, E> {
+    return Ok(this)
+}
+
+fun <T, E> E.err(): Res<T, E> {
+    return Err(this)
+}
+
+{% for native_result in native_results -%}
+{{native_result|indent(4)}}
+{% endfor %}
+

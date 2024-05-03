@@ -59,6 +59,7 @@ class OpaqueMutexedString internal constructor (
     fun change(number: Long): Unit {
         
         val returnVal = lib.OpaqueMutexedString_change(handle, number);
+    
     }
     fun borrow(): OpaqueMutexedString {
         

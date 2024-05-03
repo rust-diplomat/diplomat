@@ -64,7 +64,7 @@ class OptionOpaque internal constructor (
             } else {
                 
             val returnStruct = OptionStruct(returnVal)
-            return returnStruct 
+            return returnStruct
             
             }
         }
@@ -73,7 +73,7 @@ class OptionOpaque internal constructor (
             val returnVal = lib.OptionOpaque_new_struct();
         
             val returnStruct = OptionStruct(returnVal)
-            return returnStruct 
+            return returnStruct
         
         }
         fun newStructNones(): OptionStruct {
@@ -81,7 +81,7 @@ class OptionOpaque internal constructor (
             val returnVal = lib.OptionOpaque_new_struct_nones();
         
             val returnStruct = OptionStruct(returnVal)
-            return returnStruct 
+            return returnStruct
         
         }
         fun optionOpaqueArgument(arg: OptionOpaque?): Boolean {
@@ -93,6 +93,7 @@ class OptionOpaque internal constructor (
     fun assertInteger(i: Int): Unit {
         
         val returnVal = lib.OptionOpaque_assert_integer(handle, i);
+    
     }
 
 }

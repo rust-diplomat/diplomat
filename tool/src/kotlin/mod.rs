@@ -2,12 +2,13 @@ use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
     self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaquePath, Optional, ReturnableStructDef, SelfType, Slice, StringEncoding, StructField,
-    StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    OpaquePath, Optional, OutType, ReturnableStructDef, SelfType, Slice, StringEncoding,
+    StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashSet};
 use std::iter::once;
 use std::path::Path;
@@ -40,6 +41,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
     let mut ty_gen_cx = TyGenContext {
         tcx,
         errors: &errors,
+        result_types: RefCell::new(HashSet::new()),
         formatter: &formatter,
     };
 
@@ -111,17 +113,25 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
     .expect("Failed to render settings file");
 
     files.add_file("settings.gradle.kts".to_string(), settings);
+    let native_results = ty_gen_cx
+        .result_types
+        .borrow()
+        .iter()
+        .map(|result_type| result_type.render().expect("failed to render result type"))
+        .collect::<Vec<_>>();
 
     #[derive(Template)]
     #[template(path = "kotlin/init.kt.jinja", escape = "none")]
     struct Init<'a> {
         domain: &'a str,
+        native_results: &'a [String],
         lib_name: &'a str,
     }
 
     let init = Init {
         domain: &domain,
         lib_name: &lib_name,
+        native_results: native_results.as_slice(),
     }
     .render()
     .expect("Failed to lib top level file");
@@ -137,38 +147,56 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
     files
 }
 
+#[derive(Clone, Copy)]
+enum ReturnTypeModifier {
+    Error,
+    Okay,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+struct TypeForResult<'d> {
+    type_name: Cow<'d, str>,
+    default: Option<Cow<'d, str>>,
+}
+
+#[derive(Template, PartialEq, Eq, Clone, Hash)]
+#[template(path = "kotlin/Result.kt.jinja")]
+struct NativeResult<'d> {
+    ok: TypeForResult<'d>,
+    err: TypeForResult<'d>,
+}
+
 struct TyGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
     formatter: &'a KotlinFormatter<'cx>,
+    result_types: RefCell<HashSet<NativeResult<'cx>>>,
     errors: &'a ErrorStore<'cx, String>,
 }
 
 impl<'a, 'cx> TyGenContext<'a, 'cx> {
+    fn gen_infallible_return_type_name(&self, success_type: &SuccessType) -> Cow<'cx, str> {
+        match success_type {
+            SuccessType::Unit => self.formatter.fmt_void().into(),
+            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::OutType(ref o) => self.gen_type_name(o),
+            _ => panic!("Unsupported success type"),
+        }
+    }
     fn gen_return_type_name(&self, result_ty: &ReturnType) -> Cow<'cx, str> {
         match *result_ty {
-            ReturnType::Infallible(SuccessType::Unit)
-            | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Writeable)
-            | ReturnType::Fallible(SuccessType::Writeable, Some(_)) => {
-                self.formatter.fmt_string().into()
+            ReturnType::Infallible(ref success) => self.gen_infallible_return_type_name(success),
+            ReturnType::Fallible(ref ok, ref err) => {
+                let ok_type = self.gen_infallible_return_type_name(ok);
+                let err_type = err
+                    .as_ref()
+                    .map(|err| self.gen_type_name(err))
+                    .unwrap_or_else(|| "Unit".into());
+                format!("Res<{ok_type}, {err_type}>").into()
             }
-            ReturnType::Infallible(SuccessType::OutType(ref o))
-            | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_type_name(o),
-            ReturnType::Fallible(SuccessType::Writeable, None)
-            | ReturnType::Nullable(SuccessType::Writeable) => self
+            ReturnType::Nullable(ref success) => self
                 .formatter
-                .fmt_nullable(self.formatter.fmt_string())
+                .fmt_nullable(self.gen_infallible_return_type_name(success).as_ref())
                 .into(),
-            ReturnType::Fallible(SuccessType::Unit, None)
-            | ReturnType::Nullable(SuccessType::Unit) => self
-                .formatter
-                .fmt_primitive_as_ffi(hir::PrimitiveType::Bool)
-                .into(),
-            ReturnType::Fallible(SuccessType::OutType(ref o), None)
-            | ReturnType::Nullable(SuccessType::OutType(ref o)) => {
-                self.formatter.fmt_nullable(&self.gen_type_name(o)).into()
-            }
-            _ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
@@ -191,23 +219,50 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             _ => todo!(),
         }
     }
+    fn gen_infallible_return_type_ffi(&self, success: &SuccessType) -> Cow<'cx, str> {
+        match success {
+            SuccessType::Unit => self.formatter.fmt_void().into(),
+            SuccessType::Writeable => self.formatter.fmt_void().into(),
+            SuccessType::OutType(ref o) => self.gen_type_name_ffi(o),
+            _ => panic!("Unsupported success type"),
+        }
+    }
 
     fn gen_return_type_name_ffi(&self, out: &ReturnType) -> Cow<'cx, str> {
         match *out {
-            ReturnType::Infallible(SuccessType::Unit) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Writeable) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name_ffi(o),
-            ReturnType::Fallible(_, _) => {
-                todo!("Fallible return types not supported yet")
-            }
-            ReturnType::Nullable(SuccessType::Unit | SuccessType::Writeable) => {
-                format!("{}?", self.formatter.fmt_void()).into()
-            }
+            ReturnType::Infallible(ref s) => self.gen_infallible_return_type_ffi(s),
+            ReturnType::Fallible(ref ok, ref err) => {
+                let ok_type = self.gen_infallible_return_type_ffi(ok);
+                let err_type = err
+                    .as_ref()
+                    .map(|err| self.gen_type_name_ffi(err))
+                    .unwrap_or_else(|| "Unit".into());
 
-            ReturnType::Nullable(SuccessType::OutType(ref o)) => {
-                format!("{}?", self.gen_type_name_ffi(o)).into()
+                let ok_default = match ok {
+                    SuccessType::OutType(ref o) => Some(self.formatter.fmt_field_default(o)),
+                    _ => None,
+                };
+                let err_default = err
+                    .as_ref()
+                    .map(|err| self.formatter.fmt_field_default(err));
+                let result_type = NativeResult {
+                    ok: TypeForResult {
+                        type_name: ok_type.clone(),
+                        default: ok_default,
+                    },
+                    err: TypeForResult {
+                        type_name: err_type.clone(),
+                        default: err_default,
+                    },
+                };
+                let mut result_types = self.result_types.borrow_mut();
+                result_types.insert(result_type);
+
+                format!("Result{ok_type}{err_type}").into()
             }
-            _ => unreachable!("unknown AST/HIR variant"),
+            ReturnType::Nullable(ref success) => {
+                format!("{}?", self.gen_infallible_return_type_ffi(success)).into()
+            }
         }
     }
 
@@ -233,9 +288,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_opaque_return<'d>(
         &'d self,
         opaque_path: &'d OpaquePath<Optional, MaybeOwn>,
-        method_lifetimes_map: MethodLtMap<'d>,
+        method_lifetimes_map: &'d MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
         cleanups: &[Cow<'d, str>],
+        val_name: &'d str,
+        return_type_modifier: &str,
     ) -> String {
         let opaque_def = opaque_path.resolve(self.tcx);
 
@@ -251,6 +308,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             self_edges: Vec<Cow<'b, str>>,
             cleanups: &'a [Cow<'b, str>],
             optional: bool,
+            val_name: &'a str,
+            return_type_modifier: &'a str,
         }
 
         struct ParamsForLt<'c> {
@@ -303,51 +362,70 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             self_edges,
             cleanups,
             optional,
+            val_name,
+            return_type_modifier,
         };
         opaque_return
             .render()
             .expect("Failed to render opaque return block")
     }
 
-    const WRITEABLE_RETURN: &'static str = r#"
+    fn writeable_return(return_type_modifier: &str) -> String {
+        format!(
+            r#"
 val returnString = DW.writeableToString(writeable)
 DW.lib.diplomat_buffer_writeable_destroy(writeable)
-return returnString"#;
+return returnString{return_type_modifier}"#
+        )
+    }
 
-    fn boxed_slice_return(encoding: &str) -> String {
+    fn boxed_slice_return(encoding: &str, val_name: &str, return_type_modifier: &str) -> String {
         format!(
-            r#"    val string = PrimitiveArrayTools.get{encoding}(returnVal)
-Native.free(Pointer.nativeValue(returnVal.data))
+            r#"    val string = PrimitiveArrayTools.get{encoding}({val_name})
+Native.free(Pointer.nativeValue({val_name}.data){return_type_modifier})
 return string"#
         )
     }
 
-    fn gen_slice_retrn<'d>(&'d self, slice_ty: &'d Slice) -> String {
+    fn gen_slice_retrn<'d>(
+        &'d self,
+        slice_ty: &'d Slice,
+        val_name: &'d str,
+        return_type_modifier: &str,
+    ) -> String {
         match slice_ty {
             Slice::Str(Some(_), enc) => match enc {
                 StringEncoding::UnvalidatedUtf16 => {
-                    "    return PrimitiveArrayTools.getUtf16(returnVal)".into()
+                    format!("    return PrimitiveArrayTools.getUtf16({val_name})").into()
                 }
                 StringEncoding::UnvalidatedUtf8 => {
-                    "    return PrimitiveArrayTools.getUtf8(returnVal)".into()
+                    format!("    return PrimitiveArrayTools.getUtf8({val_name})").into()
                 }
-                StringEncoding::Utf8 => "    return PrimitiveArrayTools.getUtf8(returnVal)".into(),
+                StringEncoding::Utf8 => {
+                    format!("    return PrimitiveArrayTools.getUtf8({val_name})").into()
+                }
                 _ => todo!(),
             },
             Slice::Str(None, enc) => match enc {
-                StringEncoding::UnvalidatedUtf16 => Self::boxed_slice_return("Utf16"),
-                StringEncoding::UnvalidatedUtf8 => Self::boxed_slice_return("Utf8"),
-                StringEncoding::Utf8 => Self::boxed_slice_return("Utf8"),
+                StringEncoding::UnvalidatedUtf16 => {
+                    Self::boxed_slice_return("Utf16", val_name, return_type_modifier)
+                }
+                StringEncoding::UnvalidatedUtf8 => {
+                    Self::boxed_slice_return("Utf8", val_name, return_type_modifier)
+                }
+                StringEncoding::Utf8 => {
+                    Self::boxed_slice_return("Utf8", val_name, return_type_modifier)
+                }
                 _ => todo!(),
             },
             Slice::Primitive(Some(_), prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
-                format!("    return PrimitiveArrayTools.get{prim_ty}Array(returnVal)")
+                format!("    return PrimitiveArrayTools.get{prim_ty}Array({val_name}){return_type_modifier}")
             }
             Slice::Primitive(None, prim_ty) => {
                 let prim_ty = self.formatter.fmt_primitive_as_ffi(*prim_ty);
                 let prim_ty_array = format!("{prim_ty}Array");
-                Self::boxed_slice_return(prim_ty_array.as_str())
+                Self::boxed_slice_return(prim_ty_array.as_str(), val_name, return_type_modifier)
             }
 
             _ => todo!(),
@@ -359,9 +437,11 @@ return string"#
         struct_def: &'d ReturnableStructDef,
         // ownership: MaybeOwn,
         lifetimes: &'d Lifetimes,
-        method_lifetimes_map: MethodLtMap<'d>,
+        method_lifetimes_map: &'d MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
         cleanups: &[Cow<'d, str>],
+        val_name: &'d str,
+        return_type_modifier: &str,
     ) -> String {
         #[derive(Template)]
         #[template(path = "kotlin/StructReturn.kt.jinja", escape = "none")]
@@ -369,6 +449,8 @@ return string"#
             return_type_name: Cow<'b, str>,
             borrows: Vec<ParamsForLt<'b>>,
             cleanups: &'a [Cow<'b, str>],
+            val_name: &'a str,
+            return_type_modifier: &'a str,
         }
 
         struct ParamsForLt<'c> {
@@ -404,51 +486,134 @@ return string"#
             return_type_name,
             borrows,
             cleanups,
+            val_name,
+            return_type_modifier,
         };
         opaque_return
             .render()
             .expect("Failed to render opaque return block")
     }
 
+    fn gen_fallible_return<'d>(
+        &'d self,
+        ok: &'d SuccessType,
+        err: &'d Option<OutType>,
+        method: &'d Method,
+        method_lifetimes_map: &'d MethodLtMap<'d>,
+        cleanups: &[Cow<'d, str>],
+    ) -> Cow<'d, str> {
+        let ok_path = self.gen_infallible_return(
+            ok,
+            method,
+            method_lifetimes_map,
+            cleanups,
+            "returnVal.union.ok",
+            Some(ReturnTypeModifier::Okay),
+        );
+
+        let err_path = err
+            .as_ref()
+            .map(|err| {
+                self.gen_out_type_return(
+                    method,
+                    method_lifetimes_map,
+                    cleanups,
+                    "returnVal.union.err",
+                    ".err()",
+                    err,
+                )
+            })
+            .unwrap_or_else(|| "return Err(Unit)".into());
+
+        format!(
+            r#"
+if (returnVal.isOk == 1.toByte()) {{
+    {ok_path}
+}} else {{
+    {err_path}
+}}
+                "#
+        )
+        .into()
+    }
+
+    fn gen_out_type_return<'d>(
+        &'d self,
+        method: &'d Method,
+        method_lifetimes_map: &'d MethodLtMap<'d>,
+        cleanups: &[Cow<'d, str>],
+        val_name: &'d str,
+        return_type_modifier: &'d str,
+        o: &'d OutType,
+    ) -> String {
+        match o {
+            // todo: unsigned need to be handled
+            Type::Primitive(_) => {
+                format!("    return {val_name}{return_type_modifier}")
+            }
+            Type::Opaque(opaque_path) => self.gen_opaque_return(
+                opaque_path,
+                method_lifetimes_map,
+                &method.lifetime_env,
+                cleanups,
+                val_name,
+                return_type_modifier,
+            ),
+            Type::Struct(strct) => {
+                let lifetimes = strct.lifetimes();
+                self.gen_struct_return(
+                    &strct.resolve(self.tcx),
+                    lifetimes,
+                    method_lifetimes_map,
+                    &method.lifetime_env,
+                    cleanups,
+                    val_name,
+                    return_type_modifier,
+                )
+            }
+            Type::Enum(enm) => {
+                let return_type = enm.resolve(self.tcx);
+                format!(
+                    "    return {}.fromNative({val_name}){return_type_modifier}",
+                    return_type.name
+                )
+            }
+            Type::Slice(slc) => self.gen_slice_retrn(slc, val_name, return_type_modifier),
+            _ => todo!(),
+        }
+    }
+
     fn gen_infallible_return<'d>(
         &'d self,
         res: &'d SuccessType,
         method: &'d Method,
-        method_lifetimes_map: MethodLtMap<'d>,
+        method_lifetimes_map: &'d MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
-    ) -> Option<String> {
+        val_name: &'d str,
+        return_type_modifier: Option<ReturnTypeModifier>,
+    ) -> String {
+        use ReturnTypeModifier as RTM;
+
+        let return_type_postfix = match return_type_modifier {
+            Some(RTM::Error) => ".err()",
+            Some(RTM::Okay) => ".ok()",
+            None => "",
+        };
         match res {
-            SuccessType::Writeable => Some(Self::WRITEABLE_RETURN.into()),
-            SuccessType::OutType(o) => match o {
-                // todo: unsigned need to be handled
-                Type::Primitive(_) => Some("    return returnVal".into()),
-                Type::Opaque(opaque_path) => Some(self.gen_opaque_return(
-                    opaque_path,
-                    method_lifetimes_map,
-                    &method.lifetime_env,
-                    cleanups,
-                )),
-                Type::Struct(strct) => {
-                    let lifetimes = strct.lifetimes();
-                    Some(self.gen_struct_return(
-                        &strct.resolve(self.tcx),
-                        lifetimes,
-                        method_lifetimes_map,
-                        &method.lifetime_env,
-                        cleanups,
-                    ))
-                }
-                Type::Enum(enm) => {
-                    let return_type = enm.resolve(self.tcx);
-                    Some(format!(
-                        "    return {}.fromNative(returnVal)",
-                        return_type.name
-                    ))
-                }
-                Type::Slice(slc) => Some(self.gen_slice_retrn(slc)),
-                _ => todo!(),
+            SuccessType::Writeable => Self::writeable_return(return_type_postfix),
+            SuccessType::OutType(ref o) => self.gen_out_type_return(
+                method,
+                method_lifetimes_map,
+                cleanups,
+                val_name,
+                return_type_postfix,
+                o,
+            ),
+            SuccessType::Unit => match return_type_modifier {
+                Some(RTM::Error) => "return Err(Unit)".into(),
+                Some(RTM::Okay) => "return Ok(Unit)".into(),
+                None => "".into(),
             },
-            SuccessType::Unit => None,
             _ => todo!(),
         }
     }
@@ -458,24 +623,38 @@ return string"#
         method: &'d Method,
         method_lifetimes_map: MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
-    ) -> Option<String> {
+    ) -> String {
         match &method.output {
-            ReturnType::Infallible(res) => {
-                self.gen_infallible_return(res, method, method_lifetimes_map, cleanups)
-            }
-            ReturnType::Fallible(_, _) => todo!("fallible returns not yet supported"),
-            ReturnType::Nullable(res) => self
-                .gen_infallible_return(res, method, method_lifetimes_map, cleanups)
-                .map(|return_val| {
-                    format!(
-                        r#"
+            ReturnType::Infallible(res) => self.gen_infallible_return(
+                res,
+                method,
+                &method_lifetimes_map,
+                cleanups,
+                "returnVal",
+                None,
+            ),
+            ReturnType::Fallible(ok, err) => self
+                .gen_fallible_return(ok, err, method, &method_lifetimes_map, cleanups)
+                .into(),
+
+            ReturnType::Nullable(res) => {
+                let return_val = self.gen_infallible_return(
+                    res,
+                    method,
+                    &method_lifetimes_map,
+                    cleanups,
+                    "returnVal",
+                    None,
+                );
+                format!(
+                    r#"
 if (returnVal == null) {{
     return null
 }} else {{
     {return_val}
 }}"#,
-                    )
-                }),
+                )
+            }
         }
     }
     fn gen_slice_conv(&self, kt_param_name: Cow<'cx, str>, slice_type: Slice) -> Cow<'cx, str> {
@@ -616,7 +795,7 @@ if (returnVal == null) {{
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
             .gen_return(method, method_lifetimes_map, cleanups.as_ref())
-            .map(From::from);
+            .into();
 
         MethodTpl {
             // todo: comment,
@@ -1028,7 +1207,7 @@ struct MethodTpl<'a> {
 
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
-    return_expression: Option<Cow<'a, str>>,
+    return_expression: Cow<'a, str>,
     writeable_return: bool,
     slice_conversions: Vec<Cow<'a, str>>,
 }
@@ -1039,6 +1218,9 @@ struct NativeMethodInfo {
 
 #[cfg(test)]
 mod test {
+
+    use std::cell::RefCell;
+    use std::collections::HashSet;
 
     use diplomat_core::hir::TypeDef;
     use quote::quote;
@@ -1093,6 +1275,7 @@ mod test {
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
+                result_types: RefCell::new(HashSet::new()),
                 errors: &error_store,
             };
             let type_name = enum_def.name.to_string();
@@ -1155,6 +1338,7 @@ mod test {
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
+                result_types: RefCell::new(HashSet::new()),
                 errors: &error_store,
             };
             let type_name = strct.name.to_string();
@@ -1258,6 +1442,7 @@ mod test {
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
+                result_types: RefCell::new(HashSet::new()),
                 errors: &eror_store,
             };
             let type_name = opaque_def.name.to_string();
