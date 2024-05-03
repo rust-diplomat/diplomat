@@ -9,7 +9,7 @@ use diplomat_core::hir::{ReturnType, SuccessType};
 
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::iter::once;
 use std::path::Path;
 
@@ -41,7 +41,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
     let mut ty_gen_cx = TyGenContext {
         tcx,
         errors: &errors,
-        result_types: RefCell::new(HashSet::new()),
+        result_types: RefCell::new(BTreeSet::new()),
         formatter: &formatter,
     };
 
@@ -153,13 +153,13 @@ enum ReturnTypeModifier {
     Okay,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 struct TypeForResult<'d> {
     type_name: Cow<'d, str>,
     default: Option<Cow<'d, str>>,
 }
 
-#[derive(Template, PartialEq, Eq, Clone, Hash)]
+#[derive(Template, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 #[template(path = "kotlin/Result.kt.jinja")]
 struct NativeResult<'d> {
     ok: TypeForResult<'d>,
@@ -169,7 +169,7 @@ struct NativeResult<'d> {
 struct TyGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
     formatter: &'a KotlinFormatter<'cx>,
-    result_types: RefCell<HashSet<NativeResult<'cx>>>,
+    result_types: RefCell<BTreeSet<NativeResult<'cx>>>,
     errors: &'a ErrorStore<'cx, String>,
 }
 
@@ -953,7 +953,7 @@ if (returnVal == null) {{
             .map(|method| self.gen_method(id, method, None))
             .collect::<Vec<_>>();
 
-        let lifetimes_set: HashSet<Lifetime> = ty
+        let lifetimes = ty
             .lifetimes
             .lifetimes()
             .lifetimes()
@@ -961,10 +961,6 @@ if (returnVal == null) {{
                 MaybeStatic::Static => None,
                 MaybeStatic::NonStatic(lt) => Some(lt),
             })
-            .collect();
-        let lifetimes = lifetimes_set
-            .iter()
-            .copied()
             .map(|lt| ty.lifetimes.fmt_lifetime(lt))
             .collect();
 
