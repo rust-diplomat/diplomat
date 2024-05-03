@@ -75,7 +75,7 @@ class OpaqueMutexedString internal constructor (
         
         val returnVal = lib.OpaqueMutexedString_borrow_self_or_other(handle, other.handle);
     
-        val selfEdges: List<Any> = listOf(this, other)
+        val selfEdges: List<Any> = listOf(this) + listOf(other)
         val handle = returnVal 
         val returnOpaque = OpaqueMutexedString(handle, selfEdges)
         

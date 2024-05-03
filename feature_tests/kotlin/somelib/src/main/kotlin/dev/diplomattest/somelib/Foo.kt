@@ -65,7 +65,7 @@ class Foo internal constructor (
             val returnVal = lib.Foo_extract_from_fields(fields.nativeStruct);
         
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any> = listOf(fields.aEdges)
+            val aEdges: List<Any> = fields.aEdges
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
@@ -79,7 +79,7 @@ class Foo internal constructor (
             val returnVal = lib.Foo_extract_from_bounds(bounds.nativeStruct, anotherStringSlice);
         
             val selfEdges: List<Any> = listOf()
-            val aEdges: List<Any> = listOf(bounds.bEdges, bounds.cEdges, anotherStringMem)
+            val aEdges: List<Any> = bounds.bEdges + bounds.cEdges + listOf(anotherStringMem)
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));

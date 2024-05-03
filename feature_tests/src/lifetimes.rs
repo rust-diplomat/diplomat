@@ -1,5 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
+    use diplomat_runtime::DiplomatStr16;
+
     #[diplomat::opaque]
     pub struct Foo<'a>(&'a DiplomatStr);
 
@@ -61,10 +63,59 @@ pub mod ffi {
         }
     }
 
+    impl<'x> BorrowedFields<'x> {
+        pub fn from_bar_and_strings(
+            bar: &'x Bar<'x, 'x>,
+            dstr16: &'x DiplomatStr16,
+            utf8_str: &'x str,
+        ) -> Self {
+            BorrowedFields {
+                a: dstr16,
+                b: bar.0 .0,
+                c: utf8_str,
+            }
+        }
+    }
+
+    impl<'x, 'y: 'x, 'z: 'y> BorrowedFieldsWithBounds<'x, 'y, 'z> {
+        pub fn from_foo_and_strings(
+            foo: &'x Foo<'y>,
+            dstr16_x: &'x DiplomatStr16,
+            utf8_str_z: &'z str,
+        ) -> Self {
+            BorrowedFieldsWithBounds {
+                field_a: dstr16_x,
+                field_b: foo.0,
+                field_c: utf8_str_z,
+            }
+        }
+    }
+
     pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
         fields: BorrowedFields<'x>,
         bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,
         bounds2: BorrowedFieldsWithBounds<'z, 'z, 'z>,
+    }
+
+    impl<'x, 'y: 'x, 'z> NestedBorrowedFields<'x, 'y, 'z> {
+        pub fn from_bar_and_foo_and_strings(
+            bar: &'x Bar<'x, 'y>,
+            foo: &'z Foo<'z>,
+            dstr16_x: &'x DiplomatStr16,
+            dstr16_z: &'z DiplomatStr16,
+            utf8_str_y: &'y str,
+            utf8_str_z: &'z str,
+        ) -> Self {
+            let fields = BorrowedFields::from_bar_and_strings(bar, dstr16_x, utf8_str_y);
+            let bounds =
+                BorrowedFieldsWithBounds::from_foo_and_strings(bar.0, dstr16_x, utf8_str_y);
+            let bounds2 = BorrowedFieldsWithBounds::from_foo_and_strings(foo, dstr16_z, utf8_str_z);
+            Self {
+                fields,
+                bounds,
+                bounds2,
+            }
+        }
     }
 
     // FIXME(#191): This test breaks the C++ codegen

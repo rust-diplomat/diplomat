@@ -8,7 +8,7 @@ use diplomat_core::hir::{
 use diplomat_core::hir::{ReturnType, SuccessType};
 
 use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::iter::once;
 use std::path::Path;
 
@@ -774,7 +774,7 @@ if (returnVal == null) {{
             .map(|method| self.gen_method(id, method, None))
             .collect::<Vec<_>>();
 
-        let lifetimes = ty
+        let lifetimes_set: HashSet<Lifetime> = ty
             .lifetimes
             .lifetimes()
             .lifetimes()
@@ -782,6 +782,10 @@ if (returnVal == null) {{
                 MaybeStatic::Static => None,
                 MaybeStatic::NonStatic(lt) => Some(lt),
             })
+            .collect();
+        let lifetimes = lifetimes_set
+            .iter()
+            .copied()
             .map(|lt| ty.lifetimes.fmt_lifetime(lt))
             .collect();
 
@@ -811,14 +815,17 @@ if (returnVal == null) {{
             .iter()
             .map(|field: &StructField<P>| {
                 let field_name = self.formatter.fmt_field_name(field.name.as_str());
+
                 StructFieldDef {
                     name: field_name.clone(),
                     ffi_type_default: self.formatter.fmt_field_default(&field.ty),
                     ffi_cast_type_name: self.formatter.fmt_struct_field_type_native(&field.ty),
                     field_type: self.formatter.fmt_struct_field_type_kt(&field.ty),
-                    native_to_kt: self
-                        .formatter
-                        .fmt_struct_field_native_to_kt(field_name.as_ref(), &field.ty),
+                    native_to_kt: self.formatter.fmt_struct_field_native_to_kt(
+                        field_name.as_ref(),
+                        &ty.lifetimes,
+                        &field.ty,
+                    ),
                 }
             })
             .collect();

@@ -2,8 +2,8 @@ use crate::c2::CFormatter;
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
-    FloatType, IntSizeType, IntType, PrimitiveType, Slice, StringEncoding, StructPathLike,
-    TyPosition, Type, TypeContext, TypeId,
+    FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic, PrimitiveType, Slice,
+    StringEncoding, StructPathLike, TyPosition, Type, TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
@@ -95,8 +95,8 @@ impl<'tcx> KotlinFormatter<'tcx> {
         } = edge;
         let param_name = self.fmt_param_name(param_name).to_string();
         match ty {
-            LifetimeEdgeKind::OpaqueParam => param_name.into(),
-            LifetimeEdgeKind::SliceParam => format!("{param_name}Mem").into(),
+            LifetimeEdgeKind::OpaqueParam => format!("listOf({param_name})").into(),
+            LifetimeEdgeKind::SliceParam => format!("listOf({param_name}Mem)").into(),
             LifetimeEdgeKind::StructLifetime(lt_env, lt) => {
                 let lt = lt_env.fmt_lifetime(lt);
                 format!("{param_name}.{lt}Edges").into()
@@ -139,6 +139,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     pub fn fmt_struct_field_native_to_kt<'a, P: TyPosition>(
         &'a self,
         field_name: &'a str,
+        lifetime_env: &'a LifetimeEnv,
         ty: &'a Type<P>,
     ) -> Cow<'tcx, str> {
         match ty {
@@ -163,10 +164,29 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 _ => format!("nativeStruct.{field_name}").into(),
             },
             Type::Opaque(opaque) => {
-                let lt_list: String = once("listOf()")
-                    .chain(opaque.lifetimes.lifetimes().map(|_| "listOf()"))
-                    .collect::<Vec<_>>()
-                    .join(", ");
+                let lt_list: String =
+                    once("listOf()".to_string()) // we only support owned opaque types, so the self edges
+                                     // should be empty
+                        .chain(opaque.lifetimes.lifetimes().filter_map(|maybe_static_lt| match maybe_static_lt{
+                            MaybeStatic::Static => None,
+                            MaybeStatic::NonStatic(lt) => {
+                               
+                                let lts = lifetime_env
+                                    .all_longer_lifetimes(lt)
+                                    .map(|longer_lt|  {
+                                         let longer_lt = lifetime_env.fmt_lifetime(longer_lt);
+                                         format!("{longer_lt}Edges")
+                                    })
+                                    .collect::<Vec<_>>();
+                                 Some(if lts.is_empty() {
+                                    "listOf()".into()
+                                } else {
+                                    lts.join("+")
+                                })
+                            }
+                        }))
+                        .collect::<Vec<_>>()
+                        .join(", ");
                 let ty_name =
                     self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
                 if opaque.is_optional() {
@@ -185,11 +205,14 @@ impl<'tcx> KotlinFormatter<'tcx> {
             Type::Struct(strct) => {
                 let ty_name =
                     self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
-                let lt_list: String = strct
-                    .lifetimes()
-                    .lifetimes()
-                    .map(|_| ", listOf()")
-                    .collect::<String>();
+                let lt_list: String = strct.lifetimes().lifetimes().filter_map(|maybe_static_lt| match maybe_static_lt{
+                        MaybeStatic::Static => None,
+                        MaybeStatic::NonStatic(lt) => {
+                            let lt_name= lifetime_env.fmt_lifetime(lt);
+                            Some(format!("{lt_name}Edges"))
+                        }
+                    })
+                    .fold(String::new(), |accum, new| format!("{accum}, {new}"));
                 format!("{ty_name}(nativeStruct.{field_name}{lt_list})").into()
             }
             Type::Enum(enum_path) => {
