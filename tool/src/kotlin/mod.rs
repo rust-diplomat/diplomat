@@ -779,6 +779,8 @@ if (returnVal == null) {{
         let writeable_return = matches!(
             &method.output,
             ReturnType::Infallible(SuccessType::Writeable)
+                | ReturnType::Fallible(SuccessType::Writeable, _)
+                | ReturnType::Nullable(SuccessType::Writeable)
         );
         if writeable_return {
             param_conversions.push("writeable".into());
@@ -836,7 +838,10 @@ if (returnVal == null) {{
                 self.gen_native_type_name(&param.ty)
             ));
         }
-        if let ReturnType::Infallible(SuccessType::Writeable) = method.output {
+        if let ReturnType::Infallible(SuccessType::Writeable)
+        | ReturnType::Fallible(SuccessType::Writeable, _)
+        | ReturnType::Nullable(SuccessType::Writeable) = method.output
+        {
             param_decls.push("writeable: Pointer".into())
         }
         let params = param_decls.join(", ");
@@ -1216,7 +1221,7 @@ struct NativeMethodInfo {
 mod test {
 
     use std::cell::RefCell;
-    use std::collections::HashSet;
+    use std::collections::{BTreeSet, HashSet};
 
     use diplomat_core::hir::TypeDef;
     use quote::quote;
@@ -1271,7 +1276,7 @@ mod test {
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
-                result_types: RefCell::new(HashSet::new()),
+                result_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
             };
             let type_name = enum_def.name.to_string();
@@ -1334,7 +1339,7 @@ mod test {
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
-                result_types: RefCell::new(HashSet::new()),
+                result_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
             };
             let type_name = strct.name.to_string();
@@ -1438,7 +1443,7 @@ mod test {
             let mut ty_gen_cx = TyGenContext {
                 tcx: &tcx,
                 formatter: &formatter,
-                result_types: RefCell::new(HashSet::new()),
+                result_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
             };
             let type_name = opaque_def.name.to_string();

@@ -461,6 +461,15 @@ exit_on_error true
 generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
 '''
 
+[tasks.gen-kotlin-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
+'''
+
 # Build deps
 
 [tasks.build-tool]

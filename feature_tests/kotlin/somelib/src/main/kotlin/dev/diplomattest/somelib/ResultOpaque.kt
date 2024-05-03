@@ -160,15 +160,14 @@ class ResultOpaque internal constructor (
             val returnVal = lib.ResultOpaque_new_in_enum_err(i);
         
             if (returnVal.isOk == 1.toByte()) {
-                    return ErrorEnum.fromNative(returnVal.union.ok).ok()
+                return ErrorEnum.fromNative(returnVal.union.ok).ok()
             } else {
-                
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.union.err 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-            
-            return returnOpaque.err()
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.union.err
+                val returnOpaque = ResultOpaque(handle, selfEdges)
+                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+
+                return returnOpaque.err()
             
             }
                             

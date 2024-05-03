@@ -318,84 +318,6 @@ fun <T, E> E.err(): Res<T, E> {
     return Err(this)
 }
 
-class ResultIntUnitUnion: Union() {
-    @JvmField
-        var ok: Int = 0
-    
-    }
-    
-    class ResultIntUnit: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultIntUnitUnion = ResultIntUnitUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
-class ResultIntPointerUnion: Union() {
-    @JvmField
-        var ok: Int = ErrorEnum.default().toNative()
-    
-    @JvmField
-        var err: Pointer = Pointer(0)
-    }
-    
-    class ResultIntPointer: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultIntPointerUnion = ResultIntPointerUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
-class ResultPointerErrorStructNativeUnion: Union() {
-    @JvmField
-        var ok: Pointer = Pointer(0)
-    
-    @JvmField
-        var err: ErrorStructNative = ErrorStructNative()
-    }
-    
-    class ResultPointerErrorStructNative: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultPointerErrorStructNativeUnion = ResultPointerErrorStructNativeUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
-class ResultPointerIntUnion: Union() {
-    @JvmField
-        var ok: Pointer = Pointer(0)
-    
-    @JvmField
-        var err: Int = ErrorEnum.default().toNative()
-    }
-    
-    class ResultPointerInt: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultPointerIntUnion = ResultPointerIntUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
 class ResultPointerUnitUnion: Union() {
     @JvmField
         var ok: Pointer = Pointer(0)
@@ -414,14 +336,12 @@ class ResultPointerUnitUnion: Union() {
             return listOf("union", "isOk")
         }
     }
-class ResultUnitPointerUnion: Union() {
-    @JvmField
-        var err: Pointer = Pointer(0)
+class ResultUnitUnitUnion: Union() {
     }
     
-    class ResultUnitPointer: Structure(), Structure.ByValue  {
+    class ResultUnitUnit: Structure(), Structure.ByValue  {
         @JvmField
-        var union: ResultUnitPointerUnion = ResultUnitPointerUnion()
+        var union: ResultUnitUnitUnion = ResultUnitUnitUnion()
     
         @JvmField
         var isOk: Byte = 0
