@@ -10,8 +10,18 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
+#include "Bar.hpp"
 #include "BorrowedFields.h"
 
+
+inline BorrowedFields BorrowedFields::from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str) {
+  auto result = capi::BorrowedFields_from_bar_and_strings(bar.AsFFI(),
+    dstr16.data(),
+    dstr16.size(),
+    utf8_str.data(),
+    utf8_str.size());
+  return BorrowedFields::FromFFI(result);
+}
 
 
 inline capi::BorrowedFields BorrowedFields::AsFFI() const {

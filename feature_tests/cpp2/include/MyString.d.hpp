@@ -26,6 +26,8 @@ public:
 
   inline std::string get_str() const;
 
+  inline std::string_view get_boxed_str() const;
+
   inline const capi::MyString* AsFFI() const;
   inline capi::MyString* AsFFI();
   inline static const MyString* FromFFI(const capi::MyString* ptr);

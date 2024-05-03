@@ -25,9 +25,9 @@ class NestedBorrowedFieldsNative: Structure(), Structure.ByValue {
 
 class NestedBorrowedFields internal constructor (
     internal val nativeStruct: NestedBorrowedFieldsNative,
-    internal val xEdges: List<Any>,
+    internal val zEdges: List<Any>,
     internal val yEdges: List<Any>,
-    internal val zEdges: List<Any>
+    internal val xEdges: List<Any>
     ) {
     val fields: BorrowedFields = BorrowedFields(nativeStruct.fields, xEdges)
     val bounds: BorrowedFieldsWithBounds = BorrowedFieldsWithBounds(nativeStruct.bounds, xEdges, yEdges, yEdges)

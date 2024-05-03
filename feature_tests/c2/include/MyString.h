@@ -27,6 +27,8 @@ void MyString_set_str(MyString* self, const char* new_str_data, size_t new_str_l
 
 void MyString_get_str(const MyString* self, DiplomatWriteable* writeable);
 
+struct { const char* data; size_t len; } MyString_get_boxed_str(const MyString* self);
+
 void MyString_destroy(MyString* self);
 
 

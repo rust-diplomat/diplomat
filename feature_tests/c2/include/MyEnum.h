@@ -17,6 +17,8 @@ extern "C" {
 
 int8_t MyEnum_into_value(MyEnum self);
 
+MyEnum MyEnum_a();
+
 
 #ifdef __cplusplus
 } // extern "C"

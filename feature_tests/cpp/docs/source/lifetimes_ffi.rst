@@ -12,6 +12,13 @@
     .. cpp:member:: std::string_view c
         Warning: Setting ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
 
+    .. cpp:function:: static BorrowedFields from_bar_and_strings(const Bar& bar, const std::u16string_view dstr16, const std::string_view utf8_str)
+
+        Lifetimes: ``bar``, ``dstr16``, ``utf8_str`` must live at least as long as the output.
+
+        Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
+
+
 .. cpp:struct:: BorrowedFieldsReturning
 
     .. cpp:member:: std::string_view bytes
@@ -24,6 +31,13 @@
 
     .. cpp:member:: std::string_view field_c
         Warning: Setting ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
+
+    .. cpp:function:: static BorrowedFieldsWithBounds from_foo_and_strings(const Foo& foo, const std::u16string_view dstr16_x, const std::string_view utf8_str_z)
+
+        Lifetimes: ``foo``, ``dstr16_x``, ``utf8_str_z`` must live at least as long as the output.
+
+        Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
+
 
 .. cpp:class:: Foo
 
@@ -66,6 +80,13 @@
     .. cpp:member:: BorrowedFieldsWithBounds bounds
 
     .. cpp:member:: BorrowedFieldsWithBounds bounds2
+
+    .. cpp:function:: static NestedBorrowedFields from_bar_and_foo_and_strings(const Bar& bar, const Foo& foo, const std::u16string_view dstr16_x, const std::u16string_view dstr16_z, const std::string_view utf8_str_y, const std::string_view utf8_str_z)
+
+        Lifetimes: ``bar``, ``foo``, ``dstr16_x``, ``dstr16_z``, ``utf8_str_y``, ``utf8_str_z`` must live at least as long as the output.
+
+        Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
+
 
 .. cpp:class:: One
 

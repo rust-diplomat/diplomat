@@ -51,6 +51,11 @@ inline std::string MyString::get_str() const {
   return output;
 }
 
+inline std::string_view MyString::get_boxed_str() const {
+  auto result = capi::MyString_get_boxed_str(this->AsFFI());
+  return std::string_view(result_data, result_size);
+}
+
 inline const capi::MyString* MyString::AsFFI() const {
   return reinterpret_cast<const capi::MyString*>(this);
 }
