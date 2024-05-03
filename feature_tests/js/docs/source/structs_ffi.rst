@@ -7,7 +7,7 @@
 
     .. js:method:: into_value()
 
-    .. js:function:: a()
+    .. js:function:: get_a()
 
 .. js:class:: MyStruct
 

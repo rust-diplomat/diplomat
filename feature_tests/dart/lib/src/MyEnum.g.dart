@@ -37,8 +37,8 @@ enum MyEnum {
     return result;
   }
 
-  static MyEnum a() {
-    final result = _MyEnum_a();
+  static MyEnum getA() {
+    final result = _MyEnum_get_a();
     return MyEnum.values.firstWhere((v) => v._ffi == result);
   }
 }
@@ -48,7 +48,7 @@ enum MyEnum {
 // ignore: non_constant_identifier_names
 external int _MyEnum_into_value(int self);
 
-@meta.ResourceIdentifier('MyEnum_a')
-@ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'MyEnum_a')
+@meta.ResourceIdentifier('MyEnum_get_a')
+@ffi.Native<ffi.Int32 Function()>(isLeaf: true, symbol: 'MyEnum_get_a')
 // ignore: non_constant_identifier_names
-external int _MyEnum_a();
+external int _MyEnum_get_a();

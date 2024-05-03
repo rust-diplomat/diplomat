@@ -139,7 +139,7 @@ pub mod ffi {
             self as i8
         }
 
-        pub fn a() -> MyEnum {
+        pub fn get_a() -> MyEnum {
             MyEnum::A
         }
     }

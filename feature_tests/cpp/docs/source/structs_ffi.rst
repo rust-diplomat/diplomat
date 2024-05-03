@@ -28,7 +28,7 @@
     .. cpp:function:: int8_t into_value()
 
 
-    .. cpp:function:: static MyEnum a()
+    .. cpp:function:: static MyEnum get_a()
 
 
 .. cpp:struct:: MyStruct

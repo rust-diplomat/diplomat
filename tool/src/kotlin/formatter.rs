@@ -170,7 +170,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
                         .chain(opaque.lifetimes.lifetimes().filter_map(|maybe_static_lt| match maybe_static_lt{
                             MaybeStatic::Static => None,
                             MaybeStatic::NonStatic(lt) => {
-                               
                                 let lts = lifetime_env
                                     .all_longer_lifetimes(lt)
                                     .map(|longer_lt|  {
@@ -205,10 +204,13 @@ impl<'tcx> KotlinFormatter<'tcx> {
             Type::Struct(strct) => {
                 let ty_name =
                     self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
-                let lt_list: String = strct.lifetimes().lifetimes().filter_map(|maybe_static_lt| match maybe_static_lt{
+                let lt_list: String = strct
+                    .lifetimes()
+                    .lifetimes()
+                    .filter_map(|maybe_static_lt| match maybe_static_lt {
                         MaybeStatic::Static => None,
                         MaybeStatic::NonStatic(lt) => {
-                            let lt_name= lifetime_env.fmt_lifetime(lt);
+                            let lt_name = lifetime_env.fmt_lifetime(lt);
                             Some(format!("{lt_name}Edges"))
                         }
                     })
