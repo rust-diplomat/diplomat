@@ -10,4 +10,3 @@ plugins {
 }
 
 rootProject.name = "somelib"
-include("lib")
