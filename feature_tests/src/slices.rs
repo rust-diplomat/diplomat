@@ -37,7 +37,6 @@ mod ffi {
             writeable.flush();
         }
 
-        #[diplomat::attr(supports = accessors, getter = "str")]
         #[diplomat::skip_if_ast]
         pub fn get_boxed_str(&self) -> Box<str> {
             self.0.as_str().into()

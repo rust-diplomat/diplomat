@@ -64,7 +64,7 @@ final class MyString implements ffi.Finalizable {
     return writeable.finalize();
   }
 
-  String get str {
+  String getBoxedStr() {
     final result = _MyString_get_boxed_str(_ffi);
     return result._toDart([]);
   }
