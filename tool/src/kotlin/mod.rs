@@ -8,7 +8,7 @@ use diplomat_core::hir::{
 use diplomat_core::hir::{ReturnType, SuccessType};
 
 use std::borrow::Cow;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::iter::once;
 use std::path::Path;
 
