@@ -1,0 +1,36 @@
+---
+source: tool/src/kotlin/mod.rs
+expression: result
+---
+package dev.gigapixel.somelib;
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
+
+
+internal interface BorrowWrapperLib: Library {
+    fun BorrowWrapper_destroy(handle: Pointer)
+}
+
+class BorrowWrapper internal constructor (
+    internal val handle: Pointer,
+
+    // These ensure that anything that is borrowed is kept alive and not cleaned
+    // up by the garbage collector.
+    internal val selfEdges: List<Any>,
+    internal val aEdges: List<Any>,
+    internal val bEdges: List<Any>,
+    ) {
+
+    internal class BorrowWrapperCleaner(val handle: Pointer, val lib: BorrowWrapperLib) : Runnable {
+        override fun run() {
+            lib.BorrowWrapper_destroy(handle)
+        }
+    }
+
+    companion object {
+        internal val libClass: Class<BorrowWrapperLib> = BorrowWrapperLib::class.java
+        internal val lib: BorrowWrapperLib = Native.load("somelib", libClass)
+    }
+
+}

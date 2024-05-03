@@ -1099,38 +1099,7 @@ mod test {
             // test that we can render and that it doesn't panic
             let (_, enum_code) =
                 ty_gen_cx.gen_enum_def(enum_def, type_id, &type_name, "dev.gigapixel", "somelib");
-            insta::assert_snapshot!(enum_code, @r###"
-            package dev.gigapixel.somelib
-
-            import com.sun.jna.Library
-            import com.sun.jna.Native
-
-            internal interface ContLib: Library {
-            }
-            enum class Cont {
-                A,
-                B,
-                C,
-                D;
-
-                fun toNative(): Int {
-                    return this.ordinal
-                }
-
-
-                companion object {
-                    internal val libClass: Class<ContLib> = ContLib::class.java
-                    internal val lib: ContLib = Native.load("somelib", libClass) 
-                    fun fromNative(native: Int): Cont {
-                        return Cont.entries[native]
-                    }
-
-                    fun default(): Cont {
-                        return A
-                    }
-                }
-            }
-            "###)
+            insta::assert_snapshot!(enum_code)
         }
     }
 
@@ -1192,90 +1161,7 @@ mod test {
             // test that we can render and that it doesn't panic
             let (_, struct_code) =
                 ty_gen_cx.gen_struct_def(strct, type_id, &type_name, "dev.gigapixel", "somelib");
-            insta::assert_snapshot!(struct_code, @r###"
-            package dev.gigapixel.somelib
-
-            import com.sun.jna.Library
-            import com.sun.jna.Native
-            import com.sun.jna.Pointer
-            import com.sun.jna.Structure
-
-            internal interface MyNativeStructLib: Library {
-                fun MyNativeStruct_new(): MyNativeStructNative
-            }
-
-            class MyNativeStructNative: Structure(), Structure.ByValue {
-                @JvmField
-                var a: Byte = 0;
-                @JvmField
-                var b: Byte = 0;
-                @JvmField
-                var c: Byte = 0;
-                @JvmField
-                var d: Short = 0;
-                @JvmField
-                var e: Short = 0;
-                @JvmField
-                var f: Int = 0;
-                @JvmField
-                var g: Int = 0;
-                @JvmField
-                var h: Long = 0;
-                @JvmField
-                var i: Long = 0;
-                @JvmField
-                var j: Int = 0;
-                @JvmField
-                var k: Float = 0.0F;
-                @JvmField
-                var l: Double = 0.0;
-                @JvmField
-                var m: Slice = Slice();
-                @JvmField
-                var n: Pointer = Pointer(0);
-              
-                // Define the fields of the struct
-                override fun getFieldOrder(): List<String> {
-                    return listOf("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n")
-                }
-            }
-
-            class MyNativeStruct internal constructor (
-                internal val nativeStruct: MyNativeStructNative,
-                internal val bEdges: List<Any>
-                ) {
-                val a: Boolean = nativeStruct.a > 0
-                val b: Byte = nativeStruct.b
-                val c: UByte = nativeStruct.c.toUByte()
-                val d: Short = nativeStruct.d
-                val e: UShort = nativeStruct.e.toUShort()
-                val f: Int = nativeStruct.f
-                val g: UInt = nativeStruct.g.toUInt()
-                val h: Long = nativeStruct.h
-                val i: ULong = nativeStruct.i.toULong()
-                val j: Int = nativeStruct.j
-                val k: Float = nativeStruct.k
-                val l: Double = nativeStruct.l
-                val m: DoubleArray = PrimitiveArrayTools.getDoubleArray(nativeStruct.m)
-                val n: Opaque = Opaque(nativeStruct.n, listOf())
-
-                companion object {
-                    internal val libClass: Class<MyNativeStructLib> = MyNativeStructLib::class.java
-                    internal val lib: MyNativeStructLib = Native.load("somelib", libClass)
-                    val NATIVESIZE: Long = Native.getNativeSize(MyNativeStructNative::class.java).toLong()
-                    fun new_(): MyNativeStruct {
-                        
-                        val returnVal = lib.MyNativeStruct_new();
-                    
-                        val bEdges: List<Any> = listOf()
-                        val returnStruct = MyNativeStruct(returnVal, bEdges)
-                        return returnStruct 
-                    
-                    }
-                }
-
-            }
-            "###)
+            insta::assert_snapshot!(struct_code)
         }
     }
 
@@ -1383,40 +1269,7 @@ mod test {
                 "dev.gigapixel",
                 "somelib",
             );
-            insta::assert_snapshot!(result, @r###"
-            package dev.gigapixel.somelib;
-            import com.sun.jna.Library
-            import com.sun.jna.Native
-            import com.sun.jna.Pointer
-
-
-            internal interface BorrowWrapperLib: Library {
-                fun BorrowWrapper_destroy(handle: Pointer)
-            }
-
-            class BorrowWrapper internal constructor (
-                internal val handle: Pointer,
-
-                // These ensure that anything that is borrowed is kept alive and not cleaned
-                // up by the garbage collector.
-                internal val selfEdges: List<Any>,
-                internal val aEdges: List<Any>,
-                internal val bEdges: List<Any>,
-                ) {
-
-                internal class BorrowWrapperCleaner(val handle: Pointer, val lib: BorrowWrapperLib) : Runnable {
-                    override fun run() {
-                        lib.BorrowWrapper_destroy(handle)
-                    }
-                }
-
-                companion object {
-                    internal val libClass: Class<BorrowWrapperLib> = BorrowWrapperLib::class.java
-                    internal val lib: BorrowWrapperLib = Native.load("somelib", libClass)
-                }
-
-            }
-            "###)
+            insta::assert_snapshot!(result)
         }
     }
 }
