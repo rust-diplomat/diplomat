@@ -222,6 +222,17 @@ exec --fail-on-error dart --enable-experiment=native-assets pub get
 exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
+[tasks.test-kotlin-example]
+category = "Tests"
+script_runner = "@duckscript"
+dependencies = ["build-feature"]
+script = '''
+exit_on_error true
+cp target/debug/libdiplomat_example.dylib example/kotlin/somelib/libsomelib.dylib
+cd example/kotlin/somelib
+exec --fail-on-error gradle test --warning-mode all
+'''
+
 [tasks.test-kotlin-feature]
 category = "Tests"
 script_runner = "@duckscript"

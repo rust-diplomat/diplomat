@@ -1,5 +1,6 @@
 package dev.diplomattest.somelib
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class ICU4XFixedDecimalFormatterTest {
@@ -11,6 +12,6 @@ class ICU4XFixedDecimalFormatterTest {
         val formatter = ICU4XFixedDecimalFormatter.tryNew(locale, provider, options).wrapErrAndThrow()
         val decimal: ICU4XFixedDecimal = ICU4XFixedDecimal.new_(123)
         val formatted = formatter.formatWrite(decimal)
-        println(formatted)
+        assertEquals(formatted, "123")
     }
 }
