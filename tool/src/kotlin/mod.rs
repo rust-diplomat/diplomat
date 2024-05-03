@@ -8,7 +8,7 @@ use diplomat_core::hir::{
 use diplomat_core::hir::{ReturnType, SuccessType};
 
 use std::borrow::Cow;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::iter::once;
 use std::path::Path;
 
@@ -774,7 +774,7 @@ if (returnVal == null) {{
             .map(|method| self.gen_method(id, method, None))
             .collect::<Vec<_>>();
 
-        let lifetimes_set: HashSet<Lifetime> = ty
+        let lifetimes_set: BTreeSet<Lifetime> = ty
             .lifetimes
             .lifetimes()
             .lifetimes()
