@@ -1,9 +1,15 @@
 # Usage: generate_generic <feature_tests or example> <backend name> <output folder name> <optional docs folder> <optional additional args> <optional preserve_subdirectory for copying over>
-# for example to not overwrite project files or committed tests in kotlin 
+# If a backend generates a whole project then you can choose to only copy over a certain subdirectory
+# by passing  it as the preserve_subdirectory argument. For example the kotlin backend creates an entire
+# project. To not overwrite project files or committed tests in kotlin you can run
 # ```sh
 # generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
 # ```
-# only copies over the contents of `src/main/kotlin` from the tmp folder
+# which only copies over the contents of `src/main/kotlin` from the tmp folder. Whereas
+# ```sh
+# generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" 
+# ```
+# will copy over all project files and delete the old ones including the tests.
 # note: if you make changes to the project file generation, then you should 
 # commit those changes (just make sure you checkout the test files)
 fn generate_generic
