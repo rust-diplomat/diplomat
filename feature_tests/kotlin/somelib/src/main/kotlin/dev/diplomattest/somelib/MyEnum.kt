@@ -5,7 +5,7 @@ import com.sun.jna.Native
 
 internal interface MyEnumLib: Library {
     fun MyEnum_into_value(inner: Int): Byte
-    fun MyEnum_a(): Int
+    fun MyEnum_get_a(): Int
 }
 enum class MyEnum(val inner: Int) {
     A(-2),
@@ -38,9 +38,9 @@ enum class MyEnum(val inner: Int) {
         fun default(): MyEnum {
             return A
         }
-        fun a(): MyEnum {
+        fun getA(): MyEnum {
             
-            val returnVal = lib.MyEnum_a();
+            val returnVal = lib.MyEnum_get_a();
             return MyEnum.fromNative(returnVal)
         }
     }

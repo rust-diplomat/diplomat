@@ -26,7 +26,7 @@ public:
 
   inline int8_t into_value();
 
-  inline static MyEnum a();
+  inline static MyEnum get_a();
 
   inline MyEnum(MyEnum::Value cpp_value);
   inline MyEnum(capi::MyEnum c_enum) : value(c_enum) {};

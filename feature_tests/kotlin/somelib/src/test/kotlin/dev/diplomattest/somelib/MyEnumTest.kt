@@ -6,6 +6,6 @@ import org.junit.jupiter.api.Test
 class MyEnumTest {
     @Test
     fun testEnum() {
-        assertEquals(MyEnum.default(), MyEnum.a())
+        assertEquals(MyEnum.default(), MyEnum.getA())
     }
 }
