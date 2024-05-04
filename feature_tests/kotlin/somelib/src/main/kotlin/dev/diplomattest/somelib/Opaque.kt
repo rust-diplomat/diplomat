@@ -32,19 +32,17 @@ class Opaque internal constructor (
         fun new_(): Opaque {
             
             val returnVal = lib.Opaque_new();
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
             
             return returnOpaque
-        
         }
         fun returnsUsize(): Long {
             
             val returnVal = lib.Opaque_returns_usize();
-            return returnVal
+        return returnVal
         }
         fun returnsImported(): ImportedStruct {
             
@@ -52,12 +50,11 @@ class Opaque internal constructor (
         
             val returnStruct = ImportedStruct(returnVal)
             return returnStruct
-        
         }
         fun cmp(): Byte {
             
             val returnVal = lib.Opaque_cmp();
-            return returnVal
+        return returnVal
         }
     }
     fun assertStruct(s: MyStruct): Unit {

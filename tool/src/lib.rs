@@ -1,6 +1,7 @@
 // Enable once https://github.com/rust-lang/rust/issues/89554 is stable
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
+pub mod backend;
 #[doc(hidden)]
 pub mod c;
 #[doc(hidden)]

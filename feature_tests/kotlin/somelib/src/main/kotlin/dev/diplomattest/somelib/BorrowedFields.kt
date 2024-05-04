@@ -44,7 +44,6 @@ class BorrowedFields internal constructor (
             val xEdges: List<Any> = listOf(bar) + listOf(dstr16Mem) + listOf(utf8StrMem)
             val returnStruct = BorrowedFields(returnVal, xEdges)
             return returnStruct
-        
         }
     }
 

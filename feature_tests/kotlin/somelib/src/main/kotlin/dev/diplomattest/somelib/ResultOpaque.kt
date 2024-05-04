@@ -38,93 +38,77 @@ class ResultOpaque internal constructor (
             val returnVal = lib.ResultOpaque_new(i);
         
             if (returnVal.isOk == 1.toByte()) {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.union.ok 
+                val returnOpaque = ResultOpaque(handle, selfEdges)
+                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.union.ok 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-            
-            return returnOpaque.ok()
-            
+                return returnOpaque.ok()
             } else {
-                    return ErrorEnum.fromNative(returnVal.union.err).err()
+                return ErrorEnum.fromNative(returnVal.union.err).err()
             }
-                            
         }
         fun newFailingFoo(): Res<ResultOpaque, ErrorEnum> {
             
             val returnVal = lib.ResultOpaque_new_failing_foo();
         
             if (returnVal.isOk == 1.toByte()) {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.union.ok 
+                val returnOpaque = ResultOpaque(handle, selfEdges)
+                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.union.ok 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-            
-            return returnOpaque.ok()
-            
+                return returnOpaque.ok()
             } else {
-                    return ErrorEnum.fromNative(returnVal.union.err).err()
+                return ErrorEnum.fromNative(returnVal.union.err).err()
             }
-                            
         }
         fun newFailingBar(): Res<ResultOpaque, ErrorEnum> {
             
             val returnVal = lib.ResultOpaque_new_failing_bar();
         
             if (returnVal.isOk == 1.toByte()) {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.union.ok 
+                val returnOpaque = ResultOpaque(handle, selfEdges)
+                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.union.ok 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-            
-            return returnOpaque.ok()
-            
+                return returnOpaque.ok()
             } else {
-                    return ErrorEnum.fromNative(returnVal.union.err).err()
+                return ErrorEnum.fromNative(returnVal.union.err).err()
             }
-                            
         }
         fun newFailingUnit(): Res<ResultOpaque, Unit> {
             
             val returnVal = lib.ResultOpaque_new_failing_unit();
         
             if (returnVal.isOk == 1.toByte()) {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.union.ok 
+                val returnOpaque = ResultOpaque(handle, selfEdges)
+                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.union.ok 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-            
-            return returnOpaque.ok()
-            
+                return returnOpaque.ok()
             } else {
                 return Err(Unit)
             }
-                            
         }
         fun newFailingStruct(i: Int): Res<ResultOpaque, ErrorStruct> {
             
             val returnVal = lib.ResultOpaque_new_failing_struct(i);
         
             if (returnVal.isOk == 1.toByte()) {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.union.ok 
+                val returnOpaque = ResultOpaque(handle, selfEdges)
+                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.union.ok 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-            
-            return returnOpaque.ok()
-            
+                return returnOpaque.ok()
             } else {
                 
-            val returnStruct = ErrorStruct(returnVal.union.err)
-            return returnStruct.err()
-            
+                val returnStruct = ErrorStruct(returnVal.union.err)
+                return returnStruct.err()
             }
-                            
         }
         fun newInErr(i: Int): Res<Unit, ResultOpaque> {
             
@@ -133,45 +117,38 @@ class ResultOpaque internal constructor (
             if (returnVal.isOk == 1.toByte()) {
                 return Ok(Unit)
             } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.union.err 
+                val returnOpaque = ResultOpaque(handle, selfEdges)
+                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.union.err 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-            
-            return returnOpaque.err()
-            
+                return returnOpaque.err()
             }
-                            
         }
         fun newInt(i: Int): Res<Int, Unit> {
             
             val returnVal = lib.ResultOpaque_new_int(i);
         
             if (returnVal.isOk == 1.toByte()) {
-                    return returnVal.union.ok.ok()
+                return returnVal.union.ok.ok()
             } else {
                 return Err(Unit)
             }
-                            
         }
         fun newInEnumErr(i: Int): Res<ErrorEnum, ResultOpaque> {
             
             val returnVal = lib.ResultOpaque_new_in_enum_err(i);
         
             if (returnVal.isOk == 1.toByte()) {
-                    return ErrorEnum.fromNative(returnVal.union.ok).ok()
+                return ErrorEnum.fromNative(returnVal.union.ok).ok()
             } else {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal.union.err 
+                val returnOpaque = ResultOpaque(handle, selfEdges)
+                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
                 
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal.union.err 
-            val returnOpaque = ResultOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
-            
-            return returnOpaque.err()
-            
+                return returnOpaque.err()
             }
-                            
         }
     }
     fun assertInteger(i: Int): Unit {

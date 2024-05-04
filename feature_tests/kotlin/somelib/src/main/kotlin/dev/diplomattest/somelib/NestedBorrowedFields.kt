@@ -50,7 +50,6 @@ class NestedBorrowedFields internal constructor (
             val zEdges: List<Any> = listOf(foo) + listOf(dstr16ZMem) + listOf(utf8StrZMem)
             val returnStruct = NestedBorrowedFields(returnVal, xEdges, yEdges, zEdges)
             return returnStruct
-        
         }
     }
 

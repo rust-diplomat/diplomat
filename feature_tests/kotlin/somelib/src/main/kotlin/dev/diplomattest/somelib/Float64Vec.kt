@@ -43,105 +43,89 @@ class Float64Vec internal constructor (
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
             return returnOpaque
-        
         }
         fun newBool(v: BooleanArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_bool(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
             return returnOpaque
-        
         }
         fun newI16(v: ShortArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_i16(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
             return returnOpaque
-        
         }
         fun newU16(v: UShortArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_u16(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
             return returnOpaque
-        
         }
         fun newIsize(v: LongArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_isize(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
             return returnOpaque
-        
         }
         fun newUsize(v: LongArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_usize(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
             return returnOpaque
-        
         }
         fun newF64BeBytes(v: ByteArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_f64_be_bytes(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
             return returnOpaque
-        
         }
         fun newFromOwned(v: DoubleArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
             val returnVal = lib.Float64Vec_new_from_owned(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             
             return returnOpaque
-        
         }
     }
     fun asBoxedSlice(): DoubleArray {
@@ -188,7 +172,7 @@ class Float64Vec internal constructor (
         if (returnVal == null) {
             return null
         } else {
-                return returnVal
+            return returnVal
         }
     }
 

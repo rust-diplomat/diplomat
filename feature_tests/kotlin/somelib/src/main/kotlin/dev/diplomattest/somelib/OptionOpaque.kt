@@ -34,26 +34,22 @@ class OptionOpaque internal constructor (
         fun new_(i: Int): OptionOpaque? {
             
             val returnVal = lib.OptionOpaque_new(i);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
             val returnOpaque = OptionOpaque(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
             
             return returnOpaque
-        
         }
         fun newNone(): OptionOpaque? {
             
             val returnVal = lib.OptionOpaque_new_none();
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
             val returnOpaque = OptionOpaque(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
             
             return returnOpaque
-        
         }
         fun returns(): OptionStruct? {
             
@@ -65,7 +61,6 @@ class OptionOpaque internal constructor (
                 
             val returnStruct = OptionStruct(returnVal)
             return returnStruct
-            
             }
         }
         fun newStruct(): OptionStruct {
@@ -74,7 +69,6 @@ class OptionOpaque internal constructor (
         
             val returnStruct = OptionStruct(returnVal)
             return returnStruct
-        
         }
         fun newStructNones(): OptionStruct {
             
@@ -82,12 +76,11 @@ class OptionOpaque internal constructor (
         
             val returnStruct = OptionStruct(returnVal)
             return returnStruct
-        
         }
         fun optionOpaqueArgument(arg: OptionOpaque?): Boolean {
             
             val returnVal = lib.OptionOpaque_option_opaque_argument(arg?.handle);
-            return returnVal
+        return returnVal
         }
     }
     fun assertInteger(i: Int): Unit {

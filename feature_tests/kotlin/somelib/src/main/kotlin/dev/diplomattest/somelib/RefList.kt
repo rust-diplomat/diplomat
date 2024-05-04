@@ -30,15 +30,13 @@ class RefList internal constructor (
         fun node(data: RefListParameter): RefList {
             
             val returnVal = lib.RefList_node(data.handle);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val bEdges: List<Any> = listOf(data)
             val handle = returnVal 
             val returnOpaque = RefList(handle, selfEdges, bEdges)
             CLEANER.register(returnOpaque, RefList.RefListCleaner(handle, RefList.lib));
             
             return returnOpaque
-        
         }
     }
 

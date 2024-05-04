@@ -48,7 +48,6 @@ class BorrowedFieldsWithBounds internal constructor (
             val zEdges: List<Any> = listOf(utf8StrZMem)
             val returnStruct = BorrowedFieldsWithBounds(returnVal, xEdges, yEdges, zEdges)
             return returnStruct
-        
         }
     }
 

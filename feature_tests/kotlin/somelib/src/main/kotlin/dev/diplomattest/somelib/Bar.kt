@@ -32,14 +32,11 @@ class Bar internal constructor (
     fun foo(): Foo {
         
         val returnVal = lib.Bar_foo(handle);
-    
-        val selfEdges: List<Any> = listOf(this)
+    val selfEdges: List<Any> = listOf(this)
         val aEdges: List<Any> = listOf(this)
         val handle = returnVal 
         val returnOpaque = Foo(handle, selfEdges, aEdges)
-        
         return returnOpaque
-    
     }
 
 }

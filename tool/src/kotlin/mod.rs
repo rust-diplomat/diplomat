@@ -511,6 +511,13 @@ return string"#
             Some(ReturnTypeModifier::Okay),
         );
 
+        #[derive(Template)]
+        #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
+        struct ResultReturn<'d> {
+            ok_path: &'d str,
+            err_path: &'d str,
+        }
+
         let err_path = err
             .as_ref()
             .map(|err| {
@@ -525,16 +532,24 @@ return string"#
             })
             .unwrap_or_else(|| "return Err(Unit)".into());
 
-        format!(
-            r#"
-if (returnVal.isOk == 1.toByte()) {{
-    {ok_path}
-}} else {{
-    {err_path}
-}}
-                "#
-        )
+        ResultReturn {
+            ok_path: ok_path.as_str(),
+            err_path: err_path.as_str(),
+        }
+        .render()
+        .expect("Failed to render result return")
         .into()
+
+        //         format!(
+        //             r#"
+        // if (returnVal.isOk == 1.toByte()) {{
+        //     {ok_path}
+        // }} else {{
+        //     {err_path}
+        // }}
+        //                 "#
+        //         )
+        //         .into()
     }
 
     fn gen_out_type_return<'d>(
@@ -549,7 +564,7 @@ if (returnVal.isOk == 1.toByte()) {{
         match o {
             // todo: unsigned need to be handled
             Type::Primitive(_) => {
-                format!("    return {val_name}{return_type_modifier}")
+                format!("return {val_name}{return_type_modifier}")
             }
             Type::Opaque(opaque_path) => self.gen_opaque_return(
                 opaque_path,
@@ -574,7 +589,7 @@ if (returnVal.isOk == 1.toByte()) {{
             Type::Enum(enm) => {
                 let return_type = enm.resolve(self.tcx);
                 format!(
-                    "    return {}.fromNative({val_name}){return_type_modifier}",
+                    "return {}.fromNative({val_name}){return_type_modifier}",
                     return_type.name
                 )
             }
@@ -1221,7 +1236,7 @@ struct NativeMethodInfo {
 mod test {
 
     use std::cell::RefCell;
-    use std::collections::{BTreeSet, HashSet};
+    use std::collections::BTreeSet;
 
     use diplomat_core::hir::TypeDef;
     use quote::quote;
