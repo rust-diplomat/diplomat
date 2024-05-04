@@ -7,6 +7,7 @@ import com.sun.jna.Pointer
 internal interface RefListLib: Library {
     fun RefList_destroy(handle: Pointer)
     fun RefList_node(data: Pointer): Pointer
+    fun RefList_extend(handle: Pointer, other: Pointer): Unit
 }
 
 class RefList internal constructor (
@@ -40,6 +41,11 @@ class RefList internal constructor (
             return returnOpaque
         
         }
+    }
+    fun extend(other: RefList): Unit {
+        
+        val returnVal = lib.RefList_extend(handle, other.handle);
+    
     }
 
 }

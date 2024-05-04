@@ -1,9 +1,12 @@
 #[diplomat::bridge]
 mod ffi {
     #[diplomat::opaque]
+    #[derive(Clone, Copy)]
     struct RefListParameter;
 
     #[diplomat::opaque]
+    #[diplomat::attr(disable, kotlin)]
+    #[derive(Clone)]
     struct RefList<'a>((&'a RefListParameter, Option<Box<Self>>));
 
     impl<'b> RefList<'b> {
@@ -12,11 +15,11 @@ mod ffi {
             Box::new(RefList((data, None)))
         }
 
-        // pub fn extend(&mut self, other: Self) {
-        //     match self.next.as_mut() {
-        //         Some(tail) => tail.extend(other),
-        //         None => self.next = Some(Box::new(other)),
-        //     }
-        // }
+        pub fn extend(&mut self, other: &Self) {
+            match self.0 .1.as_mut() {
+                Some(tail) => tail.extend(other),
+                None => self.0 .1 = Some(Box::new(other.clone())),
+            }
+        }
     }
 }
