@@ -26,20 +26,18 @@ class ICU4XDataProvider internal constructor (
     companion object {
         internal val libClass: Class<ICU4XDataProviderLib> = ICU4XDataProviderLib::class.java
         internal val lib: ICU4XDataProviderLib = Native.load("somelib", libClass)
-        fun newStatic(): ICU4XDataProvider {
-            
-            val returnVal = lib.ICU4XDataProvider_new_static();
         
-            val selfEdges: List<Any> = listOf()
+        fun newStatic(): ICU4XDataProvider {
+            val returnVal = lib.ICU4XDataProvider_new_static();
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = ICU4XDataProvider(handle, selfEdges)
             CLEANER.register(returnOpaque, ICU4XDataProvider.ICU4XDataProviderCleaner(handle, ICU4XDataProvider.lib));
             
             return returnOpaque
-        
         }
+        
         fun returnsResult(): Res<Unit, Unit> {
-            
             val returnVal = lib.ICU4XDataProvider_returns_result();
         
             if (returnVal.isOk == 1.toByte()) {
@@ -47,7 +45,6 @@ class ICU4XDataProvider internal constructor (
             } else {
                 return Err(Unit)
             }
-                            
         }
     }
 

@@ -30,13 +30,12 @@ class ICU4XFixedDecimalFormatterOptions internal constructor (
         internal val libClass: Class<ICU4XFixedDecimalFormatterOptionsLib> = ICU4XFixedDecimalFormatterOptionsLib::class.java
         internal val lib: ICU4XFixedDecimalFormatterOptionsLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(ICU4XFixedDecimalFormatterOptionsNative::class.java).toLong()
+        
         fun default_(): ICU4XFixedDecimalFormatterOptions {
-            
             val returnVal = lib.ICU4XFixedDecimalFormatterOptions_default();
         
             val returnStruct = ICU4XFixedDecimalFormatterOptions(returnVal)
             return returnStruct
-        
         }
     }
 

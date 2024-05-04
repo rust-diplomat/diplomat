@@ -25,18 +25,16 @@ class ICU4XLocale internal constructor (
     companion object {
         internal val libClass: Class<ICU4XLocaleLib> = ICU4XLocaleLib::class.java
         internal val lib: ICU4XLocaleLib = Native.load("somelib", libClass)
+        
         fun new_(name: String): ICU4XLocale {
             val (nameMem, nameSlice) = PrimitiveArrayTools.readUtf8(name)
-            
             val returnVal = lib.ICU4XLocale_new(nameSlice);
-        
-            val selfEdges: List<Any> = listOf()
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = ICU4XLocale(handle, selfEdges)
             CLEANER.register(returnOpaque, ICU4XLocale.ICU4XLocaleCleaner(handle, ICU4XLocale.lib));
             nameMem.close()
             return returnOpaque
-        
         }
     }
 

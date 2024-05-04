@@ -27,37 +27,35 @@ class ICU4XFixedDecimal internal constructor (
     companion object {
         internal val libClass: Class<ICU4XFixedDecimalLib> = ICU4XFixedDecimalLib::class.java
         internal val lib: ICU4XFixedDecimalLib = Native.load("somelib", libClass)
-        fun new_(v: Int): ICU4XFixedDecimal {
-            
-            val returnVal = lib.ICU4XFixedDecimal_new(v);
         
-            val selfEdges: List<Any> = listOf()
+        fun new_(v: Int): ICU4XFixedDecimal {
+            val returnVal = lib.ICU4XFixedDecimal_new(v);
+        val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = ICU4XFixedDecimal(handle, selfEdges)
             CLEANER.register(returnOpaque, ICU4XFixedDecimal.ICU4XFixedDecimalCleaner(handle, ICU4XFixedDecimal.lib));
             
             return returnOpaque
-        
         }
     }
+    
     fun multiplyPow10(power: Short): Unit {
-        
         val returnVal = lib.ICU4XFixedDecimal_multiply_pow10(handle, power);
     
     }
+    
     fun toString_(): Res<String, Unit> {
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)
         val returnVal = lib.ICU4XFixedDecimal_to_string(handle, writeable);
     
         if (returnVal.isOk == 1.toByte()) {
             
-        val returnString = DW.writeableToString(writeable)
-        DW.lib.diplomat_buffer_writeable_destroy(writeable)
-        return returnString.ok()
+            val returnString = DW.writeableToString(writeable)
+            DW.lib.diplomat_buffer_writeable_destroy(writeable)
+            return returnString.ok()
         } else {
             return Err(Unit)
         }
-                        
     }
 
 }
