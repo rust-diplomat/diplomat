@@ -46,16 +46,16 @@ class MyStruct internal constructor (
         internal val libClass: Class<MyStructLib> = MyStructLib::class.java
         internal val lib: MyStructLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyStructNative::class.java).toLong()
+        
         fun new_(): MyStruct {
-            
             val returnVal = lib.MyStruct_new();
         
             val returnStruct = MyStruct(returnVal)
             return returnStruct
         }
     }
+    
     fun intoA(): UByte {
-        
         val returnVal = lib.MyStruct_into_a(nativeStruct);
     return returnVal
     }

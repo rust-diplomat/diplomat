@@ -27,8 +27,8 @@ class RefList internal constructor (
     companion object {
         internal val libClass: Class<RefListLib> = RefListLib::class.java
         internal val lib: RefListLib = Native.load("somelib", libClass)
+        
         fun node(data: RefListParameter): RefList {
-            
             val returnVal = lib.RefList_node(data.handle);
         val selfEdges: List<Any> = listOf()
             val bEdges: List<Any> = listOf(data)

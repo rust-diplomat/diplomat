@@ -31,9 +31,9 @@ class MyString internal constructor (
     companion object {
         internal val libClass: Class<MyStringLib> = MyStringLib::class.java
         internal val lib: MyStringLib = Native.load("somelib", libClass)
+        
         fun new_(v: String): MyString {
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
-            
             val returnVal = lib.MyString_new(vSlice);
         val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -42,9 +42,9 @@ class MyString internal constructor (
             vMem.close()
             return returnOpaque
         }
+        
         fun newUnsafe(v: String): MyString {
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
-            
             val returnVal = lib.MyString_new_unsafe(vSlice);
         val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -53,9 +53,9 @@ class MyString internal constructor (
             vMem.close()
             return returnOpaque
         }
+        
         fun newOwned(v: String): MyString {
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
-            
             val returnVal = lib.MyString_new_owned(vSlice);
         val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -64,9 +64,9 @@ class MyString internal constructor (
             
             return returnOpaque
         }
+        
         fun newFromFirst(v: Array<String>): MyString {
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8s(v)
-            
             val returnVal = lib.MyString_new_from_first(vSlice);
         val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -76,12 +76,13 @@ class MyString internal constructor (
             return returnOpaque
         }
     }
+    
     fun setStr(newStr: String): Unit {
         val (newStrMem, newStrSlice) = PrimitiveArrayTools.readUtf8(newStr)
-        
         val returnVal = lib.MyString_set_str(handle, newStrSlice);
     
     }
+    
     fun getStr(): String {
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)
         val returnVal = lib.MyString_get_str(handle, writeable);
@@ -90,8 +91,8 @@ class MyString internal constructor (
         DW.lib.diplomat_buffer_writeable_destroy(writeable)
         return returnString
     }
+    
     fun getBoxedStr(): String {
-        
         val returnVal = lib.MyString_get_boxed_str(handle);
         val string = PrimitiveArrayTools.getUtf8(returnVal)
         Native.free(Pointer.nativeValue(returnVal.data))

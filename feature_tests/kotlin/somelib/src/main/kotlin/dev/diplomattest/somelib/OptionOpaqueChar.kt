@@ -26,8 +26,8 @@ class OptionOpaqueChar internal constructor (
         internal val libClass: Class<OptionOpaqueCharLib> = OptionOpaqueCharLib::class.java
         internal val lib: OptionOpaqueCharLib = Native.load("somelib", libClass)
     }
+    
     fun assertChar(ch: Int): Unit {
-        
         val returnVal = lib.OptionOpaqueChar_assert_char(handle, ch);
     
     }

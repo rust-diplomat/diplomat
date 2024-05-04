@@ -37,10 +37,10 @@ class BorrowedFieldsWithBounds internal constructor (
         internal val libClass: Class<BorrowedFieldsWithBoundsLib> = BorrowedFieldsWithBoundsLib::class.java
         internal val lib: BorrowedFieldsWithBoundsLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsWithBoundsNative::class.java).toLong()
+        
         fun fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds {
             val (dstr16XMem, dstr16XSlice) = PrimitiveArrayTools.readUtf16(dstr16X)
             val (utf8StrZMem, utf8StrZSlice) = PrimitiveArrayTools.readUtf8(utf8StrZ)
-            
             val returnVal = lib.BorrowedFieldsWithBounds_from_foo_and_strings(foo.handle, dstr16XSlice, utf8StrZSlice);
         
             val xEdges: List<Any> = listOf(foo) + listOf(dstr16XMem) + listOf(utf8StrZMem)

@@ -29,8 +29,8 @@ class Bar internal constructor (
         internal val libClass: Class<BarLib> = BarLib::class.java
         internal val lib: BarLib = Native.load("somelib", libClass)
     }
+    
     fun foo(): Foo {
-        
         val returnVal = lib.Bar_foo(handle);
     val selfEdges: List<Any> = listOf(this)
         val aEdges: List<Any> = listOf(this)

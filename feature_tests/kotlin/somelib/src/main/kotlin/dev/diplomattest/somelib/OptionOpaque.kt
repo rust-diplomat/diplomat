@@ -31,8 +31,8 @@ class OptionOpaque internal constructor (
     companion object {
         internal val libClass: Class<OptionOpaqueLib> = OptionOpaqueLib::class.java
         internal val lib: OptionOpaqueLib = Native.load("somelib", libClass)
+        
         fun new_(i: Int): OptionOpaque? {
-            
             val returnVal = lib.OptionOpaque_new(i);
         val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
@@ -41,8 +41,8 @@ class OptionOpaque internal constructor (
             
             return returnOpaque
         }
+        
         fun newNone(): OptionOpaque? {
-            
             val returnVal = lib.OptionOpaque_new_none();
         val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
@@ -51,8 +51,8 @@ class OptionOpaque internal constructor (
             
             return returnOpaque
         }
+        
         fun returns(): OptionStruct? {
-            
             val returnVal = lib.OptionOpaque_returns();
         
             if (returnVal == null) {
@@ -63,28 +63,28 @@ class OptionOpaque internal constructor (
             return returnStruct
             }
         }
+        
         fun newStruct(): OptionStruct {
-            
             val returnVal = lib.OptionOpaque_new_struct();
         
             val returnStruct = OptionStruct(returnVal)
             return returnStruct
         }
+        
         fun newStructNones(): OptionStruct {
-            
             val returnVal = lib.OptionOpaque_new_struct_nones();
         
             val returnStruct = OptionStruct(returnVal)
             return returnStruct
         }
+        
         fun optionOpaqueArgument(arg: OptionOpaque?): Boolean {
-            
             val returnVal = lib.OptionOpaque_option_opaque_argument(arg?.handle);
         return returnVal
         }
     }
+    
     fun assertInteger(i: Int): Unit {
-        
         val returnVal = lib.OptionOpaque_assert_integer(handle, i);
     
     }

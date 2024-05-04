@@ -29,8 +29,8 @@ class Opaque internal constructor (
     companion object {
         internal val libClass: Class<OpaqueLib> = OpaqueLib::class.java
         internal val lib: OpaqueLib = Native.load("somelib", libClass)
+        
         fun new_(): Opaque {
-            
             val returnVal = lib.Opaque_new();
         val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -39,26 +39,26 @@ class Opaque internal constructor (
             
             return returnOpaque
         }
+        
         fun returnsUsize(): Long {
-            
             val returnVal = lib.Opaque_returns_usize();
         return returnVal
         }
+        
         fun returnsImported(): ImportedStruct {
-            
             val returnVal = lib.Opaque_returns_imported();
         
             val returnStruct = ImportedStruct(returnVal)
             return returnStruct
         }
+        
         fun cmp(): Byte {
-            
             val returnVal = lib.Opaque_cmp();
         return returnVal
         }
     }
+    
     fun assertStruct(s: MyStruct): Unit {
-        
         val returnVal = lib.Opaque_assert_struct(handle, s.nativeStruct);
     
     }

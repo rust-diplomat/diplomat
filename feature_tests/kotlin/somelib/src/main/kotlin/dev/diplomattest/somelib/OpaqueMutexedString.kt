@@ -32,8 +32,8 @@ class OpaqueMutexedString internal constructor (
     companion object {
         internal val libClass: Class<OpaqueMutexedStringLib> = OpaqueMutexedStringLib::class.java
         internal val lib: OpaqueMutexedStringLib = Native.load("somelib", libClass)
+        
         fun fromUsize(number: Long): OpaqueMutexedString {
-            
             val returnVal = lib.OpaqueMutexedString_from_usize(number);
         val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -42,8 +42,8 @@ class OpaqueMutexedString internal constructor (
             
             return returnOpaque
         }
+        
         fun borrowOther(other: OpaqueMutexedString): OpaqueMutexedString {
-            
             val returnVal = lib.OpaqueMutexedString_borrow_other(other.handle);
         val selfEdges: List<Any> = listOf(other)
             val handle = returnVal 
@@ -51,39 +51,39 @@ class OpaqueMutexedString internal constructor (
             return returnOpaque
         }
     }
+    
     fun change(number: Long): Unit {
-        
         val returnVal = lib.OpaqueMutexedString_change(handle, number);
     
     }
+    
     fun borrow(): OpaqueMutexedString {
-        
         val returnVal = lib.OpaqueMutexedString_borrow(handle);
     val selfEdges: List<Any> = listOf(this)
         val handle = returnVal 
         val returnOpaque = OpaqueMutexedString(handle, selfEdges)
         return returnOpaque
     }
+    
     fun borrowSelfOrOther(other: OpaqueMutexedString): OpaqueMutexedString {
-        
         val returnVal = lib.OpaqueMutexedString_borrow_self_or_other(handle, other.handle);
     val selfEdges: List<Any> = listOf(this) + listOf(other)
         val handle = returnVal 
         val returnOpaque = OpaqueMutexedString(handle, selfEdges)
         return returnOpaque
     }
+    
     fun getLenAndAdd(other: Long): Long {
-        
         val returnVal = lib.OpaqueMutexedString_get_len_and_add(handle, other);
     return returnVal
     }
+    
     fun dummyStr(): String {
-        
         val returnVal = lib.OpaqueMutexedString_dummy_str(handle);
         return PrimitiveArrayTools.getUtf8(returnVal)
     }
+    
     fun wrapper(): Utf16Wrap {
-        
         val returnVal = lib.OpaqueMutexedString_wrapper(handle);
     val selfEdges: List<Any> = listOf()
         val handle = returnVal 

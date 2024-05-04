@@ -35,10 +35,10 @@ class BorrowedFields internal constructor (
         internal val libClass: Class<BorrowedFieldsLib> = BorrowedFieldsLib::class.java
         internal val lib: BorrowedFieldsLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(BorrowedFieldsNative::class.java).toLong()
+        
         fun fromBarAndStrings(bar: Bar, dstr16: String, utf8Str: String): BorrowedFields {
             val (dstr16Mem, dstr16Slice) = PrimitiveArrayTools.readUtf16(dstr16)
             val (utf8StrMem, utf8StrSlice) = PrimitiveArrayTools.readUtf8(utf8Str)
-            
             val returnVal = lib.BorrowedFields_from_bar_and_strings(bar.handle, dstr16Slice, utf8StrSlice);
         
             val xEdges: List<Any> = listOf(bar) + listOf(dstr16Mem) + listOf(utf8StrMem)
