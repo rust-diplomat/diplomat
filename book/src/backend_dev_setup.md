@@ -1,3 +1,4 @@
+# How to Set up a Minimal Backend
 How to create a backend is quite language dependent, and what is easier in one
 may be harder in another. Below we will start setting up a simple backend. We'll 
 show you how to set up a test in diplomat so you can start generating code quickly.
@@ -9,7 +10,7 @@ It is not automatically generated so when in doubt look at diplomat's [HIR](http
 first set up a host language project. It should have all dependencies to be able to interface 
 with native code (or WASM).
 
-## Setting up basic code generation in a test
+## Setting up Basic Code Generation in a Test
 
 Your backend should iterate over all [TypeDefs](https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.TypeDef.html)
 and generate the required code for these. A good starting point is to create a test for generating a simple opaque struct
@@ -82,7 +83,7 @@ cargo test -p diplomat-tool -- backend::test --nocapture
 You should also have a generated snapshot `diplomat_tool__backend__test__opaque_gen.snap.new` 
 which you can use to pick up your generated code.
 
-## How to generate the dylib
+## How to Generate the Dylib
 Now to actually test native methods you will need to create a dynamically linked library 
 You should set up a separate rust project next to your diplomat fork e.g. `mybackendtest`
 ```sh
@@ -130,7 +131,7 @@ cargo build
 ```
 to create a debug artifact in `target/debug/libmybackendtest.dylib`
 
-## getting access to your native method
+## Getting Access to your Native Method
 
 Copy the impl block for `OpaqueStruct` into the test code underneath the `OpaqueStruct`,
 and update your gen code to the following which will generate the native symbol for your
@@ -175,9 +176,16 @@ and start building progressively.
 ## Feature Tests
 Diplomat already includes feature tests that you can disable with `#[diplomat::attrs(disable, {backend})]`.
 As you add functionality to your backend you can progressively enable the types and methods for your
-backend. This way you can iterate with working examples.
+backend. This way you can iterate with working examples. These are called via [cargo-make](https://sagiegurari.github.io/cargo-make/)
+e.g
+```sh
+cargo make gen-dart-feature
+```
+You can look at `Makefile.toml` to see how tasks are defined. Most of the generative tasks make use of this
+[duckscript function](https://github.com/rust-diplomat/diplomat/blob/b3a8702f6736dbd6e667638ca0025b8f8cd1509f/support/functions.ds#L1)
+([Duckscript](https://sagiegurari.github.io/duckscript/) is a simple scripting language)
 
-## backend checklist
+## Backend Checklist
 
 - [ ] [**primitive types**](https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.PrimitiveType.html): This will be the most basic piece of the backend, and you will want
 to implement them early in order to test your ability to correctly call methods. 
@@ -188,17 +196,17 @@ to implement them early in order to test your ability to correctly call methods.
   the memory of the associated opaque.
   - [ ] as self parameter
   - [ ] as another parameter
-- [ ] structs
-- [ ] enums
-- [ ] writeable
-- [ ] slices
+- [ ] [**structs**](https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/struct.StructDef.html)
+- [ ] [**enums**](https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/struct.EnumDef.html)
+- [ ] [**writeable**](https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.SuccessType.html#variant.Writeable)
+- [ ] [**slices**](https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.Slice.html)
   - [ ] primitive slices
   - [ ] str slices
   - [ ] owned slices should be kotlin arrays
   - [ ] slices of strings
-- [ ] strings
-- [ ] borrows
+  - [ ] strings
+- [ ] borrows. This is probably one of the trickiest things., as you need to ma
   - [ ] borrows of parameters
   - [ ] in struct fields
-- [ ] nullables
-- [ ] fallibles
+- [ ] nullables, i.e. returning option types.
+- [ ] fallibles, i.e. returning result types. The resulting native type will be a discriminated union 
