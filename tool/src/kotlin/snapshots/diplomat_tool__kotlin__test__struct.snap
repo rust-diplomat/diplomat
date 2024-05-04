@@ -78,7 +78,11 @@ class MyNativeStruct internal constructor (
         
             val bEdges: List<Any> = listOf()
             val returnStruct = MyNativeStruct(returnVal, bEdges)
+<<<<<<< HEAD
             return returnStruct
+=======
+            return returnStruct 
+>>>>>>> origin/main
         
         }
     }

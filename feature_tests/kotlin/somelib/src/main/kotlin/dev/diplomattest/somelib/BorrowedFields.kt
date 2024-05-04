@@ -5,28 +5,30 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-internal interface BorrowedFieldsLib: Library {
-    fun BorrowedFields_from_bar_and_strings(bar: Pointer, dstr16: Slice, utf8Str: Slice): BorrowedFieldsNative
+internal interface BorrowedFieldsLib : Library {
+    fun BorrowedFields_from_bar_and_strings(
+            bar: Pointer,
+            dstr16: Slice,
+            utf8Str: Slice
+    ): BorrowedFieldsNative
 }
 
-class BorrowedFieldsNative: Structure(), Structure.ByValue {
-    @JvmField
-    var a: Slice = Slice();
-    @JvmField
-    var b: Slice = Slice();
-    @JvmField
-    var c: Slice = Slice();
-  
+class BorrowedFieldsNative : Structure(), Structure.ByValue {
+    @JvmField var a: Slice = Slice()
+    @JvmField var b: Slice = Slice()
+    @JvmField var c: Slice = Slice()
+
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("a", "b", "c")
     }
 }
 
-class BorrowedFields internal constructor (
-    internal val nativeStruct: BorrowedFieldsNative,
-    internal val aEdges: List<Any>
-    ) {
+class BorrowedFields
+internal constructor(
+        internal val nativeStruct: BorrowedFieldsNative,
+        internal val aEdges: List<Any>
+) {
     val a: String = PrimitiveArrayTools.getUtf16(nativeStruct.a)
     val b: String = PrimitiveArrayTools.getUtf8(nativeStruct.b)
     val c: String = PrimitiveArrayTools.getUtf8(nativeStruct.c)
@@ -38,14 +40,13 @@ class BorrowedFields internal constructor (
         fun fromBarAndStrings(bar: Bar, dstr16: String, utf8Str: String): BorrowedFields {
             val (dstr16Mem, dstr16Slice) = PrimitiveArrayTools.readUtf16(dstr16)
             val (utf8StrMem, utf8StrSlice) = PrimitiveArrayTools.readUtf8(utf8Str)
-            
-            val returnVal = lib.BorrowedFields_from_bar_and_strings(bar.handle, dstr16Slice, utf8StrSlice);
-        
+
+            val returnVal =
+                    lib.BorrowedFields_from_bar_and_strings(bar.handle, dstr16Slice, utf8StrSlice)
+
             val xEdges: List<Any> = listOf(bar) + listOf(dstr16Mem) + listOf(utf8StrMem)
             val returnStruct = BorrowedFields(returnVal, xEdges)
             return returnStruct
-        
         }
     }
-
 }

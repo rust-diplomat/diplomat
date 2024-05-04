@@ -1,4 +1,4 @@
-package dev.diplomattest.somelib;
+package dev.diplomattest.somelib
 
 import com.sun.jna.Library
 import com.sun.jna.Memory
@@ -7,13 +7,11 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 import com.sun.jna.Union
 
-
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
 val CLEANER = java.lang.ref.Cleaner.create()
 
-
-interface DiplomatWriteableLib: Library {
-    fun diplomat_buffer_writeable_create(size: Long): Pointer 
+interface DiplomatWriteableLib : Library {
+    fun diplomat_buffer_writeable_create(size: Long): Pointer
     fun diplomat_buffer_writeable_get_bytes(diplomatWriteable: Pointer): Pointer
     fun diplomat_buffer_writeable_len(diplomatWriteable: Pointer): Long
     fun diplomat_buffer_writeable_destroy(diplomatWriteable: Pointer)
@@ -24,7 +22,7 @@ object DW {
     val libClass: Class<DiplomatWriteableLib> = DiplomatWriteableLib::class.java
     val lib: DiplomatWriteableLib = Native.load("somelib", libClass)
 
-    fun writeableToString (writeable: Pointer): String {
+    fun writeableToString(writeable: Pointer): String {
         val pointer = lib.diplomat_buffer_writeable_get_bytes(writeable)
         val len = lib.diplomat_buffer_writeable_len(writeable)
         val bytes = pointer.getByteArray(0, len.toInt())
@@ -32,13 +30,12 @@ object DW {
     }
 }
 
-
 internal object PrimitiveArrayTools {
 
     fun native(boolArray: BooleanArray): Pair<Memory, Slice> {
         val mem = Memory(boolArray.size.toLong())
         val ptr = mem.share(0)
-        val byteArray = boolArray.map {if (it) 1.toByte() else 0.toByte() }.toByteArray()
+        val byteArray = boolArray.map { if (it) 1.toByte() else 0.toByte() }.toByteArray()
         ptr.write(0, byteArray, 0, byteArray.size)
         val slice = Slice()
         slice.data = ptr
@@ -46,7 +43,7 @@ internal object PrimitiveArrayTools {
         return Pair(mem, slice)
     }
 
-    fun native(byteArray: ByteArray):  Pair<Memory, Slice>{
+    fun native(byteArray: ByteArray): Pair<Memory, Slice> {
         val mem = Memory(byteArray.size.toLong())
         val ptr = mem.share(0)
         ptr.write(0, byteArray, 0, byteArray.size)
@@ -112,7 +109,6 @@ internal object PrimitiveArrayTools {
         return Pair(mem, slice)
     }
 
-
     fun native(longArray: LongArray): Pair<Memory, Slice> {
         val mem = Memory(Long.SIZE_BYTES * longArray.size.toLong())
         val ptr = mem.share(0)
@@ -173,29 +169,29 @@ internal object PrimitiveArrayTools {
         return slice.data.getIntArray(0, slice.len.toInt()).asUIntArray()
     }
 
-    fun getShortArray(slice: Slice): ShortArray{
+    fun getShortArray(slice: Slice): ShortArray {
         return slice.data.getShortArray(0, slice.len.toInt())
     }
 
     @ExperimentalUnsignedTypes
-    fun getUShortArray(slice: Slice): UShortArray{
+    fun getUShortArray(slice: Slice): UShortArray {
         return slice.data.getShortArray(0, slice.len.toInt()).asUShortArray()
     }
 
-    fun getLongArray (slice: Slice): LongArray {
+    fun getLongArray(slice: Slice): LongArray {
         return slice.data.getLongArray(0, slice.len.toInt())
     }
 
     @ExperimentalUnsignedTypes
-    fun getULongArray (slice: Slice): ULongArray {
+    fun getULongArray(slice: Slice): ULongArray {
         return slice.data.getLongArray(0, slice.len.toInt()).asULongArray()
     }
 
-    fun getFloatArray (slice: Slice): FloatArray {
+    fun getFloatArray(slice: Slice): FloatArray {
         return slice.data.getFloatArray(0, slice.len.toInt())
     }
 
-    fun getDoubleArray (slice: Slice): DoubleArray {
+    fun getDoubleArray(slice: Slice): DoubleArray {
         return slice.data.getDoubleArray(0, slice.len.toInt())
     }
 
@@ -205,7 +201,7 @@ internal object PrimitiveArrayTools {
 
     @ExperimentalUnsignedTypes
     fun readUtf16(str: String): Pair<Memory, Slice> {
-        return native(str.map {it.code.toUShort()}.toUShortArray())
+        return native(str.map { it.code.toUShort() }.toUShortArray())
     }
 
     fun getUtf8(slice: Slice): String {
@@ -216,7 +212,7 @@ internal object PrimitiveArrayTools {
 
     fun getUtf16(slice: Slice): String {
         val shortArray = slice.data.getShortArray(0, slice.len.toInt())
-        val charArray = shortArray.map { it.toInt().toChar() }.joinToString(  "")
+        val charArray = shortArray.map { it.toInt().toChar() }.joinToString("")
 
         return charArray
     }
@@ -225,12 +221,13 @@ internal object PrimitiveArrayTools {
         val sliceSize = Slice.SIZE
         val mem = Memory(sliceSize * array.size.toLong())
         val ptr = mem.share(0)
-        val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
-            val (mem, slice) = readUtf8(str)
-            ptr.setPointer(idx * sliceSize, slice.data)
-            ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len)
-            mem
-        }
+        val mems: List<Memory> =
+                array.zip(0..array.size.toLong()).map { (str, idx) ->
+                    val (mem, slice) = readUtf8(str)
+                    ptr.setPointer(idx * sliceSize, slice.data)
+                    ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len)
+                    mem
+                }
         val slice = Slice()
         slice.data = ptr
         slice.len = array.size.toLong()
@@ -241,12 +238,13 @@ internal object PrimitiveArrayTools {
         val sliceSize = Slice.SIZE
         val mem = Memory(sliceSize * array.size.toLong())
         val ptr = mem.share(0)
-        val mems: List<Memory> = array.zip(0..array.size.toLong()).map { (str, idx) ->
-            val (mem, slice) = readUtf16(str)
-            ptr.setPointer(idx * sliceSize, slice.data)
-            ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len)
-            mem
-        }
+        val mems: List<Memory> =
+                array.zip(0..array.size.toLong()).map { (str, idx) ->
+                    val (mem, slice) = readUtf16(str)
+                    ptr.setPointer(idx * sliceSize, slice.data)
+                    ptr.setLong(idx * sliceSize + Long.SIZE_BYTES, slice.len)
+                    mem
+                }
         val slice = Slice()
         slice.data = ptr
         slice.len = array.size.toLong()
@@ -276,9 +274,9 @@ internal object PrimitiveArrayTools {
     }
 }
 
-class Slice: Structure(), Structure.ByValue {
+class Slice : Structure(), Structure.ByValue {
 
-    @JvmField var data: Pointer = Pointer(0)// Pointer to const char
+    @JvmField var data: Pointer = Pointer(0) // Pointer to const char
     @JvmField var len: Long = 0 // size_t
 
     // Define the fields of the struct
@@ -292,9 +290,10 @@ class Slice: Structure(), Structure.ByValue {
 }
 
 sealed interface Res<T, E>
-class Ok<T, E>(val inner: T) : Res<T, E>
-class Err<T, E>(val inner: E) : Res<T, E>
 
+class Ok<T, E>(val inner: T) : Res<T, E>
+
+class Err<T, E>(val inner: E) : Res<T, E>
 
 fun <T> Res<T, Throwable>.reThrow(): T {
     return when (this) {
@@ -318,117 +317,98 @@ fun <T, E> E.err(): Res<T, E> {
     return Err(this)
 }
 
-class ResultIntUnitUnion: Union() {
-    @JvmField
-        var ok: Int = 0
-    
-    }
-    
-    class ResultIntUnit: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultIntUnitUnion = ResultIntUnitUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
-class ResultIntPointerUnion: Union() {
-    @JvmField
-        var ok: Int = ErrorEnum.default().toNative()
-    
-    @JvmField
-        var err: Pointer = Pointer(0)
-    }
-    
-    class ResultIntPointer: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultIntPointerUnion = ResultIntPointerUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
-class ResultPointerErrorStructNativeUnion: Union() {
-    @JvmField
-        var ok: Pointer = Pointer(0)
-    
-    @JvmField
-        var err: ErrorStructNative = ErrorStructNative()
-    }
-    
-    class ResultPointerErrorStructNative: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultPointerErrorStructNativeUnion = ResultPointerErrorStructNativeUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
-class ResultPointerIntUnion: Union() {
-    @JvmField
-        var ok: Pointer = Pointer(0)
-    
-    @JvmField
-        var err: Int = ErrorEnum.default().toNative()
-    }
-    
-    class ResultPointerInt: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultPointerIntUnion = ResultPointerIntUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
-class ResultPointerUnitUnion: Union() {
-    @JvmField
-        var ok: Pointer = Pointer(0)
-    
-    }
-    
-    class ResultPointerUnit: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
-class ResultUnitPointerUnion: Union() {
-    @JvmField
-        var err: Pointer = Pointer(0)
-    }
-    
-    class ResultUnitPointer: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultUnitPointerUnion = ResultUnitPointerUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
+class ResultIntUnitUnion : Union() {
+    @JvmField var ok: Int = 0
+}
 
+class ResultIntUnit : Structure(), Structure.ByValue {
+    @JvmField var union: ResultIntUnitUnion = ResultIntUnitUnion()
+
+    @JvmField var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+
+class ResultIntPointerUnion : Union() {
+    @JvmField var ok: Int = ErrorEnum.default().toNative()
+
+    @JvmField var err: Pointer = Pointer(0)
+}
+
+class ResultIntPointer : Structure(), Structure.ByValue {
+    @JvmField var union: ResultIntPointerUnion = ResultIntPointerUnion()
+
+    @JvmField var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+
+class ResultPointerErrorStructNativeUnion : Union() {
+    @JvmField var ok: Pointer = Pointer(0)
+
+    @JvmField var err: ErrorStructNative = ErrorStructNative()
+}
+
+class ResultPointerErrorStructNative : Structure(), Structure.ByValue {
+    @JvmField var union: ResultPointerErrorStructNativeUnion = ResultPointerErrorStructNativeUnion()
+
+    @JvmField var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+
+class ResultPointerIntUnion : Union() {
+    @JvmField var ok: Pointer = Pointer(0)
+
+    @JvmField var err: Int = ErrorEnum.default().toNative()
+}
+
+class ResultPointerInt : Structure(), Structure.ByValue {
+    @JvmField var union: ResultPointerIntUnion = ResultPointerIntUnion()
+
+    @JvmField var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+
+class ResultPointerUnitUnion : Union() {
+    @JvmField var ok: Pointer = Pointer(0)
+}
+
+class ResultPointerUnit : Structure(), Structure.ByValue {
+    @JvmField var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
+
+    @JvmField var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+
+class ResultUnitPointerUnion : Union() {
+    @JvmField var err: Pointer = Pointer(0)
+}
+
+class ResultUnitPointer : Structure(), Structure.ByValue {
+    @JvmField var union: ResultUnitPointerUnion = ResultUnitPointerUnion()
+
+    @JvmField var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
