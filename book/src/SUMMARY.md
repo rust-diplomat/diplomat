@@ -12,3 +12,4 @@
   - [Documentation](docs.md)
   - [Lifetimes](lifetimes.md)
 - [Backend developer guide](developer.md)
+  - [Checklist](backend_checklist.md)
