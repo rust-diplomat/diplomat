@@ -14,9 +14,8 @@ with native code (or WASM).
 
 Your backend should iterate over all [TypeDefs](https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.TypeDef.html)
 and generate the required code for these. A good starting point is to create a test for generating a simple opaque struct
-without any methods: create a simple opaque type. Your backend should go in the tool create:
-create a module `tool/src/{backend}/mod.rs` (make sure you add a line `pub mod backend;` to `tool/src/lib.rs`).
-Add the following to it
+without any methods. Your backend should go in the tool create: create a module `tool/src/{backend}/mod.rs` 
+(make sure you add a line `pub mod backend;` to `tool/src/lib.rs`). Add the following to it
 
 ```rs
 use diplomat_core::hir::{OpaqueDef, TypeContext, TypeId};
@@ -133,9 +132,10 @@ to create a debug artifact in `target/debug/libmybackendtest.dylib`
 
 ## Getting Access to your Native Method
 
-Copy the impl block for `OpaqueStruct` into the test code underneath the `OpaqueStruct`,
-and update your gen code to the following which will generate the native symbol for your
-method:
+Now we can add code that will iterate over all of the methods of the opaque struct.
+First, copy the impl block for `OpaqueStruct` into the test code underneath the `OpaqueStruct`.
+Next, update your the code for `gen_opaque_def` to the following which will generate the native 
+symbol for your new impl method:
 ```rust
 use crate::c2::CFormatter;
 
@@ -168,6 +168,8 @@ to you to figure how to integrate these into your host language project skeleton
 You should now work on building a minimal backend that can generate opaque type definitions
 with methods that only accept and return [**primitive types**](https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.PrimitiveType.html).
 
+You will need to update `tool/src/lib.rs` to add handling for your backend.
+
 Once you have the basics of a backend you can add attribute handling. The best way to do this is to check the existing backends
 e.g. [dart](https://github.com/rust-diplomat/diplomat/blob/b3a8702f6736dbd6e667638ca0025b8f8cd1509f/tool/src/lib.rs#L95)(Note: git permalink may be out of date).
 The most important is to ignore disabled types and methods, as then you can take advantage of diplomat's feature tests
@@ -175,8 +177,9 @@ and start building progressively.
 
 ## Feature Tests
 Diplomat already includes feature tests that you can disable with `#[diplomat::attrs(disable, {backend})]`.
-As you add functionality to your backend you can progressively enable the types and methods for your
-backend. This way you can iterate with working examples. These are called via [cargo-make](https://sagiegurari.github.io/cargo-make/)
+where `{backend}` refers to your new backend. As you add functionality to your backend you 
+can progressively enable the types and methods for your backend. This way you can iterate with 
+working examples. These are called via [cargo-make](https://sagiegurari.github.io/cargo-make/)
 e.g
 ```sh
 cargo make gen-dart-feature
