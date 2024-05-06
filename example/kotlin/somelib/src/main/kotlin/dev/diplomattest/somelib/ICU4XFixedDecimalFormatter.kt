@@ -12,10 +12,10 @@ internal interface ICU4XFixedDecimalFormatterLib: Library {
 
 class ICU4XFixedDecimalFormatter internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>) {
+    internal val selfEdges: List<Any>
+)  {
 
     internal class ICU4XFixedDecimalFormatterCleaner(val handle: Pointer, val lib: ICU4XFixedDecimalFormatterLib) : Runnable {
         override fun run() {
@@ -29,7 +29,6 @@ class ICU4XFixedDecimalFormatter internal constructor (
         
         fun tryNew(locale: ICU4XLocale, provider: ICU4XDataProvider, options: ICU4XFixedDecimalFormatterOptions): Res<ICU4XFixedDecimalFormatter, Unit> {
             val returnVal = lib.ICU4XFixedDecimalFormatter_try_new(locale.handle, provider.handle, options.nativeStruct);
-        
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.ok 
@@ -46,7 +45,7 @@ class ICU4XFixedDecimalFormatter internal constructor (
     fun formatWrite(value: ICU4XFixedDecimal): String {
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)
         val returnVal = lib.ICU4XFixedDecimalFormatter_format_write(handle, value.handle, writeable);
-    
+        
         val returnString = DW.writeableToString(writeable)
         DW.lib.diplomat_buffer_writeable_destroy(writeable)
         return returnString

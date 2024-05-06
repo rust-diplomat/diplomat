@@ -319,6 +319,10 @@ fun <T, E> E.err(): Res<T, E> {
 }
 
 {% for native_result in native_results -%}
-{{native_result|indent(4)}}
+{{native_result}}
+{% endfor %}
+
+{% for native_option in native_options-%}
+{{native_option}}
 {% endfor %}
 

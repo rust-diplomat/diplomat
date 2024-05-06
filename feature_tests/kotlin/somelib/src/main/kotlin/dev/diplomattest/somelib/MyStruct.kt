@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 
 internal interface MyStructLib: Library {
     fun MyStruct_new(): MyStructNative
-    fun MyStruct_into_a(nativeStruct: MyStructNative): UByte
+    fun MyStruct_into_a(nativeStruct: MyStructNative): Byte
 }
 
 class MyStructNative: Structure(), Structure.ByValue {
@@ -49,7 +49,7 @@ class MyStruct internal constructor (
         
         fun new_(): MyStruct {
             val returnVal = lib.MyStruct_new();
-        
+            
             val returnStruct = MyStruct(returnVal)
             return returnStruct
         }
@@ -57,7 +57,7 @@ class MyStruct internal constructor (
     
     fun intoA(): UByte {
         val returnVal = lib.MyStruct_into_a(nativeStruct);
-    return returnVal
+        return returnVal.toUByte()
     }
 
 }

@@ -1,10 +1,32 @@
 #[diplomat::bridge]
 pub mod ffi {
+    use diplomat_runtime::DiplomatWriteable;
+
     #[diplomat::opaque]
     pub struct OptionOpaque(i32);
 
     #[diplomat::opaque]
     pub struct OptionOpaqueChar(char);
+
+    #[diplomat::opaque]
+    pub struct OptionString(String);
+
+    impl OptionString {
+        pub fn new<'a>(diplomat_str: &'a DiplomatStr) -> Option<Box<Self>> {
+            let string = std::str::from_utf8(diplomat_str).ok()?.into();
+            Some(Box::new(OptionString(string)))
+        }
+
+        pub fn write<'a>(&'a self, writeable: &'a mut DiplomatWriteable) -> Result<(), ()> {
+            use std::fmt::Write;
+            write!(writeable, "{}", self.0).map_err(|_| ())?;
+            Ok(())
+        }
+
+        pub fn borrow<'a>(&'a self) -> Option<&'a DiplomatStr> {
+            Some(self.0.as_bytes())
+        }
+    }
 
     #[diplomat::out]
     pub struct OptionStruct {
@@ -25,6 +47,22 @@ pub mod ffi {
 
         pub fn returns() -> Option<OptionStruct> {
             None
+        }
+
+        pub fn option_isize(&self) -> Option<isize> {
+            Some(10)
+        }
+
+        pub fn option_usize(&self) -> Option<usize> {
+            Some(10)
+        }
+
+        pub fn option_i32(&self) -> Option<i32> {
+            Some(10)
+        }
+
+        pub fn option_u32(&self) -> Option<u32> {
+            Some(10)
         }
 
         pub fn new_struct() -> OptionStruct {

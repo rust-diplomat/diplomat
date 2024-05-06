@@ -1,8 +1,8 @@
 val selfEdges: List<Any> = {% if self_edges.is_empty() -%}
 listOf()
-{%- else -%}
-{%- for self_edge in self_edges%}{%- if !loop.first %} + {% endif -%}{{self_edge}}{%- endfor %}
-{%- endif -%}
+{%- else %}
+{%- for self_edge in self_edges %}{%- if !loop.first %} + {% endif -%}{{self_edge}}{%- endfor %}
+{%- endif %}
 {%- for borrow in borrows %}
 val {{borrow.lt}}Edges: List<Any> = {% if borrow.params.is_empty() -%}
 listOf()

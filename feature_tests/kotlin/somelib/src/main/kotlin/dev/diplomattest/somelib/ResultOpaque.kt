@@ -19,10 +19,10 @@ internal interface ResultOpaqueLib: Library {
 
 class ResultOpaque internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>) {
+    internal val selfEdges: List<Any>
+)  {
 
     internal class ResultOpaqueCleaner(val handle: Pointer, val lib: ResultOpaqueLib) : Runnable {
         override fun run() {
@@ -36,7 +36,6 @@ class ResultOpaque internal constructor (
         
         fun new_(i: Int): Res<ResultOpaque, ErrorEnum> {
             val returnVal = lib.ResultOpaque_new(i);
-        
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.ok 
@@ -51,7 +50,6 @@ class ResultOpaque internal constructor (
         
         fun newFailingFoo(): Res<ResultOpaque, ErrorEnum> {
             val returnVal = lib.ResultOpaque_new_failing_foo();
-        
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.ok 
@@ -66,7 +64,6 @@ class ResultOpaque internal constructor (
         
         fun newFailingBar(): Res<ResultOpaque, ErrorEnum> {
             val returnVal = lib.ResultOpaque_new_failing_bar();
-        
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.ok 
@@ -81,7 +78,6 @@ class ResultOpaque internal constructor (
         
         fun newFailingUnit(): Res<ResultOpaque, Unit> {
             val returnVal = lib.ResultOpaque_new_failing_unit();
-        
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.ok 
@@ -96,7 +92,6 @@ class ResultOpaque internal constructor (
         
         fun newFailingStruct(i: Int): Res<ResultOpaque, ErrorStruct> {
             val returnVal = lib.ResultOpaque_new_failing_struct(i);
-        
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.ok 
@@ -113,7 +108,6 @@ class ResultOpaque internal constructor (
         
         fun newInErr(i: Int): Res<Unit, ResultOpaque> {
             val returnVal = lib.ResultOpaque_new_in_err(i);
-        
             if (returnVal.isOk == 1.toByte()) {
                 return Ok(Unit)
             } else {
@@ -128,7 +122,6 @@ class ResultOpaque internal constructor (
         
         fun newInt(i: Int): Res<Int, Unit> {
             val returnVal = lib.ResultOpaque_new_int(i);
-        
             if (returnVal.isOk == 1.toByte()) {
                 return returnVal.union.ok.ok()
             } else {
@@ -138,7 +131,6 @@ class ResultOpaque internal constructor (
         
         fun newInEnumErr(i: Int): Res<ErrorEnum, ResultOpaque> {
             val returnVal = lib.ResultOpaque_new_in_enum_err(i);
-        
             if (returnVal.isOk == 1.toByte()) {
                 return ErrorEnum.fromNative(returnVal.union.ok).ok()
             } else {
@@ -154,7 +146,7 @@ class ResultOpaque internal constructor (
     
     fun assertInteger(i: Int): Unit {
         val returnVal = lib.ResultOpaque_assert_integer(handle, i);
-    
+        
     }
 
 }

@@ -11,12 +11,11 @@ internal interface RefListLib: Library {
 
 class RefList internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
-    ) {
+)  {
 
     internal class RefListCleaner(val handle: Pointer, val lib: RefListLib) : Runnable {
         override fun run() {
@@ -30,7 +29,7 @@ class RefList internal constructor (
         
         fun node(data: RefListParameter): RefList {
             val returnVal = lib.RefList_node(data.handle);
-        val selfEdges: List<Any> = listOf()
+            val selfEdges: List<Any> = listOf()
             val bEdges: List<Any> = listOf(data)
             val handle = returnVal 
             val returnOpaque = RefList(handle, selfEdges, bEdges)

@@ -33,7 +33,7 @@ class ICU4XFixedDecimalFormatterOptions internal constructor (
         
         fun default_(): ICU4XFixedDecimalFormatterOptions {
             val returnVal = lib.ICU4XFixedDecimalFormatterOptions_default();
-        
+            
             val returnStruct = ICU4XFixedDecimalFormatterOptions(returnVal)
             return returnStruct
         }

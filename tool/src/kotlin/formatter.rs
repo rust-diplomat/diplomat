@@ -35,12 +35,25 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "Unit"
     }
 
+    pub fn fmt_primitive_to_native_conversion(&self, name: &str, prim: PrimitiveType) -> String {
+        match prim {
+            PrimitiveType::Bool => format!("{name}.toByte()"),
+            PrimitiveType::Int(IntType::U8) => format!("{name}.toByte()"),
+            PrimitiveType::Int(IntType::U16) => format!("{name}.toShort()"),
+            PrimitiveType::Int(IntType::U32) => format!("{name}.toInt()"),
+            PrimitiveType::Int(IntType::U64) => format!("{name}.toLong()"),
+            PrimitiveType::IntSize(IntSizeType::Usize) => format!("{name}.toLong()"),
+            PrimitiveType::Int128(_) => panic!("128 bit ints not supported"),
+            _ => name.into(),
+        }
+    }
+
     pub fn fmt_string(&self) -> &'static str {
         "String"
     }
 
     pub fn fmt_primitive_slice(&self, ty: PrimitiveType) -> String {
-        format!("{}Array", self.fmt_primitive_as_ffi(ty))
+        format!("{}Array", self.fmt_primitive_as_kt(ty))
     }
 
     pub fn fmt_str_slices(&self) -> &'static str {
@@ -53,6 +66,27 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
         match prim {
+            PrimitiveType::Bool => "Byte",
+            PrimitiveType::Char => "Int",
+            PrimitiveType::Int(IntType::I8) => "Byte",
+            PrimitiveType::Int(IntType::I16) => "Short",
+            PrimitiveType::Int(IntType::I32) => "Int",
+            PrimitiveType::Int(IntType::I64) => "Long",
+            PrimitiveType::Int(IntType::U8) => "Byte",
+            PrimitiveType::Int(IntType::U16) => "Short",
+            PrimitiveType::Int(IntType::U32) => "Int",
+            PrimitiveType::Int(IntType::U64) => "Long",
+            PrimitiveType::Byte => "Byte",
+            PrimitiveType::IntSize(IntSizeType::Isize) => "Long",
+            PrimitiveType::IntSize(IntSizeType::Usize) => "Long",
+            PrimitiveType::Float(FloatType::F32) => "Float",
+            PrimitiveType::Float(FloatType::F64) => "Double",
+            PrimitiveType::Int128(_) => panic!("i128 not supported in Kotlin"),
+        }
+    }
+
+    pub fn fmt_primitive_as_kt(&self, prim: PrimitiveType) -> &'static str {
+        match prim {
             PrimitiveType::Bool => "Boolean",
             PrimitiveType::Char => "Int",
             PrimitiveType::Int(IntType::I8) => "Byte",
@@ -64,7 +98,8 @@ impl<'tcx> KotlinFormatter<'tcx> {
             PrimitiveType::Int(IntType::U32) => "UInt",
             PrimitiveType::Int(IntType::U64) => "ULong",
             PrimitiveType::Byte => "Byte",
-            PrimitiveType::IntSize(_) => "Long",
+            PrimitiveType::IntSize(IntSizeType::Isize) => "Long",
+            PrimitiveType::IntSize(IntSizeType::Usize) => "ULong",
             PrimitiveType::Float(FloatType::F32) => "Float",
             PrimitiveType::Float(FloatType::F64) => "Double",
             PrimitiveType::Int128(_) => panic!("i128 not supported in Kotlin"),
@@ -109,14 +144,16 @@ impl<'tcx> KotlinFormatter<'tcx> {
         self.fmt_param_name(ident)
     }
 
+    pub fn fmt_primitive_default<'a>(&'a self, prim: PrimitiveType) -> &'static str {
+        match prim {
+            PrimitiveType::Float(FloatType::F32) => "0.0F",
+            PrimitiveType::Float(FloatType::F64) => "0.0",
+            _ => "0",
+        }
+    }
     pub fn fmt_field_default<'a, P: TyPosition>(&'a self, ty: &'a Type<P>) -> Cow<'tcx, str> {
         match ty {
-            Type::Primitive(prim) => match prim {
-                PrimitiveType::Float(FloatType::F32) => "0.0F",
-                PrimitiveType::Float(FloatType::F64) => "0.0",
-                _ => "0",
-            }
-            .into(),
+            Type::Primitive(prim) => self.fmt_primitive_default(*prim).into(),
             Type::Opaque(op) => if op.is_optional() {
                 "null"
             } else {
@@ -136,6 +173,22 @@ impl<'tcx> KotlinFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_unsized_conversion(&self, prim: PrimitiveType, optional: bool) -> Cow<str> {
+        let optional_conversion = if optional { "?" } else { "" };
+        match prim {
+            PrimitiveType::Bool => format!("{optional_conversion} > 0").into(),
+            PrimitiveType::Int(IntType::U8) => format!("{optional_conversion}.toUByte()").into(),
+            PrimitiveType::Int(IntType::U16) => format!("{optional_conversion}.toUShort()").into(),
+            PrimitiveType::Int(IntType::U32) => format!("{optional_conversion}.toUInt()").into(),
+            PrimitiveType::Int(IntType::U64) => format!("{optional_conversion}.toULong()").into(),
+            PrimitiveType::IntSize(IntSizeType::Usize) => {
+                format!("{optional_conversion}.toULong()").into()
+            }
+            PrimitiveType::Int128(_) => panic!("Int128 not supported"),
+            _ => "".into(),
+        }
+    }
+
     pub fn fmt_struct_field_native_to_kt<'a, P: TyPosition>(
         &'a self,
         field_name: &'a str,
@@ -143,26 +196,10 @@ impl<'tcx> KotlinFormatter<'tcx> {
         ty: &'a Type<P>,
     ) -> Cow<'tcx, str> {
         match ty {
-            Type::Primitive(prim) => match prim {
-                PrimitiveType::Bool => format!("nativeStruct.{field_name} > 0").into(),
-                PrimitiveType::Int(IntType::U8) => {
-                    format!("nativeStruct.{field_name}.toUByte()").into()
-                }
-                PrimitiveType::Int(IntType::U16) => {
-                    format!("nativeStruct.{field_name}.toUShort()").into()
-                }
-                PrimitiveType::Int(IntType::U32) => {
-                    format!("nativeStruct.{field_name}.toUInt()").into()
-                }
-                PrimitiveType::Int(IntType::U64) => {
-                    format!("nativeStruct.{field_name}.toULong()").into()
-                }
-                PrimitiveType::IntSize(IntSizeType::Usize) => {
-                    format!("nativeStruct.{field_name}.toULong()").into()
-                }
-                PrimitiveType::Int128(_) => panic!("128 bit ints not supported"),
-                _ => format!("nativeStruct.{field_name}").into(),
-            },
+            Type::Primitive(prim) => {
+                let maybe_unsized_conversion = self.fmt_unsized_conversion(*prim, false);
+                format!("nativeStruct.{field_name}{maybe_unsized_conversion}").into()
+            }
             Type::Opaque(opaque) => {
                 let lt_list: String =
                     once("listOf()".to_string()) // we only support owned opaque types, so the self edges
@@ -223,7 +260,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
             }
             Type::Slice(Slice::Primitive(_, prim)) => format!(
                 "PrimitiveArrayTools.get{}Array(nativeStruct.{field_name})",
-                self.fmt_primitive_as_ffi(*prim)
+                self.fmt_primitive_as_kt(*prim)
             )
             .into(),
             Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => {
@@ -247,7 +284,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         ty: &'a Type<P>,
     ) -> Cow<'tcx, str> {
         match ty {
-            Type::Primitive(prim) => self.fmt_primitive_as_ffi(*prim).into(),
+            Type::Primitive(prim) => self.fmt_primitive_as_kt(*prim).into(),
             Type::Opaque(op) => {
                 // todo: optional
                 let optional = if op.is_optional() { "?" } else { "" };
@@ -262,11 +299,23 @@ impl<'tcx> KotlinFormatter<'tcx> {
             }
             Type::Enum(_) => self.fmt_type_name(ty.id().expect("Failed to get type id for enum")),
             Type::Slice(Slice::Primitive(_, prim)) => {
-                format!("{}Array", self.fmt_primitive_as_ffi(*prim)).into()
+                format!("{}Array", self.fmt_primitive_as_kt(*prim)).into()
             }
             Type::Slice(Slice::Str(_, _)) => "String".into(),
             Type::Slice(Slice::Strs(_)) => "List<String>".into(),
             _ => todo!(),
+        }
+    }
+
+    pub fn fmt_primitive_type_native(&self, prim: PrimitiveType) -> &'static str {
+        match prim {
+            PrimitiveType::Bool => "Byte",
+            PrimitiveType::Int(IntType::U8) => "Byte",
+            PrimitiveType::Int(IntType::U16) => "Short",
+            PrimitiveType::Int(IntType::U32) => "Int",
+            PrimitiveType::Int(IntType::U64) => "Long",
+            PrimitiveType::IntSize(_) => "Long",
+            prim => self.fmt_primitive_as_ffi(prim),
         }
     }
 
@@ -275,13 +324,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         ty: &'a Type<P>,
     ) -> Cow<'tcx, str> {
         match ty {
-            Type::Primitive(PrimitiveType::Bool) => "Byte".into(),
-            Type::Primitive(PrimitiveType::Int(IntType::U8)) => "Byte".into(),
-            Type::Primitive(PrimitiveType::Int(IntType::U16)) => "Short".into(),
-            Type::Primitive(PrimitiveType::Int(IntType::U32)) => "Int".into(),
-            Type::Primitive(PrimitiveType::Int(IntType::U64)) => "Long".into(),
-            Type::Primitive(PrimitiveType::IntSize(_)) => "Long".into(),
-            Type::Primitive(prim) => self.fmt_primitive_as_ffi(*prim).into(),
+            Type::Primitive(prim) => self.fmt_primitive_type_native(*prim).into(),
             Type::Opaque(op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()

@@ -44,7 +44,7 @@ class NestedBorrowedFields internal constructor (
             val (utf8StrYMem, utf8StrYSlice) = PrimitiveArrayTools.readUtf8(utf8StrY)
             val (utf8StrZMem, utf8StrZSlice) = PrimitiveArrayTools.readUtf8(utf8StrZ)
             val returnVal = lib.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.handle, foo.handle, dstr16XSlice, dstr16ZSlice, utf8StrYSlice, utf8StrZSlice);
-        
+            
             val xEdges: List<Any> = listOf(bar) + listOf(dstr16XMem) + listOf(utf8StrYMem)
             val yEdges: List<Any> = listOf(bar) + listOf(utf8StrYMem)
             val zEdges: List<Any> = listOf(foo) + listOf(dstr16ZMem) + listOf(utf8StrZMem)

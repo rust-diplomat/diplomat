@@ -13,17 +13,26 @@ internal interface {{type_name}}Lib: Library {
     {%- endfor %}
 }
 
+{%- match special_methods.iterator_type -%}
+{%- when Some with (iter_ty) %}
+typealias {{type_name}}IteratorItem = {{iter_ty}}
+{%- when None %}
+{%- endmatch %}
+
 class {{type_name}} internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>{% if !lifetimes.is_empty() %},
     {%- for lt in lifetimes %}
     internal val {{lt}}Edges: List<Any>,
     {%- endfor %}
-    {% endif -%}
-) {
+    {%- endif %}
+)
+{%- if special_methods.interfaces.is_empty() %} {% else %}: {% for interface in special_methods.interfaces %}
+{%- if loop.first %}{% else %}, {% endif %}{{interface}}
+{%- endfor %}
+{%- endif %} {
 
     internal class {{type_name}}Cleaner(val handle: Pointer, val lib: {{type_name}}Lib) : Runnable {
         override fun run() {
@@ -43,6 +52,40 @@ class {{type_name}} internal constructor (
 {%- for m in self_methods %}
     {{m|indent(4)}}
 {%- endfor %}
+
+{%- match special_methods.iterator_type -%}
+{%- when Some with (iter_ty) %}
+
+    var iterVal = nextInternal()
+
+    override fun hasNext(): Boolean {
+       return iterVal != null
+    }
+
+    override fun next(): {{iter_ty}}{
+        val returnVal = iterVal
+        if (returnVal == null) {
+            throw NoSuchElementException()
+        } else {
+            iterVal = nextInternal()
+            return returnVal
+        }
+    }
+{%- when None %}
+{%- endmatch %}
+{%- match special_methods.indexer_type -%}
+{%- when Some with (index_ty) %}
+
+    operator fun get(index: {{index_ty.index_type}}): {{index_ty.item_type}} {
+        val returnVal = getInternal(index)
+        if (returnVal == null) {
+            throw IndexOutOfBoundsException("Index $index is out of bounds.")
+        } else {
+            return returnVal
+        }
+    }
+{%- when None %}
+{%- endmatch %}
 
 }
 

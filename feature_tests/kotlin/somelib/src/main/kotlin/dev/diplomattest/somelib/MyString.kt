@@ -17,10 +17,10 @@ internal interface MyStringLib: Library {
 
 class MyString internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>) {
+    internal val selfEdges: List<Any>
+)  {
 
     internal class MyStringCleaner(val handle: Pointer, val lib: MyStringLib) : Runnable {
         override fun run() {
@@ -35,7 +35,7 @@ class MyString internal constructor (
         fun new_(v: String): MyString {
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
             val returnVal = lib.MyString_new(vSlice);
-        val selfEdges: List<Any> = listOf()
+            val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
@@ -46,7 +46,7 @@ class MyString internal constructor (
         fun newUnsafe(v: String): MyString {
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
             val returnVal = lib.MyString_new_unsafe(vSlice);
-        val selfEdges: List<Any> = listOf()
+            val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
@@ -57,7 +57,7 @@ class MyString internal constructor (
         fun newOwned(v: String): MyString {
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8(v)
             val returnVal = lib.MyString_new_owned(vSlice);
-        val selfEdges: List<Any> = listOf()
+            val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
@@ -68,7 +68,7 @@ class MyString internal constructor (
         fun newFromFirst(v: Array<String>): MyString {
             val (vMem, vSlice) = PrimitiveArrayTools.readUtf8s(v)
             val returnVal = lib.MyString_new_from_first(vSlice);
-        val selfEdges: List<Any> = listOf()
+            val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
@@ -80,13 +80,13 @@ class MyString internal constructor (
     fun setStr(newStr: String): Unit {
         val (newStrMem, newStrSlice) = PrimitiveArrayTools.readUtf8(newStr)
         val returnVal = lib.MyString_set_str(handle, newStrSlice);
-    
+        
     }
     
     fun getStr(): String {
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)
         val returnVal = lib.MyString_get_str(handle, writeable);
-    
+        
         val returnString = DW.writeableToString(writeable)
         DW.lib.diplomat_buffer_writeable_destroy(writeable)
         return returnString
@@ -94,7 +94,7 @@ class MyString internal constructor (
     
     fun getBoxedStr(): String {
         val returnVal = lib.MyString_get_boxed_str(handle);
-        val string = PrimitiveArrayTools.getUtf8(returnVal)
+            val string = PrimitiveArrayTools.getUtf8(returnVal)
         Native.free(Pointer.nativeValue(returnVal.data))
         return string
     }

@@ -2,8 +2,9 @@ use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
     self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaquePath, Optional, OutType, ReturnableStructDef, SelfType, Slice, StringEncoding,
-    StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    OpaquePath, Optional, OutType, Param, PrimitiveType, ReturnableStructDef, SelfType, Slice,
+    SpecialMethod, StringEncoding, StructField, StructPathLike, TyPosition, Type, TypeContext,
+    TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -42,6 +43,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
         tcx,
         errors: &errors,
         result_types: RefCell::new(BTreeSet::new()),
+        option_types: RefCell::new(BTreeSet::new()),
         formatter: &formatter,
     };
 
@@ -50,38 +52,43 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
         if ty.attrs().disable {
             continue;
         }
-        if let TypeDef::Opaque(o) = ty {
-            let type_name = o.name.to_string();
+        match ty {
+            TypeDef::Opaque(o) => {
+                let type_name = o.name.to_string();
 
-            let (file_name, body) = ty_gen_cx.gen_opaque_def(o, id, &type_name, &domain, &lib_name);
+                let (file_name, body) =
+                    ty_gen_cx.gen_opaque_def(o, id, &type_name, &domain, &lib_name);
 
-            files.add_file(format!("src/main/kotlin/{file_name}"), body);
-        }
+                files.add_file(format!("src/main/kotlin/{file_name}"), body);
+            }
 
-        if let TypeDef::OutStruct(o) = ty {
-            let type_name = o.name.to_string();
+            TypeDef::OutStruct(o) => {
+                let type_name = o.name.to_string();
 
-            let (file_name, body) = ty_gen_cx.gen_struct_def(o, id, &type_name, &domain, &lib_name);
+                let (file_name, body) =
+                    ty_gen_cx.gen_struct_def(o, id, &type_name, &domain, &lib_name);
 
-            files.add_file(format!("src/main/kotlin/{file_name}"), body);
-        }
+                files.add_file(format!("src/main/kotlin/{file_name}"), body);
+            }
 
-        if let TypeDef::Struct(struct_def) = ty {
-            let type_name = struct_def.name.to_string();
+            TypeDef::Struct(struct_def) => {
+                let type_name = struct_def.name.to_string();
 
-            let (file_name, body) =
-                ty_gen_cx.gen_struct_def(struct_def, id, &type_name, &domain, &lib_name);
+                let (file_name, body) =
+                    ty_gen_cx.gen_struct_def(struct_def, id, &type_name, &domain, &lib_name);
 
-            files.add_file(format!("src/main/kotlin/{file_name}"), body);
-        }
+                files.add_file(format!("src/main/kotlin/{file_name}"), body);
+            }
 
-        if let TypeDef::Enum(enum_def) = ty {
-            let type_name = enum_def.name.to_string();
+            TypeDef::Enum(enum_def) => {
+                let type_name = enum_def.name.to_string();
 
-            let (file_name, body) =
-                ty_gen_cx.gen_enum_def(enum_def, id, &type_name, &domain, &lib_name);
+                let (file_name, body) =
+                    ty_gen_cx.gen_enum_def(enum_def, id, &type_name, &domain, &lib_name);
 
-            files.add_file(format!("src/main/kotlin/{file_name}"), body);
+                files.add_file(format!("src/main/kotlin/{file_name}"), body);
+            }
+            ty_def => panic!("Received unknown type definition: {ty_def:?}"),
         }
     }
 
@@ -120,11 +127,19 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
         .map(|result_type| result_type.render().expect("failed to render result type"))
         .collect::<Vec<_>>();
 
+    let native_options = ty_gen_cx
+        .option_types
+        .borrow()
+        .iter()
+        .map(|option_type| option_type.render().expect("failed to render option type"))
+        .collect::<Vec<_>>();
+
     #[derive(Template)]
     #[template(path = "kotlin/init.kt.jinja", escape = "none")]
     struct Init<'a> {
         domain: &'a str,
         native_results: &'a [String],
+        native_options: &'a [String],
         lib_name: &'a str,
     }
 
@@ -132,6 +147,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
         domain: &domain,
         lib_name: &lib_name,
         native_results: native_results.as_slice(),
+        native_options: native_options.as_slice(),
     }
     .render()
     .expect("Failed to lib top level file");
@@ -147,13 +163,8 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
     files
 }
 
-#[derive(Clone, Copy)]
-enum ReturnTypeModifier {
-    Error,
-    Okay,
-}
-
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+#[derive(Template, Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+#[template(path = "kotlin/Option.kt.jinja")]
 struct TypeForResult<'d> {
     type_name: Cow<'d, str>,
     default: Option<Cow<'d, str>>,
@@ -170,6 +181,7 @@ struct TyGenContext<'a, 'cx> {
     tcx: &'cx TypeContext,
     formatter: &'a KotlinFormatter<'cx>,
     result_types: RefCell<BTreeSet<NativeResult<'cx>>>,
+    option_types: RefCell<BTreeSet<TypeForResult<'cx>>>,
     errors: &'a ErrorStore<'cx, String>,
 }
 
@@ -200,14 +212,43 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
+    fn gen_return_type_for_iterator(&self, result_ty: &ReturnType) -> Cow<'cx, str> {
+        match *result_ty {
+            ReturnType::Nullable(ref success) => self.gen_infallible_return_type_name(success),
+            ReturnType::Infallible(ref success @ SuccessType::OutType(Type::Opaque(ref o)))
+                if o.is_optional() =>
+            {
+                self.gen_infallible_return_type_name(success)
+            }
+            ref res => panic!("iterator next method should return option, {res:?}"),
+        }
+    }
+
+    fn gen_return_type_for_indexer(&self, result_ty: &ReturnType) -> Cow<'cx, str> {
+        match *result_ty {
+            ReturnType::Nullable(ref success) => self.gen_infallible_return_type_name(success),
+            ReturnType::Infallible(ref success @ SuccessType::OutType(Type::Opaque(ref o)))
+                if o.is_optional() =>
+            {
+                self.gen_infallible_return_type_name(success)
+            }
+            ref rt => {
+                panic!("indexer get method should return an option in kotlin backent: {rt:?}")
+            }
+        }
+    }
+
     fn gen_kt_to_c_for_type(&self, ty: &Type, name: Cow<'cx, str>) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(_) => name,
+            Type::Primitive(prim) => self
+                .formatter
+                .fmt_primitive_to_native_conversion(name.as_ref(), prim)
+                .into(),
             Type::Opaque(ref op @ OpaquePath { owner, .. }) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 match owner.mutability {
                     Mutability::Immutable => format!("{name}{optional}.handle").into(),
-                    Mutability::Mutable => panic!("Not comfortable with mutable access in the JVM just yet. We'll add some mutexes to the code gen"),
+                    Mutability::Mutable => format!("{name}{optional}.handle /* note this is a mutable reference. Think carefully about using especially concurrently */" ).into(),
                 }
             }
             Type::Struct(_) => format!("{name}.nativeStruct").into(),
@@ -260,15 +301,52 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 format!("Result{ok_type}{err_type}").into()
             }
-            ReturnType::Nullable(ref success) => {
-                format!("{}?", self.gen_infallible_return_type_ffi(success)).into()
+            ReturnType::Nullable(SuccessType::Unit | SuccessType::Writeable) => {
+                let mut option_types = self.option_types.borrow_mut();
+                option_types.insert(TypeForResult {
+                    type_name: "Unit".into(),
+                    default: None,
+                });
+                "OptionUnit".into()
             }
+            ReturnType::Nullable(
+                ref success @ SuccessType::OutType(
+                    Type::Struct(..) | Type::Enum(..) | Type::Primitive(..),
+                ),
+            ) => {
+                let mut option_types = self.option_types.borrow_mut();
+                let infallible_return = self.gen_infallible_return_type_ffi(success);
+                let default = match success {
+                    SuccessType::OutType(Type::Struct(..) | Type::Enum(..)) => {
+                        format!("{infallible_return}()")
+                    }
+                    SuccessType::OutType(Type::Primitive(prim)) => {
+                        self.formatter.fmt_primitive_default(*prim).into()
+                    }
+                    _ => unreachable!("success type can only be one of the above"),
+                };
+                option_types.insert(TypeForResult {
+                    type_name: infallible_return.clone(),
+                    default: Some(default.into()),
+                });
+                format!("Option{infallible_return}").into()
+            }
+            ReturnType::Nullable(SuccessType::OutType(Type::Opaque(..))) => "Pointer?".into(),
+            ReturnType::Nullable(SuccessType::OutType(Type::Slice(..))) => {
+                let mut option_types = self.option_types.borrow_mut();
+                option_types.insert(TypeForResult {
+                    type_name: "Slice".into(),
+                    default: Some("Slice()".into()),
+                });
+                "OptionSlice".into()
+            }
+            _ => panic!("unsupported return type"),
         }
     }
 
     fn gen_type_name_ffi<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
+            Type::Primitive(prim) => self.formatter.fmt_primitive_type_native(prim).into(),
             Type::Opaque(ref op) => {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()
@@ -396,13 +474,13 @@ return string"#
         match slice_ty {
             Slice::Str(Some(_), enc) => match enc {
                 StringEncoding::UnvalidatedUtf16 => {
-                    format!("    return PrimitiveArrayTools.getUtf16({val_name})").into()
+                    format!("    return PrimitiveArrayTools.getUtf16({val_name})")
                 }
                 StringEncoding::UnvalidatedUtf8 => {
-                    format!("    return PrimitiveArrayTools.getUtf8({val_name})").into()
+                    format!("    return PrimitiveArrayTools.getUtf8({val_name})")
                 }
                 StringEncoding::Utf8 => {
-                    format!("    return PrimitiveArrayTools.getUtf8({val_name})").into()
+                    format!("    return PrimitiveArrayTools.getUtf8({val_name})")
                 }
                 _ => todo!(),
             },
@@ -435,7 +513,6 @@ return string"#
     fn gen_struct_return<'d>(
         &'d self,
         struct_def: &'d ReturnableStructDef,
-        // ownership: MaybeOwn,
         lifetimes: &'d Lifetimes,
         method_lifetimes_map: &'d MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
@@ -508,7 +585,7 @@ return string"#
             method_lifetimes_map,
             cleanups,
             "returnVal.union.ok",
-            Some(ReturnTypeModifier::Okay),
+            true,
         );
 
         #[derive(Template)]
@@ -539,17 +616,6 @@ return string"#
         .render()
         .expect("Failed to render result return")
         .into()
-
-        //         format!(
-        //             r#"
-        // if (returnVal.isOk == 1.toByte()) {{
-        //     {ok_path}
-        // }} else {{
-        //     {err_path}
-        // }}
-        //                 "#
-        //         )
-        //         .into()
     }
 
     fn gen_out_type_return<'d>(
@@ -562,9 +628,9 @@ return string"#
         o: &'d OutType,
     ) -> String {
         match o {
-            // todo: unsigned need to be handled
-            Type::Primitive(_) => {
-                format!("return {val_name}{return_type_modifier}")
+            Type::Primitive(prim) => {
+                let maybe_unsized_modifier = self.formatter.fmt_unsized_conversion(*prim, false);
+                format!("return {val_name}{return_type_modifier}{maybe_unsized_modifier}")
             }
             Type::Opaque(opaque_path) => self.gen_opaque_return(
                 opaque_path,
@@ -598,6 +664,67 @@ return string"#
         }
     }
 
+    fn gen_nullable_return<'d>(
+        &'d self,
+        method: &'d Method,
+        method_lifetimes_map: &'d MethodLtMap<'d>,
+        cleanups: &[Cow<'d, str>],
+        val_name: &'d str,
+        o: &'d OutType,
+    ) -> String {
+        match o {
+            Type::Primitive(prim) => {
+                let maybe_unsized_modifier = self.formatter.fmt_unsized_conversion(*prim, true);
+                format!("return {val_name}.option(){maybe_unsized_modifier}")
+            }
+            Type::Opaque(opaque_path) => self.gen_opaque_return(
+                opaque_path,
+                method_lifetimes_map,
+                &method.lifetime_env,
+                cleanups,
+                val_name,
+                ".?",
+            ),
+            Type::Struct(strct) => {
+                let lifetimes = strct.lifetimes();
+                format!(
+                    r#"
+val intermediateOption = {val_name}.option() ?: return null
+{}
+                        "#,
+                    self.gen_struct_return(
+                        &strct.resolve(self.tcx),
+                        lifetimes,
+                        method_lifetimes_map,
+                        &method.lifetime_env,
+                        cleanups,
+                        "intermediateOption",
+                        "",
+                    )
+                )
+            }
+            Type::Enum(enm) => {
+                let return_type = enm.resolve(self.tcx);
+                format!(
+                    r#"
+val intermediateOption = {val_name}.option() ?: return null
+return {}.fromNative(intermediateOption)"#,
+                    return_type.name
+                )
+            }
+            Type::Slice(slc) => {
+                format!(
+                    r#"
+val intermediateOption = {val_name}.option() ?: return null
+{}
+                        "#,
+                    self.gen_slice_retrn(slc, "intermediateOption", "")
+                )
+            }
+            _ => todo!(),
+        }
+    }
+
     fn gen_infallible_return<'d>(
         &'d self,
         res: &'d SuccessType,
@@ -605,15 +732,13 @@ return string"#
         method_lifetimes_map: &'d MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
-        return_type_modifier: Option<ReturnTypeModifier>,
+        return_type_modifier: bool,
     ) -> String {
-        use ReturnTypeModifier as RTM;
-
         let return_type_postfix = match return_type_modifier {
-            Some(RTM::Error) => ".err()",
-            Some(RTM::Okay) => ".ok()",
-            None => "",
+            true => ".ok()",
+            false => "",
         };
+
         match res {
             SuccessType::Writeable => Self::writeable_return(return_type_postfix),
             SuccessType::OutType(ref o) => self.gen_out_type_return(
@@ -625,9 +750,8 @@ return string"#
                 o,
             ),
             SuccessType::Unit => match return_type_modifier {
-                Some(RTM::Error) => "return Err(Unit)".into(),
-                Some(RTM::Okay) => "return Ok(Unit)".into(),
-                None => "".into(),
+                true => "return Ok(Unit)".into(),
+                false => "".into(),
             },
             _ => todo!(),
         }
@@ -646,30 +770,25 @@ return string"#
                 &method_lifetimes_map,
                 cleanups,
                 "returnVal",
-                None,
+                false,
             ),
             ReturnType::Fallible(ok, err) => self
                 .gen_fallible_return(ok, err, method, &method_lifetimes_map, cleanups)
                 .into(),
 
-            ReturnType::Nullable(res) => {
-                let return_val = self.gen_infallible_return(
-                    res,
-                    method,
-                    &method_lifetimes_map,
-                    cleanups,
-                    "returnVal",
-                    None,
-                );
-                format!(
-                    r#"
-if (returnVal == null) {{
-    return null
-}} else {{
-    {return_val}
-}}"#,
-                )
+            ReturnType::Nullable(SuccessType::OutType(ref res)) => {
+                self.gen_nullable_return(method, &method_lifetimes_map, cleanups, "returnVal", res)
             }
+
+            ReturnType::Nullable(SuccessType::Writeable) => format!(
+                r#"
+retutnVal.option() ?: return null
+{}
+                        "#,
+                Self::writeable_return("")
+            ),
+            ReturnType::Nullable(SuccessType::Unit) => "retutnVal.option() ?: return null".into(),
+            _ => panic!("unsupported type"),
         }
     }
     fn gen_slice_conv(&self, kt_param_name: Cow<'cx, str>, slice_type: Slice) -> Cow<'cx, str> {
@@ -716,10 +835,15 @@ if (returnVal == null) {{
 
     fn gen_method(
         &mut self,
+        special_methods: &mut SpecialMethods,
         id: TypeId,
         method: &'cx hir::Method,
         self_type: Option<&'cx SelfType>,
     ) -> String {
+        if method.attrs.disable {
+            return "".into();
+        }
+
         let mut visitor = method.borrowing_param_visitor(self.tcx);
         let native_method_name = self.formatter.fmt_c_method_name(id, method);
 
@@ -804,15 +928,58 @@ if (returnVal == null) {{
 
         let return_ty = self.gen_return_type_name(&method.output);
 
-        let declaration = format!(
-            "fun {}({}): {return_ty}",
-            self.formatter.fmt_method_name(method),
-            params
-        );
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
             .gen_return(method, method_lifetimes_map, cleanups.as_ref())
             .into();
+
+        let declaration = match method.attrs.special_method {
+            Some(SpecialMethod::Iterator) => {
+                if special_methods.iterator_type.is_none() {
+                    let non_option_ty = self.gen_return_type_for_iterator(&method.output);
+                    special_methods.iterator_type = Some(non_option_ty.into());
+                    format!("internal fun nextInternal({params}): {return_ty}")
+                } else {
+                    panic!("Can only have one iterator method per opaque struct")
+                }
+            }
+            Some(SpecialMethod::Indexer) => {
+                if special_methods.indexer_type.is_none() {
+                    let non_option_ty = self.gen_return_type_for_indexer(&method.output);
+                    let index_type = match &method.params.first() {
+                        Some(Param {
+                            ty:
+                                Type::Primitive(
+                                    prim @ PrimitiveType::Int(..)
+                                    | prim @ PrimitiveType::IntSize(..),
+                                ),
+                            ..
+                        }) => self.formatter.fmt_primitive_as_kt(*prim),
+                        _ => panic!("index type must be an integer type"),
+                    };
+                    special_methods.indexer_type = Some(IndexerType {
+                        index_type: index_type.into(),
+                        item_type: non_option_ty.into(),
+                    });
+                    format!("internal fun getInternal({params}): {return_ty}")
+                } else {
+                    panic!("Can only have one indexer method per opaque struct")
+                }
+            }
+            Some(SpecialMethod::Iterable) => {
+                if special_methods.iterable_type.is_none() {
+                    special_methods.iterable_type = Some(return_ty.to_string());
+                    format!("override fun iterator(): {return_ty}")
+                } else {
+                    panic!("Can only have one iterable method per opaque struct")
+                }
+            }
+            _ => format!(
+                "fun {}({}): {return_ty}",
+                self.formatter.fmt_method_name(method),
+                params
+            ),
+        };
 
         MethodTpl {
             // todo: comment,
@@ -882,6 +1049,7 @@ if (returnVal == null) {{
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
+        let mut special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
             .iter()
@@ -891,14 +1059,17 @@ if (returnVal == null) {{
                     .as_ref()
                     .map(|self_param| (&self_param.ty, method))
             })
-            .map(|(self_param, method)| self.gen_method(id, method, Some(self_param)))
+            .map(|(self_param, method)| {
+                self.gen_method(&mut special_methods, id, method, Some(self_param))
+            })
             .collect::<Vec<_>>();
 
+        let mut unused_special_methods = SpecialMethods::default();
         let companion_methods = ty
             .methods
             .iter()
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(id, method, None))
+            .map(|method| self.gen_method(&mut unused_special_methods, id, method, None))
             .collect::<Vec<_>>();
 
         let lifetimes = ty
@@ -922,6 +1093,7 @@ if (returnVal == null) {{
             companion_methods: &'a [String],
             native_methods: &'a [NativeMethodInfo],
             lifetimes: Vec<Cow<'a, str>>,
+            special_methods: SpecialMethodsImpl,
         }
 
         (
@@ -934,6 +1106,7 @@ if (returnVal == null) {{
                 companion_methods: companion_methods.as_ref(),
                 native_methods: native_methods.as_ref(),
                 lifetimes,
+                special_methods: SpecialMethodsImpl::new(special_methods),
             }
             .render()
             .expect("failed to generate struct"),
@@ -954,6 +1127,7 @@ if (returnVal == null) {{
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
+        let mut unused_special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
             .iter()
@@ -963,14 +1137,16 @@ if (returnVal == null) {{
                     .as_ref()
                     .map(|self_param| (&self_param.ty, method))
             })
-            .map(|(self_param, method)| self.gen_method(id, method, Some(self_param)))
+            .map(|(self_param, method)| {
+                self.gen_method(&mut unused_special_methods, id, method, Some(self_param))
+            })
             .collect::<Vec<_>>();
 
         let companion_methods = ty
             .methods
             .iter()
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(id, method, None))
+            .map(|method| self.gen_method(&mut unused_special_methods, id, method, None))
             .collect::<Vec<_>>();
 
         let lifetimes = ty
@@ -1056,6 +1232,7 @@ if (returnVal == null) {{
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
+        let mut special_methods = SpecialMethods::default();
         let self_methods = ty
             .methods
             .iter()
@@ -1065,14 +1242,16 @@ if (returnVal == null) {{
                     .as_ref()
                     .map(|self_param| (&self_param.ty, method))
             })
-            .map(|(self_param, method)| self.gen_method(id, method, Some(self_param)))
+            .map(|(self_param, method)| {
+                self.gen_method(&mut special_methods, id, method, Some(self_param))
+            })
             .collect::<Vec<_>>();
 
         let companion_methods = ty
             .methods
             .iter()
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(id, method, None))
+            .map(|method| self.gen_method(&mut special_methods, id, method, None))
             .collect::<Vec<_>>();
 
         #[derive(Clone, Debug)]
@@ -1178,7 +1357,7 @@ if (returnVal == null) {{
 
     fn gen_type_name<P: TyPosition>(&self, ty: &Type<P>) -> Cow<'cx, str> {
         match *ty {
-            Type::Primitive(prim) => self.formatter.fmt_primitive_as_ffi(prim).into(),
+            Type::Primitive(prim) => self.formatter.fmt_primitive_as_kt(prim).into(),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(op_id);
@@ -1212,6 +1391,57 @@ if (returnVal == null) {{
 }
 
 type MethodLtMap<'a> = BTreeMap<Lifetime, BorrowedLifetimeInfo<'a>>;
+
+#[derive(Default)]
+struct SpecialMethods {
+    iterator_type: Option<String>,
+    indexer_type: Option<IndexerType>,
+    iterable_type: Option<String>,
+}
+
+struct IndexerType {
+    index_type: String,
+    item_type: String,
+}
+
+struct IterableType {
+    iterable_type: String,
+    item_type: String,
+}
+
+#[derive(Default)]
+struct SpecialMethodsImpl {
+    iterator_type: Option<String>,
+    indexer_type: Option<IndexerType>,
+    iterable_type: Option<String>,
+    interfaces: Vec<String>,
+}
+
+impl SpecialMethodsImpl {
+    pub fn new(
+        SpecialMethods {
+            iterator_type,
+            indexer_type,
+            iterable_type,
+        }: SpecialMethods,
+    ) -> Self {
+        let interfaces = iterator_type
+            .iter()
+            .map(|ty| format!("Iterator<{ty}>"))
+            .chain(
+                iterable_type
+                    .iter()
+                    .map(|iterable_type| format!("Iterable<{iterable_type}IteratorItem>")),
+            )
+            .collect();
+        Self {
+            iterator_type,
+            indexer_type,
+            iterable_type,
+            interfaces,
+        }
+    }
+}
 
 #[derive(Template)]
 #[template(path = "kotlin/Method.kt.jinja", escape = "none")]
@@ -1292,6 +1522,7 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
+                option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
             };
             let type_name = enum_def.name.to_string();
@@ -1355,6 +1586,7 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
+                option_types: RefCell::new(BTreeSet::new()),
                 errors: &error_store,
             };
             let type_name = strct.name.to_string();
@@ -1459,6 +1691,7 @@ mod test {
                 tcx: &tcx,
                 formatter: &formatter,
                 result_types: RefCell::new(BTreeSet::new()),
+                option_types: RefCell::new(BTreeSet::new()),
                 errors: &eror_store,
             };
             let type_name = opaque_def.name.to_string();

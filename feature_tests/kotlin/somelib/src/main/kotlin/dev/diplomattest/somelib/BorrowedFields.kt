@@ -40,7 +40,7 @@ class BorrowedFields internal constructor (
             val (dstr16Mem, dstr16Slice) = PrimitiveArrayTools.readUtf16(dstr16)
             val (utf8StrMem, utf8StrSlice) = PrimitiveArrayTools.readUtf8(utf8Str)
             val returnVal = lib.BorrowedFields_from_bar_and_strings(bar.handle, dstr16Slice, utf8StrSlice);
-        
+            
             val xEdges: List<Any> = listOf(bar) + listOf(dstr16Mem) + listOf(utf8StrMem)
             val returnStruct = BorrowedFields(returnVal, xEdges)
             return returnStruct
