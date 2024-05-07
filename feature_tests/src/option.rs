@@ -9,6 +9,7 @@ pub mod ffi {
     pub struct OptionOpaqueChar(char);
 
     #[diplomat::opaque]
+    #[diplomat::attr(dart, disable)]
     pub struct OptionString(String);
 
     impl OptionString {

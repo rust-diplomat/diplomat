@@ -23,7 +23,6 @@ part 'Float64Vec.g.dart';
 part 'Foo.g.dart';
 part 'ImportedStruct.g.dart';
 part 'MyEnum.g.dart';
-part 'MyIndexer.g.dart';
 part 'MyIterable.g.dart';
 part 'MyIterator.g.dart';
 part 'MyString.g.dart';
@@ -36,7 +35,6 @@ part 'OpaqueIterator.g.dart';
 part 'OpaqueMutexedString.g.dart';
 part 'OptionOpaque.g.dart';
 part 'OptionOpaqueChar.g.dart';
-part 'OptionString.g.dart';
 part 'OptionStruct.g.dart';
 part 'RefList.g.dart';
 part 'RefListParameter.g.dart';
@@ -563,7 +561,8 @@ final class _ResultUint32Void extends ffi.Struct {
 }
 
 final class _ResultUint8VoidUnion extends ffi.Union {
-  external ffi.Uint8 ok;
+  @ffi.Uint8()
+  external int ok;
 }
 
 final class _ResultUint8Void extends ffi.Struct {
@@ -579,13 +578,6 @@ final class _ResultVoidOpaqueUnion extends ffi.Union {
 
 final class _ResultVoidOpaque extends ffi.Struct {
   external _ResultVoidOpaqueUnion union;
-
-  @ffi.Bool()
-  external bool isOk;
-}
-
-final class _ResultVoidVoid extends ffi.Struct {
-  
 
   @ffi.Bool()
   external bool isOk;

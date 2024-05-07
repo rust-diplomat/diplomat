@@ -84,6 +84,7 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(not(supports = indexing), disable)]
+    #[diplomat::attr(dart, disable)]
     pub struct MyIndexer(Vec<String>);
 
     impl MyIterable {
