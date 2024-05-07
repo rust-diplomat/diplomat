@@ -13,35 +13,35 @@ internal interface MyNativeStructLib: Library {
     fun MyNativeStruct_new(): MyNativeStructNative
 }
 
-class MyNativeStructNative: Structure(), Structure.ByValue {
+internal class MyNativeStructNative: Structure(), Structure.ByValue {
     @JvmField
-    var a: Byte = 0;
+    internal var a: Byte = 0;
     @JvmField
-    var b: Byte = 0;
+    internal var b: Byte = 0;
     @JvmField
-    var c: Byte = 0;
+    internal var c: Byte = 0;
     @JvmField
-    var d: Short = 0;
+    internal var d: Short = 0;
     @JvmField
-    var e: Short = 0;
+    internal var e: Short = 0;
     @JvmField
-    var f: Int = 0;
+    internal var f: Int = 0;
     @JvmField
-    var g: Int = 0;
+    internal var g: Int = 0;
     @JvmField
-    var h: Long = 0;
+    internal var h: Long = 0;
     @JvmField
-    var i: Long = 0;
+    internal var i: Long = 0;
     @JvmField
-    var j: Int = 0;
+    internal var j: Int = 0;
     @JvmField
-    var k: Float = 0.0F;
+    internal var k: Float = 0.0F;
     @JvmField
-    var l: Double = 0.0;
+    internal var l: Double = 0.0;
     @JvmField
-    var m: Slice = Slice();
+    internal var m: Slice = Slice();
     @JvmField
-    var n: Pointer = Pointer(0);
+    internal var n: Pointer = Pointer(0);
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
