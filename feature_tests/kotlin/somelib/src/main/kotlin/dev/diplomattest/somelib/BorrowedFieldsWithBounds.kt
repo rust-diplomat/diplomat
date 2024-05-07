@@ -9,13 +9,13 @@ internal interface BorrowedFieldsWithBoundsLib: Library {
     fun BorrowedFieldsWithBounds_from_foo_and_strings(foo: Pointer, dstr16X: Slice, utf8StrZ: Slice): BorrowedFieldsWithBoundsNative
 }
 
-class BorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue {
+internal class BorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue {
     @JvmField
-    var fieldA: Slice = Slice();
+    internal var fieldA: Slice = Slice();
     @JvmField
-    var fieldB: Slice = Slice();
+    internal var fieldB: Slice = Slice();
     @JvmField
-    var fieldC: Slice = Slice();
+    internal var fieldC: Slice = Slice();
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

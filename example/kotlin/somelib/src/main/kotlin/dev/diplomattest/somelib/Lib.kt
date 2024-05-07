@@ -318,32 +318,32 @@ fun <T, E> E.err(): Res<T, E> {
     return Err(this)
 }
 
-class ResultPointerUnitUnion: Union() {
+internal class ResultPointerUnitUnion: Union() {
     @JvmField
-    var ok: Pointer = Pointer(0)
+    internal var ok: Pointer = Pointer(0)
 }
 
 class ResultPointerUnit: Structure(), Structure.ByValue  {
     @JvmField
-    var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
+    internal var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
 
     @JvmField
-    var isOk: Byte = 0
+    internal var isOk: Byte = 0
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
 }
-class ResultUnitUnitUnion: Union() {
+internal class ResultUnitUnitUnion: Union() {
 }
 
 class ResultUnitUnit: Structure(), Structure.ByValue  {
     @JvmField
-    var union: ResultUnitUnitUnion = ResultUnitUnitUnion()
+    internal var union: ResultUnitUnitUnion = ResultUnitUnitUnion()
 
     @JvmField
-    var isOk: Byte = 0
+    internal var isOk: Byte = 0
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

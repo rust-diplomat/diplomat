@@ -8,15 +8,15 @@ import com.sun.jna.Structure
 internal interface OptionStructLib: Library {
 }
 
-class OptionStructNative: Structure(), Structure.ByValue {
+internal class OptionStructNative: Structure(), Structure.ByValue {
     @JvmField
-    var a: Pointer? = null;
+    internal var a: Pointer? = null;
     @JvmField
-    var b: Pointer? = null;
+    internal var b: Pointer? = null;
     @JvmField
-    var c: Int = 0;
+    internal var c: Int = 0;
     @JvmField
-    var d: Pointer? = null;
+    internal var d: Pointer? = null;
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

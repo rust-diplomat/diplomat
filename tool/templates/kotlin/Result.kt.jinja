@@ -1,25 +1,25 @@
-class Result{{ok.type_name}}{{err.type_name}}Union: Union() {
+internal class Result{{ok.type_name}}{{err.type_name}}Union: Union() {
 {%- match ok.default %}
 {%- when Some with (ok_default) %}
     @JvmField
-    var ok: {{ok.type_name}} = {{ok_default}}
+    internal var ok: {{ok.type_name}} = {{ok_default}}
 
 {%- when None %}
 {%- endmatch %}
 {%- match err.default %}
 {%- when Some with (err_default) %}
     @JvmField
-    var err: {{err.type_name}} = {{err_default}}
+    internal var err: {{err.type_name}} = {{err_default}}
 {%- when None %}
 {%- endmatch %}
 }
 
 class Result{{ok.type_name}}{{err.type_name}}: Structure(), Structure.ByValue  {
     @JvmField
-    var union: Result{{ok.type_name}}{{err.type_name}}Union = Result{{ok.type_name}}{{err.type_name}}Union()
+    internal var union: Result{{ok.type_name}}{{err.type_name}}Union = Result{{ok.type_name}}{{err.type_name}}Union()
 
     @JvmField
-    var isOk: Byte = 0
+    internal var isOk: Byte = 0
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

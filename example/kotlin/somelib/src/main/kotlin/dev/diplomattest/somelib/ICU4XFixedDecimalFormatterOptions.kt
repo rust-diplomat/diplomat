@@ -9,11 +9,11 @@ internal interface ICU4XFixedDecimalFormatterOptionsLib: Library {
     fun ICU4XFixedDecimalFormatterOptions_default(): ICU4XFixedDecimalFormatterOptionsNative
 }
 
-class ICU4XFixedDecimalFormatterOptionsNative: Structure(), Structure.ByValue {
+internal class ICU4XFixedDecimalFormatterOptionsNative: Structure(), Structure.ByValue {
     @JvmField
-    var groupingStrategy: Int = ICU4XFixedDecimalGroupingStrategy.default().toNative();
+    internal var groupingStrategy: Int = ICU4XFixedDecimalGroupingStrategy.default().toNative();
     @JvmField
-    var someOtherConfig: Byte = 0;
+    internal var someOtherConfig: Byte = 0;
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

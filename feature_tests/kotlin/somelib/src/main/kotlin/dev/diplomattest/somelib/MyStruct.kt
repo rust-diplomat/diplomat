@@ -10,21 +10,21 @@ internal interface MyStructLib: Library {
     fun MyStruct_into_a(nativeStruct: MyStructNative): Byte
 }
 
-class MyStructNative: Structure(), Structure.ByValue {
+internal class MyStructNative: Structure(), Structure.ByValue {
     @JvmField
-    var a: Byte = 0;
+    internal var a: Byte = 0;
     @JvmField
-    var b: Byte = 0;
+    internal var b: Byte = 0;
     @JvmField
-    var c: Byte = 0;
+    internal var c: Byte = 0;
     @JvmField
-    var d: Long = 0;
+    internal var d: Long = 0;
     @JvmField
-    var e: Int = 0;
+    internal var e: Int = 0;
     @JvmField
-    var f: Int = 0;
+    internal var f: Int = 0;
     @JvmField
-    var g: Int = MyEnum.default().toNative();
+    internal var g: Int = MyEnum.default().toNative();
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

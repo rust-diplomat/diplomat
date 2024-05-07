@@ -1,20 +1,20 @@
-class Option{{type_name}}: Structure(), Structure.ByValue  {
+internal class Option{{type_name}}: Structure(), Structure.ByValue  {
     {%- match default%}
     {%- when Some with (default_value)%}
     @JvmField
-    var value: {{type_name}} = {{default_value}}
+    internal var value: {{type_name}} = {{default_value}}
     
     {% when None -%}
     {%- endmatch -%}
     @JvmField
-    var isOk: Byte = 0
+    internal var isOk: Byte = 0
 
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
         return listOf("value", "isOk")
     }
 
-    fun option(): {{type_name}}? {
+    internal fun option(): {{type_name}}? {
         if (isOk == 1.toByte()) {
             {%- match default %}
             {%- when Some with (_) %}

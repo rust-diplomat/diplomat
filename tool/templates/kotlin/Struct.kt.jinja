@@ -12,10 +12,10 @@ internal interface {{type_name}}Lib: Library {
     {%- endfor %}
 }
 
-class {{type_name}}Native: Structure(), Structure.ByValue {
+internal class {{type_name}}Native: Structure(), Structure.ByValue {
     {%- for field in fields %}
     @JvmField
-    var {{field.name}}: {{field.ffi_cast_type_name}} = {{field.ffi_type_default}};
+    internal var {{field.name}}: {{field.ffi_cast_type_name}} = {{field.ffi_type_default}};
     {%- endfor %}
   
     // Define the fields of the struct

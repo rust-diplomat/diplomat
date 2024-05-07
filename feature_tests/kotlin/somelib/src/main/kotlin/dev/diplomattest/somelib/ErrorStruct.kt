@@ -8,11 +8,11 @@ import com.sun.jna.Structure
 internal interface ErrorStructLib: Library {
 }
 
-class ErrorStructNative: Structure(), Structure.ByValue {
+internal class ErrorStructNative: Structure(), Structure.ByValue {
     @JvmField
-    var i: Int = 0;
+    internal var i: Int = 0;
     @JvmField
-    var j: Int = 0;
+    internal var j: Int = 0;
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
