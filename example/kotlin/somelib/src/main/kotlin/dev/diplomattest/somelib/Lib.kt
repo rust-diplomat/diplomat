@@ -319,9 +319,8 @@ fun <T, E> E.err(): Res<T, E> {
 }
 
 class ResultPointerUnitUnion: Union() {
-@JvmField
+    @JvmField
     var ok: Pointer = Pointer(0)
-
 }
 
 class ResultPointerUnit: Structure(), Structure.ByValue  {

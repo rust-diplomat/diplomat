@@ -319,9 +319,8 @@ fun <T, E> E.err(): Res<T, E> {
 }
 
 class ResultIntUnitUnion: Union() {
-@JvmField
+    @JvmField
     var ok: Int = 0
-
 }
 
 class ResultIntUnit: Structure(), Structure.ByValue  {
@@ -337,10 +336,9 @@ class ResultIntUnit: Structure(), Structure.ByValue  {
     }
 }
 class ResultIntPointerUnion: Union() {
-@JvmField
+    @JvmField
     var ok: Int = ErrorEnum.default().toNative()
-
-@JvmField
+    @JvmField
     var err: Pointer = Pointer(0)
 }
 
@@ -357,10 +355,9 @@ class ResultIntPointer: Structure(), Structure.ByValue  {
     }
 }
 class ResultPointerErrorStructNativeUnion: Union() {
-@JvmField
+    @JvmField
     var ok: Pointer = Pointer(0)
-
-@JvmField
+    @JvmField
     var err: ErrorStructNative = ErrorStructNative()
 }
 
@@ -377,10 +374,9 @@ class ResultPointerErrorStructNative: Structure(), Structure.ByValue  {
     }
 }
 class ResultPointerIntUnion: Union() {
-@JvmField
+    @JvmField
     var ok: Pointer = Pointer(0)
-
-@JvmField
+    @JvmField
     var err: Int = ErrorEnum.default().toNative()
 }
 
@@ -397,9 +393,8 @@ class ResultPointerInt: Structure(), Structure.ByValue  {
     }
 }
 class ResultPointerUnitUnion: Union() {
-@JvmField
+    @JvmField
     var ok: Pointer = Pointer(0)
-
 }
 
 class ResultPointerUnit: Structure(), Structure.ByValue  {
@@ -415,7 +410,7 @@ class ResultPointerUnit: Structure(), Structure.ByValue  {
     }
 }
 class ResultUnitPointerUnion: Union() {
-@JvmField
+    @JvmField
     var err: Pointer = Pointer(0)
 }
 

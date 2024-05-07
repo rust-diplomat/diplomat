@@ -1,17 +1,17 @@
 class Result{{ok.type_name}}{{err.type_name}}Union: Union() {
-{% match ok.default -%}
-{% when Some with (ok_default) -%}
+{%- match ok.default %}
+{%- when Some with (ok_default) %}
     @JvmField
     var ok: {{ok.type_name}} = {{ok_default}}
 
-{% when None -%}
-{% endmatch -%}
-{% match err.default -%}
-{% when Some with (err_default)-%}
+{%- when None %}
+{%- endmatch %}
+{%- match err.default %}
+{%- when Some with (err_default) %}
     @JvmField
     var err: {{err.type_name}} = {{err_default}}
-{% when None -%}
-{% endmatch -%}
+{%- when None %}
+{%- endmatch %}
 }
 
 class Result{{ok.type_name}}{{err.type_name}}: Structure(), Structure.ByValue  {
