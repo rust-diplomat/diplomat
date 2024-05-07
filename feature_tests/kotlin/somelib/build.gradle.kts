@@ -19,6 +19,8 @@ val someConfiguration by configurations.creating
 dependencies {
     implementation("net.java.dev.jna:jna:5.14.0")
     testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 publishing {
     publications {
@@ -31,7 +33,6 @@ publishing {
         }
     }
 }
-
 
 
 

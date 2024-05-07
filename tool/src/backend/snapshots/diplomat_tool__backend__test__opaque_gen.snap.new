@@ -1,6 +1,0 @@
----
-source: tool/src/backend/mod.rs
-assertion_line: 67
-expression: generated
----
-OpaqueStruct_add_two

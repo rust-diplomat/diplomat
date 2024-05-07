@@ -319,36 +319,38 @@ fun <T, E> E.err(): Res<T, E> {
 }
 
 class ResultPointerUnitUnion: Union() {
+@JvmField
+    var ok: Pointer = Pointer(0)
+
+}
+
+class ResultPointerUnit: Structure(), Structure.ByValue  {
     @JvmField
-        var ok: Pointer = Pointer(0)
-    
+    var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
+
+    @JvmField
+    var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
     }
-    
-    class ResultPointerUnit: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
+}
 class ResultUnitUnitUnion: Union() {
+}
+
+class ResultUnitUnit: Structure(), Structure.ByValue  {
+    @JvmField
+    var union: ResultUnitUnitUnion = ResultUnitUnitUnion()
+
+    @JvmField
+    var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
     }
-    
-    class ResultUnitUnit: Structure(), Structure.ByValue  {
-        @JvmField
-        var union: ResultUnitUnitUnion = ResultUnitUnitUnion()
-    
-        @JvmField
-        var isOk: Byte = 0
-    
-        // Define the fields of the struct
-        override fun getFieldOrder(): List<String> {
-            return listOf("union", "isOk")
-        }
-    }
+}
+
+
 

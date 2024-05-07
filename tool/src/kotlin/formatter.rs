@@ -144,7 +144,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
         self.fmt_param_name(ident)
     }
 
-    pub fn fmt_primitive_default<'a>(&'a self, prim: PrimitiveType) -> &'static str {
+    pub fn fmt_primitive_default(&self, prim: PrimitiveType) -> &'static str {
         match prim {
             PrimitiveType::Float(FloatType::F32) => "0.0F",
             PrimitiveType::Float(FloatType::F64) => "0.0",

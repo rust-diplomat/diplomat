@@ -510,6 +510,7 @@ return string"#
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn gen_struct_return<'d>(
         &'d self,
         struct_def: &'d ReturnableStructDef,
@@ -1404,16 +1405,10 @@ struct IndexerType {
     item_type: String,
 }
 
-struct IterableType {
-    iterable_type: String,
-    item_type: String,
-}
-
 #[derive(Default)]
 struct SpecialMethodsImpl {
     iterator_type: Option<String>,
     indexer_type: Option<IndexerType>,
-    iterable_type: Option<String>,
     interfaces: Vec<String>,
 }
 
@@ -1437,7 +1432,6 @@ impl SpecialMethodsImpl {
         Self {
             iterator_type,
             indexer_type,
-            iterable_type,
             interfaces,
         }
     }
