@@ -6,7 +6,7 @@ import com.sun.jna.Pointer
 
 internal interface OpaqueIteratorLib: Library {
     fun OpaqueIterator_destroy(handle: Pointer)
-    fun OpaqueIterator_next(handle: Pointer): Pointer?
+    fun namespace_OpaqueIterator_next(handle: Pointer): Pointer?
 }
 typealias OpaqueIteratorIteratorItem = AttrOpaque1?
 
@@ -30,10 +30,12 @@ class OpaqueIterator internal constructor (
     }
     
     internal fun nextInternal(): AttrOpaque1? {
-        val returnVal = lib.OpaqueIterator_next(handle);
-        val selfEdges: List<Any> = listOf(this)
+        val returnVal = lib.namespace_OpaqueIterator_next(handle);
+        val selfEdges: List<Any> = listOf()
         val handle = returnVal ?: return null
         val returnOpaque = AttrOpaque1(handle, selfEdges)
+        CLEANER.register(returnOpaque, AttrOpaque1.AttrOpaque1Cleaner(handle, AttrOpaque1.lib));
+        
         return returnOpaque
     }
 

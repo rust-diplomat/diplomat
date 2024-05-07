@@ -6,7 +6,7 @@ import com.sun.jna.Pointer
 
 internal interface MyIteratorLib: Library {
     fun MyIterator_destroy(handle: Pointer)
-    fun MyIterator_nexto(handle: Pointer): OptionByte
+    fun namespace_MyIterator_next(handle: Pointer): OptionByte
 }
 typealias MyIteratorIteratorItem = UByte
 
@@ -30,7 +30,7 @@ class MyIterator internal constructor (
     }
     
     internal fun nextInternal(): UByte? {
-        val returnVal = lib.MyIterator_nexto(handle);
+        val returnVal = lib.namespace_MyIterator_next(handle);
         return returnVal.option()?.toUByte()
     }
 

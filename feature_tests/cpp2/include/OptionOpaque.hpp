@@ -29,6 +29,26 @@ inline std::optional<OptionStruct> OptionOpaque::returns() {
   return result.is_ok ? std::optional<OptionStruct>(OptionStruct::FromFFI(result.ok)) : std::nullopt;
 }
 
+inline std::optional<intptr_t> OptionOpaque::option_isize() const {
+  auto result = capi::OptionOpaque_option_isize(this->AsFFI());
+  return result.is_ok ? std::optional<intptr_t>(result.ok) : std::nullopt;
+}
+
+inline std::optional<size_t> OptionOpaque::option_usize() const {
+  auto result = capi::OptionOpaque_option_usize(this->AsFFI());
+  return result.is_ok ? std::optional<size_t>(result.ok) : std::nullopt;
+}
+
+inline std::optional<int32_t> OptionOpaque::option_i32() const {
+  auto result = capi::OptionOpaque_option_i32(this->AsFFI());
+  return result.is_ok ? std::optional<int32_t>(result.ok) : std::nullopt;
+}
+
+inline std::optional<uint32_t> OptionOpaque::option_u32() const {
+  auto result = capi::OptionOpaque_option_u32(this->AsFFI());
+  return result.is_ok ? std::optional<uint32_t>(result.ok) : std::nullopt;
+}
+
 inline OptionStruct OptionOpaque::new_struct() {
   auto result = capi::OptionOpaque_new_struct();
   return OptionStruct::FromFFI(result);

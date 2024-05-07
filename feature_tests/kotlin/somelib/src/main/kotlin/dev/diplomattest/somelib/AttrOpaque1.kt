@@ -6,12 +6,12 @@ import com.sun.jna.Pointer
 
 internal interface AttrOpaque1Lib: Library {
     fun AttrOpaque1_destroy(handle: Pointer)
-    fun AttrOpaque1_new(): Pointer
-    fun AttrOpaque1_method(handle: Pointer): Byte
+    fun namespace_AttrOpaque1_new(): Pointer
+    fun namespace_AttrOpaque1_method(handle: Pointer): Byte
     fun renamed_on_abi_only(handle: Pointer): Byte
-    fun AttrOpaque1_method_disabledcpp(handle: Pointer): Unit
-    fun AttrOpaque1_use_unnamespaced(handle: Pointer, un: Pointer): Unit
-    fun AttrOpaque1_use_namespaced(handle: Pointer, n: Int): Unit
+    fun namespace_AttrOpaque1_method_disabledcpp(handle: Pointer): Unit
+    fun namespace_AttrOpaque1_use_unnamespaced(handle: Pointer, un: Pointer): Unit
+    fun namespace_AttrOpaque1_use_namespaced(handle: Pointer, n: Int): Unit
 }
 
 class AttrOpaque1 internal constructor (
@@ -32,7 +32,7 @@ class AttrOpaque1 internal constructor (
         internal val lib: AttrOpaque1Lib = Native.load("somelib", libClass)
         
         fun new_(): AttrOpaque1 {
-            val returnVal = lib.AttrOpaque1_new();
+            val returnVal = lib.namespace_AttrOpaque1_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = AttrOpaque1(handle, selfEdges)
@@ -43,7 +43,7 @@ class AttrOpaque1 internal constructor (
     }
     
     fun method(): UByte {
-        val returnVal = lib.AttrOpaque1_method(handle);
+        val returnVal = lib.namespace_AttrOpaque1_method(handle);
         return returnVal.toUByte()
     }
     
@@ -53,17 +53,17 @@ class AttrOpaque1 internal constructor (
     }
     
     fun methodDisabledcpp(): Unit {
-        val returnVal = lib.AttrOpaque1_method_disabledcpp(handle);
+        val returnVal = lib.namespace_AttrOpaque1_method_disabledcpp(handle);
         
     }
     
     fun useUnnamespaced(un: Unnamespaced): Unit {
-        val returnVal = lib.AttrOpaque1_use_unnamespaced(handle, un.handle);
+        val returnVal = lib.namespace_AttrOpaque1_use_unnamespaced(handle, un.handle);
         
     }
     
     fun useNamespaced(n: AttrEnum): Unit {
-        val returnVal = lib.AttrOpaque1_use_namespaced(handle, n.toNative());
+        val returnVal = lib.namespace_AttrOpaque1_use_namespaced(handle, n.toNative());
         
     }
 

@@ -6,8 +6,8 @@ import com.sun.jna.Pointer
 
 internal interface MyIterableLib: Library {
     fun MyIterable_destroy(handle: Pointer)
-    fun MyIterable_new(x: Slice): Pointer
-    fun MyIterable_iter(handle: Pointer): Pointer
+    fun namespace_MyIterable_new(x: Slice): Pointer
+    fun namespace_MyIterable_iter(handle: Pointer): Pointer
 }
 
 class MyIterable internal constructor (
@@ -29,7 +29,7 @@ class MyIterable internal constructor (
         
         fun new_(x: UByteArray): MyIterable {
             val (xMem, xSlice) = PrimitiveArrayTools.native(x)
-            val returnVal = lib.MyIterable_new(xSlice);
+            val returnVal = lib.namespace_MyIterable_new(xSlice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyIterable(handle, selfEdges)
@@ -40,7 +40,7 @@ class MyIterable internal constructor (
     }
     
     override fun iterator(): MyIterator {
-        val returnVal = lib.MyIterable_iter(handle);
+        val returnVal = lib.namespace_MyIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val aEdges: List<Any> = listOf(this)
         val handle = returnVal 

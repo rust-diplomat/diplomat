@@ -55,7 +55,7 @@ fn generate_generic
     if not ${addl_args_is_empty}
         full_args = set "${full_args} ${addl_args}"
     end
-    output = exec cargo run --release -p diplomat-tool -- %{full_args}
+    output = exec cargo run -p diplomat-tool -- %{full_args}
     if ${output.code}
         echo ${output.stderr}
         trigger_error "Bindings failed to generate. Command: diplomat-tool %{full_args}"

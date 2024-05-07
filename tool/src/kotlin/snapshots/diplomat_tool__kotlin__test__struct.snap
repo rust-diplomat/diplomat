@@ -72,18 +72,13 @@ class MyNativeStruct internal constructor (
         internal val libClass: Class<MyNativeStructLib> = MyNativeStructLib::class.java
         internal val lib: MyNativeStructLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyNativeStructNative::class.java).toLong()
-        fun new_(): MyNativeStruct {
-            
-            val returnVal = lib.MyNativeStruct_new();
         
+        fun new_(): MyNativeStruct {
+            val returnVal = lib.MyNativeStruct_new();
+            
             val bEdges: List<Any> = listOf()
             val returnStruct = MyNativeStruct(returnVal, bEdges)
-<<<<<<< HEAD
             return returnStruct
-=======
-            return returnStruct 
->>>>>>> origin/main
-        
         }
     }
 

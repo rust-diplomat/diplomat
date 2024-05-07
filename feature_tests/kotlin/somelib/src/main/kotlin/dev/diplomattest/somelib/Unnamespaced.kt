@@ -6,8 +6,8 @@ import com.sun.jna.Pointer
 
 internal interface UnnamespacedLib: Library {
     fun Unnamespaced_destroy(handle: Pointer)
-    fun Unnamespaced_make(e: Int): Pointer
-    fun Unnamespaced_use_namespaced(handle: Pointer, n: Pointer): Unit
+    fun namespace_Unnamespaced_make(e: Int): Pointer
+    fun namespace_Unnamespaced_use_namespaced(handle: Pointer, n: Pointer): Unit
 }
 
 class Unnamespaced internal constructor (
@@ -28,7 +28,7 @@ class Unnamespaced internal constructor (
         internal val lib: UnnamespacedLib = Native.load("somelib", libClass)
         
         fun make(e: AttrEnum): Unnamespaced {
-            val returnVal = lib.Unnamespaced_make(e.toNative());
+            val returnVal = lib.namespace_Unnamespaced_make(e.toNative());
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Unnamespaced(handle, selfEdges)
@@ -39,7 +39,7 @@ class Unnamespaced internal constructor (
     }
     
     fun useNamespaced(n: AttrOpaque1): Unit {
-        val returnVal = lib.Unnamespaced_use_namespaced(handle, n.handle);
+        val returnVal = lib.namespace_Unnamespaced_use_namespaced(handle, n.handle);
         
     }
 

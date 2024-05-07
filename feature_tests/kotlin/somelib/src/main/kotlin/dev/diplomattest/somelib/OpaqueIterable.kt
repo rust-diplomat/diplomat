@@ -6,7 +6,7 @@ import com.sun.jna.Pointer
 
 internal interface OpaqueIterableLib: Library {
     fun OpaqueIterable_destroy(handle: Pointer)
-    fun OpaqueIterable_iter(handle: Pointer): Pointer
+    fun namespace_OpaqueIterable_iter(handle: Pointer): Pointer
 }
 
 class OpaqueIterable internal constructor (
@@ -28,7 +28,7 @@ class OpaqueIterable internal constructor (
     }
     
     override fun iterator(): OpaqueIterator {
-        val returnVal = lib.OpaqueIterable_iter(handle);
+        val returnVal = lib.namespace_OpaqueIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val aEdges: List<Any> = listOf(this)
         val handle = returnVal 

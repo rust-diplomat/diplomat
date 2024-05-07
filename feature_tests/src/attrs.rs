@@ -1,8 +1,9 @@
 #[diplomat::bridge]
-// #[diplomat::abi_rename = "namespace_{0}"]
-// #[diplomat::attr(cpp2, rename = "CPPRenamed{0}")]
-// #[diplomat::attr(cpp2, namespace = "ns")]
+#[diplomat::abi_rename = "namespace_{0}"]
+#[diplomat::attr(cpp2, rename = "CPPRenamed{0}")]
+#[diplomat::attr(cpp2, namespace = "ns")]
 pub mod ffi {
+    #[derive(Clone)]
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, rename = "AttrOpaque1Renamed")]
     pub struct AttrOpaque1;
@@ -36,7 +37,6 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(cpp2, disable)]
     pub struct AttrOpaque2;
 
     pub enum AttrEnum {
@@ -99,7 +99,7 @@ pub mod ffi {
 
     impl<'a> MyIterator<'a> {
         #[diplomat::attr(*, iterator)]
-        pub fn nexto(&mut self) -> Option<u8> {
+        pub fn next(&mut self) -> Option<u8> {
             self.0.next().copied()
         }
     }
@@ -117,19 +117,19 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(not(supports = iterators), disable)]
-    struct OpaqueIterator<'a>(std::slice::Iter<'a, AttrOpaque1>);
+    struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
 
     impl OpaqueIterable {
         #[diplomat::attr(*, iterable)]
         pub fn iter<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
-            Box::new(OpaqueIterator(self.0.iter()))
+            Box::new(OpaqueIterator(Box::new(self.0.iter().cloned())))
         }
     }
 
     impl<'a> OpaqueIterator<'a> {
         #[diplomat::attr(*, iterator)]
-        pub fn next(&'a mut self) -> Option<&'a AttrOpaque1> {
-            self.0.next()
+        pub fn next(&'a mut self) -> Option<Box<AttrOpaque1>> {
+            self.0.next().map(Box::new)
         }
     }
 }

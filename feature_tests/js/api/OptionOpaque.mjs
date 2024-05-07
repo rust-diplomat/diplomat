@@ -45,6 +45,66 @@ export class OptionOpaque {
     })();
   }
 
+  option_isize() {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+      wasm.OptionOpaque_option_isize(diplomat_receive_buffer, this.underlying);
+      const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
+      if (!is_ok) {
+        wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        return;
+      }
+      const value = (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+      wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+      return value;
+    })();
+  }
+
+  option_usize() {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+      wasm.OptionOpaque_option_usize(diplomat_receive_buffer, this.underlying);
+      const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
+      if (!is_ok) {
+        wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        return;
+      }
+      const value = (new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+      wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+      return value;
+    })();
+  }
+
+  option_i32() {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+      wasm.OptionOpaque_option_i32(diplomat_receive_buffer, this.underlying);
+      const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
+      if (!is_ok) {
+        wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        return;
+      }
+      const value = (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+      wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+      return value;
+    })();
+  }
+
+  option_u32() {
+    return (() => {
+      const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+      wasm.OptionOpaque_option_u32(diplomat_receive_buffer, this.underlying);
+      const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4);
+      if (!is_ok) {
+        wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        return;
+      }
+      const value = (new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+      wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+      return value;
+    })();
+  }
+
   static new_struct() {
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);

@@ -27,6 +27,10 @@ class OptionOpaque {
   static std::optional<OptionOpaque> new_(int32_t i);
   static std::optional<OptionOpaque> new_none();
   static diplomat::result<OptionStruct, std::monostate> returns();
+  diplomat::result<intptr_t, std::monostate> option_isize() const;
+  diplomat::result<size_t, std::monostate> option_usize() const;
+  diplomat::result<int32_t, std::monostate> option_i32() const;
+  diplomat::result<uint32_t, std::monostate> option_u32() const;
   static OptionStruct new_struct();
   static OptionStruct new_struct_nones();
   void assert_integer(int32_t i) const;
@@ -90,6 +94,46 @@ inline diplomat::result<OptionStruct, std::monostate> OptionOpaque::returns() {
     diplomat_optional_out_value_d = std::nullopt;
   }
     diplomat_result_out_value = diplomat::Ok<OptionStruct>(OptionStruct{ .a = std::move(diplomat_optional_out_value_a), .b = std::move(diplomat_optional_out_value_b), .c = std::move(diplomat_raw_struct_out_value.c), .d = std::move(diplomat_optional_out_value_d) });
+  } else {
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
+  }
+  return diplomat_result_out_value;
+}
+inline diplomat::result<intptr_t, std::monostate> OptionOpaque::option_isize() const {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_option_isize(this->inner.get());
+  diplomat::result<intptr_t, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok<intptr_t>(diplomat_result_raw_out_value.ok);
+  } else {
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
+  }
+  return diplomat_result_out_value;
+}
+inline diplomat::result<size_t, std::monostate> OptionOpaque::option_usize() const {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_option_usize(this->inner.get());
+  diplomat::result<size_t, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok<size_t>(diplomat_result_raw_out_value.ok);
+  } else {
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
+  }
+  return diplomat_result_out_value;
+}
+inline diplomat::result<int32_t, std::monostate> OptionOpaque::option_i32() const {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_option_i32(this->inner.get());
+  diplomat::result<int32_t, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok<int32_t>(diplomat_result_raw_out_value.ok);
+  } else {
+    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
+  }
+  return diplomat_result_out_value;
+}
+inline diplomat::result<uint32_t, std::monostate> OptionOpaque::option_u32() const {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_option_u32(this->inner.get());
+  diplomat::result<uint32_t, std::monostate> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = diplomat::Ok<uint32_t>(diplomat_result_raw_out_value.ok);
   } else {
     diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
   }
