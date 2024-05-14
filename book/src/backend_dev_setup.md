@@ -14,7 +14,7 @@ with native code (or WASM).
 
 Your backend should iterate over all [TypeDefs](https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.TypeDef.html)
 and generate the required code for these. A good starting point is to create a test for generating a simple opaque struct
-without any methods. Your backend should go in the tool create: create a module `tool/src/{backend}/mod.rs` 
+without any methods. Your backend should go in the tool crate: create a module `tool/src/{backend}/mod.rs` 
 (make sure you add a line `pub mod backend;` to `tool/src/lib.rs`). Add the following to it
 
 ```rs
