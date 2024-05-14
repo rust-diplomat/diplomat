@@ -67,7 +67,7 @@ fn generate_generic
     rm -r "${backend}/${output_folder}${preserve_subdirectory}"
     # we do a /.. so that cases where output_folder is multiple folders down
     # end up copying to the right path
-    mv "tmp/${output_folder}${preserve_subdirectory}" "${backend}/${output_folder}${preserve_subdirectory}/.."
+    mv "tmp/${output_folder}${preserve_subdirectory}/" "${backend}/${output_folder}${preserve_subdirectory}/.."
     if not ${subdirectory_is_empty}
         rm -r "tmp/${output_folder}"
     end
