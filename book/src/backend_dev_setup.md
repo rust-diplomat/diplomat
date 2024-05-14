@@ -14,17 +14,23 @@ with native code (or WASM).
 
 Your backend should iterate over all [TypeDefs](https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.TypeDef.html)
 and generate the required code for these. To do that we start with an 
-[`ast::File`](https://docs.rs/diplomat_core/latest/diplomat_core/ast/struct.File.html), which can then be 
-parsed into a [`Env`](https://docs.rs/diplomat_core/latest/diplomat_core/struct.Env.html) using the 
-`all_types` method. Then we can create the [`TypeContext`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html)
-which is generated using the [`from_ast`]( https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html#method.from_ast)
-method. You will also need an [`AttributeValidator`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/trait.AttributeValidator.html), but
-should probably start with the simple [`BasicAttributeValidator`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.BasicAttributeValidator.html).
+[`ast::File`](https://docs.rs/diplomat_core/latest/diplomat_core/ast/struct.File.html), which can 
+then be parsed into a [`Env`](https://docs.rs/diplomat_core/latest/diplomat_core/struct.Env.html)
+using the `all_types` method. Then we can create the 
+[`TypeContext`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html) 
+which is generated using the 
+[`from_ast`]( https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html#method.from_ast)
+method. You will also need an 
+[`AttributeValidator`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/trait.AttributeValidator.html), 
+but should probably start with the simple 
+[`BasicAttributeValidator`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.BasicAttributeValidator.html).
 
 
-A good starting point is to create a test for generating a simple opaque struct
-without any methods. Your backend should go in the tool crate: create a module `tool/src/{backend}/mod.rs` 
-(make sure you add a line `pub mod backend;` to `tool/src/lib.rs`). Add the following to it
+
+We will now build an example by way of a test. A good starting point is to create a test for
+generating a simple opaque struct without any methods. Your backend should go in the tool crate: 
+create a module `tool/src/{backend}/mod.rs`  (make sure you add a line `pub mod backend;` to 
+`tool/src/lib.rs`). Add the following to it
 
 ```rs
 use diplomat_core::hir::{OpaqueDef, TypeContext, TypeId};
@@ -91,7 +97,7 @@ cargo test -p diplomat-tool -- backend::test --nocapture
 You should also have a generated snapshot `diplomat_tool__backend__test__opaque_gen.snap.new` 
 which you can use to pick up your generated code.
 
-## How to Generate  the library
+## How to Generate the Library
 Now to actually test native methods you will need to create some kind of library be it static, dynamic or
 even WASM. In the following we will be creating a dynamically linked library.
 
