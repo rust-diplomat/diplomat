@@ -16,7 +16,9 @@ Your backend should iterate over all [TypeDefs](https://docs.rs/diplomat_core/la
 and generate the required code for these. To do that we start with an 
 [`ast::File`](https://docs.rs/diplomat_core/latest/diplomat_core/ast/struct.File.html), which can 
 then be parsed into a [`Env`](https://docs.rs/diplomat_core/latest/diplomat_core/struct.Env.html)
-using the `all_types` method. Then we can create the 
+using the 
+[`all_types`](https://docs.rs/diplomat_core/latest/diplomat_core/ast/struct.File.html#method.all_types) 
+method. Then we can create the 
 [`TypeContext`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html) 
 which is generated using the 
 [`from_ast`]( https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html#method.from_ast)
