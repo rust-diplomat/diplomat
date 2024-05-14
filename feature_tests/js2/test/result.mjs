@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import { ResultOpaque } from "diplomat-wasm-feature-tests"
+import { ResultOpaque } from "diplomat-wasm-js2-feature-tests"
 
 test("Verify result methods", t => {
     const s = ResultOpaque.new(5);

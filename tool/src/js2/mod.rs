@@ -11,6 +11,15 @@ use crate::common::FileMap;
 pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
     let files = FileMap::default();
 
+    files.add_file("diplomat-runtime.mjs".into(), include_str!("runtime.mjs").into());
+    files.add_file("diplomat-runtime.d.ts".into(), include_str!("runtime.d.ts").into());
+    files.add_file("diplomat-wasm.mjs".into(), include_str!("wasm.mjs").into());
+
+    
+    // TODO: All of this.
+    files.add_file("index.mjs".into(), "export { FFIError } from './diplomat-runtime.mjs';".into());
+    files.add_file("index.d.ts".into(), "".into());
+
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             continue;

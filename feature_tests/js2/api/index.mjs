@@ -1,0 +1,1 @@
+export { FFIError } from './diplomat-runtime.mjs';
