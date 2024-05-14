@@ -82,8 +82,10 @@ cargo test -p diplomat-tool -- backend::test --nocapture
 You should also have a generated snapshot `diplomat_tool__backend__test__opaque_gen.snap.new` 
 which you can use to pick up your generated code.
 
-## How to Generate the Dylib
-Now to actually test native methods you will need to create a dynamically linked library 
+## How to Generate  the library
+Now to actually test native methods you will need to create some kind of library be it static, dynamic or
+even WASM. In the following we will be creating a dynamically linked library.
+
 You should set up a separate rust project next to your diplomat fork e.g. `mybackendtest`
 ```sh
 cargo new --lib mybackendtest
@@ -208,8 +210,9 @@ to implement them early in order to test your ability to correctly call methods.
   - [ ] owned slices should be kotlin arrays
   - [ ] slices of strings
   - [ ] strings
-- [ ] borrows. This is probably one of the trickiest things., as you need to ma
+- [ ] borrows. This is probably one of the trickiest things, as you need to ensure that managed objects don't get
+cleaned up if something depends on them.
   - [ ] borrows of parameters
   - [ ] in struct fields
 - [ ] nullables, i.e. returning option types.
-- [ ] fallibles, i.e. returning result types. The resulting native type will be a discriminated union 
+- [ ] fallibles, i.e. returning result types. The resulting native type will be a discriminated union.

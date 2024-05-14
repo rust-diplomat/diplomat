@@ -12,4 +12,4 @@
   - [Documentation](docs.md)
   - [Lifetimes](lifetimes.md)
 - [Backend developer guide](developer.md)
-  - [Backend development setup](backend_dev_setup.md)
+- [Backend development setup](backend_dev_setup.md)
