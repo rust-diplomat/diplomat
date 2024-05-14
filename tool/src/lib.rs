@@ -18,6 +18,8 @@ pub mod dotnet;
 #[doc(hidden)]
 pub mod js;
 #[doc(hidden)]
+pub mod js2;
+#[doc(hidden)]
 pub mod kotlin;
 
 mod docs_util;
@@ -75,6 +77,23 @@ pub fn gen(
     let mut errors_found = false;
 
     match target_language {
+        "js2" => {
+            let mut attr_validator = hir::BasicAttributeValidator::new("js2");
+            attr_validator.other_backend_names.push("js".into());
+
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(context) => context,
+                Err(e) => {
+                    eprintln!("Lowering AST to HIR for Javascript backend failed:");
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
+                    }
+                    std::process::exit(-1);
+                },
+            };
+            let mut run = js2::run(&tcx, library_config);
+            out_texts = run.take_files();
+        },
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "kotlin" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
