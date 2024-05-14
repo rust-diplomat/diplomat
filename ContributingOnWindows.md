@@ -27,3 +27,5 @@ exec --fail-on-error ${npm} --version
 ```
 
 This shoulllld work across OSes? But I imagine it'd be better to use this as a quick patch job for whatever's being developed. To then be reverted later once a more suitable fix has been found.
+
+You also don't have to use Cargo make. VS Code tasks also help me circumvent this kind of stuff. But I try to avoid calling npm directly if possible, since everybody should ideally be using the same build tools.
