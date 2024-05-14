@@ -100,7 +100,7 @@ You should also have a generated snapshot `diplomat_tool__backend__test__opaque_
 which you can use to pick up your generated code.
 
 ## How to Generate the Library
-Now to actually test native methods you will need to create some kind of library be it static, dynamic or
+Now to actually test native methods you will need to create some kind of library, be it static, dynamic, or
 even WASM. In the following we will be creating a dynamically linked library.
 
 You should set up a separate rust project next to your diplomat fork e.g. `mybackendtest`
