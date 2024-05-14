@@ -2,7 +2,7 @@
 ## By ambiguousname
 Windows tends to be more neglected when it comes to development stuff, so I'm writing mostly to note for myself the common pitfalls I'm encountering while building things.
 
-For reference, I'm using msys2 with C:\msys64\usr\bin in my PATH to try and avoid some bash-specific complications. For rust though, that doesn't mean all that much.
+For reference, I'm using msys2 with C:\msys64\usr\bin in my PATH (plus some C:\mingw64\ folders) to try and avoid some bash-specific complications. For rust though, that doesn't mean all that much.
 
 If you get frustrated, you could always try switching to WSL. Which I try not to use because I'm difficult.
 
