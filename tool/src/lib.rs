@@ -81,6 +81,8 @@ pub fn gen(
             let mut attr_validator = hir::BasicAttributeValidator::new("js2");
             attr_validator.other_backend_names.push("js".into());
 
+            attr_validator.support.disabling = true;
+
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
@@ -89,11 +91,11 @@ pub fn gen(
                         eprintln!("Lowering error in {ctx}: {err}");
                     }
                     std::process::exit(-1);
-                },
+                }
             };
             let mut run = js2::run(&tcx, library_config);
             out_texts = run.take_files();
-        },
+        }
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "kotlin" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
