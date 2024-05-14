@@ -13,7 +13,16 @@ with native code (or WASM).
 ## Setting up Basic Code Generation in a Test
 
 Your backend should iterate over all [TypeDefs](https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.TypeDef.html)
-and generate the required code for these. A good starting point is to create a test for generating a simple opaque struct
+and generate the required code for these. To do that we start with an 
+[`ast::File`](https://docs.rs/diplomat_core/latest/diplomat_core/ast/struct.File.html), which can then be 
+parsed into a [`Env`](https://docs.rs/diplomat_core/latest/diplomat_core/struct.Env.html) using the 
+`all_types` method. Then we can create the [`TypeContext`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html)
+which is generated using the [`from_ast`]( https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html#method.from_ast)
+method. You will also need an [`AttributeValidator`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/trait.AttributeValidator.html), but
+should probably start with the simple [`BasicAttributeValidator`](https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.BasicAttributeValidator.html).
+
+
+A good starting point is to create a test for generating a simple opaque struct
 without any methods. Your backend should go in the tool crate: create a module `tool/src/{backend}/mod.rs` 
 (make sure you add a line `pub mod backend;` to `tool/src/lib.rs`). Add the following to it
 
