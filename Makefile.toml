@@ -200,6 +200,19 @@ exec --fail-on-error npm install
 exec --fail-on-error npm run test
 '''
 
+[tasks.test-wasm-feature-js2]
+category = "Tests"
+dependencies = ["build-feature-wasm"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/js2/
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
+cd app
+exec --fail-on-error npm install
+exec --fail-on-error npm run test
+'''
+
 [tasks.test-dart-example]
 category = "Tests"
 script_runner = "@duckscript"
@@ -268,6 +281,7 @@ dependencies = [
     "gen-c-feature",
     "gen-c2-feature",
     "gen-js-feature",
+    "gen-js2-feature",
     "gen-dotnet-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
@@ -412,6 +426,15 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic feature_tests js api docs/source
+'''
+
+[tasks.gen-js2-feature]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests js2 api docs/source
 '''
 
 [tasks.gen-js-example]
