@@ -4,6 +4,8 @@ use diplomat_core::hir::{TypeContext, TypeId};
 
 use crate::c2::CFormatter;
 
+use super::FileType;
+
 /// Helper class for us to format JS identifiers from the HIR.
 pub(super) struct JSFormatter<'tcx> {
 	/// Per [`CFormatter`]'s documentation we use it for support.
@@ -35,11 +37,10 @@ impl<'tcx> JSFormatter<'tcx> {
 		type_def.attrs().rename.apply(candidate)
 	}
 
-	pub fn fmt_mjs_file_name(&self, type_name : &str) -> String {
-		format!("{}.mjs", type_name)
-	}
-
-	pub fn fmt_ts_file_name(&self, type_name : &str) -> String {
-		format!("{}.d.ts", type_name)
+	pub fn fmt_file_name(&self, type_name : &str, file_type : FileType) -> String {
+		match file_type {
+			FileType::Module => format!("{}.mjs", type_name),
+			FileType::Typescript => format!("{}.d.ts", type_name)
+		}
 	}
 }
