@@ -1,1 +1,0 @@
-export { FFIError } from './diplomat-runtime';

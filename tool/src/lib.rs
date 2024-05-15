@@ -93,7 +93,7 @@ pub fn gen(
                     std::process::exit(-1);
                 }
             };
-            let mut run = js2::run(&tcx, library_config);
+            let mut run = js2::JSGenerationContext::run(&tcx, strip_prefix);
             out_texts = run.take_files();
         }
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
