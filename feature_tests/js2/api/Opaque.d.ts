@@ -1,1 +1,4 @@
-This is another test
+import wasm from "./diplomat-wasm.mjs"
+import * as diplomatRuntime from "./diplomat-runtime.mjs"
+
+Opaque has a TypeDef that is unimplemented. I am working on it!

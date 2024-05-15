@@ -86,7 +86,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 TypeDef::Enum(enum_def) => {
                     self.generate_enum_from_def(enum_def, type_id, &name, &file_type)
                 },
-                _ => todo!()
+                // TODO:
+                _ => format!("{} has a TypeDef that is unimplemented. I am working on it!", type_def.name())
             };
             self.files.add_file(self.formatter.fmt_file_name(&name, file_type), self.generate_base(contents));
         }
