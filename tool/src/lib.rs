@@ -81,6 +81,7 @@ pub fn gen(
             let mut attr_validator = hir::BasicAttributeValidator::new("js2");
             attr_validator.other_backend_names.push("js".into());
 
+            attr_validator.support.renaming = true;
             attr_validator.support.disabling = true;
 
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
