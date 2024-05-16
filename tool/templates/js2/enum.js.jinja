@@ -1,6 +1,6 @@
 {% if !typescript %}// Internal conversion from JS types to Rust types.
 export const {{type_name}}_js_to_rust = {
-	
+
 };
 
 export const {{type_name}}_rust_to_js = {
@@ -11,5 +11,19 @@ export const {{type_name}}_rust_to_js = {
 
 // Base enumerator definition
 export {% if typescript -%} enum {%- else -%} const {%- endif %} {{type_name}} {% if !typescript -%} = {%- endif %} {
+{%- for variant in enum_def.variants -%}
+{%- let variant_name = formatter.fmt_enum_variant(variant) %}
+	{% if !typescript %}"{% endif -%}
 
+	{{-variant_name-}}
+	
+	{%- if !typescript %}"{% endif -%}
+	
+	{%- if typescript %} = ' {%- else -%} : " {%- endif -%}
+
+	{{-variant_name-}}
+
+	{%- if typescript %}'{% else %}"{% endif -%}
+	{%- if !loop.last %},{% endif -%}
+{% endfor %}
 } {%- if !typescript -%} ; {%- endif %}

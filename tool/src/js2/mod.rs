@@ -110,11 +110,15 @@ impl<'tcx> JSGenerationContext<'tcx> {
         #[derive(Template)]
         #[template(path="js2/enum.js.jinja", escape="none")]
         struct ImplTemplate<'a> {
+            enum_def: &'a EnumDef,
+            formatter : &'a JSFormatter<'a>,
             type_name : &'a str,
             typescript : bool,
         }
 
         ImplTemplate{
+            enum_def,
+            formatter: &self.formatter,
             type_name,
             typescript: file_type.is_typescript()
         }.render().unwrap()

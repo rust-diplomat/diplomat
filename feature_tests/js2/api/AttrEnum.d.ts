@@ -3,5 +3,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 // Base enumerator definition
 export enum AttrEnum  {
-
+	A = 'A',
+	B = 'B',
+	C = 'C'
 }

@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
-use diplomat_core::hir::{TypeContext, TypeId};
+use diplomat_core::hir::{EnumVariant, TypeContext, TypeId};
+use heck::ToUpperCamelCase;
 
 use crate::c2::CFormatter;
 
@@ -42,5 +43,10 @@ impl<'tcx> JSFormatter<'tcx> {
 			FileType::Module => format!("{}.mjs", type_name),
 			FileType::Typescript => format!("{}.d.ts", type_name)
 		}
+	}
+
+	pub fn fmt_enum_variant(&self, variant : &'tcx EnumVariant) -> Cow<'tcx, str> {
+		let name = variant.name.as_str().to_upper_camel_case().into();
+		variant.attrs.rename.apply(name)
 	}
 }
