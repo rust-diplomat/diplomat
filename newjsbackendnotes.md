@@ -2,3 +2,4 @@
 - Dart is more rigorous with lifetimes (copy that over)
 	- Found leaks in JS before
 - See Issue #420 - Enum class
+- Test on Node v20
