@@ -1,33 +1,42 @@
-{% if !typescript %}// Internal conversion from JS types to Rust types.
-export const {{type_name}}_js_to_rust = {
-{%- for variant in enum_def.variants %}
-	"{{formatter.fmt_enum_variant(variant)}}": {{variant.discriminant}}{% if !loop.last %},{% endif -%}
-{%- endfor %}
-};
-
-export const {{type_name}}_rust_to_js = {
-{%- for variant in enum_def.variants %}
-	[{{variant.discriminant}}]: "{{formatter.fmt_enum_variant(variant)}}"{% if !loop.last %},{% endif -%}
-{%- endfor %}
-};
-
-{% endif -%}
-
 // Base enumerator definition
-export {% if typescript -%} enum {%- else -%} const {%- endif %} {{type_name}} {% if !typescript -%} = {%- endif %} {
-{%- for variant in enum_def.variants -%}
-{%- let variant_name = formatter.fmt_enum_variant(variant) %}
-	{% if !typescript %}"{% endif -%}
+{% if !doc_str.is_empty() -%}
+/** {{doc_str}}
+*/
+{% endif -%}
+export class {{type_name}} {
+{%- if !typescript %}
+	#value = undefined;
 
-	{{-variant_name-}}
-	
-	{%- if !typescript %}"{% endif -%}
-	
-	{%- if typescript %} = ' {%- else -%} : " {%- endif -%}
+	static #internal_map = new Map([
+{%- for variant in enum_def.variants %}
+		["{{formatter.fmt_enum_variant(variant)}}", {{variant.discriminant}}]{% if !loop.last %},{% endif %}
+{%- endfor %}
+	]);
 
-	{{-variant_name-}}
+	constructor(value) {
+		if (value instanceof {{type_name}}) {
+			this.#value = value.value;
+			return;
+		}
 
-	{%- if typescript %}'{% else %}"{% endif -%}
-	{%- if !loop.last %},{% endif -%}
-{% endfor %}
-} {%- if !typescript -%} ; {%- endif %}
+		if ({{type_name}}.#internal_map.has(value)) {
+			this.#value = value;
+			return;
+		}
+
+		throw TypeError(value + " is not a {{type_name}} and does not correspond to any of its enumerator values.");
+	}
+
+	get value() {
+		return this.#value;
+	}
+
+	get ffiValue() {
+		return {{type_name}}.#internal_map.get(this.#value);
+	}
+{%- endif %}
+{% for variant in enum_def.variants -%}
+	{%- let variant_name = formatter.fmt_enum_variant(variant) %}
+	static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
+{% endfor -%}
+}

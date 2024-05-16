@@ -2,7 +2,9 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 // Base enumerator definition
-export enum ErrorEnum  {
-	Foo = 'Foo',
-	Bar = 'Bar'
+export class ErrorEnum {
+
+	static Foo : ErrorEnum;
+
+	static Bar : ErrorEnum;
 }

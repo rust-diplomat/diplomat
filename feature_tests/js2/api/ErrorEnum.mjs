@@ -1,19 +1,38 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-// Internal conversion from JS types to Rust types.
-export const ErrorEnum_js_to_rust = {
-	"Foo": 0,
-	"Bar": 1
-};
-
-export const ErrorEnum_rust_to_js = {
-	[0]: "Foo",
-	[1]: "Bar"
-};
-
 // Base enumerator definition
-export const ErrorEnum = {
-	"Foo": "Foo",
-	"Bar": "Bar"
-};
+export class ErrorEnum {
+	#value = undefined;
+
+	static #internal_map = new Map([
+		["Foo", 0],
+		["Bar", 1]
+	]);
+
+	constructor(value) {
+		if (value instanceof ErrorEnum) {
+			this.#value = value.value;
+			return;
+		}
+
+		if (ErrorEnum.#internal_map.has(value)) {
+			this.#value = value;
+			return;
+		}
+
+		throw TypeError(value + " is not a ErrorEnum and does not correspond to any of its enumerator values.");
+	}
+
+	get value() {
+		return this.#value;
+	}
+
+	get ffiValue() {
+		return ErrorEnum.#internal_map.get(this.#value);
+	}
+
+	static Foo = new ErrorEnum("Foo");
+
+	static Bar = new ErrorEnum("Bar");
+}

@@ -1,22 +1,41 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-// Internal conversion from JS types to Rust types.
-export const AttrEnum_js_to_rust = {
-	"A": 0,
-	"B": 1,
-	"C": 2
-};
-
-export const AttrEnum_rust_to_js = {
-	[0]: "A",
-	[1]: "B",
-	[2]: "C"
-};
-
 // Base enumerator definition
-export const AttrEnum = {
-	"A": "A",
-	"B": "B",
-	"C": "C"
-};
+export class AttrEnum {
+	#value = undefined;
+
+	static #internal_map = new Map([
+		["A", 0],
+		["B", 1],
+		["C", 2]
+	]);
+
+	constructor(value) {
+		if (value instanceof AttrEnum) {
+			this.#value = value.value;
+			return;
+		}
+
+		if (AttrEnum.#internal_map.has(value)) {
+			this.#value = value;
+			return;
+		}
+
+		throw TypeError(value + " is not a AttrEnum and does not correspond to any of its enumerator values.");
+	}
+
+	get value() {
+		return this.#value;
+	}
+
+	get ffiValue() {
+		return AttrEnum.#internal_map.get(this.#value);
+	}
+
+	static A = new AttrEnum("A");
+
+	static B = new AttrEnum("B");
+
+	static C = new AttrEnum("C");
+}

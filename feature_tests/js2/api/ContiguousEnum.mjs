@@ -1,25 +1,44 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-// Internal conversion from JS types to Rust types.
-export const ContiguousEnum_js_to_rust = {
-	"C": 0,
-	"D": 1,
-	"E": 2,
-	"F": 3
-};
-
-export const ContiguousEnum_rust_to_js = {
-	[0]: "C",
-	[1]: "D",
-	[2]: "E",
-	[3]: "F"
-};
-
 // Base enumerator definition
-export const ContiguousEnum = {
-	"C": "C",
-	"D": "D",
-	"E": "E",
-	"F": "F"
-};
+export class ContiguousEnum {
+	#value = undefined;
+
+	static #internal_map = new Map([
+		["C", 0],
+		["D", 1],
+		["E", 2],
+		["F", 3]
+	]);
+
+	constructor(value) {
+		if (value instanceof ContiguousEnum) {
+			this.#value = value.value;
+			return;
+		}
+
+		if (ContiguousEnum.#internal_map.has(value)) {
+			this.#value = value;
+			return;
+		}
+
+		throw TypeError(value + " is not a ContiguousEnum and does not correspond to any of its enumerator values.");
+	}
+
+	get value() {
+		return this.#value;
+	}
+
+	get ffiValue() {
+		return ContiguousEnum.#internal_map.get(this.#value);
+	}
+
+	static C = new ContiguousEnum("C");
+
+	static D = new ContiguousEnum("D");
+
+	static E = new ContiguousEnum("E");
+
+	static F = new ContiguousEnum("F");
+}

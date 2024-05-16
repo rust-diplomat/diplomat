@@ -1,22 +1,41 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-// Internal conversion from JS types to Rust types.
-export const UnimportedEnum_js_to_rust = {
-	"A": 0,
-	"B": 1,
-	"C": 2
-};
-
-export const UnimportedEnum_rust_to_js = {
-	[0]: "A",
-	[1]: "B",
-	[2]: "C"
-};
-
 // Base enumerator definition
-export const UnimportedEnum = {
-	"A": "A",
-	"B": "B",
-	"C": "C"
-};
+export class UnimportedEnum {
+	#value = undefined;
+
+	static #internal_map = new Map([
+		["A", 0],
+		["B", 1],
+		["C", 2]
+	]);
+
+	constructor(value) {
+		if (value instanceof UnimportedEnum) {
+			this.#value = value.value;
+			return;
+		}
+
+		if (UnimportedEnum.#internal_map.has(value)) {
+			this.#value = value;
+			return;
+		}
+
+		throw TypeError(value + " is not a UnimportedEnum and does not correspond to any of its enumerator values.");
+	}
+
+	get value() {
+		return this.#value;
+	}
+
+	get ffiValue() {
+		return UnimportedEnum.#internal_map.get(this.#value);
+	}
+
+	static A = new UnimportedEnum("A");
+
+	static B = new UnimportedEnum("B");
+
+	static C = new UnimportedEnum("C");
+}

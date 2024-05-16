@@ -2,8 +2,11 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 // Base enumerator definition
-export enum AttrEnum  {
-	A = 'A',
-	B = 'B',
-	C = 'C'
+export class AttrEnum {
+
+	static A : AttrEnum;
+
+	static B : AttrEnum;
+
+	static C : AttrEnum;
 }
