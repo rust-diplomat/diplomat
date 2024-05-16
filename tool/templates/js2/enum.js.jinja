@@ -1,10 +1,14 @@
 {% if !typescript %}// Internal conversion from JS types to Rust types.
 export const {{type_name}}_js_to_rust = {
-
+{%- for variant in enum_def.variants %}
+	"{{formatter.fmt_enum_variant(variant)}}": {{variant.discriminant}}{% if !loop.last %},{% endif -%}
+{%- endfor %}
 };
 
 export const {{type_name}}_rust_to_js = {
-	
+{%- for variant in enum_def.variants %}
+	[{{variant.discriminant}}]: "{{formatter.fmt_enum_variant(variant)}}"{% if !loop.last %},{% endif -%}
+{%- endfor %}
 };
 
 {% endif -%}
