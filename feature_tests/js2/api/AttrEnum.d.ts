@@ -4,6 +4,11 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 // Base enumerator definition
 export class AttrEnum {
+	constructor(value : AttrEnum | string);
+
+	get value() : string;
+
+	get ffiValue() : number;
 
 	static A : AttrEnum;
 

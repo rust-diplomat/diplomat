@@ -4,6 +4,11 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 // Base enumerator definition
 export class ErrorEnum {
+	constructor(value : ErrorEnum | string);
+
+	get value() : string;
+
+	get ffiValue() : number;
 
 	static Foo : ErrorEnum;
 

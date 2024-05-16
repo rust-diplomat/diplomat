@@ -26,15 +26,16 @@ export class {{type_name}} {
 
 		throw TypeError(value + " is not a {{type_name}} and does not correspond to any of its enumerator values.");
 	}
-
-	get value() {
+{% else %}
+	constructor(value : {{type_name}} | string);
+{% endif %}
+	get value() {% if typescript %}: string;{% else %}{
 		return this.#value;
-	}
+	}{% endif %}
 
-	get ffiValue() {
+	get ffiValue() {% if typescript %}: number;{% else %}{
 		return {{type_name}}.#internal_map.get(this.#value);
-	}
-{%- endif %}
+	}{% endif %}
 {% for variant in enum_def.variants -%}
 	{%- let variant_name = formatter.fmt_enum_variant(variant) %}
 	static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
