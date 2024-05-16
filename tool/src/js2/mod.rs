@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::Env;
 
 use diplomat_core::hir::{self, EnumDef, TypeContext, TypeDef, TypeId};
@@ -39,10 +40,10 @@ impl FileType {
 }
 
 impl<'tcx> JSGenerationContext<'tcx> {
-    pub fn run(tcx : &'tcx TypeContext, strip_prefix : Option<String>) -> FileMap {
+    pub fn run(tcx : &'tcx TypeContext, docs : &'tcx DocsUrlGenerator, strip_prefix : Option<String>) -> FileMap {
         let this = Self {
             tcx,
-            formatter: JSFormatter::new(tcx, strip_prefix),
+            formatter: JSFormatter::new(tcx, docs, strip_prefix),
 
             files: FileMap::default(),
         };
@@ -114,13 +115,17 @@ impl<'tcx> JSGenerationContext<'tcx> {
             formatter : &'a JSFormatter<'a>,
             type_name : &'a str,
             typescript : bool,
+
+            doc_str : String,
         }
 
         ImplTemplate{
             enum_def,
             formatter: &self.formatter,
             type_name,
-            typescript: file_type.is_typescript()
+            typescript: file_type.is_typescript(),
+
+            doc_str: self.formatter.fmt_docs(&enum_def.docs)
         }.render().unwrap()
     }
 }

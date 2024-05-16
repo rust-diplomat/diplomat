@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use diplomat_core::hir::{EnumVariant, TypeContext, TypeId};
+use diplomat_core::{ast::DocsUrlGenerator, hir::{Docs, EnumVariant, TypeContext, TypeId}};
 use heck::ToUpperCamelCase;
 
 use crate::c2::CFormatter;
@@ -11,14 +11,18 @@ use super::FileType;
 pub(super) struct JSFormatter<'tcx> {
 	/// Per [`CFormatter`]'s documentation we use it for support.
 	c_formatter : CFormatter<'tcx>,
+	
+	/// For generating doc.rs links
+	docs_url_gen : &'tcx DocsUrlGenerator,
 	/// If there's something we need to remove during formatting. Set by user.
 	strip_prefix : Option<String>,
 }
 
 impl<'tcx> JSFormatter<'tcx> {
-	pub fn new(tcx : &'tcx TypeContext, strip_prefix : Option<String>) -> Self {
+	pub fn new(tcx : &'tcx TypeContext, docs_url_gen : &'tcx DocsUrlGenerator, strip_prefix : Option<String>) -> Self {
 		Self {
 			c_formatter: CFormatter::new(tcx),
+			docs_url_gen,
 			strip_prefix: strip_prefix
 		}
 	}
@@ -43,6 +47,14 @@ impl<'tcx> JSFormatter<'tcx> {
 			FileType::Module => format!("{}.mjs", type_name),
 			FileType::Typescript => format!("{}.d.ts", type_name)
 		}
+	}
+
+	pub fn fmt_docs(&self, docs : &Docs) -> String {
+		docs.to_markdown(self.docs_url_gen, diplomat_core::ast::MarkdownStyle::Normal)
+		.trim()
+		.replace('\n', "\n*")
+		.replace(" \n", "\n")
+
 	}
 
 	pub fn fmt_enum_variant(&self, variant : &'tcx EnumVariant) -> Cow<'tcx, str> {
