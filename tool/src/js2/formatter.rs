@@ -61,6 +61,30 @@ impl<'tcx> JSFormatter<'tcx> {
 
 	}
 
+	// #region HIR::Type formatting.
+	// This is only visible for Typescript definition files, but we use it to check if types are supported.
+
+	/// Generate a primitive type.
+	/// 
+	/// `cast : bool` Are we representing this in native Javascript, or preparing to convert it into WASM-friendly code? Cast is true if it's native JS. 
+	pub fn fmt_primitive_as_ffi(&self, primitive : hir::PrimitiveType, cast : bool) -> &'static str {
+		if cast {
+			return match primitive {
+				hir::PrimitiveType::Bool => "bool",
+				hir::PrimitiveType::Char => "char",
+				hir::PrimitiveType::Int(_)| hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Byte | hir::PrimitiveType::Float(_) => "number",
+				hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt."),
+			};
+		} else {
+			todo!()
+		}
+	}
+
+	pub fn fmt_void(&self) -> &'static str {
+		"void".into()
+	}
+	// #endregion
+
 	// #region Template specific formatting
 	pub fn fmt_method_name(&self, method : &hir::Method) -> String {
 		method.name.as_str().to_lower_camel_case().into()

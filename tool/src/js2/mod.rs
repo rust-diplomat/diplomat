@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 use std::fmt::Display;
 
-use diplomat_core::ast::DocsUrlGenerator;
+use diplomat_core::ast::{DocsUrlGenerator, Param};
 
-use diplomat_core::hir::{self, EnumDef, Method, TypeContext, TypeDef, TypeId};
+use diplomat_core::hir::{self, EnumDef, Method, ReturnType, SuccessType, Type, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
 
@@ -72,7 +72,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         // TODO: All of this.
 
         for (id, ty) in self.tcx.all_types() {
-            self.errors.set_context_ty(ty.name().as_str().into());
+            let _guard = self.errors.set_context_ty(ty.name().as_str().into());
             if ty.attrs().disable {
                 continue;
             }
@@ -147,6 +147,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         }.render().unwrap()
     }
 
+    /// Generate a string Javascript representation of a given method.
     fn generate_method_body(&self, type_id : TypeId, type_name : &str, method : &'tcx Method, typescript : bool) -> Option<String> {
         if method.attrs.disable {
             return None;
@@ -156,6 +157,12 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         let _guard = self.errors.set_context_method(self.formatter.fmt_type_name_diagnostics(type_id), method.name.as_str().into());
 
+        #[derive(Default)]
+        struct ParamInfo<'a> {
+            ty : Cow<'a, str>,
+            name : Cow<'a, str>
+        }
+
         #[derive(Default, Template)]
         #[template(path="js2/method.js.jinja", escape="none")]
         struct MethodInfo<'info> {
@@ -164,6 +171,11 @@ impl<'tcx> JSGenerationContext<'tcx> {
             /// Native C method name
             c_method_name : Cow<'info, str>,
             typescript : bool,
+
+            is_static : bool,
+
+            parameters : Vec<ParamInfo<'info>>,
+            return_type : Cow<'info, str>,
         }
 
         let mut method_info = MethodInfo::default();
@@ -173,14 +185,59 @@ impl<'tcx> JSGenerationContext<'tcx> {
         method_info.typescript = typescript;
         method_info.method = Some(method);
 
+        method_info.is_static = true;
         if let Some(param_self) = method.param_self.as_ref() {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
+            method_info.is_static = false;
         }
 
         for param in method.params.iter() {
-            let param_name = self.formatter.fmt_param_name(param.name.as_str());
+            let mut param_info = ParamInfo::default();
+
+            param_info.name = self.formatter.fmt_param_name(param.name.as_str());
+            param_info.ty = self.gen_js_type_str(&param.ty);
+
+            // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
+            if let hir::Type::Slice(slice) = param.ty {
+                // TODO:
+            } else {
+
+            }
+            
+            method_info.parameters.push(param_info);
         }
 
+        method_info.return_type = self.gen_js_return_type_str(&method.output);
+
         Some(method_info.render().unwrap())
+    }
+
+    /// Given a type from Rust, convert it into something Javascript will understand.
+    fn gen_js_type_str<P: hir::TyPosition>(&self, ty: &Type<P>) -> Cow<'tcx, str> {
+        match *ty {
+            Type::Primitive(primitive) => {
+                self.formatter.fmt_primitive_as_ffi(primitive, true).into()
+            },
+            Type::Enum(ref enumerator) => {
+                let enum_id = enumerator.tcx_id.into();
+                let type_name = self.formatter.fmt_type_name(enum_id);
+                if self.tcx.resolve_type(enum_id).attrs().disable {
+                    self.errors.push_error(format!("Using disabled type {type_name}"))
+                }
+                type_name
+            }, 
+            _ => todo!("Type {:?} not supported", ty)
+        }
+    }
+
+    fn gen_js_return_type_str(&self, return_type : &ReturnType) -> Cow<'tcx, str> {
+        match *return_type {
+            // -> () or a -> Result<(), Error>.
+            ReturnType::Infallible(SuccessType::Unit) | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
+            // Any out that is not a [`SuccessType::Writeable`].
+            // TODO:
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_js_type_str(o),
+            _ => todo!("Return type {:?} not supported", return_type)
+        }
     }
 }

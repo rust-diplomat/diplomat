@@ -1,4 +1,10 @@
-{{method_name}}() {%- if typescript %};{% else %} {
+{% if is_static %}static {% endif %}{{method_name}}(
+{%- for param in parameters -%}
+    {{- param.name -}}
+    {%- if typescript -%}: {{- param.ty -}}{%- endif -%}
+    {%- if !loop.first -%},{%- endif -%}
+{%- endfor -%}
+) {%- if typescript %}: {{ return_type }};{% else %} {
 
 }
 {%- endif %}

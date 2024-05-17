@@ -23,8 +23,8 @@ export class MyEnum {
     static F : MyEnum;
 
 
-    intoValue();
+    intoValue(): number;
 
-    getA();
+    static getA(): MyEnum;
 
 }
