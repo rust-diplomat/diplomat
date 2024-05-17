@@ -31,8 +31,12 @@ pub struct Method {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum SuccessType {
+    /// Is the return type something that can be written to? I.e., a buffer
     Writeable,
+    /// See [`OutType`] and [`super::ty_position::TyPosition`].
+    /// Basically, it's a Box<SomeType> that we can output, but not recieve again as input.
     OutType(OutType),
+    /// A `()` type in Rust. 
     Unit,
 }
 
