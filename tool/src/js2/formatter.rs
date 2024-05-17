@@ -1,9 +1,9 @@
 use std::borrow::Cow;
 
-use diplomat_core::{ast::DocsUrlGenerator, hir::{Docs, EnumVariant, TypeContext, TypeId}};
-use heck::ToUpperCamelCase;
+use diplomat_core::{ast::DocsUrlGenerator, hir::{self, Docs, EnumVariant, TypeContext, TypeId}};
+use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
-use crate::c2::CFormatter;
+use crate::{c2::CFormatter, common::ErrorContextGuard};
 
 use super::FileType;
 
@@ -42,6 +42,10 @@ impl<'tcx> JSFormatter<'tcx> {
 		type_def.attrs().rename.apply(candidate)
 	}
 
+	pub fn fmt_type_name_diagnostics(&self, type_id : TypeId) -> Cow<'tcx, str> {
+		self.c_formatter.fmt_type_name_diagnostics(type_id)
+	}
+
 	pub fn fmt_file_name(&self, type_name : &str, file_type : FileType) -> String {
 		match file_type {
 			FileType::Module => format!("{}.mjs", type_name),
@@ -57,8 +61,23 @@ impl<'tcx> JSFormatter<'tcx> {
 
 	}
 
+	// #region Template specific formatting
+	pub fn fmt_method_name(&self, method : &hir::Method) -> String {
+		method.name.as_str().to_lower_camel_case().into()
+	}
+
+	pub fn fmt_c_method_name<'a>(&self, type_id: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
+		self.c_formatter.fmt_method_name(type_id, method).into()
+	}
+
+	pub fn fmt_param_name<'a>(&self, param_name: &'a str) -> Cow<'a, str> {
+		param_name.to_lower_camel_case().into()
+	}
+
 	pub fn fmt_enum_variant(&self, variant : &'tcx EnumVariant) -> Cow<'tcx, str> {
 		let name = variant.name.as_str().to_upper_camel_case().into();
 		variant.attrs.rename.apply(name)
 	}
+
+	// #endregion
 }

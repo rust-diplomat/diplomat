@@ -5,39 +5,42 @@
 {% endif -%}
 export class {{type_name}} {
 {%- if !typescript %}
-	#value = undefined;
+    #value = undefined;
 
-	static #internal_map = new Map([
+    static #internal_map = new Map([
 {%- for variant in enum_def.variants %}
-		["{{formatter.fmt_enum_variant(variant)}}", {{variant.discriminant}}]{% if !loop.last %},{% endif %}
+        ["{{formatter.fmt_enum_variant(variant)}}", {{variant.discriminant}}]{% if !loop.last %},{% endif %}
 {%- endfor %}
-	]);
+    ]);
 
-	constructor(value) {
-		if (value instanceof {{type_name}}) {
-			this.#value = value.value;
-			return;
-		}
+    constructor(value) {
+        if (value instanceof {{type_name}}) {
+            this.#value = value.value;
+            return;
+        }
 
-		if ({{type_name}}.#internal_map.has(value)) {
-			this.#value = value;
-			return;
-		}
+        if ({{type_name}}.#internal_map.has(value)) {
+            this.#value = value;
+            return;
+        }
 
-		throw TypeError(value + " is not a {{type_name}} and does not correspond to any of its enumerator values.");
-	}
+        throw TypeError(value + " is not a {{type_name}} and does not correspond to any of its enumerator values.");
+    }
 {% else %}
-	constructor(value : {{type_name}} | string);
+    constructor(value : {{type_name}} | string);
 {% endif %}
-	get value() {% if typescript %}: string;{% else %}{
-		return this.#value;
-	}{% endif %}
+    get value() {% if typescript %}: string;{% else %}{
+        return this.#value;
+    }{% endif %}
 
-	get ffiValue() {% if typescript %}: number;{% else %}{
-		return {{type_name}}.#internal_map.get(this.#value);
-	}{% endif %}
+    get ffiValue() {% if typescript %}: number;{% else %}{
+        return {{type_name}}.#internal_map.get(this.#value);
+    }{% endif %}
 {% for variant in enum_def.variants -%}
-	{%- let variant_name = formatter.fmt_enum_variant(variant) %}
-	static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
-{% endfor -%}
+    {%- let variant_name = formatter.fmt_enum_variant(variant) %}
+    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
+{% endfor %}
+{% for method in methods %}
+    {{ method|indent(4) }}
+{% endfor %}
 }

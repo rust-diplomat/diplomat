@@ -4,36 +4,38 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 // Base enumerator definition
 export class ErrorEnum {
-	#value = undefined;
+    #value = undefined;
 
-	static #internal_map = new Map([
-		["Foo", 0],
-		["Bar", 1]
-	]);
+    static #internal_map = new Map([
+        ["Foo", 0],
+        ["Bar", 1]
+    ]);
 
-	constructor(value) {
-		if (value instanceof ErrorEnum) {
-			this.#value = value.value;
-			return;
-		}
+    constructor(value) {
+        if (value instanceof ErrorEnum) {
+            this.#value = value.value;
+            return;
+        }
 
-		if (ErrorEnum.#internal_map.has(value)) {
-			this.#value = value;
-			return;
-		}
+        if (ErrorEnum.#internal_map.has(value)) {
+            this.#value = value;
+            return;
+        }
 
-		throw TypeError(value + " is not a ErrorEnum and does not correspond to any of its enumerator values.");
-	}
+        throw TypeError(value + " is not a ErrorEnum and does not correspond to any of its enumerator values.");
+    }
 
-	get value() {
-		return this.#value;
-	}
+    get value() {
+        return this.#value;
+    }
 
-	get ffiValue() {
-		return ErrorEnum.#internal_map.get(this.#value);
-	}
+    get ffiValue() {
+        return ErrorEnum.#internal_map.get(this.#value);
+    }
 
-	static Foo = new ErrorEnum("Foo");
+    static Foo = new ErrorEnum("Foo");
 
-	static Bar = new ErrorEnum("Bar");
+    static Bar = new ErrorEnum("Bar");
+
+
 }

@@ -89,13 +89,23 @@ pub fn gen(
                 Err(e) => {
                     eprintln!("Lowering AST to HIR for Javascript backend failed:");
                     for (ctx, err) in e {
-                        eprintln!("Lowering error in {ctx}: {err}");
+                        eprintln!("\tLowering error in {ctx}: {err}");
                     }
                     std::process::exit(-1);
                 }
             };
-            let mut run = js2::JSGenerationContext::run(&tcx, docs_url_gen, strip_prefix);
-            out_texts = run.take_files();
+            match js2::JSGenerationContext::run(&tcx, docs_url_gen, strip_prefix) {
+                Ok(mut files) => {
+                    out_texts = files.take_files()
+                },
+                Err(errors) => {
+                    eprintln!("Found errors whilst generating {target_language}:");
+                    for error in errors {
+                        eprintln!("\t{}: {}", error.0, error.1);
+                    }
+                    errors_found = true;
+                }
+            };
         }
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "kotlin" => {

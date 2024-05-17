@@ -1,14 +1,13 @@
-use std::collections::HashMap;
-use std::path::Path;
+use std::borrow::Cow;
+use std::fmt::Display;
 
 use diplomat_core::ast::DocsUrlGenerator;
-use diplomat_core::Env;
 
-use diplomat_core::hir::{self, EnumDef, TypeContext, TypeDef, TypeId};
+use diplomat_core::hir::{self, EnumDef, Method, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
 
-use crate::common::FileMap;
+use crate::common::{ErrorStore, FileMap};
 
 use self::formatter::JSFormatter;
 
@@ -18,8 +17,10 @@ mod formatter;
 /// 
 /// .d.ts definitions, basically. Although we include .mjs so we can do actual conversions to WebAssembly friendly definitions.
 pub struct JSGenerationContext<'tcx> {
-    pub tcx: &'tcx TypeContext,
+    tcx: &'tcx TypeContext,
     formatter : JSFormatter<'tcx>,
+
+    errors : ErrorStore<'tcx, String>,
 
     files : FileMap,
 }
@@ -40,16 +41,23 @@ impl FileType {
 }
 
 impl<'tcx> JSGenerationContext<'tcx> {
-    pub fn run(tcx : &'tcx TypeContext, docs : &'tcx DocsUrlGenerator, strip_prefix : Option<String>) -> FileMap {
+    pub fn run(tcx : &'tcx TypeContext, docs : &'tcx DocsUrlGenerator, strip_prefix : Option<String>) -> Result<FileMap, Vec<(impl Display + 'tcx, String)>> {
         let this = Self {
             tcx,
             formatter: JSFormatter::new(tcx, docs, strip_prefix),
+
+            errors: ErrorStore::default(),
 
             files: FileMap::default(),
         };
         this.init();
 
-        this.files
+        let errors = this.errors.take_all();
+        if errors.is_empty() {
+            return Ok(this.files);
+        } else {
+            return Err(errors);
+        }
     }
 
     /// Setup. Write out all the pre-written files.
@@ -64,6 +72,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         // TODO: All of this.
 
         for (id, ty) in self.tcx.all_types() {
+            self.errors.set_context_ty(ty.name().as_str().into());
             if ty.attrs().disable {
                 continue;
             }
@@ -78,6 +87,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
     /// Generate a file's name and body from its given [`TypeId`]
     fn generate_file_from_type(&self, type_id : TypeId) {
         let type_def = self.tcx.resolve_type(type_id);
+
+        let _guard = self.errors.set_context_ty(type_def.name().as_str().into());
 
         let name = self.formatter.fmt_type_name(type_id);
 
@@ -104,10 +115,13 @@ impl<'tcx> JSGenerationContext<'tcx> {
     }
 
     /// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
-    fn generate_enum_from_def(&self, enum_def : &EnumDef, type_id : TypeId, type_name : &str, file_type : &FileType) -> String {
+    fn generate_enum_from_def(&self, enum_def : &'tcx EnumDef, type_id : TypeId, type_name : &str, file_type : &FileType) -> String {
+        let methods = enum_def.methods
+        .iter()
+        .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
+        .collect::<Vec<_>>();
         // TODO: Methods
 
-        // TODO: Finish templating
         #[derive(Template)]
         #[template(path="js2/enum.js.jinja", escape="none")]
         struct ImplTemplate<'a> {
@@ -117,6 +131,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
             typescript : bool,
 
             doc_str : String,
+
+            methods : Vec<String>,
         }
 
         ImplTemplate{
@@ -125,7 +141,46 @@ impl<'tcx> JSGenerationContext<'tcx> {
             type_name,
             typescript: file_type.is_typescript(),
 
-            doc_str: self.formatter.fmt_docs(&enum_def.docs)
+            doc_str: self.formatter.fmt_docs(&enum_def.docs),
+
+            methods
         }.render().unwrap()
+    }
+
+    fn generate_method_body(&self, type_id : TypeId, type_name : &str, method : &'tcx Method, typescript : bool) -> Option<String> {
+        if method.attrs.disable {
+            return None;
+        }
+
+        let mut visitor = method.borrowing_param_visitor(self.tcx);
+
+        let _guard = self.errors.set_context_method(self.formatter.fmt_type_name_diagnostics(type_id), method.name.as_str().into());
+
+        #[derive(Default, Template)]
+        #[template(path="js2/method.js.jinja", escape="none")]
+        struct MethodInfo<'info> {
+            method : Option<&'info Method>,
+            method_name : String,
+            /// Native C method name
+            c_method_name : Cow<'info, str>,
+            typescript : bool,
+        }
+
+        let mut method_info = MethodInfo::default();
+
+        method_info.c_method_name = self.formatter.fmt_c_method_name(type_id, method);
+        method_info.method_name = self.formatter.fmt_method_name(method);
+        method_info.typescript = typescript;
+        method_info.method = Some(method);
+
+        if let Some(param_self) = method.param_self.as_ref() {
+            visitor.visit_param(&param_self.ty.clone().into(), "this");
+        }
+
+        for param in method.params.iter() {
+            let param_name = self.formatter.fmt_param_name(param.name.as_str());
+        }
+
+        Some(method_info.render().unwrap())
     }
 }

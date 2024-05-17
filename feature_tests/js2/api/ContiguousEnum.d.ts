@@ -4,17 +4,19 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 // Base enumerator definition
 export class ContiguousEnum {
-	constructor(value : ContiguousEnum | string);
+    constructor(value : ContiguousEnum | string);
 
-	get value() : string;
+    get value() : string;
 
-	get ffiValue() : number;
+    get ffiValue() : number;
 
-	static C : ContiguousEnum;
+    static C : ContiguousEnum;
 
-	static D : ContiguousEnum;
+    static D : ContiguousEnum;
 
-	static E : ContiguousEnum;
+    static E : ContiguousEnum;
 
-	static F : ContiguousEnum;
+    static F : ContiguousEnum;
+
+
 }
