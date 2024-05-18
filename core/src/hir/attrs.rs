@@ -675,7 +675,7 @@ pub struct BackendAttrSupport {
     /// I.E.
     /// ```dart
     /// class Sample {
-    ///     int compareTo(Sample other)
+    ///     @override bool operator ==(Object other) => other is {{type_name}} && compareTo(other) == 0;
     /// }
     /// ```
     pub comparators: bool,
