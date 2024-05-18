@@ -12,6 +12,7 @@ use crate::common::{ErrorStore, FileMap};
 use self::formatter::JSFormatter;
 
 mod formatter;
+mod converter;
 
 /// Wrapper for generating all export types.
 /// 
@@ -176,6 +177,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             parameters : Vec<ParamInfo<'info>>,
             return_type : Cow<'info, str>,
+            return_expression : Option<Cow<'info, str>>,
         }
 
         let mut method_info = MethodInfo::default();
@@ -208,36 +210,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
         }
 
         method_info.return_type = self.gen_js_return_type_str(&method.output);
+        method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, &method.lifetime_env);
 
         Some(method_info.render().unwrap())
-    }
-
-    /// Given a type from Rust, convert it into something Javascript will understand.
-    fn gen_js_type_str<P: hir::TyPosition>(&self, ty: &Type<P>) -> Cow<'tcx, str> {
-        match *ty {
-            Type::Primitive(primitive) => {
-                self.formatter.fmt_primitive_as_ffi(primitive, true).into()
-            },
-            Type::Enum(ref enumerator) => {
-                let enum_id = enumerator.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(enum_id);
-                if self.tcx.resolve_type(enum_id).attrs().disable {
-                    self.errors.push_error(format!("Using disabled type {type_name}"))
-                }
-                type_name
-            }, 
-            _ => todo!("Type {:?} not supported", ty)
-        }
-    }
-
-    fn gen_js_return_type_str(&self, return_type : &ReturnType) -> Cow<'tcx, str> {
-        match *return_type {
-            // -> () or a -> Result<(), Error>.
-            ReturnType::Infallible(SuccessType::Unit) | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
-            // Any out that is not a [`SuccessType::Writeable`].
-            // TODO:
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_js_type_str(o),
-            _ => todo!("Return type {:?} not supported", return_type)
-        }
     }
 }

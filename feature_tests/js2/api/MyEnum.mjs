@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class MyEnum {
     #value = undefined;
 
-    static #internal_map = new Map([
+    static values = new Map([
         ["A", -2],
         ["B", -1],
         ["C", 0],
@@ -21,7 +21,7 @@ export class MyEnum {
             return;
         }
 
-        if (MyEnum.#internal_map.has(value)) {
+        if (MyEnum.values.has(value)) {
             this.#value = value;
             return;
         }
@@ -34,7 +34,7 @@ export class MyEnum {
     }
 
     get ffiValue() {
-        return MyEnum.#internal_map.get(this.#value);
+        return MyEnum.values.get(this.#value);
     }
 
     static A = new MyEnum("A");
@@ -52,10 +52,12 @@ export class MyEnum {
 
     intoValue() {
         const result = wasm.MyEnum_into_value();
+        return result;
     }
 
     static getA() {
         const result = wasm.MyEnum_get_a();
+        return (() => {for (let i of MyEnum.values) { if(i[1] === result) return i[0]; } return null;})();;
     }
 
 }

@@ -7,7 +7,7 @@ export class {{type_name}} {
 {%- if !typescript %}
     #value = undefined;
 
-    static #internal_map = new Map([
+    static values = new Map([
 {%- for variant in enum_def.variants %}
         ["{{formatter.fmt_enum_variant(variant)}}", {{variant.discriminant}}]{% if !loop.last %},{% endif %}
 {%- endfor %}
@@ -19,7 +19,7 @@ export class {{type_name}} {
             return;
         }
 
-        if ({{type_name}}.#internal_map.has(value)) {
+        if ({{type_name}}.values.has(value)) {
             this.#value = value;
             return;
         }
@@ -34,7 +34,7 @@ export class {{type_name}} {
     }{% endif %}
 
     get ffiValue() {% if typescript %}: number;{% else %}{
-        return {{type_name}}.#internal_map.get(this.#value);
+        return {{type_name}}.values.get(this.#value);
     }{% endif %}
 {% for variant in enum_def.variants -%}
     {%- let variant_name = formatter.fmt_enum_variant(variant) %}

@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class AttrEnum {
     #value = undefined;
 
-    static #internal_map = new Map([
+    static values = new Map([
         ["A", 0],
         ["B", 1],
         ["C", 2]
@@ -18,7 +18,7 @@ export class AttrEnum {
             return;
         }
 
-        if (AttrEnum.#internal_map.has(value)) {
+        if (AttrEnum.values.has(value)) {
             this.#value = value;
             return;
         }
@@ -31,7 +31,7 @@ export class AttrEnum {
     }
 
     get ffiValue() {
-        return AttrEnum.#internal_map.get(this.#value);
+        return AttrEnum.values.get(this.#value);
     }
 
     static A = new AttrEnum("A");

@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class ContiguousEnum {
     #value = undefined;
 
-    static #internal_map = new Map([
+    static values = new Map([
         ["C", 0],
         ["D", 1],
         ["E", 2],
@@ -19,7 +19,7 @@ export class ContiguousEnum {
             return;
         }
 
-        if (ContiguousEnum.#internal_map.has(value)) {
+        if (ContiguousEnum.values.has(value)) {
             this.#value = value;
             return;
         }
@@ -32,7 +32,7 @@ export class ContiguousEnum {
     }
 
     get ffiValue() {
-        return ContiguousEnum.#internal_map.get(this.#value);
+        return ContiguousEnum.values.get(this.#value);
     }
 
     static C = new ContiguousEnum("C");

@@ -6,7 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class ErrorEnum {
     #value = undefined;
 
-    static #internal_map = new Map([
+    static values = new Map([
         ["Foo", 0],
         ["Bar", 1]
     ]);
@@ -17,7 +17,7 @@ export class ErrorEnum {
             return;
         }
 
-        if (ErrorEnum.#internal_map.has(value)) {
+        if (ErrorEnum.values.has(value)) {
             this.#value = value;
             return;
         }
@@ -30,7 +30,7 @@ export class ErrorEnum {
     }
 
     get ffiValue() {
-        return ErrorEnum.#internal_map.get(this.#value);
+        return ErrorEnum.values.get(this.#value);
     }
 
     static Foo = new ErrorEnum("Foo");
