@@ -3,7 +3,7 @@ use std::fmt::Display;
 
 use diplomat_core::ast::{DocsUrlGenerator, Param};
 
-use diplomat_core::hir::{self, EnumDef, Method, ReturnType, SuccessType, Type, TypeContext, TypeDef, TypeId};
+use diplomat_core::hir::{self, EnumDef, Method, ReturnType, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
 
@@ -121,7 +121,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
         .iter()
         .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
         .collect::<Vec<_>>();
-        // TODO: Methods
+    
+        let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence);
 
         #[derive(Template)]
         #[template(path="js2/enum.js.jinja", escape="none")]
@@ -133,7 +134,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             doc_str : String,
 
-            methods : Vec<String>,
+            methods : Vec<String>
         }
 
         ImplTemplate{
@@ -149,6 +150,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
     }
 
     /// Generate a string Javascript representation of a given method.
+    /// 
+    /// Currently, this assumes that any method will be part of a class. That will probably be a parameter that's added, however.
     fn generate_method_body(&self, type_id : TypeId, type_name : &str, method : &'tcx Method, typescript : bool) -> Option<String> {
         if method.attrs.disable {
             return None;
@@ -213,5 +216,49 @@ impl<'tcx> JSGenerationContext<'tcx> {
         method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, &method.lifetime_env);
 
         Some(method_info.render().unwrap())
+    }
+
+    /// Generate a special method from [`SpecialMethodPresence`]. We assume that this is always a member of a class.
+    fn generate_special_method_body(&self, special_method_presence : &SpecialMethodPresence) -> String {
+        todo!("Special methods not yet implemented.");
+
+        #[derive(Template)]
+        #[template(path="js2/special_method.js.jinja", escape="none")]
+        struct SpecialMethodInfo<'a> {
+            iterator : Option<Cow<'a, str>>,
+            iterable : Option<Cow<'a, str>>
+        }
+
+        let mut iterator = None;
+
+        if let Some(ref val) = special_method_presence.iterator {
+            iterator = Some(self.gen_success_ty(val))
+        }
+
+        let mut iterable = None;
+        if let Some(ref iterator) = special_method_presence.iterable {
+            let iterator_def = self.tcx.resolve_opaque(*iterator);
+            let Some(ref val) = iterator_def.special_method_presence.iterator else {
+                self.errors
+                    .push_error("Found iterable not returning an iterator type".into());
+                return "".to_string();
+            };
+            iterable = Some(self.gen_success_ty(val))
+        }
+
+        SpecialMethodInfo {
+            iterator,
+            iterable
+        }.render().unwrap()
+    }
+
+    fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
+        todo!();
+        // match out_ty {
+        //     SuccessType::Writeable => self.formatter.fmt_string().into(),
+        //     SuccessType::OutType(o) => self.gen_type_name(o),
+        //     SuccessType::Unit => self.formatter.fmt_void().into(),
+        //     _ => unreachable!(),
+        // }
     }
 }
