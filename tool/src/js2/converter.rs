@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
-use diplomat_core::hir::{self, LifetimeEnv, ReturnType, SuccessType, Type};
+use diplomat_core::hir::{self, LifetimeEnv, ReturnType, SuccessType, Type, OpaqueOwner};
+use std::fmt::{Display, Write};
 
 use super::JSGenerationContext;
 
@@ -15,7 +16,8 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
 }
 
 impl<'tcx> JSGenerationContext<'tcx> {
-	/// Given a type from Rust, convert it into something Javascript will understand.
+	/// Given a type from Rust, convert it into something Typescript will understand.
+	/// We use this to double-check our Javascript work as well.
     pub(super) fn gen_js_type_str<P: hir::TyPosition>(&self, ty: &Type<P>) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(primitive) => {
@@ -50,9 +52,39 @@ impl<'tcx> JSGenerationContext<'tcx> {
         }
     }
 
+	/// Create Javascript to convert Rust types into JS types.
 	pub(super) fn gen_c_to_js_for_type<P: hir::TyPosition>(&self, ty : &Type<P>, variable_name : Cow<'tcx, str>, lifetime_environment : &LifetimeEnv) -> Cow<'tcx, str> {
 		match *ty {
 			Type::Primitive(..) => variable_name,
+			Type::Opaque(ref op) => {
+				let type_id = op.tcx_id.into();
+				let type_name = self.formatter.fmt_type_name(type_id);
+
+				let mut edges = if let Some(lt) = op.owner.lifetime() {
+					match lt {
+						hir::MaybeStatic::NonStatic(lt) => self.formatter
+						.fmt_lifetime_edge_array(lt, lifetime_environment)
+						.into_owned(),
+						_ => todo!()
+					}
+				} else {
+					"[]".into()
+				};
+
+				for lt in op.lifetimes.lifetimes() {
+					match lt {
+						hir::MaybeStatic::NonStatic(lt) => write!(edges, ", {}", self.formatter.fmt_lifetime_edge_array(lt, lifetime_environment)).unwrap(),
+						_ => todo!(),
+					}
+				}
+
+				// TODO: Owned? Check JS
+				if op.is_optional() {
+					format!("({variable_name} == 0) ? undefined : new {type_name}({variable_name}, {edges});").into()
+				} else {
+					format!("new {type_name}({variable_name}, {edges});").into()
+				}
+			},
 			Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.tcx)) => {
 				let id = enum_path.tcx_id.into();
 				let type_name = self.formatter.fmt_type_name(id);
