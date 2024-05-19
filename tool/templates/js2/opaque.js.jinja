@@ -1,0 +1,16 @@
+{% if !docs.is_empty() %}
+/** {{docs}}
+*/
+{% endif %}
+export class {{type_name}} {
+	{% if !typescript -%}
+
+	{% for lifetime in lifetimes.all_lifetimes() %}
+	#{{lifetimes.fmt_lifetime(lifetime)}}Edge;
+	{% endfor %}
+
+	{%- endif %}
+	{% for method in methods %}
+	{{ method|indent(4) }}
+	{% endfor %}
+}

@@ -3,7 +3,7 @@ use std::fmt::Display;
 
 use diplomat_core::ast::{DocsUrlGenerator, Param};
 
-use diplomat_core::hir::{self, EnumDef, Method, ReturnType, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
+use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
 
@@ -99,6 +99,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 TypeDef::Enum(enum_def) => {
                     self.generate_enum_from_def(enum_def, type_id, &name, &file_type)
                 },
+                TypeDef::Opaque(opaque_def) => {
+                    self.generate_opaque_from_def(opaque_def, type_id, &name, &file_type)
+                },
                 // TODO:
                 _ => format!("{} has a TypeDef that is unimplemented. I am working on it!", type_def.name())
             };
@@ -115,14 +118,16 @@ impl<'tcx> JSGenerationContext<'tcx> {
         BaseTemplate {body}.render().unwrap()
     }
 
+    // #region Base generator functions (enum, opaque, struct, outstruct)
     /// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
     fn generate_enum_from_def(&self, enum_def : &'tcx EnumDef, type_id : TypeId, type_name : &str, file_type : &FileType) -> String {
-        let methods = enum_def.methods
+        let mut methods = enum_def.methods
         .iter()
         .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
         .collect::<Vec<_>>();
     
         let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence);
+        methods.push(special_method_body);
 
         #[derive(Template)]
         #[template(path="js2/enum.js.jinja", escape="none")]
@@ -148,6 +153,39 @@ impl<'tcx> JSGenerationContext<'tcx> {
             methods
         }.render().unwrap()
     }
+
+    fn generate_opaque_from_def(&self, opaque_def: &'tcx OpaqueDef, type_id : TypeId, type_name : &str, file_type : &FileType) -> String {
+        let mut methods = opaque_def.methods.iter()
+        .flat_map(|method| { self.generate_method_body(type_id, type_name, method, file_type.is_typescript()) })
+        .collect::<Vec<_>>();
+
+        let destructor = self.formatter.fmt_destructor_name(type_id);
+
+        let special = self.generate_special_method_body(&opaque_def.special_method_presence);
+        methods.push(special);
+
+        #[derive(Template)]
+        #[template(path = "js2/opaque.js.jinja", escape="none")]
+        struct ImplTemplate<'a> {
+            type_name: &'a str,
+            typescript : bool,
+
+            lifetimes : &'a LifetimeEnv,
+            methods : Vec<String>,
+
+            docs : String,
+        }
+
+        ImplTemplate {
+            type_name,
+            methods,
+            typescript: file_type.is_typescript(),
+            docs: self.formatter.fmt_docs(&opaque_def.docs),
+            lifetimes : &opaque_def.lifetimes,
+        }.render().unwrap()
+    }
+
+    // #endregion
 
     /// Generate a string Javascript representation of a given method.
     /// 

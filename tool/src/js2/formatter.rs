@@ -83,6 +83,10 @@ impl<'tcx> JSFormatter<'tcx> {
 	pub fn fmt_void(&self) -> &'static str {
 		"void".into()
 	}
+
+	pub fn fmt_nullable(&self, ident : &str) -> String {
+		format!("{ident}?")
+	}
 	// #endregion
 
 	// #region Template specific formatting
@@ -102,6 +106,9 @@ impl<'tcx> JSFormatter<'tcx> {
 		let name = variant.name.as_str().to_upper_camel_case().into();
 		variant.attrs.rename.apply(name)
 	}
-
+	
+	pub fn fmt_destructor_name(&self, type_id : TypeId) -> String {
+		self.c_formatter.fmt_dtor_name(type_id)
+	}
 	// #endregion
 }

@@ -21,6 +21,23 @@ impl<'tcx> JSGenerationContext<'tcx> {
             Type::Primitive(primitive) => {
                 self.formatter.fmt_primitive_as_ffi(primitive, true).into()
             },
+			Type::Opaque(ref op) => {
+				let opaque_id = op.tcx_id.into();
+				let type_name = self.formatter.fmt_type_name(opaque_id);
+
+				if self.tcx.resolve_type(opaque_id).attrs().disable {
+					self.errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
+				}
+
+				let ret = if op.is_optional() {
+					self.formatter.fmt_nullable(&type_name).into()
+				} else {
+					type_name
+				};
+
+				ret.to_owned().into()
+			},
             Type::Enum(ref enumerator) => {
                 let enum_id = enumerator.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(enum_id);
