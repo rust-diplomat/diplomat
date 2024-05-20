@@ -106,14 +106,41 @@ impl<'tcx> JSGenerationContext<'tcx> {
 	}
 
 	// #region Return Types
+
+	/// Give us a Typescript return type from [`ReturnType`]
     pub(super) fn gen_js_return_type_str(&self, return_type : &ReturnType) -> Cow<'tcx, str> {
         match *return_type {
             // -> () or a -> Result<(), Error>.
-            ReturnType::Infallible(SuccessType::Unit) | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
-            // Any out that is not a [`SuccessType::Writeable`].
-            // TODO:
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_js_type_str(o),
-            _ => todo!("Return type {:?} not supported", return_type)
+            ReturnType::Infallible(SuccessType::Unit)
+			| ReturnType::Fallible(SuccessType::Unit, Some(_))
+			=> self.formatter.fmt_void().into(),
+
+			// Something we can write to? We just treat it as a string.
+			ReturnType::Infallible(SuccessType::Writeable)
+			| ReturnType::Fallible(SuccessType::Writeable, Some(_))
+			=> self.formatter.fmt_string().into(),
+
+            // Anything we get returned that is not a [`SuccessType::Writeable`].
+            ReturnType::Infallible(SuccessType::OutType(ref o))
+			| ReturnType::Fallible(SuccessType::OutType(ref o), Some(_))
+			=> self.gen_js_type_str(o),
+
+			// Nullable string (no error on return).
+			ReturnType::Fallible(SuccessType::Writeable, None)
+			| ReturnType::Nullable(SuccessType::Writeable)
+			=> self.formatter.fmt_nullable(self.formatter.fmt_string()).into(),
+
+			// Something like Option<()>. Basically, did we run successfully?
+			ReturnType::Fallible(SuccessType::Unit, None)
+			| ReturnType::Nullable(SuccessType::Unit)
+			=> self.formatter.fmt_primitive_as_ffi(hir::PrimitiveType::Bool, true).into(),
+
+			// A nullable out type. Something like MyStruct? in Typescript.
+			ReturnType::Fallible(SuccessType::OutType(ref o), None)
+			| ReturnType::Nullable(SuccessType::OutType(ref o))
+			=> self.formatter.fmt_nullable(&self.gen_js_type_str(o)).into(),
+
+			_ => unreachable!("AST/HIR variant {:?} unknown.", return_type),
         }
     }
 
