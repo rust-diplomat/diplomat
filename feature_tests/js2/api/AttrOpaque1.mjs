@@ -8,7 +8,7 @@ export class AttrOpaque1 {
 	
 	static new() {
         const result = wasm.namespace_AttrOpaque1_new();
-        return new AttrOpaque1(result, []);;
+        return new AttrOpaque1(result, []);
     }
 	
 	method() {

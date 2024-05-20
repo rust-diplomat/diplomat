@@ -11,7 +11,7 @@ export class ResultOpaque {
         if (!result.isOk) {
         throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
     }
-     return new ResultOpaque(result.union.ok, []);;
+     return new ResultOpaque(result.union.ok, []);
     }
 	
 	static newFailingFoo() {
@@ -19,7 +19,7 @@ export class ResultOpaque {
         if (!result.isOk) {
         throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
     }
-     return new ResultOpaque(result.union.ok, []);;
+     return new ResultOpaque(result.union.ok, []);
     }
 	
 	static newFailingBar() {
@@ -27,7 +27,7 @@ export class ResultOpaque {
         if (!result.isOk) {
         throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
     }
-     return new ResultOpaque(result.union.ok, []);;
+     return new ResultOpaque(result.union.ok, []);
     }
 	
 	static newFailingUnit() {
@@ -35,7 +35,7 @@ export class ResultOpaque {
         if (!result.isOk) {
         return null
     }
-     return new ResultOpaque(result.union.ok, []);;
+     return new ResultOpaque(result.union.ok, []);
     }
 	
 	static newFailingStruct(i) {
@@ -43,13 +43,13 @@ export class ResultOpaque {
         if (!result.isOk) {
         throw ErrorStruct // TODO
     }
-     return new ResultOpaque(result.union.ok, []);;
+     return new ResultOpaque(result.union.ok, []);
     }
 	
 	static newInErr(i) {
         const result = wasm.ResultOpaque_new_in_err();
         if (!result.isOk) {
-        throw new ResultOpaque(result.union.error, []);
+        throw new ResultOpaque(result.union.error, [])
     }
     
     }
@@ -65,7 +65,7 @@ export class ResultOpaque {
 	static newInEnumErr(i) {
         const result = wasm.ResultOpaque_new_in_enum_err();
         if (!result.isOk) {
-        throw new ResultOpaque(result.union.error, []);
+        throw new ResultOpaque(result.union.error, [])
     }
      return ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.ok]];
     }

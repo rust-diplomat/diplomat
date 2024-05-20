@@ -8,37 +8,37 @@ export class Float64Vec {
 	
 	static newBool(v) {
         const result = wasm.Float64Vec_new_bool();
-        return new Float64Vec(result, []);;
+        return new Float64Vec(result, []);
     }
 	
 	static newI16(v) {
         const result = wasm.Float64Vec_new_i16();
-        return new Float64Vec(result, []);;
+        return new Float64Vec(result, []);
     }
 	
 	static newU16(v) {
         const result = wasm.Float64Vec_new_u16();
-        return new Float64Vec(result, []);;
+        return new Float64Vec(result, []);
     }
 	
 	static newIsize(v) {
         const result = wasm.Float64Vec_new_isize();
-        return new Float64Vec(result, []);;
+        return new Float64Vec(result, []);
     }
 	
 	static newUsize(v) {
         const result = wasm.Float64Vec_new_usize();
-        return new Float64Vec(result, []);;
+        return new Float64Vec(result, []);
     }
 	
 	static newF64BeBytes(v) {
         const result = wasm.Float64Vec_new_f64_be_bytes();
-        return new Float64Vec(result, []);;
+        return new Float64Vec(result, []);
     }
 	
 	static newFromOwned(v) {
         const result = wasm.Float64Vec_new_from_owned();
-        return new Float64Vec(result, []);;
+        return new Float64Vec(result, []);
     }
 	
 	asBoxedSlice() {

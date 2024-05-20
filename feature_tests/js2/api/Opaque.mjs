@@ -8,7 +8,7 @@ export class Opaque {
 	
 	static new() {
         const result = wasm.Opaque_new();
-        return new Opaque(result, []);;
+        return new Opaque(result, []);
     }
 	
 	assertStruct(s) {

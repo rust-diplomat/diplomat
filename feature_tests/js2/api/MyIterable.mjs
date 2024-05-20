@@ -8,12 +8,12 @@ export class MyIterable {
 	
 	static new(x) {
         const result = wasm.namespace_MyIterable_new();
-        return new MyIterable(result, []);;
+        return new MyIterable(result, []);
     }
 	
 	iter() {
         const result = wasm.namespace_MyIterable_iter();
-        return new MyIterator(result, [], aEdges);;
+        return new MyIterator(result, [], aEdges);
     }
 	
 }

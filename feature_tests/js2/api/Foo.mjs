@@ -10,17 +10,17 @@ export class Foo {
 	
 	static new(x) {
         const result = wasm.Foo_new();
-        return new Foo(result, [], aEdges);;
+        return new Foo(result, [], aEdges);
     }
 	
 	getBar() {
         const result = wasm.Foo_get_bar();
-        return new Bar(result, [], bEdges, aEdges);;
+        return new Bar(result, [], bEdges, aEdges);
     }
 	
 	static newStatic(x) {
         const result = wasm.Foo_new_static();
-        return new Foo(result, [], aEdges);;
+        return new Foo(result, [], aEdges);
     }
 	
 	asReturning() {
@@ -30,12 +30,12 @@ export class Foo {
 	
 	static extractFromFields(fields) {
         const result = wasm.Foo_extract_from_fields();
-        return new Foo(result, [], aEdges);;
+        return new Foo(result, [], aEdges);
     }
 	
 	static extractFromBounds(boundsanotherString,) {
         const result = wasm.Foo_extract_from_bounds();
-        return new Foo(result, [], aEdges);;
+        return new Foo(result, [], aEdges);
     }
 	
 }

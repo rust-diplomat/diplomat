@@ -8,7 +8,7 @@ export class OpaqueMutexedString {
 	
 	static fromUsize(number) {
         const result = wasm.OpaqueMutexedString_from_usize();
-        return new OpaqueMutexedString(result, []);;
+        return new OpaqueMutexedString(result, []);
     }
 	
 	change(number) {
@@ -18,17 +18,17 @@ export class OpaqueMutexedString {
 	
 	borrow() {
         const result = wasm.OpaqueMutexedString_borrow();
-        return new OpaqueMutexedString(result, aEdges);;
+        return new OpaqueMutexedString(result, aEdges);
     }
 	
 	static borrowOther(other) {
         const result = wasm.OpaqueMutexedString_borrow_other();
-        return new OpaqueMutexedString(result, aEdges);;
+        return new OpaqueMutexedString(result, aEdges);
     }
 	
 	borrowSelfOrOther(other) {
         const result = wasm.OpaqueMutexedString_borrow_self_or_other();
-        return new OpaqueMutexedString(result, aEdges);;
+        return new OpaqueMutexedString(result, aEdges);
     }
 	
 	getLenAndAdd(other) {
@@ -43,7 +43,7 @@ export class OpaqueMutexedString {
 	
 	wrapper() {
         const result = wasm.OpaqueMutexedString_wrapper();
-        return new Utf16Wrap(result, []);;
+        return new Utf16Wrap(result, []);
     }
 	
 }

@@ -12,7 +12,7 @@ export class Bar {
 	
 	foo() {
         const result = wasm.Bar_foo();
-        return new Foo(result, bEdges, aEdges);;
+        return new Foo(result, bEdges, aEdges);
     }
 	
 }

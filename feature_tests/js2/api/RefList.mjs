@@ -10,7 +10,7 @@ export class RefList {
 	
 	static node(data) {
         const result = wasm.RefList_node();
-        return new RefList(result, [], bEdges);;
+        return new RefList(result, [], bEdges);
     }
 	
 }
