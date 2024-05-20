@@ -47,7 +47,12 @@ impl<'tcx> JSGenerationContext<'tcx> {
                     self.errors.push_error(format!("Using disabled type {type_name}"))
                 }
                 type_name
-            }, 
+            },
+			Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().into(),
+            Type::Slice(hir::Slice::Primitive(_, p)) => {
+                self.formatter.fmt_primitive_list_type(p).into()
+            }
+            Type::Slice(hir::Slice::Strs(..)) => "Array<String>".into(),
             _ => todo!("Type {:?} not supported", ty)
         }
     }

@@ -66,7 +66,7 @@ impl<'tcx> JSFormatter<'tcx> {
 
 	/// Generate a primitive type.
 	/// 
-	/// `cast : bool` Are we representing this in native Javascript, or preparing to convert it into WASM-friendly code? Cast is true if it's native JS. 
+	/// `cast : bool` Are we representing this for Typescript, or preparing to convert it into WASM-friendly code? Cast is true if it's Typescript. 
 	pub fn fmt_primitive_as_ffi(&self, primitive : hir::PrimitiveType, cast : bool) -> &'static str {
 		if cast {
 			return match primitive {
@@ -79,6 +79,17 @@ impl<'tcx> JSFormatter<'tcx> {
 			todo!()
 		}
 	}
+	
+
+	pub fn fmt_primitive_list_type(&self, primitive : hir::PrimitiveType) -> &'static str {
+		match primitive {
+			hir::PrimitiveType::Bool => "Array<bool>",
+			hir::PrimitiveType::Char => "Array<char>",
+			hir::PrimitiveType::Byte => "Uint8Array",
+			hir::PrimitiveType::Int(_) | hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Float(_) => "Array<number>",
+			hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt."),
+		}
+	}
 
 	pub fn fmt_void(&self) -> &'static str {
 		"void".into()
@@ -86,6 +97,10 @@ impl<'tcx> JSFormatter<'tcx> {
 
 	pub fn fmt_nullable(&self, ident : &str) -> String {
 		format!("{ident}?")
+	}
+	
+	pub fn fmt_string(&self) -> &'static str {
+		"String"
 	}
 	// #endregion
 
