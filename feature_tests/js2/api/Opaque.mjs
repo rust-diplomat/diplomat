@@ -2,4 +2,33 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-Opaque has a TypeDef that is unimplemented. I am working on it!
+
+export class Opaque {
+	
+	
+	static new() {
+        const result = wasm.Opaque_new();
+        return new Opaque(result, []);;
+    }
+	
+	assertStruct(s) {
+        wasm.Opaque_assert_struct();
+        
+    }
+	
+	static returnsUsize() {
+        const result = wasm.Opaque_returns_usize();
+        return result;
+    }
+	
+	static returnsImported() {
+        const result = wasm.Opaque_returns_imported();
+        return ImportedStruct // TODO;
+    }
+	
+	static cmp() {
+        const result = wasm.Opaque_cmp();
+        return result;
+    }
+	
+}

@@ -2,4 +2,22 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-MyString has a TypeDef that is unimplemented. I am working on it!
+
+export class MyString {
+	
+	
+	static new(v:String): MyString;
+	
+	static newUnsafe(v:String): MyString;
+	
+	static newOwned(v:String): MyString;
+	
+	static newFromFirst(v:Array<String>): MyString;
+	
+	setStr(newStr:String): void;
+	
+	getStr(): String;
+	
+	getBoxedStr(): String;
+	
+}

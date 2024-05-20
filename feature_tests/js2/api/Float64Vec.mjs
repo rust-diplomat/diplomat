@@ -2,4 +2,81 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-Float64Vec has a TypeDef that is unimplemented. I am working on it!
+
+export class Float64Vec {
+	
+	
+	static newBool(v) {
+        const result = wasm.Float64Vec_new_bool();
+        return new Float64Vec(result, []);;
+    }
+	
+	static newI16(v) {
+        const result = wasm.Float64Vec_new_i16();
+        return new Float64Vec(result, []);;
+    }
+	
+	static newU16(v) {
+        const result = wasm.Float64Vec_new_u16();
+        return new Float64Vec(result, []);;
+    }
+	
+	static newIsize(v) {
+        const result = wasm.Float64Vec_new_isize();
+        return new Float64Vec(result, []);;
+    }
+	
+	static newUsize(v) {
+        const result = wasm.Float64Vec_new_usize();
+        return new Float64Vec(result, []);;
+    }
+	
+	static newF64BeBytes(v) {
+        const result = wasm.Float64Vec_new_f64_be_bytes();
+        return new Float64Vec(result, []);;
+    }
+	
+	static newFromOwned(v) {
+        const result = wasm.Float64Vec_new_from_owned();
+        return new Float64Vec(result, []);;
+    }
+	
+	asBoxedSlice() {
+        const result = wasm.Float64Vec_as_boxed_slice();
+        return result // TODO;
+    }
+	
+	asSlice() {
+        const result = wasm.Float64Vec_as_slice();
+        return result(aEdges) // TODO;
+    }
+	
+	fillSlice(v) {
+        wasm.Float64Vec_fill_slice();
+        
+    }
+	
+	setValue(newSlice) {
+        wasm.Float64Vec_set_value();
+        
+    }
+	
+	toString() {
+        wasm.Float64Vec_to_string();
+        return writeable;
+    }
+	
+	borrow() {
+        const result = wasm.Float64Vec_borrow();
+        return result(aEdges) // TODO;
+    }
+	
+	get(i) {
+        const result = wasm.Float64Vec_get();
+        if (!result.isOk) {
+        return null
+    }
+     return result.union.ok;
+    }
+	
+}

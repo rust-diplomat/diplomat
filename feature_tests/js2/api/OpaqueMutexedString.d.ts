@@ -2,4 +2,24 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-OpaqueMutexedString has a TypeDef that is unimplemented. I am working on it!
+
+export class OpaqueMutexedString {
+	
+	
+	static fromUsize(number:number): OpaqueMutexedString;
+	
+	change(number:number): void;
+	
+	borrow(): OpaqueMutexedString;
+	
+	static borrowOther(other:OpaqueMutexedString): OpaqueMutexedString;
+	
+	borrowSelfOrOther(other:OpaqueMutexedString): OpaqueMutexedString;
+	
+	getLenAndAdd(other:number): number;
+	
+	dummyStr(): String;
+	
+	wrapper(): Utf16Wrap;
+	
+}

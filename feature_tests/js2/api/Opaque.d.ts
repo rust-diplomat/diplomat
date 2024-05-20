@@ -2,4 +2,18 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-Opaque has a TypeDef that is unimplemented. I am working on it!
+
+export class Opaque {
+	
+	
+	static new(): Opaque;
+	
+	assertStruct(s:MyStruct): void;
+	
+	static returnsUsize(): number;
+	
+	static returnsImported(): ImportedStruct;
+	
+	static cmp(): number;
+	
+}

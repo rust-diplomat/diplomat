@@ -2,4 +2,22 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-OptionOpaque has a TypeDef that is unimplemented. I am working on it!
+
+export class OptionOpaque {
+	
+	
+	static new(i:number): OptionOpaque?;
+	
+	static newNone(): OptionOpaque?;
+	
+	static returns(): OptionStruct?;
+	
+	static newStruct(): OptionStruct;
+	
+	static newStructNones(): OptionStruct;
+	
+	assertInteger(i:number): void;
+	
+	static optionOpaqueArgument(arg:OptionOpaque?): bool;
+	
+}

@@ -3,7 +3,11 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
-export class Two {
+export class MyIterable {
 	
+	
+	static new(x:Array<number>): MyIterable;
+	
+	iter(): MyIterator;
 	
 }

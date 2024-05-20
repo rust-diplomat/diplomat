@@ -2,4 +2,20 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-Foo has a TypeDef that is unimplemented. I am working on it!
+
+export class Foo {
+	
+	
+	static new(x:String): Foo;
+	
+	getBar(): Bar;
+	
+	static newStatic(x:String): Foo;
+	
+	asReturning(): BorrowedFieldsReturning;
+	
+	static extractFromFields(fields:BorrowedFields): Foo;
+	
+	static extractFromBounds(bounds:BorrowedFieldsWithBoundsanotherString:String,): Foo;
+	
+}

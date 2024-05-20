@@ -2,4 +2,17 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-Bar has a TypeDef that is unimplemented. I am working on it!
+
+export class Bar {
+	
+	#bEdge;
+	
+	#aEdge;
+	
+	
+	foo() {
+        const result = wasm.Bar_foo();
+        return new Foo(result, bEdges, aEdges);;
+    }
+	
+}
