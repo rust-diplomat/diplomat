@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use diplomat_core::hir::{self, LifetimeEnv, ReturnType, SuccessType, Type, OpaqueOwner, StructPathLike};
+use diplomat_core::hir::{self, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, StructPathLike, SuccessType, Type};
 use std::fmt::{Display, Write};
 
 use super::JSGenerationContext;
@@ -94,10 +94,23 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
 				// TODO: Owned? Check JS
 				if op.is_optional() {
-					format!("({variable_name} == 0) ? undefined : new {type_name}({variable_name}, {edges});").into()
+					format!("({variable_name} === 0) ? undefined : new {type_name}({variable_name}, {edges});").into()
 				} else {
 					format!("new {type_name}({variable_name}, {edges});").into()
 				}
+			},
+			Type::Struct(ref st) => {
+				let id = st.id();
+				let type_name = self.formatter.fmt_type_name(id);
+				let mut edges = String::new();
+				for lt in st.lifetimes().lifetimes() {
+					match lt {
+						hir::MaybeStatic::NonStatic(lt) => write!(edges, ", {}Edges", lifetime_environment.fmt_lifetime(lt)).unwrap(),
+						_ => todo!()
+					}
+				}
+				// TODO:
+				format!("{type_name} // TODO").into()
 			},
 			Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.tcx)) => {
 				let id = enum_path.tcx_id.into();
@@ -110,7 +123,21 @@ impl<'tcx> JSGenerationContext<'tcx> {
 				// Based on Dart specifics, but if storing too many things in memory isn't an issue we could just make a reverse-lookup map in the enum template.
 				format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return i[0]; }} return null;}})();").into()
 			},
-			_ => todo!("{:?} is not yet implemented.", ty)
+			Type::Slice(slice) => {
+				if let Some(lt) = slice.lifetime() {
+					match lt {
+						MaybeStatic::NonStatic(lifetime) => {
+							// TODO:
+							format!("{variable_name}({}Edges) // TODO", lifetime_environment.fmt_lifetime(lifetime)).into()
+						},
+						_ => todo!()
+					}
+				} else {
+					// TODO:
+					format!("{variable_name} // TODO").into()
+				}
+			},
+			_ => unreachable!("AST/HIR variant {:?} unknown.", ty)
 		}
 	}
 
