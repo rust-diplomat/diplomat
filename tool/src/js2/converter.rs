@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use diplomat_core::hir::{self, LifetimeEnv, ReturnType, SuccessType, Type, OpaqueOwner};
+use diplomat_core::hir::{self, LifetimeEnv, ReturnType, SuccessType, Type, OpaqueOwner, StructPathLike};
 use std::fmt::{Display, Write};
 
 use super::JSGenerationContext;
@@ -40,6 +40,15 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
 				ret.to_owned().into()
 			},
+			Type::Struct(ref st) => {
+				let id = st.id();
+                let type_name = self.formatter.fmt_type_name(id);
+                if self.tcx.resolve_type(id).attrs().disable {
+                    self.errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
+                }
+                type_name
+			},
             Type::Enum(ref enumerator) => {
                 let enum_id = enumerator.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(enum_id);
@@ -53,7 +62,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
             Type::Slice(hir::Slice::Strs(..)) => "Array<String>".into(),
-            _ => todo!("Type {:?} not supported", ty)
+            _ => unreachable!("AST/HIR variant {:?} unknown", ty)
         }
     }
 
