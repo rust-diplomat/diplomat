@@ -126,8 +126,11 @@ impl<'tcx> JSGenerationContext<'tcx> {
         .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
         .collect::<Vec<_>>();
     
-        let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence);
-        methods.push(special_method_body);
+        // Javascript is fairly easy-going, so instead of using a separate function for the presence of say, Iterators or Iterables in a separate part of defining our class,
+        // We just use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
+
+        // let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence);
+        // methods.push(special_method_body);
 
         #[derive(Template)]
         #[template(path="js2/enum.js.jinja", escape="none")]
@@ -161,9 +164,6 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         let destructor = self.formatter.fmt_destructor_name(type_id);
 
-        let special = self.generate_special_method_body(&opaque_def.special_method_presence);
-        methods.push(special);
-
         #[derive(Template)]
         #[template(path = "js2/opaque.js.jinja", escape="none")]
         struct ImplTemplate<'a> {
@@ -172,6 +172,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             lifetimes : &'a LifetimeEnv,
             methods : Vec<String>,
+            destructor : String,
 
             docs : String,
         }
@@ -179,6 +180,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         ImplTemplate {
             type_name,
             methods,
+            destructor,
             typescript: file_type.is_typescript(),
             docs: self.formatter.fmt_docs(&opaque_def.docs),
             lifetimes : &opaque_def.lifetimes,
@@ -254,40 +256,6 @@ impl<'tcx> JSGenerationContext<'tcx> {
         method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, &method.lifetime_env);
 
         Some(method_info.render().unwrap())
-    }
-
-    /// Generate a special method from [`SpecialMethodPresence`]. We assume that this is always a member of a class.
-    fn generate_special_method_body(&self, special_method_presence : &SpecialMethodPresence) -> String {
-        todo!("Special methods not yet implemented.");
-
-        #[derive(Template)]
-        #[template(path="js2/special_method.js.jinja", escape="none")]
-        struct SpecialMethodInfo<'a> {
-            iterator : Option<Cow<'a, str>>,
-            iterable : Option<Cow<'a, str>>
-        }
-
-        let mut iterator = None;
-
-        if let Some(ref val) = special_method_presence.iterator {
-            iterator = Some(self.gen_success_ty(val))
-        }
-
-        let mut iterable = None;
-        if let Some(ref iterator) = special_method_presence.iterable {
-            let iterator_def = self.tcx.resolve_opaque(*iterator);
-            let Some(ref val) = iterator_def.special_method_presence.iterator else {
-                self.errors
-                    .push_error("Found iterable not returning an iterator type".into());
-                return "".to_string();
-            };
-            iterable = Some(self.gen_success_ty(val))
-        }
-
-        SpecialMethodInfo {
-            iterator,
-            iterable
-        }.render().unwrap()
     }
 
     fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
