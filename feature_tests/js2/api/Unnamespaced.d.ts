@@ -3,9 +3,7 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
-const Unnamespaced_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.namespace_Unnamespaced_destroy(ptr);
-});
+
 export class Unnamespaced {
 	
 

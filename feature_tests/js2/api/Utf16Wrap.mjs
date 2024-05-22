@@ -3,9 +3,11 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+
 const Utf16Wrap_box_destroy_registry = new FinalizationRegistry((ptr) => {
 	wasm.Utf16Wrap_destroy(ptr);
 });
+
 export class Utf16Wrap {
 	// Internal ptr reference:
 	#ptr = null;
@@ -19,7 +21,6 @@ export class Utf16Wrap {
 		this.#ptr = ptr;
 		this.#selfEdge = selfEdge;
 		if (this.#selfEdge.length === 0) {
-			// TODO: Do we need owned? Should double check with Dart opaque types.
 			Utf16Wrap_box_destroy_registry.register(this, this.#ptr);
 		}
 	}

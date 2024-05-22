@@ -3,9 +3,11 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+
 const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
 	wasm.Foo_destroy(ptr);
 });
+
 export class Foo {
 	// Internal ptr reference:
 	#ptr = null;
@@ -24,7 +26,6 @@ export class Foo {
 		this.#ptr = ptr;
 		this.#selfEdge = selfEdge;
 		if (this.#selfEdge.length === 0) {
-			// TODO: Do we need owned? Should double check with Dart opaque types.
 			Foo_box_destroy_registry.register(this, this.#ptr);
 		}
 	}

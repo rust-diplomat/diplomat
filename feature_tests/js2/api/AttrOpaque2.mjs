@@ -3,9 +3,11 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+
 const AttrOpaque2_box_destroy_registry = new FinalizationRegistry((ptr) => {
 	wasm.namespace_AttrOpaque2_destroy(ptr);
 });
+
 export class AttrOpaque2 {
 	// Internal ptr reference:
 	#ptr = null;
@@ -19,7 +21,6 @@ export class AttrOpaque2 {
 		this.#ptr = ptr;
 		this.#selfEdge = selfEdge;
 		if (this.#selfEdge.length === 0) {
-			// TODO: Do we need owned? Should double check with Dart opaque types.
 			AttrOpaque2_box_destroy_registry.register(this, this.#ptr);
 		}
 	}

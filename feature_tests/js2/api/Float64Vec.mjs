@@ -3,9 +3,11 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+
 const Float64Vec_box_destroy_registry = new FinalizationRegistry((ptr) => {
 	wasm.Float64Vec_destroy(ptr);
 });
+
 export class Float64Vec {
 	// Internal ptr reference:
 	#ptr = null;
@@ -19,7 +21,6 @@ export class Float64Vec {
 		this.#ptr = ptr;
 		this.#selfEdge = selfEdge;
 		if (this.#selfEdge.length === 0) {
-			// TODO: Do we need owned? Should double check with Dart opaque types.
 			Float64Vec_box_destroy_registry.register(this, this.#ptr);
 		}
 	}

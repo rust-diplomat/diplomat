@@ -3,9 +3,7 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
-const Bar_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.Bar_destroy(ptr);
-});
+
 export class Bar {
 	
 
