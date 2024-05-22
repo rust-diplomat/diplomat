@@ -3,16 +3,40 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const Bar_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.Bar_destroy(ptr);
+});
 export class Bar {
+	// Internal ptr reference:
+	#ptr = null;
+
+	// Lifetimes are only to keep dependencies alive.
+	#selfEdge = [];
 	
-	#bEdge;
+	#bEdge = [];
 	
-	#aEdge;
+	#aEdge = [];
 	
 	
+	constructor(ptr, selfEdge, bEdge, aEdge) {
+		
+		
+		this.#bEdge = bEdge;
+		
+		
+		this.#aEdge = aEdge;
+		
+		this.#ptr = ptr;
+		this.#selfEdge = selfEdge;
+		if (this.#selfEdge.length === 0) {
+			// TODO: Do we need owned? Should double check with Dart opaque types.
+			Bar_box_destroy_registry.register(this, this.#ptr);
+		}
+	}
+
 	foo() {
         const result = wasm.Bar_foo();
         return new Foo(result, bEdges, aEdges);
     }
-	
+
 }

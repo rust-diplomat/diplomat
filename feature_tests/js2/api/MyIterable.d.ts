@@ -3,11 +3,14 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const MyIterable_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.namespace_MyIterable_destroy(ptr);
+});
 export class MyIterable {
 	
-	
+
 	static new(x:Array<number>): MyIterable;
-	
+
 	iter(): MyIterator;
-	
+
 }

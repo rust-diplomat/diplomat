@@ -3,64 +3,85 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const One_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.One_destroy(ptr);
+});
 export class One {
+	// Internal ptr reference:
+	#ptr = null;
+
+	// Lifetimes are only to keep dependencies alive.
+	#selfEdge = [];
 	
-	#aEdge;
+	#aEdge = [];
 	
 	
+	constructor(ptr, selfEdge, aEdge) {
+		
+		
+		this.#aEdge = aEdge;
+		
+		this.#ptr = ptr;
+		this.#selfEdge = selfEdge;
+		if (this.#selfEdge.length === 0) {
+			// TODO: Do we need owned? Should double check with Dart opaque types.
+			One_box_destroy_registry.register(this, this.#ptr);
+		}
+	}
+
 	static transitivity(holdnohold,) {
         const result = wasm.One_transitivity();
         return new One(result, [], aEdges);
     }
-	
+
 	static cycle(holdnohold,) {
         const result = wasm.One_cycle();
         return new One(result, [], aEdges);
     }
-	
+
 	static manyDependents(ab,c,d,nohold,) {
         const result = wasm.One_many_dependents();
         return new One(result, [], aEdges);
     }
-	
+
 	static returnOutlivesParam(holdnohold,) {
         const result = wasm.One_return_outlives_param();
         return new One(result, [], longEdges);
     }
-	
+
 	static diamondTop(topleft,right,bottom,) {
         const result = wasm.One_diamond_top();
         return new One(result, [], topEdges);
     }
-	
+
 	static diamondLeft(topleft,right,bottom,) {
         const result = wasm.One_diamond_left();
         return new One(result, [], leftEdges);
     }
-	
+
 	static diamondRight(topleft,right,bottom,) {
         const result = wasm.One_diamond_right();
         return new One(result, [], rightEdges);
     }
-	
+
 	static diamondBottom(topleft,right,bottom,) {
         const result = wasm.One_diamond_bottom();
         return new One(result, [], bottomEdges);
     }
-	
+
 	static diamondAndNestedTypes(ab,c,d,nohold,) {
         const result = wasm.One_diamond_and_nested_types();
         return new One(result, [], aEdges);
     }
-	
+
 	static implicitBounds(explicitHoldimplicitHold,nohold,) {
         const result = wasm.One_implicit_bounds();
         return new One(result, [], aEdges);
     }
-	
+
 	static implicitBoundsDeep(explicitimplicit1,implicit2,nohold,) {
         const result = wasm.One_implicit_bounds_deep();
         return new One(result, [], aEdges);
     }
-	
+
 }

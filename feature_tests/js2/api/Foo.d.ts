@@ -3,19 +3,22 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.Foo_destroy(ptr);
+});
 export class Foo {
 	
-	
+
 	static new(x:String): Foo;
-	
+
 	getBar(): Bar;
-	
+
 	static newStatic(x:String): Foo;
-	
+
 	asReturning(): BorrowedFieldsReturning;
-	
+
 	static extractFromFields(fields:BorrowedFields): Foo;
-	
+
 	static extractFromBounds(bounds:BorrowedFieldsWithBoundsanotherString:String,): Foo;
-	
+
 }

@@ -3,9 +3,12 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const MyIterator_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.namespace_MyIterator_destroy(ptr);
+});
 export class MyIterator {
 	
-	
+
 	next(): number?;
-	
+
 }

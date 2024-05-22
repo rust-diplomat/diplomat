@@ -3,21 +3,24 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const MyString_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.MyString_destroy(ptr);
+});
 export class MyString {
 	
-	
+
 	static new(v:String): MyString;
-	
+
 	static newUnsafe(v:String): MyString;
-	
+
 	static newOwned(v:String): MyString;
-	
+
 	static newFromFirst(v:Array<String>): MyString;
-	
+
 	setStr(newStr:String): void;
-	
+
 	getStr(): String;
-	
+
 	getBoxedStr(): String;
-	
+
 }

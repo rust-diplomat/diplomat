@@ -3,21 +3,24 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const OptionOpaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.OptionOpaque_destroy(ptr);
+});
 export class OptionOpaque {
 	
-	
+
 	static new(i:number): OptionOpaque?;
-	
+
 	static newNone(): OptionOpaque?;
-	
+
 	static returns(): OptionStruct?;
-	
+
 	static newStruct(): OptionStruct;
-	
+
 	static newStructNones(): OptionStruct;
-	
+
 	assertInteger(i:number): void;
-	
+
 	static optionOpaqueArgument(arg:OptionOpaque?): bool;
-	
+
 }

@@ -3,14 +3,35 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const RefList_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.RefList_destroy(ptr);
+});
 export class RefList {
+	// Internal ptr reference:
+	#ptr = null;
+
+	// Lifetimes are only to keep dependencies alive.
+	#selfEdge = [];
 	
-	#aEdge;
+	#aEdge = [];
 	
 	
+	constructor(ptr, selfEdge, aEdge) {
+		
+		
+		this.#aEdge = aEdge;
+		
+		this.#ptr = ptr;
+		this.#selfEdge = selfEdge;
+		if (this.#selfEdge.length === 0) {
+			// TODO: Do we need owned? Should double check with Dart opaque types.
+			RefList_box_destroy_registry.register(this, this.#ptr);
+		}
+	}
+
 	static node(data) {
         const result = wasm.RefList_node();
         return new RefList(result, [], bEdges);
     }
-	
+
 }

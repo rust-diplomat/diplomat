@@ -3,37 +3,55 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const AttrOpaque1_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.namespace_AttrOpaque1_destroy(ptr);
+});
 export class AttrOpaque1 {
+	// Internal ptr reference:
+	#ptr = null;
+
+	// Lifetimes are only to keep dependencies alive.
+	#selfEdge = [];
 	
 	
+	constructor(ptr, selfEdge) {
+		
+		this.#ptr = ptr;
+		this.#selfEdge = selfEdge;
+		if (this.#selfEdge.length === 0) {
+			// TODO: Do we need owned? Should double check with Dart opaque types.
+			AttrOpaque1_box_destroy_registry.register(this, this.#ptr);
+		}
+	}
+
 	static new() {
         const result = wasm.namespace_AttrOpaque1_new();
         return new AttrOpaque1(result, []);
     }
-	
+
 	method() {
         const result = wasm.namespace_AttrOpaque1_method();
         return result;
     }
-	
+
 	abirenamed() {
         const result = wasm.renamed_on_abi_only();
         return result;
     }
-	
+
 	methodDisabledcpp() {
         wasm.namespace_AttrOpaque1_method_disabledcpp();
         
     }
-	
+
 	useUnnamespaced(un) {
         wasm.namespace_AttrOpaque1_use_unnamespaced();
         
     }
-	
+
 	useNamespaced(n) {
         wasm.namespace_AttrOpaque1_use_namespaced();
         
     }
-	
+
 }

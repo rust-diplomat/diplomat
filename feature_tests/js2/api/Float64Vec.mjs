@@ -3,74 +3,92 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const Float64Vec_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.Float64Vec_destroy(ptr);
+});
 export class Float64Vec {
+	// Internal ptr reference:
+	#ptr = null;
+
+	// Lifetimes are only to keep dependencies alive.
+	#selfEdge = [];
 	
 	
+	constructor(ptr, selfEdge) {
+		
+		this.#ptr = ptr;
+		this.#selfEdge = selfEdge;
+		if (this.#selfEdge.length === 0) {
+			// TODO: Do we need owned? Should double check with Dart opaque types.
+			Float64Vec_box_destroy_registry.register(this, this.#ptr);
+		}
+	}
+
 	static newBool(v) {
         const result = wasm.Float64Vec_new_bool();
         return new Float64Vec(result, []);
     }
-	
+
 	static newI16(v) {
         const result = wasm.Float64Vec_new_i16();
         return new Float64Vec(result, []);
     }
-	
+
 	static newU16(v) {
         const result = wasm.Float64Vec_new_u16();
         return new Float64Vec(result, []);
     }
-	
+
 	static newIsize(v) {
         const result = wasm.Float64Vec_new_isize();
         return new Float64Vec(result, []);
     }
-	
+
 	static newUsize(v) {
         const result = wasm.Float64Vec_new_usize();
         return new Float64Vec(result, []);
     }
-	
+
 	static newF64BeBytes(v) {
         const result = wasm.Float64Vec_new_f64_be_bytes();
         return new Float64Vec(result, []);
     }
-	
+
 	static newFromOwned(v) {
         const result = wasm.Float64Vec_new_from_owned();
         return new Float64Vec(result, []);
     }
-	
+
 	asBoxedSlice() {
         const result = wasm.Float64Vec_as_boxed_slice();
         return result // TODO;
     }
-	
+
 	asSlice() {
         const result = wasm.Float64Vec_as_slice();
         return result(aEdges) // TODO;
     }
-	
+
 	fillSlice(v) {
         wasm.Float64Vec_fill_slice();
         
     }
-	
+
 	setValue(newSlice) {
         wasm.Float64Vec_set_value();
         
     }
-	
+
 	toString() {
         wasm.Float64Vec_to_string();
         return writeable;
     }
-	
+
 	borrow() {
         const result = wasm.Float64Vec_borrow();
         return result(aEdges) // TODO;
     }
-	
+
 	get(i) {
         const result = wasm.Float64Vec_get();
         if (!result.isOk) {
@@ -78,5 +96,5 @@ export class Float64Vec {
     }
      return result.union.ok;
     }
-	
+
 }

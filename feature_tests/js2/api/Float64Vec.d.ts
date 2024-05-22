@@ -3,35 +3,38 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const Float64Vec_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.Float64Vec_destroy(ptr);
+});
 export class Float64Vec {
 	
-	
+
 	static newBool(v:Array<bool>): Float64Vec;
-	
+
 	static newI16(v:Array<number>): Float64Vec;
-	
+
 	static newU16(v:Array<number>): Float64Vec;
-	
+
 	static newIsize(v:Array<number>): Float64Vec;
-	
+
 	static newUsize(v:Array<number>): Float64Vec;
-	
+
 	static newF64BeBytes(v:Uint8Array): Float64Vec;
-	
+
 	static newFromOwned(v:Array<number>): Float64Vec;
-	
+
 	asBoxedSlice(): Array<number>;
-	
+
 	asSlice(): Array<number>;
-	
+
 	fillSlice(v:Array<number>): void;
-	
+
 	setValue(newSlice:Array<number>): void;
-	
+
 	toString(): String;
-	
+
 	borrow(): Array<number>;
-	
+
 	get(i:number): number?;
-	
+
 }

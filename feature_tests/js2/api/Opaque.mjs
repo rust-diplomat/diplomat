@@ -3,32 +3,50 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const Opaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.Opaque_destroy(ptr);
+});
 export class Opaque {
+	// Internal ptr reference:
+	#ptr = null;
+
+	// Lifetimes are only to keep dependencies alive.
+	#selfEdge = [];
 	
 	
+	constructor(ptr, selfEdge) {
+		
+		this.#ptr = ptr;
+		this.#selfEdge = selfEdge;
+		if (this.#selfEdge.length === 0) {
+			// TODO: Do we need owned? Should double check with Dart opaque types.
+			Opaque_box_destroy_registry.register(this, this.#ptr);
+		}
+	}
+
 	static new() {
         const result = wasm.Opaque_new();
         return new Opaque(result, []);
     }
-	
+
 	assertStruct(s) {
         wasm.Opaque_assert_struct();
         
     }
-	
+
 	static returnsUsize() {
         const result = wasm.Opaque_returns_usize();
         return result;
     }
-	
+
 	static returnsImported() {
         const result = wasm.Opaque_returns_imported();
         return ImportedStruct // TODO;
     }
-	
+
 	static cmp() {
         const result = wasm.Opaque_cmp();
         return result;
     }
-	
+
 }

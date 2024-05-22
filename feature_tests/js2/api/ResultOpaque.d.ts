@@ -3,25 +3,28 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const ResultOpaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.ResultOpaque_destroy(ptr);
+});
 export class ResultOpaque {
 	
-	
+
 	static new(i:number): ResultOpaque;
-	
+
 	static newFailingFoo(): ResultOpaque;
-	
+
 	static newFailingBar(): ResultOpaque;
-	
+
 	static newFailingUnit(): ResultOpaque?;
-	
+
 	static newFailingStruct(i:number): ResultOpaque;
-	
+
 	static newInErr(i:number): void;
-	
+
 	static newInt(i:number): number?;
-	
+
 	static newInEnumErr(i:number): ErrorEnum;
-	
+
 	assertInteger(i:number): void;
-	
+
 }

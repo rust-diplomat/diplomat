@@ -3,17 +3,20 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
+const Opaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
+	wasm.Opaque_destroy(ptr);
+});
 export class Opaque {
 	
-	
+
 	static new(): Opaque;
-	
+
 	assertStruct(s:MyStruct): void;
-	
+
 	static returnsUsize(): number;
-	
+
 	static returnsImported(): ImportedStruct;
-	
+
 	static cmp(): number;
-	
+
 }
