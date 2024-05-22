@@ -70,7 +70,7 @@ impl<'tcx> JSFormatter<'tcx> {
 	pub fn fmt_primitive_as_ffi(&self, primitive : hir::PrimitiveType, cast : bool) -> &'static str {
 		if cast {
 			return match primitive {
-				hir::PrimitiveType::Bool => "bool",
+				hir::PrimitiveType::Bool => "boolean",
 				hir::PrimitiveType::Char => "char",
 				hir::PrimitiveType::Int(_)| hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Byte | hir::PrimitiveType::Float(_) => "number",
 				hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt."),
