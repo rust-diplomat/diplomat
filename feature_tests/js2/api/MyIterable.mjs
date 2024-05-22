@@ -26,6 +26,7 @@ export class MyIterable {
 	}
 
 	static new(x) {
+        
         const result = wasm.namespace_MyIterable_new();
         return new MyIterable(result, []);
     }
@@ -33,7 +34,8 @@ export class MyIterable {
 	iter() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.namespace_MyIterable_iter();
+        let aEdges = [this];
+        const result = wasm.namespace_MyIterable_iter();
         return new MyIterator(result, [], aEdges);
     }
 

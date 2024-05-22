@@ -26,11 +26,13 @@ export class OpaqueMutexedString {
 	}
 
 	static fromUsize(number) {
+        
         const result = wasm.OpaqueMutexedString_from_usize();
         return new OpaqueMutexedString(result, []);
     }
 
 	change(number) {
+        
         wasm.OpaqueMutexedString_change();
         
     }
@@ -38,25 +40,29 @@ export class OpaqueMutexedString {
 	borrow() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.OpaqueMutexedString_borrow();
+        let aEdges = [this];
+        const result = wasm.OpaqueMutexedString_borrow();
         return new OpaqueMutexedString(result, aEdges);
     }
 
 	static borrowOther(other) {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];const result = wasm.OpaqueMutexedString_borrow_other();
+        let aEdges = [];
+        const result = wasm.OpaqueMutexedString_borrow_other();
         return new OpaqueMutexedString(result, aEdges);
     }
 
 	borrowSelfOrOther(other) {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.OpaqueMutexedString_borrow_self_or_other();
+        let aEdges = [this];
+        const result = wasm.OpaqueMutexedString_borrow_self_or_other();
         return new OpaqueMutexedString(result, aEdges);
     }
 
 	getLenAndAdd(other) {
+        
         const result = wasm.OpaqueMutexedString_get_len_and_add();
         return result;
     }
@@ -64,11 +70,13 @@ export class OpaqueMutexedString {
 	dummyStr() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.OpaqueMutexedString_dummy_str();
+        let aEdges = [this];
+        const result = wasm.OpaqueMutexedString_dummy_str();
         return result(aEdges) // TODO: Slice c_to_js;
     }
 
 	wrapper() {
+        
         const result = wasm.OpaqueMutexedString_wrapper();
         return new Utf16Wrap(result, []);
     }

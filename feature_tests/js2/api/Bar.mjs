@@ -40,7 +40,8 @@ export class Bar {
         // This lifetime edge depends on lifetimes 'b, 'a
         let bEdges = [this];
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.Bar_foo();
+        let aEdges = [this];
+        const result = wasm.Bar_foo();
         return new Foo(result, bEdges, aEdges);
     }
 

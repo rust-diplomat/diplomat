@@ -26,36 +26,43 @@ export class MyString {
 	}
 
 	static new(v) {
+        
         const result = wasm.MyString_new();
         return new MyString(result, []);
     }
 
 	static newUnsafe(v) {
+        
         const result = wasm.MyString_new_unsafe();
         return new MyString(result, []);
     }
 
 	static newOwned(v) {
+        
         const result = wasm.MyString_new_owned();
         return new MyString(result, []);
     }
 
 	static newFromFirst(v) {
+        
         const result = wasm.MyString_new_from_first();
         return new MyString(result, []);
     }
 
 	setStr(newStr) {
+        
         wasm.MyString_set_str();
         
     }
 
 	getStr() {
+        
         wasm.MyString_get_str();
         return writeable;
     }
 
 	getBoxedStr() {
+        
         const result = wasm.MyString_get_boxed_str();
         return result // TODO: Slice c_to_js;
     }

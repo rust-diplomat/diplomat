@@ -33,7 +33,8 @@ export class RefList {
 	static node(data) {
         
         // This lifetime edge depends on lifetimes 'b
-        let bEdges = [];const result = wasm.RefList_node();
+        let bEdges = [];
+        const result = wasm.RefList_node();
         return new RefList(result, [], bEdges);
     }
 

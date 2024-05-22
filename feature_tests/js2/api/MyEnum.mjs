@@ -51,11 +51,13 @@ export class MyEnum {
 
 
     intoValue() {
+        
         const result = wasm.MyEnum_into_value();
         return result;
     }
 
     static getA() {
+        
         const result = wasm.MyEnum_get_a();
         return (() => {for (let i of MyEnum.values) { if(i[1] === result) return i[0]; } return null;})();;
     }

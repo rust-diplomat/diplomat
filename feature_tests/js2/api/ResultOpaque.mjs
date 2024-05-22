@@ -26,6 +26,7 @@ export class ResultOpaque {
 	}
 
 	static new(i) {
+        
         const result = wasm.ResultOpaque_new();
         if (!result.isOk) {
             throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
@@ -34,6 +35,7 @@ export class ResultOpaque {
     }
 
 	static newFailingFoo() {
+        
         const result = wasm.ResultOpaque_new_failing_foo();
         if (!result.isOk) {
             throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
@@ -42,6 +44,7 @@ export class ResultOpaque {
     }
 
 	static newFailingBar() {
+        
         const result = wasm.ResultOpaque_new_failing_bar();
         if (!result.isOk) {
             throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
@@ -50,6 +53,7 @@ export class ResultOpaque {
     }
 
 	static newFailingUnit() {
+        
         const result = wasm.ResultOpaque_new_failing_unit();
         if (!result.isOk) {
             return null
@@ -58,6 +62,7 @@ export class ResultOpaque {
     }
 
 	static newFailingStruct(i) {
+        
         const result = wasm.ResultOpaque_new_failing_struct();
         if (!result.isOk) {
             throw ErrorStruct // TODO: Struct c_to_js
@@ -66,6 +71,7 @@ export class ResultOpaque {
     }
 
 	static newInErr(i) {
+        
         const result = wasm.ResultOpaque_new_in_err();
         if (!result.isOk) {
             throw new ResultOpaque(result.union.error, [])
@@ -74,6 +80,7 @@ export class ResultOpaque {
     }
 
 	static newInt(i) {
+        
         const result = wasm.ResultOpaque_new_int();
         if (!result.isOk) {
             return null
@@ -82,6 +89,7 @@ export class ResultOpaque {
     }
 
 	static newInEnumErr(i) {
+        
         const result = wasm.ResultOpaque_new_in_enum_err();
         if (!result.isOk) {
             throw new ResultOpaque(result.union.error, [])
@@ -90,6 +98,7 @@ export class ResultOpaque {
     }
 
 	assertInteger(i) {
+        
         wasm.ResultOpaque_assert_integer();
         
     }

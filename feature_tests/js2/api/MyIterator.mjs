@@ -31,6 +31,7 @@ export class MyIterator {
 	}
 
 	next() {
+        
         const result = wasm.namespace_MyIterator_next();
         if (!result.isOk) {
             return null

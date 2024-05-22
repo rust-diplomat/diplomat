@@ -26,31 +26,37 @@ export class AttrOpaque1 {
 	}
 
 	static new() {
+        
         const result = wasm.namespace_AttrOpaque1_new();
         return new AttrOpaque1(result, []);
     }
 
 	method() {
+        
         const result = wasm.namespace_AttrOpaque1_method();
         return result;
     }
 
 	abirenamed() {
+        
         const result = wasm.renamed_on_abi_only();
         return result;
     }
 
 	methodDisabledcpp() {
+        
         wasm.namespace_AttrOpaque1_method_disabledcpp();
         
     }
 
 	useUnnamespaced(un) {
+        
         wasm.namespace_AttrOpaque1_use_unnamespaced();
         
     }
 
 	useNamespaced(n) {
+        
         wasm.namespace_AttrOpaque1_use_namespaced();
         
     }

@@ -33,7 +33,8 @@ export class Foo {
 	static new(x) {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];const result = wasm.Foo_new();
+        let aEdges = [];
+        const result = wasm.Foo_new();
         return new Foo(result, [], aEdges);
     }
 
@@ -42,35 +43,40 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         // This lifetime edge depends on lifetimes 'a, 'b
-        let bEdges = [this];const result = wasm.Foo_get_bar();
+        let bEdges = [this];
+        const result = wasm.Foo_get_bar();
         return new Bar(result, [], bEdges, aEdges);
     }
 
 	static newStatic(x) {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];const result = wasm.Foo_new_static();
+        let aEdges = [];
+        const result = wasm.Foo_new_static();
         return new Foo(result, [], aEdges);
     }
 
 	asReturning() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.Foo_as_returning();
+        let aEdges = [this];
+        const result = wasm.Foo_as_returning();
         return BorrowedFieldsReturning // TODO: Struct c_to_js;
     }
 
 	static extractFromFields(fields) {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];const result = wasm.Foo_extract_from_fields();
+        let aEdges = [];
+        const result = wasm.Foo_extract_from_fields();
         return new Foo(result, [], aEdges);
     }
 
 	static extractFromBounds(bounds, anotherString) {
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
-        let aEdges = [];const result = wasm.Foo_extract_from_bounds();
+        let aEdges = [];
+        const result = wasm.Foo_extract_from_bounds();
         return new Foo(result, [], aEdges);
     }
 

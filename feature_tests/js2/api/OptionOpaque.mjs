@@ -26,16 +26,19 @@ export class OptionOpaque {
 	}
 
 	static new(i) {
+        
         const result = wasm.OptionOpaque_new();
         return (result === 0) ? undefined : new OptionOpaque(result, []);;
     }
 
 	static newNone() {
+        
         const result = wasm.OptionOpaque_new_none();
         return (result === 0) ? undefined : new OptionOpaque(result, []);;
     }
 
 	static returns() {
+        
         const result = wasm.OptionOpaque_returns();
         if (!result.isOk) {
             return null
@@ -44,21 +47,25 @@ export class OptionOpaque {
     }
 
 	static newStruct() {
+        
         const result = wasm.OptionOpaque_new_struct();
         return OptionStruct // TODO: Struct c_to_js;
     }
 
 	static newStructNones() {
+        
         const result = wasm.OptionOpaque_new_struct_nones();
         return OptionStruct // TODO: Struct c_to_js;
     }
 
 	assertInteger(i) {
+        
         wasm.OptionOpaque_assert_integer();
         
     }
 
 	static optionOpaqueArgument(arg) {
+        
         const result = wasm.OptionOpaque_option_opaque_argument();
         return result;
     }

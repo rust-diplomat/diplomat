@@ -26,26 +26,31 @@ export class Opaque {
 	}
 
 	static new() {
+        
         const result = wasm.Opaque_new();
         return new Opaque(result, []);
     }
 
 	assertStruct(s) {
+        
         wasm.Opaque_assert_struct();
         
     }
 
 	static returnsUsize() {
+        
         const result = wasm.Opaque_returns_usize();
         return result;
     }
 
 	static returnsImported() {
+        
         const result = wasm.Opaque_returns_imported();
         return ImportedStruct // TODO: Struct c_to_js;
     }
 
 	static cmp() {
+        
         const result = wasm.Opaque_cmp();
         return result;
     }
