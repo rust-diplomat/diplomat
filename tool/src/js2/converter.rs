@@ -92,7 +92,6 @@ impl<'tcx> JSGenerationContext<'tcx> {
 					}
 				}
 
-				// TODO: Owned? Check JS
 				if op.is_optional() {
 					format!("({variable_name} === 0) ? undefined : new {type_name}({variable_name}, {edges});").into()
 				} else {
@@ -110,7 +109,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 					}
 				}
 				// TODO:
-				format!("{type_name} // TODO").into()
+				format!("{type_name} // TODO: Struct c_to_js").into()
 			},
 			Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.tcx)) => {
 				let id = enum_path.tcx_id.into();
@@ -128,13 +127,13 @@ impl<'tcx> JSGenerationContext<'tcx> {
 					match lt {
 						MaybeStatic::NonStatic(lifetime) => {
 							// TODO:
-							format!("{variable_name}({}Edges) // TODO", lifetime_environment.fmt_lifetime(lifetime)).into()
+							format!("{variable_name}({}Edges) // TODO: Slice c_to_js", lifetime_environment.fmt_lifetime(lifetime)).into()
 						},
 						_ => todo!()
 					}
 				} else {
 					// TODO:
-					format!("{variable_name} // TODO").into()
+					format!("{variable_name} // TODO: Slice c_to_js").into()
 				}
 			},
 			_ => unreachable!("AST/HIR variant {:?} unknown.", ty)

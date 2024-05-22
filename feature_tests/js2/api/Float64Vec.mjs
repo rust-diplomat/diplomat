@@ -62,12 +62,14 @@ export class Float64Vec {
 
 	asBoxedSlice() {
         const result = wasm.Float64Vec_as_boxed_slice();
-        return result // TODO;
+        return result // TODO: Slice c_to_js;
     }
 
 	asSlice() {
-        const result = wasm.Float64Vec_as_slice();
-        return result(aEdges) // TODO;
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];const result = wasm.Float64Vec_as_slice();
+        return result(aEdges) // TODO: Slice c_to_js;
     }
 
 	fillSlice(v) {
@@ -86,16 +88,18 @@ export class Float64Vec {
     }
 
 	borrow() {
-        const result = wasm.Float64Vec_borrow();
-        return result(aEdges) // TODO;
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];const result = wasm.Float64Vec_borrow();
+        return result(aEdges) // TODO: Slice c_to_js;
     }
 
 	get(i) {
         const result = wasm.Float64Vec_get();
         if (!result.isOk) {
-        return null
-    }
-     return result.union.ok;
+            return null
+        }
+         return result.union.ok;
     }
 
 }

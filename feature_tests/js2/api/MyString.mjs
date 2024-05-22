@@ -57,7 +57,7 @@ export class MyString {
 
 	getBoxedStr() {
         const result = wasm.MyString_get_boxed_str();
-        return result // TODO;
+        return result // TODO: Slice c_to_js;
     }
 
 }

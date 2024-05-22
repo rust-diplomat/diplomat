@@ -36,17 +36,23 @@ export class OpaqueMutexedString {
     }
 
 	borrow() {
-        const result = wasm.OpaqueMutexedString_borrow();
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];const result = wasm.OpaqueMutexedString_borrow();
         return new OpaqueMutexedString(result, aEdges);
     }
 
 	static borrowOther(other) {
-        const result = wasm.OpaqueMutexedString_borrow_other();
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [];const result = wasm.OpaqueMutexedString_borrow_other();
         return new OpaqueMutexedString(result, aEdges);
     }
 
 	borrowSelfOrOther(other) {
-        const result = wasm.OpaqueMutexedString_borrow_self_or_other();
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];const result = wasm.OpaqueMutexedString_borrow_self_or_other();
         return new OpaqueMutexedString(result, aEdges);
     }
 
@@ -56,8 +62,10 @@ export class OpaqueMutexedString {
     }
 
 	dummyStr() {
-        const result = wasm.OpaqueMutexedString_dummy_str();
-        return result(aEdges) // TODO;
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];const result = wasm.OpaqueMutexedString_dummy_str();
+        return result(aEdges) // TODO: Slice c_to_js;
     }
 
 	wrapper() {

@@ -1,8 +1,10 @@
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 use std::fmt::Display;
 
 use diplomat_core::ast::{DocsUrlGenerator, Param};
 
+use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind};
 use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
@@ -214,13 +216,16 @@ impl<'tcx> JSGenerationContext<'tcx> {
             method_name : String,
             /// Native C method name
             c_method_name : Cow<'info, str>,
-            typescript : bool,
 
+            typescript : bool,
             is_static : bool,
 
             parameters : Vec<ParamInfo<'info>>,
             return_type : Cow<'info, str>,
             return_expression : Option<Cow<'info, str>>,
+
+            method_lifetimes_map : BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
+            lifetimes : Option<&'info LifetimeEnv>,
         }
 
         let mut method_info = MethodInfo::default();
@@ -254,6 +259,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         method_info.return_type = self.gen_js_return_type_str(&method.output);
         method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, &method.lifetime_env);
+        
+        method_info.method_lifetimes_map = visitor.borrow_map();
+        method_info.lifetimes = Some(&method.lifetime_env);
 
         Some(method_info.render().unwrap())
     }
@@ -266,5 +274,26 @@ impl<'tcx> JSGenerationContext<'tcx> {
         //     SuccessType::Unit => self.formatter.fmt_void().into(),
         //     _ => unreachable!(),
         // }
+    }
+}
+
+// Helpers used in templates (Askama has restrictions on Rust syntax)
+
+/// Modified from dart backend
+fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
+    let param_name = &edge.param_name;
+    match edge.kind {
+        // Opaque parameters are just retained as edges
+        LifetimeEdgeKind::OpaqueParam => param_name.into(),
+        _ => todo!("Lifetime edge kind {:?} not yet implemented", edge.kind),
+        // Slice parameters make an arena which is retained as an edge
+        // LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
+        // We extract the edge-relevant fields for a borrowed struct lifetime
+        // LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
+        //     "...{param_name}._fieldsForLifetime{}",
+        //     def_env.fmt_lifetime(def_lt).to_uppercase(),
+        // )
+        // .into(),
+        // _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
 }

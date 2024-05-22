@@ -26,13 +26,15 @@ export class Utf16Wrap {
 	}
 
 	borrowCont() {
-        const result = wasm.Utf16Wrap_borrow_cont();
-        return result(aEdges) // TODO;
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];const result = wasm.Utf16Wrap_borrow_cont();
+        return result(aEdges) // TODO: Slice c_to_js;
     }
 
 	owned() {
         const result = wasm.Utf16Wrap_owned();
-        return result // TODO;
+        return result // TODO: Slice c_to_js;
     }
 
 }

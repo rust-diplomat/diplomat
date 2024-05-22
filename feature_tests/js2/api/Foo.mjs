@@ -31,32 +31,46 @@ export class Foo {
 	}
 
 	static new(x) {
-        const result = wasm.Foo_new();
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [];const result = wasm.Foo_new();
         return new Foo(result, [], aEdges);
     }
 
 	getBar() {
-        const result = wasm.Foo_get_bar();
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];
+        // This lifetime edge depends on lifetimes 'a, 'b
+        let bEdges = [this];const result = wasm.Foo_get_bar();
         return new Bar(result, [], bEdges, aEdges);
     }
 
 	static newStatic(x) {
-        const result = wasm.Foo_new_static();
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [];const result = wasm.Foo_new_static();
         return new Foo(result, [], aEdges);
     }
 
 	asReturning() {
-        const result = wasm.Foo_as_returning();
-        return BorrowedFieldsReturning // TODO;
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];const result = wasm.Foo_as_returning();
+        return BorrowedFieldsReturning // TODO: Struct c_to_js;
     }
 
 	static extractFromFields(fields) {
-        const result = wasm.Foo_extract_from_fields();
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [];const result = wasm.Foo_extract_from_fields();
         return new Foo(result, [], aEdges);
     }
 
 	static extractFromBounds(boundsanotherString,) {
-        const result = wasm.Foo_extract_from_bounds();
+        
+        // This lifetime edge depends on lifetimes 'a, 'y, 'z
+        let aEdges = [];const result = wasm.Foo_extract_from_bounds();
         return new Foo(result, [], aEdges);
     }
 

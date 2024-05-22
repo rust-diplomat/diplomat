@@ -6,18 +6,27 @@
     {%- if !loop.first -%},{%- endif -%}
 {%- endfor -%}
 ) {%- if typescript %}: {{ return_type }};{% else %} {
-    {% for lifetime in lifetimes.all_lifetimes() %}
-    {% let maybe_lifetime_info = method_lifetimes_map.get(lifetime) %}
-    {% if maybe_lifetime_info.is_some() %}
-    {% let lifetime_info = maybe_lifetime_info.unwrap() %}
-    // TODO
-    {% endif %}
-    {% endfor %}
+    {% let lifetimes = lifetimes.unwrap() -%}
+    {% for lifetime in lifetimes.all_lifetimes() -%}
+    {%- let maybe_lifetime_info = method_lifetimes_map.get(lifetime) -%}
+    {%- if maybe_lifetime_info.is_some() -%}
+    {%- let lifetime_info = maybe_lifetime_info.unwrap() %}
+    // This lifetime edge depends on lifetimes {#+ -#}
+    {%- for longer in lifetime_info.all_longer_lifetimes.iter().copied() -%}
+    {%- if !loop.first -%}, {% endif %}'{{lifetimes.fmt_lifetime(longer)}}
+    {%- endfor %}
+    let {{lifetimes.fmt_lifetime(lifetime)}}Edges = [
+        {%- for incoming_edge in lifetime_info.incoming_edges.iter() %}
+        {%- if !loop.first %}, {% endif -%} {{self::display_lifetime_edge(incoming_edge)}}
+        {%- endfor -%}
+    ];
+    {%- endif -%}
+    {%- endfor -%}
 
     {% if !method.output.is_ffi_unit() %}const result = {% endif %}wasm.{{ c_method_name }}();
     {% match return_expression -%}
     {%- when Some with (statement) -%}
-    {{ statement | indent(4) }}
+    {{ statement|indent(4) }}
     {%- when None -%}
     {%- endmatch %}
 }

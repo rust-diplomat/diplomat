@@ -38,19 +38,19 @@ export class OptionOpaque {
 	static returns() {
         const result = wasm.OptionOpaque_returns();
         if (!result.isOk) {
-        return null
-    }
-     return OptionStruct // TODO;
+            return null
+        }
+         return OptionStruct // TODO: Struct c_to_js;
     }
 
 	static newStruct() {
         const result = wasm.OptionOpaque_new_struct();
-        return OptionStruct // TODO;
+        return OptionStruct // TODO: Struct c_to_js;
     }
 
 	static newStructNones() {
         const result = wasm.OptionOpaque_new_struct_nones();
-        return OptionStruct // TODO;
+        return OptionStruct // TODO: Struct c_to_js;
     }
 
 	assertInteger(i) {

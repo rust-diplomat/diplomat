@@ -42,7 +42,7 @@ export class Opaque {
 
 	static returnsImported() {
         const result = wasm.Opaque_returns_imported();
-        return ImportedStruct // TODO;
+        return ImportedStruct // TODO: Struct c_to_js;
     }
 
 	static cmp() {

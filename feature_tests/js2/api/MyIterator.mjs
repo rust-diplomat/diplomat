@@ -33,9 +33,9 @@ export class MyIterator {
 	next() {
         const result = wasm.namespace_MyIterator_next();
         if (!result.isOk) {
-        return null
-    }
-     return result.union.ok;
+            return null
+        }
+         return result.union.ok;
     }
 
 }
