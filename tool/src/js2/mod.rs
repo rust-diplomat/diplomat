@@ -4,7 +4,7 @@ use std::fmt::Display;
 
 use diplomat_core::ast::{DocsUrlGenerator, Param};
 
-use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind};
+use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo};
 use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
@@ -209,6 +209,13 @@ impl<'tcx> JSGenerationContext<'tcx> {
             name : Cow<'a, str>
         }
 
+        struct SliceParam<'a> {
+            name : Cow<'a, str>,
+            /// How to convert the JS type into a view
+            view_expr : Cow<'a, str>,
+            is_borrowed : bool,
+        }
+
         #[derive(Default, Template)]
         #[template(path="js2/method.js.jinja", escape="none")]
         struct MethodInfo<'info> {
@@ -221,6 +228,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
             is_static : bool,
 
             parameters : Vec<ParamInfo<'info>>,
+            slice_params : Vec<SliceParam<'info>>,
+            param_conversions : Vec<Cow<'static, str>>,
+
             return_type : Cow<'info, str>,
             return_expression : Option<Cow<'info, str>>,
 
@@ -239,6 +249,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
         if let Some(param_self) = method.param_self.as_ref() {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
             method_info.is_static = false;
+
+            method_info.param_conversions.push(self.gen_js_to_c_self(&param_self.ty));
         }
 
         for param in method.params.iter() {
@@ -246,12 +258,30 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             param_info.name = self.formatter.fmt_param_name(param.name.as_str());
             param_info.ty = self.gen_js_type_str(&param.ty);
+            
+            let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
 
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
             if let hir::Type::Slice(slice) = param.ty {
-                // TODO:
-            } else {
+                let view_expr = self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None);
 
+                let is_borrowed = match param_borrow_kind {
+                    ParamBorrowInfo::TemporarySlice => false,
+                    ParamBorrowInfo::BorrowedSlice => true,
+                    _ => unreachable!(
+                        "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
+                    ),
+                };
+
+                todo!("Need to add to param_conversions");
+
+                method_info.slice_params.push(SliceParam {
+                    name: param_info.name.clone(),
+                    view_expr,
+                    is_borrowed,
+                });
+            } else {
+                // TODO:
             }
             
             method_info.parameters.push(param_info);
@@ -285,15 +315,14 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     match edge.kind {
         // Opaque parameters are just retained as edges
         LifetimeEdgeKind::OpaqueParam => param_name.into(),
-        _ => todo!("Lifetime edge kind {:?} not yet implemented", edge.kind),
         // Slice parameters make an arena which is retained as an edge
-        // LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
+        LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
         // We extract the edge-relevant fields for a borrowed struct lifetime
-        // LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
-        //     "...{param_name}._fieldsForLifetime{}",
-        //     def_env.fmt_lifetime(def_lt).to_uppercase(),
-        // )
-        // .into(),
-        // _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
+        LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
+            "...{param_name}._fieldsForLifetime{}",
+            def_env.fmt_lifetime(def_lt).to_uppercase(),
+        )
+        .into(),
+        _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
 }

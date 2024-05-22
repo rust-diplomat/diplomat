@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use diplomat_core::hir::{self, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, StructPathLike, SuccessType, Type};
+use diplomat_core::hir::{self, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type};
 use std::fmt::{Display, Write};
 
 use super::JSGenerationContext;
@@ -16,6 +16,7 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
 }
 
 impl<'tcx> JSGenerationContext<'tcx> {
+	// #region C to JS
 	/// Given a type from Rust, convert it into something Typescript will understand.
 	/// We use this to double-check our Javascript work as well.
     pub(super) fn gen_js_type_str<P: hir::TyPosition>(&self, ty: &Type<P>) -> Cow<'tcx, str> {
@@ -222,5 +223,33 @@ impl<'tcx> JSGenerationContext<'tcx> {
 			_ => unreachable!("AST/HIR variant {:?} unknown", return_type)
 		}
 	}
+	// #endregion
+
+	// #endregion
+
+	// #region JS to C
+
+	pub(super) fn gen_js_to_c_self(&self, ty : &SelfType) -> Cow<'static, str> {
+		match *ty {
+			SelfType::Enum(ref e) => "this.ffiValue".into(),
+			SelfType::Struct(..) => todo!("Struct not yet implemented"),
+			SelfType::Opaque(..) => "this.#ptr".into(),
+			_ => unreachable!("Unknown AST/HIR variant {:?}", ty)
+		}
+	}
+
+	pub(super) fn gen_js_to_c_for_type<P: TyPosition>(&self,
+		ty : &Type<P>,
+		js_name : Cow<'tcx, str>,
+		struct_borrow_info : Option<&StructBorrowContext<'tcx>>) -> Cow<'tcx, str> {
+			match *ty {
+				Type::Primitive(..) => js_name.clone(),
+				Type::Enum(ref e) => format!("{js_name}.ffiValue").into(),
+				Type::Opaque(ref op) if op.is_optional() => {
+					todo!()
+				},
+				_ => todo!("{:?} not implemented yet", ty),
+			}
+		}
 	// #endregion
 }
