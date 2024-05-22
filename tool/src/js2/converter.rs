@@ -196,11 +196,13 @@ impl<'tcx> JSGenerationContext<'tcx> {
 			),
 
 			// Result<(), ()> or Option<()>
+			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(SuccessType::Unit, None)
 			| ReturnType::Nullable(SuccessType::Unit)
 			=> Some("return result.isOk;".into()),
 
 			// Result<Type, Error> or Option<Type>
+			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok)  => {
 				let err_check = format!("if (!result.isOk) {{\n    {}\n}}\n",
 				match return_type {
