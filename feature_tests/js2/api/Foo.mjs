@@ -67,7 +67,7 @@ export class Foo {
         return new Foo(result, [], aEdges);
     }
 
-	static extractFromBounds(boundsanotherString,) {
+	static extractFromBounds(bounds, anotherString) {
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [];const result = wasm.Foo_extract_from_bounds();

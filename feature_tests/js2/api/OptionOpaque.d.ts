@@ -19,6 +19,6 @@ export class OptionOpaque {
 
 	assertInteger(i:number): void;
 
-	static optionOpaqueArgument(arg:OptionOpaque?): bool;
+	static optionOpaqueArgument(arg:OptionOpaque?): boolean;
 
 }

@@ -3,7 +3,7 @@
 {%- for param in parameters -%}
     {{- param.name -}}
     {%- if typescript -%}: {{- param.ty -}}{%- endif -%}
-    {%- if !loop.first -%},{%- endif -%}
+    {%- if !loop.last -%}, {% endif -%}
 {%- endfor -%}
 ) {%- if typescript %}: {{ return_type }};{% else %} {
     {% let lifetimes = lifetimes.unwrap() -%}

@@ -17,6 +17,6 @@ export class Foo {
 
 	static extractFromFields(fields:BorrowedFields): Foo;
 
-	static extractFromBounds(bounds:BorrowedFieldsWithBoundsanotherString:String,): Foo;
+	static extractFromBounds(bounds:BorrowedFieldsWithBounds, anotherString:String): Foo;
 
 }
