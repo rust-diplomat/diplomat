@@ -7,6 +7,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class RefList {
 	
 
-	static node(data:RefListParameter): RefList;
+	static node(data: RefListParameter): RefList;
 
 }

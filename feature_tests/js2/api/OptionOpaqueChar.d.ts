@@ -7,6 +7,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class OptionOpaqueChar {
 	
 
-	assertChar(ch:char): void;
+	assertChar(ch: char): void;
 
 }

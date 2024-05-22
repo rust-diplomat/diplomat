@@ -7,7 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class ResultOpaque {
 	
 
-	static new(i:number): ResultOpaque;
+	static new(i: number): ResultOpaque;
 
 	static newFailingFoo(): ResultOpaque;
 
@@ -15,14 +15,14 @@ export class ResultOpaque {
 
 	static newFailingUnit(): ResultOpaque?;
 
-	static newFailingStruct(i:number): ResultOpaque;
+	static newFailingStruct(i: number): ResultOpaque;
 
-	static newInErr(i:number): void;
+	static newInErr(i: number): void;
 
-	static newInt(i:number): number?;
+	static newInt(i: number): number?;
 
-	static newInEnumErr(i:number): ErrorEnum;
+	static newInEnumErr(i: number): ErrorEnum;
 
-	assertInteger(i:number): void;
+	assertInteger(i: number): void;
 
 }

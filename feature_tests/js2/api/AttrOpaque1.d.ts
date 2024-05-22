@@ -15,8 +15,8 @@ export class AttrOpaque1 {
 
 	methodDisabledcpp(): void;
 
-	useUnnamespaced(un:Unnamespaced): void;
+	useUnnamespaced(un: Unnamespaced): void;
 
-	useNamespaced(n:AttrEnum): void;
+	useNamespaced(n: AttrEnum): void;
 
 }

@@ -7,17 +7,17 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class OpaqueMutexedString {
 	
 
-	static fromUsize(number:number): OpaqueMutexedString;
+	static fromUsize(number: number): OpaqueMutexedString;
 
-	change(number:number): void;
+	change(number: number): void;
 
 	borrow(): OpaqueMutexedString;
 
-	static borrowOther(other:OpaqueMutexedString): OpaqueMutexedString;
+	static borrowOther(other: OpaqueMutexedString): OpaqueMutexedString;
 
-	borrowSelfOrOther(other:OpaqueMutexedString): OpaqueMutexedString;
+	borrowSelfOrOther(other: OpaqueMutexedString): OpaqueMutexedString;
 
-	getLenAndAdd(other:number): number;
+	getLenAndAdd(other: number): number;
 
 	dummyStr(): String;
 

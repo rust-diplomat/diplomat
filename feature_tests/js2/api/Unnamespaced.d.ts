@@ -7,8 +7,8 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class Unnamespaced {
 	
 
-	static make(e:AttrEnum): Unnamespaced;
+	static make(e: AttrEnum): Unnamespaced;
 
-	useNamespaced(n:AttrOpaque1): void;
+	useNamespaced(n: AttrOpaque1): void;
 
 }

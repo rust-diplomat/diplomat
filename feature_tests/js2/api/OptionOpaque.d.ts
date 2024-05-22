@@ -7,7 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class OptionOpaque {
 	
 
-	static new(i:number): OptionOpaque?;
+	static new(i: number): OptionOpaque?;
 
 	static newNone(): OptionOpaque?;
 
@@ -17,8 +17,8 @@ export class OptionOpaque {
 
 	static newStructNones(): OptionStruct;
 
-	assertInteger(i:number): void;
+	assertInteger(i: number): void;
 
-	static optionOpaqueArgument(arg:OptionOpaque?): boolean;
+	static optionOpaqueArgument(arg: OptionOpaque?): boolean;
 
 }

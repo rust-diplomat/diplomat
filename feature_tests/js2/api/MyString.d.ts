@@ -7,15 +7,15 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class MyString {
 	
 
-	static new(v:String): MyString;
+	static new(v: String): MyString;
 
-	static newUnsafe(v:String): MyString;
+	static newUnsafe(v: String): MyString;
 
-	static newOwned(v:String): MyString;
+	static newOwned(v: String): MyString;
 
-	static newFromFirst(v:Array<String>): MyString;
+	static newFromFirst(v: Array<String>): MyString;
 
-	setStr(newStr:String): void;
+	setStr(newStr: String): void;
 
 	getStr(): String;
 

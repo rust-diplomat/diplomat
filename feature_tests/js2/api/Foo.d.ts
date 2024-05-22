@@ -7,16 +7,16 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class Foo {
 	
 
-	static new(x:String): Foo;
+	static new(x: String): Foo;
 
 	getBar(): Bar;
 
-	static newStatic(x:String): Foo;
+	static newStatic(x: String): Foo;
 
 	asReturning(): BorrowedFieldsReturning;
 
-	static extractFromFields(fields:BorrowedFields): Foo;
+	static extractFromFields(fields: BorrowedFields): Foo;
 
-	static extractFromBounds(bounds:BorrowedFieldsWithBounds, anotherString:String): Foo;
+	static extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo;
 
 }

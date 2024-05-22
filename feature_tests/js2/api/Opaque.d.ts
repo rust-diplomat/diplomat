@@ -9,7 +9,7 @@ export class Opaque {
 
 	static new(): Opaque;
 
-	assertStruct(s:MyStruct): void;
+	assertStruct(s: MyStruct): void;
 
 	static returnsUsize(): number;
 

@@ -7,7 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 export class MyIterable {
 	
 
-	static new(x:Array<number>): MyIterable;
+	static new(x: Array<number>): MyIterable;
 
 	iter(): MyIterator;
 

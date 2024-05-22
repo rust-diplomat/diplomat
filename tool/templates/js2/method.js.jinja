@@ -2,7 +2,7 @@
 {% if is_static %}static {% endif %}{{method_name}}(
 {%- for param in parameters -%}
     {{- param.name -}}
-    {%- if typescript -%}: {{- param.ty -}}{%- endif -%}
+    {%- if typescript %}: {{ param.ty -}}{%- endif -%}
     {%- if !loop.last -%}, {% endif -%}
 {%- endfor -%}
 ) {%- if typescript %}: {{ return_type }};{% else %} {
