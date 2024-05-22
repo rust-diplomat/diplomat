@@ -6,10 +6,18 @@
     {%- if !loop.first -%},{%- endif -%}
 {%- endfor -%}
 ) {%- if typescript %}: {{ return_type }};{% else %} {
+    {% for lifetime in lifetimes.all_lifetimes() %}
+    {% let maybe_lifetime_info = method_lifetimes_map.get(lifetime) %}
+    {% if maybe_lifetime_info.is_some() %}
+    {% let lifetime_info = maybe_lifetime_info.unwrap() %}
+    // TODO
+    {% endif %}
+    {% endfor %}
+
     {% if !method.output.is_ffi_unit() %}const result = {% endif %}wasm.{{ c_method_name }}();
     {% match return_expression -%}
     {%- when Some with (statement) -%}
-    {{ statement }}
+    {{ statement | indent(4) }}
     {%- when None -%}
     {%- endmatch %}
 }
