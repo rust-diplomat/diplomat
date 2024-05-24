@@ -1,9 +1,9 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaquePath, Optional, ReturnableStructDef, SelfType, Slice, StringEncoding, StructField,
-    StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
+    self, Borrow, ErrorType, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method,
+    Mutability, OpaquePath, Optional, ReturnableStructDef, SelfType, Slice, StringEncoding,
+    StructField, StructPathLike, TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -147,24 +147,28 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_return_type_name(&self, result_ty: &ReturnType) -> Cow<'cx, str> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit)
-            | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
+            | ReturnType::Fallible(SuccessType::Unit, ErrorType::OutType(_)) => {
+                self.formatter.fmt_void().into()
+            }
             ReturnType::Infallible(SuccessType::Writeable)
-            | ReturnType::Fallible(SuccessType::Writeable, Some(_)) => {
+            | ReturnType::Fallible(SuccessType::Writeable, ErrorType::OutType(_)) => {
                 self.formatter.fmt_string().into()
             }
             ReturnType::Infallible(SuccessType::OutType(ref o))
-            | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_type_name(o),
-            ReturnType::Fallible(SuccessType::Writeable, None)
+            | ReturnType::Fallible(SuccessType::OutType(ref o), ErrorType::OutType(_)) => {
+                self.gen_type_name(o)
+            }
+            ReturnType::Fallible(SuccessType::Writeable, ErrorType::Unit)
             | ReturnType::Nullable(SuccessType::Writeable) => self
                 .formatter
                 .fmt_nullable(self.formatter.fmt_string())
                 .into(),
-            ReturnType::Fallible(SuccessType::Unit, None)
+            ReturnType::Fallible(SuccessType::Unit, ErrorType::Unit)
             | ReturnType::Nullable(SuccessType::Unit) => self
                 .formatter
                 .fmt_primitive_as_ffi(hir::PrimitiveType::Bool)
                 .into(),
-            ReturnType::Fallible(SuccessType::OutType(ref o), None)
+            ReturnType::Fallible(SuccessType::OutType(ref o), ErrorType::Unit)
             | ReturnType::Nullable(SuccessType::OutType(ref o)) => {
                 self.formatter.fmt_nullable(&self.gen_type_name(o)).into()
             }

@@ -16,6 +16,8 @@ public:
 
   inline static std::unique_ptr<MyString> new_(std::string_view v);
 
+  inline static diplomat::result<std::unique_ptr<MyString>, Utf8Error> new_2(std::string_view v);
+
   inline static std::unique_ptr<MyString> new_unsafe(std::string_view v);
 
   inline static std::unique_ptr<MyString> new_owned(std::string_view v);

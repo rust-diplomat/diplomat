@@ -1,6 +1,8 @@
 use super::header::Header;
 use super::CContext;
-use diplomat_core::hir::{self, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef, TypeId};
+use diplomat_core::hir::{
+    self, ErrorType, OpaqueOwner, StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
+};
 use std::borrow::Cow;
 use std::fmt::Write;
 
@@ -79,7 +81,7 @@ impl<'tcx> super::CContext<'tcx> {
     }
 }
 /// Simple wrapper type representing the return type of a fallible function
-pub type ResultType<'tcx> = (Option<&'tcx hir::OutType>, Option<&'tcx hir::OutType>);
+pub type ResultType<'tcx> = (&'tcx SuccessType, &'tcx ErrorType);
 
 /// Context for generating a particular type's header
 pub struct TyGenContext<'ccx, 'tcx, 'header> {
@@ -141,25 +143,25 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, false),
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 // Result<T, ()> and Option<T> are the same on the ABI
-                let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
-                    Some(e)
+                let err = if let ReturnType::Fallible(_, ref e) = method.output {
+                    e
                 } else {
-                    None
+                    &ErrorType::Unit
                 };
-                let (ok_type_name, ok_ty) = match ok {
+                let ok_type_name = match ok {
                     SuccessType::Writeable => {
                         param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
-                        ("void".into(), None)
+                        "void".into()
                     }
-                    SuccessType::Unit => ("void".into(), None),
-                    SuccessType::OutType(o) => {
-                        (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
-                    }
+                    SuccessType::Unit => "void".into(),
+                    SuccessType::OutType(o) => self.cx.formatter.fmt_type_name_uniquely(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
-                    Some(o) => self.cx.formatter.fmt_type_name_uniquely(o),
-                    None => "void".into(),
+                    ErrorType::OutType(e) => self.cx.formatter.fmt_type_name_uniquely(e),
+                    ErrorType::Utf8 => "Utf8Error".into(),
+                    ErrorType::Unit => "void".into(),
+                    _ => unreachable!("unknown AST/HIR variant"),
                 };
                 // todo push to results set
                 let result_name = self
@@ -172,7 +174,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 self.cx
                     .result_store
                     .borrow_mut()
-                    .insert(result_name.clone(), (ok_ty, err));
+                    .insert(result_name.clone(), (ok, err));
                 result_name.into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
@@ -200,20 +202,22 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     }
 
     pub fn gen_result(&mut self, name: &str, ty: ResultType) {
-        let ok_line = if let Some(ok) = ty.0 {
+        let ok_line = if let SuccessType::OutType(ok) = ty.0 {
             let ok_name = self.gen_ty_name(ok, true);
             format!("\t\t{ok_name} ok;\n")
         } else {
             "".into()
         };
-        let err_line = if let Some(err) = ty.1 {
+        let err_line = if let ErrorType::OutType(err) = ty.1 {
             let err_name = self.gen_ty_name(err, true);
             format!("\t\t{err_name} err;\n")
+        } else if let ErrorType::Utf8 = ty.1 {
+            "\t\tUtf8Error err;\n".into()
         } else {
             "".into()
         };
 
-        let union_def = if ty.0.is_some() || ty.1.is_some() {
+        let union_def = if !err_line.is_empty() || !ok_line.is_empty() {
             format!("\tunion {{\n{ok_line}{err_line}\t}};\n")
         } else {
             "".into()

@@ -29,6 +29,17 @@ final class MyString implements ffi.Finalizable {
     return MyString._fromFfi(result, []);
   }
 
+  factory MyString.new2(String v) {
+    final temp = ffi2.Arena();
+    final vView = v.utf8View;
+    final result = _MyString_new_2(vView.allocIn(temp), vView.length);
+    temp.releaseAll();
+    if (!result.isOk) {
+      throw 'Utf8Error';
+    }
+    return MyString._fromFfi(result.union.ok, []);
+  }
+
   factory MyString.unsafe(String v) {
     final temp = ffi2.Arena();
     final vView = v.utf8View;
@@ -79,6 +90,11 @@ external void _MyString_destroy(ffi.Pointer<ffi.Void> self);
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new(ffi.Pointer<ffi.Uint8> vData, int vLength);
+
+@meta.ResourceIdentifier('MyString_new_2')
+@ffi.Native<_ResultOpaqueUtf8Error Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_2')
+// ignore: non_constant_identifier_names
+external _ResultOpaqueUtf8Error _MyString_new_2(ffi.Pointer<ffi.Uint8> vData, int vLength);
 
 @meta.ResourceIdentifier('MyString_new_unsafe')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'MyString_new_unsafe')

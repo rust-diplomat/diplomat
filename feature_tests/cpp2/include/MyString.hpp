@@ -19,6 +19,12 @@ inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
   return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }
 
+inline diplomat::result<std::unique_ptr<MyString>, Utf8Error> MyString::new_2(std::string_view v) {
+  auto result = capi::MyString_new_2(v.data(),
+    v.size());
+  return result.is_ok ? diplomat::result<std::unique_ptr<MyString>, Utf8Error>(diplomat::Ok<std::unique_ptr<MyString>>(std::unique_ptr<MyString>(MyString::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<MyString>, Utf8Error>(diplomat::Err<Utf8Error>(result.err));
+}
+
 inline std::unique_ptr<MyString> MyString::new_unsafe(std::string_view v) {
   auto result = capi::MyString_new_unsafe(v.data(),
     v.size());

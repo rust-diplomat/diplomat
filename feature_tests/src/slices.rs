@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 mod ffi {
-    use diplomat_runtime::{DiplomatStr, DiplomatWriteable};
+    use diplomat_runtime::{DiplomatStr, DiplomatWriteable, Utf8Error};
     use std::fmt::Write as _;
 
     #[diplomat::opaque]
@@ -10,6 +10,13 @@ mod ffi {
         #[diplomat::attr(supports = constructors, constructor)]
         pub fn new(v: &DiplomatStr) -> Box<MyString> {
             Box::new(Self(String::from_utf8(v.to_owned()).unwrap()))
+        }
+
+        #[diplomat::attr(supports = named_constructors, named_constructor = "new_2")]
+        #[diplomat::skip_if_ast]
+        #[diplomat::attr(kotlin, disable)] // no Result support yet
+        pub fn new_2(v: &DiplomatStr) -> Result<Box<MyString>, Utf8Error> {
+            Ok(Box::new(Self(core::str::from_utf8(v)?.to_owned())))
         }
 
         #[diplomat::attr(supports = named_constructors, named_constructor = "unsafe")]

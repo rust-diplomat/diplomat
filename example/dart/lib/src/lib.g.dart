@@ -408,6 +408,11 @@ class _Float64ListView {
   int get length => _values.length;
 }
 
+final class _Utf8Error extends ffi.Struct {
+  @ffi.Size()
+  external int validUpTo;
+}
+
 final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
 }

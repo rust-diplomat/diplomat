@@ -4,10 +4,10 @@ use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
-use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, SpecialMethod,
-    SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, ErrorType, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType,
+    SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type,
+    TypeContext, TypeDef, TypeId,
 };
 use formatter::DartFormatter;
 use std::borrow::Cow;
@@ -548,7 +548,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
         let mut docs = self.formatter.fmt_docs(&method.docs);
 
-        if let hir::ReturnType::Fallible(_, Some(e)) = &method.output {
+        if let hir::ReturnType::Fallible(_, ErrorType::OutType(e)) = &method.output {
             write!(
                 &mut docs,
                 "\n///\n/// Throws [{}] on failure.",
@@ -660,28 +660,28 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     /// Generates a return type's Dart type.
     fn gen_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'cx, str> {
         match *result_ty {
-            ReturnType::Infallible(SuccessType::Unit)
-            | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Writeable)
-            | ReturnType::Fallible(SuccessType::Writeable, Some(_)) => {
-                self.formatter.fmt_string().into()
-            }
-            ReturnType::Infallible(SuccessType::OutType(ref o))
-            | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_type_name(o),
-            ReturnType::Fallible(SuccessType::Writeable, None)
-            | ReturnType::Nullable(SuccessType::Writeable) => self
-                .formatter
-                .fmt_nullable(self.formatter.fmt_string())
-                .into(),
-            ReturnType::Fallible(SuccessType::Unit, None)
+            // Option<()> and Result<(), ()> become bool
+            ReturnType::Fallible(SuccessType::Unit, ErrorType::Unit)
             | ReturnType::Nullable(SuccessType::Unit) => self
                 .formatter
                 .fmt_primitive_as_ffi(hir::PrimitiveType::Bool, true)
                 .into(),
-            ReturnType::Fallible(SuccessType::OutType(ref o), None)
+            ReturnType::Infallible(SuccessType::Unit)
+            | ReturnType::Fallible(SuccessType::Unit, _) => self.formatter.fmt_void().into(),
+
+            ReturnType::Fallible(SuccessType::OutType(ref o), ErrorType::Unit)
             | ReturnType::Nullable(SuccessType::OutType(ref o)) => {
                 self.formatter.fmt_nullable(&self.gen_type_name(o)).into()
             }
+            ReturnType::Fallible(SuccessType::Writeable, ErrorType::Unit)
+            | ReturnType::Nullable(SuccessType::Writeable) => self
+                .formatter
+                .fmt_nullable(self.formatter.fmt_string())
+                .into(),
+            ReturnType::Infallible(SuccessType::OutType(ref o))
+            | ReturnType::Fallible(SuccessType::OutType(ref o), _) => self.gen_type_name(o),
+            ReturnType::Infallible(SuccessType::Writeable)
+            | ReturnType::Fallible(SuccessType::Writeable, _) => self.formatter.fmt_string().into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -760,10 +760,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     self.gen_type_name_ffi(o, cast)
                 }
             }
-            ReturnType::Fallible(ref ok, ref err) => {
-                self.gen_result(ok.as_type(), err.as_ref()).into()
-            }
-            ReturnType::Nullable(ref ok) => self.gen_result(ok.as_type(), None).into(),
+            ReturnType::Fallible(ref ok, ref err) => self.gen_result(ok, err).into(),
+            ReturnType::Nullable(ref ok) => self.gen_result(ok, &ErrorType::Unit).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -969,17 +967,24 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 .into(),
             ),
             // Special case Result<(), ()> and Option<()> to bool
-            ReturnType::Fallible(SuccessType::Unit, None)
+            ReturnType::Fallible(SuccessType::Unit, ErrorType::Unit)
             | ReturnType::Nullable(SuccessType::Unit) => Some("return result.isOk;".into()),
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 let err_check = format!(
                     "if (!result.isOk) {{\n  {}\n}}\n",
                     match result_ty {
-                        ReturnType::Fallible(_, Some(e)) => format!(
+                        ReturnType::Fallible(_, ErrorType::OutType(e)) => format!(
                             "throw {};",
                             self.gen_c_to_dart_for_type(e, "result.union.err".into(), lifetime_env)
                         ),
-                        _ => "return null;".into(),
+                        ReturnType::Fallible(_, ErrorType::Utf8) => {
+                            // UTF-8 errors are not possible in Dart, however they might be errouneously
+                            // generated on the Rust side.
+                            "throw 'Utf8Error';".into()
+                        }
+                        ReturnType::Nullable(_) | ReturnType::Fallible(_, ErrorType::Unit) =>
+                            "return null;".into(),
+                        _ => unreachable!(),
                     }
                 );
 
@@ -1112,28 +1117,36 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     }
 
     /// Generates a Dart helper class for a result type.
-    fn gen_result(&mut self, ok: Option<&hir::OutType>, err: Option<&hir::OutType>) -> String {
+    fn gen_result(&mut self, ok: &SuccessType, err: &ErrorType) -> String {
         let name = format!(
             "_Result{}{}",
-            &self
-                .formatter
-                .fmt_type_as_ident(ok.map(|o| self.gen_type_name_ffi(o, false)).as_deref()),
-            &self
-                .formatter
-                .fmt_type_as_ident(err.map(|o| self.gen_type_name_ffi(o, false)).as_deref())
+            match ok {
+                SuccessType::OutType(ok) => self
+                    .formatter
+                    .fmt_type_as_ident(Some(&self.gen_type_name_ffi(ok, false))),
+                SuccessType::Unit | SuccessType::Writeable =>
+                    self.formatter.fmt_type_as_ident(None),
+                _ => unreachable!("unknown AST/HIR variant"),
+            },
+            match err {
+                ErrorType::OutType(err) => self
+                    .formatter
+                    .fmt_type_as_ident(Some(&self.gen_type_name_ffi(err, false))),
+                ErrorType::Unit => self.formatter.fmt_type_as_ident(None),
+                ErrorType::Utf8 => "Utf8Error".into(),
+                _ => unreachable!("unknown AST/HIR variant"),
+            }
         );
 
         if self.helper_classes.contains_key(&name) {
             return name;
         }
 
-        let decls = [ok.map(|o| (o, "ok")), err.map(|o| (o, "err"))]
-            .into_iter()
-            .flatten()
-            .map(|(o, field_name)| {
-                format!(
-                    "{}external {} {field_name};",
-                    match o {
+        let decls = [
+            match ok {
+                SuccessType::OutType(ok) => Some(format!(
+                    "{}external {} ok;",
+                    match ok {
                         hir::OutType::Primitive(p) => {
                             format!("@{}()\n", self.formatter.fmt_primitive_as_ffi(*p, false))
                         }
@@ -1141,10 +1154,32 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                             format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
                         _ => String::new(),
                     },
-                    { self.gen_type_name_ffi(o, true) }
-                )
-            })
-            .collect();
+                    { self.gen_type_name_ffi(ok, true) }
+                )),
+                SuccessType::Unit | SuccessType::Writeable => None,
+                _ => unreachable!("unknown AST/HIR variant"),
+            },
+            match err {
+                ErrorType::OutType(err) => Some(format!(
+                    "{}external {} err;",
+                    match err {
+                        hir::OutType::Primitive(p) => {
+                            format!("@{}()\n", self.formatter.fmt_primitive_as_ffi(*p, false))
+                        }
+                        hir::OutType::Enum(_) =>
+                            format!("@{}()\n", self.formatter.fmt_enum_as_ffi(false)),
+                        _ => String::new(),
+                    },
+                    { self.gen_type_name_ffi(err, true) }
+                )),
+                ErrorType::Utf8 => Some("external _Utf8Error err;".into()),
+                ErrorType::Unit => None,
+                _ => unreachable!("unknown AST/HIR variant"),
+            },
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
 
         #[derive(askama::Template)]
         #[template(path = "dart/result.dart.jinja", escape = "none")]

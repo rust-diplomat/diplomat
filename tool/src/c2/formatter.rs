@@ -140,13 +140,15 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     pub fn fmt_result_for_diagnostics(&self, r: ResultType) -> String {
-        let ok = if let Some(ok) = r.0 {
+        let ok = if let hir::SuccessType::OutType(ok) = r.0 {
             self.fmt_type_name_uniquely(ok)
         } else {
             "()".into()
         };
-        let err = if let Some(err) = r.1 {
+        let err = if let hir::ErrorType::OutType(err) = r.1 {
             self.fmt_type_name_uniquely(err)
+        } else if let hir::ErrorType::Utf8 = r.1 {
+            "Utf8Error".into()
         } else {
             "()".into()
         };

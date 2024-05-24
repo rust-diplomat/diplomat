@@ -435,6 +435,11 @@ class _Float64ListView {
   int get length => _values.length;
 }
 
+final class _Utf8Error extends ffi.Struct {
+  @ffi.Size()
+  external int validUpTo;
+}
+
 final class _ResultDoubleVoidUnion extends ffi.Union {
   @ffi.Double()
   external double ok;
@@ -495,6 +500,19 @@ final class _ResultOpaqueInt32Union extends ffi.Union {
 
 final class _ResultOpaqueInt32 extends ffi.Struct {
   external _ResultOpaqueInt32Union union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
+final class _ResultOpaqueUtf8ErrorUnion extends ffi.Union {
+  external ffi.Pointer<ffi.Opaque> ok;
+
+  external _Utf8Error err;
+}
+
+final class _ResultOpaqueUtf8Error extends ffi.Struct {
+  external _ResultOpaqueUtf8ErrorUnion union;
 
   @ffi.Bool()
   external bool isOk;

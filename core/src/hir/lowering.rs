@@ -1,7 +1,7 @@
 use super::{
     AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, EnumDef, EnumPath,
-    EnumVariant, IdentBuf, IntType, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn,
-    Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
+    EnumVariant, ErrorType, IdentBuf, IntType, Lifetime, LifetimeEnv, LifetimeLowerer, LookupId,
+    MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional, OutStructDef, OutStructField,
     OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf, PrimitiveType,
     ReturnLifetimeLowerer, ReturnType, ReturnableStructPath, SelfParamLifetimeLowerer, SelfType,
     Slice, SpecialMethod, SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType,
@@ -550,6 +550,10 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Found cmp::Ordering in parameter or struct field, it is only allowed in return types".to_string()));
                 Err(())
             }
+            ast::TypeName::Utf8Error => {
+                self.errors.push(LoweringError::Other("Found Utf8Error in parameter or struct field, it is only allowed in the error position of return types".to_string()));
+                Err(())
+            }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
@@ -726,6 +730,12 @@ impl<'ast> LoweringContext<'ast> {
                 } else {
                     Ok(Type::Primitive(PrimitiveType::Int(IntType::I8)))
                 }
+            }
+            ast::TypeName::Utf8Error => {
+                self.errors.push(LoweringError::Other(
+                    "Utf8Error is only allowed in the error position of a return type".to_string(),
+                ));
+                Err(())
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
@@ -1090,10 +1100,11 @@ impl<'ast> LoweringContext<'ast> {
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
-                    ast::TypeName::Unit => Ok(None),
+                    ast::TypeName::Unit => Ok(ErrorType::Unit),
+                    ast::TypeName::Utf8Error => Ok(ErrorType::Utf8),
                     ty => self
                         .lower_out_type(ty, &mut return_ltl, in_path, false)
-                        .map(Some),
+                        .map(ErrorType::OutType),
                 };
 
                 match (ok_ty, err_ty) {

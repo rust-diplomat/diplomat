@@ -362,6 +362,8 @@ pub enum TypeName {
     ///
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
+    /// `Utf8Error` from the Diplomat Runtime
+    Utf8Error,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -381,6 +383,9 @@ impl TypeName {
                 syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
             }
             TypeName::Ordering => syn::Type::Path(syn::parse_str("i8").unwrap()),
+            TypeName::Utf8Error => {
+                syn::Type::Path(syn::parse_str("diplomat_runtime::Utf8Error").unwrap())
+            }
             TypeName::Named(name) | TypeName::SelfType(name) => {
                 // Self also gets expanded instead of turning into `Self` because
                 // this code is used to generate the `extern "C"` functions, which
@@ -606,6 +611,8 @@ impl TypeName {
                     && p.path.segments[p_len - 1].ident == "Ordering"
                 {
                     TypeName::Ordering
+                } else if p_len == 1 && p.path.segments[0].ident == "Utf8Error" {
+                    TypeName::Utf8Error
                 } else if p_len == 1 && p.path.segments[0].ident == "Box" {
                     if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
                     {
@@ -823,6 +830,7 @@ impl fmt::Display for TypeName {
         match self {
             TypeName::Primitive(p) => p.fmt(f),
             TypeName::Ordering => write!(f, "Ordering"),
+            TypeName::Utf8Error => write!(f, "Utf8Error"),
             TypeName::Named(p) | TypeName::SelfType(p) => p.fmt(f),
             TypeName::Reference(lifetime, mutability, typ) => {
                 write!(f, "{}{typ}", ReferenceDisplay(lifetime, mutability))

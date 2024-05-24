@@ -28,6 +28,19 @@ pub type DiplomatStr16 = [u16];
 /// type, but special types for byte buffers.
 pub type DiplomatByte = u8;
 
+/// An error that can be returned if invalid UTF-8 is passed inside a [`DiplomatStr`].
+///
+/// Languages that guarantee valid UTF-8 can ignore this error and make methods returning
+/// it infallible.
+#[repr(transparent)]
+pub struct Utf8Error(pub usize);
+
+impl From<core::str::Utf8Error> for Utf8Error {
+    fn from(e: core::str::Utf8Error) -> Self {
+        Self(e.valid_up_to())
+    }
+}
+
 /// Allocates a buffer of a given size in Rust's memory.
 ///
 /// # Safety

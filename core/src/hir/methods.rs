@@ -36,12 +36,20 @@ pub enum SuccessType {
     Unit,
 }
 
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum ErrorType {
+    Utf8,
+    OutType(OutType),
+    Unit,
+}
+
 /// Whether or not the method returns a value or a result.
 #[derive(Debug)]
 #[allow(clippy::exhaustive_enums)] // this only exists for fallible/infallible, breaking changes for more complex returns are ok
 pub enum ReturnType {
     Infallible(SuccessType),
-    Fallible(SuccessType, Option<OutType>),
+    Fallible(SuccessType, ErrorType),
     Nullable(SuccessType),
 }
 
@@ -63,17 +71,36 @@ pub struct Param {
 impl SuccessType {
     /// Returns whether the variant is `Writeable`.
     pub fn is_writeable(&self) -> bool {
-        matches!(self, SuccessType::Writeable)
+        matches!(self, Self::Writeable)
     }
 
     /// Returns whether the variant is `Unit`.
     pub fn is_unit(&self) -> bool {
-        matches!(self, SuccessType::Unit)
+        matches!(self, Self::Unit)
     }
 
     pub fn as_type(&self) -> Option<&OutType> {
         match self {
-            SuccessType::OutType(ty) => Some(ty),
+            Self::OutType(ty) => Some(ty),
+            _ => None,
+        }
+    }
+}
+
+impl ErrorType {
+    /// Returns whether the variant is `Writeable`.
+    pub fn is_writeable(&self) -> bool {
+        matches!(self, Self::Utf8)
+    }
+
+    /// Returns whether the variant is `Unit`.
+    pub fn is_unit(&self) -> bool {
+        matches!(self, Self::Unit)
+    }
+
+    pub fn as_type(&self) -> Option<&OutType> {
+        match self {
+            Self::OutType(ty) => Some(ty),
             _ => None,
         }
     }
@@ -130,7 +157,7 @@ impl ReturnType {
                 if let SuccessType::OutType(ref ty) = ok {
                     add_to_set(ty)
                 }
-                if let Some(ref ty) = err {
+                if let ErrorType::OutType(ref ty) = err {
                     add_to_set(ty)
                 }
             }
@@ -144,12 +171,12 @@ impl ReturnType {
         match self {
             Self::Infallible(SuccessType::OutType(o))
             | Self::Nullable(SuccessType::OutType(o))
-            | Self::Fallible(SuccessType::OutType(o), None) => f(o),
-            Self::Fallible(SuccessType::OutType(o), Some(o2)) => {
+            | Self::Fallible(SuccessType::OutType(o), ErrorType::Unit | ErrorType::Utf8) => f(o),
+            Self::Fallible(SuccessType::OutType(o), ErrorType::OutType(o2)) => {
                 f(o);
                 f(o2)
             }
-            Self::Fallible(_, Some(o)) => f(o),
+            Self::Fallible(_, ErrorType::OutType(o)) => f(o),
             _ => (),
         }
     }

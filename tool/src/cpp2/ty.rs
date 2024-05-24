@@ -2,6 +2,7 @@ use super::header::Header;
 use super::Cpp2Context;
 use super::Cpp2Formatter;
 use askama::Template;
+use diplomat_core::hir::ErrorType;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
     Type, TypeDef, TypeId,
@@ -602,8 +603,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
-                    None => "std::monostate".into(),
+                    ErrorType::OutType(e) => self.gen_type_name(e),
+                    ErrorType::Unit => "std::monostate".into(),
+                    ErrorType::Utf8 => "Utf8Error".into(),
+                    _ => unreachable!("unknown AST/HIR variant"),
                 };
                 format!("diplomat::result<{ok_type_name}, {err_type_name}>").into()
             }
@@ -717,8 +720,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
-                    None => "std::monostate".into(),
+                    ErrorType::OutType(e) => self.gen_type_name(e),
+                    ErrorType::Unit => "std::monostate".into(),
+                    ErrorType::Utf8 => "Utf8Error".into(),
+                    _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let ok_conversion = match ok {
                     // Note: the `output` variable is a string initialized in the template
@@ -730,8 +735,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_conversion = match err {
-                    Some(o) => self.gen_c_to_cpp_for_type(o, format!("{var_name}.err").into()),
-                    None => "".into(),
+                    ErrorType::OutType(o) => {
+                        self.gen_c_to_cpp_for_type(o, format!("{var_name}.err").into())
+                    }
+                    ErrorType::Unit => "".into(),
+                    ErrorType::Utf8 => format!("{var_name}.err").into(),
+                    _ => unreachable!("unknown AST/HIR variant"),
                 };
                 Some(
                     format!("{var_name}.is_ok ? diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Ok<{ok_type_name}>({ok_conversion})) : diplomat::result<{ok_type_name}, {err_type_name}>(diplomat::Err<{err_type_name}>({err_conversion}))").into()

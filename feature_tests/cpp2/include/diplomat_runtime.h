@@ -63,6 +63,9 @@ MAKE_SLICES(Char, char32_t)
 MAKE_SLICES(String, char)
 MAKE_SLICES(U16String, char16_t)
 
+typedef struct Utf8Error {
+    size_t valid_up_to;
+} Utf8Error;
 
 #ifdef __cplusplus
 } // extern "C"

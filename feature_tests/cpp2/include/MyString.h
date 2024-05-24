@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+#include "diplomat_result_box_MyString_Utf8Error.d.h"
 
 #include "MyString.d.h"
 
@@ -16,6 +17,8 @@ extern "C" {
 
 
 MyString* MyString_new(const char* v_data, size_t v_len);
+
+diplomat_result_box_MyString_Utf8Error MyString_new_2(const char* v_data, size_t v_len);
 
 MyString* MyString_new_unsafe(const char* v_data, size_t v_len);
 
