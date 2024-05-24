@@ -46,6 +46,8 @@ pub struct DiplomatWriteable {
     len: usize,
     /// The current capacity of the buffer
     cap: usize,
+    /// Set to true if `grow` ever fails.
+    is_err: bool,
     /// Called by Rust to indicate that there is no more data to write.
     ///
     /// May be called multiple times.
@@ -72,11 +74,15 @@ impl DiplomatWriteable {
 }
 impl fmt::Write for DiplomatWriteable {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+        if self.is_err {
+            return Ok(());
+        }
         let needed_len = self.len + s.len();
         if needed_len > self.cap {
             let success = (self.grow)(self, needed_len);
             if !success {
-                return Err(fmt::Error);
+                self.is_err = true;
+                return Ok(());
             }
         }
         debug_assert!(needed_len <= self.cap);
@@ -114,6 +120,7 @@ pub unsafe extern "C" fn diplomat_simple_writeable(
         context: ptr::null_mut(),
         buf,
         len: 0,
+        is_err: false,
         // keep an extra byte in our pocket for the null terminator
         cap: buf_size - 1,
         flush,
@@ -145,6 +152,7 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
         context: ptr::null_mut(),
         buf: vec.as_mut_ptr(),
         len: 0,
+        is_err: false,
         cap,
         flush,
         grow,
@@ -156,23 +164,35 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
 
 /// Grabs a pointer to the underlying buffer of a writable.
 ///
+/// Returns null if there was an allocation error during the writeable construction.
+///
 /// # Safety
 /// - The returned pointer is valid until the passed writable is destroyed.
 /// - `this` must be a pointer to a valid [`DiplomatWriteable`] constructed by
 /// [`diplomat_buffer_writeable_create()`].
 #[no_mangle]
 pub extern "C" fn diplomat_buffer_writeable_get_bytes(this: &DiplomatWriteable) -> *mut u8 {
-    this.buf
+    if this.is_err {
+        core::ptr::null_mut()
+    } else {
+        this.buf
+    }
 }
 
 /// Gets the length in bytes of the content written to the writable.
+///
+/// Returns 0 if there was an allocation error during the writeable construction.
 ///
 /// # Safety
 /// - `this` must be a pointer to a valid [`DiplomatWriteable`] constructed by
 /// [`diplomat_buffer_writeable_create()`].
 #[no_mangle]
 pub extern "C" fn diplomat_buffer_writeable_len(this: &DiplomatWriteable) -> usize {
-    this.len
+    if this.is_err {
+        0
+    } else {
+        this.len
+    }
 }
 
 /// Destructor for Rust-memory backed writables.

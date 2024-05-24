@@ -309,10 +309,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .expect("Failed to render opaque return block")
     }
 
-    const WRITEABLE_RETURN: &'static str = r#"
-val returnString = DW.writeableToString(writeable)
-DW.lib.diplomat_buffer_writeable_destroy(writeable)
-return returnString"#;
+    const WRITEABLE_RETURN: &'static str = "\nreturn DW.writeableToString(writeable)";
 
     fn boxed_slice_return(encoding: &str) -> String {
         format!(
