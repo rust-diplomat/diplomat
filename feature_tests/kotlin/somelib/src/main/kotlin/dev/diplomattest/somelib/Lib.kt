@@ -24,10 +24,17 @@ object DW {
     val lib: DiplomatWriteableLib = Native.load("somelib", libClass)
 
     fun writeableToString (writeable: Pointer): String {
-        val pointer = lib.diplomat_buffer_writeable_get_bytes(writeable)
-        val len = lib.diplomat_buffer_writeable_len(writeable)
-        val bytes = pointer.getByteArray(0, len.toInt())
-        return bytes.decodeToString()
+        try {
+            val pointer = lib.diplomat_buffer_writeable_get_bytes(writeable)
+            if (bytes == null) {
+                throw OutOfMemoryError();
+            }
+            val len = lib.diplomat_buffer_writeable_len(writeable)
+            val bytes = pointer.getByteArray(0, len.toInt())
+            return bytes.decodeToString();
+        } finally {
+            lib.diplomat_buffer_writeable_destroy(writeable);
+        }
     }
 }
 

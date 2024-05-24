@@ -93,9 +93,7 @@ class MyString internal constructor (
         val writeable = DW.lib.diplomat_buffer_writeable_create(0)
         val returnVal = lib.MyString_get_str(handle, writeable);
     
-        val returnString = DW.writeableToString(writeable)
-        DW.lib.diplomat_buffer_writeable_destroy(writeable)
-        return returnString
+        return DW.writeableToString(writeable)
     }
     fun getBoxedStr(): String {
         

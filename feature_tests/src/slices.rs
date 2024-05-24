@@ -33,8 +33,7 @@ mod ffi {
 
         #[diplomat::attr(supports = accessors, getter = "str")]
         pub fn get_str(&self, writeable: &mut DiplomatWriteable) {
-            let _ = write!(writeable, "{}", self.0);
-            writeable.flush();
+            let _infallible = write!(writeable, "{}", self.0);
         }
 
         #[diplomat::skip_if_ast]
@@ -113,7 +112,7 @@ mod ffi {
 
         #[diplomat::attr(supports = stringifiers, stringifier)]
         pub fn to_string(&self, w: &mut DiplomatWriteable) {
-            write!(w, "{:?}", self.0).unwrap();
+            let _infallible = write!(w, "{:?}", self.0);
         }
 
         #[allow(clippy::needless_lifetimes)]
