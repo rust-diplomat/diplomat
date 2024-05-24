@@ -1,4 +1,3 @@
-import { Foo } from "./Foo";
 
 /**
  */

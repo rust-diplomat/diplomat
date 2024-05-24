@@ -145,6 +145,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
@@ -179,6 +180,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
@@ -301,6 +303,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
         let special = self.gen_special_method_info(&ty.special_method_presence);

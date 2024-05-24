@@ -680,12 +680,14 @@ if (returnVal == null) {{
         let native_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
         let self_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .filter_map(|method| {
                 method
                     .param_self
@@ -698,6 +700,7 @@ if (returnVal == null) {{
         let companion_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .filter(|method| method.param_self.is_none())
             .map(|method| self.gen_method(id, method, None))
             .collect::<Vec<_>>();
@@ -752,6 +755,7 @@ if (returnVal == null) {{
         let native_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
@@ -854,12 +858,14 @@ if (returnVal == null) {{
         let native_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
         let self_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .filter_map(|method| {
                 method
                     .param_self
@@ -872,6 +878,7 @@ if (returnVal == null) {{
         let companion_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .filter(|method| method.param_self.is_none())
             .map(|method| self.gen_method(id, method, None))
             .collect::<Vec<_>>();

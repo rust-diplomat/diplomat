@@ -130,6 +130,9 @@ pub fn gen_struct<W: fmt::Write>(
                     )?;
 
                     for method in strct.methods.iter() {
+                        if method.attrs.skip_if_ast {
+                            continue;
+                        }
                         gen_method(method, in_path, env, &mut f)?;
                     }
                     Ok(())
@@ -173,6 +176,9 @@ pub fn gen_struct<W: fmt::Write>(
                     )?;
 
                     for method in opaque.methods.iter() {
+                        if method.attrs.skip_if_ast {
+                            continue;
+                        }
                         gen_method(method, in_path, env, &mut f)?;
                     }
 
@@ -202,9 +208,6 @@ fn gen_method<W: fmt::Write>(
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        return Ok(());
-    }
     writeln!(out)?;
 
     let is_writeable = method.is_writeable_out();
@@ -456,6 +459,9 @@ pub fn gen_ts_custom_type_declaration<W: fmt::Write>(
                 }
 
                 for method in custom_type.methods() {
+                    if method.attrs.skip_if_ast {
+                        continue;
+                    }
                     gen_ts_method_declaration(method, in_path, env, docs_url_gen, &mut f)?;
                 }
                 Ok(())
@@ -542,9 +548,6 @@ fn gen_ts_method_declaration<W: fmt::Write>(
     docs_url_gen: Option<&ast::DocsUrlGenerator>,
     out: &mut W,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        return Ok(());
-    }
     writeln!(out)?;
 
     if let Some(docs_url_gen) = docs_url_gen {

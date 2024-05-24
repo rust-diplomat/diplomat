@@ -54,12 +54,6 @@
 
     .. js:method:: change(number)
 
-    .. js:method:: borrow()
-
-    .. js:function:: borrow_other(other)
-
-    .. js:method:: borrow_self_or_other(other)
-
     .. js:method:: get_len_and_add(other)
 
     .. js:method:: dummy_str()

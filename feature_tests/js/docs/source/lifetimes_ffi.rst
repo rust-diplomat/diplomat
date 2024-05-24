@@ -3,8 +3,6 @@
 
 .. js:class:: Bar
 
-    .. js:method:: foo()
-
 .. js:class:: BorrowedFields
 
     .. js:attribute:: a

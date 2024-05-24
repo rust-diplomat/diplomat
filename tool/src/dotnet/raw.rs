@@ -90,6 +90,9 @@ pub fn gen<'ast>(
                 }
 
                 for method in typ.methods() {
+                    if method.attrs.skip_if_ast {
+                        continue;
+                    }
                     gen_method(typ, method, in_path, env, docs_url_gen, out)?;
                 }
 
@@ -115,6 +118,10 @@ pub fn gen<'ast>(
                 )?;
 
                 for method in typ.methods() {
+
+                if method.attrs.skip_if_ast {
+                    continue;
+                }
                     gen_method(typ, method, in_path, env, docs_url_gen, out)?;
                 }
 
@@ -185,10 +192,6 @@ fn gen_method(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        return Ok(());
-    }
-
     writeln!(out)?;
 
     gen_doc_block(

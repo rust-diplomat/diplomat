@@ -134,6 +134,9 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     }
 
     for method in typ.methods() {
+        if method.attrs.skip_if_ast {
+            continue;
+        }
         gen_method_docs(
             method,
             typ,
@@ -160,11 +163,6 @@ pub fn gen_method_docs<W: fmt::Write>(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        // We don't support returning references
-        return Ok(());
-    }
-
     writeln!(out)?;
 
     // This method should rearrange the writeable
