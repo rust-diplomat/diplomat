@@ -1,6 +1,5 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
-import { Foo } from "./Foo.mjs"
 
 const Bar_box_destroy_registry = new FinalizationRegistry(underlying => {
   wasm.Bar_destroy(underlying);

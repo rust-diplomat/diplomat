@@ -62,6 +62,9 @@ pub fn gen_struct<W: fmt::Write>(
             };
 
             for method in &opaque.methods {
+                if method.attrs.skip_if_ast {
+                    continue;
+                }
                 gen_method(
                     custom_type,
                     method,
@@ -139,6 +142,9 @@ pub fn gen_struct<W: fmt::Write>(
             }
 
             for method in &strct.methods {
+                if method.attrs.skip_if_ast {
+                    continue;
+                }
                 gen_method(
                     custom_type,
                     method,
@@ -177,9 +183,6 @@ fn gen_method<W: fmt::Write>(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        return Ok(());
-    }
     // This method should rearrange the writeable
     let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
 

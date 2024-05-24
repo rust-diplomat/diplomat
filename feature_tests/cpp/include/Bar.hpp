@@ -11,7 +11,6 @@
 
 #include "Bar.h"
 
-class Foo;
 
 /**
  * A destruction policy for using Bar with std::unique_ptr.
@@ -33,6 +32,5 @@ class Bar {
   std::unique_ptr<capi::Bar, BarDeleter> inner;
 };
 
-#include "Foo.hpp"
 
 #endif

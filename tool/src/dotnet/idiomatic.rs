@@ -81,6 +81,9 @@ pub fn gen(
                 out.scope(|out| writeln!(out, "_inner = handle;"))?;
 
                 for method in &opaque.methods {
+                if method.attrs.skip_if_ast {
+                    continue;
+                }
                     gen_method(custom_type, method, in_path, true, env, library_config, docs_url_gen, out)?;
                 }
 
@@ -147,6 +150,9 @@ pub fn gen(
                 out.scope(|out| writeln!(out, "_inner = data;"))?;
 
                 for method in &strct.methods {
+                    if method.attrs.skip_if_ast {
+                        continue;
+                    }
                     gen_method(
                         custom_type,
                         method,
@@ -313,10 +319,6 @@ fn gen_method(
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        // We don't support returning references
-        return Ok(());
-    }
     // This method should rearrange the writeable
     let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
 
@@ -926,6 +928,9 @@ fn collect_properties(
     let mut setters = HashMap::<Property, Setter>::new();
 
     for method in methods {
+        if method.attrs.skip_if_ast {
+            continue;
+        }
         if let Some((property, getter)) =
             extract_getter_metadata(method, in_path, env, library_config)
         {

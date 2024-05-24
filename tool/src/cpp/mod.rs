@@ -132,6 +132,9 @@ pub fn gen_bindings(
         }
 
         for method in typ.methods() {
+            if method.attrs.skip_if_ast {
+                continue;
+            }
             for param in &method.params {
                 gen_includes(
                     &param.ty,
@@ -177,6 +180,9 @@ pub fn gen_bindings(
         writeln!(out)?;
 
         for method in typ.methods() {
+            if method.attrs.skip_if_ast {
+                continue;
+            }
             for param in &method.params {
                 gen_includes(
                     &param.ty,

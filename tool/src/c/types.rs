@@ -138,7 +138,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             ast::Ident::from(format!("ref_mut_prim_slice_{}", c_type_for_prim(prim)))
         }
         ast::TypeName::Unit => ast::Ident::from("void"),
-        &_ => unreachable!("unknown AST/HIR variant"),
+        ast => unreachable!("unknown AST/HIR variant {ast:?}"),
     }
 }
 

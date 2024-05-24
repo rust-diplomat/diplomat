@@ -14,7 +14,6 @@ typedef struct Bar Bar;
 #ifdef __cplusplus
 } // namespace capi
 #endif
-#include "Foo.h"
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
