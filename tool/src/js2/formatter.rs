@@ -7,6 +7,21 @@ use crate::{c2::CFormatter, common::ErrorContextGuard};
 
 use super::FileType;
 
+const RESERVED : &[&str] = &[
+	"break",
+	"case", "catch", "class", "const", "continue",
+	"debugger", "default", "delete", "do",
+	"else", "export", "extends",
+	"false", "finally", "for", "function",
+	"if", "import", "in", "instanceof",
+	"new", "null",
+	"return",
+	"super", "switch",
+	"this", "throw", "true", "try", "typeof",
+	"var", "void",
+	"while", "with"
+];
+
 /// Helper class for us to format JS identifiers from the HIR.
 pub(super) struct JSFormatter<'tcx> {
 	/// Per [`CFormatter`]'s documentation we use it for support.
@@ -127,7 +142,28 @@ impl<'tcx> JSFormatter<'tcx> {
 
 	// #region Template specific formatting
 	pub fn fmt_method_name(&self, method : &hir::Method) -> String {
-		method.name.as_str().to_lower_camel_case().into()
+		let name : String = method.attrs.rename
+		.apply(method.name.as_str().into()).to_lower_camel_case();
+		if RESERVED.contains(&&*name) {
+			format!("{name}_")
+		} else {
+			name
+		}
+	}
+
+	/// For formatting a JS method that has an associated name with it. Like a named constructor or getter/setter.
+	pub fn fmt_method_field_name(&self, name: &Option<String>, method: &hir::Method) -> String {
+		let name: String = method.attrs.rename
+		.apply(
+			name.as_deref().unwrap_or(method.name.as_str()).into()
+		)
+		.to_lower_camel_case();
+
+		if RESERVED.contains(&&*name) {
+			format!("{name}_")
+		} else {
+			name
+		}
 	}
 
 	pub fn fmt_c_method_name<'a>(&self, type_id: TypeId, method: &'a hir::Method) -> Cow<'a, str> {

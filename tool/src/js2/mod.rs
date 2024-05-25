@@ -334,9 +334,12 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         method_info.method_decl = match &method.attrs.special_method {
             Some(SpecialMethod::Constructor) => format!("constructor"),
-            Some(SpecialMethod::NamedConstructor(name)) => format!("static {}", self.formatter.fmt_constructor_name(name)),
-            Some(SpecialMethod::Getter(name)) => format!("get {}", self.formatter.fmt_accessor_name(name)),
-            Some(SpecialMethod::Setter(name)) => format!("set {}", self.formatter.fmt_accessor_name(name)),
+            Some(SpecialMethod::NamedConstructor(name)) => format!("static {}", self.formatter.fmt_method_field_name(name, method)),
+
+            Some(SpecialMethod::Getter(name))
+            =>format!("get {}", self.formatter.fmt_method_field_name(name, method)),
+            Some(SpecialMethod::Setter(name))
+            => format!("set {}", self.formatter.fmt_method_field_name(name, method)),
             
             None if method.param_self.is_none() => format!(
                 "static {}",
