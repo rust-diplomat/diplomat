@@ -16,13 +16,13 @@ export class ResultOpaque {
 
     static newFailingBar(): ResultOpaque;
 
-    static newFailingUnit(): ResultOpaque?;
+    static newFailingUnit(): ResultOpaque | undefined;
 
     static newFailingStruct(i: number): ResultOpaque;
 
     static newInErr(i: number): void;
 
-    static newInt(i: number): number?;
+    static newInt(i: number): number | undefined;
 
     static newInEnumErr(i: number): ErrorEnum;
 

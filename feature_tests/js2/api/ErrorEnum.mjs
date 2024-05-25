@@ -10,7 +10,6 @@ export class ErrorEnum {
         ["Foo", 0],
         ["Bar", 1]
     ]);
-
     constructor(value) {
         if (value instanceof ErrorEnum) {
             this.#value = value.value;

@@ -1,15 +1,15 @@
 {%- if let Some(it) = iterator %}
 #value{% if typescript%}: {{it}}{% endif %};
 
-get value{% if typescript %}: {{it}};{% endif %}() {
+get value(){% if typescript %}: {{it}};{% else %} {
 	return this.#value;
-}
+}{% endif %}
 
-next() {
+next() {% if typescript %}: {{it}};{% else %}{
 	const out = this.#iteratorNext();
 
 	this.#value = out;
 
 	return out;
-}
-{% endif %}
+}{% endif -%}
+{% endif -%}

@@ -12,7 +12,6 @@ export class ContiguousEnum {
         ["E", 2],
         ["F", 3]
     ]);
-
     constructor(value) {
         if (value instanceof ContiguousEnum) {
             this.#value = value.value;

@@ -11,7 +11,6 @@ export class AttrEnum {
         ["B", 1],
         ["C", 2]
     ]);
-
     constructor(value) {
         if (value instanceof AttrEnum) {
             this.#value = value.value;

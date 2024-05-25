@@ -10,11 +10,11 @@ export class OptionOpaque {
     get ffiValue(): pointer;
 
 
-    static new_(i: number): OptionOpaque?;
+    static new_(i: number): OptionOpaque | undefined;
 
-    static newNone(): OptionOpaque?;
+    static newNone(): OptionOpaque | undefined;
 
-    static returns(): OptionStruct?;
+    static returns(): OptionStruct | undefined;
 
     static newStruct(): OptionStruct;
 
@@ -22,7 +22,7 @@ export class OptionOpaque {
 
     assertInteger(i: number): void;
 
-    static optionOpaqueArgument(arg: OptionOpaque?): boolean;
+    static optionOpaqueArgument(arg: OptionOpaque | undefined): boolean;
 
     
 

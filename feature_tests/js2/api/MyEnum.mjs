@@ -14,7 +14,6 @@ export class MyEnum {
         ["E", 2],
         ["F", 3]
     ]);
-
     constructor(value) {
         if (value instanceof MyEnum) {
             this.#value = value.value;

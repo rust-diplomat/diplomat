@@ -36,7 +36,7 @@ export class Float64Vec {
 
     borrow(): Array<number>;
 
-    get(i: number): number?;
+    get(i: number): number | undefined;
 
     
 

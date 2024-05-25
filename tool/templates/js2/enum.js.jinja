@@ -12,8 +12,7 @@ export class {{type_name}} {
         ["{{formatter.fmt_enum_variant(variant)}}", {{variant.discriminant}}]{% if !loop.last %},{% endif %}
 {%- endfor %}
     ]);
-
-    {#- TODO: I think it's possible to allow for constructors,
+    {# TODO: I think it's possible to allow for constructors,
     but we just need to check if a constructor will be generated. -#}
     constructor(value) {
         if (value instanceof {{type_name}}) {

@@ -11,7 +11,6 @@ export class UnimportedEnum {
         ["B", 1],
         ["C", 2]
     ]);
-
     constructor(value) {
         if (value instanceof UnimportedEnum) {
             this.#value = value.value;
