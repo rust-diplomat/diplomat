@@ -30,15 +30,14 @@ export class Unnamespaced {
     }
 
 
-    static make(e) {const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
-    
+    static make(e) {
+        const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
         return new Unnamespaced(result, []);
-        
     }
 
-    useNamespaced(n) {wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
-    
+    useNamespaced(n) {
+        wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
     
     }
 

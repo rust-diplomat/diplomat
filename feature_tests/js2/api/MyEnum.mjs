@@ -49,18 +49,16 @@ export class MyEnum {
     static F = new MyEnum("F");
 
 
-    intoValue() {const result = wasm.MyEnum_into_value(this.ffiValue);
-    
+    intoValue() {
+        const result = wasm.MyEnum_into_value(this.ffiValue);
     
         return result;
-        
     }
 
-    static getA() {const result = wasm.MyEnum_get_a();
-    
+    static getA() {
+        const result = wasm.MyEnum_get_a();
     
         return (() => {for (let i of MyEnum.values) { if(i[1] === result) return i[0]; } return null;})();;
-        
     }
 
     

@@ -36,6 +36,7 @@ export class Foo {
 
 
     static new_(x) {
+        
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         const xArena = new diplomatRuntime.DiplomatFinalizedArena();
         
@@ -45,23 +46,21 @@ export class Foo {
     
         xSlice.garbageCollect();
         
-    
         return new Foo(result, [], aEdges);
-        
     }
 
     get bar() {
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         // This lifetime edge depends on lifetimes 'a, 'b
         let bEdges = [this];const result = wasm.Foo_get_bar(this.ffiValue);
     
-    
         return new Bar(result, [], bEdges, aEdges);
-        
     }
 
     static newStatic(x) {
+        
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         
         // This lifetime edge depends on lifetimes 'a
@@ -69,30 +68,27 @@ export class Foo {
     
         xSlice.free();
         
-    
         return new Foo(result, [], aEdges);
-        
     }
 
     asReturning() {
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];const result = wasm.Foo_as_returning(this.ffiValue);
     
-    
         return BorrowedFieldsReturning // TODO: Struct c_to_js;
-        
     }
 
     static extractFromFields(fields) {
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];const result = wasm.Foo_extract_from_fields(/*TODO: gen_js_to_c_for_type for Struct*/);
     
-    
         return new Foo(result, [], aEdges);
-        
     }
 
     static extractFromBounds(bounds, anotherString) {
+        
         const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
         const anotherStringArena = new diplomatRuntime.DiplomatFinalizedArena();
         
@@ -102,9 +98,7 @@ export class Foo {
     
         anotherStringSlice.garbageCollect();
         
-    
         return new Foo(result, [], aEdges);
-        
     }
 
     

@@ -35,14 +35,13 @@ export class MyIterator {
     }
 
 
-    #iteratorNext() {const result = wasm.namespace_MyIterator_next(this.ffiValue);
-    
+    #iteratorNext() {
+        const result = wasm.namespace_MyIterator_next(this.ffiValue);
     
         if (!result.isOk) {
             return null
         }
          return result.union.ok;
-        
     }
 
     

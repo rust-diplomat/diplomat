@@ -6,7 +6,7 @@
     {%- if !loop.last -%}, {% endif -%}
 {%- endfor -%}
 ) {%- if typescript %}: {{ return_type }};{% else %} {
-    {%- for slice in slice_params %}
+    {% for slice in slice_params %}
     const {{slice.name}}Slice = {{slice.slice_expr}};
     {%- if slice.is_borrowed %}
     const {{slice.name}}Arena = new diplomatRuntime.DiplomatFinalizedArena();
@@ -40,12 +40,12 @@
 
     {%~ for cleanup in cleanup_expressions %}
     {{cleanup|indent(4)}}
-    {% endfor ~%}
+    {% endfor -%}
 
 
     {%~ match return_expression -%}
     {%- when Some with (statement) %}
-    {{ statement|indent(4) }}
+    {{ statement|indent(4) -}}
     {% when None -%}
     {%- endmatch %}
 }
