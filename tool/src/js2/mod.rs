@@ -301,7 +301,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 });
             } else {
                 if let hir::Type::Struct(..) = param.ty {
-                    todo!("Cleanup statement for struct param.");
+                    // TODO:
+                    // todo!("Cleanup statement for struct param.");
                 }
 
                 let struct_borrow_info = 
@@ -340,13 +341,16 @@ impl<'tcx> JSGenerationContext<'tcx> {
             =>format!("get {}", self.formatter.fmt_method_field_name(name, method)),
             Some(SpecialMethod::Setter(name))
             => format!("set {}", self.formatter.fmt_method_field_name(name, method)),
+
+            Some(SpecialMethod::Iterable) => format!("[Symbol.iterator]"),
+            Some(SpecialMethod::Iterator) => format!("next"),
             
             None if method.param_self.is_none() => format!(
                 "static {}",
                 self.formatter.fmt_method_name(method)
             ),
             None => self.formatter.fmt_method_name(method),
-            _ => todo!(),
+            _ => todo!("Method Declaration {:?} not implemented", method.attrs.special_method),
         };
 
         Some(method_info.render().unwrap())
