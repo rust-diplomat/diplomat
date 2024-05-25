@@ -228,7 +228,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             parameters : Vec<ParamInfo<'info>>,
             slice_params : Vec<SliceParam<'info>>,
-            param_conversions : Vec<Cow<'static, str>>,
+            param_conversions : Vec<Cow<'info, str>>,
 
             return_type : Cow<'info, str>,
             return_expression : Option<Cow<'info, str>>,
