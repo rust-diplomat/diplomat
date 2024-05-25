@@ -91,6 +91,27 @@ impl<'tcx> JSFormatter<'tcx> {
 		}
 	}
 
+	pub fn fmt_primitive_list_view(&self, primitive : hir::PrimitiveType) -> &'static str {
+		match primitive {
+			hir::PrimitiveType::Bool => "bool",
+			hir::PrimitiveType::Char => "u16",
+			hir::PrimitiveType::Byte => "u8",
+			hir::PrimitiveType::Int(hir::IntType::I8) => "i8",
+			hir::PrimitiveType::Int(hir::IntType::U8) => "u8",
+			hir::PrimitiveType::Int(hir::IntType::I16) => "i16",
+			hir::PrimitiveType::Int(hir::IntType::U16) => "u16",
+			hir::PrimitiveType::Int(hir::IntType::I32) => "i32",
+			hir::PrimitiveType::Int(hir::IntType::U32) => "u32",
+			hir::PrimitiveType::Int(hir::IntType::I64) => "i64",
+			hir::PrimitiveType::Int(hir::IntType::U64) => "u64",
+			hir::PrimitiveType::IntSize(hir::IntSizeType::Isize) => "isize",
+			hir::PrimitiveType::IntSize(hir::IntSizeType::Usize) => "usize",
+			hir::PrimitiveType::Float(hir::FloatType::F32) => "f32",
+			hir::PrimitiveType::Float(hir::FloatType::F64) => "f64",
+			hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt")
+		}
+	}
+
 	pub fn fmt_void(&self) -> &'static str {
 		"void".into()
 	}

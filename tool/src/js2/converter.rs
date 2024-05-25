@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use diplomat_core::hir::{self, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type};
+use diplomat_core::hir::{self, borrowing_param::StructBorrowInfo, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type};
 use std::fmt::{Display, Write};
 
 use super::JSGenerationContext;
@@ -13,6 +13,18 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
         .iter()
         .enumerate()
         .all(|(i, v)| i as isize == v.discriminant)
+}
+
+/// Context about a struct being borrowed when doing js-to-c conversions
+/// Borrowed from dart implementation.
+pub(super) struct StructBorrowContext<'tcx> {
+    /// Is this in a method or struct?
+    ///
+    /// Methods generate things like `[aEdges, bEdges]`
+    /// whereas structs do `[...aAppendArray, ...bAppendArray]`
+    is_method: bool,
+    use_env: &'tcx LifetimeEnv,
+    param_info: StructBorrowInfo<'tcx>,
 }
 
 impl<'tcx> JSGenerationContext<'tcx> {
@@ -244,10 +256,22 @@ impl<'tcx> JSGenerationContext<'tcx> {
 		struct_borrow_info : Option<&StructBorrowContext<'tcx>>) -> Cow<'tcx, str> {
 			match *ty {
 				Type::Primitive(..) => js_name.clone(),
-				Type::Enum(ref e) => format!("{js_name}.ffiValue").into(),
-				Type::Opaque(ref op) if op.is_optional() => {
-					todo!()
+				Type::Opaque(ref op) if op.is_optional() => 
+					format!("{js_name}.ffiValue ?? 0").into(),
+				Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
+				Type::Slice(hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding)) => {
+					match encoding {
+						hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+							format!("diplomatRuntime.DiplomatBuf.str8(wasm, {js_name})").into()
+						},
+						_ => {
+							format!("diplomatRuntime.DiplomatBuf.str16(wasm, {js_name})").into()
+						}
+					}
 				},
+				Type::Slice(hir::Slice::Primitive(_, p)) => format!(
+					r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#, self.formatter.fmt_primitive_list_view(p)
+				).into(),
 				_ => todo!("{:?} not implemented yet", ty),
 			}
 		}

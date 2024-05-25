@@ -18,3 +18,4 @@ export type isize = number;
 export type f32 = number;
 export type f64 = number;
 export type char = string;
+export type pointer = number;
