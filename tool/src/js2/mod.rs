@@ -334,9 +334,6 @@ impl<'tcx> JSGenerationContext<'tcx> {
         method_info.lifetimes = Some(&method.lifetime_env);
 
         method_info.method_decl = match &method.attrs.special_method {
-            Some(SpecialMethod::Constructor) => format!("constructor"),
-            Some(SpecialMethod::NamedConstructor(name)) => format!("static {}", self.formatter.fmt_method_field_name(name, method)),
-
             Some(SpecialMethod::Getter(name))
             =>format!("get {}", self.formatter.fmt_method_field_name(name, method)),
             Some(SpecialMethod::Setter(name))

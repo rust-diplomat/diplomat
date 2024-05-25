@@ -89,8 +89,6 @@ pub fn gen(
             attr_validator.support.iterables = true;
             attr_validator.support.iterators = true;
             
-            attr_validator.support.constructors = true;
-            attr_validator.support.named_constructors = true;
             attr_validator.support.accessors = true;
 
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
