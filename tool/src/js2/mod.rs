@@ -127,12 +127,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
         .iter()
         .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
         .collect::<Vec<_>>();
-    
-        // Javascript is fairly easy-going, so instead of using a separate function for the presence of say, Iterators or Iterables in a separate part of defining our class,
-        // We just use https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
 
-        // let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence);
-        // methods.push(special_method_body);
+        let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence);
+        methods.push(special_method_body);
 
         #[derive(Template)]
         #[template(path="js2/enum.js.jinja", escape="none")]
@@ -163,6 +160,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
         let mut methods = opaque_def.methods.iter()
         .flat_map(|method| { self.generate_method_body(type_id, type_name, method, file_type.is_typescript()) })
         .collect::<Vec<_>>();
+
+        let special_method_body = self.generate_special_method_body(&opaque_def.special_method_presence);
+        methods.push(special_method_body);
 
         let destructor = self.formatter.fmt_destructor_name(type_id);
 
@@ -355,15 +355,49 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         Some(method_info.render().unwrap())
     }
+    
+    /// If a special method exists inside a structure, opaque, or enum through [`SpecialMethodPresence`],
+    /// We need to make sure Javascript can access it.
+    /// 
+    /// This is mostly for iterators, using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
+    fn generate_special_method_body(&self, special_method_presence : &SpecialMethodPresence) -> String {
+        #[derive(Template)]
+        #[template(path="js2/special_method.js.jinja", escape="none")]
+        struct SpecialMethodInfo<'a> {
+            iterator : Option<Cow<'a, str>>,
+            iterable : Option<Cow<'a, str>>
+        }
+
+        let mut iterator = None;
+
+        if let Some(ref val) = special_method_presence.iterator {
+            iterator = Some(self.gen_success_ty(val))
+        }
+
+        let mut iterable = None;
+        if let Some(ref iterator) = special_method_presence.iterable {
+            let iterator_def = self.tcx.resolve_opaque(*iterator);
+            let Some(ref val) = iterator_def.special_method_presence.iterator else {
+                self.errors
+                    .push_error("Found iterable not returning an iterator type".into());
+                return "".to_string();
+            };
+            iterable = Some(self.gen_success_ty(val))
+        }
+
+        SpecialMethodInfo {
+            iterator,
+            iterable
+        }.render().unwrap()
+    }
 
     fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
-        todo!();
-        // match out_ty {
-        //     SuccessType::Writeable => self.formatter.fmt_string().into(),
-        //     SuccessType::OutType(o) => self.gen_type_name(o),
-        //     SuccessType::Unit => self.formatter.fmt_void().into(),
-        //     _ => unreachable!(),
-        // }
+        match out_ty {
+            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::OutType(o) => self.gen_type_name(o),
+            SuccessType::Unit => self.formatter.fmt_void().into(),
+            _ => unreachable!(),
+        }
     }
 }
 
