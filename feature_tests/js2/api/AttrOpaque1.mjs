@@ -5,60 +5,59 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const AttrOpaque1_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.namespace_AttrOpaque1_destroy(ptr);
+    wasm.namespace_AttrOpaque1_destroy(ptr);
 });
 
 export class AttrOpaque1 {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			AttrOpaque1_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	static new() {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
         
-        const result = wasm.namespace_AttrOpaque1_new();
-        return new AttrOpaque1(result, []);
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            AttrOpaque1_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	method() {
-        
-        const result = wasm.namespace_AttrOpaque1_method();
-        return result;
+    get ffiValue() {
+        return this.#ptr;
     }
 
-	abirenamed() {
-        
-        const result = wasm.renamed_on_abi_only();
-        return result;
+
+    constructor() {
+    const result = wasm.namespace_AttrOpaque1_new();
+    return new AttrOpaque1(result, []);
     }
 
-	methodDisabledcpp() {
-        
-        wasm.namespace_AttrOpaque1_method_disabledcpp();
-        
+    get method() {
+    const result = wasm.namespace_AttrOpaque1_method(this.#ptr);
+    return result;
     }
 
-	useUnnamespaced(un) {
-        
-        wasm.namespace_AttrOpaque1_use_unnamespaced();
-        
+    get abirenamed() {
+    const result = wasm.renamed_on_abi_only(this.#ptr);
+    return result;
     }
 
-	useNamespaced(n) {
-        
-        wasm.namespace_AttrOpaque1_use_namespaced();
-        
+    methodDisabledcpp() {
+    wasm.namespace_AttrOpaque1_method_disabledcpp(this.#ptr);
+    
+    }
+
+    useUnnamespaced(un) {
+    wasm.namespace_AttrOpaque1_use_unnamespaced(this.#ptr, un.ffiValue);
+    
+    }
+
+    useNamespaced(n) {
+    wasm.namespace_AttrOpaque1_use_namespaced(this.#ptr, n.ffiValue);
+    
     }
 
 }

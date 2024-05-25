@@ -5,38 +5,41 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const Utf16Wrap_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.Utf16Wrap_destroy(ptr);
+    wasm.Utf16Wrap_destroy(ptr);
 });
 
 export class Utf16Wrap {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			Utf16Wrap_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	borrowCont() {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
         
-        // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];
-        const result = wasm.Utf16Wrap_borrow_cont();
-        return result(aEdges) // TODO: Slice c_to_js;
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            Utf16Wrap_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	owned() {
-        
-        const result = wasm.Utf16Wrap_owned();
-        return result // TODO: Slice c_to_js;
+    get ffiValue() {
+        return this.#ptr;
+    }
+
+
+    borrowCont() {
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [this];
+    const result = wasm.Utf16Wrap_borrow_cont(this.#ptr);
+    return result(aEdges) // TODO: Slice c_to_js;
+    }
+
+    owned() {
+    const result = wasm.Utf16Wrap_owned(this.#ptr);
+    return result // TODO: Slice c_to_js;
     }
 
 }

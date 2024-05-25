@@ -5,16 +5,19 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class Opaque {
-	
+    
 
-	static new(): Opaque;
+    get ffiValue(): pointer;
 
-	assertStruct(s: MyStruct): void;
 
-	static returnsUsize(): number;
+    constructor(): Opaque;
 
-	static returnsImported(): ImportedStruct;
+    assertStruct(s: MyStruct): void;
 
-	static cmp(): number;
+    static returnsUsize(): number;
+
+    static returnsImported(): ImportedStruct;
+
+    static cmp(): number;
 
 }

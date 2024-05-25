@@ -5,8 +5,11 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class RefList {
-	
+    
 
-	static node(data: RefListParameter): RefList;
+    get ffiValue(): pointer;
+
+
+    static node(data: RefListParameter): RefList;
 
 }

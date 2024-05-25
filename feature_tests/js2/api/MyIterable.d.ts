@@ -5,10 +5,13 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class MyIterable {
-	
+    
 
-	static new(x: Array<number>): MyIterable;
+    get ffiValue(): pointer;
 
-	iter(): MyIterator;
+
+    constructor(x: Array<number>): MyIterable;
+
+    [Symbol.iterator](): MyIterator;
 
 }

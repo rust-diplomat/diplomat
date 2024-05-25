@@ -5,66 +5,74 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const MyString_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.MyString_destroy(ptr);
+    wasm.MyString_destroy(ptr);
 });
 
 export class MyString {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			MyString_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	static new(v) {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
         
-        const result = wasm.MyString_new();
-        return new MyString(result, []);
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            MyString_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	static newUnsafe(v) {
-        
-        const result = wasm.MyString_new_unsafe();
-        return new MyString(result, []);
+    get ffiValue() {
+        return this.#ptr;
     }
 
-	static newOwned(v) {
+
+    constructor(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         
-        const result = wasm.MyString_new_owned();
-        return new MyString(result, []);
+    const result = wasm.MyString_new(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new MyString(result, []);
     }
 
-	static newFromFirst(v) {
+    static unsafe(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         
-        const result = wasm.MyString_new_from_first();
-        return new MyString(result, []);
+    const result = wasm.MyString_new_unsafe(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new MyString(result, []);
     }
 
-	setStr(newStr) {
+    static newOwned(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         
-        wasm.MyString_set_str();
-        
+    const result = wasm.MyString_new_owned(vSlice.ptr, vSlice.size);
+    return new MyString(result, []);
     }
 
-	getStr() {
+    static newFromFirst(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         
-        wasm.MyString_get_str();
-        return writeable;
+    const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new MyString(result, []);
     }
 
-	getBoxedStr() {
+    set str(newStr) {
+        const newStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, newStr);
         
-        const result = wasm.MyString_get_boxed_str();
-        return result // TODO: Slice c_to_js;
+    wasm.MyString_set_str(this.#ptr, newStrSlice.ptr, newStrSlice.size, newStrSlice.free(););
+    
+    }
+
+    get str() {
+    wasm.MyString_get_str(this.#ptr);
+    return writeable;
+    }
+
+    getBoxedStr() {
+    const result = wasm.MyString_get_boxed_str(this.#ptr);
+    return result // TODO: Slice c_to_js;
     }
 
 }

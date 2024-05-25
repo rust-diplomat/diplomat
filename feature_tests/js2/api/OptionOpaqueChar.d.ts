@@ -5,8 +5,11 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class OptionOpaqueChar {
-	
+    
 
-	assertChar(ch: char): void;
+    get ffiValue(): pointer;
+
+
+    assertChar(ch: char): void;
 
 }

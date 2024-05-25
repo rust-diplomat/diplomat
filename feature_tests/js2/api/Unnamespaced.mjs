@@ -5,36 +5,39 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const Unnamespaced_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.namespace_Unnamespaced_destroy(ptr);
+    wasm.namespace_Unnamespaced_destroy(ptr);
 });
 
 export class Unnamespaced {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			Unnamespaced_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	static make(e) {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
         
-        const result = wasm.namespace_Unnamespaced_make();
-        return new Unnamespaced(result, []);
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            Unnamespaced_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	useNamespaced(n) {
-        
-        wasm.namespace_Unnamespaced_use_namespaced();
-        
+    get ffiValue() {
+        return this.#ptr;
+    }
+
+
+    static make(e) {
+    const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
+    return new Unnamespaced(result, []);
+    }
+
+    useNamespaced(n) {
+    wasm.namespace_Unnamespaced_use_namespaced(this.#ptr, n.ffiValue);
+    
     }
 
 }

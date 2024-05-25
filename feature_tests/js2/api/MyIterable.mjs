@@ -5,38 +5,43 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const MyIterable_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.namespace_MyIterable_destroy(ptr);
+    wasm.namespace_MyIterable_destroy(ptr);
 });
 
 export class MyIterable {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			MyIterable_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	static new(x) {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
         
-        const result = wasm.namespace_MyIterable_new();
-        return new MyIterable(result, []);
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            MyIterable_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	iter() {
+    get ffiValue() {
+        return this.#ptr;
+    }
+
+
+    constructor(x) {
+        const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
         
+    const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size, xSlice.free(););
+    return new MyIterable(result, []);
+    }
+
+    [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.namespace_MyIterable_iter();
-        return new MyIterator(result, [], aEdges);
+    const result = wasm.namespace_MyIterable_iter(this.#ptr);
+    return new MyIterator(result, [], aEdges);
     }
 
 }

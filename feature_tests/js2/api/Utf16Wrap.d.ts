@@ -5,10 +5,13 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class Utf16Wrap {
-	
+    
 
-	borrowCont(): String;
+    get ffiValue(): pointer;
 
-	owned(): String;
+
+    borrowCont(): String;
+
+    owned(): String;
 
 }

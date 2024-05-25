@@ -5,18 +5,21 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class Foo {
-	
+    
 
-	static new(x: String): Foo;
+    get ffiValue(): pointer;
 
-	getBar(): Bar;
 
-	static newStatic(x: String): Foo;
+    constructor(x: String): Foo;
 
-	asReturning(): BorrowedFieldsReturning;
+    get bar(): Bar;
 
-	static extractFromFields(fields: BorrowedFields): Foo;
+    static static(x: String): Foo;
 
-	static extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo;
+    asReturning(): BorrowedFieldsReturning;
+
+    static extractFromFields(fields: BorrowedFields): Foo;
+
+    static extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo;
 
 }

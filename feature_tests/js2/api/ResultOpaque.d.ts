@@ -5,24 +5,27 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class ResultOpaque {
-	
+    
 
-	static new(i: number): ResultOpaque;
+    get ffiValue(): pointer;
 
-	static newFailingFoo(): ResultOpaque;
 
-	static newFailingBar(): ResultOpaque;
+    static new_(i: number): ResultOpaque;
 
-	static newFailingUnit(): ResultOpaque?;
+    static newFailingFoo(): ResultOpaque;
 
-	static newFailingStruct(i: number): ResultOpaque;
+    static newFailingBar(): ResultOpaque;
 
-	static newInErr(i: number): void;
+    static newFailingUnit(): ResultOpaque?;
 
-	static newInt(i: number): number?;
+    static newFailingStruct(i: number): ResultOpaque;
 
-	static newInEnumErr(i: number): ErrorEnum;
+    static newInErr(i: number): void;
 
-	assertInteger(i: number): void;
+    static newInt(i: number): number?;
+
+    static newInEnumErr(i: number): ErrorEnum;
+
+    assertInteger(i: number): void;
 
 }

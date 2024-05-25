@@ -6,12 +6,12 @@
     {%- if !loop.last -%}, {% endif -%}
 {%- endfor -%}
 ) {%- if typescript %}: {{ return_type }};{% else %} {
-    {% for slice in slice_params %}
+    {%- for slice in slice_params %}
     const {{slice.name}}Slice = {{slice.slice_expr}};
-    {% if slice.is_borrowed %}
+    {%- if slice.is_borrowed %}
     const {{slice.name}}Arena = new diplomatRuntime.DiplomatFinalizedArena();
     {% endif %}
-    {% endfor %}
+    {% endfor -%}
     
     {% let lifetimes = lifetimes.unwrap() -%}
     {% for lifetime in lifetimes.all_lifetimes() -%}
@@ -30,14 +30,14 @@
     {%- endif -%}
     {%- endfor -%}
 
-    {% for cleanup in cleanup_expressions %}
+    {%- for cleanup in cleanup_expressions %}
     {{cleanup}}
     {% endfor %}
 
 
     {%~ if !method.output.is_ffi_unit() %}const result = {% endif %}wasm.{{ c_method_name }}(
         {%- for param in param_conversions -%}
-        {%- if !loop.last %}, {% endif -%}
+        {%- if !loop.first %}, {% endif -%}
         {{ param }}
         {%- endfor -%}
     );

@@ -5,18 +5,21 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class AttrOpaque1 {
-	
+    
 
-	static new(): AttrOpaque1;
+    get ffiValue(): pointer;
 
-	method(): number;
 
-	abirenamed(): number;
+    constructor(): AttrOpaque1;
 
-	methodDisabledcpp(): void;
+    get method(): number;
 
-	useUnnamespaced(un: Unnamespaced): void;
+    get abirenamed(): number;
 
-	useNamespaced(n: AttrEnum): void;
+    methodDisabledcpp(): void;
+
+    useUnnamespaced(un: Unnamespaced): void;
+
+    useNamespaced(n: AttrEnum): void;
 
 }

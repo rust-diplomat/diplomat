@@ -5,80 +5,77 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const OpaqueMutexedString_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.OpaqueMutexedString_destroy(ptr);
+    wasm.OpaqueMutexedString_destroy(ptr);
 });
 
 export class OpaqueMutexedString {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			OpaqueMutexedString_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	static fromUsize(number) {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
         
-        const result = wasm.OpaqueMutexedString_from_usize();
-        return new OpaqueMutexedString(result, []);
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            OpaqueMutexedString_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	change(number) {
-        
-        wasm.OpaqueMutexedString_change();
-        
+    get ffiValue() {
+        return this.#ptr;
     }
 
-	borrow() {
-        
+
+    static fromUsize(number) {
+    const result = wasm.OpaqueMutexedString_from_usize(number);
+    return new OpaqueMutexedString(result, []);
+    }
+
+    change(number) {
+    wasm.OpaqueMutexedString_change(this.#ptr, number);
+    
+    }
+
+    borrow() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.OpaqueMutexedString_borrow();
-        return new OpaqueMutexedString(result, aEdges);
+    const result = wasm.OpaqueMutexedString_borrow(this.#ptr);
+    return new OpaqueMutexedString(result, aEdges);
     }
 
-	static borrowOther(other) {
-        
+    static borrowOther(other) {
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];
-        const result = wasm.OpaqueMutexedString_borrow_other();
-        return new OpaqueMutexedString(result, aEdges);
+        let aEdges = [other];
+    const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
+    return new OpaqueMutexedString(result, aEdges);
     }
 
-	borrowSelfOrOther(other) {
-        
+    borrowSelfOrOther(other) {
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];
-        const result = wasm.OpaqueMutexedString_borrow_self_or_other();
-        return new OpaqueMutexedString(result, aEdges);
+        let aEdges = [this, other];
+    const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.#ptr, other.ffiValue);
+    return new OpaqueMutexedString(result, aEdges);
     }
 
-	getLenAndAdd(other) {
-        
-        const result = wasm.OpaqueMutexedString_get_len_and_add();
-        return result;
+    getLenAndAdd(other) {
+    const result = wasm.OpaqueMutexedString_get_len_and_add(this.#ptr, other);
+    return result;
     }
 
-	dummyStr() {
-        
+    dummyStr() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.OpaqueMutexedString_dummy_str();
-        return result(aEdges) // TODO: Slice c_to_js;
+    const result = wasm.OpaqueMutexedString_dummy_str(this.#ptr);
+    return result(aEdges) // TODO: Slice c_to_js;
     }
 
-	wrapper() {
-        
-        const result = wasm.OpaqueMutexedString_wrapper();
-        return new Utf16Wrap(result, []);
+    wrapper() {
+    const result = wasm.OpaqueMutexedString_wrapper(this.#ptr);
+    return new Utf16Wrap(result, []);
     }
 
 }

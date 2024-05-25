@@ -4,39 +4,39 @@
 {% endif %}
 {% if !typescript %}
 const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.{{destructor}}(ptr);
+    wasm.{{destructor}}(ptr);
 });
 {% endif %}
 export class {{type_name}} {
-	{% if !typescript -%}
-	// Internal ptr reference:
-	#ptr = null;
+    {% if !typescript -%}
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	{% for lifetime in lifetimes.all_lifetimes() %}
-	#{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
-	{% endfor %}
-	
-	constructor(ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
-		{% for lifetime in lifetimes.all_lifetimes() %}
-		{% let lt = lifetimes.fmt_lifetime(lifetime) %}
-		this.#{{lt}}Edge = {{lt}}Edge;
-		{% endfor %}
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			{{type_name}}_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    {% for lifetime in lifetimes.all_lifetimes() %}
+    #{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
+    {% endfor %}
+    
+    constructor(ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
+        {% for lifetime in lifetimes.all_lifetimes() %}
+        {% let lt = lifetimes.fmt_lifetime(lifetime) %}
+        this.#{{lt}}Edge = {{lt}}Edge;
+        {% endfor %}
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            {{type_name}}_box_destroy_registry.register(this, this.#ptr);
+        }
+    }
 
-	{%- endif %}
+    {%- endif %}
 
-	get ffiValue(){% if typescript %}: pointer;{% else %} {
-		return this.#ptr;
-	}{% endif %}
+    get ffiValue(){% if typescript %}: pointer;{% else %} {
+        return this.#ptr;
+    }{% endif %}
 
 {% for method in methods %}
-	{{ method|indent(4) }}
+    {{ method|indent(4) }}
 {% endfor %}
 }

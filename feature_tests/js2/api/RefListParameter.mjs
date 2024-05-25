@@ -5,24 +5,29 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const RefListParameter_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.RefListParameter_destroy(ptr);
+    wasm.RefListParameter_destroy(ptr);
 });
 
 export class RefListParameter {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			RefListParameter_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
+        
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            RefListParameter_box_destroy_registry.register(this, this.#ptr);
+        }
+    }
+
+    get ffiValue() {
+        return this.#ptr;
+    }
+
 
 }

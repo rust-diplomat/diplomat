@@ -5,8 +5,11 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class Bar {
-	
+    
 
-	foo(): Foo;
+    get ffiValue(): pointer;
+
+
+    get foo(): Foo;
 
 }

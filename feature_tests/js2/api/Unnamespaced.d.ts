@@ -5,10 +5,13 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class Unnamespaced {
-	
+    
 
-	static make(e: AttrEnum): Unnamespaced;
+    get ffiValue(): pointer;
 
-	useNamespaced(n: AttrOpaque1): void;
+
+    static make(e: AttrEnum): Unnamespaced;
+
+    useNamespaced(n: AttrOpaque1): void;
 
 }

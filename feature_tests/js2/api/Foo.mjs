@@ -5,79 +5,92 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.Foo_destroy(ptr);
+    wasm.Foo_destroy(ptr);
 });
 
 export class Foo {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	#aEdge = [];
-	
-	
-	constructor(ptr, selfEdge, aEdge) {
-		
-		
-		this.#aEdge = aEdge;
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			Foo_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	static new(x) {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    #aEdge = [];
+    
+    
+    constructor(ptr, selfEdge, aEdge) {
         
-        // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];
-        const result = wasm.Foo_new();
-        return new Foo(result, [], aEdges);
+        
+        this.#aEdge = aEdge;
+        
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            Foo_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	getBar() {
+    get ffiValue() {
+        return this.#ptr;
+    }
+
+
+    constructor(x) {
+        const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
+        const xArena = new diplomatRuntime.DiplomatFinalizedArena();
         
+        
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [xSlice];
+        xSlice.garbageCollect();
+        
+    const result = wasm.Foo_new(xSlice.ptr, xSlice.size);
+    return new Foo(result, [], aEdges);
+    }
+
+    get bar() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         // This lifetime edge depends on lifetimes 'a, 'b
         let bEdges = [this];
-        const result = wasm.Foo_get_bar();
-        return new Bar(result, [], bEdges, aEdges);
+    const result = wasm.Foo_get_bar(this.#ptr);
+    return new Bar(result, [], bEdges, aEdges);
     }
 
-	static newStatic(x) {
+    static static(x) {
+        const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [];
-        const result = wasm.Foo_new_static();
-        return new Foo(result, [], aEdges);
+    const result = wasm.Foo_new_static(xSlice.ptr, xSlice.size, xSlice.free(););
+    return new Foo(result, [], aEdges);
     }
 
-	asReturning() {
-        
+    asReturning() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Foo_as_returning();
-        return BorrowedFieldsReturning // TODO: Struct c_to_js;
+    const result = wasm.Foo_as_returning(this.#ptr);
+    return BorrowedFieldsReturning // TODO: Struct c_to_js;
     }
 
-	static extractFromFields(fields) {
-        
+    static extractFromFields(fields) {
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];
-        const result = wasm.Foo_extract_from_fields();
-        return new Foo(result, [], aEdges);
+        let aEdges = [...fields._fieldsForLifetimeA];
+    const result = wasm.Foo_extract_from_fields(/*TODO: gen_js_to_c_for_type for Struct*/);
+    return new Foo(result, [], aEdges);
     }
 
-	static extractFromBounds(bounds, anotherString) {
+    static extractFromBounds(bounds, anotherString) {
+        const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
+        const anotherStringArena = new diplomatRuntime.DiplomatFinalizedArena();
+        
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
-        let aEdges = [];
-        const result = wasm.Foo_extract_from_bounds();
-        return new Foo(result, [], aEdges);
+        let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
+        anotherStringSlice.garbageCollect();
+        
+    const result = wasm.Foo_extract_from_bounds(/*TODO: gen_js_to_c_for_type for Struct*/, anotherStringSlice.ptr, anotherStringSlice.size);
+    return new Foo(result, [], aEdges);
     }
 
 }

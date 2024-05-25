@@ -5,34 +5,37 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class Float64Vec {
-	
+    
 
-	static newBool(v: Array<bool>): Float64Vec;
+    get ffiValue(): pointer;
 
-	static newI16(v: Array<number>): Float64Vec;
 
-	static newU16(v: Array<number>): Float64Vec;
+    static bool(v: Array<bool>): Float64Vec;
 
-	static newIsize(v: Array<number>): Float64Vec;
+    static i16(v: Array<number>): Float64Vec;
 
-	static newUsize(v: Array<number>): Float64Vec;
+    static u16(v: Array<number>): Float64Vec;
 
-	static newF64BeBytes(v: Uint8Array): Float64Vec;
+    static isize(v: Array<number>): Float64Vec;
 
-	static newFromOwned(v: Array<number>): Float64Vec;
+    static usize(v: Array<number>): Float64Vec;
 
-	asBoxedSlice(): Array<number>;
+    static f64BeBytes(v: Uint8Array): Float64Vec;
 
-	asSlice(): Array<number>;
+    constructor(v: Array<number>): Float64Vec;
 
-	fillSlice(v: Array<number>): void;
+    get asBoxedSlice(): Array<number>;
 
-	setValue(newSlice: Array<number>): void;
+    get asSlice(): Array<number>;
 
-	toString(): String;
+    fillSlice(v: Array<number>): void;
 
-	borrow(): Array<number>;
+    setValue(newSlice: Array<number>): void;
 
-	get(i: number): number?;
+    toString(): String;
+
+    borrow(): Array<number>;
+
+    get(i: number): number?;
 
 }

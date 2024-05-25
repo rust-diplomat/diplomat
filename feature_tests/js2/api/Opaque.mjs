@@ -5,54 +5,54 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const Opaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.Opaque_destroy(ptr);
+    wasm.Opaque_destroy(ptr);
 });
 
 export class Opaque {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			Opaque_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	static new() {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
         
-        const result = wasm.Opaque_new();
-        return new Opaque(result, []);
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            Opaque_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	assertStruct(s) {
-        
-        wasm.Opaque_assert_struct();
-        
+    get ffiValue() {
+        return this.#ptr;
     }
 
-	static returnsUsize() {
-        
-        const result = wasm.Opaque_returns_usize();
-        return result;
+
+    constructor() {
+    const result = wasm.Opaque_new();
+    return new Opaque(result, []);
     }
 
-	static returnsImported() {
-        
-        const result = wasm.Opaque_returns_imported();
-        return ImportedStruct // TODO: Struct c_to_js;
+    assertStruct(s) {
+    wasm.Opaque_assert_struct(this.#ptr, /*TODO: gen_js_to_c_for_type for Struct*/);
+    
     }
 
-	static cmp() {
-        
-        const result = wasm.Opaque_cmp();
-        return result;
+    static returnsUsize() {
+    const result = wasm.Opaque_returns_usize();
+    return result;
+    }
+
+    static returnsImported() {
+    const result = wasm.Opaque_returns_imported();
+    return ImportedStruct // TODO: Struct c_to_js;
+    }
+
+    static cmp() {
+    const result = wasm.Opaque_cmp();
+    return result;
     }
 
 }

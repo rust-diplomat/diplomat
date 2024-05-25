@@ -5,22 +5,25 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class OpaqueMutexedString {
-	
+    
 
-	static fromUsize(number: number): OpaqueMutexedString;
+    get ffiValue(): pointer;
 
-	change(number: number): void;
 
-	borrow(): OpaqueMutexedString;
+    static fromUsize(number: number): OpaqueMutexedString;
 
-	static borrowOther(other: OpaqueMutexedString): OpaqueMutexedString;
+    change(number: number): void;
 
-	borrowSelfOrOther(other: OpaqueMutexedString): OpaqueMutexedString;
+    borrow(): OpaqueMutexedString;
 
-	getLenAndAdd(other: number): number;
+    static borrowOther(other: OpaqueMutexedString): OpaqueMutexedString;
 
-	dummyStr(): String;
+    borrowSelfOrOther(other: OpaqueMutexedString): OpaqueMutexedString;
 
-	wrapper(): Utf16Wrap;
+    getLenAndAdd(other: number): number;
+
+    dummyStr(): String;
+
+    wrapper(): Utf16Wrap;
 
 }

@@ -5,112 +5,121 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 const Float64Vec_box_destroy_registry = new FinalizationRegistry((ptr) => {
-	wasm.Float64Vec_destroy(ptr);
+    wasm.Float64Vec_destroy(ptr);
 });
 
 export class Float64Vec {
-	// Internal ptr reference:
-	#ptr = null;
+    // Internal ptr reference:
+    #ptr = null;
 
-	// Lifetimes are only to keep dependencies alive.
-	#selfEdge = [];
-	
-	
-	constructor(ptr, selfEdge) {
-		
-		this.#ptr = ptr;
-		this.#selfEdge = selfEdge;
-		if (this.#selfEdge.length === 0) {
-			Float64Vec_box_destroy_registry.register(this, this.#ptr);
-		}
-	}
-
-	static newBool(v) {
+    // Lifetimes are only to keep dependencies alive.
+    #selfEdge = [];
+    
+    
+    constructor(ptr, selfEdge) {
         
-        const result = wasm.Float64Vec_new_bool();
-        return new Float64Vec(result, []);
+        this.#ptr = ptr;
+        this.#selfEdge = selfEdge;
+        if (this.#selfEdge.length === 0) {
+            Float64Vec_box_destroy_registry.register(this, this.#ptr);
+        }
     }
 
-	static newI16(v) {
-        
-        const result = wasm.Float64Vec_new_i16();
-        return new Float64Vec(result, []);
+    get ffiValue() {
+        return this.#ptr;
     }
 
-	static newU16(v) {
+
+    static bool(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "bool");
         
-        const result = wasm.Float64Vec_new_u16();
-        return new Float64Vec(result, []);
+    const result = wasm.Float64Vec_new_bool(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new Float64Vec(result, []);
     }
 
-	static newIsize(v) {
+    static i16(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "i16");
         
-        const result = wasm.Float64Vec_new_isize();
-        return new Float64Vec(result, []);
+    const result = wasm.Float64Vec_new_i16(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new Float64Vec(result, []);
     }
 
-	static newUsize(v) {
+    static u16(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u16");
         
-        const result = wasm.Float64Vec_new_usize();
-        return new Float64Vec(result, []);
+    const result = wasm.Float64Vec_new_u16(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new Float64Vec(result, []);
     }
 
-	static newF64BeBytes(v) {
+    static isize(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "isize");
         
-        const result = wasm.Float64Vec_new_f64_be_bytes();
-        return new Float64Vec(result, []);
+    const result = wasm.Float64Vec_new_isize(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new Float64Vec(result, []);
     }
 
-	static newFromOwned(v) {
+    static usize(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "usize");
         
-        const result = wasm.Float64Vec_new_from_owned();
-        return new Float64Vec(result, []);
+    const result = wasm.Float64Vec_new_usize(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new Float64Vec(result, []);
     }
 
-	asBoxedSlice() {
+    static f64BeBytes(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u8");
         
-        const result = wasm.Float64Vec_as_boxed_slice();
-        return result // TODO: Slice c_to_js;
+    const result = wasm.Float64Vec_new_f64_be_bytes(vSlice.ptr, vSlice.size, vSlice.free(););
+    return new Float64Vec(result, []);
     }
 
-	asSlice() {
+    constructor(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         
+    const result = wasm.Float64Vec_new_from_owned(vSlice.ptr, vSlice.size);
+    return new Float64Vec(result, []);
+    }
+
+    get asBoxedSlice() {
+    const result = wasm.Float64Vec_as_boxed_slice(this.#ptr);
+    return result // TODO: Slice c_to_js;
+    }
+
+    get asSlice() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Float64Vec_as_slice();
-        return result(aEdges) // TODO: Slice c_to_js;
+    const result = wasm.Float64Vec_as_slice(this.#ptr);
+    return result(aEdges) // TODO: Slice c_to_js;
     }
 
-	fillSlice(v) {
+    fillSlice(v) {
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         
-        wasm.Float64Vec_fill_slice();
-        
+    wasm.Float64Vec_fill_slice(this.#ptr, vSlice.ptr, vSlice.size, vSlice.free(););
+    
     }
 
-	setValue(newSlice) {
+    setValue(newSlice) {
+        const newSliceSlice = diplomatRuntime.DiplomatBuf.slice(wasm, newSlice, "f64");
         
-        wasm.Float64Vec_set_value();
-        
+    wasm.Float64Vec_set_value(this.#ptr, newSliceSlice.ptr, newSliceSlice.size, newSliceSlice.free(););
+    
     }
 
-	toString() {
-        
-        wasm.Float64Vec_to_string();
-        return writeable;
+    toString() {
+    wasm.Float64Vec_to_string(this.#ptr);
+    return writeable;
     }
 
-	borrow() {
-        
+    borrow() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Float64Vec_borrow();
-        return result(aEdges) // TODO: Slice c_to_js;
+    const result = wasm.Float64Vec_borrow(this.#ptr);
+    return result(aEdges) // TODO: Slice c_to_js;
     }
 
-	get(i) {
-        
-        const result = wasm.Float64Vec_get();
-        if (!result.isOk) {
+    get(i) {
+    const result = wasm.Float64Vec_get(this.#ptr, i);
+    if (!result.isOk) {
             return null
         }
          return result.union.ok;

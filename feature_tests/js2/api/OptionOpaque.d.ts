@@ -5,20 +5,23 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class OptionOpaque {
-	
+    
 
-	static new(i: number): OptionOpaque?;
+    get ffiValue(): pointer;
 
-	static newNone(): OptionOpaque?;
 
-	static returns(): OptionStruct?;
+    static new_(i: number): OptionOpaque?;
 
-	static newStruct(): OptionStruct;
+    static newNone(): OptionOpaque?;
 
-	static newStructNones(): OptionStruct;
+    static returns(): OptionStruct?;
 
-	assertInteger(i: number): void;
+    static newStruct(): OptionStruct;
 
-	static optionOpaqueArgument(arg: OptionOpaque?): boolean;
+    static newStructNones(): OptionStruct;
+
+    assertInteger(i: number): void;
+
+    static optionOpaqueArgument(arg: OptionOpaque?): boolean;
 
 }

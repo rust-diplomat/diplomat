@@ -5,20 +5,23 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class MyString {
-	
+    
 
-	static new(v: String): MyString;
+    get ffiValue(): pointer;
 
-	static newUnsafe(v: String): MyString;
 
-	static newOwned(v: String): MyString;
+    constructor(v: String): MyString;
 
-	static newFromFirst(v: Array<String>): MyString;
+    static unsafe(v: String): MyString;
 
-	setStr(newStr: String): void;
+    static newOwned(v: String): MyString;
 
-	getStr(): String;
+    static newFromFirst(v: Array<String>): MyString;
 
-	getBoxedStr(): String;
+    set str(newStr: String): void;
+
+    get str(): String;
+
+    getBoxedStr(): String;
 
 }

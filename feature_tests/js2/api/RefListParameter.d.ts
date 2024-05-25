@@ -5,6 +5,9 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class RefListParameter {
-	
+    
+
+    get ffiValue(): pointer;
+
 
 }

@@ -259,6 +259,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 				Type::Opaque(ref op) if op.is_optional() => 
 					format!("{js_name}.ffiValue ?? 0").into(),
 				Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
+				Type::Struct(..) => "/*TODO: gen_js_to_c_for_type for Struct*/".into(),
 				Type::Slice(hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding)) => {
 					match encoding {
 						hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
