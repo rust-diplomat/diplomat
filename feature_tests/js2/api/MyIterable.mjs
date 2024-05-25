@@ -40,7 +40,7 @@ export class MyIterable {
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-    const result = wasm.namespace_MyIterable_iter(this.#ptr);
+    const result = wasm.namespace_MyIterable_iter(this.ffiValue);
     return new MyIterator(result, [], aEdges);
     }
 

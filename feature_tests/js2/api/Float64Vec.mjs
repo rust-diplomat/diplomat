@@ -80,45 +80,45 @@ export class Float64Vec {
     }
 
     get asBoxedSlice() {
-    const result = wasm.Float64Vec_as_boxed_slice(this.#ptr);
+    const result = wasm.Float64Vec_as_boxed_slice(this.ffiValue);
     return result // TODO: Slice c_to_js;
     }
 
     get asSlice() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-    const result = wasm.Float64Vec_as_slice(this.#ptr);
+    const result = wasm.Float64Vec_as_slice(this.ffiValue);
     return result(aEdges) // TODO: Slice c_to_js;
     }
 
     fillSlice(v) {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         
-    wasm.Float64Vec_fill_slice(this.#ptr, vSlice.ptr, vSlice.size, vSlice.free(););
+    wasm.Float64Vec_fill_slice(this.ffiValue, vSlice.ptr, vSlice.size, vSlice.free(););
     
     }
 
     setValue(newSlice) {
         const newSliceSlice = diplomatRuntime.DiplomatBuf.slice(wasm, newSlice, "f64");
         
-    wasm.Float64Vec_set_value(this.#ptr, newSliceSlice.ptr, newSliceSlice.size, newSliceSlice.free(););
+    wasm.Float64Vec_set_value(this.ffiValue, newSliceSlice.ptr, newSliceSlice.size, newSliceSlice.free(););
     
     }
 
     toString() {
-    wasm.Float64Vec_to_string(this.#ptr);
+    wasm.Float64Vec_to_string(this.ffiValue);
     return writeable;
     }
 
     borrow() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-    const result = wasm.Float64Vec_borrow(this.#ptr);
+    const result = wasm.Float64Vec_borrow(this.ffiValue);
     return result(aEdges) // TODO: Slice c_to_js;
     }
 
     get(i) {
-    const result = wasm.Float64Vec_get(this.#ptr, i);
+    const result = wasm.Float64Vec_get(this.ffiValue, i);
     if (!result.isOk) {
             return null
         }

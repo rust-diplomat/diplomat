@@ -53,7 +53,7 @@ export class Foo {
         let aEdges = [this];
         // This lifetime edge depends on lifetimes 'a, 'b
         let bEdges = [this];
-    const result = wasm.Foo_get_bar(this.#ptr);
+    const result = wasm.Foo_get_bar(this.ffiValue);
     return new Bar(result, [], bEdges, aEdges);
     }
 
@@ -69,7 +69,7 @@ export class Foo {
     asReturning() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-    const result = wasm.Foo_as_returning(this.#ptr);
+    const result = wasm.Foo_as_returning(this.ffiValue);
     return BorrowedFieldsReturning // TODO: Struct c_to_js;
     }
 

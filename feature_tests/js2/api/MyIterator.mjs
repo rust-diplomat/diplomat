@@ -36,7 +36,7 @@ export class MyIterator {
 
 
     next() {
-    const result = wasm.namespace_MyIterator_next(this.#ptr);
+    const result = wasm.namespace_MyIterator_next(this.ffiValue);
     if (!result.isOk) {
             return null
         }

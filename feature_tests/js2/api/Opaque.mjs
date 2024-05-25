@@ -36,7 +36,7 @@ export class Opaque {
     }
 
     assertStruct(s) {
-    wasm.Opaque_assert_struct(this.#ptr, /*TODO: gen_js_to_c_for_type for Struct*/);
+    wasm.Opaque_assert_struct(this.ffiValue, /*TODO: gen_js_to_c_for_type for Struct*/);
     
     }
 

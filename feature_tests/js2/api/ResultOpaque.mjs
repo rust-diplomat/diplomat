@@ -95,7 +95,7 @@ export class ResultOpaque {
     }
 
     assertInteger(i) {
-    wasm.ResultOpaque_assert_integer(this.#ptr, i);
+    wasm.ResultOpaque_assert_integer(this.ffiValue, i);
     
     }
 

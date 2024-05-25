@@ -243,9 +243,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
 	pub(super) fn gen_js_to_c_self(&self, ty : &SelfType) -> Cow<'static, str> {
 		match *ty {
-			SelfType::Enum(ref e) => "this.ffiValue".into(),
+			SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
 			SelfType::Struct(..) => todo!("Struct not yet implemented"),
-			SelfType::Opaque(..) => "this.#ptr".into(),
 			_ => unreachable!("Unknown AST/HIR variant {:?}", ty)
 		}
 	}

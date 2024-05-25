@@ -59,7 +59,7 @@ export class OptionOpaque {
     }
 
     assertInteger(i) {
-    wasm.OptionOpaque_assert_integer(this.#ptr, i);
+    wasm.OptionOpaque_assert_integer(this.ffiValue, i);
     
     }
 

@@ -61,17 +61,17 @@ export class MyString {
     set str(newStr) {
         const newStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, newStr);
         
-    wasm.MyString_set_str(this.#ptr, newStrSlice.ptr, newStrSlice.size, newStrSlice.free(););
+    wasm.MyString_set_str(this.ffiValue, newStrSlice.ptr, newStrSlice.size, newStrSlice.free(););
     
     }
 
     get str() {
-    wasm.MyString_get_str(this.#ptr);
+    wasm.MyString_get_str(this.ffiValue);
     return writeable;
     }
 
     getBoxedStr() {
-    const result = wasm.MyString_get_boxed_str(this.#ptr);
+    const result = wasm.MyString_get_boxed_str(this.ffiValue);
     return result // TODO: Slice c_to_js;
     }
 

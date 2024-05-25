@@ -36,7 +36,7 @@ export class Unnamespaced {
     }
 
     useNamespaced(n) {
-    wasm.namespace_Unnamespaced_use_namespaced(this.#ptr, n.ffiValue);
+    wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
     
     }
 
