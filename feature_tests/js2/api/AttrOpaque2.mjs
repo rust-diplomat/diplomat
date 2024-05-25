@@ -30,4 +30,6 @@ export class AttrOpaque2 {
     }
 
 
+    
+
 }

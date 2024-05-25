@@ -10,4 +10,6 @@ export class AttrOpaque2 {
     get ffiValue(): pointer;
 
 
+    
+
 }

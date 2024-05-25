@@ -12,4 +12,6 @@ export class OptionOpaqueChar {
 
     assertChar(ch: char): void;
 
+    
+
 }

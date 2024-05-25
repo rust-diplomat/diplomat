@@ -19,4 +19,6 @@ export class ContiguousEnum {
     static F : ContiguousEnum;
 
 
+    
+
 }

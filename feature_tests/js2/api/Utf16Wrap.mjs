@@ -42,4 +42,6 @@ export class Utf16Wrap {
     return result // TODO: Slice c_to_js;
     }
 
+    
+
 }

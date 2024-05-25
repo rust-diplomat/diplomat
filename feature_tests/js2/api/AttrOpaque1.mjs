@@ -30,7 +30,7 @@ export class AttrOpaque1 {
     }
 
 
-    constructor() {
+    static new_() {
     const result = wasm.namespace_AttrOpaque1_new();
     return new AttrOpaque1(result, []);
     }
@@ -59,5 +59,7 @@ export class AttrOpaque1 {
     wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
     
     }
+
+    
 
 }

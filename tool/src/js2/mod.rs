@@ -387,15 +387,6 @@ impl<'tcx> JSGenerationContext<'tcx> {
             iterable
         }.render().unwrap()
     }
-
-    fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
-        match out_ty {
-            SuccessType::Writeable => self.formatter.fmt_string().into(),
-            SuccessType::OutType(o) => self.gen_type_name(o),
-            SuccessType::Unit => self.formatter.fmt_void().into(),
-            _ => unreachable!(),
-        }
-    }
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)

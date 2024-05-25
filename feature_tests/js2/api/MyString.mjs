@@ -30,14 +30,14 @@ export class MyString {
     }
 
 
-    constructor(v) {
+    static new_(v) {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         
     const result = wasm.MyString_new(vSlice.ptr, vSlice.size, vSlice.free(););
     return new MyString(result, []);
     }
 
-    static unsafe(v) {
+    static newUnsafe(v) {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         
     const result = wasm.MyString_new_unsafe(vSlice.ptr, vSlice.size, vSlice.free(););
@@ -74,5 +74,7 @@ export class MyString {
     const result = wasm.MyString_get_boxed_str(this.ffiValue);
     return result // TODO: Slice c_to_js;
     }
+
+    
 
 }

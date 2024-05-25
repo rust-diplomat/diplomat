@@ -24,4 +24,6 @@ export class OptionOpaque {
 
     static optionOpaqueArgument(arg: OptionOpaque?): boolean;
 
+    
+
 }

@@ -10,7 +10,7 @@ export class Opaque {
     get ffiValue(): pointer;
 
 
-    constructor(): Opaque;
+    static new_(): Opaque;
 
     assertStruct(s: MyStruct): void;
 
@@ -19,5 +19,7 @@ export class Opaque {
     static returnsImported(): ImportedStruct;
 
     static cmp(): number;
+
+    
 
 }

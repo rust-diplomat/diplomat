@@ -79,6 +79,15 @@ impl<'tcx> JSGenerationContext<'tcx> {
         }
     }
 
+	pub(super) fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
+        match out_ty {
+            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::OutType(o) => self.gen_js_type_str(o),
+            SuccessType::Unit => self.formatter.fmt_void().into(),
+            _ => unreachable!(),
+        }
+    }
+
 	/// Create Javascript to convert Rust types into JS types.
 	pub(super) fn gen_c_to_js_for_type<P: hir::TyPosition>(&self, ty : &Type<P>, variable_name : Cow<'tcx, str>, lifetime_environment : &LifetimeEnv) -> Cow<'tcx, str> {
 		match *ty {

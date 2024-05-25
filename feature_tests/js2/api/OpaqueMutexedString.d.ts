@@ -26,4 +26,6 @@ export class OpaqueMutexedString {
 
     wrapper(): Utf16Wrap;
 
+    
+
 }

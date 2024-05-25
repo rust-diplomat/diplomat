@@ -49,4 +49,6 @@ export class Bar {
     return new Foo(result, bEdges, aEdges);
     }
 
+    
+
 }

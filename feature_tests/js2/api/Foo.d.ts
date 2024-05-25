@@ -10,16 +10,18 @@ export class Foo {
     get ffiValue(): pointer;
 
 
-    constructor(x: String): Foo;
+    static new_(x: String): Foo;
 
     get bar(): Bar;
 
-    static static(x: String): Foo;
+    static newStatic(x: String): Foo;
 
     asReturning(): BorrowedFieldsReturning;
 
     static extractFromFields(fields: BorrowedFields): Foo;
 
     static extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo;
+
+    
 
 }

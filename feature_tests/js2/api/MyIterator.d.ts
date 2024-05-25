@@ -12,4 +12,6 @@ export class MyIterator {
 
     next(): number?;
 
+    
+
 }

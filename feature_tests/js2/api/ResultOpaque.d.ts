@@ -28,4 +28,6 @@ export class ResultOpaque {
 
     assertInteger(i: number): void;
 
+    
+
 }

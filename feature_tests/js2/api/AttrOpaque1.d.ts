@@ -10,7 +10,7 @@ export class AttrOpaque1 {
     get ffiValue(): pointer;
 
 
-    constructor(): AttrOpaque1;
+    static new_(): AttrOpaque1;
 
     get method(): number;
 
@@ -21,5 +21,7 @@ export class AttrOpaque1 {
     useUnnamespaced(un: Unnamespaced): void;
 
     useNamespaced(n: AttrEnum): void;
+
+    
 
 }

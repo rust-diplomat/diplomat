@@ -10,8 +10,14 @@ export class MyIterable {
     get ffiValue(): pointer;
 
 
-    constructor(x: Array<number>): MyIterable;
+    static new_(x: Array<number>): MyIterable;
 
     [Symbol.iterator](): MyIterator;
+
+    
+    [Symbol.iterator]() {
+    	// TODO
+    }
+
 
 }

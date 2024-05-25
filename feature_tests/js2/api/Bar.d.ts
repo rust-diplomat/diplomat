@@ -12,4 +12,6 @@ export class Bar {
 
     get foo(): Foo;
 
+    
+
 }

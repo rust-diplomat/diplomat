@@ -30,7 +30,7 @@ export class MyIterable {
     }
 
 
-    constructor(x) {
+    static new_(x) {
         const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
         
     const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size, xSlice.free(););
@@ -43,5 +43,11 @@ export class MyIterable {
     const result = wasm.namespace_MyIterable_iter(this.ffiValue);
     return new MyIterator(result, [], aEdges);
     }
+
+    
+    [Symbol.iterator]() {
+    	// TODO
+    }
+
 
 }

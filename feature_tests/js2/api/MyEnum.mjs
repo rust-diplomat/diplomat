@@ -60,4 +60,6 @@ export class MyEnum {
     return (() => {for (let i of MyEnum.values) { if(i[1] === result) return i[0]; } return null;})();;
     }
 
+    
+
 }

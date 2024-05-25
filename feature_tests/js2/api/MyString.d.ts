@@ -10,9 +10,9 @@ export class MyString {
     get ffiValue(): pointer;
 
 
-    constructor(v: String): MyString;
+    static new_(v: String): MyString;
 
-    static unsafe(v: String): MyString;
+    static newUnsafe(v: String): MyString;
 
     static newOwned(v: String): MyString;
 
@@ -23,5 +23,7 @@ export class MyString {
     get str(): String;
 
     getBoxedStr(): String;
+
+    
 
 }

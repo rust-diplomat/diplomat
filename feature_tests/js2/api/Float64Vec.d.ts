@@ -10,19 +10,19 @@ export class Float64Vec {
     get ffiValue(): pointer;
 
 
-    static bool(v: Array<bool>): Float64Vec;
+    static newBool(v: Array<bool>): Float64Vec;
 
-    static i16(v: Array<number>): Float64Vec;
+    static newI16(v: Array<number>): Float64Vec;
 
-    static u16(v: Array<number>): Float64Vec;
+    static newU16(v: Array<number>): Float64Vec;
 
-    static isize(v: Array<number>): Float64Vec;
+    static newIsize(v: Array<number>): Float64Vec;
 
-    static usize(v: Array<number>): Float64Vec;
+    static newUsize(v: Array<number>): Float64Vec;
 
-    static f64BeBytes(v: Uint8Array): Float64Vec;
+    static newF64BeBytes(v: Uint8Array): Float64Vec;
 
-    constructor(v: Array<number>): Float64Vec;
+    static newFromOwned(v: Array<number>): Float64Vec;
 
     get asBoxedSlice(): Array<number>;
 
@@ -37,5 +37,7 @@ export class Float64Vec {
     borrow(): Array<number>;
 
     get(i: number): number?;
+
+    
 
 }

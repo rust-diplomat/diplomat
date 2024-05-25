@@ -35,7 +35,7 @@ export class Foo {
     }
 
 
-    constructor(x) {
+    static new_(x) {
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         const xArena = new diplomatRuntime.DiplomatFinalizedArena();
         
@@ -57,7 +57,7 @@ export class Foo {
     return new Bar(result, [], bEdges, aEdges);
     }
 
-    static static(x) {
+    static newStatic(x) {
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         
         // This lifetime edge depends on lifetimes 'a
@@ -92,5 +92,7 @@ export class Foo {
     const result = wasm.Foo_extract_from_bounds(/*TODO: gen_js_to_c_for_type for Struct*/, anotherStringSlice.ptr, anotherStringSlice.size);
     return new Foo(result, [], aEdges);
     }
+
+    
 
 }

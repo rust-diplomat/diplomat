@@ -14,4 +14,6 @@ export class Utf16Wrap {
 
     owned(): String;
 
+    
+
 }

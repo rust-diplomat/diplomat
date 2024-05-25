@@ -14,4 +14,6 @@ export class Unnamespaced {
 
     useNamespaced(n: AttrOpaque1): void;
 
+    
+
 }

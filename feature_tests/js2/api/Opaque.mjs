@@ -30,7 +30,7 @@ export class Opaque {
     }
 
 
-    constructor() {
+    static new_() {
     const result = wasm.Opaque_new();
     return new Opaque(result, []);
     }
@@ -54,5 +54,7 @@ export class Opaque {
     const result = wasm.Opaque_cmp();
     return result;
     }
+
+    
 
 }
