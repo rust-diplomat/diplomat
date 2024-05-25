@@ -5,7 +5,7 @@ use std::fmt::Display;
 use diplomat_core::ast::{DocsUrlGenerator, Param};
 
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo};
-use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
+use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethod, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
 
@@ -211,8 +211,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         struct SliceParam<'a> {
             name : Cow<'a, str>,
-            /// How to convert the JS type into a view
-            view_expr : Cow<'a, str>,
+            /// How to convert the JS type into a C slice.
+            slice_expr : Cow<'a, str>,
             is_borrowed : bool,
         }
 
@@ -220,12 +220,11 @@ impl<'tcx> JSGenerationContext<'tcx> {
         #[template(path="js2/method.js.jinja", escape="none")]
         struct MethodInfo<'info> {
             method : Option<&'info Method>,
-            method_name : String,
+            method_decl : String,
             /// Native C method name
             c_method_name : Cow<'info, str>,
 
             typescript : bool,
-            is_static : bool,
 
             parameters : Vec<ParamInfo<'info>>,
             slice_params : Vec<SliceParam<'info>>,
@@ -236,34 +235,38 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             method_lifetimes_map : BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
             lifetimes : Option<&'info LifetimeEnv>,
+            cleanup_expressions : Vec<Cow<'info, str>>
         }
 
         let mut method_info = MethodInfo::default();
 
         method_info.c_method_name = self.formatter.fmt_c_method_name(type_id, method);
-        method_info.method_name = self.formatter.fmt_method_name(method);
         method_info.typescript = typescript;
         method_info.method = Some(method);
 
-        method_info.is_static = true;
         if let Some(param_self) = method.param_self.as_ref() {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
-            method_info.is_static = false;
 
             method_info.param_conversions.push(self.gen_js_to_c_self(&param_self.ty));
+            if matches!(param_self.ty, hir::SelfType::Struct(..)) {
+                todo!("Need to add cleanup statement for structs.");
+                // method_info.cleanup_expressions.push(
+                //     format!("{}")
+                // );
+            }
         }
 
         for param in method.params.iter() {
             let mut param_info = ParamInfo::default();
 
-            param_info.name = self.formatter.fmt_param_name(param.name.as_str());
+            param_info.name = self.formatter.fmt_param_name(param.name.as_str());;
             param_info.ty = self.gen_js_type_str(&param.ty);
             
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
 
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
             if let hir::Type::Slice(slice) = param.ty {
-                let view_expr = self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None);
+                let slice_expr = self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None);
 
                 let is_borrowed = match param_borrow_kind {
                     ParamBorrowInfo::TemporarySlice => false,
@@ -272,19 +275,55 @@ impl<'tcx> JSGenerationContext<'tcx> {
                         "Slices must produce slice ParamBorrowInfo, found {param_borrow_kind:?}"
                     ),
                 };
+                // We add the pointer and size for slices:
+                method_info.param_conversions.push(format!("{}Slice.ptr", param_info.name).into());
+                method_info.param_conversions.push(format!("{}Slice.size", param_info.name).into());
 
-                todo!("Need to add to param_conversions");
+                // Then we make sure to handle clean-up for the slice:
+                if is_borrowed {
+                    // Is this function borrowing the slice?
+                    // I.e., Do we need it alive for at least as long as this function call?
+                    method_info.cleanup_expressions.push(
+                        format!("{}Slice.garbageCollect();", param_info.name).into()
+                    );
+                } else if !slice.lifetime().is_none() {
+                    // Is Rust NOT taking ownership?
+                    // Then that means we can free this after the function is done.
+                    method_info.param_conversions.push(
+                        format!("{}Slice.free();", param_info.name).into()
+                    );
+                }
 
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
-                    view_expr,
+                    slice_expr,
                     is_borrowed,
                 });
             } else {
-                // TODO:
+                if let hir::Type::Struct(..) = param.ty {
+                    todo!("Cleanup statement for struct param.");
+                }
+
+                let struct_borrow_info = 
+                    if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
+                        Some(converter::StructBorrowContext {
+                            use_env: &method.lifetime_env,
+                            param_info,
+                            is_method: true,
+                        })
+                    } else {
+                        None
+                    };
+                method_info.param_conversions.push(
+                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), struct_borrow_info.as_ref())
+                );
             }
             
             method_info.parameters.push(param_info);
+        }
+
+        if method.output.is_writeable() {
+            // TODO:
         }
 
         method_info.return_type = self.gen_js_return_type_str(&method.output);
@@ -292,6 +331,20 @@ impl<'tcx> JSGenerationContext<'tcx> {
         
         method_info.method_lifetimes_map = visitor.borrow_map();
         method_info.lifetimes = Some(&method.lifetime_env);
+
+        method_info.method_decl = match &method.attrs.special_method {
+            Some(SpecialMethod::Constructor) => format!("constructor"),
+            Some(SpecialMethod::NamedConstructor(name)) => format!("static {}", self.formatter.fmt_constructor_name(name)),
+            Some(SpecialMethod::Getter(name)) => format!("get {}", self.formatter.fmt_accessor_name(name)),
+            Some(SpecialMethod::Setter(name)) => format!("set {}", self.formatter.fmt_accessor_name(name)),
+            
+            None if method.param_self.is_none() => format!(
+                "static {}",
+                self.formatter.fmt_method_name(method)
+            ),
+            None => self.formatter.fmt_method_name(method),
+            _ => todo!(),
+        };
 
         Some(method_info.render().unwrap())
     }
@@ -315,8 +368,8 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
     match edge.kind {
         // Opaque parameters are just retained as edges
         LifetimeEdgeKind::OpaqueParam => param_name.into(),
-        // Slice parameters make an arena which is retained as an edge
-        LifetimeEdgeKind::SliceParam => format!("{param_name}Arena").into(),
+        // Slice parameters are constructed from diplomatRuntime.mjs:
+        LifetimeEdgeKind::SliceParam => format!("{param_name}Slice").into(),
         // We extract the edge-relevant fields for a borrowed struct lifetime
         LifetimeEdgeKind::StructLifetime(def_env, def_lt) => format!(
             "...{param_name}._fieldsForLifetime{}",

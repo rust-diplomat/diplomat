@@ -22,9 +22,9 @@ pub(super) struct StructBorrowContext<'tcx> {
     ///
     /// Methods generate things like `[aEdges, bEdges]`
     /// whereas structs do `[...aAppendArray, ...bAppendArray]`
-    is_method: bool,
-    use_env: &'tcx LifetimeEnv,
-    param_info: StructBorrowInfo<'tcx>,
+    pub is_method: bool,
+    pub use_env: &'tcx LifetimeEnv,
+    pub param_info: StructBorrowInfo<'tcx>,
 }
 
 impl<'tcx> JSGenerationContext<'tcx> {
