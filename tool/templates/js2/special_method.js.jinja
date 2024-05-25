@@ -1,5 +1,15 @@
-{%- if let Some(it) = iterable %}
-[Symbol.iterator]() {
-	// TODO
+{%- if let Some(it) = iterator %}
+#value{% if typescript%}: {{it}}{% endif %};
+
+get value{% if typescript %}: {{it}};{% endif %}() {
+	return this.#value;
+}
+
+next() {
+	const out = this.#iteratorNext();
+
+	this.#value = out;
+
+	return out;
 }
 {% endif %}

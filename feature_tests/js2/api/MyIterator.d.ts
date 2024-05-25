@@ -10,8 +10,22 @@ export class MyIterator {
     get ffiValue(): pointer;
 
 
-    next(): number?;
+    #iteratorNext(): number?;
 
     
+    #value: number;
+    
+    get value: number;() {
+    	return this.#value;
+    }
+    
+    next() {
+    	const out = this.#iteratorNext();
+    
+    	this.#value = out;
+    
+    	return out;
+    }
+
 
 }

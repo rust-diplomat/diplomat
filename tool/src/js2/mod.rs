@@ -128,7 +128,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
         .collect::<Vec<_>>();
 
-        let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence);
+        let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence, file_type.is_typescript());
         methods.push(special_method_body);
 
         #[derive(Template)]
@@ -161,7 +161,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         .flat_map(|method| { self.generate_method_body(type_id, type_name, method, file_type.is_typescript()) })
         .collect::<Vec<_>>();
 
-        let special_method_body = self.generate_special_method_body(&opaque_def.special_method_presence);
+        let special_method_body = self.generate_special_method_body(&opaque_def.special_method_presence, file_type.is_typescript());
         methods.push(special_method_body);
 
         let destructor = self.formatter.fmt_destructor_name(type_id);
@@ -340,7 +340,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
             => format!("set {}", self.formatter.fmt_method_field_name(name, method)),
 
             Some(SpecialMethod::Iterable) => format!("[Symbol.iterator]"),
-            Some(SpecialMethod::Iterator) => format!("next"),
+            Some(SpecialMethod::Iterator) => format!("#iteratorNext"),
             
             None if method.param_self.is_none() => format!(
                 "static {}",
@@ -357,12 +357,13 @@ impl<'tcx> JSGenerationContext<'tcx> {
     /// We need to make sure Javascript can access it.
     /// 
     /// This is mostly for iterators, using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
-    fn generate_special_method_body(&self, special_method_presence : &SpecialMethodPresence) -> String {
+    fn generate_special_method_body(&self, special_method_presence : &SpecialMethodPresence, typescript : bool) -> String {
         #[derive(Template)]
         #[template(path="js2/special_method.js.jinja", escape="none")]
         struct SpecialMethodInfo<'a> {
             iterator : Option<Cow<'a, str>>,
-            iterable : Option<Cow<'a, str>>
+            iterable : Option<Cow<'a, str>>,
+            typescript : bool,
         }
 
         let mut iterator = None;
@@ -384,7 +385,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         SpecialMethodInfo {
             iterator,
-            iterable
+            iterable,
+            typescript
         }.render().unwrap()
     }
 }

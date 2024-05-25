@@ -45,9 +45,5 @@ export class MyIterable {
     }
 
     
-    [Symbol.iterator]() {
-    	// TODO
-    }
-
 
 }

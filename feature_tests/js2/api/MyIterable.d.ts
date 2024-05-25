@@ -15,9 +15,5 @@ export class MyIterable {
     [Symbol.iterator](): MyIterator;
 
     
-    [Symbol.iterator]() {
-    	// TODO
-    }
-
 
 }

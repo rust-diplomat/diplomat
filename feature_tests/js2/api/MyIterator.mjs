@@ -35,7 +35,7 @@ export class MyIterator {
     }
 
 
-    next() {
+    #iteratorNext() {
     const result = wasm.namespace_MyIterator_next(this.ffiValue);
     if (!result.isOk) {
             return null
@@ -44,5 +44,19 @@ export class MyIterator {
     }
 
     
+    #value;
+    
+    get value() {
+    	return this.#value;
+    }
+    
+    next() {
+    	const out = this.#iteratorNext();
+    
+    	this.#value = out;
+    
+    	return out;
+    }
+
 
 }
