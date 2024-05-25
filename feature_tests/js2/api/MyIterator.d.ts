@@ -13,9 +13,9 @@ export class MyIterator {
     #iteratorNext(): number | undefined;
 
     
-    #value: number;
-    
     get value(): number;
+    
+    get done(): bool;
     
     next() : number;
 

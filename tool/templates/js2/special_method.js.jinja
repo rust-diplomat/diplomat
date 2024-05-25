@@ -1,14 +1,22 @@
 {%- if let Some(it) = iterator %}
-#value{% if typescript%}: {{it}}{% endif %};
+{% if !typescript %}
+#value = null;
+#done = false;
+{% endif -%}
 
 get value(){% if typescript %}: {{it}};{% else %} {
 	return this.#value;
+}{% endif %}
+
+get done(){% if typescript %}: bool;{% else %} {
+	return this.#done;
 }{% endif %}
 
 next() {% if typescript %}: {{it}};{% else %}{
 	const out = this.#iteratorNext();
 
 	this.#value = out;
+	this.#done = out === null;
 
 	return out;
 }{% endif -%}

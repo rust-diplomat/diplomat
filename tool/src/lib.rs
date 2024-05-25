@@ -84,8 +84,6 @@ pub fn gen(
             attr_validator.support.renaming = true;
             attr_validator.support.disabling = true;
 
-            // Per: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators, but
-            // TODO, per generate_special_method_body
             attr_validator.support.iterables = true;
             attr_validator.support.iterators = true;
             

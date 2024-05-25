@@ -45,16 +45,22 @@ export class MyIterator {
     }
 
     
-    #value;
     
+    #value = null;
+    #done = false;
     get value() {
     	return this.#value;
+    }
+    
+    get done() {
+    	return this.#done;
     }
     
     next() {
     	const out = this.#iteratorNext();
     
     	this.#value = out;
+    	this.#done = out === null;
     
     	return out;
     }
