@@ -289,7 +289,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 } else if !slice.lifetime().is_none() {
                     // Is Rust NOT taking ownership?
                     // Then that means we can free this after the function is done.
-                    method_info.param_conversions.push(
+                    method_info.cleanup_expressions.push(
                         format!("{}Slice.free();", param_info.name).into()
                     );
                 }

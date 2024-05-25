@@ -30,29 +30,37 @@ export class Opaque {
     }
 
 
-    static new_() {
-    const result = wasm.Opaque_new();
-    return new Opaque(result, []);
+    static new_() {const result = wasm.Opaque_new();
+    
+    
+        return new Opaque(result, []);
+        
     }
 
-    assertStruct(s) {
-    wasm.Opaque_assert_struct(this.ffiValue, /*TODO: gen_js_to_c_for_type for Struct*/);
+    assertStruct(s) {wasm.Opaque_assert_struct(this.ffiValue, /*TODO: gen_js_to_c_for_type for Struct*/);
+    
     
     }
 
-    static returnsUsize() {
-    const result = wasm.Opaque_returns_usize();
-    return result;
+    static returnsUsize() {const result = wasm.Opaque_returns_usize();
+    
+    
+        return result;
+        
     }
 
-    static returnsImported() {
-    const result = wasm.Opaque_returns_imported();
-    return ImportedStruct // TODO: Struct c_to_js;
+    static returnsImported() {const result = wasm.Opaque_returns_imported();
+    
+    
+        return ImportedStruct // TODO: Struct c_to_js;
+        
     }
 
-    static cmp() {
-    const result = wasm.Opaque_cmp();
-    return result;
+    static cmp() {const result = wasm.Opaque_cmp();
+    
+    
+        return result;
+        
     }
 
     

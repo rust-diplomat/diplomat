@@ -30,8 +30,8 @@ export class OptionOpaqueChar {
     }
 
 
-    assertChar(ch) {
-    wasm.OptionOpaqueChar_assert_char(this.ffiValue, ch);
+    assertChar(ch) {wasm.OptionOpaqueChar_assert_char(this.ffiValue, ch);
+    
     
     }
 

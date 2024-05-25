@@ -32,16 +32,22 @@ export class MyIterable {
 
     static new_(x) {
         const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
+        const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size);
+    
+        xSlice.free();
         
-    const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size, xSlice.free(););
-    return new MyIterable(result, []);
+    
+        return new MyIterable(result, []);
+        
     }
 
     [Symbol.iterator]() {
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];
-    const result = wasm.namespace_MyIterable_iter(this.ffiValue);
-    return new MyIterator(result, [], aEdges);
+        let aEdges = [this];const result = wasm.namespace_MyIterable_iter(this.ffiValue);
+    
+    
+        return new MyIterator(result, [], aEdges);
+        
     }
 
     

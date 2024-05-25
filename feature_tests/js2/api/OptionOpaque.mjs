@@ -30,42 +30,54 @@ export class OptionOpaque {
     }
 
 
-    static new_(i) {
-    const result = wasm.OptionOpaque_new(i);
-    return (result === 0) ? undefined : new OptionOpaque(result, []);;
+    static new_(i) {const result = wasm.OptionOpaque_new(i);
+    
+    
+        return (result === 0) ? undefined : new OptionOpaque(result, []);;
+        
     }
 
-    static newNone() {
-    const result = wasm.OptionOpaque_new_none();
-    return (result === 0) ? undefined : new OptionOpaque(result, []);;
+    static newNone() {const result = wasm.OptionOpaque_new_none();
+    
+    
+        return (result === 0) ? undefined : new OptionOpaque(result, []);;
+        
     }
 
-    static returns() {
-    const result = wasm.OptionOpaque_returns();
-    if (!result.isOk) {
+    static returns() {const result = wasm.OptionOpaque_returns();
+    
+    
+        if (!result.isOk) {
             return null
         }
          return OptionStruct // TODO: Struct c_to_js;
+        
     }
 
-    static newStruct() {
-    const result = wasm.OptionOpaque_new_struct();
-    return OptionStruct // TODO: Struct c_to_js;
+    static newStruct() {const result = wasm.OptionOpaque_new_struct();
+    
+    
+        return OptionStruct // TODO: Struct c_to_js;
+        
     }
 
-    static newStructNones() {
-    const result = wasm.OptionOpaque_new_struct_nones();
-    return OptionStruct // TODO: Struct c_to_js;
+    static newStructNones() {const result = wasm.OptionOpaque_new_struct_nones();
+    
+    
+        return OptionStruct // TODO: Struct c_to_js;
+        
     }
 
-    assertInteger(i) {
-    wasm.OptionOpaque_assert_integer(this.ffiValue, i);
+    assertInteger(i) {wasm.OptionOpaque_assert_integer(this.ffiValue, i);
+    
     
     }
 
-    static optionOpaqueArgument(arg) {
-    const result = wasm.OptionOpaque_option_opaque_argument(arg.ffiValue ?? 0);
-    return result;
+    static optionOpaqueArgument(arg) {const result = wasm.OptionOpaque_option_opaque_argument(arg.ffiValue ?? 0);
+    
+    
+        return result;
+        
     }
 
     
