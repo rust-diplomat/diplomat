@@ -13,6 +13,7 @@ export class ResultOpaque {
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
+    // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
     
@@ -20,9 +21,8 @@ export class ResultOpaque {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        if (this.#selfEdge.length === 0) {
-            ResultOpaque_box_destroy_registry.register(this, this.#ptr);
-        }
+        // Unconditionally register to destroy when this object is ready to garbage collect.
+        ResultOpaque_box_destroy_registry.register(this, this.#ptr);
     }
 
     get ffiValue() {

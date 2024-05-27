@@ -13,6 +13,7 @@ export class Bar {
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
+    // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
     #bEdge = [];
@@ -30,9 +31,8 @@ export class Bar {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        if (this.#selfEdge.length === 0) {
-            Bar_box_destroy_registry.register(this, this.#ptr);
-        }
+        // Unconditionally register to destroy when this object is ready to garbage collect.
+        Bar_box_destroy_registry.register(this, this.#ptr);
     }
 
     get ffiValue() {

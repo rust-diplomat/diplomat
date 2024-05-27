@@ -13,6 +13,7 @@ export class MyIterator {
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
+    // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
     #aEdge = [];
@@ -25,9 +26,8 @@ export class MyIterator {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        if (this.#selfEdge.length === 0) {
-            MyIterator_box_destroy_registry.register(this, this.#ptr);
-        }
+        // Unconditionally register to destroy when this object is ready to garbage collect.
+        MyIterator_box_destroy_registry.register(this, this.#ptr);
     }
 
     get ffiValue() {

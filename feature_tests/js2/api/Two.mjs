@@ -13,6 +13,7 @@ export class Two {
     #ptr = null;
 
     // Lifetimes are only to keep dependencies alive.
+    // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
     #aEdge = [];
@@ -30,9 +31,8 @@ export class Two {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
-        if (this.#selfEdge.length === 0) {
-            Two_box_destroy_registry.register(this, this.#ptr);
-        }
+        // Unconditionally register to destroy when this object is ready to garbage collect.
+        Two_box_destroy_registry.register(this, this.#ptr);
     }
 
     get ffiValue() {
