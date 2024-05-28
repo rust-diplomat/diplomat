@@ -18,10 +18,10 @@
 
 
 inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowedFields::from_bar_and_foo_and_strings(const Bar& bar, const Foo& foo, std::u16string_view dstr16_x, std::u16string_view dstr16_z, std::string_view utf8_str_y, std::string_view utf8_str_z) {
-  if (!capi::is_str(utf8_str_y.data(), utf8_str_y.size()) {
+  if (!capi::diplomat_is_str(utf8_str_y.data(), utf8_str_y.size()) {
     return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)
   }
-  if (!capi::is_str(utf8_str_z.data(), utf8_str_z.size()) {
+  if (!capi::diplomat_is_str(utf8_str_z.data(), utf8_str_z.size()) {
     return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)
   }
   auto result = capi::NestedBorrowedFields_from_bar_and_foo_and_strings(bar.AsFFI(),
