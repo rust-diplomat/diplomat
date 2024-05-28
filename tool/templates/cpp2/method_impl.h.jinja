@@ -9,6 +9,9 @@ inline {##}
 ) {##}
 {%- for qualifier in m.post_qualifiers %}{{qualifier}} {% endfor -%}
 {
+	{%- for validation in m.param_validations %}
+	{{ validation.replace('\n', "\n  ") }}
+	{%- endfor -%}
 	{%- if m.method.output.is_writeable() %}
 	std::string output;
 	capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);

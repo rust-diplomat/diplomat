@@ -19,10 +19,13 @@ inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
   return std::unique_ptr<MyString>(MyString::FromFFI(result));
 }
 
-inline std::unique_ptr<MyString> MyString::new_unsafe(std::string_view v) {
+inline diplomat::result<std::unique_ptr<MyString>, diplomat::Utf8Error> MyString::new_unsafe(std::string_view v) {
+  if (!capi::is_str(v.data(), v.size()) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)
+  }
   auto result = capi::MyString_new_unsafe(v.data(),
     v.size());
-  return std::unique_ptr<MyString>(MyString::FromFFI(result));
+  return diplomat::Ok<std::unique_ptr<MyString>>(std::unique_ptr<MyString>(MyString::FromFFI(result)));
 }
 
 inline std::unique_ptr<MyString> MyString::new_owned(std::string_view v) {

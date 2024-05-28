@@ -94,6 +94,8 @@ struct MethodInfo<'a> {
     post_qualifiers: Vec<Cow<'a, str>>,
     /// Type declarations for the C++ parameters
     param_decls: Vec<NamedType<'a>>,
+    /// Parameter validations, such as string checks
+    param_validations: Vec<String>,
     /// C++ conversion code for each parameter of the C function
     cpp_to_c_params: Vec<Cow<'a, str>>,
     /// If the function has a return value, the C++ code for the conversion. Assumes that
@@ -342,9 +344,19 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_params.push(self.gen_cpp_to_c_self(&param_self.ty));
         }
 
+        let mut param_validations = Vec::new();
+        let mut returns_utf8_err = false;
+
         for param in method.params.iter() {
             let decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             param_decls.push(decls);
+            if let Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8)) = param.ty {
+                param_validations.push(format!(
+                    "if (!capi::is_str({param}.data(), {param}.size()) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)\n}}",
+                    param = param.name.as_str(),
+                ));
+                returns_utf8_err = true;
+            }
             let conversions = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into());
             cpp_to_c_params.extend(
                 conversions
@@ -357,10 +369,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_params.push("&writeable".into());
         }
 
-        let return_ty = self.gen_cpp_return_type_name(&method.output);
+        let mut return_ty = self.gen_cpp_return_type_name(&method.output);
 
-        let c_to_cpp_return_expression: Option<Cow<str>> =
+        let mut c_to_cpp_return_expression =
             self.gen_c_to_cpp_for_return_type(&method.output, "result".into());
+
+        if returns_utf8_err {
+            c_to_cpp_return_expression = Some(
+                c_to_cpp_return_expression
+                    .map(|e| format!("diplomat::Ok<{return_ty}>({e})").into())
+                    .unwrap_or("diplomat::Ok<std::monostate>(std::monostate)".into()),
+            );
+            return_ty = if !matches!(method.output, ReturnType::Infallible(SuccessType::Unit)) {
+                format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into()
+            } else {
+                "diplomat::result<std::monostate, diplomat::Utf8Error>".into()
+            };
+        };
 
         let pre_qualifiers = if method.param_self.is_none() {
             vec!["static".into()]
@@ -382,6 +407,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             pre_qualifiers,
             post_qualifiers,
             param_decls,
+            param_validations,
             cpp_to_c_params,
             c_to_cpp_return_expression,
         })
