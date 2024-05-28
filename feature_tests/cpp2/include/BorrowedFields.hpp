@@ -14,13 +14,16 @@
 #include "BorrowedFields.h"
 
 
-inline BorrowedFields BorrowedFields::from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str) {
+inline diplomat::result<BorrowedFields, diplomat::Utf8Error> BorrowedFields::from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str) {
+  if (!capi::diplomat_is_str(utf8_str.data(), utf8_str.size()) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)
+  }
   auto result = capi::BorrowedFields_from_bar_and_strings(bar.AsFFI(),
     dstr16.data(),
     dstr16.size(),
     utf8_str.data(),
     utf8_str.size());
-  return BorrowedFields::FromFFI(result);
+  return diplomat::Ok<BorrowedFields>(BorrowedFields::FromFFI(result));
 }
 
 
