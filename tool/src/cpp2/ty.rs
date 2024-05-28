@@ -375,16 +375,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             self.gen_c_to_cpp_for_return_type(&method.output, "result".into());
 
         if returns_utf8_err {
-            c_to_cpp_return_expression = Some(
-                c_to_cpp_return_expression
-                    .map(|e| format!("diplomat::Ok<{return_ty}>({e})").into())
-                    .unwrap_or("diplomat::Ok<std::monostate>(std::monostate)".into()),
-            );
-            return_ty = if !matches!(method.output, ReturnType::Infallible(SuccessType::Unit)) {
-                format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into()
+            if let Some(return_expr) = c_to_cpp_return_expression {
+                c_to_cpp_return_expression = Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
+                return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
             } else {
-                "diplomat::result<std::monostate, diplomat::Utf8Error>".into()
-            };
+                c_to_cpp_return_expression =
+                    Some("diplomat::Ok<std::monostate>(std::monostate)".into());
+                return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
+            }
         };
 
         let pre_qualifiers = if method.param_self.is_none() {
