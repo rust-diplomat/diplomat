@@ -37,7 +37,7 @@ inline capi::DiplomatWriteable WriteableFromString(std::string& string) {
   // to be written to past their len; you resize *first*
   w.cap = string.length();
   // Will never become true, as Grow is infallible.
-  w.is_err = false;
+  w.grow_failed = false;
   w.flush = Flush;
   w.grow = Grow;
   return w;

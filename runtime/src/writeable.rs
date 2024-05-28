@@ -47,7 +47,7 @@ pub struct DiplomatWriteable {
     /// The current capacity of the buffer
     cap: usize,
     /// Set to true if `grow` ever fails.
-    is_err: bool,
+    grow_failed: bool,
     /// Called by Rust to indicate that there is no more data to write.
     ///
     /// May be called multiple times.
@@ -74,14 +74,14 @@ impl DiplomatWriteable {
 }
 impl fmt::Write for DiplomatWriteable {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
-        if self.is_err {
+        if self.grow_failed {
             return Ok(());
         }
         let needed_len = self.len + s.len();
         if needed_len > self.cap {
             let success = (self.grow)(self, needed_len);
             if !success {
-                self.is_err = true;
+                self.grow_failed = true;
                 return Ok(());
             }
         }
@@ -120,7 +120,7 @@ pub unsafe extern "C" fn diplomat_simple_writeable(
         context: ptr::null_mut(),
         buf,
         len: 0,
-        is_err: false,
+        grow_failed: false,
         // keep an extra byte in our pocket for the null terminator
         cap: buf_size - 1,
         flush,
@@ -152,7 +152,7 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
         context: ptr::null_mut(),
         buf: vec.as_mut_ptr(),
         len: 0,
-        is_err: false,
+        grow_failed: false,
         cap,
         flush,
         grow,
@@ -172,7 +172,7 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
 /// [`diplomat_buffer_writeable_create()`].
 #[no_mangle]
 pub extern "C" fn diplomat_buffer_writeable_get_bytes(this: &DiplomatWriteable) -> *mut u8 {
-    if this.is_err {
+    if this.grow_failed {
         core::ptr::null_mut()
     } else {
         this.buf
@@ -188,7 +188,7 @@ pub extern "C" fn diplomat_buffer_writeable_get_bytes(this: &DiplomatWriteable) 
 /// [`diplomat_buffer_writeable_create()`].
 #[no_mangle]
 pub extern "C" fn diplomat_buffer_writeable_len(this: &DiplomatWriteable) -> usize {
-    if this.is_err {
+    if this.grow_failed {
         0
     } else {
         this.len
