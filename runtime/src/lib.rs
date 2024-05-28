@@ -45,6 +45,10 @@ pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize, align: usize) 
     alloc::alloc::dealloc(ptr, Layout::from_size_align(size, align).unwrap())
 }
 
+
+/// Whether a `&[u8]` is as a `&str`
+/// # Safety
+/// - `ptr` and `size` must be a valid `&[u8]`
 #[no_mangle]
 pub unsafe extern "C" fn is_str(ptr: *const u8, size: usize) -> bool {
     core::str::from_utf8(core::slice::from_raw_parts(ptr, size)).is_ok()
