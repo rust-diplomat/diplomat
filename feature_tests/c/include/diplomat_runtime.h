@@ -36,9 +36,9 @@ typedef struct DiplomatWriteable {
 DiplomatWriteable diplomat_simple_writeable(char* buf, size_t buf_size);
 
 DiplomatWriteable* diplomat_buffer_writeable_create(size_t cap);
-char* diplomat_buffer_writeable_get_bytes(DiplomatWriteable* this);
-size_t diplomat_buffer_writeable_len(DiplomatWriteable* this);
-void diplomat_buffer_writeable_destroy(DiplomatWriteable* this);
+char* diplomat_buffer_writeable_get_bytes(DiplomatWriteable* t);
+size_t diplomat_buffer_writeable_len(DiplomatWriteable* t);
+void diplomat_buffer_writeable_destroy(DiplomatWriteable* t);
 
 bool is_str(char* buf, size_t len);
 

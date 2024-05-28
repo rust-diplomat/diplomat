@@ -131,7 +131,7 @@ public:
   }
 };
 
-class Utf8Error {}
+class Utf8Error {};
 
 // Use custom std::span on C++17, otherwise use std::span
 #if __cplusplus >= 202002L
