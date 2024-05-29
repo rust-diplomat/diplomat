@@ -561,7 +561,7 @@ impl fmt::Display for InvocationIntoJs<'_> {
             ast::TypeName::PrimitiveSlice(.., prim) => {
                 self.display_slice(SliceKind::Primitive(prim.into())).fmt(f)
             }
-            ast::TypeName::Writeable => todo!(),
+            ast::TypeName::Write => todo!(),
             ast::TypeName::Unit => self.invocation.scalar().fmt(f),
             &_ => unreachable!("unknown AST/HIR variant"),
         }
@@ -837,7 +837,7 @@ impl fmt::Display for UnderlyingIntoJs<'_> {
             ast::TypeName::Result(..) => {
                 todo!("Result in a buffer")
             }
-            ast::TypeName::Writeable => todo!("Writeable in a buffer"),
+            ast::TypeName::Write => todo!("Write in a buffer"),
             ast::TypeName::StrReference(
                 _,
                 ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,

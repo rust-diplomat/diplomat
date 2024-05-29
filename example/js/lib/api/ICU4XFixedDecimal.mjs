@@ -24,9 +24,9 @@ export class ICU4XFixedDecimal {
   }
 
   to_string() {
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
       return (() => {
-        const is_ok = wasm.ICU4XFixedDecimal_to_string(this.underlying, writeable) == 1;
+        const is_ok = wasm.ICU4XFixedDecimal_to_string(this.underlying, write) == 1;
         if (!is_ok) {
           throw new diplomatRuntime.FFIError(undefined);
         }

@@ -13,4 +13,3 @@ export class MyStruct {
 
   write_result(): string | never;
 }
-

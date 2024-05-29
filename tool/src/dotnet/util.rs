@@ -57,7 +57,7 @@ pub fn collect_results<'ast>(
             }
         }
         ast::TypeName::Unit
-        | ast::TypeName::Writeable
+        | ast::TypeName::Write
         | ast::TypeName::StrReference(..)
         | ast::TypeName::PrimitiveSlice(..)
         | ast::TypeName::Named(_)
@@ -123,7 +123,7 @@ fn collect_errors_impl<'ast>(
             }
         }
         ast::TypeName::Unit
-        | ast::TypeName::Writeable
+        | ast::TypeName::Write
         | ast::TypeName::Ordering
         | ast::TypeName::StrReference(..)
         | ast::TypeName::PrimitiveSlice(..) => {}

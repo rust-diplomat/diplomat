@@ -16,7 +16,7 @@
 
 
 
-    .. cpp:function:: template<typename W> void format_write_to_writeable(const ICU4XFixedDecimal& value, W& write) const
+    .. cpp:function:: template<typename W> void format_write_to_write(const ICU4XFixedDecimal& value, W& write) const
 
         Formats a :cpp:class:`ICU4XFixedDecimal` to a string.
 

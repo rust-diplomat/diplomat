@@ -268,7 +268,7 @@ pub fn gen_includes<W: fmt::Write>(
                 seen_includes.insert(include);
             }
         }
-        ast::TypeName::Writeable => {}
+        ast::TypeName::Write => {}
         ast::TypeName::StrReference(..) => {}
         ast::TypeName::PrimitiveSlice(..) => {}
         ast::TypeName::Unit => {}

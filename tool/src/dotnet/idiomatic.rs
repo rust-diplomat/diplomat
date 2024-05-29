@@ -313,16 +313,16 @@ fn gen_method(
     enclosing_type: &ast::CustomType,
     method: &ast::Method,
     in_path: &ast::Path,
-    writeable_to_string: bool,
+    write_to_string: bool,
     env: &Env,
     library_config: &LibraryConfig,
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut CodeWriter,
 ) -> fmt::Result {
-    // This method should rearrange the writeable
-    let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
+    // This method should rearrange the write
+    let rearranged_write = method.is_write_out() && write_to_string;
 
-    if rearranged_writeable {
+    if rearranged_write {
         // generate the normal method too
         gen_method(
             enclosing_type,
@@ -369,7 +369,7 @@ fn gen_method(
     if method.self_param.is_none() {
         write!(out, "static ")?;
     }
-    if rearranged_writeable {
+    if rearranged_write {
         write!(out, "string ")?;
     } else {
         gen_type_name_return_position(&method.return_type, in_path, env, out)?;
@@ -378,7 +378,7 @@ fn gen_method(
     write!(out, "{}(", method.name.as_str().to_upper_camel_case())?;
 
     let mut params_to_gen = method.params.clone();
-    if rearranged_writeable {
+    if rearranged_write {
         params_to_gen.remove(params_to_gen.len() - 1);
     }
 
@@ -406,7 +406,7 @@ fn gen_method(
             params_slice.push(SliceParam::new(name.clone(), prim));
             all_params_invocation.push(format!("{name}Ptr"));
             all_params_invocation.push(format!("{name}Length"));
-        } else if param.is_writeable() {
+        } else if param.is_write() {
             all_params_invocation.push(format!("&{name}"));
         } else if let ast::TypeName::Primitive(_) = param.ty {
             all_params_invocation.push(name.clone());
@@ -500,12 +500,9 @@ fn gen_method(
                 param.open_fixed_block(out)?;
             }
 
-            if rearranged_writeable {
-                writeln!(
-                    out,
-                    "DiplomatWriteable writeable = new DiplomatWriteable();"
-                )?;
-                all_params_invocation.push("&writeable".to_owned());
+            if rearranged_write {
+                writeln!(out, "DiplomatWrite write = new DiplomatWrite();")?;
+                all_params_invocation.push("&write".to_owned());
             }
 
             let ret_typ = match &method.return_type {
@@ -570,9 +567,9 @@ fn gen_method(
                 }
             }
 
-            if rearranged_writeable {
-                writeln!(out, "string retVal = writeable.ToUnicode();")?;
-                writeln!(out, "writeable.Dispose();")?;
+            if rearranged_write {
+                writeln!(out, "string retVal = write.ToUnicode();")?;
+                writeln!(out, "write.Dispose();")?;
                 writeln!(out, "return retVal;")?;
             } else {
                 match ret_typ {
@@ -854,7 +851,7 @@ fn extract_getter_metadata(
 
     method.self_param.as_ref()?;
 
-    let return_type = if method.is_writeable_out() {
+    let return_type = if method.is_write_out() {
         if method.params.len() > 1 {
             return None;
         }

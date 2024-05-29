@@ -112,7 +112,7 @@ pub fn gen_method_docs<W: fmt::Write>(
         .iter()
         .map(|p| p.name.as_str())
         .collect::<Vec<_>>();
-    if method.is_writeable_out() {
+    if method.is_write_out() {
         param_names.remove(param_names.len() - 1);
     }
 

@@ -488,8 +488,8 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             }
         }
 
-        if method.output.is_writeable() {
-            param_conversions.push("writeable._ffi".into());
+        if method.output.is_write() {
+            param_conversions.push("write._ffi".into());
             param_types_ffi.push(
                 self.formatter
                     .fmt_pointer(self.formatter.fmt_opaque())
@@ -500,10 +500,10 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     .fmt_pointer(self.formatter.fmt_opaque())
                     .into(),
             );
-            param_names_ffi.push("writeable".into());
+            param_names_ffi.push("write".into());
             self.helper_classes.insert(
-                "writeable".into(),
-                include_str!("../../templates/dart/writeable.dart").into(),
+                "write".into(),
+                include_str!("../../templates/dart/write.dart").into(),
             );
         }
 
@@ -603,7 +603,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
     fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'cx, str> {
         match out_ty {
-            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::Write => self.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_type_name(o),
             SuccessType::Unit => self.formatter.fmt_void().into(),
             _ => unreachable!(),
@@ -662,14 +662,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit)
             | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Writeable)
-            | ReturnType::Fallible(SuccessType::Writeable, Some(_)) => {
+            ReturnType::Infallible(SuccessType::Write)
+            | ReturnType::Fallible(SuccessType::Write, Some(_)) => {
                 self.formatter.fmt_string().into()
             }
             ReturnType::Infallible(SuccessType::OutType(ref o))
             | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_type_name(o),
-            ReturnType::Fallible(SuccessType::Writeable, None)
-            | ReturnType::Nullable(SuccessType::Writeable) => self
+            ReturnType::Fallible(SuccessType::Write, None)
+            | ReturnType::Nullable(SuccessType::Write) => self
                 .formatter
                 .fmt_nullable(self.formatter.fmt_string())
                 .into(),
@@ -747,7 +747,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.formatter.fmt_ffi_void()
             }
             .into(),
-            ReturnType::Infallible(SuccessType::Writeable) => if cast {
+            ReturnType::Infallible(SuccessType::Write) => if cast {
                 self.formatter.fmt_void()
             } else {
                 self.formatter.fmt_ffi_void()
@@ -957,9 +957,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     ) -> Option<Cow<'cx, str>> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
-            ReturnType::Infallible(SuccessType::Writeable) => {
-                // Note: the `writeable` variable is initialized in the template
-                Some("return writeable.finalize();".into())
+            ReturnType::Infallible(SuccessType::Write) => {
+                // Note: the `write` variable is initialized in the template
+                Some("return write.finalize();".into())
             }
             ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => Some(
                 format!(
@@ -985,9 +985,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 Some(
                     match ok {
-                        // Note: the `writeable` variable is initialized in the template
-                        SuccessType::Writeable => {
-                            format!("{err_check}return writeable.finalize();")
+                        // Note: the `write` variable is initialized in the template
+                        SuccessType::Write => {
+                            format!("{err_check}return write.finalize();")
                         }
                         SuccessType::OutType(o) => {
                             format!(
@@ -1204,7 +1204,7 @@ struct MethodInfo<'a> {
 
     /// If the function has a return value, the Dart code for the conversion. Assumes that
     /// the C function return value is saved to a variable named `result` or that the
-    /// writeable, if present, is saved to a variable named `writeable`.
+    /// `DiplomatWrite`, if present, is saved to a variable named `write`.
     return_expression: Option<Cow<'a, str>>,
 
     lifetimes: &'a LifetimeEnv,

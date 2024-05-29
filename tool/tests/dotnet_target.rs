@@ -50,7 +50,7 @@ fn generation_using_default_config() {
             struct MyLibError;
 
             impl MyLibError {
-                pub fn to_display(out: &mut DiplomatWriteable) {
+                pub fn to_display(out: &mut DiplomatWrite) {
                     unimplemented!()
                 }
             }
@@ -80,7 +80,7 @@ fn generation_using_library_config() {
             struct MyLibError;
 
             impl MyLibError {
-                pub fn to_display(&self, out: &mut DiplomatWriteable) {
+                pub fn to_display(&self, out: &mut DiplomatWrite) {
                     unimplemented!()
                 }
             }
@@ -121,7 +121,7 @@ fn setters_getters_properties() {
                     unimplemented!()
                 }
 
-                pub fn get_name(&self, out: &mut DiplomatWriteable) -> Result<(), ()> {
+                pub fn get_name(&self, out: &mut DiplomatWrite) -> Result<(), ()> {
                     unimplemented!()
                 }
 
@@ -309,7 +309,7 @@ fn method_taking_slice() {
 }
 
 #[test]
-fn method_writeable_out() {
+fn method_write_out() {
     test_file! {
         #[diplomat::bridge]
         mod ffi {
@@ -317,19 +317,19 @@ fn method_writeable_out() {
             struct MyStruct(UnknownType);
 
             impl MyStruct {
-                pub fn write(&self, out: &mut DiplomatWriteable) {
+                pub fn write(&self, out: &mut DiplomatWrite) {
                     unimplemented!()
                 }
 
-                pub fn write_unit(&self, out: &mut DiplomatWriteable) -> () {
+                pub fn write_unit(&self, out: &mut DiplomatWrite) -> () {
                     unimplemented!()
                 }
 
-                pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
+                pub fn write_result(&self, out: &mut DiplomatWrite) -> Result<(), u8> {
                     unimplemented!()
                 }
 
-                pub fn write_no_rearrange(&self, out: &mut DiplomatWriteable) -> u8 {
+                pub fn write_no_rearrange(&self, out: &mut DiplomatWrite) -> u8 {
                     unimplemented!()
                 }
             }
@@ -498,7 +498,7 @@ fn string_reference() {
 }
 
 #[test]
-fn writeable_out() {
+fn write_out() {
     test_file! {
         #[diplomat::bridge]
         mod ffi {
@@ -506,7 +506,7 @@ fn writeable_out() {
             struct MyStruct;
 
             impl MyStruct {
-                pub fn write(&self, to: &mut DiplomatWriteable) {
+                pub fn write(&self, to: &mut DiplomatWrite) {
                     unimplemented!()
                 }
             }
@@ -585,7 +585,7 @@ fn almost_properties() {
                 }
 
                 /// This should not generate a property
-                pub fn get_str_by_key(&self, key: &DiplomatStr, writer: &mut DiplomatWriteable) {
+                pub fn get_str_by_key(&self, key: &DiplomatStr, writer: &mut DiplomatWrite) {
                     unimplemented!()
                 }
 

@@ -12,4 +12,3 @@ expression: out_docs.get(out).unwrap()
     .. js:attribute:: b
 
     .. js:method:: write()
-

@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 pub mod ffi {
-    use diplomat_runtime::DiplomatWriteable;
+    use diplomat_runtime::DiplomatWrite;
     use fixed_decimal::FixedDecimal;
     use writeable::Writeable;
 
@@ -25,7 +25,7 @@ pub mod ffi {
         #[diplomat::rust_link(fixed_decimal::FixedDecimal::write_to, FnInStruct)]
         #[allow(clippy::result_unit_err)]
         #[diplomat::attr(dart, rename = "toStringFallible")]
-        pub fn to_string(&self, to: &mut DiplomatWriteable) -> Result<(), ()> {
+        pub fn to_string(&self, to: &mut DiplomatWrite) -> Result<(), ()> {
             self.0.write_to(to).map_err(|_| ())
         }
     }

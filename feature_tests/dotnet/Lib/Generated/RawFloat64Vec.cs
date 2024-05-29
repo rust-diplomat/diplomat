@@ -53,7 +53,7 @@ public partial struct Float64Vec
     public static unsafe extern void SetValue(Float64Vec* self, double* newSlice, nuint newSliceSz);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_to_string", ExactSpelling = true)]
-    public static unsafe extern void ToString(Float64Vec* self, DiplomatWriteable* w);
+    public static unsafe extern void ToString(Float64Vec* self, DiplomatWrite* w);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Float64Vec_borrow", ExactSpelling = true)]
     public static unsafe extern double[] Borrow(Float64Vec* self);

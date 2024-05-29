@@ -5,7 +5,7 @@
 
 void print_decimal(ICU4XFixedDecimal* fd) {
     char output[40];
-    DiplomatWriteable out = diplomat_simple_writeable(output, 40);
+    DiplomatWrite out = diplomat_simple_write(output, 40);
     assert(ICU4XFixedDecimal_to_string(fd, &out).is_ok == true);
     output[out.len] = '\0';
     printf("%s\n", output);
@@ -13,7 +13,7 @@ void print_decimal(ICU4XFixedDecimal* fd) {
 
 void format_decimal(ICU4XFixedDecimalFormatter* fdf, ICU4XFixedDecimal* fd) {
     char output[40];
-    DiplomatWriteable out = diplomat_simple_writeable(output, 40);
+    DiplomatWrite out = diplomat_simple_write(output, 40);
     ICU4XFixedDecimalFormatter_format_write(fdf, fd, &out);
     output[out.len] = '\0';
     printf("%s\n", output);
