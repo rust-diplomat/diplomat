@@ -382,6 +382,8 @@ pub fn gen_method_interface<W: fmt::Write>(
                 gen_type(err, in_path, None, env, library_config, false)?
             };
             write!(out, "diplomat::result<std::string, {err_ty}>")?;
+        } else if let Some(ast::TypeName::Option(_)) = &method.return_type {
+            write!(out, "std::optional<std::string>")?;
         } else {
             write!(out, "std::string")?;
         }
@@ -440,6 +442,11 @@ fn gen_writeable_out_value<W: fmt::Write>(
         writeln!(
             method_body,
             "return {out_expr}.replace_ok(std::move(diplomat_writeable_string));"
+        )?;
+    } else if let ast::TypeName::Option(_) = ret_typ {
+        writeln!(
+            method_body,
+            "return {out_expr}.has_value() ? std::optional<std::string>{{std::move(diplomat_writeable_string)}} : std::nullopt;"
         )?;
     } else {
         panic!("Not in writeable out form")

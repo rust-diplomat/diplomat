@@ -632,17 +632,11 @@ fn gen_ts_method_declaration<W: fmt::Write>(
         return_type = display::expr(|f| {
             if is_writeable {
                 f.write_str("string")?;
-                if method.return_type.is_some() {
-                    // sanity check that the only return type is a result
-                    assert!(
-                        matches!(
-                            method.return_type,
-                            Some(ast::TypeName::Result(..) | ast::TypeName::Unit),
-                        ),
-                        "found {:?}",
-                        method.return_type
-                    );
-                    f.write_str(" | never")?;
+                match &method.return_type {
+                    Some(ast::TypeName::Result(..)) => f.write_str(" | never")?,
+                    Some(ast::TypeName::Unit) | None => {},
+                    Some(ast::TypeName::Option(..)) => f.write_str(" | undefined")?,
+                    r => panic!("found {r:?}"),
                 }
                 Ok(())
             } else if let Some(ref return_type) = method.return_type {
@@ -776,6 +770,10 @@ mod tests {
                     }
 
                     pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
+                        unimplemented!()
+                    }
+
+                    pub fn write_option(&self, out: &mut DiplomatWriteable) -> Option<()> {
                         unimplemented!()
                     }
                 }

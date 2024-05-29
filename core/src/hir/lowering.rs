@@ -1106,6 +1106,7 @@ impl<'ast> LoweringContext<'ast> {
                     .lower_out_type(ty, &mut return_ltl, in_path, false)
                     .map(SuccessType::OutType)
                     .map(ReturnType::Infallible),
+                ast::TypeName::Unit => Ok(ReturnType::Nullable(writeable_or_unit)),
                 _ => self
                     .lower_out_type(value_ty, &mut return_ltl, in_path, false)
                     .map(SuccessType::OutType)

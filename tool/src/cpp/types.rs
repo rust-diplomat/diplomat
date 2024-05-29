@@ -128,17 +128,21 @@ fn gen_type_inner<W: fmt::Write>(
             }
 
             underlying => {
-                write!(out, "diplomat::result<")?;
-                gen_type_inner(
-                    underlying,
-                    in_path,
-                    ref_type,
-                    env,
-                    library_config,
-                    in_struct,
-                    out,
-                )?;
-                write!(out, ", std::monostate>")?;
+                write!(out, "{}<", library_config.optional.expr)?;
+                if underlying.is_zst() {
+                    write!(out, "std::monostate")?;
+                } else {
+                    gen_type_inner(
+                        underlying,
+                        in_path,
+                        ref_type,
+                        env,
+                        library_config,
+                        in_struct,
+                        out,
+                    )?;
+                }
+                write!(out, ">")?;
             }
         },
 
