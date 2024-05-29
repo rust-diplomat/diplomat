@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
     // fd->to_string_to_write(out);
 
-    // simple_assert_eq("Formatting FixedDecimal to Write", fd_out, "12.3");
+    // simple_assert_eq("Formatting FixedDecimal to DiplomatWrite", fd_out, "12.3");
 
     std::unique_ptr<ICU4XLocale> locale = ICU4XLocale::new_("bn");
 
