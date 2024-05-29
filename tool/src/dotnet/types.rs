@@ -45,8 +45,8 @@ pub fn gen_type_name(
             write!(out, "{}", type_name_for_prim(prim))
         }
 
-        ast::TypeName::Writeable => {
-            write!(out, "DiplomatWriteable")
+        ast::TypeName::Write => {
+            write!(out, "DiplomatWrite")
         }
 
         ast::TypeName::StrReference(
@@ -117,7 +117,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
         ast::TypeName::Result(ok, err, _) => {
             ast::Ident::from(format!("Result{}{}", name_for_type(ok), name_for_type(err)))
         }
-        ast::TypeName::Writeable => ast::Ident::from("Writeable"),
+        ast::TypeName::Write => ast::Ident::from("Write"),
         ast::TypeName::StrReference(
             _,
             ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,

@@ -8,8 +8,8 @@ use alloc::alloc::Layout;
 // defines `extern "C" diplomat_init()`
 mod wasm_glue;
 
-mod writeable;
-pub use writeable::DiplomatWriteable;
+mod write;
+pub use write::DiplomatWrite;
 
 mod result;
 pub use result::DiplomatResult;

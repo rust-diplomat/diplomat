@@ -445,8 +445,8 @@ impl<'ast> LoweringContext<'ast> {
         self.errors.set_subitem(method.name.as_str());
         let name = self.lower_ident(&method.name, "method name");
 
-        let (ast_params, takes_writeable) = match method.params.split_last() {
-            Some((last, remaining)) if last.is_writeable() => (remaining, true),
+        let (ast_params, takes_write) = match method.params.split_last() {
+            Some((last, remaining)) if last.is_write() => (remaining, true),
             _ => (&method.params[..], false),
         };
 
@@ -464,7 +464,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let (output, lifetime_env) = self.lower_return_type(
             method.return_type.as_ref(),
-            takes_writeable,
+            takes_write,
             return_ltl,
             in_path,
         )?;
@@ -679,9 +679,9 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::Writeable => {
+            ast::TypeName::Write => {
                 self.errors.push(LoweringError::Other(
-                    "Writeables can only appear as the last parameter of a method".into(),
+                    "DiplomatWrite can only appear as the last parameter of a method".into(),
                 ));
                 Err(())
             }
@@ -900,9 +900,9 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::Writeable => {
+            ast::TypeName::Write => {
                 self.errors.push(LoweringError::Other(
-                    "Writeables can only appear as the last parameter of a method".into(),
+                    "DiplomatWrite can only appear as the last parameter of a method".into(),
                 ));
                 Err(())
             }
@@ -1023,7 +1023,7 @@ impl<'ast> LoweringContext<'ast> {
     ///
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
     ///
-    /// Note that this expects that if there was a writeable param at the end in
+    /// Note that this expects that if there was a DiplomatWrite param at the end in
     /// the method, it's not passed into here.
     fn lower_param(
         &mut self,
@@ -1041,7 +1041,7 @@ impl<'ast> LoweringContext<'ast> {
     ///
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
     ///
-    /// Note that this expects that if there was a writeable param at the end in
+    /// Note that this expects that if there was a DiplomatWrite param at the end in
     /// the method, `ast_params` was sliced to not include it. This happens in
     /// `self.lower_method`, the caller of this function.
     fn lower_many_params(
@@ -1072,19 +1072,19 @@ impl<'ast> LoweringContext<'ast> {
     fn lower_return_type(
         &mut self,
         return_type: Option<&ast::TypeName>,
-        takes_writeable: bool,
+        takes_write: bool,
         mut return_ltl: ReturnLifetimeLowerer<'_>,
         in_path: &ast::Path,
     ) -> Result<(ReturnType, LifetimeEnv), ()> {
-        let writeable_or_unit = if takes_writeable {
-            SuccessType::Writeable
+        let write_or_unit = if takes_write {
+            SuccessType::Write
         } else {
             SuccessType::Unit
         };
         match return_type.unwrap_or(&ast::TypeName::Unit) {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
                 let ok_ty = match ok_ty.as_ref() {
-                    ast::TypeName::Unit => Ok(writeable_or_unit),
+                    ast::TypeName::Unit => Ok(write_or_unit),
                     ty => self
                         .lower_out_type(ty, &mut return_ltl, in_path, false)
                         .map(SuccessType::OutType),
@@ -1111,7 +1111,7 @@ impl<'ast> LoweringContext<'ast> {
                     .map(SuccessType::OutType)
                     .map(ReturnType::Nullable),
             },
-            ast::TypeName::Unit => Ok(ReturnType::Infallible(writeable_or_unit)),
+            ast::TypeName::Unit => Ok(ReturnType::Infallible(write_or_unit)),
             ty => self
                 .lower_out_type(ty, &mut return_ltl, in_path, false)
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),

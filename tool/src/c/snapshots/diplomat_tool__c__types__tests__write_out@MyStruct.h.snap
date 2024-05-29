@@ -24,7 +24,7 @@ namespace capi {
 extern "C" {
 #endif
 
-void MyStruct_write(const MyStruct* self, DiplomatWriteable* to);
+void MyStruct_write(const MyStruct* self, DiplomatWrite* to);
 void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus
@@ -32,4 +32,3 @@ void MyStruct_destroy(MyStruct* self);
 } // namespace capi
 #endif
 #endif
-

@@ -93,7 +93,7 @@ public partial class MyStruct: IDisposable
     /// <summary>
     /// This should not generate a property
     /// </summary>
-    public void GetStrByKey(string key, DiplomatWriteable writer)
+    public void GetStrByKey(string key, DiplomatWrite writer)
     {
         unsafe
         {
@@ -125,10 +125,10 @@ public partial class MyStruct: IDisposable
             nuint keyBufLength = (nuint)keyBuf.Length;
             fixed (byte* keyBufPtr = keyBuf)
             {
-                DiplomatWriteable writeable = new DiplomatWriteable();
-                Raw.MyStruct.GetStrByKey(_inner, keyBufPtr, keyBufLength, &writeable);
-                string retVal = writeable.ToUnicode();
-                writeable.Dispose();
+                DiplomatWrite write = new DiplomatWrite();
+                Raw.MyStruct.GetStrByKey(_inner, keyBufPtr, keyBufLength, &write);
+                string retVal = write.ToUnicode();
+                write.Dispose();
                 return retVal;
             }
         }

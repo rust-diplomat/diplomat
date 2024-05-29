@@ -11,18 +11,18 @@ namespace {{NAMESPACE}}.Diplomat;
 #nullable enable
 
 [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-delegate void WriteableFlush(IntPtr self);
+delegate void WriteFlush(IntPtr self);
 
 [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 [return: MarshalAs(UnmanagedType.U1)]
-delegate bool WriteableGrow(IntPtr self, nuint capacity);
+delegate bool WriteGrow(IntPtr self, nuint capacity);
 
 [Serializable]
 [StructLayout(LayoutKind.Sequential)]
-public struct DiplomatWriteable : IDisposable
+public struct DiplomatWrite : IDisposable
 {
     // About the current approach:
-    // Ideally DiplomatWriteable should wrap the native string type and grows/writes directly into the internal buffer.
+    // Ideally DiplomatWrite should wrap the native string type and grows/writes directly into the internal buffer.
     // However, there is no native string type backed by UTF-8 in dotnet frameworks.
     // Alternative could be to provide Diplomat's own `Utf8String` type, but this is not trivial and mostly useless
     // on its own because all other dotnet/C# APIs are expecting the standard UTF-16 encoded string/String type.
@@ -39,10 +39,10 @@ public struct DiplomatWriteable : IDisposable
     readonly IntPtr flush;
     readonly IntPtr grow;
 
-    public DiplomatWriteable()
+    public DiplomatWrite()
     {
-        WriteableFlush flushFunc = Flush;
-        WriteableGrow growFunc = Grow;
+        WriteFlush flushFunc = Flush;
+        WriteGrow growFunc = Grow;
 
         IntPtr flushFuncPtr = Marshal.GetFunctionPointerForDelegate(flushFunc);
         IntPtr growFuncPtr = Marshal.GetFunctionPointerForDelegate(growFunc);
@@ -50,7 +50,7 @@ public struct DiplomatWriteable : IDisposable
         // flushFunc and growFunc are managed objects and might be disposed of by the garbage collector.
         // To prevent this, we make the context hold the references and protect the context itself
         // for automatic disposal by moving it behind a GCHandle.
-        DiplomatWriteableContext ctx = new DiplomatWriteableContext();        
+        DiplomatWriteContext ctx = new DiplomatWriteContext();        
         ctx.flushFunc = flushFunc;
         ctx.growFunc = growFunc;
         GCHandle ctxHandle = GCHandle.Alloc(ctx);
@@ -67,7 +67,7 @@ public struct DiplomatWriteable : IDisposable
     {
         if (len > int.MaxValue)
         {
-            throw new IndexOutOfRangeException("DiplomatWriteable buffer is too big");
+            throw new IndexOutOfRangeException("DiplomatWrite buffer is too big");
         }
         byte[] managedArray = new byte[(int)len];
         Marshal.Copy(buf, managedArray, 0, (int)len);
@@ -79,7 +79,7 @@ public struct DiplomatWriteable : IDisposable
 #if NET6_0_OR_GREATER
         if (len > int.MaxValue)
         {
-            throw new IndexOutOfRangeException("DiplomatWriteable buffer is too big");
+            throw new IndexOutOfRangeException("DiplomatWrite buffer is too big");
         }
         return Marshal.PtrToStringUTF8(buf, (int) len);
 #else
@@ -109,13 +109,13 @@ public struct DiplomatWriteable : IDisposable
     }
 
     [return: MarshalAs(UnmanagedType.U1)]
-    private unsafe static bool Grow(IntPtr writeable, nuint capacity)
+    private unsafe static bool Grow(IntPtr write, nuint capacity)
     {
-        if (writeable == IntPtr.Zero)
+        if (write == IntPtr.Zero)
         {
             return false;
         }
-        DiplomatWriteable* self = (DiplomatWriteable*)writeable;
+        DiplomatWrite* self = (DiplomatWrite*)write;
 
         nuint newCap = capacity;
         if (newCap > int.MaxValue)
@@ -142,10 +142,10 @@ public struct DiplomatWriteable : IDisposable
     }
 }
 
-internal struct DiplomatWriteableContext
+internal struct DiplomatWriteContext
 {
-    internal WriteableFlush flushFunc;
-    internal WriteableGrow growFunc;
+    internal WriteFlush flushFunc;
+    internal WriteGrow growFunc;
 }
 
 internal static class DiplomatUtils

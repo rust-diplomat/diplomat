@@ -27,8 +27,8 @@
     {%- endfor %}
 
 
-    {%- if m.method.output.is_writeable() %}
-    final writeable = _Writeable();
+    {%- if m.method.output.is_write() %}
+    final write = _Write();
     {%- endif %}
     {%- if !m.method.output.is_ffi_unit() %}
     final result = {% else %}

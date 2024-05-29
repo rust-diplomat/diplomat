@@ -29,7 +29,7 @@ public partial struct Bar
     public static unsafe extern FfiResultVoidVoid SetFoo(Bar* self, Foo* foo);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Bar_get_name", ExactSpelling = true)]
-    public static unsafe extern FfiResultVoidVoid GetName(Bar* self, DiplomatWriteable* out);
+    public static unsafe extern FfiResultVoidVoid GetName(Bar* self, DiplomatWrite* out);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Bar_set_name", ExactSpelling = true)]
     public static unsafe extern FfiResultVoidVoid SetName(Bar* self, byte* newName, nuint newNameSz);

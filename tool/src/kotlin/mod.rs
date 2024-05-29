@@ -148,14 +148,14 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit)
             | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Writeable)
-            | ReturnType::Fallible(SuccessType::Writeable, Some(_)) => {
+            ReturnType::Infallible(SuccessType::Write)
+            | ReturnType::Fallible(SuccessType::Write, Some(_)) => {
                 self.formatter.fmt_string().into()
             }
             ReturnType::Infallible(SuccessType::OutType(ref o))
             | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_type_name(o),
-            ReturnType::Fallible(SuccessType::Writeable, None)
-            | ReturnType::Nullable(SuccessType::Writeable) => self
+            ReturnType::Fallible(SuccessType::Write, None)
+            | ReturnType::Nullable(SuccessType::Write) => self
                 .formatter
                 .fmt_nullable(self.formatter.fmt_string())
                 .into(),
@@ -195,12 +195,12 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_return_type_name_ffi(&self, out: &ReturnType) -> Cow<'cx, str> {
         match *out {
             ReturnType::Infallible(SuccessType::Unit) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Writeable) => self.formatter.fmt_void().into(),
+            ReturnType::Infallible(SuccessType::Write) => self.formatter.fmt_void().into(),
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name_ffi(o),
             ReturnType::Fallible(_, _) => {
                 todo!("Fallible return types not supported yet")
             }
-            ReturnType::Nullable(SuccessType::Unit | SuccessType::Writeable) => {
+            ReturnType::Nullable(SuccessType::Unit | SuccessType::Write) => {
                 format!("{}?", self.formatter.fmt_void()).into()
             }
 
@@ -309,7 +309,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .expect("Failed to render opaque return block")
     }
 
-    const WRITEABLE_RETURN: &'static str = "\nreturn DW.writeableToString(writeable)";
+    const WRITEABLE_RETURN: &'static str = "\nreturn DW.writeToString(write)";
 
     fn boxed_slice_return(encoding: &str) -> String {
         format!(
@@ -415,7 +415,7 @@ return string"#
         cleanups: &[Cow<'d, str>],
     ) -> Option<String> {
         match res {
-            SuccessType::Writeable => Some(Self::WRITEABLE_RETURN.into()),
+            SuccessType::Write => Some(Self::WRITEABLE_RETURN.into()),
             SuccessType::OutType(o) => match o {
                 // todo: unsigned need to be handled
                 Type::Primitive(_) => Some("    return returnVal".into()),
@@ -594,12 +594,9 @@ if (returnVal == null) {{
             param_types_ffi.push(param_type_ffi);
             param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
         }
-        let writeable_return = matches!(
-            &method.output,
-            ReturnType::Infallible(SuccessType::Writeable)
-        );
-        if writeable_return {
-            param_conversions.push("writeable".into());
+        let write_return = matches!(&method.output, ReturnType::Infallible(SuccessType::Write));
+        if write_return {
+            param_conversions.push("write".into());
         }
         let params = param_decls_kt.join(", ");
 
@@ -621,7 +618,7 @@ if (returnVal == null) {{
             native_method_name,
             param_conversions,
             return_expression,
-            writeable_return,
+            write_return,
             slice_conversions,
         }
         .render()
@@ -654,8 +651,8 @@ if (returnVal == null) {{
                 self.gen_native_type_name(&param.ty)
             ));
         }
-        if let ReturnType::Infallible(SuccessType::Writeable) = method.output {
-            param_decls.push("writeable: Pointer".into())
+        if let ReturnType::Infallible(SuccessType::Write) = method.output {
+            param_decls.push("write: Pointer".into())
         }
         let params = param_decls.join(", ");
         let native_method = self.formatter.fmt_c_method_name(id, method);
@@ -1029,7 +1026,7 @@ struct MethodTpl<'a> {
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
     return_expression: Option<Cow<'a, str>>,
-    writeable_return: bool,
+    write_return: bool,
     slice_conversions: Vec<Cow<'a, str>>,
 }
 
@@ -1223,7 +1220,7 @@ mod test {
                     }
 
 
-                    pub fn borrow3<'a>(&'a self, other: &'a mut DiplomatWriteable) {
+                    pub fn borrow3<'a>(&'a self, other: &'a mut DiplomatWrite) {
                         todo!()
                     }
 

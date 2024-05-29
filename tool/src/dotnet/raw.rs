@@ -229,7 +229,7 @@ fn gen_method(
         }
 
         let name = param.name.as_str().to_lower_camel_case();
-        gen_param(&name, &param.ty, param.is_writeable(), in_path, env, out)?;
+        gen_param(&name, &param.ty, param.is_write(), in_path, env, out)?;
     }
 
     writeln!(out, ");")?;
@@ -386,13 +386,13 @@ fn gen_type_name_return_position<'ast>(
 fn gen_param(
     name: &str,
     typ: &ast::TypeName,
-    is_writeable: bool,
+    is_write: bool,
     in_path: &ast::Path,
     env: &Env,
     out: &mut dyn fmt::Write,
 ) -> fmt::Result {
-    if is_writeable {
-        write!(out, "DiplomatWriteable* {name}")
+    if is_write {
+        write!(out, "DiplomatWrite* {name}")
     } else {
         match typ {
             ast::TypeName::StrReference(_, ast::StringEncoding::UnvalidatedUtf8) => {

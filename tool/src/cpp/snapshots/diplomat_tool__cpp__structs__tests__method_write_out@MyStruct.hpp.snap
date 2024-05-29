@@ -26,13 +26,13 @@ struct MyStructDeleter {
 };
 class MyStruct {
  public:
-  template<typename W> void write_to_writeable(W& out) const;
+  template<typename W> void write_to_write(W& out) const;
   std::string write() const;
-  template<typename W> void write_unit_to_writeable(W& out) const;
+  template<typename W> void write_unit_to_write(W& out) const;
   std::string write_unit() const;
-  template<typename W> diplomat::result<std::monostate, uint8_t> write_result_to_writeable(W& out) const;
+  template<typename W> diplomat::result<std::monostate, uint8_t> write_result_to_write(W& out) const;
   diplomat::result<std::string, uint8_t> write_result() const;
-  uint8_t write_no_rearrange(capi::DiplomatWriteable& out) const;
+  uint8_t write_no_rearrange(capi::DiplomatWrite& out) const;
   inline const capi::MyStruct* AsFFI() const { return this->inner.get(); }
   inline capi::MyStruct* AsFFIMut() { return this->inner.get(); }
   inline explicit MyStruct(capi::MyStruct* i) : inner(i) {}
@@ -44,28 +44,28 @@ class MyStruct {
 };
 
 
-template<typename W> inline void MyStruct::write_to_writeable(W& out) const {
-  capi::DiplomatWriteable out_writer = diplomat::WriteableTrait<W>::Construct(out);
+template<typename W> inline void MyStruct::write_to_write(W& out) const {
+  capi::DiplomatWrite out_writer = diplomat::WriteTrait<W>::Construct(out);
   capi::MyStruct_write(this->inner.get(), &out_writer);
 }
 inline std::string MyStruct::write() const {
-  std::string diplomat_writeable_string;
-  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  capi::MyStruct_write(this->inner.get(), &diplomat_writeable_out);
-  return diplomat_writeable_string;
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  capi::MyStruct_write(this->inner.get(), &diplomat_write_out);
+  return diplomat_write_string;
 }
-template<typename W> inline void MyStruct::write_unit_to_writeable(W& out) const {
-  capi::DiplomatWriteable out_writer = diplomat::WriteableTrait<W>::Construct(out);
+template<typename W> inline void MyStruct::write_unit_to_write(W& out) const {
+  capi::DiplomatWrite out_writer = diplomat::WriteTrait<W>::Construct(out);
   capi::MyStruct_write_unit(this->inner.get(), &out_writer);
 }
 inline std::string MyStruct::write_unit() const {
-  std::string diplomat_writeable_string;
-  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  capi::MyStruct_write_unit(this->inner.get(), &diplomat_writeable_out);
-  return diplomat_writeable_string;
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  capi::MyStruct_write_unit(this->inner.get(), &diplomat_write_out);
+  return diplomat_write_string;
 }
-template<typename W> inline diplomat::result<std::monostate, uint8_t> MyStruct::write_result_to_writeable(W& out) const {
-  capi::DiplomatWriteable out_writer = diplomat::WriteableTrait<W>::Construct(out);
+template<typename W> inline diplomat::result<std::monostate, uint8_t> MyStruct::write_result_to_write(W& out) const {
+  capi::DiplomatWrite out_writer = diplomat::WriteTrait<W>::Construct(out);
   auto diplomat_result_raw_out_value = capi::MyStruct_write_result(this->inner.get(), &out_writer);
   diplomat::result<std::monostate, uint8_t> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
@@ -76,20 +76,19 @@ template<typename W> inline diplomat::result<std::monostate, uint8_t> MyStruct::
   return diplomat_result_out_value;
 }
 inline diplomat::result<std::string, uint8_t> MyStruct::write_result() const {
-  std::string diplomat_writeable_string;
-  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  auto diplomat_result_raw_out_value = capi::MyStruct_write_result(this->inner.get(), &diplomat_writeable_out);
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  auto diplomat_result_raw_out_value = capi::MyStruct_write_result(this->inner.get(), &diplomat_write_out);
   diplomat::result<std::monostate, uint8_t> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());
   } else {
     diplomat_result_out_value = diplomat::Err<uint8_t>(diplomat_result_raw_out_value.err);
   }
-  return diplomat_result_out_value.replace_ok(std::move(diplomat_writeable_string));
+  return diplomat_result_out_value.replace_ok(std::move(diplomat_write_string));
 }
-inline uint8_t MyStruct::write_no_rearrange(capi::DiplomatWriteable& out) const {
-  capi::DiplomatWriteable out_writer = diplomat::WriteableTrait<W>::Construct(out);
+inline uint8_t MyStruct::write_no_rearrange(capi::DiplomatWrite& out) const {
+  capi::DiplomatWrite out_writer = diplomat::WriteTrait<W>::Construct(out);
   return capi::MyStruct_write_no_rearrange(this->inner.get(), &out_writer);
 }
 #endif
-

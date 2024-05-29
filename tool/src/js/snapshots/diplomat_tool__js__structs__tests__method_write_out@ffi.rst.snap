@@ -12,4 +12,3 @@ expression: out_docs.get(out).unwrap()
     .. js:method:: write_unit()
 
     .. js:method:: write_result()
-

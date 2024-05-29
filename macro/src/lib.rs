@@ -289,10 +289,10 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         (quote! {}, quote! {})
     };
 
-    let writeable_flushes = m
+    let write_flushes = m
         .params
         .iter()
-        .filter(|p| p.is_writeable())
+        .filter(|p| p.is_write())
         .map(|p| {
             let p = &p.name;
             quote! { #p.flush(); }
@@ -301,7 +301,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
 
     let cfg = cfgs_to_stream(&m.attrs.cfg);
 
-    if writeable_flushes.is_empty() {
+    if write_flushes.is_empty() {
         Item::Fn(syn::parse_quote! {
             #[no_mangle]
             #cfg
@@ -315,7 +315,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
             #cfg
             extern "C" fn #extern_ident#lifetimes(#(#all_params),*) #return_tokens {
                 let ret = #method_invocation(#(#all_params_invocation),*);
-                #(#writeable_flushes)*
+                #(#write_flushes)*
                 ret #maybe_into
             }
         })
@@ -702,14 +702,14 @@ mod tests {
     }
 
     #[test]
-    fn mod_with_writeable_result() {
+    fn mod_with_write_result() {
         insta::assert_snapshot!(rustfmt_code(
             &gen_bridge(parse_quote! {
                 mod ffi {
                     struct Foo {}
 
                     impl Foo {
-                        pub fn to_string(&self, to: &mut DiplomatWriteable) -> Result<(), ()> {
+                        pub fn to_string(&self, to: &mut DiplomatWrite) -> Result<(), ()> {
                             unimplemented!()
                         }
                     }
