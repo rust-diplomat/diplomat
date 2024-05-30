@@ -80,23 +80,17 @@ impl<'tcx> JSFormatter<'tcx> {
 	// This is only visible for Typescript definition files, but we use it to check if types are supported.
 
 	/// Generate a primitive type.
-	/// 
-	/// `cast : bool` Are we representing this for Typescript, or preparing to convert it into WASM-friendly code? Cast is true if it's Typescript. 
-	pub fn fmt_primitive_as_ffi(&self, primitive : hir::PrimitiveType, cast : bool) -> &'static str {
-		if cast {
-			return match primitive {
-				hir::PrimitiveType::Bool => "boolean",
-				hir::PrimitiveType::Char => "char",
-				hir::PrimitiveType::Int(_)| hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Byte | hir::PrimitiveType::Float(_) => "number",
-				hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt."),
-			};
-		} else {
-			todo!()
-		}
+	pub fn fmt_primitive_as_ffi(&self, primitive : hir::PrimitiveType) -> &'static str {
+		return match primitive {
+			hir::PrimitiveType::Bool => "boolean",
+			hir::PrimitiveType::Char => "char",
+			hir::PrimitiveType::Int(_)| hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Byte | hir::PrimitiveType::Float(_) => "number",
+			hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt."),
+		};
 	}
 
-	pub fn fmt_enum_as_ffi(&self, cast : bool) -> &'static str {
-		self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
+	pub fn fmt_enum_as_ffi(&self) -> &'static str {
+		self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32))
 	}
 	
 

@@ -34,7 +34,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
     pub(super) fn gen_js_type_str<P: hir::TyPosition>(&self, ty: &Type<P>) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(primitive) => {
-                self.formatter.fmt_primitive_as_ffi(primitive, true).into()
+                self.formatter.fmt_primitive_as_ffi(primitive).into()
             },
 			Type::Opaque(ref op) => {
 				let opaque_id = op.tcx_id.into();
@@ -190,7 +190,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 			// Something like Option<()>. Basically, did we run successfully?
 			ReturnType::Fallible(SuccessType::Unit, None)
 			| ReturnType::Nullable(SuccessType::Unit)
-			=> self.formatter.fmt_primitive_as_ffi(hir::PrimitiveType::Bool, true).into(),
+			=> self.formatter.fmt_primitive_as_ffi(hir::PrimitiveType::Bool).into(),
 
 			// A nullable out type. Something like `MyStruct?` in Typescript.
 			ReturnType::Fallible(SuccessType::OutType(ref o), None)
