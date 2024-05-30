@@ -60,7 +60,7 @@ pub fn gen_type<W: fmt::Write>(
             write!(out, "{}", name_for_type(typ))?;
         }
 
-        ast::TypeName::Writeable => write!(out, "DiplomatWriteable")?,
+        ast::TypeName::Write => write!(out, "DiplomatWrite")?,
         ast::TypeName::StrReference(
             _,
             ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
@@ -123,7 +123,7 @@ pub fn name_for_type(typ: &ast::TypeName) -> ast::Ident {
             name_for_type(ok),
             name_for_type(err)
         )),
-        ast::TypeName::Writeable => ast::Ident::from("writeable"),
+        ast::TypeName::Write => ast::Ident::from("write"),
         ast::TypeName::StrReference(
             _,
             ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
@@ -237,14 +237,14 @@ mod tests {
     }
 
     #[test]
-    fn test_writeable_out() {
+    fn test_write_out() {
         test_file! {
             #[diplomat::bridge]
             mod ffi {
                 struct MyStruct;
 
                 impl MyStruct {
-                    pub fn write(&self, to: &mut DiplomatWriteable) {
+                    pub fn write(&self, to: &mut DiplomatWrite) {
                         unimplemented!()
                     }
                 }

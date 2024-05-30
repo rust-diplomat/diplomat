@@ -45,7 +45,7 @@ class ICU4XFixedDecimal {
    * 
    * See the [Rust documentation for `write_to`](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
    */
-  template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_writeable(W& to) const;
+  template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_write(W& to) const;
 
   /**
    * Format the [`ICU4XFixedDecimal`] as a string.
@@ -70,8 +70,8 @@ inline ICU4XFixedDecimal ICU4XFixedDecimal::new_(int32_t v) {
 inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
   capi::ICU4XFixedDecimal_multiply_pow10(this->inner.get(), power);
 }
-template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_writeable(W& to) const {
-  capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
+template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_write(W& to) const {
+  capi::DiplomatWrite to_writer = diplomat::WriteTrait<W>::Construct(to);
   auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &to_writer);
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
@@ -82,15 +82,15 @@ template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU
   return diplomat_result_out_value;
 }
 inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
-  std::string diplomat_writeable_string;
-  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_writeable_out);
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_write_out);
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());
   } else {
     diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
   }
-  return diplomat_result_out_value.replace_ok(std::move(diplomat_writeable_string));
+  return diplomat_result_out_value.replace_ok(std::move(diplomat_write_string));
 }
 #endif

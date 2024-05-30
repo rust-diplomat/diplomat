@@ -343,9 +343,9 @@ pub enum TypeName {
     Box(Box<TypeName>),
     /// A `Option<T>` type.
     Option(Box<TypeName>),
-    /// A `Result<T, E>` or `diplomat_runtime::DiplomatWriteable` type. If the bool is true, it's `Result`
+    /// A `Result<T, E>` or `diplomat_runtime::DiplomatResult` type. If the bool is true, it's `Result`
     Result(Box<TypeName>, Box<TypeName>, bool),
-    Writeable,
+    Write,
     /// A `&DiplomatStr` or `Box<DiplomatStr>` type.
     /// Owned strings don't have a lifetime.
     StrReference(Option<Lifetime>, StringEncoding),
@@ -473,9 +473,7 @@ impl TypeName {
                     ]),
                 },
             }),
-            TypeName::Writeable => syn::parse_quote! {
-                diplomat_runtime::DiplomatWriteable
-            },
+            TypeName::Write => syn::parse_quote!(diplomat_runtime::DiplomatWrite),
             TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8) => {
                 syn::parse_str(&format!(
                     "{}DiplomatStr",
@@ -538,7 +536,7 @@ impl TypeName {
     /// - If the type is a path with a single element `Self` and `self_path_type` is provided, returns a [`TypeName::Named`]
     /// - If the type is a path with a single element [`Result`], returns a [`TypeName::Result`] with the type parameters recursively converted
     /// - If the type is a path equal to [`diplomat_runtime::DiplomatResult`], returns a [`TypeName::DiplomatResult`] with the type parameters recursively converted
-    /// - If the type is a path equal to [`diplomat_runtime::DiplomatWriteable`], returns a [`TypeName::Writeable`]
+    /// - If the type is a path equal to [`diplomat_runtime::DiplomatWrite`], returns a [`TypeName::Write`]
     /// - If the type is a owned or borrowed string type, returns a [`TypeName::StrReference`]
     /// - If the type is a owned or borrowed slice of a Rust primitive, returns a [`TypeName::PrimitiveSlice`]
     /// - If the type is a reference (`&` or `&mut`), returns a [`TypeName::Reference`] with the referenced type recursively converted
@@ -672,8 +670,8 @@ impl TypeName {
                     } else {
                         panic!("Expected angle brackets for Result type")
                     }
-                } else if is_runtime_type(p, "DiplomatWriteable") {
-                    TypeName::Writeable
+                } else if is_runtime_type(p, "DiplomatWrite") {
+                    TypeName::Write
                 } else {
                     TypeName::Named(PathType::from(p))
                 }
@@ -832,7 +830,7 @@ impl fmt::Display for TypeName {
             TypeName::Result(ok, err, _) => {
                 write!(f, "Result<{ok}, {err}>")
             }
-            TypeName::Writeable => "DiplomatWriteable".fmt(f),
+            TypeName::Write => "DiplomatWrite".fmt(f),
             TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8) => {
                 write!(
                     f,

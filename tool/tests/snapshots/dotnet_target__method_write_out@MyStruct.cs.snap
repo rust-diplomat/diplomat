@@ -33,7 +33,7 @@ public partial class MyStruct: IDisposable
         _inner = handle;
     }
 
-    public void Write(DiplomatWriteable out)
+    public void Write(DiplomatWrite out)
     {
         unsafe
         {
@@ -53,15 +53,15 @@ public partial class MyStruct: IDisposable
             {
                 throw new ObjectDisposedException("MyStruct");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            Raw.MyStruct.Write(_inner, &writeable);
-            string retVal = writeable.ToUnicode();
-            writeable.Dispose();
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.MyStruct.Write(_inner, &write);
+            string retVal = write.ToUnicode();
+            write.Dispose();
             return retVal;
         }
     }
 
-    public void WriteUnit(DiplomatWriteable out)
+    public void WriteUnit(DiplomatWrite out)
     {
         unsafe
         {
@@ -81,16 +81,16 @@ public partial class MyStruct: IDisposable
             {
                 throw new ObjectDisposedException("MyStruct");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            Raw.MyStruct.WriteUnit(_inner, &writeable);
-            string retVal = writeable.ToUnicode();
-            writeable.Dispose();
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.MyStruct.WriteUnit(_inner, &write);
+            string retVal = write.ToUnicode();
+            write.Dispose();
             return retVal;
         }
     }
 
     /// <exception cref="ByteException"></exception>
-    public void WriteResult(DiplomatWriteable out)
+    public void WriteResult(DiplomatWrite out)
     {
         unsafe
         {
@@ -115,19 +115,19 @@ public partial class MyStruct: IDisposable
             {
                 throw new ObjectDisposedException("MyStruct");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            Raw.FfiResultVoidU8 result = Raw.MyStruct.WriteResult(_inner, &writeable);
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.FfiResultVoidU8 result = Raw.MyStruct.WriteResult(_inner, &write);
             if (!result.isOk)
             {
                 throw new ByteException(result.Err);
             }
-            string retVal = writeable.ToUnicode();
-            writeable.Dispose();
+            string retVal = write.ToUnicode();
+            write.Dispose();
             return retVal;
         }
     }
 
-    public byte WriteNoRearrange(DiplomatWriteable out)
+    public byte WriteNoRearrange(DiplomatWrite out)
     {
         unsafe
         {
@@ -172,4 +172,3 @@ public partial class MyStruct: IDisposable
         Dispose();
     }
 }
-

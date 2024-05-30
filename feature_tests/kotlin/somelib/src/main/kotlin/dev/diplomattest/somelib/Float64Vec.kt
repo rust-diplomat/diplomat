@@ -17,7 +17,7 @@ internal interface Float64VecLib: Library {
     fun Float64Vec_as_slice(handle: Pointer): Slice
     fun Float64Vec_fill_slice(handle: Pointer, v: Slice): Unit
     fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
-    fun Float64Vec_to_string(handle: Pointer, writeable: Pointer): Unit
+    fun Float64Vec_to_string(handle: Pointer, write: Pointer): Unit
     fun Float64Vec_borrow(handle: Pointer): Slice
     fun Float64Vec_get(handle: Pointer, i: Long): Double?
 }
@@ -153,10 +153,10 @@ class Float64Vec internal constructor (
         val returnVal = lib.Float64Vec_set_value(handle, newSliceSlice);
     }
     fun toString_(): String {
-        val writeable = DW.lib.diplomat_buffer_writeable_create(0)
-        val returnVal = lib.Float64Vec_to_string(handle, writeable);
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.Float64Vec_to_string(handle, write);
     
-        return DW.writeableToString(writeable)
+        return DW.writeToString(write)
     }
     fun borrow(): DoubleArray {
         

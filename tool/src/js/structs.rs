@@ -210,7 +210,7 @@ fn gen_method<W: fmt::Write>(
 ) -> fmt::Result {
     writeln!(out)?;
 
-    let is_writeable = method.is_writeable_out();
+    let is_write = method.is_write_out();
 
     let mut pre_stmts = vec![];
     let mut all_param_exprs = vec![];
@@ -303,8 +303,8 @@ fn gen_method<W: fmt::Write>(
         .map(|p| UnpackedBinding::MethodParam(&p.name))
         .collect();
 
-    if is_writeable {
-        *all_param_exprs.last_mut().unwrap() = "writeable".to_string();
+    if is_write {
+        *all_param_exprs.last_mut().unwrap() = "write".to_string();
 
         all_params.pop();
     }
@@ -353,10 +353,10 @@ fn gen_method<W: fmt::Write>(
                     }
                 });
 
-                if is_writeable {
+                if is_write {
                     write!(
                         f,
-                        "diplomatRuntime.withWriteable(wasm, (writeable) => {})",
+                        "diplomatRuntime.withDiplomatWrite(wasm, (write) => {})",
                         display::block(|mut f| writeln!(f, "return {display_return_type};"))
                     )
                 } else {
@@ -364,7 +364,7 @@ fn gen_method<W: fmt::Write>(
                 }
             });
 
-            let do_return = method.return_type.is_some() || is_writeable;
+            let do_return = method.return_type.is_some() || is_write;
 
             if post_stmts.is_empty() && do_return {
                 writeln!(f, "return {diplomat_out};")
@@ -508,7 +508,7 @@ pub fn gen_ts_type<W: fmt::Write>(
             write!(out, " | never")?;
             return Ok(opt);
         }
-        ast::TypeName::Writeable => unreachable!(),
+        ast::TypeName::Write => unreachable!(),
         ast::TypeName::StrReference(
             _,
             ast::StringEncoding::UnvalidatedUtf8
@@ -598,13 +598,13 @@ fn gen_ts_method_declaration<W: fmt::Write>(
     if method.self_param.is_none() {
         out.write_str("static ")?;
     }
-    let is_writeable = method.is_writeable_out();
+    let is_write = method.is_write_out();
     writeln!(
         out,
         "{name}({args}): {return_type};",
         name = method.name,
         args = display::expr(|f| {
-            let params = if is_writeable {
+            let params = if is_write {
                 method.params.split_last().unwrap().1
             } else {
                 &method.params[..]
@@ -630,7 +630,7 @@ fn gen_ts_method_declaration<W: fmt::Write>(
             Ok(())
         }),
         return_type = display::expr(|f| {
-            if is_writeable {
+            if is_write {
                 f.write_str("string")?;
                 match &method.return_type {
                     Some(ast::TypeName::Result(..)) => f.write_str(" | never")?,
@@ -753,7 +753,7 @@ mod tests {
     }
 
     #[test]
-    fn test_method_writeable_out() {
+    fn test_method_write_out() {
         test_file! {
             #[diplomat::bridge]
             mod ffi {
@@ -761,19 +761,19 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    pub fn write(&self, out: &mut DiplomatWriteable) {
+                    pub fn write(&self, out: &mut DiplomatWrite) {
                         unimplemented!()
                     }
 
-                    pub fn write_unit(&self, out: &mut DiplomatWriteable) -> () {
+                    pub fn write_unit(&self, out: &mut DiplomatWrite) -> () {
                         unimplemented!()
                     }
 
-                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
+                    pub fn write_result(&self, out: &mut DiplomatWrite) -> Result<(), u8> {
                         unimplemented!()
                     }
 
-                    pub fn write_option(&self, out: &mut DiplomatWriteable) -> Option<()> {
+                    pub fn write_option(&self, out: &mut DiplomatWrite) -> Option<()> {
                         unimplemented!()
                     }
                 }

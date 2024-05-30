@@ -39,7 +39,7 @@ class Float64Vec {
   const diplomat::span<const double> as_slice() const;
   void fill_slice(const diplomat::span<double> v) const;
   void set_value(const diplomat::span<const double> new_slice);
-  template<typename W> void to_string_to_writeable(W& w) const;
+  template<typename W> void to_string_to_write(W& w) const;
   std::string to_string() const;
 
   /**
@@ -98,15 +98,15 @@ inline void Float64Vec::fill_slice(const diplomat::span<double> v) const {
 inline void Float64Vec::set_value(const diplomat::span<const double> new_slice) {
   capi::Float64Vec_set_value(this->inner.get(), new_slice.data(), new_slice.size());
 }
-template<typename W> inline void Float64Vec::to_string_to_writeable(W& w) const {
-  capi::DiplomatWriteable w_writer = diplomat::WriteableTrait<W>::Construct(w);
+template<typename W> inline void Float64Vec::to_string_to_write(W& w) const {
+  capi::DiplomatWrite w_writer = diplomat::WriteTrait<W>::Construct(w);
   capi::Float64Vec_to_string(this->inner.get(), &w_writer);
 }
 inline std::string Float64Vec::to_string() const {
-  std::string diplomat_writeable_string;
-  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  capi::Float64Vec_to_string(this->inner.get(), &diplomat_writeable_out);
-  return diplomat_writeable_string;
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  capi::Float64Vec_to_string(this->inner.get(), &diplomat_write_out);
+  return diplomat_write_string;
 }
 inline const diplomat::span<const double> Float64Vec::borrow() const {
   capi::DiplomatF64View diplomat_slice_raw_out_value = capi::Float64Vec_borrow(this->inner.get());

@@ -100,7 +100,7 @@ struct MethodInfo<'a> {
     cpp_to_c_params: Vec<Cow<'a, str>>,
     /// If the function has a return value, the C++ code for the conversion. Assumes that
     /// the C function return value is saved to a variable named `result` or that the
-    /// writeable, if present, is saved to a variable named `output`.
+    /// DiplomatWrite, if present, is saved to a variable named `output`.
     c_to_cpp_return_expression: Option<Cow<'a, str>>,
 }
 
@@ -365,8 +365,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             );
         }
 
-        if method.output.is_writeable() {
-            cpp_to_c_params.push("&writeable".into());
+        if method.output.is_write() {
+            cpp_to_c_params.push("&write".into());
         }
 
         let mut return_ty = self.gen_cpp_return_type_name(&method.output);
@@ -617,11 +617,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     fn gen_cpp_return_type_name(&mut self, result_ty: &ReturnType) -> Cow<'ccx, str> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => "void".into(),
-            ReturnType::Infallible(SuccessType::Writeable) => self.cx.formatter.fmt_owned_str(),
+            ReturnType::Infallible(SuccessType::Write) => self.cx.formatter.fmt_owned_str(),
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name(o),
             ReturnType::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
-                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                    SuccessType::Write => self.cx.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
                     SuccessType::OutType(o) => self.gen_type_name(o),
                     _ => unreachable!("unknown AST/HIR variant"),
@@ -634,7 +634,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
             ReturnType::Nullable(ref ty) => {
                 let type_name = match ty {
-                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                    SuccessType::Write => self.cx.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
                     SuccessType::OutType(o) => self.gen_type_name(o),
                     _ => unreachable!("unknown AST/HIR variant"),
@@ -722,7 +722,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     /// Generates a C++ expression that converts from a C return type to the corresponding C++ return type.
     ///
-    /// If the type is `Writeable`, this function assumes that there is a variable named `output` in scope.
+    /// If the type is `SuccessType::Write`, this function assumes that there is a variable named `output` in scope.
     fn gen_c_to_cpp_for_return_type<'a>(
         &mut self,
         result_ty: &ReturnType,
@@ -730,13 +730,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     ) -> Option<Cow<'a, str>> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
-            ReturnType::Infallible(SuccessType::Writeable) => Some("output".into()),
+            ReturnType::Infallible(SuccessType::Write) => Some("output".into()),
             ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => {
                 Some(self.gen_c_to_cpp_for_type(out_ty, var_name))
             }
             ReturnType::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
-                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                    SuccessType::Write => self.cx.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
                     SuccessType::OutType(ref o) => self.gen_type_name(o),
                     _ => unreachable!("unknown AST/HIR variant"),
@@ -747,7 +747,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 };
                 let ok_conversion = match ok {
                     // Note: the `output` variable is a string initialized in the template
-                    SuccessType::Writeable => "std::move(output)".into(),
+                    SuccessType::Write => "std::move(output)".into(),
                     SuccessType::Unit => "".into(),
                     SuccessType::OutType(ref o) => {
                         self.gen_c_to_cpp_for_type(o, format!("{var_name}.ok").into())
@@ -764,7 +764,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
             ReturnType::Nullable(ref ty) => {
                 let type_name = match ty {
-                    SuccessType::Writeable => self.cx.formatter.fmt_owned_str(),
+                    SuccessType::Write => self.cx.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
                     SuccessType::OutType(o) => self.gen_type_name(o),
                     _ => unreachable!("unknown AST/HIR variant"),
@@ -772,7 +772,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
                 let conversion = match ty {
                     // Note: the `output` variable is a string initialized in the template
-                    SuccessType::Writeable => "std::move(output)".into(),
+                    SuccessType::Write => "std::move(output)".into(),
                     SuccessType::Unit => "".into(),
                     SuccessType::OutType(ref o) => {
                         self.gen_c_to_cpp_for_type(o, format!("{var_name}.ok").into())

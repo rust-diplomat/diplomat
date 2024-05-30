@@ -31,7 +31,7 @@ class MyString {
   static MyString new_unsafe(const std::string_view v);
   static MyString new_owned(const std::string_view v);
   void set_str(const std::string_view new_str);
-  template<typename W> void get_str_to_writeable(W& writeable) const;
+  template<typename W> void get_str_to_write(W& write) const;
   std::string get_str() const;
   inline const capi::MyString* AsFFI() const { return this->inner.get(); }
   inline capi::MyString* AsFFIMut() { return this->inner.get(); }
@@ -56,14 +56,14 @@ inline MyString MyString::new_owned(const std::string_view v) {
 inline void MyString::set_str(const std::string_view new_str) {
   capi::MyString_set_str(this->inner.get(), new_str.data(), new_str.size());
 }
-template<typename W> inline void MyString::get_str_to_writeable(W& writeable) const {
-  capi::DiplomatWriteable writeable_writer = diplomat::WriteableTrait<W>::Construct(writeable);
-  capi::MyString_get_str(this->inner.get(), &writeable_writer);
+template<typename W> inline void MyString::get_str_to_write(W& write) const {
+  capi::DiplomatWrite write_writer = diplomat::WriteTrait<W>::Construct(write);
+  capi::MyString_get_str(this->inner.get(), &write_writer);
 }
 inline std::string MyString::get_str() const {
-  std::string diplomat_writeable_string;
-  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  capi::MyString_get_str(this->inner.get(), &diplomat_writeable_out);
-  return diplomat_writeable_string;
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  capi::MyString_get_str(this->inner.get(), &diplomat_write_out);
+  return diplomat_write_string;
 }
 #endif

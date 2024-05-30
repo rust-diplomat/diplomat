@@ -254,7 +254,7 @@ pub fn gen_rust_to_cpp<W: Write>(
         ast::TypeName::Reference(_, _, _) => {
             todo!("Returning references from Rust to C++ is not currently supported")
         }
-        ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
+        ast::TypeName::Write => panic!("Returning DiplomatWrite is not supported"),
         ast::TypeName::StrReference(
             _,
             ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
@@ -422,7 +422,7 @@ pub fn gen_cpp_to_rust<W: Write>(
                 &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
-        ast::TypeName::Writeable => {
+        ast::TypeName::Write => {
             if behind_ref
                 == Some(ReferenceMeta {
                     owned: false,
@@ -430,10 +430,14 @@ pub fn gen_cpp_to_rust<W: Write>(
                     is_nullable: false,
                 })
             {
-                writeln!(out, "capi::DiplomatWriteable {cpp}_writer = diplomat::WriteableTrait<W>::Construct({cpp});").unwrap();
+                writeln!(
+                    out,
+                    "capi::DiplomatWrite {cpp}_writer = diplomat::WriteTrait<W>::Construct({cpp});"
+                )
+                .unwrap();
                 format!("&{cpp}_writer")
             } else {
-                panic!("Cannot send Writeable to Rust as a value");
+                panic!("Cannot send DiplomatWrite to Rust as a value");
             }
         }
         ast::TypeName::Primitive(_) => cpp.to_string(),

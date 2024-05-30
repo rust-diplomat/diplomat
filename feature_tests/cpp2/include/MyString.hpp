@@ -48,9 +48,9 @@ inline void MyString::set_str(std::string_view new_str) {
 
 inline std::string MyString::get_str() const {
   std::string output;
-  capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+  capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::MyString_get_str(this->AsFFI(),
-    &writeable);
+    &write);
   return output;
 }
 
