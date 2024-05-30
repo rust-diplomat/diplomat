@@ -406,8 +406,10 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 });
             } else {
                 if let hir::Type::Struct(..) = param.ty {
-                    // TODO:
-                    // todo!("Cleanup statement for struct param.");
+                    // TODO: Does this work?
+                    method_info.cleanup_expressions.push(
+                        "this.free(); /* TODO: Does this work? */".into()
+                    );
                 }
 
                 let struct_borrow_info = 
