@@ -446,7 +446,7 @@ fn gen_write_out_value<W: fmt::Write>(
     } else if let ast::TypeName::Option(_) = ret_typ {
         writeln!(
             method_body,
-            "return {out_expr}.has_value() ? std::optional<std::string>{{std::move(diplomat_writeable_string)}} : std::nullopt;"
+            "return {out_expr}.has_value() ? std::optional<std::string>{{std::move(diplomat_write_string)}} : std::nullopt;"
         )?;
     } else {
         panic!("Not in DiplomatWrite out form")
