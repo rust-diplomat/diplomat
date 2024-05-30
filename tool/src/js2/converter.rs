@@ -253,7 +253,10 @@ impl<'tcx> JSGenerationContext<'tcx> {
 	pub(super) fn gen_js_to_c_self(&self, ty : &SelfType) -> Cow<'static, str> {
 		match *ty {
 			SelfType::Enum(..) | SelfType::Opaque(..) => "this.ffiValue".into(),
-			SelfType::Struct(..) => todo!("Struct not yet implemented"),
+			// The way Rust generates WebAssembly, each function that requires a self struct require us to pass in each parameter into the function.
+			// So we call a function in JS that lets us do this.
+			// We use spread syntax to avoid a complicated array setup.
+			SelfType::Struct(..) => "...this.#intoFFI()".into(),
 			_ => unreachable!("Unknown AST/HIR variant {:?}", ty)
 		}
 	}
