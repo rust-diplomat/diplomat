@@ -354,10 +354,10 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             method_info.param_conversions.push(self.gen_js_to_c_self(&param_self.ty));
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
-                todo!("Need to add cleanup statement for structs.");
-                // method_info.cleanup_expressions.push(
-                //     format!("{}")
-                // );
+                // TODO: Does this work?
+                method_info.cleanup_expressions.push(
+                    "this.free(); /* TODO: Does this work? */".into()
+                );
             }
         }
 
