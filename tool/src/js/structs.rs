@@ -634,7 +634,7 @@ fn gen_ts_method_declaration<W: fmt::Write>(
                 f.write_str("string")?;
                 match &method.return_type {
                     Some(ast::TypeName::Result(..)) => f.write_str(" | never")?,
-                    Some(ast::TypeName::Unit) | None => {},
+                    Some(ast::TypeName::Unit) | None => {}
                     Some(ast::TypeName::Option(..)) => f.write_str(" | undefined")?,
                     r => panic!("found {r:?}"),
                 }

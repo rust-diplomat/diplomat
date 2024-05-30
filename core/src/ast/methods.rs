@@ -200,7 +200,7 @@ impl Method {
                 TypeName::Result(ok, _, _) | TypeName::Option(ok) => {
                     matches!(ok.as_ref(), TypeName::Unit)
                 }
-                
+
                 _ => false,
             })
             .unwrap_or(true);
