@@ -9,7 +9,9 @@ export class MyStruct {
 
   write(): string;
 
-  write_unit(): string | never;
+  write_unit(): string;
 
   write_result(): string | never;
+
+  write_option(): string | undefined;
 }

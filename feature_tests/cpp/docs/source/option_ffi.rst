@@ -9,7 +9,7 @@
     .. cpp:function:: static std::optional<OptionOpaque> new_none()
 
 
-    .. cpp:function:: static diplomat::result<OptionStruct, std::monostate> returns()
+    .. cpp:function:: static std::optional<OptionStruct> returns()
 
 
     .. cpp:function:: static OptionStruct new_struct()

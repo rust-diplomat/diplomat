@@ -49,4 +49,13 @@ export class MyStruct {
       })();
     });
   }
+
+  write_option() {
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return (() => {
+        const is_ok = wasm.MyStruct_write_option(this.underlying, write) == 1;
+        if (!is_ok) return;
+      })();
+    });
+  }
 }
