@@ -2,9 +2,10 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::Display;
 
+use converter::StructBorrowContext;
 use diplomat_core::ast::{DocsUrlGenerator, Param};
 
-use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo};
+use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo};
 use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethod, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
@@ -104,6 +105,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 TypeDef::Opaque(opaque_def) => {
                     self.generate_opaque_from_def(opaque_def, type_id, &name, &file_type)
                 },
+                TypeDef::Struct(struct_def) => {
+                    self.generate_struct_from_def(struct_def, type_id, false, &name, true, &file_type)
+                }
                 // TODO:
                 _ => format!("{} has a TypeDef that is unimplemented. I am working on it!", type_def.name())
             };
@@ -186,6 +190,107 @@ impl<'tcx> JSGenerationContext<'tcx> {
             typescript: file_type.is_typescript(),
             docs: self.formatter.fmt_docs(&opaque_def.docs),
             lifetimes : &opaque_def.lifetimes,
+        }.render().unwrap()
+    }
+
+    fn generate_struct_from_def(&self, struct_def : &'tcx hir::StructDef, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool, file_type : &FileType) -> String {
+        struct FieldInfo<'info, P: hir::TyPosition> {
+            field_name: Cow<'info, str>,
+            field_type : &'info Type<P>,
+            annotation : Option<&'static str>,
+            js_type_name  : Cow<'info, str>,
+            c_to_js : Cow<'info, str>,
+            js_to_c : Vec<String>,
+            maybe_struct_borrow_info : Option<StructBorrowInfo<'info>>,
+        };
+
+        let fields = struct_def.fields.iter()
+        .map(|field| {
+            let field_name = self.formatter.fmt_param_name(field.name.as_str());
+
+            let field_annotation = match field.ty {
+                hir::Type::Primitive(p) => Some(self.formatter.fmt_primitive_as_ffi(p, false)),
+                hir::Type::Enum(_) => Some(self.formatter.fmt_enum_as_ffi(false)),
+                _ => None,
+            };
+
+            // Don't need for JS
+            // let ffi_cast_type_name = if let hir::Type::Slice(s) = field.ty {
+            //     todo!()
+            // } else {
+            //     self.gen_type_name_ffi(&field.ty, true)
+            // };
+
+            let js_type_name = self.gen_js_type_str(&field.ty);
+
+            let c_to_js = self.gen_c_to_js_for_type(
+                &field.ty, 
+                field_name.clone().into(), 
+                &struct_def.lifetimes
+            );
+
+            let (js_to_c, maybe_struct_borrow_info) = if let hir::Type::Slice(slice) = &field.ty {
+                let slice_expr = self.gen_js_to_c_for_type(&field.ty, field_name.clone(), None);
+
+                let mut ret = vec![
+                    format!("/*TODO: struct Slice fields*/"),
+                ];
+                (ret, None)
+            } else {
+                let borrow_info = if let hir::Type::Struct(path) = &field.ty {
+                    StructBorrowInfo::compute_for_struct_field(struct_def, path, self.tcx).map(
+                        |param_info| StructBorrowContext {
+                            use_env: &struct_def.lifetimes,
+                            param_info,
+                            is_method: false
+                        }
+                    )
+                } else {
+                    None
+                };
+                (vec!(format!("/*TODO: Other struct fields. {}*/",
+                    self.gen_js_to_c_for_type(&field.ty, field_name.clone(), borrow_info.as_ref())
+                )), borrow_info.map(|s| s.param_info))
+            };
+
+            FieldInfo {
+                field_name,
+                field_type: &field.ty,
+                annotation: field_annotation,
+                js_type_name,
+                c_to_js,
+                js_to_c,
+                maybe_struct_borrow_info
+            }
+        }).collect::<Vec<_>>();
+
+        let mut methods = struct_def.methods
+        .iter()
+        .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
+        .collect::<Vec<_>>();
+
+        methods.push(self.generate_special_method_body(&struct_def.special_method_presence, file_type.is_typescript()));
+
+        // TODO: Default constructors? (Could be expanded with Opaque default constructors??)
+
+        #[derive(Template)]
+        #[template(path="js2/struct.js.jinja", escape = "none")]
+        struct ImplTemplate<'a, P: hir::TyPosition> {
+            type_name : &'a str,
+            mutable : bool,
+            fields : Vec<FieldInfo<'a, P>>,
+            methods: Vec<String>,
+            docs: String,
+            lifetimes : &'a LifetimeEnv,
+        }
+
+        ImplTemplate {
+            type_name,
+            mutable,
+            fields,
+            methods,
+            docs: self.formatter.fmt_docs(&struct_def.docs),
+            lifetimes: &struct_def.lifetimes
         }.render().unwrap()
     }
 

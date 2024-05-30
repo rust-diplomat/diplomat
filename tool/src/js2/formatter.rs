@@ -94,6 +94,10 @@ impl<'tcx> JSFormatter<'tcx> {
 			todo!()
 		}
 	}
+
+	pub fn fmt_enum_as_ffi(&self, cast : bool) -> &'static str {
+		self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
+	}
 	
 
 	pub fn fmt_primitive_list_type(&self, primitive : hir::PrimitiveType) -> &'static str {
