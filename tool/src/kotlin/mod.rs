@@ -309,7 +309,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .expect("Failed to render opaque return block")
     }
 
-    const WRITEABLE_RETURN: &'static str = "\nreturn DW.writeToString(write)";
+    const WRITE_RETURN: &'static str = "\nreturn DW.writeToString(write)";
 
     fn boxed_slice_return(encoding: &str) -> String {
         format!(
@@ -415,7 +415,7 @@ return string"#
         cleanups: &[Cow<'d, str>],
     ) -> Option<String> {
         match res {
-            SuccessType::Write => Some(Self::WRITEABLE_RETURN.into()),
+            SuccessType::Write => Some(Self::WRITE_RETURN.into()),
             SuccessType::OutType(o) => match o {
                 // todo: unsigned need to be handled
                 Type::Primitive(_) => Some("    return returnVal".into()),
