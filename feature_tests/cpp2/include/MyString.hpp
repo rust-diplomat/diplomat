@@ -20,12 +20,12 @@ inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
 }
 
 inline diplomat::result<std::unique_ptr<MyString>, diplomat::Utf8Error> MyString::new_unsafe(std::string_view v) {
-  if (!capi::diplomat_is_str(v.data(), v.size()) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)
+  if (!capi::diplomat_is_str(v.data(), v.size())) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
   }
   auto result = capi::MyString_new_unsafe(v.data(),
     v.size());
-  return diplomat::Ok<std::unique_ptr<MyString>>(std::unique_ptr<MyString>(MyString::FromFFI(result)));
+  return diplomat::Ok<std::unique_ptr<MyString>>(std::move(std::unique_ptr<MyString>(MyString::FromFFI(result))));
 }
 
 inline std::unique_ptr<MyString> MyString::new_owned(std::string_view v) {
@@ -56,7 +56,7 @@ inline std::string MyString::get_str() const {
 
 inline std::string_view MyString::get_boxed_str() const {
   auto result = capi::MyString_get_boxed_str(this->AsFFI());
-  return std::string_view(result_data, result_size);
+  return std::string_view(result.data, result.len);
 }
 
 inline const capi::MyString* MyString::AsFFI() const {

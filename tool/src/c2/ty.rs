@@ -1,6 +1,9 @@
 use super::header::Header;
 use super::CContext;
-use diplomat_core::hir::{self, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef, TypeId};
+use diplomat_core::hir::{
+    self, FloatType, IntSizeType, IntType, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef,
+    TypeId,
+};
 use std::borrow::Cow;
 use std::fmt::Write;
 
@@ -276,8 +279,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 vec![
                     (
                         match encoding {
-                            hir::StringEncoding::UnvalidatedUtf16 => "DiplomatStrs16View*",
-                            _ => "DiplomatStrs8View*",
+                            hir::StringEncoding::UnvalidatedUtf16 => "DiplomatStrings16View*",
+                            _ => "DiplomatStringsView*",
                         }
                         .into(),
                         format!("{param_name}_data").into(),
@@ -343,25 +346,60 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 header.includes.insert(header_path);
                 (Some(id), ty_name)
             }
-            Type::Slice(ref s) => {
-                let ptr_ty = match s {
-                    hir::Slice::Str(
+            Type::Slice(ref s) => (
+                None,
+                match s {
+                    hir::Slice::Primitive(
                         _,
-                        hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-                    ) => "char".into(),
-                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "char16_t".into(),
-                    hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
-                    hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => {
-                        "DiplomatStrs16View".into()
+                        hir::PrimitiveType::Int(IntType::U8) | hir::PrimitiveType::Byte,
+                    ) => "DiplomatU8View",
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U16)) => {
+                        "DiplomatU16View"
                     }
-                    hir::Slice::Strs(_) => "DiplomatStrs8View".into(),
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U32)) => {
+                        "DiplomatU32View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U64)) => {
+                        "DiplomatU64View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I8)) => {
+                        "DiplomatI8View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I16)) => {
+                        "DiplomatI16View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I32)) => {
+                        "DiplomatI32View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I64)) => {
+                        "DiplomatI64View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Usize)) => {
+                        "DiplomatUsizeView"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Isize)) => {
+                        "DiplomatIsizeView"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Bool) => "DiplomatBoolView",
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F32)) => {
+                        "DiplomatF32View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F64)) => {
+                        "DiplomatF64View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Char) => "DiplomatCharView",
+                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                        "DiplomatString16View"
+                    }
+                    hir::Slice::Str(_, _) => "DiplomatStringView",
+                    hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => {
+                        "DiplomatStrings16View"
+                    }
+                    hir::Slice::Strs(_) => "DiplomatStringsView",
                     &_ => unreachable!("unknown AST/HIR variant"),
-                };
-                (
-                    None,
-                    format!("struct {{ const {ptr_ty}* data; size_t len; }}").into(),
-                )
-            }
+                }
+                .into(),
+            ),
             _ => unreachable!("unknown AST/HIR variant"),
         };
         // Todo(breaking): We can remove this requirement

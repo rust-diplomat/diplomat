@@ -14,9 +14,9 @@ extern "C" {
 
 
 typedef struct BorrowedFieldsWithBounds {
-  struct { const char16_t* data; size_t len; } field_a;
-  struct { const char* data; size_t len; } field_b;
-  struct { const char* data; size_t len; } field_c;
+  DiplomatString16View field_a;
+  DiplomatStringView field_b;
+  DiplomatStringView field_c;
 } BorrowedFieldsWithBounds;
 
 

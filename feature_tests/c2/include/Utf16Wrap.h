@@ -15,9 +15,9 @@ extern "C" {
 #endif // __cplusplus
 
 
-struct { const char16_t* data; size_t len; } Utf16Wrap_borrow_cont(const Utf16Wrap* self);
+DiplomatString16View Utf16Wrap_borrow_cont(const Utf16Wrap* self);
 
-struct { const char16_t* data; size_t len; } Utf16Wrap_owned(const Utf16Wrap* self);
+DiplomatString16View Utf16Wrap_owned(const Utf16Wrap* self);
 
 void Utf16Wrap_destroy(Utf16Wrap* self);
 

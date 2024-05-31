@@ -29,7 +29,7 @@ const OpaqueMutexedString* OpaqueMutexedString_borrow_self_or_other(const Opaque
 
 size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString* self, size_t other);
 
-struct { const char* data; size_t len; } OpaqueMutexedString_dummy_str(const OpaqueMutexedString* self);
+DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString* self);
 
 Utf16Wrap* OpaqueMutexedString_wrapper(const OpaqueMutexedString* self);
 

@@ -12,27 +12,31 @@
 
 
 class MyEnum {
-  capi::MyEnum value;
-
 public:
   enum Value {
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
+    A = -2,
+    B = -1,
+    C = 0,
+    D = 1,
+    E = 2,
+    F = 3,
   };
+
+  MyEnum() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr MyEnum(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
   inline int8_t into_value();
 
   inline static MyEnum get_a();
 
-  inline MyEnum(MyEnum::Value cpp_value);
-  inline MyEnum(capi::MyEnum c_enum) : value(c_enum) {};
-
   inline capi::MyEnum AsFFI() const;
   inline static MyEnum FromFFI(capi::MyEnum c_enum);
+private:
+    Value value;
 };
 
 

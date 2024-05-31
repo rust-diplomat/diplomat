@@ -14,7 +14,7 @@ extern "C" {
 
 
 typedef struct BorrowedFieldsReturning {
-  struct { const char* data; size_t len; } bytes;
+  DiplomatStringView bytes;
 } BorrowedFieldsReturning;
 
 
