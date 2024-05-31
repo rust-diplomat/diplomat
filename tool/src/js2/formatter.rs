@@ -61,10 +61,14 @@ impl<'tcx> JSFormatter<'tcx> {
 		self.c_formatter.fmt_type_name_diagnostics(type_id)
 	}
 
+	pub fn fmt_file_name_extensionless(&self, type_name : &str) -> String {
+		format!("{}", type_name)
+	}
+
 	pub fn fmt_file_name(&self, type_name : &str, file_type : &FileType) -> String {
 		match file_type {
-			FileType::Module => format!("{}.mjs", type_name),
-			FileType::Typescript => format!("{}.d.ts", type_name)
+			FileType::Module => format!("{}.mjs", self.fmt_file_name_extensionless(type_name)),
+			FileType::Typescript => format!("{}.d.ts", self.fmt_file_name_extensionless(type_name))
 		}
 	}
 

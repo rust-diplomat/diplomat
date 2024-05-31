@@ -86,13 +86,26 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         let mut export_str: String = String::new();
         for export in self.exports.iter() {
-            write!(export_str, "{export}\n").expect("Could not write into export_str");
+            writeln!(export_str, "{export}").expect("Could not write into export_str");
         }
+
+        #[derive(Template)]
+        #[template(path = "js2/index.js.jinja", escape = "none")]
+        struct IndexTemplate<'a> {
+            exports : &'a Vec<Cow<'a, str>>,
+            typescript : bool,
+        }
+
+        let mut out_index = IndexTemplate {
+            exports: &self.exports,
+            typescript: false
+        };
         
-        let out_index = format!("export {{ FFIError }} from './diplomat-runtime.mjs'; \n{export_str}");
-        
-        self.files.add_file("index.mjs".into(), out_index);
-        self.files.add_file("index.d.ts".into(), "".into());
+        self.files.add_file("index.mjs".into(), out_index.render().unwrap());
+
+        out_index.typescript = true;
+
+        self.files.add_file("index.d.ts".into(), out_index.render().unwrap());
     }
 
     /// Generate a file's name and body from its given [`TypeId`]
@@ -130,10 +143,10 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             let file_name = self.formatter.fmt_file_name(&name, &file_type);
 
-            self.exports.push(format!("export {{ {name} }} from './{file_name}'").into());
-
             self.files.add_file(file_name, self.generate_base(contents, &file_type));
         }
+        
+        self.exports.push(format!("export {{ {name} }} from './{}", self.formatter.fmt_file_name_extensionless(&name)).into());
     }
 
     fn generate_base(&self, body : String, file_type : &FileType) -> String {
