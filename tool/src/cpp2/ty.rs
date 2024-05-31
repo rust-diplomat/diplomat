@@ -161,7 +161,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &'a str,
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
-            type_name_unnamespaced: &'a str,
         }
 
         ImplTemplate {
@@ -170,7 +169,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
-            type_name_unnamespaced: &type_name_unnamespaced,
         }
         .render_into(self.impl_header)
         .unwrap();
