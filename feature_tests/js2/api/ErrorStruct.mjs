@@ -13,8 +13,8 @@ export class ErrorStruct {
     
     #intoFFI() {
         return [
-            /*TODO: Other struct fields. i*/, 
-            /*TODO: Other struct fields. j*/]
+            i, 
+            j]
     }
     
 

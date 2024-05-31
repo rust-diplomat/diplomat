@@ -19,9 +19,9 @@ export class NestedBorrowedFields {
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     #intoFFI(xAppendArray = [], yAppendArray = [], zAppendArray = []) {
         return [
-            /*TODO: Other struct fields. /*TODO: gen_js_to_c_for_type for Struct*/*/, 
-            /*TODO: Other struct fields. /*TODO: gen_js_to_c_for_type for Struct*/*/, 
-            /*TODO: Other struct fields. /*TODO: gen_js_to_c_for_type for Struct*/*/]
+            /*TODO: gen_js_to_c_for_type for Struct*/, 
+            /*TODO: gen_js_to_c_for_type for Struct*/, 
+            /*TODO: gen_js_to_c_for_type for Struct*/]
     }
     
 

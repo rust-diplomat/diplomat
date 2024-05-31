@@ -233,8 +233,26 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 let slice_expr = self.gen_js_to_c_for_type(&field.ty, field_name.clone(), None);
 
                 let mut ret = vec![
-                    format!("/*TODO: struct Slice fields*/"),
+                    format!("{slice_expr} /* TODO: Freeing code */").into()
                 ];
+
+                // We do not need to handle lifetime transitivity here: Methods already resolve
+                // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
+                // are explicitly specified on methods.
+                // TODO: JS lifetimes.
+                // if let Some(lt) = slice.lifetime() {
+                //     let hir::MaybeStatic::NonStatic(lt) = lt else {
+                //         todo!("'static not supported in JS right now");
+                //     };
+                //     ret.push(format!(
+                //         "struct.{name}._data = {name}View.allocIn({lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp);",
+                //         lt_name = ty.lifetimes.fmt_lifetime(lt),
+                //     ));
+                // } else {
+                //     ret.push(format!(
+                //         "struct.{name}._data = {name}View.allocIn(_RustAlloc());"
+                //     ));
+                // }
                 (ret, None)
             } else {
                 let borrow_info = if let hir::Type::Struct(path) = &field.ty {
@@ -248,9 +266,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 } else {
                     None
                 };
-                (vec!(format!("/*TODO: Other struct fields. {}*/",
-                    self.gen_js_to_c_for_type(&field.ty, field_name.clone(), borrow_info.as_ref())
-                )), borrow_info.map(|s| s.param_info))
+
+                (vec!(self.gen_js_to_c_for_type(&field.ty, field_name.clone(), borrow_info.as_ref()).into()
+                ), borrow_info.map(|s| s.param_info))
             };
 
             FieldInfo {

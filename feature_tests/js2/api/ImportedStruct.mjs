@@ -13,8 +13,8 @@ export class ImportedStruct {
     
     #intoFFI() {
         return [
-            /*TODO: Other struct fields. foo.ffiValue*/, 
-            /*TODO: Other struct fields. count*/]
+            foo.ffiValue, 
+            count]
     }
     
 
