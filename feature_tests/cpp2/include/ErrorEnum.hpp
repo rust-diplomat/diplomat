@@ -13,25 +13,25 @@
 #include "ErrorEnum.h"
 
 
-inline ErrorEnum::ErrorEnum(ErrorEnum::Value cpp_value) {
-  switch (cpp_value) {
+inline capi::ErrorEnum ErrorEnum::AsFFI() const {
+  switch (value) {
     case Foo:
-      value = capi::ErrorEnum_Foo;
-      break;
+      return capi::ErrorEnum_Foo;
     case Bar:
-      value = capi::ErrorEnum_Bar;
-      break;
+      return capi::ErrorEnum_Bar;
     default:
       abort();
   }
 }
 
-inline capi::ErrorEnum ErrorEnum::AsFFI() const {
-  return value;
-}
-
 inline ErrorEnum ErrorEnum::FromFFI(capi::ErrorEnum c_enum) {
-  return ErrorEnum(c_enum);
+    switch (c_enum) {
+    case capi::ErrorEnum_Foo:
+      return ErrorEnum::Value::Foo;
+    case capi::ErrorEnum_Bar:
+      return ErrorEnum::Value::Bar;
+    default:
+      abort();
+  }
 }
-
 #endif // ErrorEnum_HPP

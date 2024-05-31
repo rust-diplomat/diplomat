@@ -13,28 +13,29 @@
 #include "AttrEnum.h"
 
 
-inline ns::CPPRenamedAttrEnum::CPPRenamedAttrEnum(ns::CPPRenamedAttrEnum::Value cpp_value) {
-  switch (cpp_value) {
+inline capi::AttrEnum ns::CPPRenamedAttrEnum::AsFFI() const {
+  switch (value) {
     case A:
-      value = capi::AttrEnum_A;
-      break;
+      return capi::AttrEnum_A;
     case B:
-      value = capi::AttrEnum_B;
-      break;
+      return capi::AttrEnum_B;
     case CPPRenamed:
-      value = capi::AttrEnum_C;
-      break;
+      return capi::AttrEnum_C;
     default:
       abort();
   }
 }
 
-inline capi::AttrEnum ns::CPPRenamedAttrEnum::AsFFI() const {
-  return value;
-}
-
 inline ns::CPPRenamedAttrEnum ns::CPPRenamedAttrEnum::FromFFI(capi::AttrEnum c_enum) {
-  return ns::CPPRenamedAttrEnum(c_enum);
+    switch (c_enum) {
+    case capi::AttrEnum_A:
+      return ns::CPPRenamedAttrEnum::Value::A;
+    case capi::AttrEnum_B:
+      return ns::CPPRenamedAttrEnum::Value::B;
+    case capi::AttrEnum_C:
+      return ns::CPPRenamedAttrEnum::Value::CPPRenamed;
+    default:
+      abort();
+  }
 }
-
 #endif // CPPRenamedAttrEnum_HPP

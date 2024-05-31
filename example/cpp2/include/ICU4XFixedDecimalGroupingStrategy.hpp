@@ -13,31 +13,33 @@
 #include "ICU4XFixedDecimalGroupingStrategy.h"
 
 
-inline ICU4XFixedDecimalGroupingStrategy::ICU4XFixedDecimalGroupingStrategy(ICU4XFixedDecimalGroupingStrategy::Value cpp_value) {
-  switch (cpp_value) {
+inline capi::ICU4XFixedDecimalGroupingStrategy ICU4XFixedDecimalGroupingStrategy::AsFFI() const {
+  switch (value) {
     case Auto:
-      value = capi::ICU4XFixedDecimalGroupingStrategy_Auto;
-      break;
+      return capi::ICU4XFixedDecimalGroupingStrategy_Auto;
     case Never:
-      value = capi::ICU4XFixedDecimalGroupingStrategy_Never;
-      break;
+      return capi::ICU4XFixedDecimalGroupingStrategy_Never;
     case Always:
-      value = capi::ICU4XFixedDecimalGroupingStrategy_Always;
-      break;
+      return capi::ICU4XFixedDecimalGroupingStrategy_Always;
     case Min2:
-      value = capi::ICU4XFixedDecimalGroupingStrategy_Min2;
-      break;
+      return capi::ICU4XFixedDecimalGroupingStrategy_Min2;
     default:
       abort();
   }
 }
 
-inline capi::ICU4XFixedDecimalGroupingStrategy ICU4XFixedDecimalGroupingStrategy::AsFFI() const {
-  return value;
-}
-
 inline ICU4XFixedDecimalGroupingStrategy ICU4XFixedDecimalGroupingStrategy::FromFFI(capi::ICU4XFixedDecimalGroupingStrategy c_enum) {
-  return ICU4XFixedDecimalGroupingStrategy(c_enum);
+    switch (c_enum) {
+    case capi::ICU4XFixedDecimalGroupingStrategy_Auto:
+      return ICU4XFixedDecimalGroupingStrategy::Value::Auto;
+    case capi::ICU4XFixedDecimalGroupingStrategy_Never:
+      return ICU4XFixedDecimalGroupingStrategy::Value::Never;
+    case capi::ICU4XFixedDecimalGroupingStrategy_Always:
+      return ICU4XFixedDecimalGroupingStrategy::Value::Always;
+    case capi::ICU4XFixedDecimalGroupingStrategy_Min2:
+      return ICU4XFixedDecimalGroupingStrategy::Value::Min2;
+    default:
+      abort();
+  }
 }
-
 #endif // ICU4XFixedDecimalGroupingStrategy_HPP

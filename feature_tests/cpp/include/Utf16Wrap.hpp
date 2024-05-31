@@ -40,12 +40,12 @@ class Utf16Wrap {
 
 
 inline const std::u16string_view Utf16Wrap::borrow_cont() const {
-  capi::DiplomatU16StringView diplomat_slice_raw_out_value = capi::Utf16Wrap_borrow_cont(this->inner.get());
+  capi::DiplomatString16View diplomat_slice_raw_out_value = capi::Utf16Wrap_borrow_cont(this->inner.get());
   diplomat::span<const char16_t> slice(diplomat_slice_raw_out_value.data, diplomat_slice_raw_out_value.len);
   return slice;
 }
 inline const std::u16string_view Utf16Wrap::owned() const {
-  capi::DiplomatU16StringView diplomat_slice_raw_out_value = capi::Utf16Wrap_owned(this->inner.get());
+  capi::DiplomatString16View diplomat_slice_raw_out_value = capi::Utf16Wrap_owned(this->inner.get());
   diplomat::span<const char16_t> slice(diplomat_slice_raw_out_value.data, diplomat_slice_raw_out_value.len);
   return slice;
 }

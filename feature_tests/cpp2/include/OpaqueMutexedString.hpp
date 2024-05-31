@@ -48,7 +48,7 @@ inline size_t OpaqueMutexedString::get_len_and_add(size_t other) const {
 
 inline std::string_view OpaqueMutexedString::dummy_str() const {
   auto result = capi::OpaqueMutexedString_dummy_str(this->AsFFI());
-  return std::string_view(result_data, result_size);
+  return std::string_view(result.data, result.len);
 }
 
 inline std::unique_ptr<Utf16Wrap> OpaqueMutexedString::wrapper() const {

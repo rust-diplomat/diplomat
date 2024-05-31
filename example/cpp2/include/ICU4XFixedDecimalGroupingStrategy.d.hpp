@@ -12,8 +12,6 @@
 
 
 class ICU4XFixedDecimalGroupingStrategy {
-  capi::ICU4XFixedDecimalGroupingStrategy value;
-
 public:
   enum Value {
     Auto,
@@ -22,11 +20,17 @@ public:
     Min2,
   };
 
-  inline ICU4XFixedDecimalGroupingStrategy(ICU4XFixedDecimalGroupingStrategy::Value cpp_value);
-  inline ICU4XFixedDecimalGroupingStrategy(capi::ICU4XFixedDecimalGroupingStrategy c_enum) : value(c_enum) {};
+  ICU4XFixedDecimalGroupingStrategy() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr ICU4XFixedDecimalGroupingStrategy(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
   inline capi::ICU4XFixedDecimalGroupingStrategy AsFFI() const;
   inline static ICU4XFixedDecimalGroupingStrategy FromFFI(capi::ICU4XFixedDecimalGroupingStrategy c_enum);
+private:
+    Value value;
 };
 
 

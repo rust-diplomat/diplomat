@@ -13,31 +13,33 @@
 #include "ContiguousEnum.h"
 
 
-inline ContiguousEnum::ContiguousEnum(ContiguousEnum::Value cpp_value) {
-  switch (cpp_value) {
+inline capi::ContiguousEnum ContiguousEnum::AsFFI() const {
+  switch (value) {
     case C:
-      value = capi::ContiguousEnum_C;
-      break;
+      return capi::ContiguousEnum_C;
     case D:
-      value = capi::ContiguousEnum_D;
-      break;
+      return capi::ContiguousEnum_D;
     case E:
-      value = capi::ContiguousEnum_E;
-      break;
+      return capi::ContiguousEnum_E;
     case F:
-      value = capi::ContiguousEnum_F;
-      break;
+      return capi::ContiguousEnum_F;
     default:
       abort();
   }
 }
 
-inline capi::ContiguousEnum ContiguousEnum::AsFFI() const {
-  return value;
-}
-
 inline ContiguousEnum ContiguousEnum::FromFFI(capi::ContiguousEnum c_enum) {
-  return ContiguousEnum(c_enum);
+    switch (c_enum) {
+    case capi::ContiguousEnum_C:
+      return ContiguousEnum::Value::C;
+    case capi::ContiguousEnum_D:
+      return ContiguousEnum::Value::D;
+    case capi::ContiguousEnum_E:
+      return ContiguousEnum::Value::E;
+    case capi::ContiguousEnum_F:
+      return ContiguousEnum::Value::F;
+    default:
+      abort();
+  }
 }
-
 #endif // ContiguousEnum_HPP

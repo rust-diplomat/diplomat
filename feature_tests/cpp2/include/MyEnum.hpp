@@ -13,26 +13,39 @@
 #include "MyEnum.h"
 
 
-inline MyEnum::MyEnum(MyEnum::Value cpp_value) {
-  switch (cpp_value) {
+inline capi::MyEnum MyEnum::AsFFI() const {
+  switch (value) {
     case A:
-      value = capi::MyEnum_A;
-      break;
+      return capi::MyEnum_A;
     case B:
-      value = capi::MyEnum_B;
-      break;
+      return capi::MyEnum_B;
     case C:
-      value = capi::MyEnum_C;
-      break;
+      return capi::MyEnum_C;
     case D:
-      value = capi::MyEnum_D;
-      break;
+      return capi::MyEnum_D;
     case E:
-      value = capi::MyEnum_E;
-      break;
+      return capi::MyEnum_E;
     case F:
-      value = capi::MyEnum_F;
-      break;
+      return capi::MyEnum_F;
+    default:
+      abort();
+  }
+}
+
+inline MyEnum MyEnum::FromFFI(capi::MyEnum c_enum) {
+    switch (c_enum) {
+    case capi::MyEnum_A:
+      return MyEnum::Value::A;
+    case capi::MyEnum_B:
+      return MyEnum::Value::B;
+    case capi::MyEnum_C:
+      return MyEnum::Value::C;
+    case capi::MyEnum_D:
+      return MyEnum::Value::D;
+    case capi::MyEnum_E:
+      return MyEnum::Value::E;
+    case capi::MyEnum_F:
+      return MyEnum::Value::F;
     default:
       abort();
   }
@@ -47,13 +60,4 @@ inline MyEnum MyEnum::get_a() {
   auto result = capi::MyEnum_get_a();
   return MyEnum::FromFFI(result);
 }
-
-inline capi::MyEnum MyEnum::AsFFI() const {
-  return value;
-}
-
-inline MyEnum MyEnum::FromFFI(capi::MyEnum c_enum) {
-  return MyEnum(c_enum);
-}
-
 #endif // MyEnum_HPP

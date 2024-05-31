@@ -12,8 +12,6 @@
 
 
 class UnimportedEnum {
-  capi::UnimportedEnum value;
-
 public:
   enum Value {
     A,
@@ -21,11 +19,17 @@ public:
     C,
   };
 
-  inline UnimportedEnum(UnimportedEnum::Value cpp_value);
-  inline UnimportedEnum(capi::UnimportedEnum c_enum) : value(c_enum) {};
+  UnimportedEnum() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr UnimportedEnum(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
   inline capi::UnimportedEnum AsFFI() const;
   inline static UnimportedEnum FromFFI(capi::UnimportedEnum c_enum);
+private:
+    Value value;
 };
 
 

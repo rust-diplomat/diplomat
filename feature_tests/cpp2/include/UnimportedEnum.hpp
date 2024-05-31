@@ -13,28 +13,29 @@
 #include "UnimportedEnum.h"
 
 
-inline UnimportedEnum::UnimportedEnum(UnimportedEnum::Value cpp_value) {
-  switch (cpp_value) {
+inline capi::UnimportedEnum UnimportedEnum::AsFFI() const {
+  switch (value) {
     case A:
-      value = capi::UnimportedEnum_A;
-      break;
+      return capi::UnimportedEnum_A;
     case B:
-      value = capi::UnimportedEnum_B;
-      break;
+      return capi::UnimportedEnum_B;
     case C:
-      value = capi::UnimportedEnum_C;
-      break;
+      return capi::UnimportedEnum_C;
     default:
       abort();
   }
 }
 
-inline capi::UnimportedEnum UnimportedEnum::AsFFI() const {
-  return value;
-}
-
 inline UnimportedEnum UnimportedEnum::FromFFI(capi::UnimportedEnum c_enum) {
-  return UnimportedEnum(c_enum);
+    switch (c_enum) {
+    case capi::UnimportedEnum_A:
+      return UnimportedEnum::Value::A;
+    case capi::UnimportedEnum_B:
+      return UnimportedEnum::Value::B;
+    case capi::UnimportedEnum_C:
+      return UnimportedEnum::Value::C;
+    default:
+      abort();
+  }
 }
-
 #endif // UnimportedEnum_HPP

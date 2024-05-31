@@ -15,12 +15,12 @@
 
 inline std::u16string_view Utf16Wrap::borrow_cont() const {
   auto result = capi::Utf16Wrap_borrow_cont(this->AsFFI());
-  return std::u16string_view(result_data, result_size);
+  return std::u16string_view(result.data, result.len);
 }
 
 inline std::u16string_view Utf16Wrap::owned() const {
   auto result = capi::Utf16Wrap_owned(this->AsFFI());
-  return std::u16string_view(result_data, result_size);
+  return std::u16string_view(result.data, result.len);
 }
 
 inline const capi::Utf16Wrap* Utf16Wrap::AsFFI() const {

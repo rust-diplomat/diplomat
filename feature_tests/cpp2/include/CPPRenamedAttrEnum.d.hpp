@@ -13,8 +13,6 @@
 
 namespace ns {
 class CPPRenamedAttrEnum {
-  capi::AttrEnum value;
-
 public:
   enum Value {
     A,
@@ -22,11 +20,17 @@ public:
     CPPRenamed,
   };
 
-  inline CPPRenamedAttrEnum(ns::CPPRenamedAttrEnum::Value cpp_value);
-  inline CPPRenamedAttrEnum(capi::AttrEnum c_enum) : value(c_enum) {};
+  CPPRenamedAttrEnum() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr CPPRenamedAttrEnum(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
   inline capi::AttrEnum AsFFI() const;
   inline static ns::CPPRenamedAttrEnum FromFFI(capi::AttrEnum c_enum);
+private:
+    Value value;
 };
 
 }

@@ -12,8 +12,6 @@
 
 
 class ContiguousEnum {
-  capi::ContiguousEnum value;
-
 public:
   enum Value {
     C,
@@ -22,11 +20,17 @@ public:
     F,
   };
 
-  inline ContiguousEnum(ContiguousEnum::Value cpp_value);
-  inline ContiguousEnum(capi::ContiguousEnum c_enum) : value(c_enum) {};
+  ContiguousEnum() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr ContiguousEnum(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
   inline capi::ContiguousEnum AsFFI() const;
   inline static ContiguousEnum FromFFI(capi::ContiguousEnum c_enum);
+private:
+    Value value;
 };
 
 
