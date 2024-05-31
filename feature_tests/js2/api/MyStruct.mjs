@@ -12,9 +12,12 @@ export class MyStruct {
     e;
     f;
     g;
-    // Return this struct as any array that can be expanded with spread syntax (...)
+
+    // Return this struct in FFI function friendly format.
+    // Returns an array that can be expanded with spread syntax (...)
+    
     #intoFFI() {
-        [
+        return [
             /*TODO: Other struct fields. a*/, 
             /*TODO: Other struct fields. b*/, 
             /*TODO: Other struct fields. c*/, 

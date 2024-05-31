@@ -7,9 +7,12 @@ export class ImportedStruct {
     #ptr
     foo;
     count;
-    // Return this struct as any array that can be expanded with spread syntax (...)
+
+    // Return this struct in FFI function friendly format.
+    // Returns an array that can be expanded with spread syntax (...)
+    
     #intoFFI() {
-        [
+        return [
             /*TODO: Other struct fields. foo.ffiValue*/, 
             /*TODO: Other struct fields. count*/]
     }

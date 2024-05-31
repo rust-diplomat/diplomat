@@ -9,6 +9,7 @@ export class BorrowedFields {
     b: String;
     c: String;
 
+
     constructor(ptr: pointer, aEdges: Array[object]): BorrowedFields;
     static fromBarAndStrings(bar: Bar, dstr16: String, utf8Str: String): BorrowedFields;
 

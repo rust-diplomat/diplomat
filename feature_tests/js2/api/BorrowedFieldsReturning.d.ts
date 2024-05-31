@@ -7,6 +7,7 @@ export class BorrowedFieldsReturning {
     #ptr: pointer;
     bytes: String;
 
+
     constructor(ptr: pointer, aEdges: Array[object]): BorrowedFieldsReturning;
     
 

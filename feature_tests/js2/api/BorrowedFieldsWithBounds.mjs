@@ -8,9 +8,17 @@ export class BorrowedFieldsWithBounds {
     fieldA;
     fieldB;
     fieldC;
-    // Return this struct as any array that can be expanded with spread syntax (...)
-    #intoFFI() {
-        [
+
+    // Return this struct in FFI function friendly format.
+    // Returns an array that can be expanded with spread syntax (...)
+    // If this struct contains any slices, their lifetime-edge-relevant objects will only
+    // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
+    // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
+    // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
+    //
+    // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
+    #intoFFI(aAppendArray = [], bAppendArray = [], cAppendArray = []) {
+        return [
             /*TODO: struct Slice fields*/, 
             /*TODO: struct Slice fields*/, 
             /*TODO: struct Slice fields*/]

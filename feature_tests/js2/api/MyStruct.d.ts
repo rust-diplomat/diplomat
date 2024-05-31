@@ -13,6 +13,7 @@ export class MyStruct {
     f: char;
     g: MyEnum;
 
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.
