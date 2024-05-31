@@ -248,7 +248,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 let optional = if op.is_optional() { "?" } else { "" };
                 match owner.mutability {
                     Mutability::Immutable => format!("{name}{optional}.handle").into(),
-                    Mutability::Mutable => format!("{name}{optional}.handle /* note this is a mutable reference. Think carefully about using especially concurrently */" ).into(),
+                    Mutability::Mutable => format!("{name}{optional}.handle /* note this is a mutable reference. Think carefully about using, especially concurrently */" ).into(),
                 }
             }
             Type::Struct(_) => format!("{name}.nativeStruct").into(),
@@ -260,6 +260,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             _ => todo!(),
         }
     }
+
     fn gen_infallible_return_type_ffi(&self, success: &SuccessType) -> Cow<'cx, str> {
         match success {
             SuccessType::Unit => self.formatter.fmt_void().into(),

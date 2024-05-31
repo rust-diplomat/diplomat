@@ -9,8 +9,6 @@ use heck::ToLowerCamelCase;
 use std::{borrow::Cow, iter::once};
 
 /// This type mediates all formatting
-///
-/// of C types and methods.
 pub(super) struct KotlinFormatter<'tcx> {
     tcx: &'tcx TypeContext,
     c: CFormatter<'tcx>,
