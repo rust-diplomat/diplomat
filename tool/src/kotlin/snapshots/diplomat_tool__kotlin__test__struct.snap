@@ -74,6 +74,7 @@ class MyNativeStruct internal constructor (
         val NATIVESIZE: Long = Native.getNativeSize(MyNativeStructNative::class.java).toLong()
         
         fun new_(): MyNativeStruct {
+            
             val returnVal = lib.MyNativeStruct_new();
             
             val bEdges: List<Any> = listOf()
