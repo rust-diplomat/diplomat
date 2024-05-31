@@ -33,7 +33,7 @@ public partial class MyStruct: IDisposable
         _inner = handle;
     }
 
-    public void Write(DiplomatWriteable to)
+    public void Write(DiplomatWrite to)
     {
         unsafe
         {
@@ -53,10 +53,10 @@ public partial class MyStruct: IDisposable
             {
                 throw new ObjectDisposedException("MyStruct");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            Raw.MyStruct.Write(_inner, &writeable);
-            string retVal = writeable.ToUnicode();
-            writeable.Dispose();
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.MyStruct.Write(_inner, &write);
+            string retVal = write.ToUnicode();
+            write.Dispose();
             return retVal;
         }
     }
@@ -93,4 +93,3 @@ public partial class MyStruct: IDisposable
         Dispose();
     }
 }
-

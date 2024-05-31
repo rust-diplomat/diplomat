@@ -62,6 +62,9 @@ pub fn gen_struct<W: fmt::Write>(
             };
 
             for method in &opaque.methods {
+                if method.attrs.skip_if_ast {
+                    continue;
+                }
                 gen_method(
                     custom_type,
                     method,
@@ -139,6 +142,9 @@ pub fn gen_struct<W: fmt::Write>(
             }
 
             for method in &strct.methods {
+                if method.attrs.skip_if_ast {
+                    continue;
+                }
                 gen_method(
                     custom_type,
                     method,
@@ -170,23 +176,20 @@ fn gen_method<W: fmt::Write>(
     method: &ast::Method,
     in_path: &ast::Path,
     is_header: bool,
-    // should it convert writeables to string as an additional method?
-    writeable_to_string: bool,
+    // should it convert DiplomatWrites to string as an additional method?
+    write_to_string: bool,
     env: &Env,
     library_config: &LibraryConfig,
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        return Ok(());
-    }
-    // This method should rearrange the writeable
-    let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
+    // This method should rearrange the DiplomatWrite
+    let rearranged_write = method.is_write_out() && write_to_string;
 
-    // This method has some writeable param that is preserved
-    let has_writeable_param = method.has_writeable_param() && !writeable_to_string;
+    // This method has some DiplomatWrite param that is preserved
+    let has_write_param = method.has_write_param() && !write_to_string;
 
-    if rearranged_writeable {
+    if rearranged_write {
         // generate the normal method too
         gen_method(
             enclosing_type,
@@ -231,12 +234,12 @@ fn gen_method<W: fmt::Write>(
         enclosing_type,
         in_path,
         is_header,
-        has_writeable_param,
-        rearranged_writeable,
+        has_write_param,
+        rearranged_write,
         env,
         library_config,
         out,
-        writeable_to_string,
+        write_to_string,
     )?;
 
     if is_header {
@@ -291,10 +294,10 @@ fn gen_method<W: fmt::Write>(
             }
         }
 
-        if rearranged_writeable {
-            all_params_invocation.push("&diplomat_writeable_out".to_string());
-            writeln!(&mut method_body, "std::string diplomat_writeable_string;")?;
-            writeln!(&mut method_body, "capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);")?;
+        if rearranged_write {
+            all_params_invocation.push("&diplomat_write_out".to_string());
+            writeln!(&mut method_body, "std::string diplomat_write_string;")?;
+            writeln!(&mut method_body, "capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);")?;
         }
 
         match &method.return_type {
@@ -306,8 +309,8 @@ fn gen_method<W: fmt::Write>(
                     all_params_invocation.join(", ")
                 )?;
 
-                if rearranged_writeable {
-                    writeln!(&mut method_body, "return diplomat_writeable_string;")?;
+                if rearranged_write {
+                    writeln!(&mut method_body, "return diplomat_write_string;")?;
                 }
             }
 
@@ -326,8 +329,8 @@ fn gen_method<W: fmt::Write>(
                     &mut method_body,
                 );
 
-                if rearranged_writeable {
-                    gen_writeable_out_value(&out_expr, ret_typ, &mut method_body)?;
+                if rearranged_write {
+                    gen_write_out_value(&out_expr, ret_typ, &mut method_body)?;
                 } else {
                     writeln!(&mut method_body, "return {out_expr};")?;
                 }
@@ -346,14 +349,14 @@ pub fn gen_method_interface<W: fmt::Write>(
     enclosing_type: &ast::CustomType,
     in_path: &ast::Path,
     is_header: bool,
-    has_writeable_param: bool,
-    rearranged_writeable: bool,
+    has_write_param: bool,
+    rearranged_write: bool,
     env: &Env,
     library_config: &LibraryConfig,
     out: &mut W,
-    writeable_to_string: bool,
+    write_to_string: bool,
 ) -> Result<Vec<ast::Param>, fmt::Error> {
-    if has_writeable_param {
+    if has_write_param {
         write!(out, "template<typename W> ")?;
     }
 
@@ -371,7 +374,7 @@ pub fn gen_method_interface<W: fmt::Write>(
         write!(out, "static ")?;
     }
 
-    if rearranged_writeable {
+    if rearranged_write {
         if let Some(ast::TypeName::Result(_, err, _)) = &method.return_type {
             let err_ty = if err.is_zst() {
                 "std::monostate".into()
@@ -379,6 +382,8 @@ pub fn gen_method_interface<W: fmt::Write>(
                 gen_type(err, in_path, None, env, library_config, false)?
             };
             write!(out, "diplomat::result<std::string, {err_ty}>")?;
+        } else if let Some(ast::TypeName::Option(_)) = &method.return_type {
+            write!(out, "std::optional<std::string>")?;
         } else {
             write!(out, "std::string")?;
         }
@@ -397,14 +402,14 @@ pub fn gen_method_interface<W: fmt::Write>(
         write!(out, " {}::", enclosing_type.name())?;
     }
 
-    if has_writeable_param {
-        write!(out, "{}_to_writeable(", method.name)?;
+    if has_write_param {
+        write!(out, "{}_to_write(", method.name)?;
     } else {
         write!(out, "{}(", transform_keyword_ident(&method.name))?;
     }
 
     let mut params_to_gen = method.params.clone();
-    if rearranged_writeable {
+    if rearranged_write {
         params_to_gen.remove(params_to_gen.len() - 1);
     }
 
@@ -412,7 +417,7 @@ pub fn gen_method_interface<W: fmt::Write>(
         if i != 0 {
             write!(out, ", ")?;
         }
-        let ty_name = if param.is_writeable() && !writeable_to_string {
+        let ty_name = if param.is_write() && !write_to_string {
             "W&".into()
         } else {
             gen_type(&param.ty, in_path, None, env, library_config, false)?
@@ -428,7 +433,7 @@ pub fn gen_method_interface<W: fmt::Write>(
     Ok(params_to_gen)
 }
 
-fn gen_writeable_out_value<W: fmt::Write>(
+fn gen_write_out_value<W: fmt::Write>(
     out_expr: &str,
     ret_typ: &ast::TypeName,
     method_body: &mut W,
@@ -436,10 +441,15 @@ fn gen_writeable_out_value<W: fmt::Write>(
     if let ast::TypeName::Result(_, _, _) = ret_typ {
         writeln!(
             method_body,
-            "return {out_expr}.replace_ok(std::move(diplomat_writeable_string));"
+            "return {out_expr}.replace_ok(std::move(diplomat_write_string));"
+        )?;
+    } else if let ast::TypeName::Option(_) = ret_typ {
+        writeln!(
+            method_body,
+            "return {out_expr}.has_value() ? std::optional<std::string>{{std::move(diplomat_write_string)}} : std::nullopt;"
         )?;
     } else {
-        panic!("Not in writeable out form")
+        panic!("Not in DiplomatWrite out form")
     }
 
     Ok(())
@@ -563,7 +573,7 @@ mod tests {
     }
 
     #[test]
-    fn test_method_writeable_out() {
+    fn test_method_write_out() {
         test_file! {
             #[diplomat::bridge]
             mod ffi {
@@ -571,19 +581,19 @@ mod tests {
                 struct MyStruct(UnknownType);
 
                 impl MyStruct {
-                    pub fn write(&self, out: &mut DiplomatWriteable) {
+                    pub fn write(&self, out: &mut DiplomatWrite) {
                         unimplemented!()
                     }
 
-                    pub fn write_unit(&self, out: &mut DiplomatWriteable) -> () {
+                    pub fn write_unit(&self, out: &mut DiplomatWrite) -> () {
                         unimplemented!()
                     }
 
-                    pub fn write_result(&self, out: &mut DiplomatWriteable) -> Result<(), u8> {
+                    pub fn write_result(&self, out: &mut DiplomatWrite) -> Result<(), u8> {
                         unimplemented!()
                     }
 
-                    pub fn write_no_rearrange(&self, out: &mut DiplomatWriteable) -> u8 {
+                    pub fn write_no_rearrange(&self, out: &mut DiplomatWrite) -> u8 {
                         unimplemented!()
                     }
                 }

@@ -134,6 +134,9 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     }
 
     for method in typ.methods() {
+        if method.attrs.skip_if_ast {
+            continue;
+        }
         gen_method_docs(
             method,
             typ,
@@ -154,26 +157,21 @@ pub fn gen_method_docs<W: fmt::Write>(
     method: &ast::Method,
     enclosing_type: &ast::CustomType,
     in_path: &ast::Path,
-    writeable_to_string: bool,
+    write_to_string: bool,
     env: &Env,
     library_config: &LibraryConfig,
     docs_url_gen: &ast::DocsUrlGenerator,
     out: &mut W,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        // We don't support returning references
-        return Ok(());
-    }
-
     writeln!(out)?;
 
-    // This method should rearrange the writeable
-    let rearranged_writeable = method.is_writeable_out() && writeable_to_string;
+    // This method should rearrange the write
+    let rearranged_write = method.is_write_out() && write_to_string;
 
-    // This method has some writeable param that is preserved
-    let has_writeable_param = method.has_writeable_param() && !writeable_to_string;
+    // This method has some write param that is preserved
+    let has_write_param = method.has_write_param() && !write_to_string;
 
-    if rearranged_writeable {
+    if rearranged_write {
         // generate the normal method too
         gen_method_docs(
             method,
@@ -195,12 +193,12 @@ pub fn gen_method_docs<W: fmt::Write>(
         enclosing_type,
         in_path,
         true,
-        has_writeable_param,
-        rearranged_writeable,
+        has_write_param,
+        rearranged_write,
         env,
         library_config,
         out,
-        writeable_to_string,
+        write_to_string,
     )?;
 
     writeln!(out)?;

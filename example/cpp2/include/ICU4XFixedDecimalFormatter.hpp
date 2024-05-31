@@ -26,10 +26,10 @@ inline diplomat::result<std::unique_ptr<ICU4XFixedDecimalFormatter>, std::monost
 
 inline std::string ICU4XFixedDecimalFormatter::format_write(const ICU4XFixedDecimal& value) const {
   std::string output;
-  capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+  capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::ICU4XFixedDecimalFormatter_format_write(this->AsFFI(),
     value.AsFFI(),
-    &writeable);
+    &write);
   return output;
 }
 

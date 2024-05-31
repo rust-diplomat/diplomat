@@ -46,7 +46,7 @@ class ICU4XFixedDecimalFormatter {
    * 
    * See the [Rust documentation for `format`](https://unicode-org.github.io/icu4x-docs/doc/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
    */
-  template<typename W> void format_write_to_writeable(const ICU4XFixedDecimal& value, W& write) const;
+  template<typename W> void format_write_to_write(const ICU4XFixedDecimal& value, W& write) const;
 
   /**
    * Formats a [`ICU4XFixedDecimal`] to a string.
@@ -80,14 +80,14 @@ inline diplomat::result<ICU4XFixedDecimalFormatter, std::monostate> ICU4XFixedDe
   }
   return diplomat_result_out_value;
 }
-template<typename W> inline void ICU4XFixedDecimalFormatter::format_write_to_writeable(const ICU4XFixedDecimal& value, W& write) const {
-  capi::DiplomatWriteable write_writer = diplomat::WriteableTrait<W>::Construct(write);
+template<typename W> inline void ICU4XFixedDecimalFormatter::format_write_to_write(const ICU4XFixedDecimal& value, W& write) const {
+  capi::DiplomatWrite write_writer = diplomat::WriteTrait<W>::Construct(write);
   capi::ICU4XFixedDecimalFormatter_format_write(this->inner.get(), value.AsFFI(), &write_writer);
 }
 inline std::string ICU4XFixedDecimalFormatter::format_write(const ICU4XFixedDecimal& value) const {
-  std::string diplomat_writeable_string;
-  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  capi::ICU4XFixedDecimalFormatter_format_write(this->inner.get(), value.AsFFI(), &diplomat_writeable_out);
-  return diplomat_writeable_string;
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  capi::ICU4XFixedDecimalFormatter_format_write(this->inner.get(), value.AsFFI(), &diplomat_write_out);
+  return diplomat_write_string;
 }
 #endif

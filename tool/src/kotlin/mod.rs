@@ -989,7 +989,7 @@ retutnVal.option() ?: return null
             native_method_name,
             param_conversions,
             return_expression,
-            writeable_return,
+            write_return,
             slice_conversions,
         }
         .render()
@@ -1048,6 +1048,7 @@ retutnVal.option() ?: return null
         let native_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
@@ -1055,6 +1056,7 @@ retutnVal.option() ?: return null
         let self_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .filter_map(|method| {
                 method
                     .param_self
@@ -1070,6 +1072,7 @@ retutnVal.option() ?: return null
         let companion_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .filter(|method| method.param_self.is_none())
             .map(|method| self.gen_method(&mut unused_special_methods, id, method, None))
             .collect::<Vec<_>>();
@@ -1126,6 +1129,7 @@ retutnVal.option() ?: return null
         let native_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
@@ -1231,6 +1235,7 @@ retutnVal.option() ?: return null
         let native_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .map(|method| self.gen_native_method_info(id, method))
             .collect::<Vec<_>>();
 
@@ -1238,6 +1243,7 @@ retutnVal.option() ?: return null
         let self_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .filter_map(|method| {
                 method
                     .param_self
@@ -1252,6 +1258,7 @@ retutnVal.option() ?: return null
         let companion_methods = ty
             .methods
             .iter()
+            .filter(|m| !m.attrs.disable)
             .filter(|method| method.param_self.is_none())
             .map(|method| self.gen_method(&mut special_methods, id, method, None))
             .collect::<Vec<_>>();
@@ -1449,7 +1456,7 @@ struct MethodTpl<'a> {
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
     return_expression: Cow<'a, str>,
-    writeable_return: bool,
+    write_return: bool,
     slice_conversions: Vec<Cow<'a, str>>,
 }
 
@@ -1650,7 +1657,7 @@ mod test {
                     }
 
 
-                    pub fn borrow3<'a>(&'a self, other: &'a mut DiplomatWriteable) {
+                    pub fn borrow3<'a>(&'a self, other: &'a mut DiplomatWrite) {
                         todo!()
                     }
 

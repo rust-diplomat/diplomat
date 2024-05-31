@@ -6,7 +6,6 @@ import com.sun.jna.Pointer
 
 internal interface Float64VecLib: Library {
     fun Float64Vec_destroy(handle: Pointer)
-    fun Float64Vec_new(v: Slice): Pointer
     fun Float64Vec_new_bool(v: Slice): Pointer
     fun Float64Vec_new_i16(v: Slice): Pointer
     fun Float64Vec_new_u16(v: Slice): Pointer
@@ -18,7 +17,7 @@ internal interface Float64VecLib: Library {
     fun Float64Vec_as_slice(handle: Pointer): Slice
     fun Float64Vec_fill_slice(handle: Pointer, v: Slice): Unit
     fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
-    fun Float64Vec_to_string(handle: Pointer, writeable: Pointer): Unit
+    fun Float64Vec_to_string(handle: Pointer, write: Pointer): Unit
     fun Float64Vec_borrow(handle: Pointer): Slice
     fun Float64Vec_get(handle: Pointer, i: Long): OptionDouble
 }

@@ -25,9 +25,9 @@ inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
 
 inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
   std::string output;
-  capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+  capi::DiplomatWrite write = diplomat::WriteFromString(output);
   auto result = capi::ICU4XFixedDecimal_to_string(this->AsFFI(),
-    &writeable);
+    &write);
   return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
 }
 

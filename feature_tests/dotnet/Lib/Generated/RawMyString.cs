@@ -29,7 +29,7 @@ public partial struct MyString
     public static unsafe extern void SetStr(MyString* self, byte* newStr, nuint newStrSz);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyString_get_str", ExactSpelling = true)]
-    public static unsafe extern void GetStr(MyString* self, DiplomatWriteable* writeable);
+    public static unsafe extern void GetStr(MyString* self, DiplomatWrite* write);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyString_destroy", ExactSpelling = true)]
     public static unsafe extern void Destroy(MyString* self);

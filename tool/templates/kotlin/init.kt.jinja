@@ -12,23 +12,30 @@ import com.sun.jna.Union
 val CLEANER = java.lang.ref.Cleaner.create()
 
 
-interface DiplomatWriteableLib: Library {
-    fun diplomat_buffer_writeable_create(size: Long): Pointer 
-    fun diplomat_buffer_writeable_get_bytes(diplomatWriteable: Pointer): Pointer
-    fun diplomat_buffer_writeable_len(diplomatWriteable: Pointer): Long
-    fun diplomat_buffer_writeable_destroy(diplomatWriteable: Pointer)
+interface DiplomatWriteLib: Library {
+    fun diplomat_buffer_write_create(size: Long): Pointer 
+    fun diplomat_buffer_write_get_bytes(diplomatWrite: Pointer): Pointer
+    fun diplomat_buffer_write_len(diplomatWrite: Pointer): Long
+    fun diplomat_buffer_write_destroy(diplomatWrite: Pointer)
 }
 
 object DW {
 
-    val libClass: Class<DiplomatWriteableLib> = DiplomatWriteableLib::class.java
-    val lib: DiplomatWriteableLib = Native.load("{{lib_name}}", libClass)
+    val libClass: Class<DiplomatWriteLib> = DiplomatWriteLib::class.java
+    val lib: DiplomatWriteLib = Native.load("{{lib_name}}", libClass)
 
-    fun writeableToString (writeable: Pointer): String {
-        val pointer = lib.diplomat_buffer_writeable_get_bytes(writeable)
-        val len = lib.diplomat_buffer_writeable_len(writeable)
-        val bytes = pointer.getByteArray(0, len.toInt())
-        return bytes.decodeToString()
+    fun writeToString (write: Pointer): String {
+        try {
+            val pointer = lib.diplomat_buffer_write_get_bytes(write)
+            if (bytes == null) {
+                throw OutOfMemoryError();
+            }
+            val len = lib.diplomat_buffer_write_len(write)
+            val bytes = pointer.getByteArray(0, len.toInt())
+            return bytes.decodeToString();
+        } finally {
+            lib.diplomat_buffer_write_destroy(write);
+        }
     }
 }
 

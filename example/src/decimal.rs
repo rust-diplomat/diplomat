@@ -2,7 +2,7 @@
 
 #[diplomat::bridge]
 pub mod ffi {
-    use diplomat_runtime::DiplomatWriteable;
+    use diplomat_runtime::DiplomatWrite;
     use icu::decimal::{options::GroupingStrategy, FixedDecimalFormatter};
     use icu_provider::DataLocale;
     use writeable::Writeable;
@@ -63,7 +63,7 @@ pub mod ffi {
 
         /// Formats a [`ICU4XFixedDecimal`] to a string.
         #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter::format, FnInStruct)]
-        pub fn format_write(&self, value: &ICU4XFixedDecimal, write: &mut DiplomatWriteable) {
+        pub fn format_write(&self, value: &ICU4XFixedDecimal, write: &mut DiplomatWrite) {
             self.0.format(&value.0).write_to(write).unwrap();
             write.flush();
         }

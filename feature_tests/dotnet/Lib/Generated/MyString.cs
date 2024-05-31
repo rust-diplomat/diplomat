@@ -97,7 +97,7 @@ public partial class MyString: IDisposable
         }
     }
 
-    public void GetStr(DiplomatWriteable writeable)
+    public void GetStr(DiplomatWrite write)
     {
         unsafe
         {
@@ -105,7 +105,7 @@ public partial class MyString: IDisposable
             {
                 throw new ObjectDisposedException("MyString");
             }
-            Raw.MyString.GetStr(_inner, &writeable);
+            Raw.MyString.GetStr(_inner, &write);
         }
     }
 
@@ -117,10 +117,10 @@ public partial class MyString: IDisposable
             {
                 throw new ObjectDisposedException("MyString");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            Raw.MyString.GetStr(_inner, &writeable);
-            string retVal = writeable.ToUnicode();
-            writeable.Dispose();
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.MyString.GetStr(_inner, &write);
+            string retVal = write.ToUnicode();
+            write.Dispose();
             return retVal;
         }
     }

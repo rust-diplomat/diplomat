@@ -33,7 +33,7 @@ public partial class MyLibError: IDisposable
         _inner = handle;
     }
 
-    public static void ToDisplay(DiplomatWriteable out)
+    public static void ToDisplay(DiplomatWrite out)
     {
         unsafe
         {
@@ -45,10 +45,10 @@ public partial class MyLibError: IDisposable
     {
         unsafe
         {
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            Raw.MyLibError.ToDisplay(&writeable);
-            string retVal = writeable.ToUnicode();
-            writeable.Dispose();
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.MyLibError.ToDisplay(&write);
+            string retVal = write.ToUnicode();
+            write.Dispose();
             return retVal;
         }
     }

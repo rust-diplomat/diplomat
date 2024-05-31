@@ -22,7 +22,7 @@ struct MyIteratorDeleter {
 };
 class MyIterator {
  public:
-  diplomat::result<uint8_t, std::monostate> next();
+  std::optional<uint8_t> next();
   inline const capi::MyIterator* AsFFI() const { return this->inner.get(); }
   inline capi::MyIterator* AsFFIMut() { return this->inner.get(); }
   inline explicit MyIterator(capi::MyIterator* i) : inner(i) {}
@@ -34,13 +34,13 @@ class MyIterator {
 };
 
 
-inline diplomat::result<uint8_t, std::monostate> MyIterator::next() {
+inline std::optional<uint8_t> MyIterator::next() {
   auto diplomat_result_raw_out_value = capi::namespace_MyIterator_next(this->inner.get());
-  diplomat::result<uint8_t, std::monostate> diplomat_result_out_value;
+  std::optional<uint8_t> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<uint8_t>(diplomat_result_raw_out_value.ok);
+    diplomat_result_out_value = std::optional<uint8_t>(diplomat_result_raw_out_value.ok);
   } else {
-    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
+    diplomat_result_out_value = std::nullopt;
   }
   return diplomat_result_out_value;
 }

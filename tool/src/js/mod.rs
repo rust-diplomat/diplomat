@@ -182,6 +182,9 @@ impl<'env> Imports<'env> {
         }
 
         for method in custom_type.methods() {
+            if method.attrs.skip_if_ast {
+                continue;
+            }
             for param in method.params.iter() {
                 this.collect_usages(&param.ty, in_path, env, TypePosition::Param);
             }

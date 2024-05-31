@@ -91,7 +91,9 @@ pub fn gen_custom_type_docs<W: fmt::Write>(
     }
 
     for method in typ.methods() {
-        writeln!(&mut class_indented)?;
+        if method.attrs.skip_if_ast {
+            continue;
+        }
         gen_method_docs(&mut class_indented, method, in_path, docs_url_gen, env)?;
     }
     Ok(())
@@ -104,12 +106,13 @@ pub fn gen_method_docs<W: fmt::Write>(
     docs_url_gen: &ast::DocsUrlGenerator,
     env: &Env,
 ) -> fmt::Result {
+    writeln!(out)?;
     let mut param_names = method
         .params
         .iter()
         .map(|p| p.name.as_str())
         .collect::<Vec<_>>();
-    if method.is_writeable_out() {
+    if method.is_write_out() {
         param_names.remove(param_names.len() - 1);
     }
 

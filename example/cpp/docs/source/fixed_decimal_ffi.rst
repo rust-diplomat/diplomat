@@ -19,7 +19,7 @@
 
 
 
-    .. cpp:function:: template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_writeable(W& to) const
+    .. cpp:function:: template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_write(W& to) const
 
         Format the :cpp:class:`ICU4XFixedDecimal` as a string.
 

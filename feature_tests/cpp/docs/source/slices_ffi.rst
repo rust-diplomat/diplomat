@@ -42,7 +42,7 @@
 
 
 
-    .. cpp:function:: template<typename W> void to_string_to_writeable(W& w) const
+    .. cpp:function:: template<typename W> void to_string_to_write(W& w) const
 
 
     .. cpp:function:: std::string to_string() const
@@ -53,7 +53,7 @@
         Lifetimes: ``this`` must live at least as long as the output.
 
 
-    .. cpp:function:: diplomat::result<double, std::monostate> get(size_t i) const
+    .. cpp:function:: std::optional<double> get(size_t i) const
 
 
 .. cpp:class:: MyString
@@ -73,7 +73,7 @@
 
 
 
-    .. cpp:function:: template<typename W> void get_str_to_writeable(W& writeable) const
+    .. cpp:function:: template<typename W> void get_str_to_write(W& write) const
 
 
     .. cpp:function:: std::string get_str() const

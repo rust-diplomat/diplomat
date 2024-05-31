@@ -87,7 +87,7 @@ jobs:
       run: CXX=clang++-14 cargo make test-cpp
 
     - name: GCC tests for cpp backend
-      run: CXX=g++-13 cargo make test-cpp2
+      run: CXX=g++ cargo make test-cpp2
   test-wasm:
     runs-on: ubuntu-latest
     steps:

@@ -107,7 +107,7 @@ pub fn type_size_alignment(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) 
         // Temporary:
         ast::TypeName::StrReference(..) => Layout::new::<(usize_target, usize_target)>(),
         ast::TypeName::PrimitiveSlice(..) => Layout::new::<(usize_target, usize_target)>(),
-        ast::TypeName::Writeable => panic!(),
+        ast::TypeName::Write => panic!(),
         ast::TypeName::Unit => Layout::new::<()>(),
         &_ => unreachable!("unknown AST/HIR variant"),
     }

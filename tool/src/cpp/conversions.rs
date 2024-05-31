@@ -147,29 +147,39 @@ pub fn gen_rust_to_cpp<W: Write>(
                 writeln!(out, "{result_ty} {wrapped_value_id};").unwrap();
 
                 writeln!(out, "if ({raw_value_id}.is_ok) {{").unwrap();
-                let value_expr = gen_rust_to_cpp(
-                    &format!("{raw_value_id}.ok"),
-                    path,
-                    underlying,
-                    in_path,
-                    env,
-                    library_config,
-                    out,
-                );
-                let underlying_type =
-                    super::types::gen_type(underlying, in_path, None, env, library_config, false)
-                        .unwrap();
-                writeln!(
-                    out,
-                    "  {wrapped_value_id} = diplomat::Ok<{underlying_type}>({value_expr});"
-                )
-                .unwrap();
+                if !underlying.is_zst() {
+                    let value_expr = gen_rust_to_cpp(
+                        &format!("{raw_value_id}.ok"),
+                        path,
+                        underlying,
+                        in_path,
+                        env,
+                        library_config,
+                        out,
+                    );
+                    let underlying_type = super::types::gen_type(
+                        underlying,
+                        in_path,
+                        None,
+                        env,
+                        library_config,
+                        false,
+                    )
+                    .unwrap();
+                    writeln!(
+                        out,
+                        "  {wrapped_value_id} = std::optional<{underlying_type}>({value_expr});"
+                    )
+                    .unwrap();
+                } else {
+                    writeln!(
+                        out,
+                        "  {wrapped_value_id} = std::optional<std::monostate>(std::monostate());"
+                    )
+                    .unwrap();
+                }
                 writeln!(out, "}} else {{").unwrap();
-                writeln!(
-                    out,
-                    "  {wrapped_value_id} = diplomat::Err<std::monostate>(std::monostate());"
-                )
-                .unwrap();
+                writeln!(out, "  {wrapped_value_id} = std::nullopt;").unwrap();
                 writeln!(out, "}}").unwrap();
 
                 wrapped_value_id
@@ -244,7 +254,7 @@ pub fn gen_rust_to_cpp<W: Write>(
         ast::TypeName::Reference(_, _, ty_name) => {
             todo!("Returning references from Rust to C++ is not currently supported {ty_name:?}")
         }
-        ast::TypeName::Writeable => panic!("Returning writeables is not supported"),
+        ast::TypeName::Write => panic!("Returning DiplomatWrite is not supported"),
         ast::TypeName::StrReference(
             _,
             ast::StringEncoding::UnvalidatedUtf8 | ast::StringEncoding::Utf8,
@@ -412,7 +422,7 @@ pub fn gen_cpp_to_rust<W: Write>(
                 &_ => unreachable!("unknown AST/HIR variant"),
             }
         }
-        ast::TypeName::Writeable => {
+        ast::TypeName::Write => {
             if behind_ref
                 == Some(ReferenceMeta {
                     owned: false,
@@ -420,10 +430,14 @@ pub fn gen_cpp_to_rust<W: Write>(
                     is_nullable: false,
                 })
             {
-                writeln!(out, "capi::DiplomatWriteable {cpp}_writer = diplomat::WriteableTrait<W>::Construct({cpp});").unwrap();
+                writeln!(
+                    out,
+                    "capi::DiplomatWrite {cpp}_writer = diplomat::WriteTrait<W>::Construct({cpp});"
+                )
+                .unwrap();
                 format!("&{cpp}_writer")
             } else {
-                panic!("Cannot send Writeable to Rust as a value");
+                panic!("Cannot send DiplomatWrite to Rust as a value");
             }
         }
         ast::TypeName::Primitive(_) => cpp.to_string(),

@@ -24,16 +24,24 @@ namespace capi {
 extern "C" {
 #endif
 
-typedef struct DiplomatWriteable {
+typedef struct DiplomatWrite {
     void* context;
     char* buf;
     size_t len;
     size_t cap;
-    void (*flush)(struct DiplomatWriteable*);
-    bool (*grow)(struct DiplomatWriteable*, size_t);
-} DiplomatWriteable;
+    bool grow_failed;
+    void (*flush)(struct DiplomatWrite*);
+    bool (*grow)(struct DiplomatWrite*, size_t);
+} DiplomatWrite;
 
-DiplomatWriteable diplomat_simple_writeable(char* buf, size_t buf_size);
+DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+
+DiplomatWrite* diplomat_buffer_write_create(size_t cap);
+char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);
+size_t diplomat_buffer_write_len(DiplomatWrite* t);
+void diplomat_buffer_write_destroy(DiplomatWrite* t);
+
+bool diplomat_is_str(char* buf, size_t len);
 
 #define MAKE_SLICES(name, c_ty) \
     typedef struct Diplomat##name##View { \

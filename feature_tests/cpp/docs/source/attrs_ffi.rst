@@ -58,7 +58,7 @@
 
 .. cpp:class:: MyIterator
 
-    .. cpp:function:: diplomat::result<uint8_t, std::monostate> next()
+    .. cpp:function:: std::optional<uint8_t> next()
 
 
 .. cpp:class:: OpaqueIterable

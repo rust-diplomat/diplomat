@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 pub mod ffi {
-    use diplomat_runtime::DiplomatWriteable;
+    use diplomat_runtime::DiplomatWrite;
 
     #[diplomat::opaque]
     pub struct OptionOpaque(i32);
@@ -18,9 +18,9 @@ pub mod ffi {
             Some(Box::new(OptionString(string)))
         }
 
-        pub fn write<'a>(&'a self, writeable: &'a mut DiplomatWriteable) -> Result<(), ()> {
+        pub fn write<'a>(&'a self, write: &'a mut DiplomatWrite) -> Result<(), ()> {
             use std::fmt::Write;
-            write!(writeable, "{}", self.0).map_err(|_| ())?;
+            write!(write, "{}", self.0).map_err(|_| ())?;
             Ok(())
         }
 

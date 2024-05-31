@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 mod ffi {
-    use diplomat_runtime::{DiplomatStr, DiplomatWriteable};
+    use diplomat_runtime::{DiplomatStr, DiplomatWrite};
     use std::fmt::Write as _;
 
     #[diplomat::opaque]
@@ -32,9 +32,8 @@ mod ffi {
         }
 
         #[diplomat::attr(supports = accessors, getter = "str")]
-        pub fn get_str(&self, writeable: &mut DiplomatWriteable) {
-            let _ = write!(writeable, "{}", self.0);
-            writeable.flush();
+        pub fn get_str(&self, write: &mut DiplomatWrite) {
+            let _infallible = write!(write, "{}", self.0);
         }
 
         #[diplomat::skip_if_ast]
@@ -112,8 +111,8 @@ mod ffi {
         }
 
         #[diplomat::attr(supports = stringifiers, stringifier)]
-        pub fn to_string(&self, w: &mut DiplomatWriteable) {
-            write!(w, "{:?}", self.0).unwrap();
+        pub fn to_string(&self, w: &mut DiplomatWrite) {
+            let _infallible = write!(w, "{:?}", self.0);
         }
 
         #[allow(clippy::needless_lifetimes)]

@@ -11,7 +11,7 @@ internal interface MyStringLib: Library {
     fun MyString_new_owned(v: Slice): Pointer
     fun MyString_new_from_first(v: Slice): Pointer
     fun MyString_set_str(handle: Pointer, newStr: Slice): Unit
-    fun MyString_get_str(handle: Pointer, writeable: Pointer): Unit
+    fun MyString_get_str(handle: Pointer, write: Pointer): Unit
     fun MyString_get_boxed_str(handle: Pointer): Slice
 }
 
