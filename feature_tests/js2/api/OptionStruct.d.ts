@@ -2,4 +2,21 @@
 import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
-OptionStruct has a TypeDef that is unimplemented. I am working on it!
+
+export class OptionStruct {
+    #ptr: pointer;
+    const a: OptionOpaque | undefined;
+    const b: OptionOpaqueChar | undefined;
+    const c: number;
+    const d: OptionOpaque | undefined;
+
+
+    // This struct contains borrowed fields, so this takes in a list of
+    // "edges" corresponding to where each lifetime's data may have been borrowed from
+    // and passes it down to individual fields containing the borrow.
+    // This method does not attempt to handle any dependencies between lifetimes, the caller
+    // should handle this when constructing edge arrays.
+    constructor(ptr: pointer): OptionStruct;
+    
+
+}

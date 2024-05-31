@@ -107,9 +107,11 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 },
                 TypeDef::Struct(struct_def) => {
                     self.generate_struct_from_def(struct_def, type_id, false, &name, true, &file_type)
-                }
-                // TODO:
-                _ => format!("{} has a TypeDef that is unimplemented. I am working on it!", type_def.name())
+                },
+                TypeDef::OutStruct(struct_def) => {
+                    self.generate_struct_from_def(struct_def, type_id, true, &name, false, &file_type)
+                },
+                _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def)
             };
             self.files.add_file(self.formatter.fmt_file_name(&name, file_type), self.generate_base(contents));
         }
@@ -193,7 +195,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         }.render().unwrap()
     }
 
-    fn generate_struct_from_def(&self, struct_def : &'tcx hir::StructDef, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool, file_type : &FileType) -> String {
+    fn generate_struct_from_def<P: hir::TyPosition>(&self, struct_def : &'tcx hir::StructDef<P>, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool, file_type : &FileType) -> String {
         struct FieldInfo<'info, P: hir::TyPosition> {
             field_name: Cow<'info, str>,
             field_type : &'info Type<P>,
