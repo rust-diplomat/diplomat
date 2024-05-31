@@ -5,7 +5,7 @@ class {{type_name_unnamespaced}} {
 public:
 	enum Value {
 		{%- for enum_variant in ty.variants %}
-		{{fmt.fmt_enum_variant(enum_variant)}},
+		{{fmt.fmt_enum_variant(enum_variant)}} = {{ enum_variant.discriminant }},
 		{%- endfor %}
 	};
 

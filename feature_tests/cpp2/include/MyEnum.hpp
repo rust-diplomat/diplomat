@@ -14,38 +14,18 @@
 
 
 inline capi::MyEnum MyEnum::AsFFI() const {
-  switch (value) {
-    case A:
-      return capi::MyEnum_A;
-    case B:
-      return capi::MyEnum_B;
-    case C:
-      return capi::MyEnum_C;
-    case D:
-      return capi::MyEnum_D;
-    case E:
-      return capi::MyEnum_E;
-    case F:
-      return capi::MyEnum_F;
-    default:
-      abort();
-  }
+  return static_cast<capi::MyEnum>(value);
 }
 
 inline MyEnum MyEnum::FromFFI(capi::MyEnum c_enum) {
-    switch (c_enum) {
+  switch (c_enum) {
     case capi::MyEnum_A:
-      return MyEnum::Value::A;
     case capi::MyEnum_B:
-      return MyEnum::Value::B;
     case capi::MyEnum_C:
-      return MyEnum::Value::C;
     case capi::MyEnum_D:
-      return MyEnum::Value::D;
     case capi::MyEnum_E:
-      return MyEnum::Value::E;
     case capi::MyEnum_F:
-      return MyEnum::Value::F;
+      return static_cast<MyEnum::Value>(c_enum);
     default:
       abort();
   }

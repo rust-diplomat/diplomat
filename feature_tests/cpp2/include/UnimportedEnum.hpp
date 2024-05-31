@@ -14,26 +14,15 @@
 
 
 inline capi::UnimportedEnum UnimportedEnum::AsFFI() const {
-  switch (value) {
-    case A:
-      return capi::UnimportedEnum_A;
-    case B:
-      return capi::UnimportedEnum_B;
-    case C:
-      return capi::UnimportedEnum_C;
-    default:
-      abort();
-  }
+  return static_cast<capi::UnimportedEnum>(value);
 }
 
 inline UnimportedEnum UnimportedEnum::FromFFI(capi::UnimportedEnum c_enum) {
-    switch (c_enum) {
+  switch (c_enum) {
     case capi::UnimportedEnum_A:
-      return UnimportedEnum::Value::A;
     case capi::UnimportedEnum_B:
-      return UnimportedEnum::Value::B;
     case capi::UnimportedEnum_C:
-      return UnimportedEnum::Value::C;
+      return static_cast<UnimportedEnum::Value>(c_enum);
     default:
       abort();
   }

@@ -14,22 +14,14 @@
 
 
 inline capi::ErrorEnum ErrorEnum::AsFFI() const {
-  switch (value) {
-    case Foo:
-      return capi::ErrorEnum_Foo;
-    case Bar:
-      return capi::ErrorEnum_Bar;
-    default:
-      abort();
-  }
+  return static_cast<capi::ErrorEnum>(value);
 }
 
 inline ErrorEnum ErrorEnum::FromFFI(capi::ErrorEnum c_enum) {
-    switch (c_enum) {
+  switch (c_enum) {
     case capi::ErrorEnum_Foo:
-      return ErrorEnum::Value::Foo;
     case capi::ErrorEnum_Bar:
-      return ErrorEnum::Value::Bar;
+      return static_cast<ErrorEnum::Value>(c_enum);
     default:
       abort();
   }

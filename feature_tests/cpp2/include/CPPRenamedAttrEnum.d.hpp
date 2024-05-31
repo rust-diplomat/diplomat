@@ -15,9 +15,9 @@ namespace ns {
 class CPPRenamedAttrEnum {
 public:
   enum Value {
-    A,
-    B,
-    CPPRenamed,
+    A = 0,
+    B = 1,
+    CPPRenamed = 2,
   };
 
   CPPRenamedAttrEnum() = default;

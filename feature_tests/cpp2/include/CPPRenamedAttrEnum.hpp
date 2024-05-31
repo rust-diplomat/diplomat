@@ -14,26 +14,15 @@
 
 
 inline capi::AttrEnum ns::CPPRenamedAttrEnum::AsFFI() const {
-  switch (value) {
-    case A:
-      return capi::AttrEnum_A;
-    case B:
-      return capi::AttrEnum_B;
-    case CPPRenamed:
-      return capi::AttrEnum_C;
-    default:
-      abort();
-  }
+  return static_cast<capi::AttrEnum>(value);
 }
 
 inline ns::CPPRenamedAttrEnum ns::CPPRenamedAttrEnum::FromFFI(capi::AttrEnum c_enum) {
-    switch (c_enum) {
+  switch (c_enum) {
     case capi::AttrEnum_A:
-      return ns::CPPRenamedAttrEnum::Value::A;
     case capi::AttrEnum_B:
-      return ns::CPPRenamedAttrEnum::Value::B;
     case capi::AttrEnum_C:
-      return ns::CPPRenamedAttrEnum::Value::CPPRenamed;
+      return static_cast<ns::CPPRenamedAttrEnum::Value>(c_enum);
     default:
       abort();
   }

@@ -14,8 +14,8 @@
 class ErrorEnum {
 public:
   enum Value {
-    Foo,
-    Bar,
+    Foo = 0,
+    Bar = 1,
   };
 
   ErrorEnum() = default;

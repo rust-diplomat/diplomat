@@ -14,10 +14,10 @@
 class ContiguousEnum {
 public:
   enum Value {
-    C,
-    D,
-    E,
-    F,
+    C = 0,
+    D = 1,
+    E = 2,
+    F = 3,
   };
 
   ContiguousEnum() = default;

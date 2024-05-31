@@ -14,10 +14,10 @@
 class ICU4XFixedDecimalGroupingStrategy {
 public:
   enum Value {
-    Auto,
-    Never,
-    Always,
-    Min2,
+    Auto = 0,
+    Never = 1,
+    Always = 2,
+    Min2 = 3,
   };
 
   ICU4XFixedDecimalGroupingStrategy() = default;

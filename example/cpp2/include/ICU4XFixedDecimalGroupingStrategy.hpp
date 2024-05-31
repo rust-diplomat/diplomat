@@ -14,30 +14,16 @@
 
 
 inline capi::ICU4XFixedDecimalGroupingStrategy ICU4XFixedDecimalGroupingStrategy::AsFFI() const {
-  switch (value) {
-    case Auto:
-      return capi::ICU4XFixedDecimalGroupingStrategy_Auto;
-    case Never:
-      return capi::ICU4XFixedDecimalGroupingStrategy_Never;
-    case Always:
-      return capi::ICU4XFixedDecimalGroupingStrategy_Always;
-    case Min2:
-      return capi::ICU4XFixedDecimalGroupingStrategy_Min2;
-    default:
-      abort();
-  }
+  return static_cast<capi::ICU4XFixedDecimalGroupingStrategy>(value);
 }
 
 inline ICU4XFixedDecimalGroupingStrategy ICU4XFixedDecimalGroupingStrategy::FromFFI(capi::ICU4XFixedDecimalGroupingStrategy c_enum) {
-    switch (c_enum) {
+  switch (c_enum) {
     case capi::ICU4XFixedDecimalGroupingStrategy_Auto:
-      return ICU4XFixedDecimalGroupingStrategy::Value::Auto;
     case capi::ICU4XFixedDecimalGroupingStrategy_Never:
-      return ICU4XFixedDecimalGroupingStrategy::Value::Never;
     case capi::ICU4XFixedDecimalGroupingStrategy_Always:
-      return ICU4XFixedDecimalGroupingStrategy::Value::Always;
     case capi::ICU4XFixedDecimalGroupingStrategy_Min2:
-      return ICU4XFixedDecimalGroupingStrategy::Value::Min2;
+      return static_cast<ICU4XFixedDecimalGroupingStrategy::Value>(c_enum);
     default:
       abort();
   }
