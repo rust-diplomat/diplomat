@@ -4,8 +4,8 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class ImportedStruct {
-	foo: UnimportedEnum;
-	count: number;
+    foo: UnimportedEnum;
+    count: number;
+    
 
-	
 }

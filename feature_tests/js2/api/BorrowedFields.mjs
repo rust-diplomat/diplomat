@@ -4,18 +4,37 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFields {
-	a;
-	b;
-	c;
+    a;
+    b;
+    c;
+    // Return this struct as any array that can be expanded with spread syntax (...)
+    #intoFFI() {
+        [
+            /*TODO: struct Slice fields*/, 
+            /*TODO: struct Slice fields*/, 
+            /*TODO: struct Slice fields*/]
+    }
+    
+    static fromBarAndStrings(bar, dstr16, utf8Str) {
+        
+        const dstr16Slice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16);
+        const dstr16Arena = new diplomatRuntime.DiplomatFinalizedArena();
+        
+        
+        const utf8StrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str);
+        const utf8StrArena = new diplomatRuntime.DiplomatFinalizedArena();
+        
+        
+        // This lifetime edge depends on lifetimes 'x
+        let xEdges = [bar, dstr16Slice, utf8StrSlice];const result = wasm.BorrowedFields_from_bar_and_strings(bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
+    
+        dstr16Slice.garbageCollect();
+        
+        utf8StrSlice.garbageCollect();
+        
+        return BorrowedFields // TODO: Struct c_to_js;
+    }
 
-	
-	// Return this struct as any array that can be expanded with spread syntax (...)
-	#intoFFI() {
-		[
-			/*TODO: struct Slice fields*/, 
-			/*TODO: struct Slice fields*/, 
-			/*TODO: struct Slice fields*/]
-	}
+    
 
-	
 }

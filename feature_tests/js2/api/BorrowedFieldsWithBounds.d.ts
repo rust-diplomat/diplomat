@@ -4,9 +4,11 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFieldsWithBounds {
-	fieldA: String;
-	fieldB: String;
-	fieldC: String;
+    fieldA: String;
+    fieldB: String;
+    fieldC: String;
+    static fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds;
 
-	
+    
+
 }

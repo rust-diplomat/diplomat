@@ -4,18 +4,41 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFieldsWithBounds {
-	fieldA;
-	fieldB;
-	fieldC;
+    fieldA;
+    fieldB;
+    fieldC;
+    // Return this struct as any array that can be expanded with spread syntax (...)
+    #intoFFI() {
+        [
+            /*TODO: struct Slice fields*/, 
+            /*TODO: struct Slice fields*/, 
+            /*TODO: struct Slice fields*/]
+    }
+    
+    static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
+        
+        const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
+        const dstr16XArena = new diplomatRuntime.DiplomatFinalizedArena();
+        
+        
+        const utf8StrZSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ);
+        const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
+        
+        
+        // This lifetime edge depends on lifetimes 'x, 'y, 'z
+        let xEdges = [foo, dstr16XSlice, utf8StrZSlice];
+        // This lifetime edge depends on lifetimes 'y, 'z
+        let yEdges = [foo, utf8StrZSlice];
+        // This lifetime edge depends on lifetimes 'z
+        let zEdges = [utf8StrZSlice];const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+    
+        dstr16XSlice.garbageCollect();
+        
+        utf8StrZSlice.garbageCollect();
+        
+        return BorrowedFieldsWithBounds // TODO: Struct c_to_js;
+    }
 
-	
-	// Return this struct as any array that can be expanded with spread syntax (...)
-	#intoFFI() {
-		[
-			/*TODO: struct Slice fields*/, 
-			/*TODO: struct Slice fields*/, 
-			/*TODO: struct Slice fields*/]
-	}
+    
 
-	
 }

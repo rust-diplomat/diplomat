@@ -4,13 +4,17 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class MyStruct {
-	a: number;
-	b: boolean;
-	c: number;
-	d: number;
-	e: number;
-	f: char;
-	g: MyEnum;
+    a: number;
+    b: boolean;
+    c: number;
+    d: number;
+    e: number;
+    f: char;
+    g: MyEnum;
+    static new_(): MyStruct;
 
-	
+    intoA(): number;
+
+    
+
 }

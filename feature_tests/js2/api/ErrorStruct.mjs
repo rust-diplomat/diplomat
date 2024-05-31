@@ -4,16 +4,15 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class ErrorStruct {
-	i;
-	j;
+    i;
+    j;
+    // Return this struct as any array that can be expanded with spread syntax (...)
+    #intoFFI() {
+        [
+            /*TODO: Other struct fields. i*/, 
+            /*TODO: Other struct fields. j*/]
+    }
+    
+    
 
-	
-	// Return this struct as any array that can be expanded with spread syntax (...)
-	#intoFFI() {
-		[
-			/*TODO: Other struct fields. i*/, 
-			/*TODO: Other struct fields. j*/]
-	}
-
-	
 }

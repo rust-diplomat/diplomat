@@ -4,9 +4,11 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class NestedBorrowedFields {
-	fields: BorrowedFields;
-	bounds: BorrowedFieldsWithBounds;
-	bounds2: BorrowedFieldsWithBounds;
+    fields: BorrowedFields;
+    bounds: BorrowedFieldsWithBounds;
+    bounds2: BorrowedFieldsWithBounds;
+    static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: String, dstr16Z: String, utf8StrY: String, utf8StrZ: String): NestedBorrowedFields;
 
-	
+    
+
 }

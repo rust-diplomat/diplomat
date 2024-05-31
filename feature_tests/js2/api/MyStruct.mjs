@@ -4,26 +4,39 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class MyStruct {
-	a;
-	b;
-	c;
-	d;
-	e;
-	f;
-	g;
+    a;
+    b;
+    c;
+    d;
+    e;
+    f;
+    g;
+    // Return this struct as any array that can be expanded with spread syntax (...)
+    #intoFFI() {
+        [
+            /*TODO: Other struct fields. a*/, 
+            /*TODO: Other struct fields. b*/, 
+            /*TODO: Other struct fields. c*/, 
+            /*TODO: Other struct fields. d*/, 
+            /*TODO: Other struct fields. e*/, 
+            /*TODO: Other struct fields. f*/, 
+            /*TODO: Other struct fields. g.ffiValue*/]
+    }
+    
+    static new_() {
+        const result = wasm.MyStruct_new();
+    
+        return MyStruct // TODO: Struct c_to_js;
+    }
 
-	
-	// Return this struct as any array that can be expanded with spread syntax (...)
-	#intoFFI() {
-		[
-			/*TODO: Other struct fields. a*/, 
-			/*TODO: Other struct fields. b*/, 
-			/*TODO: Other struct fields. c*/, 
-			/*TODO: Other struct fields. d*/, 
-			/*TODO: Other struct fields. e*/, 
-			/*TODO: Other struct fields. f*/, 
-			/*TODO: Other struct fields. g.ffiValue*/]
-	}
+    intoA() {
+        const result = wasm.MyStruct_into_a(...this.#intoFFI());
+    
+        this.free(); /* TODO: Does this work? */
+        
+        return result;
+    }
 
-	
+    
+
 }
