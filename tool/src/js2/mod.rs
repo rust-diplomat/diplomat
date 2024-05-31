@@ -128,21 +128,22 @@ impl<'tcx> JSGenerationContext<'tcx> {
             };
 
 
-            let file_name = self.formatter.fmt_file_name(&name, file_type);
+            let file_name = self.formatter.fmt_file_name(&name, &file_type);
 
             self.exports.push(format!("export {{ {name} }} from './{file_name}'").into());
 
-            self.files.add_file(file_name, self.generate_base(contents));
+            self.files.add_file(file_name, self.generate_base(contents, &file_type));
         }
     }
 
-    fn generate_base(&self, body : String) -> String {
+    fn generate_base(&self, body : String, file_type : &FileType) -> String {
         #[derive(Template)]
         #[template(path="js2/base.js.jinja", escape="none")]
         struct BaseTemplate {
             body : String,
+            typescript : bool,
         }
-        BaseTemplate {body}.render().unwrap()
+        BaseTemplate {body, typescript: file_type.is_typescript()}.render().unwrap()
     }
 
     // #region Base generator functions (enum, opaque, struct, outstruct)
