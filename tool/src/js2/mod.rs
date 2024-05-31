@@ -430,7 +430,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
             method_info.parameters.push(param_info);
         }
 
-        if method.output.is_writeable() {
+        if method.output.is_write() {
             // TODO:
         }
 

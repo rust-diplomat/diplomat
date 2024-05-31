@@ -81,7 +81,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
 	pub(super) fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
         match out_ty {
-            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::Write => self.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_js_type_str(o),
             SuccessType::Unit => self.formatter.fmt_void().into(),
             _ => unreachable!(),
@@ -173,18 +173,18 @@ impl<'tcx> JSGenerationContext<'tcx> {
 			=> self.formatter.fmt_void().into(),
 
 			// Something we can write to? We just treat it as a string.
-			ReturnType::Infallible(SuccessType::Writeable)
-			| ReturnType::Fallible(SuccessType::Writeable, Some(_))
+			ReturnType::Infallible(SuccessType::Write)
+			| ReturnType::Fallible(SuccessType::Write, Some(_))
 			=> self.formatter.fmt_string().into(),
 
-            // Anything we get returned that is not a [`SuccessType::Writeable`].
+            // Anything we get returned that is not a [`SuccessType::Write`].
             ReturnType::Infallible(SuccessType::OutType(ref o))
 			| ReturnType::Fallible(SuccessType::OutType(ref o), Some(_))
 			=> self.gen_js_type_str(o),
 
 			// Nullable string (no error on return).
-			ReturnType::Fallible(SuccessType::Writeable, None)
-			| ReturnType::Nullable(SuccessType::Writeable)
+			ReturnType::Fallible(SuccessType::Write, None)
+			| ReturnType::Nullable(SuccessType::Write)
 			=> self.formatter.fmt_nullable(self.formatter.fmt_string()).into(),
 
 			// Something like Option<()>. Basically, did we run successfully?
@@ -208,9 +208,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
 			// -> ()
 			ReturnType::Infallible(SuccessType::Unit) => None,
 			
-			ReturnType::Infallible(SuccessType::Writeable) => Some("return writeable;".into()),
+			ReturnType::Infallible(SuccessType::Write) => Some("return writeable;".into()),
 
-			// Any out that is not a [`SuccessType::Writeable`].
+			// Any out that is not a [`SuccessType::Write`].
 			ReturnType::Infallible(SuccessType::OutType(ref o)) => Some(
 				format!("return {};", self.gen_c_to_js_for_type(o, "result".into(), lifetime_environment))
 				.into()
@@ -234,7 +234,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
 				Some(match ok {
 					SuccessType::Unit => err_check,
-					SuccessType::Writeable => format!("{err_check} return writeable;"),
+					SuccessType::Write => format!("{err_check} return writeable;"),
 					SuccessType::OutType(ref o) => format!("{err_check} return {};", 
 					self.gen_c_to_js_for_type(o, "result.union.ok".into(), lifetime_environment)),
 					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)

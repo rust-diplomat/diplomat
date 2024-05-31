@@ -84,6 +84,8 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];const result = wasm.Foo_extract_from_fields(/*TODO: gen_js_to_c_for_type for Struct*/);
     
+        this.free(); /* TODO: Does this work? */
+        
         return new Foo(result, [], aEdges);
     }
 
@@ -96,6 +98,8 @@ export class Foo {
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];const result = wasm.Foo_extract_from_bounds(/*TODO: gen_js_to_c_for_type for Struct*/, anotherStringSlice.ptr, anotherStringSlice.size);
     
+        this.free(); /* TODO: Does this work? */
+        
         anotherStringSlice.garbageCollect();
         
         return new Foo(result, [], aEdges);
