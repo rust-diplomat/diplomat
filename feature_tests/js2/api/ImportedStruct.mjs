@@ -4,9 +4,16 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class ImportedStruct {
+	foo;
+	count;
+
+	
+	// Return this struct as any array that can be expanded with spread syntax (...)
 	#intoFFI() {
-		// TODO
+		[
+			/*TODO: Other struct fields. foo.ffiValue*/, 
+			/*TODO: Other struct fields. count*/]
 	}
-	// TODO
-	get ffiValue();
+
+	
 }

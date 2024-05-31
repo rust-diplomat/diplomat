@@ -3,9 +3,22 @@
 */
 {% endif %}
 export class {{type_name}} {
+	{%- for field in fields %}
+	{% if !mutable -%} const {% endif -%} {{field.field_name}} {%- if typescript %}: {{field.js_type_name}}{% endif %};
+	{%- endfor %}
+
+	{% if !typescript %}
+	// Return this struct as any array that can be expanded with spread syntax (...)
 	#intoFFI() {
-		// TODO
+		[
+			{%- for field in fields -%}
+			{%- for statement in field.js_to_c %}
+			{{statement}}{% if !loop.last %}, {% endif %}
+			{%- endfor -%}
+			{%- if !loop.last -%}, {% endif %}
+			{%- endfor -%}
+		]
 	}
-	// TODO
-	get ffiValue();
+
+	{% endif %}
 }

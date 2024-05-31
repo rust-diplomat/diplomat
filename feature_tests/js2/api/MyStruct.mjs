@@ -4,9 +4,26 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class MyStruct {
+	a;
+	b;
+	c;
+	d;
+	e;
+	f;
+	g;
+
+	
+	// Return this struct as any array that can be expanded with spread syntax (...)
 	#intoFFI() {
-		// TODO
+		[
+			/*TODO: Other struct fields. a*/, 
+			/*TODO: Other struct fields. b*/, 
+			/*TODO: Other struct fields. c*/, 
+			/*TODO: Other struct fields. d*/, 
+			/*TODO: Other struct fields. e*/, 
+			/*TODO: Other struct fields. f*/, 
+			/*TODO: Other struct fields. g.ffiValue*/]
 	}
-	// TODO
-	get ffiValue();
+
+	
 }

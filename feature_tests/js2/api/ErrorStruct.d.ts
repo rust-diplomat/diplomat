@@ -4,9 +4,8 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class ErrorStruct {
-	#intoFFI() {
-		// TODO
-	}
-	// TODO
-	get ffiValue();
+	i: number;
+	j: number;
+
+	
 }

@@ -202,7 +202,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
             c_to_js : Cow<'info, str>,
             js_to_c : Vec<String>,
             maybe_struct_borrow_info : Option<StructBorrowInfo<'info>>,
-        };
+        }
 
         let fields = struct_def.fields.iter()
         .map(|field| {
@@ -278,6 +278,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         struct ImplTemplate<'a, P: hir::TyPosition> {
             type_name : &'a str,
             mutable : bool,
+            typescript: bool,
             fields : Vec<FieldInfo<'a, P>>,
             methods: Vec<String>,
             docs: String,
@@ -287,6 +288,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
         ImplTemplate {
             type_name,
             mutable,
+            typescript: file_type.is_typescript(),
             fields,
             methods,
             docs: self.formatter.fmt_docs(&struct_def.docs),

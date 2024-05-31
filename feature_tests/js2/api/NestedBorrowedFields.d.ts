@@ -4,9 +4,9 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class NestedBorrowedFields {
-	#intoFFI() {
-		// TODO
-	}
-	// TODO
-	get ffiValue();
+	fields: BorrowedFields;
+	bounds: BorrowedFieldsWithBounds;
+	bounds2: BorrowedFieldsWithBounds;
+
+	
 }

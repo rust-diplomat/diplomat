@@ -4,9 +4,9 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFieldsWithBounds {
-	#intoFFI() {
-		// TODO
-	}
-	// TODO
-	get ffiValue();
+	fieldA: String;
+	fieldB: String;
+	fieldC: String;
+
+	
 }

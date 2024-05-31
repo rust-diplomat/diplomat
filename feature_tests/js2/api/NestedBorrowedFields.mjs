@@ -4,9 +4,18 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class NestedBorrowedFields {
+	fields;
+	bounds;
+	bounds2;
+
+	
+	// Return this struct as any array that can be expanded with spread syntax (...)
 	#intoFFI() {
-		// TODO
+		[
+			/*TODO: Other struct fields. /*TODO: gen_js_to_c_for_type for Struct*/*/, 
+			/*TODO: Other struct fields. /*TODO: gen_js_to_c_for_type for Struct*/*/, 
+			/*TODO: Other struct fields. /*TODO: gen_js_to_c_for_type for Struct*/*/]
 	}
-	// TODO
-	get ffiValue();
+
+	
 }

@@ -4,9 +4,14 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFieldsReturning {
+	bytes;
+
+	
+	// Return this struct as any array that can be expanded with spread syntax (...)
 	#intoFFI() {
-		// TODO
+		[
+			/*TODO: struct Slice fields*/]
 	}
-	// TODO
-	get ffiValue();
+
+	
 }

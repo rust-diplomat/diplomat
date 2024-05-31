@@ -4,9 +4,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFieldsReturning {
-	#intoFFI() {
-		// TODO
-	}
-	// TODO
-	get ffiValue();
+	bytes: String;
+
+	
 }

@@ -4,9 +4,8 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class ImportedStruct {
-	#intoFFI() {
-		// TODO
-	}
-	// TODO
-	get ffiValue();
+	foo: UnimportedEnum;
+	count: number;
+
+	
 }
