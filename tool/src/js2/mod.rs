@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::collections::BTreeMap;
-use std::fmt::Display;
+use std::fmt::{Display, Write};
 
 use converter::StructBorrowContext;
 use diplomat_core::ast::{DocsUrlGenerator, Param};
@@ -27,6 +27,9 @@ pub struct JSGenerationContext<'tcx> {
     errors : ErrorStore<'tcx, String>,
 
     files : FileMap,
+
+    /// Exports for the root level index.js file.
+    exports : Vec<Cow<'tcx, str>>,
 }
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?
@@ -46,13 +49,15 @@ impl FileType {
 
 impl<'tcx> JSGenerationContext<'tcx> {
     pub fn run(tcx : &'tcx TypeContext, docs : &'tcx DocsUrlGenerator, strip_prefix : Option<String>) -> Result<FileMap, Vec<(impl Display + 'tcx, String)>> {
-        let this = Self {
+        let mut this = Self {
             tcx,
             formatter: JSFormatter::new(tcx, docs, strip_prefix),
 
             errors: ErrorStore::default(),
 
             files: FileMap::default(),
+
+            exports : Vec::new(),
         };
         this.init();
 
@@ -67,7 +72,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
     /// Setup. Write out all the pre-written files.
     /// 
     /// Then iterate through all the types we get from the TypeContext to create separate out files.
-    pub fn init(&self) {
+    pub fn init(&mut self) {
         self.files.add_file("diplomat-runtime.mjs".into(), include_str!("../../templates/js2/runtime.mjs").into());
         self.files.add_file("diplomat-runtime.d.ts".into(), include_str!("../../templates/js2/runtime.d.ts").into());
         self.files.add_file("diplomat-wasm.mjs".into(), include_str!("../../templates/js2/wasm.mjs").into());
@@ -76,20 +81,28 @@ impl<'tcx> JSGenerationContext<'tcx> {
         // TODO: All of this.
 
         for (id, ty) in self.tcx.all_types() {
-            let _guard = self.errors.set_context_ty(ty.name().as_str().into());
-            if ty.attrs().disable {
-                continue;
-            }
+            self.generate_file_from_type(id, ty);
+        }
 
-            self.generate_file_from_type(id);
+        let mut export_str: String = String::new();
+        for export in self.exports.iter() {
+            write!(export_str, "{export}\n").expect("Could not write into export_str");
         }
         
-        self.files.add_file("index.mjs".into(), "export { FFIError } from './diplomat-runtime.mjs';".into());
+        let out_index = format!("export {{ FFIError }} from './diplomat-runtime.mjs'; \n{export_str}");
+        
+        self.files.add_file("index.mjs".into(), out_index);
         self.files.add_file("index.d.ts".into(), "".into());
     }
 
     /// Generate a file's name and body from its given [`TypeId`]
-    fn generate_file_from_type(&self, type_id : TypeId) {
+    fn generate_file_from_type(&mut self, type_id : TypeId, ty : hir::TypeDef<'tcx>) {
+        let _guard = self.errors.set_context_ty(ty.name().as_str().into());
+
+        if ty.attrs().disable {
+            return;
+        }
+        
         let type_def = self.tcx.resolve_type(type_id);
 
         let _guard = self.errors.set_context_ty(type_def.name().as_str().into());
@@ -113,7 +126,13 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 },
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def)
             };
-            self.files.add_file(self.formatter.fmt_file_name(&name, file_type), self.generate_base(contents));
+
+
+            let file_name = self.formatter.fmt_file_name(&name, file_type);
+
+            self.exports.push(format!("export {{ {name} }} from './{file_name}'").into());
+
+            self.files.add_file(file_name, self.generate_base(contents));
         }
     }
 
