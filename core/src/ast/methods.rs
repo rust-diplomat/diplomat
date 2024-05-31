@@ -183,33 +183,34 @@ impl Method {
         }
     }
 
-    /// Checks whether the method qualifies for special writeable handling.
+    /// Checks whether the method qualifies for special write handling.
     /// To qualify, a method must:
     ///  - not return any value
-    ///  - have the last argument be an `&mut diplomat_runtime::DiplomatWriteable`
+    ///  - have the last argument be an `&mut diplomat_runtime::DiplomatWrite`
     ///
     /// Typically, methods of this form will be transformed in the bindings to a
-    /// method that doesn't take the writeable as an argument but instead creates
+    /// method that doesn't take the write as an argument but instead creates
     /// one locally and just returns the final string.
-    pub fn is_writeable_out(&self) -> bool {
+    pub fn is_write_out(&self) -> bool {
         let return_compatible = self
             .return_type
             .as_ref()
             .map(|return_type| match return_type {
                 TypeName::Unit => true,
-                TypeName::Result(ok, _, _) => {
+                TypeName::Result(ok, _, _) | TypeName::Option(ok) => {
                     matches!(ok.as_ref(), TypeName::Unit)
                 }
+
                 _ => false,
             })
             .unwrap_or(true);
 
-        return_compatible && self.params.last().map(Param::is_writeable).unwrap_or(false)
+        return_compatible && self.params.last().map(Param::is_write).unwrap_or(false)
     }
 
-    /// Checks if any parameters are writeable (regardless of other compatibilities for writeable output)
-    pub fn has_writeable_param(&self) -> bool {
-        self.params.iter().any(|p| p.is_writeable())
+    /// Checks if any parameters are write (regardless of other compatibilities for write output)
+    pub fn has_write_param(&self) -> bool {
+        self.params.iter().any(|p| p.is_write())
     }
 
     /// Returns the documentation block
@@ -262,10 +263,10 @@ pub struct Param {
 }
 
 impl Param {
-    /// Check if this parameter is a Writeable
-    pub fn is_writeable(&self) -> bool {
+    /// Check if this parameter is a Write
+    pub fn is_write(&self) -> bool {
         match self.ty {
-            TypeName::Reference(_, Mutability::Mutable, ref w) => **w == TypeName::Writeable,
+            TypeName::Reference(_, Mutability::Mutable, ref w) => **w == TypeName::Write,
             _ => false,
         }
     }

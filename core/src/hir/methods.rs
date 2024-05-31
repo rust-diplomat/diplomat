@@ -32,7 +32,7 @@ pub struct Method {
 #[non_exhaustive]
 pub enum SuccessType {
     /// Is the return type something that can be written to? I.e., a buffer
-    Writeable,
+    Write,
     /// See [`OutType`] and [`super::ty_position::TyPosition`].
     /// Basically, it's a Box<SomeType> that we can output, but not recieve again as input.
     OutType(OutType),
@@ -65,9 +65,9 @@ pub struct Param {
 }
 
 impl SuccessType {
-    /// Returns whether the variant is `Writeable`.
-    pub fn is_writeable(&self) -> bool {
-        matches!(self, SuccessType::Writeable)
+    /// Returns whether the variant is `Write`.
+    pub fn is_write(&self) -> bool {
+        matches!(self, SuccessType::Write)
     }
 
     /// Returns whether the variant is `Unit`.
@@ -95,11 +95,11 @@ impl Deref for ReturnType {
 
 impl ReturnType {
     /// Returns `true` if the FFI function returns `void`. Not that this is different from `is_unit`,
-    /// which will be true for `DiplomatResult<(), E>` and false for infallible writeable.
+    /// which will be true for `DiplomatResult<(), E>` and false for infallible write.
     pub fn is_ffi_unit(&self) -> bool {
         matches!(
             self,
-            ReturnType::Infallible(SuccessType::Unit | SuccessType::Writeable)
+            ReturnType::Infallible(SuccessType::Unit | SuccessType::Write)
         )
     }
 

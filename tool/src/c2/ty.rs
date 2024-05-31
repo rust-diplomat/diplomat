@@ -134,8 +134,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
         let return_ty: Cow<str> = match method.output {
             ReturnType::Infallible(SuccessType::Unit) => "void".into(),
-            ReturnType::Infallible(SuccessType::Writeable) => {
-                param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
+            ReturnType::Infallible(SuccessType::Write) => {
+                param_decls.push(("DiplomatWrite*".into(), "write".into()));
                 "void".into()
             }
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, false),
@@ -147,8 +147,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     None
                 };
                 let (ok_type_name, ok_ty) = match ok {
-                    SuccessType::Writeable => {
-                        param_decls.push(("DiplomatWriteable*".into(), "writeable".into()));
+                    SuccessType::Write => {
+                        param_decls.push(("DiplomatWrite*".into(), "write".into()));
                         ("void".into(), None)
                     }
                     SuccessType::Unit => ("void".into(), None),

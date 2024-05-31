@@ -59,9 +59,9 @@ final class MyString implements ffi.Finalizable {
   }
 
   String get str {
-    final writeable = _Writeable();
-    _MyString_get_str(_ffi, writeable._ffi);
-    return writeable.finalize();
+    final write = _Write();
+    _MyString_get_str(_ffi, write._ffi);
+    return write.finalize();
   }
 
   String getBoxedStr() {
@@ -103,7 +103,7 @@ external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Ui
 @meta.ResourceIdentifier('MyString_get_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_str')
 // ignore: non_constant_identifier_names
-external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);
+external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @meta.ResourceIdentifier('MyString_get_boxed_str')
 @ffi.Native<_SliceUtf8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_boxed_str')

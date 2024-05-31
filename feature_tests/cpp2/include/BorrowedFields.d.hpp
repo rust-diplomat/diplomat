@@ -18,7 +18,7 @@ struct BorrowedFields {
   std::string_view b;
   std::string_view c;
 
-  inline static BorrowedFields from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str);
+  inline static diplomat::result<BorrowedFields, diplomat::Utf8Error> from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str);
 
   inline capi::BorrowedFields AsFFI() const;
   inline static BorrowedFields FromFFI(capi::BorrowedFields c_struct);

@@ -3,16 +3,17 @@ example/c2/include/** linguist-generated=true
 example/cpp/include/** linguist-generated=true
 example/cpp/docs/source/** linguist-generated=true
 example/cpp2/include/** linguist-generated=true
+example/dart/lib/** linguist-generated=true
 example/js/lib/api/** linguist-generated=true
 example/js/lib/docs/source/**
-example/dart/lib/** linguist-generated=true
 
 feature_tests/c/include/** linguist-generated=true
 feature_tests/c2/include/** linguist-generated=true
 feature_tests/cpp/include/** linguist-generated=true
 feature_tests/cpp/docs/source/** linguist-generated=true
 feature_tests/cpp2/include/** linguist-generated=true
+feature_tests/dart/lib/** linguist-generated=true
+feature_tests/dotnet/Lib/** linguist-generated=true
 feature_tests/js/api/** linguist-generated=true
 feature_tests/js/docs/source/** linguist-generated=true
-feature_tests/dotnet/Lib/** linguist-generated=true
-feature_tests/dart/lib/** linguist-generated=true
+feature_tests/kotlin/somelib/** linguist-generated=true

@@ -102,8 +102,8 @@ export class Float64Vec {
   }
 
   to_string() {
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
-      return wasm.Float64Vec_to_string(this.underlying, writeable);
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return wasm.Float64Vec_to_string(this.underlying, write);
     });
   }
 

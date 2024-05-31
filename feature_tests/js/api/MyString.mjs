@@ -41,8 +41,8 @@ export class MyString {
   }
 
   get_str() {
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
-      return wasm.MyString_get_str(this.underlying, writeable);
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return wasm.MyString_get_str(this.underlying, write);
     });
   }
 }

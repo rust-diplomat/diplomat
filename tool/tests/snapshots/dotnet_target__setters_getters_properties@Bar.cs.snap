@@ -105,7 +105,7 @@ public partial class Bar: IDisposable
     }
 
     /// <exception cref="DiplomatOpaqueException"></exception>
-    public void GetName(DiplomatWriteable out)
+    public void GetName(DiplomatWrite out)
     {
         unsafe
         {
@@ -130,14 +130,14 @@ public partial class Bar: IDisposable
             {
                 throw new ObjectDisposedException("Bar");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            Raw.FfiResultVoidVoid result = Raw.Bar.GetName(_inner, &writeable);
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.FfiResultVoidVoid result = Raw.Bar.GetName(_inner, &write);
             if (!result.isOk)
             {
                 throw new DiplomatOpaqueException();
             }
-            string retVal = writeable.ToUnicode();
-            writeable.Dispose();
+            string retVal = write.ToUnicode();
+            write.Dispose();
             return retVal;
         }
     }

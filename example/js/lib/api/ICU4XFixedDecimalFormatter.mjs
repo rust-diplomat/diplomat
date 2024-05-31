@@ -36,8 +36,8 @@ export class ICU4XFixedDecimalFormatter {
   }
 
   format_write(arg_value) {
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
-      return wasm.ICU4XFixedDecimalFormatter_format_write(this.underlying, arg_value.underlying, writeable);
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return wasm.ICU4XFixedDecimalFormatter_format_write(this.underlying, arg_value.underlying, write);
     });
   }
 }

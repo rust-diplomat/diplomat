@@ -11,7 +11,7 @@ internal interface MyStringLib: Library {
     fun MyString_new_owned(v: Slice): Pointer
     fun MyString_new_from_first(v: Slice): Pointer
     fun MyString_set_str(handle: Pointer, newStr: Slice): Unit
-    fun MyString_get_str(handle: Pointer, writeable: Pointer): Unit
+    fun MyString_get_str(handle: Pointer, write: Pointer): Unit
     fun MyString_get_boxed_str(handle: Pointer): Slice
 }
 
@@ -90,12 +90,10 @@ class MyString internal constructor (
         val returnVal = lib.MyString_set_str(handle, newStrSlice);
     }
     fun getStr(): String {
-        val writeable = DW.lib.diplomat_buffer_writeable_create(0)
-        val returnVal = lib.MyString_get_str(handle, writeable);
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.MyString_get_str(handle, write);
     
-        val returnString = DW.writeableToString(writeable)
-        DW.lib.diplomat_buffer_writeable_destroy(writeable)
-        return returnString
+        return DW.writeToString(write)
     }
     fun getBoxedStr(): String {
         

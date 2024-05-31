@@ -18,20 +18,19 @@ expression: out_texts.get(out).unwrap()
 
 struct MyStruct {
  public:
-  template<typename W> void write_to_writeable(W& to) const;
+  template<typename W> void write_to_write(W& to) const;
   std::string write() const;
 };
 
 
-template<typename W> inline void MyStruct::write_to_writeable(W& to) const {
-  capi::DiplomatWriteable to_writer = diplomat::WriteableTrait<W>::Construct(to);
+template<typename W> inline void MyStruct::write_to_write(W& to) const {
+  capi::DiplomatWrite to_writer = diplomat::WriteTrait<W>::Construct(to);
   capi::MyStruct_write((capi::MyStruct*) &this, &to_writer);
 }
 inline std::string MyStruct::write() const {
-  std::string diplomat_writeable_string;
-  capi::DiplomatWriteable diplomat_writeable_out = diplomat::WriteableFromString(diplomat_writeable_string);
-  capi::MyStruct_write((capi::MyStruct*) &this, &diplomat_writeable_out);
-  return diplomat_writeable_string;
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  capi::MyStruct_write((capi::MyStruct*) &this, &diplomat_write_out);
+  return diplomat_write_string;
 }
 #endif
-

@@ -128,17 +128,21 @@ fn gen_type_inner<W: fmt::Write>(
             }
 
             underlying => {
-                write!(out, "diplomat::result<")?;
-                gen_type_inner(
-                    underlying,
-                    in_path,
-                    ref_type,
-                    env,
-                    library_config,
-                    in_struct,
-                    out,
-                )?;
-                write!(out, ", std::monostate>")?;
+                write!(out, "{}<", library_config.optional.expr)?;
+                if underlying.is_zst() {
+                    write!(out, "std::monostate")?;
+                } else {
+                    gen_type_inner(
+                        underlying,
+                        in_path,
+                        ref_type,
+                        env,
+                        library_config,
+                        in_struct,
+                        out,
+                    )?;
+                }
+                write!(out, ">")?;
             }
         },
 
@@ -163,8 +167,8 @@ fn gen_type_inner<W: fmt::Write>(
             write!(out, "{}", crate::c::types::c_type_for_prim(prim))?;
         }
 
-        ast::TypeName::Writeable => {
-            write!(out, "capi::DiplomatWriteable")?;
+        ast::TypeName::Write => {
+            write!(out, "capi::DiplomatWrite")?;
         }
 
         ast::TypeName::StrReference(
@@ -310,14 +314,14 @@ mod tests {
     }
 
     #[test]
-    fn test_writeable_out() {
+    fn test_write_out() {
         test_file! {
             #[diplomat::bridge]
             mod ffi {
                 struct MyStruct;
 
                 impl MyStruct {
-                    pub fn write(&self, to: &mut DiplomatWriteable) {
+                    pub fn write(&self, to: &mut DiplomatWrite) {
                         unimplemented!()
                     }
                 }

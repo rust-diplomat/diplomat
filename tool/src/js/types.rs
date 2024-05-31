@@ -90,7 +90,7 @@ pub fn return_type_form(typ: &ast::TypeName, in_path: &ast::Path, env: &Env) -> 
 
         ast::TypeName::Primitive(_) => ReturnTypeForm::Scalar,
 
-        ast::TypeName::Writeable => panic!("Cannot return writeable"),
+        ast::TypeName::Write => panic!("Cannot return write"),
         &_ => unreachable!("unknown AST/HIR variant"),
     }
 }
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn test_writeable_out() {
+    fn test_write_out() {
         test_file! {
             #[diplomat::bridge]
             mod ffi {
@@ -186,7 +186,7 @@ mod tests {
                 }
 
                 impl MyStruct {
-                    pub fn write(self, to: &mut DiplomatWriteable) {
+                    pub fn write(self, to: &mut DiplomatWrite) {
                         unimplemented!()
                     }
                 }

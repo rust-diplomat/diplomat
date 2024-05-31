@@ -1,6 +1,4 @@
-    val writeable = DW.lib.diplomat_buffer_writeable_create(0)
+    val write = DW.lib.diplomat_buffer_write_create(0)
     {{method}}
-    val returnString = DW.writeableToString(writeable)
-    writeable = DW.lib.diplomat_buffer_writeable_destroy(writeable)
-    return returnString
+    return DW.writeToString(write)
 

@@ -32,4 +32,3 @@ public partial class ByteException : Exception
         }
     }
 }
-

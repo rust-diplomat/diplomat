@@ -120,6 +120,9 @@ fn gen_struct_header(
         }
     }
     for method in typ.methods() {
+        if method.attrs.skip_if_ast {
+            continue;
+        }
         for param in &method.params {
             gen_includes(&param.ty, in_path, env, &mut seen_includes, out)?;
             collect_results(&param.ty, in_path, env, seen_results, all_results);
@@ -137,6 +140,9 @@ fn gen_struct_header(
     writeln!(out, "#endif")?;
 
     for method in typ.methods() {
+        if method.attrs.skip_if_ast {
+            continue;
+        }
         gen_method(method, in_path, env, out)?;
     }
 
@@ -262,7 +268,7 @@ pub fn gen_includes<W: fmt::Write>(
                 seen_includes.insert(include);
             }
         }
-        ast::TypeName::Writeable => {}
+        ast::TypeName::Write => {}
         ast::TypeName::StrReference(..) => {}
         ast::TypeName::PrimitiveSlice(..) => {}
         ast::TypeName::Unit => {}

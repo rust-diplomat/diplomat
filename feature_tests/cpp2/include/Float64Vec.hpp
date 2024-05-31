@@ -79,9 +79,9 @@ inline void Float64Vec::set_value(diplomat::span<const double> new_slice) {
 
 inline std::string Float64Vec::to_string() const {
   std::string output;
-  capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+  capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::Float64Vec_to_string(this->AsFFI(),
-    &writeable);
+    &write);
   return output;
 }
 

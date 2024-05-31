@@ -14,9 +14,8 @@ export class MyStruct {
   write() {
     const field_a_this = this["a"];
     const field_b_this = this["b"];
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
-      return wasm.MyStruct_write(field_a_this, field_b_this, writeable);
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return wasm.MyStruct_write(field_a_this, field_b_this, write);
     });
   }
 }
-

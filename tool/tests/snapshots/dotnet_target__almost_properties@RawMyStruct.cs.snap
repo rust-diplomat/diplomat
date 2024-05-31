@@ -41,7 +41,7 @@ public partial struct MyStruct
     /// This should not generate a property
     /// </summary>
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "MyStruct_get_str_by_key", ExactSpelling = true)]
-    public static unsafe extern void GetStrByKey(MyStruct* self, byte* key, nuint keySz, DiplomatWriteable* writer);
+    public static unsafe extern void GetStrByKey(MyStruct* self, byte* key, nuint keySz, DiplomatWrite* writer);
 
     /// <summary>
     /// This should not generate a property

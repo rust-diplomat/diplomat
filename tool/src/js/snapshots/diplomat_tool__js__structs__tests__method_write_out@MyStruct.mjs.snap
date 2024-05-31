@@ -20,22 +20,22 @@ export class MyStruct {
   }
 
   write() {
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
-      return wasm.MyStruct_write(this.underlying, writeable);
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return wasm.MyStruct_write(this.underlying, write);
     });
   }
 
   write_unit() {
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
-      return wasm.MyStruct_write_unit(this.underlying, writeable);
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return wasm.MyStruct_write_unit(this.underlying, write);
     });
   }
 
   write_result() {
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
       return (() => {
         const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
-        wasm.MyStruct_write_result(diplomat_receive_buffer, this.underlying, writeable);
+        wasm.MyStruct_write_result(diplomat_receive_buffer, this.underlying, write);
         const is_ok = diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 1);
         if (is_ok) {
           const ok_value = {};
@@ -49,5 +49,13 @@ export class MyStruct {
       })();
     });
   }
-}
 
+  write_option() {
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return (() => {
+        const is_ok = wasm.MyStruct_write_option(this.underlying, write) == 1;
+        if (!is_ok) return;
+      })();
+    });
+  }
+}

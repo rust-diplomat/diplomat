@@ -309,7 +309,7 @@ impl RenameAttr {
 
     pub(crate) fn extend(&mut self, other: &Self) {
         if other.pattern.is_some() {
-            self.pattern = other.pattern.clone()
+            self.pattern.clone_from(&other.pattern);
         }
 
         // In the future if we support things like to_lower_case they may inherit separately

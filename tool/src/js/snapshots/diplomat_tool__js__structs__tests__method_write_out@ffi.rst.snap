@@ -13,3 +13,4 @@ expression: out_docs.get(out).unwrap()
 
     .. js:method:: write_result()
 
+    .. js:method:: write_option()

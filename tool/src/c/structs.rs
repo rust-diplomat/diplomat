@@ -56,10 +56,6 @@ pub fn gen_method<W: fmt::Write>(
     env: &Env,
     out: &mut W,
 ) -> fmt::Result {
-    if method.attrs.skip_if_ast {
-        return Ok(());
-    }
-
     writeln!(out)?;
 
     match &method.return_type {

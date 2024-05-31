@@ -15,14 +15,14 @@ use core::{fmt, ptr};
 /// and Rust will write to it, calling `grow()` as necessary. Once done, it will call `flush()`
 /// to update any state on `context` (e.g. adding a null terminator, updating the length).
 /// The object on the foreign side will be directly usable after this, the foreign side
-/// need not perform additional state updates after passing an [`DiplomatWriteable`] to
+/// need not perform additional state updates after passing an [`DiplomatWrite`] to
 /// a function.
 ///
-/// [`diplomat_simple_writeable()`] can be used to write to a fixed-size char buffer.
+/// [`diplomat_simple_write()`] can be used to write to a fixed-size char buffer.
 ///
 /// May be extended in the future to support further invariants
 ///
-/// DiplomatWriteable will not perform any cleanup on `context` or `buf`, these are logically
+/// DiplomatWrite will not perform any cleanup on `context` or `buf`, these are logically
 /// "borrows" from the FFI side.
 ///
 /// # Safety invariants:
@@ -31,10 +31,10 @@ use core::{fmt, ptr};
 ///  - `buf` must be `cap` bytes long
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
 ///    of at least the requested buffer size
-///  - `DiplomatWriteable::flush()` will be automatically called by Diplomat. `flush()` might also be called
+///  - `DiplomatWrite::flush()` will be automatically called by Diplomat. `flush()` might also be called
 ///    (erroneously) on the Rust side (it's a public method), so it must be idempotent.
 #[repr(C)]
-pub struct DiplomatWriteable {
+pub struct DiplomatWrite {
     /// Context pointer for additional data needed by `grow()` and `flush()`. May be `null`.
     ///
     /// The pointer may reference structured data on the foreign side,
@@ -46,37 +46,43 @@ pub struct DiplomatWriteable {
     len: usize,
     /// The current capacity of the buffer
     cap: usize,
+    /// Set to true if `grow` ever fails.
+    grow_failed: bool,
     /// Called by Rust to indicate that there is no more data to write.
     ///
     /// May be called multiple times.
     ///
     /// Arguments:
-    /// - `self` (`*mut DiplomatWriteable`): This `DiplomatWriteable`
-    flush: extern "C" fn(*mut DiplomatWriteable),
+    /// - `self` (`*mut DiplomatWrite`): This `DiplomatWrite`
+    flush: extern "C" fn(*mut DiplomatWrite),
     /// Called by Rust to request more capacity in the buffer. The implementation should allocate a new
     /// buffer and copy the contents of the old buffer into the new buffer, updating `self.buf` and `self.cap`
     ///
     /// Arguments:
-    /// - `self` (`*mut DiplomatWriteable`): This `DiplomatWriteable`
+    /// - `self` (`*mut DiplomatWrite`): This `DiplomatWrite`
     /// - `capacity` (`usize`): The requested capacity.
     ///
     /// Returns: `true` if the allocation succeeded. Should not update any state if it failed.
-    grow: extern "C" fn(*mut DiplomatWriteable, usize) -> bool,
+    grow: extern "C" fn(*mut DiplomatWrite, usize) -> bool,
 }
 
-impl DiplomatWriteable {
+impl DiplomatWrite {
     /// Call this function before releasing the buffer to C
     pub fn flush(&mut self) {
         (self.flush)(self);
     }
 }
-impl fmt::Write for DiplomatWriteable {
+impl fmt::Write for DiplomatWrite {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+        if self.grow_failed {
+            return Ok(());
+        }
         let needed_len = self.len + s.len();
         if needed_len > self.cap {
             let success = (self.grow)(self, needed_len);
             if !success {
-                return Err(fmt::Error);
+                self.grow_failed = true;
+                return Ok(());
             }
         }
         debug_assert!(needed_len <= self.cap);
@@ -88,7 +94,7 @@ impl fmt::Write for DiplomatWriteable {
     }
 }
 
-/// Create an `DiplomatWriteable` that can write to a fixed-length stack allocated `u8` buffer.
+/// Create an `DiplomatWrite` that can write to a fixed-length stack allocated `u8` buffer.
 ///
 /// Once done, this will append a null terminator to the written string.
 ///
@@ -96,24 +102,22 @@ impl fmt::Write for DiplomatWriteable {
 ///
 ///  - `buf` must be a valid pointer to a region of memory that can hold at `buf_size` bytes
 #[no_mangle]
-pub unsafe extern "C" fn diplomat_simple_writeable(
-    buf: *mut u8,
-    buf_size: usize,
-) -> DiplomatWriteable {
-    extern "C" fn grow(_this: *mut DiplomatWriteable, _cap: usize) -> bool {
+pub unsafe extern "C" fn diplomat_simple_write(buf: *mut u8, buf_size: usize) -> DiplomatWrite {
+    extern "C" fn grow(_this: *mut DiplomatWrite, _cap: usize) -> bool {
         false
     }
-    extern "C" fn flush(this: *mut DiplomatWriteable) {
+    extern "C" fn flush(this: *mut DiplomatWrite) {
         unsafe {
             debug_assert!((*this).len <= (*this).cap);
             let buf = (*this).buf;
             ptr::write(buf.add((*this).len), 0)
         }
     }
-    DiplomatWriteable {
+    DiplomatWrite {
         context: ptr::null_mut(),
         buf,
         len: 0,
+        grow_failed: false,
         // keep an extra byte in our pocket for the null terminator
         cap: buf_size - 1,
         flush,
@@ -121,12 +125,12 @@ pub unsafe extern "C" fn diplomat_simple_writeable(
     }
 }
 
-/// Create an [`DiplomatWriteable`] that can write to a dynamically allocated buffer managed by Rust.
+/// Create an [`DiplomatWrite`] that can write to a dynamically allocated buffer managed by Rust.
 ///
-/// Use [`diplomat_buffer_writeable_destroy()`] to free the writable and its underlying buffer.
+/// Use [`diplomat_buffer_write_destroy()`] to free the writable and its underlying buffer.
 #[no_mangle]
-pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatWriteable {
-    extern "C" fn grow(this: *mut DiplomatWriteable, new_cap: usize) -> bool {
+pub extern "C" fn diplomat_buffer_write_create(cap: usize) -> *mut DiplomatWrite {
+    extern "C" fn grow(this: *mut DiplomatWrite, new_cap: usize) -> bool {
         unsafe {
             let this = this.as_mut().unwrap();
             let mut vec = Vec::from_raw_parts(this.buf, 0, this.cap);
@@ -138,13 +142,14 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
         true
     }
 
-    extern "C" fn flush(_: *mut DiplomatWriteable) {}
+    extern "C" fn flush(_: *mut DiplomatWrite) {}
 
     let mut vec = Vec::<u8>::with_capacity(cap);
-    let ret = DiplomatWriteable {
+    let ret = DiplomatWrite {
         context: ptr::null_mut(),
         buf: vec.as_mut_ptr(),
         len: 0,
+        grow_failed: false,
         cap,
         flush,
         grow,
@@ -156,32 +161,44 @@ pub extern "C" fn diplomat_buffer_writeable_create(cap: usize) -> *mut DiplomatW
 
 /// Grabs a pointer to the underlying buffer of a writable.
 ///
+/// Returns null if there was an allocation error during the write construction.
+///
 /// # Safety
 /// - The returned pointer is valid until the passed writable is destroyed.
-/// - `this` must be a pointer to a valid [`DiplomatWriteable`] constructed by
-/// [`diplomat_buffer_writeable_create()`].
+/// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
+/// [`diplomat_buffer_write_create()`].
 #[no_mangle]
-pub extern "C" fn diplomat_buffer_writeable_get_bytes(this: &DiplomatWriteable) -> *mut u8 {
-    this.buf
+pub extern "C" fn diplomat_buffer_write_get_bytes(this: &DiplomatWrite) -> *mut u8 {
+    if this.grow_failed {
+        core::ptr::null_mut()
+    } else {
+        this.buf
+    }
 }
 
 /// Gets the length in bytes of the content written to the writable.
 ///
+/// Returns 0 if there was an allocation error during the write construction.
+///
 /// # Safety
-/// - `this` must be a pointer to a valid [`DiplomatWriteable`] constructed by
-/// [`diplomat_buffer_writeable_create()`].
+/// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
+/// [`diplomat_buffer_write_create()`].
 #[no_mangle]
-pub extern "C" fn diplomat_buffer_writeable_len(this: &DiplomatWriteable) -> usize {
-    this.len
+pub extern "C" fn diplomat_buffer_write_len(this: &DiplomatWrite) -> usize {
+    if this.grow_failed {
+        0
+    } else {
+        this.len
+    }
 }
 
 /// Destructor for Rust-memory backed writables.
 ///
 /// # Safety
-/// - `this` must be a pointer to a valid [`DiplomatWriteable`] constructed by
-/// [`diplomat_buffer_writeable_create()`].
+/// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
+/// [`diplomat_buffer_write_create()`].
 #[no_mangle]
-pub unsafe extern "C" fn diplomat_buffer_writeable_destroy(this: *mut DiplomatWriteable) {
+pub unsafe extern "C" fn diplomat_buffer_write_destroy(this: *mut DiplomatWrite) {
     let this = Box::from_raw(this);
     let vec = Vec::from_raw_parts(this.buf, 0, this.cap);
     drop(vec);

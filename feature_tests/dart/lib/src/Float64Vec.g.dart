@@ -103,9 +103,9 @@ final class Float64Vec implements ffi.Finalizable {
 
   @override
   String toString() {
-    final writeable = _Writeable();
-    _Float64Vec_to_string(_ffi, writeable._ffi);
-    return writeable.finalize();
+    final write = _Write();
+    _Float64Vec_to_string(_ffi, write._ffi);
+    return write.finalize();
   }
 
   core.List<double> borrow() {
@@ -187,7 +187,7 @@ external void _Float64Vec_set_value(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ff
 @meta.ResourceIdentifier('Float64Vec_to_string')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_to_string')
 // ignore: non_constant_identifier_names
-external void _Float64Vec_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> writeable);
+external void _Float64Vec_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @meta.ResourceIdentifier('Float64Vec_borrow')
 @ffi.Native<_SliceDouble Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_borrow')

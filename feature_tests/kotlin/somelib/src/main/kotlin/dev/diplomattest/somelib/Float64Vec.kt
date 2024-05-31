@@ -6,7 +6,6 @@ import com.sun.jna.Pointer
 
 internal interface Float64VecLib: Library {
     fun Float64Vec_destroy(handle: Pointer)
-    fun Float64Vec_new(v: Slice): Pointer
     fun Float64Vec_new_bool(v: Slice): Pointer
     fun Float64Vec_new_i16(v: Slice): Pointer
     fun Float64Vec_new_u16(v: Slice): Pointer
@@ -18,7 +17,7 @@ internal interface Float64VecLib: Library {
     fun Float64Vec_as_slice(handle: Pointer): Slice
     fun Float64Vec_fill_slice(handle: Pointer, v: Slice): Unit
     fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
-    fun Float64Vec_to_string(handle: Pointer, writeable: Pointer): Unit
+    fun Float64Vec_to_string(handle: Pointer, write: Pointer): Unit
     fun Float64Vec_borrow(handle: Pointer): Slice
     fun Float64Vec_get(handle: Pointer, i: Long): Double?
 }
@@ -39,19 +38,6 @@ class Float64Vec internal constructor (
     companion object {
         internal val libClass: Class<Float64VecLib> = Float64VecLib::class.java
         internal val lib: Float64VecLib = Native.load("somelib", libClass)
-        fun new_(v: DoubleArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
-            
-            val returnVal = lib.Float64Vec_new(vSlice);
-        
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = Float64Vec(handle, selfEdges)
-            CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
-            return returnOpaque
-        
-        }
         fun newBool(v: BooleanArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
             
@@ -167,12 +153,10 @@ class Float64Vec internal constructor (
         val returnVal = lib.Float64Vec_set_value(handle, newSliceSlice);
     }
     fun toString_(): String {
-        val writeable = DW.lib.diplomat_buffer_writeable_create(0)
-        val returnVal = lib.Float64Vec_to_string(handle, writeable);
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.Float64Vec_to_string(handle, write);
     
-        val returnString = DW.writeableToString(writeable)
-        DW.lib.diplomat_buffer_writeable_destroy(writeable)
-        return returnString
+        return DW.writeToString(write)
     }
     fun borrow(): DoubleArray {
         

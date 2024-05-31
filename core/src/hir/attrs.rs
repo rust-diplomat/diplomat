@@ -67,7 +67,7 @@ pub enum SpecialMethod {
     ///
     /// Must have no return type (aside from potentially a `Result<(), _>`) and must have one parameter
     Setter(Option<String>),
-    /// A stringifier. Must have no parameters and return a string (writeable)
+    /// A stringifier. Must have no parameters and return a string (DiplomatWrite)
     Stringifier,
     /// A comparison operator. Currently unsupported
     Comparison,
@@ -380,9 +380,9 @@ impl Attrs {
                             errors
                                 .push(LoweringError::Other("Getter cannot have parameters".into()));
                         }
-                        if !matches!(method.output.success_type(), SuccessType::Writeable) {
+                        if !matches!(method.output.success_type(), SuccessType::Write) {
                             errors.push(LoweringError::Other(
-                                "Stringifier must return Writeable".into(),
+                                "Stringifier must return string".into(),
                             ));
                         }
                     }
