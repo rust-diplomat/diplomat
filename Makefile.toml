@@ -248,7 +248,7 @@ script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.dylib feature_tests/kotlin/somelib/libsomelib.dylib
 cd feature_tests/kotlin/somelib
-exec --fail-on-error gradle test --stacktrace --debug --scan --warning-mode all 
+exec --fail-on-error gradle test --warning-mode all 
 '''
 
 [tasks.test-c2-example-self-contained]
