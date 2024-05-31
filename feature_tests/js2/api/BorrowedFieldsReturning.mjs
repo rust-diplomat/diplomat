@@ -4,6 +4,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFieldsReturning {
+    #ptr
     bytes;
     // Return this struct as any array that can be expanded with spread syntax (...)
     #intoFFI() {
@@ -11,6 +12,11 @@ export class BorrowedFieldsReturning {
             /*TODO: struct Slice fields*/]
     }
     
+
+    constructor(ptr, aEdges) {
+        this.#ptr = ptr;
+        bytes = bytes(aEdges) // TODO: Slice c_to_js;
+    }
     
 
 }

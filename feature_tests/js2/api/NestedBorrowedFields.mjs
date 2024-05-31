@@ -4,6 +4,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class NestedBorrowedFields {
+    #ptr
     fields;
     bounds;
     bounds2;
@@ -15,6 +16,13 @@ export class NestedBorrowedFields {
             /*TODO: Other struct fields. /*TODO: gen_js_to_c_for_type for Struct*/*/]
     }
     
+
+    constructor(ptr, xEdges, yEdges, zEdges) {
+        this.#ptr = ptr;
+        fields = BorrowedFields // TODO: Struct c_to_js,
+        bounds = BorrowedFieldsWithBounds // TODO: Struct c_to_js,
+        bounds2 = BorrowedFieldsWithBounds // TODO: Struct c_to_js;
+    }
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);

@@ -4,6 +4,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFields {
+    #ptr
     a;
     b;
     c;
@@ -15,6 +16,13 @@ export class BorrowedFields {
             /*TODO: struct Slice fields*/]
     }
     
+
+    constructor(ptr, aEdges) {
+        this.#ptr = ptr;
+        a = a(aEdges) // TODO: Slice c_to_js,
+        b = b(aEdges) // TODO: Slice c_to_js,
+        c = c(aEdges) // TODO: Slice c_to_js;
+    }
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         
         const dstr16Slice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16);

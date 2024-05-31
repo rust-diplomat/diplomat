@@ -4,9 +4,12 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFields {
+    #ptr: pointer;
     a: String;
     b: String;
     c: String;
+
+    constructor(ptr: pointer, aEdges: Array[object]): BorrowedFields;
     static fromBarAndStrings(bar: Bar, dstr16: String, utf8Str: String): BorrowedFields;
 
     

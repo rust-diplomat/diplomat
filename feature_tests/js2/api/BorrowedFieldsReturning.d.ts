@@ -4,7 +4,10 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 
 export class BorrowedFieldsReturning {
+    #ptr: pointer;
     bytes: String;
+
+    constructor(ptr: pointer, aEdges: Array[object]): BorrowedFieldsReturning;
     
 
 }
