@@ -7,7 +7,7 @@ import com.sun.jna.Pointer
 internal interface ICU4XFixedDecimalFormatterLib: Library {
     fun ICU4XFixedDecimalFormatter_destroy(handle: Pointer)
     fun ICU4XFixedDecimalFormatter_try_new(locale: Pointer, provider: Pointer, options: ICU4XFixedDecimalFormatterOptionsNative): ResultPointerUnit
-    fun ICU4XFixedDecimalFormatter_format_write(handle: Pointer, value: Pointer, writeable: Pointer): Unit
+    fun ICU4XFixedDecimalFormatter_format_write(handle: Pointer, value: Pointer, write: Pointer): Unit
 }
 
 class ICU4XFixedDecimalFormatter internal constructor (
@@ -28,6 +28,7 @@ class ICU4XFixedDecimalFormatter internal constructor (
         internal val lib: ICU4XFixedDecimalFormatterLib = Native.load("somelib", libClass)
         
         fun tryNew(locale: ICU4XLocale, provider: ICU4XDataProvider, options: ICU4XFixedDecimalFormatterOptions): Res<ICU4XFixedDecimalFormatter, Unit> {
+            
             val returnVal = lib.ICU4XFixedDecimalFormatter_try_new(locale.handle, provider.handle, options.nativeStruct);
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
@@ -43,11 +44,10 @@ class ICU4XFixedDecimalFormatter internal constructor (
     }
     
     fun formatWrite(value: ICU4XFixedDecimal): String {
-        val writeable = DW.lib.diplomat_buffer_writeable_create(0)
-        val returnVal = lib.ICU4XFixedDecimalFormatter_format_write(handle, value.handle, writeable);
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.ICU4XFixedDecimalFormatter_format_write(handle, value.handle, write);
         
-        val returnString = DW.writeableToString(writeable)
-        DW.lib.diplomat_buffer_writeable_destroy(writeable)
+        val returnString = DW.writeToString(write)
         return returnString
     }
 

@@ -26,9 +26,9 @@ export class OptionString {
   }
 
   write() {
-    return diplomatRuntime.withWriteable(wasm, (writeable) => {
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
       return (() => {
-        const is_ok = wasm.OptionString_write(this.underlying, writeable) == 1;
+        const is_ok = wasm.OptionString_write(this.underlying, write) == 1;
         if (!is_ok) {
           throw new diplomatRuntime.FFIError(undefined);
         }

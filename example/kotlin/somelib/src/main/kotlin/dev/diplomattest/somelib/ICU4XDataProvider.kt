@@ -28,6 +28,7 @@ class ICU4XDataProvider internal constructor (
         internal val lib: ICU4XDataProviderLib = Native.load("somelib", libClass)
         
         fun newStatic(): ICU4XDataProvider {
+            
             val returnVal = lib.ICU4XDataProvider_new_static();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -38,6 +39,7 @@ class ICU4XDataProvider internal constructor (
         }
         
         fun returnsResult(): Res<Unit, Unit> {
+            
             val returnVal = lib.ICU4XDataProvider_returns_result();
             if (returnVal.isOk == 1.toByte()) {
                 return Ok(Unit)

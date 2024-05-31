@@ -32,6 +32,7 @@ class AttrOpaque1 internal constructor (
         internal val lib: AttrOpaque1Lib = Native.load("somelib", libClass)
         
         fun new_(): AttrOpaque1 {
+            
             val returnVal = lib.namespace_AttrOpaque1_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -43,26 +44,31 @@ class AttrOpaque1 internal constructor (
     }
     
     fun method(): UByte {
+        
         val returnVal = lib.namespace_AttrOpaque1_method(handle);
         return returnVal.toUByte()
     }
     
     fun abirenamed(): UByte {
+        
         val returnVal = lib.renamed_on_abi_only(handle);
         return returnVal.toUByte()
     }
     
     fun methodDisabledcpp(): Unit {
+        
         val returnVal = lib.namespace_AttrOpaque1_method_disabledcpp(handle);
         
     }
     
     fun useUnnamespaced(un: Unnamespaced): Unit {
+        
         val returnVal = lib.namespace_AttrOpaque1_use_unnamespaced(handle, un.handle);
         
     }
     
     fun useNamespaced(n: AttrEnum): Unit {
+        
         val returnVal = lib.namespace_AttrOpaque1_use_namespaced(handle, n.toNative());
         
     }

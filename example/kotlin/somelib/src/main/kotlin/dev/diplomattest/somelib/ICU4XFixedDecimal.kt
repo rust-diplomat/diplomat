@@ -8,7 +8,7 @@ internal interface ICU4XFixedDecimalLib: Library {
     fun ICU4XFixedDecimal_destroy(handle: Pointer)
     fun ICU4XFixedDecimal_new(v: Int): Pointer
     fun ICU4XFixedDecimal_multiply_pow10(handle: Pointer, power: Short): Unit
-    fun ICU4XFixedDecimal_to_string(handle: Pointer, writeable: Pointer): ResultUnitUnit
+    fun ICU4XFixedDecimal_to_string(handle: Pointer, write: Pointer): ResultUnitUnit
 }
 
 class ICU4XFixedDecimal internal constructor (
@@ -29,6 +29,7 @@ class ICU4XFixedDecimal internal constructor (
         internal val lib: ICU4XFixedDecimalLib = Native.load("somelib", libClass)
         
         fun new_(v: Int): ICU4XFixedDecimal {
+            
             val returnVal = lib.ICU4XFixedDecimal_new(v);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -40,17 +41,17 @@ class ICU4XFixedDecimal internal constructor (
     }
     
     fun multiplyPow10(power: Short): Unit {
+        
         val returnVal = lib.ICU4XFixedDecimal_multiply_pow10(handle, power);
         
     }
     
     fun toString_(): Res<String, Unit> {
-        val writeable = DW.lib.diplomat_buffer_writeable_create(0)
-        val returnVal = lib.ICU4XFixedDecimal_to_string(handle, writeable);
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.ICU4XFixedDecimal_to_string(handle, write);
         if (returnVal.isOk == 1.toByte()) {
             
-            val returnString = DW.writeableToString(writeable)
-            DW.lib.diplomat_buffer_writeable_destroy(writeable)
+            val returnString = DW.writeToString(write)
             return returnString.ok()
         } else {
             return Err(Unit)

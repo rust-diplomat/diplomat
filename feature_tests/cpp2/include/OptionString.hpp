@@ -21,9 +21,9 @@ inline std::unique_ptr<OptionString> OptionString::new_(std::string_view diploma
 
 inline diplomat::result<std::string, std::monostate> OptionString::write() const {
   std::string output;
-  capi::DiplomatWriteable writeable = diplomat::WriteableFromString(output);
+  capi::DiplomatWrite write = diplomat::WriteFromString(output);
   auto result = capi::OptionString_write(this->AsFFI(),
-    &writeable);
+    &write);
   return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
 }
 

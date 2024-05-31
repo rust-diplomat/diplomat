@@ -12,16 +12,16 @@
     .. cpp:function:: static std::optional<OptionStruct> returns()
 
 
-    .. cpp:function:: diplomat::result<intptr_t, std::monostate> option_isize() const
+    .. cpp:function:: std::optional<intptr_t> option_isize() const
 
 
-    .. cpp:function:: diplomat::result<size_t, std::monostate> option_usize() const
+    .. cpp:function:: std::optional<size_t> option_usize() const
 
 
-    .. cpp:function:: diplomat::result<int32_t, std::monostate> option_i32() const
+    .. cpp:function:: std::optional<int32_t> option_i32() const
 
 
-    .. cpp:function:: diplomat::result<uint32_t, std::monostate> option_u32() const
+    .. cpp:function:: std::optional<uint32_t> option_u32() const
 
 
     .. cpp:function:: static OptionStruct new_struct()
@@ -47,13 +47,13 @@
 
 
 
-    .. cpp:function:: template<typename W> diplomat::result<std::monostate, std::monostate> write_to_writeable(W& writeable) const
+    .. cpp:function:: template<typename W> diplomat::result<std::monostate, std::monostate> write_to_write(W& write) const
 
 
     .. cpp:function:: diplomat::result<std::string, std::monostate> write() const
 
 
-    .. cpp:function:: diplomat::result<const std::string_view, std::monostate> borrow() const
+    .. cpp:function:: std::optional<const std::string_view> borrow() const
 
         Lifetimes: ``this`` must live at least as long as the output.
 

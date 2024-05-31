@@ -51,7 +51,7 @@ public partial class OptionString: IDisposable
     }
 
     /// <exception cref="DiplomatOpaqueException"></exception>
-    public void Write(DiplomatWriteable writeable)
+    public void Write(DiplomatWrite write)
     {
         unsafe
         {
@@ -59,7 +59,7 @@ public partial class OptionString: IDisposable
             {
                 throw new ObjectDisposedException("OptionString");
             }
-            Raw.OptionFfiResultVoidVoid result = Raw.OptionString.Write(_inner, &writeable);
+            Raw.OptionFfiResultVoidVoid result = Raw.OptionString.Write(_inner, &write);
             if (!result.isOk)
             {
                 throw new DiplomatOpaqueException();
@@ -76,14 +76,14 @@ public partial class OptionString: IDisposable
             {
                 throw new ObjectDisposedException("OptionString");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            Raw.OptionFfiResultVoidVoid result = Raw.OptionString.Write(_inner, &writeable);
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.OptionFfiResultVoidVoid result = Raw.OptionString.Write(_inner, &write);
             if (!result.isOk)
             {
                 throw new DiplomatOpaqueException();
             }
-            string retVal = writeable.ToUnicode();
-            writeable.Dispose();
+            string retVal = write.ToUnicode();
+            write.Dispose();
             return retVal;
         }
     }

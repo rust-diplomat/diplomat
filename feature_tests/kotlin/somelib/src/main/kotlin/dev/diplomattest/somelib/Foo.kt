@@ -34,6 +34,7 @@ class Foo internal constructor (
         
         fun new_(x: String): Foo {
             val (xMem, xSlice) = PrimitiveArrayTools.readUtf8(x)
+            
             val returnVal = lib.Foo_new(xSlice);
             val selfEdges: List<Any> = listOf()
             val aEdges: List<Any> = listOf(xMem)
@@ -46,6 +47,7 @@ class Foo internal constructor (
         
         fun newStatic(x: String): Foo {
             val (xMem, xSlice) = PrimitiveArrayTools.readUtf8(x)
+            
             val returnVal = lib.Foo_new_static(xSlice);
             val selfEdges: List<Any> = listOf()
             val aEdges: List<Any> = listOf()
@@ -57,6 +59,7 @@ class Foo internal constructor (
         }
         
         fun extractFromFields(fields: BorrowedFields): Foo {
+            
             val returnVal = lib.Foo_extract_from_fields(fields.nativeStruct);
             val selfEdges: List<Any> = listOf()
             val aEdges: List<Any> = fields.aEdges
@@ -69,6 +72,7 @@ class Foo internal constructor (
         
         fun extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo {
             val (anotherStringMem, anotherStringSlice) = PrimitiveArrayTools.readUtf8(anotherString)
+            
             val returnVal = lib.Foo_extract_from_bounds(bounds.nativeStruct, anotherStringSlice);
             val selfEdges: List<Any> = listOf()
             val aEdges: List<Any> = bounds.bEdges + bounds.cEdges + listOf(anotherStringMem)
@@ -81,6 +85,7 @@ class Foo internal constructor (
     }
     
     fun getBar(): Bar {
+        
         val returnVal = lib.Foo_get_bar(handle);
         val selfEdges: List<Any> = listOf()
         val bEdges: List<Any> = listOf(this)
@@ -93,6 +98,7 @@ class Foo internal constructor (
     }
     
     fun asReturning(): BorrowedFieldsReturning {
+        
         val returnVal = lib.Foo_as_returning(handle);
         
         val aEdges: List<Any> = listOf(this)

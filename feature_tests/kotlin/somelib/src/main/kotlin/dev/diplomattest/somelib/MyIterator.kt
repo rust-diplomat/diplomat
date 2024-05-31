@@ -30,6 +30,7 @@ class MyIterator internal constructor (
     }
     
     internal fun nextInternal(): UByte? {
+        
         val returnVal = lib.namespace_MyIterator_next(handle);
         return returnVal.option()?.toUByte()
     }

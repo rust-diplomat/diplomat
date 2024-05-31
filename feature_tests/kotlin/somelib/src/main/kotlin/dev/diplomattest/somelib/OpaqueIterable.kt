@@ -28,6 +28,7 @@ class OpaqueIterable internal constructor (
     }
     
     override fun iterator(): OpaqueIterator {
+        
         val returnVal = lib.namespace_OpaqueIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val aEdges: List<Any> = listOf(this)

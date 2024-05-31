@@ -28,6 +28,7 @@ class OptionOpaqueChar internal constructor (
     }
     
     fun assertChar(ch: Int): Unit {
+        
         val returnVal = lib.OptionOpaqueChar_assert_char(handle, ch);
         
     }

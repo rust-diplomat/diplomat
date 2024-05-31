@@ -189,7 +189,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_infallible_return_type_name(&self, success_type: &SuccessType) -> Cow<'cx, str> {
         match success_type {
             SuccessType::Unit => self.formatter.fmt_void().into(),
-            SuccessType::Writeable => self.formatter.fmt_string().into(),
+            SuccessType::Write => self.formatter.fmt_string().into(),
             SuccessType::OutType(ref o) => self.gen_type_name(o),
             _ => panic!("Unsupported success type"),
         }
@@ -264,7 +264,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     fn gen_infallible_return_type_ffi(&self, success: &SuccessType) -> Cow<'cx, str> {
         match success {
             SuccessType::Unit => self.formatter.fmt_void().into(),
-            SuccessType::Writeable => self.formatter.fmt_void().into(),
+            SuccessType::Write => self.formatter.fmt_void().into(),
             SuccessType::OutType(ref o) => self.gen_type_name_ffi(o),
             _ => panic!("Unsupported success type"),
         }
@@ -302,7 +302,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
                 format!("Result{ok_type}{err_type}").into()
             }
-            ReturnType::Nullable(SuccessType::Unit | SuccessType::Writeable) => {
+            ReturnType::Nullable(SuccessType::Unit | SuccessType::Write) => {
                 let mut option_types = self.option_types.borrow_mut();
                 option_types.insert(TypeForResult {
                     type_name: "Unit".into(),
@@ -449,20 +449,19 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .expect("Failed to render opaque return block")
     }
 
-    fn writeable_return(return_type_modifier: &str) -> String {
+    fn write_return(return_type_modifier: &str) -> String {
         format!(
             r#"
-val returnString = DW.writeableToString(writeable)
-DW.lib.diplomat_buffer_writeable_destroy(writeable)
+val returnString = DW.writeToString(write)
 return returnString{return_type_modifier}"#
         )
     }
 
     fn boxed_slice_return(encoding: &str, val_name: &str, return_type_modifier: &str) -> String {
         format!(
-            r#"    val string = PrimitiveArrayTools.get{encoding}({val_name})
-Native.free(Pointer.nativeValue({val_name}.data){return_type_modifier})
-return string"#
+            r#"val string = PrimitiveArrayTools.get{encoding}({val_name})
+Native.free(Pointer.nativeValue({val_name}.data))
+return string{return_type_modifier}"#
         )
     }
 
@@ -742,7 +741,7 @@ val intermediateOption = {val_name}.option() ?: return null
         };
 
         match res {
-            SuccessType::Writeable => Self::writeable_return(return_type_postfix),
+            SuccessType::Write => Self::write_return(return_type_postfix),
             SuccessType::OutType(ref o) => self.gen_out_type_return(
                 method,
                 method_lifetimes_map,
@@ -782,12 +781,12 @@ val intermediateOption = {val_name}.option() ?: return null
                 self.gen_nullable_return(method, &method_lifetimes_map, cleanups, "returnVal", res)
             }
 
-            ReturnType::Nullable(SuccessType::Writeable) => format!(
+            ReturnType::Nullable(SuccessType::Write) => format!(
                 r#"
 retutnVal.option() ?: return null
 {}
                         "#,
-                Self::writeable_return("")
+                Self::write_return("")
             ),
             ReturnType::Nullable(SuccessType::Unit) => "retutnVal.option() ?: return null".into(),
             _ => panic!("unsupported type"),
@@ -917,14 +916,14 @@ retutnVal.option() ?: return null
             param_types_ffi.push(param_type_ffi);
             param_conversions.push(self.gen_kt_to_c_for_type(&param.ty, param_name.clone()));
         }
-        let writeable_return = matches!(
+        let write_return = matches!(
             &method.output,
-            ReturnType::Infallible(SuccessType::Writeable)
-                | ReturnType::Fallible(SuccessType::Writeable, _)
-                | ReturnType::Nullable(SuccessType::Writeable)
+            ReturnType::Infallible(SuccessType::Write)
+                | ReturnType::Fallible(SuccessType::Write, _)
+                | ReturnType::Nullable(SuccessType::Write)
         );
-        if writeable_return {
-            param_conversions.push("writeable".into());
+        if write_return {
+            param_conversions.push("write".into());
         }
         let params = param_decls_kt.join(", ");
 
@@ -1022,11 +1021,11 @@ retutnVal.option() ?: return null
                 self.gen_native_type_name(&param.ty)
             ));
         }
-        if let ReturnType::Infallible(SuccessType::Writeable)
-        | ReturnType::Fallible(SuccessType::Writeable, _)
-        | ReturnType::Nullable(SuccessType::Writeable) = method.output
+        if let ReturnType::Infallible(SuccessType::Write)
+        | ReturnType::Fallible(SuccessType::Write, _)
+        | ReturnType::Nullable(SuccessType::Write) = method.output
         {
-            param_decls.push("writeable: Pointer".into())
+            param_decls.push("write: Pointer".into())
         }
         let params = param_decls.join(", ");
         let native_method = self.formatter.fmt_c_method_name(id, method);

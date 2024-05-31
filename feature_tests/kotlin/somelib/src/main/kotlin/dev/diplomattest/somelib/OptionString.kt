@@ -7,7 +7,7 @@ import com.sun.jna.Pointer
 internal interface OptionStringLib: Library {
     fun OptionString_destroy(handle: Pointer)
     fun OptionString_new(diplomatStr: Slice): Pointer?
-    fun OptionString_write(handle: Pointer, writeable: Pointer): ResultUnitUnit
+    fun OptionString_write(handle: Pointer, write: Pointer): ResultUnitUnit
     fun OptionString_borrow(handle: Pointer): OptionSlice
 }
 
@@ -30,6 +30,7 @@ class OptionString internal constructor (
         
         fun new_(diplomatStr: String): OptionString? {
             val (diplomatStrMem, diplomatStrSlice) = PrimitiveArrayTools.readUtf8(diplomatStr)
+            
             val returnVal = lib.OptionString_new(diplomatStrSlice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
@@ -41,12 +42,11 @@ class OptionString internal constructor (
     }
     
     fun write(): Res<String, Unit> {
-        val writeable = DW.lib.diplomat_buffer_writeable_create(0)
-        val returnVal = lib.OptionString_write(handle, writeable);
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.OptionString_write(handle, write);
         if (returnVal.isOk == 1.toByte()) {
             
-            val returnString = DW.writeableToString(writeable)
-            DW.lib.diplomat_buffer_writeable_destroy(writeable)
+            val returnString = DW.writeToString(write)
             return returnString.ok()
         } else {
             return Err(Unit)
@@ -54,6 +54,7 @@ class OptionString internal constructor (
     }
     
     fun borrow(): String? {
+        
         val returnVal = lib.OptionString_borrow(handle);
         
         val intermediateOption = returnVal.option() ?: return null

@@ -27,7 +27,7 @@ object DW {
     fun writeToString (write: Pointer): String {
         try {
             val pointer = lib.diplomat_buffer_write_get_bytes(write)
-            if (bytes == null) {
+            if (pointer == null) {
                 throw OutOfMemoryError();
             }
             val len = lib.diplomat_buffer_write_len(write)

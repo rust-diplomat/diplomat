@@ -41,7 +41,7 @@
 
 .. cpp:class:: MyIndexer
 
-    .. cpp:function:: diplomat::result<const std::string_view, std::monostate> get(size_t i) const
+    .. cpp:function:: std::optional<const std::string_view> get(size_t i) const
 
         Lifetimes: ``this`` must live at least as long as the output.
 

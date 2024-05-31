@@ -20,7 +20,7 @@ public partial struct OptionString
     public static unsafe extern OptionString* New(byte* diplomatStr, nuint diplomatStrSz);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionString_write", ExactSpelling = true)]
-    public static unsafe extern OptionFfiResultVoidVoid Write(OptionString* self, DiplomatWriteable* writeable);
+    public static unsafe extern OptionFfiResultVoidVoid Write(OptionString* self, DiplomatWrite* write);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionString_borrow", ExactSpelling = true)]
     public static unsafe extern Options without a pointer type are not yet supported Borrow(OptionString* self);

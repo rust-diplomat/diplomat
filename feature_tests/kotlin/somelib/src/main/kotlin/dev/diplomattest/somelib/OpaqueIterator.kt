@@ -30,6 +30,7 @@ class OpaqueIterator internal constructor (
     }
     
     internal fun nextInternal(): AttrOpaque1? {
+        
         val returnVal = lib.namespace_OpaqueIterator_next(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal ?: return null

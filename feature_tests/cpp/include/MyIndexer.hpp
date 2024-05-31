@@ -26,7 +26,7 @@ class MyIndexer {
   /**
    * Lifetimes: `this` must live at least as long as the output.
    */
-  diplomat::result<const std::string_view, std::monostate> get(size_t i) const;
+  std::optional<const std::string_view> get(size_t i) const;
   inline const capi::MyIndexer* AsFFI() const { return this->inner.get(); }
   inline capi::MyIndexer* AsFFIMut() { return this->inner.get(); }
   inline explicit MyIndexer(capi::MyIndexer* i) : inner(i) {}
@@ -38,15 +38,15 @@ class MyIndexer {
 };
 
 
-inline diplomat::result<const std::string_view, std::monostate> MyIndexer::get(size_t i) const {
+inline std::optional<const std::string_view> MyIndexer::get(size_t i) const {
   auto diplomat_result_raw_out_value = capi::namespace_MyIndexer_get(this->inner.get(), i);
-  diplomat::result<const std::string_view, std::monostate> diplomat_result_out_value;
+  std::optional<const std::string_view> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
   capi::DiplomatStringView diplomat_str_raw_out_value = diplomat_result_raw_out_value.ok;
   std::string_view str(diplomat_str_raw_out_value.data, diplomat_str_raw_out_value.len);
-    diplomat_result_out_value = diplomat::Ok<const std::string_view>(str);
+    diplomat_result_out_value = std::optional<const std::string_view>(str);
   } else {
-    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
+    diplomat_result_out_value = std::nullopt;
   }
   return diplomat_result_out_value;
 }

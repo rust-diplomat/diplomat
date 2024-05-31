@@ -22,6 +22,15 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
+tasks.named<Test>("test") {
+    useJUnitPlatform()
+
+    maxHeapSize = "2G"
+
+    testLogging {
+        events("passed")
+    }
+}
 publishing {
     publications {
         create<MavenPublication>("maven") {

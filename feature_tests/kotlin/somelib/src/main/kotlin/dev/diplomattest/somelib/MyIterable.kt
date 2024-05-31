@@ -29,6 +29,7 @@ class MyIterable internal constructor (
         
         fun new_(x: UByteArray): MyIterable {
             val (xMem, xSlice) = PrimitiveArrayTools.native(x)
+            
             val returnVal = lib.namespace_MyIterable_new(xSlice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -40,6 +41,7 @@ class MyIterable internal constructor (
     }
     
     override fun iterator(): MyIterator {
+        
         val returnVal = lib.namespace_MyIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val aEdges: List<Any> = listOf(this)

@@ -28,6 +28,7 @@ class ICU4XLocale internal constructor (
         
         fun new_(name: String): ICU4XLocale {
             val (nameMem, nameSlice) = PrimitiveArrayTools.readUtf8(name)
+            
             val returnVal = lib.ICU4XLocale_new(nameSlice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 

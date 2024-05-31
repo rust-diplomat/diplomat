@@ -28,6 +28,7 @@ class MyIndexer internal constructor (
     }
     
     internal fun getInternal(i: ULong): String? {
+        
         val returnVal = lib.namespace_MyIndexer_get(handle, i.toLong());
         
         val intermediateOption = returnVal.option() ?: return null

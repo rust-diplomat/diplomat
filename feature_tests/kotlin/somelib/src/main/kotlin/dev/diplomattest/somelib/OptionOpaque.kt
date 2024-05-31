@@ -37,6 +37,7 @@ class OptionOpaque internal constructor (
         internal val lib: OptionOpaqueLib = Native.load("somelib", libClass)
         
         fun new_(i: Int): OptionOpaque? {
+            
             val returnVal = lib.OptionOpaque_new(i);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
@@ -47,6 +48,7 @@ class OptionOpaque internal constructor (
         }
         
         fun newNone(): OptionOpaque? {
+            
             val returnVal = lib.OptionOpaque_new_none();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
@@ -57,6 +59,7 @@ class OptionOpaque internal constructor (
         }
         
         fun returns(): OptionStruct? {
+            
             val returnVal = lib.OptionOpaque_returns();
             
             val intermediateOption = returnVal.option() ?: return null
@@ -67,6 +70,7 @@ class OptionOpaque internal constructor (
         }
         
         fun newStruct(): OptionStruct {
+            
             val returnVal = lib.OptionOpaque_new_struct();
             
             val returnStruct = OptionStruct(returnVal)
@@ -74,6 +78,7 @@ class OptionOpaque internal constructor (
         }
         
         fun newStructNones(): OptionStruct {
+            
             val returnVal = lib.OptionOpaque_new_struct_nones();
             
             val returnStruct = OptionStruct(returnVal)
@@ -81,32 +86,38 @@ class OptionOpaque internal constructor (
         }
         
         fun optionOpaqueArgument(arg: OptionOpaque?): Boolean {
+            
             val returnVal = lib.OptionOpaque_option_opaque_argument(arg?.handle);
             return returnVal > 0
         }
     }
     
     fun optionIsize(): Long? {
+        
         val returnVal = lib.OptionOpaque_option_isize(handle);
         return returnVal.option()
     }
     
     fun optionUsize(): ULong? {
+        
         val returnVal = lib.OptionOpaque_option_usize(handle);
         return returnVal.option()?.toULong()
     }
     
     fun optionI32(): Int? {
+        
         val returnVal = lib.OptionOpaque_option_i32(handle);
         return returnVal.option()
     }
     
     fun optionU32(): UInt? {
+        
         val returnVal = lib.OptionOpaque_option_u32(handle);
         return returnVal.option()?.toUInt()
     }
     
     fun assertInteger(i: Int): Unit {
+        
         val returnVal = lib.OptionOpaque_assert_integer(handle, i);
         
     }

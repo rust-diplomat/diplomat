@@ -28,6 +28,7 @@ class Unnamespaced internal constructor (
         internal val lib: UnnamespacedLib = Native.load("somelib", libClass)
         
         fun make(e: AttrEnum): Unnamespaced {
+            
             val returnVal = lib.namespace_Unnamespaced_make(e.toNative());
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
@@ -39,6 +40,7 @@ class Unnamespaced internal constructor (
     }
     
     fun useNamespaced(n: AttrOpaque1): Unit {
+        
         val returnVal = lib.namespace_Unnamespaced_use_namespaced(handle, n.handle);
         
     }
