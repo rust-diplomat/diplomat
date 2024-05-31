@@ -231,8 +231,8 @@ impl<'tcx> JSGenerationContext<'tcx> {
             let field_name = self.formatter.fmt_param_name(field.name.as_str());
 
             let field_annotation = match field.ty {
-                hir::Type::Primitive(p) => Some(self.formatter.fmt_primitive_as_ffi(p)),
-                hir::Type::Enum(_) => Some(self.formatter.fmt_enum_as_ffi()),
+                hir::Type::Primitive(p) => Some(self.formatter.fmt_primitive_as_ffi(p, false)),
+                hir::Type::Enum(_) => Some(self.formatter.fmt_enum_as_ffi(false)),
                 _ => None,
             };
 

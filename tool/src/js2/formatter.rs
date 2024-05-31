@@ -80,17 +80,38 @@ impl<'tcx> JSFormatter<'tcx> {
 	// This is only visible for Typescript definition files, but we use it to check if types are supported.
 
 	/// Generate a primitive type.
-	pub fn fmt_primitive_as_ffi(&self, primitive : hir::PrimitiveType) -> &'static str {
-		return match primitive {
-			hir::PrimitiveType::Bool => "boolean",
-			hir::PrimitiveType::Char => "char",
-			hir::PrimitiveType::Int(_)| hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Byte | hir::PrimitiveType::Float(_) => "number",
-			hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt."),
-		};
+	/// `cast: bool` - Basically, do we want to use `number` instead of `u8`? 
+	pub fn fmt_primitive_as_ffi(&self, primitive : hir::PrimitiveType, cast : bool) -> &'static str {
+		if cast {
+			return match primitive {
+				hir::PrimitiveType::Bool => "boolean",
+				hir::PrimitiveType::Char => "char",
+				hir::PrimitiveType::Int(_)| hir::PrimitiveType::IntSize(_) | hir::PrimitiveType::Byte | hir::PrimitiveType::Float(_) => "number",
+				hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt."),
+			};
+		} else {
+			return match primitive {
+				hir::PrimitiveType::Bool => "boolean",
+				hir::PrimitiveType::Char => "char",
+				hir::PrimitiveType::Int(hir::IntType::I8) => "i8",
+                hir::PrimitiveType::Int(hir::IntType::U8) | hir::PrimitiveType::Byte => "u8",
+                hir::PrimitiveType::Int(hir::IntType::I16) => "i16",
+                hir::PrimitiveType::Int(hir::IntType::U16) => "u16",
+                hir::PrimitiveType::Int(hir::IntType::I32) => "i32",
+                hir::PrimitiveType::Int(hir::IntType::U32) => "u32",
+                hir::PrimitiveType::Int(hir::IntType::I64) => "i64",
+                hir::PrimitiveType::Int(hir::IntType::U64) => "u64",
+                hir::PrimitiveType::IntSize(hir::IntSizeType::Isize) => "isize",
+                hir::PrimitiveType::IntSize(hir::IntSizeType::Usize) => "usize",
+                hir::PrimitiveType::Float(hir::FloatType::F32) => "f32",
+                hir::PrimitiveType::Float(hir::FloatType::F64) => "f64",
+				hir::PrimitiveType::Int128(_) => panic!("Javascript backend does not currently support BigInt.")
+			};
+		}
 	}
 
-	pub fn fmt_enum_as_ffi(&self) -> &'static str {
-		self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32))
+	pub fn fmt_enum_as_ffi(&self, cast : bool) -> &'static str {
+		self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
 	}
 	
 
