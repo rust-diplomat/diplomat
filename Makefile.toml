@@ -232,7 +232,7 @@ exec --fail-on-error dart --enable-experiment=native-assets test
 [tasks.test-kotlin-example]
 category = "Tests"
 script_runner = "@duckscript"
-dependencies = ["build-feature"]
+dependencies = ["build-example"]
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_example.dylib example/kotlin/somelib/libsomelib.dylib
