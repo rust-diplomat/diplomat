@@ -51,7 +51,7 @@ export class MyStruct {
     }
 
     intoA() {
-        const result = wasm.MyStruct_into_a(...this.#intoFFI());
+        const result = wasm.MyStruct_into_a(...this._intoFFI());
     
         this.free(); /* TODO: Does this work? */
         
