@@ -34,7 +34,8 @@ export class Utf16Wrap {
     borrowCont() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.Utf16Wrap_borrow_cont(this.ffiValue);
+        let aEdges = [this];
+        const result = wasm.Utf16Wrap_borrow_cont(this.ffiValue);
     
         return result(aEdges) // TODO: Slice c_to_js;
     }

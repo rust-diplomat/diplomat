@@ -27,7 +27,7 @@
         {%- if !loop.first %}, {% endif -%} {{self::display_lifetime_edge(incoming_edge)}}
         {%- endfor -%}
     ];
-    {%- endif -%}
+    {% endif -%}
     {%- endfor -%}
 
 

@@ -18,7 +18,7 @@ export class BorrowedFieldsWithBounds {
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
-    #intoFFI(aAppendArray = [], bAppendArray = [], cAppendArray = []) {
+    _intoFFI(aAppendArray = [], bAppendArray = [], cAppendArray = []) {
         return [
             diplomatRuntime.DiplomatBuf.str16(wasm, fieldA) /* TODO: Freeing code */, 
             diplomatRuntime.DiplomatBuf.str8(wasm, fieldB) /* TODO: Freeing code */, 
@@ -44,10 +44,13 @@ export class BorrowedFieldsWithBounds {
         
         // This lifetime edge depends on lifetimes 'x, 'y, 'z
         let xEdges = [foo, dstr16XSlice, utf8StrZSlice];
+        
         // This lifetime edge depends on lifetimes 'y, 'z
         let yEdges = [foo, utf8StrZSlice];
+        
         // This lifetime edge depends on lifetimes 'z
-        let zEdges = [utf8StrZSlice];const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+        let zEdges = [utf8StrZSlice];
+        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         dstr16XSlice.garbageCollect();
         

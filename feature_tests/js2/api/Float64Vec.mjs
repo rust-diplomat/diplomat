@@ -108,7 +108,8 @@ export class Float64Vec {
     get asSlice() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.Float64Vec_as_slice(this.ffiValue);
+        let aEdges = [this];
+        const result = wasm.Float64Vec_as_slice(this.ffiValue);
     
         return result(aEdges) // TODO: Slice c_to_js;
     }
@@ -140,7 +141,8 @@ export class Float64Vec {
     borrow() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.Float64Vec_borrow(this.ffiValue);
+        let aEdges = [this];
+        const result = wasm.Float64Vec_borrow(this.ffiValue);
     
         return result(aEdges) // TODO: Slice c_to_js;
     }

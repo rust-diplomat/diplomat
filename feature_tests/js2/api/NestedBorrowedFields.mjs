@@ -18,11 +18,11 @@ export class NestedBorrowedFields {
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
-    #intoFFI(xAppendArray = [], yAppendArray = [], zAppendArray = []) {
+    _intoFFI(xAppendArray = [], yAppendArray = [], zAppendArray = []) {
         return [
-            /*TODO: gen_js_to_c_for_type for Struct*/, 
-            /*TODO: gen_js_to_c_for_type for Struct*/, 
-            /*TODO: gen_js_to_c_for_type for Struct*/]
+            ...fields._intoFfi(temp, [...xAppendArray]), 
+            ...bounds._intoFfi(temp, [...xAppendArray], [...yAppendArray], [...yAppendArray]), 
+            ...bounds2._intoFfi(temp, [...zAppendArray], [...zAppendArray], [...zAppendArray])]
     }
     
 
@@ -52,10 +52,13 @@ export class NestedBorrowedFields {
         
         // This lifetime edge depends on lifetimes 'x, 'y
         let xEdges = [bar, dstr16XSlice, utf8StrYSlice];
+        
         // This lifetime edge depends on lifetimes 'y
         let yEdges = [bar, utf8StrYSlice];
+        
         // This lifetime edge depends on lifetimes 'z
-        let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+        let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
+        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         dstr16XSlice.garbageCollect();
         

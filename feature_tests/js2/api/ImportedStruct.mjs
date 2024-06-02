@@ -12,7 +12,7 @@ export class ImportedStruct {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
-    #intoFFI() {
+    _intoFFI() {
         return [
             foo.ffiValue, 
             count]

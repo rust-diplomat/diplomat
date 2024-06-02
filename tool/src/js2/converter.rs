@@ -270,7 +270,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 				Type::Opaque(ref op) if op.is_optional() => 
 					format!("{js_name}.ffiValue ?? 0").into(),
 				Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
-				Type::Struct(..) => "/*TODO: gen_js_to_c_for_type for Struct*/".into(),
+				Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info),
 				Type::Slice(hir::Slice::Str(_, encoding) | hir::Slice::Strs(encoding)) => {
 					match encoding {
 						hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
@@ -287,5 +287,32 @@ impl<'tcx> JSGenerationContext<'tcx> {
 				_ => todo!("{:?} not implemented yet", ty),
 			}
 		}
+	
+	pub(super) fn gen_js_to_c_for_struct_type(&self, js_name : Cow<'tcx, str>, struct_borrow_info : Option<&StructBorrowContext<'tcx>>) -> Cow<'tcx, str> {
+        let mut params = String::new();
+		// TODO: Fix to JS particulars.
+        if let Some(info) = struct_borrow_info {
+            for (def_lt, use_lts) in &info.param_info.borrowed_struct_lifetime_map {
+                write!(
+                    &mut params,
+                    ", [",
+                )
+                .unwrap();
+                let mut maybe_comma = "";
+                for use_lt in use_lts {
+                    // Generate stuff like `, aEdges` or for struct fields, `, ...aAppendArray`
+                    let lt = info.use_env.fmt_lifetime(use_lt);
+                    if info.is_method {
+                        write!(&mut params, "{maybe_comma}{lt}Edges",).unwrap();
+                    } else {
+                        write!(&mut params, "{maybe_comma}...{lt}AppendArray",).unwrap();
+                    }
+                    maybe_comma = ", ";
+                }
+                write!(&mut params, "]").unwrap();
+            }
+        }
+        format!("...{js_name}._intoFfi(temp{params})").into()
+	}
 	// #endregion
 }

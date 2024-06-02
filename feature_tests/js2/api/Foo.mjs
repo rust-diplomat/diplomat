@@ -43,7 +43,8 @@ export class Foo {
         
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [xSlice];const result = wasm.Foo_new(xSlice.ptr, xSlice.size);
+        let aEdges = [xSlice];
+        const result = wasm.Foo_new(xSlice.ptr, xSlice.size);
     
         xSlice.garbageCollect();
         
@@ -54,8 +55,10 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
+        
         // This lifetime edge depends on lifetimes 'a, 'b
-        let bEdges = [this];const result = wasm.Foo_get_bar(this.ffiValue);
+        let bEdges = [this];
+        const result = wasm.Foo_get_bar(this.ffiValue);
     
         return new Bar(result, [], bEdges, aEdges);
     }
@@ -65,7 +68,8 @@ export class Foo {
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [];const result = wasm.Foo_new_static(xSlice.ptr, xSlice.size);
+        let aEdges = [];
+        const result = wasm.Foo_new_static(xSlice.ptr, xSlice.size);
     
         xSlice.free();
         
@@ -75,7 +79,8 @@ export class Foo {
     asReturning() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.Foo_as_returning(this.ffiValue);
+        let aEdges = [this];
+        const result = wasm.Foo_as_returning(this.ffiValue);
     
         return BorrowedFieldsReturning // TODO: Struct c_to_js;
     }
@@ -83,7 +88,8 @@ export class Foo {
     static extractFromFields(fields) {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [...fields._fieldsForLifetimeA];const result = wasm.Foo_extract_from_fields(/*TODO: gen_js_to_c_for_type for Struct*/);
+        let aEdges = [...fields._fieldsForLifetimeA];
+        const result = wasm.Foo_extract_from_fields(...fields._intoFfi(temp, [aEdges]));
     
         this.free(); /* TODO: Does this work? */
         
@@ -97,7 +103,8 @@ export class Foo {
         
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
-        let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];const result = wasm.Foo_extract_from_bounds(/*TODO: gen_js_to_c_for_type for Struct*/, anotherStringSlice.ptr, anotherStringSlice.size);
+        let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
+        const result = wasm.Foo_extract_from_bounds(...bounds._intoFfi(temp, [aEdges], [aEdges]), anotherStringSlice.ptr, anotherStringSlice.size);
     
         this.free(); /* TODO: Does this work? */
         

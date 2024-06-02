@@ -16,7 +16,7 @@ export class BorrowedFields {
     // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
-    #intoFFI(aAppendArray = []) {
+    _intoFFI(aAppendArray = []) {
         return [
             diplomatRuntime.DiplomatBuf.str16(wasm, a) /* TODO: Freeing code */, 
             diplomatRuntime.DiplomatBuf.str8(wasm, b) /* TODO: Freeing code */, 
@@ -41,7 +41,8 @@ export class BorrowedFields {
         
         
         // This lifetime edge depends on lifetimes 'x
-        let xEdges = [bar, dstr16Slice, utf8StrSlice];const result = wasm.BorrowedFields_from_bar_and_strings(bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
+        let xEdges = [bar, dstr16Slice, utf8StrSlice];
+        const result = wasm.BorrowedFields_from_bar_and_strings(bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
     
         dstr16Slice.garbageCollect();
         

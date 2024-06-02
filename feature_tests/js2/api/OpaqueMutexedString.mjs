@@ -45,7 +45,8 @@ export class OpaqueMutexedString {
     borrow() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
+        let aEdges = [this];
+        const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
     
         return new OpaqueMutexedString(result, aEdges);
     }
@@ -53,7 +54,8 @@ export class OpaqueMutexedString {
     static borrowOther(other) {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [other];const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
+        let aEdges = [other];
+        const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
     
         return new OpaqueMutexedString(result, aEdges);
     }
@@ -61,7 +63,8 @@ export class OpaqueMutexedString {
     borrowSelfOrOther(other) {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this, other];const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
+        let aEdges = [this, other];
+        const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
     
         return new OpaqueMutexedString(result, aEdges);
     }
@@ -75,7 +78,8 @@ export class OpaqueMutexedString {
     dummyStr() {
         
         // This lifetime edge depends on lifetimes 'a
-        let aEdges = [this];const result = wasm.OpaqueMutexedString_dummy_str(this.ffiValue);
+        let aEdges = [this];
+        const result = wasm.OpaqueMutexedString_dummy_str(this.ffiValue);
     
         return result(aEdges) // TODO: Slice c_to_js;
     }

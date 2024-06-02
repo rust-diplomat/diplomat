@@ -14,7 +14,7 @@ export class BorrowedFieldsReturning {
     // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
-    #intoFFI(aAppendArray = []) {
+    _intoFFI(aAppendArray = []) {
         return [
             diplomatRuntime.DiplomatBuf.str8(wasm, bytes) /* TODO: Freeing code */]
     }

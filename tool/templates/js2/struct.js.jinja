@@ -25,7 +25,7 @@ export class {{type_name}} {
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     {%- endif -%}
     {% endif %}
-    #intoFFI(
+    _intoFFI(
         {%- if lifetimes.all_lifetimes().len() != 0 -%}
         {%- for l in lifetimes.all_lifetimes() %}{{lifetimes.fmt_lifetime(l)}}AppendArray = []{% if !loop.last %}, {% endif %} 
         {%- endfor -%}
