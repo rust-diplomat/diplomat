@@ -3,10 +3,14 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 export class OptionStruct {
     #ptr: pointer;
-    const a: OptionOpaque | undefined;
-    const b: OptionOpaqueChar | undefined;
-    const c: number;
-    const d: OptionOpaque | undefined;
+    get a() : OptionOpaque | undefined;
+    #a: OptionOpaque | undefined;
+    get b() : OptionOpaqueChar | undefined;
+    #b: OptionOpaqueChar | undefined;
+    get c() : number;
+    #c: number;
+    get d() : OptionOpaque | undefined;
+    #d: OptionOpaque | undefined;
 
 
     // This struct contains borrowed fields, so this takes in a list of

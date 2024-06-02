@@ -77,9 +77,6 @@ impl<'tcx> JSGenerationContext<'tcx> {
         self.files.add_file("diplomat-runtime.d.ts".into(), include_str!("../../templates/js2/runtime.d.ts").into());
         self.files.add_file("diplomat-wasm.mjs".into(), include_str!("../../templates/js2/wasm.mjs").into());
 
-        
-        // TODO: All of this.
-
         for (id, ty) in self.tcx.all_types() {
             self.generate_file_from_type(id, ty);
         }

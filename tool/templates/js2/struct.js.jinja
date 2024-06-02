@@ -5,7 +5,11 @@
 export class {{type_name}} {
     #ptr{% if typescript %}: pointer;{% endif %}
     {%- for field in fields %}
-    {% if !mutable -%} const {% endif -%} {{field.field_name}} {%- if typescript %}: {{field.js_type_name}}{% endif %};
+    {% if !mutable -%} 
+    get {{field.field_name}}() {% if typescript %}: {{field.js_type_name}};{% else %} {
+        return this.#{{field.field_name}};
+    }{% endif %}
+    #{% endif -%}{{field.field_name}} {%- if typescript %}: {{field.js_type_name}}{% endif %};
     {%- endfor %}
 
     {%~ if !typescript %}

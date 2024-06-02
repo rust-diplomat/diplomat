@@ -6,10 +6,22 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class OptionStruct {
     #ptr
-    const a;
-    const b;
-    const c;
-    const d;
+    get a()  {
+        return this.#a;
+    }
+    #a;
+    get b()  {
+        return this.#b;
+    }
+    #b;
+    get c()  {
+        return this.#c;
+    }
+    #c;
+    get d()  {
+        return this.#d;
+    }
+    #d;
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
