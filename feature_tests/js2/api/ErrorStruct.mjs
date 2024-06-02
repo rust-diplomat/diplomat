@@ -26,7 +26,7 @@ export class ErrorStruct {
     // should handle this when constructing edge arrays.
     constructor(ptr) {
         this.#ptr = ptr;
-        i = i,
+        i = i;
         j = j;
     }
     

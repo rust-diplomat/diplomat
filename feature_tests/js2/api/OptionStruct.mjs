@@ -42,10 +42,10 @@ export class OptionStruct {
     // should handle this when constructing edge arrays.
     constructor(ptr) {
         this.#ptr = ptr;
-        a = (a === 0) ? undefined : new OptionOpaque(a, []);,
-        b = (b === 0) ? undefined : new OptionOpaqueChar(b, []);,
-        c = c,
-        d = (d === 0) ? undefined : new OptionOpaque(d, []);;
+        a = ((a === 0) ? undefined : new OptionOpaque(a, []));
+        b = ((b === 0) ? undefined : new OptionOpaqueChar(b, []));
+        c = c;
+        d = ((d === 0) ? undefined : new OptionOpaque(d, []));
     }
     
 

@@ -52,8 +52,7 @@ export class {{type_name}} {
     constructor(ptr{% if typescript %}: pointer{% endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- if typescript %}: Array[object]{% endif %} {%- endfor -%}) {%- if typescript %}: {{type_name}};{% else %} {
         this.#ptr = ptr;
         {%- for field in fields %}
-        {{field.field_name}} = {{field.c_to_js}}
-        {%- if loop.last %};{% else %},{% endif -%}
+        {{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
     }
     {%- endif %}

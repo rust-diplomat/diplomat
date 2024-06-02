@@ -115,7 +115,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 				}
 
 				if op.is_optional() {
-					format!("({variable_name} === 0) ? undefined : new {type_name}({variable_name}, {edges});").into()
+					format!("(({variable_name} === 0) ? undefined : new {type_name}({variable_name}, {edges}))").into()
 				} else {
 					format!("new {type_name}({variable_name}, {edges})").into()
 				}

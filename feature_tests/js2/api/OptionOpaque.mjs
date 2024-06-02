@@ -34,13 +34,13 @@ export class OptionOpaque {
     static new_(i) {
         const result = wasm.OptionOpaque_new(i);
     
-        return (result === 0) ? undefined : new OptionOpaque(result, []);;
+        return ((result === 0) ? undefined : new OptionOpaque(result, []));
     }
 
     static newNone() {
         const result = wasm.OptionOpaque_new_none();
     
-        return (result === 0) ? undefined : new OptionOpaque(result, []);;
+        return ((result === 0) ? undefined : new OptionOpaque(result, []));
     }
 
     static returns() {

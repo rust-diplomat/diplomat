@@ -28,8 +28,8 @@ export class NestedBorrowedFields {
 
     constructor(ptr, xEdges, yEdges, zEdges) {
         this.#ptr = ptr;
-        fields = BorrowedFields // TODO: Struct c_to_js,
-        bounds = BorrowedFieldsWithBounds // TODO: Struct c_to_js,
+        fields = BorrowedFields // TODO: Struct c_to_js;
+        bounds = BorrowedFieldsWithBounds // TODO: Struct c_to_js;
         bounds2 = BorrowedFieldsWithBounds // TODO: Struct c_to_js;
     }
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {

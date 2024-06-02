@@ -28,8 +28,8 @@ export class BorrowedFieldsWithBounds {
 
     constructor(ptr, aEdges, bEdges, cEdges) {
         this.#ptr = ptr;
-        fieldA = fieldA(aEdges) // TODO: Slice c_to_js,
-        fieldB = fieldB(bEdges) // TODO: Slice c_to_js,
+        fieldA = fieldA(aEdges) // TODO: Slice c_to_js;
+        fieldB = fieldB(bEdges) // TODO: Slice c_to_js;
         fieldC = fieldC(cEdges) // TODO: Slice c_to_js;
     }
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {

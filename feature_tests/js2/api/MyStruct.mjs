@@ -36,12 +36,12 @@ export class MyStruct {
     // should handle this when constructing edge arrays.
     constructor(ptr) {
         this.#ptr = ptr;
-        a = a,
-        b = b,
-        c = c,
-        d = d,
-        e = e,
-        f = f,
+        a = a;
+        b = b;
+        c = c;
+        d = d;
+        e = e;
+        f = f;
         g = (() => {for (let i of MyEnum.values) { if(i[1] === g) return i[0]; } return null;})();;
     }
     static new_() {

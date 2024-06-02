@@ -26,7 +26,7 @@ export class ImportedStruct {
     // should handle this when constructing edge arrays.
     constructor(ptr) {
         this.#ptr = ptr;
-        foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[foo]],
+        foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[foo]];
         count = count;
     }
     

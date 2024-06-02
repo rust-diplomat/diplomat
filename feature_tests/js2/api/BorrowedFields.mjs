@@ -26,8 +26,8 @@ export class BorrowedFields {
 
     constructor(ptr, aEdges) {
         this.#ptr = ptr;
-        a = a(aEdges) // TODO: Slice c_to_js,
-        b = b(aEdges) // TODO: Slice c_to_js,
+        a = a(aEdges) // TODO: Slice c_to_js;
+        b = b(aEdges) // TODO: Slice c_to_js;
         c = c(aEdges) // TODO: Slice c_to_js;
     }
     static fromBarAndStrings(bar, dstr16, utf8Str) {
