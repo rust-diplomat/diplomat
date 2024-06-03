@@ -16,9 +16,9 @@ impl<'tcx> super::CContext<'tcx> {
             return;
         }
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
-        let mut decl_header = Header::new(decl_header_path.clone());
+        let mut decl_header = Header::new(decl_header_path.clone(), self.is_for_cpp);
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
-        let mut impl_header = Header::new(impl_header_path.clone());
+        let mut impl_header = Header::new(impl_header_path.clone(), self.is_for_cpp);
 
         let mut context = TyGenContext {
             cx: self,
@@ -36,10 +36,6 @@ impl<'tcx> super::CContext<'tcx> {
         }
 
         context.gen_impl(ty, id);
-
-        if let TypeDef::Opaque(_) = ty {
-            context.gen_dtor(id);
-        }
 
         // In some cases like generating decls for `self` parameters,
         // a header will get its own includes. Instead of
@@ -62,8 +58,8 @@ impl<'tcx> super::CContext<'tcx> {
             .errors
             .set_context_ty(self.formatter.fmt_result_for_diagnostics(ty).into());
         let header_path = self.formatter.fmt_result_header_path(name);
-        let mut header = Header::new(header_path.clone());
-        let mut dummy_header = Header::new("".to_string());
+        let mut header = Header::new(header_path.clone(), self.is_for_cpp);
+        let mut dummy_header = Header::new("".to_string(), self.is_for_cpp);
         let mut context = TyGenContext {
             cx: self,
             // NOTE: Only one header for results
@@ -109,6 +105,9 @@ struct OpaqueTemplate<'a> {
 #[template(path = "c2/impl.h.jinja", escape = "none")]
 struct ImplTemplate<'a> {
     methods: Vec<MethodTemplate<'a>>,
+    is_for_cpp: bool,
+    ty_name: Cow<'a, str>,
+    dtor_name: Option<String>,
 }
 
 struct MethodTemplate<'a> {
@@ -162,9 +161,21 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods.push(self.gen_method(id, method));
         }
 
-        ImplTemplate { methods }
-            .render_into(self.impl_header)
-            .unwrap();
+        let ty_name = self.cx.formatter.fmt_type_name(id);
+
+        let dtor_name = if let TypeDef::Opaque(_) = ty {
+            Some(self.cx.formatter.fmt_dtor_name(id))
+        } else {
+            None
+        };
+        ImplTemplate {
+            ty_name,
+            methods,
+            dtor_name,
+            is_for_cpp: self.cx.is_for_cpp,
+        }
+        .render_into(self.impl_header)
+        .unwrap();
     }
 
     fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) -> MethodTemplate<'ccx> {
@@ -243,12 +254,6 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             return_ty,
             params,
         }
-    }
-
-    pub fn gen_dtor(&mut self, id: TypeId) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
-        let dtor_name = self.cx.formatter.fmt_dtor_name(id);
-        write!(self.impl_header, "void {dtor_name}({ty_name}* self);\n\n").unwrap();
     }
 
     pub fn gen_result(&mut self, name: &str, ty: ResultType) {

@@ -10,10 +10,7 @@
 #include "BorrowedFields.d.h"
 #include "BorrowedFieldsWithBounds.d.h"
 
-#ifdef __cplusplus
 namespace capi {
-extern "C" {
-#endif // __cplusplus
 
 
 typedef struct NestedBorrowedFields {
@@ -24,9 +21,6 @@ typedef struct NestedBorrowedFields {
 
 
 
-#ifdef __cplusplus
-} // extern "C"
 } // namespace capi
-#endif // __cplusplus
 
 #endif // NestedBorrowedFields_D_H

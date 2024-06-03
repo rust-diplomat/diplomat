@@ -19,7 +19,9 @@ typedef uint32_t char32_t;
 #endif
 
 
+{% if is_for_cpp -%}
 namespace capi {
+{%- endif %}
 
 
 typedef struct DiplomatWrite {
@@ -32,7 +34,9 @@ typedef struct DiplomatWrite {
     bool (*grow)(struct DiplomatWrite*, size_t);
 } DiplomatWrite;
 
+{% if is_for_cpp -%}
 extern "C" {
+{%- endif %}
 DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
 
 DiplomatWrite* diplomat_buffer_write_create(size_t cap);
@@ -42,7 +46,9 @@ void diplomat_buffer_write_destroy(DiplomatWrite* t);
 
 bool diplomat_is_str(const char* buf, size_t len);
 
+{% if is_for_cpp -%}
 } // extern "C"
+{%- endif %}
 
 #define MAKE_SLICES(name, c_ty) \
     typedef struct Diplomat##name##View { \
@@ -73,6 +79,9 @@ MAKE_SLICES(String16, char16_t)
 MAKE_SLICES(Strings, DiplomatStringView)
 MAKE_SLICES(Strings16, DiplomatString16View)
 
+{% if is_for_cpp -%}
 } // namespace capi
+{%- endif %}
 
 #endif
+

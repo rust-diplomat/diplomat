@@ -10,20 +10,16 @@
 
 #include "RefListParameter.d.h"
 
-#ifdef __cplusplus
 namespace capi {
-extern "C" {
-#endif // __cplusplus
 
+
+extern "C" {
 
 
 void RefListParameter_destroy(RefListParameter* self);
 
-
-
-#ifdef __cplusplus
 } // extern "C"
+
 } // namespace capi
-#endif // __cplusplus
 
 #endif // RefListParameter_H

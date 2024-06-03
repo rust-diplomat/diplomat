@@ -8,10 +8,7 @@
 #include "diplomat_runtime.h"
 
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
 
 
 typedef struct diplomat_result_int32_t_void {
@@ -22,9 +19,6 @@ typedef struct diplomat_result_int32_t_void {
 } diplomat_result_int32_t_void;
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
 
 #endif // diplomat_result_int32_t_void_D_H

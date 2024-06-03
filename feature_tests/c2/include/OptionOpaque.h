@@ -13,10 +13,8 @@
 
 #include "OptionOpaque.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -34,13 +32,11 @@ void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
 
 bool OptionOpaque_option_opaque_argument(const OptionOpaque* arg);
 
+
 void OptionOpaque_destroy(OptionOpaque* self);
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
 
 #endif // OptionOpaque_H

@@ -8,10 +8,7 @@
 #include "diplomat_runtime.h"
 
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
 
 
 typedef struct BorrowedFieldsReturning {
@@ -20,9 +17,6 @@ typedef struct BorrowedFieldsReturning {
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
 
 #endif // BorrowedFieldsReturning_D_H

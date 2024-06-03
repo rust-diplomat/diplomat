@@ -16,10 +16,8 @@
 
 #include "ResultOpaque.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -41,13 +39,11 @@ diplomat_result_ErrorEnum_box_ResultOpaque ResultOpaque_new_in_enum_err(int32_t 
 
 void ResultOpaque_assert_integer(const ResultOpaque* self, int32_t i);
 
+
 void ResultOpaque_destroy(ResultOpaque* self);
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
 
 #endif // ResultOpaque_H

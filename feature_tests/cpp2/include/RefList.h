@@ -12,22 +12,18 @@
 
 #include "RefList.d.h"
 
-#ifdef __cplusplus
 namespace capi {
+
+
 extern "C" {
-#endif // __cplusplus
-
-
 
 RefList* RefList_node(const RefListParameter* data);
 
+
 void RefList_destroy(RefList* self);
 
-
-
-#ifdef __cplusplus
 } // extern "C"
+
 } // namespace capi
-#endif // __cplusplus
 
 #endif // RefList_H

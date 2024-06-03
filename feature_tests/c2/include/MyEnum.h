@@ -10,10 +10,8 @@
 
 #include "MyEnum.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -23,9 +21,7 @@ MyEnum MyEnum_get_a();
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
+
 
 #endif // MyEnum_H
