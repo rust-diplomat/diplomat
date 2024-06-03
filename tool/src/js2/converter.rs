@@ -225,7 +225,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
 			// Result<Type, Error> or Option<Type>
 			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok)  => {
-				let err_check = format!("if (!result.isOk) {{\n    {}\n}}\n",
+				let err_check = format!("if (!result.isOk) {{\n    {};\n}}\n",
 				match return_type {
 					ReturnType::Fallible(_, Some(e)) => format!("throw {}",
 					self.gen_c_to_js_for_type(e, "result.union.error".into(), lifetime_environment)),
