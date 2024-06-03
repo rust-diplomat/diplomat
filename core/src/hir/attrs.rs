@@ -688,8 +688,8 @@ pub struct BackendAttrSupport {
     pub memory_sharing: bool,
     /// I.E.
     /// ```dart
-    /// class Iterator {
-    ///     int _iteratorNext()
+    /// class MyIterator implements Iterator {
+    ///     int next()
     /// }
     /// ```
     pub iterators: bool,
