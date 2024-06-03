@@ -675,7 +675,7 @@ pub struct BackendAttrSupport {
     /// I.E.
     /// ```dart
     /// class Sample {
-    ///     @override bool operator ==(Object other) => other is {{type_name}} && compareTo(other) == 0;
+    ///     @override bool operator ==(Object other) => ...;
     /// }
     /// ```
     pub comparators: bool,
@@ -688,14 +688,14 @@ pub struct BackendAttrSupport {
     pub memory_sharing: bool,
     /// I.E.
     /// ```dart
-    /// class Iterator {
-    ///     int _iteratorNext()
+    /// class MyIterator implements Iterator {
+    ///     int next()
     /// }
     /// ```
     pub iterators: bool,
     /// I.E.
     /// ```dart
-    /// class Sample {
+    /// class Sample implements Iterable {
     ///     Iterator get iterator
     /// }
     /// ```
