@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "Bar.d.h"
 #include "Bar.h"
 #include "BorrowedFields.d.h"
@@ -36,6 +37,7 @@ Foo* Foo_extract_from_fields(BorrowedFields fields);
 Foo* Foo_extract_from_bounds(BorrowedFieldsWithBounds bounds, const char* another_string_data, size_t another_string_len);
 
 void Foo_destroy(Foo* self);
+
 
 
 #ifdef __cplusplus

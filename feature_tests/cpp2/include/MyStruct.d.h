@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "MyEnum.d.h"
 
 #ifdef __cplusplus
@@ -23,6 +24,7 @@ typedef struct MyStruct {
   char32_t f;
   MyEnum g;
 } MyStruct;
+
 
 
 #ifdef __cplusplus

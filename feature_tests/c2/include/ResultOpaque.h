@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "diplomat_result_ErrorEnum_box_ResultOpaque.d.h"
 #include "diplomat_result_box_ResultOpaque_ErrorEnum.d.h"
 #include "diplomat_result_box_ResultOpaque_ErrorStruct.d.h"
@@ -40,6 +41,7 @@ diplomat_result_ErrorEnum_box_ResultOpaque ResultOpaque_new_in_enum_err(int32_t 
 void ResultOpaque_assert_integer(const ResultOpaque* self, int32_t i);
 
 void ResultOpaque_destroy(ResultOpaque* self);
+
 
 
 #ifdef __cplusplus

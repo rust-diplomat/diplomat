@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -21,6 +22,7 @@ typedef enum MyEnum {
   MyEnum_E = 2,
   MyEnum_F = 3,
 } MyEnum;
+
 
 
 #ifdef __cplusplus

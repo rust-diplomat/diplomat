@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "diplomat_result_double_void.d.h"
 
 #include "Float64Vec.d.h"
@@ -45,6 +46,7 @@ DiplomatF64View Float64Vec_borrow(const Float64Vec* self);
 diplomat_result_double_void Float64Vec_get(const Float64Vec* self, size_t i);
 
 void Float64Vec_destroy(Float64Vec* self);
+
 
 
 #ifdef __cplusplus

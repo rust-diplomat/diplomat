@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "OptionStruct.d.h"
 #include "OptionStruct.h"
 #include "diplomat_result_OptionStruct_void.d.h"
@@ -33,6 +34,7 @@ void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
 bool OptionOpaque_option_opaque_argument(const OptionOpaque* arg);
 
 void OptionOpaque_destroy(OptionOpaque* self);
+
 
 
 #ifdef __cplusplus

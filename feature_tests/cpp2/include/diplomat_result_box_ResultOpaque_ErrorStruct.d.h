@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "ErrorStruct.d.h"
 #include "ResultOpaque.d.h"
 
@@ -22,6 +23,7 @@ typedef struct diplomat_result_box_ResultOpaque_ErrorStruct {
   };
   bool is_ok;
 } diplomat_result_box_ResultOpaque_ErrorStruct;
+
 
 #ifdef __cplusplus
 } // extern "C"

@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "BorrowedFields.d.h"
 #include "BorrowedFieldsWithBounds.d.h"
 
@@ -20,6 +21,7 @@ typedef struct NestedBorrowedFields {
   BorrowedFieldsWithBounds bounds;
   BorrowedFieldsWithBounds bounds2;
 } NestedBorrowedFields;
+
 
 
 #ifdef __cplusplus

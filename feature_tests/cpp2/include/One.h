@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "Two.d.h"
 #include "Two.h"
 
@@ -40,6 +41,7 @@ One* One_implicit_bounds(const One* explicit_hold, const One* implicit_hold, con
 One* One_implicit_bounds_deep(const One* explicit_, const One* implicit_1, const One* implicit_2, const One* nohold);
 
 void One_destroy(One* self);
+
 
 
 #ifdef __cplusplus

@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "OptionStruct.d.h"
 
 #ifdef __cplusplus
@@ -20,6 +21,7 @@ typedef struct diplomat_result_OptionStruct_void {
   };
   bool is_ok;
 } diplomat_result_OptionStruct_void;
+
 
 #ifdef __cplusplus
 } // extern "C"

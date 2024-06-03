@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "ICU4XDataProvider.d.h"
 #include "ICU4XDataProvider.h"
 #include "ICU4XFixedDecimal.d.h"
@@ -29,6 +30,7 @@ diplomat_result_box_ICU4XFixedDecimalFormatter_void ICU4XFixedDecimalFormatter_t
 void ICU4XFixedDecimalFormatter_format_write(const ICU4XFixedDecimalFormatter* self, const ICU4XFixedDecimal* value, DiplomatWrite* write);
 
 void ICU4XFixedDecimalFormatter_destroy(ICU4XFixedDecimalFormatter* self);
+
 
 
 #ifdef __cplusplus

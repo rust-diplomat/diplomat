@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #include "AttrOpaque2.d.h"
 
 #ifdef __cplusplus
@@ -16,6 +17,7 @@ extern "C" {
 
 
 void namespace_AttrOpaque2_destroy(AttrOpaque2* self);
+
 
 
 #ifdef __cplusplus

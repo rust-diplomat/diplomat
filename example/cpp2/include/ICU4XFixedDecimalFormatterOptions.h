@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #include "ICU4XFixedDecimalFormatterOptions.d.h"
 
 #ifdef __cplusplus
@@ -16,6 +17,7 @@ extern "C" {
 
 
 ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions_default();
+
 
 
 #ifdef __cplusplus

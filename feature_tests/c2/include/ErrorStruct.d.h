@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -17,6 +18,7 @@ typedef struct ErrorStruct {
   int32_t i;
   int32_t j;
 } ErrorStruct;
+
 
 
 #ifdef __cplusplus

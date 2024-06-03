@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "Utf16Wrap.d.h"
 #include "Utf16Wrap.h"
 
@@ -34,6 +35,7 @@ DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString* self
 Utf16Wrap* OpaqueMutexedString_wrapper(const OpaqueMutexedString* self);
 
 void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
+
 
 
 #ifdef __cplusplus

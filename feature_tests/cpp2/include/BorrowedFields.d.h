@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -18,6 +19,7 @@ typedef struct BorrowedFields {
   DiplomatStringView b;
   DiplomatStringView c;
 } BorrowedFields;
+
 
 
 #ifdef __cplusplus
