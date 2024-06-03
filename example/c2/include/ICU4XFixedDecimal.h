@@ -17,6 +17,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 ICU4XFixedDecimal* ICU4XFixedDecimal_new(int32_t v);
 
 void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);

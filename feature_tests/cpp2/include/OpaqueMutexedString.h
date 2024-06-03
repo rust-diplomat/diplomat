@@ -18,6 +18,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
 
 void OpaqueMutexedString_change(const OpaqueMutexedString* self, size_t number);

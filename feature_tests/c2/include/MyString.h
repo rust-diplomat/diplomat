@@ -16,6 +16,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 MyString* MyString_new(const char* v_data, size_t v_len);
 
 MyString* MyString_new_unsafe(const char* v_data, size_t v_len);

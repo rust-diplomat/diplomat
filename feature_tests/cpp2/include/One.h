@@ -18,6 +18,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 One* One_transitivity(const One* hold, const One* nohold);
 
 One* One_cycle(const Two* hold, const One* nohold);

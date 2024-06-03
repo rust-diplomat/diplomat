@@ -20,6 +20,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 Opaque* Opaque_new();
 
 void Opaque_assert_struct(const Opaque* self, MyStruct s);

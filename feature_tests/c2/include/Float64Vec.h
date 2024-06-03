@@ -17,6 +17,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 Float64Vec* Float64Vec_new(const double* v_data, size_t v_len);
 
 Float64Vec* Float64Vec_new_bool(const bool* v_data, size_t v_len);

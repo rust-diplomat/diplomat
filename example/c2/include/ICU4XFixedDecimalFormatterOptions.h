@@ -16,6 +16,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions_default();
 
 

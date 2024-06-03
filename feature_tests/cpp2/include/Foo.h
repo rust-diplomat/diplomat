@@ -24,6 +24,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 Foo* Foo_new(const char* x_data, size_t x_len);
 
 Bar* Foo_get_bar(const Foo* self);

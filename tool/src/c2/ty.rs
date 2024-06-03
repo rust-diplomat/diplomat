@@ -34,17 +34,8 @@ impl<'tcx> super::CContext<'tcx> {
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
             _ => unreachable!("unknown AST/HIR variant"),
         }
-        for method in ty.methods() {
-            if method.attrs.disable {
-                // Skip method if disabled
-                continue;
-            }
-            let _guard = self.errors.set_context_method(
-                self.formatter.fmt_type_name_diagnostics(id),
-                method.name.as_str().into(),
-            );
-            context.gen_method(id, method);
-        }
+
+        context.gen_impl(ty, id);
 
         if let TypeDef::Opaque(_) = ty {
             context.gen_dtor(id);
@@ -114,6 +105,18 @@ struct OpaqueTemplate<'a> {
     ty_name: Cow<'a, str>,
 }
 
+#[derive(Template)]
+#[template(path = "c2/impl.h.jinja", escape = "none")]
+struct ImplTemplate<'a> {
+    methods: Vec<MethodTemplate<'a>>,
+}
+
+struct MethodTemplate<'a> {
+    return_ty: Cow<'a, str>,
+    params: String,
+    name: Cow<'a, str>,
+}
+
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_enum_def(&mut self, def: &'tcx hir::EnumDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
@@ -145,7 +148,26 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             .unwrap();
     }
 
-    pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
+    pub fn gen_impl(&mut self, ty: hir::TypeDef<'tcx>, id: TypeId) {
+        let mut methods = vec![];
+        for method in ty.methods() {
+            if method.attrs.disable {
+                // Skip method if disabled
+                continue;
+            }
+            let _guard = self.cx.errors.set_context_method(
+                self.cx.formatter.fmt_type_name_diagnostics(id),
+                method.name.as_str().into(),
+            );
+            methods.push(self.gen_method(id, method));
+        }
+
+        ImplTemplate { methods }
+            .render_into(self.impl_header)
+            .unwrap();
+    }
+
+    fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) -> MethodTemplate<'ccx> {
         use diplomat_core::hir::{ReturnType, SuccessType};
         let method_name = self.cx.formatter.fmt_method_name(id, method);
         let mut param_decls = Vec::new();
@@ -216,7 +238,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
         }
 
-        write!(self.impl_header, "{return_ty} {method_name}({params});\n\n").unwrap();
+        MethodTemplate {
+            name: method_name.into(),
+            return_ty,
+            params,
+        }
     }
 
     pub fn gen_dtor(&mut self, id: TypeId) {

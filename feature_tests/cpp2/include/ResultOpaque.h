@@ -22,6 +22,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 diplomat_result_box_ResultOpaque_ErrorEnum ResultOpaque_new(int32_t i);
 
 diplomat_result_box_ResultOpaque_ErrorEnum ResultOpaque_new_failing_foo();

@@ -17,6 +17,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 ICU4XDataProvider* ICU4XDataProvider_new_static();
 
 diplomat_result_void_void ICU4XDataProvider_returns_result();

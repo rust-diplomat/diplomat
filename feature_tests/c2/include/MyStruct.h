@@ -16,6 +16,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 MyStruct MyStruct_new();
 
 uint8_t MyStruct_into_a(MyStruct self);

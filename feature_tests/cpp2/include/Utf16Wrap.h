@@ -16,6 +16,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 DiplomatString16View Utf16Wrap_borrow_cont(const Utf16Wrap* self);
 
 DiplomatString16View Utf16Wrap_owned(const Utf16Wrap* self);
