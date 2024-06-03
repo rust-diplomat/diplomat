@@ -695,7 +695,7 @@ pub struct BackendAttrSupport {
     pub iterators: bool,
     /// I.E.
     /// ```dart
-    /// class Sample {
+    /// class Sample implements Iterable {
     ///     Iterator get iterator
     /// }
     /// ```
