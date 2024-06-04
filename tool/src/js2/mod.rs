@@ -120,24 +120,25 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         const FILE_TYPES : [FileType; 2] = [FileType::Module, FileType::Typescript];
 
-        let mut context = TypeGenerationContext {
-            js_ctx: self,
-            imports: String::new(),
-        };
-
         for file_type in FILE_TYPES {
+            let mut context = TypeGenerationContext {
+                js_ctx: self,
+                typescript: file_type.is_typescript(),
+                imports: Vec::new(),
+            };
+
             let contents = match type_def {
                 TypeDef::Enum(enum_def) => {
-                    context.generate_enum_from_def(enum_def, type_id, &name, &file_type)
+                    context.generate_enum_from_def(enum_def, type_id, &name)
                 },
                 TypeDef::Opaque(opaque_def) => {
-                    context.generate_opaque_from_def(opaque_def, type_id, &name, &file_type)
+                    context.generate_opaque_from_def(opaque_def, type_id, &name)
                 },
                 TypeDef::Struct(struct_def) => {
-                    context.generate_struct_from_def(struct_def, type_id, false, &name, true, &file_type)
+                    context.generate_struct_from_def(struct_def, type_id, false, &name, true)
                 },
                 TypeDef::OutStruct(struct_def) => {
-                    context.generate_struct_from_def(struct_def, type_id, true, &name, false, &file_type)
+                    context.generate_struct_from_def(struct_def, type_id, true, &name, false)
                 },
                 _ => unreachable!("HIR/AST variant {:?} is unknown.", type_def)
             };

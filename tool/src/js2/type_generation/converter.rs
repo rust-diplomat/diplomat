@@ -50,6 +50,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				} else {
 					type_name
 				};
+				
+				// Add to the import list:
+				// self.imports.push(self.js_ctx.formatter.fmt_import_statement(self.typescript));
 
 				ret.to_owned().into()
 			},

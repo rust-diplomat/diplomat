@@ -15,18 +15,19 @@ use converter::StructBorrowContext;
 
 pub(super) struct TypeGenerationContext<'jsctx, 'tcx> {
     pub js_ctx : &'jsctx JSGenerationContext<'tcx>,
-    pub imports : String,
+    pub typescript : bool,
+    pub imports : Vec<String>,
 }
 
 impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 	/// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
-    pub(super) fn generate_enum_from_def(&self, enum_def : &'tcx EnumDef, type_id : TypeId, type_name : &str, file_type : &FileType) -> String {
+    pub(super) fn generate_enum_from_def(&self, enum_def : &'tcx EnumDef, type_id : TypeId, type_name : &str) -> String {
         let mut methods = enum_def.methods
         .iter()
-        .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
+        .flat_map(|method| self.generate_method_body(type_id, type_name, method, self.typescript))
         .collect::<Vec<_>>();
 
-        let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence, file_type.is_typescript());
+        let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence, self.typescript);
         methods.push(special_method_body);
 
         #[derive(Template)]
@@ -46,7 +47,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             enum_def,
             formatter: &self.js_ctx.formatter,
             type_name,
-            typescript: file_type.is_typescript(),
+            typescript: self.typescript,
 
             doc_str: self.js_ctx.formatter.fmt_docs(&enum_def.docs),
 
@@ -54,12 +55,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         }.render().unwrap()
     }
 
-    pub(super) fn generate_opaque_from_def(&self, opaque_def: &'tcx OpaqueDef, type_id : TypeId, type_name : &str, file_type : &FileType) -> String {
+    pub(super) fn generate_opaque_from_def(&self, opaque_def: &'tcx OpaqueDef, type_id : TypeId, type_name : &str) -> String {
         let mut methods = opaque_def.methods.iter()
-        .flat_map(|method| { self.generate_method_body(type_id, type_name, method, file_type.is_typescript()) })
+        .flat_map(|method| { self.generate_method_body(type_id, type_name, method, self.typescript) })
         .collect::<Vec<_>>();
 
-        let special_method_body = self.generate_special_method_body(&opaque_def.special_method_presence, file_type.is_typescript());
+        let special_method_body = self.generate_special_method_body(&opaque_def.special_method_presence, self.typescript);
         methods.push(special_method_body);
 
         let destructor = self.js_ctx.formatter.fmt_destructor_name(type_id);
@@ -81,13 +82,13 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             type_name,
             methods,
             destructor,
-            typescript: file_type.is_typescript(),
+            typescript: self.typescript,
             docs: self.js_ctx.formatter.fmt_docs(&opaque_def.docs),
             lifetimes : &opaque_def.lifetimes,
         }.render().unwrap()
     }
 
-    pub(super) fn generate_struct_from_def<P: hir::TyPosition>(&self, struct_def : &'tcx hir::StructDef<P>, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool, file_type : &FileType) -> String {
+    pub(super) fn generate_struct_from_def<P: hir::TyPosition>(&self, struct_def : &'tcx hir::StructDef<P>, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool) -> String {
         struct FieldInfo<'info, P: hir::TyPosition> {
             field_name: Cow<'info, str>,
             field_type : &'info Type<P>,
@@ -178,10 +179,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
         let mut methods = struct_def.methods
         .iter()
-        .flat_map(|method| self.generate_method_body(type_id, type_name, method, file_type.is_typescript()))
+        .flat_map(|method| self.generate_method_body(type_id, type_name, method, self.typescript))
         .collect::<Vec<_>>();
 
-        methods.push(self.generate_special_method_body(&struct_def.special_method_presence, file_type.is_typescript()));
+        methods.push(self.generate_special_method_body(&struct_def.special_method_presence, self.typescript));
 
         // TODO: Default constructors? (Could be expanded with Opaque default constructors??)
 
@@ -200,7 +201,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         ImplTemplate {
             type_name,
             mutable,
-            typescript: file_type.is_typescript(),
+            typescript: self.typescript,
             fields,
             methods,
             docs: self.js_ctx.formatter.fmt_docs(&struct_def.docs),
