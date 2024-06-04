@@ -14,10 +14,8 @@
 
 #include "NestedBorrowedFields.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -25,9 +23,7 @@ NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const Bar
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
+
 
 #endif // NestedBorrowedFields_H

@@ -43,16 +43,18 @@ pub struct Header {
     pub body: String,
     /// What string to use for indentation.
     pub indent_str: &'static str,
+    pub is_for_cpp: bool,
 }
 
 impl Header {
-    pub fn new(path: String) -> Self {
+    pub fn new(path: String, is_for_cpp: bool) -> Self {
         Header {
             path,
             includes: BTreeSet::new(),
             decl_include: None,
             body: String::new(),
             indent_str: "  ",
+            is_for_cpp,
         }
     }
 }
@@ -76,6 +78,7 @@ struct HeaderTemplate<'a> {
     decl_include: Option<&'a String>,
     includes: &'a BTreeSet<String>,
     body: Cow<'a, str>,
+    is_for_cpp: bool,
 }
 
 impl fmt::Display for Header {
@@ -94,6 +97,7 @@ impl fmt::Display for Header {
             includes: &self.includes,
             decl_include: self.decl_include.as_ref(),
             body,
+            is_for_cpp: self.is_for_cpp,
         }
         .render_into(f)
         .unwrap();

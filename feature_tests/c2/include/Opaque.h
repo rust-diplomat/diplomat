@@ -14,10 +14,8 @@
 
 #include "Opaque.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -31,13 +29,11 @@ ImportedStruct Opaque_returns_imported();
 
 int8_t Opaque_cmp();
 
+
 void Opaque_destroy(Opaque* self);
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
 
 #endif // Opaque_H

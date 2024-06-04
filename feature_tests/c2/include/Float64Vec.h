@@ -11,10 +11,8 @@
 
 #include "Float64Vec.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -46,13 +44,11 @@ DiplomatF64View Float64Vec_borrow(const Float64Vec* self);
 
 diplomat_result_double_void Float64Vec_get(const Float64Vec* self, size_t i);
 
+
 void Float64Vec_destroy(Float64Vec* self);
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
 
 #endif // Float64Vec_H

@@ -8,10 +8,7 @@
 #include "diplomat_runtime.h"
 
 
-#ifdef __cplusplus
 namespace capi {
-extern "C" {
-#endif // __cplusplus
 
 
 typedef struct ErrorStruct {
@@ -21,9 +18,6 @@ typedef struct ErrorStruct {
 
 
 
-#ifdef __cplusplus
-} // extern "C"
 } // namespace capi
-#endif // __cplusplus
 
 #endif // ErrorStruct_D_H

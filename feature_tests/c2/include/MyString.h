@@ -10,10 +10,8 @@
 
 #include "MyString.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -31,13 +29,11 @@ void MyString_get_str(const MyString* self, DiplomatWrite* write);
 
 DiplomatStringView MyString_get_boxed_str(const MyString* self);
 
+
 void MyString_destroy(MyString* self);
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
 
 #endif // MyString_H

@@ -10,22 +10,18 @@
 
 #include "MyStruct.d.h"
 
-#ifdef __cplusplus
 namespace capi {
+
+
 extern "C" {
-#endif // __cplusplus
-
-
 
 MyStruct MyStruct_new();
 
 uint8_t MyStruct_into_a(MyStruct self);
 
 
-
-#ifdef __cplusplus
 } // extern "C"
+
 } // namespace capi
-#endif // __cplusplus
 
 #endif // MyStruct_H

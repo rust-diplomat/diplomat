@@ -19,10 +19,8 @@
 
 #include "ICU4XFixedDecimalFormatter.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -30,13 +28,11 @@ diplomat_result_box_ICU4XFixedDecimalFormatter_void ICU4XFixedDecimalFormatter_t
 
 void ICU4XFixedDecimalFormatter_format_write(const ICU4XFixedDecimalFormatter* self, const ICU4XFixedDecimal* value, DiplomatWrite* write);
 
+
 void ICU4XFixedDecimalFormatter_destroy(ICU4XFixedDecimalFormatter* self);
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
 
 #endif // ICU4XFixedDecimalFormatter_H

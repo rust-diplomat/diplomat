@@ -12,10 +12,8 @@
 
 #include "BorrowedFieldsWithBounds.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
 
 
 
@@ -23,9 +21,7 @@ BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo
 
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
+
 
 #endif // BorrowedFieldsWithBounds_H

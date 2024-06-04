@@ -9,17 +9,15 @@
         #include "{{ include }}"
     {%~ when None %}
 {%- endmatch %}
-#ifdef __cplusplus
+{% if is_for_cpp -%}
 namespace capi {
-extern "C" {
-#endif // __cplusplus
+{%- endif %}
 
 
 {{ body }}
 
-#ifdef __cplusplus
-} // extern "C"
+{% if is_for_cpp -%}
 } // namespace capi
-#endif // __cplusplus
+{%- endif %}
 
 #endif // {{ header_guard }}

@@ -12,12 +12,10 @@
 
 #include "OpaqueMutexedString.d.h"
 
-#ifdef __cplusplus
 namespace capi {
+
+
 extern "C" {
-#endif // __cplusplus
-
-
 
 OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
 
@@ -35,13 +33,11 @@ DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString* self
 
 Utf16Wrap* OpaqueMutexedString_wrapper(const OpaqueMutexedString* self);
 
+
 void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
 
-
-
-#ifdef __cplusplus
 } // extern "C"
+
 } // namespace capi
-#endif // __cplusplus
 
 #endif // OpaqueMutexedString_H
