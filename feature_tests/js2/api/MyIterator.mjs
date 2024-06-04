@@ -40,7 +40,7 @@ export class MyIterator {
         const result = wasm.namespace_MyIterator_next(this.ffiValue);
     
         if (!result.isOk) {
-            return null
+            return null;
         }
          return result.union.ok;
     }

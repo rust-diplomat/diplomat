@@ -151,7 +151,7 @@ export class Float64Vec {
         const result = wasm.Float64Vec_get(this.ffiValue, i);
     
         if (!result.isOk) {
-            return null
+            return null;
         }
          return result.union.ok;
     }

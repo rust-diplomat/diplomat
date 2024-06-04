@@ -47,7 +47,7 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_returns();
     
         if (!result.isOk) {
-            return null
+            return null;
         }
          return OptionStruct // TODO: Struct c_to_js;
     }

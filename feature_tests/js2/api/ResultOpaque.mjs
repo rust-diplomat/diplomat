@@ -35,7 +35,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new(i);
     
         if (!result.isOk) {
-            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
+            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]];
         }
          return new ResultOpaque(result.union.ok, []);
     }
@@ -44,7 +44,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new_failing_foo();
     
         if (!result.isOk) {
-            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
+            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]];
         }
          return new ResultOpaque(result.union.ok, []);
     }
@@ -53,7 +53,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new_failing_bar();
     
         if (!result.isOk) {
-            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]]
+            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.error]];
         }
          return new ResultOpaque(result.union.ok, []);
     }
@@ -62,7 +62,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new_failing_unit();
     
         if (!result.isOk) {
-            return null
+            return null;
         }
          return new ResultOpaque(result.union.ok, []);
     }
@@ -71,7 +71,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new_failing_struct(i);
     
         if (!result.isOk) {
-            throw ErrorStruct // TODO: Struct c_to_js
+            throw ErrorStruct // TODO: Struct c_to_js;
         }
          return new ResultOpaque(result.union.ok, []);
     }
@@ -80,7 +80,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new_in_err(i);
     
         if (!result.isOk) {
-            throw new ResultOpaque(result.union.error, [])
+            throw new ResultOpaque(result.union.error, []);
         }
     
     }
@@ -89,7 +89,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new_int(i);
     
         if (!result.isOk) {
-            return null
+            return null;
         }
          return result.union.ok;
     }
@@ -98,7 +98,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new_in_enum_err(i);
     
         if (!result.isOk) {
-            throw new ResultOpaque(result.union.error, [])
+            throw new ResultOpaque(result.union.error, []);
         }
          return ErrorEnum[Array.from(ErrorEnum.values.keys())[result.union.ok]];
     }
