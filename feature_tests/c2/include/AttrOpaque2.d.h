@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -14,6 +15,7 @@ extern "C" {
 
 
 typedef struct AttrOpaque2 AttrOpaque2;
+
 
 
 #ifdef __cplusplus

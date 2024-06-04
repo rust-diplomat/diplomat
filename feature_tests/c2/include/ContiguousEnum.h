@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #include "ContiguousEnum.d.h"
 
 #ifdef __cplusplus
@@ -15,7 +16,7 @@ extern "C" {
 #endif // __cplusplus
 
 
-// No Content
+
 
 
 #ifdef __cplusplus

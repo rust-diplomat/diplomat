@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #include "RefListParameter.d.h"
 
 #ifdef __cplusplus
@@ -15,7 +16,9 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 void RefListParameter_destroy(RefListParameter* self);
+
 
 
 #ifdef __cplusplus

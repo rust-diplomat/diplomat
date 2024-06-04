@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "Utf16Wrap.d.h"
 #include "Utf16Wrap.h"
 
@@ -15,6 +16,7 @@
 namespace capi {
 extern "C" {
 #endif // __cplusplus
+
 
 
 OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
@@ -34,6 +36,7 @@ DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString* self
 Utf16Wrap* OpaqueMutexedString_wrapper(const OpaqueMutexedString* self);
 
 void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
+
 
 
 #ifdef __cplusplus

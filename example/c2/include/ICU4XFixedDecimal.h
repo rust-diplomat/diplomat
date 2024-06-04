@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "diplomat_result_void_void.d.h"
 
 #include "ICU4XFixedDecimal.d.h"
@@ -16,6 +17,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 ICU4XFixedDecimal* ICU4XFixedDecimal_new(int32_t v);
 
 void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);
@@ -23,6 +25,7 @@ void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);
 diplomat_result_void_void ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWrite* write);
 
 void ICU4XFixedDecimal_destroy(ICU4XFixedDecimal* self);
+
 
 
 #ifdef __cplusplus

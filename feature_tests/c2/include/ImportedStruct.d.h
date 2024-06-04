@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "UnimportedEnum.d.h"
 
 #ifdef __cplusplus
@@ -18,6 +19,7 @@ typedef struct ImportedStruct {
   UnimportedEnum foo;
   uint8_t count;
 } ImportedStruct;
+
 
 
 #ifdef __cplusplus

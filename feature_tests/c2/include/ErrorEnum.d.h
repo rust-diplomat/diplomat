@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #ifdef __cplusplus
 namespace capi {
 extern "C" {
@@ -17,6 +18,7 @@ typedef enum ErrorEnum {
   ErrorEnum_Foo = 0,
   ErrorEnum_Bar = 1,
 } ErrorEnum;
+
 
 
 #ifdef __cplusplus

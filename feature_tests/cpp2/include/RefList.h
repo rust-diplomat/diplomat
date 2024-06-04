@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "RefListParameter.d.h"
 #include "RefListParameter.h"
 
@@ -17,9 +18,11 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 RefList* RefList_node(const RefListParameter* data);
 
 void RefList_destroy(RefList* self);
+
 
 
 #ifdef __cplusplus

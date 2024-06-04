@@ -1,0 +1,25 @@
+#ifndef {{ header_guard }}
+#define {{ header_guard }}
+{{ self::BASE_INCLUDES -}}
+{%- for include in includes %}
+#include "{{ include }}"
+{%- endfor %}
+{%~ match decl_include %}
+    {% when Some with (include) ~%}
+        #include "{{ include }}"
+    {%~ when None %}
+{%- endmatch %}
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif // __cplusplus
+
+
+{{ body }}
+
+#ifdef __cplusplus
+} // extern "C"
+} // namespace capi
+#endif // __cplusplus
+
+#endif // {{ header_guard }}

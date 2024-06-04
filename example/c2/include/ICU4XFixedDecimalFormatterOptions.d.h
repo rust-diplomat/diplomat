@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "ICU4XFixedDecimalGroupingStrategy.d.h"
 
 #ifdef __cplusplus
@@ -18,6 +19,7 @@ typedef struct ICU4XFixedDecimalFormatterOptions {
   ICU4XFixedDecimalGroupingStrategy grouping_strategy;
   bool some_other_config;
 } ICU4XFixedDecimalFormatterOptions;
+
 
 
 #ifdef __cplusplus

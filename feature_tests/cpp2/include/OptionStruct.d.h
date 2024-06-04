@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "OptionOpaque.d.h"
 #include "OptionOpaqueChar.d.h"
 
@@ -21,6 +22,7 @@ typedef struct OptionStruct {
   uint32_t c;
   OptionOpaque* d;
 } OptionStruct;
+
 
 
 #ifdef __cplusplus

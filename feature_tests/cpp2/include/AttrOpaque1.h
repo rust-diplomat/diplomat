@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "AttrEnum.d.h"
 #include "AttrEnum.h"
 #include "Unnamespaced.d.h"
@@ -19,6 +20,7 @@ extern "C" {
 #endif // __cplusplus
 
 
+
 AttrOpaque1* namespace_AttrOpaque1_new();
 
 uint8_t namespace_AttrOpaque1_method(const AttrOpaque1* self);
@@ -30,6 +32,7 @@ void namespace_AttrOpaque1_use_unnamespaced(const AttrOpaque1* self, const Unnam
 void namespace_AttrOpaque1_use_namespaced(const AttrOpaque1* self, AttrEnum _n);
 
 void namespace_AttrOpaque1_destroy(AttrOpaque1* self);
+
 
 
 #ifdef __cplusplus
