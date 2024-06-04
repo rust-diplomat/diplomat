@@ -59,6 +59,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			Type::Struct(ref st) => {
 				let id = st.id();
                 let type_name = self.js_ctx.formatter.fmt_type_name(id);
+				
+				// Add to the import list:
+				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript));
+
                 if self.js_ctx.tcx.resolve_type(id).attrs().disable {
                     self.js_ctx.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
@@ -68,6 +72,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             Type::Enum(ref enumerator) => {
                 let enum_id = enumerator.tcx_id.into();
                 let type_name = self.js_ctx.formatter.fmt_type_name(enum_id);
+				
+				// Add to the import list:
+				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript));
+				
                 if self.js_ctx.tcx.resolve_type(enum_id).attrs().disable {
                     self.js_ctx.errors.push_error(format!("Using disabled type {type_name}"))
                 }
