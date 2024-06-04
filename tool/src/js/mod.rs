@@ -28,13 +28,13 @@ pub fn gen_bindings(
 ) -> fmt::Result {
     outs.entry("diplomat-runtime.mjs".to_string())
         .or_default()
-        .write_str(include_str!("runtime.mjs"))?;
+        .write_str(include_str!("../../templates/js2/runtime.mjs"))?;
     outs.entry("diplomat-runtime.d.ts".to_string())
         .or_default()
-        .write_str(include_str!("runtime.d.ts"))?;
+        .write_str(include_str!("../../templates/js2/runtime.d.ts"))?;
     outs.entry("diplomat-wasm.mjs".to_string())
         .or_default()
-        .write_str(include_str!("wasm.mjs"))?;
+        .write_str(include_str!("../../templates/js2/wasm.mjs"))?;
 
     let mut all_types = util::get_all_custom_types(env);
     all_types.sort_by_key(|t| t.1.name());
