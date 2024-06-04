@@ -31,7 +31,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 	// #region C to JS
 	/// Given a type from Rust, convert it into something Typescript will understand.
 	/// We use this to double-check our Javascript work as well.
-    pub(super) fn gen_js_type_str<P: hir::TyPosition>(&self, ty: &Type<P>) -> Cow<'tcx, str> {
+    pub(super) fn gen_js_type_str<P: hir::TyPosition>(&mut self, ty: &Type<P>) -> Cow<'tcx, str> {
         match *ty {
             Type::Primitive(primitive) => {
                 self.js_ctx.formatter.fmt_primitive_as_ffi(primitive, true).into()
@@ -39,6 +39,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			Type::Opaque(ref op) => {
 				let opaque_id = op.tcx_id.into();
 				let type_name = self.js_ctx.formatter.fmt_type_name(opaque_id);
+				
+				// Add to the import list:
+				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript));
 
 				if self.js_ctx.tcx.resolve_type(opaque_id).attrs().disable {
 					self.js_ctx.errors
@@ -50,9 +53,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				} else {
 					type_name
 				};
-				
-				// Add to the import list:
-				// self.imports.push(self.js_ctx.formatter.fmt_import_statement(self.typescript));
 
 				ret.to_owned().into()
 			},
@@ -82,7 +82,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         }
     }
 
-	pub(super) fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
+	pub(super) fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'tcx, str> {
         match out_ty {
             SuccessType::Write => self.js_ctx.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_js_type_str(o),
@@ -168,7 +168,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 	// #region Return Types
 
 	/// Give us a Typescript return type from [`ReturnType`]
-    pub(super) fn gen_js_return_type_str(&self, return_type : &ReturnType) -> Cow<'tcx, str> {
+    pub(super) fn gen_js_return_type_str(&mut self, return_type : &ReturnType) -> Cow<'tcx, str> {
         match *return_type {
             // -> () or a -> Result<(), Error>.
             ReturnType::Infallible(SuccessType::Unit)

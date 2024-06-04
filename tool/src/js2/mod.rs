@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 use std::fmt::{Display, Write};
 
 use diplomat_core::ast::{DocsUrlGenerator, Param};
@@ -124,7 +125,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
             let mut context = TypeGenerationContext {
                 js_ctx: self,
                 typescript: file_type.is_typescript(),
-                imports: Vec::new(),
+                imports: BTreeSet::new(),
             };
 
             let contents = match type_def {
@@ -146,19 +147,13 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
             let file_name = self.formatter.fmt_file_name(&name, &file_type);
 
-            self.files.add_file(file_name, self.generate_base(contents, &file_type));
+            // Remove our self reference:
+            context.imports.remove(&self.formatter.fmt_import_statement(&name, context.typescript));
+
+            self.files.add_file(file_name, context.generate_base(contents));
         }
         
-        self.exports.push(format!("export {{ {name} }} from './{}", self.formatter.fmt_file_name_extensionless(&name)).into());
-    }
-
-    fn generate_base(&self, body : String, file_type : &FileType) -> String {
-        #[derive(Template)]
-        #[template(path="js2/base.js.jinja", escape="none")]
-        struct BaseTemplate {
-            body : String,
-            typescript : bool,
-        }
-        BaseTemplate {body, typescript: file_type.is_typescript()}.render().unwrap()
+        // TODO: Typescript variant.
+        self.exports.push(self.formatter.fmt_export_statement(&name, false).into());
     }
 }

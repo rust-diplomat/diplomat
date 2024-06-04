@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use diplomat_core::{ast::DocsUrlGenerator, hir::{self, Docs, EnumVariant, TypeContext, TypeId}};
 use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
-use crate::{c2::CFormatter, common::ErrorContextGuard};
+use crate::{c::types, c2::CFormatter, common::ErrorContextGuard};
 
 use super::FileType;
 
@@ -78,6 +78,27 @@ impl<'tcx> JSFormatter<'tcx> {
 		.replace('\n', "\n*")
 		.replace(" \n", "\n")
 
+	}
+
+	pub fn fmt_module_statement(&self, type_name : &str, typescript: bool) -> String {
+		let file_name = self.fmt_file_name_extensionless(type_name);
+		format!(r#"{{ {type_name} }} from "./{file_name}{}"#, match typescript {
+			true => "",
+			false => ".mjs"
+		})
+	}
+
+	pub fn fmt_import_statement(&self, type_name : &str, typescript : bool) -> String {
+		format!(r#"import {}{}""#,
+		match typescript {
+			true => "type ",
+			false => ""
+		}, 
+		self.fmt_module_statement(type_name, typescript))
+	}
+
+	pub fn fmt_export_statement(&self, type_name : &str, typescript : bool) -> String {
+		format!(r#"export {}""#, self.fmt_module_statement(type_name, typescript))
 	}
 
 	// #region HIR::Type formatting.

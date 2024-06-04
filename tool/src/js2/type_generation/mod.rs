@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{Display, Write};
 
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo};
@@ -16,12 +16,23 @@ use converter::StructBorrowContext;
 pub(super) struct TypeGenerationContext<'jsctx, 'tcx> {
     pub js_ctx : &'jsctx JSGenerationContext<'tcx>,
     pub typescript : bool,
-    pub imports : Vec<String>,
+    pub imports : BTreeSet<String>,
 }
 
 impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
+    pub(super) fn generate_base(&self, body : String) -> String {
+        #[derive(Template)]
+        #[template(path="js2/base.js.jinja", escape="none")]
+        struct BaseTemplate<'info> {
+            body : String,
+            typescript : bool,
+            imports : &'info BTreeSet<String>,
+        }
+        BaseTemplate {body, typescript: self.typescript, imports: &self.imports}.render().unwrap()
+    }
+
 	/// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
-    pub(super) fn generate_enum_from_def(&self, enum_def : &'tcx EnumDef, type_id : TypeId, type_name : &str) -> String {
+    pub(super) fn generate_enum_from_def(&mut self, enum_def : &'tcx EnumDef, type_id : TypeId, type_name : &str) -> String {
         let mut methods = enum_def.methods
         .iter()
         .flat_map(|method| self.generate_method_body(type_id, type_name, method, self.typescript))
@@ -55,7 +66,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         }.render().unwrap()
     }
 
-    pub(super) fn generate_opaque_from_def(&self, opaque_def: &'tcx OpaqueDef, type_id : TypeId, type_name : &str) -> String {
+    pub(super) fn generate_opaque_from_def(&mut self, opaque_def: &'tcx OpaqueDef, type_id : TypeId, type_name : &str) -> String {
         let mut methods = opaque_def.methods.iter()
         .flat_map(|method| { self.generate_method_body(type_id, type_name, method, self.typescript) })
         .collect::<Vec<_>>();
@@ -88,7 +99,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         }.render().unwrap()
     }
 
-    pub(super) fn generate_struct_from_def<P: hir::TyPosition>(&self, struct_def : &'tcx hir::StructDef<P>, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool) -> String {
+    pub(super) fn generate_struct_from_def<P: hir::TyPosition>(&mut self, struct_def : &'tcx hir::StructDef<P>, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool) -> String {
         struct FieldInfo<'info, P: hir::TyPosition> {
             field_name: Cow<'info, str>,
             field_type : &'info Type<P>,
@@ -212,7 +223,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
     /// Generate a string Javascript representation of a given method.
     /// 
     /// Currently, this assumes that any method will be part of a class. That will probably be a parameter that's added, however.
-    fn generate_method_body(&self, type_id : TypeId, type_name : &str, method : &'tcx Method, typescript : bool) -> Option<String> {
+    fn generate_method_body(&mut self, type_id : TypeId, type_name : &str, method : &'tcx Method, typescript : bool) -> Option<String> {
         if method.attrs.disable {
             return None;
         }
@@ -377,7 +388,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
     /// We need to make sure Javascript can access it.
     /// 
     /// This is mostly for iterators, using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
-    fn generate_special_method_body(&self, special_method_presence : &SpecialMethodPresence, typescript : bool) -> String {
+    fn generate_special_method_body(&mut self, special_method_presence : &SpecialMethodPresence, typescript : bool) -> String {
         #[derive(Template)]
         #[template(path="js2/special_method.js.jinja", escape="none")]
         struct SpecialMethodInfo<'a> {
