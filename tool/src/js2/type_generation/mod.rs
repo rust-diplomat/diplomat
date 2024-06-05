@@ -378,11 +378,14 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             if let Type::Struct(s) = o {
                 let type_name = self.js_ctx.formatter.fmt_type_name(s.id());
                 method_info.alloc_expressions.push(
-                    format!("const diplomat_recieve_buffer = wasm.diplomat_alloc({type_name}._size, {type_name}._align);").into()
+                    format!("const diplomat_recieve_buffer = wasm.diplomat_alloc({type_name}._size, {type_name}._align);")
+                    .into()
                 );
                 // This is the first thing in param converison order:
                 method_info.param_conversions.insert(0, "diplomat_recieve_buffer".into());
-                method_info.cleanup_expressions.push("wasm.diplomat_free(diplomat_recieve_buffer);".into());
+                method_info.cleanup_expressions.push(
+                    format!("wasm.diplomat_free(diplomat_recieve_buffer, {type_name}._size, {type_name}._size);")
+                    .into());
             }
         }
 

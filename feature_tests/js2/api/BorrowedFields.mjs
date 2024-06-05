@@ -62,7 +62,7 @@ export class BorrowedFields {
         
         utf8StrSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer);
+        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFields._size, BorrowedFields._size);
         
         return BorrowedFields // TODO struct c_to_js;
     }

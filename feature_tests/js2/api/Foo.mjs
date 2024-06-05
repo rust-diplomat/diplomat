@@ -89,7 +89,7 @@ export class Foo {
         let aEdges = [this];
         const result = wasm.Foo_as_returning(diplomat_recieve_buffer, this.ffiValue);
     
-        wasm.diplomat_free(diplomat_recieve_buffer);
+        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFieldsReturning._size, BorrowedFieldsReturning._size);
         
         return BorrowedFieldsReturning // TODO struct c_to_js;
     }

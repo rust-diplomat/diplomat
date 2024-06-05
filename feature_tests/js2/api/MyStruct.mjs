@@ -61,7 +61,7 @@ export class MyStruct {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(MyStruct._size, MyStruct._align);
         const result = wasm.MyStruct_new(diplomat_recieve_buffer);
     
-        wasm.diplomat_free(diplomat_recieve_buffer);
+        wasm.diplomat_free(diplomat_recieve_buffer, MyStruct._size, MyStruct._size);
         
         return MyStruct // TODO struct c_to_js;
     }

@@ -58,7 +58,7 @@ export class Opaque {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(ImportedStruct._size, ImportedStruct._align);
         const result = wasm.Opaque_returns_imported(diplomat_recieve_buffer);
     
-        wasm.diplomat_free(diplomat_recieve_buffer);
+        wasm.diplomat_free(diplomat_recieve_buffer, ImportedStruct._size, ImportedStruct._size);
         
         return ImportedStruct // TODO struct c_to_js;
     }

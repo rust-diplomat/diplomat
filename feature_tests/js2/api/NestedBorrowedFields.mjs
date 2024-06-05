@@ -85,7 +85,7 @@ export class NestedBorrowedFields {
         
         utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer);
+        wasm.diplomat_free(diplomat_recieve_buffer, NestedBorrowedFields._size, NestedBorrowedFields._size);
         
         return NestedBorrowedFields // TODO struct c_to_js;
     }

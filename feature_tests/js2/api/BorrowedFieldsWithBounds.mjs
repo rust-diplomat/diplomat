@@ -70,7 +70,7 @@ export class BorrowedFieldsWithBounds {
         
         utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer);
+        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFieldsWithBounds._size, BorrowedFieldsWithBounds._size);
         
         return BorrowedFieldsWithBounds // TODO struct c_to_js;
     }
