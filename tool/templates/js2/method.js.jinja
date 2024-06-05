@@ -12,6 +12,10 @@
     const {{slice.name}}Arena = new diplomatRuntime.DiplomatFinalizedArena();
     {% endif %}
     {% endfor -%}
+
+    {% for alloc_stmt in alloc_expressions %}
+    {{alloc_stmt|indent(4)}}
+    {% endfor %}
     
     {% let lifetimes = lifetimes.unwrap() -%}
     {% for lifetime in lifetimes.all_lifetimes() -%}

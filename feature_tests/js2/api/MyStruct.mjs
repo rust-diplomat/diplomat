@@ -7,7 +7,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class MyStruct {
-    #ptr
     a;
     b;
     c;
@@ -37,7 +36,6 @@ export class MyStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     constructor(ptr) {
-        this.#ptr = ptr;
         a = a;
         b = b;
         c = c;
@@ -47,9 +45,9 @@ export class MyStruct {
         g = (() => {for (let i of MyEnum.values) { if(i[1] === g) return i[0]; } return null;})();;
     }
     static new_() {
-        const result = wasm.MyStruct_new();
+        const result = wasm.MyStruct_new(/* TODO: Struct param conversion.*/);
     
-        return MyStruct // TODO: Struct c_to_js;
+        return MyStruct // TODO struct c_to_js;
     }
 
     intoA() {

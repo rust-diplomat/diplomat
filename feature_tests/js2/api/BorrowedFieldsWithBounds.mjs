@@ -7,7 +7,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BorrowedFieldsWithBounds {
-    #ptr
     fieldA;
     fieldB;
     fieldC;
@@ -29,7 +28,6 @@ export class BorrowedFieldsWithBounds {
     
 
     constructor(ptr, aEdges, bEdges, cEdges) {
-        this.#ptr = ptr;
         fieldA = fieldA(aEdges) // TODO: Slice c_to_js;
         fieldB = fieldB(bEdges) // TODO: Slice c_to_js;
         fieldC = fieldC(cEdges) // TODO: Slice c_to_js;
@@ -52,13 +50,13 @@ export class BorrowedFieldsWithBounds {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [utf8StrZSlice];
-        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size, /* TODO: Struct param conversion.*/);
     
         dstr16XSlice.garbageCollect();
         
         utf8StrZSlice.garbageCollect();
         
-        return BorrowedFieldsWithBounds // TODO: Struct c_to_js;
+        return BorrowedFieldsWithBounds // TODO struct c_to_js;
     }
 
     

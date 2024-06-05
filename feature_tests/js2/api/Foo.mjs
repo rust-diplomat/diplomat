@@ -85,9 +85,9 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Foo_as_returning(this.ffiValue);
+        const result = wasm.Foo_as_returning(this.ffiValue, /* TODO: Struct param conversion.*/);
     
-        return BorrowedFieldsReturning // TODO: Struct c_to_js;
+        return BorrowedFieldsReturning // TODO struct c_to_js;
     }
 
     static extractFromFields(fields) {

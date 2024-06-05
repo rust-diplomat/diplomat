@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{Display, Write};
 
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo};
-use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethod, SpecialMethodPresence, SuccessType, Type, TypeDef, TypeId};
+use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethod, SpecialMethodPresence, SuccessType, Type, TypeDef, TypeId, StructPathLike};
 
 use askama::{self, Template};
 
@@ -207,6 +207,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             methods: Vec<String>,
             docs: String,
             lifetimes : &'a LifetimeEnv,
+
+            size: u32,
+            align: u32
         }
 
         ImplTemplate {
@@ -216,7 +219,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             fields,
             methods,
             docs: self.js_ctx.formatter.fmt_docs(&struct_def.docs),
-            lifetimes: &struct_def.lifetimes
+            lifetimes: &struct_def.lifetimes,
         }.render().unwrap()
     }
 
@@ -264,6 +267,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             method_lifetimes_map : BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
             lifetimes : Option<&'info LifetimeEnv>,
+            
+            alloc_expressions : Vec<Cow<'info, str>>,
             cleanup_expressions : Vec<Cow<'info, str>>
         }
 
@@ -359,6 +364,19 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         }
 
         method_info.return_type = self.gen_js_return_type_str(&method.output);
+
+        let success = method.output.success_type();
+        if let SuccessType::OutType(ref o) = success {
+            if let Type::Struct(s) = o {
+                let type_name = self.js_ctx.formatter.fmt_type_name(s.id());
+                method_info.alloc_expressions.push(
+                    format!("const diplomat_recieve_buffer = wasm.diplomat_alloc({type_name}._size, {type_name}._align);").into()
+                );
+                method_info.param_conversions.push("diplomat_recieve_buffer".into());
+                method_info.cleanup_expressions.push("wasm.diplomat_free(diplomat_recieve_buffer);".into());
+            }
+        }
+
         method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, &method.lifetime_env);
         
         method_info.method_lifetimes_map = visitor.borrow_map();

@@ -8,7 +8,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class OptionStruct {
-    #ptr
     get a()  {
         return this.#a;
     }
@@ -44,7 +43,6 @@ export class OptionStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     constructor(ptr) {
-        this.#ptr = ptr;
         a = ((a === 0) ? undefined : new OptionOpaque(a, []));
         b = ((b === 0) ? undefined : new OptionOpaqueChar(b, []));
         c = c;

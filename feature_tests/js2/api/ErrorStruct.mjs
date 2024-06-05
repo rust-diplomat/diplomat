@@ -6,7 +6,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ErrorStruct {
-    #ptr
     i;
     j;
 
@@ -26,7 +25,6 @@ export class ErrorStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     constructor(ptr) {
-        this.#ptr = ptr;
         i = i;
         j = j;
     }

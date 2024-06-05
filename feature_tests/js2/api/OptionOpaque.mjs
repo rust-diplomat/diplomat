@@ -46,24 +46,24 @@ export class OptionOpaque {
     }
 
     static returns() {
-        const result = wasm.OptionOpaque_returns();
+        const result = wasm.OptionOpaque_returns(/* TODO: Struct param conversion.*/);
     
         if (!result.isOk) {
             return null;
         }
-         return OptionStruct // TODO: Struct c_to_js;
+         return OptionStruct // TODO struct c_to_js;
     }
 
     static newStruct() {
-        const result = wasm.OptionOpaque_new_struct();
+        const result = wasm.OptionOpaque_new_struct(/* TODO: Struct param conversion.*/);
     
-        return OptionStruct // TODO: Struct c_to_js;
+        return OptionStruct // TODO struct c_to_js;
     }
 
     static newStructNones() {
-        const result = wasm.OptionOpaque_new_struct_nones();
+        const result = wasm.OptionOpaque_new_struct_nones(/* TODO: Struct param conversion.*/);
     
-        return OptionStruct // TODO: Struct c_to_js;
+        return OptionStruct // TODO struct c_to_js;
     }
 
     assertInteger(i) {

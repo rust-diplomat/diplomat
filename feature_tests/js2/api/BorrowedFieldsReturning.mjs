@@ -6,7 +6,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BorrowedFieldsReturning {
-    #ptr
     bytes;
 
     // Return this struct in FFI function friendly format.
@@ -22,7 +21,6 @@ export class BorrowedFieldsReturning {
     
 
     constructor(ptr, aEdges) {
-        this.#ptr = ptr;
         bytes = bytes(aEdges) // TODO: Slice c_to_js;
     }
     

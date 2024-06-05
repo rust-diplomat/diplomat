@@ -73,7 +73,7 @@ export class ResultOpaque {
         const result = wasm.ResultOpaque_new_failing_struct(i);
     
         if (!result.isOk) {
-            throw ErrorStruct // TODO: Struct c_to_js;
+            throw ErrorStruct // TODO struct c_to_js;
         }
          return new ResultOpaque(result.union.ok, []);
     }

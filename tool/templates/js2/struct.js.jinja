@@ -3,7 +3,6 @@
 */
 {% endif %}
 export class {{type_name}} {
-    #ptr{% if typescript %}: pointer;{% endif %}
     {%- for field in fields %}
     {% if !mutable -%} 
     get {{field.field_name}}() {% if typescript %}: {{field.js_type_name}};{% else %} {
@@ -42,6 +41,18 @@ export class {{type_name}} {
     }
     {% endif %}
 
+    static #size = {{size}}
+
+    static get _size() {
+        return #size;
+    }
+
+    static #align = {{align}}
+    
+    static get _align() {
+        return #align;
+    }
+
     {% if lifetimes.all_lifetimes().len() == 0 -%}
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
@@ -50,7 +61,6 @@ export class {{type_name}} {
     // should handle this when constructing edge arrays.
     {% endif -%}
     constructor(ptr{% if typescript %}: pointer{% endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- if typescript %}: Array[object]{% endif %} {%- endfor -%}) {%- if typescript %}: {{type_name}};{% else %} {
-        this.#ptr = ptr;
         {%- for field in fields %}
         {{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}

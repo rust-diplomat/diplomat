@@ -54,9 +54,9 @@ export class Opaque {
     }
 
     static returnsImported() {
-        const result = wasm.Opaque_returns_imported();
+        const result = wasm.Opaque_returns_imported(/* TODO: Struct param conversion.*/);
     
-        return ImportedStruct // TODO: Struct c_to_js;
+        return ImportedStruct // TODO struct c_to_js;
     }
 
     static cmp() {

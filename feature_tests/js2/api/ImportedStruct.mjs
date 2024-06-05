@@ -7,7 +7,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ImportedStruct {
-    #ptr
     foo;
     count;
 
@@ -27,7 +26,6 @@ export class ImportedStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     constructor(ptr) {
-        this.#ptr = ptr;
         foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[foo]];
         count = count;
     }

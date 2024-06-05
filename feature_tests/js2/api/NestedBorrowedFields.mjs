@@ -10,7 +10,6 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class NestedBorrowedFields {
-    #ptr
     fields;
     bounds;
     bounds2;
@@ -32,10 +31,9 @@ export class NestedBorrowedFields {
     
 
     constructor(ptr, xEdges, yEdges, zEdges) {
-        this.#ptr = ptr;
-        fields = BorrowedFields // TODO: Struct c_to_js;
-        bounds = BorrowedFieldsWithBounds // TODO: Struct c_to_js;
-        bounds2 = BorrowedFieldsWithBounds // TODO: Struct c_to_js;
+        fields = BorrowedFields // TODO struct c_to_js;
+        bounds = BorrowedFieldsWithBounds // TODO struct c_to_js;
+        bounds2 = BorrowedFieldsWithBounds // TODO struct c_to_js;
     }
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
@@ -63,7 +61,7 @@ export class NestedBorrowedFields {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
-        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size, /* TODO: Struct param conversion.*/);
     
         dstr16XSlice.garbageCollect();
         
@@ -73,7 +71,7 @@ export class NestedBorrowedFields {
         
         utf8StrZSlice.garbageCollect();
         
-        return NestedBorrowedFields // TODO: Struct c_to_js;
+        return NestedBorrowedFields // TODO struct c_to_js;
     }
 
     

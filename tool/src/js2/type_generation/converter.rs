@@ -75,7 +75,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				
 				// Add to the import list:
 				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript));
-				
+
                 if self.js_ctx.tcx.resolve_type(enum_id).attrs().disable {
                     self.js_ctx.errors.push_error(format!("Using disabled type {type_name}"))
                 }
@@ -141,8 +141,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						_ => todo!()
 					}
 				}
-				// TODO:
-				format!("{type_name} // TODO: Struct c_to_js").into()
+				format!("{type_name} // TODO struct c_to_js").into()
 			},
 			Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.js_ctx.tcx)) => {
 				let id = enum_path.tcx_id.into();
