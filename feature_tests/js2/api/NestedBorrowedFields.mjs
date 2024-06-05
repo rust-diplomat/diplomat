@@ -75,7 +75,7 @@ export class NestedBorrowedFields {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
-        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size, diplomat_recieve_buffer);
+        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomat_recieve_buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         dstr16XSlice.garbageCollect();
         

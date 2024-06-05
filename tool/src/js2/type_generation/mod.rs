@@ -380,7 +380,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 method_info.alloc_expressions.push(
                     format!("const diplomat_recieve_buffer = wasm.diplomat_alloc({type_name}._size, {type_name}._align);").into()
                 );
-                method_info.param_conversions.push("diplomat_recieve_buffer".into());
+                // This is the first thing in param converison order:
+                method_info.param_conversions.insert(0, "diplomat_recieve_buffer".into());
                 method_info.cleanup_expressions.push("wasm.diplomat_free(diplomat_recieve_buffer);".into());
             }
         }

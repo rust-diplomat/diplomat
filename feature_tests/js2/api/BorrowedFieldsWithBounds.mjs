@@ -64,7 +64,7 @@ export class BorrowedFieldsWithBounds {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [utf8StrZSlice];
-        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size, diplomat_recieve_buffer);
+        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomat_recieve_buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         dstr16XSlice.garbageCollect();
         

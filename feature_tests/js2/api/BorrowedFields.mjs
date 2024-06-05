@@ -56,7 +56,7 @@ export class BorrowedFields {
         
         // This lifetime edge depends on lifetimes 'x
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
-        const result = wasm.BorrowedFields_from_bar_and_strings(bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size, diplomat_recieve_buffer);
+        const result = wasm.BorrowedFields_from_bar_and_strings(diplomat_recieve_buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
     
         dstr16Slice.garbageCollect();
         

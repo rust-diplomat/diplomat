@@ -87,7 +87,7 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Foo_as_returning(this.ffiValue, diplomat_recieve_buffer);
+        const result = wasm.Foo_as_returning(diplomat_recieve_buffer, this.ffiValue);
     
         wasm.diplomat_free(diplomat_recieve_buffer);
         
