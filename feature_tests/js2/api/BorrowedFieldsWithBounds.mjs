@@ -27,6 +27,18 @@ export class BorrowedFieldsWithBounds {
     }
     
 
+    // Size of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {
+        return 24;
+    }
+    
+    // Alignment of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {
+        return 4;
+    }
+
     constructor(ptr, aEdges, bEdges, cEdges) {
         fieldA = fieldA(aEdges) // TODO: Slice c_to_js;
         fieldB = fieldB(bEdges) // TODO: Slice c_to_js;
@@ -42,6 +54,8 @@ export class BorrowedFieldsWithBounds {
         const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(BorrowedFieldsWithBounds._size, BorrowedFieldsWithBounds._align);
+        
         // This lifetime edge depends on lifetimes 'x, 'y, 'z
         let xEdges = [foo, dstr16XSlice, utf8StrZSlice];
         
@@ -50,11 +64,13 @@ export class BorrowedFieldsWithBounds {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [utf8StrZSlice];
-        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size, /* TODO: Struct param conversion.*/);
+        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size, diplomat_recieve_buffer);
     
         dstr16XSlice.garbageCollect();
         
         utf8StrZSlice.garbageCollect();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer);
         
         return BorrowedFieldsWithBounds // TODO struct c_to_js;
     }

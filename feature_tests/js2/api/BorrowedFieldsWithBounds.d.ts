@@ -10,7 +10,15 @@ export class BorrowedFieldsWithBounds {
     fieldC: String;
 
 
-    constructor(ptr: pointer, aEdges: Array[object], bEdges: Array[object], cEdges: Array[object]): BorrowedFieldsWithBounds;
+    // Size of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size(): usize;
+    
+    // Alignment of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align(): usize;
+
+    constructor(ptr: pointer, aEdges: Array[object], bEdges: Array[object], cEdges: Array[object]);
     static fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds;
 
     

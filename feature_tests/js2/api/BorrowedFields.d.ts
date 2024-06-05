@@ -10,7 +10,15 @@ export class BorrowedFields {
     c: String;
 
 
-    constructor(ptr: pointer, aEdges: Array[object]): BorrowedFields;
+    // Size of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size(): usize;
+    
+    // Alignment of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align(): usize;
+
+    constructor(ptr: pointer, aEdges: Array[object]);
     static fromBarAndStrings(bar: Bar, dstr16: String, utf8Str: String): BorrowedFields;
 
     

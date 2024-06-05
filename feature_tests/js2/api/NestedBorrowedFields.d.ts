@@ -13,7 +13,15 @@ export class NestedBorrowedFields {
     bounds2: BorrowedFieldsWithBounds;
 
 
-    constructor(ptr: pointer, xEdges: Array[object], yEdges: Array[object], zEdges: Array[object]): NestedBorrowedFields;
+    // Size of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size(): usize;
+    
+    // Alignment of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align(): usize;
+
+    constructor(ptr: pointer, xEdges: Array[object], yEdges: Array[object], zEdges: Array[object]);
     static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: String, dstr16Z: String, utf8StrY: String, utf8StrZ: String): NestedBorrowedFields;
 
     

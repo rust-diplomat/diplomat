@@ -30,6 +30,18 @@ export class MyStruct {
     }
     
 
+    // Size of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {
+        return 28;
+    }
+    
+    // Alignment of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {
+        return 8;
+    }
+
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.
@@ -45,8 +57,12 @@ export class MyStruct {
         g = (() => {for (let i of MyEnum.values) { if(i[1] === g) return i[0]; } return null;})();;
     }
     static new_() {
-        const result = wasm.MyStruct_new(/* TODO: Struct param conversion.*/);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(MyStruct._size, MyStruct._align);
+        const result = wasm.MyStruct_new(diplomat_recieve_buffer);
     
+        wasm.diplomat_free(diplomat_recieve_buffer);
+        
         return MyStruct // TODO struct c_to_js;
     }
 

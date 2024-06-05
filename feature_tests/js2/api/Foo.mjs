@@ -83,10 +83,14 @@ export class Foo {
 
     asReturning() {
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(BorrowedFieldsReturning._size, BorrowedFieldsReturning._align);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Foo_as_returning(this.ffiValue, /* TODO: Struct param conversion.*/);
+        const result = wasm.Foo_as_returning(this.ffiValue, diplomat_recieve_buffer);
     
+        wasm.diplomat_free(diplomat_recieve_buffer);
+        
         return BorrowedFieldsReturning // TODO struct c_to_js;
     }
 

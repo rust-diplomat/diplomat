@@ -46,8 +46,12 @@ export class OptionOpaque {
     }
 
     static returns() {
-        const result = wasm.OptionOpaque_returns(/* TODO: Struct param conversion.*/);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
+        const result = wasm.OptionOpaque_returns(diplomat_recieve_buffer);
     
+        wasm.diplomat_free(diplomat_recieve_buffer);
+        
         if (!result.isOk) {
             return null;
         }
@@ -55,14 +59,22 @@ export class OptionOpaque {
     }
 
     static newStruct() {
-        const result = wasm.OptionOpaque_new_struct(/* TODO: Struct param conversion.*/);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
+        const result = wasm.OptionOpaque_new_struct(diplomat_recieve_buffer);
     
+        wasm.diplomat_free(diplomat_recieve_buffer);
+        
         return OptionStruct // TODO struct c_to_js;
     }
 
     static newStructNones() {
-        const result = wasm.OptionOpaque_new_struct_nones(/* TODO: Struct param conversion.*/);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
+        const result = wasm.OptionOpaque_new_struct_nones(diplomat_recieve_buffer);
     
+        wasm.diplomat_free(diplomat_recieve_buffer);
+        
         return OptionStruct // TODO struct c_to_js;
     }
 

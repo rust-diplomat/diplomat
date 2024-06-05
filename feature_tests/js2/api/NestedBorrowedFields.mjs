@@ -30,6 +30,18 @@ export class NestedBorrowedFields {
     }
     
 
+    // Size of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {
+        return 72;
+    }
+    
+    // Alignment of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {
+        return 4;
+    }
+
     constructor(ptr, xEdges, yEdges, zEdges) {
         fields = BorrowedFields // TODO struct c_to_js;
         bounds = BorrowedFieldsWithBounds // TODO struct c_to_js;
@@ -53,6 +65,8 @@ export class NestedBorrowedFields {
         const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(NestedBorrowedFields._size, NestedBorrowedFields._align);
+        
         // This lifetime edge depends on lifetimes 'x, 'y
         let xEdges = [bar, dstr16XSlice, utf8StrYSlice];
         
@@ -61,7 +75,7 @@ export class NestedBorrowedFields {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
-        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size, /* TODO: Struct param conversion.*/);
+        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size, diplomat_recieve_buffer);
     
         dstr16XSlice.garbageCollect();
         
@@ -70,6 +84,8 @@ export class NestedBorrowedFields {
         utf8StrYSlice.garbageCollect();
         
         utf8StrZSlice.garbageCollect();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer);
         
         return NestedBorrowedFields // TODO struct c_to_js;
     }

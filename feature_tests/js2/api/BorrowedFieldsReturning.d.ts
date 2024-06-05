@@ -7,7 +7,15 @@ export class BorrowedFieldsReturning {
     bytes: String;
 
 
-    constructor(ptr: pointer, aEdges: Array[object]): BorrowedFieldsReturning;
+    // Size of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size(): usize;
+    
+    // Alignment of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align(): usize;
+
+    constructor(ptr: pointer, aEdges: Array[object]);
     
 
 }

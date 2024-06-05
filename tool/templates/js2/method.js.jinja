@@ -13,9 +13,9 @@
     {% endif %}
     {% endfor -%}
 
-    {% for alloc_stmt in alloc_expressions %}
+    {%- for alloc_stmt in alloc_expressions %}
     {{alloc_stmt|indent(4)}}
-    {% endfor %}
+    {% endfor -%}
     
     {% let lifetimes = lifetimes.unwrap() -%}
     {% for lifetime in lifetimes.all_lifetimes() -%}

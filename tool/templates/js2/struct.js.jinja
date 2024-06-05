@@ -41,17 +41,19 @@ export class {{type_name}} {
     }
     {% endif %}
 
-    static #size = {{size}}
-
-    static get _size() {
-        return #size;
+    // Size of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {%- if typescript %}: usize;{% else %} {
+        return {{size}};
     }
-
-    static #align = {{align}}
+    {%- endif %}
     
-    static get _align() {
-        return #align;
+    // Alignment of our struct in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {%- if typescript %}: usize;{% else %} {
+        return {{align}};
     }
+    {%- endif %}
 
     {% if lifetimes.all_lifetimes().len() == 0 -%}
     // This struct contains borrowed fields, so this takes in a list of
@@ -60,7 +62,7 @@ export class {{type_name}} {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    constructor(ptr{% if typescript %}: pointer{% endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- if typescript %}: Array[object]{% endif %} {%- endfor -%}) {%- if typescript %}: {{type_name}};{% else %} {
+    constructor(ptr{% if typescript %}: pointer{% endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- if typescript %}: Array[object]{% endif %} {%- endfor -%}) {%- if typescript %};{% else %} {
         {%- for field in fields %}
         {{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
