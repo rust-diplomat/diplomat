@@ -30,8 +30,10 @@ pub fn struct_offsets_size_max_align<'a, P: hir::TyPosition + 'a>(
 
 pub fn type_size_alignment<P: hir::TyPosition>(typ : &Type<P>, tcx : &TypeContext) -> Layout {
 	match typ {
+		// repr(C) fieldless enums use the default platform representation: isize
 		Type::Enum(..) => Layout::new::<usize_target>(),
-		Type::Opaque(..) => panic!("Size of opaque types is unknown."),
+		// TODO: Is this correct?
+		Type::Opaque(..) => Layout::new::<usize_target>(),
 		Type::Slice(..) => Layout::new::<(usize_target, usize_target)>(),
 		Type::Primitive(p) => primitive_size_alignment(*p),
 		Type::Struct(struct_path) => {
