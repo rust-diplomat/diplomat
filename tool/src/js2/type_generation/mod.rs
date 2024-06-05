@@ -208,9 +208,14 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             docs: String,
             lifetimes : &'a LifetimeEnv,
 
-            size: u32,
-            align: u32
+            size: usize,
+            align: usize
         }
+
+        let (_, layout) = crate::layout_hir::struct_offsets_size_max_align(
+            fields.iter().map(|f| f.field_type),
+            self.js_ctx.tcx
+        );
 
         ImplTemplate {
             type_name,
@@ -220,6 +225,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             methods,
             docs: self.js_ctx.formatter.fmt_docs(&struct_def.docs),
             lifetimes: &struct_def.lifetimes,
+
+            size: layout.size(),
+            align: layout.align()
         }.render().unwrap()
     }
 

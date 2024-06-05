@@ -1,12 +1,12 @@
 use std::{alloc::Layout, cmp::max};
 
-use diplomat_core::hir::{self, Everywhere, FloatType, Int128Type, IntSizeType, IntType, PrimitiveType, StructPathLike, TyPosition, Type, TypeContext};
+use diplomat_core::hir::{self, FloatType, Int128Type, IntSizeType, IntType, PrimitiveType, StructPathLike, Type, TypeContext};
 
 // TODO(#58): support non-32-bit platforms
 use u32 as usize_target;
 
-pub fn struct_offsets_size_max_align<'a>(
-	types : impl Iterator<Item = &'a Type>,
+pub fn struct_offsets_size_max_align<'a, P: hir::TyPosition + 'a>(
+	types : impl Iterator<Item = &'a Type<P>>,
 	tcx : &'a TypeContext
 ) -> (Vec<usize>, Layout) {
 	
@@ -15,7 +15,7 @@ pub fn struct_offsets_size_max_align<'a>(
     let mut offsets = vec![];
 
 	for typ in types {
-		let size_align = type_size_alignment(&typ, tcx);
+		let size_align = type_size_alignment(typ, tcx);
 		let size = size_align.size();
 		let align = size_align.align();
 
@@ -28,18 +28,29 @@ pub fn struct_offsets_size_max_align<'a>(
 	(offsets, Layout::from_size_align(next_offset, max_align).unwrap())
 }
 
-pub fn type_size_alignment(typ : &Type, tcx : &TypeContext) -> Layout {
-	match *typ {
+pub fn type_size_alignment<P: hir::TyPosition>(typ : &Type<P>, tcx : &TypeContext) -> Layout {
+	match typ {
 		Type::Enum(..) => Layout::new::<usize_target>(),
 		Type::Opaque(..) => panic!("Size of opaque types is unknown."),
 		Type::Slice(..) => Layout::new::<(usize_target, usize_target)>(),
-		Type::Primitive(p) => primitive_size_alignment(p),
+		Type::Primitive(p) => primitive_size_alignment(*p),
 		Type::Struct(struct_path) => {
-			let s = struct_path.resolve(tcx);
-			let (_, size_max_align) = struct_offsets_size_max_align(
-				s.fields.iter().map(|f| &f.ty),
-				tcx
-			);
+			let def = tcx.resolve_type(struct_path.id());
+			let (_, size_max_align) = match def {
+				hir::TypeDef::OutStruct(out_struct) => {
+					struct_offsets_size_max_align(
+						out_struct.fields.iter().map(|f| &f.ty),
+						tcx
+					)
+				},
+				hir::TypeDef::Struct(struct_def) => {
+					struct_offsets_size_max_align(
+						struct_def.fields.iter().map(|f| &f.ty),
+						tcx
+					)
+				},
+				_ => panic!("Should be a struct TypeDef."),
+			};
 			size_max_align
 		},
 		_ => unreachable!("Unknown AST/HIR variant {:?}", typ)
