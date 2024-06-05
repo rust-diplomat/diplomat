@@ -24,6 +24,7 @@ pub mod kotlin;
 
 mod docs_util;
 mod layout;
+mod layout_hir;
 mod util;
 
 use colored::*;
