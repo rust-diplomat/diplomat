@@ -66,13 +66,17 @@ export class BorrowedFieldsWithBounds {
         let zEdges = [utf8StrZSlice];
         const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomat_recieve_buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
+        const finalOut = new BorrowedFieldsWithBounds(result, xEdges, yEdges, zEdges);
+        
+        
         dstr16XSlice.garbageCollect();
         
         utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFieldsWithBounds._size, BorrowedFieldsWithBounds._size);
+        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFieldsWithBounds._size, BorrowedFieldsWithBounds._align);
         
-        return BorrowedFieldsWithBounds // TODO struct c_to_js;
+    
+        return finalOut;
     }
 
     

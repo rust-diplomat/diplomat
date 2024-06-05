@@ -51,9 +51,13 @@ export class Foo {
         let aEdges = [xSlice];
         const result = wasm.Foo_new(xSlice.ptr, xSlice.size);
     
+        const finalOut = new Foo(result, [], aEdges);
+        
+        
         xSlice.garbageCollect();
         
-        return new Foo(result, [], aEdges);
+    
+        return finalOut;
     }
 
     get bar() {
@@ -65,7 +69,11 @@ export class Foo {
         let bEdges = [this];
         const result = wasm.Foo_get_bar(this.ffiValue);
     
-        return new Bar(result, [], bEdges, aEdges);
+        const finalOut = new Bar(result, [], bEdges, aEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static newStatic(x) {
@@ -76,9 +84,13 @@ export class Foo {
         let aEdges = [];
         const result = wasm.Foo_new_static(xSlice.ptr, xSlice.size);
     
+        const finalOut = new Foo(result, [], aEdges);
+        
+        
         xSlice.free();
         
-        return new Foo(result, [], aEdges);
+    
+        return finalOut;
     }
 
     asReturning() {
@@ -89,9 +101,13 @@ export class Foo {
         let aEdges = [this];
         const result = wasm.Foo_as_returning(diplomat_recieve_buffer, this.ffiValue);
     
-        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFieldsReturning._size, BorrowedFieldsReturning._size);
+        const finalOut = new BorrowedFieldsReturning(result, aEdges);
         
-        return BorrowedFieldsReturning // TODO struct c_to_js;
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFieldsReturning._size, BorrowedFieldsReturning._align);
+        
+    
+        return finalOut;
     }
 
     static extractFromFields(fields) {
@@ -100,9 +116,13 @@ export class Foo {
         let aEdges = [...fields._fieldsForLifetimeA];
         const result = wasm.Foo_extract_from_fields(...fields._intoFfi(temp, [aEdges]));
     
+        const finalOut = new Foo(result, [], aEdges);
+        
+        
         this.free(); /* TODO: Does this work? */
         
-        return new Foo(result, [], aEdges);
+    
+        return finalOut;
     }
 
     static extractFromBounds(bounds, anotherString) {
@@ -115,11 +135,15 @@ export class Foo {
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
         const result = wasm.Foo_extract_from_bounds(...bounds._intoFfi(temp, [aEdges], [aEdges]), anotherStringSlice.ptr, anotherStringSlice.size);
     
+        const finalOut = new Foo(result, [], aEdges);
+        
+        
         this.free(); /* TODO: Does this work? */
         
         anotherStringSlice.garbageCollect();
         
-        return new Foo(result, [], aEdges);
+    
+        return finalOut;
     }
 
     

@@ -384,7 +384,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 // This is the first thing in param converison order:
                 method_info.param_conversions.insert(0, "diplomat_recieve_buffer".into());
                 method_info.cleanup_expressions.push(
-                    format!("wasm.diplomat_free(diplomat_recieve_buffer, {type_name}._size, {type_name}._size);")
+                    format!("wasm.diplomat_free(diplomat_recieve_buffer, {type_name}._size, {type_name}._align);")
                     .into());
             }
         }

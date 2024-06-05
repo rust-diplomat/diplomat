@@ -43,7 +43,11 @@ export class MyIterator {
         if (!result.isOk) {
             return null;
         }
-         return result.union.ok;
+        const finalOut = result.union.ok;
+        
+        
+    
+        return finalOut;
     }
 
     

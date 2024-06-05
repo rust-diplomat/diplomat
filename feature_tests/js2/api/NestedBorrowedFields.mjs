@@ -43,9 +43,9 @@ export class NestedBorrowedFields {
     }
 
     constructor(ptr, xEdges, yEdges, zEdges) {
-        fields = BorrowedFields // TODO struct c_to_js;
-        bounds = BorrowedFieldsWithBounds // TODO struct c_to_js;
-        bounds2 = BorrowedFieldsWithBounds // TODO struct c_to_js;
+        fields = new BorrowedFields(fields, xEdges);
+        bounds = new BorrowedFieldsWithBounds(bounds, xEdges, yEdges, yEdges);
+        bounds2 = new BorrowedFieldsWithBounds(bounds2, zEdges, zEdges, zEdges);
     }
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
@@ -77,6 +77,9 @@ export class NestedBorrowedFields {
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
         const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomat_recieve_buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
+        const finalOut = new NestedBorrowedFields(result, xEdges, yEdges, zEdges);
+        
+        
         dstr16XSlice.garbageCollect();
         
         dstr16ZSlice.garbageCollect();
@@ -85,9 +88,10 @@ export class NestedBorrowedFields {
         
         utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer, NestedBorrowedFields._size, NestedBorrowedFields._size);
+        wasm.diplomat_free(diplomat_recieve_buffer, NestedBorrowedFields._size, NestedBorrowedFields._align);
         
-        return NestedBorrowedFields // TODO struct c_to_js;
+    
+        return finalOut;
     }
 
     

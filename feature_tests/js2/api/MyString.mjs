@@ -37,9 +37,13 @@ export class MyString {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new(vSlice.ptr, vSlice.size);
     
+        const finalOut = new MyString(result, []);
+        
+        
         vSlice.free();
         
-        return new MyString(result, []);
+    
+        return finalOut;
     }
 
     static newUnsafe(v) {
@@ -47,9 +51,13 @@ export class MyString {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new_unsafe(vSlice.ptr, vSlice.size);
     
+        const finalOut = new MyString(result, []);
+        
+        
         vSlice.free();
         
-        return new MyString(result, []);
+    
+        return finalOut;
     }
 
     static newOwned(v) {
@@ -57,7 +65,11 @@ export class MyString {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new_owned(vSlice.ptr, vSlice.size);
     
-        return new MyString(result, []);
+        const finalOut = new MyString(result, []);
+        
+        
+    
+        return finalOut;
     }
 
     static newFromFirst(v) {
@@ -65,9 +77,13 @@ export class MyString {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size);
     
+        const finalOut = new MyString(result, []);
+        
+        
         vSlice.free();
         
-        return new MyString(result, []);
+    
+        return finalOut;
     }
 
     set str(newStr) {
@@ -75,20 +91,32 @@ export class MyString {
         const newStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, newStr);
         wasm.MyString_set_str(this.ffiValue, newStrSlice.ptr, newStrSlice.size);
     
+        
+        
         newStrSlice.free();
         
+    
+        return finalOut;
     }
 
     get str() {
         wasm.MyString_get_str(this.ffiValue);
     
         return writeable;
+        
+        
+    
+        return finalOut;
     }
 
     getBoxedStr() {
         const result = wasm.MyString_get_boxed_str(this.ffiValue);
     
-        return result // TODO: Slice c_to_js;
+        const finalOut = result // TODO: Slice c_to_js;
+        
+        
+    
+        return finalOut;
     }
 
     

@@ -38,13 +38,21 @@ export class Utf16Wrap {
         let aEdges = [this];
         const result = wasm.Utf16Wrap_borrow_cont(this.ffiValue);
     
-        return result(aEdges) // TODO: Slice c_to_js;
+        const finalOut = result(aEdges) // TODO: Slice c_to_js;
+        
+        
+    
+        return finalOut;
     }
 
     owned() {
         const result = wasm.Utf16Wrap_owned(this.ffiValue);
     
-        return result // TODO: Slice c_to_js;
+        const finalOut = result // TODO: Slice c_to_js;
+        
+        
+    
+        return finalOut;
     }
 
     

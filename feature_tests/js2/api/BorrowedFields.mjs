@@ -58,13 +58,17 @@ export class BorrowedFields {
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomat_recieve_buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
     
+        const finalOut = new BorrowedFields(result, xEdges);
+        
+        
         dstr16Slice.garbageCollect();
         
         utf8StrSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFields._size, BorrowedFields._size);
+        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFields._size, BorrowedFields._align);
         
-        return BorrowedFields // TODO struct c_to_js;
+    
+        return finalOut;
     }
 
     

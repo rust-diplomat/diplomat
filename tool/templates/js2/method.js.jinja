@@ -42,15 +42,16 @@
         {%- endfor -%}
     );
 
-    {%~ for cleanup in cleanup_expressions %}
-    {{cleanup|indent(4)}}
-    {% endfor -%}
-
-
     {%~ match return_expression -%}
     {%- when Some with (statement) %}
     {{ statement|indent(4) -}}
     {% when None -%}
-    {%- endmatch %}
+    {%- endmatch ~%}
+    
+    {% for cleanup in cleanup_expressions %}
+    {{cleanup|indent(4)}}
+    {% endfor %}
+
+    return finalOut;
 }
 {%- endif -%}

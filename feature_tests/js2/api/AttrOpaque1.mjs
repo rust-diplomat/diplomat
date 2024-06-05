@@ -37,34 +37,58 @@ export class AttrOpaque1 {
     static new_() {
         const result = wasm.namespace_AttrOpaque1_new();
     
-        return new AttrOpaque1(result, []);
+        const finalOut = new AttrOpaque1(result, []);
+        
+        
+    
+        return finalOut;
     }
 
     get method() {
         const result = wasm.namespace_AttrOpaque1_method(this.ffiValue);
     
-        return result;
+        const finalOut = result;
+        
+        
+    
+        return finalOut;
     }
 
     get abirenamed() {
         const result = wasm.renamed_on_abi_only(this.ffiValue);
     
-        return result;
+        const finalOut = result;
+        
+        
+    
+        return finalOut;
     }
 
     methodDisabledcpp() {
         wasm.namespace_AttrOpaque1_method_disabledcpp(this.ffiValue);
     
+        
+        
+    
+        return finalOut;
     }
 
     useUnnamespaced(un) {
         wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
     
+        
+        
+    
+        return finalOut;
     }
 
     useNamespaced(n) {
         wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
     
+        
+        
+    
+        return finalOut;
     }
 
     

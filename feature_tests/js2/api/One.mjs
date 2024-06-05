@@ -44,7 +44,11 @@ export class One {
         let aEdges = [hold];
         const result = wasm.One_transitivity(hold.ffiValue, nohold.ffiValue);
     
-        return new One(result, [], aEdges);
+        const finalOut = new One(result, [], aEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static cycle(hold, nohold) {
@@ -53,7 +57,11 @@ export class One {
         let aEdges = [hold];
         const result = wasm.One_cycle(hold.ffiValue, nohold.ffiValue);
     
-        return new One(result, [], aEdges);
+        const finalOut = new One(result, [], aEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static manyDependents(a, b, c, d, nohold) {
@@ -62,7 +70,11 @@ export class One {
         let aEdges = [a, b, c, d];
         const result = wasm.One_many_dependents(a.ffiValue, b.ffiValue, c.ffiValue, d.ffiValue, nohold.ffiValue);
     
-        return new One(result, [], aEdges);
+        const finalOut = new One(result, [], aEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static returnOutlivesParam(hold, nohold) {
@@ -71,7 +83,11 @@ export class One {
         let longEdges = [hold];
         const result = wasm.One_return_outlives_param(hold.ffiValue, nohold.ffiValue);
     
-        return new One(result, [], longEdges);
+        const finalOut = new One(result, [], longEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static diamondTop(top, left, right, bottom) {
@@ -80,7 +96,11 @@ export class One {
         let topEdges = [top, left, right, bottom];
         const result = wasm.One_diamond_top(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
-        return new One(result, [], topEdges);
+        const finalOut = new One(result, [], topEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static diamondLeft(top, left, right, bottom) {
@@ -89,7 +109,11 @@ export class One {
         let leftEdges = [left, bottom];
         const result = wasm.One_diamond_left(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
-        return new One(result, [], leftEdges);
+        const finalOut = new One(result, [], leftEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static diamondRight(top, left, right, bottom) {
@@ -98,7 +122,11 @@ export class One {
         let rightEdges = [right, bottom];
         const result = wasm.One_diamond_right(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
-        return new One(result, [], rightEdges);
+        const finalOut = new One(result, [], rightEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static diamondBottom(top, left, right, bottom) {
@@ -107,7 +135,11 @@ export class One {
         let bottomEdges = [bottom];
         const result = wasm.One_diamond_bottom(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
-        return new One(result, [], bottomEdges);
+        const finalOut = new One(result, [], bottomEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static diamondAndNestedTypes(a, b, c, d, nohold) {
@@ -116,7 +148,11 @@ export class One {
         let aEdges = [a, b, c, d];
         const result = wasm.One_diamond_and_nested_types(a.ffiValue, b.ffiValue, c.ffiValue, d.ffiValue, nohold.ffiValue);
     
-        return new One(result, [], aEdges);
+        const finalOut = new One(result, [], aEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static implicitBounds(explicitHold, implicitHold, nohold) {
@@ -125,7 +161,11 @@ export class One {
         let aEdges = [explicitHold, implicitHold];
         const result = wasm.One_implicit_bounds(explicitHold.ffiValue, implicitHold.ffiValue, nohold.ffiValue);
     
-        return new One(result, [], aEdges);
+        const finalOut = new One(result, [], aEdges);
+        
+        
+    
+        return finalOut;
     }
 
     static implicitBoundsDeep(explicit, implicit1, implicit2, nohold) {
@@ -134,7 +174,11 @@ export class One {
         let aEdges = [explicit, implicit1, implicit2];
         const result = wasm.One_implicit_bounds_deep(explicit.ffiValue, implicit1.ffiValue, implicit2.ffiValue, nohold.ffiValue);
     
-        return new One(result, [], aEdges);
+        const finalOut = new One(result, [], aEdges);
+        
+        
+    
+        return finalOut;
     }
 
     

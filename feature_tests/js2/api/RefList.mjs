@@ -44,7 +44,11 @@ export class RefList {
         let bEdges = [data];
         const result = wasm.RefList_node(data.ffiValue);
     
-        return new RefList(result, [], bEdges);
+        const finalOut = new RefList(result, [], bEdges);
+        
+        
+    
+        return finalOut;
     }
 
     

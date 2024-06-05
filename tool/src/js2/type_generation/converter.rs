@@ -141,7 +141,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						_ => todo!()
 					}
 				}
-				format!("{type_name} // TODO struct c_to_js").into()
+				
+				format!("new {type_name}({variable_name}{edges})").into()
 			},
 			Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.js_ctx.tcx)) => {
 				let id = enum_path.tcx_id.into();
@@ -222,7 +223,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
 			// Any out that is not a [`SuccessType::Write`].
 			ReturnType::Infallible(SuccessType::OutType(ref o)) => Some(
-				format!("return {};", self.gen_c_to_js_for_type(o, "result".into(), lifetime_environment))
+				format!("const finalOut = {};", self.gen_c_to_js_for_type(o, "result".into(), lifetime_environment))
 				.into()
 			),
 
@@ -230,7 +231,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(SuccessType::Unit, None)
 			| ReturnType::Nullable(SuccessType::Unit)
-			=> Some("return result.isOk;".into()),
+			=> Some("const finalOut = result.isOk;".into()),
 
 			// Result<Type, Error> or Option<Type>
 			// TODO: See js/api/OptionOpaque.mjs.
@@ -245,7 +246,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				Some(match ok {
 					SuccessType::Unit => err_check,
 					SuccessType::Write => format!("{err_check} return writeable;"),
-					SuccessType::OutType(ref o) => format!("{err_check} return {};", 
+					SuccessType::OutType(ref o) => format!("{err_check}const finalOut = {};", 
 					self.gen_c_to_js_for_type(o, "result.union.ok".into(), lifetime_environment)),
 					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
 				}.into())

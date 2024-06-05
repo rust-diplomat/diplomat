@@ -52,7 +52,11 @@ export class Bar {
         let aEdges = [this];
         const result = wasm.Bar_foo(this.ffiValue);
     
-        return new Foo(result, bEdges, aEdges);
+        const finalOut = new Foo(result, bEdges, aEdges);
+        
+        
+    
+        return finalOut;
     }
 
     
