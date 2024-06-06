@@ -106,12 +106,21 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             annotation : Option<&'static str>,
             js_type_name  : Cow<'info, str>,
             c_to_js : Cow<'info, str>,
+            c_to_js_deref : Cow<'info, str>,
             js_to_c : Vec<String>,
             maybe_struct_borrow_info : Option<StructBorrowInfo<'info>>,
         }
 
-        let fields = struct_def.fields.iter()
-        .map(|field| {
+        
+        let (offsets, layout) = crate::layout_hir::struct_offsets_size_max_align(
+            struct_def.fields.iter().map(|f| &f.ty),
+            self.js_ctx.tcx
+        );
+
+        let fields = struct_def.fields.iter().enumerate()
+        .map(|field_enumerator| {
+            let (i, field) = field_enumerator;
+
             let field_name = self.js_ctx.formatter.fmt_param_name(field.name.as_str());
 
             let field_annotation = match field.ty {
@@ -129,9 +138,11 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             let js_type_name = self.gen_js_type_str(&field.ty);
 
+            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, offsets[i]);
+
             let c_to_js = self.gen_c_to_js_for_type(
                 &field.ty, 
-                field_name.clone().into(), 
+                format!("{field_name}Deref").into(), 
                 &struct_def.lifetimes
             );
 
@@ -182,6 +193,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 field_type: &field.ty,
                 annotation: field_annotation,
                 js_type_name,
+                c_to_js_deref,
                 c_to_js,
                 js_to_c,
                 maybe_struct_borrow_info
@@ -211,11 +223,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             size: usize,
             align: usize
         }
-
-        let (_, layout) = crate::layout_hir::struct_offsets_size_max_align(
-            fields.iter().map(|f| f.field_type),
-            self.js_ctx.tcx
-        );
 
         ImplTemplate {
             type_name,

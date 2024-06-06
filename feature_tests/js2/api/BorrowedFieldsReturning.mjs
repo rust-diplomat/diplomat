@@ -33,7 +33,8 @@ export class BorrowedFieldsReturning {
     }
 
     constructor(ptr, aEdges) {
-        bytes = bytes(aEdges) // TODO: Slice c_to_js;
+        bytesDeref = /* TODO: gen_c_to_js_deref */null;
+        bytes = bytesDeref(aEdges) // TODO: Slice c_to_js;
     }
     
 

@@ -37,8 +37,10 @@ export class ErrorStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     constructor(ptr) {
-        i = i;
-        j = j;
+        iDeref = (new Int32Array(wasm.memory.buffer, ptr, 1))[0];
+        i = iDeref;
+        jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
+        j = jDeref;
     }
     
 

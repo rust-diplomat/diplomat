@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use diplomat_core::hir::{self, borrowing_param::StructBorrowInfo, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type};
+use diplomat_core::hir::{self, borrowing_param::StructBorrowInfo, FloatType, IntSizeType, IntType, LifetimeEnv, MaybeStatic, OpaqueOwner, PrimitiveType, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition, Type};
 use std::fmt::{Display, Write};
 
 use super::{JSGenerationContext, TypeGenerationContext};
@@ -126,7 +126,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				}
 
 				if op.is_optional() {
-					format!("(({variable_name} === 0) ? undefined : new {type_name}({variable_name}, {edges}))").into()
+					format!("(({variable_name} == 0) ? undefined : new {type_name}({variable_name}, {edges}))").into()
 				} else {
 					format!("new {type_name}({variable_name}, {edges})").into()
 				}
@@ -170,6 +170,47 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				}
 			},
 			_ => unreachable!("AST/HIR variant {:?} unknown.", ty)
+		}
+	}
+
+	pub(super) fn gen_c_to_js_deref_for_type<P: hir::TyPosition>(&self, ty : &Type<P>, offset : usize) -> Cow<'tcx, str> {
+		let o = if offset <= 0 {
+			"".into()
+		} else {
+			format!(" + {}", offset)
+		};
+		match *ty {
+			Type::Enum(..) => format!("diplomatRuntime.enumDiscriminant(wasm, ptr{o})").into(),
+			Type::Opaque(..) | Type::Struct(..) => format!("diplomatRuntime.ptrRead(wasm, ptr{o})").into(),
+			Type::Slice(..) => "/* TODO: gen_c_to_js_deref */null".into(), // TODO: See BorrowedFieldsWithBounds.
+			Type::Primitive(p) => {
+				format!("{0}(new {1}(wasm.memory.buffer, ptr{o}, 1))[0]{2}", 
+				match p {
+					PrimitiveType::Char => "String.fromfromCharCode(",
+					_ => "",
+				},
+				match p {
+					PrimitiveType::Bool | PrimitiveType::Byte | PrimitiveType::Int(IntType::U8)
+					=> "Uint8Array",
+					PrimitiveType::Int(IntType::I8) => "Int8Array",
+					PrimitiveType::Int(IntType::I16) => "Int16Array",
+					PrimitiveType::Int(IntType::U16) => "Uint16Array",
+					PrimitiveType::Int(IntType::I32) | PrimitiveType::IntSize(IntSizeType::Isize) => "Int32Array",
+					PrimitiveType::Int(IntType::U32) | PrimitiveType::IntSize(IntSizeType::Usize) | PrimitiveType::Char => "Uint32Array",
+					PrimitiveType::Int(IntType::I64) => "BigInt64Array",
+					PrimitiveType::Int(IntType::U64) => "BigUint64Array",
+					PrimitiveType::Float(FloatType::F32) => "Float32Array",
+					PrimitiveType::Float(FloatType::F64) => "Float64Array",
+					PrimitiveType::Int128(..) => panic!("Int128 is not a supported type for the JS backend."),
+				},
+				match p {
+					PrimitiveType::Bool => "== 0",
+					PrimitiveType::Char => ")",
+					_ => "",
+				}
+				).into()
+			},
+			_ => unreachable!("Unknown AST/HIR variant {:?}", ty)
 		}
 	}
 

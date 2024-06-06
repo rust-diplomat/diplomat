@@ -36,7 +36,7 @@ export class OptionOpaque {
     static new_(i) {
         const result = wasm.OptionOpaque_new(i);
     
-        const finalOut = ((result === 0) ? undefined : new OptionOpaque(result, []));
+        const finalOut = ((result == 0) ? undefined : new OptionOpaque(result, []));
         
         
     
@@ -46,7 +46,7 @@ export class OptionOpaque {
     static newNone() {
         const result = wasm.OptionOpaque_new_none();
     
-        const finalOut = ((result === 0) ? undefined : new OptionOpaque(result, []));
+        const finalOut = ((result == 0) ? undefined : new OptionOpaque(result, []));
         
         
     
