@@ -8,9 +8,6 @@ test("Verify option methods", t => {
 
     const on = OptionOpaque.newNone();
     t.assert(!on);
-    
-    // Passes up to here!
-    // TODO: Get the rest of these working.
 
     const s = OptionOpaque.newStruct();
 

@@ -4,4 +4,10 @@
         "target": "es2020",
         "moduleResolution": "node"
     },
+    "include": ["./api/index.d.ts"],
+    "files": [
+        "./test/option-ts.mts",
+        "./test/result-ts.mts",
+        "./test/struct-ts.mts"
+    ]
 }
