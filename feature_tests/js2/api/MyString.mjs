@@ -96,7 +96,6 @@ export class MyString {
         newStrSlice.free();
         
     
-        return finalOut;
     }
 
     get str() {

@@ -52,6 +52,10 @@
     {{cleanup|indent(4)}}
     {% endfor %}
 
+    {%~ match return_expression -%}
+    {%- when Some with (statement) %}
     return finalOut;
+    {%- when None -%}
+    {%- endmatch ~%}
 }
 {%- endif -%}

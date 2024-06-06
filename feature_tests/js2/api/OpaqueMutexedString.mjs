@@ -49,7 +49,6 @@ export class OpaqueMutexedString {
         
         
     
-        return finalOut;
     }
 
     borrow() {

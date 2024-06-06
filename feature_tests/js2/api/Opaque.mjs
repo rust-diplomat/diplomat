@@ -52,7 +52,6 @@ export class Opaque {
         this.free(); /* TODO: Does this work? */
         
     
-        return finalOut;
     }
 
     static returnsUsize() {

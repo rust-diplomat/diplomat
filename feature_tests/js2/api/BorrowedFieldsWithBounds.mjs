@@ -40,12 +40,12 @@ export class BorrowedFieldsWithBounds {
     }
 
     constructor(ptr, aEdges, bEdges, cEdges) {
-        fieldADeref = /* TODO: gen_c_to_js_deref */null;
-        fieldA = fieldADeref(aEdges) // TODO: Slice c_to_js;
-        fieldBDeref = /* TODO: gen_c_to_js_deref */null;
-        fieldB = fieldBDeref(bEdges) // TODO: Slice c_to_js;
-        fieldCDeref = /* TODO: gen_c_to_js_deref */null;
-        fieldC = fieldCDeref(cEdges) // TODO: Slice c_to_js;
+        const fieldADeref = /* TODO: gen_c_to_js_deref */null;
+        this.#fieldA = fieldADeref(aEdges) // TODO: Slice c_to_js;
+        const fieldBDeref = /* TODO: gen_c_to_js_deref */null;
+        this.#fieldB = fieldBDeref(bEdges) // TODO: Slice c_to_js;
+        const fieldCDeref = /* TODO: gen_c_to_js_deref */null;
+        this.#fieldC = fieldCDeref(cEdges) // TODO: Slice c_to_js;
     }
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         

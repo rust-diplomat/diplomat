@@ -55,14 +55,14 @@ export class OptionStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     constructor(ptr) {
-        aDeref = diplomatRuntime.ptrRead(wasm, ptr);
-        a = ((aDeref == 0) ? undefined : new OptionOpaque(aDeref, []));
-        bDeref = diplomatRuntime.ptrRead(wasm, ptr + 4);
-        b = ((bDeref == 0) ? undefined : new OptionOpaqueChar(bDeref, []));
-        cDeref = (new Uint32Array(wasm.memory.buffer, ptr + 8, 1))[0];
-        c = cDeref;
-        dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
-        d = ((dDeref == 0) ? undefined : new OptionOpaque(dDeref, []));
+        const aDeref = diplomatRuntime.ptrRead(wasm, ptr);
+        this.#a = ((aDeref == 0) ? undefined : new OptionOpaque(aDeref, []));
+        const bDeref = diplomatRuntime.ptrRead(wasm, ptr + 4);
+        this.#b = ((bDeref == 0) ? undefined : new OptionOpaqueChar(bDeref, []));
+        const cDeref = (new Uint32Array(wasm.memory.buffer, ptr + 8, 1))[0];
+        this.#c = cDeref;
+        const dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
+        this.#d = ((dDeref == 0) ? undefined : new OptionOpaque(dDeref, []));
     }
     
 

@@ -48,20 +48,20 @@ export class MyStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     constructor(ptr) {
-        aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
-        a = aDeref;
-        bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0]== 0;
-        b = bDeref;
-        cDeref = (new Uint8Array(wasm.memory.buffer, ptr + 2, 1))[0];
-        c = cDeref;
-        dDeref = (new BigUint64Array(wasm.memory.buffer, ptr + 8, 1))[0];
-        d = dDeref;
-        eDeref = (new Int32Array(wasm.memory.buffer, ptr + 16, 1))[0];
-        e = eDeref;
-        fDeref = String.fromfromCharCode((new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0]);
-        f = fDeref;
-        gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
-        g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return i[0]; } return null;})();;
+        const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
+        this.#a = aDeref;
+        const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0]== 0;
+        this.#b = bDeref;
+        const cDeref = (new Uint8Array(wasm.memory.buffer, ptr + 2, 1))[0];
+        this.#c = cDeref;
+        const dDeref = (new BigUint64Array(wasm.memory.buffer, ptr + 8, 1))[0];
+        this.#d = dDeref;
+        const eDeref = (new Int32Array(wasm.memory.buffer, ptr + 16, 1))[0];
+        this.#e = eDeref;
+        const fDeref = String.fromfromCharCode((new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0]);
+        this.#f = fDeref;
+        const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
+        this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return i[0]; } return null;})();;
     }
     static new_() {
         

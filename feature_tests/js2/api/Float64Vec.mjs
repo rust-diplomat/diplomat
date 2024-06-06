@@ -161,7 +161,6 @@ export class Float64Vec {
         vSlice.free();
         
     
-        return finalOut;
     }
 
     setValue(newSlice) {
@@ -174,7 +173,6 @@ export class Float64Vec {
         newSliceSlice.free();
         
     
-        return finalOut;
     }
 
     toString() {

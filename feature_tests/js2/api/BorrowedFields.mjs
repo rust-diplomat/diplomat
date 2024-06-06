@@ -38,12 +38,12 @@ export class BorrowedFields {
     }
 
     constructor(ptr, aEdges) {
-        aDeref = /* TODO: gen_c_to_js_deref */null;
-        a = aDeref(aEdges) // TODO: Slice c_to_js;
-        bDeref = /* TODO: gen_c_to_js_deref */null;
-        b = bDeref(aEdges) // TODO: Slice c_to_js;
-        cDeref = /* TODO: gen_c_to_js_deref */null;
-        c = cDeref(aEdges) // TODO: Slice c_to_js;
+        const aDeref = /* TODO: gen_c_to_js_deref */null;
+        this.#a = aDeref(aEdges) // TODO: Slice c_to_js;
+        const bDeref = /* TODO: gen_c_to_js_deref */null;
+        this.#b = bDeref(aEdges) // TODO: Slice c_to_js;
+        const cDeref = /* TODO: gen_c_to_js_deref */null;
+        this.#c = cDeref(aEdges) // TODO: Slice c_to_js;
     }
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         

@@ -70,7 +70,6 @@ export class AttrOpaque1 {
         
         
     
-        return finalOut;
     }
 
     useUnnamespaced(un) {
@@ -79,7 +78,6 @@ export class AttrOpaque1 {
         
         
     
-        return finalOut;
     }
 
     useNamespaced(n) {
@@ -88,7 +86,6 @@ export class AttrOpaque1 {
         
         
     
-        return finalOut;
     }
 
     

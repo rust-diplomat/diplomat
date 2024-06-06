@@ -38,10 +38,10 @@ export class ImportedStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     constructor(ptr) {
-        fooDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
-        foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[fooDeref]];
-        countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
-        count = countDeref;
+        const fooDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
+        this.#foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[fooDeref]];
+        const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
+        this.#count = countDeref;
     }
     
 

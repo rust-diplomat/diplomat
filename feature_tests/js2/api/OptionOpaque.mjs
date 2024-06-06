@@ -104,7 +104,6 @@ export class OptionOpaque {
         
         
     
-        return finalOut;
     }
 
     static optionOpaqueArgument(arg) {

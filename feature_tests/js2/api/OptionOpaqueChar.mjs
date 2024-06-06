@@ -38,7 +38,6 @@ export class OptionOpaqueChar {
         
         
     
-        return finalOut;
     }
 
     
