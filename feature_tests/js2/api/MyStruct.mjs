@@ -67,7 +67,7 @@ export class MyStruct {
             c, 
             d, 
             e, 
-            f, 
+            diplomatRuntime.extractCodePoint(f, 'f'), 
             g.ffiValue]
     }
     

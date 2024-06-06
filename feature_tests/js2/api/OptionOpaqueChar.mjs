@@ -33,7 +33,7 @@ export class OptionOpaqueChar {
 
 
     assertChar(ch) {
-        wasm.OptionOpaqueChar_assert_char(this.ffiValue, ch);
+        wasm.OptionOpaqueChar_assert_char(this.ffiValue, diplomatRuntime.extractCodePoint(ch, 'ch'));
     
         
         

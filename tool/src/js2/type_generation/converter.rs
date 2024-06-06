@@ -318,7 +318,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 		js_name : Cow<'tcx, str>,
 		struct_borrow_info : Option<&StructBorrowContext<'tcx>>) -> Cow<'tcx, str> {
 			match *ty {
-				Type::Primitive(..) => js_name.clone(),
+				Type::Primitive(p) => { 
+					match p {
+						PrimitiveType::Char => format!("diplomatRuntime.extractCodePoint({js_name}, '{js_name}')").into(),
+						_ => js_name.clone()
+					}
+				},
 				Type::Opaque(ref op) if op.is_optional() => 
 					format!("{js_name}.ffiValue ?? 0").into(),
 				Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
