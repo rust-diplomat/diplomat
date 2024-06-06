@@ -4,7 +4,9 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 
 export class BorrowedFieldsReturning {
-    bytes: String;
+    #bytes;
+    get bytes() : String;
+    set bytes(value: String); 
 
 
     // Size of our struct in bytes for diplomat_alloc.

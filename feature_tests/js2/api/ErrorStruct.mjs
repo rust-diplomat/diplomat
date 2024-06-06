@@ -6,8 +6,20 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ErrorStruct {
-    i;
-    j;
+    #i;
+    get i()  {
+        return this.#i;
+    }
+    set i(value) {
+        this.#i = value;
+    }
+    #j;
+    get j()  {
+        return this.#j;
+    }
+    set j(value) {
+        this.#j = value;
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)

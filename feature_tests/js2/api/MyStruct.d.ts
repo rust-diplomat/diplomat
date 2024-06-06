@@ -5,13 +5,27 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 
 export class MyStruct {
-    a: number;
-    b: boolean;
-    c: number;
-    d: number;
-    e: number;
-    f: char;
-    g: MyEnum;
+    #a;
+    get a() : number;
+    set a(value: number); 
+    #b;
+    get b() : boolean;
+    set b(value: boolean); 
+    #c;
+    get c() : number;
+    set c(value: number); 
+    #d;
+    get d() : number;
+    set d(value: number); 
+    #e;
+    get e() : number;
+    set e(value: number); 
+    #f;
+    get f() : char;
+    set f(value: char); 
+    #g;
+    get g() : MyEnum;
+    set g(value: MyEnum); 
 
 
     // Size of our struct in bytes for diplomat_alloc.

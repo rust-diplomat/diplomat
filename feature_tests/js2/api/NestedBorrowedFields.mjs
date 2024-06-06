@@ -10,9 +10,27 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class NestedBorrowedFields {
-    fields;
-    bounds;
-    bounds2;
+    #fields;
+    get fields()  {
+        return this.#fields;
+    }
+    set fields(value) {
+        this.#fields = value;
+    }
+    #bounds;
+    get bounds()  {
+        return this.#bounds;
+    }
+    set bounds(value) {
+        this.#bounds = value;
+    }
+    #bounds2;
+    get bounds2()  {
+        return this.#bounds2;
+    }
+    set bounds2(value) {
+        this.#bounds2 = value;
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)

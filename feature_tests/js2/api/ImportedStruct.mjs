@@ -7,8 +7,20 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class ImportedStruct {
-    foo;
-    count;
+    #foo;
+    get foo()  {
+        return this.#foo;
+    }
+    set foo(value) {
+        this.#foo = value;
+    }
+    #count;
+    get count()  {
+        return this.#count;
+    }
+    set count(value) {
+        this.#count = value;
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)

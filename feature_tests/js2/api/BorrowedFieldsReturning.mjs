@@ -6,7 +6,13 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BorrowedFieldsReturning {
-    bytes;
+    #bytes;
+    get bytes()  {
+        return this.#bytes;
+    }
+    set bytes(value) {
+        this.#bytes = value;
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)

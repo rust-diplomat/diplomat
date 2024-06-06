@@ -6,14 +6,18 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 
 export class OptionStruct {
+    #a;
     get a() : OptionOpaque | undefined;
-    #a: OptionOpaque | undefined;
+    
+    #b;
     get b() : OptionOpaqueChar | undefined;
-    #b: OptionOpaqueChar | undefined;
+    
+    #c;
     get c() : number;
-    #c: number;
+    
+    #d;
     get d() : OptionOpaque | undefined;
-    #d: OptionOpaque | undefined;
+    
 
 
     // Size of our struct in bytes for diplomat_alloc.

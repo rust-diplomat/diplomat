@@ -5,9 +5,15 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 
 export class BorrowedFieldsWithBounds {
-    fieldA: String;
-    fieldB: String;
-    fieldC: String;
+    #fieldA;
+    get fieldA() : String;
+    set fieldA(value: String); 
+    #fieldB;
+    get fieldB() : String;
+    set fieldB(value: String); 
+    #fieldC;
+    get fieldC() : String;
+    set fieldC(value: String); 
 
 
     // Size of our struct in bytes for diplomat_alloc.

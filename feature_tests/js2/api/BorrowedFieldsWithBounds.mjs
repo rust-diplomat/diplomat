@@ -7,9 +7,27 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
 export class BorrowedFieldsWithBounds {
-    fieldA;
-    fieldB;
-    fieldC;
+    #fieldA;
+    get fieldA()  {
+        return this.#fieldA;
+    }
+    set fieldA(value) {
+        this.#fieldA = value;
+    }
+    #fieldB;
+    get fieldB()  {
+        return this.#fieldB;
+    }
+    set fieldB(value) {
+        this.#fieldB = value;
+    }
+    #fieldC;
+    get fieldC()  {
+        return this.#fieldC;
+    }
+    set fieldC(value) {
+        this.#fieldC = value;
+    }
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)

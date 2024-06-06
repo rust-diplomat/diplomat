@@ -5,8 +5,12 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 
 export class ImportedStruct {
-    foo: UnimportedEnum;
-    count: number;
+    #foo;
+    get foo() : UnimportedEnum;
+    set foo(value: UnimportedEnum); 
+    #count;
+    get count() : number;
+    set count(value: number); 
 
 
     // Size of our struct in bytes for diplomat_alloc.

@@ -8,9 +8,15 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 
 export class NestedBorrowedFields {
-    fields: BorrowedFields;
-    bounds: BorrowedFieldsWithBounds;
-    bounds2: BorrowedFieldsWithBounds;
+    #fields;
+    get fields() : BorrowedFields;
+    set fields(value: BorrowedFields); 
+    #bounds;
+    get bounds() : BorrowedFieldsWithBounds;
+    set bounds(value: BorrowedFieldsWithBounds); 
+    #bounds2;
+    get bounds2() : BorrowedFieldsWithBounds;
+    set bounds2(value: BorrowedFieldsWithBounds); 
 
 
     // Size of our struct in bytes for diplomat_alloc.
