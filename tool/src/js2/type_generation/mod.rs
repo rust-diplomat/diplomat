@@ -380,6 +380,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
         method_info.return_type = self.gen_js_return_type_str(&method.output);
 
+        let mut result_var = "result";
+
         let success = method.output.success_type();
         if let SuccessType::OutType(ref o) = success {
             if let Type::Struct(s) = o {
@@ -393,10 +395,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 method_info.cleanup_expressions.push(
                     format!("wasm.diplomat_free(diplomat_recieve_buffer, {type_name}._size, {type_name}._align);")
                     .into());
+
+                result_var = "diplomat_recieve_buffer";
             }
         }
 
-        method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, &method.lifetime_env);
+        method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, result_var.into(), &method.lifetime_env);
         
         method_info.method_lifetimes_map = visitor.borrow_map();
         method_info.lifetimes = Some(&method.lifetime_env);

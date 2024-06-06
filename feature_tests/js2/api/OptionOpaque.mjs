@@ -58,10 +58,10 @@ export class OptionOpaque {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
         const result = wasm.OptionOpaque_returns(diplomat_recieve_buffer);
     
-        if (!result.isOk) {
+        if (!diplomat_recieve_buffer.isOk) {
             return null;
         }
-        const finalOut = new OptionStruct(result.union.ok);
+        const finalOut = new OptionStruct(diplomat_recieve_buffer.union.ok);
         
         
         wasm.diplomat_free(diplomat_recieve_buffer, OptionStruct._size, OptionStruct._align);
@@ -75,7 +75,7 @@ export class OptionOpaque {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
         const result = wasm.OptionOpaque_new_struct(diplomat_recieve_buffer);
     
-        const finalOut = new OptionStruct(result);
+        const finalOut = new OptionStruct(diplomat_recieve_buffer);
         
         
         wasm.diplomat_free(diplomat_recieve_buffer, OptionStruct._size, OptionStruct._align);
@@ -89,7 +89,7 @@ export class OptionOpaque {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
         const result = wasm.OptionOpaque_new_struct_nones(diplomat_recieve_buffer);
     
-        const finalOut = new OptionStruct(result);
+        const finalOut = new OptionStruct(diplomat_recieve_buffer);
         
         
         wasm.diplomat_free(diplomat_recieve_buffer, OptionStruct._size, OptionStruct._align);

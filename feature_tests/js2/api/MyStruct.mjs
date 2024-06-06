@@ -110,7 +110,7 @@ export class MyStruct {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(MyStruct._size, MyStruct._align);
         const result = wasm.MyStruct_new(diplomat_recieve_buffer);
     
-        const finalOut = new MyStruct(result);
+        const finalOut = new MyStruct(diplomat_recieve_buffer);
         
         
         wasm.diplomat_free(diplomat_recieve_buffer, MyStruct._size, MyStruct._align);

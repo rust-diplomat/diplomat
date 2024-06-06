@@ -255,7 +255,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
 	/// Give us pure JS for returning types.
 	/// This basically handles the conversions from whatever the WASM gives us to a JS-friendly type.
-	pub(super) fn gen_c_to_js_for_return_type(&self, return_type : &ReturnType, lifetime_environment : &LifetimeEnv) -> Option<Cow<'tcx, str>> {
+	pub(super) fn gen_c_to_js_for_return_type(&self, return_type : &ReturnType, result_var : String, lifetime_environment : &LifetimeEnv) -> Option<Cow<'tcx, str>> {
 		match *return_type {
 			// -> ()
 			ReturnType::Infallible(SuccessType::Unit) => None,
@@ -264,7 +264,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
 			// Any out that is not a [`SuccessType::Write`].
 			ReturnType::Infallible(SuccessType::OutType(ref o)) => Some(
-				format!("const finalOut = {};", self.gen_c_to_js_for_type(o, "result".into(), lifetime_environment))
+				format!("const finalOut = {};", self.gen_c_to_js_for_type(o, result_var.clone().into(), lifetime_environment))
 				.into()
 			),
 
@@ -272,15 +272,15 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(SuccessType::Unit, None)
 			| ReturnType::Nullable(SuccessType::Unit)
-			=> Some("const finalOut = result.isOk;".into()),
+			=> Some(format!("const finalOut = {result_var}.isOk;").into()),
 
 			// Result<Type, Error> or Option<Type>
 			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok)  => {
-				let err_check = format!("if (!result.isOk) {{\n    {};\n}}\n",
+				let err_check = format!("if (!{result_var}.isOk) {{\n    {};\n}}\n",
 				match return_type {
 					ReturnType::Fallible(_, Some(e)) => format!("throw {}",
-					self.gen_c_to_js_for_type(e, "result.union.error".into(), lifetime_environment)),
+					self.gen_c_to_js_for_type(e, format!("{result_var}.union.error").into(), lifetime_environment)),
 					_ => "return null".into(),
 				});
 
@@ -288,7 +288,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 					SuccessType::Unit => err_check,
 					SuccessType::Write => format!("{err_check} return writeable;"),
 					SuccessType::OutType(ref o) => format!("{err_check}const finalOut = {};", 
-					self.gen_c_to_js_for_type(o, "result.union.ok".into(), lifetime_environment)),
+					self.gen_c_to_js_for_type(o, format!("{result_var}.union.ok").into(), lifetime_environment)),
 					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
 				}.into())
 			},
