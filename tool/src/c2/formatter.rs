@@ -1,7 +1,7 @@
 //! This module contains functions for formatting types
 
 use diplomat_core::hir::{
-    self, OpaqueOwner, StringEncoding, StructPathLike, Type, TypeContext, TypeId,
+    self, TypeContext, TypeId,
 };
 use std::borrow::Cow;
 
@@ -95,42 +95,6 @@ impl<'tcx> CFormatter<'tcx> {
             format!("{ident}*").into()
         } else {
             format!("const {ident}*").into()
-        }
-    }
-
-    /// Generates an identifier that uniquely identifies the given *C* type.
-    /// Rust types that map to the same C type will get the same C identifier
-    /// (e.g. &mut Foo and Option<&mut Foo> are all the same)
-    ///
-    /// This is primarily used for generating structs for result types,
-    /// which require one struct for each distinct instance.
-    pub fn fmt_type_name_uniquely<P: hir::TyPosition>(&self, ty: &'tcx Type<P>) -> Cow<'tcx, str> {
-        match ty {
-            Type::Primitive(p) => self.fmt_primitive_as_c(*p),
-            Type::Opaque(o) => {
-                let o_name = self.fmt_type_name(o.tcx_id.into());
-                // Todo (breaking): box should be unified with the mutable branch
-                let ownership = match o.owner.mutability() {
-                    None => "box_",
-                    Some(hir::Mutability::Mutable) => "",
-                    Some(hir::Mutability::Immutable) => "const_",
-                };
-                format!("{ownership}{o_name}").into()
-            }
-            Type::Struct(s) => self.fmt_type_name(s.id()),
-            Type::Enum(e) => self.fmt_type_name(e.tcx_id.into()),
-            Type::Slice(hir::Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => "str_ref8".into(),
-            Type::Slice(hir::Slice::Str(_, StringEncoding::Utf8)) => "str_refv8".into(),
-            Type::Slice(hir::Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => "str_ref16".into(),
-            Type::Slice(hir::Slice::Primitive(borrow, p)) => {
-                let constness = borrow
-                    .map(|b| b.mutability)
-                    .unwrap_or(hir::Mutability::Mutable)
-                    .if_mut_else("", "const_");
-                let prim = self.fmt_primitive_as_c(*p);
-                format!("ref_{constness}prim_slice_{prim}").into()
-            }
-            &_ => unreachable!("unknown AST/HIR variant"),
         }
     }
 
