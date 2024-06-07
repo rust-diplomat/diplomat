@@ -7,8 +7,6 @@ pub use self::formatter::CFormatter;
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir::TypeContext;
-use std::cell::RefCell;
-use std::collections::HashMap;
 
 /// This is the main object that drives this backend. Most execution steps
 /// for this backend will be found as methods on this context
@@ -16,8 +14,6 @@ pub struct CContext<'tcx> {
     pub tcx: &'tcx TypeContext,
     pub formatter: CFormatter<'tcx>,
     pub files: FileMap,
-    // The results needed by various methods
-    pub result_store: RefCell<HashMap<String, ty::ResultType<'tcx>>>,
 
     pub errors: ErrorStore<'tcx, String>,
     /// Whether this is being generated for C++ (needs extern C, namespaces, etc)
@@ -36,7 +32,6 @@ impl<'tcx> CContext<'tcx> {
             tcx,
             files,
             formatter: CFormatter::new(tcx),
-            result_store: Default::default(),
             errors: ErrorStore::default(),
             is_for_cpp,
         }
@@ -56,10 +51,6 @@ impl<'tcx> CContext<'tcx> {
         self.files.add_file("diplomat_runtime.h".into(), runtime);
         for (id, ty) in self.tcx.all_types() {
             self.gen_ty(id, ty)
-        }
-
-        for (result_name, result_ty) in self.result_store.borrow().iter() {
-            self.gen_result(result_name, *result_ty)
         }
     }
 

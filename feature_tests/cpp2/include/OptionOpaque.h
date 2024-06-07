@@ -9,11 +9,6 @@
 
 #include "OptionStruct.d.h"
 #include "OptionStruct.h"
-#include "diplomat_result_OptionStruct_void.d.h"
-#include "diplomat_result_int32_t_void.d.h"
-#include "diplomat_result_intptr_t_void.d.h"
-#include "diplomat_result_size_t_void.d.h"
-#include "diplomat_result_uint32_t_void.d.h"
 
 #include "OptionOpaque.d.h"
 
@@ -26,15 +21,20 @@ OptionOpaque* OptionOpaque_new(int32_t i);
 
 OptionOpaque* OptionOpaque_new_none();
 
-diplomat_result_OptionStruct_void OptionOpaque_returns();
+struct OptionOpaque_returns_result {union {OptionStruct ok; }; bool is_ok;};
+struct OptionOpaque_returns_result OptionOpaque_returns();
 
-diplomat_result_intptr_t_void OptionOpaque_option_isize(const OptionOpaque* self);
+struct OptionOpaque_option_isize_result {union {intptr_t ok; }; bool is_ok;};
+struct OptionOpaque_option_isize_result OptionOpaque_option_isize(const OptionOpaque* self);
 
-diplomat_result_size_t_void OptionOpaque_option_usize(const OptionOpaque* self);
+struct OptionOpaque_option_usize_result {union {size_t ok; }; bool is_ok;};
+struct OptionOpaque_option_usize_result OptionOpaque_option_usize(const OptionOpaque* self);
 
-diplomat_result_int32_t_void OptionOpaque_option_i32(const OptionOpaque* self);
+struct OptionOpaque_option_i32_result {union {int32_t ok; }; bool is_ok;};
+struct OptionOpaque_option_i32_result OptionOpaque_option_i32(const OptionOpaque* self);
 
-diplomat_result_uint32_t_void OptionOpaque_option_u32(const OptionOpaque* self);
+struct OptionOpaque_option_u32_result {union {uint32_t ok; }; bool is_ok;};
+struct OptionOpaque_option_u32_result OptionOpaque_option_u32(const OptionOpaque* self);
 
 OptionStruct OptionOpaque_new_struct();
 
