@@ -1,6 +1,5 @@
 use super::formatter::CFormatter;
 use super::header::Header;
-use super::CContext;
 use askama::Template;
 use diplomat_core::hir::{
     self, FloatType, IntSizeType, IntType, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef,
@@ -18,29 +17,22 @@ impl<'tcx> super::CContext<'tcx> {
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
 
-        let context = TyGenContext { cx: self };
-
         let _guard = self.errors.set_context_ty(ty.name().as_str().into());
         let decl_header = match ty {
-            TypeDef::Enum(e) => context.gen_enum_def(e, id, &decl_header_path),
-            TypeDef::Opaque(o) => context.gen_opaque_def(o, id, &decl_header_path),
-            TypeDef::Struct(s) => context.gen_struct_def(s, id, &decl_header_path),
-            TypeDef::OutStruct(s) => context.gen_struct_def(s, id, &decl_header_path),
+            TypeDef::Enum(e) => self.gen_enum_def(e, id, &decl_header_path),
+            TypeDef::Opaque(o) => self.gen_opaque_def(o, id, &decl_header_path),
+            TypeDef::Struct(s) => self.gen_struct_def(s, id, &decl_header_path),
+            TypeDef::OutStruct(s) => self.gen_struct_def(s, id, &decl_header_path),
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let impl_header = context.gen_impl(ty, id, &decl_header_path, &impl_header_path);
+        let impl_header = self.gen_impl(ty, id, &decl_header_path, &impl_header_path);
 
         self.files
             .add_file(decl_header_path, decl_header.to_string());
         self.files
             .add_file(impl_header_path, impl_header.to_string());
     }
-}
-
-/// Context for generating a particular type's header
-pub struct TyGenContext<'ccx, 'tcx> {
-    pub cx: &'ccx CContext<'tcx>,
 }
 
 #[derive(Template)]
@@ -79,18 +71,18 @@ struct MethodTemplate<'a> {
     name: Cow<'a, str>,
 }
 
-impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
+impl<'tcx> super::CContext<'tcx> {
     pub fn gen_enum_def(
         &self,
         def: &'tcx hir::EnumDef,
         id: TypeId,
         decl_header_path: &str,
     ) -> Header {
-        let mut decl_header = Header::new(decl_header_path.into(), self.cx.is_for_cpp);
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(id);
         EnumTemplate {
             ty: def,
-            fmt: &self.cx.formatter,
+            fmt: &self.formatter,
             ty_name: &ty_name,
         }
         .render_into(&mut decl_header)
@@ -105,8 +97,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         id: TypeId,
         decl_header_path: &str,
     ) -> Header {
-        let mut decl_header = Header::new(decl_header_path.into(), self.cx.is_for_cpp);
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(id);
         OpaqueTemplate { ty_name }
             .render_into(&mut decl_header)
             .unwrap();
@@ -120,8 +112,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         id: TypeId,
         decl_header_path: &str,
     ) -> Header {
-        let mut decl_header = Header::new(decl_header_path.into(), self.cx.is_for_cpp);
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(id);
         let mut fields = vec![];
         for field in def.fields.iter() {
             self.gen_ty_decl(
@@ -147,24 +139,24 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         decl_header_path: &str,
         impl_header_path: &str,
     ) -> Header {
-        let mut impl_header = Header::new(impl_header_path.into(), self.cx.is_for_cpp);
+        let mut impl_header = Header::new(impl_header_path.into(), self.is_for_cpp);
         let mut methods = vec![];
         for method in ty.methods() {
             if method.attrs.disable {
                 // Skip method if disabled
                 continue;
             }
-            let _guard = self.cx.errors.set_context_method(
-                self.cx.formatter.fmt_type_name_diagnostics(id),
+            let _guard = self.errors.set_context_method(
+                self.formatter.fmt_type_name_diagnostics(id),
                 method.name.as_str().into(),
             );
             methods.push(self.gen_method(id, method, &mut impl_header));
         }
 
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+        let ty_name = self.formatter.fmt_type_name(id);
 
         let dtor_name = if let TypeDef::Opaque(_) = ty {
-            Some(self.cx.formatter.fmt_dtor_name(id))
+            Some(self.formatter.fmt_dtor_name(id))
         } else {
             None
         };
@@ -172,7 +164,7 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
             ty_name,
             methods,
             dtor_name,
-            is_for_cpp: self.cx.is_for_cpp,
+            is_for_cpp: self.is_for_cpp,
         }
         .render_into(&mut impl_header)
         .unwrap();
@@ -194,9 +186,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         id: TypeId,
         method: &'tcx hir::Method,
         header: &mut Header,
-    ) -> MethodTemplate<'ccx> {
+    ) -> MethodTemplate<'tcx> {
         use diplomat_core::hir::{ReturnType, SuccessType};
-        let method_name = self.cx.formatter.fmt_method_name(id, method);
+        let method_name = self.formatter.fmt_method_name(id, method);
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
@@ -301,9 +293,9 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
         ident: &'a str,
         is_struct: bool,
         header: &mut Header,
-        out: &mut Vec<(Cow<'ccx, str>, Cow<'a, str>)>,
+        out: &mut Vec<(Cow<'tcx, str>, Cow<'a, str>)>,
     ) {
-        let param_name = self.cx.formatter.fmt_param_name(ident);
+        let param_name = self.formatter.fmt_param_name(ident);
         match ty {
             Type::Slice(hir::Slice::Str(
                 _,
@@ -322,8 +314,8 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
                 out.push(("size_t".into(), format!("{param_name}_len").into()));
             }
             Type::Slice(hir::Slice::Primitive(b, p)) if !is_struct => {
-                let prim = self.cx.formatter.fmt_primitive_as_c(*p);
-                let ptr_type = self.cx.formatter.fmt_ptr(
+                let prim = self.formatter.fmt_primitive_as_c(*p);
+                let ptr_type = self.formatter.fmt_ptr(
                     &prim,
                     b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
                 );
@@ -353,47 +345,44 @@ impl<'ccx, 'tcx: 'ccx> TyGenContext<'ccx, 'tcx> {
 
     // Generate the C code for referencing a particular type.
     // Handles adding imports and such as necessary
-    fn gen_ty_name<P: TyPosition>(&self, ty: &Type<P>, header: &mut Header) -> Cow<'ccx, str> {
+    fn gen_ty_name<P: TyPosition>(&self, ty: &Type<P>, header: &mut Header) -> Cow<'tcx, str> {
         let ty_name = match *ty {
-            Type::Primitive(prim) => self.cx.formatter.fmt_primitive_as_c(prim),
+            Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(op_id);
-                if self.cx.tcx.resolve_type(op_id).attrs().disable {
-                    self.cx
-                        .errors
+                let ty_name = self.formatter.fmt_type_name(op_id);
+                if self.tcx.resolve_type(op_id).attrs().disable {
+                    self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
                 // unwrap_or(mut) since owned pointers need to not be const
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let ret = self.cx.formatter.fmt_ptr(&ty_name, mutability);
+                let ret = self.formatter.fmt_ptr(&ty_name, mutability);
                 header
                     .includes
-                    .insert(self.cx.formatter.fmt_decl_header_path(op_id));
+                    .insert(self.formatter.fmt_decl_header_path(op_id));
                 ret.into_owned().into()
             }
             Type::Struct(ref st) => {
                 let st_id = st.id();
-                let ty_name = self.cx.formatter.fmt_type_name(st_id);
-                if self.cx.tcx.resolve_type(st_id).attrs().disable {
-                    self.cx
-                        .errors
+                let ty_name = self.formatter.fmt_type_name(st_id);
+                if self.tcx.resolve_type(st_id).attrs().disable {
+                    self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
                 let ret = ty_name.clone();
-                let header_path = self.cx.formatter.fmt_decl_header_path(st_id);
+                let header_path = self.formatter.fmt_decl_header_path(st_id);
                 header.includes.insert(header_path);
                 ret
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(id);
-                if self.cx.tcx.resolve_type(id).attrs().disable {
-                    self.cx
-                        .errors
+                let ty_name = self.formatter.fmt_type_name(id);
+                if self.tcx.resolve_type(id).attrs().disable {
+                    self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
-                let header_path = self.cx.formatter.fmt_decl_header_path(id);
+                let header_path = self.formatter.fmt_decl_header_path(id);
                 header.includes.insert(header_path);
                 ty_name
             }
