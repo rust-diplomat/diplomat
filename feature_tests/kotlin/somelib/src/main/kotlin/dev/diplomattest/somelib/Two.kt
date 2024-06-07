@@ -10,13 +10,12 @@ internal interface TwoLib: Library {
 
 class Two internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
     internal val bEdges: List<Any>,
-    ) {
+)  {
 
     internal class TwoCleaner(val handle: Pointer, val lib: TwoLib) : Runnable {
         override fun run() {

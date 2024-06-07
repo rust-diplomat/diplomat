@@ -12,10 +12,10 @@ internal interface {{type_name}}Lib: Library {
     {%- endfor %}
 }
 
-class {{type_name}}Native: Structure(), Structure.ByValue {
+internal class {{type_name}}Native: Structure(), Structure.ByValue {
     {%- for field in fields %}
     @JvmField
-    var {{field.name}}: {{field.ffi_cast_type_name}} = {{field.ffi_type_default}};
+    internal var {{field.name}}: {{field.ffi_cast_type_name}} = {{field.ffi_type_default}};
     {%- endfor %}
   
     // Define the fields of the struct
@@ -40,10 +40,14 @@ class {{type_name}} internal constructor (
         internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
         internal val lib: {{type_name}}Lib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize({{type_name}}Native::class.java).toLong()
-{%- for m in companion_methods %}{{m|indent(8)}}{%- endfor %}
+{%- for m in companion_methods %}
+        {{m|indent(8)}}
+{%- endfor %}
     }
 
-{%- for m in self_methods %}{{m|indent(4)}}{%- endfor %}
+{%- for m in self_methods %}
+    {{m|indent(4)}}
+{%- endfor %}
 
 }
 

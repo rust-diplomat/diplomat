@@ -15,10 +15,10 @@ internal interface OpaqueLib: Library {
 
 class Opaque internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>) {
+    internal val selfEdges: List<Any>
+)  {
 
     internal class OpaqueCleaner(val handle: Pointer, val lib: OpaqueLib) : Runnable {
         override fun run() {
@@ -29,40 +29,43 @@ class Opaque internal constructor (
     companion object {
         internal val libClass: Class<OpaqueLib> = OpaqueLib::class.java
         internal val lib: OpaqueLib = Native.load("somelib", libClass)
+        
         fun new_(): Opaque {
             
             val returnVal = lib.Opaque_new();
-        
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
             
             return returnOpaque
-        
         }
-        fun returnsUsize(): Long {
+        
+        fun returnsUsize(): ULong {
             
             val returnVal = lib.Opaque_returns_usize();
-            return returnVal
+            return returnVal.toULong()
         }
+        
         fun returnsImported(): ImportedStruct {
             
             val returnVal = lib.Opaque_returns_imported();
-        
+            
             val returnStruct = ImportedStruct(returnVal)
-            return returnStruct 
-        
+            return returnStruct
         }
+        
         fun cmp(): Byte {
             
             val returnVal = lib.Opaque_cmp();
             return returnVal
         }
     }
+    
     fun assertStruct(s: MyStruct): Unit {
         
         val returnVal = lib.Opaque_assert_struct(handle, s.nativeStruct);
+        
     }
 
 }

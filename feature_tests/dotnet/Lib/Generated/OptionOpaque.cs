@@ -77,6 +77,74 @@ public partial class OptionOpaque: IDisposable
         }
     }
 
+    public nint? OptionIsize()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OptionOpaque");
+            }
+            Options without a pointer type are not yet supported retVal = Raw.OptionOpaque.OptionIsize(_inner);
+            if (retVal == null)
+            {
+                return null;
+            }
+            return retVal;
+        }
+    }
+
+    public nuint? OptionUsize()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OptionOpaque");
+            }
+            Options without a pointer type are not yet supported retVal = Raw.OptionOpaque.OptionUsize(_inner);
+            if (retVal == null)
+            {
+                return null;
+            }
+            return retVal;
+        }
+    }
+
+    public int? OptionI32()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OptionOpaque");
+            }
+            Options without a pointer type are not yet supported retVal = Raw.OptionOpaque.OptionI32(_inner);
+            if (retVal == null)
+            {
+                return null;
+            }
+            return retVal;
+        }
+    }
+
+    public uint? OptionU32()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OptionOpaque");
+            }
+            Options without a pointer type are not yet supported retVal = Raw.OptionOpaque.OptionU32(_inner);
+            if (retVal == null)
+            {
+                return null;
+            }
+            return retVal;
+        }
+    }
+
     /// <returns>
     /// A <c>OptionStruct</c> allocated on C# side.
     /// </returns>

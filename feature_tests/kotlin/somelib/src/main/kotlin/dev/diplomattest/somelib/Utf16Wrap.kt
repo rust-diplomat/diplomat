@@ -12,10 +12,10 @@ internal interface Utf16WrapLib: Library {
 
 class Utf16Wrap internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>) {
+    internal val selfEdges: List<Any>
+)  {
 
     internal class Utf16WrapCleaner(val handle: Pointer, val lib: Utf16WrapLib) : Runnable {
         override fun run() {
@@ -27,11 +27,13 @@ class Utf16Wrap internal constructor (
         internal val libClass: Class<Utf16WrapLib> = Utf16WrapLib::class.java
         internal val lib: Utf16WrapLib = Native.load("somelib", libClass)
     }
+    
     fun borrowCont(): String {
         
         val returnVal = lib.Utf16Wrap_borrow_cont(handle);
-        return PrimitiveArrayTools.getUtf16(returnVal)
+            return PrimitiveArrayTools.getUtf16(returnVal)
     }
+    
     fun owned(): String {
         
         val returnVal = lib.Utf16Wrap_owned(handle);

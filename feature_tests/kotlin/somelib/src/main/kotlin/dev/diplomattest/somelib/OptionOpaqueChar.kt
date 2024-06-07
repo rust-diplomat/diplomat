@@ -11,10 +11,10 @@ internal interface OptionOpaqueCharLib: Library {
 
 class OptionOpaqueChar internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>) {
+    internal val selfEdges: List<Any>
+)  {
 
     internal class OptionOpaqueCharCleaner(val handle: Pointer, val lib: OptionOpaqueCharLib) : Runnable {
         override fun run() {
@@ -26,9 +26,11 @@ class OptionOpaqueChar internal constructor (
         internal val libClass: Class<OptionOpaqueCharLib> = OptionOpaqueCharLib::class.java
         internal val lib: OptionOpaqueCharLib = Native.load("somelib", libClass)
     }
+    
     fun assertChar(ch: Int): Unit {
         
         val returnVal = lib.OptionOpaqueChar_assert_char(handle, ch);
+        
     }
 
 }

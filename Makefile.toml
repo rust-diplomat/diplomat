@@ -74,6 +74,12 @@ dependencies = [
     "test-dart-example",
     "test-dart-feature",
 ]
+[tasks.test-kotlin]
+category = "Tests"
+dependencies = [
+    "test-kotlin-example",
+    "test-kotlin-feature",
+]
 [tasks.test-example]
 category = "Tests"
 dependencies = [
@@ -83,6 +89,7 @@ dependencies = [
     "test-c2-example",
     "test-wasm-example",
     "test-dart-example",
+    "test-kotlin-example",
 ]
 
 [tasks.test-feature]
@@ -222,6 +229,17 @@ exec --fail-on-error dart --enable-experiment=native-assets pub get
 exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
+[tasks.test-kotlin-example]
+category = "Tests"
+script_runner = "@duckscript"
+dependencies = ["build-example"]
+script = '''
+exit_on_error true
+cp target/debug/libdiplomat_example.dylib example/kotlin/somelib/libsomelib.dylib
+cd example/kotlin/somelib
+exec --fail-on-error gradle test --warning-mode all
+'''
+
 [tasks.test-kotlin-feature]
 category = "Tests"
 script_runner = "@duckscript"
@@ -230,7 +248,7 @@ script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.dylib feature_tests/kotlin/somelib/libsomelib.dylib
 cd feature_tests/kotlin/somelib
-exec --fail-on-error gradle test --warning-mode all
+exec --fail-on-error gradle test --warning-mode all 
 '''
 
 [tasks.test-c2-example-self-contained]
@@ -282,6 +300,7 @@ dependencies = [
     "gen-c2-example",
     "gen-js-example",
     "gen-dart-example",
+    "gen-kotlin-example",
 ]
 [tasks.gen-cpp]
 category = "Code generation"
@@ -328,6 +347,7 @@ dependencies = [
 category = "Code generation"
 dependencies = [
     "gen-kotlin-feature",
+    "gen-kotlin-example",
 ]
 
 
@@ -459,6 +479,15 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
+'''
+
+[tasks.gen-kotlin-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
 '''
 
 # Build deps

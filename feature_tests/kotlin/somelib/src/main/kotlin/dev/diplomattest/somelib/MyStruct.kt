@@ -7,24 +7,24 @@ import com.sun.jna.Structure
 
 internal interface MyStructLib: Library {
     fun MyStruct_new(): MyStructNative
-    fun MyStruct_into_a(nativeStruct: MyStructNative): UByte
+    fun MyStruct_into_a(nativeStruct: MyStructNative): Byte
 }
 
-class MyStructNative: Structure(), Structure.ByValue {
+internal class MyStructNative: Structure(), Structure.ByValue {
     @JvmField
-    var a: Byte = 0;
+    internal var a: Byte = 0;
     @JvmField
-    var b: Byte = 0;
+    internal var b: Byte = 0;
     @JvmField
-    var c: Byte = 0;
+    internal var c: Byte = 0;
     @JvmField
-    var d: Long = 0;
+    internal var d: Long = 0;
     @JvmField
-    var e: Int = 0;
+    internal var e: Int = 0;
     @JvmField
-    var f: Int = 0;
+    internal var f: Int = 0;
     @JvmField
-    var g: Int = MyEnum.default().toNative();
+    internal var g: Int = MyEnum.default().toNative();
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
@@ -46,19 +46,20 @@ class MyStruct internal constructor (
         internal val libClass: Class<MyStructLib> = MyStructLib::class.java
         internal val lib: MyStructLib = Native.load("somelib", libClass)
         val NATIVESIZE: Long = Native.getNativeSize(MyStructNative::class.java).toLong()
+        
         fun new_(): MyStruct {
             
             val returnVal = lib.MyStruct_new();
-        
+            
             val returnStruct = MyStruct(returnVal)
-            return returnStruct 
-        
+            return returnStruct
         }
     }
+    
     fun intoA(): UByte {
         
         val returnVal = lib.MyStruct_into_a(nativeStruct);
-        return returnVal
+        return returnVal.toUByte()
     }
 
 }

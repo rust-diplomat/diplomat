@@ -23,6 +23,14 @@ public:
 
   inline static std::optional<OptionStruct> returns();
 
+  inline std::optional<intptr_t> option_isize() const;
+
+  inline std::optional<size_t> option_usize() const;
+
+  inline std::optional<int32_t> option_i32() const;
+
+  inline std::optional<uint32_t> option_u32() const;
+
   inline static OptionStruct new_struct();
 
   inline static OptionStruct new_struct_nones();

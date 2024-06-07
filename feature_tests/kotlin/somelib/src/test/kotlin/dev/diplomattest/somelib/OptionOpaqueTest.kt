@@ -3,6 +3,7 @@ package dev.diplomattest.somelib
 import com.sun.jna.Native
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import javax.swing.text.html.Option
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -30,6 +31,14 @@ class OptionOpaqueTest {
         assertNull(noneStruct.b)
         assertEquals(noneStruct.c, 908.toUInt())
         assertNull(noneStruct.d)
+
+    }
+
+    @Test
+    fun testPrimitiveOptionReturns() {
+        val someOption = OptionOpaque.new_(12) ?: throw RuntimeException("Failed to get option")
+        assertEquals(someOption.optionI32(), 10)
+        assertEquals(someOption.optionU32(), 10.toUInt())
 
     }
 }

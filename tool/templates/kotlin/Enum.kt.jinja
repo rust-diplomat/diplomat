@@ -59,8 +59,12 @@ enum class {{type_name}}
             return {{variants[0]}}
         }
         {%- endmatch %}
-{%- for m in companion_methods %}{{m|indent(8)}}{%- endfor %}
+{%- for m in companion_methods %}
+        {{m|indent(8)}}
+{%- endfor %}
     }
 
-{%- for m in self_methods %}{{m|indent(4)}}{%- endfor %}
+{%- for m in self_methods %}
+    {{m|indent(4)}}
+{%- endfor %}
 }
