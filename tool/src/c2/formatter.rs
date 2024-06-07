@@ -1,8 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{
-    self, TypeContext, TypeId,
-};
+use diplomat_core::hir::{self, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
