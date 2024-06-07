@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#include "diplomat_result_double_void.d.h"
 
 #include "Float64Vec.d.h"
 
@@ -42,7 +41,8 @@ void Float64Vec_to_string(const Float64Vec* self, DiplomatWrite* write);
 
 DiplomatF64View Float64Vec_borrow(const Float64Vec* self);
 
-diplomat_result_double_void Float64Vec_get(const Float64Vec* self, size_t i);
+struct Float64Vec_get_result {union {double ok; }; bool is_ok;};
+struct Float64Vec_get_result Float64Vec_get(const Float64Vec* self, size_t i);
 
 
 void Float64Vec_destroy(Float64Vec* self);

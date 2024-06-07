@@ -52,26 +52,7 @@ impl<'tcx> super::CContext<'tcx> {
         self.files
             .add_file(impl_header_path, impl_header.to_string());
     }
-
-    pub fn gen_result(&self, name: &str, ty: ResultType) {
-        let _guard = self
-            .errors
-            .set_context_ty(self.formatter.fmt_result_for_diagnostics(ty).into());
-        let header_path = self.formatter.fmt_result_header_path(name);
-        let mut header = Header::new(header_path.clone(), self.is_for_cpp);
-        let mut dummy_header = Header::new("".to_string(), self.is_for_cpp);
-        let mut context = TyGenContext {
-            cx: self,
-            // NOTE: Only one header for results
-            decl_header: &mut header,
-            impl_header: &mut dummy_header,
-        };
-        context.gen_result(name, ty);
-        self.files.add_file(header_path, header.to_string());
-    }
 }
-/// Simple wrapper type representing the return type of a fallible function
-pub type ResultType<'tcx> = (Option<&'tcx hir::OutType>, Option<&'tcx hir::OutType>);
 
 /// Context for generating a particular type's header
 pub struct TyGenContext<'ccx, 'tcx, 'header> {
@@ -205,34 +186,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 } else {
                     None
                 };
-                let (ok_type_name, ok_ty) = match ok {
-                    SuccessType::Write => {
-                        param_decls.push(("DiplomatWrite*".into(), "write".into()));
-                        ("void".into(), None)
-                    }
-                    SuccessType::Unit => ("void".into(), None),
-                    SuccessType::OutType(o) => {
-                        (self.cx.formatter.fmt_type_name_uniquely(o), Some(o))
-                    }
+                let ok_ty = match ok {
+                    SuccessType::Write | SuccessType::Unit => None,
+                    SuccessType::OutType(o) => Some(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                let err_type_name = match err {
-                    Some(o) => self.cx.formatter.fmt_type_name_uniquely(o),
-                    None => "void".into(),
-                };
-                // todo push to results set
-                let result_name = self
-                    .cx
-                    .formatter
-                    .fmt_result_name(&ok_type_name, &err_type_name);
-                self.impl_header
-                    .includes
-                    .insert(self.cx.formatter.fmt_result_header_path(&result_name));
-                self.cx
-                    .result_store
-                    .borrow_mut()
-                    .insert(result_name.clone(), (ok_ty, err));
-                result_name.into()
+                self.gen_result_ty(&method_name, ok_ty, err).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         };
@@ -256,31 +215,34 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         }
     }
 
-    pub fn gen_result(&mut self, name: &str, ty: ResultType) {
-        let ok_line = if let Some(ok) = ty.0 {
-            let ok_name = self.gen_ty_name(ok, true);
-            format!("\t\t{ok_name} ok;\n")
+    pub fn gen_result_ty(
+        &mut self,
+        fn_name: &str,
+        ok_ty: Option<&hir::OutType>,
+        err_ty: Option<&hir::OutType>,
+    ) -> String {
+        let ok_line = if let Some(ok) = ok_ty {
+            let ok_name = self.gen_ty_name(ok, false);
+            format!("{ok_name} ok;")
         } else {
             "".into()
         };
-        let err_line = if let Some(err) = ty.1 {
-            let err_name = self.gen_ty_name(err, true);
-            format!("\t\t{err_name} err;\n")
+        let err_line = if let Some(err) = err_ty {
+            let err_name = self.gen_ty_name(err, false);
+            format!("{err_name} err;")
         } else {
             "".into()
         };
 
-        let union_def = if ty.0.is_some() || ty.1.is_some() {
-            format!("\tunion {{\n{ok_line}{err_line}\t}};\n")
+        let union_def = if ok_ty.is_some() || err_ty.is_some() {
+            format!("union {{{ok_line} {err_line}}};")
         } else {
             "".into()
         };
 
-        writeln!(
-            self.decl_header,
-            "typedef struct {name} {{\n{union_def}\tbool is_ok;\n}} {name};"
-        )
-        .unwrap();
+        // We can't use an anonymous struct here: C++ doesn't like producing those in return types
+        // Instead we name it something unique per-function. This is a bit ugly but works just fine.
+        format!("struct {fn_name}_result {{{union_def} bool is_ok;}};\nstruct {fn_name}_result")
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)
