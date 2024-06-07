@@ -920,7 +920,7 @@ retutnVal.option() ?: return null
             .gen_return_conversion(method, method_lifetimes_map, cleanups.as_ref())
             .into();
 
-        // this should only be called in the
+        // this should only be called in the special method generation below
         let non_option_type_name = |return_type: &ReturnType| match return_type {
             ReturnType::Infallible(ok) | ReturnType::Nullable(ok) => {
                 self.gen_infallible_return_type_name(ok)
