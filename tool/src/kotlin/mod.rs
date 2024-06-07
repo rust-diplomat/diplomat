@@ -212,32 +212,6 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
-    fn gen_return_type_for_iterator(&self, result_ty: &ReturnType) -> Cow<'cx, str> {
-        match *result_ty {
-            ReturnType::Nullable(ref success) => self.gen_infallible_return_type_name(success),
-            ReturnType::Infallible(ref success @ SuccessType::OutType(Type::Opaque(ref o)))
-                if o.is_optional() =>
-            {
-                self.gen_infallible_return_type_name(success)
-            }
-            ref res => panic!("iterator next method should return option, {res:?}"),
-        }
-    }
-
-    fn gen_return_type_for_indexer(&self, result_ty: &ReturnType) -> Cow<'cx, str> {
-        match *result_ty {
-            ReturnType::Nullable(ref success) => self.gen_infallible_return_type_name(success),
-            ReturnType::Infallible(ref success @ SuccessType::OutType(Type::Opaque(ref o)))
-                if o.is_optional() =>
-            {
-                self.gen_infallible_return_type_name(success)
-            }
-            ref rt => {
-                panic!("indexer get method should return an option in kotlin backent: {rt:?}")
-            }
-        }
-    }
-
     fn gen_kt_to_c_for_type(&self, ty: &Type, name: Cow<'cx, str>) -> Cow<'cx, str> {
         match *ty {
             Type::Primitive(prim) => self
@@ -364,7 +338,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
-    fn gen_opaque_return<'d>(
+    fn gen_opaque_return_conversion<'d>(
         &'d self,
         opaque_path: &'d OpaquePath<Optional, MaybeOwn>,
         method_lifetimes_map: &'d MethodLtMap<'d>,
@@ -465,7 +439,7 @@ return string{return_type_modifier}"#
         )
     }
 
-    fn gen_slice_retrn<'d>(
+    fn gen_slice_return_conversion<'d>(
         &'d self,
         slice_ty: &'d Slice,
         val_name: &'d str,
@@ -511,7 +485,7 @@ return string{return_type_modifier}"#
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn gen_struct_return<'d>(
+    fn gen_struct_return_conversion<'d>(
         &'d self,
         struct_def: &'d ReturnableStructDef,
         lifetimes: &'d Lifetimes,
@@ -572,7 +546,7 @@ return string{return_type_modifier}"#
             .expect("Failed to render opaque return block")
     }
 
-    fn gen_fallible_return<'d>(
+    fn gen_fallible_return_conversion<'d>(
         &'d self,
         ok: &'d SuccessType,
         err: &'d Option<OutType>,
@@ -580,7 +554,7 @@ return string{return_type_modifier}"#
         method_lifetimes_map: &'d MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
     ) -> Cow<'d, str> {
-        let ok_path = self.gen_infallible_return(
+        let ok_path = self.gen_infallible_return_conversion(
             ok,
             method,
             method_lifetimes_map,
@@ -599,7 +573,7 @@ return string{return_type_modifier}"#
         let err_path = err
             .as_ref()
             .map(|err| {
-                self.gen_out_type_return(
+                self.gen_out_type_return_conversion(
                     method,
                     method_lifetimes_map,
                     cleanups,
@@ -619,7 +593,7 @@ return string{return_type_modifier}"#
         .into()
     }
 
-    fn gen_out_type_return<'d>(
+    fn gen_out_type_return_conversion<'d>(
         &'d self,
         method: &'d Method,
         method_lifetimes_map: &'d MethodLtMap<'d>,
@@ -633,7 +607,7 @@ return string{return_type_modifier}"#
                 let maybe_unsized_modifier = self.formatter.fmt_unsized_conversion(*prim, false);
                 format!("return {val_name}{return_type_modifier}{maybe_unsized_modifier}")
             }
-            Type::Opaque(opaque_path) => self.gen_opaque_return(
+            Type::Opaque(opaque_path) => self.gen_opaque_return_conversion(
                 opaque_path,
                 method_lifetimes_map,
                 &method.lifetime_env,
@@ -643,7 +617,7 @@ return string{return_type_modifier}"#
             ),
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
-                self.gen_struct_return(
+                self.gen_struct_return_conversion(
                     &strct.resolve(self.tcx),
                     lifetimes,
                     method_lifetimes_map,
@@ -660,12 +634,14 @@ return string{return_type_modifier}"#
                     return_type.name
                 )
             }
-            Type::Slice(slc) => self.gen_slice_retrn(slc, val_name, return_type_modifier),
+            Type::Slice(slc) => {
+                self.gen_slice_return_conversion(slc, val_name, return_type_modifier)
+            }
             _ => todo!(),
         }
     }
 
-    fn gen_nullable_return<'d>(
+    fn gen_nullable_return_conversion<'d>(
         &'d self,
         method: &'d Method,
         method_lifetimes_map: &'d MethodLtMap<'d>,
@@ -678,7 +654,7 @@ return string{return_type_modifier}"#
                 let maybe_unsized_modifier = self.formatter.fmt_unsized_conversion(*prim, true);
                 format!("return {val_name}.option(){maybe_unsized_modifier}")
             }
-            Type::Opaque(opaque_path) => self.gen_opaque_return(
+            Type::Opaque(opaque_path) => self.gen_opaque_return_conversion(
                 opaque_path,
                 method_lifetimes_map,
                 &method.lifetime_env,
@@ -693,7 +669,7 @@ return string{return_type_modifier}"#
 val intermediateOption = {val_name}.option() ?: return null
 {}
                         "#,
-                    self.gen_struct_return(
+                    self.gen_struct_return_conversion(
                         &strct.resolve(self.tcx),
                         lifetimes,
                         method_lifetimes_map,
@@ -719,14 +695,14 @@ return {}.fromNative(intermediateOption)"#,
 val intermediateOption = {val_name}.option() ?: return null
 {}
                         "#,
-                    self.gen_slice_retrn(slc, "intermediateOption", "")
+                    self.gen_slice_return_conversion(slc, "intermediateOption", "")
                 )
             }
             _ => todo!(),
         }
     }
 
-    fn gen_infallible_return<'d>(
+    fn gen_infallible_return_conversion<'d>(
         &'d self,
         res: &'d SuccessType,
         method: &'d Method,
@@ -742,7 +718,7 @@ val intermediateOption = {val_name}.option() ?: return null
 
         match res {
             SuccessType::Write => Self::write_return(return_type_postfix),
-            SuccessType::OutType(ref o) => self.gen_out_type_return(
+            SuccessType::OutType(ref o) => self.gen_out_type_return_conversion(
                 method,
                 method_lifetimes_map,
                 cleanups,
@@ -758,14 +734,14 @@ val intermediateOption = {val_name}.option() ?: return null
         }
     }
 
-    fn gen_return<'d>(
+    fn gen_return_conversion<'d>(
         &'d self,
         method: &'d Method,
         method_lifetimes_map: MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
     ) -> String {
         match &method.output {
-            ReturnType::Infallible(res) => self.gen_infallible_return(
+            ReturnType::Infallible(res) => self.gen_infallible_return_conversion(
                 res,
                 method,
                 &method_lifetimes_map,
@@ -774,12 +750,17 @@ val intermediateOption = {val_name}.option() ?: return null
                 false,
             ),
             ReturnType::Fallible(ok, err) => self
-                .gen_fallible_return(ok, err, method, &method_lifetimes_map, cleanups)
+                .gen_fallible_return_conversion(ok, err, method, &method_lifetimes_map, cleanups)
                 .into(),
 
-            ReturnType::Nullable(SuccessType::OutType(ref res)) => {
-                self.gen_nullable_return(method, &method_lifetimes_map, cleanups, "returnVal", res)
-            }
+            ReturnType::Nullable(SuccessType::OutType(ref res)) => self
+                .gen_nullable_return_conversion(
+                    method,
+                    &method_lifetimes_map,
+                    cleanups,
+                    "returnVal",
+                    res,
+                ),
 
             ReturnType::Nullable(SuccessType::Write) => format!(
                 r#"
@@ -792,9 +773,14 @@ retutnVal.option() ?: return null
             _ => panic!("unsupported type"),
         }
     }
-    fn gen_slice_conv(&self, kt_param_name: Cow<'cx, str>, slice_type: Slice) -> Cow<'cx, str> {
+
+    fn gen_slice_conversion(
+        &self,
+        kt_param_name: Cow<'cx, str>,
+        slice_type: Slice,
+    ) -> Cow<'cx, str> {
         #[derive(Template)]
-        #[template(path = "kotlin/SliceConv.kt.jinja", escape = "none")]
+        #[template(path = "kotlin/SliceConversion.kt.jinja", escape = "none")]
         struct SliceConv<'d> {
             slice_method: Cow<'d, str>,
             kt_param_name: Cow<'d, str>,
@@ -888,7 +874,7 @@ retutnVal.option() ?: return null
 
             match param.ty {
                 Type::Slice(slice) => {
-                    slice_conversions.push(self.gen_slice_conv(param_name.clone(), slice));
+                    slice_conversions.push(self.gen_slice_conversion(param_name.clone(), slice));
 
                     let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
@@ -931,13 +917,22 @@ retutnVal.option() ?: return null
 
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
-            .gen_return(method, method_lifetimes_map, cleanups.as_ref())
+            .gen_return_conversion(method, method_lifetimes_map, cleanups.as_ref())
             .into();
 
+        // this should only be called in the
+        let non_option_type_name = |return_type: &ReturnType| match return_type {
+            ReturnType::Infallible(ok) | ReturnType::Nullable(ok) => {
+                self.gen_infallible_return_type_name(ok)
+            }
+            ReturnType::Fallible(_, _) => panic!(
+                "non_option_type_name should only be called for a return type that is optional"
+            ),
+        };
         let declaration = match method.attrs.special_method {
             Some(SpecialMethod::Iterator) => {
                 if special_methods.iterator_type.is_none() {
-                    let non_option_ty = self.gen_return_type_for_iterator(&method.output);
+                    let non_option_ty = non_option_type_name(&method.output);
                     special_methods.iterator_type = Some(non_option_ty.into());
                     format!("internal fun nextInternal({params}): {return_ty}")
                 } else {
@@ -946,7 +941,7 @@ retutnVal.option() ?: return null
             }
             Some(SpecialMethod::Indexer) => {
                 if special_methods.indexer_type.is_none() {
-                    let non_option_ty = self.gen_return_type_for_indexer(&method.output);
+                    let non_option_ty = non_option_type_name(&method.output);
                     let index_type = match &method.params.first() {
                         Some(Param {
                             ty:
