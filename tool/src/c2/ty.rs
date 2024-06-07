@@ -187,7 +187,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     None
                 };
                 let ok_ty = match ok {
-                    SuccessType::Write | SuccessType::Unit => None,
+                    SuccessType::Write => {
+                        param_decls.push(("DiplomatWrite*".into(), "write".into()));
+                        None
+                    }
+                    SuccessType::Unit => None,
                     SuccessType::OutType(o) => Some(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
