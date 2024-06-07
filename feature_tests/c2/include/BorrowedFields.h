@@ -8,7 +8,6 @@
 #include "diplomat_runtime.h"
 
 #include "Bar.d.h"
-#include "Bar.h"
 
 #include "BorrowedFields.d.h"
 

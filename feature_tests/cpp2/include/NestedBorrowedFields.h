@@ -8,9 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "Bar.d.h"
-#include "Bar.h"
 #include "Foo.d.h"
-#include "Foo.h"
 
 #include "NestedBorrowedFields.d.h"
 

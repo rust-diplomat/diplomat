@@ -8,9 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "AttrEnum.d.h"
-#include "AttrEnum.h"
 #include "Unnamespaced.d.h"
-#include "Unnamespaced.h"
 
 #include "AttrOpaque1.d.h"
 

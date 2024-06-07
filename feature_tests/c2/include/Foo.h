@@ -8,13 +8,9 @@
 #include "diplomat_runtime.h"
 
 #include "Bar.d.h"
-#include "Bar.h"
 #include "BorrowedFields.d.h"
-#include "BorrowedFields.h"
 #include "BorrowedFieldsReturning.d.h"
-#include "BorrowedFieldsReturning.h"
 #include "BorrowedFieldsWithBounds.d.h"
-#include "BorrowedFieldsWithBounds.h"
 
 #include "Foo.d.h"
 

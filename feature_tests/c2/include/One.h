@@ -8,7 +8,6 @@
 #include "diplomat_runtime.h"
 
 #include "Two.d.h"
-#include "Two.h"
 
 #include "One.d.h"
 

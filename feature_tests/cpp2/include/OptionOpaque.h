@@ -8,7 +8,6 @@
 #include "diplomat_runtime.h"
 
 #include "OptionStruct.d.h"
-#include "OptionStruct.h"
 
 #include "OptionOpaque.d.h"
 

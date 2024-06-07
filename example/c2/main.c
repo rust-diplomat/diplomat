@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "include/ICU4XLocale.h"
+#include "include/ICU4XDataProvider.h"
+#include "include/ICU4XFixedDecimal.h"
 #include "include/ICU4XFixedDecimalFormatter.h"
+#include "include/ICU4XFixedDecimalFormatterOptions.h"
 
 void print_decimal(ICU4XFixedDecimal* fd) {
     char output[40];
