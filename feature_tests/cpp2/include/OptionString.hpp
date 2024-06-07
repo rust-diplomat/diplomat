@@ -29,7 +29,7 @@ inline diplomat::result<std::string, std::monostate> OptionString::write() const
 
 inline std::optional<std::string_view> OptionString::borrow() const {
   auto result = capi::OptionString_borrow(this->AsFFI());
-  return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok_data, result.ok_size)) : std::nullopt;
+  return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
 }
 
 inline const capi::OptionString* OptionString::AsFFI() const {
