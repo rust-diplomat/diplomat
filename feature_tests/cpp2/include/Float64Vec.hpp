@@ -57,12 +57,12 @@ inline std::unique_ptr<Float64Vec> Float64Vec::new_f64_be_bytes(diplomat::span<c
 
 inline diplomat::span<double> Float64Vec::as_boxed_slice() const {
   auto result = capi::Float64Vec_as_boxed_slice(this->AsFFI());
-  return diplomat::span<double>(result_data, result_size);
+  return diplomat::span<double>(result.data, result.len);
 }
 
 inline diplomat::span<const double> Float64Vec::as_slice() const {
   auto result = capi::Float64Vec_as_slice(this->AsFFI());
-  return diplomat::span<const double>(result_data, result_size);
+  return diplomat::span<const double>(result.data, result.len);
 }
 
 inline void Float64Vec::fill_slice(diplomat::span<double> v) const {
@@ -87,7 +87,7 @@ inline std::string Float64Vec::to_string() const {
 
 inline diplomat::span<const double> Float64Vec::borrow() const {
   auto result = capi::Float64Vec_borrow(this->AsFFI());
-  return diplomat::span<const double>(result_data, result_size);
+  return diplomat::span<const double>(result.data, result.len);
 }
 
 inline std::optional<double> Float64Vec::get(size_t i) const {

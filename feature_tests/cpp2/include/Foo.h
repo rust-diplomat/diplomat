@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
+
 #include "Bar.d.h"
 #include "Bar.h"
 #include "BorrowedFields.d.h"
@@ -17,11 +18,10 @@
 
 #include "Foo.d.h"
 
-#ifdef __cplusplus
 namespace capi {
-extern "C" {
-#endif // __cplusplus
 
+
+extern "C" {
 
 Foo* Foo_new(const char* x_data, size_t x_len);
 
@@ -35,12 +35,11 @@ Foo* Foo_extract_from_fields(BorrowedFields fields);
 
 Foo* Foo_extract_from_bounds(BorrowedFieldsWithBounds bounds, const char* another_string_data, size_t another_string_len);
 
+
 void Foo_destroy(Foo* self);
 
-
-#ifdef __cplusplus
 } // extern "C"
+
 } // namespace capi
-#endif // __cplusplus
 
 #endif // Foo_H

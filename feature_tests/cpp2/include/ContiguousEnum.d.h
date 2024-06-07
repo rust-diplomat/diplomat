@@ -7,10 +7,8 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#ifdef __cplusplus
+
 namespace capi {
-extern "C" {
-#endif // __cplusplus
 
 
 typedef enum ContiguousEnum {
@@ -21,9 +19,7 @@ typedef enum ContiguousEnum {
 } ContiguousEnum;
 
 
-#ifdef __cplusplus
-} // extern "C"
+
 } // namespace capi
-#endif // __cplusplus
 
 #endif // ContiguousEnum_D_H

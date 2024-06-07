@@ -33,7 +33,7 @@ struct BorrowedFieldsWithBounds {
 
 inline BorrowedFieldsWithBounds BorrowedFieldsWithBounds::from_foo_and_strings(const Foo& foo, const std::u16string_view dstr16_x, const std::string_view utf8_str_z) {
   capi::BorrowedFieldsWithBounds diplomat_raw_struct_out_value = capi::BorrowedFieldsWithBounds_from_foo_and_strings(foo.AsFFI(), dstr16_x.data(), dstr16_x.size(), utf8_str_z.data(), utf8_str_z.size());
-  capi::DiplomatU16StringView diplomat_slice_raw_out_value_field_a = diplomat_raw_struct_out_value.field_a;
+  capi::DiplomatString16View diplomat_slice_raw_out_value_field_a = diplomat_raw_struct_out_value.field_a;
   diplomat::span<const char16_t> slice(diplomat_slice_raw_out_value_field_a.data, diplomat_slice_raw_out_value_field_a.len);
   capi::DiplomatStringView diplomat_str_raw_out_value_field_b = diplomat_raw_struct_out_value.field_b;
   std::string_view str(diplomat_str_raw_out_value_field_b.data, diplomat_str_raw_out_value_field_b.len);

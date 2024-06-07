@@ -1,3 +1,4 @@
+use askama::Template;
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::fmt;
@@ -42,16 +43,18 @@ pub struct Header {
     pub body: String,
     /// What string to use for indentation.
     pub indent_str: &'static str,
+    pub is_for_cpp: bool,
 }
 
 impl Header {
-    pub fn new(path: String) -> Self {
+    pub fn new(path: String, is_for_cpp: bool) -> Self {
         Header {
             path,
             includes: BTreeSet::new(),
             decl_include: None,
             body: String::new(),
             indent_str: "  ",
+            is_for_cpp,
         }
     }
 }
@@ -68,16 +71,18 @@ impl fmt::Write for Header {
     }
 }
 
+#[derive(Template)]
+#[template(path = "c2/base.h.jinja", escape = "none")]
+struct HeaderTemplate<'a> {
+    header_guard: Cow<'a, str>,
+    decl_include: Option<&'a String>,
+    includes: &'a BTreeSet<String>,
+    body: Cow<'a, str>,
+    is_for_cpp: bool,
+}
+
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut includes = String::from(BASE_INCLUDES);
-        for i in &self.includes {
-            writeln!(includes, "#include \"{i}\"").unwrap();
-        }
-        let decl_header_include: Cow<str> = match self.decl_include {
-            Some(ref v) => format!("\n#include \"{v}\"\n").into(),
-            None => "".into(),
-        };
         let header_guard = &self.path;
         let header_guard = header_guard.replace(".d.h", "_D_H");
         let header_guard = header_guard.replace(".h", "_H");
@@ -87,25 +92,15 @@ impl fmt::Display for Header {
             self.body.replace('\t', self.indent_str).into()
         };
 
-        write!(
-            f,
-            r#"#ifndef {header_guard}
-#define {header_guard}
-{includes}{decl_header_include}
-#ifdef __cplusplus
-namespace capi {{
-extern "C" {{
-#endif // __cplusplus
-
-
-{body}
-#ifdef __cplusplus
-}} // extern "C"
-}} // namespace capi
-#endif // __cplusplus
-
-#endif // {header_guard}
-"#
-        )
+        HeaderTemplate {
+            header_guard: header_guard.into(),
+            includes: &self.includes,
+            decl_include: self.decl_include.as_ref(),
+            body,
+            is_for_cpp: self.is_for_cpp,
+        }
+        .render_into(f)
+        .unwrap();
+        f.write_char('\n')
     }
 }

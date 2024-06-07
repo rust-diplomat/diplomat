@@ -1,0 +1,23 @@
+#ifndef {{ header_guard }}
+#define {{ header_guard }}
+{{ self::BASE_INCLUDES -}}
+{%- for include in includes %}
+#include "{{ include }}"
+{%- endfor %}
+{%~ match decl_include %}
+    {% when Some with (include) ~%}
+        #include "{{ include }}"
+    {%~ when None %}
+{%- endmatch %}
+{% if is_for_cpp -%}
+namespace capi {
+{%- endif %}
+
+
+{{ body }}
+
+{% if is_for_cpp -%}
+} // namespace capi
+{%- endif %}
+
+#endif // {{ header_guard }}

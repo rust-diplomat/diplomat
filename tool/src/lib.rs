@@ -169,7 +169,7 @@ pub fn gen(
                 }
             };
             let files = common::FileMap::default();
-            let mut context = c2::CContext::new(&tcx, files);
+            let mut context = c2::CContext::new(&tcx, files, target_language != "c2");
             context.run();
 
             let errors = context.errors.take_all();

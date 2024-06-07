@@ -1,6 +1,11 @@
+use super::formatter::CFormatter;
 use super::header::Header;
 use super::CContext;
-use diplomat_core::hir::{self, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef, TypeId};
+use askama::Template;
+use diplomat_core::hir::{
+    self, FloatType, IntSizeType, IntType, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef,
+    TypeId,
+};
 use std::borrow::Cow;
 use std::fmt::Write;
 
@@ -11,9 +16,9 @@ impl<'tcx> super::CContext<'tcx> {
             return;
         }
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
-        let mut decl_header = Header::new(decl_header_path.clone());
+        let mut decl_header = Header::new(decl_header_path.clone(), self.is_for_cpp);
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
-        let mut impl_header = Header::new(impl_header_path.clone());
+        let mut impl_header = Header::new(impl_header_path.clone(), self.is_for_cpp);
 
         let mut context = TyGenContext {
             cx: self,
@@ -29,21 +34,8 @@ impl<'tcx> super::CContext<'tcx> {
             TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
             _ => unreachable!("unknown AST/HIR variant"),
         }
-        for method in ty.methods() {
-            if method.attrs.disable {
-                // Skip method if disabled
-                continue;
-            }
-            let _guard = self.errors.set_context_method(
-                self.formatter.fmt_type_name_diagnostics(id),
-                method.name.as_str().into(),
-            );
-            context.gen_method(id, method);
-        }
 
-        if let TypeDef::Opaque(_) = ty {
-            context.gen_dtor(id);
-        }
+        context.gen_impl(ty, id);
 
         // In some cases like generating decls for `self` parameters,
         // a header will get its own includes. Instead of
@@ -66,8 +58,8 @@ impl<'tcx> super::CContext<'tcx> {
             .errors
             .set_context_ty(self.formatter.fmt_result_for_diagnostics(ty).into());
         let header_path = self.formatter.fmt_result_header_path(name);
-        let mut header = Header::new(header_path.clone());
-        let mut dummy_header = Header::new("".to_string());
+        let mut header = Header::new(header_path.clone(), self.is_for_cpp);
+        let mut dummy_header = Header::new("".to_string(), self.is_for_cpp);
         let mut context = TyGenContext {
             cx: self,
             // NOTE: Only one header for results
@@ -88,48 +80,115 @@ pub struct TyGenContext<'ccx, 'tcx, 'header> {
     pub impl_header: &'header mut Header,
 }
 
+#[derive(Template)]
+#[template(path = "c2/enum.h.jinja", escape = "none")]
+struct EnumTemplate<'a> {
+    ty: &'a hir::EnumDef,
+    fmt: &'a CFormatter<'a>,
+    ty_name: &'a str,
+}
+
+#[derive(Template)]
+#[template(path = "c2/struct.h.jinja", escape = "none")]
+struct StructTemplate<'a> {
+    ty_name: Cow<'a, str>,
+    fields: Vec<(Cow<'a, str>, Cow<'a, str>)>,
+}
+
+#[derive(Template)]
+#[template(path = "c2/opaque.h.jinja", escape = "none")]
+struct OpaqueTemplate<'a> {
+    ty_name: Cow<'a, str>,
+}
+
+#[derive(Template)]
+#[template(path = "c2/impl.h.jinja", escape = "none")]
+struct ImplTemplate<'a> {
+    methods: Vec<MethodTemplate<'a>>,
+    is_for_cpp: bool,
+    ty_name: Cow<'a, str>,
+    dtor_name: Option<String>,
+}
+
+struct MethodTemplate<'a> {
+    return_ty: Cow<'a, str>,
+    params: String,
+    name: Cow<'a, str>,
+}
+
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     pub fn gen_enum_def(&mut self, def: &'tcx hir::EnumDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.decl_header, "typedef enum {ty_name} {{").unwrap();
-        for variant in def.variants.iter() {
-            let enum_variant = self.cx.formatter.fmt_enum_variant(&ty_name, variant);
-            let discriminant = variant.discriminant;
-            writeln!(self.decl_header, "\t{enum_variant} = {discriminant},").unwrap();
+        EnumTemplate {
+            ty: def,
+            fmt: &self.cx.formatter,
+            ty_name: &ty_name,
         }
-        write!(self.decl_header, "}} {ty_name};\n\n").unwrap();
+        .render_into(self.decl_header)
+        .unwrap();
     }
 
     pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        write!(self.decl_header, "typedef struct {ty_name} {ty_name};\n\n").unwrap();
+        OpaqueTemplate { ty_name }
+            .render_into(self.decl_header)
+            .unwrap();
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let ty_name = self.cx.formatter.fmt_type_name(id);
-        writeln!(self.decl_header, "typedef struct {ty_name} {{").unwrap();
+        let mut fields = vec![];
         for field in def.fields.iter() {
-            let decls = self.gen_ty_decl(&field.ty, field.name.as_str(), true);
-            for (decl_ty, decl_name) in decls {
-                writeln!(self.decl_header, "\t{decl_ty} {decl_name};").unwrap();
-            }
+            self.gen_ty_decl(&field.ty, field.name.as_str(), true, &mut fields);
         }
-        // reborrow to avoid borrowing across mutation
-        write!(self.decl_header, "}} {ty_name};\n\n").unwrap();
+
+        StructTemplate { ty_name, fields }
+            .render_into(self.decl_header)
+            .unwrap();
     }
 
-    pub fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) {
+    pub fn gen_impl(&mut self, ty: hir::TypeDef<'tcx>, id: TypeId) {
+        let mut methods = vec![];
+        for method in ty.methods() {
+            if method.attrs.disable {
+                // Skip method if disabled
+                continue;
+            }
+            let _guard = self.cx.errors.set_context_method(
+                self.cx.formatter.fmt_type_name_diagnostics(id),
+                method.name.as_str().into(),
+            );
+            methods.push(self.gen_method(id, method));
+        }
+
+        let ty_name = self.cx.formatter.fmt_type_name(id);
+
+        let dtor_name = if let TypeDef::Opaque(_) = ty {
+            Some(self.cx.formatter.fmt_dtor_name(id))
+        } else {
+            None
+        };
+        ImplTemplate {
+            ty_name,
+            methods,
+            dtor_name,
+            is_for_cpp: self.cx.is_for_cpp,
+        }
+        .render_into(self.impl_header)
+        .unwrap();
+    }
+
+    fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) -> MethodTemplate<'ccx> {
         use diplomat_core::hir::{ReturnType, SuccessType};
         let method_name = self.cx.formatter.fmt_method_name(id, method);
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
-            param_decls = self.gen_ty_decl(&self_ty, "self", false);
+            self.gen_ty_decl(&self_ty, "self", false, &mut param_decls);
         }
 
         for param in &method.params {
-            let decls = self.gen_ty_decl(&param.ty, param.name.as_str(), false);
-            param_decls.extend(decls);
+            self.gen_ty_decl(&param.ty, param.name.as_str(), false, &mut param_decls);
         }
 
         let return_ty: Cow<str> = match method.output {
@@ -190,13 +249,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
         }
 
-        write!(self.impl_header, "{return_ty} {method_name}({params});\n\n").unwrap();
-    }
-
-    pub fn gen_dtor(&mut self, id: TypeId) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
-        let dtor_name = self.cx.formatter.fmt_dtor_name(id);
-        write!(self.impl_header, "void {dtor_name}({ty_name}* self);\n\n").unwrap();
+        MethodTemplate {
+            name: method_name.into(),
+            return_ty,
+            params,
+        }
     }
 
     pub fn gen_result(&mut self, name: &str, ty: ResultType) {
@@ -235,28 +292,25 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         ty: &Type<P>,
         ident: &'a str,
         is_struct: bool,
-    ) -> Vec<(Cow<'ccx, str>, Cow<'a, str>)> {
+        out: &mut Vec<(Cow<'ccx, str>, Cow<'a, str>)>,
+    ) {
         let param_name = self.cx.formatter.fmt_param_name(ident);
         match ty {
             Type::Slice(hir::Slice::Str(
                 _,
                 hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
             )) if !is_struct => {
-                vec![
-                    ("const char*".into(), format!("{param_name}_data").into()),
-                    ("size_t".into(), format!("{param_name}_len").into()),
-                ]
+                out.push(("const char*".into(), format!("{param_name}_data").into()));
+                out.push(("size_t".into(), format!("{param_name}_len").into()));
             }
             Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16))
                 if !is_struct =>
             {
-                vec![
-                    (
-                        "const char16_t*".into(),
-                        format!("{param_name}_data").into(),
-                    ),
-                    ("size_t".into(), format!("{param_name}_len").into()),
-                ]
+                out.push((
+                    "const char16_t*".into(),
+                    format!("{param_name}_data").into(),
+                ));
+                out.push(("size_t".into(), format!("{param_name}_len").into()));
             }
             Type::Slice(hir::Slice::Primitive(b, p)) if !is_struct => {
                 let prim = self.cx.formatter.fmt_primitive_as_c(*p);
@@ -264,30 +318,26 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     &prim,
                     b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
                 );
-                vec![
-                    (
-                        format!("{ptr_type}").into(),
-                        format!("{param_name}_data").into(),
-                    ),
-                    ("size_t".into(), format!("{param_name}_len").into()),
-                ]
+                out.push((
+                    format!("{ptr_type}").into(),
+                    format!("{param_name}_data").into(),
+                ));
+                out.push(("size_t".into(), format!("{param_name}_len").into()));
             }
             Type::Slice(hir::Slice::Strs(encoding)) => {
-                vec![
-                    (
-                        match encoding {
-                            hir::StringEncoding::UnvalidatedUtf16 => "DiplomatStrs16View*",
-                            _ => "DiplomatStrs8View*",
-                        }
-                        .into(),
-                        format!("{param_name}_data").into(),
-                    ),
-                    ("size_t".into(), format!("{param_name}_len").into()),
-                ]
+                out.push((
+                    match encoding {
+                        hir::StringEncoding::UnvalidatedUtf16 => "DiplomatStrings16View*",
+                        _ => "DiplomatStringsView*",
+                    }
+                    .into(),
+                    format!("{param_name}_data").into(),
+                ));
+                out.push(("size_t".into(), format!("{param_name}_len").into()));
             }
             _ => {
                 let ty = self.gen_ty_name(ty, is_struct);
-                vec![(ty, param_name)]
+                out.push((ty, param_name));
             }
         }
     }
@@ -343,25 +393,60 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 header.includes.insert(header_path);
                 (Some(id), ty_name)
             }
-            Type::Slice(ref s) => {
-                let ptr_ty = match s {
-                    hir::Slice::Str(
+            Type::Slice(ref s) => (
+                None,
+                match s {
+                    hir::Slice::Primitive(
                         _,
-                        hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-                    ) => "char".into(),
-                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "char16_t".into(),
-                    hir::Slice::Primitive(_, prim) => self.cx.formatter.fmt_primitive_as_c(*prim),
-                    hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => {
-                        "DiplomatStrs16View".into()
+                        hir::PrimitiveType::Int(IntType::U8) | hir::PrimitiveType::Byte,
+                    ) => "DiplomatU8View",
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U16)) => {
+                        "DiplomatU16View"
                     }
-                    hir::Slice::Strs(_) => "DiplomatStrs8View".into(),
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U32)) => {
+                        "DiplomatU32View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U64)) => {
+                        "DiplomatU64View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I8)) => {
+                        "DiplomatI8View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I16)) => {
+                        "DiplomatI16View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I32)) => {
+                        "DiplomatI32View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I64)) => {
+                        "DiplomatI64View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Usize)) => {
+                        "DiplomatUsizeView"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Isize)) => {
+                        "DiplomatIsizeView"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Bool) => "DiplomatBoolView",
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F32)) => {
+                        "DiplomatF32View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F64)) => {
+                        "DiplomatF64View"
+                    }
+                    hir::Slice::Primitive(_, hir::PrimitiveType::Char) => "DiplomatCharView",
+                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                        "DiplomatString16View"
+                    }
+                    hir::Slice::Str(_, _) => "DiplomatStringView",
+                    hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => {
+                        "DiplomatStrings16View"
+                    }
+                    hir::Slice::Strs(_) => "DiplomatStringsView",
                     &_ => unreachable!("unknown AST/HIR variant"),
-                };
-                (
-                    None,
-                    format!("struct {{ const {ptr_ty}* data; size_t len; }}").into(),
-                )
-            }
+                }
+                .into(),
+            ),
             _ => unreachable!("unknown AST/HIR variant"),
         };
         // Todo(breaking): We can remove this requirement
