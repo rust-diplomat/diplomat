@@ -8,9 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "ErrorEnum.d.h"
-#include "ErrorEnum.h"
 #include "ErrorStruct.d.h"
-#include "ErrorStruct.h"
 
 #include "ResultOpaque.d.h"
 

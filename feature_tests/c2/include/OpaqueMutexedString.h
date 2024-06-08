@@ -8,7 +8,6 @@
 #include "diplomat_runtime.h"
 
 #include "Utf16Wrap.d.h"
-#include "Utf16Wrap.h"
 
 #include "OpaqueMutexedString.d.h"
 

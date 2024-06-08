@@ -8,13 +8,9 @@
 #include "diplomat_runtime.h"
 
 #include "ICU4XDataProvider.d.h"
-#include "ICU4XDataProvider.h"
 #include "ICU4XFixedDecimal.d.h"
-#include "ICU4XFixedDecimal.h"
 #include "ICU4XFixedDecimalFormatterOptions.d.h"
-#include "ICU4XFixedDecimalFormatterOptions.h"
 #include "ICU4XLocale.d.h"
-#include "ICU4XLocale.h"
 
 #include "ICU4XFixedDecimalFormatter.d.h"
 

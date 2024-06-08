@@ -1,6 +1,5 @@
 use super::formatter::CFormatter;
 use super::header::Header;
-use super::CContext;
 use askama::Template;
 use diplomat_core::hir::{
     self, FloatType, IntSizeType, IntType, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef,
@@ -16,49 +15,24 @@ impl<'tcx> super::CContext<'tcx> {
             return;
         }
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
-        let mut decl_header = Header::new(decl_header_path.clone(), self.is_for_cpp);
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
-        let mut impl_header = Header::new(impl_header_path.clone(), self.is_for_cpp);
-
-        let mut context = TyGenContext {
-            cx: self,
-            decl_header: &mut decl_header,
-            impl_header: &mut impl_header,
-        };
 
         let _guard = self.errors.set_context_ty(ty.name().as_str().into());
-        match ty {
-            TypeDef::Enum(e) => context.gen_enum_def(e, id),
-            TypeDef::Opaque(o) => context.gen_opaque_def(o, id),
-            TypeDef::Struct(s) => context.gen_struct_def(s, id),
-            TypeDef::OutStruct(s) => context.gen_struct_def(s, id),
+        let decl_header = match ty {
+            TypeDef::Enum(e) => self.gen_enum_def(e, id, &decl_header_path),
+            TypeDef::Opaque(o) => self.gen_opaque_def(o, id, &decl_header_path),
+            TypeDef::Struct(s) => self.gen_struct_def(s, id, &decl_header_path),
+            TypeDef::OutStruct(s) => self.gen_struct_def(s, id, &decl_header_path),
             _ => unreachable!("unknown AST/HIR variant"),
-        }
+        };
 
-        context.gen_impl(ty, id);
-
-        // In some cases like generating decls for `self` parameters,
-        // a header will get its own includes. Instead of
-        // trying to avoid pushing them, it's cleaner to just pull them out
-        // once done
-        context.decl_header.includes.remove(&*decl_header_path);
-        context.impl_header.includes.remove(&*impl_header_path);
-        context.impl_header.includes.remove(&*decl_header_path);
-
-        context.impl_header.decl_include = Some(decl_header_path.clone());
+        let impl_header = self.gen_impl(ty, id, &decl_header_path, &impl_header_path);
 
         self.files
             .add_file(decl_header_path, decl_header.to_string());
         self.files
             .add_file(impl_header_path, impl_header.to_string());
     }
-}
-
-/// Context for generating a particular type's header
-pub struct TyGenContext<'ccx, 'tcx, 'header> {
-    pub cx: &'ccx CContext<'tcx>,
-    pub decl_header: &'header mut Header,
-    pub impl_header: &'header mut Header,
 }
 
 #[derive(Template)]
@@ -97,55 +71,92 @@ struct MethodTemplate<'a> {
     name: Cow<'a, str>,
 }
 
-impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
-    pub fn gen_enum_def(&mut self, def: &'tcx hir::EnumDef, id: TypeId) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+impl<'tcx> super::CContext<'tcx> {
+    pub fn gen_enum_def(
+        &self,
+        def: &'tcx hir::EnumDef,
+        id: TypeId,
+        decl_header_path: &str,
+    ) -> Header {
+        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(id);
         EnumTemplate {
             ty: def,
-            fmt: &self.cx.formatter,
+            fmt: &self.formatter,
             ty_name: &ty_name,
         }
-        .render_into(self.decl_header)
+        .render_into(&mut decl_header)
         .unwrap();
+
+        decl_header
     }
 
-    pub fn gen_opaque_def(&mut self, _def: &'tcx hir::OpaqueDef, id: TypeId) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+    pub fn gen_opaque_def(
+        &self,
+        _def: &'tcx hir::OpaqueDef,
+        id: TypeId,
+        decl_header_path: &str,
+    ) -> Header {
+        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(id);
         OpaqueTemplate { ty_name }
-            .render_into(self.decl_header)
+            .render_into(&mut decl_header)
             .unwrap();
+
+        decl_header
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+    pub fn gen_struct_def<P: TyPosition>(
+        &self,
+        def: &'tcx hir::StructDef<P>,
+        id: TypeId,
+        decl_header_path: &str,
+    ) -> Header {
+        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(id);
         let mut fields = vec![];
         for field in def.fields.iter() {
-            self.gen_ty_decl(&field.ty, field.name.as_str(), true, &mut fields);
+            self.gen_ty_decl(
+                &field.ty,
+                field.name.as_str(),
+                true,
+                &mut decl_header,
+                &mut fields,
+            );
         }
 
         StructTemplate { ty_name, fields }
-            .render_into(self.decl_header)
+            .render_into(&mut decl_header)
             .unwrap();
+
+        decl_header
     }
 
-    pub fn gen_impl(&mut self, ty: hir::TypeDef<'tcx>, id: TypeId) {
+    pub fn gen_impl(
+        &self,
+        ty: hir::TypeDef<'tcx>,
+        id: TypeId,
+        decl_header_path: &str,
+        impl_header_path: &str,
+    ) -> Header {
+        let mut impl_header = Header::new(impl_header_path.into(), self.is_for_cpp);
         let mut methods = vec![];
         for method in ty.methods() {
             if method.attrs.disable {
                 // Skip method if disabled
                 continue;
             }
-            let _guard = self.cx.errors.set_context_method(
-                self.cx.formatter.fmt_type_name_diagnostics(id),
+            let _guard = self.errors.set_context_method(
+                self.formatter.fmt_type_name_diagnostics(id),
                 method.name.as_str().into(),
             );
-            methods.push(self.gen_method(id, method));
+            methods.push(self.gen_method(id, method, &mut impl_header));
         }
 
-        let ty_name = self.cx.formatter.fmt_type_name(id);
+        let ty_name = self.formatter.fmt_type_name(id);
 
         let dtor_name = if let TypeDef::Opaque(_) = ty {
-            Some(self.cx.formatter.fmt_dtor_name(id))
+            Some(self.formatter.fmt_dtor_name(id))
         } else {
             None
         };
@@ -153,23 +164,45 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ty_name,
             methods,
             dtor_name,
-            is_for_cpp: self.cx.is_for_cpp,
+            is_for_cpp: self.is_for_cpp,
         }
-        .render_into(self.impl_header)
+        .render_into(&mut impl_header)
         .unwrap();
+
+        impl_header.decl_include = Some(decl_header_path.into());
+
+        // In some cases like generating decls for `self` parameters,
+        // a header will get its own includes. Instead of
+        // trying to avoid pushing them, it's cleaner to just pull them out
+        // once done
+        impl_header.includes.remove(impl_header_path);
+        impl_header.includes.remove(decl_header_path);
+
+        impl_header
     }
 
-    fn gen_method(&mut self, id: TypeId, method: &'tcx hir::Method) -> MethodTemplate<'ccx> {
+    fn gen_method(
+        &self,
+        id: TypeId,
+        method: &'tcx hir::Method,
+        header: &mut Header,
+    ) -> MethodTemplate<'tcx> {
         use diplomat_core::hir::{ReturnType, SuccessType};
-        let method_name = self.cx.formatter.fmt_method_name(id, method);
+        let method_name = self.formatter.fmt_method_name(id, method);
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
-            self.gen_ty_decl(&self_ty, "self", false, &mut param_decls);
+            self.gen_ty_decl(&self_ty, "self", false, header, &mut param_decls);
         }
 
         for param in &method.params {
-            self.gen_ty_decl(&param.ty, param.name.as_str(), false, &mut param_decls);
+            self.gen_ty_decl(
+                &param.ty,
+                param.name.as_str(),
+                false,
+                header,
+                &mut param_decls,
+            );
         }
 
         let return_ty: Cow<str> = match method.output {
@@ -178,7 +211,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 param_decls.push(("DiplomatWrite*".into(), "write".into()));
                 "void".into()
             }
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, false),
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, header),
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 // Result<T, ()> and Option<T> are the same on the ABI
                 let err = if let ReturnType::Fallible(_, Some(ref e)) = method.output {
@@ -195,7 +228,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     SuccessType::OutType(o) => Some(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                self.gen_result_ty(&method_name, ok_ty, err).into()
+                self.gen_result_ty(&method_name, ok_ty, err, header).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         };
@@ -220,19 +253,20 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     }
 
     pub fn gen_result_ty(
-        &mut self,
+        &self,
         fn_name: &str,
         ok_ty: Option<&hir::OutType>,
         err_ty: Option<&hir::OutType>,
+        header: &mut Header,
     ) -> String {
         let ok_line = if let Some(ok) = ok_ty {
-            let ok_name = self.gen_ty_name(ok, false);
+            let ok_name = self.gen_ty_name(ok, header);
             format!("{ok_name} ok;")
         } else {
             "".into()
         };
         let err_line = if let Some(err) = err_ty {
-            let err_name = self.gen_ty_name(err, false);
+            let err_name = self.gen_ty_name(err, header);
             format!("{err_name} err;")
         } else {
             "".into()
@@ -254,13 +288,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     /// Might return multiple in the case of slices and strings. The `is_struct` parameter
     /// affects whether the decls are generated for a struct field or method
     pub fn gen_ty_decl<'a, P: TyPosition>(
-        &mut self,
+        &self,
         ty: &Type<P>,
         ident: &'a str,
         is_struct: bool,
-        out: &mut Vec<(Cow<'ccx, str>, Cow<'a, str>)>,
+        header: &mut Header,
+        out: &mut Vec<(Cow<'tcx, str>, Cow<'a, str>)>,
     ) {
-        let param_name = self.cx.formatter.fmt_param_name(ident);
+        let param_name = self.formatter.fmt_param_name(ident);
         match ty {
             Type::Slice(hir::Slice::Str(
                 _,
@@ -279,8 +314,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 out.push(("size_t".into(), format!("{param_name}_len").into()));
             }
             Type::Slice(hir::Slice::Primitive(b, p)) if !is_struct => {
-                let prim = self.cx.formatter.fmt_primitive_as_c(*p);
-                let ptr_type = self.cx.formatter.fmt_ptr(
+                let prim = self.formatter.fmt_primitive_as_c(*p);
+                let ptr_type = self.formatter.fmt_ptr(
                     &prim,
                     b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
                 );
@@ -302,7 +337,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 out.push(("size_t".into(), format!("{param_name}_len").into()));
             }
             _ => {
-                let ty = self.gen_ty_name(ty, is_struct);
+                let ty = self.gen_ty_name(ty, header);
                 out.push((ty, param_name));
             }
         }
@@ -310,120 +345,95 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
     // Generate the C code for referencing a particular type.
     // Handles adding imports and such as necessary
-    fn gen_ty_name<P: TyPosition>(&mut self, ty: &Type<P>, is_decl: bool) -> Cow<'ccx, str> {
-        let header = if is_decl {
-            &mut self.decl_header
-        } else {
-            &mut self.impl_header
-        };
-        let (id, ty_name) = match *ty {
-            Type::Primitive(prim) => (None, self.cx.formatter.fmt_primitive_as_c(prim)),
+    fn gen_ty_name<P: TyPosition>(&self, ty: &Type<P>, header: &mut Header) -> Cow<'tcx, str> {
+        let ty_name = match *ty {
+            Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(op_id);
-                if self.cx.tcx.resolve_type(op_id).attrs().disable {
-                    self.cx
-                        .errors
+                let ty_name = self.formatter.fmt_type_name(op_id);
+                if self.tcx.resolve_type(op_id).attrs().disable {
+                    self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
                 // unwrap_or(mut) since owned pointers need to not be const
                 let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let ret = self.cx.formatter.fmt_ptr(&ty_name, mutability);
+                let ret = self.formatter.fmt_ptr(&ty_name, mutability);
                 header
                     .includes
-                    .insert(self.cx.formatter.fmt_decl_header_path(op_id));
-                (Some(op_id), ret.into_owned().into())
+                    .insert(self.formatter.fmt_decl_header_path(op_id));
+                ret.into_owned().into()
             }
             Type::Struct(ref st) => {
                 let st_id = st.id();
-                let ty_name = self.cx.formatter.fmt_type_name(st_id);
-                if self.cx.tcx.resolve_type(st_id).attrs().disable {
-                    self.cx
-                        .errors
+                let ty_name = self.formatter.fmt_type_name(st_id);
+                if self.tcx.resolve_type(st_id).attrs().disable {
+                    self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
                 let ret = ty_name.clone();
-                let header_path = self.cx.formatter.fmt_decl_header_path(st_id);
+                let header_path = self.formatter.fmt_decl_header_path(st_id);
                 header.includes.insert(header_path);
-                (Some(st_id), ret)
+                ret
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                let ty_name = self.cx.formatter.fmt_type_name(id);
-                if self.cx.tcx.resolve_type(id).attrs().disable {
-                    self.cx
-                        .errors
+                let ty_name = self.formatter.fmt_type_name(id);
+                if self.tcx.resolve_type(id).attrs().disable {
+                    self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
                 }
-                let header_path = self.cx.formatter.fmt_decl_header_path(id);
+                let header_path = self.formatter.fmt_decl_header_path(id);
                 header.includes.insert(header_path);
-                (Some(id), ty_name)
+                ty_name
             }
-            Type::Slice(ref s) => (
-                None,
-                match s {
-                    hir::Slice::Primitive(
-                        _,
-                        hir::PrimitiveType::Int(IntType::U8) | hir::PrimitiveType::Byte,
-                    ) => "DiplomatU8View",
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U16)) => {
-                        "DiplomatU16View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U32)) => {
-                        "DiplomatU32View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U64)) => {
-                        "DiplomatU64View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I8)) => {
-                        "DiplomatI8View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I16)) => {
-                        "DiplomatI16View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I32)) => {
-                        "DiplomatI32View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I64)) => {
-                        "DiplomatI64View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Usize)) => {
-                        "DiplomatUsizeView"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Isize)) => {
-                        "DiplomatIsizeView"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Bool) => "DiplomatBoolView",
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F32)) => {
-                        "DiplomatF32View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F64)) => {
-                        "DiplomatF64View"
-                    }
-                    hir::Slice::Primitive(_, hir::PrimitiveType::Char) => "DiplomatCharView",
-                    hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
-                        "DiplomatString16View"
-                    }
-                    hir::Slice::Str(_, _) => "DiplomatStringView",
-                    hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => {
-                        "DiplomatStrings16View"
-                    }
-                    hir::Slice::Strs(_) => "DiplomatStringsView",
-                    &_ => unreachable!("unknown AST/HIR variant"),
+            Type::Slice(ref s) => match s {
+                hir::Slice::Primitive(
+                    _,
+                    hir::PrimitiveType::Int(IntType::U8) | hir::PrimitiveType::Byte,
+                ) => "DiplomatU8View",
+                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U16)) => {
+                    "DiplomatU16View"
                 }
-                .into(),
-            ),
+                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U32)) => {
+                    "DiplomatU32View"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U64)) => {
+                    "DiplomatU64View"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I8)) => "DiplomatI8View",
+                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I16)) => {
+                    "DiplomatI16View"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I32)) => {
+                    "DiplomatI32View"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I64)) => {
+                    "DiplomatI64View"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Usize)) => {
+                    "DiplomatUsizeView"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Isize)) => {
+                    "DiplomatIsizeView"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::Bool) => "DiplomatBoolView",
+                hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F32)) => {
+                    "DiplomatF32View"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F64)) => {
+                    "DiplomatF64View"
+                }
+                hir::Slice::Primitive(_, hir::PrimitiveType::Char) => "DiplomatCharView",
+                hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "DiplomatString16View",
+                hir::Slice::Str(_, _) => "DiplomatStringView",
+                hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => "DiplomatStrings16View",
+                hir::Slice::Strs(_) => "DiplomatStringsView",
+                &_ => unreachable!("unknown AST/HIR variant"),
+            }
+            .into(),
             _ => unreachable!("unknown AST/HIR variant"),
         };
-        // Todo(breaking): We can remove this requirement
-        // and users will be forced to import more types
-        if let Some(id) = id {
-            if !is_decl {
-                header
-                    .includes
-                    .insert(self.cx.formatter.fmt_impl_header_path(id));
-            }
-        }
+
         ty_name
     }
 }
