@@ -175,8 +175,8 @@ impl<'tcx> super::CContext<'tcx> {
         // a header will get its own includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        impl_header.includes.remove(&*impl_header_path);
-        impl_header.includes.remove(&*decl_header_path);
+        impl_header.includes.remove(impl_header_path);
+        impl_header.includes.remove(decl_header_path);
 
         impl_header
     }
