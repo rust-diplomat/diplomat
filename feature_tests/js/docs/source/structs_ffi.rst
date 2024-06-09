@@ -33,6 +33,12 @@
 
     .. js:function:: new()
 
+    .. js:function:: try_from_utf8(input)
+
+    .. js:function:: from_str(input)
+
+    .. js:method:: get_debug_str()
+
     .. js:method:: assert_struct(s)
 
         See the `Rust documentation for something <https://docs.rs/Something/latest/struct.Something.html#method.something>`__ for more information.
@@ -61,6 +67,10 @@
     .. js:method:: wrapper()
 
 .. js:class:: Utf16Wrap
+
+    .. js:function:: from_utf16(input)
+
+    .. js:method:: get_debug_str()
 
     .. js:method:: borrow_cont()
 

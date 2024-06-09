@@ -13,6 +13,20 @@
 #include "Utf16Wrap.h"
 
 
+inline std::unique_ptr<Utf16Wrap> Utf16Wrap::from_utf16(std::u16string_view input) {
+  auto result = capi::Utf16Wrap_from_utf16(input.data(),
+    input.size());
+  return std::unique_ptr<Utf16Wrap>(Utf16Wrap::FromFFI(result));
+}
+
+inline std::string Utf16Wrap::get_debug_str() const {
+  std::string output;
+  capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  capi::Utf16Wrap_get_debug_str(this->AsFFI(),
+    &write);
+  return output;
+}
+
 inline std::u16string_view Utf16Wrap::borrow_cont() const {
   auto result = capi::Utf16Wrap_borrow_cont(this->AsFFI());
   return std::u16string_view(result.data, result.len);

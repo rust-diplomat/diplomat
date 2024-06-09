@@ -7,6 +7,9 @@ import com.sun.jna.Pointer
 internal interface OpaqueLib: Library {
     fun Opaque_destroy(handle: Pointer)
     fun Opaque_new(): Pointer
+    fun Opaque_try_from_utf8(input: Slice): Pointer?
+    fun Opaque_from_str(input: Slice): Pointer
+    fun Opaque_get_debug_str(handle: Pointer, write: Pointer): Unit
     fun Opaque_assert_struct(handle: Pointer, s: MyStructNative): Unit
     fun Opaque_returns_usize(): Long
     fun Opaque_returns_imported(): ImportedStructNative
@@ -41,6 +44,30 @@ class Opaque internal constructor (
             return returnOpaque
         }
         
+        fun tryFromUtf8(input: String): Opaque? {
+            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf8(input)
+            
+            val returnVal = lib.Opaque_try_from_utf8(inputSlice);
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal ?: return null
+            val returnOpaque = Opaque(handle, selfEdges)
+            CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
+            inputMem.close()
+            return returnOpaque
+        }
+        
+        fun fromStr(input: String): Opaque {
+            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf8(input)
+            
+            val returnVal = lib.Opaque_from_str(inputSlice);
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal 
+            val returnOpaque = Opaque(handle, selfEdges)
+            CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
+            inputMem.close()
+            return returnOpaque
+        }
+        
         fun returnsUsize(): ULong {
             
             val returnVal = lib.Opaque_returns_usize();
@@ -60,6 +87,14 @@ class Opaque internal constructor (
             val returnVal = lib.Opaque_cmp();
             return returnVal
         }
+    }
+    
+    fun getDebugStr(): String {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.Opaque_get_debug_str(handle, write);
+        
+        val returnString = DW.writeToString(write)
+        return returnString
     }
     
     fun assertStruct(s: MyStruct): Unit {
