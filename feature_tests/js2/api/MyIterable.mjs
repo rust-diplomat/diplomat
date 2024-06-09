@@ -32,16 +32,32 @@ export class MyIterable {
         return this.#ptr;
     }
 
+    // Size of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {
+        return 4;
+    }
+    
+    // Alignment of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {
+        return 4;
+    }
+
 
     static new_(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
-        const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(MyIterable._size, MyIterable._align);
+        const result = wasm.namespace_MyIterable_new(diplomat_recieve_buffer, xSlice.ptr, xSlice.size);
     
-        const finalOut = new MyIterable(result, []);
+        const finalOut = new MyIterable(diplomat_recieve_buffer, []);
         
         
         xSlice.free();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, MyIterable._size, MyIterable._align);
         
     
         return finalOut;
@@ -49,12 +65,16 @@ export class MyIterable {
 
     [Symbol.iterator]() {
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(MyIterator._size, MyIterator._align);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.namespace_MyIterable_iter(this.ffiValue);
+        const result = wasm.namespace_MyIterable_iter(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = new MyIterator(result, [], aEdges);
+        const finalOut = new MyIterator(diplomat_recieve_buffer, [], aEdges);
         
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, MyIterator._size, MyIterator._align);
         
     
         return finalOut;

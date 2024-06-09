@@ -31,16 +31,32 @@ export class MyString {
         return this.#ptr;
     }
 
+    // Size of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {
+        return 4;
+    }
+    
+    // Alignment of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {
+        return 4;
+    }
+
 
     static new_(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-        const result = wasm.MyString_new(vSlice.ptr, vSlice.size);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(MyString._size, MyString._align);
+        const result = wasm.MyString_new(diplomat_recieve_buffer, vSlice.ptr, vSlice.size);
     
-        const finalOut = new MyString(result, []);
+        const finalOut = new MyString(diplomat_recieve_buffer, []);
         
         
         vSlice.free();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, MyString._size, MyString._align);
         
     
         return finalOut;
@@ -49,12 +65,16 @@ export class MyString {
     static newUnsafe(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-        const result = wasm.MyString_new_unsafe(vSlice.ptr, vSlice.size);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(MyString._size, MyString._align);
+        const result = wasm.MyString_new_unsafe(diplomat_recieve_buffer, vSlice.ptr, vSlice.size);
     
-        const finalOut = new MyString(result, []);
+        const finalOut = new MyString(diplomat_recieve_buffer, []);
         
         
         vSlice.free();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, MyString._size, MyString._align);
         
     
         return finalOut;
@@ -63,10 +83,14 @@ export class MyString {
     static newOwned(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-        const result = wasm.MyString_new_owned(vSlice.ptr, vSlice.size);
-    
-        const finalOut = new MyString(result, []);
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(MyString._size, MyString._align);
+        const result = wasm.MyString_new_owned(diplomat_recieve_buffer, vSlice.ptr, vSlice.size);
+    
+        const finalOut = new MyString(diplomat_recieve_buffer, []);
+        
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, MyString._size, MyString._align);
         
     
         return finalOut;
@@ -75,12 +99,16 @@ export class MyString {
     static newFromFirst(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
-        const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(MyString._size, MyString._align);
+        const result = wasm.MyString_new_from_first(diplomat_recieve_buffer, vSlice.ptr, vSlice.size);
     
-        const finalOut = new MyString(result, []);
+        const finalOut = new MyString(diplomat_recieve_buffer, []);
         
         
         vSlice.free();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, MyString._size, MyString._align);
         
     
         return finalOut;

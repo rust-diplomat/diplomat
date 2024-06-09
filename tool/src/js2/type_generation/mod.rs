@@ -87,7 +87,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             destructor : String,
 
             docs : String,
+
+            size: usize,
+            align: usize,
         }
+
+        let layout = crate::layout_hir::opaque_size_alignment();
 
         ImplTemplate {
             type_name,
@@ -96,6 +101,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             typescript: self.typescript,
             docs: self.js_ctx.formatter.fmt_docs(&opaque_def.docs),
             lifetimes : &opaque_def.lifetimes,
+
+            size: layout.size(),
+            align: layout.align()
         }.render().unwrap()
     }
 
@@ -384,8 +392,19 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
         let success = method.output.success_type();
         if let SuccessType::OutType(ref o) = success {
-            if let Type::Struct(s) = o {
-                let type_name = self.js_ctx.formatter.fmt_type_name(s.id());
+            let name = match o {
+                Type::Struct(s)  => {
+                    Some(self.js_ctx.formatter.fmt_type_name(s.id()))
+                },
+                Type::Opaque(op) => {
+                    Some(self.js_ctx.formatter.fmt_type_name(op.tcx_id.into()))
+                },
+                _ => None,
+            };
+
+            // TODO: If we're fallible, add the size of the failure type to the size.
+
+            if let Some(type_name) = name {
                 method_info.alloc_expressions.push(
                     format!("const diplomat_recieve_buffer = wasm.diplomat_alloc({type_name}._size, {type_name}._align);")
                     .into()

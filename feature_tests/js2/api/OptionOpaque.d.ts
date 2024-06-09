@@ -10,6 +10,14 @@ export class OptionOpaque {
 
     get ffiValue(): pointer;
 
+    // Size of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size(): usize;
+    
+    // Alignment of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align(): usize;
+
 
     static new_(i: number): OptionOpaque | undefined;
 

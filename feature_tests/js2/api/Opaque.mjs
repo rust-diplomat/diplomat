@@ -33,12 +33,28 @@ export class Opaque {
         return this.#ptr;
     }
 
+    // Size of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {
+        return 4;
+    }
+    
+    // Alignment of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {
+        return 4;
+    }
+
 
     static new_() {
-        const result = wasm.Opaque_new();
-    
-        const finalOut = new Opaque(result, []);
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(Opaque._size, Opaque._align);
+        const result = wasm.Opaque_new(diplomat_recieve_buffer);
+    
+        const finalOut = new Opaque(diplomat_recieve_buffer, []);
+        
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, Opaque._size, Opaque._align);
         
     
         return finalOut;

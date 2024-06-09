@@ -37,15 +37,31 @@ export class RefList {
         return this.#ptr;
     }
 
+    // Size of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {
+        return 4;
+    }
+    
+    // Alignment of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {
+        return 4;
+    }
+
 
     static node(data) {
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(RefList._size, RefList._align);
+        
         // This lifetime edge depends on lifetimes 'b
         let bEdges = [data];
-        const result = wasm.RefList_node(data.ffiValue);
+        const result = wasm.RefList_node(diplomat_recieve_buffer, data.ffiValue);
     
-        const finalOut = new RefList(result, [], bEdges);
+        const finalOut = new RefList(diplomat_recieve_buffer, [], bEdges);
         
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, RefList._size, RefList._align);
         
     
         return finalOut;

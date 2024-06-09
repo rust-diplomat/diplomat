@@ -40,6 +40,18 @@ export class Foo {
         return this.#ptr;
     }
 
+    // Size of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _size() {
+        return 4;
+    }
+    
+    // Alignment of our opaque type in bytes for diplomat_alloc.
+    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
+    static get _align() {
+        return 4;
+    }
+
 
     static new_(x) {
         
@@ -47,14 +59,18 @@ export class Foo {
         const xArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(Foo._size, Foo._align);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
-        const result = wasm.Foo_new(xSlice.ptr, xSlice.size);
+        const result = wasm.Foo_new(diplomat_recieve_buffer, xSlice.ptr, xSlice.size);
     
-        const finalOut = new Foo(result, [], aEdges);
+        const finalOut = new Foo(diplomat_recieve_buffer, [], aEdges);
         
         
         xSlice.garbageCollect();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, Foo._size, Foo._align);
         
     
         return finalOut;
@@ -62,15 +78,19 @@ export class Foo {
 
     get bar() {
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(Bar._size, Bar._align);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
         
         // This lifetime edge depends on lifetimes 'a, 'b
         let bEdges = [this];
-        const result = wasm.Foo_get_bar(this.ffiValue);
+        const result = wasm.Foo_get_bar(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = new Bar(result, [], bEdges, aEdges);
+        const finalOut = new Bar(diplomat_recieve_buffer, [], bEdges, aEdges);
         
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, Bar._size, Bar._align);
         
     
         return finalOut;
@@ -80,14 +100,18 @@ export class Foo {
         
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(Foo._size, Foo._align);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [];
-        const result = wasm.Foo_new_static(xSlice.ptr, xSlice.size);
+        const result = wasm.Foo_new_static(diplomat_recieve_buffer, xSlice.ptr, xSlice.size);
     
-        const finalOut = new Foo(result, [], aEdges);
+        const finalOut = new Foo(diplomat_recieve_buffer, [], aEdges);
         
         
         xSlice.free();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, Foo._size, Foo._align);
         
     
         return finalOut;
@@ -112,14 +136,18 @@ export class Foo {
 
     static extractFromFields(fields) {
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(Foo._size, Foo._align);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
-        const result = wasm.Foo_extract_from_fields(...fields._intoFfi(temp, [aEdges]));
+        const result = wasm.Foo_extract_from_fields(diplomat_recieve_buffer, ...fields._intoFfi(temp, [aEdges]));
     
-        const finalOut = new Foo(result, [], aEdges);
+        const finalOut = new Foo(diplomat_recieve_buffer, [], aEdges);
         
         
         this.free(); /* TODO: Does this work? */
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, Foo._size, Foo._align);
         
     
         return finalOut;
@@ -131,16 +159,20 @@ export class Foo {
         const anotherStringArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(Foo._size, Foo._align);
+        
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
-        const result = wasm.Foo_extract_from_bounds(...bounds._intoFfi(temp, [aEdges], [aEdges]), anotherStringSlice.ptr, anotherStringSlice.size);
+        const result = wasm.Foo_extract_from_bounds(diplomat_recieve_buffer, ...bounds._intoFfi(temp, [aEdges], [aEdges]), anotherStringSlice.ptr, anotherStringSlice.size);
     
-        const finalOut = new Foo(result, [], aEdges);
+        const finalOut = new Foo(diplomat_recieve_buffer, [], aEdges);
         
         
         this.free(); /* TODO: Does this work? */
         
         anotherStringSlice.garbageCollect();
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, Foo._size, Foo._align);
         
     
         return finalOut;
