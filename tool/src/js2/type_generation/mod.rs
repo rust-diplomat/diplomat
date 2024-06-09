@@ -87,12 +87,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             destructor : String,
 
             docs : String,
-
-            size: usize,
-            align: usize,
         }
-
-        let layout = crate::layout_hir::opaque_size_alignment();
 
         ImplTemplate {
             type_name,
@@ -100,10 +95,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             destructor,
             typescript: self.typescript,
             docs: self.js_ctx.formatter.fmt_docs(&opaque_def.docs),
-            lifetimes : &opaque_def.lifetimes,
-
-            size: layout.size(),
-            align: layout.align()
+            lifetimes : &opaque_def.lifetimes
         }.render().unwrap()
     }
 
@@ -227,9 +219,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             methods: Vec<String>,
             docs: String,
             lifetimes : &'a LifetimeEnv,
-
-            size: usize,
-            align: usize
         }
 
         ImplTemplate {
@@ -240,9 +229,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             methods,
             docs: self.js_ctx.formatter.fmt_docs(&struct_def.docs),
             lifetimes: &struct_def.lifetimes,
-
-            size: layout.size(),
-            align: layout.align()
         }.render().unwrap()
     }
 
