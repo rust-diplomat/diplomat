@@ -7,9 +7,9 @@ test("Verify result methods", t => {
     s.assertInteger(5);
 
     const error_foo = t.throws(() => ResultOpaque.newFailingFoo());
-    t.is(error_foo.error_value, "Foo");
+    t.is(error_foo.error_value.value, "Foo");
     const error_bar = t.throws(() => ResultOpaque.newFailingBar());
-    t.is(error_bar.error_value, "Bar");
+    t.is(error_bar.error_value.value, "Bar");
     t.throws(() => ResultOpaque.newFailingUnit());
     const error_struct = t.throws(() => ResultOpaque.newFailingStruct(109));
     t.is(error_struct.error_value.i, 109);
