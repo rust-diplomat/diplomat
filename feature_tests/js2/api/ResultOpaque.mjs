@@ -107,18 +107,18 @@ export class ResultOpaque {
 
     static newFailingStruct(i) {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(9, 4);
         const result = wasm.ResultOpaque_new_failing_struct(i);
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8), resultByte) {
                 throw new ErrorStruct(diplomat_receive_buffer);
             }
             return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-            wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(9, 4);
         
         }
     }

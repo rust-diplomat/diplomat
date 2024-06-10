@@ -323,14 +323,20 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 							ReturnType::Fallible(_, ref err) if err.is_some() => { 
 								crate::layout_hir::type_size_alignment(&err.clone().unwrap(), &self.js_ctx.tcx)
 							},
-							ReturnType::Fallible(_, _) | ReturnType::Nullable(_) => crate::layout_hir::unit_size_alignment(),
+							ReturnType::Fallible(_, None) | ReturnType::Nullable(_) => crate::layout_hir::unit_size_alignment(),
 							_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
 						}
 					}
 					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
 				};
-				// Add one for a pass/fail result:
-				let size = layout.size() + 1;
+				// Add size for checking whether or not we're a pass/fail result. And we make sure to see if our error type is bigger, so if we need to add extra width based on that:
+				let size = std::cmp::max(layout.size(), match return_type {
+					// We already account for an error in the Write match up above:
+					ReturnType::Fallible(_, e) if e.is_some() => {
+						crate::layout_hir::type_size_alignment(&e.clone().unwrap(), &self.js_ctx.tcx).size()
+					},
+					_ => 0,
+				}) + 1;
 				let align = layout.align();
 
 				
