@@ -8,7 +8,7 @@ export function readString16(wasm, ptr, len) {
 	return String.fromCharCode.apply(null, buf)
 }
 
-export function withWriteable(wasm, callback) {
+export function withDiplomatWrite(wasm, callback) {
 	const writeable = wasm.diplomat_buffer_writeable_create(0);
 	try {
 	callback(writeable);
