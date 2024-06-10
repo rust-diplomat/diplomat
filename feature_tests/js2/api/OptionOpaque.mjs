@@ -54,13 +54,17 @@ export class OptionOpaque {
     }
 
     static returns() {
-        const result = wasm.OptionOpaque_returns();
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(17, 4);
+        const result = wasm.OptionOpaque_returns(diplomat_recieve_buffer);
     
-        if (!diplomatRuntime.resultFlag(wasm, result), resultByte) {
+        if (!diplomatRuntime.resultFlag(wasm, diplomat_recieve_buffer), resultByte) {
             return null;
         }
-        const finalOut = new OptionStruct(result.union.ok);
+        const finalOut = new OptionStruct(diplomat_recieve_buffer.union.ok);
         
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, 17, 4);
         
     
         return finalOut;

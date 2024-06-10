@@ -381,7 +381,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         let (return_buffer, additional_size) = {
             let mut additional_types_size = 0;
             let o = match method.output {
-                ReturnType::Fallible(ref o, _) => {
+                ReturnType::Fallible(ref o, _) | ReturnType::Nullable(ref o) => {
+                    // TODO: For Result<Success, Error>, add failure size.
                     additional_types_size += 1;
                     if let SuccessType::OutType(out) = o {
                         Some(out)

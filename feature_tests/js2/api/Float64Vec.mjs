@@ -211,13 +211,17 @@ export class Float64Vec {
     }
 
     get(i) {
-        const result = wasm.Float64Vec_get(this.ffiValue, i);
+        
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(9, 8);
+        const result = wasm.Float64Vec_get(diplomat_recieve_buffer, this.ffiValue, i);
     
-        if (!diplomatRuntime.resultFlag(wasm, result), resultByte) {
+        if (!diplomatRuntime.resultFlag(wasm, diplomat_recieve_buffer), resultByte) {
             return null;
         }
-        const finalOut = result.union.ok;
+        const finalOut = diplomat_recieve_buffer.union.ok;
         
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, 9, 8);
         
     
         return finalOut;
