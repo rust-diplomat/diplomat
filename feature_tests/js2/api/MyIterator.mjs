@@ -44,7 +44,7 @@ export class MyIterator {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 1), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 1)) {
                 return null;
             }
             return diplomat_receive_buffer;

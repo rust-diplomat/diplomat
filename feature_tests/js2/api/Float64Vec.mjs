@@ -236,7 +236,7 @@ export class Float64Vec {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
                 return null;
             }
             return diplomat_receive_buffer;

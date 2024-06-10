@@ -40,7 +40,7 @@ export class ResultOpaque {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
             }
             return new ResultOpaque(diplomat_receive_buffer, []);
@@ -58,7 +58,7 @@ export class ResultOpaque {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
             }
             return new ResultOpaque(diplomat_receive_buffer, []);
@@ -76,7 +76,7 @@ export class ResultOpaque {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
             }
             return new ResultOpaque(diplomat_receive_buffer, []);
@@ -94,7 +94,7 @@ export class ResultOpaque {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
             return new ResultOpaque(diplomat_receive_buffer, []);
@@ -112,7 +112,7 @@ export class ResultOpaque {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
                 throw new ErrorStruct(diplomat_receive_buffer);
             }
             return new ResultOpaque(diplomat_receive_buffer, []);
@@ -130,7 +130,7 @@ export class ResultOpaque {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw new ResultOpaque(diplomat_receive_buffer, []);
             }
     
@@ -148,7 +148,7 @@ export class ResultOpaque {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
             return diplomat_receive_buffer;
@@ -166,7 +166,7 @@ export class ResultOpaque {
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw new ResultOpaque(diplomat_receive_buffer, []);
             }
             return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];

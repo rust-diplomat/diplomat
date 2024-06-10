@@ -308,9 +308,13 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			| ReturnType::Nullable(SuccessType::Unit)
 			=> {
 				let layout = crate::layout_hir::unit_size_alignment();
-				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({}, {})", layout.size(), layout.align()).into());
-				method_info.cleanup_expressions.push(format!("wasm.diplomat_free({}, {})", layout.size(), layout.align()).into());
-				Some(format!("return diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, resultByte);").into())
+
+				let size = layout.size() + 1;
+				let align = layout.align();
+
+				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({size}, {align})").into());
+				method_info.cleanup_expressions.push(format!("wasm.diplomat_free({size}, {align})").into());
+				Some(format!("return diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {}, {align});", size - 1).into())
 			},
 
 			// Result<Type, Error> or Option<Type>
@@ -354,7 +358,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 					throw Error();
 				}
 				 */
-				let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {}), resultByte) {{\n    {};\n}}\n",
+				let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {})) {{\n    {};\n}}\n",
 				size - 1,
 				match return_type {
 					ReturnType::Fallible(_, Some(e)) => format!("throw {}",
