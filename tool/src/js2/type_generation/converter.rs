@@ -366,8 +366,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 					ReturnType::Fallible(_, Some(e)) => {
 						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
 						format!("throw new diplomatRuntime.FFIError({})", self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment))
-				},
-					_ => "return null".into(),
+					},
+					_ => "throw diplomatRuntime.FFIError(null)".into(),
 				});
 
 				Some(match ok {

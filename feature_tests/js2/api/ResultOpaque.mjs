@@ -95,7 +95,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                return null;
+                throw diplomatRuntime.FFIError(null);
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
@@ -149,7 +149,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                return null;
+                throw diplomatRuntime.FFIError(null);
             }
             return (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
         } finally {

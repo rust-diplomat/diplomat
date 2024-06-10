@@ -63,7 +63,7 @@ export class OptionOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 16)) {
-                return null;
+                throw diplomatRuntime.FFIError(null);
             }
             return new OptionStruct(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
         } finally {

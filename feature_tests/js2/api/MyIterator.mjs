@@ -45,7 +45,7 @@ export class MyIterator {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 1)) {
-                return null;
+                throw diplomatRuntime.FFIError(null);
             }
             return (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
         } finally {
