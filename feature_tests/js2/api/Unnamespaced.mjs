@@ -33,28 +33,12 @@ export class Unnamespaced {
         return this.#ptr;
     }
 
-    // Size of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 4;
-    }
-    
-    // Alignment of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
 
     static make(e) {
-        
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(Unnamespaced._size, Unnamespaced._align);
-        const result = wasm.namespace_Unnamespaced_make(diplomat_recieve_buffer, e.ffiValue);
+        const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
-        const finalOut = new Unnamespaced(diplomat_recieve_buffer, []);
+        const finalOut = new Unnamespaced(result, []);
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, Unnamespaced._size, Unnamespaced._align);
         
     
         return finalOut;

@@ -45,18 +45,6 @@ export class BorrowedFieldsWithBounds {
     }
     
 
-    // Size of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 24;
-    }
-    
-    // Alignment of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
     constructor(ptr, aEdges, bEdges, cEdges) {
         const fieldADeref = /* TODO: gen_c_to_js_deref */null;
         this.#fieldA = fieldADeref(aEdges) // TODO: Slice c_to_js;
@@ -75,7 +63,7 @@ export class BorrowedFieldsWithBounds {
         const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(BorrowedFieldsWithBounds._size, BorrowedFieldsWithBounds._align);
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(24, 4);
         
         // This lifetime edge depends on lifetimes 'x, 'y, 'z
         let xEdges = [foo, dstr16XSlice, utf8StrZSlice];
@@ -94,7 +82,7 @@ export class BorrowedFieldsWithBounds {
         
         utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer, BorrowedFieldsWithBounds._size, BorrowedFieldsWithBounds._align);
+        wasm.diplomat_free(diplomat_recieve_buffer, 24, 4);
         
     
         return finalOut;

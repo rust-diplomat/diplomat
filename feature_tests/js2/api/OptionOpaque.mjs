@@ -32,59 +32,35 @@ export class OptionOpaque {
         return this.#ptr;
     }
 
-    // Size of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 4;
-    }
-    
-    // Alignment of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
 
     static new_(i) {
-        
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionOpaque._size, OptionOpaque._align);
-        const result = wasm.OptionOpaque_new(diplomat_recieve_buffer, i);
+        const result = wasm.OptionOpaque_new(i);
     
-        const finalOut = ((diplomat_recieve_buffer == 0) ? undefined : new OptionOpaque(diplomat_recieve_buffer, []));
+        const finalOut = ((result == 0) ? undefined : new OptionOpaque(result, []));
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, OptionOpaque._size, OptionOpaque._align);
         
     
         return finalOut;
     }
 
     static newNone() {
-        
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionOpaque._size, OptionOpaque._align);
-        const result = wasm.OptionOpaque_new_none(diplomat_recieve_buffer);
+        const result = wasm.OptionOpaque_new_none();
     
-        const finalOut = ((diplomat_recieve_buffer == 0) ? undefined : new OptionOpaque(diplomat_recieve_buffer, []));
+        const finalOut = ((result == 0) ? undefined : new OptionOpaque(result, []));
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, OptionOpaque._size, OptionOpaque._align);
         
     
         return finalOut;
     }
 
     static returns() {
-        
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
-        const result = wasm.OptionOpaque_returns(diplomat_recieve_buffer);
+        const result = wasm.OptionOpaque_returns();
     
-        if (!diplomat_recieve_buffer.isOk) {
+        if (!diplomatRuntime.resultFlag(wasm, result), resultByte) {
             return null;
         }
-        const finalOut = new OptionStruct(diplomat_recieve_buffer.union.ok);
+        const finalOut = new OptionStruct(result.union.ok);
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, OptionStruct._size, OptionStruct._align);
         
     
         return finalOut;
@@ -92,13 +68,13 @@ export class OptionOpaque {
 
     static newStruct() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(16, 4);
         const result = wasm.OptionOpaque_new_struct(diplomat_recieve_buffer);
     
         const finalOut = new OptionStruct(diplomat_recieve_buffer);
         
         
-        wasm.diplomat_free(diplomat_recieve_buffer, OptionStruct._size, OptionStruct._align);
+        wasm.diplomat_free(diplomat_recieve_buffer, 16, 4);
         
     
         return finalOut;
@@ -106,13 +82,13 @@ export class OptionOpaque {
 
     static newStructNones() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OptionStruct._size, OptionStruct._align);
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(16, 4);
         const result = wasm.OptionOpaque_new_struct_nones(diplomat_recieve_buffer);
     
         const finalOut = new OptionStruct(diplomat_recieve_buffer);
         
         
-        wasm.diplomat_free(diplomat_recieve_buffer, OptionStruct._size, OptionStruct._align);
+        wasm.diplomat_free(diplomat_recieve_buffer, 16, 4);
         
     
         return finalOut;

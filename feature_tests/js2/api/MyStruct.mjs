@@ -72,18 +72,6 @@ export class MyStruct {
     }
     
 
-    // Size of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 28;
-    }
-    
-    // Alignment of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 8;
-    }
-
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.
@@ -107,13 +95,13 @@ export class MyStruct {
     }
     static new_() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(MyStruct._size, MyStruct._align);
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(28, 8);
         const result = wasm.MyStruct_new(diplomat_recieve_buffer);
     
         const finalOut = new MyStruct(diplomat_recieve_buffer);
         
         
-        wasm.diplomat_free(diplomat_recieve_buffer, MyStruct._size, MyStruct._align);
+        wasm.diplomat_free(diplomat_recieve_buffer, 28, 8);
         
     
         return finalOut;

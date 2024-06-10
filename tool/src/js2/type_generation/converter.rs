@@ -272,12 +272,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(SuccessType::Unit, None)
 			| ReturnType::Nullable(SuccessType::Unit)
-			=> Some(format!("const finalOut = {result_var}.isOk;").into()),
+			=> Some(format!("const finalOut = diplomatRuntime.resultFlag(wasm, {result_var}, resultByte);").into()),
 
 			// Result<Type, Error> or Option<Type>
 			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok)  => {
-				let err_check = format!("if (!{result_var}.isOk) {{\n    {};\n}}\n",
+				let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, {result_var}), resultByte) {{\n    {};\n}}\n",
 				match return_type {
 					ReturnType::Fallible(_, Some(e)) => format!("throw {}",
 					self.gen_c_to_js_for_type(e, format!("{result_var}.union.error").into(), lifetime_environment)),

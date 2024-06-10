@@ -42,34 +42,18 @@ export class Bar {
         return this.#ptr;
     }
 
-    // Size of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 4;
-    }
-    
-    // Alignment of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
 
     get foo() {
-        
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(Foo._size, Foo._align);
         
         // This lifetime edge depends on lifetimes 'b, 'a
         let bEdges = [this];
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Bar_foo(diplomat_recieve_buffer, this.ffiValue);
+        const result = wasm.Bar_foo(this.ffiValue);
     
-        const finalOut = new Foo(diplomat_recieve_buffer, bEdges, aEdges);
+        const finalOut = new Foo(result, bEdges, aEdges);
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, Foo._size, Foo._align);
         
     
         return finalOut;

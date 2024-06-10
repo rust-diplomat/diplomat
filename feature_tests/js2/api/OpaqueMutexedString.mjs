@@ -32,28 +32,12 @@ export class OpaqueMutexedString {
         return this.#ptr;
     }
 
-    // Size of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 4;
-    }
-    
-    // Alignment of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
 
     static fromUsize(number) {
-        
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OpaqueMutexedString._size, OpaqueMutexedString._align);
-        const result = wasm.OpaqueMutexedString_from_usize(diplomat_recieve_buffer, number);
+        const result = wasm.OpaqueMutexedString_from_usize(number);
     
-        const finalOut = new OpaqueMutexedString(diplomat_recieve_buffer, []);
+        const finalOut = new OpaqueMutexedString(result, []);
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, OpaqueMutexedString._size, OpaqueMutexedString._align);
         
     
         return finalOut;
@@ -69,16 +53,12 @@ export class OpaqueMutexedString {
 
     borrow() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OpaqueMutexedString._size, OpaqueMutexedString._align);
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.OpaqueMutexedString_borrow(diplomat_recieve_buffer, this.ffiValue);
+        const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
     
-        const finalOut = new OpaqueMutexedString(diplomat_recieve_buffer, aEdges);
+        const finalOut = new OpaqueMutexedString(result, aEdges);
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, OpaqueMutexedString._size, OpaqueMutexedString._align);
         
     
         return finalOut;
@@ -86,16 +66,12 @@ export class OpaqueMutexedString {
 
     static borrowOther(other) {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OpaqueMutexedString._size, OpaqueMutexedString._align);
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [other];
-        const result = wasm.OpaqueMutexedString_borrow_other(diplomat_recieve_buffer, other.ffiValue);
+        const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
     
-        const finalOut = new OpaqueMutexedString(diplomat_recieve_buffer, aEdges);
+        const finalOut = new OpaqueMutexedString(result, aEdges);
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, OpaqueMutexedString._size, OpaqueMutexedString._align);
         
     
         return finalOut;
@@ -103,16 +79,12 @@ export class OpaqueMutexedString {
 
     borrowSelfOrOther(other) {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(OpaqueMutexedString._size, OpaqueMutexedString._align);
-        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this, other];
-        const result = wasm.OpaqueMutexedString_borrow_self_or_other(diplomat_recieve_buffer, this.ffiValue, other.ffiValue);
+        const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
     
-        const finalOut = new OpaqueMutexedString(diplomat_recieve_buffer, aEdges);
+        const finalOut = new OpaqueMutexedString(result, aEdges);
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, OpaqueMutexedString._size, OpaqueMutexedString._align);
         
     
         return finalOut;
@@ -130,26 +102,26 @@ export class OpaqueMutexedString {
 
     dummyStr() {
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.OpaqueMutexedString_dummy_str(this.ffiValue);
+        const result = wasm.OpaqueMutexedString_dummy_str(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = result(aEdges) // TODO: Slice c_to_js;
+        const finalOut = diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
         
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
     
         return finalOut;
     }
 
     wrapper() {
-        
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(Utf16Wrap._size, Utf16Wrap._align);
-        const result = wasm.OpaqueMutexedString_wrapper(diplomat_recieve_buffer, this.ffiValue);
+        const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
     
-        const finalOut = new Utf16Wrap(diplomat_recieve_buffer, []);
+        const finalOut = new Utf16Wrap(result, []);
         
-        
-        wasm.diplomat_free(diplomat_recieve_buffer, Utf16Wrap._size, Utf16Wrap._align);
         
     
         return finalOut;

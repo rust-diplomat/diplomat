@@ -31,18 +31,6 @@ export class OptionOpaqueChar {
         return this.#ptr;
     }
 
-    // Size of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 4;
-    }
-    
-    // Alignment of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
 
     assertChar(ch) {
         wasm.OptionOpaqueChar_assert_char(this.ffiValue, diplomatRuntime.extractCodePoint(ch, 'ch'));

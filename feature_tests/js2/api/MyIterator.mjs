@@ -36,23 +36,11 @@ export class MyIterator {
         return this.#ptr;
     }
 
-    // Size of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 4;
-    }
-    
-    // Alignment of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
 
     #iteratorNext() {
         const result = wasm.namespace_MyIterator_next(this.ffiValue);
     
-        if (!result.isOk) {
+        if (!diplomatRuntime.resultFlag(wasm, result), resultByte) {
             return null;
         }
         const finalOut = result.union.ok;

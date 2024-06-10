@@ -31,37 +31,33 @@ export class Utf16Wrap {
         return this.#ptr;
     }
 
-    // Size of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 4;
-    }
-    
-    // Alignment of our opaque type in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
 
     borrowCont() {
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Utf16Wrap_borrow_cont(this.ffiValue);
+        const result = wasm.Utf16Wrap_borrow_cont(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = result(aEdges) // TODO: Slice c_to_js;
+        const finalOut = diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
         
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
     
         return finalOut;
     }
 
     owned() {
-        const result = wasm.Utf16Wrap_owned(this.ffiValue);
-    
-        const finalOut = result // TODO: Slice c_to_js;
         
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
+        const result = wasm.Utf16Wrap_owned(diplomat_recieve_buffer, this.ffiValue);
+    
+        const finalOut = diplomat_recieve_buffer // TODO: Slice c_to_js;
+        
+        
+        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
     
         return finalOut;

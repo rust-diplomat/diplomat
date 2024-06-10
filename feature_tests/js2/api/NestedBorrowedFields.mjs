@@ -48,18 +48,6 @@ export class NestedBorrowedFields {
     }
     
 
-    // Size of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 72;
-    }
-    
-    // Alignment of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
     constructor(ptr, xEdges, yEdges, zEdges) {
         const fieldsDeref = diplomatRuntime.ptrRead(wasm, ptr);
         this.#fields = new BorrowedFields(fieldsDeref, xEdges);
@@ -86,7 +74,7 @@ export class NestedBorrowedFields {
         const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(NestedBorrowedFields._size, NestedBorrowedFields._align);
+        const diplomat_recieve_buffer = wasm.diplomat_alloc(72, 4);
         
         // This lifetime edge depends on lifetimes 'x, 'y
         let xEdges = [bar, dstr16XSlice, utf8StrYSlice];
@@ -109,7 +97,7 @@ export class NestedBorrowedFields {
         
         utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer, NestedBorrowedFields._size, NestedBorrowedFields._align);
+        wasm.diplomat_free(diplomat_recieve_buffer, 72, 4);
         
     
         return finalOut;

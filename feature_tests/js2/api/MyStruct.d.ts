@@ -28,14 +28,6 @@ export class MyStruct {
     set g(value: MyEnum); 
 
 
-    // Size of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size(): usize;
-    
-    // Alignment of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align(): usize;
-
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
     // and passes it down to individual fields containing the borrow.

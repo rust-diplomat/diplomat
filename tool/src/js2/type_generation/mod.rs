@@ -373,36 +373,61 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         }
 
         method_info.return_type = self.gen_js_return_type_str(&method.output);
-
-        let mut result_var = "result";
-
-        let success = method.output.success_type();
-        if let SuccessType::OutType(ref o) = success {
-            let name = match o {
-                Type::Struct(s)  => {
-                    Some(self.js_ctx.formatter.fmt_type_name(s.id()))
+        
+        // Conditions for allocating a buffer:
+        // 1. Function returns a slice.
+        // 2. Function returns an Option<> or Success<> with an OutType.
+        // 3. Function returns a struct.
+        let (return_buffer, additional_size) = {
+            let mut additional_types_size = 0;
+            let o = match method.output {
+                ReturnType::Fallible(ref o, _) => {
+                    additional_types_size += 1;
+                    if let SuccessType::OutType(out) = o {
+                        Some(out)
+                    } else {
+                        None
+                    }
                 },
-                Type::Opaque(op) => {
-                    Some(self.js_ctx.formatter.fmt_type_name(op.tcx_id.into()))
+                ReturnType::Infallible(ref o) => {
+                    if let SuccessType::OutType(s) = o {
+                        if let Type::Struct(_) = s {
+                            Some(s)
+                        } else if let Type::Slice(_) = s {
+                            Some(s)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
                 },
                 _ => None,
             };
 
+            (o.and_then(|o| {
+                Some(crate::layout_hir::type_size_alignment(o, &self.js_ctx.tcx))
+            }), additional_types_size)
+        };
+
+        
+        let mut result_var = "result";
+        if let Some(layout) = return_buffer {
+            let base_size = layout.size() + additional_size;
+            let base_align = layout.align();
+
             // TODO: If we're fallible, add the size of the failure type to the size.
+            method_info.alloc_expressions.push(
+                format!("const diplomat_recieve_buffer = wasm.diplomat_alloc({base_size}, {base_align});")
+                .into()
+            );
+            // This is the first thing in param converison order:
+            method_info.param_conversions.insert(0, "diplomat_recieve_buffer".into());
+            method_info.cleanup_expressions.push(
+                format!("wasm.diplomat_free(diplomat_recieve_buffer, {base_size}, {base_align});")
+                .into());
 
-            if let Some(type_name) = name {
-                method_info.alloc_expressions.push(
-                    format!("const diplomat_recieve_buffer = wasm.diplomat_alloc({type_name}._size, {type_name}._align);")
-                    .into()
-                );
-                // This is the first thing in param converison order:
-                method_info.param_conversions.insert(0, "diplomat_recieve_buffer".into());
-                method_info.cleanup_expressions.push(
-                    format!("wasm.diplomat_free(diplomat_recieve_buffer, {type_name}._size, {type_name}._align);")
-                    .into());
-
-                result_var = "diplomat_recieve_buffer";
-            }
+            result_var = "diplomat_recieve_buffer";
         }
 
         method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, result_var.into(), &method.lifetime_env);

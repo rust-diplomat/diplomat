@@ -26,18 +26,6 @@ export class BorrowedFieldsReturning {
     }
     
 
-    // Size of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _size() {
-        return 8;
-    }
-    
-    // Alignment of our struct in bytes for diplomat_alloc.
-    // See https://doc.rust-lang.org/reference/type-layout.html for further reference.
-    static get _align() {
-        return 4;
-    }
-
     constructor(ptr, aEdges) {
         const bytesDeref = /* TODO: gen_c_to_js_deref */null;
         this.#bytes = bytesDeref(aEdges) // TODO: Slice c_to_js;
