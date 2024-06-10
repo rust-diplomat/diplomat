@@ -40,7 +40,7 @@ export class MyIterator {
     #iteratorNext() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
-        const result = wasm.namespace_MyIterator_next(this.ffiValue);
+        const result = wasm.namespace_MyIterator_next(diplomat_receive_buffer, this.ffiValue);
     
         try {
     
@@ -50,7 +50,7 @@ export class MyIterator {
             return diplomat_receive_buffer;
         } finally {
         
-            wasm.diplomat_free(2, 1);
+            wasm.diplomat_free(diplomat_receive_buffer, 2, 1);
         
         }
     }

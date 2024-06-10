@@ -36,7 +36,7 @@ export class ResultOpaque {
     static new_(i) {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new(i);
+        const result = wasm.ResultOpaque_new(diplomat_receive_buffer, i);
     
         try {
     
@@ -46,7 +46,7 @@ export class ResultOpaque {
             return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-            wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }
@@ -54,7 +54,7 @@ export class ResultOpaque {
     static newFailingFoo() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_failing_foo();
+        const result = wasm.ResultOpaque_new_failing_foo(diplomat_receive_buffer);
     
         try {
     
@@ -64,7 +64,7 @@ export class ResultOpaque {
             return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-            wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }
@@ -72,7 +72,7 @@ export class ResultOpaque {
     static newFailingBar() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_failing_bar();
+        const result = wasm.ResultOpaque_new_failing_bar(diplomat_receive_buffer);
     
         try {
     
@@ -82,7 +82,7 @@ export class ResultOpaque {
             return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-            wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }
@@ -90,7 +90,7 @@ export class ResultOpaque {
     static newFailingUnit() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_failing_unit();
+        const result = wasm.ResultOpaque_new_failing_unit(diplomat_receive_buffer);
     
         try {
     
@@ -100,7 +100,7 @@ export class ResultOpaque {
             return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-            wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }
@@ -108,7 +108,7 @@ export class ResultOpaque {
     static newFailingStruct(i) {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(9, 4);
-        const result = wasm.ResultOpaque_new_failing_struct(i);
+        const result = wasm.ResultOpaque_new_failing_struct(diplomat_receive_buffer, i);
     
         try {
     
@@ -118,7 +118,7 @@ export class ResultOpaque {
             return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-            wasm.diplomat_free(9, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
         
         }
     }
@@ -126,7 +126,7 @@ export class ResultOpaque {
     static newInErr(i) {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_in_err(i);
+        const result = wasm.ResultOpaque_new_in_err(diplomat_receive_buffer, i);
     
         try {
     
@@ -136,7 +136,7 @@ export class ResultOpaque {
     
         } finally {
         
-            wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }
@@ -144,7 +144,7 @@ export class ResultOpaque {
     static newInt(i) {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_int(i);
+        const result = wasm.ResultOpaque_new_int(diplomat_receive_buffer, i);
     
         try {
     
@@ -154,7 +154,7 @@ export class ResultOpaque {
             return diplomat_receive_buffer;
         } finally {
         
-            wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }
@@ -162,7 +162,7 @@ export class ResultOpaque {
     static newInEnumErr(i) {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_in_enum_err(i);
+        const result = wasm.ResultOpaque_new_in_enum_err(diplomat_receive_buffer, i);
     
         try {
     
@@ -172,7 +172,7 @@ export class ResultOpaque {
             return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
         } finally {
         
-            wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }

@@ -313,7 +313,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				let align = layout.align();
 
 				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({size}, {align})").into());
-				method_info.cleanup_expressions.push(format!("wasm.diplomat_free({size}, {align})").into());
+				method_info.param_conversions.insert(0, "diplomat_receive_buffer".into());
+				method_info.cleanup_expressions.push(format!("wasm.diplomat_free(diplomat_receive_buffer, {size}, {align})").into());
 				Some(format!("return diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {}, {align});", size - 1).into())
 			},
 
@@ -345,7 +346,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
 				
 				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});", size, align).into());
-				method_info.cleanup_expressions.push(format!("wasm.diplomat_free({}, {});", size, align).into());
+				method_info.param_conversions.insert(0, "diplomat_receive_buffer".into());
+				method_info.cleanup_expressions.push(format!("wasm.diplomat_free(diplomat_receive_buffer, {}, {});", size, align).into());
 				
 				// TODO: Not sure what Result<Write, Err> or Option<Write> looks like. My guess is:
 				/*

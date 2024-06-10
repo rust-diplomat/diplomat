@@ -232,7 +232,7 @@ export class Float64Vec {
     get(i) {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(9, 8);
-        const result = wasm.Float64Vec_get(this.ffiValue, i);
+        const result = wasm.Float64Vec_get(diplomat_receive_buffer, this.ffiValue, i);
     
         try {
     
@@ -242,7 +242,7 @@ export class Float64Vec {
             return diplomat_receive_buffer;
         } finally {
         
-            wasm.diplomat_free(9, 8);
+            wasm.diplomat_free(diplomat_receive_buffer, 9, 8);
         
         }
     }

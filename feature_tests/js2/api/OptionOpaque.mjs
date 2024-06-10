@@ -58,7 +58,7 @@ export class OptionOpaque {
     static returns() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(17, 4);
-        const result = wasm.OptionOpaque_returns();
+        const result = wasm.OptionOpaque_returns(diplomat_receive_buffer);
     
         try {
     
@@ -68,7 +68,7 @@ export class OptionOpaque {
             return new OptionStruct(diplomat_receive_buffer);
         } finally {
         
-            wasm.diplomat_free(17, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 17, 4);
         
         }
     }
