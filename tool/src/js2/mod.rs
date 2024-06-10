@@ -128,6 +128,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 imports: BTreeSet::new(),
             };
 
+            // TODO: A lot of this could go faster if we cached info for typescript, instead of re-generating it.
             let contents = match type_def {
                 TypeDef::Enum(enum_def) => {
                     context.generate_enum_from_def(enum_def, type_id, &name)

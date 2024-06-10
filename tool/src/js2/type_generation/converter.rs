@@ -256,7 +256,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 	/// Give us pure JS for returning types.
 	/// This basically handles the conversions from whatever the WASM gives us to a JS-friendly type.
 	/// We access [`super::MethodInfo`] to handle allocation and cleanup.
-	pub(super) fn gen_c_to_js_for_return_type(&self, method_info: &mut super::MethodInfo, lifetime_environment : &LifetimeEnv) -> Option<Cow<'tcx, str>> {
+	pub(super) fn gen_c_to_js_for_return_type(&mut self, method_info: &mut super::MethodInfo, lifetime_environment : &LifetimeEnv) -> Option<Cow<'tcx, str>> {
 		let return_type = &method_info.method.unwrap().output; 
 		
 
@@ -364,6 +364,13 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				size - 1,
 				match return_type {
 					ReturnType::Fallible(_, Some(e)) => {
+						
+						// Because we don't add Result<_, Error> types to imports, we do that here:
+						if !self.typescript {
+							let type_name = self.js_ctx.formatter.fmt_type_name(e.id().unwrap());
+							self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, false));
+						}
+
 						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
 						format!("throw new diplomatRuntime.FFIError({})", self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment))
 					},
