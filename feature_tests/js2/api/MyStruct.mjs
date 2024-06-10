@@ -80,7 +80,7 @@ export class MyStruct {
     constructor(ptr) {
         const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         this.#a = aDeref;
-        const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0]== 0;
+        const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] == 1;
         this.#b = bDeref;
         const cDeref = (new Uint8Array(wasm.memory.buffer, ptr + 2, 1))[0];
         this.#c = cDeref;
@@ -88,10 +88,10 @@ export class MyStruct {
         this.#d = dDeref;
         const eDeref = (new Int32Array(wasm.memory.buffer, ptr + 16, 1))[0];
         this.#e = eDeref;
-        const fDeref = String.fromfromCharCode((new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0]);
+        const fDeref = String.fromCharCode((new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0]);
         this.#f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
-        this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return i[0]; } return null;})();;
+        this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();;
     }
     static new_() {
         

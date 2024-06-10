@@ -153,7 +153,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				let id = enum_path.tcx_id.into();
 				let type_name = self.js_ctx.formatter.fmt_type_name(id);
 				// Based on Dart specifics, but if storing too many things in memory isn't an issue we could just make a reverse-lookup map in the enum template.
-				format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return i[0]; }} return null;}})();").into()
+				format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})();").into()
 			},
 			Type::Slice(slice) => {
 				if let Some(lt) = slice.lifetime() {
@@ -189,7 +189,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			Type::Primitive(p) => {
 				format!("{0}(new {1}(wasm.memory.buffer, {variable_name}{o}, 1))[0]{2}", 
 				match p {
-					PrimitiveType::Char => "String.fromfromCharCode(",
+					PrimitiveType::Char => "String.fromCharCode(",
 					_ => "",
 				},
 				match p {
@@ -207,7 +207,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 					PrimitiveType::Int128(..) => panic!("Int128 is not a supported type for the JS backend."),
 				},
 				match p {
-					PrimitiveType::Bool => "== 0",
+					PrimitiveType::Bool => " == 1",
 					PrimitiveType::Char => ")",
 					_ => "",
 				}
