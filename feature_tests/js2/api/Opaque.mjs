@@ -39,7 +39,7 @@ export class Opaque {
     
         try {
     
-        return new Opaque(result, []);
+            return new Opaque(result, []);
         } finally {
         
         }
@@ -52,7 +52,7 @@ export class Opaque {
     
         } finally {
         
-        this.free(); /* TODO: Does this work? */
+            this.free(); /* TODO: Does this work? */
         
         }
     }
@@ -62,7 +62,7 @@ export class Opaque {
     
         try {
     
-        return result;
+            return result;
         } finally {
         
         }
@@ -75,10 +75,10 @@ export class Opaque {
     
         try {
     
-        return new ImportedStruct(diplomat_receive_buffer);
+            return new ImportedStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }
@@ -88,7 +88,7 @@ export class Opaque {
     
         try {
     
-        return result;
+            return result;
         } finally {
         
         }

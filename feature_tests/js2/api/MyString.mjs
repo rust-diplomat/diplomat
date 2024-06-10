@@ -39,10 +39,10 @@ export class MyString {
     
         try {
     
-        return new MyString(result, []);
+            return new MyString(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -54,10 +54,10 @@ export class MyString {
     
         try {
     
-        return new MyString(result, []);
+            return new MyString(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -69,7 +69,7 @@ export class MyString {
     
         try {
     
-        return new MyString(result, []);
+            return new MyString(result, []);
         } finally {
         
         }
@@ -82,10 +82,10 @@ export class MyString {
     
         try {
     
-        return new MyString(result, []);
+            return new MyString(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -99,7 +99,7 @@ export class MyString {
     
         } finally {
         
-        newStrSlice.free();
+            newStrSlice.free();
         
         }
     }
@@ -111,10 +111,10 @@ export class MyString {
     
         try {
     
-        return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
         } finally {
         
-        wasm.diplomat_buffer_write_destroy(write);
+            wasm.diplomat_buffer_write_destroy(write);
         
         }
     }
@@ -126,10 +126,10 @@ export class MyString {
     
         try {
     
-        return diplomat_receive_buffer // TODO: Slice c_to_js;
+            return diplomat_receive_buffer // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }

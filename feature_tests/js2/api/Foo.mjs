@@ -53,10 +53,10 @@ export class Foo {
     
         try {
     
-        return new Foo(result, [], aEdges);
+            return new Foo(result, [], aEdges);
         } finally {
         
-        xSlice.garbageCollect();
+            xSlice.garbageCollect();
         
         }
     }
@@ -72,7 +72,7 @@ export class Foo {
     
         try {
     
-        return new Bar(result, [], bEdges, aEdges);
+            return new Bar(result, [], bEdges, aEdges);
         } finally {
         
         }
@@ -88,10 +88,10 @@ export class Foo {
     
         try {
     
-        return new Foo(result, [], aEdges);
+            return new Foo(result, [], aEdges);
         } finally {
         
-        xSlice.free();
+            xSlice.free();
         
         }
     }
@@ -106,10 +106,10 @@ export class Foo {
     
         try {
     
-        return new BorrowedFieldsReturning(diplomat_receive_buffer, aEdges);
+            return new BorrowedFieldsReturning(diplomat_receive_buffer, aEdges);
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
@@ -122,10 +122,10 @@ export class Foo {
     
         try {
     
-        return new Foo(result, [], aEdges);
+            return new Foo(result, [], aEdges);
         } finally {
         
-        this.free(); /* TODO: Does this work? */
+            this.free(); /* TODO: Does this work? */
         
         }
     }
@@ -142,12 +142,12 @@ export class Foo {
     
         try {
     
-        return new Foo(result, [], aEdges);
+            return new Foo(result, [], aEdges);
         } finally {
         
-        this.free(); /* TODO: Does this work? */
+            this.free(); /* TODO: Does this work? */
         
-        anotherStringSlice.garbageCollect();
+            anotherStringSlice.garbageCollect();
         
         }
     }

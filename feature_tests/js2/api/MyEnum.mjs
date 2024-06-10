@@ -56,7 +56,7 @@ export class MyEnum {
     
         try {
     
-        return result;
+            return result;
         } finally {
         
         }
@@ -67,7 +67,7 @@ export class MyEnum {
     
         try {
     
-        return (() => {for (let i of MyEnum.values) { if(i[1] === result) return i[0]; } return null;})();;
+            return (() => {for (let i of MyEnum.values) { if(i[1] === result) return i[0]; } return null;})();;
         } finally {
         
         }

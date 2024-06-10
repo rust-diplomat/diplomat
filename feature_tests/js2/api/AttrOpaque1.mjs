@@ -39,7 +39,7 @@ export class AttrOpaque1 {
     
         try {
     
-        return new AttrOpaque1(result, []);
+            return new AttrOpaque1(result, []);
         } finally {
         
         }
@@ -50,7 +50,7 @@ export class AttrOpaque1 {
     
         try {
     
-        return result;
+            return result;
         } finally {
         
         }
@@ -61,7 +61,7 @@ export class AttrOpaque1 {
     
         try {
     
-        return result;
+            return result;
         } finally {
         
         }

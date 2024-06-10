@@ -77,14 +77,14 @@ export class BorrowedFieldsWithBounds {
     
         try {
     
-        return new BorrowedFieldsWithBounds(diplomat_receive_buffer, xEdges, yEdges, zEdges);
+            return new BorrowedFieldsWithBounds(diplomat_receive_buffer, xEdges, yEdges, zEdges);
         } finally {
         
-        dstr16XSlice.garbageCollect();
+            dstr16XSlice.garbageCollect();
         
-        utf8StrZSlice.garbageCollect();
+            utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_receive_buffer, 24, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 24, 4);
         
         }
     }

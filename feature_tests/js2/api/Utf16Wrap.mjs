@@ -42,10 +42,10 @@ export class Utf16Wrap {
     
         try {
     
-        return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
+            return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
@@ -57,10 +57,10 @@ export class Utf16Wrap {
     
         try {
     
-        return diplomat_receive_buffer // TODO: Slice c_to_js;
+            return diplomat_receive_buffer // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }

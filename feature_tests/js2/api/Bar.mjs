@@ -54,7 +54,7 @@ export class Bar {
     
         try {
     
-        return new Foo(result, bEdges, aEdges);
+            return new Foo(result, bEdges, aEdges);
         } finally {
         
         }

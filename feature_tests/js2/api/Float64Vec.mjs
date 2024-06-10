@@ -39,10 +39,10 @@ export class Float64Vec {
     
         try {
     
-        return new Float64Vec(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -54,10 +54,10 @@ export class Float64Vec {
     
         try {
     
-        return new Float64Vec(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -69,10 +69,10 @@ export class Float64Vec {
     
         try {
     
-        return new Float64Vec(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -84,10 +84,10 @@ export class Float64Vec {
     
         try {
     
-        return new Float64Vec(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -99,10 +99,10 @@ export class Float64Vec {
     
         try {
     
-        return new Float64Vec(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -114,10 +114,10 @@ export class Float64Vec {
     
         try {
     
-        return new Float64Vec(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -129,7 +129,7 @@ export class Float64Vec {
     
         try {
     
-        return new Float64Vec(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
         }
@@ -142,10 +142,10 @@ export class Float64Vec {
     
         try {
     
-        return diplomat_receive_buffer // TODO: Slice c_to_js;
+            return diplomat_receive_buffer // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
@@ -160,10 +160,10 @@ export class Float64Vec {
     
         try {
     
-        return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
+            return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
@@ -177,7 +177,7 @@ export class Float64Vec {
     
         } finally {
         
-        vSlice.free();
+            vSlice.free();
         
         }
     }
@@ -191,7 +191,7 @@ export class Float64Vec {
     
         } finally {
         
-        newSliceSlice.free();
+            newSliceSlice.free();
         
         }
     }
@@ -203,10 +203,10 @@ export class Float64Vec {
     
         try {
     
-        return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
         } finally {
         
-        wasm.diplomat_buffer_write_destroy(write);
+            wasm.diplomat_buffer_write_destroy(write);
         
         }
     }
@@ -221,10 +221,10 @@ export class Float64Vec {
     
         try {
     
-        return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
+            return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
@@ -236,13 +236,13 @@ export class Float64Vec {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8), resultByte) {
-            return null;
-        }
-        return diplomat_receive_buffer;
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8), resultByte) {
+                return null;
+            }
+            return diplomat_receive_buffer;
         } finally {
         
-        wasm.diplomat_free(9, 8);
+            wasm.diplomat_free(9, 8);
         
         }
     }

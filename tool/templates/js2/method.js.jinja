@@ -45,12 +45,12 @@
     try {
     {%~ match return_expression -%}
     {%- when Some with (statement) %}
-    {{ statement|indent(4) -}}
+        {{ statement|indent(8) -}}
     {% when None -%}
     {%- endmatch %}
     } finally {
     {% for cleanup in cleanup_expressions %}
-    {{cleanup|indent(4)}}
+        {{cleanup|indent(8)}}
     {% endfor %}
     }
 }

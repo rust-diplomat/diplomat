@@ -38,7 +38,7 @@ export class OptionOpaque {
     
         try {
     
-        return ((result == 0) ? undefined : new OptionOpaque(result, []));
+            return ((result == 0) ? undefined : new OptionOpaque(result, []));
         } finally {
         
         }
@@ -49,7 +49,7 @@ export class OptionOpaque {
     
         try {
     
-        return ((result == 0) ? undefined : new OptionOpaque(result, []));
+            return ((result == 0) ? undefined : new OptionOpaque(result, []));
         } finally {
         
         }
@@ -62,13 +62,13 @@ export class OptionOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 16), resultByte) {
-            return null;
-        }
-        return new OptionStruct(diplomat_receive_buffer);
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 16), resultByte) {
+                return null;
+            }
+            return new OptionStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(17, 4);
+            wasm.diplomat_free(17, 4);
         
         }
     }
@@ -80,10 +80,10 @@ export class OptionOpaque {
     
         try {
     
-        return new OptionStruct(diplomat_receive_buffer);
+            return new OptionStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
         
         }
     }
@@ -95,10 +95,10 @@ export class OptionOpaque {
     
         try {
     
-        return new OptionStruct(diplomat_receive_buffer);
+            return new OptionStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
         
         }
     }
@@ -118,7 +118,7 @@ export class OptionOpaque {
     
         try {
     
-        return result;
+            return result;
         } finally {
         
         }

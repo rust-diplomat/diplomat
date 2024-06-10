@@ -88,18 +88,18 @@ export class NestedBorrowedFields {
     
         try {
     
-        return new NestedBorrowedFields(diplomat_receive_buffer, xEdges, yEdges, zEdges);
+            return new NestedBorrowedFields(diplomat_receive_buffer, xEdges, yEdges, zEdges);
         } finally {
         
-        dstr16XSlice.garbageCollect();
+            dstr16XSlice.garbageCollect();
         
-        dstr16ZSlice.garbageCollect();
+            dstr16ZSlice.garbageCollect();
         
-        utf8StrYSlice.garbageCollect();
+            utf8StrYSlice.garbageCollect();
         
-        utf8StrZSlice.garbageCollect();
+            utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_receive_buffer, 72, 4);
+            wasm.diplomat_free(diplomat_receive_buffer, 72, 4);
         
         }
     }

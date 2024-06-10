@@ -40,13 +40,13 @@ export class ResultOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
-            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
-        }
-        return new ResultOpaque(diplomat_receive_buffer, []);
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
+            }
+            return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-        wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(5, 4);
         
         }
     }
@@ -58,13 +58,13 @@ export class ResultOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
-            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
-        }
-        return new ResultOpaque(diplomat_receive_buffer, []);
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
+            }
+            return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-        wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(5, 4);
         
         }
     }
@@ -76,13 +76,13 @@ export class ResultOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
-            throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
-        }
-        return new ResultOpaque(diplomat_receive_buffer, []);
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
+            }
+            return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-        wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(5, 4);
         
         }
     }
@@ -94,13 +94,13 @@ export class ResultOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
-            return null;
-        }
-        return new ResultOpaque(diplomat_receive_buffer, []);
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+                return null;
+            }
+            return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-        wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(5, 4);
         
         }
     }
@@ -112,13 +112,13 @@ export class ResultOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
-            throw new ErrorStruct(diplomat_receive_buffer);
-        }
-        return new ResultOpaque(diplomat_receive_buffer, []);
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+                throw new ErrorStruct(diplomat_receive_buffer);
+            }
+            return new ResultOpaque(diplomat_receive_buffer, []);
         } finally {
         
-        wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(5, 4);
         
         }
     }
@@ -130,13 +130,13 @@ export class ResultOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
-            throw new ResultOpaque(diplomat_receive_buffer, []);
-        }
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+                throw new ResultOpaque(diplomat_receive_buffer, []);
+            }
     
         } finally {
         
-        wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(5, 4);
         
         }
     }
@@ -148,13 +148,13 @@ export class ResultOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
-            return null;
-        }
-        return diplomat_receive_buffer;
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+                return null;
+            }
+            return diplomat_receive_buffer;
         } finally {
         
-        wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(5, 4);
         
         }
     }
@@ -166,13 +166,13 @@ export class ResultOpaque {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
-            throw new ResultOpaque(diplomat_receive_buffer, []);
-        }
-        return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4), resultByte) {
+                throw new ResultOpaque(diplomat_receive_buffer, []);
+            }
+            return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
         } finally {
         
-        wasm.diplomat_free(5, 4);
+            wasm.diplomat_free(5, 4);
         
         }
     }

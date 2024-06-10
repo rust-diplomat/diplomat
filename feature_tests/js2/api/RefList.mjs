@@ -46,7 +46,7 @@ export class RefList {
     
         try {
     
-        return new RefList(result, [], bEdges);
+            return new RefList(result, [], bEdges);
         } finally {
         
         }

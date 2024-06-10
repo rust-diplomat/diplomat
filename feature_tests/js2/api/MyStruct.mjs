@@ -100,10 +100,10 @@ export class MyStruct {
     
         try {
     
-        return new MyStruct(diplomat_receive_buffer);
+            return new MyStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_receive_buffer, 28, 8);
+            wasm.diplomat_free(diplomat_receive_buffer, 28, 8);
         
         }
     }
@@ -113,10 +113,10 @@ export class MyStruct {
     
         try {
     
-        return result;
+            return result;
         } finally {
         
-        this.free(); /* TODO: Does this work? */
+            this.free(); /* TODO: Does this work? */
         
         }
     }

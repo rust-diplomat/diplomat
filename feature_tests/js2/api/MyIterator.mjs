@@ -44,13 +44,13 @@ export class MyIterator {
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 1), resultByte) {
-            return null;
-        }
-        return diplomat_receive_buffer;
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 1), resultByte) {
+                return null;
+            }
+            return diplomat_receive_buffer;
         } finally {
         
-        wasm.diplomat_free(2, 1);
+            wasm.diplomat_free(2, 1);
         
         }
     }

@@ -40,10 +40,10 @@ export class MyIterable {
     
         try {
     
-        return new MyIterable(result, []);
+            return new MyIterable(result, []);
         } finally {
         
-        xSlice.free();
+            xSlice.free();
         
         }
     }
@@ -56,7 +56,7 @@ export class MyIterable {
     
         try {
     
-        return new MyIterator(result, [], aEdges);
+            return new MyIterator(result, [], aEdges);
         } finally {
         
         }

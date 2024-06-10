@@ -39,7 +39,7 @@ export class Unnamespaced {
     
         try {
     
-        return new Unnamespaced(result, []);
+            return new Unnamespaced(result, []);
         } finally {
         
         }
