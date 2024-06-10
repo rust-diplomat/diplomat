@@ -114,7 +114,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
-                throw new diplomatRuntime.FFIError(new ErrorStruct(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer)));
+                throw new diplomatRuntime.FFIError(new ErrorStruct(diplomat_receive_buffer));
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {

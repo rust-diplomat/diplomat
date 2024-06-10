@@ -181,7 +181,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 		};
 		match *ty {
 			Type::Enum(..) => format!("diplomatRuntime.enumDiscriminant(wasm, {variable_name}{o})").into(),
-			Type::Opaque(..) | Type::Struct(..) => format!("diplomatRuntime.ptrRead(wasm, {variable_name}{o})").into(),
+			Type::Opaque(..) => format!("diplomatRuntime.ptrRead(wasm, {variable_name}{o})").into(),
+			// FIXME: I'm not sure this works if we're being passed a struct that's a member of a struct.
+			// Structs always assume they're being passed a pointer, so they handle this in their constructors:
+			Type::Struct(..) => variable_name,
 			Type::Slice(..) => "/* TODO: gen_c_to_js_deref */null".into(), // TODO: See BorrowedFieldsWithBounds.
 			Type::Primitive(p) => {
 				format!("{0}(new {1}(wasm.memory.buffer, {variable_name}{o}, 1))[0]{2}", 
