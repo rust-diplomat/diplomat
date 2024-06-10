@@ -173,18 +173,18 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 		}
 	}
 
-	pub(super) fn gen_c_to_js_deref_for_type<P: hir::TyPosition>(&self, ty : &Type<P>, offset : usize) -> Cow<'tcx, str> {
+	pub(super) fn gen_c_to_js_deref_for_type<P: hir::TyPosition>(&self, ty : &Type<P>, variable_name : Cow<'tcx, str>, offset : usize) -> Cow<'tcx, str> {
 		let o = if offset <= 0 {
 			"".into()
 		} else {
 			format!(" + {}", offset)
 		};
 		match *ty {
-			Type::Enum(..) => format!("diplomatRuntime.enumDiscriminant(wasm, ptr{o})").into(),
-			Type::Opaque(..) | Type::Struct(..) => format!("diplomatRuntime.ptrRead(wasm, ptr{o})").into(),
+			Type::Enum(..) => format!("diplomatRuntime.enumDiscriminant(wasm, {variable_name}{o})").into(),
+			Type::Opaque(..) | Type::Struct(..) => format!("diplomatRuntime.ptrRead(wasm, {variable_name}{o})").into(),
 			Type::Slice(..) => "/* TODO: gen_c_to_js_deref */null".into(), // TODO: See BorrowedFieldsWithBounds.
 			Type::Primitive(p) => {
-				format!("{0}(new {1}(wasm.memory.buffer, ptr{o}, 1))[0]{2}", 
+				format!("{0}(new {1}(wasm.memory.buffer, {variable_name}{o}, 1))[0]{2}", 
 				match p {
 					PrimitiveType::Char => "String.fromfromCharCode(",
 					_ => "",
@@ -363,8 +363,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {})) {{\n    {};\n}}\n",
 				size - 1,
 				match return_type {
-					ReturnType::Fallible(_, Some(e)) => format!("throw {}",
-					self.gen_c_to_js_for_type(e, format!("diplomat_receive_buffer").into(), lifetime_environment)),
+					ReturnType::Fallible(_, Some(e)) => {
+						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
+						format!("throw {}", self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment))
+				},
 					_ => "return null".into(),
 				});
 
@@ -376,8 +378,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						format!("return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));").into()
 					},
 					SuccessType::OutType(ref o) => {
+						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomat_receive_buffer".into(), 0);
 						format!("{err_check}return {};", 
-						self.gen_c_to_js_for_type(o, format!("diplomat_receive_buffer").into(), lifetime_environment))
+						self.gen_c_to_js_for_type(o, ptr_deref, lifetime_environment))
 					},
 					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
 				}.into())

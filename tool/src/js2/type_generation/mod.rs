@@ -138,7 +138,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             let js_type_name = self.gen_js_type_str(&field.ty);
 
-            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, offsets[i]);
+            let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), offsets[i]);
 
             let c_to_js = self.gen_c_to_js_for_type(
                 &field.ty, 

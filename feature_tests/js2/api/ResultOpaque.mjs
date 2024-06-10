@@ -41,9 +41,9 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
+                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
             }
-            return new ResultOpaque(diplomat_receive_buffer, []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -59,9 +59,9 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
+                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
             }
-            return new ResultOpaque(diplomat_receive_buffer, []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -77,9 +77,9 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
+                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
             }
-            return new ResultOpaque(diplomat_receive_buffer, []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -97,7 +97,7 @@ export class ResultOpaque {
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
-            return new ResultOpaque(diplomat_receive_buffer, []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -113,9 +113,9 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
-                throw new ErrorStruct(diplomat_receive_buffer);
+                throw new ErrorStruct(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
             }
-            return new ResultOpaque(diplomat_receive_buffer, []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
@@ -131,7 +131,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw new ResultOpaque(diplomat_receive_buffer, []);
+                throw new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
             }
     
         } finally {
@@ -151,7 +151,7 @@ export class ResultOpaque {
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
-            return diplomat_receive_buffer;
+            return (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -167,9 +167,9 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw new ResultOpaque(diplomat_receive_buffer, []);
+                throw new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
             }
-            return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomat_receive_buffer]];
+            return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
