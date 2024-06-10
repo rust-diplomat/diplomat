@@ -36,19 +36,22 @@ export class OpaqueMutexedString {
     static fromUsize(number) {
         const result = wasm.OpaqueMutexedString_from_usize(number);
     
-        const finalOut = new OpaqueMutexedString(result, []);
-        
-        
+        try {
     
-        return finalOut;
+        return new OpaqueMutexedString(result, []);
+        } finally {
+        
+        }
     }
 
     change(number) {
         wasm.OpaqueMutexedString_change(this.ffiValue, number);
     
-        
-        
+        try {
     
+        } finally {
+        
+        }
     }
 
     borrow() {
@@ -57,11 +60,12 @@ export class OpaqueMutexedString {
         let aEdges = [this];
         const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
     
-        const finalOut = new OpaqueMutexedString(result, aEdges);
-        
-        
+        try {
     
-        return finalOut;
+        return new OpaqueMutexedString(result, aEdges);
+        } finally {
+        
+        }
     }
 
     static borrowOther(other) {
@@ -70,11 +74,12 @@ export class OpaqueMutexedString {
         let aEdges = [other];
         const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
     
-        const finalOut = new OpaqueMutexedString(result, aEdges);
-        
-        
+        try {
     
-        return finalOut;
+        return new OpaqueMutexedString(result, aEdges);
+        } finally {
+        
+        }
     }
 
     borrowSelfOrOther(other) {
@@ -83,21 +88,23 @@ export class OpaqueMutexedString {
         let aEdges = [this, other];
         const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
     
-        const finalOut = new OpaqueMutexedString(result, aEdges);
-        
-        
+        try {
     
-        return finalOut;
+        return new OpaqueMutexedString(result, aEdges);
+        } finally {
+        
+        }
     }
 
     getLenAndAdd(other) {
         const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
     
-        const finalOut = result;
-        
-        
+        try {
     
-        return finalOut;
+        return result;
+        } finally {
+        
+        }
     }
 
     dummyStr() {
@@ -108,23 +115,25 @@ export class OpaqueMutexedString {
         let aEdges = [this];
         const result = wasm.OpaqueMutexedString_dummy_str(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
-        
+        try {
+    
+        return diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
-    
-        return finalOut;
+        }
     }
 
     wrapper() {
         const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
     
-        const finalOut = new Utf16Wrap(result, []);
-        
-        
+        try {
     
-        return finalOut;
+        return new Utf16Wrap(result, []);
+        } finally {
+        
+        }
     }
 
     

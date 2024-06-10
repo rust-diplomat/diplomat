@@ -67,8 +67,10 @@ export class BorrowedFields {
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomat_recieve_buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
     
-        const finalOut = new BorrowedFields(diplomat_recieve_buffer, xEdges);
-        
+        try {
+    
+        return new BorrowedFields(diplomat_recieve_buffer, xEdges);
+        } finally {
         
         dstr16Slice.garbageCollect();
         
@@ -76,8 +78,7 @@ export class BorrowedFields {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 24, 4);
         
-    
-        return finalOut;
+        }
     }
 
     

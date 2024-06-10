@@ -36,21 +36,23 @@ export class OptionOpaque {
     static new_(i) {
         const result = wasm.OptionOpaque_new(i);
     
-        const finalOut = ((result == 0) ? undefined : new OptionOpaque(result, []));
-        
-        
+        try {
     
-        return finalOut;
+        return ((result == 0) ? undefined : new OptionOpaque(result, []));
+        } finally {
+        
+        }
     }
 
     static newNone() {
         const result = wasm.OptionOpaque_new_none();
     
-        const finalOut = ((result == 0) ? undefined : new OptionOpaque(result, []));
-        
-        
+        try {
     
-        return finalOut;
+        return ((result == 0) ? undefined : new OptionOpaque(result, []));
+        } finally {
+        
+        }
     }
 
     static returns() {
@@ -58,16 +60,17 @@ export class OptionOpaque {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(17, 4);
         const result = wasm.OptionOpaque_returns(diplomat_recieve_buffer);
     
+        try {
+    
         if (!diplomatRuntime.resultFlag(wasm, diplomat_recieve_buffer), resultByte) {
             return null;
         }
-        const finalOut = new OptionStruct(diplomat_recieve_buffer.union.ok);
-        
+        return new OptionStruct(diplomat_recieve_buffer.union.ok);
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 17, 4);
         
-    
-        return finalOut;
+        }
     }
 
     static newStruct() {
@@ -75,13 +78,14 @@ export class OptionOpaque {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(16, 4);
         const result = wasm.OptionOpaque_new_struct(diplomat_recieve_buffer);
     
-        const finalOut = new OptionStruct(diplomat_recieve_buffer);
-        
+        try {
+    
+        return new OptionStruct(diplomat_recieve_buffer);
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 16, 4);
         
-    
-        return finalOut;
+        }
     }
 
     static newStructNones() {
@@ -89,31 +93,35 @@ export class OptionOpaque {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(16, 4);
         const result = wasm.OptionOpaque_new_struct_nones(diplomat_recieve_buffer);
     
-        const finalOut = new OptionStruct(diplomat_recieve_buffer);
-        
+        try {
+    
+        return new OptionStruct(diplomat_recieve_buffer);
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 16, 4);
         
-    
-        return finalOut;
+        }
     }
 
     assertInteger(i) {
         wasm.OptionOpaque_assert_integer(this.ffiValue, i);
     
-        
-        
+        try {
     
+        } finally {
+        
+        }
     }
 
     static optionOpaqueArgument(arg) {
         const result = wasm.OptionOpaque_option_opaque_argument(arg.ffiValue ?? 0);
     
-        const finalOut = result;
-        
-        
+        try {
     
-        return finalOut;
+        return result;
+        } finally {
+        
+        }
     }
 
     

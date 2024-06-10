@@ -98,25 +98,27 @@ export class MyStruct {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(28, 8);
         const result = wasm.MyStruct_new(diplomat_recieve_buffer);
     
-        const finalOut = new MyStruct(diplomat_recieve_buffer);
-        
+        try {
+    
+        return new MyStruct(diplomat_recieve_buffer);
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 28, 8);
         
-    
-        return finalOut;
+        }
     }
 
     intoA() {
         const result = wasm.MyStruct_into_a(...this._intoFFI());
     
-        const finalOut = result;
-        
+        try {
+    
+        return result;
+        } finally {
         
         this.free(); /* TODO: Does this work? */
         
-    
-        return finalOut;
+        }
     }
 
     

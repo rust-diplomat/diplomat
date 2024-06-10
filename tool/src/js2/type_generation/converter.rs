@@ -264,7 +264,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
 			// Any out that is not a [`SuccessType::Write`].
 			ReturnType::Infallible(SuccessType::OutType(ref o)) => Some(
-				format!("const finalOut = {};", self.gen_c_to_js_for_type(o, result_var.clone().into(), lifetime_environment))
+				format!("return {};", self.gen_c_to_js_for_type(o, result_var.clone().into(), lifetime_environment))
 				.into()
 			),
 
@@ -272,7 +272,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(SuccessType::Unit, None)
 			| ReturnType::Nullable(SuccessType::Unit)
-			=> Some(format!("const finalOut = diplomatRuntime.resultFlag(wasm, {result_var}, resultByte);").into()),
+			=> Some(format!("return diplomatRuntime.resultFlag(wasm, {result_var}, resultByte);").into()),
 
 			// Result<Type, Error> or Option<Type>
 			// TODO: See js/api/OptionOpaque.mjs.
@@ -287,7 +287,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				Some(match ok {
 					SuccessType::Unit => err_check,
 					SuccessType::Write => format!("{err_check} return writeable;"),
-					SuccessType::OutType(ref o) => format!("{err_check}const finalOut = {};", 
+					SuccessType::OutType(ref o) => format!("{err_check}return {};", 
 					self.gen_c_to_js_for_type(o, format!("{result_var}.union.ok").into(), lifetime_environment)),
 					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
 				}.into())

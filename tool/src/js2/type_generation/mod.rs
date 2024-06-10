@@ -369,14 +369,18 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         }
 
         if method.output.is_write() {
-            // TODO:
+            // TODO: Allocate our writeable (like diplomatRuntime.withDiplomatWrite)
+            method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
+            method_info.cleanup_expressions.push("diplomatRuntime.cleanupWrite(write);".into());
         }
 
         method_info.return_type = self.gen_js_return_type_str(&method.output);
         
+        //# region Return management
+        // TODO: This could probably be moved into gen_c_to_js_for_return_type. The only major issue is in handling allocation BEFORE setting up the return type.
         // Conditions for allocating a buffer:
         // 1. Function returns a slice.
-        // 2. Function returns an Option<> or Success<> with an OutType.
+        // 2. Function returns an Option<> or Success<> with an OutType or UnitType.
         // 3. Function returns a struct.
         let (return_buffer, additional_size) = {
             let mut additional_types_size = 0;
@@ -430,6 +434,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             result_var = "diplomat_recieve_buffer";
         }
+        // #endregion
 
         method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, result_var.into(), &method.lifetime_env);
         

@@ -40,13 +40,14 @@ export class Utf16Wrap {
         let aEdges = [this];
         const result = wasm.Utf16Wrap_borrow_cont(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
-        
+        try {
+    
+        return diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
-    
-        return finalOut;
+        }
     }
 
     owned() {
@@ -54,13 +55,14 @@ export class Utf16Wrap {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
         const result = wasm.Utf16Wrap_owned(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = diplomat_recieve_buffer // TODO: Slice c_to_js;
-        
+        try {
+    
+        return diplomat_recieve_buffer // TODO: Slice c_to_js;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
-    
-        return finalOut;
+        }
     }
 
     

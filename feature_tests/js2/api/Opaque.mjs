@@ -37,31 +37,35 @@ export class Opaque {
     static new_() {
         const result = wasm.Opaque_new();
     
-        const finalOut = new Opaque(result, []);
-        
-        
+        try {
     
-        return finalOut;
+        return new Opaque(result, []);
+        } finally {
+        
+        }
     }
 
     assertStruct(s) {
         wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFfi(temp));
     
-        
+        try {
+    
+        } finally {
         
         this.free(); /* TODO: Does this work? */
         
-    
+        }
     }
 
     static returnsUsize() {
         const result = wasm.Opaque_returns_usize();
     
-        const finalOut = result;
-        
-        
+        try {
     
-        return finalOut;
+        return result;
+        } finally {
+        
+        }
     }
 
     static returnsImported() {
@@ -69,23 +73,25 @@ export class Opaque {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(5, 4);
         const result = wasm.Opaque_returns_imported(diplomat_recieve_buffer);
     
-        const finalOut = new ImportedStruct(diplomat_recieve_buffer);
-        
+        try {
+    
+        return new ImportedStruct(diplomat_recieve_buffer);
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 5, 4);
         
-    
-        return finalOut;
+        }
     }
 
     static cmp() {
         const result = wasm.Opaque_cmp();
     
-        const finalOut = result;
-        
-        
+        try {
     
-        return finalOut;
+        return result;
+        } finally {
+        
+        }
     }
 
     

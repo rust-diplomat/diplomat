@@ -37,55 +37,64 @@ export class AttrOpaque1 {
     static new_() {
         const result = wasm.namespace_AttrOpaque1_new();
     
-        const finalOut = new AttrOpaque1(result, []);
-        
-        
+        try {
     
-        return finalOut;
+        return new AttrOpaque1(result, []);
+        } finally {
+        
+        }
     }
 
     get method() {
         const result = wasm.namespace_AttrOpaque1_method(this.ffiValue);
     
-        const finalOut = result;
-        
-        
+        try {
     
-        return finalOut;
+        return result;
+        } finally {
+        
+        }
     }
 
     get abirenamed() {
         const result = wasm.renamed_on_abi_only(this.ffiValue);
     
-        const finalOut = result;
-        
-        
+        try {
     
-        return finalOut;
+        return result;
+        } finally {
+        
+        }
     }
 
     methodDisabledcpp() {
         wasm.namespace_AttrOpaque1_method_disabledcpp(this.ffiValue);
     
-        
-        
+        try {
     
+        } finally {
+        
+        }
     }
 
     useUnnamespaced(un) {
         wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
     
-        
-        
+        try {
     
+        } finally {
+        
+        }
     }
 
     useNamespaced(n) {
         wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
     
-        
-        
+        try {
     
+        } finally {
+        
+        }
     }
 
     

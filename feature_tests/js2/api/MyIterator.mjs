@@ -42,16 +42,17 @@ export class MyIterator {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(2, 1);
         const result = wasm.namespace_MyIterator_next(diplomat_recieve_buffer, this.ffiValue);
     
+        try {
+    
         if (!diplomatRuntime.resultFlag(wasm, diplomat_recieve_buffer), resultByte) {
             return null;
         }
-        const finalOut = diplomat_recieve_buffer.union.ok;
-        
+        return diplomat_recieve_buffer.union.ok;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 2, 1);
         
-    
-        return finalOut;
+        }
     }
 
     

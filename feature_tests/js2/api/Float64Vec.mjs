@@ -37,13 +37,14 @@ export class Float64Vec {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "bool");
         const result = wasm.Float64Vec_new_bool(vSlice.ptr, vSlice.size);
     
-        const finalOut = new Float64Vec(result, []);
-        
+        try {
+    
+        return new Float64Vec(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     static newI16(v) {
@@ -51,13 +52,14 @@ export class Float64Vec {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "i16");
         const result = wasm.Float64Vec_new_i16(vSlice.ptr, vSlice.size);
     
-        const finalOut = new Float64Vec(result, []);
-        
+        try {
+    
+        return new Float64Vec(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     static newU16(v) {
@@ -65,13 +67,14 @@ export class Float64Vec {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u16");
         const result = wasm.Float64Vec_new_u16(vSlice.ptr, vSlice.size);
     
-        const finalOut = new Float64Vec(result, []);
-        
+        try {
+    
+        return new Float64Vec(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     static newIsize(v) {
@@ -79,13 +82,14 @@ export class Float64Vec {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "isize");
         const result = wasm.Float64Vec_new_isize(vSlice.ptr, vSlice.size);
     
-        const finalOut = new Float64Vec(result, []);
-        
+        try {
+    
+        return new Float64Vec(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     static newUsize(v) {
@@ -93,13 +97,14 @@ export class Float64Vec {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "usize");
         const result = wasm.Float64Vec_new_usize(vSlice.ptr, vSlice.size);
     
-        const finalOut = new Float64Vec(result, []);
-        
+        try {
+    
+        return new Float64Vec(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     static newF64BeBytes(v) {
@@ -107,13 +112,14 @@ export class Float64Vec {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "u8");
         const result = wasm.Float64Vec_new_f64_be_bytes(vSlice.ptr, vSlice.size);
     
-        const finalOut = new Float64Vec(result, []);
-        
+        try {
+    
+        return new Float64Vec(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     static newFromOwned(v) {
@@ -121,11 +127,12 @@ export class Float64Vec {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         const result = wasm.Float64Vec_new_from_owned(vSlice.ptr, vSlice.size);
     
-        const finalOut = new Float64Vec(result, []);
-        
-        
+        try {
     
-        return finalOut;
+        return new Float64Vec(result, []);
+        } finally {
+        
+        }
     }
 
     get asBoxedSlice() {
@@ -133,13 +140,14 @@ export class Float64Vec {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
         const result = wasm.Float64Vec_as_boxed_slice(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = diplomat_recieve_buffer // TODO: Slice c_to_js;
-        
+        try {
+    
+        return diplomat_recieve_buffer // TODO: Slice c_to_js;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
-    
-        return finalOut;
+        }
     }
 
     get asSlice() {
@@ -150,13 +158,14 @@ export class Float64Vec {
         let aEdges = [this];
         const result = wasm.Float64Vec_as_slice(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
-        
+        try {
+    
+        return diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
-    
-        return finalOut;
+        }
     }
 
     fillSlice(v) {
@@ -164,11 +173,13 @@ export class Float64Vec {
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         wasm.Float64Vec_fill_slice(this.ffiValue, vSlice.ptr, vSlice.size);
     
-        
+        try {
+    
+        } finally {
         
         vSlice.free();
         
-    
+        }
     }
 
     setValue(newSlice) {
@@ -176,21 +187,28 @@ export class Float64Vec {
         const newSliceSlice = diplomatRuntime.DiplomatBuf.slice(wasm, newSlice, "f64");
         wasm.Float64Vec_set_value(this.ffiValue, newSliceSlice.ptr, newSliceSlice.size);
     
-        
+        try {
+    
+        } finally {
         
         newSliceSlice.free();
         
-    
+        }
     }
 
     toString() {
+        
+        const write = wasm.diplomat_buffer_write_create(0);
         wasm.Float64Vec_to_string(this.ffiValue);
     
-        return writeable;
-        
-        
+        try {
     
-        return finalOut;
+        return writeable;
+        } finally {
+        
+        diplomatRuntime.cleanupWrite(write);
+        
+        }
     }
 
     borrow() {
@@ -201,13 +219,14 @@ export class Float64Vec {
         let aEdges = [this];
         const result = wasm.Float64Vec_borrow(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
-        
+        try {
+    
+        return diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
-    
-        return finalOut;
+        }
     }
 
     get(i) {
@@ -215,16 +234,17 @@ export class Float64Vec {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(9, 8);
         const result = wasm.Float64Vec_get(diplomat_recieve_buffer, this.ffiValue, i);
     
+        try {
+    
         if (!diplomatRuntime.resultFlag(wasm, diplomat_recieve_buffer), resultByte) {
             return null;
         }
-        const finalOut = diplomat_recieve_buffer.union.ok;
-        
+        return diplomat_recieve_buffer.union.ok;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 9, 8);
         
-    
-        return finalOut;
+        }
     }
 
     

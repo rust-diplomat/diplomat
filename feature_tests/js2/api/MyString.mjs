@@ -37,13 +37,14 @@ export class MyString {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new(vSlice.ptr, vSlice.size);
     
-        const finalOut = new MyString(result, []);
-        
+        try {
+    
+        return new MyString(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     static newUnsafe(v) {
@@ -51,13 +52,14 @@ export class MyString {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new_unsafe(vSlice.ptr, vSlice.size);
     
-        const finalOut = new MyString(result, []);
-        
+        try {
+    
+        return new MyString(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     static newOwned(v) {
@@ -65,11 +67,12 @@ export class MyString {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new_owned(vSlice.ptr, vSlice.size);
     
-        const finalOut = new MyString(result, []);
-        
-        
+        try {
     
-        return finalOut;
+        return new MyString(result, []);
+        } finally {
+        
+        }
     }
 
     static newFromFirst(v) {
@@ -77,13 +80,14 @@ export class MyString {
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size);
     
-        const finalOut = new MyString(result, []);
-        
+        try {
+    
+        return new MyString(result, []);
+        } finally {
         
         vSlice.free();
         
-    
-        return finalOut;
+        }
     }
 
     set str(newStr) {
@@ -91,21 +95,28 @@ export class MyString {
         const newStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, newStr);
         wasm.MyString_set_str(this.ffiValue, newStrSlice.ptr, newStrSlice.size);
     
-        
+        try {
+    
+        } finally {
         
         newStrSlice.free();
         
-    
+        }
     }
 
     get str() {
+        
+        const write = wasm.diplomat_buffer_write_create(0);
         wasm.MyString_get_str(this.ffiValue);
     
-        return writeable;
-        
-        
+        try {
     
-        return finalOut;
+        return writeable;
+        } finally {
+        
+        diplomatRuntime.cleanupWrite(write);
+        
+        }
     }
 
     getBoxedStr() {
@@ -113,13 +124,14 @@ export class MyString {
         const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
         const result = wasm.MyString_get_boxed_str(diplomat_recieve_buffer, this.ffiValue);
     
-        const finalOut = diplomat_recieve_buffer // TODO: Slice c_to_js;
-        
+        try {
+    
+        return diplomat_recieve_buffer // TODO: Slice c_to_js;
+        } finally {
         
         wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
         
-    
-        return finalOut;
+        }
     }
 
     
