@@ -41,7 +41,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
+                throw new diplomatRuntime.FFIError(ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]]);
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
@@ -59,7 +59,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
+                throw new diplomatRuntime.FFIError(ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]]);
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
@@ -77,7 +77,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
+                throw new diplomatRuntime.FFIError(ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]]);
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
@@ -113,7 +113,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
-                throw new ErrorStruct(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer));
+                throw new diplomatRuntime.FFIError(new ErrorStruct(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer)));
             }
             return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
@@ -131,7 +131,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+                throw new diplomatRuntime.FFIError(new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []));
             }
     
         } finally {
@@ -167,7 +167,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+                throw new diplomatRuntime.FFIError(new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []));
             }
             return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
         } finally {
