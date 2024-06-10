@@ -33,6 +33,11 @@ pub fn opaque_size_alignment() -> Layout {
 	Layout::new::<usize_target>()
 }
 
+pub fn unit_size_alignment() -> Layout {
+	// TODO: Is this correct?
+	Layout::new::<usize_target>()
+}
+
 pub fn type_size_alignment<P: hir::TyPosition>(typ : &Type<P>, tcx : &TypeContext) -> Layout {
 	match typ {
 		// repr(C) fieldless enums use the default platform representation: isize

@@ -98,18 +98,18 @@ export class Foo {
 
     asReturning() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Foo_as_returning(diplomat_recieve_buffer, this.ffiValue);
+        const result = wasm.Foo_as_returning(diplomat_receive_buffer, this.ffiValue);
     
         try {
     
-        return new BorrowedFieldsReturning(diplomat_recieve_buffer, aEdges);
+        return new BorrowedFieldsReturning(diplomat_receive_buffer, aEdges);
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }

@@ -137,33 +137,33 @@ export class Float64Vec {
 
     get asBoxedSlice() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
-        const result = wasm.Float64Vec_as_boxed_slice(diplomat_recieve_buffer, this.ffiValue);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+        const result = wasm.Float64Vec_as_boxed_slice(diplomat_receive_buffer, this.ffiValue);
     
         try {
     
-        return diplomat_recieve_buffer // TODO: Slice c_to_js;
+        return diplomat_receive_buffer // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
 
     get asSlice() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Float64Vec_as_slice(diplomat_recieve_buffer, this.ffiValue);
+        const result = wasm.Float64Vec_as_slice(diplomat_receive_buffer, this.ffiValue);
     
         try {
     
-        return diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
+        return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
@@ -203,46 +203,46 @@ export class Float64Vec {
     
         try {
     
-        return writeable;
+        return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
         } finally {
         
-        diplomatRuntime.cleanupWrite(write);
+        wasm.diplomat_buffer_write_destroy(write);
         
         }
     }
 
     borrow() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Float64Vec_borrow(diplomat_recieve_buffer, this.ffiValue);
+        const result = wasm.Float64Vec_borrow(diplomat_receive_buffer, this.ffiValue);
     
         try {
     
-        return diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
+        return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
 
     get(i) {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(9, 8);
-        const result = wasm.Float64Vec_get(diplomat_recieve_buffer, this.ffiValue, i);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(9, 8);
+        const result = wasm.Float64Vec_get(this.ffiValue, i);
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_recieve_buffer), resultByte) {
+        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8), resultByte) {
             return null;
         }
-        return diplomat_recieve_buffer.union.ok;
+        return diplomat_receive_buffer;
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 9, 8);
+        wasm.diplomat_free(9, 8);
         
         }
     }

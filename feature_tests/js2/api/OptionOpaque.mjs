@@ -57,48 +57,48 @@ export class OptionOpaque {
 
     static returns() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(17, 4);
-        const result = wasm.OptionOpaque_returns(diplomat_recieve_buffer);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(17, 4);
+        const result = wasm.OptionOpaque_returns();
     
         try {
     
-        if (!diplomatRuntime.resultFlag(wasm, diplomat_recieve_buffer), resultByte) {
+        if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 16), resultByte) {
             return null;
         }
-        return new OptionStruct(diplomat_recieve_buffer.union.ok);
+        return new OptionStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 17, 4);
+        wasm.diplomat_free(17, 4);
         
         }
     }
 
     static newStruct() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(16, 4);
-        const result = wasm.OptionOpaque_new_struct(diplomat_recieve_buffer);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);
+        const result = wasm.OptionOpaque_new_struct(diplomat_receive_buffer);
     
         try {
     
-        return new OptionStruct(diplomat_recieve_buffer);
+        return new OptionStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 16, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
         
         }
     }
 
     static newStructNones() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(16, 4);
-        const result = wasm.OptionOpaque_new_struct_nones(diplomat_recieve_buffer);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);
+        const result = wasm.OptionOpaque_new_struct_nones(diplomat_receive_buffer);
     
         try {
     
-        return new OptionStruct(diplomat_recieve_buffer);
+        return new OptionStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 16, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
         
         }
     }

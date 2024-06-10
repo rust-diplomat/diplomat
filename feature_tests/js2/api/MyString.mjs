@@ -111,25 +111,25 @@ export class MyString {
     
         try {
     
-        return writeable;
+        return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
         } finally {
         
-        diplomatRuntime.cleanupWrite(write);
+        wasm.diplomat_buffer_write_destroy(write);
         
         }
     }
 
     getBoxedStr() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
-        const result = wasm.MyString_get_boxed_str(diplomat_recieve_buffer, this.ffiValue);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+        const result = wasm.MyString_get_boxed_str(diplomat_receive_buffer, this.ffiValue);
     
         try {
     
-        return diplomat_recieve_buffer // TODO: Slice c_to_js;
+        return diplomat_receive_buffer // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }

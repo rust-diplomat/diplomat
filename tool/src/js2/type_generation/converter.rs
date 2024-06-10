@@ -255,40 +255,118 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
 	/// Give us pure JS for returning types.
 	/// This basically handles the conversions from whatever the WASM gives us to a JS-friendly type.
-	pub(super) fn gen_c_to_js_for_return_type(&self, return_type : &ReturnType, result_var : String, lifetime_environment : &LifetimeEnv) -> Option<Cow<'tcx, str>> {
+	/// We access [`super::MethodInfo`] to handle allocation and cleanup.
+	pub(super) fn gen_c_to_js_for_return_type(&self, method_info: &mut super::MethodInfo, lifetime_environment : &LifetimeEnv) -> Option<Cow<'tcx, str>> {
+		let return_type = &method_info.method.unwrap().output; 
+		
+
+		
+        // Conditions for allocating a diplomat buffer:
+        // 1. Function returns an Option<> or Result<>.
+        // 2. Infallible function returns a slice.
+        // 3. Infallible function returns a struct.
 		match *return_type {
 			// -> ()
 			ReturnType::Infallible(SuccessType::Unit) => None,
 			
-			ReturnType::Infallible(SuccessType::Write) => Some("return writeable;".into()),
+			ReturnType::Infallible(SuccessType::Write) => {
+				method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
+				method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
+				Some("return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
+			},
 
 			// Any out that is not a [`SuccessType::Write`].
-			ReturnType::Infallible(SuccessType::OutType(ref o)) => Some(
-				format!("return {};", self.gen_c_to_js_for_type(o, result_var.clone().into(), lifetime_environment))
+			ReturnType::Infallible(SuccessType::OutType(ref o)) => {
+				let mut result = "result";
+				match o {
+					Type::Struct(_) | Type::Slice(_) => {
+						let layout = crate::layout_hir::type_size_alignment(o, &self.js_ctx.tcx);
+						let size = layout.size();
+						let align = layout.align();
+
+						method_info.alloc_expressions.push(
+							format!("const diplomat_receive_buffer = wasm.diplomat_alloc({size}, {align});")
+							.into()
+						);
+						// This is the first thing in param converison order:
+						method_info.param_conversions.insert(0, "diplomat_receive_buffer".into());
+						method_info.cleanup_expressions.push(
+							format!("wasm.diplomat_free(diplomat_receive_buffer, {size}, {align});")
+							.into());
+						result = "diplomat_receive_buffer";
+					},
+					_ => (),
+				}
+				Some(
+				format!("return {};", self.gen_c_to_js_for_type(o, result.into(), lifetime_environment))
 				.into()
-			),
+				)
+			},
 
 			// Result<(), ()> or Option<()>
-			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(SuccessType::Unit, None)
 			| ReturnType::Nullable(SuccessType::Unit)
-			=> Some(format!("return diplomatRuntime.resultFlag(wasm, {result_var}, resultByte);").into()),
+			=> {
+				let layout = crate::layout_hir::unit_size_alignment();
+				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({}, {})", layout.size(), layout.align()).into());
+				method_info.cleanup_expressions.push(format!("wasm.diplomat_free({}, {})", layout.size(), layout.align()).into());
+				Some(format!("return diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, resultByte);").into())
+			},
 
 			// Result<Type, Error> or Option<Type>
-			// TODO: See js/api/OptionOpaque.mjs.
 			ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok)  => {
-				let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, {result_var}), resultByte) {{\n    {};\n}}\n",
+				let layout = match ok {
+					SuccessType::Unit => crate::layout_hir::unit_size_alignment(),
+					SuccessType::OutType(ref o) => crate::layout_hir::type_size_alignment(o, &self.js_ctx.tcx),
+					SuccessType::Write => {
+						match return_type {
+							ReturnType::Fallible(_, ref err) if err.is_some() => { 
+								crate::layout_hir::type_size_alignment(&err.clone().unwrap(), &self.js_ctx.tcx)
+							},
+							ReturnType::Fallible(_, _) | ReturnType::Nullable(_) => crate::layout_hir::unit_size_alignment(),
+							_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
+						}
+					}
+					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
+				};
+				// Add one for a pass/fail result:
+				let size = layout.size() + 1;
+				let align = layout.align();
+
+				
+				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});", size, align).into());
+				method_info.cleanup_expressions.push(format!("wasm.diplomat_free({}, {});", size, align).into());
+				
+				// TODO: Not sure what Result<Write, Err> or Option<Write> looks like. My guess is:
+				/*
+				const write = alloc(0);
+				const diplomat_receive_buffer = diplomat.alloc(error_size, error_align);
+				wasm.c_func();
+				if (diplomat.resultFlag(wasm, diplomat_receive_buffer, error_size - 1)) {
+					return correct;
+				} else {
+					throw Error();
+				}
+				 */
+				let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {}), resultByte) {{\n    {};\n}}\n",
+				size - 1,
 				match return_type {
 					ReturnType::Fallible(_, Some(e)) => format!("throw {}",
-					self.gen_c_to_js_for_type(e, format!("{result_var}.union.error").into(), lifetime_environment)),
+					self.gen_c_to_js_for_type(e, format!("diplomat_receive_buffer").into(), lifetime_environment)),
 					_ => "return null".into(),
 				});
 
 				Some(match ok {
 					SuccessType::Unit => err_check,
-					SuccessType::Write => format!("{err_check} return writeable;"),
-					SuccessType::OutType(ref o) => format!("{err_check}return {};", 
-					self.gen_c_to_js_for_type(o, format!("{result_var}.union.ok").into(), lifetime_environment)),
+					SuccessType::Write => {
+						method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
+						method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
+						format!("return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));").into()
+					},
+					SuccessType::OutType(ref o) => {
+						format!("{err_check}return {};", 
+						self.gen_c_to_js_for_type(o, format!("diplomat_receive_buffer").into(), lifetime_environment))
+					},
 					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
 				}.into())
 			},

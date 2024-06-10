@@ -63,7 +63,7 @@ export class BorrowedFieldsWithBounds {
         const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(24, 4);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(24, 4);
         
         // This lifetime edge depends on lifetimes 'x, 'y, 'z
         let xEdges = [foo, dstr16XSlice, utf8StrZSlice];
@@ -73,18 +73,18 @@ export class BorrowedFieldsWithBounds {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [utf8StrZSlice];
-        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomat_recieve_buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomat_receive_buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         try {
     
-        return new BorrowedFieldsWithBounds(diplomat_recieve_buffer, xEdges, yEdges, zEdges);
+        return new BorrowedFieldsWithBounds(diplomat_receive_buffer, xEdges, yEdges, zEdges);
         } finally {
         
         dstr16XSlice.garbageCollect();
         
         utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 24, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 24, 4);
         
         }
     }

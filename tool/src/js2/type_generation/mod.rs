@@ -244,43 +244,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
         let _guard = self.js_ctx.errors.set_context_method(self.js_ctx.formatter.fmt_type_name_diagnostics(type_id), method.name.as_str().into());
 
-        #[derive(Default)]
-        struct ParamInfo<'a> {
-            ty : Cow<'a, str>,
-            name : Cow<'a, str>
-        }
-
-        struct SliceParam<'a> {
-            name : Cow<'a, str>,
-            /// How to convert the JS type into a C slice.
-            slice_expr : Cow<'a, str>,
-            is_borrowed : bool,
-        }
-
-        #[derive(Default, Template)]
-        #[template(path="js2/method.js.jinja", escape="none")]
-        struct MethodInfo<'info> {
-            method : Option<&'info Method>,
-            method_decl : String,
-            /// Native C method name
-            c_method_name : Cow<'info, str>,
-
-            typescript : bool,
-
-            parameters : Vec<ParamInfo<'info>>,
-            slice_params : Vec<SliceParam<'info>>,
-            param_conversions : Vec<Cow<'info, str>>,
-
-            return_type : Cow<'info, str>,
-            return_expression : Option<Cow<'info, str>>,
-
-            method_lifetimes_map : BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
-            lifetimes : Option<&'info LifetimeEnv>,
-            
-            alloc_expressions : Vec<Cow<'info, str>>,
-            cleanup_expressions : Vec<Cow<'info, str>>
-        }
-
         let mut method_info = MethodInfo::default();
 
         method_info.c_method_name = self.js_ctx.formatter.fmt_c_method_name(type_id, method);
@@ -368,75 +331,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             method_info.parameters.push(param_info);
         }
 
-        if method.output.is_write() {
-            // TODO: Allocate our writeable (like diplomatRuntime.withDiplomatWrite)
-            method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
-            method_info.cleanup_expressions.push("diplomatRuntime.cleanupWrite(write);".into());
-        }
-
         method_info.return_type = self.gen_js_return_type_str(&method.output);
-        
-        //# region Return management
-        // TODO: This could probably be moved into gen_c_to_js_for_return_type. The only major issue is in handling allocation BEFORE setting up the return type.
-        // Conditions for allocating a buffer:
-        // 1. Function returns a slice.
-        // 2. Function returns an Option<> or Success<> with an OutType or UnitType.
-        // 3. Function returns a struct.
-        let (return_buffer, additional_size) = {
-            let mut additional_types_size = 0;
-            let o = match method.output {
-                ReturnType::Fallible(ref o, _) | ReturnType::Nullable(ref o) => {
-                    // TODO: For Result<Success, Error>, add failure size.
-                    additional_types_size += 1;
-                    if let SuccessType::OutType(out) = o {
-                        Some(out)
-                    } else {
-                        None
-                    }
-                },
-                ReturnType::Infallible(ref o) => {
-                    if let SuccessType::OutType(s) = o {
-                        if let Type::Struct(_) = s {
-                            Some(s)
-                        } else if let Type::Slice(_) = s {
-                            Some(s)
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                },
-                _ => None,
-            };
 
-            (o.and_then(|o| {
-                Some(crate::layout_hir::type_size_alignment(o, &self.js_ctx.tcx))
-            }), additional_types_size)
-        };
-
-        
-        let mut result_var = "result";
-        if let Some(layout) = return_buffer {
-            let base_size = layout.size() + additional_size;
-            let base_align = layout.align();
-
-            // TODO: If we're fallible, add the size of the failure type to the size.
-            method_info.alloc_expressions.push(
-                format!("const diplomat_recieve_buffer = wasm.diplomat_alloc({base_size}, {base_align});")
-                .into()
-            );
-            // This is the first thing in param converison order:
-            method_info.param_conversions.insert(0, "diplomat_recieve_buffer".into());
-            method_info.cleanup_expressions.push(
-                format!("wasm.diplomat_free(diplomat_recieve_buffer, {base_size}, {base_align});")
-                .into());
-
-            result_var = "diplomat_recieve_buffer";
-        }
-        // #endregion
-
-        method_info.return_expression = self.gen_c_to_js_for_return_type(&method.output, result_var.into(), &method.lifetime_env);
+        method_info.return_expression = self.gen_c_to_js_for_return_type(&mut method_info, &method.lifetime_env);
         
         method_info.method_lifetimes_map = visitor.borrow_map();
         method_info.lifetimes = Some(&method.lifetime_env);
@@ -497,6 +394,43 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             typescript
         }.render().unwrap()
     }
+}
+
+#[derive(Default)]
+struct ParamInfo<'a> {
+    ty : Cow<'a, str>,
+    name : Cow<'a, str>
+}
+
+struct SliceParam<'a> {
+    name : Cow<'a, str>,
+    /// How to convert the JS type into a C slice.
+    slice_expr : Cow<'a, str>,
+    is_borrowed : bool,
+}
+
+#[derive(Default, Template)]
+#[template(path="js2/method.js.jinja", escape="none")]
+struct MethodInfo<'info> {
+    method : Option<&'info Method>,
+    method_decl : String,
+    /// Native C method name
+    c_method_name : Cow<'info, str>,
+
+    typescript : bool,
+
+    parameters : Vec<ParamInfo<'info>>,
+    slice_params : Vec<SliceParam<'info>>,
+    param_conversions : Vec<Cow<'info, str>>,
+
+    return_type : Cow<'info, str>,
+    return_expression : Option<Cow<'info, str>>,
+
+    method_lifetimes_map : BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
+    lifetimes : Option<&'info LifetimeEnv>,
+    
+    alloc_expressions : Vec<Cow<'info, str>>,
+    cleanup_expressions : Vec<Cow<'info, str>>
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)

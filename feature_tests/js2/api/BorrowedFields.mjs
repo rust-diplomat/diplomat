@@ -61,22 +61,22 @@ export class BorrowedFields {
         const utf8StrArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(24, 4);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(24, 4);
         
         // This lifetime edge depends on lifetimes 'x
         let xEdges = [bar, dstr16Slice, utf8StrSlice];
-        const result = wasm.BorrowedFields_from_bar_and_strings(diplomat_recieve_buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
+        const result = wasm.BorrowedFields_from_bar_and_strings(diplomat_receive_buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
     
         try {
     
-        return new BorrowedFields(diplomat_recieve_buffer, xEdges);
+        return new BorrowedFields(diplomat_receive_buffer, xEdges);
         } finally {
         
         dstr16Slice.garbageCollect();
         
         utf8StrSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 24, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 24, 4);
         
         }
     }

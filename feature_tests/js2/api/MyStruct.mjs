@@ -95,15 +95,15 @@ export class MyStruct {
     }
     static new_() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(28, 8);
-        const result = wasm.MyStruct_new(diplomat_recieve_buffer);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(28, 8);
+        const result = wasm.MyStruct_new(diplomat_receive_buffer);
     
         try {
     
-        return new MyStruct(diplomat_recieve_buffer);
+        return new MyStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 28, 8);
+        wasm.diplomat_free(diplomat_receive_buffer, 28, 8);
         
         }
     }

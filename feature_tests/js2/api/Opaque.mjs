@@ -70,15 +70,15 @@ export class Opaque {
 
     static returnsImported() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.Opaque_returns_imported(diplomat_recieve_buffer);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+        const result = wasm.Opaque_returns_imported(diplomat_receive_buffer);
     
         try {
     
-        return new ImportedStruct(diplomat_recieve_buffer);
+        return new ImportedStruct(diplomat_receive_buffer);
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 5, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
     }

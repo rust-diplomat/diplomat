@@ -34,33 +34,33 @@ export class Utf16Wrap {
 
     borrowCont() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Utf16Wrap_borrow_cont(diplomat_recieve_buffer, this.ffiValue);
+        const result = wasm.Utf16Wrap_borrow_cont(diplomat_receive_buffer, this.ffiValue);
     
         try {
     
-        return diplomat_recieve_buffer(aEdges) // TODO: Slice c_to_js;
+        return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }
 
     owned() {
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(8, 4);
-        const result = wasm.Utf16Wrap_owned(diplomat_recieve_buffer, this.ffiValue);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+        const result = wasm.Utf16Wrap_owned(diplomat_receive_buffer, this.ffiValue);
     
         try {
     
-        return diplomat_recieve_buffer // TODO: Slice c_to_js;
+        return diplomat_receive_buffer // TODO: Slice c_to_js;
         } finally {
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 8, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
         
         }
     }

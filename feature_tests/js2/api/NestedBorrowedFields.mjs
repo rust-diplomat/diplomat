@@ -74,7 +74,7 @@ export class NestedBorrowedFields {
         const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
         
         
-        const diplomat_recieve_buffer = wasm.diplomat_alloc(72, 4);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(72, 4);
         
         // This lifetime edge depends on lifetimes 'x, 'y
         let xEdges = [bar, dstr16XSlice, utf8StrYSlice];
@@ -84,11 +84,11 @@ export class NestedBorrowedFields {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [foo, dstr16ZSlice, utf8StrZSlice];
-        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomat_recieve_buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+        const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomat_receive_buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         try {
     
-        return new NestedBorrowedFields(diplomat_recieve_buffer, xEdges, yEdges, zEdges);
+        return new NestedBorrowedFields(diplomat_receive_buffer, xEdges, yEdges, zEdges);
         } finally {
         
         dstr16XSlice.garbageCollect();
@@ -99,7 +99,7 @@ export class NestedBorrowedFields {
         
         utf8StrZSlice.garbageCollect();
         
-        wasm.diplomat_free(diplomat_recieve_buffer, 72, 4);
+        wasm.diplomat_free(diplomat_receive_buffer, 72, 4);
         
         }
     }
