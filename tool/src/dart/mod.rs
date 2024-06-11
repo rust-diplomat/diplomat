@@ -4,11 +4,11 @@ use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
-use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, SpecialMethod,
     SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
 };
+use diplomat_core::hir::{ReturnableStructDef, TypeContext};
 use formatter::DartFormatter;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
@@ -334,6 +334,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 constructor.return_expression = Some(r.into());
 
                 None
+            } else if fields.is_empty() {
+                // ZST
+                Some(format!("{type_name}();"))
             } else {
                 // Otherwise we create a constructor with required values for all fields.
                 let args = fields
@@ -913,15 +916,24 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             Type::Struct(ref st) => {
                 let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
-                let mut edges = String::new();
-                for lt in st.lifetimes().lifetimes() {
-                    let MaybeStatic::NonStatic(lt) = lt else {
-                        panic!("'static not supported in Dart")
-                    };
-                    write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
-                }
+                let is_zst = match self.tcx.resolve_type(id) {
+                    TypeDef::Struct(def) => def.fields.is_empty(),
+                    TypeDef::OutStruct(def) => def.fields.is_empty(),
+                    _ => false,
+                };
+                if is_zst {
+                    format!("{type_name}()").into()
+                } else {
+                    let mut edges = String::new();
+                    for lt in st.lifetimes().lifetimes() {
+                        let MaybeStatic::NonStatic(lt) = lt else {
+                            panic!("'static not supported in Dart")
+                        };
+                        write!(&mut edges, ", {}Edges", lifetime_env.fmt_lifetime(lt)).unwrap();
+                    }
 
-                format!("{type_name}._fromFfi({var_name}{edges})").into()
+                    format!("{type_name}._fromFfi({var_name}{edges})").into()
+                }
             }
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 let id = e.tcx_id.into();
@@ -1126,6 +1138,28 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         if self.helper_classes.contains_key(&name) {
             return name;
         }
+
+        let ok = ok.filter(|t| {
+            let Type::Struct(s) = t else {
+                return true;
+            };
+            match s.resolve(self.tcx) {
+                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
+                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+                _ => unreachable!("unknown AST/HIR variant"),
+            }
+        });
+
+        let err = err.filter(|t| {
+            let Type::Struct(s) = t else {
+                return true;
+            };
+            match s.resolve(self.tcx) {
+                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
+                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+                _ => unreachable!("unknown AST/HIR variant"),
+            }
+        });
 
         let decls = [ok.map(|o| (o, "ok")), err.map(|o| (o, "err"))]
             .into_iter()

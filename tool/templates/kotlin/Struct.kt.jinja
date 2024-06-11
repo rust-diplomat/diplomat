@@ -5,6 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
+{% if !fields.is_empty() -%}
 internal interface {{type_name}}Lib: Library {
 
     {%- for m in native_methods %}
@@ -24,8 +25,12 @@ internal class {{type_name}}Native: Structure(), Structure.ByValue {
     }
 }
 
+{% endif -%}
+
 class {{type_name}} internal constructor (
-    internal val nativeStruct: {{type_name}}Native{% if !lifetimes.is_empty() %},
+    {% if !fields.is_empty() -%}
+    internal val nativeStruct: {{type_name}}Native{% if !lifetimes.is_empty() %},{% endif %}{% endif -%}
+    {% if !lifetimes.is_empty() %}
     {%- for lt in lifetimes %}
     internal val {{lt}}Edges: List<Any>{% if !loop.last%},{% endif %}
     {%- endfor %}
@@ -36,6 +41,7 @@ class {{type_name}} internal constructor (
     val {{field.name}}: {{field.field_type}} = {{field.native_to_kt}}
     {%- endfor %}
 
+    {% if !fields.is_empty() -%}
     companion object {
         internal val libClass: Class<{{type_name}}Lib> = {{type_name}}Lib::class.java
         internal val lib: {{type_name}}Lib = Native.load("somelib", libClass)
@@ -49,5 +55,6 @@ class {{type_name}} internal constructor (
     {{m|indent(4)}}
 {%- endfor %}
 
+{% endif -%}
 }
 

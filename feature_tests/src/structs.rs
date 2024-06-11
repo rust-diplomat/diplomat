@@ -44,6 +44,9 @@ pub mod ffi {
         g: MyEnum,
     }
 
+    #[diplomat::skip_if_ast]
+    pub struct MyZst;
+
     impl Opaque {
         #[diplomat::attr(supports = constructors, constructor)]
         pub fn new() -> Box<Opaque> {
@@ -170,6 +173,11 @@ pub mod ffi {
             assert_eq!(self.e, 5991);
             assert_eq!(self.f, '餐' as DiplomatChar);
             assert_eq!(self.g, MyEnum::B);
+        }
+
+        #[diplomat::skip_if_ast]
+        pub fn returns_zst_result() -> Result<(), MyZst> {
+            Ok(())
         }
     }
 }

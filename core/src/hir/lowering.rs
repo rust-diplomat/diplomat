@@ -298,31 +298,21 @@ impl<'ast> LoweringContext<'ast> {
         self.errors.set_item(ast_struct.name.as_str());
         let name = self.lower_ident(&ast_struct.name, "struct name");
 
-        let fields = if ast_struct.fields.is_empty() {
-            self.errors.push(LoweringError::Other(format!(
-                "struct `{}` is a ZST because it has no fields",
-                ast_struct.name
-            )));
-            Err(())
-        } else {
-            let mut fields = Ok(Vec::with_capacity(ast_struct.fields.len()));
+        let mut fields = Ok(Vec::with_capacity(ast_struct.fields.len()));
 
-            for (name, ty, docs) in ast_struct.fields.iter() {
-                let name = self.lower_ident(name, "struct field name");
-                let ty = self.lower_type(ty, &mut &ast_struct.lifetimes, item.in_path);
+        for (name, ty, docs) in ast_struct.fields.iter() {
+            let name = self.lower_ident(name, "struct field name");
+            let ty = self.lower_type(ty, &mut &ast_struct.lifetimes, item.in_path);
 
-                match (name, ty, &mut fields) {
-                    (Ok(name), Ok(ty), Ok(fields)) => fields.push(StructField {
-                        docs: docs.clone(),
-                        name,
-                        ty,
-                    }),
-                    _ => fields = Err(()),
-                }
+            match (name, ty, &mut fields) {
+                (Ok(name), Ok(ty), Ok(fields)) => fields.push(StructField {
+                    docs: docs.clone(),
+                    name,
+                    ty,
+                }),
+                _ => fields = Err(()),
             }
-
-            fields
-        };
+        }
         let attrs = self.attr_validator.attr_from_ast(
             &ast_struct.attrs,
             &item.ty_parent_attrs,
@@ -333,6 +323,15 @@ impl<'ast> LoweringContext<'ast> {
         let mut special_method_presence = SpecialMethodPresence::default();
         let methods = if attrs.disable {
             Vec::new()
+        } else if ast_struct.fields.is_empty() {
+            if !ast_struct.methods.is_empty() {
+                self.errors.push(LoweringError::Other(format!(
+                    "Methods on ZST structs are not yet implemented"
+                )));
+                return Err(());
+            } else {
+                Vec::new()
+            }
         } else {
             self.lower_all_methods(
                 &ast_struct.methods[..],
@@ -379,8 +378,13 @@ impl<'ast> LoweringContext<'ast> {
 
             for (name, ty, docs) in ast_out_struct.fields.iter() {
                 let name = self.lower_ident(name, "out-struct field name");
-                let ty =
-                    self.lower_out_type(ty, &mut &ast_out_struct.lifetimes, item.in_path, true);
+                let ty = self.lower_out_type(
+                    ty,
+                    &mut &ast_out_struct.lifetimes,
+                    item.in_path,
+                    true,
+                    false,
+                );
 
                 match (name, ty, &mut fields) {
                     (Ok(name), Ok(ty), Ok(fields)) => fields.push(OutStructField {
@@ -553,6 +557,10 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
+                        if strct.fields.is_empty() {
+                            self.errors.push(LoweringError::Other(format!("zero-size types are not allowed as method arguments: {ty} in {path}")));
+                            return Err(());
+                        }
                         if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                             let lifetimes = ltl.lower_generics(
                                 &path.lifetimes[..],
@@ -711,6 +719,7 @@ impl<'ast> LoweringContext<'ast> {
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
         in_struct: bool,
+        in_result_option: bool,
     ) -> Result<OutType, ()> {
         match ty {
             ast::TypeName::Primitive(prim) => {
@@ -730,6 +739,10 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
+                        if !in_result_option && strct.fields.is_empty() {
+                            self.errors.push(LoweringError::Other(format!("Found zero-size struct outside a `Result` or `Option`: {ty} in {in_path}")));
+                            return Err(());
+                        }
                         let lifetimes =
                             ltl.lower_generics(&path.lifetimes, &strct.lifetimes, ty.is_self());
 
@@ -1086,13 +1099,13 @@ impl<'ast> LoweringContext<'ast> {
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(write_or_unit),
                     ty => self
-                        .lower_out_type(ty, &mut return_ltl, in_path, false)
+                        .lower_out_type(ty, &mut return_ltl, in_path, false, true)
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_out_type(ty, &mut return_ltl, in_path, false)
+                        .lower_out_type(ty, &mut return_ltl, in_path, false, true)
                         .map(Some),
                 };
 
@@ -1103,18 +1116,18 @@ impl<'ast> LoweringContext<'ast> {
             }
             ty @ ast::TypeName::Option(value_ty) => match &**value_ty {
                 ast::TypeName::Box(..) | ast::TypeName::Reference(..) => self
-                    .lower_out_type(ty, &mut return_ltl, in_path, false)
+                    .lower_out_type(ty, &mut return_ltl, in_path, false, true)
                     .map(SuccessType::OutType)
                     .map(ReturnType::Infallible),
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(write_or_unit)),
                 _ => self
-                    .lower_out_type(value_ty, &mut return_ltl, in_path, false)
+                    .lower_out_type(value_ty, &mut return_ltl, in_path, false, true)
                     .map(SuccessType::OutType)
                     .map(ReturnType::Nullable),
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(write_or_unit)),
             ty => self
-                .lower_out_type(ty, &mut return_ltl, in_path, false)
+                .lower_out_type(ty, &mut return_ltl, in_path, false, false)
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
         .map(|r_ty| (r_ty, return_ltl.finish()))

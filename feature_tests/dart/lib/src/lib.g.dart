@@ -27,6 +27,7 @@ part 'MyIterable.g.dart';
 part 'MyIterator.g.dart';
 part 'MyString.g.dart';
 part 'MyStruct.g.dart';
+part 'MyZst.g.dart';
 part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
 part 'Opaque.g.dart';
@@ -567,6 +568,13 @@ final class _ResultUint8VoidUnion extends ffi.Union {
 
 final class _ResultUint8Void extends ffi.Struct {
   external _ResultUint8VoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
+final class _ResultVoidMyZstFfi extends ffi.Struct {
+  
 
   @ffi.Bool()
   external bool isOk;

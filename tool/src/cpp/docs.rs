@@ -77,6 +77,9 @@ pub fn gen_docs(
 
             for item in module.items() {
                 if let ast::ModSymbol::CustomType(ref typ) = item {
+                    if typ.attrs().skip_if_ast {
+                        continue;
+                    }
                     writeln!(out)?;
                     gen_custom_type_docs(out, typ, in_path, env, &library_config, docs_url_gen)?;
                 }

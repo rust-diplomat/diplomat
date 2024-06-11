@@ -25,6 +25,16 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
         };
+        context.impl_header.decl_include = Some(decl_header_path.clone());
+        context
+            .decl_header
+            .includes
+            .insert(self.formatter.fmt_c_decl_header_path(id));
+        context
+            .impl_header
+            .includes
+            .insert(self.formatter.fmt_c_impl_header_path(id));
+
         let guard = self.errors.set_context_ty(ty.name().as_str().into());
         match ty {
             TypeDef::Enum(o) => context.gen_enum_def(o, id),
@@ -44,14 +54,6 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
-
-        context.impl_header.decl_include = Some(decl_header_path.clone());
-
-        let c_decl_header_path = self.formatter.fmt_c_decl_header_path(id);
-        context.decl_header.includes.insert(c_decl_header_path);
-
-        let c_impl_header_path = self.formatter.fmt_c_impl_header_path(id);
-        context.impl_header.includes.insert(c_impl_header_path);
 
         self.files
             .add_file(decl_header_path, decl_header.to_string());
@@ -306,6 +308,15 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: &'a [NamedExpression<'a>],
             c_to_cpp_fields: &'a [NamedExpression<'a>],
             methods: &'a [MethodInfo<'a>],
+        }
+
+        if def.fields.is_empty() {
+            self.impl_header
+                .includes
+                .remove(&self.cx.formatter.fmt_c_impl_header_path(id));
+            self.decl_header
+                .includes
+                .remove(&self.cx.formatter.fmt_c_decl_header_path(id));
         }
 
         ImplTemplate {
@@ -702,10 +713,20 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 format!("*{type_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
+                let is_zst = match self.cx.tcx.resolve_type(ty.id().unwrap()) {
+                    TypeDef::Struct(s) => s.fields.is_empty(),
+                    TypeDef::OutStruct(s) => s.fields.is_empty(),
+                    _ => false,
+                };
+
                 let id = st.id();
                 let type_name = self.cx.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_type_name().
-                format!("{type_name}::FromFFI({var_name})").into()
+                if is_zst {
+                    format!("{type_name} {{}}").into()
+                } else {
+                    // Note: The impl file is imported in gen_type_name().
+                    format!("{type_name}::FromFFI({var_name})").into()
+                }
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();

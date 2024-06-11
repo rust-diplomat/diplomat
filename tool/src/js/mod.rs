@@ -45,6 +45,9 @@ pub fn gen_bindings(
         "export {{ FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char }} from './diplomat-runtime';"
     )?;
     for (_, custom_type) in &all_types {
+        if custom_type.attrs().skip_if_ast {
+            continue;
+        }
         let name = custom_type.name();
         writeln!(index_ts, "export {{ {name} }} from './{name}';",)?;
     }
@@ -55,11 +58,17 @@ pub fn gen_bindings(
         "export {{ FFIError }} from './diplomat-runtime.mjs';"
     )?;
     for (_, custom_type) in &all_types {
+        if custom_type.attrs().skip_if_ast {
+            continue;
+        }
         let name = custom_type.name();
         writeln!(index_js, "export {{ {name} }} from './{name}.mjs';",)?;
     }
 
     for (in_path, custom_type) in &all_types {
+        if custom_type.attrs().skip_if_ast {
+            continue;
+        }
         let imports = Imports::new(custom_type, in_path, env);
 
         let out = outs
