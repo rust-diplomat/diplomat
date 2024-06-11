@@ -19,6 +19,7 @@
       "esm"
     ],
     "nodeArguments": [
+      "--experimental-wasm-bigint"
     ]
   },
   "scripts": {
