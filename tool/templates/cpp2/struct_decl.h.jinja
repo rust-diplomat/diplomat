@@ -1,3 +1,7 @@
+namespace capi {
+    {{ c_header.body|trim|indent(4) }}
+}
+
 {%- if let Some(ns) = namespace -%}
 namespace {{ns}} {
 {%endif-%}

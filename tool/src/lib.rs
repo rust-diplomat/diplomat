@@ -191,7 +191,7 @@ pub fn gen(
                 let files = common::FileMap::default();
                 let mut context = cpp2::Cpp2Context::new(&tcx, files);
                 context.run();
-                out_texts.extend(context.files.take_files());
+                out_texts = context.files.take_files();
 
                 let errors = context.errors.take_all();
 

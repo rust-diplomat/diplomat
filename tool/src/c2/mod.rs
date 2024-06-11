@@ -3,6 +3,8 @@ mod header;
 mod ty;
 
 pub use self::formatter::CFormatter;
+pub(crate) use self::header::Header;
+pub(crate) use self::ty::TyGenContext;
 
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
@@ -22,8 +24,8 @@ pub struct CContext<'tcx> {
 
 #[derive(Template)]
 #[template(path = "c2/runtime.h.jinja", escape = "none")]
-struct RuntimeTemplate {
-    is_for_cpp: bool,
+pub(crate) struct RuntimeTemplate {
+    pub is_for_cpp: bool,
 }
 
 impl<'tcx> CContext<'tcx> {

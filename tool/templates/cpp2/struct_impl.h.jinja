@@ -1,3 +1,7 @@
+namespace capi {
+    {{ c_impl_header.body|trim|indent(4) }}
+}
+
 {% for m in methods -%}
 {% include "method_impl.h.jinja" %}
 

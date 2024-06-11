@@ -106,14 +106,16 @@ struct MethodTemplate<'a> {
 }
 
 /// The context used for generating a particular type
-struct TyGenContext<'cx, 'tcx> {
-    tcx: &'tcx TypeContext,
-    formatter: &'cx CFormatter<'tcx>,
-    errors: &'cx ErrorStore<'tcx, String>,
-    is_for_cpp: bool,
-    id: TypeId,
-    decl_header_path: String,
-    impl_header_path: String,
+///
+/// Also used by C++ generation code
+pub(crate) struct TyGenContext<'cx, 'tcx> {
+    pub(crate) tcx: &'tcx TypeContext,
+    pub(crate) formatter: &'cx CFormatter<'tcx>,
+    pub(crate) errors: &'cx ErrorStore<'tcx, String>,
+    pub(crate) is_for_cpp: bool,
+    pub(crate) id: TypeId,
+    pub(crate) decl_header_path: String,
+    pub(crate) impl_header_path: String,
 }
 
 impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
@@ -122,7 +124,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         let ty_name = self.formatter.fmt_type_name(self.id);
         EnumTemplate {
             ty: def,
-            fmt: &self.formatter,
+            fmt: self.formatter,
             ty_name: &ty_name,
         }
         .render_into(&mut decl_header)
