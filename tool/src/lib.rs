@@ -20,6 +20,8 @@ pub mod js;
 #[doc(hidden)]
 pub mod js2;
 #[doc(hidden)]
+pub mod demo_gen;
+#[doc(hidden)]
 pub mod kotlin;
 
 mod docs_util;
@@ -114,6 +116,31 @@ pub fn gen(
             };
         }
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
+        "demo-gen" => {
+            let attr_validator = hir::BasicAttributeValidator::new("js2");
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(context) => context,
+                Err(e) => {
+                    eprintln!("Lowering AST to HIR for Demo Generator backend failed:");
+                    for (ctx, err) in e {
+                        eprintln!("\tLowering error in {ctx}: {err}");
+                    }
+                    std::process::exit(-1);
+                }
+            };
+            match demo_gen::WebDemoGenerationContext::run(&tcx) {
+                Ok(mut files) => {
+                    out_texts = files.take_files();
+                },
+                Err(errors) => {
+                    eprintln!("Found errors whilst generating {target_language}:");
+                    for error in errors {
+                        eprintln!("\t{}: {}", error.0, error.1);
+                    }
+                    errors_found = true;
+                }
+            };
+        },
         "kotlin" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
             attr_validator.support.renaming = true;
