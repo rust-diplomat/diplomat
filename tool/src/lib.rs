@@ -128,7 +128,7 @@ pub fn gen(
                     std::process::exit(-1);
                 }
             };
-            match demo_gen::WebDemoGenerationContext::run(&tcx) {
+            match demo_gen::WebDemoGenerationContext::run(&tcx, docs_url_gen, strip_prefix) {
                 Ok(mut files) => {
                     out_texts = files.take_files();
                 },
