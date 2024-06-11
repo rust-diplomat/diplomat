@@ -1,6 +1,8 @@
 use super::formatter::CFormatter;
 use super::header::Header;
+use crate::common::ErrorStore;
 use askama::Template;
+use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
     self, FloatType, IntSizeType, IntType, OpaqueOwner, ReturnableStructDef, StructPathLike,
     TyPosition, Type, TypeDef, TypeId,
@@ -31,20 +33,39 @@ impl<'tcx> super::CContext<'tcx> {
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
 
         let _guard = self.errors.set_context_ty(ty.name().as_str().into());
+        let tygen = self.ty_gen_context(id, decl_header_path, impl_header_path);
+
         let decl_header = match ty {
-            TypeDef::Enum(e) => self.gen_enum_def(e, id, &decl_header_path),
-            TypeDef::Opaque(o) => self.gen_opaque_def(o, id, &decl_header_path),
-            TypeDef::Struct(s) => self.gen_struct_def(s, id, &decl_header_path),
-            TypeDef::OutStruct(s) => self.gen_struct_def(s, id, &decl_header_path),
+            TypeDef::Enum(e) => tygen.gen_enum_def(e),
+            TypeDef::Opaque(o) => tygen.gen_opaque_def(o),
+            TypeDef::Struct(s) => tygen.gen_struct_def(s),
+            TypeDef::OutStruct(s) => tygen.gen_struct_def(s),
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let impl_header = self.gen_impl(ty, id, &decl_header_path, &impl_header_path);
+        let impl_header = tygen.gen_impl(ty);
 
         self.files
-            .add_file(decl_header_path, decl_header.to_string());
+            .add_file(tygen.decl_header_path, decl_header.to_string());
         self.files
-            .add_file(impl_header_path, impl_header.to_string());
+            .add_file(tygen.impl_header_path, impl_header.to_string());
+    }
+
+    pub(crate) fn ty_gen_context<'cx>(
+        &'cx self,
+        id: TypeId,
+        decl_header_path: String,
+        impl_header_path: String,
+    ) -> TyGenContext<'cx, 'tcx> {
+        TyGenContext {
+            tcx: self.tcx,
+            formatter: &self.formatter,
+            errors: &self.errors,
+            is_for_cpp: self.is_for_cpp,
+            id,
+            decl_header_path,
+            impl_header_path,
+        }
     }
 }
 
@@ -84,15 +105,21 @@ struct MethodTemplate<'a> {
     name: Cow<'a, str>,
 }
 
-impl<'tcx> super::CContext<'tcx> {
-    pub fn gen_enum_def(
-        &self,
-        def: &'tcx hir::EnumDef,
-        id: TypeId,
-        decl_header_path: &str,
-    ) -> Header {
-        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(id);
+/// The context used for generating a particular type
+struct TyGenContext<'cx, 'tcx> {
+    tcx: &'tcx TypeContext,
+    formatter: &'cx CFormatter<'tcx>,
+    errors: &'cx ErrorStore<'tcx, String>,
+    is_for_cpp: bool,
+    id: TypeId,
+    decl_header_path: String,
+    impl_header_path: String,
+}
+
+impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
+    pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
+        let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(self.id);
         EnumTemplate {
             ty: def,
             fmt: &self.formatter,
@@ -104,14 +131,9 @@ impl<'tcx> super::CContext<'tcx> {
         decl_header
     }
 
-    pub fn gen_opaque_def(
-        &self,
-        _def: &'tcx hir::OpaqueDef,
-        id: TypeId,
-        decl_header_path: &str,
-    ) -> Header {
-        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(id);
+    pub fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
+        let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(self.id);
         OpaqueTemplate { ty_name }
             .render_into(&mut decl_header)
             .unwrap();
@@ -119,14 +141,9 @@ impl<'tcx> super::CContext<'tcx> {
         decl_header
     }
 
-    pub fn gen_struct_def<P: TyPosition>(
-        &self,
-        def: &'tcx hir::StructDef<P>,
-        id: TypeId,
-        decl_header_path: &str,
-    ) -> Header {
-        let mut decl_header = Header::new(decl_header_path.into(), self.is_for_cpp);
-        let ty_name = self.formatter.fmt_type_name(id);
+    pub fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
+        let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
+        let ty_name = self.formatter.fmt_type_name(self.id);
         let mut fields = vec![];
         for field in def.fields.iter() {
             self.gen_ty_decl(
@@ -145,14 +162,8 @@ impl<'tcx> super::CContext<'tcx> {
         decl_header
     }
 
-    pub fn gen_impl(
-        &self,
-        ty: hir::TypeDef<'tcx>,
-        id: TypeId,
-        decl_header_path: &str,
-        impl_header_path: &str,
-    ) -> Header {
-        let mut impl_header = Header::new(impl_header_path.into(), self.is_for_cpp);
+    pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
+        let mut impl_header = Header::new(self.impl_header_path.clone(), self.is_for_cpp);
         let mut methods = vec![];
         for method in ty.methods() {
             if method.attrs.disable {
@@ -160,16 +171,16 @@ impl<'tcx> super::CContext<'tcx> {
                 continue;
             }
             let _guard = self.errors.set_context_method(
-                self.formatter.fmt_type_name_diagnostics(id),
+                self.formatter.fmt_type_name_diagnostics(self.id),
                 method.name.as_str().into(),
             );
-            methods.push(self.gen_method(id, method, &mut impl_header));
+            methods.push(self.gen_method(method, &mut impl_header));
         }
 
-        let ty_name = self.formatter.fmt_type_name(id);
+        let ty_name = self.formatter.fmt_type_name(self.id);
 
         let dtor_name = if let TypeDef::Opaque(_) = ty {
-            Some(self.formatter.fmt_dtor_name(id))
+            Some(self.formatter.fmt_dtor_name(self.id))
         } else {
             None
         };
@@ -182,26 +193,21 @@ impl<'tcx> super::CContext<'tcx> {
         .render_into(&mut impl_header)
         .unwrap();
 
-        impl_header.decl_include = Some(decl_header_path.into());
+        impl_header.decl_include = Some(self.decl_header_path.clone());
 
         // In some cases like generating decls for `self` parameters,
         // a header will get its own includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        impl_header.includes.remove(impl_header_path);
-        impl_header.includes.remove(decl_header_path);
+        impl_header.includes.remove(&self.impl_header_path);
+        impl_header.includes.remove(&self.decl_header_path);
 
         impl_header
     }
 
-    fn gen_method(
-        &self,
-        id: TypeId,
-        method: &'tcx hir::Method,
-        header: &mut Header,
-    ) -> MethodTemplate<'tcx> {
+    fn gen_method(&self, method: &'tcx hir::Method, header: &mut Header) -> MethodTemplate<'tcx> {
         use diplomat_core::hir::{ReturnType, SuccessType};
-        let method_name = self.formatter.fmt_method_name(id, method);
+        let method_name = self.formatter.fmt_method_name(self.id, method);
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
