@@ -26,7 +26,7 @@ final class Opaque implements ffi.Finalizable {
     return Opaque._fromFfi(result, []);
   }
 
-  factory Opaque(String input) {
+  static Opaque? tryFromUtf8(String input) {
     final temp = ffi2.Arena();
     final inputView = input.utf8View;
     final result = _Opaque_try_from_utf8(inputView.allocIn(temp), inputView.length);
@@ -34,7 +34,7 @@ final class Opaque implements ffi.Finalizable {
     return result.address == 0 ? null : Opaque._fromFfi(result, []);
   }
 
-  factory Opaque(String input) {
+  static Opaque fromStr(String input) {
     final temp = ffi2.Arena();
     final inputView = input.utf8View;
     final result = _Opaque_from_str(inputView.allocIn(temp), inputView.length);

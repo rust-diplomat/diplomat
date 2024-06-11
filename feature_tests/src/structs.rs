@@ -51,13 +51,11 @@ pub mod ffi {
             Box::new(Opaque("".into()))
         }
 
-        #[diplomat::attr(supports = constructors, constructor)]
         pub fn try_from_utf8(input: &DiplomatStr) -> Option<Box<Self>> {
             let s = std::str::from_utf8(input.into()).ok()?;
             Some(Box::new(Self(s.into())))
         }
 
-        #[diplomat::attr(supports = constructors, constructor)]
         pub fn from_str(input: &str) -> Box<Self> {
             Box::new(Self(input.into()))
         }
