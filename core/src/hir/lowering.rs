@@ -326,7 +326,8 @@ impl<'ast> LoweringContext<'ast> {
         } else if ast_struct.fields.is_empty() {
             if !ast_struct.methods.is_empty() {
                 self.errors.push(LoweringError::Other(format!(
-                    "Methods on ZST structs are not yet implemented"
+                    "Methods on ZST structs are not yet implemented: {}",
+                    ast_struct.name
                 )));
                 return Err(());
             } else {
