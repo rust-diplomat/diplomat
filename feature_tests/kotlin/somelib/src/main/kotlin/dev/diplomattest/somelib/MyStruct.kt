@@ -8,6 +8,7 @@ import com.sun.jna.Structure
 internal interface MyStructLib: Library {
     fun MyStruct_new(): MyStructNative
     fun MyStruct_into_a(nativeStruct: MyStructNative): Byte
+    fun MyStruct_returns_zst_result(): ResultUnitMyZstNative
 }
 
 internal class MyStructNative: Structure(), Structure.ByValue {
@@ -53,6 +54,16 @@ class MyStruct internal constructor (
             
             val returnStruct = MyStruct(returnVal)
             return returnStruct
+        }
+        
+        fun returnsZstResult(): Res<Unit, MyZst> {
+            
+            val returnVal = lib.MyStruct_returns_zst_result();
+            if (returnVal.isOk == 1.toByte()) {
+                Unit.ok()
+            } else {
+                MyZst().err()
+            }
         }
     }
     

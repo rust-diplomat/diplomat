@@ -615,7 +615,7 @@ mod tests {
                 struct NonOpaqueStruct {}
 
                 impl NonOpaqueStruct {
-                    fn new(x: i32) -> NonOpaqueStruct {
+                    pub fn new(x: i32) -> NonOpaqueStruct {
                         unimplemented!();
                     }
                 }
@@ -662,9 +662,11 @@ mod tests {
         uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
-                struct OpaqueStruct;
+                struct NonOpaque;
 
-                enum OpaqueEnum {}
+                impl NonOpaque {
+                    pub fn foo(self) {}
+                }
             }
         };
     }

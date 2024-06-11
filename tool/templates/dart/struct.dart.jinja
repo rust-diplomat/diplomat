@@ -1,3 +1,4 @@
+{% if !fields.is_empty() -%}
 final class _{{type_name}}Ffi extends ffi.Struct {
   {%- for field in fields %}
   {%- match field.annotation %}
@@ -9,6 +10,7 @@ final class _{{type_name}}Ffi extends ffi.Struct {
   {%- endfor %}
 }
 
+{% endif -%}
 {% if !docs.is_empty() -%}
 /// {{docs}}
 {% endif -%}
@@ -26,6 +28,8 @@ final class {{type_name}}
   {{c}}
   {%- when None %}
   {%- endmatch %}
+
+  {%- if !fields.is_empty() %}
 
   {% if lifetimes.all_lifetimes().len() == 0 -%}
   // This struct contains borrowed fields, so this takes in a list of
@@ -68,9 +72,11 @@ final class {{type_name}}
     {%- endfor %}
     return struct;
   }
+  {%- endif -%}
 
   {%- for m in methods %}
 {% include "method.dart.jinja" %}
+
   {%- endfor %}
 
   @override
@@ -81,11 +87,15 @@ final class {{type_name}}
       {%- endfor %};
 
   @override
+  {%- if !fields.is_empty() %}
   int get hashCode => Object.hashAll([
       {%- for field in fields %}
         {{field.name}},
       {%- endfor %}
       ]);
+  {%- else %}
+  int get hashCode => 0;
+  {%- endif %}
 
 
   {%- for l in lifetimes.all_lifetimes() %}

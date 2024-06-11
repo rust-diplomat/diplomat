@@ -84,6 +84,10 @@ pub fn gen_bindings(
     let all_types = crate::util::get_all_custom_types(env);
 
     for (in_path, typ) in &all_types {
+        if typ.attrs().skip_if_ast {
+            continue;
+        }
+
         let out = outs.entry(format!("{}.hpp", typ.name())).or_default();
 
         let rendered = render_header(typ.name(), &library_config.headers);

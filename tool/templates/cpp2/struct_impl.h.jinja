@@ -3,6 +3,7 @@
 
 {% endfor ~%}
 
+{%- if !cpp_to_c_fields.is_empty() %}
 inline {{ctype}} {{type_name}}::AsFFI() const {
 	return {{ctype}} {
 {%- for field in cpp_to_c_fields %}
@@ -18,5 +19,6 @@ inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_struct) {
 {%- endfor %}
 	};
 }
+{%- endif %}
 
 

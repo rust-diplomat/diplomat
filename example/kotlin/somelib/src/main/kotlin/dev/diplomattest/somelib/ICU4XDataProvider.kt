@@ -42,7 +42,7 @@ class ICU4XDataProvider internal constructor (
             
             val returnVal = lib.ICU4XDataProvider_returns_result();
             if (returnVal.isOk == 1.toByte()) {
-                return Ok(Unit)
+                Unit.ok()
             } else {
                 return Err(Unit)
             }

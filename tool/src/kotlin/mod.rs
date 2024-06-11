@@ -255,12 +255,33 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     .unwrap_or_else(|| "Unit".into());
 
                 let ok_default = match ok {
-                    SuccessType::OutType(ref o) => Some(self.formatter.fmt_field_default(o)),
+                    SuccessType::OutType(ref o) => Some(o)
+                        .filter(|t| {
+                            let Type::Struct(s) = t else {
+                                return true;
+                            };
+                            match s.resolve(self.tcx) {
+                                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
+                                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+                                _ => unreachable!("unknown AST/HIR variant"),
+                            }
+                        })
+                        .map(|t| self.formatter.fmt_field_default(t)),
                     _ => None,
                 };
                 let err_default = err
                     .as_ref()
-                    .map(|err| self.formatter.fmt_field_default(err));
+                    .filter(|t| {
+                        let Type::Struct(s) = t else {
+                            return true;
+                        };
+                        match s.resolve(self.tcx) {
+                            ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
+                            ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        }
+                    })
+                    .map(|t| self.formatter.fmt_field_default(t));
                 let result_type = NativeResult {
                     ok: TypeForResult {
                         type_name: ok_type.clone(),
@@ -495,26 +516,21 @@ return string{return_type_modifier}"#
         val_name: &'d str,
         return_type_modifier: &str,
     ) -> String {
-        #[derive(Template)]
-        #[template(path = "kotlin/StructReturn.kt.jinja", escape = "none")]
-        struct StructReturn<'a, 'b> {
-            return_type_name: Cow<'b, str>,
-            borrows: Vec<ParamsForLt<'b>>,
-            cleanups: &'a [Cow<'b, str>],
-            val_name: &'a str,
-            return_type_modifier: &'a str,
-        }
-
-        struct ParamsForLt<'c> {
-            lt: Cow<'c, str>,
-            params: Vec<Cow<'c, str>>,
-        }
+        let is_zst = match struct_def {
+            ReturnableStructDef::Struct(s) => s.fields.is_empty(),
+            ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
+            _ => false,
+        };
 
         let return_type_name = match struct_def {
             ReturnableStructDef::Struct(strct) => strct.name.to_string().into(),
             ReturnableStructDef::OutStruct(out_strct) => out_strct.name.to_string().into(),
             _ => todo!(),
         };
+
+        if is_zst {
+            return format!("{return_type_name}(){return_type_modifier}");
+        }
 
         let borrows = lifetimes
             .lifetimes()
@@ -534,63 +550,28 @@ return string{return_type_modifier}"#
             })
             .collect::<Vec<_>>();
 
-        let opaque_return = StructReturn {
+        struct ParamsForLt<'c> {
+            lt: Cow<'c, str>,
+            params: Vec<Cow<'c, str>>,
+        }
+        #[derive(Template)]
+        #[template(path = "kotlin/StructReturn.kt.jinja", escape = "none")]
+        struct StructReturn<'a, 'b> {
+            return_type_name: Cow<'b, str>,
+            borrows: Vec<ParamsForLt<'b>>,
+            cleanups: &'a [Cow<'b, str>],
+            val_name: &'a str,
+            return_type_modifier: &'a str,
+        }
+        StructReturn {
             return_type_name,
             borrows,
             cleanups,
             val_name,
             return_type_modifier,
-        };
-        opaque_return
-            .render()
-            .expect("Failed to render opaque return block")
-    }
-
-    fn gen_fallible_return_conversion<'d>(
-        &'d self,
-        ok: &'d SuccessType,
-        err: &'d Option<OutType>,
-        method: &'d Method,
-        method_lifetimes_map: &'d MethodLtMap<'d>,
-        cleanups: &[Cow<'d, str>],
-    ) -> Cow<'d, str> {
-        let ok_path = self.gen_infallible_return_conversion(
-            ok,
-            method,
-            method_lifetimes_map,
-            cleanups,
-            "returnVal.union.ok",
-            true,
-        );
-
-        #[derive(Template)]
-        #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
-        struct ResultReturn<'d> {
-            ok_path: &'d str,
-            err_path: &'d str,
-        }
-
-        let err_path = err
-            .as_ref()
-            .map(|err| {
-                self.gen_out_type_return_conversion(
-                    method,
-                    method_lifetimes_map,
-                    cleanups,
-                    "returnVal.union.err",
-                    ".err()",
-                    err,
-                )
-            })
-            .unwrap_or_else(|| "return Err(Unit)".into());
-
-        ResultReturn {
-            ok_path: ok_path.as_str(),
-            err_path: err_path.as_str(),
         }
         .render()
-        .expect("Failed to render result return")
-        .into()
+        .expect("Failed to render opaque return block")
     }
 
     fn gen_out_type_return_conversion<'d>(
@@ -702,20 +683,15 @@ val intermediateOption = {val_name}.option() ?: return null
         }
     }
 
-    fn gen_infallible_return_conversion<'d>(
+    fn gen_success_return_conversion<'d>(
         &'d self,
         res: &'d SuccessType,
         method: &'d Method,
         method_lifetimes_map: &'d MethodLtMap<'d>,
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
-        return_type_modifier: bool,
+        return_type_postfix: &str,
     ) -> String {
-        let return_type_postfix = match return_type_modifier {
-            true => ".ok()",
-            false => "",
-        };
-
         match res {
             SuccessType::Write => Self::write_return(return_type_postfix),
             SuccessType::OutType(ref o) => self.gen_out_type_return_conversion(
@@ -726,10 +702,8 @@ val intermediateOption = {val_name}.option() ?: return null
                 return_type_postfix,
                 o,
             ),
-            SuccessType::Unit => match return_type_modifier {
-                true => "return Ok(Unit)".into(),
-                false => "".into(),
-            },
+            SuccessType::Unit if return_type_postfix.is_empty() => "".into(),
+            SuccessType::Unit => format!("Unit{return_type_postfix}"),
             _ => todo!(),
         }
     }
@@ -741,18 +715,51 @@ val intermediateOption = {val_name}.option() ?: return null
         cleanups: &[Cow<'d, str>],
     ) -> String {
         match &method.output {
-            ReturnType::Infallible(res) => self.gen_infallible_return_conversion(
+            ReturnType::Infallible(res) => self.gen_success_return_conversion(
                 res,
                 method,
                 &method_lifetimes_map,
                 cleanups,
                 "returnVal",
-                false,
+                "",
             ),
-            ReturnType::Fallible(ok, err) => self
-                .gen_fallible_return_conversion(ok, err, method, &method_lifetimes_map, cleanups)
-                .into(),
+            ReturnType::Fallible(ok, err) => {
+                let ok_path = self.gen_success_return_conversion(
+                    ok,
+                    method,
+                    &method_lifetimes_map,
+                    cleanups,
+                    "returnVal.union.ok",
+                    ".ok()",
+                );
 
+                let err_path = err
+                    .as_ref()
+                    .map(|err| {
+                        self.gen_out_type_return_conversion(
+                            method,
+                            &method_lifetimes_map,
+                            cleanups,
+                            "returnVal.union.err",
+                            ".err()",
+                            err,
+                        )
+                    })
+                    .unwrap_or_else(|| "return Err(Unit)".into());
+
+                #[derive(Template)]
+                #[template(path = "kotlin/ResultReturn.kt.jinja", escape = "none")]
+                struct ResultReturn<'d> {
+                    ok_path: &'d str,
+                    err_path: &'d str,
+                }
+                ResultReturn {
+                    ok_path: ok_path.as_str(),
+                    err_path: err_path.as_str(),
+                }
+                .render()
+                .expect("Failed to render result return")
+            }
             ReturnType::Nullable(SuccessType::OutType(ref res)) => self
                 .gen_nullable_return_conversion(
                     method,

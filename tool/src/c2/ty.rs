@@ -2,8 +2,8 @@ use super::formatter::CFormatter;
 use super::header::Header;
 use askama::Template;
 use diplomat_core::hir::{
-    self, FloatType, IntSizeType, IntType, OpaqueOwner, StructPathLike, TyPosition, Type, TypeDef,
-    TypeId,
+    self, FloatType, IntSizeType, IntType, OpaqueOwner, ReturnableStructDef, StructPathLike,
+    TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -14,6 +14,19 @@ impl<'tcx> super::CContext<'tcx> {
             // Skip type if disabled
             return;
         }
+        if let TypeDef::Struct(s) = ty {
+            if s.fields.is_empty() {
+                // Skip ZST
+                return;
+            }
+        }
+        if let TypeDef::OutStruct(s) = ty {
+            if s.fields.is_empty() {
+                // Skip ZST
+                return;
+            }
+        }
+
         let decl_header_path = self.formatter.fmt_decl_header_path(id);
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
 
@@ -259,6 +272,28 @@ impl<'tcx> super::CContext<'tcx> {
         err_ty: Option<&hir::OutType>,
         header: &mut Header,
     ) -> String {
+        let ok_ty = ok_ty.filter(|t| {
+            let Type::Struct(s) = t else {
+                return true;
+            };
+            match s.resolve(self.tcx) {
+                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
+                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+                _ => unreachable!("unknown AST/HIR variant"),
+            }
+        });
+
+        let err_ty = err_ty.filter(|t| {
+            let Type::Struct(s) = t else {
+                return true;
+            };
+            match s.resolve(self.tcx) {
+                ReturnableStructDef::Struct(s) => !s.fields.is_empty(),
+                ReturnableStructDef::OutStruct(s) => !s.fields.is_empty(),
+                _ => unreachable!("unknown AST/HIR variant"),
+            }
+        });
+
         let ok_line = if let Some(ok) = ok_ty {
             let ok_name = self.gen_ty_name(ok, header);
             format!("{ok_name} ok;")
