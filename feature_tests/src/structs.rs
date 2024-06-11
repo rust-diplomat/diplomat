@@ -52,7 +52,7 @@ pub mod ffi {
         }
 
         pub fn try_from_utf8(input: &DiplomatStr) -> Option<Box<Self>> {
-            let s = std::str::from_utf8(input.into()).ok()?;
+            let s = std::str::from_utf8(input).ok()?;
             Some(Box::new(Self(s.into())))
         }
 
