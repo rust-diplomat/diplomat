@@ -117,7 +117,7 @@ pub fn gen(
         }
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "demo-gen" => {
-            let attr_validator = hir::BasicAttributeValidator::new("js2");
+            let attr_validator = hir::BasicAttributeValidator::new("demo-gen");
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
