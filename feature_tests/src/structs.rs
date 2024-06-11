@@ -4,8 +4,8 @@ pub mod ffi {
     use diplomat_runtime::DiplomatStr16;
 
     use crate::imports::ffi::ImportedStruct;
-    use std::sync::Mutex;
     use std::fmt::Write;
+    use std::sync::Mutex;
 
     #[diplomat::opaque]
     #[diplomat::transparent_convert]
