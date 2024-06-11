@@ -58,6 +58,21 @@
     .. cpp:function:: static Opaque new_()
 
 
+    .. cpp:function:: static std::optional<Opaque> try_from_utf8(const std::string_view input)
+
+
+    .. cpp:function:: static Opaque from_str(const std::string_view input)
+
+        Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
+
+
+
+    .. cpp:function:: template<typename W> void get_debug_str_to_write(W& write) const
+
+
+    .. cpp:function:: std::string get_debug_str() const
+
+
     .. cpp:function:: void assert_struct(MyStruct s) const
 
         See the `Rust documentation for something <https://docs.rs/Something/latest/struct.Something.html#method.something>`__ for more information.
@@ -96,6 +111,16 @@
 
 
 .. cpp:class:: Utf16Wrap
+
+    .. cpp:function:: static Utf16Wrap from_utf16(const std::u16string_view input)
+
+
+
+    .. cpp:function:: template<typename W> void get_debug_str_to_write(W& write) const
+
+
+    .. cpp:function:: std::string get_debug_str() const
+
 
     .. cpp:function:: const std::u16string_view borrow_cont() const
 

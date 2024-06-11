@@ -14,6 +14,10 @@
 class Utf16Wrap {
 public:
 
+  inline static std::unique_ptr<Utf16Wrap> from_utf16(std::u16string_view input);
+
+  inline std::string get_debug_str() const;
+
   inline std::u16string_view borrow_cont() const;
 
   inline std::u16string_view owned() const;

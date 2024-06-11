@@ -11,6 +11,18 @@ export class Opaque {
   static new(): Opaque;
 
   /**
+   */
+  static try_from_utf8(input: string): Opaque | undefined;
+
+  /**
+   */
+  static from_str(input: string): Opaque;
+
+  /**
+   */
+  get_debug_str(): string;
+
+  /**
 
    * See the {@link https://docs.rs/Something/latest/struct.Something.html#method.something Rust documentation for `something`} for more information.
 

@@ -21,6 +21,12 @@ public:
 
   inline static std::unique_ptr<Opaque> new_();
 
+  inline static std::unique_ptr<Opaque> try_from_utf8(std::string_view input);
+
+  inline static diplomat::result<std::unique_ptr<Opaque>, diplomat::Utf8Error> from_str(std::string_view input);
+
+  inline std::string get_debug_str() const;
+
   inline void assert_struct(MyStruct s) const;
 
   inline static size_t returns_usize();

@@ -41,6 +41,72 @@ public partial class Opaque: IDisposable
         }
     }
 
+    /// <returns>
+    /// A <c>Opaque</c> allocated on Rust side.
+    /// </returns>
+    public static Opaque? TryFromUtf8(string input)
+    {
+        unsafe
+        {
+            byte[] inputBuf = DiplomatUtils.StringToUtf8(input);
+            nuint inputBufLength = (nuint)inputBuf.Length;
+            fixed (byte* inputBufPtr = inputBuf)
+            {
+                Raw.Opaque* retVal = Raw.Opaque.TryFromUtf8(inputBufPtr, inputBufLength);
+                if (retVal == null)
+                {
+                    return null;
+                }
+                return new Opaque(retVal);
+            }
+        }
+    }
+
+    /// <returns>
+    /// A <c>Opaque</c> allocated on Rust side.
+    /// </returns>
+    public static Opaque FromStr(string input)
+    {
+        unsafe
+        {
+            byte[] inputBuf = DiplomatUtils.StringToUtf8(input);
+            nuint inputBufLength = (nuint)inputBuf.Length;
+            fixed (byte* inputBufPtr = inputBuf)
+            {
+                Raw.Opaque* retVal = Raw.Opaque.FromStr(inputBufPtr, inputBufLength);
+                return new Opaque(retVal);
+            }
+        }
+    }
+
+    public void GetDebugStr(DiplomatWrite write)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Opaque");
+            }
+            Raw.Opaque.GetDebugStr(_inner, &write);
+        }
+    }
+
+    public string GetDebugStr()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Opaque");
+            }
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.Opaque.GetDebugStr(_inner, &write);
+            string retVal = write.ToUnicode();
+            write.Dispose();
+            return retVal;
+        }
+    }
+
     /// <summary>
     /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
     /// </summary>

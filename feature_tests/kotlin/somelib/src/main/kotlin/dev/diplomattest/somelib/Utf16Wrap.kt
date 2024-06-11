@@ -6,6 +6,8 @@ import com.sun.jna.Pointer
 
 internal interface Utf16WrapLib: Library {
     fun Utf16Wrap_destroy(handle: Pointer)
+    fun Utf16Wrap_from_utf16(input: Slice): Pointer
+    fun Utf16Wrap_get_debug_str(handle: Pointer, write: Pointer): Unit
     fun Utf16Wrap_borrow_cont(handle: Pointer): Slice
     fun Utf16Wrap_owned(handle: Pointer): Slice
 }
@@ -26,6 +28,26 @@ class Utf16Wrap internal constructor (
     companion object {
         internal val libClass: Class<Utf16WrapLib> = Utf16WrapLib::class.java
         internal val lib: Utf16WrapLib = Native.load("somelib", libClass)
+        
+        fun fromUtf16(input: String): Utf16Wrap {
+            val (inputMem, inputSlice) = PrimitiveArrayTools.readUtf16(input)
+            
+            val returnVal = lib.Utf16Wrap_from_utf16(inputSlice);
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal 
+            val returnOpaque = Utf16Wrap(handle, selfEdges)
+            CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
+            inputMem.close()
+            return returnOpaque
+        }
+    }
+    
+    fun getDebugStr(): String {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.Utf16Wrap_get_debug_str(handle, write);
+        
+        val returnString = DW.writeToString(write)
+        return returnString
     }
     
     fun borrowCont(): String {
