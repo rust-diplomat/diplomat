@@ -450,6 +450,15 @@ exit_on_error true
 generate_generic feature_tests js2 api
 '''
 
+[tasks.gen-js2-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests js2 api
+'''
+
 [tasks.gen-js-example]
 category = "Code generation"
 script_runner = "@duckscript"
