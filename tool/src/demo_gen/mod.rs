@@ -1,4 +1,4 @@
-use std::fmt::{Write, Display};
+use std::{borrow::Cow, fmt::{Display, Write}};
 
 use diplomat_core::hir::{self, Method, TypeContext, TypeId};
 
@@ -11,6 +11,7 @@ pub struct WebDemoGenerationContext<'tcx> {
     errors: ErrorStore<'tcx, String>,
     
     formatter : JSFormatter<'tcx>,
+    exports : Vec<Cow<'tcx, str>>,
 }
 
 impl<'tcx> WebDemoGenerationContext<'tcx> {
@@ -22,6 +23,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
             errors: ErrorStore::default(),
 
             formatter : JSFormatter::new(tcx, docs, strip_prefix),
+            exports: Vec::new(),
         };
 
         this.init();
@@ -40,7 +42,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
     /// That is, only generate .js files to be used in final rendering.
     /// This JS should include:
     /// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs. 
-    pub fn init(&self) {
+    pub fn init(&mut self) {
         // So, here's what I'm thinking.
 
         // 1. Search through all methods that can be classified as a render terminus.
@@ -58,9 +60,18 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
             if method_str.len() > 0 {
                 let type_name = self.formatter.fmt_type_name(id);
                 let file_name = self.formatter.fmt_file_name(&type_name, &crate::js2::FileType::Module);
+                
+                self.exports.push(format!(r#"export * as {type_name} from "{file_name}""#).into());
+
                 self.files.add_file(file_name, method_str);
             }
         }
+
+        let mut out_str = String::new();
+        for export in self.exports.iter() {
+            writeln!(out_str, "{}", export).unwrap();
+        }
+        self.files.add_file("index.mjs".into(), out_str);
     }
 
     /// Create a Render Terminus .js file from a method.
@@ -72,6 +83,6 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
 
         let method_name = self.formatter.fmt_method_name(method);
 
-        return Some(format!("function {method_name}() {{}}"));
+        return Some(format!("export function {method_name}() {{}}"));
     }
 }

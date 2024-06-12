@@ -1,1 +1,1 @@
-function formatWrite() {}
+export function formatWrite() {}
