@@ -470,6 +470,7 @@ generate_generic example js lib/api lib/docs/source "--docs-base-urls=*:https://
 
 [tasks.build-wasm-demo]
 category = "Code generation"
+dependencies = [ "gen-js2-example" ]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
