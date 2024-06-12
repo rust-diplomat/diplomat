@@ -14,8 +14,16 @@
 #include "BorrowedFields.hpp"
 #include "BorrowedFieldsWithBounds.hpp"
 #include "Foo.hpp"
-#include "NestedBorrowedFields.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const Bar* bar, const Foo* foo, const char16_t* dstr16_x_data, size_t dstr16_x_len, const char16_t* dstr16_z_data, size_t dstr16_z_len, const char* utf8_str_y_data, size_t utf8_str_y_len, const char* utf8_str_z_data, size_t utf8_str_z_len);
+    
+    
+    } // extern "C"
+}
 
 inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowedFields::from_bar_and_foo_and_strings(const Bar& bar, const Foo& foo, std::u16string_view dstr16_x, std::u16string_view dstr16_z, std::string_view utf8_str_y, std::string_view utf8_str_z) {
   if (!capi::diplomat_is_str(utf8_str_y.data(), utf8_str_y.size())) {

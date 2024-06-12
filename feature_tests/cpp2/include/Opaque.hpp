@@ -12,8 +12,32 @@
 #include "diplomat_runtime.hpp"
 #include "ImportedStruct.hpp"
 #include "MyStruct.hpp"
-#include "Opaque.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    Opaque* Opaque_new();
+    
+    Opaque* Opaque_try_from_utf8(const char* input_data, size_t input_len);
+    
+    Opaque* Opaque_from_str(const char* input_data, size_t input_len);
+    
+    void Opaque_get_debug_str(const Opaque* self, DiplomatWrite* write);
+    
+    void Opaque_assert_struct(const Opaque* self, MyStruct s);
+    
+    size_t Opaque_returns_usize();
+    
+    ImportedStruct Opaque_returns_imported();
+    
+    int8_t Opaque_cmp();
+    
+    
+    void Opaque_destroy(Opaque* self);
+    
+    } // extern "C"
+}
 
 inline std::unique_ptr<Opaque> Opaque::new_() {
   auto result = capi::Opaque_new();

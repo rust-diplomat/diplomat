@@ -10,9 +10,17 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "BorrowedFieldsWithBounds.h"
 #include "Foo.hpp"
 
+
+namespace capi {
+    extern "C" {
+    
+    BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const Foo* foo, const char16_t* dstr16_x_data, size_t dstr16_x_len, const char* utf8_str_z_data, size_t utf8_str_z_len);
+    
+    
+    } // extern "C"
+}
 
 inline diplomat::result<BorrowedFieldsWithBounds, diplomat::Utf8Error> BorrowedFieldsWithBounds::from_foo_and_strings(const Foo& foo, std::u16string_view dstr16_x, std::string_view utf8_str_z) {
   if (!capi::diplomat_is_str(utf8_str_z.data(), utf8_str_z.size())) {

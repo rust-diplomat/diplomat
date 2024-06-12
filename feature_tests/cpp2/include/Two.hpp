@@ -10,8 +10,16 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Two.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    
+    void Two_destroy(Two* self);
+    
+    } // extern "C"
+}
 
 inline const capi::Two* Two::AsFFI() const {
   return reinterpret_cast<const capi::Two*>(this);

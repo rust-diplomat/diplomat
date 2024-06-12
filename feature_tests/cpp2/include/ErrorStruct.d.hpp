@@ -8,10 +8,14 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ErrorStruct.d.h"
 
 
-struct ErrorStruct {
+namespace capi {
+    typedef struct ErrorStruct {
+      int32_t i;
+      int32_t j;
+    } ErrorStruct;
+}struct ErrorStruct {
   int32_t i;
   int32_t j;
 

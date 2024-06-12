@@ -8,10 +8,15 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "AttrEnum.d.h"
 
 
-namespace ns {
+namespace capi {
+    typedef enum AttrEnum {
+      AttrEnum_A = 0,
+      AttrEnum_B = 1,
+      AttrEnum_C = 2,
+    } AttrEnum;
+}namespace ns {
 class CPPRenamedAttrEnum {
 public:
   enum Value {

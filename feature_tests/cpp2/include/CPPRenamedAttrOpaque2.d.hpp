@@ -8,8 +8,11 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "AttrOpaque2.d.h"
 
+
+namespace capi {
+    typedef struct AttrOpaque2 AttrOpaque2;
+}
 
 namespace ns {
 class CPPRenamedAttrOpaque2 {

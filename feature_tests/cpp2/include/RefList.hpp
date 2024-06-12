@@ -10,9 +10,19 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "RefList.h"
 #include "RefListParameter.hpp"
 
+
+namespace capi {
+    extern "C" {
+    
+    RefList* RefList_node(const RefListParameter* data);
+    
+    
+    void RefList_destroy(RefList* self);
+    
+    } // extern "C"
+}
 
 inline std::unique_ptr<RefList> RefList::node(const RefListParameter& data) {
   auto result = capi::RefList_node(data.AsFFI());

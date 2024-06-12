@@ -8,10 +8,15 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "UnimportedEnum.d.h"
 
 
-class UnimportedEnum {
+namespace capi {
+    typedef enum UnimportedEnum {
+      UnimportedEnum_A = 0,
+      UnimportedEnum_B = 1,
+      UnimportedEnum_C = 2,
+    } UnimportedEnum;
+}class UnimportedEnum {
 public:
   enum Value {
     A = 0,

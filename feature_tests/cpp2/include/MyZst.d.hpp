@@ -10,7 +10,10 @@
 #include "diplomat_runtime.hpp"
 
 
-struct MyZst {
+namespace capi {
+    typedef struct MyZst {
+    } MyZst;
+}struct MyZst {
 
 };
 

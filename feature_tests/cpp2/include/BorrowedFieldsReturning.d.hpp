@@ -8,10 +8,13 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "BorrowedFieldsReturning.d.h"
 
 
-struct BorrowedFieldsReturning {
+namespace capi {
+    typedef struct BorrowedFieldsReturning {
+      DiplomatStringView bytes;
+    } BorrowedFieldsReturning;
+}struct BorrowedFieldsReturning {
   std::string_view bytes;
 
   inline capi::BorrowedFieldsReturning AsFFI() const;

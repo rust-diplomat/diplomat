@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "AttrOpaque1.d.h"
 #include "CPPRenamedAttrEnum.d.hpp"
 
 class Unnamespaced;
@@ -17,6 +16,10 @@ class AttrOpaque1Renamed;
 class CPPRenamedAttrEnum;
 }
 
+
+namespace capi {
+    typedef struct AttrOpaque1 AttrOpaque1;
+}
 
 namespace ns {
 class AttrOpaque1Renamed {

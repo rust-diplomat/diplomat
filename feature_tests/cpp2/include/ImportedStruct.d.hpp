@@ -8,13 +8,17 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ImportedStruct.d.h"
 #include "UnimportedEnum.d.hpp"
 
 class UnimportedEnum;
 
 
-struct ImportedStruct {
+namespace capi {
+    typedef struct ImportedStruct {
+      UnimportedEnum foo;
+      uint8_t count;
+    } ImportedStruct;
+}struct ImportedStruct {
   UnimportedEnum foo;
   uint8_t count;
 

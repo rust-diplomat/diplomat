@@ -10,11 +10,14 @@
 #include "diplomat_runtime.hpp"
 #include "ErrorEnum.d.hpp"
 #include "ErrorStruct.d.hpp"
-#include "ResultOpaque.d.h"
 
 struct ErrorStruct;
 class ErrorEnum;
 
+
+namespace capi {
+    typedef struct ResultOpaque ResultOpaque;
+}
 
 class ResultOpaque {
 public:

@@ -8,10 +8,16 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ContiguousEnum.d.h"
 
 
-class ContiguousEnum {
+namespace capi {
+    typedef enum ContiguousEnum {
+      ContiguousEnum_C = 0,
+      ContiguousEnum_D = 1,
+      ContiguousEnum_E = 2,
+      ContiguousEnum_F = 3,
+    } ContiguousEnum;
+}class ContiguousEnum {
 public:
   enum Value {
     C = 0,

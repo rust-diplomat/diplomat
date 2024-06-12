@@ -8,10 +8,14 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ErrorEnum.d.h"
 
 
-class ErrorEnum {
+namespace capi {
+    typedef enum ErrorEnum {
+      ErrorEnum_Foo = 0,
+      ErrorEnum_Bar = 1,
+    } ErrorEnum;
+}class ErrorEnum {
 public:
   enum Value {
     Foo = 0,

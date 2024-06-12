@@ -8,10 +8,13 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "RefList.d.h"
 
 class RefListParameter;
 
+
+namespace capi {
+    typedef struct RefList RefList;
+}
 
 class RefList {
 public:

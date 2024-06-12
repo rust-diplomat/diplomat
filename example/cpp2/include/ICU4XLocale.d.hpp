@@ -8,8 +8,11 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XLocale.d.h"
 
+
+namespace capi {
+    typedef struct ICU4XLocale ICU4XLocale;
+}
 
 class ICU4XLocale {
 public:

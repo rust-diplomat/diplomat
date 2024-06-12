@@ -10,11 +10,14 @@
 #include "diplomat_runtime.hpp"
 #include "ImportedStruct.d.hpp"
 #include "MyStruct.d.hpp"
-#include "Opaque.d.h"
 
 struct ImportedStruct;
 struct MyStruct;
 
+
+namespace capi {
+    typedef struct Opaque Opaque;
+}
 
 class Opaque {
 public:
