@@ -61,7 +61,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 let file_name = self.formatter.fmt_file_name(&type_name, &crate::js2::FileType::Module);
                 
-                self.exports.push(format!(r#"export * as {type_name} from "{file_name}""#).into());
+                self.exports.push(format!(r#"export * as {type_name}Demo from "{file_name}""#).into());
 
                 self.files.add_file(file_name, method_str);
             }
