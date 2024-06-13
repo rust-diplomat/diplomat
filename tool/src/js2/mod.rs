@@ -39,7 +39,7 @@ pub enum FileType {
 }
 
 impl FileType {
-    fn is_typescript(&self) -> bool {
+    pub fn is_typescript(&self) -> bool {
         match self {
             FileType::Module => false,
             FileType::Typescript => true

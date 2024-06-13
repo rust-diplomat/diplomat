@@ -1,8 +1,8 @@
 use std::{borrow::Cow, fmt::{Display, Write}};
 
-use diplomat_core::hir::{self, Method, TypeContext, TypeId};
+use diplomat_core::hir::{self, Method, Param, TypeContext, TypeId};
 
-use crate::{common::{ErrorStore, FileMap}, js2::formatter::JSFormatter};
+use crate::{common::{ErrorStore, FileMap}, js2::{formatter::JSFormatter, FileType}};
 
 use askama::{self, Template};
 
@@ -51,21 +51,27 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
         for (id, ty) in self.tcx.all_types() {
             let methods = ty.methods();
 
-            let mut method_str = String::new();
-            for method in methods {
-                let val = self.evaluate_method(method);
-                if let Some(s) = val  {
-                    writeln!(method_str, "{}", s).unwrap();
+            const FILE_TYPES : [FileType; 2] = [FileType::Module, FileType::Typescript];
+
+            for file_type in FILE_TYPES {
+                let mut method_str = String::new();
+                for method in methods {
+                    let val = self.evaluate_method(method, &file_type);
+                    if let Some(s) = val  {
+                        writeln!(method_str, "{}", s).unwrap();
+                    }
                 }
-            }
 
-            if method_str.len() > 0 {
-                let type_name = self.formatter.fmt_type_name(id);
-                let file_name = self.formatter.fmt_file_name(&type_name, &crate::js2::FileType::Module);
-                
-                self.exports.push(format!(r#"export * as {type_name}Demo from "./{file_name}""#).into());
+                if method_str.len() > 0 {
+                    let type_name = self.formatter.fmt_type_name(id);
+                    let file_name = self.formatter.fmt_file_name(&type_name, &file_type);
+                    
+                    if !file_type.is_typescript(){
+                        self.exports.push(format!(r#"export * as {type_name}Demo from "./{file_name}""#).into());
+                    }
 
-                self.files.add_file(format!("{file_name}"), method_str);
+                    self.files.add_file(format!("{file_name}"), method_str);
+                }
             }
         }
 
@@ -78,31 +84,42 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
 
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
-    pub fn evaluate_method(&self, method : &Method) -> Option<String> {
+    pub fn evaluate_method(&self, method : &Method, file_type : &FileType) -> Option<String> {
         if !method.output.success_type().is_write() {
             return None;
         }
 
         #[derive(Template)]
         #[template(path="demo-gen/method.js.jinja", escape="none")]
-        struct MethodInfo<'info> {
+        struct TerminusInfo<'info> {
+            /// Name of the function for the render engine to call
             function_name : String,
+            /// Parameters that we require explicit input from the render engine for
             params: Vec<Cow<'info, str>>,
+
+            typescript: bool,
         }
 
-        let mut method_info = MethodInfo {
+        let mut terminus_info = TerminusInfo {
             function_name : self.formatter.fmt_method_name(method),
             params: Vec::new(),
+
+            typescript: file_type.is_typescript(),
         };
 
+        // Start with our self variable:
 
         // if method.param_self.is_some() {
         //     method_info.params.push("self".into());
         // }
         for param in method.params.iter() {
-            method_info.params.push(self.formatter.fmt_param_name(param.name.as_str()));
+            terminus_info.params.push(self.formatter.fmt_param_name(param.name.as_str()));
         }
 
-        method_info.render().ok()
+        terminus_info.render().ok()
+    }
+
+    pub fn evaluate_param(&self, param : Param) {
+
     }
 }
