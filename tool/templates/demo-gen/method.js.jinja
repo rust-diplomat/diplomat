@@ -1,0 +1,7 @@
+export function {{function_name}}(
+	{%- for param in params -%}
+	{{param}}{% if !loop.last %}, {% endif %}
+	{%- endfor -%}
+) {
+
+}

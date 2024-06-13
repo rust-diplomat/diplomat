@@ -4,6 +4,8 @@ use diplomat_core::hir::{self, Method, TypeContext, TypeId};
 
 use crate::{common::{ErrorStore, FileMap}, js2::formatter::JSFormatter};
 
+use askama::{self, Template};
+
 pub struct WebDemoGenerationContext<'tcx> {
     tcx: &'tcx TypeContext,
 
@@ -81,8 +83,26 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
             return None;
         }
 
-        let method_name = self.formatter.fmt_method_name(method);
+        #[derive(Template)]
+        #[template(path="demo-gen/method.js.jinja", escape="none")]
+        struct MethodInfo<'info> {
+            function_name : String,
+            params: Vec<Cow<'info, str>>,
+        }
 
-        return Some(format!("export function {method_name}() {{}}"));
+        let mut method_info = MethodInfo {
+            function_name : self.formatter.fmt_method_name(method),
+            params: Vec::new(),
+        };
+
+
+        // if method.param_self.is_some() {
+        //     method_info.params.push("self".into());
+        // }
+        for param in method.params.iter() {
+            method_info.params.push(self.formatter.fmt_param_name(param.name.as_str()));
+        }
+
+        method_info.render().ok()
     }
 }
