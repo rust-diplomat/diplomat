@@ -517,3 +517,19 @@ description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-feature-tests", "--target", "wasm32-unknown-unknown"]
+
+
+[tasks.bench-rust-example]
+description = "Benchmark rust example"
+category = "Benchmark"
+script = '''
+cargo bench --package diplomat-example
+'''
+[tasks.bench-kotlin-example]
+description = "Benchmark kotlin example"
+category = "Benchmark"
+dependencies = ["gen-kotlin-example", "test-kotlin-example"]
+script = '''
+cd example/kotlin/somelib
+gradle jmh --warning-mode all
+'''

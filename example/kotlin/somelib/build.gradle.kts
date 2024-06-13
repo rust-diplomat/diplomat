@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.0"
     application
     `maven-publish`
+    id("me.champeau.jmh") version "0.7.2"
 }
 
 
@@ -47,4 +48,16 @@ kotlin {
 }
 
 application {
+}
+jmh {
+    iterations = 2 // Number of measurement iterations to do.
+    batchSize =
+        1 // Batch size: number of benchmark method calls per operation. (some benchmark modes can ignore this setting)
+    fork = 2
+    warmupBatchSize = 2 // Warmup batch size: number of benchmark method calls per operation.
+    warmupIterations = 1 // Number of warmup iterations to do.
+    timeOnIteration = "2s"
+    warmup = "1s"
+    benchmarkMode = listOf("avgt")
+    timeUnit = "ns"
 }
