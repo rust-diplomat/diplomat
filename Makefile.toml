@@ -219,10 +219,12 @@ dependencies = ["build-wasm-demo", "build-example-wasm"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd example/demo-gen/
-cp ../js2/api/* api
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm api/diplomat_example.wasm
 !include_files ./support/windows_npm_fix.ds
+cd example/demo-gen/
+# For windows Copy-Item giving us issues:
+rm -r ./api
+cp ../js2/api .
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm api/diplomat_example.wasm
 exec --fail-on-error ${npm} install
 exec --fail-on-error ${npm} run build
 '''
