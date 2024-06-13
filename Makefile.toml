@@ -194,8 +194,8 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/windows_npm_fix.ds
-cd example/demo-gen/
-cp ../js2/api .
+cd example/js2/
+cp ../demo-gen/demo api
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm api/diplomat_example.wasm
 exec --fail-on-error ${npm} install
 exec --fail-on-error ${npm} run test
@@ -476,7 +476,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example demo-gen api
+generate_generic example demo-gen demo
 '''
 
 [tasks.gen-dotnet-feature]

@@ -63,7 +63,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                 
                 self.exports.push(format!(r#"export * as {type_name}Demo from "./{file_name}""#).into());
 
-                self.files.add_file(format!("demo/{file_name}"), method_str);
+                self.files.add_file(format!("{file_name}"), method_str);
             }
         }
 
@@ -71,7 +71,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
         for export in self.exports.iter() {
             writeln!(out_str, "{}", export).unwrap();
         }
-        self.files.add_file("demo/index.mjs".into(), out_str);
+        self.files.add_file("index.mjs".into(), out_str);
     }
 
     /// Create a Render Terminus .js file from a method.
