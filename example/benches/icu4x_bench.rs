@@ -48,12 +48,12 @@ pub fn criterion_benchmark_format(c: &mut Criterion) {
     c.bench_function("format", |b| {
         b.iter(|| {
             unsafe {
-                let mut ptr = diplomat_runtime::diplomat_buffer_write_create(10);
+                let ptr = diplomat_runtime::diplomat_buffer_write_create(10);
                 let writeable = ptr
                     .as_mut()
                     .expect("Tried to get null pointer as diplomat writeable");
 
-                black_box(formatter.format_write(&x, writeable));
+                formatter.format_write(black_box(&x), writeable);
                 diplomat_runtime::diplomat_buffer_write_destroy(ptr);
             };
         })
