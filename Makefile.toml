@@ -187,6 +187,20 @@ exec --fail-on-error npm install
 exec --fail-on-error npm run build
 '''
 
+[tasks.test-wasm-demo-js2]
+category = "Tests"
+dependencies = ["build-wasm-demo", "build-example-wasm"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/windows_npm_fix.ds
+cd example/demo-gen/
+cp ../js2/api .
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm api/diplomat_example.wasm
+exec --fail-on-error ${npm} install
+exec --fail-on-error ${npm} run test
+'''
+
 [tasks.test-wasm-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
@@ -211,22 +225,6 @@ cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/dip
 !include_files ./support/windows_npm_fix.ds
 exec --fail-on-error ${npm} install
 exec --fail-on-error ${npm} run test
-'''
-
-[tasks.test-wasm-demo-js2]
-category = "Tests"
-dependencies = ["build-wasm-demo", "build-example-wasm"]
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
-!include_files ./support/windows_npm_fix.ds
-cd example/demo-gen/
-# For windows Copy-Item giving us issues:
-rm -r ./api
-cp ../js2/api .
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm api/diplomat_example.wasm
-exec --fail-on-error ${npm} install
-exec --fail-on-error ${npm} run build
 '''
 
 [tasks.test-dart-example]
@@ -478,7 +476,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example demo-gen demo
+generate_generic example demo-gen api
 '''
 
 [tasks.gen-dotnet-feature]

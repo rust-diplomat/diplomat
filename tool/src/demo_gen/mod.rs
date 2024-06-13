@@ -61,9 +61,9 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                 let type_name = self.formatter.fmt_type_name(id);
                 let file_name = self.formatter.fmt_file_name(&type_name, &crate::js2::FileType::Module);
                 
-                self.exports.push(format!(r#"export * as {type_name}Demo from "{file_name}""#).into());
+                self.exports.push(format!(r#"export * as {type_name}Demo from "./{file_name}""#).into());
 
-                self.files.add_file(file_name, method_str);
+                self.files.add_file(format!("demo/{file_name}"), method_str);
             }
         }
 
@@ -71,7 +71,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
         for export in self.exports.iter() {
             writeln!(out_str, "{}", export).unwrap();
         }
-        self.files.add_file("index.mjs".into(), out_str);
+        self.files.add_file("demo/index.mjs".into(), out_str);
     }
 
     /// Create a Render Terminus .js file from a method.

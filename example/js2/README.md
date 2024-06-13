@@ -5,5 +5,3 @@ The current assumptions are that you would run this on top of a project that alr
 TODO:
 
 That's the hope anyways, I need to figure out JS imports enough to see how we can get this working without much config on the developer's side.
-
-Also need to actually implement the copying /api/ duckscript.
