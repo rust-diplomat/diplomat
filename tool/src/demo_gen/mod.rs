@@ -63,7 +63,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                 };
 
                 for method in methods {
-                    let val = context.evaluate_method(method);
+                    let val = context.evaluate_terminus(method);
                     if let Some(t) = val  {
                         termini.push(t.to_owned());
                     }
