@@ -117,7 +117,11 @@ pub fn gen(
         }
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "demo-gen" => {
-            let attr_validator = hir::BasicAttributeValidator::new("demo-gen");
+            let mut attr_validator = hir::BasicAttributeValidator::new("demo-gen");
+
+            // For finding default constructors of opaques:
+            attr_validator.support.constructors = true;
+            
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
