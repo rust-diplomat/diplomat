@@ -1,6 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use diplomat_example::{data_provider, decimal, fixed_decimal, locale};
-use diplomat_runtime::DiplomatWrite;
 
 pub fn criterion_benchmark_locale(c: &mut Criterion) {
     c.bench_function("create locale", |b| {
@@ -50,7 +49,7 @@ pub fn criterion_benchmark_format(c: &mut Criterion) {
         b.iter(|| {
             unsafe {
                 let mut ptr = diplomat_runtime::diplomat_buffer_write_create(10);
-                let mut writeable = ptr
+                let writeable = ptr
                     .as_mut()
                     .expect("Tried to get null pointer as diplomat writeable");
 
