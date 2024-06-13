@@ -1,1 +1,1 @@
-export function formatWrite();
+export function formatWrite(v: number);

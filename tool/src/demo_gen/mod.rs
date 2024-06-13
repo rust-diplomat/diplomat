@@ -58,12 +58,8 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
             let mut termini : Vec<terminus::TerminusInfo> = Vec::new();
 
             {
-                let context = RenderTerminusContext {
-                    ctx: self,
-                };
-
                 for method in methods {
-                    let val = context.evaluate_terminus(method);
+                    let val = RenderTerminusContext::evaluate_terminus(self, method);
                     if let Some(t) = val  {
                         termini.push(t.to_owned());
                     }

@@ -1,6 +1,6 @@
 export function {{function_name}}(
 	{%- for param in params -%}
-	{{param}}{% if !loop.last %}, {% endif %}
+	{{param.name}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}
 	{%- endfor -%}
 ){% if typescript %};{% else %} {
 
