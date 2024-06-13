@@ -215,15 +215,16 @@ exec --fail-on-error ${npm} run test
 
 [tasks.test-wasm-demo-js2]
 category = "Tests"
-dependencies = ["build-wasm-demo"]
+dependencies = ["build-wasm-demo", "build-example-wasm"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd example/js2/
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
-cd js2
-exec --fail-on-error npm install
-exec --fail-on-error npm run build
+cd example/demo-gen/
+cp ../js2/api/* api
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm api/diplomat_example.wasm
+!include_files ./support/windows_npm_fix.ds
+exec --fail-on-error ${npm} install
+exec --fail-on-error ${npm} run build
 '''
 
 [tasks.test-dart-example]
