@@ -10,6 +10,7 @@ mod wasm_glue;
 
 mod write;
 pub use write::DiplomatWrite;
+pub use write::{diplomat_buffer_write_create, diplomat_buffer_write_destroy};
 
 mod result;
 pub use result::DiplomatResult;
