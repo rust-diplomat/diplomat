@@ -8,8 +8,18 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "MyEnum.d.h"
 
+
+namespace capi {
+    typedef enum MyEnum {
+      MyEnum_A = -2,
+      MyEnum_B = -1,
+      MyEnum_C = 0,
+      MyEnum_D = 1,
+      MyEnum_E = 2,
+      MyEnum_F = 3,
+    } MyEnum;
+}
 
 class MyEnum {
 public:

@@ -10,13 +10,20 @@
 #include "diplomat_runtime.hpp"
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsWithBounds.d.hpp"
-#include "NestedBorrowedFields.d.h"
 
 class Bar;
 class Foo;
 struct BorrowedFields;
 struct BorrowedFieldsWithBounds;
 
+
+namespace capi {
+    typedef struct NestedBorrowedFields {
+      BorrowedFields fields;
+      BorrowedFieldsWithBounds bounds;
+      BorrowedFieldsWithBounds bounds2;
+    } NestedBorrowedFields;
+}
 
 struct NestedBorrowedFields {
   BorrowedFields fields;

@@ -10,8 +10,16 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "AttrOpaque2.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    
+    void namespace_AttrOpaque2_destroy(AttrOpaque2* self);
+    
+    } // extern "C"
+}
 
 inline const capi::AttrOpaque2* ns::CPPRenamedAttrOpaque2::AsFFI() const {
   return reinterpret_cast<const capi::AttrOpaque2*>(this);

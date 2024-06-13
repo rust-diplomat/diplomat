@@ -12,6 +12,13 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace capi {
+    extern "C" {
+    
+    
+    } // extern "C"
+}
+
 
 
 

@@ -10,7 +10,18 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "MyEnum.h"
+
+
+namespace capi {
+    extern "C" {
+    
+    int8_t MyEnum_into_value(MyEnum self);
+    
+    MyEnum MyEnum_get_a();
+    
+    
+    } // extern "C"
+}
 
 
 inline capi::MyEnum MyEnum::AsFFI() const {

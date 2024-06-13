@@ -8,11 +8,19 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionStruct.d.h"
 
 class OptionOpaque;
 class OptionOpaqueChar;
 
+
+namespace capi {
+    typedef struct OptionStruct {
+      OptionOpaque* a;
+      OptionOpaqueChar* b;
+      uint32_t c;
+      OptionOpaque* d;
+    } OptionStruct;
+}
 
 struct OptionStruct {
   std::unique_ptr<OptionOpaque> a;

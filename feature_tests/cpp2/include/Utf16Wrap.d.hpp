@@ -8,8 +8,11 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Utf16Wrap.d.h"
 
+
+namespace capi {
+    typedef struct Utf16Wrap Utf16Wrap;
+}
 
 class Utf16Wrap {
 public:

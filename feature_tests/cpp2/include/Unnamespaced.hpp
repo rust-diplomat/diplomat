@@ -12,8 +12,20 @@
 #include "diplomat_runtime.hpp"
 #include "AttrOpaque1Renamed.hpp"
 #include "CPPRenamedAttrEnum.hpp"
-#include "Unnamespaced.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    Unnamespaced* namespace_Unnamespaced_make(AttrEnum _e);
+    
+    void namespace_Unnamespaced_use_namespaced(const Unnamespaced* self, const AttrOpaque1* _n);
+    
+    
+    void namespace_Unnamespaced_destroy(Unnamespaced* self);
+    
+    } // extern "C"
+}
 
 inline std::unique_ptr<Unnamespaced> Unnamespaced::make(ns::CPPRenamedAttrEnum _e) {
   auto result = capi::namespace_Unnamespaced_make(_e.AsFFI());

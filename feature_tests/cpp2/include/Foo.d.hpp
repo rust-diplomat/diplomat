@@ -11,13 +11,16 @@
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsReturning.d.hpp"
 #include "BorrowedFieldsWithBounds.d.hpp"
-#include "Foo.d.h"
 
 class Bar;
 struct BorrowedFields;
 struct BorrowedFieldsReturning;
 struct BorrowedFieldsWithBounds;
 
+
+namespace capi {
+    typedef struct Foo Foo;
+}
 
 class Foo {
 public:

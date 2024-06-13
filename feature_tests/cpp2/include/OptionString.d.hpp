@@ -8,8 +8,11 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionString.d.h"
 
+
+namespace capi {
+    typedef struct OptionString OptionString;
+}
 
 class OptionString {
 public:

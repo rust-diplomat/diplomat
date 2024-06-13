@@ -1,6 +1,8 @@
 use super::header::Header;
 use super::Cpp2Context;
 use super::Cpp2Formatter;
+use crate::c2::Header as C2Header;
+use crate::c2::TyGenContext as C2TyGenContext;
 use askama::Template;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
@@ -20,20 +22,15 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
         let mut impl_header = Header::new(impl_header_path.clone());
 
+        let c = self.c2_gen_context(id, decl_header_path.clone(), impl_header_path.clone());
+
         let mut context = TyGenContext {
             cx: self,
+            c,
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
-        context
-            .decl_header
-            .includes
-            .insert(self.formatter.fmt_c_decl_header_path(id));
-        context
-            .impl_header
-            .includes
-            .insert(self.formatter.fmt_c_impl_header_path(id));
 
         let guard = self.errors.set_context_ty(ty.name().as_str().into());
         match ty {
@@ -59,6 +56,23 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             .add_file(decl_header_path, decl_header.to_string());
         self.files
             .add_file(impl_header_path, impl_header.to_string());
+    }
+
+    fn c2_gen_context<'cx>(
+        &'cx self,
+        id: TypeId,
+        decl_header_path: String,
+        impl_header_path: String,
+    ) -> C2TyGenContext<'cx, 'tcx> {
+        C2TyGenContext {
+            tcx: self.tcx,
+            formatter: &self.formatter.c,
+            errors: &self.errors,
+            is_for_cpp: true,
+            id,
+            decl_header_path,
+            impl_header_path,
+        }
     }
 }
 
@@ -109,6 +123,7 @@ struct MethodInfo<'a> {
 /// Context for generating a particular type's header
 pub struct TyGenContext<'ccx, 'tcx, 'header> {
     pub cx: &'ccx Cpp2Context<'tcx>,
+    pub c: C2TyGenContext<'ccx, 'tcx>,
     pub impl_header: &'header mut Header,
     pub decl_header: &'header mut Header,
 }
@@ -124,6 +139,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
+        let c_header = self.c.gen_enum_def(ty);
+        let c_impl_header = self.c.gen_impl(ty.into());
 
         let methods = ty
             .methods
@@ -141,6 +158,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
+            c_header: C2Header,
         }
 
         DeclTemplate {
@@ -151,6 +169,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            c_header,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -163,6 +182,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &'a str,
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
+            c_impl_header: C2Header,
         }
 
         ImplTemplate {
@@ -171,13 +191,10 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
+            c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();
-
-        self.decl_header
-            .includes
-            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
     }
 
     pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
@@ -185,6 +202,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
         let dtor_name = self.cx.formatter.fmt_c_dtor_name(id);
+        let c_header = self.c.gen_opaque_def(ty);
+        let c_impl_header = self.c.gen_impl(ty.into());
 
         let methods = ty
             .methods
@@ -202,6 +221,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
+            c_header: C2Header,
         }
 
         DeclTemplate {
@@ -212,6 +232,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            c_header,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -225,6 +246,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &'a str,
             dtor_name: &'a str,
             methods: &'a [MethodInfo<'a>],
+            c_impl_header: C2Header,
         }
 
         ImplTemplate {
@@ -234,19 +256,19 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &ctype,
             dtor_name: &dtor_name,
             methods: methods.as_slice(),
+            c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();
-
-        self.decl_header
-            .includes
-            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
     }
 
     pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
+
+        let c_header = self.c.gen_struct_def(def);
+        let c_impl_header = self.c.gen_impl(def.into());
 
         let field_decls = def
             .fields
@@ -283,6 +305,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
+            c_header: C2Header,
         }
 
         DeclTemplate {
@@ -294,6 +317,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: methods.as_slice(),
             namespace: def.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            c_header,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -308,15 +332,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: &'a [NamedExpression<'a>],
             c_to_cpp_fields: &'a [NamedExpression<'a>],
             methods: &'a [MethodInfo<'a>],
-        }
-
-        if def.fields.is_empty() {
-            self.impl_header
-                .includes
-                .remove(&self.cx.formatter.fmt_c_impl_header_path(id));
-            self.decl_header
-                .includes
-                .remove(&self.cx.formatter.fmt_c_decl_header_path(id));
+            c_impl_header: C2Header,
         }
 
         ImplTemplate {
@@ -327,6 +343,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: cpp_to_c_fields.as_slice(),
             c_to_cpp_fields: c_to_cpp_fields.as_slice(),
             methods: methods.as_slice(),
+            c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();

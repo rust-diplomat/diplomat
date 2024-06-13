@@ -10,8 +10,18 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionOpaqueChar.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    void OptionOpaqueChar_assert_char(const OptionOpaqueChar* self, char32_t ch);
+    
+    
+    void OptionOpaqueChar_destroy(OptionOpaqueChar* self);
+    
+    } // extern "C"
+}
 
 inline void OptionOpaqueChar::assert_char(char32_t ch) const {
   capi::OptionOpaqueChar_assert_char(this->AsFFI(),

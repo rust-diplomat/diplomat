@@ -11,8 +11,16 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "Bar.hpp"
-#include "BorrowedFields.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    BorrowedFields BorrowedFields_from_bar_and_strings(const Bar* bar, const char16_t* dstr16_data, size_t dstr16_len, const char* utf8_str_data, size_t utf8_str_len);
+    
+    
+    } // extern "C"
+}
 
 inline diplomat::result<BorrowedFields, diplomat::Utf8Error> BorrowedFields::from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str) {
   if (!capi::diplomat_is_str(utf8_str.data(), utf8_str.size())) {

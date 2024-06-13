@@ -9,12 +9,23 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "MyEnum.d.hpp"
-#include "MyStruct.d.h"
 #include "MyZst.d.hpp"
 
 struct MyZst;
 class MyEnum;
 
+
+namespace capi {
+    typedef struct MyStruct {
+      uint8_t a;
+      bool b;
+      uint8_t c;
+      uint64_t d;
+      int32_t e;
+      char32_t f;
+      MyEnum g;
+    } MyStruct;
+}
 
 struct MyStruct {
   uint8_t a;

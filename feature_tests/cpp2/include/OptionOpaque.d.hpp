@@ -8,11 +8,14 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionOpaque.d.h"
 #include "OptionStruct.d.hpp"
 
 struct OptionStruct;
 
+
+namespace capi {
+    typedef struct OptionOpaque OptionOpaque;
+}
 
 class OptionOpaque {
 public:

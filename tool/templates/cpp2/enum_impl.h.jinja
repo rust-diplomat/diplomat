@@ -1,3 +1,8 @@
+namespace capi {
+    {{ c_impl_header.body|trim|indent(4) }}
+}
+
+
 inline {{ctype}} {{type_name}}::AsFFI() const {
 	return static_cast<{{ctype}}>(value);
 }
