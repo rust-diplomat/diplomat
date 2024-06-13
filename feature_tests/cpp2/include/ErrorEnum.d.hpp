@@ -15,7 +15,9 @@ namespace capi {
       ErrorEnum_Foo = 0,
       ErrorEnum_Bar = 1,
     } ErrorEnum;
-}class ErrorEnum {
+}
+
+class ErrorEnum {
 public:
   enum Value {
     Foo = 0,

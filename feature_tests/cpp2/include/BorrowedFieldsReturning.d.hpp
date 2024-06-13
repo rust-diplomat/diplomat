@@ -14,7 +14,9 @@ namespace capi {
     typedef struct BorrowedFieldsReturning {
       DiplomatStringView bytes;
     } BorrowedFieldsReturning;
-}struct BorrowedFieldsReturning {
+}
+
+struct BorrowedFieldsReturning {
   std::string_view bytes;
 
   inline capi::BorrowedFieldsReturning AsFFI() const;

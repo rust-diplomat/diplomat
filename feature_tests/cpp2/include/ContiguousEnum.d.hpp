@@ -17,7 +17,9 @@ namespace capi {
       ContiguousEnum_E = 2,
       ContiguousEnum_F = 3,
     } ContiguousEnum;
-}class ContiguousEnum {
+}
+
+class ContiguousEnum {
 public:
   enum Value {
     C = 0,

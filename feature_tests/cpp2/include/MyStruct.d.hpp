@@ -25,7 +25,9 @@ namespace capi {
       char32_t f;
       MyEnum g;
     } MyStruct;
-}struct MyStruct {
+}
+
+struct MyStruct {
   uint8_t a;
   bool b;
   uint8_t c;

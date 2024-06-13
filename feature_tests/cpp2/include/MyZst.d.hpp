@@ -13,7 +13,9 @@
 namespace capi {
     typedef struct MyZst {
     } MyZst;
-}struct MyZst {
+}
+
+struct MyZst {
 
 };
 

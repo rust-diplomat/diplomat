@@ -17,7 +17,9 @@ namespace capi {
       ICU4XFixedDecimalGroupingStrategy_Always = 2,
       ICU4XFixedDecimalGroupingStrategy_Min2 = 3,
     } ICU4XFixedDecimalGroupingStrategy;
-}class ICU4XFixedDecimalGroupingStrategy {
+}
+
+class ICU4XFixedDecimalGroupingStrategy {
 public:
   enum Value {
     Auto = 0,

@@ -18,7 +18,9 @@ namespace capi {
       DiplomatStringView b;
       DiplomatStringView c;
     } BorrowedFields;
-}struct BorrowedFields {
+}
+
+struct BorrowedFields {
   std::u16string_view a;
   std::string_view b;
   std::string_view c;

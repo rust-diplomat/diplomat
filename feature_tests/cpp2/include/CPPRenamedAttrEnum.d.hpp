@@ -16,7 +16,9 @@ namespace capi {
       AttrEnum_B = 1,
       AttrEnum_C = 2,
     } AttrEnum;
-}namespace ns {
+}
+
+namespace ns {
 class CPPRenamedAttrEnum {
 public:
   enum Value {

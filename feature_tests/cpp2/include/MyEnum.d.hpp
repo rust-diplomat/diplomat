@@ -19,7 +19,9 @@ namespace capi {
       MyEnum_E = 2,
       MyEnum_F = 3,
     } MyEnum;
-}class MyEnum {
+}
+
+class MyEnum {
 public:
   enum Value {
     A = -2,

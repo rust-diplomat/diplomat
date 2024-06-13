@@ -16,7 +16,9 @@ namespace capi {
       UnimportedEnum_B = 1,
       UnimportedEnum_C = 2,
     } UnimportedEnum;
-}class UnimportedEnum {
+}
+
+class UnimportedEnum {
 public:
   enum Value {
     A = 0,

@@ -18,7 +18,9 @@ namespace capi {
       UnimportedEnum foo;
       uint8_t count;
     } ImportedStruct;
-}struct ImportedStruct {
+}
+
+struct ImportedStruct {
   UnimportedEnum foo;
   uint8_t count;
 

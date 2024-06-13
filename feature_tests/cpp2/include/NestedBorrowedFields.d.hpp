@@ -23,7 +23,9 @@ namespace capi {
       BorrowedFieldsWithBounds bounds;
       BorrowedFieldsWithBounds bounds2;
     } NestedBorrowedFields;
-}struct NestedBorrowedFields {
+}
+
+struct NestedBorrowedFields {
   BorrowedFields fields;
   BorrowedFieldsWithBounds bounds;
   BorrowedFieldsWithBounds bounds2;

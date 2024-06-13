@@ -20,7 +20,9 @@ namespace capi {
       uint32_t c;
       OptionOpaque* d;
     } OptionStruct;
-}struct OptionStruct {
+}
+
+struct OptionStruct {
   std::unique_ptr<OptionOpaque> a;
   std::unique_ptr<OptionOpaqueChar> b;
   uint32_t c;

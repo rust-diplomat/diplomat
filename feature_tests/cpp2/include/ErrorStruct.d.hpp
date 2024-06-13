@@ -15,7 +15,9 @@ namespace capi {
       int32_t i;
       int32_t j;
     } ErrorStruct;
-}struct ErrorStruct {
+}
+
+struct ErrorStruct {
   int32_t i;
   int32_t j;
 
