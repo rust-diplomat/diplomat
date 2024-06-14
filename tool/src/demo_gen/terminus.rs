@@ -16,7 +16,27 @@ struct ParamInfo {
 /// So because formatWrite is a render terminus, we'll need to actuall call the real formatWrite() in the body of the function.
 /// 
 /// formatWrite represents our root.
-/// formatWrite is based on ICU4XFixedDecimal.new(), so we add that as a child of the root.
+/// formatWrite requires ICU4XFixedDecimal as a parameter, and so we need to call ICU4XFixedDecimal.new().
+/// We then add ICU4XFixedDecimal.new() as a child of our root, and add it as a parameter to be called by formatWrite.
+/// 
+/// I think the final render should look something like this:
+/// ```typescript
+/// function formatWrite(locale : ICU4XLocale, provider : ICU4XDataProvider, options : ICU4XFixedDecimalFormatterOptions, v : number) {
+///     return ICU4XFixedDecimalFormatter.formatWrite
+///     .call(
+///         ICU4XFixedDecimalFormatter.tryNew.call(
+///             null,
+///             locale,
+///             provider,
+///             options
+///         ), 
+///         ICU4XFixedDecimal.new_.call(
+///             null,
+///             v
+///         ),
+///     );
+/// }
+/// ```
 #[derive(Template)]
 #[template(path="demo-gen/method_dependency.js.jinja", escape="none")]
 struct MethodDependency {
@@ -101,7 +121,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     /// 1. Add it to the list of parameters that the terminus function takes for the render engine to call.
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
     /// 
-    /// `node` - Represents the 
+    /// `node` - Represents the current function of the parameter we're evaluating. See [`MethodDependency`] for more on its purpose.
     fn evaluate_param(&mut self, param_type : Type, param_name : String, node : &mut MethodDependency) {
         match param_type {
             Type::Primitive(_) | Type::Enum(_) | Type::Slice(_) => {
