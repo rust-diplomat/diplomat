@@ -53,9 +53,9 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         // if method.param_self.is_some() {
         //     method_info.params.push("self".into());
         // }
-        for param in method.params.iter() {
-            this.evaluate_param(param.ty.clone(), this.ctx.formatter.fmt_param_name(param.name.as_str()).into());
-        }
+
+        // And then we just treat the terminus as a regular constructor method:
+        this.evaluate_constructor(method);
 
         Some(this.terminus_info)
     }
