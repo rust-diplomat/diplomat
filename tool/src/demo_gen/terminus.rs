@@ -106,17 +106,17 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         match param_type {
             Type::Primitive(_) | Type::Enum(_) | Type::Slice(_) => {
                 let type_name = match param_type {
-                    Type::Primitive(p) => self.ctx.formatter.fmt_primitive_as_ffi(p, true),
-                    Type::Slice(hir::Slice::Str(..)) => self.ctx.formatter.fmt_string(),
-                    Type::Slice(hir::Slice::Primitive(_, p)) => self.ctx.formatter.fmt_primitive_list_type(p),
-                    Type::Slice(hir::Slice::Strs(..)) => "Array<String>",
-                    Type::Enum(e) => todo!(),
+                    Type::Primitive(p) => self.ctx.formatter.fmt_primitive_as_ffi(p, true).to_string(),
+                    Type::Slice(hir::Slice::Str(..)) => self.ctx.formatter.fmt_string().to_string(),
+                    Type::Slice(hir::Slice::Primitive(_, p)) => self.ctx.formatter.fmt_primitive_list_type(p).to_string(),
+                    Type::Slice(hir::Slice::Strs(..)) => "Array<String>".to_string(),
+                    Type::Enum(e) => self.ctx.formatter.fmt_type_name(e.tcx_id.into()).to_string(),
                     _ => unreachable!("Unknown primitive type {:?}", param_type)
                 };
 
                 let param_info = ParamInfo {
                     name: param_name,
-                    type_name: type_name.into()
+                    type_name
                 };
 
                 self.terminus_info.params.push(param_info.clone());
