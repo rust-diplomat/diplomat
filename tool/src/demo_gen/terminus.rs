@@ -37,6 +37,7 @@ struct ParamInfo {
 ///     );
 /// }
 /// ```
+/// TODO: Is this even necessary? I think this could be accomplished with the recursive structure that we already have. Just return this with no keeping track of children needed.
 #[derive(Template)]
 #[template(path="demo-gen/method_dependency.js.jinja", escape="none")]
 struct MethodDependency {
