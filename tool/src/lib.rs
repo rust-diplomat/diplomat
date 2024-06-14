@@ -16,6 +16,8 @@ pub mod dart;
 #[doc(hidden)]
 pub mod dotnet;
 #[doc(hidden)]
+pub mod java;
+#[doc(hidden)]
 pub mod js;
 #[doc(hidden)]
 pub mod kotlin;
@@ -76,6 +78,30 @@ pub fn gen(
 
     match target_language {
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
+        "java" => {
+            let mut attr_validator = hir::BasicAttributeValidator::new("true");
+            attr_validator.support.renaming = true;
+            attr_validator.support.disabling = true;
+            attr_validator.support.iterators = true;
+            attr_validator.support.iterables = true;
+            attr_validator.support.indexing = true;
+            attr_validator.support.constructors = true;
+            attr_validator.support.named_constructors = true;
+            attr_validator.support.memory_sharing = true;
+            attr_validator.support.accessors = true;
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(context) => context,
+
+                Err(e) => {
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
+                    }
+                    std::process::exit(1);
+                }
+            };
+
+            out_texts = java::run(&tcx, library_config, out_folder)?.take_files();
+        }
         "kotlin" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
             attr_validator.support.renaming = true;
