@@ -82,11 +82,6 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         // Easier to make the MethodDependency tree now, then turn it into something that the template can read then clone it all and set it up later. 
         let mut root = MethodDependency::new(method_name);
 
-        // Start with our self variable:
-        method.param_self.as_ref().inspect(|s| {
-            this.evaluate_param(s.ty.clone().into(), "self".into(), &mut root);
-        });
-
         // if method.param_self.is_some() {
         //     method_info.params.push("self".into());
         // }
@@ -137,8 +132,14 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
     fn evaluate_constructor(&mut self, method : &Method, node : &mut MethodDependency) {
+        method.param_self.as_ref().inspect(|s| {
+            self.evaluate_param(s.ty.clone().into(), "self".into(), node);
+        });
+        
         for param in method.params.iter() {
             self.evaluate_param(param.ty.clone(), self.ctx.formatter.fmt_param_name(param.name.as_str()).into(), node);
         }
+
+        // TODO: Then add our call to the stack:
     }
 }
