@@ -123,7 +123,6 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 // Piggybacking off of the #[diplomat::attr(constructor)] macro for now. 
                 let op = o.resolve(self.ctx.tcx);
                 for method in op.methods.iter() {
-                    println!("{:?} {:?} {:?}", self.ctx.formatter.fmt_type_name(o.tcx_id.into()), method.name, method.attrs.special_method);
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method {
                         let method_name = self.ctx.formatter.fmt_method_name(method);
                         
@@ -131,6 +130,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                         node.children.push(child);
                         let i = node.children.len() - 1;
                         self.evaluate_constructor(method, &mut node.children.get_mut(i).unwrap());
+                    } else {
+                        panic!("You must set a default constructor for the opaque type {}. Try adding #[diplomat::attr(constructor)] above a method that you wish to be the default constructor.", op.name.as_str());
                     }
                 }
             },
