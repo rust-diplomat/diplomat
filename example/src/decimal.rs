@@ -48,7 +48,7 @@ pub mod ffi {
     impl ICU4XFixedDecimalFormatter {
         /// Creates a new [`ICU4XFixedDecimalFormatter`] from locale data.
         #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter::try_new, FnInStruct)]
-        #[diplomat::attr(supports = constructors, constructor)]
+        #[diplomat::attr(all(supports = constructors, supports = fallible_constructors), constructor)]
         // TODO constructors: this should ideally be a constructor too
         pub fn try_new(
             locale: &ICU4XLocale,
