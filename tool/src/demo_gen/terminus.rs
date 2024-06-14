@@ -5,33 +5,42 @@ use diplomat_core::hir::{Method, Type};
 use super::WebDemoGenerationContext;
 use askama::{self, Template};
 
-pub struct RenderTerminusContext<'a, 'tcx> {
-    pub ctx: &'a WebDemoGenerationContext<'tcx>,
-    pub terminus_info : TerminusInfo,
-}
-
 #[derive(Clone)]
 struct ParamInfo {
     pub name : String,
     pub type_name : String,
 }
 
+
 /// Represents a function that we'll be using when constructing the ultimate output of a RenderTerminus function.
 /// So because formatWrite is a render terminus, we'll need to actuall call the real formatWrite() in the body of the function.
 /// 
 /// formatWrite represents our root.
 /// formatWrite is based on ICU4XFixedDecimal.new(), so we add that as a child of the root.
+#[derive(Template)]
+#[template(path="demo-gen/method_dependency.js.jinja", escape="none")]
 struct MethodDependency {
     children: Vec<MethodDependency>,
 
+    /// JS name to invoke for this method.
     method_name: String,
+
+    /// Parameters to pass into the method.
+    params : Vec<ParamInfo>,
+}
+
+pub struct RenderTerminusContext<'a, 'tcx> {
+    pub ctx: &'a WebDemoGenerationContext<'tcx>,
+    pub terminus_info : TerminusInfo,
+    
 }
 
 impl<'a> MethodDependency {
     pub fn new(method_name : String) -> Self {
         MethodDependency {
             children: Vec::new(),
-            method_name
+            method_name,
+            params : Vec::new(),
         }
     }
 }
@@ -42,7 +51,7 @@ impl<'a> MethodDependency {
 pub(super) struct TerminusInfo {
     /// Name of the function for the render engine to call
     function_name : String,
-    /// Parameters that we require explicit input from the render engine for
+    /// Parameters that we require explicit user input from the render engine
     params: Vec<ParamInfo>,
 
     /// Stack of setup statements for creating the body of the JS function. Created from a [`MethodDependency`] tree.
@@ -78,13 +87,9 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
 
         let method_name = this.ctx.formatter.fmt_method_name(method);
 
-        // We don't include this as part of the RenderTerminusContext because that's something we want to render later.
-        // Easier to make the MethodDependency tree now, then turn it into something that the template can read then clone it all and set it up later. 
+        // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
+        // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
         let mut root = MethodDependency::new(method_name);
-
-        // if method.param_self.is_some() {
-        //     method_info.params.push("self".into());
-        // }
 
         // And then we just treat the terminus as a regular constructor method:
         this.evaluate_constructor(method, &mut root);
@@ -101,10 +106,14 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         match param_type {
             Type::Primitive(p) => {
                 let type_name = self.ctx.formatter.fmt_primitive_as_ffi(p, true);
-                self.terminus_info.params.push(ParamInfo {
+
+                let param_info = ParamInfo {
                     name: param_name,
                     type_name: type_name.into()
-                });
+                };
+
+                self.terminus_info.params.push(param_info.clone());
+                node.params.push(param_info);
             },
             Type::Enum(e) => todo!(),
             Type::Slice(s) => todo!(),
@@ -140,6 +149,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             self.evaluate_param(param.ty.clone(), self.ctx.formatter.fmt_param_name(param.name.as_str()).into(), node);
         }
 
-        // TODO: Then add our call to the stack:
+        // Then add our call to the stack:
+        self.terminus_info.setup_stack.push(node.render().unwrap());
     }
 }

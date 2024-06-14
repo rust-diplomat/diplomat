@@ -3,6 +3,8 @@ export function {{function_name}}(
 	{{param.name}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}
 	{%- endfor -%}
 ){% if typescript %};{% else %} {
-
+	{% for setup in setup_stack %}
+	{{setup}}
+	{% endfor %}
 }
 {%- endif %}
