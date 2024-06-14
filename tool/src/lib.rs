@@ -121,6 +121,7 @@ pub fn gen(
 
             // For finding default constructors of opaques:
             attr_validator.support.constructors = true;
+            attr_validator.support.fallible_constructors = true;
             
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,

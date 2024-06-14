@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use diplomat_core::hir::{Method, Type};
+use diplomat_core::hir::{self, Method, Type};
 
 use super::WebDemoGenerationContext;
 use askama::{self, Template};
@@ -104,8 +104,15 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     /// `node` - Represents the 
     fn evaluate_param(&mut self, param_type : Type, param_name : String, node : &mut MethodDependency) {
         match param_type {
-            Type::Primitive(p) => {
-                let type_name = self.ctx.formatter.fmt_primitive_as_ffi(p, true);
+            Type::Primitive(_) | Type::Enum(_) | Type::Slice(_) => {
+                let type_name = match param_type {
+                    Type::Primitive(p) => self.ctx.formatter.fmt_primitive_as_ffi(p, true),
+                    Type::Slice(hir::Slice::Str(..)) => self.ctx.formatter.fmt_string(),
+                    Type::Slice(hir::Slice::Primitive(_, p)) => self.ctx.formatter.fmt_primitive_list_type(p),
+                    Type::Slice(hir::Slice::Strs(..)) => "Array<String>",
+                    Type::Enum(e) => todo!(),
+                    _ => unreachable!("Unknown primitive type {:?}", param_type)
+                };
 
                 let param_info = ParamInfo {
                     name: param_name,
@@ -115,8 +122,6 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 self.terminus_info.params.push(param_info.clone());
                 node.params.push(param_info);
             },
-            Type::Enum(e) => todo!(),
-            Type::Slice(s) => todo!(),
             Type::Opaque(o) => {
                 // We need to find a constructor that we can call.
                 // TODO: I'm not sure where I could start setting up attributes? So maybe this is a discussion point for later.
@@ -131,7 +136,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                         let i = node.children.len() - 1;
                         self.evaluate_constructor(method, &mut node.children.get_mut(i).unwrap());
                     } else {
-                        panic!("You must set a default constructor for the opaque type {}. Try adding #[diplomat::attr(constructor)] above a method that you wish to be the default constructor.", op.name.as_str());
+                        panic!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::attr(constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_name);
                     }
                 }
             },
