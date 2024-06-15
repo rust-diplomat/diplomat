@@ -1,7 +1,7 @@
 //! #[diplomat::attr] and other attributes
 
 use crate::ast;
-use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
+use crate::ast::attrs::{AttrInheritContext, DemoBackendAttr, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
 use crate::hir::{
     EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
@@ -41,6 +41,11 @@ pub struct Attrs {
     /// This attribute does not participate in inheritance and must always
     /// be specified on individual methods
     pub special_method: Option<SpecialMethod>,
+
+    /// FIXME: Don't love lumping this in with all the attributes, but I'm trying to quickly set up a proof a concept.
+    /// It would be great if the demo-gen backend could handle this itself, just by doing its own read of the AST and mixing it in with tcx in some way.
+    /// If anyone has any other solutions, I'm open to ideas.
+    pub demo_attrs : Option<Vec<DemoBackendAttr>>,
 }
 
 /// Attributes that mark methods as "special"
@@ -118,6 +123,12 @@ impl Attrs {
 
         let support = validator.attrs_supported();
         let backend = validator.primary_name();
+
+        // FIXME: This is horrible.
+        if backend == "demo-gen" {
+            this.demo_attrs = Some(ast.demo_attrs.clone());
+        }
+
         for attr in &ast.attrs {
             let satisfies = match validator.satisfies_cfg(&attr.cfg) {
                 Ok(satisfies) => satisfies,
@@ -307,6 +318,7 @@ impl Attrs {
             rename: _,
             abi_rename: _,
             special_method,
+            demo_attrs: _,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -592,6 +604,7 @@ impl Attrs {
             abi_rename: Default::default(),
             // Never inherited
             special_method: None,
+            demo_attrs: Default::default(),
         }
     }
 }

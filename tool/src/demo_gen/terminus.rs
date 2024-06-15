@@ -149,6 +149,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 // Piggybacking off of the #[diplomat::attr(constructor)] macro for now. 
                 let op = o.resolve(self.ctx.tcx);
                 for method in op.methods.iter() {
+                    let demo_attrs = method.attrs.demo_attrs.as_ref().unwrap();
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method {
                         let method_name = self.ctx.formatter.fmt_method_name(method);
                         

@@ -1,1 +1,1 @@
-export function formatWrite(v: number);
+export function formatWrite(name: String, v: number);

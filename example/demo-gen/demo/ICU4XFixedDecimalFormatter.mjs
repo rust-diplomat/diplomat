@@ -1,4 +1,8 @@
-export function formatWrite(v) {
+export function formatWrite(name, v) {
+	
+	new_();
+	
+	tryNew();
 	
 	new_();
 	
