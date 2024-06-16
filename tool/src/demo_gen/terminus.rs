@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use diplomat_core::hir::{self, Method, Type};
 
-use super::WebDemoGenerationContext;
+use super::{attrs::MarkupOutCFGAttr, WebDemoGenerationContext};
 use askama::{self, Template};
 
 #[derive(Clone)]
@@ -124,6 +124,18 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     /// 
     /// `node` - Represents the current function of the parameter we're evaluating. See [`MethodDependency`] for more on its purpose.
     fn evaluate_param(&mut self, param_type : Type, param_name : String, node : &mut MethodDependency) {
+        // Helper function for quickly passing a parameter to both our node and the render terminus.
+        let out_param = |type_name| {
+            let param_info = ParamInfo {
+                name: param_name,
+                type_name
+            };
+
+            self.terminus_info.params.push(param_info.clone());
+            node.params.push(param_info);
+        };
+
+        // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
         match param_type {
             Type::Primitive(_) | Type::Enum(_) | Type::Slice(_) => {
                 let type_name = match param_type {
@@ -135,24 +147,25 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     _ => unreachable!("Unknown primitive type {:?}", param_type)
                 };
 
-                let param_info = ParamInfo {
-                    name: param_name,
-                    type_name
-                };
-
-                self.terminus_info.params.push(param_info.clone());
-                node.params.push(param_info);
+                out_param(type_name);
             },
             Type::Opaque(o) => {
                 // We need to find a constructor that we can call.
                 // TODO: I'm not sure where I could start setting up attributes? So maybe this is a discussion point for later.
                 // Piggybacking off of the #[diplomat::attr(constructor)] macro for now. 
                 let op = o.resolve(self.ctx.tcx);
+
+                let attrs = op.attrs.demo_attrs.as_ref().unwrap()
+                .iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) });
+                if attrs.any(|attr| {}) {
+                    let type_name = self.ctx.formatter.fmt_type_name(o.tcx_id.into());
+                    out_param(type_name.into());
+                    return;
+                }
+
                 for method in op.methods.iter() {
-                    let demo_attrs = method.attrs.demo_attrs.as_ref().unwrap();
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method {
                         let method_name = self.ctx.formatter.fmt_method_name(method);
-                        
                         let child = MethodDependency::new(method_name);
                         node.children.push(child);
                         let i = node.children.len() - 1;
