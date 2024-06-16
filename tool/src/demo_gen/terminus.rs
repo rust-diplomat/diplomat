@@ -184,6 +184,13 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     fn evaluate_constructor(&mut self, method : &Method, node : &mut MethodDependency) {
         method.param_self.as_ref().inspect(|s| {
             self.evaluate_param(s.ty.clone().into(), "self".into(), node);
+        }).or_else(|| {
+            // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
+            node.params.push(ParamInfo {
+                name: self.ctx.formatter.fmt_null(),
+                type_name: self.ctx.formatter.fmt_null(),
+            });
+            None
         });
         
         for param in method.params.iter() {
