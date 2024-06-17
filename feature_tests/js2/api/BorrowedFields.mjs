@@ -43,7 +43,7 @@ export class BorrowedFields {
     }
     
 
-    constructor(ptr, aEdges) {
+    _fromFFI(ptr, aEdges) {
         const aDeref = /* TODO: gen_c_to_js_deref */null;
         this.#a = aDeref(aEdges) // TODO: Slice c_to_js;
         const bDeref = /* TODO: gen_c_to_js_deref */null;
@@ -69,7 +69,7 @@ export class BorrowedFields {
     
         try {
     
-            return new BorrowedFields(diplomat_receive_buffer, xEdges);
+            return BorrowedFields._fromFFI(diplomat_receive_buffer, xEdges);
         } finally {
         
             dstr16Slice.garbageCollect();

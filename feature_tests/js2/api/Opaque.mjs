@@ -75,7 +75,7 @@ export class Opaque {
     
         try {
     
-            return new ImportedStruct(diplomat_receive_buffer);
+            return ImportedStruct._fromFFI(diplomat_receive_buffer);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);

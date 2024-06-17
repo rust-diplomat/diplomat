@@ -36,7 +36,7 @@ export class ErrorStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    constructor(ptr) {
+    _fromFFI(ptr) {
         const iDeref = (new Int32Array(wasm.memory.buffer, ptr, 1))[0];
         this.#i = iDeref;
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];

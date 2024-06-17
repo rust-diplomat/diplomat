@@ -45,7 +45,7 @@ export class BorrowedFieldsWithBounds {
     }
     
 
-    constructor(ptr, aEdges, bEdges, cEdges) {
+    _fromFFI(ptr, aEdges, bEdges, cEdges) {
         const fieldADeref = /* TODO: gen_c_to_js_deref */null;
         this.#fieldA = fieldADeref(aEdges) // TODO: Slice c_to_js;
         const fieldBDeref = /* TODO: gen_c_to_js_deref */null;
@@ -77,7 +77,7 @@ export class BorrowedFieldsWithBounds {
     
         try {
     
-            return new BorrowedFieldsWithBounds(diplomat_receive_buffer, xEdges, yEdges, zEdges);
+            return BorrowedFieldsWithBounds._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
         } finally {
         
             dstr16XSlice.garbageCollect();

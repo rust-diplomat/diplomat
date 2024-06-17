@@ -106,7 +106,7 @@ export class Foo {
     
         try {
     
-            return new BorrowedFieldsReturning(diplomat_receive_buffer, aEdges);
+            return BorrowedFieldsReturning._fromFFI(diplomat_receive_buffer, aEdges);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
