@@ -1,1 +1,5 @@
-{{method_name}}();
+{{method_name}}.call(
+	{% for param in params %}
+	{{param.js}}{% if !loop.last %},{% endif %}
+	{% endfor %}
+)

@@ -1,7 +1,13 @@
 export function toString(v) {
+	return toString.call(
 	
-	new_();
+	new_.call(
 	
-	toString();
+	null,
 	
+	v
+	
+)
+	
+);
 }

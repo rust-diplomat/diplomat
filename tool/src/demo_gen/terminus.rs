@@ -7,7 +7,9 @@ use askama::{self, Template};
 
 #[derive(Clone)]
 struct ParamInfo {
-    pub name : String,
+    /// Either the name of the parameter (i.e, when a primitive is created as an argument for the render terminus), or the javascript that represents this parameter.
+    pub js : String,
+    /// For typescript only.
     pub type_name : String,
 }
 
@@ -75,8 +77,8 @@ pub(super) struct TerminusInfo {
     /// Parameters that we require explicit user input from the render engine
     params: Vec<ParamInfo>,
 
-    /// Stack of setup statements for creating the body of the JS function. Created from a [`MethodDependency`] tree.
-    setup_stack : Vec<String>,
+    /// Final result of recursively calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`]
+    node_call_stack : String,
 
     /// Are we a typescript file? Set by [`super::WebDemoGenerationContext::init`]
     pub typescript: bool,
@@ -99,7 +101,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 function_name : ctx.formatter.fmt_method_name(method),
                 params: Vec::new(),
 
-                setup_stack: Vec::new(),
+                node_call_stack: String::default(),
     
                 // We set this in the init function of WebDemoGenerationContext.
                 typescript: false,
@@ -113,7 +115,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         let mut root = MethodDependency::new(method_name);
 
         // And then we just treat the terminus as a regular constructor method:
-        this.evaluate_constructor(method, &mut root);
+        this.terminus_info.node_call_stack = this.evaluate_constructor(method, &mut root);
 
         Some(this.terminus_info)
     }
@@ -127,7 +129,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         // Helper function for quickly passing a parameter to both our node and the render terminus.
         let out_param = |type_name| {
             let param_info = ParamInfo {
-                name: param_name,
+                js: param_name,
                 type_name
             };
 
@@ -182,7 +184,12 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                         let child = MethodDependency::new(method_name);
                         node.children.push(child);
                         let i = node.children.len() - 1;
-                        self.evaluate_constructor(method, &mut node.children.get_mut(i).unwrap());
+                        
+                        let call = self.evaluate_constructor(method, &mut node.children.get_mut(i).unwrap());
+                        node.params.push(ParamInfo {
+                            js: call,
+                            type_name: String::default(),
+                        });
                     }
                 }
                 if !usable_constructor {
@@ -201,13 +208,13 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
-    fn evaluate_constructor(&mut self, method : &Method, node : &mut MethodDependency) {
+    fn evaluate_constructor(&mut self, method : &Method, node : &mut MethodDependency) -> String {
         method.param_self.as_ref().inspect(|s| {
             self.evaluate_param(s.ty.clone().into(), "self".into(), node);
         }).or_else(|| {
             // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
             node.params.push(ParamInfo {
-                name: self.ctx.formatter.fmt_null().into(),
+                js: self.ctx.formatter.fmt_null().into(),
                 type_name: self.ctx.formatter.fmt_null().into(),
             });
             None
@@ -217,7 +224,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             self.evaluate_param(param.ty.clone(), self.ctx.formatter.fmt_param_name(param.name.as_str()).into(), node);
         }
 
-        // Then add our call to the stack:
-        self.terminus_info.setup_stack.push(node.render().unwrap());
+        // The node that is awaiting this node as a child needs the rendered output:
+        return node.render().unwrap();
     }
 }

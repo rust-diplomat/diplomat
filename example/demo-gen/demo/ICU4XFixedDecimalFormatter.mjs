@@ -1,13 +1,33 @@
 export function formatWrite(name, v) {
+	return formatWrite.call(
 	
-	new_();
+	tryNew.call(
 	
-	newStatic();
+	null,
 	
-	tryNew();
+	new_.call(
 	
-	new_();
+	null,
 	
-	formatWrite();
+	name
 	
+),
+	
+	newStatic.call(
+	
+	null
+	
+)
+	
+),
+	
+	new_.call(
+	
+	null,
+	
+	v
+	
+)
+	
+);
 }
