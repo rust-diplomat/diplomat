@@ -7,7 +7,7 @@
 {% endif -%}
 
 {%- if is_static -%} {{ type_name }}.{{ method_name }} {%- endif %}.call(
-    {% for param in params %}
-    {{ param.js }}{% if !loop.last %},{% endif %}
+    {%- for param in params %}
+    {{ param.js|indent(4) }}{% if !loop.last %},{% endif -%}
     {% endfor %}
 )

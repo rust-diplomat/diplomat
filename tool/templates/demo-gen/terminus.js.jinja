@@ -9,6 +9,6 @@ export function {{function_name}}(
 	{{param.js}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}
 	{%- endfor -%}
 ){% if typescript %};{% else %} {
-	return {{node_call_stack}};
+	return {{node_call_stack|indent(4)}};
 }
 {%- endif %}
