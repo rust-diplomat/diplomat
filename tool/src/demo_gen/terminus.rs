@@ -184,9 +184,10 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                         node.children.push(child);
                         let i = node.children.len() - 1;
                         self.evaluate_constructor(method, &mut node.children.get_mut(i).unwrap());
-                    } else {
-                        panic!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::attr(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_name);
                     }
+                }
+                if !usable_constructor {
+                    self.ctx.errors.push_error(format!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::attr(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_name));
                 }
             },
             Type::Struct(s) => {
