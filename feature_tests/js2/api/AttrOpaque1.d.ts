@@ -12,7 +12,7 @@ export class AttrOpaque1 {
     get ffiValue(): pointer;
 
 
-    constructor();
+    static new_(): AttrOpaque1;
 
     get method(): number;
 

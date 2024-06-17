@@ -50,11 +50,11 @@ export class NestedBorrowedFields {
 
     _fromFFI(ptr, xEdges, yEdges, zEdges) {
         const fieldsDeref = ptr;
-        this.#fields = BorrowedFields._fromFFI(fieldsDeref, xEdges);
+        this.#fields = new BorrowedFields()._fromFFI(fieldsDeref, xEdges);
         const boundsDeref = ptr;
-        this.#bounds = BorrowedFieldsWithBounds._fromFFI(boundsDeref, xEdges, yEdges, yEdges);
+        this.#bounds = new BorrowedFieldsWithBounds()._fromFFI(boundsDeref, xEdges, yEdges, yEdges);
         const bounds2Deref = ptr;
-        this.#bounds2 = BorrowedFieldsWithBounds._fromFFI(bounds2Deref, zEdges, zEdges, zEdges);
+        this.#bounds2 = new BorrowedFieldsWithBounds()._fromFFI(bounds2Deref, zEdges, zEdges, zEdges);
     }
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
@@ -88,7 +88,7 @@ export class NestedBorrowedFields {
     
         try {
     
-            return NestedBorrowedFields._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
+            return new NestedBorrowedFields()._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
         } finally {
         
             dstr16XSlice.garbageCollect();

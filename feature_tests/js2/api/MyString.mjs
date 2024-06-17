@@ -19,7 +19,7 @@ export class MyString {
     #selfEdge = [];
     
     
-    _fromFFI(ptr, selfEdge) {
+    constructor(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -32,7 +32,7 @@ export class MyString {
     }
 
 
-    constructor(v) {
+    static new_(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new(vSlice.ptr, vSlice.size);

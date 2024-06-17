@@ -90,10 +90,10 @@ pub fn gen(
             
             attr_validator.support.accessors = true;
 
-            attr_validator.support.constructors = true;
-            // Not really true for JS, but this is to avoid throwing errors on the existing testing library.
-            attr_validator.support.named_constructors = true;
-            // attr_validator.support.fallible_constructors = true;
+            // Not possible since Javascript only allows us to provide one `constructor()` function for the `new` keyword.
+            // For opaques, we need the constructor to ensure that a pointer has actually been allocated.
+            // For structs, we want to allow the user to set their own values in the struct.
+            attr_validator.support.constructors = false;
 
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,

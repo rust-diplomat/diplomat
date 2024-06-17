@@ -25,7 +25,7 @@ export class Foo {
     #aEdge = [];
     
     
-    _fromFFI(ptr, selfEdge, aEdge) {
+    constructor(ptr, selfEdge, aEdge) {
         
         
         this.#aEdge = aEdge;
@@ -41,7 +41,7 @@ export class Foo {
     }
 
 
-    constructor(x) {
+    static new_(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         const xArena = new diplomatRuntime.DiplomatFinalizedArena();
@@ -106,7 +106,7 @@ export class Foo {
     
         try {
     
-            return BorrowedFieldsReturning._fromFFI(diplomat_receive_buffer, aEdges);
+            return new BorrowedFieldsReturning()._fromFFI(diplomat_receive_buffer, aEdges);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);

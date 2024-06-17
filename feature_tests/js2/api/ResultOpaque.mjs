@@ -21,15 +21,12 @@ export class ResultOpaque {
     #selfEdge = [];
     
     
-    _fromFFI(ptr, selfEdge) {
+    constructor(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
         // Unconditionally register to destroy when this object is ready to garbage collect.
         ResultOpaque_box_destroy_registry.register(this, this.#ptr);
-    }
-    constructor() {
-        throw new Error("You cannot create the opaque type ResultOpaque without a valid constructor. You may call one of the static methods below, or you may label the default opaque constructor in the diplomat FFI definition with #[diplomat::attr(constructor)].");
     }
 
     get ffiValue() {
@@ -117,7 +114,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
-                throw new diplomatRuntime.FFIError(ErrorStruct._fromFFI(diplomat_receive_buffer));
+                throw new diplomatRuntime.FFIError(new ErrorStruct()._fromFFI(diplomat_receive_buffer));
             }
             return ResultOpaque._fromFFI(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {

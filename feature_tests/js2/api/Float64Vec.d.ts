@@ -22,7 +22,7 @@ export class Float64Vec {
 
     static newF64BeBytes(v: Uint8Array): Float64Vec;
 
-    constructor(v: Array<number>);
+    static newFromOwned(v: Array<number>): Float64Vec;
 
     get asBoxedSlice(): Array<number>;
 

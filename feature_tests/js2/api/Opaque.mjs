@@ -21,7 +21,7 @@ export class Opaque {
     #selfEdge = [];
     
     
-    _fromFFI(ptr, selfEdge) {
+    constructor(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -34,7 +34,7 @@ export class Opaque {
     }
 
 
-    constructor() {
+    static new_() {
         const result = wasm.Opaque_new();
     
         try {
@@ -75,7 +75,7 @@ export class Opaque {
     
         try {
     
-            return ImportedStruct._fromFFI(diplomat_receive_buffer);
+            return new ImportedStruct()._fromFFI(diplomat_receive_buffer);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);

@@ -19,7 +19,7 @@ export class Float64Vec {
     #selfEdge = [];
     
     
-    _fromFFI(ptr, selfEdge) {
+    constructor(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -122,7 +122,7 @@ export class Float64Vec {
         }
     }
 
-    constructor(v) {
+    static newFromOwned(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         const result = wasm.Float64Vec_new_from_owned(vSlice.ptr, vSlice.size);

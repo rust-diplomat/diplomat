@@ -67,15 +67,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
     }
 
     pub(super) fn generate_opaque_from_def(&mut self, opaque_def: &'tcx OpaqueDef, type_id : TypeId, type_name : &str) -> String {
-        let mut has_valid_constructor = false;
         let mut methods = opaque_def.methods.iter()
-        .flat_map(|method| { 
-            has_valid_constructor |= method.attrs.special_method.as_ref().is_some_and(| m | {
-                match m {
-                    SpecialMethod::Constructor => true,
-                    _ => false,
-                }
-            });
+        .flat_map(|method| {
             self.generate_method_body(type_id, type_name, method, self.typescript)
          })
         .collect::<Vec<_>>();
@@ -94,7 +87,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             lifetimes : &'a LifetimeEnv,
             methods : Vec<String>,
             destructor : String,
-            no_constructor : bool,
 
             docs : String,
         }
@@ -105,7 +97,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             destructor,
             typescript: self.typescript,
             docs: self.js_ctx.formatter.fmt_docs(&opaque_def.docs),
-            no_constructor: !has_valid_constructor,
             lifetimes : &opaque_def.lifetimes
         }.render().unwrap()
     }
@@ -217,8 +208,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         .collect::<Vec<_>>();
 
         methods.push(self.generate_special_method_body(&struct_def.special_method_presence, self.typescript));
-
-        // TODO: Default constructors? (Could be expanded with Opaque default constructors??)
 
         #[derive(Template)]
         #[template(path="js2/struct.js.jinja", escape = "none")]
@@ -357,9 +346,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             Some(SpecialMethod::Iterable) => format!("[Symbol.iterator]"),
             Some(SpecialMethod::Iterator) => format!("#iteratorNext"),
-            Some(SpecialMethod::Constructor) => {method_info.return_type = "".into(); format!("constructor")},
             
-            None | Some(SpecialMethod::NamedConstructor(..)) if method.param_self.is_none() => format!(
+            None if method.param_self.is_none() => format!(
                 "static {}",
                 self.js_ctx.formatter.fmt_method_name(method)
             ),

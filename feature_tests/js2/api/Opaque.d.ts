@@ -12,7 +12,7 @@ export class Opaque {
     get ffiValue(): pointer;
 
 
-    constructor();
+    static new_(): Opaque;
 
     assertStruct(s: MyStruct): void;
 

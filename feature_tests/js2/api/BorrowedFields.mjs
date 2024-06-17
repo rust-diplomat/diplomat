@@ -69,7 +69,7 @@ export class BorrowedFields {
     
         try {
     
-            return BorrowedFields._fromFFI(diplomat_receive_buffer, xEdges);
+            return new BorrowedFields()._fromFFI(diplomat_receive_buffer, xEdges);
         } finally {
         
             dstr16Slice.garbageCollect();

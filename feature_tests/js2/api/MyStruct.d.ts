@@ -34,7 +34,7 @@ export class MyStruct {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     _fromFFI(ptr: pointer);
-    constructor();
+    static new_(): MyStruct;
 
     intoA(): number;
 

@@ -24,7 +24,7 @@ export class Bar {
     #aEdge = [];
     
     
-    _fromFFI(ptr, selfEdge, bEdge, aEdge) {
+    constructor(ptr, selfEdge, bEdge, aEdge) {
         
         
         this.#bEdge = bEdge;
@@ -36,9 +36,6 @@ export class Bar {
         this.#selfEdge = selfEdge;
         // Unconditionally register to destroy when this object is ready to garbage collect.
         Bar_box_destroy_registry.register(this, this.#ptr);
-    }
-    constructor() {
-        throw new Error("You cannot create the opaque type Bar without a valid constructor. You may call one of the static methods below, or you may label the default opaque constructor in the diplomat FFI definition with #[diplomat::attr(constructor)].");
     }
 
     get ffiValue() {

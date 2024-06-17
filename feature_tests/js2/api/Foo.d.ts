@@ -14,7 +14,7 @@ export class Foo {
     get ffiValue(): pointer;
 
 
-    constructor(x: String);
+    static new_(x: String): Foo;
 
     get bar(): Bar;
 

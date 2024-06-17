@@ -77,7 +77,7 @@ export class BorrowedFieldsWithBounds {
     
         try {
     
-            return BorrowedFieldsWithBounds._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
+            return new BorrowedFieldsWithBounds()._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
         } finally {
         
             dstr16XSlice.garbageCollect();

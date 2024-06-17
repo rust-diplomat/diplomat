@@ -142,7 +142,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 					}
 				}
 				
-				format!("{type_name}._fromFFI({variable_name}{edges})").into()
+				format!("new {type_name}()._fromFFI({variable_name}{edges})").into()
 			},
 			Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.js_ctx.tcx)) => {
 				let id = enum_path.tcx_id.into();

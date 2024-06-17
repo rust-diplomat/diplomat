@@ -11,7 +11,7 @@ export class MyIterable {
     get ffiValue(): pointer;
 
 
-    constructor(x: Array<number>);
+    static new_(x: Array<number>): MyIterable;
 
     [Symbol.iterator](): MyIterator;
 

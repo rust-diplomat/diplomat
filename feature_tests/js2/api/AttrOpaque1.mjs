@@ -21,7 +21,7 @@ export class AttrOpaque1 {
     #selfEdge = [];
     
     
-    _fromFFI(ptr, selfEdge) {
+    constructor(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -34,7 +34,7 @@ export class AttrOpaque1 {
     }
 
 
-    constructor() {
+    static new_() {
         const result = wasm.namespace_AttrOpaque1_new();
     
         try {
