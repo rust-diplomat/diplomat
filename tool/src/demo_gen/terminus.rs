@@ -142,6 +142,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
 
             self.terminus_info.params.push(param_info.clone());
 
+            // Grab arguments without having to name them
             param_info.js = format!("arguments[{}]", self.terminus_info.params.len() - 1);
             node.params.push(param_info);
         };
