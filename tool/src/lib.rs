@@ -90,6 +90,11 @@ pub fn gen(
             
             attr_validator.support.accessors = true;
 
+            attr_validator.support.constructors = true;
+            // Not really true for JS, but this is to avoid throwing errors on the existing testing library.
+            attr_validator.support.named_constructors = true;
+            // attr_validator.support.fallible_constructors = true;
+
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {

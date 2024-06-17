@@ -24,7 +24,7 @@ export class Bar {
     #aEdge = [];
     
     
-    constructor(ptr, selfEdge, bEdge, aEdge) {
+    _fromFFI(ptr, selfEdge, bEdge, aEdge) {
         
         
         this.#bEdge = bEdge;
@@ -54,7 +54,7 @@ export class Bar {
     
         try {
     
-            return new Foo(result, bEdges, aEdges);
+            return Foo._fromFFI(result, bEdges, aEdges);
         } finally {
         
         }

@@ -21,7 +21,7 @@ export class Opaque {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -34,12 +34,12 @@ export class Opaque {
     }
 
 
-    static new_() {
+    constructor() {
         const result = wasm.Opaque_new();
     
         try {
     
-            return new Opaque(result, []);
+            return Opaque._fromFFI(result, []);
         } finally {
         
         }

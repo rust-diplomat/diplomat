@@ -19,7 +19,7 @@ export class Float64Vec {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -39,7 +39,7 @@ export class Float64Vec {
     
         try {
     
-            return new Float64Vec(result, []);
+            return Float64Vec._fromFFI(result, []);
         } finally {
         
             vSlice.free();
@@ -54,7 +54,7 @@ export class Float64Vec {
     
         try {
     
-            return new Float64Vec(result, []);
+            return Float64Vec._fromFFI(result, []);
         } finally {
         
             vSlice.free();
@@ -69,7 +69,7 @@ export class Float64Vec {
     
         try {
     
-            return new Float64Vec(result, []);
+            return Float64Vec._fromFFI(result, []);
         } finally {
         
             vSlice.free();
@@ -84,7 +84,7 @@ export class Float64Vec {
     
         try {
     
-            return new Float64Vec(result, []);
+            return Float64Vec._fromFFI(result, []);
         } finally {
         
             vSlice.free();
@@ -99,7 +99,7 @@ export class Float64Vec {
     
         try {
     
-            return new Float64Vec(result, []);
+            return Float64Vec._fromFFI(result, []);
         } finally {
         
             vSlice.free();
@@ -114,7 +114,7 @@ export class Float64Vec {
     
         try {
     
-            return new Float64Vec(result, []);
+            return Float64Vec._fromFFI(result, []);
         } finally {
         
             vSlice.free();
@@ -122,14 +122,14 @@ export class Float64Vec {
         }
     }
 
-    static newFromOwned(v) {
+    constructor(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64");
         const result = wasm.Float64Vec_new_from_owned(vSlice.ptr, vSlice.size);
     
         try {
     
-            return new Float64Vec(result, []);
+            return Float64Vec._fromFFI(result, []);
         } finally {
         
         }

@@ -19,7 +19,7 @@ export class MyString {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -32,14 +32,14 @@ export class MyString {
     }
 
 
-    static new_(v) {
+    constructor(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new(vSlice.ptr, vSlice.size);
     
         try {
     
-            return new MyString(result, []);
+            return MyString._fromFFI(result, []);
         } finally {
         
             vSlice.free();
@@ -54,7 +54,7 @@ export class MyString {
     
         try {
     
-            return new MyString(result, []);
+            return MyString._fromFFI(result, []);
         } finally {
         
             vSlice.free();
@@ -69,7 +69,7 @@ export class MyString {
     
         try {
     
-            return new MyString(result, []);
+            return MyString._fromFFI(result, []);
         } finally {
         
         }
@@ -82,7 +82,7 @@ export class MyString {
     
         try {
     
-            return new MyString(result, []);
+            return MyString._fromFFI(result, []);
         } finally {
         
             vSlice.free();

@@ -23,7 +23,7 @@ export class Two {
     #bEdge = [];
     
     
-    constructor(ptr, selfEdge, aEdge, bEdge) {
+    _fromFFI(ptr, selfEdge, aEdge, bEdge) {
         
         
         this.#aEdge = aEdge;

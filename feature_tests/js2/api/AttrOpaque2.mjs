@@ -19,7 +19,7 @@ export class AttrOpaque2 {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;

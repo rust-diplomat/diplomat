@@ -22,7 +22,7 @@ export class RefList {
     #aEdge = [];
     
     
-    constructor(ptr, selfEdge, aEdge) {
+    _fromFFI(ptr, selfEdge, aEdge) {
         
         
         this.#aEdge = aEdge;
@@ -46,7 +46,7 @@ export class RefList {
     
         try {
     
-            return new RefList(result, [], bEdges);
+            return RefList._fromFFI(result, [], bEdges);
         } finally {
         
         }

@@ -93,7 +93,7 @@ export class MyStruct {
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();;
     }
-    static new_() {
+    constructor() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(28, 8);
         const result = wasm.MyStruct_new(diplomat_receive_buffer);

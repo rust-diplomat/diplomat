@@ -21,7 +21,7 @@ export class MyIterator {
     #aEdge = [];
     
     
-    constructor(ptr, selfEdge, aEdge) {
+    _fromFFI(ptr, selfEdge, aEdge) {
         
         
         this.#aEdge = aEdge;

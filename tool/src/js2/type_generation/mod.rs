@@ -331,7 +331,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             method_info.parameters.push(param_info);
         }
 
-        method_info.return_type = self.gen_js_return_type_str(&method.output);
+        method_info.return_type = format!(": {}", self.gen_js_return_type_str(&method.output));
 
         method_info.return_expression = self.gen_c_to_js_for_return_type(&mut method_info, &method.lifetime_env);
         
@@ -346,8 +346,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             Some(SpecialMethod::Iterable) => format!("[Symbol.iterator]"),
             Some(SpecialMethod::Iterator) => format!("#iteratorNext"),
+            Some(SpecialMethod::Constructor) => {method_info.return_type = "".into(); format!("constructor")},
             
-            None if method.param_self.is_none() => format!(
+            None | Some(SpecialMethod::NamedConstructor(..)) if method.param_self.is_none() => format!(
                 "static {}",
                 self.js_ctx.formatter.fmt_method_name(method)
             ),
@@ -423,7 +424,7 @@ struct MethodInfo<'info> {
     slice_params : Vec<SliceParam<'info>>,
     param_conversions : Vec<Cow<'info, str>>,
 
-    return_type : Cow<'info, str>,
+    return_type : String,
     return_expression : Option<Cow<'info, str>>,
 
     method_lifetimes_map : BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,

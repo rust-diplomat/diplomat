@@ -21,7 +21,7 @@ export class ResultOpaque {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -44,7 +44,7 @@ export class ResultOpaque {
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw new diplomatRuntime.FFIError(ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]]);
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return ResultOpaque._fromFFI(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -62,7 +62,7 @@ export class ResultOpaque {
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw new diplomatRuntime.FFIError(ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]]);
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return ResultOpaque._fromFFI(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -80,7 +80,7 @@ export class ResultOpaque {
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw new diplomatRuntime.FFIError(ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]]);
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return ResultOpaque._fromFFI(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -98,7 +98,7 @@ export class ResultOpaque {
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 throw diplomatRuntime.FFIError(null);
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return ResultOpaque._fromFFI(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
@@ -116,7 +116,7 @@ export class ResultOpaque {
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
                 throw new diplomatRuntime.FFIError(new ErrorStruct(diplomat_receive_buffer));
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return ResultOpaque._fromFFI(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
@@ -132,7 +132,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw new diplomatRuntime.FFIError(new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []));
+                throw new diplomatRuntime.FFIError(ResultOpaque._fromFFI(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []));
             }
     
         } finally {
@@ -168,7 +168,7 @@ export class ResultOpaque {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw new diplomatRuntime.FFIError(new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []));
+                throw new diplomatRuntime.FFIError(ResultOpaque._fromFFI(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []));
             }
             return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
         } finally {

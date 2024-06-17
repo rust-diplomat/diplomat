@@ -10,7 +10,7 @@ export class MyString {
     get ffiValue(): pointer;
 
 
-    static new_(v: String): MyString;
+    constructor(v: String);
 
     static newUnsafe(v: String): MyString;
 

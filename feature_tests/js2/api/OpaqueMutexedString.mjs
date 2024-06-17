@@ -20,7 +20,7 @@ export class OpaqueMutexedString {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -38,7 +38,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return new OpaqueMutexedString(result, []);
+            return OpaqueMutexedString._fromFFI(result, []);
         } finally {
         
         }
@@ -62,7 +62,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return new OpaqueMutexedString(result, aEdges);
+            return OpaqueMutexedString._fromFFI(result, aEdges);
         } finally {
         
         }
@@ -76,7 +76,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return new OpaqueMutexedString(result, aEdges);
+            return OpaqueMutexedString._fromFFI(result, aEdges);
         } finally {
         
         }
@@ -90,7 +90,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return new OpaqueMutexedString(result, aEdges);
+            return OpaqueMutexedString._fromFFI(result, aEdges);
         } finally {
         
         }
@@ -130,7 +130,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return new Utf16Wrap(result, []);
+            return Utf16Wrap._fromFFI(result, []);
         } finally {
         
         }

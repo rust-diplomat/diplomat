@@ -25,7 +25,7 @@ export class Foo {
     #aEdge = [];
     
     
-    constructor(ptr, selfEdge, aEdge) {
+    _fromFFI(ptr, selfEdge, aEdge) {
         
         
         this.#aEdge = aEdge;
@@ -41,7 +41,7 @@ export class Foo {
     }
 
 
-    static new_(x) {
+    constructor(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
         const xArena = new diplomatRuntime.DiplomatFinalizedArena();
@@ -53,7 +53,7 @@ export class Foo {
     
         try {
     
-            return new Foo(result, [], aEdges);
+            return Foo._fromFFI(result, [], aEdges);
         } finally {
         
             xSlice.garbageCollect();
@@ -72,7 +72,7 @@ export class Foo {
     
         try {
     
-            return new Bar(result, [], bEdges, aEdges);
+            return Bar._fromFFI(result, [], bEdges, aEdges);
         } finally {
         
         }
@@ -88,7 +88,7 @@ export class Foo {
     
         try {
     
-            return new Foo(result, [], aEdges);
+            return Foo._fromFFI(result, [], aEdges);
         } finally {
         
             xSlice.free();
@@ -122,7 +122,7 @@ export class Foo {
     
         try {
     
-            return new Foo(result, [], aEdges);
+            return Foo._fromFFI(result, [], aEdges);
         } finally {
         
             this.free(); /* TODO: Does this work? */
@@ -142,7 +142,7 @@ export class Foo {
     
         try {
     
-            return new Foo(result, [], aEdges);
+            return Foo._fromFFI(result, [], aEdges);
         } finally {
         
             this.free(); /* TODO: Does this work? */

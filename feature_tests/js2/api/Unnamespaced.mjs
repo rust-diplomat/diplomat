@@ -21,7 +21,7 @@ export class Unnamespaced {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -39,7 +39,7 @@ export class Unnamespaced {
     
         try {
     
-            return new Unnamespaced(result, []);
+            return Unnamespaced._fromFFI(result, []);
         } finally {
         
         }

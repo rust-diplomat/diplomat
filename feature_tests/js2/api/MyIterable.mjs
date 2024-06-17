@@ -20,7 +20,7 @@ export class MyIterable {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -33,14 +33,14 @@ export class MyIterable {
     }
 
 
-    static new_(x) {
+    constructor(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
         const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size);
     
         try {
     
-            return new MyIterable(result, []);
+            return MyIterable._fromFFI(result, []);
         } finally {
         
             xSlice.free();
@@ -56,7 +56,7 @@ export class MyIterable {
     
         try {
     
-            return new MyIterator(result, [], aEdges);
+            return MyIterator._fromFFI(result, [], aEdges);
         } finally {
         
         }

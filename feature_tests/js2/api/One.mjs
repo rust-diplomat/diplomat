@@ -22,7 +22,7 @@ export class One {
     #aEdge = [];
     
     
-    constructor(ptr, selfEdge, aEdge) {
+    _fromFFI(ptr, selfEdge, aEdge) {
         
         
         this.#aEdge = aEdge;
@@ -46,7 +46,7 @@ export class One {
     
         try {
     
-            return new One(result, [], aEdges);
+            return One._fromFFI(result, [], aEdges);
         } finally {
         
         }
@@ -60,7 +60,7 @@ export class One {
     
         try {
     
-            return new One(result, [], aEdges);
+            return One._fromFFI(result, [], aEdges);
         } finally {
         
         }
@@ -74,7 +74,7 @@ export class One {
     
         try {
     
-            return new One(result, [], aEdges);
+            return One._fromFFI(result, [], aEdges);
         } finally {
         
         }
@@ -88,7 +88,7 @@ export class One {
     
         try {
     
-            return new One(result, [], longEdges);
+            return One._fromFFI(result, [], longEdges);
         } finally {
         
         }
@@ -102,7 +102,7 @@ export class One {
     
         try {
     
-            return new One(result, [], topEdges);
+            return One._fromFFI(result, [], topEdges);
         } finally {
         
         }
@@ -116,7 +116,7 @@ export class One {
     
         try {
     
-            return new One(result, [], leftEdges);
+            return One._fromFFI(result, [], leftEdges);
         } finally {
         
         }
@@ -130,7 +130,7 @@ export class One {
     
         try {
     
-            return new One(result, [], rightEdges);
+            return One._fromFFI(result, [], rightEdges);
         } finally {
         
         }
@@ -144,7 +144,7 @@ export class One {
     
         try {
     
-            return new One(result, [], bottomEdges);
+            return One._fromFFI(result, [], bottomEdges);
         } finally {
         
         }
@@ -158,7 +158,7 @@ export class One {
     
         try {
     
-            return new One(result, [], aEdges);
+            return One._fromFFI(result, [], aEdges);
         } finally {
         
         }
@@ -172,7 +172,7 @@ export class One {
     
         try {
     
-            return new One(result, [], aEdges);
+            return One._fromFFI(result, [], aEdges);
         } finally {
         
         }
@@ -186,7 +186,7 @@ export class One {
     
         try {
     
-            return new One(result, [], aEdges);
+            return One._fromFFI(result, [], aEdges);
         } finally {
         
         }

@@ -20,7 +20,7 @@ export class OptionOpaque {
     #selfEdge = [];
     
     
-    constructor(ptr, selfEdge) {
+    _fromFFI(ptr, selfEdge) {
         
         this.#ptr = ptr;
         this.#selfEdge = selfEdge;
@@ -38,7 +38,7 @@ export class OptionOpaque {
     
         try {
     
-            return ((result == 0) ? undefined : new OptionOpaque(result, []));
+            return ((result == 0) ? undefined : OptionOpaque._fromFFI(result, []));
         } finally {
         
         }
@@ -49,7 +49,7 @@ export class OptionOpaque {
     
         try {
     
-            return ((result == 0) ? undefined : new OptionOpaque(result, []));
+            return ((result == 0) ? undefined : OptionOpaque._fromFFI(result, []));
         } finally {
         
         }
