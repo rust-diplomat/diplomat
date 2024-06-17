@@ -1,7 +1,10 @@
+import { ICU4XFixedDecimal } from "./ICU4XFixedDecimal.mjs"
+import { ICU4XFixedDecimal } from "./ICU4XFixedDecimal.mjs"
+
 export function toString(v) {
-	return toString.call(
+	return ICU4XFixedDecimal.toString.call(
 	
-	new_.call(
+	ICU4XFixedDecimal.new_.call(
 	
 	null,
 	

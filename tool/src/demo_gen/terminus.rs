@@ -70,7 +70,7 @@ impl<'a> MethodDependency {
 
 
 #[derive(Clone, Template)]
-#[template(path="demo-gen/method.js.jinja", escape="none")]
+#[template(path="demo-gen/terminus.js.jinja", escape="none")]
 pub(super) struct TerminusInfo {
     /// Name of the function for the render engine to call
     function_name : String,
@@ -82,12 +82,15 @@ pub(super) struct TerminusInfo {
 
     /// Are we a typescript file? Set by [`super::WebDemoGenerationContext::init`]
     pub typescript: bool,
+    
+    /// List of JS imports that this terminus needs.
+    imports: Vec<String>,
 }
 
 impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
-    pub fn evaluate_terminus(ctx : &'a WebDemoGenerationContext<'tcx>, method : &Method) -> Option<TerminusInfo> {
+    pub fn evaluate_terminus(ctx : &'a WebDemoGenerationContext<'tcx>, type_name: String, method : &Method) -> Option<TerminusInfo> {
         if !method.output.success_type().is_write() {
             return None;
         }
@@ -105,10 +108,12 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     
                 // We set this in the init function of WebDemoGenerationContext.
                 typescript: false,
+
+                imports: Vec::new(),
             },
         };
 
-        let method_name = this.ctx.formatter.fmt_method_name(method);
+        let method_name = format!("{type_name}.{}", this.ctx.formatter.fmt_method_name(method));
 
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
@@ -116,6 +121,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
 
         // And then we just treat the terminus as a regular constructor method:
         this.terminus_info.node_call_stack = this.evaluate_constructor(method, &mut root);
+
+        this.terminus_info.imports.push(this.ctx.formatter.fmt_import_statement(&type_name, false));
 
         Some(this.terminus_info)
     }
@@ -155,11 +162,11 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 // We need to find a constructor that we can call.
                 // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
                 let op = o.resolve(self.ctx.tcx);
+                let type_name = self.ctx.formatter.fmt_type_name(o.tcx_id.into());
 
                 let mut attrs = op.attrs.demo_attrs.as_ref().unwrap()
                 .iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) });
                 if attrs.any(|attr| {attr == MarkupOutCFGAttr::External}) {
-                    let type_name = self.ctx.formatter.fmt_type_name(o.tcx_id.into());
                     out_param(type_name.into());
                     return;
                 }
@@ -180,7 +187,9 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     }
 
                     if usable_constructor {
-                        let method_name = self.ctx.formatter.fmt_method_name(method);
+                        self.terminus_info.imports.push(self.ctx.formatter.fmt_import_statement(&type_name, false));
+
+                        let method_name = format!("{type_name}.{}", self.ctx.formatter.fmt_method_name(method));
                         let child = MethodDependency::new(method_name);
                         node.children.push(child);
                         let i = node.children.len() - 1;

@@ -1,11 +1,17 @@
+import { ICU4XFixedDecimalFormatter } from "./ICU4XFixedDecimalFormatter.mjs"
+import { ICU4XLocale } from "./ICU4XLocale.mjs"
+import { ICU4XDataProvider } from "./ICU4XDataProvider.mjs"
+import { ICU4XFixedDecimal } from "./ICU4XFixedDecimal.mjs"
+import { ICU4XFixedDecimalFormatter } from "./ICU4XFixedDecimalFormatter.mjs"
+
 export function formatWrite(name, v) {
-	return formatWrite.call(
+	return ICU4XFixedDecimalFormatter.formatWrite.call(
 	
-	tryNew.call(
+	ICU4XFixedDecimalFormatter.tryNew.call(
 	
 	null,
 	
-	new_.call(
+	ICU4XLocale.new_.call(
 	
 	null,
 	
@@ -13,7 +19,7 @@ export function formatWrite(name, v) {
 	
 ),
 	
-	newStatic.call(
+	ICU4XDataProvider.newStatic.call(
 	
 	null
 	
@@ -21,7 +27,7 @@ export function formatWrite(name, v) {
 	
 ),
 	
-	new_.call(
+	ICU4XFixedDecimal.new_.call(
 	
 	null,
 	

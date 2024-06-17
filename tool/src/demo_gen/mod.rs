@@ -59,8 +59,9 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
             let mut termini : Vec<terminus::TerminusInfo> = Vec::new();
 
             {
+                let type_name = self.formatter.fmt_type_name(id);
                 for method in methods {
-                    let val = RenderTerminusContext::evaluate_terminus(self, method);
+                    let val = RenderTerminusContext::evaluate_terminus(self, type_name.to_string(), method);
                     if let Some(t) = val  {
                         termini.push(t.to_owned());
                     }
