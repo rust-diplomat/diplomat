@@ -41,7 +41,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				let type_name = self.js_ctx.formatter.fmt_type_name(opaque_id);
 				
 				// Add to the import list:
-				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript));
+				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript, "./".into()));
 
 				if self.js_ctx.tcx.resolve_type(opaque_id).attrs().disable {
 					self.js_ctx.errors
@@ -61,7 +61,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 let type_name = self.js_ctx.formatter.fmt_type_name(id);
 				
 				// Add to the import list:
-				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript));
+				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript, "./".into()));
 
                 if self.js_ctx.tcx.resolve_type(id).attrs().disable {
                     self.js_ctx.errors
@@ -74,7 +74,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 let type_name = self.js_ctx.formatter.fmt_type_name(enum_id);
 				
 				// Add to the import list:
-				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript));
+				self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, self.typescript, "./".into()));
 
                 if self.js_ctx.tcx.resolve_type(enum_id).attrs().disable {
                     self.js_ctx.errors.push_error(format!("Using disabled type {type_name}"))
@@ -371,7 +371,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						// Because we don't add Result<_, Error> types to imports, we do that here:
 						if !self.typescript {
 							let type_name = self.js_ctx.formatter.fmt_type_name(e.id().unwrap());
-							self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, false));
+							self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, false, "./".into()));
 						}
 
 						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
