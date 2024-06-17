@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::collections::BTreeSet;
 
 use diplomat_core::hir::{self, Method, Type};
 
@@ -84,7 +84,7 @@ pub(super) struct TerminusInfo {
     pub typescript: bool,
     
     /// List of JS imports that this terminus needs.
-    imports: Vec<String>,
+    imports: BTreeSet<String>,
 }
 
 impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
@@ -109,7 +109,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 // We set this in the init function of WebDemoGenerationContext.
                 typescript: false,
 
-                imports: Vec::new(),
+                imports: BTreeSet::new(),
             },
         };
 
@@ -122,7 +122,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         // And then we just treat the terminus as a regular constructor method:
         this.terminus_info.node_call_stack = this.evaluate_constructor(method, &mut root);
 
-        this.terminus_info.imports.push(this.ctx.formatter.fmt_import_statement(&type_name, false));
+        this.terminus_info.imports.insert(this.ctx.formatter.fmt_import_statement(&type_name, false));
 
         Some(this.terminus_info)
     }
@@ -187,7 +187,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     }
 
                     if usable_constructor {
-                        self.terminus_info.imports.push(self.ctx.formatter.fmt_import_statement(&type_name, false));
+                        self.terminus_info.imports.insert(self.ctx.formatter.fmt_import_statement(&type_name, false));
 
                         let method_name = format!("{type_name}.{}", self.ctx.formatter.fmt_method_name(method));
                         let child = MethodDependency::new(method_name);
