@@ -54,7 +54,7 @@ export class Bar {
     
         try {
     
-            return Foo._fromFFI(result, bEdges, aEdges);
+            return new Foo(result, bEdges, aEdges);
         } finally {
         
         }

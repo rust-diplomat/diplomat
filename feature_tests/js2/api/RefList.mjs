@@ -46,7 +46,7 @@ export class RefList {
     
         try {
     
-            return RefList._fromFFI(result, [], bEdges);
+            return new RefList(result, [], bEdges);
         } finally {
         
         }

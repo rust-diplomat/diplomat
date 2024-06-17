@@ -40,7 +40,7 @@ export class MyIterable {
     
         try {
     
-            return MyIterable._fromFFI(result, []);
+            return new MyIterable(result, []);
         } finally {
         
             xSlice.free();
@@ -56,7 +56,7 @@ export class MyIterable {
     
         try {
     
-            return MyIterator._fromFFI(result, [], aEdges);
+            return new MyIterator(result, [], aEdges);
         } finally {
         
         }

@@ -38,7 +38,7 @@ export class OptionOpaque {
     
         try {
     
-            return ((result == 0) ? undefined : OptionOpaque._fromFFI(result, []));
+            return ((result == 0) ? undefined : new OptionOpaque(result, []));
         } finally {
         
         }
@@ -49,7 +49,7 @@ export class OptionOpaque {
     
         try {
     
-            return ((result == 0) ? undefined : OptionOpaque._fromFFI(result, []));
+            return ((result == 0) ? undefined : new OptionOpaque(result, []));
         } finally {
         
         }

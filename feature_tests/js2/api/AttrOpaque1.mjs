@@ -39,7 +39,7 @@ export class AttrOpaque1 {
     
         try {
     
-            return AttrOpaque1._fromFFI(result, []);
+            return new AttrOpaque1(result, []);
         } finally {
         
         }

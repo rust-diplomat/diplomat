@@ -39,7 +39,7 @@ export class MyString {
     
         try {
     
-            return MyString._fromFFI(result, []);
+            return new MyString(result, []);
         } finally {
         
             vSlice.free();
@@ -54,7 +54,7 @@ export class MyString {
     
         try {
     
-            return MyString._fromFFI(result, []);
+            return new MyString(result, []);
         } finally {
         
             vSlice.free();
@@ -69,7 +69,7 @@ export class MyString {
     
         try {
     
-            return MyString._fromFFI(result, []);
+            return new MyString(result, []);
         } finally {
         
         }
@@ -82,7 +82,7 @@ export class MyString {
     
         try {
     
-            return MyString._fromFFI(result, []);
+            return new MyString(result, []);
         } finally {
         
             vSlice.free();

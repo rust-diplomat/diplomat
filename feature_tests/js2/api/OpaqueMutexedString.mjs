@@ -38,7 +38,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return OpaqueMutexedString._fromFFI(result, []);
+            return new OpaqueMutexedString(result, []);
         } finally {
         
         }
@@ -62,7 +62,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return OpaqueMutexedString._fromFFI(result, aEdges);
+            return new OpaqueMutexedString(result, aEdges);
         } finally {
         
         }
@@ -76,7 +76,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return OpaqueMutexedString._fromFFI(result, aEdges);
+            return new OpaqueMutexedString(result, aEdges);
         } finally {
         
         }
@@ -90,7 +90,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return OpaqueMutexedString._fromFFI(result, aEdges);
+            return new OpaqueMutexedString(result, aEdges);
         } finally {
         
         }
@@ -130,7 +130,7 @@ export class OpaqueMutexedString {
     
         try {
     
-            return Utf16Wrap._fromFFI(result, []);
+            return new Utf16Wrap(result, []);
         } finally {
         
         }

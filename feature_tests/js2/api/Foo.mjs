@@ -53,7 +53,7 @@ export class Foo {
     
         try {
     
-            return Foo._fromFFI(result, [], aEdges);
+            return new Foo(result, [], aEdges);
         } finally {
         
             xSlice.garbageCollect();
@@ -72,7 +72,7 @@ export class Foo {
     
         try {
     
-            return Bar._fromFFI(result, [], bEdges, aEdges);
+            return new Bar(result, [], bEdges, aEdges);
         } finally {
         
         }
@@ -88,7 +88,7 @@ export class Foo {
     
         try {
     
-            return Foo._fromFFI(result, [], aEdges);
+            return new Foo(result, [], aEdges);
         } finally {
         
             xSlice.free();
@@ -122,7 +122,7 @@ export class Foo {
     
         try {
     
-            return Foo._fromFFI(result, [], aEdges);
+            return new Foo(result, [], aEdges);
         } finally {
         
             this.free(); /* TODO: Does this work? */
@@ -142,7 +142,7 @@ export class Foo {
     
         try {
     
-            return Foo._fromFFI(result, [], aEdges);
+            return new Foo(result, [], aEdges);
         } finally {
         
             this.free(); /* TODO: Does this work? */

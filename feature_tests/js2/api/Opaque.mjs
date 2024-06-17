@@ -39,7 +39,7 @@ export class Opaque {
     
         try {
     
-            return Opaque._fromFFI(result, []);
+            return new Opaque(result, []);
         } finally {
         
         }

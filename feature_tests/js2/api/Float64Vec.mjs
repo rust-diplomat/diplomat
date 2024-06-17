@@ -39,7 +39,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Vec._fromFFI(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
             vSlice.free();
@@ -54,7 +54,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Vec._fromFFI(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
             vSlice.free();
@@ -69,7 +69,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Vec._fromFFI(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
             vSlice.free();
@@ -84,7 +84,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Vec._fromFFI(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
             vSlice.free();
@@ -99,7 +99,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Vec._fromFFI(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
             vSlice.free();
@@ -114,7 +114,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Vec._fromFFI(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
             vSlice.free();
@@ -129,7 +129,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Vec._fromFFI(result, []);
+            return new Float64Vec(result, []);
         } finally {
         
         }

@@ -39,7 +39,7 @@ export class Unnamespaced {
     
         try {
     
-            return Unnamespaced._fromFFI(result, []);
+            return new Unnamespaced(result, []);
         } finally {
         
         }
