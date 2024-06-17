@@ -26,6 +26,9 @@ export class OptionOpaqueChar {
         // Unconditionally register to destroy when this object is ready to garbage collect.
         OptionOpaqueChar_box_destroy_registry.register(this, this.#ptr);
     }
+    constructor() {
+        throw new Error("You cannot create the opaque type OptionOpaqueChar without a valid constructor. You may call one of the static methods below, or you may label the default opaque constructor in the diplomat FFI definition with #[diplomat::attr(constructor)].");
+    }
 
     get ffiValue() {
         return this.#ptr;

@@ -29,6 +29,12 @@ export class {{type_name}} {
         // Unconditionally register to destroy when this object is ready to garbage collect.
         {{type_name}}_box_destroy_registry.register(this, this.#ptr);
     }
+    
+    {%- if no_constructor %}
+    constructor() {
+        throw new Error("You cannot create the opaque type {{type_name}} without a valid constructor. You may call one of the static methods below, or you may label the default opaque constructor in the diplomat FFI definition with #[diplomat::attr(constructor)].");
+    }
+    {%- endif -%}
 
     {%- endif %}
 
