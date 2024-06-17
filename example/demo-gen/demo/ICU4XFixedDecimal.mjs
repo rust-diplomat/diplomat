@@ -7,7 +7,7 @@ export function toString(v) {
 	
 	null,
 	
-	v
+	arguments[0]
 	
 )
 	

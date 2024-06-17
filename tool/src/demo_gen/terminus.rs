@@ -135,12 +135,14 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     fn evaluate_param(&mut self, param_type : Type, param_name : String, node : &mut MethodDependency) {
         // Helper function for quickly passing a parameter to both our node and the render terminus.
         let out_param = |type_name| {
-            let param_info = ParamInfo {
+            let mut param_info = ParamInfo {
                 js: param_name,
                 type_name
             };
 
             self.terminus_info.params.push(param_info.clone());
+
+            param_info.js = format!("arguments[{}]", self.terminus_info.params.len() - 1);
             node.params.push(param_info);
         };
 

@@ -14,7 +14,7 @@ export function formatWrite(name, v) {
 	
 	null,
 	
-	name
+	arguments[0]
 	
 ),
 	
@@ -30,7 +30,7 @@ export function formatWrite(name, v) {
 	
 	null,
 	
-	v
+	arguments[1]
 	
 )
 	
