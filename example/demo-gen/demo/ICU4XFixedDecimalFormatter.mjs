@@ -4,35 +4,38 @@ import { ICU4XFixedDecimalFormatter } from "../ICU4XFixedDecimalFormatter.mjs"
 import { ICU4XLocale } from "../ICU4XLocale.mjs"
 
 export function formatWrite(name, v) {
-	return ICU4XFixedDecimalFormatter.formatWrite.call(
-	
-	ICU4XFixedDecimalFormatter.tryNew.call(
-	
-	null,
-	
-	ICU4XLocale.new_.call(
-	
-	null,
-	
-	arguments[0]
-	
+	return ((...args) => {
+    return this.formatWrite(args[1], args[2]);
+})
+.call(
+    
+    ICU4XFixedDecimalFormatter.tryNew.call(
+    
+    null,
+    
+    ICU4XLocale.new_.call(
+    
+    null,
+    
+    arguments[0]
+    
 ),
-	
-	ICU4XDataProvider.newStatic.call(
-	
-	null
-	
+    
+    ICU4XDataProvider.newStatic.call(
+    
+    null
+    
 )
-	
+    
 ),
-	
-	ICU4XFixedDecimal.new_.call(
-	
-	null,
-	
-	arguments[1]
-	
+    
+    ICU4XFixedDecimal.new_.call(
+    
+    null,
+    
+    arguments[1]
+    
 )
-	
+    
 );
 }

@@ -45,11 +45,17 @@ struct ParamInfo {
 struct MethodDependency {
     children: Vec<MethodDependency>,
 
+    /// The type that this method belongs to.
+    type_name: String,
+
     /// JS name to invoke for this method.
     method_name: String,
 
     /// Parameters to pass into the method.
     params : Vec<ParamInfo>,
+
+    /// Do we need a "this" reference to call this function?
+    is_static : bool,
 }
 
 pub struct RenderTerminusContext<'a, 'tcx> {
@@ -59,11 +65,13 @@ pub struct RenderTerminusContext<'a, 'tcx> {
 }
 
 impl<'a> MethodDependency {
-    pub fn new(method_name : String) -> Self {
+    pub fn new(type_name : String, method_name : String) -> Self {
         MethodDependency {
             children: Vec::new(),
+            type_name,
             method_name,
             params : Vec::new(),
+            is_static: true,
         }
     }
 }
@@ -113,11 +121,11 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             },
         };
 
-        let method_name = format!("{type_name}.{}", this.ctx.formatter.fmt_method_name(method));
+        let method_name = this.ctx.formatter.fmt_method_name(method);
 
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
-        let mut root = MethodDependency::new(method_name);
+        let mut root = MethodDependency::new(type_name.clone(), method_name);
 
         // And then we just treat the terminus as a regular constructor method:
         this.terminus_info.node_call_stack = this.evaluate_constructor(method, &mut root);
@@ -190,10 +198,10 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     }
 
                     if usable_constructor {
-                        self.terminus_info.imports.insert(self.ctx.formatter.fmt_import_statement(&type_name, false, "../".into()));
+                        self.terminus_info.imports.insert(self.ctx.formatter.fmt_import_statement(&type_name.clone(), false, "../".into()));
 
-                        let method_name = format!("{type_name}.{}", self.ctx.formatter.fmt_method_name(method));
-                        let child = MethodDependency::new(method_name);
+                        let method_name = self.ctx.formatter.fmt_method_name(method);
+                        let child = MethodDependency::new(type_name.to_string(), method_name);
                         node.children.push(child);
                         let i = node.children.len() - 1;
                         
@@ -222,6 +230,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
     fn evaluate_constructor(&mut self, method : &Method, node : &mut MethodDependency) -> String {
         method.param_self.as_ref().inspect(|s| {
+            node.is_static = false;
+
             self.evaluate_param(s.ty.clone().into(), "self".into(), node);
         }).or_else(|| {
             // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
