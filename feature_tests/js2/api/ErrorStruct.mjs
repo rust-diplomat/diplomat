@@ -41,6 +41,8 @@ export class ErrorStruct {
         this.#i = iDeref;
         const jDeref = (new Int32Array(wasm.memory.buffer, ptr + 4, 1))[0];
         this.#j = jDeref;
+
+        return this;
     }
     
 

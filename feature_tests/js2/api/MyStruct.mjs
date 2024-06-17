@@ -92,6 +92,8 @@ export class MyStruct {
         this.#f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();;
+
+        return this;
     }
     static new_() {
         

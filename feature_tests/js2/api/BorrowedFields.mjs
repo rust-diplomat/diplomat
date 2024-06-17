@@ -50,6 +50,8 @@ export class BorrowedFields {
         this.#b = bDeref(aEdges) // TODO: Slice c_to_js;
         const cDeref = /* TODO: gen_c_to_js_deref */null;
         this.#c = cDeref(aEdges) // TODO: Slice c_to_js;
+
+        return this;
     }
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         

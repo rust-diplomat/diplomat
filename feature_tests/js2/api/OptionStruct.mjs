@@ -55,6 +55,8 @@ export class OptionStruct {
         this.#c = cDeref;
         const dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
         this.#d = ((dDeref == 0) ? undefined : new OptionOpaque(dDeref, []));
+
+        return this;
     }
     
 

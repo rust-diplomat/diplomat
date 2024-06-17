@@ -58,6 +58,8 @@ export class {{type_name}} {
         const {{field.field_name}}Deref = {{field.c_to_js_deref}};
         this.#{{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
+
+        return this;
     }
     {%- endif %}
 

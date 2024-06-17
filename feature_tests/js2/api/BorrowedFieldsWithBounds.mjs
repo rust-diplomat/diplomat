@@ -52,6 +52,8 @@ export class BorrowedFieldsWithBounds {
         this.#fieldB = fieldBDeref(bEdges) // TODO: Slice c_to_js;
         const fieldCDeref = /* TODO: gen_c_to_js_deref */null;
         this.#fieldC = fieldCDeref(cEdges) // TODO: Slice c_to_js;
+
+        return this;
     }
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         

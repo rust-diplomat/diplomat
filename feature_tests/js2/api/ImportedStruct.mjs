@@ -42,6 +42,8 @@ export class ImportedStruct {
         this.#foo = UnimportedEnum[Array.from(UnimportedEnum.values.keys())[fooDeref]];
         const countDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0];
         this.#count = countDeref;
+
+        return this;
     }
     
 
