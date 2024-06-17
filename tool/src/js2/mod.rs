@@ -149,12 +149,12 @@ impl<'tcx> JSGenerationContext<'tcx> {
             let file_name = self.formatter.fmt_file_name(&name, &file_type);
 
             // Remove our self reference:
-            context.imports.remove(&self.formatter.fmt_import_statement(&name, context.typescript));
+            context.imports.remove(&self.formatter.fmt_import_statement(&name, context.typescript, "./".into()));
 
             self.files.add_file(file_name, context.generate_base(contents));
         }
         
         // TODO: Typescript variant.
-        self.exports.push(self.formatter.fmt_export_statement(&name, false).into());
+        self.exports.push(self.formatter.fmt_export_statement(&name, false, "./".into()).into());
     }
 }

@@ -80,25 +80,25 @@ impl<'tcx> JSFormatter<'tcx> {
 
 	}
 
-	pub fn fmt_module_statement(&self, type_name : &str, typescript: bool) -> String {
+	pub fn fmt_module_statement(&self, type_name : &str, typescript: bool, relative_path: String) -> String {
 		let file_name = self.fmt_file_name_extensionless(type_name);
-		format!(r#"{{ {type_name} }} from "./{file_name}{}"#, match typescript {
+		format!(r#"{{ {type_name} }} from "{relative_path}{file_name}{}"#, match typescript {
 			true => "",
 			false => ".mjs"
 		})
 	}
 
-	pub fn fmt_import_statement(&self, type_name : &str, typescript : bool) -> String {
+	pub fn fmt_import_statement(&self, type_name : &str, typescript : bool, relative_path: String) -> String {
 		format!(r#"import {}{}""#,
 		match typescript {
 			true => "type ",
 			false => ""
 		}, 
-		self.fmt_module_statement(type_name, typescript))
+		self.fmt_module_statement(type_name, typescript, relative_path))
 	}
 
-	pub fn fmt_export_statement(&self, type_name : &str, typescript : bool) -> String {
-		format!(r#"export {}""#, self.fmt_module_statement(type_name, typescript))
+	pub fn fmt_export_statement(&self, type_name : &str, typescript : bool, relative_path: String) -> String {
+		format!(r#"export {}""#, self.fmt_module_statement(type_name, typescript, relative_path))
 	}
 
 	// #region HIR::Type formatting.
