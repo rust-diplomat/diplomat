@@ -155,23 +155,37 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 // Piggybacking off of the #[diplomat::attr(constructor)] macro for now. 
                 let op = o.resolve(self.ctx.tcx);
 
-                let attrs = op.attrs.demo_attrs.as_ref().unwrap()
+                let mut attrs = op.attrs.demo_attrs.as_ref().unwrap()
                 .iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) });
-                if attrs.any(|attr| {}) {
+                if attrs.any(|attr| {attr == MarkupOutCFGAttr::External}) {
                     let type_name = self.ctx.formatter.fmt_type_name(o.tcx_id.into());
                     out_param(type_name.into());
                     return;
                 }
 
+                let mut usable_constructor = false;
+
                 for method in op.methods.iter() {
+                    if usable_constructor {
+                        break;
+                    }
+
+                    let mut attrs = method.attrs.demo_attrs.as_ref().unwrap()
+                    .iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) });
+                
+                    usable_constructor |= attrs.any(|attr| { attr == MarkupOutCFGAttr::DefaultConstructor });
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method {
+                        usable_constructor |= true;
+                    }
+
+                    if usable_constructor {
                         let method_name = self.ctx.formatter.fmt_method_name(method);
                         let child = MethodDependency::new(method_name);
                         node.children.push(child);
                         let i = node.children.len() - 1;
                         self.evaluate_constructor(method, &mut node.children.get_mut(i).unwrap());
                     } else {
-                        panic!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::attr(constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_name);
+                        panic!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::attr(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_name);
                     }
                 }
             },
@@ -187,8 +201,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         }).or_else(|| {
             // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
             node.params.push(ParamInfo {
-                name: self.ctx.formatter.fmt_null(),
-                type_name: self.ctx.formatter.fmt_null(),
+                name: self.ctx.formatter.fmt_null().into(),
+                type_name: self.ctx.formatter.fmt_null().into(),
             });
             None
         });
