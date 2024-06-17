@@ -189,7 +189,13 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     }
                 }
             },
-            Type::Struct(s) => todo!(),
+            Type::Struct(s) => {
+                let st = s.resolve(&self.ctx.tcx);
+
+                for ty in st.fields.iter() {
+                    // TODO: I think creating a struct purely from its fields needs to be implemented in the JS2 backend first.
+                }
+            },
             _ => unreachable!("Unknown HIR type {:?}", param_type),
         }
     }
