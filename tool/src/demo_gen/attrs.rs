@@ -2,6 +2,7 @@ use diplomat_core::ast::attrs::DemoBackendAttr;
 
 
 /// Master attribute for handling configuration of the markup that demo-gen produces.
+/// Created from [`diplomat_core::ast::attrs::DemoBackendAttr`]
 #[non_exhaustive]
 #[derive(Debug, PartialEq)]
 pub(super) enum MarkupOutCFGAttr {

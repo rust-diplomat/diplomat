@@ -151,8 +151,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             },
             Type::Opaque(o) => {
                 // We need to find a constructor that we can call.
-                // TODO: I'm not sure where I could start setting up attributes? So maybe this is a discussion point for later.
-                // Piggybacking off of the #[diplomat::attr(constructor)] macro for now. 
+                // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
                 let op = o.resolve(self.ctx.tcx);
 
                 let mut attrs = op.attrs.demo_attrs.as_ref().unwrap()
