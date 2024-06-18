@@ -249,7 +249,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     fn get_constructor_js(&self, owner_type_name: String, method : &Method) -> String {
         let method_name = self.ctx.formatter.fmt_method_name(method);
         if method.param_self.is_some() {
-            format!("((...args) => {{ return this.{method_name}(...args) }})", )
+            // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
+            format!("(function (...args) {{ return this.{method_name}(...args) }})", )
         } else {
             format!("{owner_type_name}.{method_name}")
         }

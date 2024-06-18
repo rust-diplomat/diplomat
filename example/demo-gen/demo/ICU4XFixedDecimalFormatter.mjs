@@ -5,7 +5,7 @@ import { ICU4XFixedDecimalFormatterOptions } from "../ICU4XFixedDecimalFormatter
 import { ICU4XLocale } from "../ICU4XLocale.mjs"
 
 export function formatWrite(name, grouping_strategy, some_other_config, v) {
-	return ((...args) => { return this.formatWrite(...args) }).call(
+	return (function (...args) { return this.formatWrite(...args) }).call(
         ICU4XFixedDecimalFormatter.tryNew.call(
             null,
             ICU4XLocale.new_.call(
