@@ -42,9 +42,9 @@ export class NestedBorrowedFields {
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(xAppendArray = [], yAppendArray = [], zAppendArray = []) {
         return [
-            ...fields._intoFFI([...xAppendArray]), 
-            ...bounds._intoFFI([...xAppendArray],[...yAppendArray],[...yAppendArray]), 
-            ...bounds2._intoFFI([...zAppendArray],[...zAppendArray],[...zAppendArray])]
+            ...this.#fields._intoFFI([...xAppendArray]), 
+            ...this.#bounds._intoFFI([...xAppendArray],[...yAppendArray],[...yAppendArray]), 
+            ...this.#bounds2._intoFFI([...zAppendArray],[...zAppendArray],[...zAppendArray])]
     }
     
 

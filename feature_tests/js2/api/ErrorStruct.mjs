@@ -26,8 +26,8 @@ export class ErrorStruct {
     
     _intoFFI() {
         return [
-            i, 
-            j]
+            this.#i, 
+            this.#j]
     }
     
 

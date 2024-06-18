@@ -37,9 +37,9 @@ export class BorrowedFields {
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     _intoFFI(aAppendArray = []) {
         return [
-            diplomatRuntime.DiplomatBuf.str16(wasm, a) /* TODO: Freeing code */, 
-            diplomatRuntime.DiplomatBuf.str8(wasm, b) /* TODO: Freeing code */, 
-            diplomatRuntime.DiplomatBuf.str8(wasm, c) /* TODO: Freeing code */]
+            diplomatRuntime.DiplomatBuf.str16(wasm, this.#a) /* TODO: Freeing code */, 
+            diplomatRuntime.DiplomatBuf.str8(wasm, this.#b) /* TODO: Freeing code */, 
+            diplomatRuntime.DiplomatBuf.str8(wasm, this.#c) /* TODO: Freeing code */]
     }
     
 
