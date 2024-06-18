@@ -1,0 +1,21 @@
+{% for terminus in termini %}
+export * as {{terminus.type_name}} from "./TODO";
+{% endfor %}
+
+export const RenderInfo = {
+	termini: [
+		{%- for terminus in termini %}
+		{
+			func: {{terminus.type_name}}.{{terminus.function_name}},
+			parameters: [
+				{% for param in terminus.params %}
+				{
+					name: "{{param.js}}",
+					type: "{{param.type_name}}"
+				}{% if !loop.last %},{% endif %}
+				{% endfor %}
+			]
+		}{% if !loop.last %},{% endif %}
+		{% endfor -%}
+	],
+};

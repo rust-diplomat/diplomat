@@ -6,7 +6,7 @@ use super::{attrs::MarkupOutCFGAttr, WebDemoGenerationContext};
 use askama::{self, Template};
 
 #[derive(Clone)]
-struct ParamInfo {
+pub struct ParamInfo {
     /// Either the name of the parameter (i.e, when a primitive is created as an argument for the render terminus), or the javascript that represents this parameter.
     pub js : String,
     /// For typescript only.
@@ -65,13 +65,17 @@ impl<'a> MethodDependency {
 }
 
 
-#[derive(Clone, Template)]
+#[derive(Template)]
 #[template(path="demo-gen/terminus.js.jinja", escape="none")]
 pub(super) struct TerminusInfo {
     /// Name of the function for the render engine to call
-    function_name : String,
+    pub function_name : String,
+
     /// Parameters that we require explicit user input from the render engine
-    params: Vec<ParamInfo>,
+    pub params: Vec<ParamInfo>,
+
+    /// The type name of the type that this function belongs to.
+    pub type_name : String,
 
     /// Final result of recursively calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`]
     node_call_stack : String,
@@ -99,6 +103,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             terminus_info: TerminusInfo {
                 function_name : ctx.formatter.fmt_method_name(method),
                 params: Vec::new(),
+
+                type_name: type_name.clone(),
 
                 node_call_stack: String::default(),
     

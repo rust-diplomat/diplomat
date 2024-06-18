@@ -1,8 +1,8 @@
 use std::{borrow::Cow, fmt::{Display, Write}};
 
-use askama::Template;
+use askama::{self, Template};
 use diplomat_core::hir::{self, Method, Param, SelfType, Type, TypeContext, TypeId};
-use terminus::RenderTerminusContext;
+use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{common::{ErrorStore, FileMap}, js2::{formatter::JSFormatter, FileType}};
 
@@ -16,7 +16,6 @@ pub struct WebDemoGenerationContext<'tcx> {
     errors: ErrorStore<'tcx, String>,
     
     formatter : JSFormatter<'tcx>,
-    exports : Vec<Cow<'tcx, str>>,
 }
 
 impl<'tcx> WebDemoGenerationContext<'tcx> {
@@ -28,7 +27,6 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
             errors: ErrorStore::default(),
 
             formatter : JSFormatter::new(tcx, docs, strip_prefix),
-            exports: Vec::new(),
         };
 
         this.init();
@@ -48,22 +46,29 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
     /// This JS should include:
     /// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs. 
     pub fn init(&mut self) {
-        // So, here's what I'm thinking.
+        #[derive(Template)]
+        #[template(path = "demo-gen/index.js.jinja", escape = "none")]
+        struct IndexInfo {
+            termini : Vec<TerminusInfo>,
+        }
 
-        // 1. Search through all methods that can be classified as a render terminus.
+        let mut out_info = IndexInfo {
+            termini: Vec::new(),
+        };
+
         for (id, ty) in self.tcx.all_types() {
             let methods = ty.methods();
 
             const FILE_TYPES : [FileType; 2] = [FileType::Module, FileType::Typescript];
-            
-            let mut termini : Vec<terminus::TerminusInfo> = Vec::new();
+
+            let mut termini = Vec::new();
 
             {
                 let type_name = self.formatter.fmt_type_name(id);
                 for method in methods {
                     let val = RenderTerminusContext::evaluate_terminus(self, type_name.to_string(), method);
                     if let Some(t) = val  {
-                        termini.push(t.to_owned());
+                        termini.push(t);
                     }
                 }
             }
@@ -72,10 +77,6 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                 for file_type in FILE_TYPES {
                     let type_name = self.formatter.fmt_type_name(id);
                     let file_name = self.formatter.fmt_file_name(&type_name, &file_type);
-                    
-                    if !file_type.is_typescript(){
-                        self.exports.push(format!(r#"export * as {type_name}Demo from "./{file_name}""#).into());
-                    }
 
                     let mut method_str = String::new();
 
@@ -86,13 +87,11 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
 
                     self.files.add_file(format!("{file_name}"), method_str);
                 }
+
+                out_info.termini.append(&mut termini);
             }
         }
 
-        let mut out_str = String::new();
-        for export in self.exports.iter() {
-            writeln!(out_str, "{}", export).unwrap();
-        }
-        self.files.add_file("index.mjs".into(), out_str);
+        self.files.add_file("index.mjs".into(), out_info.render().unwrap());
     }
 }
