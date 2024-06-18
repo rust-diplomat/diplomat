@@ -1,7 +1,7 @@
 
-export * as ICU4XFixedDecimalFormatter from "./TODO";
+export * as ICU4XFixedDecimalFormatter from "./ICU4XFixedDecimalFormatter.mjs";
 
-export * as ICU4XFixedDecimal from "./TODO";
+export * as ICU4XFixedDecimal from "./ICU4XFixedDecimal.mjs";
 
 
 export const RenderInfo = {

@@ -77,6 +77,8 @@ pub(super) struct TerminusInfo {
     /// The type name of the type that this function belongs to.
     pub type_name : String,
 
+    pub js_file_name : String,
+
     /// Final result of recursively calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`]
     node_call_stack : String,
 
@@ -105,6 +107,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 params: Vec::new(),
 
                 type_name: type_name.clone(),
+
+                js_file_name : ctx.formatter.fmt_file_name(&type_name, &crate::js2::FileType::Module),
 
                 node_call_stack: String::default(),
     
