@@ -37,11 +37,13 @@ export class ICU4XFixedDecimalFormatterOptions {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    constructor(ptr) {
+    _fromFFI(ptr) {
         const groupingStrategyDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
         this.#groupingStrategy = ICU4XFixedDecimalGroupingStrategy[Array.from(ICU4XFixedDecimalGroupingStrategy.values.keys())[groupingStrategyDeref]];
         const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] == 1;
         this.#someOtherConfig = someOtherConfigDeref;
+
+        return this;
     }
     static default_() {
         
@@ -50,7 +52,7 @@ export class ICU4XFixedDecimalFormatterOptions {
     
         try {
     
-            return new ICU4XFixedDecimalFormatterOptions(diplomat_receive_buffer);
+            return new ICU4XFixedDecimalFormatterOptions()._fromFFI(diplomat_receive_buffer);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
