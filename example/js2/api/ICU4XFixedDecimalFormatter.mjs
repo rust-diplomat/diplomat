@@ -62,7 +62,7 @@ export class ICU4XFixedDecimalFormatter {
     formatWrite(value) {
         
         const write = wasm.diplomat_buffer_write_create(0);
-        wasm.ICU4XFixedDecimalFormatter_format_write(this.ffiValue, value.ffiValue);
+        wasm.ICU4XFixedDecimalFormatter_format_write(this.ffiValue, value.ffiValue, write);
     
         try {
     
