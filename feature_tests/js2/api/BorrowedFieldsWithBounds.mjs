@@ -58,12 +58,8 @@ export class BorrowedFieldsWithBounds {
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
-        const dstr16XArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const utf8StrZSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ);
-        const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(24, 4);
         

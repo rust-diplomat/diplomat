@@ -253,13 +253,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         if let Some(param_self) = method.param_self.as_ref() {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
 
+            // We don't need to clean up structs for Rust because they're represented entirely in JS form.
             method_info.param_conversions.push(self.gen_js_to_c_self(&param_self.ty));
-            if matches!(param_self.ty, hir::SelfType::Struct(..)) {
-                // TODO: Does this work?
-                method_info.cleanup_expressions.push(
-                    "this.free(); /* TODO: Does this work? */".into()
-                );
-            }
         }
 
         for param in method.params.iter() {
@@ -306,13 +301,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     is_borrowed,
                 });
             } else {
-                if let hir::Type::Struct(..) = param.ty {
-                    // TODO: Does this work?
-                    method_info.cleanup_expressions.push(
-                        "this.free(); /* TODO: Does this work? */".into()
-                    );
-                }
-
                 let struct_borrow_info = 
                     if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
                         Some(converter::StructBorrowContext {

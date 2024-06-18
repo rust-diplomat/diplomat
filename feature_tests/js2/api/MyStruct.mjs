@@ -118,8 +118,6 @@ export class MyStruct {
             return result;
         } finally {
         
-            this.free(); /* TODO: Does this work? */
-        
         }
     }
 

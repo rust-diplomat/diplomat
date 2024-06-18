@@ -46,13 +46,11 @@ export class Opaque {
     }
 
     assertStruct(s) {
-        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFfi(temp));
+        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI());
     
         try {
     
         } finally {
-        
-            this.free(); /* TODO: Does this work? */
         
         }
     }

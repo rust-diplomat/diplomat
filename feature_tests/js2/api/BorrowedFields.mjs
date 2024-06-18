@@ -56,12 +56,8 @@ export class BorrowedFields {
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         
         const dstr16Slice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16);
-        const dstr16Arena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const utf8StrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str);
-        const utf8StrArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(24, 4);
         
