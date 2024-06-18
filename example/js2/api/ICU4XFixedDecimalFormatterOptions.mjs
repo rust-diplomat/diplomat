@@ -27,8 +27,8 @@ export class ICU4XFixedDecimalFormatterOptions {
     
     _intoFFI() {
         return [
-            groupingStrategy.ffiValue, 
-            someOtherConfig]
+            this.#groupingStrategy.ffiValue, 
+            this.#someOtherConfig]
     }
     
 
