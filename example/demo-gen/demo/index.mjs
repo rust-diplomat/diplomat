@@ -1,13 +1,13 @@
-
-export * as ICU4XFixedDecimalFormatter from "./ICU4XFixedDecimalFormatter.mjs";
-
-export * as ICU4XFixedDecimal from "./ICU4XFixedDecimal.mjs";
+import * as ICU4XFixedDecimalFormatterDemo from "./ICU4XFixedDecimalFormatter.mjs";
+export * as ICU4XFixedDecimalFormatterDemo from "./ICU4XFixedDecimalFormatter.mjs";
+import * as ICU4XFixedDecimalDemo from "./ICU4XFixedDecimal.mjs";
+export * as ICU4XFixedDecimalDemo from "./ICU4XFixedDecimal.mjs";
 
 
 export const RenderInfo = {
 	termini: [
 		{
-			func: ICU4XFixedDecimalFormatter.formatWrite,
+			func: ICU4XFixedDecimalFormatterDemo.formatWrite,
 			parameters: [
 				
 				{
@@ -34,7 +34,7 @@ export const RenderInfo = {
 		},
 		
 		{
-			func: ICU4XFixedDecimal.toString,
+			func: ICU4XFixedDecimalDemo.toString,
 			parameters: [
 				
 				{
