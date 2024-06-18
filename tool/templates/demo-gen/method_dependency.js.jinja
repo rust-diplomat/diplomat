@@ -1,12 +1,4 @@
-{%- if !is_static -%}
-((...args) => {
-    return this.{{- method_name -}}({% for param in params -%}
-    args[ {{- loop.index -}} ]{% if !loop.last %}, {% endif %}
-    {%- endfor %});
-})
-{% endif -%}
-
-{%- if is_static -%} {{ type_name }}.{{ method_name }} {%- endif %}.call(
+{{ method_js }}.call(
     {%- for param in params %}
     {{ param.js|indent(4) }}{% if !loop.last %},{% endif -%}
     {% endfor %}

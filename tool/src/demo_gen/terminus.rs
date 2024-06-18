@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{fmt::Write, collections::BTreeSet};
 
 use diplomat_core::hir::{self, Method, Type};
 
@@ -39,23 +39,14 @@ struct ParamInfo {
 ///     );
 /// }
 /// ```
-/// TODO: Is this even necessary? I think this could be accomplished with the recursive structure that we already have. Just return this with no keeping track of children needed.
 #[derive(Template)]
 #[template(path="demo-gen/method_dependency.js.jinja", escape="none")]
 struct MethodDependency {
-    children: Vec<MethodDependency>,
-
-    /// The type that this method belongs to.
-    type_name: String,
-
-    /// JS name to invoke for this method.
-    method_name: String,
+    /// Javascript to invoke for this method.
+    method_js: String,
 
     /// Parameters to pass into the method.
     params : Vec<ParamInfo>,
-
-    /// Do we need a "this" reference to call this function?
-    is_static : bool,
 }
 
 pub struct RenderTerminusContext<'a, 'tcx> {
@@ -65,13 +56,10 @@ pub struct RenderTerminusContext<'a, 'tcx> {
 }
 
 impl<'a> MethodDependency {
-    pub fn new(type_name : String, method_name : String) -> Self {
+    pub fn new(method_js : String) -> Self {
         MethodDependency {
-            children: Vec::new(),
-            type_name,
-            method_name,
+            method_js,
             params : Vec::new(),
-            is_static: true,
         }
     }
 }
@@ -121,11 +109,9 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             },
         };
 
-        let method_name = this.ctx.formatter.fmt_method_name(method);
-
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
-        let mut root = MethodDependency::new(type_name.clone(), method_name);
+        let mut root = MethodDependency::new(this.get_constructor_js(type_name.to_string(), method));
 
         // And then we just treat the terminus as a regular constructor method:
         this.terminus_info.node_call_stack = this.evaluate_constructor(method, &mut root);
@@ -200,12 +186,9 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     if usable_constructor {
                         self.terminus_info.imports.insert(self.ctx.formatter.fmt_import_statement(&type_name.clone(), false, "../".into()));
 
-                        let method_name = self.ctx.formatter.fmt_method_name(method);
-                        let child = MethodDependency::new(type_name.to_string(), method_name);
-                        node.children.push(child);
-                        let i = node.children.len() - 1;
+                        let mut child = MethodDependency::new(self.get_constructor_js(type_name.to_string(), method));
                         
-                        let call = self.evaluate_constructor(method, &mut node.children.get_mut(i).unwrap());
+                        let call = self.evaluate_constructor(method, &mut child);
                         node.params.push(ParamInfo {
                             js: call,
                             type_name: String::default(),
@@ -213,25 +196,68 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     }
                 }
                 if !usable_constructor {
-                    self.ctx.errors.push_error(format!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::attr(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_name));
+                    self.ctx.errors.push_error(format!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::attr(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_js));
                 }
             },
             Type::Struct(s) => {
                 let st = s.resolve(&self.ctx.tcx);
 
-                for ty in st.fields.iter() {
-                    // TODO: I think creating a struct purely from its fields needs to be implemented in the JS2 backend first.
+                let type_name = self.ctx.formatter.fmt_type_name(s.tcx_id.into());
+                
+                self.terminus_info.imports.insert(self.ctx.formatter.fmt_import_statement(&type_name, false, "../".into()));
+                
+                let mut child = MethodDependency::new("".to_string());
+
+                #[derive(Template)]
+                #[template(path = "demo-gen/struct.js.jinja", escape = "none")]
+                struct StructInfo {
+                    fields: Vec<String>,
+                    type_name : String,
+                };
+
+                let mut fields = Vec::new();
+
+                for field in st.fields.iter() {
+                    fields.push(self.ctx.formatter.fmt_param_name(field.name.as_str()).to_string());
+                    self.evaluate_param(field.ty.clone(), field.name.to_string(), &mut child);
                 }
+
+                child.method_js = StructInfo {
+                    type_name: type_name.to_string(),
+                    fields,
+                }.render().unwrap();
+
+                node.params.push(ParamInfo {
+                    type_name: type_name.to_string(), 
+                    js: child.render().unwrap(),
+                });
             },
             _ => unreachable!("Unknown HIR type {:?}", param_type),
+        }
+    }
+
+    /// Get the javascript that will be used to evaluate a constructor.
+    /// 
+    /// Could be something like:
+    /// ClassName.new()
+    /// or
+    /// (...args) => { this.new(); }
+    /// 
+    /// `owner_type_name` - The type name of the owner for this method.
+    /// 
+    /// `method` - The method we're trying to call.
+    fn get_constructor_js(&self, owner_type_name: String, method : &Method) -> String {
+        let method_name = self.ctx.formatter.fmt_method_name(method);
+        if method.param_self.is_some() {
+            format!("((...args) => {{ return this.{method_name}(...args) }})", )
+        } else {
+            format!("{owner_type_name}.{method_name}")
         }
     }
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
     fn evaluate_constructor(&mut self, method : &Method, node : &mut MethodDependency) -> String {
         method.param_self.as_ref().inspect(|s| {
-            node.is_static = false;
-
             self.evaluate_param(s.ty.clone().into(), "self".into(), node);
         }).or_else(|| {
             // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
