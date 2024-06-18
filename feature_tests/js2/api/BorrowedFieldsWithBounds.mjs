@@ -39,9 +39,9 @@ export class BorrowedFieldsWithBounds {
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(aAppendArray = [], bAppendArray = [], cAppendArray = []) {
         return [
-            diplomatRuntime.DiplomatBuf.str16(wasm, fieldA) /* TODO: Freeing code */, 
-            diplomatRuntime.DiplomatBuf.str8(wasm, fieldB) /* TODO: Freeing code */, 
-            diplomatRuntime.DiplomatBuf.str8(wasm, fieldC) /* TODO: Freeing code */]
+            diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA) /* TODO: Freeing code */, 
+            diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB) /* TODO: Freeing code */, 
+            diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC) /* TODO: Freeing code */]
     }
     
 

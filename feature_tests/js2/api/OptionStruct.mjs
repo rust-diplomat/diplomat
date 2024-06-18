@@ -34,10 +34,10 @@ export class OptionStruct {
     
     _intoFFI() {
         return [
-            a.ffiValue ?? 0, 
-            b.ffiValue ?? 0, 
-            c, 
-            d.ffiValue ?? 0]
+            this.#a.ffiValue ?? 0, 
+            this.#b.ffiValue ?? 0, 
+            this.#c, 
+            this.#d.ffiValue ?? 0]
     }
     
 

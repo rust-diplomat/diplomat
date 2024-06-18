@@ -62,13 +62,13 @@ export class MyStruct {
     
     _intoFFI() {
         return [
-            a, 
-            b, 
-            c, 
-            d, 
-            e, 
-            diplomatRuntime.extractCodePoint(f, 'f'), 
-            g.ffiValue]
+            this.#a, 
+            this.#b, 
+            this.#c, 
+            this.#d, 
+            this.#e, 
+            diplomatRuntime.extractCodePoint(this.#f, 'this.#f'), 
+            this.#g.ffiValue]
     }
     
 

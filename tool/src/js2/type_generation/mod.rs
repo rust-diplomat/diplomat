@@ -149,7 +149,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             );
 
             let (js_to_c, maybe_struct_borrow_info) = if let hir::Type::Slice(slice) = &field.ty {
-                let slice_expr = self.gen_js_to_c_for_type(&field.ty, field_name.clone(), None);
+                let slice_expr = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), None);
 
                 let mut ret = vec![
                     format!("{slice_expr} /* TODO: Freeing code */").into()
@@ -186,7 +186,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     None
                 };
 
-                (vec!(self.gen_js_to_c_for_type(&field.ty, field_name.clone(), borrow_info.as_ref()).into()
+                (vec!(self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), borrow_info.as_ref()).into()
                 ), borrow_info.map(|s| s.param_info))
             };
 

@@ -27,8 +27,8 @@ export class ImportedStruct {
     
     _intoFFI() {
         return [
-            foo.ffiValue, 
-            count]
+            this.#foo.ffiValue, 
+            this.#count]
     }
     
 
