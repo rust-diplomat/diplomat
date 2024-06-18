@@ -199,7 +199,7 @@ export class Float64Vec {
     toString() {
         
         const write = wasm.diplomat_buffer_write_create(0);
-        wasm.Float64Vec_to_string(this.ffiValue);
+        wasm.Float64Vec_to_string(this.ffiValue, write);
     
         try {
     

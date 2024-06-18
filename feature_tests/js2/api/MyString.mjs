@@ -107,7 +107,7 @@ export class MyString {
     get str() {
         
         const write = wasm.diplomat_buffer_write_create(0);
-        wasm.MyString_get_str(this.ffiValue);
+        wasm.MyString_get_str(this.ffiValue, write);
     
         try {
     
