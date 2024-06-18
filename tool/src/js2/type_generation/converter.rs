@@ -274,6 +274,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			
 			ReturnType::Infallible(SuccessType::Write) => {
 				method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
+				method_info.param_conversions.push("write".into());
 				method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
 				Some("return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
 			},
