@@ -9,7 +9,7 @@ export class BorrowedFieldsReturning {
     set bytes(value: String); 
 
 
-    constructor(ptr: pointer, aEdges: Array[object]);
+    _fromFFI(ptr: pointer, aEdges: Array<object>);
     
 
 }

@@ -142,7 +142,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 					}
 				}
 				
-				format!("new {type_name}({variable_name}{edges})").into()
+				format!("new {type_name}()._fromFFI({variable_name}{edges})").into()
 			},
 			Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.js_ctx.tcx)) => {
 				let id = enum_path.tcx_id.into();
@@ -452,14 +452,15 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         let mut params = String::new();
 		// TODO: Fix to JS particulars.
         if let Some(info) = struct_borrow_info {
-            for (def_lt, use_lts) in &info.param_info.borrowed_struct_lifetime_map {
+			let iter = &mut info.param_info.borrowed_struct_lifetime_map.iter().peekable();
+            while let Some((def_lt, use_lts)) = &iter.next() {
                 write!(
                     &mut params,
-                    ", [",
+                    "[",
                 )
                 .unwrap();
                 let mut maybe_comma = "";
-                for use_lt in use_lts {
+                for use_lt in use_lts.iter() {
                     // Generate stuff like `, aEdges` or for struct fields, `, ...aAppendArray`
                     let lt = info.use_env.fmt_lifetime(use_lt);
                     if info.is_method {
@@ -469,10 +470,13 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     }
                     maybe_comma = ", ";
                 }
-                write!(&mut params, "]").unwrap();
+                write!(&mut params, "]{}", match iter.peek().is_none() {
+					true => "",
+					false => ",",
+				}).unwrap();
             }
         }
-        format!("...{js_name}._intoFfi(temp{params})").into()
+        format!("...{js_name}._intoFFI({params})").into()
 	}
 	// #endregion
 }

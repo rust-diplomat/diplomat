@@ -43,23 +43,21 @@ export class BorrowedFields {
     }
     
 
-    constructor(ptr, aEdges) {
+    _fromFFI(ptr, aEdges) {
         const aDeref = /* TODO: gen_c_to_js_deref */null;
         this.#a = aDeref(aEdges) // TODO: Slice c_to_js;
         const bDeref = /* TODO: gen_c_to_js_deref */null;
         this.#b = bDeref(aEdges) // TODO: Slice c_to_js;
         const cDeref = /* TODO: gen_c_to_js_deref */null;
         this.#c = cDeref(aEdges) // TODO: Slice c_to_js;
+
+        return this;
     }
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         
         const dstr16Slice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16);
-        const dstr16Arena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const utf8StrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8Str);
-        const utf8StrArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(24, 4);
         
@@ -69,7 +67,7 @@ export class BorrowedFields {
     
         try {
     
-            return new BorrowedFields(diplomat_receive_buffer, xEdges);
+            return new BorrowedFields()._fromFFI(diplomat_receive_buffer, xEdges);
         } finally {
         
             dstr16Slice.garbageCollect();

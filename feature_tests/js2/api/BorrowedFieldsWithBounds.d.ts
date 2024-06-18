@@ -16,7 +16,7 @@ export class BorrowedFieldsWithBounds {
     set fieldC(value: String); 
 
 
-    constructor(ptr: pointer, aEdges: Array[object], bEdges: Array[object], cEdges: Array[object]);
+    _fromFFI(ptr: pointer, aEdges: Array<object>, bEdges: Array<object>, cEdges: Array<object>);
     static fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds;
 
     

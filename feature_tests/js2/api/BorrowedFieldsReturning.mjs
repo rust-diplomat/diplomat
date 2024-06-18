@@ -26,9 +26,11 @@ export class BorrowedFieldsReturning {
     }
     
 
-    constructor(ptr, aEdges) {
+    _fromFFI(ptr, aEdges) {
         const bytesDeref = /* TODO: gen_c_to_js_deref */null;
         this.#bytes = bytesDeref(aEdges) // TODO: Slice c_to_js;
+
+        return this;
     }
     
 

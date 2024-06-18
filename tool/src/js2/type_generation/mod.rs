@@ -68,7 +68,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
     pub(super) fn generate_opaque_from_def(&mut self, opaque_def: &'tcx OpaqueDef, type_id : TypeId, type_name : &str) -> String {
         let mut methods = opaque_def.methods.iter()
-        .flat_map(|method| { self.generate_method_body(type_id, type_name, method, self.typescript) })
+        .flat_map(|method| {
+            self.generate_method_body(type_id, type_name, method, self.typescript)
+         })
         .collect::<Vec<_>>();
 
         let special_method_body = self.generate_special_method_body(&opaque_def.special_method_presence, self.typescript);
@@ -207,8 +209,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
         methods.push(self.generate_special_method_body(&struct_def.special_method_presence, self.typescript));
 
-        // TODO: Default constructors? (Could be expanded with Opaque default constructors??)
-
         #[derive(Template)]
         #[template(path="js2/struct.js.jinja", escape = "none")]
         struct ImplTemplate<'a, P: hir::TyPosition> {
@@ -253,13 +253,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         if let Some(param_self) = method.param_self.as_ref() {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
 
+            // We don't need to clean up structs for Rust because they're represented entirely in JS form.
             method_info.param_conversions.push(self.gen_js_to_c_self(&param_self.ty));
-            if matches!(param_self.ty, hir::SelfType::Struct(..)) {
-                // TODO: Does this work?
-                method_info.cleanup_expressions.push(
-                    "this.free(); /* TODO: Does this work? */".into()
-                );
-            }
         }
 
         for param in method.params.iter() {
@@ -306,13 +301,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     is_borrowed,
                 });
             } else {
-                if let hir::Type::Struct(..) = param.ty {
-                    // TODO: Does this work?
-                    method_info.cleanup_expressions.push(
-                        "this.free(); /* TODO: Does this work? */".into()
-                    );
-                }
-
                 let struct_borrow_info = 
                     if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
                         Some(converter::StructBorrowContext {
@@ -331,7 +319,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             method_info.parameters.push(param_info);
         }
 
-        method_info.return_type = self.gen_js_return_type_str(&method.output);
+        method_info.return_type = format!(": {}", self.gen_js_return_type_str(&method.output));
 
         method_info.return_expression = self.gen_c_to_js_for_return_type(&mut method_info, &method.lifetime_env);
         
@@ -423,7 +411,7 @@ struct MethodInfo<'info> {
     slice_params : Vec<SliceParam<'info>>,
     param_conversions : Vec<Cow<'info, str>>,
 
-    return_type : Cow<'info, str>,
+    return_type : String,
     return_expression : Option<Cow<'info, str>>,
 
     method_lifetimes_map : BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,

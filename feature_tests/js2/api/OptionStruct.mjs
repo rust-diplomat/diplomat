@@ -46,7 +46,7 @@ export class OptionStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    constructor(ptr) {
+    _fromFFI(ptr) {
         const aDeref = diplomatRuntime.ptrRead(wasm, ptr);
         this.#a = ((aDeref == 0) ? undefined : new OptionOpaque(aDeref, []));
         const bDeref = diplomatRuntime.ptrRead(wasm, ptr + 4);
@@ -55,6 +55,8 @@ export class OptionStruct {
         this.#c = cDeref;
         const dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
         this.#d = ((dDeref == 0) ? undefined : new OptionOpaque(dDeref, []));
+
+        return this;
     }
     
 

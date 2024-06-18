@@ -53,11 +53,13 @@ export class {{type_name}} {
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
     {% endif -%}
-    constructor(ptr{% if typescript %}: pointer{% endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- if typescript %}: Array[object]{% endif %} {%- endfor -%}) {%- if typescript %};{% else %} {
+    _fromFFI(ptr{% if typescript %}: pointer{% endif -%} {%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- if typescript %}: Array<object>{% endif %} {%- endfor -%}) {%- if typescript %};{% else %} {
         {%- for field in fields %}
         const {{field.field_name}}Deref = {{field.c_to_js_deref}};
         this.#{{field.field_name}} = {{field.c_to_js}};
         {%- endfor %}
+
+        return this;
     }
     {%- endif %}
 

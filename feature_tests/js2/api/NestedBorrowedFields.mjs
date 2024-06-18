@@ -42,37 +42,31 @@ export class NestedBorrowedFields {
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
     _intoFFI(xAppendArray = [], yAppendArray = [], zAppendArray = []) {
         return [
-            ...fields._intoFfi(temp, [...xAppendArray]), 
-            ...bounds._intoFfi(temp, [...xAppendArray], [...yAppendArray], [...yAppendArray]), 
-            ...bounds2._intoFfi(temp, [...zAppendArray], [...zAppendArray], [...zAppendArray])]
+            ...fields._intoFFI([...xAppendArray]), 
+            ...bounds._intoFFI([...xAppendArray],[...yAppendArray],[...yAppendArray]), 
+            ...bounds2._intoFFI([...zAppendArray],[...zAppendArray],[...zAppendArray])]
     }
     
 
-    constructor(ptr, xEdges, yEdges, zEdges) {
+    _fromFFI(ptr, xEdges, yEdges, zEdges) {
         const fieldsDeref = ptr;
-        this.#fields = new BorrowedFields(fieldsDeref, xEdges);
+        this.#fields = new BorrowedFields()._fromFFI(fieldsDeref, xEdges);
         const boundsDeref = ptr;
-        this.#bounds = new BorrowedFieldsWithBounds(boundsDeref, xEdges, yEdges, yEdges);
+        this.#bounds = new BorrowedFieldsWithBounds()._fromFFI(boundsDeref, xEdges, yEdges, yEdges);
         const bounds2Deref = ptr;
-        this.#bounds2 = new BorrowedFieldsWithBounds(bounds2Deref, zEdges, zEdges, zEdges);
+        this.#bounds2 = new BorrowedFieldsWithBounds()._fromFFI(bounds2Deref, zEdges, zEdges, zEdges);
+
+        return this;
     }
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
-        const dstr16XArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const dstr16ZSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16Z);
-        const dstr16ZArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const utf8StrYSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrY);
-        const utf8StrYArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const utf8StrZSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ);
-        const utf8StrZArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(72, 4);
         
@@ -88,7 +82,7 @@ export class NestedBorrowedFields {
     
         try {
     
-            return new NestedBorrowedFields(diplomat_receive_buffer, xEdges, yEdges, zEdges);
+            return new NestedBorrowedFields()._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
         } finally {
         
             dstr16XSlice.garbageCollect();

@@ -77,7 +77,7 @@ export class MyStruct {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    constructor(ptr) {
+    _fromFFI(ptr) {
         const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         this.#a = aDeref;
         const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] == 1;
@@ -92,6 +92,8 @@ export class MyStruct {
         this.#f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();;
+
+        return this;
     }
     static new_() {
         
@@ -100,7 +102,7 @@ export class MyStruct {
     
         try {
     
-            return new MyStruct(diplomat_receive_buffer);
+            return new MyStruct()._fromFFI(diplomat_receive_buffer);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 28, 8);
@@ -115,8 +117,6 @@ export class MyStruct {
     
             return result;
         } finally {
-        
-            this.free(); /* TODO: Does this work? */
         
         }
     }

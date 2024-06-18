@@ -44,8 +44,6 @@ export class Foo {
     static new_(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
-        const xArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [xSlice];
@@ -106,7 +104,7 @@ export class Foo {
     
         try {
     
-            return new BorrowedFieldsReturning(diplomat_receive_buffer, aEdges);
+            return new BorrowedFieldsReturning()._fromFFI(diplomat_receive_buffer, aEdges);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
@@ -118,14 +116,12 @@ export class Foo {
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
-        const result = wasm.Foo_extract_from_fields(...fields._intoFfi(temp, [aEdges]));
+        const result = wasm.Foo_extract_from_fields(...fields._intoFFI([aEdges]));
     
         try {
     
             return new Foo(result, [], aEdges);
         } finally {
-        
-            this.free(); /* TODO: Does this work? */
         
         }
     }
@@ -133,19 +129,15 @@ export class Foo {
     static extractFromBounds(bounds, anotherString) {
         
         const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
-        const anotherStringArena = new diplomatRuntime.DiplomatFinalizedArena();
-        
         
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
-        const result = wasm.Foo_extract_from_bounds(...bounds._intoFfi(temp, [aEdges], [aEdges]), anotherStringSlice.ptr, anotherStringSlice.size);
+        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI([aEdges],[aEdges]), anotherStringSlice.ptr, anotherStringSlice.size);
     
         try {
     
             return new Foo(result, [], aEdges);
         } finally {
-        
-            this.free(); /* TODO: Does this work? */
         
             anotherStringSlice.garbageCollect();
         

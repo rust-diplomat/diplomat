@@ -19,7 +19,7 @@ export class NestedBorrowedFields {
     set bounds2(value: BorrowedFieldsWithBounds); 
 
 
-    constructor(ptr: pointer, xEdges: Array[object], yEdges: Array[object], zEdges: Array[object]);
+    _fromFFI(ptr: pointer, xEdges: Array<object>, yEdges: Array<object>, zEdges: Array<object>);
     static fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: String, dstr16Z: String, utf8StrY: String, utf8StrZ: String): NestedBorrowedFields;
 
     
