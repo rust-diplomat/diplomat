@@ -34,6 +34,8 @@ jobs:
       - name: Install dependencies
         run: npm install
         working-directory: example/js2/app
+      - name: Copy Demo Files
+        run: cp example/demo-gen/demo example/js2/lib/demo
       - name: Build demo
         run: npm run build
         working-directory: example/js2/app
