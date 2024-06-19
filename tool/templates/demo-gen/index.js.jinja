@@ -8,6 +8,8 @@ export const RenderInfo = {
 		{%- for terminus in termini %}
 		{
 			func: {{terminus.type_name}}Demo.{{terminus.function_name}},
+			// For avoiding webpacking minifying issues:
+			funcName: "{{terminus.type_name}}.{{terminus.function_name}}",
 			parameters: [
 				{% for param in terminus.params %}
 				{

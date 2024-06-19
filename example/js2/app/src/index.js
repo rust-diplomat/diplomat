@@ -163,7 +163,7 @@ class TerminusRender extends HTMLElement {
 	#func = null;
 	#parameters;
 	#output;
-	constructor(func, params) {
+	constructor(func, funcName, params) {
 		super();
 		let clone = TerminusRender.template.cloneNode(true);
 
@@ -175,7 +175,7 @@ class TerminusRender extends HTMLElement {
 
 		let funcText = document.createElement("span");
 		funcText.slot = "funcName";
-		funcText.innerText = this.#func.name;
+		funcText.innerText = this.funcName;
 		this.appendChild(funcText);
 
 		this.#parameters = new TerminusParams(params);
@@ -203,5 +203,5 @@ class TerminusRender extends HTMLElement {
 customElements.define("terminus-render", TerminusRender);
 
 RenderInfo.termini.forEach((t) => {
-	document.body.appendChild(new TerminusRender(t.func, t.parameters));
+	document.body.appendChild(new TerminusRender(t.func, t.funcName, t.parameters));
 });
