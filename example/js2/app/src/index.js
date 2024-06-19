@@ -1,6 +1,44 @@
 import { RenderInfo } from "mini-icu4x/demo";
 import * as lib from "mini-icu4x";
 
+
+class BooleanTemplate extends HTMLElement {
+	static template = document.querySelector("template#boolean").content;
+	constructor() {
+		super();
+
+		const shadowRoot = this.attachShadow({ mode: "open" });
+		shadowRoot.appendChild(BooleanTemplate.template.cloneNode(true));
+	}
+}
+
+customElements.define("terminus-param-boolean", BooleanTemplate);
+
+
+class NumberTemplate extends HTMLElement {
+	static template = document.querySelector("template#number").content;
+	constructor() {
+		super();
+
+		const shadowRoot = this.attachShadow({ mode: "open" });
+		shadowRoot.appendChild(NumberTemplate.template.cloneNode(true));
+	}
+}
+
+customElements.define("terminus-param-number", NumberTemplate);
+
+class StringTemplate extends HTMLElement {
+	static template = document.querySelector("template#string").content;
+	constructor() {
+		super();
+
+		const shadowRoot = this.attachShadow({ mode: "open" });
+		shadowRoot.appendChild(StringTemplate.template.cloneNode(true));
+	}
+}
+
+customElements.define("terminus-param-string", StringTemplate);
+
 class EnumOption extends HTMLElement {
 	static template = document.querySelector("template#enum-option").content;
 	constructor(optionText) {
@@ -41,19 +79,34 @@ class TerminusParams extends HTMLElement {
 	constructor(params){
 		super();
 		for (let param of params) {
+			let paramName = document.createElement("span");
+			paramName.slot = "param-name";
+			paramName.innerText = param.name;
+
+			var newChild;
+
 			switch (param.type) {
 				case "string":
+					newChild = new StringTemplate();
+					break;
 				case "boolean":
+					newChild = new BooleanTemplate();
+					break;
 				case "number":
+					newChild = new NumberTemplate();
 					break;
 				default:
 					if (param.type in lib) {
-						this.appendChild(new EnumTemplate(lib[param.type]));
+						newChild = new EnumTemplate(lib[param.type]);
 					} else {
 						console.error("Could not evaluate parameter of type ", param.type, " for parameter ", param.name);
+						return;
 					}
 					break;
 			}
+
+			newChild.appendChild(paramName);
+			this.appendChild(newChild);
 		}
 	}
 }

@@ -19,6 +19,7 @@
 </template>
 
 <template id="enum">
+	<label><slot name="param-name"></slot></label>
 	<select>
 		<!-- Select doesn't evaluate anything other than option nodes, so to allow dropdowns (in addition to other HTML elements), we just search for whatever element has the #options id to insert enum-option into.-->
 		<option id="options"></option>
@@ -32,5 +33,16 @@
 </template>
 
 <template id="string">
+	<label><slot name="param-name"></slot></label>
+	<input type="text"/>
+</template>
 
+<template id="number">
+	<label><slot name="param-name"></slot></label>
+	<input type="number"/>
+</template>
+
+<template id="boolean">
+	<label><slot name="param-name" for="bool"></slot></label>
+	<input type="checkbox" id="bool"/>
 </template>
