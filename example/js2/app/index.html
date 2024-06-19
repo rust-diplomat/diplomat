@@ -14,14 +14,15 @@
 	<div>
 		<slot name="funcName"></slot>
 		<slot name="parameters"></slot>
-		<span id="output-text">OUTPUT</span>
+		<button id="submit">Submit</button>
+		<slot name="output">Output Shown Here</slot>
 	</div>
 </template>
 
 <template id="enum">
 	<label><slot name="param-name"></slot></label>
 	<select>
-		<!-- Select doesn't evaluate anything other than option nodes, so to allow dropdowns (in addition to other HTML elements), we just search for whatever element has the #options id to insert enum-option into.-->
+		<!-- Select doesn't evaluate anything other than option nodes, so to allow dropdowns (in addition to other HTML elements), we just search for whatever element has the #options id to insert the children of enum-option into.-->
 		<option id="options"></option>
 	</select>
 </template>
