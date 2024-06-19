@@ -49,7 +49,7 @@ class NumberTemplate extends ParameterTemplate {
 	}
 	
 	getEventValue(event) {
-		return parseInt(event.target.value);
+		return parseFloat(event.target.value);
 	}
 }
 
