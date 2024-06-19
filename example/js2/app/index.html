@@ -35,15 +35,15 @@
 
 <template id="string">
 	<label><slot name="param-name"></slot></label>
-	<input type="text"/>
+	<input type="text" oninput="valueChange()"/>
 </template>
 
 <template id="number">
 	<label><slot name="param-name"></slot></label>
-	<input type="number"/>
+	<input type="number" oninput="valueChange()"/>
 </template>
 
 <template id="boolean">
 	<label><slot name="param-name" for="bool"></slot></label>
-	<input type="checkbox" id="bool"/>
+	<input type="checkbox" id="bool" oninput="valueChange()"/>
 </template>

@@ -7,9 +7,21 @@ class ParameterTemplate extends HTMLElement {
 		let clone = template.cloneNode(true);
 
 		this.initialize(clone, ...args);
+
+		let input = clone.querySelector("*[oninput='valueChange()']");
+		if (input !== null) {
+			input.setAttribute("oninput", "");
+			input.addEventListener("input", this.input.bind(this));
+		}
 		
 		const shadowRoot = this.attachShadow({ mode: "open" });
 		shadowRoot.appendChild(clone);
+	}
+
+	input(event) {
+		this.dispatchEvent(new CustomEvent("parameter-input", {
+			detail: event
+		}));
 	}
 
 	initialize(clone) {
@@ -65,10 +77,13 @@ class EnumTemplate extends ParameterTemplate {
 		super(EnumTemplate.template, enumType);
 	}
 
+	default;
 	initialize(clone, enumType) {
 		let options = clone.querySelector("#options").parentNode;
 
 		clone.querySelector("#options").remove();
+
+		this.default = enumType.values.values()[0];
 
 		for (let value of enumType.values) {
 			options.append(...(new EnumOption(value[0])).children);
@@ -79,11 +94,13 @@ class EnumTemplate extends ParameterTemplate {
 customElements.define("terminus-param-enum", EnumTemplate);
 
 class TerminusParams extends HTMLElement {
-	#params = {};
+	#params = [];
 
 	constructor(params){
 		super();
-		for (let param of params) {
+
+		for (var i = 0; i < params.length; i++) {
+			let param = params[i];
 			let paramName = document.createElement("span");
 			paramName.slot = "param-name";
 			paramName.innerText = param.name;
@@ -93,16 +110,20 @@ class TerminusParams extends HTMLElement {
 			switch (param.type) {
 				case "string":
 					newChild = new StringTemplate();
+					this.#params[i] = "";
 					break;
 				case "boolean":
 					newChild = new BooleanTemplate();
+					this.#params[i] = false;
 					break;
 				case "number":
 					newChild = new NumberTemplate();
+					this.#params[i] = 0;
 					break;
 				default:
 					if (param.type in lib) {
 						newChild = new EnumTemplate(lib[param.type]);
+						this.#params[i] = newChild.default
 					} else {
 						console.error("Could not evaluate parameter of type ", param.type, " for parameter ", param.name);
 						return;
@@ -110,15 +131,19 @@ class TerminusParams extends HTMLElement {
 					break;
 			}
 
-			// newChild.addEventListener("input", this.input.bind(this, paramName));
+			newChild.addEventListener("parameter-input", this.input.bind(this, i));
 
 			newChild.appendChild(paramName);
 			this.appendChild(newChild);
 		}
 	}
 
-	input(paramName, event) {
-		this.#params[paramName] = event.target.value;
+	input(paramIdx, event) {
+		this.#params[paramIdx] = event.detail.target.value;
+	}
+
+	get paramArray() {
+		return this.#params;
 	}
 }
 
@@ -128,6 +153,7 @@ class TerminusRender extends HTMLElement {
 	static template = document.querySelector("template#terminus").content;
 
 	#func = null;
+	#parameters;
 	constructor(func, params) {
 		super();
 		let clone = TerminusRender.template.cloneNode(true);
@@ -136,24 +162,23 @@ class TerminusRender extends HTMLElement {
 
 		let button = clone.querySelector("button[onclick='submit()']");
 		button.setAttribute("onclick", "");
-		button.addEventListener("click", this.submit);
+		button.addEventListener("click", this.submit.bind(this));
 
 		let funcText = document.createElement("span");
 		funcText.slot = "funcName";
 		funcText.innerText = this.#func.name;
 		this.appendChild(funcText);
 
-		let parameters = new TerminusParams(params);
-		parameters.slot = "parameters";
-		this.appendChild(parameters);
+		this.#parameters = new TerminusParams(params);
+		this.#parameters.slot = "parameters";
+		this.appendChild(this.#parameters);
 
 		const shadowRoot = this.attachShadow({ mode: "open" });
 		shadowRoot.appendChild(clone);
 	}
 
 	submit() {
-		alert("");
-		this.#func();
+		alert(this.#func(...this.#parameters.paramArray));
 	}
 }
 
