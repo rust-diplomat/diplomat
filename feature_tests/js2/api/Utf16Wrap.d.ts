@@ -10,9 +10,9 @@ export class Utf16Wrap {
     get ffiValue(): pointer;
 
 
-    borrowCont(): String;
+    borrowCont(): string;
 
-    owned(): String;
+    owned(): string;
 
     
 

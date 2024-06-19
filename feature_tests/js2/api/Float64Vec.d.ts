@@ -32,7 +32,7 @@ export class Float64Vec {
 
     setValue(newSlice: Array<number>): void;
 
-    toString(): String;
+    toString(): string;
 
     borrow(): Array<number>;
 

@@ -23,7 +23,7 @@ export class OpaqueMutexedString {
 
     getLenAndAdd(other: number): number;
 
-    dummyStr(): String;
+    dummyStr(): string;
 
     wrapper(): Utf16Wrap;
 
