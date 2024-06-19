@@ -37,6 +37,8 @@ jobs:
         working-directory: example/js2/app
       - name: Copy Demo Files
         run: cp -r example/demo-gen/demo example/js2/lib/api/demo
+      - name: Add WASM
+        run: rustup target add wasm32-unknown-unknown
       - name: Build WASM
         run: cargo build -p diplomat-example --target wasm32-unknown-unknown
       - name: Copy WASM
