@@ -203,10 +203,10 @@ exec --fail-on-error ${npm} run test
 
 [tasks.test-wasm-example-app-js2]
 category = "Tests"
-dependencies = ["build-wasm-demo", "build-example-wasm", "test-wasm-demo-js2"]
+dependencies = ["test-wasm-demo-js2"]
 script_runner = "@shell"
 script = '''
-cd example/js2/demo
+cd example/js2/app
 npm install
 npm run build
 '''
