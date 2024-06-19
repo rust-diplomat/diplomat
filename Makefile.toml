@@ -209,7 +209,7 @@ script = '''
 exit_on_error true
 !include_files ./support/windows_npm_fix.ds
 cd example/js2/lib
-cp ../../demo-gen/demo api
+cp ../../demo-gen/app api
 cp ../../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm api/diplomat_example.wasm
 exec --fail-on-error ${npm} install
 exec --fail-on-error ${npm} run build
