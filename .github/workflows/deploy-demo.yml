@@ -31,11 +31,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        # Hacking this all together in a hurry, I probably will change this to a cargo make run later.
       - name: Install dependencies
         run: npm install
         working-directory: example/js2/app
       - name: Copy Demo Files
         run: cp -r example/demo-gen/demo example/js2/lib/api/demo
+      - name: Build WASM
+        run: cargo build -p diplomat-example --target wasm32-unknown-unknown
+      - name: Copy WASM
+        run: target/wasm32-unknown-unknown/debug/diplomat_example.wasm example/js2/lib/api/diplomat_feature_tests.wasm
       - name: Build demo
         run: npm run build
         working-directory: example/js2/app
