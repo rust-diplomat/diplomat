@@ -35,7 +35,7 @@ jobs:
         run: npm install
         working-directory: example/js2/app
       - name: Build demo
-        run: npm build
+        run: npm run build
         working-directory: example/js2/app
       - name: Copy HTML
         run: cp index.html dist/index.html
@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
-          path: 'dist'
+          path: 'example/js2/app/dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

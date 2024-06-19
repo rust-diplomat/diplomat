@@ -9,7 +9,7 @@ export default {
 		"fs": false,
 	  },
 	},
-	mode: "development",
+	mode: "production",
 	output: {
 	  filename: 'bundle.js',
 	  path: new URL('dist', import.meta.url).href.replace("file:///", ""),
