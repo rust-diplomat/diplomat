@@ -154,6 +154,7 @@ class TerminusRender extends HTMLElement {
 
 	#func = null;
 	#parameters;
+	#output;
 	constructor(func, params) {
 		super();
 		let clone = TerminusRender.template.cloneNode(true);
@@ -173,12 +174,21 @@ class TerminusRender extends HTMLElement {
 		this.#parameters.slot = "parameters";
 		this.appendChild(this.#parameters);
 
+		this.#output = document.createElement("span");
+		this.#output.slot = "output";
+
+		this.appendChild(this.#output);
+
 		const shadowRoot = this.attachShadow({ mode: "open" });
 		shadowRoot.appendChild(clone);
 	}
 
 	submit() {
-		alert(this.#func(...this.#parameters.paramArray));
+		try {
+			this.#output.innerText = this.#func(...this.#parameters.paramArray);
+		} catch(e) {
+			this.#output.innerText = e;
+		}
 	}
 }
 
