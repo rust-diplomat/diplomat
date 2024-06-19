@@ -1,3 +1,8 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default {
 	entry: './src/index.js',
 	resolve: {
@@ -12,7 +17,7 @@ export default {
 	mode: "production",
 	output: {
 	  filename: 'bundle.js',
-	  path: new URL('dist', import.meta.url).href.replace("file:///", ""),
+	  path: path.resolve(__dirname, 'dist'),
 	},
 	experiments: {
 	  // Enables using modules with top-level awaits (mainly wasm.mjs)
