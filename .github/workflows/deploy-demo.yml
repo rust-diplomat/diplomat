@@ -35,7 +35,7 @@ jobs:
         run: npm install
         working-directory: example/js2/app
       - name: Copy Demo Files
-        run: cp example/demo-gen/demo example/js2/lib/demo
+        run: cp -r example/demo-gen/demo example/js2/lib/api/demo
       - name: Build demo
         run: npm run build
         working-directory: example/js2/app
