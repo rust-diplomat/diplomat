@@ -8,5 +8,5 @@ test("Format write returns a formatted decimal.", t => {
 });
 
 test("To string returns the proper string.", t => {
-	t.is(1000, ICU4XFixedDecimalDemo.toString(1000));
+	t.is("1000", ICU4XFixedDecimalDemo.toString(1000));
 });
