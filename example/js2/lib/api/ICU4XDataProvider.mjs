@@ -49,16 +49,12 @@ export class ICU4XDataProvider {
     }
 
     static returnsResult() {
-        
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4)
-        const result = wasm.ICU4XDataProvider_returns_result(diplomat_receive_buffer);
+        const result = wasm.ICU4XDataProvider_returns_result();
     
         try {
     
-            return diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4, 4);
+            return result == 1;
         } finally {
-        
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4)
         
         }
     }
