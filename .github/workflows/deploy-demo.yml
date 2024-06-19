@@ -31,10 +31,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - run: cd example/js2/app
-      - run: npm install
-      - run: npm build
-      - run: cp index.html dist/index.html
+      - name: Install dependencies
+        run: npm install
+        working-directory: example/js2/app
+      - name: Build demo
+        run: npm build
+        working-directory: example/js2/app
+      - name: Copy HTML
+        run: cp index.html dist/index.html
+        working-directory: example/js2/app
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
