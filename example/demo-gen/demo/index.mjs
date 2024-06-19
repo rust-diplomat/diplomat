@@ -12,7 +12,7 @@ export const RenderInfo = {
 				
 				{
 					name: "name",
-					type: "String"
+					type: "string"
 				},
 				
 				{
