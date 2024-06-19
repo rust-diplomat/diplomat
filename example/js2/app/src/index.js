@@ -175,7 +175,7 @@ class TerminusRender extends HTMLElement {
 
 		let funcText = document.createElement("span");
 		funcText.slot = "funcName";
-		funcText.innerText = this.funcName;
+		funcText.innerText = funcName;
 		this.appendChild(funcText);
 
 		this.#parameters = new TerminusParams(params);

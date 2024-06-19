@@ -8,6 +8,8 @@ export const RenderInfo = {
 	termini: [
 		{
 			func: ICU4XFixedDecimalFormatterDemo.formatWrite,
+			// For avoiding webpacking minifying issues:
+			funcName: "ICU4XFixedDecimalFormatter.formatWrite",
 			parameters: [
 				
 				{
@@ -35,6 +37,8 @@ export const RenderInfo = {
 		
 		{
 			func: ICU4XFixedDecimalDemo.toString,
+			// For avoiding webpacking minifying issues:
+			funcName: "ICU4XFixedDecimal.toString",
 			parameters: [
 				
 				{
