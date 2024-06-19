@@ -6,18 +6,18 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 export class BorrowedFieldsWithBounds {
     #fieldA;
-    get fieldA() : String;
-    set fieldA(value: String); 
+    get fieldA() : string;
+    set fieldA(value: string); 
     #fieldB;
-    get fieldB() : String;
-    set fieldB(value: String); 
+    get fieldB() : string;
+    set fieldB(value: string); 
     #fieldC;
-    get fieldC() : String;
-    set fieldC(value: String); 
+    get fieldC() : string;
+    set fieldC(value: string); 
 
 
     _fromFFI(ptr: pointer, aEdges: Array<object>, bEdges: Array<object>, cEdges: Array<object>);
-    static fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds;
+    static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 
     
 

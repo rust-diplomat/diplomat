@@ -10,19 +10,19 @@ export class MyString {
     get ffiValue(): pointer;
 
 
-    static new_(v: String): MyString;
+    static new_(v: string): MyString;
 
-    static newUnsafe(v: String): MyString;
+    static newUnsafe(v: string): MyString;
 
-    static newOwned(v: String): MyString;
+    static newOwned(v: string): MyString;
 
     static newFromFirst(v: Array<String>): MyString;
 
-    set str(newStr: String): void;
+    set str(newStr: string): void;
 
-    get str(): String;
+    get str(): string;
 
-    getBoxedStr(): String;
+    getBoxedStr(): string;
 
     
 

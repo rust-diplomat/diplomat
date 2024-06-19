@@ -14,17 +14,17 @@ export class Foo {
     get ffiValue(): pointer;
 
 
-    static new_(x: String): Foo;
+    static new_(x: string): Foo;
 
     get bar(): Bar;
 
-    static newStatic(x: String): Foo;
+    static newStatic(x: string): Foo;
 
     asReturning(): BorrowedFieldsReturning;
 
     static extractFromFields(fields: BorrowedFields): Foo;
 
-    static extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo;
+    static extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: string): Foo;
 
     
 

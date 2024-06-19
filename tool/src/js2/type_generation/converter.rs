@@ -311,16 +311,16 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			ReturnType::Fallible(SuccessType::Unit, None)
 			| ReturnType::Nullable(SuccessType::Unit)
 			=> {
-				let layout = crate::layout_hir::unit_size_alignment();
-
-				let size = layout.size() + 1;
-				let align = layout.align();
-
-				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({size}, {align})").into());
-				method_info.param_conversions.insert(0, "diplomat_receive_buffer".into());
-				method_info.cleanup_expressions.push(format!("wasm.diplomat_free(diplomat_receive_buffer, {size}, {align})").into());
-				Some(format!("return diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {}, {align});", size - 1).into())
+				Some("return result == 1;".into())
 			},
+
+			// Result<Write, ()> or Option<Write>.
+			ReturnType::Fallible(SuccessType::Write, None) | ReturnType::Nullable(SuccessType::Write) => {
+				method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
+				method_info.param_conversions.push("write".into());
+				method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
+				Some("if (!(result == 1)) {\n     throw new diplomatRuntime.FFIError(null);}\n    return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
+			}
 
 			// Result<Type, Error> or Option<Type>
 			ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok)  => {
@@ -352,18 +352,20 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});", size, align).into());
 				method_info.param_conversions.insert(0, "diplomat_receive_buffer".into());
 				method_info.cleanup_expressions.push(format!("wasm.diplomat_free(diplomat_receive_buffer, {}, {});", size, align).into());
-				
-				// TODO: Not sure what Result<Write, Err> or Option<Write> looks like. My guess is:
+
+				// TODO: Pretty sure you can't have a Result<Write, Err> and also return something else.
+				// So this is our ideal output:
 				/*
 				const write = alloc(0);
 				const diplomat_receive_buffer = diplomat.alloc(error_size, error_align);
-				wasm.c_func();
+				wasm.c_func(write);
 				if (diplomat.resultFlag(wasm, diplomat_receive_buffer, error_size - 1)) {
-					return correct;
+					return write;
 				} else {
 					throw Error();
 				}
 				 */
+				
 				let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {})) {{\n    {};\n}}\n",
 				size - 1,
 				match return_type {
@@ -385,8 +387,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 					SuccessType::Unit => err_check,
 					SuccessType::Write => {
 						method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
+						method_info.param_conversions.push("write".into());
 						method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
-						format!("return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));").into()
+						format!("{err_check}return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));").into()
 					},
 					SuccessType::OutType(ref o) => {
 						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomat_receive_buffer".into(), 0);
