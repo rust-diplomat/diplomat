@@ -31,24 +31,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        # Hacking this all together in a hurry, I probably will change this to a cargo make run later.
-      - name: Install dependencies
-        run: npm install
-        working-directory: example/js2/app
-      - name: Copy Demo Files
-        run: cp -r example/demo-gen/demo example/js2/lib/api/demo
-      - name: Add WASM
-        run: rustup target add wasm32-unknown-unknown
-      - name: Build WASM
-        run: cargo build -p diplomat-example --target wasm32-unknown-unknown
-      - name: Copy WASM
-        run: target/wasm32-unknown-unknown/debug/diplomat_example.wasm example/js2/lib/api/diplomat_feature_tests.wasm
-      - name: Build demo
-        run: npm run build
-        working-directory: example/js2/app
-      - name: Copy HTML
-        run: cp index.html dist/index.html
-        working-directory: example/js2/app
+      # Cargo-make boilerplate
+      - name: Get cargo-make version
+        id: cargo-make-version
+        run: |
+          echo "::set-output name=hash::0.36.13"
+        shell: bash
+      - name: Attempt to load cached cargo-make
+        uses: actions/cache@v2
+        id: cargo-make-cache
+        with:
+          path: |
+            ~/.cargo/bin/cargo-make
+            ~/.cargo/bin/cargo-make.exe
+          key: ${{ runner.os }}-make-${{ steps.cargo-make-version.outputs.hash }}
+      - name: Install cargo-make
+        if: steps.cargo-make-cache.outputs.cache-hit != 'true'
+        uses: actions-rs/install@v0.1.2
+        with:
+          crate: cargo-make
+          version: 0.36.13
+      - name: Build page
+        run: cargo make test-wasm-example-app-js2
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
