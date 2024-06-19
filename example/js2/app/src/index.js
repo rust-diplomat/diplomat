@@ -1,39 +1,44 @@
 import { RenderInfo } from "mini-icu4x/demo";
 import * as lib from "mini-icu4x";
 
+class ParameterTemplate extends HTMLElement {
+	constructor(template, ...args) {
+		super();
+		let clone = template.cloneNode(true);
 
-class BooleanTemplate extends HTMLElement {
+		this.initialize(clone, ...args);
+		
+		const shadowRoot = this.attachShadow({ mode: "open" });
+		shadowRoot.appendChild(clone);
+	}
+
+	initialize(clone) {
+
+	}
+}
+
+class BooleanTemplate extends ParameterTemplate {
 	static template = document.querySelector("template#boolean").content;
 	constructor() {
-		super();
-
-		const shadowRoot = this.attachShadow({ mode: "open" });
-		shadowRoot.appendChild(BooleanTemplate.template.cloneNode(true));
+		super(BooleanTemplate.template);
 	}
 }
 
 customElements.define("terminus-param-boolean", BooleanTemplate);
 
-
-class NumberTemplate extends HTMLElement {
+class NumberTemplate extends ParameterTemplate {
 	static template = document.querySelector("template#number").content;
 	constructor() {
-		super();
-
-		const shadowRoot = this.attachShadow({ mode: "open" });
-		shadowRoot.appendChild(NumberTemplate.template.cloneNode(true));
+		super(NumberTemplate.template);
 	}
 }
 
 customElements.define("terminus-param-number", NumberTemplate);
 
-class StringTemplate extends HTMLElement {
+class StringTemplate extends ParameterTemplate {
 	static template = document.querySelector("template#string").content;
 	constructor() {
-		super();
-
-		const shadowRoot = this.attachShadow({ mode: "open" });
-		shadowRoot.appendChild(StringTemplate.template.cloneNode(true));
+		super(StringTemplate.template);
 	}
 }
 
@@ -53,13 +58,14 @@ class EnumOption extends HTMLElement {
 
 customElements.define("terminus-enum-option", EnumOption);
 
-class EnumTemplate extends HTMLElement {
+class EnumTemplate extends ParameterTemplate {
 	static template = document.querySelector("template#enum").content;
+
 	constructor(enumType) {
-		super();
+		super(EnumTemplate.template, enumType);
+	}
 
-		let clone = EnumTemplate.template.cloneNode(true);
-
+	initialize(clone, enumType) {
 		let options = clone.querySelector("#options").parentNode;
 
 		clone.querySelector("#options").remove();
@@ -67,15 +73,14 @@ class EnumTemplate extends HTMLElement {
 		for (let value of enumType.values) {
 			options.append(...(new EnumOption(value[0])).children);
 		}
-
-		const shadowRoot = this.attachShadow({ mode: "open" });
-		shadowRoot.appendChild(clone);
 	}
 }
 
 customElements.define("terminus-param-enum", EnumTemplate);
 
 class TerminusParams extends HTMLElement {
+	#params = {};
+
 	constructor(params){
 		super();
 		for (let param of params) {
@@ -105,9 +110,15 @@ class TerminusParams extends HTMLElement {
 					break;
 			}
 
+			// newChild.addEventListener("input", this.input.bind(this, paramName));
+
 			newChild.appendChild(paramName);
 			this.appendChild(newChild);
 		}
+	}
+
+	input(paramName, event) {
+		this.#params[paramName] = event.target.value;
 	}
 }
 
@@ -115,12 +126,21 @@ customElements.define("terminus-params", TerminusParams);
 
 class TerminusRender extends HTMLElement {
 	static template = document.querySelector("template#terminus").content;
-	constructor(funcName, params) {
+
+	#func = null;
+	constructor(func, params) {
 		super();
+		let clone = TerminusRender.template.cloneNode(true);
+
+		this.#func = func;
+
+		let button = clone.querySelector("button[onclick='submit()']");
+		button.setAttribute("onclick", "");
+		button.addEventListener("click", this.submit);
 
 		let funcText = document.createElement("span");
 		funcText.slot = "funcName";
-		funcText.innerText = funcName;
+		funcText.innerText = this.#func.name;
 		this.appendChild(funcText);
 
 		let parameters = new TerminusParams(params);
@@ -128,12 +148,17 @@ class TerminusRender extends HTMLElement {
 		this.appendChild(parameters);
 
 		const shadowRoot = this.attachShadow({ mode: "open" });
-		shadowRoot.appendChild(TerminusRender.template.cloneNode(true));
+		shadowRoot.appendChild(clone);
+	}
+
+	submit() {
+		alert("");
+		this.#func();
 	}
 }
 
 customElements.define("terminus-render", TerminusRender);
 
 RenderInfo.termini.forEach((t) => {
-	document.body.appendChild(new TerminusRender(t.func.name, t.parameters));
+	document.body.appendChild(new TerminusRender(t.func, t.parameters));
 });
