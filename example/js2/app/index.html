@@ -20,10 +20,17 @@
 
 <template id="enum">
 	<select>
-		<slot name="options">
-		</slot>
+		<!-- Select doesn't evaluate anything other than option nodes, so to allow dropdowns (in addition to other HTML elements), we just search for whatever element has the #options id to insert enum-option into.-->
+		<option id="options"></option>
 	</select>
 </template>
+
+<template id="enum-option">
+	<option>
+		<slot name="option-text"></slot>
+	</option>
+</template>
+
 <template id="string">
 
 </template>

@@ -1,12 +1,37 @@
 import { RenderInfo } from "mini-icu4x/demo";
+import * as lib from "mini-icu4x";
+
+class EnumOption extends HTMLElement {
+	static template = document.querySelector("template#enum-option").content;
+	constructor(optionText) {
+		super();
+		let clone = EnumOption.template.cloneNode(true);
+
+		clone.querySelector("slot[name='option-text']").parentElement.innerText = optionText;
+		
+		this.append(...clone.children);
+	}
+}
+
+customElements.define("terminus-enum-option", EnumOption);
 
 class EnumTemplate extends HTMLElement {
 	static template = document.querySelector("template#enum").content;
-	constructor(choices) {
+	constructor(enumType) {
 		super();
 
+		let clone = EnumTemplate.template.cloneNode(true);
+
+		let options = clone.querySelector("#options").parentNode;
+
+		clone.querySelector("#options").remove();
+
+		for (let value of enumType.values) {
+			options.append(...(new EnumOption(value[0])).children);
+		}
+
 		const shadowRoot = this.attachShadow({ mode: "open" });
-		shadowRoot.appendChild(EnumTemplate.template.cloneNode(true));
+		shadowRoot.appendChild(clone);
 	}
 }
 
@@ -17,9 +42,16 @@ class TerminusParams extends HTMLElement {
 		super();
 		for (let param of params) {
 			switch (param.type) {
-				// Assume it's an enum if we don't recognize the type.
+				case "string":
+				case "boolean":
+				case "number":
+					break;
 				default:
-					this.appendChild(new EnumTemplate());
+					if (param.type in lib) {
+						this.appendChild(new EnumTemplate(lib[param.type]));
+					} else {
+						console.error("Could not evaluate parameter of type ", param.type, " for parameter ", param.name);
+					}
 					break;
 			}
 		}
