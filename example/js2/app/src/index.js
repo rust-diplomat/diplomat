@@ -18,9 +18,13 @@ class ParameterTemplate extends HTMLElement {
 		shadowRoot.appendChild(clone);
 	}
 
+	getEventValue(event) {
+		return event.target.value;
+	}
+
 	input(event) {
 		this.dispatchEvent(new CustomEvent("parameter-input", {
-			detail: event
+			detail: this.getEventValue(event)
 		}));
 	}
 
@@ -42,6 +46,10 @@ class NumberTemplate extends ParameterTemplate {
 	static template = document.querySelector("template#number").content;
 	constructor() {
 		super(NumberTemplate.template);
+	}
+	
+	getEventValue(event) {
+		return parseInt(event.target.value);
 	}
 }
 
@@ -139,7 +147,7 @@ class TerminusParams extends HTMLElement {
 	}
 
 	input(paramIdx, event) {
-		this.#params[paramIdx] = event.detail.target.value;
+		this.#params[paramIdx] = event.detail;
 	}
 
 	get paramArray() {
