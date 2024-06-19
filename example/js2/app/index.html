@@ -10,9 +10,20 @@
 	</body>
 </html>
 
-<template id="enum-input">
+<template id="terminus">
+	<div>
+		<slot name="funcName"></slot>
+		<slot name="parameters"></slot>
+		<span id="output-text">OUTPUT</span>
+	</div>
+</template>
+
+<template id="enum">
 	<select>
 		<slot name="options">
 		</slot>
 	</select>
+</template>
+<template id="string">
+
 </template>
