@@ -19,13 +19,8 @@ If you need to quickly test something, you can replace whatever script is callin
 
 The permanent solution depends on where you're seeing npm being run from. If it's Rust, see the above post. For `Makefile.toml`s using duckscript, it's tricky.
 
-For full windows support, it'd be nice to have `npm` as a variable that switches based on OS. I am not experienced enough in duckscript and whatever it's using to execute to figure out a good solution that works across OSes. I don't have the time anyways. So, here's a hack:
+The main thing to do is to see if it's a script mostly moving files around and running things that the user should have installed. If so, I'd change it to an `@shell` script.
 
-```sh
-!include_files ./support/windows_npm_fix.ds
-exec --fail-on-error ${npm} --version
-```
-
-This shoulllld work across OSes? But I imagine it'd be better to use this as a quick patch job for whatever's being developed. To then be reverted later once a more suitable fix has been found.
+For full windows support, it'd be nice to have `npm` as a variable that switches based on OS. I have a fix exclusive to windows: `support/windows_npm_fix.ds`, but it breaks on other systems.
 
 You also don't have to use Cargo make. VS Code tasks also help me circumvent this kind of stuff. But I try to avoid calling npm directly if possible, since everybody should ideally be using the same build tools.
