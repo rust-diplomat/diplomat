@@ -108,14 +108,14 @@ struct MethodTemplate<'a> {
 /// The context used for generating a particular type
 ///
 /// Also used by C++ generation code
-pub(crate) struct TyGenContext<'cx, 'tcx> {
-    pub(crate) tcx: &'tcx TypeContext,
-    pub(crate) formatter: &'cx CFormatter<'tcx>,
-    pub(crate) errors: &'cx ErrorStore<'tcx, String>,
-    pub(crate) is_for_cpp: bool,
-    pub(crate) id: TypeId,
-    pub(crate) decl_header_path: String,
-    pub(crate) impl_header_path: String,
+pub struct TyGenContext<'cx, 'tcx> {
+    pub tcx: &'tcx TypeContext,
+    pub formatter: &'cx CFormatter<'tcx>,
+    pub errors: &'cx ErrorStore<'tcx, String>,
+    pub is_for_cpp: bool,
+    pub id: TypeId,
+    pub decl_header_path: String,
+    pub impl_header_path: String,
 }
 
 impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
