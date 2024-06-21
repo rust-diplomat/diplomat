@@ -61,12 +61,12 @@ dependencies = [
     "test-c2-example-self-contained",
     "test-c2-feature-self-contained",
 ]
-[tasks.test-wasm]
+[tasks.test-js]
 category = "Tests"
 dependencies = [
-    "test-wasm-example",
-    "test-wasm-example-app",
-    "test-wasm-feature",
+    "test-js-example",
+    "test-js-example-app",
+    "test-js-feature",
 ]
 [tasks.test-dart]
 category = "Tests"
@@ -87,7 +87,7 @@ dependencies = [
     "test-cpp2-example",
     "test-c-example",
     "test-c2-example",
-    "test-wasm-example",
+    "test-js-example",
     "test-dart-example",
     "test-kotlin-example",
 ]
@@ -97,7 +97,7 @@ category = "Tests"
 dependencies = [
     "test-cpp-feature",
     "test-cpp2-feature",
-    "test-wasm-feature",
+    "test-js-feature",
     "test-dart-feature",
     "test-kotlin-feature",
 ]
@@ -168,7 +168,7 @@ rm *.out
 exec --fail-on-error make
 '''
 
-[tasks.test-wasm-example]
+[tasks.test-js-example]
 category = "Tests"
 dependencies = ["build-example-wasm"]
 script_runner = "@duckscript"
@@ -181,7 +181,7 @@ exec --fail-on-error npm install
 exec --fail-on-error npm run test
 '''
 
-[tasks.test-wasm-example-app]
+[tasks.test-js-example-app]
 category = "Tests"
 dependencies = ["build-example-wasm"]
 script_runner = "@duckscript"
@@ -194,7 +194,7 @@ exec --fail-on-error npm install
 exec --fail-on-error npm run build
 '''
 
-[tasks.test-wasm-feature]
+[tasks.test-js-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
 script_runner = "@duckscript"
