@@ -121,8 +121,8 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Run wasm tests
-      run: cargo make test-wasm
+    - name: Test JS
+      run: cargo make test-js
       
   test-dart:
     runs-on: ubuntu-latest
@@ -137,5 +137,5 @@ jobs:
       with:
         sdk: 3.4.0-204.0.dev
 
-    - name: Run Dart tests
+    - name: Test Dart
       run: cargo make test-dart
