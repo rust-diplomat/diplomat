@@ -2,10 +2,9 @@ use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::fmt::{Display, Write};
 
-use diplomat_core::ast::{DocsUrlGenerator, Param};
+use diplomat_core::ast::DocsUrlGenerator;
 
-use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo};
-use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethod, SpecialMethodPresence, SuccessType, Type, TypeContext, TypeDef, TypeId};
+use diplomat_core::hir::{self, TypeContext, TypeDef, TypeId};
 
 use askama::{self, Template};
 use type_generation::TypeGenerationContext;

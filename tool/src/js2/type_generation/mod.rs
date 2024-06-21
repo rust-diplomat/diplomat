@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::{Display, Write};
 
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo};
-use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, ReturnType, SpecialMethod, SpecialMethodPresence, SuccessType, Type, TypeDef, TypeId, StructPathLike};
+use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence, Type, TypeId};
 
 use askama::{self, Template};
 

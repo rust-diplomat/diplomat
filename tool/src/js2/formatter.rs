@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use diplomat_core::{ast::DocsUrlGenerator, hir::{self, Docs, EnumVariant, TypeContext, TypeId}};
 use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
-use crate::{c::types, c2::CFormatter, common::ErrorContextGuard};
+use crate::c2::CFormatter;
 
 use super::FileType;
 
