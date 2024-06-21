@@ -323,7 +323,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
         // We can't use an anonymous struct here: C++ doesn't like producing those in return types
         // Instead we name it something unique per-function. This is a bit ugly but works just fine.
-        format!("struct {fn_name}_result {{{union_def} bool is_ok;}};\nstruct {fn_name}_result")
+        format!("typedef struct {fn_name}_result {{{union_def} bool is_ok;}} {fn_name}_result;\n{fn_name}_result")
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)

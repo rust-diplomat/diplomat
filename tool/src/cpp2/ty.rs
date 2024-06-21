@@ -121,11 +121,11 @@ struct MethodInfo<'a> {
 }
 
 /// Context for generating a particular type's header
-pub struct TyGenContext<'ccx, 'tcx, 'header> {
-    pub cx: &'ccx Cpp2Context<'tcx>,
-    pub c: C2TyGenContext<'ccx, 'tcx>,
-    pub impl_header: &'header mut Header,
-    pub decl_header: &'header mut Header,
+pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
+    pub(crate) cx: &'ccx Cpp2Context<'tcx>,
+    pub(crate) c: C2TyGenContext<'ccx, 'tcx>,
+    pub(crate) impl_header: &'header mut Header,
+    pub(crate) decl_header: &'header mut Header,
 }
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
@@ -135,7 +135,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     /// C enum type. This enables us to add methods to the enum and generally make the enum
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
     /// cannot be added to it.
-    pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
+    pub(crate) fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
@@ -197,7 +197,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         .unwrap();
     }
 
-    pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
+    pub(crate) fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
@@ -262,7 +262,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         .unwrap();
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
+    pub(crate) fn gen_struct_def<P: TyPosition>(
+        &mut self,
+        def: &'tcx hir::StructDef<P>,
+        id: TypeId,
+    ) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);

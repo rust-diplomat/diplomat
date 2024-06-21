@@ -19,8 +19,8 @@ namespace capi {
     
     void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);
     
-    struct ICU4XFixedDecimal_to_string_result { bool is_ok;};
-    struct ICU4XFixedDecimal_to_string_result ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWrite* write);
+    typedef struct ICU4XFixedDecimal_to_string_result { bool is_ok;} ICU4XFixedDecimal_to_string_result;
+    ICU4XFixedDecimal_to_string_result ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWrite* write);
     
     
     void ICU4XFixedDecimal_destroy(ICU4XFixedDecimal* self);
