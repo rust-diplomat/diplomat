@@ -44,7 +44,7 @@ export class ICU4XFixedDecimalFormatter {
     static tryNew(locale, provider, options) {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ICU4XFixedDecimalFormatter_try_new(diplomat_receive_buffer, locale.ffiValue, provider.ffiValue, ...options._intoFfi(temp));
+        const result = wasm.ICU4XFixedDecimalFormatter_try_new(diplomat_receive_buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI());
     
         try {
     
@@ -54,8 +54,6 @@ export class ICU4XFixedDecimalFormatter {
             return new ICU4XFixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
         
-            this.free(); /* TODO: Does this work? */
-        
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
         }
@@ -64,7 +62,7 @@ export class ICU4XFixedDecimalFormatter {
     formatWrite(value) {
         
         const write = wasm.diplomat_buffer_write_create(0);
-        wasm.ICU4XFixedDecimalFormatter_format_write(this.ffiValue, value.ffiValue);
+        wasm.ICU4XFixedDecimalFormatter_format_write(this.ffiValue, value.ffiValue, write);
     
         try {
     

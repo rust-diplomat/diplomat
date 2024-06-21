@@ -15,7 +15,7 @@ export class ICU4XLocale {
     get ffiValue(): pointer;
 
 
-    static new_(name: String): ICU4XLocale;
+    static new_(name: string): ICU4XLocale;
 
     
 

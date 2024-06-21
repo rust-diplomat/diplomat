@@ -18,7 +18,7 @@ export class ICU4XFixedDecimalFormatterOptions {
     // and passes it down to individual fields containing the borrow.
     // This method does not attempt to handle any dependencies between lifetimes, the caller
     // should handle this when constructing edge arrays.
-    constructor(ptr: pointer);
+    _fromFFI(ptr: pointer);
     static default_(): ICU4XFixedDecimalFormatterOptions;
 
     

@@ -17,7 +17,7 @@ export class ICU4XFixedDecimal {
 
     multiplyPow10(power: number): void;
 
-    toString(): String | undefined;
+    toString(): string | undefined;
 
     
 

@@ -21,7 +21,7 @@ export class ICU4XFixedDecimalFormatter {
 
     static tryNew(locale: ICU4XLocale, provider: ICU4XDataProvider, options: ICU4XFixedDecimalFormatterOptions): ICU4XFixedDecimalFormatter | undefined;
 
-    formatWrite(value: ICU4XFixedDecimal): String;
+    formatWrite(value: ICU4XFixedDecimal): string;
 
     
 

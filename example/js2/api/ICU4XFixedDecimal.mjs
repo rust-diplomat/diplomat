@@ -58,17 +58,15 @@ export class ICU4XFixedDecimal {
 
     toString() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        
         const write = wasm.diplomat_buffer_write_create(0);
-        const result = wasm.ICU4XFixedDecimal_to_string(diplomat_receive_buffer, this.ffiValue);
+        const result = wasm.ICU4XFixedDecimal_to_string(this.ffiValue, write);
     
         try {
     
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            if (!(result == 1)) {
+                 throw new diplomatRuntime.FFIError(null);}
+                return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
         } finally {
-        
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
             wasm.diplomat_buffer_write_destroy(write);
         
