@@ -17,8 +17,8 @@ namespace capi {
     
     ICU4XDataProvider* ICU4XDataProvider_new_static();
     
-    struct ICU4XDataProvider_returns_result_result { bool is_ok;};
-    struct ICU4XDataProvider_returns_result_result ICU4XDataProvider_returns_result();
+    typedef struct ICU4XDataProvider_returns_result_result { bool is_ok;} ICU4XDataProvider_returns_result_result;
+    ICU4XDataProvider_returns_result_result ICU4XDataProvider_returns_result();
     
     
     void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
