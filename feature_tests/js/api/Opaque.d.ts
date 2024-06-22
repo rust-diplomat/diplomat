@@ -1,4 +1,4 @@
-import { usize } from "./diplomat-runtime"
+import { usize, i8 } from "./diplomat-runtime"
 import { ImportedStruct } from "./ImportedStruct";
 import { MyStruct } from "./MyStruct";
 
