@@ -8,11 +8,14 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionOpaque.d.h"
 #include "OptionStruct.d.hpp"
 
 struct OptionStruct;
 
+
+namespace capi {
+    typedef struct OptionOpaque OptionOpaque;
+}
 
 class OptionOpaque {
 public:
@@ -22,6 +25,14 @@ public:
   inline static std::unique_ptr<OptionOpaque> new_none();
 
   inline static std::optional<OptionStruct> returns();
+
+  inline std::optional<intptr_t> option_isize() const;
+
+  inline std::optional<size_t> option_usize() const;
+
+  inline std::optional<int32_t> option_i32() const;
+
+  inline std::optional<uint32_t> option_u32() const;
 
   inline static OptionStruct new_struct();
 

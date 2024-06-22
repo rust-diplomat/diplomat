@@ -26,6 +26,14 @@ struct OpaqueDeleter {
 class Opaque {
  public:
   static Opaque new_();
+  static std::optional<Opaque> try_from_utf8(const std::string_view input);
+
+  /**
+   * Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
+   */
+  static Opaque from_str(const std::string_view input);
+  template<typename W> void get_debug_str_to_write(W& write) const;
+  std::string get_debug_str() const;
 
   /**
    * See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
@@ -53,6 +61,29 @@ class Opaque {
 
 inline Opaque Opaque::new_() {
   return Opaque(capi::Opaque_new());
+}
+inline std::optional<Opaque> Opaque::try_from_utf8(const std::string_view input) {
+  auto diplomat_optional_raw_out_value = capi::Opaque_try_from_utf8(input.data(), input.size());
+  std::optional<Opaque> diplomat_optional_out_value;
+  if (diplomat_optional_raw_out_value != nullptr) {
+    diplomat_optional_out_value = Opaque(diplomat_optional_raw_out_value);
+  } else {
+    diplomat_optional_out_value = std::nullopt;
+  }
+  return diplomat_optional_out_value;
+}
+inline Opaque Opaque::from_str(const std::string_view input) {
+  return Opaque(capi::Opaque_from_str(input.data(), input.size()));
+}
+template<typename W> inline void Opaque::get_debug_str_to_write(W& write) const {
+  capi::DiplomatWrite write_writer = diplomat::WriteTrait<W>::Construct(write);
+  capi::Opaque_get_debug_str(this->inner.get(), &write_writer);
+}
+inline std::string Opaque::get_debug_str() const {
+  std::string diplomat_write_string;
+  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
+  capi::Opaque_get_debug_str(this->inner.get(), &diplomat_write_out);
+  return diplomat_write_string;
 }
 inline void Opaque::assert_struct(MyStruct s) const {
   MyStruct diplomat_wrapped_struct_s = s;

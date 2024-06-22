@@ -1,3 +1,7 @@
+namespace capi {
+    {{ c_impl_header.body|trim|indent(4) }}
+}
+
 {% let const_ptr = fmt.fmt_c_ptr(type_name, Mutability::Immutable) -%}
 {% let mut_ptr = fmt.fmt_c_ptr(type_name, Mutability::Mutable) -%}
 {% let const_cptr = fmt.fmt_c_ptr(ctype, Mutability::Immutable) -%}

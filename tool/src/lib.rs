@@ -123,6 +123,13 @@ pub fn gen(
             let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
             attr_validator.support.renaming = true;
             attr_validator.support.disabling = true;
+            attr_validator.support.iterators = true;
+            attr_validator.support.iterables = true;
+            attr_validator.support.indexing = true;
+            attr_validator.support.constructors = true;
+            attr_validator.support.named_constructors = true;
+            attr_validator.support.memory_sharing = true;
+            attr_validator.support.accessors = true;
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
 
@@ -205,7 +212,7 @@ pub fn gen(
                 }
             };
             let files = common::FileMap::default();
-            let mut context = c2::CContext::new(&tcx, files);
+            let mut context = c2::CContext::new(&tcx, files, target_language != "c2");
             context.run();
 
             let errors = context.errors.take_all();
@@ -227,7 +234,7 @@ pub fn gen(
                 let files = common::FileMap::default();
                 let mut context = cpp2::Cpp2Context::new(&tcx, files);
                 context.run();
-                out_texts.extend(context.files.take_files());
+                out_texts = context.files.take_files();
 
                 let errors = context.errors.take_all();
 

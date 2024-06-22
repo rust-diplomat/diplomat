@@ -33,6 +33,9 @@ pub fn gen_bindings(env: &Env, outs: &mut HashMap<String, String>) -> fmt::Resul
     let mut all_results = Vec::new();
 
     for (in_path, typ) in all_types {
+        if typ.attrs().skip_if_ast {
+            continue;
+        }
         gen_struct_header(
             typ,
             &in_path,

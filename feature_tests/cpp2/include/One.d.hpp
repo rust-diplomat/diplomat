@@ -8,10 +8,13 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "One.d.h"
 
 class Two;
 
+
+namespace capi {
+    typedef struct One One;
+}
 
 class One {
 public:

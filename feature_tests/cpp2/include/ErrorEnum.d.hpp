@@ -8,23 +8,33 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ErrorEnum.d.h"
 
+
+namespace capi {
+    typedef enum ErrorEnum {
+      ErrorEnum_Foo = 0,
+      ErrorEnum_Bar = 1,
+    } ErrorEnum;
+}
 
 class ErrorEnum {
-  capi::ErrorEnum value;
-
 public:
   enum Value {
-    Foo,
-    Bar,
+    Foo = 0,
+    Bar = 1,
   };
 
-  inline ErrorEnum(ErrorEnum::Value cpp_value);
-  inline ErrorEnum(capi::ErrorEnum c_enum) : value(c_enum) {};
+  ErrorEnum() = default;
+  // Implicit conversions between enum and ::Value
+  constexpr ErrorEnum(Value v) : value(v) {}
+  constexpr operator Value() const { return value; }
+  // Prevent usage as boolean value
+  explicit operator bool() const = delete;
 
   inline capi::ErrorEnum AsFFI() const;
   inline static ErrorEnum FromFFI(capi::ErrorEnum c_enum);
+private:
+    Value value;
 };
 
 

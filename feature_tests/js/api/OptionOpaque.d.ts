@@ -1,4 +1,4 @@
-import { i32 } from "./diplomat-runtime"
+import { i32, u32, isize, usize } from "./diplomat-runtime"
 import { OptionStruct } from "./OptionStruct";
 
 /**
@@ -16,6 +16,22 @@ export class OptionOpaque {
   /**
    */
   static returns(): OptionStruct | undefined;
+
+  /**
+   */
+  option_isize(): isize | undefined;
+
+  /**
+   */
+  option_usize(): usize | undefined;
+
+  /**
+   */
+  option_i32(): i32 | undefined;
+
+  /**
+   */
+  option_u32(): u32 | undefined;
 
   /**
    */

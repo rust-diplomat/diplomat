@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "include/ICU4XLocale.h"
+#include "include/ICU4XDataProvider.h"
+#include "include/ICU4XFixedDecimal.h"
 #include "include/ICU4XFixedDecimalFormatter.h"
+#include "include/ICU4XFixedDecimalFormatterOptions.h"
 
 void print_decimal(ICU4XFixedDecimal* fd) {
     char output[40];
@@ -33,7 +37,7 @@ int main(int argc, char *argv[]) {
 
     ICU4XDataProvider* data_provider = ICU4XDataProvider_new_static();
 
-    diplomat_result_box_ICU4XFixedDecimalFormatter_void fdf = ICU4XFixedDecimalFormatter_try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions_default());
+    struct ICU4XFixedDecimalFormatter_try_new_result fdf = ICU4XFixedDecimalFormatter_try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions_default());
     printf("%d\n", fdf.is_ok);
     format_decimal(fdf.ok, fd);
 }

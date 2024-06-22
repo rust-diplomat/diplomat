@@ -10,10 +10,28 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "AttrOpaque1.h"
 #include "CPPRenamedAttrEnum.hpp"
 #include "Unnamespaced.hpp"
 
+
+namespace capi {
+    extern "C" {
+    
+    AttrOpaque1* namespace_AttrOpaque1_new();
+    
+    uint8_t namespace_AttrOpaque1_method(const AttrOpaque1* self);
+    
+    uint8_t renamed_on_abi_only(const AttrOpaque1* self);
+    
+    void namespace_AttrOpaque1_use_unnamespaced(const AttrOpaque1* self, const Unnamespaced* _un);
+    
+    void namespace_AttrOpaque1_use_namespaced(const AttrOpaque1* self, AttrEnum _n);
+    
+    
+    void namespace_AttrOpaque1_destroy(AttrOpaque1* self);
+    
+    } // extern "C"
+}
 
 inline std::unique_ptr<ns::AttrOpaque1Renamed> ns::AttrOpaque1Renamed::totally_not_new() {
   auto result = capi::namespace_AttrOpaque1_new();

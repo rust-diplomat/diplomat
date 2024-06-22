@@ -25,6 +25,18 @@ public partial struct OptionOpaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_returns", ExactSpelling = true)]
     public static unsafe extern Options without a pointer type are not yet supported Returns();
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_option_isize", ExactSpelling = true)]
+    public static unsafe extern Options without a pointer type are not yet supported OptionIsize(OptionOpaque* self);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_option_usize", ExactSpelling = true)]
+    public static unsafe extern Options without a pointer type are not yet supported OptionUsize(OptionOpaque* self);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_option_i32", ExactSpelling = true)]
+    public static unsafe extern Options without a pointer type are not yet supported OptionI32(OptionOpaque* self);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_option_u32", ExactSpelling = true)]
+    public static unsafe extern Options without a pointer type are not yet supported OptionU32(OptionOpaque* self);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "OptionOpaque_new_struct", ExactSpelling = true)]
     public static unsafe extern OptionStruct NewStruct();
 

@@ -14,15 +14,23 @@
 #include "BorrowedFields.hpp"
 #include "BorrowedFieldsWithBounds.hpp"
 #include "Foo.hpp"
-#include "NestedBorrowedFields.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const Bar* bar, const Foo* foo, const char16_t* dstr16_x_data, size_t dstr16_x_len, const char16_t* dstr16_z_data, size_t dstr16_z_len, const char* utf8_str_y_data, size_t utf8_str_y_len, const char* utf8_str_z_data, size_t utf8_str_z_len);
+    
+    
+    } // extern "C"
+}
 
 inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowedFields::from_bar_and_foo_and_strings(const Bar& bar, const Foo& foo, std::u16string_view dstr16_x, std::u16string_view dstr16_z, std::string_view utf8_str_y, std::string_view utf8_str_z) {
-  if (!capi::diplomat_is_str(utf8_str_y.data(), utf8_str_y.size()) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)
+  if (!capi::diplomat_is_str(utf8_str_y.data(), utf8_str_y.size())) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
   }
-  if (!capi::diplomat_is_str(utf8_str_z.data(), utf8_str_z.size()) {
-    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)
+  if (!capi::diplomat_is_str(utf8_str_z.data(), utf8_str_z.size())) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
   }
   auto result = capi::NestedBorrowedFields_from_bar_and_foo_and_strings(bar.AsFFI(),
     foo.AsFFI(),
@@ -34,7 +42,7 @@ inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowe
     utf8_str_y.size(),
     utf8_str_z.data(),
     utf8_str_z.size());
-  return diplomat::Ok<NestedBorrowedFields>(NestedBorrowedFields::FromFFI(result));
+  return diplomat::Ok<NestedBorrowedFields>(std::move(NestedBorrowedFields::FromFFI(result)));
 }
 
 

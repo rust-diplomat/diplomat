@@ -8,6 +8,7 @@ class Float64VecTest {
     fun testFloat64Vec() {
         val doubleList = listOf(1.0, 2.0, 3.0, 4.0)
         val float64Array = Float64Vec.new_(doubleList.toDoubleArray())
-        assertEquals(float64Array.toString_(), doubleList.toString())
+        val float64ArrayStr = float64Array.toString_()
+        assertEquals(float64ArrayStr, doubleList.toString())
     }
 }

@@ -15,6 +15,19 @@ export class Utf16Wrap {
     }
   }
 
+  static from_utf16(arg_input) {
+    const buf_arg_input = diplomatRuntime.DiplomatBuf.str16(wasm, arg_input);
+    const diplomat_out = new Utf16Wrap(wasm.Utf16Wrap_from_utf16(buf_arg_input.ptr, buf_arg_input.size), true, []);
+    buf_arg_input.free();
+    return diplomat_out;
+  }
+
+  get_debug_str() {
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return wasm.Utf16Wrap_get_debug_str(this.underlying, write);
+    });
+  }
+
   borrow_cont() {
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);

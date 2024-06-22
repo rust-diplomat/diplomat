@@ -10,8 +10,21 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XDataProvider.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    ICU4XDataProvider* ICU4XDataProvider_new_static();
+    
+    typedef struct ICU4XDataProvider_returns_result_result { bool is_ok;} ICU4XDataProvider_returns_result_result;
+    ICU4XDataProvider_returns_result_result ICU4XDataProvider_returns_result();
+    
+    
+    void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
+    
+    } // extern "C"
+}
 
 inline std::unique_ptr<ICU4XDataProvider> ICU4XDataProvider::new_static() {
   auto result = capi::ICU4XDataProvider_new_static();

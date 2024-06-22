@@ -10,9 +10,19 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Bar.h"
 #include "Foo.hpp"
 
+
+namespace capi {
+    extern "C" {
+    
+    const Foo* Bar_foo(const Bar* self);
+    
+    
+    void Bar_destroy(Bar* self);
+    
+    } // extern "C"
+}
 
 inline const Foo& Bar::foo() const {
   auto result = capi::Bar_foo(this->AsFFI());

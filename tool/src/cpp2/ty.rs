@@ -1,6 +1,8 @@
 use super::header::Header;
 use super::Cpp2Context;
 use super::Cpp2Formatter;
+use crate::c2::Header as C2Header;
+use crate::c2::TyGenContext as C2TyGenContext;
 use askama::Template;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
@@ -20,11 +22,16 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         let impl_header_path = self.formatter.fmt_impl_header_path(id);
         let mut impl_header = Header::new(impl_header_path.clone());
 
+        let c = self.c2_gen_context(id, decl_header_path.clone(), impl_header_path.clone());
+
         let mut context = TyGenContext {
             cx: self,
+            c,
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
         };
+        context.impl_header.decl_include = Some(decl_header_path.clone());
+
         let guard = self.errors.set_context_ty(ty.name().as_str().into());
         match ty {
             TypeDef::Enum(o) => context.gen_enum_def(o, id),
@@ -45,18 +52,27 @@ impl<'tcx> super::Cpp2Context<'tcx> {
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
 
-        context.impl_header.decl_include = Some(decl_header_path.clone());
-
-        let c_decl_header_path = self.formatter.fmt_c_decl_header_path(id);
-        context.decl_header.includes.insert(c_decl_header_path);
-
-        let c_impl_header_path = self.formatter.fmt_c_impl_header_path(id);
-        context.impl_header.includes.insert(c_impl_header_path);
-
         self.files
             .add_file(decl_header_path, decl_header.to_string());
         self.files
             .add_file(impl_header_path, impl_header.to_string());
+    }
+
+    fn c2_gen_context<'cx>(
+        &'cx self,
+        id: TypeId,
+        decl_header_path: String,
+        impl_header_path: String,
+    ) -> C2TyGenContext<'cx, 'tcx> {
+        C2TyGenContext {
+            tcx: self.tcx,
+            formatter: &self.formatter.c,
+            errors: &self.errors,
+            is_for_cpp: true,
+            id,
+            decl_header_path,
+            impl_header_path,
+        }
     }
 }
 
@@ -105,10 +121,11 @@ struct MethodInfo<'a> {
 }
 
 /// Context for generating a particular type's header
-pub struct TyGenContext<'ccx, 'tcx, 'header> {
-    pub cx: &'ccx Cpp2Context<'tcx>,
-    pub impl_header: &'header mut Header,
-    pub decl_header: &'header mut Header,
+pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
+    pub(crate) cx: &'ccx Cpp2Context<'tcx>,
+    pub(crate) c: C2TyGenContext<'ccx, 'tcx>,
+    pub(crate) impl_header: &'header mut Header,
+    pub(crate) decl_header: &'header mut Header,
 }
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
@@ -118,10 +135,12 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     /// C enum type. This enables us to add methods to the enum and generally make the enum
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
     /// cannot be added to it.
-    pub fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
+    pub(crate) fn gen_enum_def(&mut self, ty: &'tcx hir::EnumDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
+        let c_header = self.c.gen_enum_def(ty);
+        let c_impl_header = self.c.gen_impl(ty.into());
 
         let methods = ty
             .methods
@@ -139,6 +158,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
+            c_header: C2Header,
         }
 
         DeclTemplate {
@@ -149,6 +169,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            c_header,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -161,7 +182,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &'a str,
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
-            type_name_unnamespaced: &'a str,
+            c_impl_header: C2Header,
         }
 
         ImplTemplate {
@@ -170,21 +191,19 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
-            type_name_unnamespaced: &type_name_unnamespaced,
+            c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();
-
-        self.decl_header
-            .includes
-            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
     }
 
-    pub fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
+    pub(crate) fn gen_opaque_def(&mut self, ty: &'tcx hir::OpaqueDef, id: TypeId) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
         let dtor_name = self.cx.formatter.fmt_c_dtor_name(id);
+        let c_header = self.c.gen_opaque_def(ty);
+        let c_impl_header = self.c.gen_impl(ty.into());
 
         let methods = ty
             .methods
@@ -202,6 +221,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
+            c_header: C2Header,
         }
 
         DeclTemplate {
@@ -212,6 +232,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            c_header,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -225,6 +246,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &'a str,
             dtor_name: &'a str,
             methods: &'a [MethodInfo<'a>],
+            c_impl_header: C2Header,
         }
 
         ImplTemplate {
@@ -234,19 +256,23 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &ctype,
             dtor_name: &dtor_name,
             methods: methods.as_slice(),
+            c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();
-
-        self.decl_header
-            .includes
-            .insert(self.cx.formatter.fmt_c_decl_header_path(id));
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&mut self, def: &'tcx hir::StructDef<P>, id: TypeId) {
+    pub(crate) fn gen_struct_def<P: TyPosition>(
+        &mut self,
+        def: &'tcx hir::StructDef<P>,
+        id: TypeId,
+    ) {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
+
+        let c_header = self.c.gen_struct_def(def);
+        let c_impl_header = self.c.gen_impl(def.into());
 
         let field_decls = def
             .fields
@@ -283,6 +309,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
+            c_header: C2Header,
         }
 
         DeclTemplate {
@@ -294,6 +321,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             methods: methods.as_slice(),
             namespace: def.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
+            c_header,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -308,6 +336,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: &'a [NamedExpression<'a>],
             c_to_cpp_fields: &'a [NamedExpression<'a>],
             methods: &'a [MethodInfo<'a>],
+            c_impl_header: C2Header,
         }
 
         ImplTemplate {
@@ -318,6 +347,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: cpp_to_c_fields.as_slice(),
             c_to_cpp_fields: c_to_cpp_fields.as_slice(),
             methods: methods.as_slice(),
+            c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -352,12 +382,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             param_decls.push(decls);
             if let Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8)) = param.ty {
                 param_validations.push(format!(
-                    "if (!capi::diplomat_is_str({param}.data(), {param}.size()) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error)\n}}",
+                    "if (!capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
                     param = param.name.as_str(),
                 ));
                 returns_utf8_err = true;
             }
-            let conversions = self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into());
+            let conversions =
+                self.gen_cpp_to_c_for_type(&param.ty, param.name.as_str().into(), true);
             cpp_to_c_params.extend(
                 conversions
                     .into_iter()
@@ -377,7 +408,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         if returns_utf8_err {
             if let Some(return_expr) = c_to_cpp_return_expression {
                 c_to_cpp_return_expression =
-                    Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
+                    Some(format!("diplomat::Ok<{return_ty}>(std::move({return_expr}))").into());
                 return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
             } else {
                 c_to_cpp_return_expression =
@@ -546,7 +577,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     ) -> Vec<NamedExpression<'a>> {
         let var_name = self.cx.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        self.gen_cpp_to_c_for_type(&field.ty, field_getter.into())
+        self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), false)
             .into_iter()
             .map(
                 |PartiallyNamedExpression { suffix, expression }| NamedExpression {
@@ -565,6 +596,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         &self,
         ty: &Type<P>,
         cpp_name: Cow<'a, str>,
+        is_method_call: bool,
     ) -> Vec<PartiallyNamedExpression<'a>> {
         match *ty {
             Type::Primitive(..) => {
@@ -597,7 +629,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     expression: format!("{cpp_name}.AsFFI()").into(),
                 }]
             }
-            Type::Slice(..) => {
+            Type::Slice(..) if is_method_call => {
                 vec![
                     PartiallyNamedExpression {
                         suffix: "_data".into(),
@@ -608,6 +640,15 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         expression: format!("{cpp_name}.size()").into(),
                     },
                 ]
+            }
+            Type::Slice(..) => {
+                vec![PartiallyNamedExpression {
+                    suffix: "".into(),
+                    expression: format!(
+                        "{{ .data = {cpp_name}.data(), .len = {cpp_name}.size() }}"
+                    )
+                    .into(),
+                }]
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -693,10 +734,20 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 format!("*{type_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
+                let is_zst = match self.cx.tcx.resolve_type(ty.id().unwrap()) {
+                    TypeDef::Struct(s) => s.fields.is_empty(),
+                    TypeDef::OutStruct(s) => s.fields.is_empty(),
+                    _ => false,
+                };
+
                 let id = st.id();
                 let type_name = self.cx.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_type_name().
-                format!("{type_name}::FromFFI({var_name})").into()
+                if is_zst {
+                    format!("{type_name} {{}}").into()
+                } else {
+                    // Note: The impl file is imported in gen_type_name().
+                    format!("{type_name}::FromFFI({var_name})").into()
+                }
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
@@ -706,7 +757,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => {
                 let string_view = self.cx.formatter.fmt_borrowed_str(encoding);
-                format!("{string_view}({var_name}_data, {var_name}_size)").into()
+                format!("{string_view}({var_name}.data, {var_name}.len)").into()
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let prim_name = self.cx.formatter.fmt_primitive_as_c(p);
@@ -714,7 +765,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                     &prim_name,
                     b.map(|b| b.mutability).unwrap_or(hir::Mutability::Mutable),
                 );
-                format!("{span}({var_name}_data, {var_name}_size)").into()
+                format!("{span}({var_name}.data, {var_name}.len)").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }

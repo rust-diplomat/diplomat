@@ -22,6 +22,29 @@ export class Opaque {
     return new Opaque(wasm.Opaque_new(), true, []);
   }
 
+  static try_from_utf8(arg_input) {
+    const buf_arg_input = diplomatRuntime.DiplomatBuf.str8(wasm, arg_input);
+    const diplomat_out = (() => {
+      const option_ptr = wasm.Opaque_try_from_utf8(buf_arg_input.ptr, buf_arg_input.size);
+      return (option_ptr == 0) ? undefined : new Opaque(option_ptr, true, []);
+    })();
+    buf_arg_input.free();
+    return diplomat_out;
+  }
+
+  static from_str(arg_input) {
+    const buf_arg_input = diplomatRuntime.DiplomatBuf.str8(wasm, arg_input);
+    const diplomat_out = new Opaque(wasm.Opaque_from_str(buf_arg_input.ptr, buf_arg_input.size), true, []);
+    buf_arg_input.free();
+    return diplomat_out;
+  }
+
+  get_debug_str() {
+    return diplomatRuntime.withDiplomatWrite(wasm, (write) => {
+      return wasm.Opaque_get_debug_str(this.underlying, write);
+    });
+  }
+
   assert_struct(arg_s) {
     const field_a_arg_s = arg_s["a"];
     const field_b_arg_s = arg_s["b"];

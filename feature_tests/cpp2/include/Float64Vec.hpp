@@ -10,8 +10,45 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Float64Vec.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    Float64Vec* Float64Vec_new(const double* v_data, size_t v_len);
+    
+    Float64Vec* Float64Vec_new_bool(const bool* v_data, size_t v_len);
+    
+    Float64Vec* Float64Vec_new_i16(const int16_t* v_data, size_t v_len);
+    
+    Float64Vec* Float64Vec_new_u16(const uint16_t* v_data, size_t v_len);
+    
+    Float64Vec* Float64Vec_new_isize(const intptr_t* v_data, size_t v_len);
+    
+    Float64Vec* Float64Vec_new_usize(const size_t* v_data, size_t v_len);
+    
+    Float64Vec* Float64Vec_new_f64_be_bytes(const uint8_t* v_data, size_t v_len);
+    
+    DiplomatF64View Float64Vec_as_boxed_slice(const Float64Vec* self);
+    
+    DiplomatF64View Float64Vec_as_slice(const Float64Vec* self);
+    
+    void Float64Vec_fill_slice(const Float64Vec* self, double* v_data, size_t v_len);
+    
+    void Float64Vec_set_value(Float64Vec* self, const double* new_slice_data, size_t new_slice_len);
+    
+    void Float64Vec_to_string(const Float64Vec* self, DiplomatWrite* write);
+    
+    DiplomatF64View Float64Vec_borrow(const Float64Vec* self);
+    
+    typedef struct Float64Vec_get_result {union {double ok; }; bool is_ok;} Float64Vec_get_result;
+    Float64Vec_get_result Float64Vec_get(const Float64Vec* self, size_t i);
+    
+    
+    void Float64Vec_destroy(Float64Vec* self);
+    
+    } // extern "C"
+}
 
 inline std::unique_ptr<Float64Vec> Float64Vec::new_(diplomat::span<const double> v) {
   auto result = capi::Float64Vec_new(v.data(),
@@ -57,12 +94,12 @@ inline std::unique_ptr<Float64Vec> Float64Vec::new_f64_be_bytes(diplomat::span<c
 
 inline diplomat::span<double> Float64Vec::as_boxed_slice() const {
   auto result = capi::Float64Vec_as_boxed_slice(this->AsFFI());
-  return diplomat::span<double>(result_data, result_size);
+  return diplomat::span<double>(result.data, result.len);
 }
 
 inline diplomat::span<const double> Float64Vec::as_slice() const {
   auto result = capi::Float64Vec_as_slice(this->AsFFI());
-  return diplomat::span<const double>(result_data, result_size);
+  return diplomat::span<const double>(result.data, result.len);
 }
 
 inline void Float64Vec::fill_slice(diplomat::span<double> v) const {
@@ -87,7 +124,7 @@ inline std::string Float64Vec::to_string() const {
 
 inline diplomat::span<const double> Float64Vec::borrow() const {
   auto result = capi::Float64Vec_borrow(this->AsFFI());
-  return diplomat::span<const double>(result_data, result_size);
+  return diplomat::span<const double>(result.data, result.len);
 }
 
 inline std::optional<double> Float64Vec::get(size_t i) const {

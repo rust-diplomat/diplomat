@@ -5,6 +5,7 @@ import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
+import com.sun.jna.Union
 
 
 // We spawn a cleaner for the library which is responsible for cleaning opaque types.
@@ -26,7 +27,7 @@ object DW {
     fun writeToString (write: Pointer): String {
         try {
             val pointer = lib.diplomat_buffer_write_get_bytes(write)
-            if (bytes == null) {
+            if (pointer == null) {
                 throw OutOfMemoryError();
             }
             val len = lib.diplomat_buffer_write_len(write)
@@ -296,3 +297,292 @@ class Slice: Structure(), Structure.ByValue {
         var SIZE: Long = Native.getNativeSize(Slice::class.java).toLong()
     }
 }
+
+sealed interface Res<T, E>
+class Ok<T, E>(val inner: T) : Res<T, E>
+class Err<T, E>(val inner: E) : Res<T, E>
+
+
+fun <T> Res<T, Throwable>.reThrow(): T {
+    return when (this) {
+        is Ok -> this.inner
+        is Err -> throw this.inner
+    }
+}
+
+fun <T, E> Res<T, E>.wrapErrAndThrow(): T {
+    return when (this) {
+        is Ok -> this.inner
+        is Err -> throw RuntimeException("Received error ${this.inner}")
+    }
+}
+
+fun <T, E> T.ok(): Res<T, E> {
+    return Ok(this)
+}
+
+fun <T, E> E.err(): Res<T, E> {
+    return Err(this)
+}
+
+internal class ResultIntUnitUnion: Union() {
+    @JvmField
+    internal var ok: Int = 0
+}
+
+class ResultIntUnit: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultIntUnitUnion = ResultIntUnitUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultIntPointerUnion: Union() {
+    @JvmField
+    internal var ok: Int = ErrorEnum.default().toNative()
+    @JvmField
+    internal var err: Pointer = Pointer(0)
+}
+
+class ResultIntPointer: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultIntPointerUnion = ResultIntPointerUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultPointerErrorStructNativeUnion: Union() {
+    @JvmField
+    internal var ok: Pointer = Pointer(0)
+    @JvmField
+    internal var err: ErrorStructNative = ErrorStructNative()
+}
+
+class ResultPointerErrorStructNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultPointerErrorStructNativeUnion = ResultPointerErrorStructNativeUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultPointerIntUnion: Union() {
+    @JvmField
+    internal var ok: Pointer = Pointer(0)
+    @JvmField
+    internal var err: Int = ErrorEnum.default().toNative()
+}
+
+class ResultPointerInt: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultPointerIntUnion = ResultPointerIntUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultPointerUnitUnion: Union() {
+    @JvmField
+    internal var ok: Pointer = Pointer(0)
+}
+
+class ResultPointerUnit: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultPointerUnitUnion = ResultPointerUnitUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultUnitMyZstNativeUnion: Union() {
+}
+
+class ResultUnitMyZstNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultUnitMyZstNativeUnion = ResultUnitMyZstNativeUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultUnitPointerUnion: Union() {
+    @JvmField
+    internal var err: Pointer = Pointer(0)
+}
+
+class ResultUnitPointer: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultUnitPointerUnion = ResultUnitPointerUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+internal class ResultUnitUnitUnion: Union() {
+}
+
+class ResultUnitUnit: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultUnitUnitUnion = ResultUnitUnitUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
+
+
+internal class OptionByte: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: Byte = 0
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): Byte? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionDouble: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: Double = 0.0
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): Double? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionInt: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: Int = 0
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): Int? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionLong: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: Long = 0
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): Long? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionOptionStructNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: OptionStructNative = OptionStructNative()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): OptionStructNative? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+internal class OptionSlice: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var value: Slice = Slice()
+    
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("value", "isOk")
+    }
+
+    internal fun option(): Slice? {
+        if (isOk == 1.toByte()) {
+            return value
+        } else {
+            return null
+        }
+    }
+}
+

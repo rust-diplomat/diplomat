@@ -152,15 +152,9 @@ impl EnumDef {
     }
 }
 
-impl<'a> From<&'a StructDef> for TypeDef<'a> {
-    fn from(x: &'a StructDef) -> Self {
-        TypeDef::Struct(x)
-    }
-}
-
-impl<'a> From<&'a OutStructDef> for TypeDef<'a> {
-    fn from(x: &'a OutStructDef) -> Self {
-        TypeDef::OutStruct(x)
+impl<'a, P: TyPosition> From<&'a StructDef<P>> for TypeDef<'a> {
+    fn from(x: &'a StructDef<P>) -> Self {
+        P::wrap_struct_def(x)
     }
 }
 

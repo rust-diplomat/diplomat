@@ -39,6 +39,38 @@ final class OptionOpaque implements ffi.Finalizable {
     return OptionStruct._fromFfi(result.union.ok);
   }
 
+  int? optionIsize() {
+    final result = _OptionOpaque_option_isize(_ffi);
+    if (!result.isOk) {
+      return null;
+    }
+    return result.union.ok;
+  }
+
+  int? optionUsize() {
+    final result = _OptionOpaque_option_usize(_ffi);
+    if (!result.isOk) {
+      return null;
+    }
+    return result.union.ok;
+  }
+
+  int? optionI32() {
+    final result = _OptionOpaque_option_i32(_ffi);
+    if (!result.isOk) {
+      return null;
+    }
+    return result.union.ok;
+  }
+
+  int? optionU32() {
+    final result = _OptionOpaque_option_u32(_ffi);
+    if (!result.isOk) {
+      return null;
+    }
+    return result.union.ok;
+  }
+
   static OptionStruct newStruct() {
     final result = _OptionOpaque_new_struct();
     return OptionStruct._fromFfi(result);
@@ -78,6 +110,26 @@ external ffi.Pointer<ffi.Opaque> _OptionOpaque_new_none();
 @ffi.Native<_ResultOptionStructFfiVoid Function()>(isLeaf: true, symbol: 'OptionOpaque_returns')
 // ignore: non_constant_identifier_names
 external _ResultOptionStructFfiVoid _OptionOpaque_returns();
+
+@meta.ResourceIdentifier('OptionOpaque_option_isize')
+@ffi.Native<_ResultIntPtrVoid Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_isize')
+// ignore: non_constant_identifier_names
+external _ResultIntPtrVoid _OptionOpaque_option_isize(ffi.Pointer<ffi.Opaque> self);
+
+@meta.ResourceIdentifier('OptionOpaque_option_usize')
+@ffi.Native<_ResultSizeVoid Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_usize')
+// ignore: non_constant_identifier_names
+external _ResultSizeVoid _OptionOpaque_option_usize(ffi.Pointer<ffi.Opaque> self);
+
+@meta.ResourceIdentifier('OptionOpaque_option_i32')
+@ffi.Native<_ResultInt32Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_i32')
+// ignore: non_constant_identifier_names
+external _ResultInt32Void _OptionOpaque_option_i32(ffi.Pointer<ffi.Opaque> self);
+
+@meta.ResourceIdentifier('OptionOpaque_option_u32')
+@ffi.Native<_ResultUint32Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_u32')
+// ignore: non_constant_identifier_names
+external _ResultUint32Void _OptionOpaque_option_u32(ffi.Pointer<ffi.Opaque> self);
 
 @meta.ResourceIdentifier('OptionOpaque_new_struct')
 @ffi.Native<_OptionStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_new_struct')

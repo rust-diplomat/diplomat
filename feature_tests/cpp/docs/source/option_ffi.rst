@@ -12,6 +12,18 @@
     .. cpp:function:: static std::optional<OptionStruct> returns()
 
 
+    .. cpp:function:: std::optional<intptr_t> option_isize() const
+
+
+    .. cpp:function:: std::optional<size_t> option_usize() const
+
+
+    .. cpp:function:: std::optional<int32_t> option_i32() const
+
+
+    .. cpp:function:: std::optional<uint32_t> option_u32() const
+
+
     .. cpp:function:: static OptionStruct new_struct()
 
 
@@ -27,6 +39,23 @@
 .. cpp:class:: OptionOpaqueChar
 
     .. cpp:function:: void assert_char(char32_t ch) const
+
+
+.. cpp:class:: OptionString
+
+    .. cpp:function:: static std::optional<OptionString> new_(const std::string_view diplomat_str)
+
+
+
+    .. cpp:function:: template<typename W> diplomat::result<std::monostate, std::monostate> write_to_write(W& write) const
+
+
+    .. cpp:function:: diplomat::result<std::string, std::monostate> write() const
+
+
+    .. cpp:function:: std::optional<const std::string_view> borrow() const
+
+        Lifetimes: ``this`` must live at least as long as the output.
 
 
 .. cpp:struct:: OptionStruct

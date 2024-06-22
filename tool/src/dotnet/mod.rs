@@ -62,6 +62,9 @@ pub fn gen_bindings(
         let mut results = SetOfAstTypes::default();
 
         for (in_path, typ) in &all_types {
+            if typ.attrs().skip_if_ast {
+                continue;
+            }
             let mut out_buf = String::new();
             let mut out = CodeWriter::new(&mut out_buf, INDENTATION, SCOPE_OPENING, SCOPE_CLOSING);
             raw::gen_header(&library_config, &mut out)?;
@@ -104,6 +107,9 @@ pub fn gen_bindings(
         // Idiomatic API generation pass
 
         for (in_path, typ) in &all_types {
+            if typ.attrs().skip_if_ast {
+                continue;
+            }
             let mut out_buf = String::new();
             let mut out = CodeWriter::new(&mut out_buf, INDENTATION, SCOPE_OPENING, SCOPE_CLOSING);
             idiomatic::gen_header(&library_config, &mut out)?;

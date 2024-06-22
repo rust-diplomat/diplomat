@@ -7,22 +7,24 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+
 #include "MyStruct.d.h"
 
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif // __cplusplus
+
+
+
 
 
 MyStruct MyStruct_new();
 
 uint8_t MyStruct_into_a(MyStruct self);
 
+typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
+MyStruct_returns_zst_result_result MyStruct_returns_zst_result();
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif // __cplusplus
+
+
+
+
 
 #endif // MyStruct_H

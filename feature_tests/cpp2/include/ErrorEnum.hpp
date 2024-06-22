@@ -10,28 +10,27 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ErrorEnum.h"
 
 
-inline ErrorEnum::ErrorEnum(ErrorEnum::Value cpp_value) {
-  switch (cpp_value) {
-    case Foo:
-      value = capi::ErrorEnum_Foo;
-      break;
-    case Bar:
-      value = capi::ErrorEnum_Bar;
-      break;
+namespace capi {
+    extern "C" {
+    
+    
+    } // extern "C"
+}
+
+
+inline capi::ErrorEnum ErrorEnum::AsFFI() const {
+  return static_cast<capi::ErrorEnum>(value);
+}
+
+inline ErrorEnum ErrorEnum::FromFFI(capi::ErrorEnum c_enum) {
+  switch (c_enum) {
+    case capi::ErrorEnum_Foo:
+    case capi::ErrorEnum_Bar:
+      return static_cast<ErrorEnum::Value>(c_enum);
     default:
       abort();
   }
 }
-
-inline capi::ErrorEnum ErrorEnum::AsFFI() const {
-  return value;
-}
-
-inline ErrorEnum ErrorEnum::FromFFI(capi::ErrorEnum c_enum) {
-  return ErrorEnum(c_enum);
-}
-
 #endif // ErrorEnum_HPP

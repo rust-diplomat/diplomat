@@ -11,8 +11,22 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "MyEnum.hpp"
-#include "MyStruct.h"
+#include "MyZst.hpp"
 
+
+namespace capi {
+    extern "C" {
+    
+    MyStruct MyStruct_new();
+    
+    uint8_t MyStruct_into_a(MyStruct self);
+    
+    typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
+    MyStruct_returns_zst_result_result MyStruct_returns_zst_result();
+    
+    
+    } // extern "C"
+}
 
 inline MyStruct MyStruct::new_() {
   auto result = capi::MyStruct_new();
@@ -22,6 +36,11 @@ inline MyStruct MyStruct::new_() {
 inline uint8_t MyStruct::into_a() {
   auto result = capi::MyStruct_into_a(this->AsFFI());
   return result;
+}
+
+inline diplomat::result<std::monostate, MyZst> MyStruct::returns_zst_result() {
+  auto result = capi::MyStruct_returns_zst_result();
+  return result.is_ok ? diplomat::result<std::monostate, MyZst>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, MyZst>(diplomat::Err<MyZst>(MyZst {}));
 }
 
 

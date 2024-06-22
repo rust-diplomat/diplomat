@@ -27,9 +27,12 @@ part 'MyIterable.g.dart';
 part 'MyIterator.g.dart';
 part 'MyString.g.dart';
 part 'MyStruct.g.dart';
+part 'MyZst.g.dart';
 part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
 part 'Opaque.g.dart';
+part 'OpaqueIterable.g.dart';
+part 'OpaqueIterator.g.dart';
 part 'OpaqueMutexedString.g.dart';
 part 'OptionOpaque.g.dart';
 part 'OptionOpaqueChar.g.dart';
@@ -473,6 +476,18 @@ final class _ResultInt32Void extends ffi.Struct {
   external bool isOk;
 }
 
+final class _ResultIntPtrVoidUnion extends ffi.Union {
+  @ffi.IntPtr()
+  external int ok;
+}
+
+final class _ResultIntPtrVoid extends ffi.Struct {
+  external _ResultIntPtrVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
 final class _ResultOpaqueErrorStructFfiUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
 
@@ -522,6 +537,30 @@ final class _ResultOptionStructFfiVoid extends ffi.Struct {
   external bool isOk;
 }
 
+final class _ResultSizeVoidUnion extends ffi.Union {
+  @ffi.Size()
+  external int ok;
+}
+
+final class _ResultSizeVoid extends ffi.Struct {
+  external _ResultSizeVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
+final class _ResultUint32VoidUnion extends ffi.Union {
+  @ffi.Uint32()
+  external int ok;
+}
+
+final class _ResultUint32Void extends ffi.Struct {
+  external _ResultUint32VoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
 final class _ResultUint8VoidUnion extends ffi.Union {
   @ffi.Uint8()
   external int ok;
@@ -529,6 +568,13 @@ final class _ResultUint8VoidUnion extends ffi.Union {
 
 final class _ResultUint8Void extends ffi.Struct {
   external _ResultUint8VoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
+final class _ResultVoidMyZstFfi extends ffi.Struct {
+  
 
   @ffi.Bool()
   external bool isOk;

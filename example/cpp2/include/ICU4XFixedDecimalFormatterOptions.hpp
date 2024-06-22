@@ -10,9 +10,17 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XFixedDecimalFormatterOptions.h"
 #include "ICU4XFixedDecimalGroupingStrategy.hpp"
 
+
+namespace capi {
+    extern "C" {
+    
+    ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions_default();
+    
+    
+    } // extern "C"
+}
 
 inline ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::default_() {
   auto result = capi::ICU4XFixedDecimalFormatterOptions_default();

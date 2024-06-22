@@ -16,6 +16,12 @@ public partial struct Utf16Wrap
 {
     private const string NativeLib = "diplomat_feature_tests";
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Utf16Wrap_from_utf16", ExactSpelling = true)]
+    public static unsafe extern Utf16Wrap* FromUtf16(ushort* input, nuint inputSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Utf16Wrap_get_debug_str", ExactSpelling = true)]
+    public static unsafe extern void GetDebugStr(Utf16Wrap* self, DiplomatWrite* write);
+
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Utf16Wrap_borrow_cont", ExactSpelling = true)]
     public static unsafe extern ushort[] BorrowCont(Utf16Wrap* self);
 

@@ -10,34 +10,29 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ContiguousEnum.h"
 
 
-inline ContiguousEnum::ContiguousEnum(ContiguousEnum::Value cpp_value) {
-  switch (cpp_value) {
-    case C:
-      value = capi::ContiguousEnum_C;
-      break;
-    case D:
-      value = capi::ContiguousEnum_D;
-      break;
-    case E:
-      value = capi::ContiguousEnum_E;
-      break;
-    case F:
-      value = capi::ContiguousEnum_F;
-      break;
+namespace capi {
+    extern "C" {
+    
+    
+    } // extern "C"
+}
+
+
+inline capi::ContiguousEnum ContiguousEnum::AsFFI() const {
+  return static_cast<capi::ContiguousEnum>(value);
+}
+
+inline ContiguousEnum ContiguousEnum::FromFFI(capi::ContiguousEnum c_enum) {
+  switch (c_enum) {
+    case capi::ContiguousEnum_C:
+    case capi::ContiguousEnum_D:
+    case capi::ContiguousEnum_E:
+    case capi::ContiguousEnum_F:
+      return static_cast<ContiguousEnum::Value>(c_enum);
     default:
       abort();
   }
 }
-
-inline capi::ContiguousEnum ContiguousEnum::AsFFI() const {
-  return value;
-}
-
-inline ContiguousEnum ContiguousEnum::FromFFI(capi::ContiguousEnum c_enum) {
-  return ContiguousEnum(c_enum);
-}
-
 #endif // ContiguousEnum_HPP

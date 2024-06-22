@@ -19,6 +19,15 @@ public partial struct Opaque
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_new", ExactSpelling = true)]
     public static unsafe extern Opaque* New();
 
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_try_from_utf8", ExactSpelling = true)]
+    public static unsafe extern Opaque* TryFromUtf8(byte* input, nuint inputSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_from_str", ExactSpelling = true)]
+    public static unsafe extern Opaque* FromStr(ushort* input, nuint inputSz);
+
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "Opaque_get_debug_str", ExactSpelling = true)]
+    public static unsafe extern void GetDebugStr(Opaque* self, DiplomatWrite* write);
+
     /// <summary>
     /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
     /// </summary>

@@ -8,8 +8,11 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "MyString.d.h"
 
+
+namespace capi {
+    typedef struct MyString MyString;
+}
 
 class MyString {
 public:

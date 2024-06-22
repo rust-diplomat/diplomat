@@ -6,29 +6,29 @@ import org.junit.jupiter.api.Test
 class OpaqueMutexedStringTest {
     @Test
     fun testLoad() {
-        val opaqueMutexedString = OpaqueMutexedString.fromUsize(356)
-        assertEquals(opaqueMutexedString.getLenAndAdd(4), 7)
+        val opaqueMutexedString = OpaqueMutexedString.fromUsize(356.toULong())
+        assertEquals(opaqueMutexedString.getLenAndAdd(4.toULong()), 7.toULong())
         val borrowed = opaqueMutexedString.borrow()
-        borrowed.change(1234)
-        assertEquals(opaqueMutexedString.getLenAndAdd(4), 8)
+        borrowed.change(1234.toULong())
+        assertEquals(opaqueMutexedString.getLenAndAdd(4.toULong()), 8.toULong())
         Result
     }
 
     @Test
     fun testMultiBorrow() {
-        val opaqueMutexedStringOddLen = OpaqueMutexedString.fromUsize(356)
-        val opaqueMutexedStringEvenLen = OpaqueMutexedString.fromUsize(1111)
+        val opaqueMutexedStringOddLen = OpaqueMutexedString.fromUsize(356.toULong())
+        val opaqueMutexedStringEvenLen = OpaqueMutexedString.fromUsize(1111.toULong())
         val borrowed = opaqueMutexedStringEvenLen.borrowSelfOrOther(opaqueMutexedStringOddLen)
-        assertEquals(borrowed.getLenAndAdd(0), 4)
+        assertEquals(borrowed.getLenAndAdd(0.toULong()), 4.toULong())
 
-        opaqueMutexedStringEvenLen.change(33333)
+        opaqueMutexedStringEvenLen.change(33333.toULong())
         val borrowed2 = opaqueMutexedStringEvenLen.borrowSelfOrOther(opaqueMutexedStringOddLen)
-        assertEquals(borrowed2.getLenAndAdd(0), 3)
+        assertEquals(borrowed2.getLenAndAdd(0.toULong()), 3.toULong())
     }
 
     @Test
     fun testStrReturn() {
-        val opaque = OpaqueMutexedString.fromUsize(356)
+        val opaque = OpaqueMutexedString.fromUsize(356.toULong())
         val str = opaque.dummyStr()
 
         assertEquals("A const str with non byte char: 餐 which is a DiplomatChar,", str)

@@ -8,8 +8,11 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XFixedDecimal.d.h"
 
+
+namespace capi {
+    typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
+}
 
 class ICU4XFixedDecimal {
 public:

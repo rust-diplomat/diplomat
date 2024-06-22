@@ -10,29 +10,33 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "MyEnum.h"
 
 
-inline MyEnum::MyEnum(MyEnum::Value cpp_value) {
-  switch (cpp_value) {
-    case A:
-      value = capi::MyEnum_A;
-      break;
-    case B:
-      value = capi::MyEnum_B;
-      break;
-    case C:
-      value = capi::MyEnum_C;
-      break;
-    case D:
-      value = capi::MyEnum_D;
-      break;
-    case E:
-      value = capi::MyEnum_E;
-      break;
-    case F:
-      value = capi::MyEnum_F;
-      break;
+namespace capi {
+    extern "C" {
+    
+    int8_t MyEnum_into_value(MyEnum self);
+    
+    MyEnum MyEnum_get_a();
+    
+    
+    } // extern "C"
+}
+
+
+inline capi::MyEnum MyEnum::AsFFI() const {
+  return static_cast<capi::MyEnum>(value);
+}
+
+inline MyEnum MyEnum::FromFFI(capi::MyEnum c_enum) {
+  switch (c_enum) {
+    case capi::MyEnum_A:
+    case capi::MyEnum_B:
+    case capi::MyEnum_C:
+    case capi::MyEnum_D:
+    case capi::MyEnum_E:
+    case capi::MyEnum_F:
+      return static_cast<MyEnum::Value>(c_enum);
     default:
       abort();
   }
@@ -47,13 +51,4 @@ inline MyEnum MyEnum::get_a() {
   auto result = capi::MyEnum_get_a();
   return MyEnum::FromFFI(result);
 }
-
-inline capi::MyEnum MyEnum::AsFFI() const {
-  return value;
-}
-
-inline MyEnum MyEnum::FromFFI(capi::MyEnum c_enum) {
-  return MyEnum(c_enum);
-}
-
 #endif // MyEnum_HPP

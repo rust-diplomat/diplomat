@@ -10,9 +10,33 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OpaqueMutexedString.h"
 #include "Utf16Wrap.hpp"
 
+
+namespace capi {
+    extern "C" {
+    
+    OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
+    
+    void OpaqueMutexedString_change(const OpaqueMutexedString* self, size_t number);
+    
+    const OpaqueMutexedString* OpaqueMutexedString_borrow(const OpaqueMutexedString* self);
+    
+    const OpaqueMutexedString* OpaqueMutexedString_borrow_other(const OpaqueMutexedString* other);
+    
+    const OpaqueMutexedString* OpaqueMutexedString_borrow_self_or_other(const OpaqueMutexedString* self, const OpaqueMutexedString* other);
+    
+    size_t OpaqueMutexedString_get_len_and_add(const OpaqueMutexedString* self, size_t other);
+    
+    DiplomatStringView OpaqueMutexedString_dummy_str(const OpaqueMutexedString* self);
+    
+    Utf16Wrap* OpaqueMutexedString_wrapper(const OpaqueMutexedString* self);
+    
+    
+    void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
+    
+    } // extern "C"
+}
 
 inline std::unique_ptr<OpaqueMutexedString> OpaqueMutexedString::from_usize(size_t number) {
   auto result = capi::OpaqueMutexedString_from_usize(number);
@@ -48,7 +72,7 @@ inline size_t OpaqueMutexedString::get_len_and_add(size_t other) const {
 
 inline std::string_view OpaqueMutexedString::dummy_str() const {
   auto result = capi::OpaqueMutexedString_dummy_str(this->AsFFI());
-  return std::string_view(result_data, result_size);
+  return std::string_view(result.data, result.len);
 }
 
 inline std::unique_ptr<Utf16Wrap> OpaqueMutexedString::wrapper() const {
