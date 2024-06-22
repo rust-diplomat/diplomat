@@ -207,14 +207,12 @@ npm run test
 [tasks.test-wasm-feature-js2]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
-script_runner = "@duckscript"
+script_runner = "@shell"
 script = '''
-exit_on_error true
 cd feature_tests/js2/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
-!include_files ./support/windows_npm_fix.ds
-exec --fail-on-error ${npm} install
-exec --fail-on-error ${npm} run test
+npm install
+npm run test
 '''
 
 [tasks.test-dart-example]
