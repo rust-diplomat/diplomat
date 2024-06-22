@@ -37,7 +37,8 @@
   "homepage": "https://github.com/rust-diplomat/diplomat#readme",
   "devDependencies": {
     "ava": "^3.15.0",
-    "esm": "^3.2.25"
+    "esm": "^3.2.25",
+    "typescript": "^5.5.2"
   },
   "dependencies": {}
 }
