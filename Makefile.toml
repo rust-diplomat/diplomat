@@ -176,8 +176,7 @@ script = '''
 cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd lib
-npm install
-npm run test
+npm install && npm run test
 '''
 
 [tasks.test-js-example-app]
@@ -188,8 +187,7 @@ script = '''
 cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd app
-npm install
-npm run build
+npm install && npm run build
 '''
 
 [tasks.test-js-feature]
@@ -200,8 +198,7 @@ script = '''
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
 cd app
-npm install
-npm run test
+npm install && npm run test
 '''
 
 [tasks.test-wasm-feature-js2]
