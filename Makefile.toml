@@ -178,6 +178,7 @@ cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd lib
 exec --fail-on-error npm install
+exec --fail-on-error npm run build
 exec --fail-on-error npm run test
 '''
 
@@ -204,6 +205,7 @@ cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
 cd app
 exec --fail-on-error npm install
+exec --fail-on-error npm run build
 exec --fail-on-error npm run test
 '''
 

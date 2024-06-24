@@ -4,4 +4,5 @@
         "target": "es2020",
         "moduleResolution": "node"
     },
+    "include": ["./api/index.d.ts"]
 }

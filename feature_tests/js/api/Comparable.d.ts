@@ -1,4 +1,4 @@
-import { u8 } from "./diplomat-runtime"
+import { u8, i8 } from "./diplomat-runtime"
 
 /**
  */
