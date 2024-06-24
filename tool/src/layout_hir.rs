@@ -14,6 +14,11 @@ pub fn struct_offsets_size_max_align<'a, P: hir::TyPosition + 'a>(
     let mut next_offset = 0;
     let mut offsets = vec![];
 
+	let types = types.collect::<Vec<_>>();
+	if types.len() <= 0 {
+		return (vec![], unit_size_alignment());
+	}
+
 	for typ in types {
 		let size_align = type_size_alignment(typ, tcx);
 		let size = size_align.size();
