@@ -38,9 +38,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Install cargo-make
-      uses: taiki-e/install-action@v2
-      with:
-        tool: cargo-make@0.36.13 # https://github.com/rust-diplomat/diplomat/issues/440
+      uses: taiki-e/install-action@cargo-make
         
     - name: Run regeneration
       run: cargo make gen
