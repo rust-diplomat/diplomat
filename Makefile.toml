@@ -171,40 +171,33 @@ exec --fail-on-error make
 [tasks.test-js-example]
 category = "Tests"
 dependencies = ["build-example-wasm"]
-script_runner = "@duckscript"
+script_runner = "@shell"
 script = '''
-exit_on_error true
 cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd lib
-exec --fail-on-error npm install
-exec --fail-on-error npm run test
+npm install && npm run test
 '''
 
 [tasks.test-js-example-app]
 category = "Tests"
 dependencies = ["build-example-wasm"]
-script_runner = "@duckscript"
+script_runner = "@shell"
 script = '''
-exit_on_error true
 cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd app
-exec --fail-on-error npm install
-exec --fail-on-error npm run build
+npm install && npm run build
 '''
 
 [tasks.test-js-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
-script_runner = "@duckscript"
+script_runner = "@shell"
 script = '''
-exit_on_error true
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
-cd app
-exec --fail-on-error npm install
-exec --fail-on-error npm run test
+npm install && npm run test
 '''
 
 [tasks.test-dart-example]
