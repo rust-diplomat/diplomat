@@ -194,9 +194,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			format!(" + {}", offset)
 		};
 		match *ty {
-			Type::Enum(..) => format!("enumDiscriminant(wasm, {variable_name}{o})").into(),
+			Type::Enum(..) => format!("diplomatRuntime.enumDiscriminant(wasm, {variable_name}{o})").into(),
 			Type::Opaque(..) => format!("diplomatRuntime.ptrRead(wasm, {variable_name}{o})").into(),
-			// FIXME: I'm not sure this works if we're being passed a struct that's a member of a struct.
 			// Structs always assume they're being passed a pointer, so they handle this in their constructors:
 			// See NestedBorrowedFields
 			Type::Struct(..) | Type::Slice(..) => format!("{variable_name}{o}").into(),
