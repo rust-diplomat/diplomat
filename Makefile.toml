@@ -68,6 +68,12 @@ dependencies = [
     "test-js-example-app",
     "test-js-feature",
 ]
+[tasks.test-js2]
+category = "Tests"
+dependencies = [
+    "test-js2-feature",
+]
+
 [tasks.test-dart]
 category = "Tests"
 dependencies = [
@@ -98,6 +104,7 @@ dependencies = [
     "test-cpp-feature",
     "test-cpp2-feature",
     "test-js-feature",
+    "test-js2-feature",
     "test-dart-feature",
     "test-kotlin-feature",
 ]
@@ -200,7 +207,7 @@ cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/dip
 npm install && npm run test
 '''
 
-[tasks.test-wasm-feature-js2]
+[tasks.test-js2-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
 script_runner = "@shell"
@@ -303,6 +310,7 @@ dependencies = [
     "gen-c-example",
     "gen-c2-example",
     "gen-js-example",
+    "gen-js2-example",
     "gen-dart-example",
     "gen-kotlin-example",
 ]
