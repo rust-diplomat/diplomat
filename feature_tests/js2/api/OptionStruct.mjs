@@ -58,6 +58,5 @@ export class OptionStruct {
         return this;
     }
     
-    
 
 }

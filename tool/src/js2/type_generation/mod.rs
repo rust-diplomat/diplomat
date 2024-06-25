@@ -101,18 +101,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
     }
 
     pub(super) fn generate_struct_from_def<P: hir::TyPosition>(&mut self, struct_def : &'tcx hir::StructDef<P>, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool) -> String {
-        struct FieldInfo<'info, P: hir::TyPosition> {
-            field_name: Cow<'info, str>,
-            field_type : &'info Type<P>,
-            annotation : Option<&'static str>,
-            js_type_name  : Cow<'info, str>,
-            c_to_js : Cow<'info, str>,
-            c_to_js_deref : Cow<'info, str>,
-            js_to_c : Vec<String>,
-            maybe_struct_borrow_info : Option<StructBorrowInfo<'info>>,
-        }
-
-        
         let (offsets, layout) = crate::layout_hir::struct_offsets_size_max_align(
             struct_def.fields.iter().map(|f| &f.ty),
             self.js_ctx.tcx
@@ -420,6 +408,17 @@ struct MethodInfo<'info> {
     cleanup_expressions : Vec<Cow<'info, str>>
 }
 
+struct FieldInfo<'info, P: hir::TyPosition> {
+    field_name: Cow<'info, str>,
+    field_type : &'info Type<P>,
+    annotation : Option<&'static str>,
+    js_type_name  : Cow<'info, str>,
+    c_to_js : Cow<'info, str>,
+    c_to_js_deref : Cow<'info, str>,
+    js_to_c : Vec<String>,
+    maybe_struct_borrow_info : Option<StructBorrowInfo<'info>>,
+}
+
 // Helpers used in templates (Askama has restrictions on Rust syntax)
 
 /// Modified from dart backend
@@ -438,4 +437,35 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Cow<'a, str> {
         .into(),
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
     }
+}
+
+fn iter_def_lifetimes_matching_use_lt<'a>(
+    use_lt: &'a hir::Lifetime,
+    info: &'a StructBorrowInfo,
+) -> impl Iterator<Item = hir::Lifetime> + 'a {
+    info.borrowed_struct_lifetime_map
+        .iter()
+        .filter(|(_def_lt, use_lts)| use_lts.contains(use_lt))
+        .map(|(def_lt, _use_lts)| def_lt)
+        .copied()
+}
+
+/// Iterate over fields, filtering by fields that actually use lifetimes from `lifetimes`
+fn iter_fields_with_lifetimes_from_set<'a, P: hir::TyPosition>(
+    fields: &'a [FieldInfo<'a, P>],
+    lifetime: &'a hir::Lifetime,
+) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
+    /// Does `ty` use any lifetime from `lifetimes`?
+    fn does_type_use_lifetime_from_set<P: hir::TyPosition>(ty: &Type<P>, lifetime: &hir::Lifetime) -> bool {
+        ty.lifetimes().any(|lt| {
+            let hir::MaybeStatic::NonStatic(lt) = lt else {
+                panic!("'static not supported in JS2 backend");
+            };
+            lt == *lifetime
+        })
+    }
+
+    fields
+        .iter()
+        .filter(move |f| does_type_use_lifetime_from_set(f.field_type, lifetime))
 }

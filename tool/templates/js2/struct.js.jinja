@@ -60,7 +60,33 @@ export class {{type_name}} {
 
         return this;
     }
-    {% endif %}
+    
+    {%- for l in lifetimes.all_lifetimes() %}
+    {%- let ltname = lifetimes.fmt_lifetime(l) %}
+
+    // Return all fields corresponding to lifetime `'{{ltname}}` 
+    // without handling lifetime dependencies (this is the job of the caller)
+    // This is all fields that may be borrowed from if borrowing `'{{ltname}}`,
+    // assuming that there are no `'other: {{ltname}}`. bounds. In case of such bounds,
+    // the caller should take care to also call _fieldsForLifetimeOther
+    get _fieldsForLifetime{{ltname.to_uppercase()}}() { 
+        return [
+        {%- for field in self::iter_fields_with_lifetimes_from_set(fields, l) %}
+            {%- if !loop.first %}, {% endif -%}
+            {%- if let Some(st) = field.maybe_struct_borrow_info -%}
+            {%- for def_lt in self::iter_def_lifetimes_matching_use_lt(l, st) -%}
+            {%- if !loop.first %}, {% endif -%}
+            ...{{field.field_name}}._fieldsForLifetime{{st.env.fmt_lifetime(def_lt).to_uppercase()}}
+            {%- endfor -%}
+            {%- else -%}
+            {{field.field_name}}
+            {%- endif -%}
+        {%- endfor -%}
+        ];
+    };
+
+    {%- endfor -%}
+    {%- endif %}
 
 {%- for method in methods %}
     {{ method|indent(4) }}

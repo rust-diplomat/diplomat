@@ -45,6 +45,5 @@ export class ImportedStruct {
         return this;
     }
     
-    
 
 }

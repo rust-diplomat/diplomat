@@ -52,7 +52,16 @@ export class BorrowedFields {
 
         return this;
     }
-    
+
+    // Return all fields corresponding to lifetime `'a` 
+    // without handling lifetime dependencies (this is the job of the caller)
+    // This is all fields that may be borrowed from if borrowing `'a`,
+    // assuming that there are no `'other: a`. bounds. In case of such bounds,
+    // the caller should take care to also call _fieldsForLifetimeOther
+    // ignore: unused_element
+    get _fieldsForLifetimeA() { 
+        return [a, b, c];
+    };
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         
         const dstr16Slice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16);

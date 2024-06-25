@@ -57,7 +57,36 @@ export class NestedBorrowedFields {
 
         return this;
     }
-    
+
+    // Return all fields corresponding to lifetime `'x` 
+    // without handling lifetime dependencies (this is the job of the caller)
+    // This is all fields that may be borrowed from if borrowing `'x`,
+    // assuming that there are no `'other: x`. bounds. In case of such bounds,
+    // the caller should take care to also call _fieldsForLifetimeOther
+    // ignore: unused_element
+    get _fieldsForLifetimeX() { 
+        return [...fields._fieldsForLifetimeA, ...bounds._fieldsForLifetimeA];
+    };
+
+    // Return all fields corresponding to lifetime `'y` 
+    // without handling lifetime dependencies (this is the job of the caller)
+    // This is all fields that may be borrowed from if borrowing `'y`,
+    // assuming that there are no `'other: y`. bounds. In case of such bounds,
+    // the caller should take care to also call _fieldsForLifetimeOther
+    // ignore: unused_element
+    get _fieldsForLifetimeY() { 
+        return [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
+    };
+
+    // Return all fields corresponding to lifetime `'z` 
+    // without handling lifetime dependencies (this is the job of the caller)
+    // This is all fields that may be borrowed from if borrowing `'z`,
+    // assuming that there are no `'other: z`. bounds. In case of such bounds,
+    // the caller should take care to also call _fieldsForLifetimeOther
+    // ignore: unused_element
+    get _fieldsForLifetimeZ() { 
+        return [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
+    };
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);

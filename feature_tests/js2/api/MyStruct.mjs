@@ -95,7 +95,6 @@ export class MyStruct {
 
         return this;
     }
-    
     static new_() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(28, 8);

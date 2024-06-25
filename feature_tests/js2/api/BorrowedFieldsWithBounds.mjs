@@ -54,7 +54,36 @@ export class BorrowedFieldsWithBounds {
 
         return this;
     }
-    
+
+    // Return all fields corresponding to lifetime `'a` 
+    // without handling lifetime dependencies (this is the job of the caller)
+    // This is all fields that may be borrowed from if borrowing `'a`,
+    // assuming that there are no `'other: a`. bounds. In case of such bounds,
+    // the caller should take care to also call _fieldsForLifetimeOther
+    // ignore: unused_element
+    get _fieldsForLifetimeA() { 
+        return [fieldA];
+    };
+
+    // Return all fields corresponding to lifetime `'b` 
+    // without handling lifetime dependencies (this is the job of the caller)
+    // This is all fields that may be borrowed from if borrowing `'b`,
+    // assuming that there are no `'other: b`. bounds. In case of such bounds,
+    // the caller should take care to also call _fieldsForLifetimeOther
+    // ignore: unused_element
+    get _fieldsForLifetimeB() { 
+        return [fieldB];
+    };
+
+    // Return all fields corresponding to lifetime `'c` 
+    // without handling lifetime dependencies (this is the job of the caller)
+    // This is all fields that may be borrowed from if borrowing `'c`,
+    // assuming that there are no `'other: c`. bounds. In case of such bounds,
+    // the caller should take care to also call _fieldsForLifetimeOther
+    // ignore: unused_element
+    get _fieldsForLifetimeC() { 
+        return [fieldC];
+    };
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
