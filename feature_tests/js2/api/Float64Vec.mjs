@@ -142,7 +142,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Array.from(new Float64Array(wasm.memory.buffer, new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[0], new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[1]));
+            return diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, diplomat_receive_buffer, "f64");
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
@@ -160,7 +160,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Array.from(new Float64Array(wasm.memory.buffer, new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[0], new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[1]));
+            return diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, diplomat_receive_buffer, "f64");
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
@@ -221,7 +221,7 @@ export class Float64Vec {
     
         try {
     
-            return Float64Array.from(new Float64Array(wasm.memory.buffer, new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[0], new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[1]));
+            return diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, diplomat_receive_buffer, "f64");
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);

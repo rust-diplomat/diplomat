@@ -126,7 +126,7 @@ export class MyString {
     
         try {
     
-            return diplomatRuntime.readString8(wasm.memory.buffer, new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[0], new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[1]);
+            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string8");
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);

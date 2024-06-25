@@ -46,12 +46,12 @@ export class BorrowedFieldsWithBounds {
     
 
     _fromFFI(ptr, aEdges, bEdges, cEdges) {
-        const fieldADeref = new Uint32Array(wasm.memory.buffer, ptr, 2);
-        this.#fieldA = diplomatRuntime.readString16(wasm.memory.buffer, fieldADeref[0], fieldADeref[1]);
-        const fieldBDeref = new Uint32Array(wasm.memory.buffer, ptr + 8, 2);
-        this.#fieldB = diplomatRuntime.readString8(wasm.memory.buffer, fieldBDeref[0], fieldBDeref[1]);
-        const fieldCDeref = new Uint32Array(wasm.memory.buffer, ptr + 16, 2);
-        this.#fieldC = diplomatRuntime.readString8(wasm.memory.buffer, fieldCDeref[0], fieldCDeref[1]);
+        const fieldADeref = ptr;
+        this.#fieldA = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, fieldADeref, "string16");
+        const fieldBDeref = ptr + 8;
+        this.#fieldB = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, fieldBDeref, "string8");
+        const fieldCDeref = ptr + 16;
+        this.#fieldC = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, fieldCDeref, "string8");
 
         return this;
     }

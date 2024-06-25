@@ -72,7 +72,7 @@ export class Utf16Wrap {
     
         try {
     
-            return diplomatRuntime.readString16(wasm.memory.buffer, new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[0], new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[1]);
+            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string16");
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
@@ -87,7 +87,7 @@ export class Utf16Wrap {
     
         try {
     
-            return diplomatRuntime.readString16(wasm.memory.buffer, new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[0], new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[1]);
+            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string16");
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);

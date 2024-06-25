@@ -130,6 +130,74 @@ export class DiplomatBuf {
 	return new DiplomatBuf(ptr, list.length, () => wasm.diplomat_free(ptr, byteLength, elementSize));
 	}
 
+	static stringsFromPtr(wasm, stringsPtr, stringEncoding) {
+		const [ptr, size] = new Uint32Array(wasm.memory.buffer, stringsPtr, 2);
+
+		let strings = [];
+		for (var arrayPtr = ptr; arrayPtr < size; arrayPtr += 1) {
+			var out = this.stringFromPtr(wasm, arrayPtr, stringEncoding);
+			strings.push(out);
+		}
+		return strings;
+	}
+
+	static stringFromPtr(wasm, stringPtr, stringEncoding) {
+		const [ptr, size] = new Uint32Array(wasm.memory.buffer, stringPtr, 2);
+		switch (stringEncoding) {
+			case "string8":
+				return readString8(wasm, ptr, size);
+			case "string16":
+				return readString16(wasm, ptr, size);
+			default:
+				console.error("Unrecognized stringEncoding ", stringEncoding);
+				break;
+		}
+	}
+
+	static sliceFromPtr(wasm, slicePtr, bufferType) {
+		const [ptr, size] = new Uint32Array(wasm.memory.buffer, slicePtr, 2);
+
+		var arrayType;
+		switch (bufferType) {
+			case "u8":
+			case "bool":
+				arrayType = Uint8Array;
+				break;
+			case "i8":
+				arrayType = Int8Array;
+				break;
+			case "u16":
+				arrayType = Uint16Array;
+				break;
+			case "i16":
+				arrayType = Int16Array;
+				break;
+			case "i32":
+			case "isize":
+				arrayType = Int32Array;
+				break;
+			case "u32":
+			case "usize":
+				arrayType = Uint32Array;
+				break;
+			case "i64":
+				arrayType = BigInt64Array;
+				break;
+			case "u64":
+				arrayType = BigUint64Array;
+				break;
+			case "f32":
+				arrayType = Float32Array;
+				break;
+			case "f64":
+				arrayType = Float64Array;
+				break;
+			default:
+				console.error("Unrecognized bufferType ", bufferType);
+		}
+		return arrayType.from(new arrayType(wasm.memory.buffer, ptr, size));
+	}
+
 	constructor(ptr, size, free) {
 	this.ptr = ptr;
 	this.size = size;

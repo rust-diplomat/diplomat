@@ -51,9 +51,9 @@ export class NestedBorrowedFields {
     _fromFFI(ptr, xEdges, yEdges, zEdges) {
         const fieldsDeref = ptr;
         this.#fields = new BorrowedFields()._fromFFI(fieldsDeref, xEdges);
-        const boundsDeref = ptr;
+        const boundsDeref = ptr + 24;
         this.#bounds = new BorrowedFieldsWithBounds()._fromFFI(boundsDeref, xEdges, yEdges, yEdges);
-        const bounds2Deref = ptr;
+        const bounds2Deref = ptr + 48;
         this.#bounds2 = new BorrowedFieldsWithBounds()._fromFFI(bounds2Deref, zEdges, zEdges, zEdges);
 
         return this;

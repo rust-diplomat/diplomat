@@ -27,8 +27,8 @@ export class BorrowedFieldsReturning {
     
 
     _fromFFI(ptr, aEdges) {
-        const bytesDeref = new Uint32Array(wasm.memory.buffer, ptr, 2);
-        this.#bytes = diplomatRuntime.readString8(wasm.memory.buffer, bytesDeref[0], bytesDeref[1]);
+        const bytesDeref = ptr;
+        this.#bytes = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, bytesDeref, "string8");
 
         return this;
     }
