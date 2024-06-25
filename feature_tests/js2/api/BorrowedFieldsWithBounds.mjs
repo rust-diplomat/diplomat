@@ -43,7 +43,6 @@ export class BorrowedFieldsWithBounds {
             diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB) /* TODO: Freeing code */, 
             diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC) /* TODO: Freeing code */]
     }
-    
 
     _fromFFI(ptr, aEdges, bEdges, cEdges) {
         const fieldADeref = ptr;
@@ -55,6 +54,7 @@ export class BorrowedFieldsWithBounds {
 
         return this;
     }
+    
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);

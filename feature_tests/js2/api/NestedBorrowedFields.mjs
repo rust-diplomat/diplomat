@@ -46,7 +46,6 @@ export class NestedBorrowedFields {
             ...this.#bounds._intoFFI([...xAppendArray],[...yAppendArray],[...yAppendArray]), 
             ...this.#bounds2._intoFFI([...zAppendArray],[...zAppendArray],[...zAppendArray])]
     }
-    
 
     _fromFFI(ptr, xEdges, yEdges, zEdges) {
         const fieldsDeref = ptr;
@@ -58,6 +57,7 @@ export class NestedBorrowedFields {
 
         return this;
     }
+    
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);

@@ -13,7 +13,6 @@ export class MyZst {
     _intoFFI() {
         return []
     }
-    
 
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
@@ -24,6 +23,7 @@ export class MyZst {
 
         return this;
     }
+    
     
 
 }

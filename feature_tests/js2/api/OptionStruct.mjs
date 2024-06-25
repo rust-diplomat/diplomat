@@ -39,7 +39,6 @@ export class OptionStruct {
             this.#c, 
             this.#d.ffiValue ?? 0]
     }
-    
 
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
@@ -58,6 +57,7 @@ export class OptionStruct {
 
         return this;
     }
+    
     
 
 }

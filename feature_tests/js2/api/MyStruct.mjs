@@ -71,7 +71,6 @@ export class MyStruct {
             diplomatRuntime.extractCodePoint(this.#f, 'this.#f'), 
             this.#g.ffiValue]
     }
-    
 
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
@@ -96,6 +95,7 @@ export class MyStruct {
 
         return this;
     }
+    
     static new_() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(28, 8);

@@ -15,8 +15,6 @@ export class BorrowedFieldsWithBounds {
     get fieldC() : string;
     set fieldC(value: string); 
 
-
-    _fromFFI(ptr: pointer, aEdges: Array<object>, bEdges: Array<object>, cEdges: Array<object>);
     static fromFooAndStrings(foo: Foo, dstr16X: string, utf8StrZ: string): BorrowedFieldsWithBounds;
 
     

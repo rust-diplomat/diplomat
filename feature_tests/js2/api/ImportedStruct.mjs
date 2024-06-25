@@ -30,7 +30,6 @@ export class ImportedStruct {
             this.#foo.ffiValue, 
             this.#count]
     }
-    
 
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
@@ -45,6 +44,7 @@ export class ImportedStruct {
 
         return this;
     }
+    
     
 
 }

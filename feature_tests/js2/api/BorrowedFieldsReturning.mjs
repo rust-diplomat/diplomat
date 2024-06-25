@@ -24,7 +24,6 @@ export class BorrowedFieldsReturning {
         return [
             diplomatRuntime.DiplomatBuf.str8(wasm, this.#bytes) /* TODO: Freeing code */]
     }
-    
 
     _fromFFI(ptr, aEdges) {
         const bytesDeref = ptr;
@@ -32,6 +31,7 @@ export class BorrowedFieldsReturning {
 
         return this;
     }
+    
     
 
 }
