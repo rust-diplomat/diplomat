@@ -350,19 +350,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				method_info.alloc_expressions.push(format!("const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});", size, align).into());
 				method_info.param_conversions.insert(0, "diplomat_receive_buffer".into());
 				method_info.cleanup_expressions.push(format!("wasm.diplomat_free(diplomat_receive_buffer, {}, {});", size, align).into());
-
-				// TODO: Pretty sure you can't have a Result<Write, Err> and also return something else.
-				// So this is our ideal output:
-				/*
-				const write = alloc(0);
-				const diplomat_receive_buffer = diplomat.alloc(error_size, error_align);
-				wasm.c_func(write);
-				if (diplomat.resultFlag(wasm, diplomat_receive_buffer, error_size - 1)) {
-					return write;
-				} else {
-					throw Error();
-				}
-				 */
 				
 				let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {})) {{\n    {};\n}}\n",
 				size - 1,
@@ -384,6 +371,19 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				Some(match ok {
 					SuccessType::Unit => err_check,
 					SuccessType::Write => {
+						// Pretty sure you can't have a Result<Write, Err> and also return something else.
+						// So this is our ideal output:
+						/*
+						const write = alloc(0);
+						const diplomat_receive_buffer = diplomat.alloc(error_size, error_align);
+						wasm.c_func(write);
+						if (diplomat.resultFlag(wasm, diplomat_receive_buffer, error_size - 1)) {
+							return write;
+						} else {
+							throw Error();
+						}
+						*/
+						// TODO: This could probably be its own diplomatRuntime function, instead of lots of little wasm calls.
 						method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
 						method_info.param_conversions.push("write".into());
 						method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
@@ -446,13 +446,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				Type::Slice(hir::Slice::Primitive(_, p)) => format!(
 					r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#, self.js_ctx.formatter.fmt_primitive_list_view(p)
 				).into(),
-				_ => todo!("{:?} not implemented yet", ty),
+				_ => unreachable!("Unknown AST/HIR variant {ty:?}"),
 			}
 		}
 	
 	pub(super) fn gen_js_to_c_for_struct_type(&self, js_name : Cow<'tcx, str>, struct_borrow_info : Option<&StructBorrowContext<'tcx>>) -> Cow<'tcx, str> {
         let mut params = String::new();
-		// TODO: Fix to JS particulars.
         if let Some(info) = struct_borrow_info {
 			let iter = &mut info.param_info.borrowed_struct_lifetime_map.iter().peekable();
             while let Some((def_lt, use_lts)) = &iter.next() {
