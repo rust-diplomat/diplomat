@@ -91,7 +91,7 @@ export class MyStruct {
         this.#e = eDeref;
         const fDeref = String.fromCharCode((new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0]);
         this.#f = fDeref;
-        const gDeref = enumDiscriminant(wasm, ptr + 24);
+        const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();;
 
         return this;
