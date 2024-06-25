@@ -30,7 +30,6 @@ export class ICU4XFixedDecimalFormatterOptions {
             this.#groupingStrategy.ffiValue, 
             this.#someOtherConfig]
     }
-    
 
     // This struct contains borrowed fields, so this takes in a list of
     // "edges" corresponding to where each lifetime's data may have been borrowed from
@@ -45,6 +44,7 @@ export class ICU4XFixedDecimalFormatterOptions {
 
         return this;
     }
+    
     static default_() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
