@@ -156,12 +156,13 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})();").into()
 			},
 			Type::Slice(slice) => {
+				// Slices are always returned to us by way of pointers, so we take advantage of a helper function:
 				match slice {
 					hir::Slice::Primitive(_, primitive_type) => {
-						format!("dioplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, {variable_name}, {})", self.js_ctx.formatter.fmt_primitive_list_view(primitive_type)).into()
+						format!(r#"diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, {variable_name}, "{}")"#, self.js_ctx.formatter.fmt_primitive_list_view(primitive_type)).into()
 					},
 					hir::Slice::Str(_, encoding) => {
-						format!(r#"diplomatRuntime.readString(wasm.memory.buffer, {variable_name}, "string{}")"#, 
+						format!(r#"diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, {variable_name}, "string{}")"#, 
 						match encoding {
 							hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
 							hir::StringEncoding::UnvalidatedUtf16 => 16,
