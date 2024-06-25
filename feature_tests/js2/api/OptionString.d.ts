@@ -4,19 +4,17 @@ import type { u8, i8, u16, i16, u32, i32, u64, i64, usize, isize, f32, f64, poin
 
 
 
-export class Utf16Wrap {
+export class OptionString {
     
 
     get ffiValue(): pointer;
 
 
-    static fromUtf16(input: string): Utf16Wrap;
+    static new_(diplomatStr: string): OptionString | undefined;
 
-    getDebugStr(): string;
+    write(): string | undefined;
 
-    borrowCont(): string;
-
-    owned(): string;
+    borrow(): string | undefined;
 
     
 

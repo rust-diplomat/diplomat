@@ -14,6 +14,12 @@ export class Opaque {
 
     static new_(): Opaque;
 
+    static tryFromUtf8(input: string): Opaque | undefined;
+
+    static fromStr(input: string): Opaque;
+
+    getDebugStr(): string;
+
     assertStruct(s: MyStruct): void;
 
     static returnsUsize(): number;

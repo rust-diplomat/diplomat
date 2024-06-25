@@ -73,6 +73,78 @@ export class OptionOpaque {
         }
     }
 
+    optionIsize() {
+        
+        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+        const result = wasm.OptionOpaque_option_isize(diplomat_receive_buffer, this.ffiValue);
+    
+        try {
+    
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
+                throw diplomatRuntime.FFIError(null);
+            }
+            return (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        } finally {
+        
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        
+        }
+    }
+
+    optionUsize() {
+        
+        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+        const result = wasm.OptionOpaque_option_usize(diplomat_receive_buffer, this.ffiValue);
+    
+        try {
+    
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
+                throw diplomatRuntime.FFIError(null);
+            }
+            return (new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        } finally {
+        
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        
+        }
+    }
+
+    optionI32() {
+        
+        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+        const result = wasm.OptionOpaque_option_i32(diplomat_receive_buffer, this.ffiValue);
+    
+        try {
+    
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
+                throw diplomatRuntime.FFIError(null);
+            }
+            return (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        } finally {
+        
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        
+        }
+    }
+
+    optionU32() {
+        
+        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+        const result = wasm.OptionOpaque_option_u32(diplomat_receive_buffer, this.ffiValue);
+    
+        try {
+    
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
+                throw diplomatRuntime.FFIError(null);
+            }
+            return (new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        } finally {
+        
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+        
+        }
+    }
+
     static newStruct() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(16, 4);

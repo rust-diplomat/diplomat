@@ -32,6 +32,36 @@ export class Utf16Wrap {
     }
 
 
+    static fromUtf16(input) {
+        
+        const inputSlice = diplomatRuntime.DiplomatBuf.str16(wasm, input);
+        const result = wasm.Utf16Wrap_from_utf16(inputSlice.ptr, inputSlice.size);
+    
+        try {
+    
+            return new Utf16Wrap(result, []);
+        } finally {
+        
+            inputSlice.free();
+        
+        }
+    }
+
+    getDebugStr() {
+        
+        const write = wasm.diplomat_buffer_write_create(0);
+        wasm.Utf16Wrap_get_debug_str(this.ffiValue, write);
+    
+        try {
+    
+            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+        } finally {
+        
+            wasm.diplomat_buffer_write_destroy(write);
+        
+        }
+    }
+
     borrowCont() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
@@ -42,7 +72,7 @@ export class Utf16Wrap {
     
         try {
     
-            return diplomat_receive_buffer(aEdges) // TODO: Slice c_to_js;
+            return diplomatRuntime.readString16(wasm.memory.buffer, new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[0], new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[1]);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
@@ -57,7 +87,7 @@ export class Utf16Wrap {
     
         try {
     
-            return diplomat_receive_buffer // TODO: Slice c_to_js;
+            return diplomatRuntime.readString16(wasm.memory.buffer, new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[0], new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 2)[1]);
         } finally {
         
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);

@@ -45,6 +45,51 @@ export class Opaque {
         }
     }
 
+    static tryFromUtf8(input) {
+        
+        const inputSlice = diplomatRuntime.DiplomatBuf.str8(wasm, input);
+        const result = wasm.Opaque_try_from_utf8(inputSlice.ptr, inputSlice.size);
+    
+        try {
+    
+            return ((result == 0) ? undefined : new Opaque(result, []));
+        } finally {
+        
+            inputSlice.free();
+        
+        }
+    }
+
+    static fromStr(input) {
+        
+        const inputSlice = diplomatRuntime.DiplomatBuf.str8(wasm, input);
+        const result = wasm.Opaque_from_str(inputSlice.ptr, inputSlice.size);
+    
+        try {
+    
+            return new Opaque(result, []);
+        } finally {
+        
+            inputSlice.free();
+        
+        }
+    }
+
+    getDebugStr() {
+        
+        const write = wasm.diplomat_buffer_write_create(0);
+        wasm.Opaque_get_debug_str(this.ffiValue, write);
+    
+        try {
+    
+            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+        } finally {
+        
+            wasm.diplomat_buffer_write_destroy(write);
+        
+        }
+    }
+
     assertStruct(s) {
         wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI());
     

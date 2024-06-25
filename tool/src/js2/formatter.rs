@@ -135,6 +135,22 @@ impl<'tcx> JSFormatter<'tcx> {
 		}
 	}
 
+	pub fn fmt_primitive_slice(&self, primitive_type : hir::PrimitiveType) -> &'static str {
+		match primitive_type {
+			hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Int(hir::IntType::U8) => "Uint8Array",
+			hir::PrimitiveType::Int(hir::IntType::I8) => "Int8Array",
+			hir::PrimitiveType::Int(hir::IntType::I16) => "Int16Array",
+			hir::PrimitiveType::Int(hir::IntType::U16) => "Uint16Array",
+			hir::PrimitiveType::Int(hir::IntType::I32) | hir::PrimitiveType::IntSize(hir::IntSizeType::Isize) => "Int32Array",
+			hir::PrimitiveType::Int(hir::IntType::U32) | hir::PrimitiveType::IntSize(hir::IntSizeType::Usize) | hir::PrimitiveType::Char => "Uint32Array",
+			hir::PrimitiveType::Int(hir::IntType::I64) => "BigInt64Array",
+			hir::PrimitiveType::Int(hir::IntType::U64) => "BigUint64Array",
+			hir::PrimitiveType::Float(hir::FloatType::F32) => "Float32Array",
+			hir::PrimitiveType::Float(hir::FloatType::F64) => "Float64Array",
+			hir::PrimitiveType::Int128(..) => panic!("Int128 is not a supported type for the JS backend."),
+		}
+	}
+
 	pub fn fmt_enum_as_ffi(&self, cast : bool) -> &'static str {
 		self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
 	}

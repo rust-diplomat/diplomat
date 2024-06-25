@@ -9,14 +9,17 @@ export function readString16(wasm, ptr, len) {
 }
 
 export function withDiplomatWrite(wasm, callback) {
-	const writeable = wasm.diplomat_buffer_writeable_create(0);
+	const write = wasm.diplomat_buffer_write_create(0);
 	try {
-	callback(writeable);
-	const outStringPtr = wasm.diplomat_buffer_writeable_get_bytes(writeable);
-	const outStringLen = wasm.diplomat_buffer_writeable_len(writeable);
+	callback(write);
+	const outStringPtr = wasm.diplomat_buffer_write_get_bytes(write);
+	if (outStringPtr == null) {
+		throw FFIError("Out of memory");
+	}
+	const outStringLen = wasm.diplomat_buffer_write_len(write);
 	return readString8(wasm, outStringPtr, outStringLen);
 	} finally {
-	wasm.diplomat_buffer_writeable_destroy(writeable);
+	wasm.diplomat_buffer_write_destroy(write);
 	}
 }
 
@@ -93,8 +96,8 @@ export class DiplomatBuf {
 	const byteLength = string.length * 2;
 	const ptr = wasm.diplomat_alloc(byteLength, 2);
 
-	const destination = new Uint16Array(wasm.memory.buffer, ptr, byteLength);
-	for (var i; i < string.length; i++) {
+	const destination = new Uint16Array(wasm.memory.buffer, ptr, string.length);
+	for (let i = 0; i < string.length; i++) {
 		destination[i] = string.charCodeAt(i);
 	}
 
@@ -113,29 +116,29 @@ export class DiplomatBuf {
 	// Create an array view of the buffer. This gives us the `set` method which correctly handles untyped values
 	const destination =
 		rustType == "u8" || rustType == "bool" ? new Uint8Array(wasm.memory.buffer, ptr, byteLength) :
-			rustType == "i8" ? new Int8Array(wasm.memory.buffer, ptr, byteLength) :
-				rustType == "u16" ? new Uint16Array(wasm.memory.buffer, ptr, byteLength) :
-					rustType == "i16" ? new Int16Array(wasm.memory.buffer, ptr, byteLength) :
-						rustType == "i32" || rustType == "isize" ? new Int32Array(wasm.memory.buffer, ptr, byteLength) :
-							rustType == "u64" ? new BigUint64Array(wasm.memory.buffer, ptr, byteLength) :
-								rustType == "i64" ? new BigInt64Array(wasm.memory.buffer, ptr, byteLength) :
-									rustType == "f32" ? new Float32Array(wasm.memory.buffer, ptr, byteLength) :
-										rustType == "f64" ? new Float64Array(wasm.memory.buffer, ptr, byteLength) :
-											new Uint32Array(wasm.memory.buffer, ptr, byteLength);
+		rustType == "i8" ? new Int8Array(wasm.memory.buffer, ptr, byteLength) :
+			rustType == "u16" ? new Uint16Array(wasm.memory.buffer, ptr, byteLength) :
+			rustType == "i16" ? new Int16Array(wasm.memory.buffer, ptr, byteLength) :
+				rustType == "i32" || rustType == "isize" ? new Int32Array(wasm.memory.buffer, ptr, byteLength) :
+				rustType == "u64" ? new BigUint64Array(wasm.memory.buffer, ptr, byteLength) :
+					rustType == "i64" ? new BigInt64Array(wasm.memory.buffer, ptr, byteLength) :
+					rustType == "f32" ? new Float32Array(wasm.memory.buffer, ptr, byteLength) :
+						rustType == "f64" ? new Float64Array(wasm.memory.buffer, ptr, byteLength) :
+						new Uint32Array(wasm.memory.buffer, ptr, byteLength);
 	destination.set(list);
 
 	return new DiplomatBuf(ptr, list.length, () => wasm.diplomat_free(ptr, byteLength, elementSize));
 	}
 
 	constructor(ptr, size, free) {
-		this.ptr = ptr;
-		this.size = size;
-		// Generated code calls one of methods these for each allocation, to either
-		// free directly after the FFI call, to leak (to create a &'static), or to
-		// register the buffer with the garbage collector (to create a &'a).
-		this.free = free;
-		this.leak = () => { };
-		this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
+	this.ptr = ptr;
+	this.size = size;
+	// Generated code calls one of methods these for each allocation, to either
+	// free directly after the FFI call, to leak (to create a &'static), or to
+	// register the buffer with the garbage collector (to create a &'a).
+	this.free = free;
+	this.leak = () => { };
+	this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
 	}
 }
 

@@ -17,6 +17,14 @@ export class OptionOpaque {
 
     static returns(): OptionStruct | undefined;
 
+    optionIsize(): number | undefined;
+
+    optionUsize(): number | undefined;
+
+    optionI32(): number | undefined;
+
+    optionU32(): number | undefined;
+
     static newStruct(): OptionStruct;
 
     static newStructNones(): OptionStruct;

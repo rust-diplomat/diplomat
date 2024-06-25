@@ -156,17 +156,25 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 				format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})();").into()
 			},
 			Type::Slice(slice) => {
-				if let Some(lt) = slice.lifetime() {
-					match lt {
-						MaybeStatic::NonStatic(lifetime) => {
-							// TODO:
-							format!("{variable_name}({}Edges) // TODO: Slice c_to_js", lifetime_environment.fmt_lifetime(lifetime)).into()
-						},
-						_ => todo!()
-					}
-				} else {
-					// TODO:
-					format!("{variable_name} // TODO: Slice c_to_js").into()
+				match slice {
+					hir::Slice::Primitive(_, primitive_type) => {
+						format!("{0}.from(new {0}(wasm.memory.buffer, {variable_name}[0], {variable_name}[1]))", self.js_ctx.formatter.fmt_primitive_slice(primitive_type)).into()
+					},
+					hir::Slice::Str(_, encoding) => {
+						format!("diplomatRuntime.readString{}(wasm.memory.buffer, {variable_name}[0], {variable_name}[1])", 
+						match encoding {
+							hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
+							hir::StringEncoding::UnvalidatedUtf16 => 16,
+							_ => unreachable!("Unknown string_encoding {encoding:?} found")
+						}).into()
+					},
+					hir::Slice::Strs(encoding) => {
+						// Old JS backend didn't support this.
+						// TODO: Basically need to iterate through and read each string into the array. 
+						// I think looking at the LLVM IR representation for this would be useful.
+						todo!("Returning slice of strings not yet implemented for JS2 backend.");
+					},
+					_ => unreachable!("Unknown slice {slice:?} found"),
 				}
 			},
 			_ => unreachable!("AST/HIR variant {:?} unknown.", ty)
@@ -180,39 +188,25 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 			format!(" + {}", offset)
 		};
 		match *ty {
-			Type::Enum(..) => format!("diplomatRuntime.enumDiscriminant(wasm, {variable_name}{o})").into(),
+			Type::Enum(..) => format!("enumDiscriminant(wasm, {variable_name}{o})").into(),
 			Type::Opaque(..) => format!("diplomatRuntime.ptrRead(wasm, {variable_name}{o})").into(),
 			// FIXME: I'm not sure this works if we're being passed a struct that's a member of a struct.
 			// Structs always assume they're being passed a pointer, so they handle this in their constructors:
+			// See NestedBorrowedFields
 			Type::Struct(..) => variable_name,
-			Type::Slice(..) => "/* TODO: gen_c_to_js_deref */null".into(), // TODO: See BorrowedFieldsWithBounds.
-			Type::Primitive(p) => {
-				format!("{0}(new {1}(wasm.memory.buffer, {variable_name}{o}, 1))[0]{2}", 
-				match p {
-					PrimitiveType::Char => "String.fromCharCode(",
-					_ => "",
-				},
-				match p {
-					PrimitiveType::Bool | PrimitiveType::Byte | PrimitiveType::Int(IntType::U8)
-					=> "Uint8Array",
-					PrimitiveType::Int(IntType::I8) => "Int8Array",
-					PrimitiveType::Int(IntType::I16) => "Int16Array",
-					PrimitiveType::Int(IntType::U16) => "Uint16Array",
-					PrimitiveType::Int(IntType::I32) | PrimitiveType::IntSize(IntSizeType::Isize) => "Int32Array",
-					PrimitiveType::Int(IntType::U32) | PrimitiveType::IntSize(IntSizeType::Usize) | PrimitiveType::Char => "Uint32Array",
-					PrimitiveType::Int(IntType::I64) => "BigInt64Array",
-					PrimitiveType::Int(IntType::U64) => "BigUint64Array",
-					PrimitiveType::Float(FloatType::F32) => "Float32Array",
-					PrimitiveType::Float(FloatType::F64) => "Float64Array",
-					PrimitiveType::Int128(..) => panic!("Int128 is not a supported type for the JS backend."),
-				},
-				match p {
-					PrimitiveType::Bool => " == 1",
-					PrimitiveType::Char => ")",
-					_ => "",
-				}
-				).into()
+			Type::Slice(..) => format!("new Uint32Array(wasm.memory.buffer, {variable_name}{o}, 2)").into(),
+			Type::Primitive(p) => format!("{0}(new {1}(wasm.memory.buffer, {variable_name}{o}, 1))[0]{2}", 
+			match p {
+				PrimitiveType::Char => "String.fromCharCode(",
+				_ => "",
 			},
+			self.js_ctx.formatter.fmt_primitive_slice(p),
+			match p {
+				PrimitiveType::Bool => " == 1",
+				PrimitiveType::Char => ")",
+				_ => "",
+			}
+			).into(),
 			_ => unreachable!("Unknown AST/HIR variant {:?}", ty)
 		}
 	}
@@ -281,7 +275,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
 			// Any out that is not a [`SuccessType::Write`].
 			ReturnType::Infallible(SuccessType::OutType(ref o)) => {
-				let mut result = "result";
+				let mut result = "result".into();
 				match o {
 					Type::Struct(_) | Type::Slice(_) => {
 						let layout = crate::layout_hir::type_size_alignment(o, &self.js_ctx.tcx);
@@ -297,7 +291,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						method_info.cleanup_expressions.push(
 							format!("wasm.diplomat_free(diplomat_receive_buffer, {size}, {align});")
 							.into());
-						result = "diplomat_receive_buffer";
+						result = "diplomat_receive_buffer".into();
+						todo!("Need to just write the static slice constructor that dereferences automatically for us.");
+						// For slices, we need an extra dereferencing step:
+						// if let Type::Slice(_) = o {
+						// 	result = self.gen_c_to_js_deref_for_type(o, "diplomat_receive_buffer".into(), 0);
+						// }
 					},
 					_ => (),
 				}

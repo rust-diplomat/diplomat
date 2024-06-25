@@ -27,8 +27,8 @@ export class BorrowedFieldsReturning {
     
 
     _fromFFI(ptr, aEdges) {
-        const bytesDeref = /* TODO: gen_c_to_js_deref */null;
-        this.#bytes = bytesDeref(aEdges) // TODO: Slice c_to_js;
+        const bytesDeref = new Uint32Array(wasm.memory.buffer, ptr, 2);
+        this.#bytes = diplomatRuntime.readString8(wasm.memory.buffer, bytesDeref[0], bytesDeref[1]);
 
         return this;
     }
