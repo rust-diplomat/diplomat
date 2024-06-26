@@ -20,7 +20,7 @@ pub struct Cpp2Formatter<'tcx> {
 impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext) -> Self {
         Self {
-            c: CFormatter::new(tcx),
+            c: CFormatter::new(tcx, true),
         }
     }
 

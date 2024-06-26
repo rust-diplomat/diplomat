@@ -1,6 +1,12 @@
-namespace capi {
+{% if let Some(ns) = namespace -%}
+namespace {{ns}} {
+{%endif-%}
+namespace {{self::CAPI_NAMESPACE}} {
     {{ c_impl_header.body|trim|indent(4) }}
 }
+{% if namespace.is_some() -%}
+}
+{%endif-%}
 
 {% let const_ptr = fmt.fmt_c_ptr(type_name, Mutability::Immutable) -%}
 {% let mut_ptr = fmt.fmt_c_ptr(type_name, Mutability::Mutable) -%}

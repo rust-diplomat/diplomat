@@ -14,21 +14,40 @@ use std::borrow::Cow;
 /// of C types and methods.
 pub struct CFormatter<'tcx> {
     tcx: &'tcx TypeContext,
+    is_for_cpp: bool,
 }
 
+pub(crate) const CAPI_NAMESPACE: &str = "capi";
+
 impl<'tcx> CFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext) -> Self {
-        Self { tcx }
+    pub fn new(tcx: &'tcx TypeContext, is_for_cpp: bool) -> Self {
+        Self { tcx, is_for_cpp }
     }
     pub fn tcx(&self) -> &'tcx TypeContext {
         self.tcx
     }
 
-    /// Resolve and format a named type for use in code
+    /// Resolve and format a named type for use in code (without the namespace)
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         // Currently don't do anything fancy
         // Eventually apply rename rules and such
         self.tcx.resolve_type(id).name().as_str().into()
+    }
+    /// Resolve and format a named type for use in code (with a namespace, if needed by C++)
+    pub fn fmt_type_name_maybe_namespaced(&self, id: TypeId) -> Cow<'tcx, str> {
+        // Currently don't do anything fancy
+        // Eventually apply rename rules and such
+        let resolved = self.tcx.resolve_type(id);
+        let name = self.tcx.resolve_type(id).name().as_str().into();
+        if self.is_for_cpp {
+            if let Some(ref ns) = resolved.attrs().namespace {
+                format!("{ns}::{CAPI_NAMESPACE}::{name}").into()
+            } else {
+                format!("{CAPI_NAMESPACE}::{name}").into()
+            }
+        } else {
+            name
+        }
     }
 
     /// Resolve and format a named type for use in diagnostics
@@ -78,6 +97,21 @@ impl<'tcx> CFormatter<'tcx> {
         let method_name = method.name.as_str();
         let put_together = format!("{ty_name}_{method_name}");
         method.attrs.abi_rename.apply(put_together.into()).into()
+    }
+
+    pub fn fmt_method_name_namespaced(&self, ty: TypeId, method: &hir::Method) -> String {
+        let method = self.fmt_method_name(ty, method);
+
+        if self.is_for_cpp {
+            let resolved = self.tcx.resolve_type(ty);
+            if let Some(ref ns) = resolved.attrs().namespace {
+                format!("{ns}::{CAPI_NAMESPACE}::{method}")
+            } else {
+                format!("{CAPI_NAMESPACE}::{method}")
+            }
+        } else {
+            method
+        }
     }
 
     /// Resolve and format a type's destructor
