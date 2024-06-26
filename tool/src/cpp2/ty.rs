@@ -10,6 +10,8 @@ use diplomat_core::hir::{
 };
 use std::borrow::Cow;
 
+use crate::c2::CAPI_NAMESPACE;
+
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
         if ty.attrs().disable {
@@ -182,6 +184,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &'a str,
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
             c_impl_header: C2Header,
         }
 
@@ -191,6 +194,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
+            namespace: ty.attrs.namespace.as_deref(),
             c_impl_header,
         }
         .render_into(self.impl_header)
@@ -246,6 +250,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &'a str,
             dtor_name: &'a str,
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
             c_impl_header: C2Header,
         }
 
@@ -256,6 +261,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &ctype,
             dtor_name: &dtor_name,
             methods: methods.as_slice(),
+            namespace: ty.attrs.namespace.as_deref(),
             c_impl_header,
         }
         .render_into(self.impl_header)
@@ -336,6 +342,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: &'a [NamedExpression<'a>],
             c_to_cpp_fields: &'a [NamedExpression<'a>],
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
             c_impl_header: C2Header,
         }
 
@@ -347,6 +354,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: cpp_to_c_fields.as_slice(),
             c_to_cpp_fields: c_to_cpp_fields.as_slice(),
             methods: methods.as_slice(),
+            namespace: def.attrs.namespace.as_deref(),
             c_impl_header,
         }
         .render_into(self.impl_header)

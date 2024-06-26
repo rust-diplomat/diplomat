@@ -392,7 +392,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => {
                 let op_id = op.tcx_id.into();
-                let ty_name = self.formatter.fmt_type_name(op_id);
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(op_id);
                 if self.tcx.resolve_type(op_id).attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
@@ -407,7 +407,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             }
             Type::Struct(ref st) => {
                 let st_id = st.id();
-                let ty_name = self.formatter.fmt_type_name(st_id);
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(st_id);
                 if self.tcx.resolve_type(st_id).attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
@@ -419,7 +419,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
-                let ty_name = self.formatter.fmt_type_name(id);
+                let ty_name = self.formatter.fmt_type_name_maybe_namespaced(id);
                 if self.tcx.resolve_type(id).attrs().disable {
                     self.errors
                         .push_error(format!("Found usage of disabled type {ty_name}"))
