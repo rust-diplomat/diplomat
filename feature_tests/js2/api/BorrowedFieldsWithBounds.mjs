@@ -31,17 +31,23 @@ export class BorrowedFieldsWithBounds {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    // If this struct contains any slices, their lifetime-edge-relevant objects will only
-    // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
+    // If this struct contains any slices, their lifetime-edge-relevant information will be
+    // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
-    _intoFFI(aAppendArray = [], bAppendArray = [], cAppendArray = []) {
-        return [
-            diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA) /* TODO: Freeing code */, 
-            diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB) /* TODO: Freeing code */, 
-            diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC) /* TODO: Freeing code */]
+    _intoFFI(
+        slice_cleanup_callbacks,
+        appendArrayMap
+    ) {
+        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(fieldA); } fieldA.garbageCollect(); } : fieldA.free);
+        
+        slice_cleanup_callbacks.push((appendArrayMap[bAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[bAppendArray]) { appendArrayMap[bAppendArray].push(fieldB); } fieldB.garbageCollect(); } : fieldB.free);
+        
+        slice_cleanup_callbacks.push((appendArrayMap[cAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[cAppendArray]) { appendArrayMap[cAppendArray].push(fieldC); } fieldC.garbageCollect(); } : fieldC.free);
+        
+        return [diplomatRuntime.DiplomatBuf.str16(wasm, this.#fieldA), diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldB), diplomatRuntime.DiplomatBuf.str8(wasm, this.#fieldC)]
     }
 
     _fromFFI(ptr, aEdges, bEdges, cEdges) {
@@ -60,7 +66,6 @@ export class BorrowedFieldsWithBounds {
     // This is all fields that may be borrowed from if borrowing `'a`,
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    // ignore: unused_element
     get _fieldsForLifetimeA() { 
         return [fieldA];
     };
@@ -70,7 +75,6 @@ export class BorrowedFieldsWithBounds {
     // This is all fields that may be borrowed from if borrowing `'b`,
     // assuming that there are no `'other: b`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    // ignore: unused_element
     get _fieldsForLifetimeB() { 
         return [fieldB];
     };
@@ -80,7 +84,6 @@ export class BorrowedFieldsWithBounds {
     // This is all fields that may be borrowed from if borrowing `'c`,
     // assuming that there are no `'other: c`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    // ignore: unused_element
     get _fieldsForLifetimeC() { 
         return [fieldC];
     };

@@ -34,17 +34,17 @@ export class NestedBorrowedFields {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    // If this struct contains any slices, their lifetime-edge-relevant objects will only
-    // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
+    // If this struct contains any slices, their lifetime-edge-relevant information will be
+    // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
     //
     // This method does not handle lifetime relationships: if `'foo: 'bar`, make sure fooAppendArray contains everything barAppendArray does.
-    _intoFFI(xAppendArray = [], yAppendArray = [], zAppendArray = []) {
-        return [
-            ...this.#fields._intoFFI([...xAppendArray]), 
-            ...this.#bounds._intoFFI([...xAppendArray],[...yAppendArray],[...yAppendArray]), 
-            ...this.#bounds2._intoFFI([...zAppendArray],[...zAppendArray],[...zAppendArray])]
+    _intoFFI(
+        slice_cleanup_callbacks,
+        appendArrayMap
+    ) {
+        return [...this.#fields._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...xAppendArray],}), ...this.#bounds._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...xAppendArray],bAppendArray: [...yAppendArray],cAppendArray: [...yAppendArray],}), ...this.#bounds2._intoFFI(slice_cleanup_callbacks, {aAppendArray: [...zAppendArray],bAppendArray: [...zAppendArray],cAppendArray: [...zAppendArray],})]
     }
 
     _fromFFI(ptr, xEdges, yEdges, zEdges) {
@@ -63,7 +63,6 @@ export class NestedBorrowedFields {
     // This is all fields that may be borrowed from if borrowing `'x`,
     // assuming that there are no `'other: x`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    // ignore: unused_element
     get _fieldsForLifetimeX() { 
         return [...fields._fieldsForLifetimeA, ...bounds._fieldsForLifetimeA];
     };
@@ -73,7 +72,6 @@ export class NestedBorrowedFields {
     // This is all fields that may be borrowed from if borrowing `'y`,
     // assuming that there are no `'other: y`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    // ignore: unused_element
     get _fieldsForLifetimeY() { 
         return [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC];
     };
@@ -83,7 +81,6 @@ export class NestedBorrowedFields {
     // This is all fields that may be borrowed from if borrowing `'z`,
     // assuming that there are no `'other: z`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    // ignore: unused_element
     get _fieldsForLifetimeZ() { 
         return [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
     };

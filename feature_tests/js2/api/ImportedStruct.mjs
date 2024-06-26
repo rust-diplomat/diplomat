@@ -25,10 +25,11 @@ export class ImportedStruct {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
-    _intoFFI() {
-        return [
-            this.#foo.ffiValue, 
-            this.#count]
+    _intoFFI(
+        slice_cleanup_callbacks,
+        appendArrayMap
+    ) {
+        return [this.#foo.ffiValue, this.#count]
     }
 
     // This struct contains borrowed fields, so this takes in a list of

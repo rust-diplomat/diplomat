@@ -114,14 +114,20 @@ export class Foo {
 
     static extractFromFields(fields) {
         
+        let slice_cleanup_callbacks = [];
+        
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [...fields._fieldsForLifetimeA];
-        const result = wasm.Foo_extract_from_fields(...fields._intoFFI([aEdges]));
+        const result = wasm.Foo_extract_from_fields(...fields._intoFFI(slice_cleanup_callbacks, {aAppendArray: [aEdges],}));
     
         try {
     
             return new Foo(result, [], aEdges);
         } finally {
+        
+            for (let cleanup of slice_cleanup_callbacks) {
+                cleanup();
+            }
         
         }
     }
@@ -130,14 +136,20 @@ export class Foo {
         
         const anotherStringSlice = diplomatRuntime.DiplomatBuf.str8(wasm, anotherString);
         
+        let slice_cleanup_callbacks = [];
+        
         // This lifetime edge depends on lifetimes 'a, 'y, 'z
         let aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringSlice];
-        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI([aEdges],[aEdges]), anotherStringSlice.ptr, anotherStringSlice.size);
+        const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(slice_cleanup_callbacks, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), anotherStringSlice.ptr, anotherStringSlice.size);
     
         try {
     
             return new Foo(result, [], aEdges);
         } finally {
+        
+            for (let cleanup of slice_cleanup_callbacks) {
+                cleanup();
+            }
         
             anotherStringSlice.garbageCollect();
         

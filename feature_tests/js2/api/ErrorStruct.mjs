@@ -24,10 +24,11 @@ export class ErrorStruct {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
-    _intoFFI() {
-        return [
-            this.#i, 
-            this.#j]
+    _intoFFI(
+        slice_cleanup_callbacks,
+        appendArrayMap
+    ) {
+        return [this.#i, this.#j]
     }
 
     // This struct contains borrowed fields, so this takes in a list of

@@ -135,31 +135,27 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 &struct_def.lifetimes
             );
 
-            let (js_to_c, maybe_struct_borrow_info) = if let hir::Type::Slice(slice) = &field.ty {
+            let (js_to_c, maybe_post_cleanup_info, maybe_struct_borrow_info) = if let hir::Type::Slice(slice) = &field.ty {
                 let slice_expr = self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), None);
-
-                let mut ret = vec![
-                    format!("{slice_expr} /* TODO: Freeing code */").into()
-                ];
 
                 // We do not need to handle lifetime transitivity here: Methods already resolve
                 // lifetime transitivity, and we have an HIR validity pass ensuring that struct lifetime bounds
                 // are explicitly specified on methods.
-                // TODO: JS lifetimes.
-                // if let Some(lt) = slice.lifetime() {
-                //     let hir::MaybeStatic::NonStatic(lt) = lt else {
-                //         todo!("'static not supported in JS right now");
-                //     };
-                //     ret.push(format!(
-                //         "struct.{name}._data = {name}View.allocIn({lt_name}AppendArray.isNotEmpty ? _FinalizedArena.withLifetime({lt_name}AppendArray).arena : temp);",
-                //         lt_name = ty.lifetimes.fmt_lifetime(lt),
-                //     ));
-                // } else {
-                //     ret.push(format!(
-                //         "struct.{name}._data = {name}View.allocIn(_RustAlloc());"
-                //     ));
-                // }
-                (ret, None)
+
+                let post_cleanup_statement = if let Some(lt) = slice.lifetime() {
+                    let hir::MaybeStatic::NonStatic(lt) = lt else {
+                        todo!("'static not supported in JS2 backend");
+                    };
+                    format!(
+                        "(appendArrayMap[{lt_name}AppendArray] || []).length > 0 ? () => {{ for (let lifetime of appendArrayMap[{lt_name}AppendArray]) {{ appendArrayMap[{lt_name}AppendArray].push({field_name}); }} {field_name}.garbageCollect(); }} : {field_name}.free",
+                        lt_name = struct_def.lifetimes.fmt_lifetime(lt),
+                    )
+                } else {
+                    // We take ownership
+                    "".into()
+                };
+
+                (format!("{slice_expr}").into(), Some(post_cleanup_statement), None)
             } else {
                 let borrow_info = if let hir::Type::Struct(path) = &field.ty {
                     StructBorrowInfo::compute_for_struct_field(struct_def, path, self.js_ctx.tcx).map(
@@ -173,8 +169,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     None
                 };
 
-                (vec!(self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), borrow_info.as_ref()).into()
-                ), borrow_info.map(|s| s.param_info))
+                (self.gen_js_to_c_for_type(&field.ty, format!("this.#{}", field_name.clone()).into(), borrow_info.as_ref()).into(), None, borrow_info.map(|s| s.param_info))
             };
 
             FieldInfo {
@@ -184,6 +179,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 js_type_name,
                 c_to_js_deref,
                 c_to_js,
+                post_cleanup_statement: maybe_post_cleanup_info,
                 js_to_c,
                 maybe_struct_borrow_info
             }
@@ -236,12 +232,17 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         method_info.c_method_name = self.js_ctx.formatter.fmt_c_method_name(type_id, method);
         method_info.typescript = typescript;
         method_info.method = Some(method);
+        method_info.needs_slice_cleanup = false;
 
         if let Some(param_self) = method.param_self.as_ref() {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
 
             // We don't need to clean up structs for Rust because they're represented entirely in JS form.
             method_info.param_conversions.push(self.gen_js_to_c_self(&param_self.ty));
+            
+            if matches!(param_self.ty, hir::SelfType::Struct(..)) {
+                method_info.needs_slice_cleanup = true;
+            }
         }
 
         for param in method.params.iter() {
@@ -288,6 +289,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     is_borrowed,
                 });
             } else {
+                if let hir::Type::Struct(..) = param.ty {
+                    method_info.needs_slice_cleanup = true;
+                }
+
                 let struct_borrow_info = 
                     if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
                         Some(converter::StructBorrowContext {
@@ -392,6 +397,8 @@ struct MethodInfo<'info> {
     /// Native C method name
     c_method_name : Cow<'info, str>,
 
+    needs_slice_cleanup : bool,
+
     typescript : bool,
 
     parameters : Vec<ParamInfo<'info>>,
@@ -415,7 +422,8 @@ struct FieldInfo<'info, P: hir::TyPosition> {
     js_type_name  : Cow<'info, str>,
     c_to_js : Cow<'info, str>,
     c_to_js_deref : Cow<'info, str>,
-    js_to_c : Vec<String>,
+    js_to_c : String,
+    post_cleanup_statement : Option<String>,
     maybe_struct_borrow_info : Option<StructBorrowInfo<'info>>,
 }
 

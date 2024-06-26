@@ -61,15 +61,11 @@ export class MyStruct {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
-    _intoFFI() {
-        return [
-            this.#a, 
-            this.#b, 
-            this.#c, 
-            this.#d, 
-            this.#e, 
-            diplomatRuntime.extractCodePoint(this.#f, 'this.#f'), 
-            this.#g.ffiValue]
+    _intoFFI(
+        slice_cleanup_callbacks,
+        appendArrayMap
+    ) {
+        return [this.#a, this.#b, this.#c, this.#d, this.#e, diplomatRuntime.extractCodePoint(this.#f, 'this.#f'), this.#g.ffiValue]
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -111,12 +107,18 @@ export class MyStruct {
     }
 
     intoA() {
+        
+        let slice_cleanup_callbacks = [];
         const result = wasm.MyStruct_into_a(...this._intoFFI());
     
         try {
     
             return result;
         } finally {
+        
+            for (let cleanup of slice_cleanup_callbacks) {
+                cleanup();
+            }
         
         }
     }

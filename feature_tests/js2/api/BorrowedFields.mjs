@@ -31,15 +31,21 @@ export class BorrowedFields {
 
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
-    // If this struct contains any slices, their lifetime-edge-relevant objects will only
-    // be constructed here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
+    // If this struct contains any slices, their lifetime-edge-relevant information will be
+    // set up here, and can be appended to any relevant lifetime arrays here. <lifetime>AppendArray accepts a list
     // of arrays for each lifetime to do so. It accepts multiple lists per lifetime in case the caller needs to tie a lifetime to multiple
     // output arrays. Null is equivalent to an empty list: this lifetime is not being borrowed from.
-    _intoFFI(aAppendArray = []) {
-        return [
-            diplomatRuntime.DiplomatBuf.str16(wasm, this.#a) /* TODO: Freeing code */, 
-            diplomatRuntime.DiplomatBuf.str8(wasm, this.#b) /* TODO: Freeing code */, 
-            diplomatRuntime.DiplomatBuf.str8(wasm, this.#c) /* TODO: Freeing code */]
+    _intoFFI(
+        slice_cleanup_callbacks,
+        appendArrayMap
+    ) {
+        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(a); } a.garbageCollect(); } : a.free);
+        
+        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(b); } b.garbageCollect(); } : b.free);
+        
+        slice_cleanup_callbacks.push((appendArrayMap[aAppendArray] || []).length > 0 ? () => { for (let lifetime of appendArrayMap[aAppendArray]) { appendArrayMap[aAppendArray].push(c); } c.garbageCollect(); } : c.free);
+        
+        return [diplomatRuntime.DiplomatBuf.str16(wasm, this.#a), diplomatRuntime.DiplomatBuf.str8(wasm, this.#b), diplomatRuntime.DiplomatBuf.str8(wasm, this.#c)]
     }
 
     _fromFFI(ptr, aEdges) {
@@ -58,7 +64,6 @@ export class BorrowedFields {
     // This is all fields that may be borrowed from if borrowing `'a`,
     // assuming that there are no `'other: a`. bounds. In case of such bounds,
     // the caller should take care to also call _fieldsForLifetimeOther
-    // ignore: unused_element
     get _fieldsForLifetimeA() { 
         return [a, b, c];
     };

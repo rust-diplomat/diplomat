@@ -10,6 +10,10 @@
     const {{slice.name}}Slice = {{slice.slice_expr}};
     {% endfor -%}
 
+    {%- if needs_slice_cleanup %}
+    let slice_cleanup_callbacks = [];
+    {% endif -%}
+
     {%- for alloc_stmt in alloc_expressions %}
     {{alloc_stmt|indent(4)}}
     {% endfor -%}
@@ -46,6 +50,11 @@
     {% when None -%}
     {%- endmatch %}
     } finally {
+    {% if needs_slice_cleanup %}
+        for (let cleanup of slice_cleanup_callbacks) {
+            cleanup();
+        }
+    {% endif -%}
     {% for cleanup in cleanup_expressions %}
         {{cleanup|indent(8)}}
     {% endfor %}

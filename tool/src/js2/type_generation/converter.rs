@@ -453,11 +453,11 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 	pub(super) fn gen_js_to_c_for_struct_type(&self, js_name : Cow<'tcx, str>, struct_borrow_info : Option<&StructBorrowContext<'tcx>>) -> Cow<'tcx, str> {
         let mut params = String::new();
         if let Some(info) = struct_borrow_info {
-			let iter = &mut info.param_info.borrowed_struct_lifetime_map.iter().peekable();
-            while let Some((def_lt, use_lts)) = &iter.next() {
+            for (def_lt, use_lts) in  &info.param_info.borrowed_struct_lifetime_map {
                 write!(
                     &mut params,
-                    "[",
+                    "{}AppendArray: [",
+					info.param_info.env.fmt_lifetime(def_lt)
                 )
                 .unwrap();
                 let mut maybe_comma = "";
@@ -471,13 +471,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     }
                     maybe_comma = ", ";
                 }
-                write!(&mut params, "]{}", match iter.peek().is_none() {
-					true => "",
-					false => ",",
-				}).unwrap();
+                write!(&mut params, "],").unwrap();
             }
         }
-        format!("...{js_name}._intoFFI({params})").into()
+        format!("...{js_name}._intoFFI(slice_cleanup_callbacks, {{{params}}})").into()
 	}
 	// #endregion
 }

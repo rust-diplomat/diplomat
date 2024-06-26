@@ -91,11 +91,17 @@ export class Opaque {
     }
 
     assertStruct(s) {
-        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI());
+        
+        let slice_cleanup_callbacks = [];
+        wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(slice_cleanup_callbacks, {}));
     
         try {
     
         } finally {
+        
+            for (let cleanup of slice_cleanup_callbacks) {
+                cleanup();
+            }
         
         }
     }

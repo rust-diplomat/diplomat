@@ -10,7 +10,10 @@ export class MyZst {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
-    _intoFFI() {
+    _intoFFI(
+        slice_cleanup_callbacks,
+        appendArrayMap
+    ) {
         return []
     }
 
