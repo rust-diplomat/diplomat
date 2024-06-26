@@ -10,9 +10,9 @@ int main(int argc, char *argv[]) {
     simple_assert_eq("method should call", r->abirenamed(), 123);
 
     // These C names should also resolve
-    void* renamed = (void*)capi::renamed_on_abi_only;
+    void* renamed = (void*)ns::capi::renamed_on_abi_only;
     std::cout<<"Renamed function at "<<renamed<<std::endl;
-    renamed = (void*)capi::namespace_AttrOpaque1_method;
+    renamed = (void*)ns::capi::namespace_AttrOpaque1_method;
     std::cout<<"Renamed function at "<<renamed<<std::endl;
 
     ns::CPPRenamedAttrEnum e = ns::CPPRenamedAttrEnum::A;
