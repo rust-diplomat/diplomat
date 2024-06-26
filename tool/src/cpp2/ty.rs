@@ -494,6 +494,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 };
                 let ret = ret.into_owned().into();
 
+                // We don't append a header for this, since we already have a forward.
+                // Note that we also need a forward for the C type in case of structs. The forward handling manages this.
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
                 self.impl_header
@@ -512,6 +514,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
+                // This can be cleaned up with https://github.com/rust-diplomat/diplomat/issues/514
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
                 self.decl_header
@@ -533,6 +536,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
+                // This can be cleaned up with https://github.com/rust-diplomat/diplomat/issues/514
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
                 self.decl_header
