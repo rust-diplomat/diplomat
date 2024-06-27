@@ -22,6 +22,7 @@ mod ffi {
         }
 
         #[diplomat::skip_if_ast]
+        #[diplomat::attr(cpp, disable)]
         pub fn new_from_first(v: &[&DiplomatStr]) -> Box<MyString> {
             Box::new(Self(core::str::from_utf8(v[0]).unwrap().into()))
         }
