@@ -1,7 +1,7 @@
-{% if !docs.is_empty() %}
+{%- if !docs.is_empty() %}
 /** {{docs}}
 */
-{% endif %}
+{% endif -%}
 export class {{type_name}} {
     {%- for field in fields %}
     #{{field.field_name}};
