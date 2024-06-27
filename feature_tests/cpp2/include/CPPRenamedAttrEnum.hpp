@@ -12,23 +12,23 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace ns {
 namespace capi {
     extern "C" {
     
     
     } // extern "C"
 }
-
-
-inline capi::AttrEnum ns::CPPRenamedAttrEnum::AsFFI() const {
-  return static_cast<capi::AttrEnum>(value);
+}
+inline ns::capi::AttrEnum ns::CPPRenamedAttrEnum::AsFFI() const {
+  return static_cast<ns::capi::AttrEnum>(value);
 }
 
-inline ns::CPPRenamedAttrEnum ns::CPPRenamedAttrEnum::FromFFI(capi::AttrEnum c_enum) {
+inline ns::CPPRenamedAttrEnum ns::CPPRenamedAttrEnum::FromFFI(ns::capi::AttrEnum c_enum) {
   switch (c_enum) {
-    case capi::AttrEnum_A:
-    case capi::AttrEnum_B:
-    case capi::AttrEnum_C:
+    case ns::capi::AttrEnum_A:
+    case ns::capi::AttrEnum_B:
+    case ns::capi::AttrEnum_C:
       return static_cast<ns::CPPRenamedAttrEnum::Value>(c_enum);
     default:
       abort();

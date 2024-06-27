@@ -9,6 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+namespace capi {typedef struct Utf16Wrap Utf16Wrap; }
 class Utf16Wrap;
 
 
@@ -35,10 +36,10 @@ public:
 
   inline std::unique_ptr<Utf16Wrap> wrapper() const;
 
-  inline const capi::OpaqueMutexedString* AsFFI() const;
-  inline capi::OpaqueMutexedString* AsFFI();
-  inline static const OpaqueMutexedString* FromFFI(const capi::OpaqueMutexedString* ptr);
-  inline static OpaqueMutexedString* FromFFI(capi::OpaqueMutexedString* ptr);
+  inline const ::capi::OpaqueMutexedString* AsFFI() const;
+  inline ::capi::OpaqueMutexedString* AsFFI();
+  inline static const OpaqueMutexedString* FromFFI(const ::capi::OpaqueMutexedString* ptr);
+  inline static OpaqueMutexedString* FromFFI(::capi::OpaqueMutexedString* ptr);
   inline static void operator delete(void* ptr);
 private:
   OpaqueMutexedString() = delete;

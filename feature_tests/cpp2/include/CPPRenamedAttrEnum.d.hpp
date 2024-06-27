@@ -10,6 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace ns {
 namespace capi {
     typedef enum AttrEnum {
       AttrEnum_A = 0,
@@ -18,7 +19,7 @@ namespace capi {
     } AttrEnum;
 }
 
-namespace ns {
+
 class CPPRenamedAttrEnum {
 public:
   enum Value {
@@ -34,8 +35,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline capi::AttrEnum AsFFI() const;
-  inline static ns::CPPRenamedAttrEnum FromFFI(capi::AttrEnum c_enum);
+  inline ns::capi::AttrEnum AsFFI() const;
+  inline static ns::CPPRenamedAttrEnum FromFFI(ns::capi::AttrEnum c_enum);
 private:
     Value value;
 };

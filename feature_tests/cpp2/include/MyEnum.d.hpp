@@ -21,6 +21,7 @@ namespace capi {
     } MyEnum;
 }
 
+
 class MyEnum {
 public:
   enum Value {
@@ -43,8 +44,8 @@ public:
 
   inline static MyEnum get_a();
 
-  inline capi::MyEnum AsFFI() const;
-  inline static MyEnum FromFFI(capi::MyEnum c_enum);
+  inline ::capi::MyEnum AsFFI() const;
+  inline static MyEnum FromFFI(::capi::MyEnum c_enum);
 private:
     Value value;
 };

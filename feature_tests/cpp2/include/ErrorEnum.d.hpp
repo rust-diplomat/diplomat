@@ -17,6 +17,7 @@ namespace capi {
     } ErrorEnum;
 }
 
+
 class ErrorEnum {
 public:
   enum Value {
@@ -31,8 +32,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline capi::ErrorEnum AsFFI() const;
-  inline static ErrorEnum FromFFI(capi::ErrorEnum c_enum);
+  inline ::capi::ErrorEnum AsFFI() const;
+  inline static ErrorEnum FromFFI(::capi::ErrorEnum c_enum);
 private:
     Value value;
 };

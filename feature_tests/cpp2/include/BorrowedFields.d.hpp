@@ -9,6 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+namespace capi {typedef struct Bar Bar; }
 class Bar;
 
 
@@ -27,8 +28,8 @@ struct BorrowedFields {
 
   inline static diplomat::result<BorrowedFields, diplomat::Utf8Error> from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str);
 
-  inline capi::BorrowedFields AsFFI() const;
-  inline static BorrowedFields FromFFI(capi::BorrowedFields c_struct);
+  inline ::capi::BorrowedFields AsFFI() const;
+  inline static BorrowedFields FromFFI(::capi::BorrowedFields c_struct);
 };
 
 
