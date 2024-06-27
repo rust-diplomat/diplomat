@@ -410,10 +410,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         typescript: bool,
     ) -> String {
         #[derive(Template)]
-        #[template(path = "js2/special_method.js.jinja", escape = "none")]
+        #[template(path = "js2/iterator.js.jinja", escape = "none")]
         struct SpecialMethodInfo<'a> {
             iterator: Option<Cow<'a, str>>,
-            iterable: Option<Cow<'a, str>>,
             typescript: bool,
         }
 
@@ -423,21 +422,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             iterator = Some(self.gen_success_ty(val))
         }
 
-        let mut iterable = None;
-        if let Some(ref iterator) = special_method_presence.iterable {
-            let iterator_def = self.js_ctx.tcx.resolve_opaque(*iterator);
-            let Some(ref val) = iterator_def.special_method_presence.iterator else {
-                self.js_ctx
-                    .errors
-                    .push_error("Found iterable not returning an iterator type".into());
-                return "".to_string();
-            };
-            iterable = Some(self.gen_success_ty(val))
-        }
-
         SpecialMethodInfo {
             iterator,
-            iterable,
             typescript,
         }
         .render()
