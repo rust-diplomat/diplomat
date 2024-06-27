@@ -35,7 +35,7 @@ pub enum SuccessType {
     Write,
     /// A Diplomat type. Some types can be outputs, but not inputs, which is expressed by the `OutType` parameter.
     OutType(OutType),
-    /// A `()` type in Rust. 
+    /// A `()` type in Rust.
     Unit,
 }
 

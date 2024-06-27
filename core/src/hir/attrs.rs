@@ -598,9 +598,9 @@ impl Attrs {
 
 /// Non-exhaustive list of what attributes your backend is able to handle, based on #[diplomat::attr(...)] contents.
 /// Set this through an [`AttributeValidator`].
-/// 
+///
 /// See [`SpecialMethod`] and [`Attrs`] for your specific implementation needs.
-/// 
+///
 /// For example, the current dart backend supports [`BackendAttrSupport::constructors`]. So when it encounters:
 /// ```ignore
 /// struct Sample {}
@@ -610,14 +610,14 @@ impl Attrs {
 ///         Box::new(Sample{})
 ///     }
 /// }
-/// 
+///
 /// ```
-/// 
+///
 /// It generates
 /// ```dart
 /// factory Sample()
 /// ```
-/// 
+///
 /// If a backend does not support a specific `#[diplomat::attr(...)]`, it will error.
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
@@ -625,7 +625,7 @@ pub struct BackendAttrSupport {
     /// Supports not including any items with `#[diplomat::attr(..., disable)]`
     pub disabling: bool,
     /// I.E., changing `rust_function_name` to `camelCaseFunctionName`
-    /// 
+    ///
     /// Note that [`Attrs::abi_rename`] is required to always be supported.
     pub renaming: bool,
     /// I.E.

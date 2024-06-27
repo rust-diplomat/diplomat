@@ -1,59 +1,78 @@
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 
-use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo};
-use diplomat_core::hir::{self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence, Type, TypeId};
+use diplomat_core::hir::borrowing_param::{
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
+};
+use diplomat_core::hir::{
+    self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence, Type,
+    TypeId,
+};
 
 use askama::{self, Template};
 
-use super::{FileType, JSGenerationContext, formatter::JSFormatter};
-
+use super::{formatter::JSFormatter, FileType, JSGenerationContext};
 
 mod converter;
 use converter::StructBorrowContext;
 
 pub(super) struct TypeGenerationContext<'jsctx, 'tcx> {
-    pub js_ctx : &'jsctx JSGenerationContext<'tcx>,
-    pub typescript : bool,
-    pub imports : BTreeSet<String>,
+    pub js_ctx: &'jsctx JSGenerationContext<'tcx>,
+    pub typescript: bool,
+    pub imports: BTreeSet<String>,
 }
 
 impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
-    pub(super) fn generate_base(&self, body : String) -> String {
+    pub(super) fn generate_base(&self, body: String) -> String {
         #[derive(Template)]
-        #[template(path="js2/base.js.jinja", escape="none")]
+        #[template(path = "js2/base.js.jinja", escape = "none")]
         struct BaseTemplate<'info> {
-            body : String,
-            typescript : bool,
-            imports : &'info BTreeSet<String>,
+            body: String,
+            typescript: bool,
+            imports: &'info BTreeSet<String>,
         }
-        BaseTemplate {body, typescript: self.typescript, imports: &self.imports}.render().unwrap()
+        BaseTemplate {
+            body,
+            typescript: self.typescript,
+            imports: &self.imports,
+        }
+        .render()
+        .unwrap()
     }
 
-	/// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
-    pub(super) fn generate_enum_from_def(&mut self, enum_def : &'tcx EnumDef, type_id : TypeId, type_name : &str) -> String {
-        let mut methods = enum_def.methods
-        .iter()
-        .flat_map(|method| self.generate_method_body(type_id, type_name, method, self.typescript))
-        .collect::<Vec<_>>();
+    /// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
+    pub(super) fn generate_enum_from_def(
+        &mut self,
+        enum_def: &'tcx EnumDef,
+        type_id: TypeId,
+        type_name: &str,
+    ) -> String {
+        let mut methods = enum_def
+            .methods
+            .iter()
+            .flat_map(|method| {
+                self.generate_method_body(type_id, type_name, method, self.typescript)
+            })
+            .collect::<Vec<_>>();
 
-        let special_method_body = self.generate_special_method_body(&enum_def.special_method_presence, self.typescript);
+        let special_method_body =
+            self.generate_special_method_body(&enum_def.special_method_presence, self.typescript);
         methods.push(special_method_body);
 
         #[derive(Template)]
-        #[template(path="js2/enum.js.jinja", escape="none")]
+        #[template(path = "js2/enum.js.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             enum_def: &'a EnumDef,
-            formatter : &'a JSFormatter<'a>,
-            type_name : &'a str,
-            typescript : bool,
+            formatter: &'a JSFormatter<'a>,
+            type_name: &'a str,
+            typescript: bool,
 
-            doc_str : String,
+            doc_str: String,
 
-            methods : Vec<String>
+            methods: Vec<String>,
         }
 
-        ImplTemplate{
+        ImplTemplate {
             enum_def,
             formatter: &self.js_ctx.formatter,
             type_name,
@@ -61,33 +80,43 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             doc_str: self.js_ctx.formatter.fmt_docs(&enum_def.docs),
 
-            methods
-        }.render().unwrap()
+            methods,
+        }
+        .render()
+        .unwrap()
     }
 
-    pub(super) fn generate_opaque_from_def(&mut self, opaque_def: &'tcx OpaqueDef, type_id : TypeId, type_name : &str) -> String {
-        let mut methods = opaque_def.methods.iter()
-        .flat_map(|method| {
-            self.generate_method_body(type_id, type_name, method, self.typescript)
-         })
-        .collect::<Vec<_>>();
+    pub(super) fn generate_opaque_from_def(
+        &mut self,
+        opaque_def: &'tcx OpaqueDef,
+        type_id: TypeId,
+        type_name: &str,
+    ) -> String {
+        let mut methods = opaque_def
+            .methods
+            .iter()
+            .flat_map(|method| {
+                self.generate_method_body(type_id, type_name, method, self.typescript)
+            })
+            .collect::<Vec<_>>();
 
-        let special_method_body = self.generate_special_method_body(&opaque_def.special_method_presence, self.typescript);
+        let special_method_body =
+            self.generate_special_method_body(&opaque_def.special_method_presence, self.typescript);
         methods.push(special_method_body);
 
         let destructor = self.js_ctx.formatter.fmt_destructor_name(type_id);
 
         #[derive(Template)]
-        #[template(path = "js2/opaque.js.jinja", escape="none")]
+        #[template(path = "js2/opaque.js.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
-            typescript : bool,
+            typescript: bool,
 
-            lifetimes : &'a LifetimeEnv,
-            methods : Vec<String>,
-            destructor : String,
+            lifetimes: &'a LifetimeEnv,
+            methods: Vec<String>,
+            destructor: String,
 
-            docs : String,
+            docs: String,
         }
 
         ImplTemplate {
@@ -96,14 +125,23 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             destructor,
             typescript: self.typescript,
             docs: self.js_ctx.formatter.fmt_docs(&opaque_def.docs),
-            lifetimes : &opaque_def.lifetimes
-        }.render().unwrap()
+            lifetimes: &opaque_def.lifetimes,
+        }
+        .render()
+        .unwrap()
     }
 
-    pub(super) fn generate_struct_from_def<P: hir::TyPosition>(&mut self, struct_def : &'tcx hir::StructDef<P>, type_id : TypeId, is_out : bool, type_name : &str, mutable: bool) -> String {
+    pub(super) fn generate_struct_from_def<P: hir::TyPosition>(
+        &mut self,
+        struct_def: &'tcx hir::StructDef<P>,
+        type_id: TypeId,
+        is_out: bool,
+        type_name: &str,
+        mutable: bool,
+    ) -> String {
         let (offsets, layout) = crate::layout_hir::struct_offsets_size_max_align(
             struct_def.fields.iter().map(|f| &f.ty),
-            self.js_ctx.tcx
+            self.js_ctx.tcx,
         );
 
         let fields = struct_def.fields.iter().enumerate()
@@ -130,7 +168,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), offsets[i]);
 
             let c_to_js = self.gen_c_to_js_for_type(
-                &field.ty, 
+                &field.ty,
                 format!("{field_name}Deref").into(), 
                 &struct_def.lifetimes
             );
@@ -185,23 +223,28 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             }
         }).collect::<Vec<_>>();
 
-        let mut methods = struct_def.methods
-        .iter()
-        .flat_map(|method| self.generate_method_body(type_id, type_name, method, self.typescript))
-        .collect::<Vec<_>>();
+        let mut methods = struct_def
+            .methods
+            .iter()
+            .flat_map(|method| {
+                self.generate_method_body(type_id, type_name, method, self.typescript)
+            })
+            .collect::<Vec<_>>();
 
-        methods.push(self.generate_special_method_body(&struct_def.special_method_presence, self.typescript));
+        methods.push(
+            self.generate_special_method_body(&struct_def.special_method_presence, self.typescript),
+        );
 
         #[derive(Template)]
-        #[template(path="js2/struct.js.jinja", escape = "none")]
+        #[template(path = "js2/struct.js.jinja", escape = "none")]
         struct ImplTemplate<'a, P: hir::TyPosition> {
-            type_name : &'a str,
-            mutable : bool,
+            type_name: &'a str,
+            mutable: bool,
             typescript: bool,
-            fields : Vec<FieldInfo<'a, P>>,
+            fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<String>,
             docs: String,
-            lifetimes : &'a LifetimeEnv,
+            lifetimes: &'a LifetimeEnv,
         }
 
         ImplTemplate {
@@ -212,20 +255,31 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             methods,
             docs: self.js_ctx.formatter.fmt_docs(&struct_def.docs),
             lifetimes: &struct_def.lifetimes,
-        }.render().unwrap()
+        }
+        .render()
+        .unwrap()
     }
 
     /// Generate a string Javascript representation of a given method.
-    /// 
+    ///
     /// Currently, this assumes that any method will be part of a class. That will probably be a parameter that's added, however.
-    fn generate_method_body(&mut self, type_id : TypeId, type_name : &str, method : &'tcx Method, typescript : bool) -> Option<String> {
+    fn generate_method_body(
+        &mut self,
+        type_id: TypeId,
+        type_name: &str,
+        method: &'tcx Method,
+        typescript: bool,
+    ) -> Option<String> {
         if method.attrs.disable {
             return None;
         }
 
         let mut visitor = method.borrowing_param_visitor(self.js_ctx.tcx);
 
-        let _guard = self.js_ctx.errors.set_context_method(self.js_ctx.formatter.fmt_type_name_diagnostics(type_id), method.name.as_str().into());
+        let _guard = self.js_ctx.errors.set_context_method(
+            self.js_ctx.formatter.fmt_type_name_diagnostics(type_id),
+            method.name.as_str().into(),
+        );
 
         let mut method_info = MethodInfo::default();
 
@@ -238,8 +292,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
 
             // We don't need to clean up structs for Rust because they're represented entirely in JS form.
-            method_info.param_conversions.push(self.gen_js_to_c_self(&param_self.ty));
-            
+            method_info
+                .param_conversions
+                .push(self.gen_js_to_c_self(&param_self.ty));
+
             if matches!(param_self.ty, hir::SelfType::Struct(..)) {
                 method_info.needs_slice_cleanup = true;
             }
@@ -248,14 +304,15 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         for param in method.params.iter() {
             let mut param_info = ParamInfo::default();
 
-            param_info.name = self.js_ctx.formatter.fmt_param_name(param.name.as_str());;
+            param_info.name = self.js_ctx.formatter.fmt_param_name(param.name.as_str());
             param_info.ty = self.gen_js_type_str(&param.ty);
-            
+
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
 
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
             if let hir::Type::Slice(slice) = param.ty {
-                let slice_expr = self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None);
+                let slice_expr =
+                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None);
 
                 let is_borrowed = match param_borrow_kind {
                     ParamBorrowInfo::TemporarySlice => false,
@@ -265,22 +322,26 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     ),
                 };
                 // We add the pointer and size for slices:
-                method_info.param_conversions.push(format!("{}Slice.ptr", param_info.name).into());
-                method_info.param_conversions.push(format!("{}Slice.size", param_info.name).into());
+                method_info
+                    .param_conversions
+                    .push(format!("{}Slice.ptr", param_info.name).into());
+                method_info
+                    .param_conversions
+                    .push(format!("{}Slice.size", param_info.name).into());
 
                 // Then we make sure to handle clean-up for the slice:
                 if is_borrowed {
                     // Is this function borrowing the slice?
                     // I.e., Do we need it alive for at least as long as this function call?
-                    method_info.cleanup_expressions.push(
-                        format!("{}Slice.garbageCollect();", param_info.name).into()
-                    );
+                    method_info
+                        .cleanup_expressions
+                        .push(format!("{}Slice.garbageCollect();", param_info.name).into());
                 } else if !slice.lifetime().is_none() {
                     // Is Rust NOT taking ownership?
                     // Then that means we can free this after the function is done.
-                    method_info.cleanup_expressions.push(
-                        format!("{}Slice.free();", param_info.name).into()
-                    );
+                    method_info
+                        .cleanup_expressions
+                        .push(format!("{}Slice.free();", param_info.name).into());
                 }
 
                 method_info.slice_params.push(SliceParam {
@@ -293,7 +354,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     method_info.needs_slice_cleanup = true;
                 }
 
-                let struct_borrow_info = 
+                let struct_borrow_info =
                     if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
                         Some(converter::StructBorrowContext {
                             use_env: &method.lifetime_env,
@@ -303,52 +364,67 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     } else {
                         None
                     };
-                method_info.param_conversions.push(
-                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), struct_borrow_info.as_ref())
-                );
+                method_info
+                    .param_conversions
+                    .push(self.gen_js_to_c_for_type(
+                        &param.ty,
+                        param_info.name.clone(),
+                        struct_borrow_info.as_ref(),
+                    ));
             }
-            
+
             method_info.parameters.push(param_info);
         }
 
         method_info.return_type = format!(": {}", self.gen_js_return_type_str(&method.output));
 
-        method_info.return_expression = self.gen_c_to_js_for_return_type(&mut method_info, &method.lifetime_env);
-        
+        method_info.return_expression =
+            self.gen_c_to_js_for_return_type(&mut method_info, &method.lifetime_env);
+
         method_info.method_lifetimes_map = visitor.borrow_map();
         method_info.lifetimes = Some(&method.lifetime_env);
 
         method_info.method_decl = match &method.attrs.special_method {
-            Some(SpecialMethod::Getter(name))
-            =>format!("get {}", self.js_ctx.formatter.fmt_method_field_name(name, method)),
-            Some(SpecialMethod::Setter(name))
-            => format!("set {}", self.js_ctx.formatter.fmt_method_field_name(name, method)),
+            Some(SpecialMethod::Getter(name)) => format!(
+                "get {}",
+                self.js_ctx.formatter.fmt_method_field_name(name, method)
+            ),
+            Some(SpecialMethod::Setter(name)) => format!(
+                "set {}",
+                self.js_ctx.formatter.fmt_method_field_name(name, method)
+            ),
 
             Some(SpecialMethod::Iterable) => format!("[Symbol.iterator]"),
             Some(SpecialMethod::Iterator) => format!("#iteratorNext"),
-            
-            None if method.param_self.is_none() => format!(
-                "static {}",
-                self.js_ctx.formatter.fmt_method_name(method)
-            ),
+
+            None if method.param_self.is_none() => {
+                format!("static {}", self.js_ctx.formatter.fmt_method_name(method))
+            }
             None => self.js_ctx.formatter.fmt_method_name(method),
-            _ => todo!("Method Declaration {:?} not implemented", method.attrs.special_method),
+            _ => todo!(
+                "Method Declaration {:?} not implemented",
+                method.attrs.special_method
+            ),
         };
 
         Some(method_info.render().unwrap())
     }
-    
+
     /// If a special method exists inside a structure, opaque, or enum through [`SpecialMethodPresence`],
     /// We need to make sure Javascript can access it.
-    /// 
+    ///
     /// This is mostly for iterators, using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols
-    fn generate_special_method_body(&mut self, special_method_presence : &SpecialMethodPresence, typescript : bool) -> String {
+    fn generate_special_method_body(
+        &mut self,
+        special_method_presence: &SpecialMethodPresence,
+        typescript: bool,
+    ) -> String {
         #[derive(Template)]
-        #[template(path="js2/special_method.js.jinja", escape="none")]
+        #[template(path = "js2/special_method.js.jinja", escape = "none")]
         struct SpecialMethodInfo<'a> {
-            iterator : Option<Cow<'a, str>>,
-            iterable : Option<Cow<'a, str>>,
-            typescript : bool,
+            iterator: Option<Cow<'a, str>>,
+            iterable: Option<Cow<'a, str>>,
+            typescript: bool,
         }
 
         let mut iterator = None;
@@ -361,7 +437,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         if let Some(ref iterator) = special_method_presence.iterable {
             let iterator_def = self.js_ctx.tcx.resolve_opaque(*iterator);
             let Some(ref val) = iterator_def.special_method_presence.iterator else {
-                self.js_ctx.errors
+                self.js_ctx
+                    .errors
                     .push_error("Found iterable not returning an iterator type".into());
                 return "".to_string();
             };
@@ -371,60 +448,62 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         SpecialMethodInfo {
             iterator,
             iterable,
-            typescript
-        }.render().unwrap()
+            typescript,
+        }
+        .render()
+        .unwrap()
     }
 }
 
 #[derive(Default)]
 struct ParamInfo<'a> {
-    ty : Cow<'a, str>,
-    name : Cow<'a, str>
+    ty: Cow<'a, str>,
+    name: Cow<'a, str>,
 }
 
 struct SliceParam<'a> {
-    name : Cow<'a, str>,
+    name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
-    slice_expr : Cow<'a, str>,
-    is_borrowed : bool,
+    slice_expr: Cow<'a, str>,
+    is_borrowed: bool,
 }
 
 #[derive(Default, Template)]
-#[template(path="js2/method.js.jinja", escape="none")]
+#[template(path = "js2/method.js.jinja", escape = "none")]
 struct MethodInfo<'info> {
-    method : Option<&'info Method>,
-    method_decl : String,
+    method: Option<&'info Method>,
+    method_decl: String,
     /// Native C method name
-    c_method_name : Cow<'info, str>,
+    c_method_name: Cow<'info, str>,
 
-    needs_slice_cleanup : bool,
+    needs_slice_cleanup: bool,
 
-    typescript : bool,
+    typescript: bool,
 
-    parameters : Vec<ParamInfo<'info>>,
-    slice_params : Vec<SliceParam<'info>>,
-    param_conversions : Vec<Cow<'info, str>>,
+    parameters: Vec<ParamInfo<'info>>,
+    slice_params: Vec<SliceParam<'info>>,
+    param_conversions: Vec<Cow<'info, str>>,
 
-    return_type : String,
-    return_expression : Option<Cow<'info, str>>,
+    return_type: String,
+    return_expression: Option<Cow<'info, str>>,
 
-    method_lifetimes_map : BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
-    lifetimes : Option<&'info LifetimeEnv>,
-    
-    alloc_expressions : Vec<Cow<'info, str>>,
-    cleanup_expressions : Vec<Cow<'info, str>>
+    method_lifetimes_map: BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'info>>,
+    lifetimes: Option<&'info LifetimeEnv>,
+
+    alloc_expressions: Vec<Cow<'info, str>>,
+    cleanup_expressions: Vec<Cow<'info, str>>,
 }
 
 struct FieldInfo<'info, P: hir::TyPosition> {
     field_name: Cow<'info, str>,
-    field_type : &'info Type<P>,
-    annotation : Option<&'static str>,
-    js_type_name  : Cow<'info, str>,
-    c_to_js : Cow<'info, str>,
-    c_to_js_deref : Cow<'info, str>,
-    js_to_c : String,
-    post_cleanup_statement : Option<String>,
-    maybe_struct_borrow_info : Option<StructBorrowInfo<'info>>,
+    field_type: &'info Type<P>,
+    annotation: Option<&'static str>,
+    js_type_name: Cow<'info, str>,
+    c_to_js: Cow<'info, str>,
+    c_to_js_deref: Cow<'info, str>,
+    js_to_c: String,
+    post_cleanup_statement: Option<String>,
+    maybe_struct_borrow_info: Option<StructBorrowInfo<'info>>,
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
@@ -464,7 +543,10 @@ fn iter_fields_with_lifetimes_from_set<'a, P: hir::TyPosition>(
     lifetime: &'a hir::Lifetime,
 ) -> impl Iterator<Item = &'a FieldInfo<'a, P>> + 'a {
     /// Does `ty` use any lifetime from `lifetimes`?
-    fn does_type_use_lifetime_from_set<P: hir::TyPosition>(ty: &Type<P>, lifetime: &hir::Lifetime) -> bool {
+    fn does_type_use_lifetime_from_set<P: hir::TyPosition>(
+        ty: &Type<P>,
+        lifetime: &hir::Lifetime,
+    ) -> bool {
         ty.lifetimes().any(|lt| {
             let hir::MaybeStatic::NonStatic(lt) = lt else {
                 panic!("'static not supported in JS2 backend");

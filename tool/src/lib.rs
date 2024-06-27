@@ -87,7 +87,7 @@ pub fn gen(
 
             attr_validator.support.iterables = true;
             attr_validator.support.iterators = true;
-            
+
             attr_validator.support.accessors = true;
 
             // Not possible since Javascript only allows us to provide one `constructor()` function for the `new` keyword.
@@ -106,9 +106,7 @@ pub fn gen(
                 }
             };
             match js2::JSGenerationContext::run(&tcx, docs_url_gen, strip_prefix) {
-                Ok(mut files) => {
-                    out_texts = files.take_files()
-                },
+                Ok(mut files) => out_texts = files.take_files(),
                 Err(errors) => {
                     eprintln!("Found errors whilst generating {target_language}:");
                     for error in errors {
