@@ -107,11 +107,11 @@ jobs:
     - name: Test C++2 self-contained (clang)
       run: CXX=clang++-14 cargo make test-cpp2-self-contained
 
-    - name: Test C++2 self-contained (clang, c++23)
-      run: CXX=clang++-14 CXX_STD=c++23 cargo make test-cpp2-self-contained
+    - name: Test C++2 self-contained (clang, c++20)
+      run: CXX=clang++-14 CXX_STD=c++20 cargo make test-cpp2-self-contained
 
-    - name: Test C++2 self-contained (g++)
-      run: CXX=g++ cargo make test-cpp2-self-contained
+    - name: Test C++2 self-contained (g++, c++23)
+      run: CXX=g++ CXX_STD=c++23 cargo make test-cpp2-self-contained
 
   test-js: 
     runs-on: ubuntu-latest
