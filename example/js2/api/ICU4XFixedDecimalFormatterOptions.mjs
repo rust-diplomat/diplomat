@@ -25,10 +25,11 @@ export class ICU4XFixedDecimalFormatterOptions {
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     
-    _intoFFI() {
-        return [
-            this.#groupingStrategy.ffiValue, 
-            this.#someOtherConfig]
+    _intoFFI(
+        slice_cleanup_callbacks,
+        appendArrayMap
+    ) {
+        return [this.#groupingStrategy.ffiValue, this.#someOtherConfig]
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -44,7 +45,6 @@ export class ICU4XFixedDecimalFormatterOptions {
 
         return this;
     }
-    
     static default_() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);

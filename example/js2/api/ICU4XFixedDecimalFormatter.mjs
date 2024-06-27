@@ -43,8 +43,10 @@ export class ICU4XFixedDecimalFormatter {
 
     static tryNew(locale, provider, options) {
         
+        let slice_cleanup_callbacks = [];
+        
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ICU4XFixedDecimalFormatter_try_new(diplomat_receive_buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI());
+        const result = wasm.ICU4XFixedDecimalFormatter_try_new(diplomat_receive_buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI(slice_cleanup_callbacks, {}));
     
         try {
     
@@ -53,6 +55,10 @@ export class ICU4XFixedDecimalFormatter {
             }
             return new ICU4XFixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
+        
+            for (let cleanup of slice_cleanup_callbacks) {
+                cleanup();
+            }
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         
