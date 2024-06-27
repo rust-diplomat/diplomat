@@ -186,8 +186,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
                 let type_def = self.js_ctx.tcx.resolve_type(id);
                 match type_def {
-                    hir::TypeDef::Struct(st) => format!("new {type_name}()._fromFFI({variable_name}{edges})").into(),
-                    hir::TypeDef::OutStruct(st) => format!("new {type_name}({variable_name}{edges})").into(),
+                    hir::TypeDef::Struct(..) => format!("new {type_name}()._fromFFI({variable_name}{edges})").into(),
+                    hir::TypeDef::OutStruct(..) => format!("new {type_name}({variable_name}{edges})").into(),
                     _ => unreachable!("Expected struct type def, found {type_def:?}")
                 }
             }
