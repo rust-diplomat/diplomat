@@ -602,8 +602,7 @@ impl Attrs {
 /// See [`SpecialMethod`] and [`Attrs`] for your specific implementation needs.
 /// 
 /// For example, the current dart backend supports [`BackendAttrSupport::constructors`]. So when it encounters:
-/// ```
-/// use diplomat;
+/// ```ignore
 /// struct Sample {}
 /// impl Sample {
 ///     #[diplomat::attr(supports = constructors, constructor)]
