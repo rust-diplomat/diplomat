@@ -264,12 +264,13 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             method.name.as_str().into(),
         );
 
-        let mut method_info = MethodInfo::default();
-
-        method_info.c_method_name = self.js_ctx.formatter.fmt_c_method_name(type_id, method);
-        method_info.typescript = typescript;
-        method_info.method = Some(method);
-        method_info.needs_slice_cleanup = false;
+        let mut method_info = MethodInfo {
+            c_method_name: self.js_ctx.formatter.fmt_c_method_name(type_id, method),
+            typescript,
+            method: Some(method),
+            needs_slice_cleanup: false,
+            ..Default::default()
+        };
 
         if let Some(param_self) = method.param_self.as_ref() {
             visitor.visit_param(&param_self.ty.clone().into(), "this");
