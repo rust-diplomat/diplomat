@@ -270,6 +270,61 @@ for file in ${files_list}
 end
 '''
 
+[tasks.test-cpp2-example-self-contained]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cxx = get_env CXX
+if is_empty ${cxx}
+    cxx = set "g++"
+end
+cxx_std = get_env CXX_STD
+if is_empty ${cxx_std}
+    cxx_std = set "c++17"
+end
+
+cd example/cpp2/include
+files_list = glob_array "./*.hpp"
+for file in ${files_list}
+    echo "Testing self-containedness of ${file}"
+    exec ${cxx}  -std=${cxx_std} ${file}
+end
+'''
+
+[tasks.test-cpp2-feature-self-contained]
+category = "Tests"
+dependencies = ["build-example"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cxx = get_env CXX
+if is_empty ${cxx}
+    cxx = set "g++"
+end
+cxx_std = get_env CXX_STD
+if is_empty ${cxx_std}
+    cxx_std = set "c++17"
+end
+
+cd feature_tests/cpp2/include
+files_list = glob_array "./*.hpp"
+for file in ${files_list}
+    echo "Testing self-containedness of ${file}"
+    exec ${cxx}  -std=${cxx_std} ${file}
+
+end
+'''
+
+[tasks.test-cpp2-self-contained]
+category = "Tests"
+dependencies = [
+    "test-cpp2-feature-self-contained",
+    "test-cpp2-example-self-contained",
+]
+
+
 # Generation
 [tasks.gen-feature]
 category = "Code generation"

@@ -29,7 +29,7 @@ Float64Vec* Float64Vec_new_usize(const size_t* v_data, size_t v_len);
 
 Float64Vec* Float64Vec_new_f64_be_bytes(const uint8_t* v_data, size_t v_len);
 
-DiplomatF64View Float64Vec_as_boxed_slice(const Float64Vec* self);
+DiplomatF64ViewMut Float64Vec_as_boxed_slice(const Float64Vec* self);
 
 DiplomatF64View Float64Vec_as_slice(const Float64Vec* self);
 
