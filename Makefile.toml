@@ -446,6 +446,15 @@ exit_on_error true
 generate_generic feature_tests js api docs/source
 '''
 
+[tasks.gen-js-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example js lib/api lib/docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
+'''
+
 [tasks.gen-js2-feature]
 category = "Code generation"
 script_runner = "@duckscript"
@@ -462,15 +471,6 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example js2 api
-'''
-
-[tasks.gen-js-example]
-category = "Code generation"
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
-!include_files ./support/functions.ds
-generate_generic example js lib/api lib/docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
 '''
 
 [tasks.gen-dotnet-feature]
