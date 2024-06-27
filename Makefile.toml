@@ -272,7 +272,6 @@ end
 
 [tasks.test-cpp2-example-self-contained]
 category = "Tests"
-dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
@@ -295,7 +294,6 @@ end
 
 [tasks.test-cpp2-feature-self-contained]
 category = "Tests"
-dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
