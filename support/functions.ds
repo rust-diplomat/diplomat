@@ -74,6 +74,6 @@ fn generate_generic
 
     if not ${docs_folder_is_empty}
         rm -r "${backend}/${docs_folder}"
-        mv "tmp/${docs_folder}" "${backend}/${docs_folder}/.."
+        mv "tmp/${docs_folder}/" "${backend}/${docs_folder}/.."
     end
 end
