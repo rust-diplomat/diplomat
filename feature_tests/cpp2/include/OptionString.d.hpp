@@ -23,10 +23,10 @@ public:
 
   inline std::optional<std::string_view> borrow() const;
 
-  inline const capi::OptionString* AsFFI() const;
-  inline capi::OptionString* AsFFI();
-  inline static const OptionString* FromFFI(const capi::OptionString* ptr);
-  inline static OptionString* FromFFI(capi::OptionString* ptr);
+  inline const ::capi::OptionString* AsFFI() const;
+  inline ::capi::OptionString* AsFFI();
+  inline static const OptionString* FromFFI(const ::capi::OptionString* ptr);
+  inline static OptionString* FromFFI(::capi::OptionString* ptr);
   inline static void operator delete(void* ptr);
 private:
   OptionString() = delete;

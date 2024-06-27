@@ -17,10 +17,10 @@ namespace capi {
 class Two {
 public:
 
-  inline const capi::Two* AsFFI() const;
-  inline capi::Two* AsFFI();
-  inline static const Two* FromFFI(const capi::Two* ptr);
-  inline static Two* FromFFI(capi::Two* ptr);
+  inline const ::capi::Two* AsFFI() const;
+  inline ::capi::Two* AsFFI();
+  inline static const Two* FromFFI(const ::capi::Two* ptr);
+  inline static Two* FromFFI(::capi::Two* ptr);
   inline static void operator delete(void* ptr);
 private:
   Two() = delete;

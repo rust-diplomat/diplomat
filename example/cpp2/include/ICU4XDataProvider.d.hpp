@@ -21,10 +21,10 @@ public:
 
   inline static diplomat::result<std::monostate, std::monostate> returns_result();
 
-  inline const capi::ICU4XDataProvider* AsFFI() const;
-  inline capi::ICU4XDataProvider* AsFFI();
-  inline static const ICU4XDataProvider* FromFFI(const capi::ICU4XDataProvider* ptr);
-  inline static ICU4XDataProvider* FromFFI(capi::ICU4XDataProvider* ptr);
+  inline const ::capi::ICU4XDataProvider* AsFFI() const;
+  inline ::capi::ICU4XDataProvider* AsFFI();
+  inline static const ICU4XDataProvider* FromFFI(const ::capi::ICU4XDataProvider* ptr);
+  inline static ICU4XDataProvider* FromFFI(::capi::ICU4XDataProvider* ptr);
   inline static void operator delete(void* ptr);
 private:
   ICU4XDataProvider() = delete;

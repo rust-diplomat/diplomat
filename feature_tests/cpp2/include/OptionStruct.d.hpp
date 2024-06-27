@@ -9,16 +9,18 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+namespace capi {typedef struct OptionOpaque OptionOpaque; }
 class OptionOpaque;
+namespace capi {typedef struct OptionOpaqueChar OptionOpaqueChar; }
 class OptionOpaqueChar;
 
 
 namespace capi {
     typedef struct OptionStruct {
-      OptionOpaque* a;
-      OptionOpaqueChar* b;
+      ::capi::OptionOpaque* a;
+      ::capi::OptionOpaqueChar* b;
       uint32_t c;
-      OptionOpaque* d;
+      ::capi::OptionOpaque* d;
     } OptionStruct;
 }
 
@@ -28,8 +30,8 @@ struct OptionStruct {
   uint32_t c;
   std::unique_ptr<OptionOpaque> d;
 
-  inline capi::OptionStruct AsFFI() const;
-  inline static OptionStruct FromFFI(capi::OptionStruct c_struct);
+  inline ::capi::OptionStruct AsFFI() const;
+  inline static OptionStruct FromFFI(::capi::OptionStruct c_struct);
 };
 
 

@@ -18,6 +18,7 @@ namespace capi {
     } UnimportedEnum;
 }
 
+
 class UnimportedEnum {
 public:
   enum Value {
@@ -33,8 +34,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline capi::UnimportedEnum AsFFI() const;
-  inline static UnimportedEnum FromFFI(capi::UnimportedEnum c_enum);
+  inline ::capi::UnimportedEnum AsFFI() const;
+  inline static UnimportedEnum FromFFI(::capi::UnimportedEnum c_enum);
 private:
     Value value;
 };

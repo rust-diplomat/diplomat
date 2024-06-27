@@ -19,10 +19,10 @@ public:
 
   inline void assert_char(char32_t ch) const;
 
-  inline const capi::OptionOpaqueChar* AsFFI() const;
-  inline capi::OptionOpaqueChar* AsFFI();
-  inline static const OptionOpaqueChar* FromFFI(const capi::OptionOpaqueChar* ptr);
-  inline static OptionOpaqueChar* FromFFI(capi::OptionOpaqueChar* ptr);
+  inline const ::capi::OptionOpaqueChar* AsFFI() const;
+  inline ::capi::OptionOpaqueChar* AsFFI();
+  inline static const OptionOpaqueChar* FromFFI(const ::capi::OptionOpaqueChar* ptr);
+  inline static OptionOpaqueChar* FromFFI(::capi::OptionOpaqueChar* ptr);
   inline static void operator delete(void* ptr);
 private:
   OptionOpaqueChar() = delete;

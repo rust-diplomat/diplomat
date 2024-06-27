@@ -16,34 +16,33 @@
 namespace capi {
     extern "C" {
     
-    One* One_transitivity(const One* hold, const One* nohold);
+    ::capi::One* One_transitivity(const ::capi::One* hold, const ::capi::One* nohold);
     
-    One* One_cycle(const Two* hold, const One* nohold);
+    ::capi::One* One_cycle(const ::capi::Two* hold, const ::capi::One* nohold);
     
-    One* One_many_dependents(const One* a, const One* b, const Two* c, const Two* d, const Two* nohold);
+    ::capi::One* One_many_dependents(const ::capi::One* a, const ::capi::One* b, const ::capi::Two* c, const ::capi::Two* d, const ::capi::Two* nohold);
     
-    One* One_return_outlives_param(const Two* hold, const One* nohold);
+    ::capi::One* One_return_outlives_param(const ::capi::Two* hold, const ::capi::One* nohold);
     
-    One* One_diamond_top(const One* top, const One* left, const One* right, const One* bottom);
+    ::capi::One* One_diamond_top(const ::capi::One* top, const ::capi::One* left, const ::capi::One* right, const ::capi::One* bottom);
     
-    One* One_diamond_left(const One* top, const One* left, const One* right, const One* bottom);
+    ::capi::One* One_diamond_left(const ::capi::One* top, const ::capi::One* left, const ::capi::One* right, const ::capi::One* bottom);
     
-    One* One_diamond_right(const One* top, const One* left, const One* right, const One* bottom);
+    ::capi::One* One_diamond_right(const ::capi::One* top, const ::capi::One* left, const ::capi::One* right, const ::capi::One* bottom);
     
-    One* One_diamond_bottom(const One* top, const One* left, const One* right, const One* bottom);
+    ::capi::One* One_diamond_bottom(const ::capi::One* top, const ::capi::One* left, const ::capi::One* right, const ::capi::One* bottom);
     
-    One* One_diamond_and_nested_types(const One* a, const One* b, const One* c, const One* d, const One* nohold);
+    ::capi::One* One_diamond_and_nested_types(const ::capi::One* a, const ::capi::One* b, const ::capi::One* c, const ::capi::One* d, const ::capi::One* nohold);
     
-    One* One_implicit_bounds(const One* explicit_hold, const One* implicit_hold, const One* nohold);
+    ::capi::One* One_implicit_bounds(const ::capi::One* explicit_hold, const ::capi::One* implicit_hold, const ::capi::One* nohold);
     
-    One* One_implicit_bounds_deep(const One* explicit_, const One* implicit_1, const One* implicit_2, const One* nohold);
+    ::capi::One* One_implicit_bounds_deep(const ::capi::One* explicit_, const ::capi::One* implicit_1, const ::capi::One* implicit_2, const ::capi::One* nohold);
     
     
     void One_destroy(One* self);
     
     } // extern "C"
 }
-
 inline std::unique_ptr<One> One::transitivity(const One& hold, const One& nohold) {
   auto result = capi::One_transitivity(hold.AsFFI(),
     nohold.AsFFI());
@@ -127,24 +126,24 @@ inline std::unique_ptr<One> One::implicit_bounds_deep(const One& explicit_, cons
   return std::unique_ptr<One>(One::FromFFI(result));
 }
 
-inline const capi::One* One::AsFFI() const {
-  return reinterpret_cast<const capi::One*>(this);
+inline const ::capi::One* One::AsFFI() const {
+  return reinterpret_cast<const ::capi::One*>(this);
 }
 
-inline capi::One* One::AsFFI() {
-  return reinterpret_cast<capi::One*>(this);
+inline ::capi::One* One::AsFFI() {
+  return reinterpret_cast<::capi::One*>(this);
 }
 
-inline const One* One::FromFFI(const capi::One* ptr) {
+inline const One* One::FromFFI(const ::capi::One* ptr) {
   return reinterpret_cast<const One*>(ptr);
 }
 
-inline One* One::FromFFI(capi::One* ptr) {
+inline One* One::FromFFI(::capi::One* ptr) {
   return reinterpret_cast<One*>(ptr);
 }
 
 inline void One::operator delete(void* ptr) {
-  capi::One_destroy(reinterpret_cast<capi::One*>(ptr));
+  capi::One_destroy(reinterpret_cast<::capi::One*>(ptr));
 }
 
 

@@ -23,10 +23,10 @@ public:
 
   inline diplomat::result<std::string, std::monostate> to_string() const;
 
-  inline const capi::ICU4XFixedDecimal* AsFFI() const;
-  inline capi::ICU4XFixedDecimal* AsFFI();
-  inline static const ICU4XFixedDecimal* FromFFI(const capi::ICU4XFixedDecimal* ptr);
-  inline static ICU4XFixedDecimal* FromFFI(capi::ICU4XFixedDecimal* ptr);
+  inline const ::capi::ICU4XFixedDecimal* AsFFI() const;
+  inline ::capi::ICU4XFixedDecimal* AsFFI();
+  inline static const ICU4XFixedDecimal* FromFFI(const ::capi::ICU4XFixedDecimal* ptr);
+  inline static ICU4XFixedDecimal* FromFFI(::capi::ICU4XFixedDecimal* ptr);
   inline static void operator delete(void* ptr);
 private:
   ICU4XFixedDecimal() = delete;

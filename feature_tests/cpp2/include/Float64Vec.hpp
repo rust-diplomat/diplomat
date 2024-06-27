@@ -15,41 +15,40 @@
 namespace capi {
     extern "C" {
     
-    Float64Vec* Float64Vec_new(const double* v_data, size_t v_len);
+    ::capi::Float64Vec* Float64Vec_new(const double* v_data, size_t v_len);
     
-    Float64Vec* Float64Vec_new_bool(const bool* v_data, size_t v_len);
+    ::capi::Float64Vec* Float64Vec_new_bool(const bool* v_data, size_t v_len);
     
-    Float64Vec* Float64Vec_new_i16(const int16_t* v_data, size_t v_len);
+    ::capi::Float64Vec* Float64Vec_new_i16(const int16_t* v_data, size_t v_len);
     
-    Float64Vec* Float64Vec_new_u16(const uint16_t* v_data, size_t v_len);
+    ::capi::Float64Vec* Float64Vec_new_u16(const uint16_t* v_data, size_t v_len);
     
-    Float64Vec* Float64Vec_new_isize(const intptr_t* v_data, size_t v_len);
+    ::capi::Float64Vec* Float64Vec_new_isize(const intptr_t* v_data, size_t v_len);
     
-    Float64Vec* Float64Vec_new_usize(const size_t* v_data, size_t v_len);
+    ::capi::Float64Vec* Float64Vec_new_usize(const size_t* v_data, size_t v_len);
     
-    Float64Vec* Float64Vec_new_f64_be_bytes(const uint8_t* v_data, size_t v_len);
+    ::capi::Float64Vec* Float64Vec_new_f64_be_bytes(const uint8_t* v_data, size_t v_len);
     
-    DiplomatF64ViewMut Float64Vec_as_boxed_slice(const Float64Vec* self);
+    DiplomatF64ViewMut Float64Vec_as_boxed_slice(const ::capi::Float64Vec* self);
     
-    DiplomatF64View Float64Vec_as_slice(const Float64Vec* self);
+    DiplomatF64View Float64Vec_as_slice(const ::capi::Float64Vec* self);
     
-    void Float64Vec_fill_slice(const Float64Vec* self, double* v_data, size_t v_len);
+    void Float64Vec_fill_slice(const ::capi::Float64Vec* self, double* v_data, size_t v_len);
     
-    void Float64Vec_set_value(Float64Vec* self, const double* new_slice_data, size_t new_slice_len);
+    void Float64Vec_set_value(::capi::Float64Vec* self, const double* new_slice_data, size_t new_slice_len);
     
-    void Float64Vec_to_string(const Float64Vec* self, DiplomatWrite* write);
+    void Float64Vec_to_string(const ::capi::Float64Vec* self, DiplomatWrite* write);
     
-    DiplomatF64View Float64Vec_borrow(const Float64Vec* self);
+    DiplomatF64View Float64Vec_borrow(const ::capi::Float64Vec* self);
     
     typedef struct Float64Vec_get_result {union {double ok; }; bool is_ok;} Float64Vec_get_result;
-    Float64Vec_get_result Float64Vec_get(const Float64Vec* self, size_t i);
+    Float64Vec_get_result Float64Vec_get(const ::capi::Float64Vec* self, size_t i);
     
     
     void Float64Vec_destroy(Float64Vec* self);
     
     } // extern "C"
 }
-
 inline std::unique_ptr<Float64Vec> Float64Vec::new_(diplomat::span<const double> v) {
   auto result = capi::Float64Vec_new(v.data(),
     v.size());
@@ -133,24 +132,24 @@ inline std::optional<double> Float64Vec::get(size_t i) const {
   return result.is_ok ? std::optional<double>(result.ok) : std::nullopt;
 }
 
-inline const capi::Float64Vec* Float64Vec::AsFFI() const {
-  return reinterpret_cast<const capi::Float64Vec*>(this);
+inline const ::capi::Float64Vec* Float64Vec::AsFFI() const {
+  return reinterpret_cast<const ::capi::Float64Vec*>(this);
 }
 
-inline capi::Float64Vec* Float64Vec::AsFFI() {
-  return reinterpret_cast<capi::Float64Vec*>(this);
+inline ::capi::Float64Vec* Float64Vec::AsFFI() {
+  return reinterpret_cast<::capi::Float64Vec*>(this);
 }
 
-inline const Float64Vec* Float64Vec::FromFFI(const capi::Float64Vec* ptr) {
+inline const Float64Vec* Float64Vec::FromFFI(const ::capi::Float64Vec* ptr) {
   return reinterpret_cast<const Float64Vec*>(ptr);
 }
 
-inline Float64Vec* Float64Vec::FromFFI(capi::Float64Vec* ptr) {
+inline Float64Vec* Float64Vec::FromFFI(::capi::Float64Vec* ptr) {
   return reinterpret_cast<Float64Vec*>(ptr);
 }
 
 inline void Float64Vec::operator delete(void* ptr) {
-  capi::Float64Vec_destroy(reinterpret_cast<capi::Float64Vec*>(ptr));
+  capi::Float64Vec_destroy(reinterpret_cast<::capi::Float64Vec*>(ptr));
 }
 
 

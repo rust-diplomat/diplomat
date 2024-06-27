@@ -17,19 +17,19 @@
 namespace capi {
     extern "C" {
     
-    Opaque* Opaque_new();
+    ::capi::Opaque* Opaque_new();
     
-    Opaque* Opaque_try_from_utf8(const char* input_data, size_t input_len);
+    ::capi::Opaque* Opaque_try_from_utf8(const char* input_data, size_t input_len);
     
-    Opaque* Opaque_from_str(const char* input_data, size_t input_len);
+    ::capi::Opaque* Opaque_from_str(const char* input_data, size_t input_len);
     
-    void Opaque_get_debug_str(const Opaque* self, DiplomatWrite* write);
+    void Opaque_get_debug_str(const ::capi::Opaque* self, DiplomatWrite* write);
     
-    void Opaque_assert_struct(const Opaque* self, MyStruct s);
+    void Opaque_assert_struct(const ::capi::Opaque* self, ::capi::MyStruct s);
     
     size_t Opaque_returns_usize();
     
-    ImportedStruct Opaque_returns_imported();
+    ::capi::ImportedStruct Opaque_returns_imported();
     
     int8_t Opaque_cmp();
     
@@ -38,7 +38,6 @@ namespace capi {
     
     } // extern "C"
 }
-
 inline std::unique_ptr<Opaque> Opaque::new_() {
   auto result = capi::Opaque_new();
   return std::unique_ptr<Opaque>(Opaque::FromFFI(result));
@@ -87,24 +86,24 @@ inline int8_t Opaque::cmp() {
   return result;
 }
 
-inline const capi::Opaque* Opaque::AsFFI() const {
-  return reinterpret_cast<const capi::Opaque*>(this);
+inline const ::capi::Opaque* Opaque::AsFFI() const {
+  return reinterpret_cast<const ::capi::Opaque*>(this);
 }
 
-inline capi::Opaque* Opaque::AsFFI() {
-  return reinterpret_cast<capi::Opaque*>(this);
+inline ::capi::Opaque* Opaque::AsFFI() {
+  return reinterpret_cast<::capi::Opaque*>(this);
 }
 
-inline const Opaque* Opaque::FromFFI(const capi::Opaque* ptr) {
+inline const Opaque* Opaque::FromFFI(const ::capi::Opaque* ptr) {
   return reinterpret_cast<const Opaque*>(ptr);
 }
 
-inline Opaque* Opaque::FromFFI(capi::Opaque* ptr) {
+inline Opaque* Opaque::FromFFI(::capi::Opaque* ptr) {
   return reinterpret_cast<Opaque*>(ptr);
 }
 
 inline void Opaque::operator delete(void* ptr) {
-  capi::Opaque_destroy(reinterpret_cast<capi::Opaque*>(ptr));
+  capi::Opaque_destroy(reinterpret_cast<::capi::Opaque*>(ptr));
 }
 
 

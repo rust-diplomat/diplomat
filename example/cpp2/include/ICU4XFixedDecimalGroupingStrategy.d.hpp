@@ -19,6 +19,7 @@ namespace capi {
     } ICU4XFixedDecimalGroupingStrategy;
 }
 
+
 class ICU4XFixedDecimalGroupingStrategy {
 public:
   enum Value {
@@ -35,8 +36,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline capi::ICU4XFixedDecimalGroupingStrategy AsFFI() const;
-  inline static ICU4XFixedDecimalGroupingStrategy FromFFI(capi::ICU4XFixedDecimalGroupingStrategy c_enum);
+  inline ::capi::ICU4XFixedDecimalGroupingStrategy AsFFI() const;
+  inline static ICU4XFixedDecimalGroupingStrategy FromFFI(::capi::ICU4XFixedDecimalGroupingStrategy c_enum);
 private:
     Value value;
 };

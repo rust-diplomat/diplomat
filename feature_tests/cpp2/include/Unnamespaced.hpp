@@ -17,16 +17,15 @@
 namespace capi {
     extern "C" {
     
-    Unnamespaced* namespace_Unnamespaced_make(AttrEnum _e);
+    ::capi::Unnamespaced* namespace_Unnamespaced_make(ns::capi::AttrEnum _e);
     
-    void namespace_Unnamespaced_use_namespaced(const Unnamespaced* self, const AttrOpaque1* _n);
+    void namespace_Unnamespaced_use_namespaced(const ::capi::Unnamespaced* self, const ns::capi::AttrOpaque1* _n);
     
     
     void namespace_Unnamespaced_destroy(Unnamespaced* self);
     
     } // extern "C"
 }
-
 inline std::unique_ptr<Unnamespaced> Unnamespaced::make(ns::CPPRenamedAttrEnum _e) {
   auto result = capi::namespace_Unnamespaced_make(_e.AsFFI());
   return std::unique_ptr<Unnamespaced>(Unnamespaced::FromFFI(result));
@@ -37,24 +36,24 @@ inline void Unnamespaced::use_namespaced(const ns::AttrOpaque1Renamed& _n) const
     _n.AsFFI());
 }
 
-inline const capi::Unnamespaced* Unnamespaced::AsFFI() const {
-  return reinterpret_cast<const capi::Unnamespaced*>(this);
+inline const ::capi::Unnamespaced* Unnamespaced::AsFFI() const {
+  return reinterpret_cast<const ::capi::Unnamespaced*>(this);
 }
 
-inline capi::Unnamespaced* Unnamespaced::AsFFI() {
-  return reinterpret_cast<capi::Unnamespaced*>(this);
+inline ::capi::Unnamespaced* Unnamespaced::AsFFI() {
+  return reinterpret_cast<::capi::Unnamespaced*>(this);
 }
 
-inline const Unnamespaced* Unnamespaced::FromFFI(const capi::Unnamespaced* ptr) {
+inline const Unnamespaced* Unnamespaced::FromFFI(const ::capi::Unnamespaced* ptr) {
   return reinterpret_cast<const Unnamespaced*>(ptr);
 }
 
-inline Unnamespaced* Unnamespaced::FromFFI(capi::Unnamespaced* ptr) {
+inline Unnamespaced* Unnamespaced::FromFFI(::capi::Unnamespaced* ptr) {
   return reinterpret_cast<Unnamespaced*>(ptr);
 }
 
 inline void Unnamespaced::operator delete(void* ptr) {
-  capi::namespace_Unnamespaced_destroy(reinterpret_cast<capi::Unnamespaced*>(ptr));
+  capi::namespace_Unnamespaced_destroy(reinterpret_cast<::capi::Unnamespaced*>(ptr));
 }
 
 

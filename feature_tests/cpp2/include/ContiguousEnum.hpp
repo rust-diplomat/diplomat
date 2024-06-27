@@ -18,18 +18,16 @@ namespace capi {
     
     } // extern "C"
 }
-
-
-inline capi::ContiguousEnum ContiguousEnum::AsFFI() const {
-  return static_cast<capi::ContiguousEnum>(value);
+inline ::capi::ContiguousEnum ContiguousEnum::AsFFI() const {
+  return static_cast<::capi::ContiguousEnum>(value);
 }
 
-inline ContiguousEnum ContiguousEnum::FromFFI(capi::ContiguousEnum c_enum) {
+inline ContiguousEnum ContiguousEnum::FromFFI(::capi::ContiguousEnum c_enum) {
   switch (c_enum) {
-    case capi::ContiguousEnum_C:
-    case capi::ContiguousEnum_D:
-    case capi::ContiguousEnum_E:
-    case capi::ContiguousEnum_F:
+    case ::capi::ContiguousEnum_C:
+    case ::capi::ContiguousEnum_D:
+    case ::capi::ContiguousEnum_E:
+    case ::capi::ContiguousEnum_F:
       return static_cast<ContiguousEnum::Value>(c_enum);
     default:
       abort();
