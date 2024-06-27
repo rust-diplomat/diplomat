@@ -221,10 +221,6 @@ impl<'tcx> JSFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_enum_as_ffi(&self, cast: bool) -> &'static str {
-        self.fmt_primitive_as_ffi(hir::PrimitiveType::Int(hir::IntType::I32), cast)
-    }
-
     pub fn fmt_primitive_list_type(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
             hir::PrimitiveType::Bool => "Array<bool>",
@@ -268,10 +264,6 @@ impl<'tcx> JSFormatter<'tcx> {
 
     pub fn fmt_nullable(&self, ident: &str) -> String {
         format!("{ident} | undefined")
-    }
-
-    pub fn fmt_null(&self) -> &'static str {
-        "null"
     }
 
     pub fn fmt_string(&self) -> &'static str {
