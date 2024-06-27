@@ -390,7 +390,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 format!("static {}", self.js_ctx.formatter.fmt_method_name(method))
             }
             None => self.js_ctx.formatter.fmt_method_name(method),
-            _ => todo!(
+            _ => panic!(
                 "Method Declaration {:?} not implemented",
                 method.attrs.special_method
             ),

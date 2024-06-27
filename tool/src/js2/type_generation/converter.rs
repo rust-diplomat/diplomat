@@ -144,7 +144,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                             .formatter
                             .fmt_lifetime_edge_array(lt, lifetime_environment)
                             .into_owned(),
-                        _ => todo!(),
+                        _ => panic!("'static not implemented for JS2 backend"),
                     }
                 } else {
                     "[]".into()
@@ -160,7 +160,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                                 .fmt_lifetime_edge_array(lt, lifetime_environment)
                         )
                         .unwrap(),
-                        _ => todo!(),
+                        _ => panic!("'static not implemented for JS2 backend"),
                     }
                 }
 
@@ -180,7 +180,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                             write!(edges, ", {}Edges", lifetime_environment.fmt_lifetime(lt))
                                 .unwrap()
                         }
-                        _ => todo!(),
+                        _ => panic!("'static not implemented for JS2 backend"),
                     }
                 }
 
