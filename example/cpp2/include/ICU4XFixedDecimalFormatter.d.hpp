@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XFixedDecimalFormatterOptions.d.hpp"
 
 namespace capi {typedef struct ICU4XDataProvider ICU4XDataProvider; }
 class ICU4XDataProvider;

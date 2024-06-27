@@ -31,6 +31,7 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             c,
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
+            generating_struct_fields: false,
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
@@ -128,6 +129,8 @@ pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
     pub(crate) c: C2TyGenContext<'ccx, 'tcx>,
     pub(crate) impl_header: &'header mut Header,
     pub(crate) decl_header: &'header mut Header,
+    /// Are we currently generating struct fields?
+    pub(crate) generating_struct_fields: bool,
 }
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
@@ -280,11 +283,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let c_header = self.c.gen_struct_def(def);
         let c_impl_header = self.c.gen_impl(def.into());
 
+        self.generating_struct_fields = true;
         let field_decls = def
             .fields
             .iter()
             .map(|field| self.gen_ty_decl(&field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
+        self.generating_struct_fields = false;
 
         let cpp_to_c_fields = def
             .fields
@@ -514,12 +519,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                // This can be cleaned up with https://github.com/rust-diplomat/diplomat/issues/514
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
-                self.decl_header
-                    .includes
-                    .insert(self.cx.formatter.fmt_decl_header_path(id));
+                if self.generating_struct_fields {
+                    self.decl_header
+                        .includes
+                        .insert(self.cx.formatter.fmt_decl_header_path(id));
+                }
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_impl_header_path(id));
@@ -536,12 +542,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                // This can be cleaned up with https://github.com/rust-diplomat/diplomat/issues/514
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
-                self.decl_header
-                    .includes
-                    .insert(self.cx.formatter.fmt_decl_header_path(id));
+                if self.generating_struct_fields {
+                    self.decl_header
+                        .includes
+                        .insert(self.cx.formatter.fmt_decl_header_path(id));
+                }
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_impl_header_path(id));

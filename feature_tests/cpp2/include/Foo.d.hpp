@@ -8,9 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "BorrowedFields.d.hpp"
-#include "BorrowedFieldsReturning.d.hpp"
-#include "BorrowedFieldsWithBounds.d.hpp"
 
 namespace capi {typedef struct Bar Bar; }
 class Bar;

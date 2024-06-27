@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "CyclicStructA.d.hpp"
 
 struct CyclicStructA;
 

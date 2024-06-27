@@ -9,7 +9,6 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "MyEnum.d.hpp"
-#include "MyZst.d.hpp"
 
 struct MyZst;
 class MyEnum;

@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "CPPRenamedAttrEnum.d.hpp"
 
 namespace ns {
 namespace capi {typedef struct AttrOpaque1Renamed AttrOpaque1Renamed; }

@@ -8,8 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ImportedStruct.d.hpp"
-#include "MyStruct.d.hpp"
 
 struct ImportedStruct;
 struct MyStruct;
