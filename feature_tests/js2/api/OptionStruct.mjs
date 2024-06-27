@@ -6,7 +6,6 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 export class OptionStruct {
     #a;
     get a()  {
@@ -55,6 +54,10 @@ export class OptionStruct {
         this.#d = ((dDeref == 0) ? undefined : new OptionOpaque(dDeref, []));
 
         return this;
+    }
+    // This is an out struct. You need to call other methods to be able to get this struct.
+    constructor(ptr) {
+        this._fromFFI(ptr);
     }
     
 

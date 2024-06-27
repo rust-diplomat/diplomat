@@ -156,13 +156,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 _ => None,
             };
 
-            // Don't need for JS
-            // let ffi_cast_type_name = if let hir::Type::Slice(s) = field.ty {
-            //     todo!()
-            // } else {
-            //     self.gen_type_name_ffi(&field.ty, true)
-            // };
-
             let js_type_name = self.gen_js_type_str(&field.ty);
 
             let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), offsets[i]);
@@ -241,6 +234,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             type_name: &'a str,
             mutable: bool,
             typescript: bool,
+
+            has_default_constructor : bool,
             fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<String>,
             docs: String,
@@ -251,6 +246,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             type_name,
             mutable,
             typescript: self.typescript,
+
+
+            has_default_constructor: is_out,
             fields,
             methods,
             docs: self.js_ctx.formatter.fmt_docs(&struct_def.docs),

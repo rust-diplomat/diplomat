@@ -63,6 +63,13 @@ export class {{type_name}} {
 
         return this;
     }
+
+    {%- if has_default_constructor %}
+    // This is an out struct. You need to call other methods to be able to get this struct.
+    constructor(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
+        this._fromFFI(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%});
+    }
+    {%- endif -%}
     
     {%- for l in lifetimes.all_lifetimes() %}
     {%- let ltname = lifetimes.fmt_lifetime(l) %}

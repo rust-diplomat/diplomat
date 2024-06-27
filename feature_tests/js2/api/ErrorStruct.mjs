@@ -4,7 +4,6 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 export class ErrorStruct {
     #i;
     get i()  {

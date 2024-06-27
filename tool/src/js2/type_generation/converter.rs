@@ -184,7 +184,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     }
                 }
 
-                format!("new {type_name}()._fromFFI({variable_name}{edges})").into()
+                let type_def = self.js_ctx.tcx.resolve_type(id);
+                match type_def {
+                    hir::TypeDef::Struct(st) => format!("new {type_name}()._fromFFI({variable_name}{edges})").into(),
+                    hir::TypeDef::OutStruct(st) => format!("new {type_name}({variable_name}{edges})").into(),
+                    _ => unreachable!("Expected struct type def, found {type_def:?}")
+                }
             }
             Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.js_ctx.tcx)) => {
                 let id = enum_path.tcx_id.into();

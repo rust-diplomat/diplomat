@@ -5,7 +5,6 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 
-
 export class ICU4XFixedDecimalFormatterOptions {
     #groupingStrategy;
     get groupingStrategy()  {
