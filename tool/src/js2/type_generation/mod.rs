@@ -11,7 +11,7 @@ use diplomat_core::hir::{
 
 use askama::{self, Template};
 
-use super::{formatter::JSFormatter, FileType, JSGenerationContext};
+use super::{formatter::JSFormatter, JSGenerationContext};
 
 mod converter;
 use converter::StructBorrowContext;
@@ -51,7 +51,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             .methods
             .iter()
             .flat_map(|method| {
-                self.generate_method_body(type_id, type_name, method, self.typescript)
+                self.generate_method_body(type_id, method, self.typescript)
             })
             .collect::<Vec<_>>();
 
@@ -92,7 +92,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             .methods
             .iter()
             .flat_map(|method| {
-                self.generate_method_body(type_id, type_name, method, self.typescript)
+                self.generate_method_body(type_id, method, self.typescript)
             })
             .collect::<Vec<_>>();
 
@@ -132,7 +132,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
-        let (offsets, layout) = crate::layout_hir::struct_offsets_size_max_align(
+        let (offsets, _) = crate::layout_hir::struct_offsets_size_max_align(
             struct_def.fields.iter().map(|f| &f.ty),
             self.js_ctx.tcx,
         );
@@ -213,7 +213,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             .methods
             .iter()
             .flat_map(|method| {
-                self.generate_method_body(type_id, type_name, method, self.typescript)
+                self.generate_method_body(type_id, method, self.typescript)
             })
             .collect::<Vec<_>>();
 
@@ -257,7 +257,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
     fn generate_method_body(
         &mut self,
         type_id: TypeId,
-        type_name: &str,
         method: &'tcx Method,
         typescript: bool,
     ) -> Option<String> {
