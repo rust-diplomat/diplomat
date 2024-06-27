@@ -17,7 +17,7 @@ pub fn struct_offsets_size_max_align<'a, P: hir::TyPosition + 'a>(
     let mut offsets = vec![];
 
     let types = types.collect::<Vec<_>>();
-    if types.len() <= 0 {
+    if types.is_empty() {
         return (vec![], unit_size_alignment());
     }
 
