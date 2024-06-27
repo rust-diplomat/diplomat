@@ -1,4 +1,8 @@
 // Base enumerator definition
+{% if !doc_str.is_empty() -%}
+/** {{doc_str}}
+*/
+{% endif -%}
 export class {{type_name}} {
 {%- if !typescript %}
     #value = undefined;
