@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 
 use diplomat_core::hir::{
-    self, borrowing_param::StructBorrowInfo, LifetimeEnv,
-    OpaqueOwner, PrimitiveType, ReturnType, SelfType, StructPathLike, SuccessType,
-    TyPosition, Type,
+    self, borrowing_param::StructBorrowInfo, LifetimeEnv, OpaqueOwner, PrimitiveType, ReturnType,
+    SelfType, StructPathLike, SuccessType, TyPosition, Type,
 };
 use std::fmt::Write;
 
@@ -186,9 +185,13 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
                 let type_def = self.js_ctx.tcx.resolve_type(id);
                 match type_def {
-                    hir::TypeDef::Struct(..) => format!("new {type_name}()._fromFFI({variable_name}{edges})").into(),
-                    hir::TypeDef::OutStruct(..) => format!("new {type_name}({variable_name}{edges})").into(),
-                    _ => unreachable!("Expected struct type def, found {type_def:?}")
+                    hir::TypeDef::Struct(..) => {
+                        format!("new {type_name}()._fromFFI({variable_name}{edges})").into()
+                    }
+                    hir::TypeDef::OutStruct(..) => {
+                        format!("new {type_name}({variable_name}{edges})").into()
+                    }
+                    _ => unreachable!("Expected struct type def, found {type_def:?}"),
                 }
             }
             Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.js_ctx.tcx)) => {

@@ -50,9 +50,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         let mut methods = enum_def
             .methods
             .iter()
-            .flat_map(|method| {
-                self.generate_method_body(type_id, method, self.typescript)
-            })
+            .flat_map(|method| self.generate_method_body(type_id, method, self.typescript))
             .collect::<Vec<_>>();
 
         let special_method_body =
@@ -95,9 +93,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         let mut methods = opaque_def
             .methods
             .iter()
-            .flat_map(|method| {
-                self.generate_method_body(type_id, method, self.typescript)
-            })
+            .flat_map(|method| self.generate_method_body(type_id, method, self.typescript))
             .collect::<Vec<_>>();
 
         let special_method_body =
@@ -212,9 +208,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         let mut methods = struct_def
             .methods
             .iter()
-            .flat_map(|method| {
-                self.generate_method_body(type_id, method, self.typescript)
-            })
+            .flat_map(|method| self.generate_method_body(type_id, method, self.typescript))
             .collect::<Vec<_>>();
 
         methods.push(
@@ -228,7 +222,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             mutable: bool,
             typescript: bool,
 
-            has_default_constructor : bool,
+            has_default_constructor: bool,
             fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<String>,
             docs: String,
@@ -239,7 +233,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             type_name,
             mutable,
             typescript: self.typescript,
-
 
             has_default_constructor: is_out,
             fields,
