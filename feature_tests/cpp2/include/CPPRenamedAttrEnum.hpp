@@ -20,15 +20,15 @@ namespace capi {
     } // extern "C"
 }
 }
-inline ns::capi::AttrEnum ns::CPPRenamedAttrEnum::AsFFI() const {
-  return static_cast<ns::capi::AttrEnum>(value);
+inline ns::capi::CPPRenamedAttrEnum ns::CPPRenamedAttrEnum::AsFFI() const {
+  return static_cast<ns::capi::CPPRenamedAttrEnum>(value);
 }
 
-inline ns::CPPRenamedAttrEnum ns::CPPRenamedAttrEnum::FromFFI(ns::capi::AttrEnum c_enum) {
+inline ns::CPPRenamedAttrEnum ns::CPPRenamedAttrEnum::FromFFI(ns::capi::CPPRenamedAttrEnum c_enum) {
   switch (c_enum) {
-    case ns::capi::AttrEnum_A:
-    case ns::capi::AttrEnum_B:
-    case ns::capi::AttrEnum_C:
+    case ns::capi::CPPRenamedAttrEnum_A:
+    case ns::capi::CPPRenamedAttrEnum_B:
+    case ns::capi::CPPRenamedAttrEnum_C:
       return static_cast<ns::CPPRenamedAttrEnum::Value>(c_enum);
     default:
       abort();

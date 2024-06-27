@@ -18,18 +18,18 @@ namespace ns {
 namespace capi {
     extern "C" {
     
-    ns::capi::AttrOpaque1* namespace_AttrOpaque1_new();
+    ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new();
     
-    uint8_t namespace_AttrOpaque1_method(const ns::capi::AttrOpaque1* self);
+    uint8_t namespace_AttrOpaque1_method(const ns::capi::AttrOpaque1Renamed* self);
     
-    uint8_t renamed_on_abi_only(const ns::capi::AttrOpaque1* self);
+    uint8_t renamed_on_abi_only(const ns::capi::AttrOpaque1Renamed* self);
     
-    void namespace_AttrOpaque1_use_unnamespaced(const ns::capi::AttrOpaque1* self, const ::capi::Unnamespaced* _un);
+    void namespace_AttrOpaque1_use_unnamespaced(const ns::capi::AttrOpaque1Renamed* self, const ::capi::Unnamespaced* _un);
     
-    void namespace_AttrOpaque1_use_namespaced(const ns::capi::AttrOpaque1* self, ns::capi::AttrEnum _n);
+    void namespace_AttrOpaque1_use_namespaced(const ns::capi::AttrOpaque1Renamed* self, ns::capi::CPPRenamedAttrEnum _n);
     
     
-    void namespace_AttrOpaque1_destroy(AttrOpaque1* self);
+    void namespace_AttrOpaque1_destroy(AttrOpaque1Renamed* self);
     
     } // extern "C"
 }
@@ -59,24 +59,24 @@ inline void ns::AttrOpaque1Renamed::use_namespaced(ns::CPPRenamedAttrEnum _n) co
     _n.AsFFI());
 }
 
-inline const ns::capi::AttrOpaque1* ns::AttrOpaque1Renamed::AsFFI() const {
-  return reinterpret_cast<const ns::capi::AttrOpaque1*>(this);
+inline const ns::capi::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::AsFFI() const {
+  return reinterpret_cast<const ns::capi::AttrOpaque1Renamed*>(this);
 }
 
-inline ns::capi::AttrOpaque1* ns::AttrOpaque1Renamed::AsFFI() {
-  return reinterpret_cast<ns::capi::AttrOpaque1*>(this);
+inline ns::capi::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::AsFFI() {
+  return reinterpret_cast<ns::capi::AttrOpaque1Renamed*>(this);
 }
 
-inline const ns::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::FromFFI(const ns::capi::AttrOpaque1* ptr) {
+inline const ns::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::FromFFI(const ns::capi::AttrOpaque1Renamed* ptr) {
   return reinterpret_cast<const ns::AttrOpaque1Renamed*>(ptr);
 }
 
-inline ns::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::FromFFI(ns::capi::AttrOpaque1* ptr) {
+inline ns::AttrOpaque1Renamed* ns::AttrOpaque1Renamed::FromFFI(ns::capi::AttrOpaque1Renamed* ptr) {
   return reinterpret_cast<ns::AttrOpaque1Renamed*>(ptr);
 }
 
 inline void ns::AttrOpaque1Renamed::operator delete(void* ptr) {
-  capi::namespace_AttrOpaque1_destroy(reinterpret_cast<ns::capi::AttrOpaque1*>(ptr));
+  capi::namespace_AttrOpaque1_destroy(reinterpret_cast<ns::capi::AttrOpaque1Renamed*>(ptr));
 }
 
 
