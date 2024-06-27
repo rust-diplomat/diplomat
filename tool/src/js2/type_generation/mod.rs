@@ -288,7 +288,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         for param in method.params.iter() {
             let param_info = ParamInfo {
                 name: self.js_ctx.formatter.fmt_param_name(param.name.as_str()),
-                ty: self.gen_js_type_str(&param.ty)
+                ty: self.gen_js_type_str(&param.ty),
             };
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
