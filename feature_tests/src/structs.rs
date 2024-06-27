@@ -205,11 +205,12 @@ pub mod ffi {
     // Test that cycles between structs work even when
     // they reference each other in the methods
     #[derive(Default)]
+    #[diplomat::skip_if_ast]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
     #[derive(Default)]
-
+    #[diplomat::skip_if_ast]
     pub struct CyclicStructB {
         pub field: u8,
     }
