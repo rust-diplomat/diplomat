@@ -1,7 +1,3 @@
-{% if !docs.is_empty() %}
-/** {{docs}}
-*/
-{% endif %}
 {% if !typescript %}
 const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.{{destructor}}(ptr);

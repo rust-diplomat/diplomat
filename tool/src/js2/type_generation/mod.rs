@@ -67,8 +67,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             type_name: &'a str,
             typescript: bool,
 
-            doc_str: String,
-
             methods: Vec<String>,
         }
 
@@ -77,8 +75,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             formatter: &self.js_ctx.formatter,
             type_name,
             typescript: self.typescript,
-
-            doc_str: self.js_ctx.formatter.fmt_docs(&enum_def.docs),
 
             methods,
         }
@@ -115,8 +111,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             lifetimes: &'a LifetimeEnv,
             methods: Vec<String>,
             destructor: String,
-
-            docs: String,
         }
 
         ImplTemplate {
@@ -124,7 +118,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             methods,
             destructor,
             typescript: self.typescript,
-            docs: self.js_ctx.formatter.fmt_docs(&opaque_def.docs),
             lifetimes: &opaque_def.lifetimes,
         }
         .render()
@@ -235,10 +228,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             mutable: bool,
             typescript: bool,
 
-            has_default_constructor : bool,
+            is_out : bool,
             fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<String>,
-            docs: String,
+            
             lifetimes: &'a LifetimeEnv,
         }
 
@@ -248,10 +241,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             typescript: self.typescript,
 
 
-            has_default_constructor: is_out,
+            is_out,
             fields,
             methods,
-            docs: self.js_ctx.formatter.fmt_docs(&struct_def.docs),
+
             lifetimes: &struct_def.lifetimes,
         }
         .render()

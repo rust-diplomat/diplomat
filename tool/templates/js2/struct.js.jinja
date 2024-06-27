@@ -1,7 +1,3 @@
-{% if !docs.is_empty() %}
-/** {{docs}}
-*/
-{% endif %}
 export class {{type_name}} {
     {%- for field in fields %}
     #{{field.field_name}};
@@ -64,7 +60,7 @@ export class {{type_name}} {
         return this;
     }
 
-    {%- if has_default_constructor %}
+    {%- if is_out %}
     // This is an out struct. You need to call other methods to be able to get this struct.
     constructor(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%}) {
         this._fromFFI(ptr{%- for lifetime in lifetimes.all_lifetimes() -%}, {{lifetimes.fmt_lifetime(lifetime)}}Edges{%- endfor -%});
