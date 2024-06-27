@@ -21,7 +21,7 @@ class CPPRenamedAttrEnum;
 
 namespace ns {
 namespace capi {
-    typedef struct AttrOpaque1 AttrOpaque1;
+    typedef struct AttrOpaque1Renamed AttrOpaque1Renamed;
 }
 
 class AttrOpaque1Renamed {
@@ -37,10 +37,10 @@ public:
 
   inline void use_namespaced(ns::CPPRenamedAttrEnum _n) const;
 
-  inline const ns::capi::AttrOpaque1* AsFFI() const;
-  inline ns::capi::AttrOpaque1* AsFFI();
-  inline static const ns::AttrOpaque1Renamed* FromFFI(const ns::capi::AttrOpaque1* ptr);
-  inline static ns::AttrOpaque1Renamed* FromFFI(ns::capi::AttrOpaque1* ptr);
+  inline const ns::capi::AttrOpaque1Renamed* AsFFI() const;
+  inline ns::capi::AttrOpaque1Renamed* AsFFI();
+  inline static const ns::AttrOpaque1Renamed* FromFFI(const ns::capi::AttrOpaque1Renamed* ptr);
+  inline static ns::AttrOpaque1Renamed* FromFFI(ns::capi::AttrOpaque1Renamed* ptr);
   inline static void operator delete(void* ptr);
 private:
   AttrOpaque1Renamed() = delete;

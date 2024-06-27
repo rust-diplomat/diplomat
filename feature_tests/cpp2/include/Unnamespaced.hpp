@@ -17,9 +17,9 @@
 namespace capi {
     extern "C" {
     
-    ::capi::Unnamespaced* namespace_Unnamespaced_make(ns::capi::AttrEnum _e);
+    ::capi::Unnamespaced* namespace_Unnamespaced_make(ns::capi::CPPRenamedAttrEnum _e);
     
-    void namespace_Unnamespaced_use_namespaced(const ::capi::Unnamespaced* self, const ns::capi::AttrOpaque1* _n);
+    void namespace_Unnamespaced_use_namespaced(const ::capi::Unnamespaced* self, const ns::capi::AttrOpaque1Renamed* _n);
     
     
     void namespace_Unnamespaced_destroy(Unnamespaced* self);

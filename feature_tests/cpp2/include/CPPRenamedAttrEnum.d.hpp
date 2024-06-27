@@ -12,11 +12,11 @@
 
 namespace ns {
 namespace capi {
-    typedef enum AttrEnum {
-      AttrEnum_A = 0,
-      AttrEnum_B = 1,
-      AttrEnum_C = 2,
-    } AttrEnum;
+    typedef enum CPPRenamedAttrEnum {
+      CPPRenamedAttrEnum_A = 0,
+      CPPRenamedAttrEnum_B = 1,
+      CPPRenamedAttrEnum_C = 2,
+    } CPPRenamedAttrEnum;
 }
 
 
@@ -35,8 +35,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline ns::capi::AttrEnum AsFFI() const;
-  inline static ns::CPPRenamedAttrEnum FromFFI(ns::capi::AttrEnum c_enum);
+  inline ns::capi::CPPRenamedAttrEnum AsFFI() const;
+  inline static ns::CPPRenamedAttrEnum FromFFI(ns::capi::CPPRenamedAttrEnum c_enum);
 private:
     Value value;
 };
