@@ -66,9 +66,9 @@ impl<'tcx> JSGenerationContext<'tcx> {
 
         let errors = this.errors.take_all();
         if errors.is_empty() {
-            return Ok(this.files);
+            Ok(this.files)
         } else {
-            return Err(errors);
+            Err(errors)
         }
     }
 

@@ -68,7 +68,7 @@ impl<'tcx> JSFormatter<'tcx> {
         Self {
             c_formatter: CFormatter::new(tcx),
             docs_url_gen,
-            strip_prefix: strip_prefix,
+            strip_prefix,
         }
     }
 
@@ -96,7 +96,7 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     pub fn fmt_file_name_extensionless(&self, type_name: &str) -> String {
-        format!("{}", type_name)
+        type_name.to_string()
     }
 
     pub fn fmt_file_name(&self, type_name: &str, file_type: &FileType) -> String {
@@ -164,7 +164,7 @@ impl<'tcx> JSFormatter<'tcx> {
     /// `cast: bool` - Basically, do we want to use `number` instead of `u8`?
     pub fn fmt_primitive_as_ffi(&self, primitive: hir::PrimitiveType, cast: bool) -> &'static str {
         if cast {
-            return match primitive {
+            match primitive {
                 hir::PrimitiveType::Bool => "boolean",
                 hir::PrimitiveType::Char => "char",
                 hir::PrimitiveType::Int(_)
@@ -174,9 +174,9 @@ impl<'tcx> JSFormatter<'tcx> {
                 hir::PrimitiveType::Int128(_) => {
                     panic!("Javascript backend does not currently support BigInt.")
                 }
-            };
+            }
         } else {
-            return match primitive {
+            match primitive {
                 hir::PrimitiveType::Bool => "boolean",
                 hir::PrimitiveType::Char => "char",
                 hir::PrimitiveType::Int(hir::IntType::I8) => "i8",
@@ -194,7 +194,7 @@ impl<'tcx> JSFormatter<'tcx> {
                 hir::PrimitiveType::Int128(_) => {
                     panic!("Javascript backend does not currently support BigInt.")
                 }
-            };
+            }
         }
     }
 
@@ -263,7 +263,7 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     pub fn fmt_void(&self) -> &'static str {
-        "void".into()
+        "void"
     }
 
     pub fn fmt_nullable(&self, ident: &str) -> String {

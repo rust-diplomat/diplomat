@@ -176,7 +176,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     "".into()
                 };
 
-                (format!("{slice_expr}").into(), Some(post_cleanup_statement), None)
+                (format!("{slice_expr}"), Some(post_cleanup_statement), None)
             } else {
                 let borrow_info = if let hir::Type::Struct(path) = &field.ty {
                     StructBorrowInfo::compute_for_struct_field(struct_def, path, self.js_ctx.tcx).map(
@@ -319,7 +319,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     method_info
                         .cleanup_expressions
                         .push(format!("{}Slice.garbageCollect();", param_info.name).into());
-                } else if !slice.lifetime().is_none() {
+                } else if slice.lifetime().is_some() {
                     // Is Rust NOT taking ownership?
                     // Then that means we can free this after the function is done.
                     method_info
@@ -376,8 +376,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 self.js_ctx.formatter.fmt_method_field_name(name, method)
             ),
 
-            Some(SpecialMethod::Iterable) => format!("[Symbol.iterator]"),
-            Some(SpecialMethod::Iterator) => format!("#iteratorNext"),
+            Some(SpecialMethod::Iterable) => "[Symbol.iterator]".to_string(),
+            Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
             None if method.param_self.is_none() => {
                 format!("static {}", self.js_ctx.formatter.fmt_method_name(method))

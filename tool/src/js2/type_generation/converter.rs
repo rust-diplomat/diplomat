@@ -65,7 +65,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     type_name
                 };
 
-                ret.to_owned().into()
+                ret.to_owned()
             }
             Type::Struct(ref st) => {
                 let id = st.id();
@@ -358,7 +358,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 let mut result = "result";
                 match o {
                     Type::Struct(_) | Type::Slice(_) => {
-                        let layout = crate::layout_hir::type_size_alignment(o, &self.js_ctx.tcx);
+                        let layout = crate::layout_hir::type_size_alignment(o, self.js_ctx.tcx);
                         let size = layout.size();
                         let align = layout.align();
 
@@ -411,13 +411,13 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 let layout = match ok {
                     SuccessType::Unit => crate::layout_hir::unit_size_alignment(),
                     SuccessType::OutType(ref o) => {
-                        crate::layout_hir::type_size_alignment(o, &self.js_ctx.tcx)
+                        crate::layout_hir::type_size_alignment(o, self.js_ctx.tcx)
                     }
                     SuccessType::Write => match return_type {
                         ReturnType::Fallible(_, ref err) if err.is_some() => {
                             crate::layout_hir::type_size_alignment(
                                 &err.clone().unwrap(),
-                                &self.js_ctx.tcx,
+                                self.js_ctx.tcx,
                             )
                         }
                         ReturnType::Fallible(_, None) | ReturnType::Nullable(_) => {
@@ -435,7 +435,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                         ReturnType::Fallible(_, e) if e.is_some() => {
                             crate::layout_hir::type_size_alignment(
                                 &e.clone().unwrap(),
-                                &self.js_ctx.tcx,
+                                self.js_ctx.tcx,
                             )
                             .size()
                         }
@@ -497,7 +497,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
 						method_info.param_conversions.push("write".into());
 						method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
-						format!("{err_check}return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));").into()
+						format!("{err_check}return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));")
 					},
 					SuccessType::OutType(ref o) => {
 						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomat_receive_buffer".into(), 0);
