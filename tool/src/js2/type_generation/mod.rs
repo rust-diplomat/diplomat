@@ -143,12 +143,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             let field_name = self.js_ctx.formatter.fmt_param_name(field.name.as_str());
 
-            let field_annotation = match field.ty {
-                hir::Type::Primitive(p) => Some(self.js_ctx.formatter.fmt_primitive_as_ffi(p, false)),
-                hir::Type::Enum(_) => Some(self.js_ctx.formatter.fmt_enum_as_ffi(false)),
-                _ => None,
-            };
-
             let js_type_name = self.gen_js_type_str(&field.ty);
 
             let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), offsets[i]);
@@ -199,7 +193,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             FieldInfo {
                 field_name,
                 field_type: &field.ty,
-                annotation: field_annotation,
                 js_type_name,
                 c_to_js_deref,
                 c_to_js,
@@ -471,7 +464,6 @@ struct MethodInfo<'info> {
 struct FieldInfo<'info, P: hir::TyPosition> {
     field_name: Cow<'info, str>,
     field_type: &'info Type<P>,
-    annotation: Option<&'static str>,
     js_type_name: Cow<'info, str>,
     c_to_js: Cow<'info, str>,
     c_to_js_deref: Cow<'info, str>,
