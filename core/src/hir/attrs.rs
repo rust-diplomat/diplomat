@@ -603,6 +603,7 @@ impl Attrs {
 /// 
 /// For example, the current dart backend supports [`BackendAttrSupport::constructors`]. So when it encounters:
 /// ```
+/// use diplomat;
 /// struct Sample {}
 /// impl Sample {
 ///     #[diplomat::attr(supports = constructors, constructor)]
