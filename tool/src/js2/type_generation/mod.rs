@@ -337,7 +337,6 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 method_info.slice_params.push(SliceParam {
                     name: param_info.name.clone(),
                     slice_expr,
-                    is_borrowed,
                 });
             } else {
                 if let hir::Type::Struct(..) = param.ty {
@@ -441,7 +440,6 @@ struct SliceParam<'a> {
     name: Cow<'a, str>,
     /// How to convert the JS type into a C slice.
     slice_expr: Cow<'a, str>,
-    is_borrowed: bool,
 }
 
 #[derive(Default, Template)]
