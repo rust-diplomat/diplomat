@@ -59,13 +59,11 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
-                let ret = if op.is_optional() {
+                if op.is_optional() {
                     self.js_ctx.formatter.fmt_nullable(&type_name).into()
                 } else {
                     type_name
-                };
-
-                ret
+                }
             }
             Type::Struct(ref st) => {
                 let id = st.id();
