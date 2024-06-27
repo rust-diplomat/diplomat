@@ -8,8 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ErrorEnum.d.hpp"
-#include "ErrorStruct.d.hpp"
 
 struct ErrorStruct;
 class ErrorEnum;

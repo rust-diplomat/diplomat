@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OptionStruct.d.hpp"
 
 struct OptionStruct;
 
