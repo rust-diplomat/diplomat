@@ -65,7 +65,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     type_name
                 };
 
-                ret.to_owned()
+                ret
             }
             Type::Struct(ref st) => {
                 let id = st.id();
@@ -244,7 +244,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         variable_name: Cow<'tcx, str>,
         offset: usize,
     ) -> Cow<'tcx, str> {
-        let o = if offset <= 0 {
+        let o = if offset == 0 {
             "".into()
         } else {
             format!(" + {}", offset)
