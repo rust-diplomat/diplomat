@@ -49,7 +49,7 @@ const RESERVED: &[&str] = &[
 ];
 
 /// Helper class for us to format JS identifiers from the HIR.
-pub(super) struct JSFormatter<'tcx> {
+pub struct JSFormatter<'tcx> {
     /// Per [`CFormatter`]'s documentation we use it for support.
     c_formatter: CFormatter<'tcx>,
 
@@ -264,6 +264,10 @@ impl<'tcx> JSFormatter<'tcx> {
 
     pub fn fmt_nullable(&self, ident: &str) -> String {
         format!("{ident} | undefined")
+    }
+
+    pub fn fmt_null(&self) -> &'static str {
+        "null"
     }
 
     pub fn fmt_string(&self) -> &'static str {
