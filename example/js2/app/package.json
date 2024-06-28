@@ -4,7 +4,7 @@
 	"description": "Web demonstration of a miniaturized ICU4X Library to demonstrate Diplomat's capabilities.",
 	"type": "module",
 	"scripts": {
-		"clean": "rm dist/*",
+		"clean": "rm public/dist/*",
 		"build": "webpack",
 		"start": "webpack serve --mode development --port 12349"
 	},
