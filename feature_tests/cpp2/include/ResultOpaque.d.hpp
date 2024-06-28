@@ -8,8 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ErrorEnum.d.hpp"
-#include "ErrorStruct.d.hpp"
 
 struct ErrorStruct;
 class ErrorEnum;
@@ -40,10 +38,10 @@ public:
 
   inline void assert_integer(int32_t i) const;
 
-  inline const capi::ResultOpaque* AsFFI() const;
-  inline capi::ResultOpaque* AsFFI();
-  inline static const ResultOpaque* FromFFI(const capi::ResultOpaque* ptr);
-  inline static ResultOpaque* FromFFI(capi::ResultOpaque* ptr);
+  inline const ::capi::ResultOpaque* AsFFI() const;
+  inline ::capi::ResultOpaque* AsFFI();
+  inline static const ResultOpaque* FromFFI(const ::capi::ResultOpaque* ptr);
+  inline static ResultOpaque* FromFFI(::capi::ResultOpaque* ptr);
   inline static void operator delete(void* ptr);
 private:
   ResultOpaque() = delete;

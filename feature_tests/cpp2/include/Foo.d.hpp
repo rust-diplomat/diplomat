@@ -8,10 +8,8 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "BorrowedFields.d.hpp"
-#include "BorrowedFieldsReturning.d.hpp"
-#include "BorrowedFieldsWithBounds.d.hpp"
 
+namespace capi {typedef struct Bar Bar; }
 class Bar;
 struct BorrowedFields;
 struct BorrowedFieldsReturning;
@@ -37,10 +35,10 @@ public:
 
   inline static std::unique_ptr<Foo> extract_from_bounds(BorrowedFieldsWithBounds bounds, std::string_view another_string);
 
-  inline const capi::Foo* AsFFI() const;
-  inline capi::Foo* AsFFI();
-  inline static const Foo* FromFFI(const capi::Foo* ptr);
-  inline static Foo* FromFFI(capi::Foo* ptr);
+  inline const ::capi::Foo* AsFFI() const;
+  inline ::capi::Foo* AsFFI();
+  inline static const Foo* FromFFI(const ::capi::Foo* ptr);
+  inline static Foo* FromFFI(::capi::Foo* ptr);
   inline static void operator delete(void* ptr);
 private:
   Foo() = delete;

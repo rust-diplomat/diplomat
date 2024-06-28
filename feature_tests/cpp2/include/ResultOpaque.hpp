@@ -17,38 +17,37 @@
 namespace capi {
     extern "C" {
     
-    typedef struct ResultOpaque_new_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_result;
+    typedef struct ResultOpaque_new_result {union {::capi::ResultOpaque* ok; ::capi::ErrorEnum err;}; bool is_ok;} ResultOpaque_new_result;
     ResultOpaque_new_result ResultOpaque_new(int32_t i);
     
-    typedef struct ResultOpaque_new_failing_foo_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_failing_foo_result;
+    typedef struct ResultOpaque_new_failing_foo_result {union {::capi::ResultOpaque* ok; ::capi::ErrorEnum err;}; bool is_ok;} ResultOpaque_new_failing_foo_result;
     ResultOpaque_new_failing_foo_result ResultOpaque_new_failing_foo();
     
-    typedef struct ResultOpaque_new_failing_bar_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_failing_bar_result;
+    typedef struct ResultOpaque_new_failing_bar_result {union {::capi::ResultOpaque* ok; ::capi::ErrorEnum err;}; bool is_ok;} ResultOpaque_new_failing_bar_result;
     ResultOpaque_new_failing_bar_result ResultOpaque_new_failing_bar();
     
-    typedef struct ResultOpaque_new_failing_unit_result {union {ResultOpaque* ok; }; bool is_ok;} ResultOpaque_new_failing_unit_result;
+    typedef struct ResultOpaque_new_failing_unit_result {union {::capi::ResultOpaque* ok; }; bool is_ok;} ResultOpaque_new_failing_unit_result;
     ResultOpaque_new_failing_unit_result ResultOpaque_new_failing_unit();
     
-    typedef struct ResultOpaque_new_failing_struct_result {union {ResultOpaque* ok; ErrorStruct err;}; bool is_ok;} ResultOpaque_new_failing_struct_result;
+    typedef struct ResultOpaque_new_failing_struct_result {union {::capi::ResultOpaque* ok; ::capi::ErrorStruct err;}; bool is_ok;} ResultOpaque_new_failing_struct_result;
     ResultOpaque_new_failing_struct_result ResultOpaque_new_failing_struct(int32_t i);
     
-    typedef struct ResultOpaque_new_in_err_result {union { ResultOpaque* err;}; bool is_ok;} ResultOpaque_new_in_err_result;
+    typedef struct ResultOpaque_new_in_err_result {union { ::capi::ResultOpaque* err;}; bool is_ok;} ResultOpaque_new_in_err_result;
     ResultOpaque_new_in_err_result ResultOpaque_new_in_err(int32_t i);
     
     typedef struct ResultOpaque_new_int_result {union {int32_t ok; }; bool is_ok;} ResultOpaque_new_int_result;
     ResultOpaque_new_int_result ResultOpaque_new_int(int32_t i);
     
-    typedef struct ResultOpaque_new_in_enum_err_result {union {ErrorEnum ok; ResultOpaque* err;}; bool is_ok;} ResultOpaque_new_in_enum_err_result;
+    typedef struct ResultOpaque_new_in_enum_err_result {union {::capi::ErrorEnum ok; ::capi::ResultOpaque* err;}; bool is_ok;} ResultOpaque_new_in_enum_err_result;
     ResultOpaque_new_in_enum_err_result ResultOpaque_new_in_enum_err(int32_t i);
     
-    void ResultOpaque_assert_integer(const ResultOpaque* self, int32_t i);
+    void ResultOpaque_assert_integer(const ::capi::ResultOpaque* self, int32_t i);
     
     
     void ResultOpaque_destroy(ResultOpaque* self);
     
     } // extern "C"
 }
-
 inline diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum> ResultOpaque::new_(int32_t i) {
   auto result = capi::ResultOpaque_new(i);
   return result.is_ok ? diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Ok<std::unique_ptr<ResultOpaque>>(std::unique_ptr<ResultOpaque>(ResultOpaque::FromFFI(result.ok)))) : diplomat::result<std::unique_ptr<ResultOpaque>, ErrorEnum>(diplomat::Err<ErrorEnum>(ErrorEnum::FromFFI(result.err)));
@@ -94,24 +93,24 @@ inline void ResultOpaque::assert_integer(int32_t i) const {
     i);
 }
 
-inline const capi::ResultOpaque* ResultOpaque::AsFFI() const {
-  return reinterpret_cast<const capi::ResultOpaque*>(this);
+inline const ::capi::ResultOpaque* ResultOpaque::AsFFI() const {
+  return reinterpret_cast<const ::capi::ResultOpaque*>(this);
 }
 
-inline capi::ResultOpaque* ResultOpaque::AsFFI() {
-  return reinterpret_cast<capi::ResultOpaque*>(this);
+inline ::capi::ResultOpaque* ResultOpaque::AsFFI() {
+  return reinterpret_cast<::capi::ResultOpaque*>(this);
 }
 
-inline const ResultOpaque* ResultOpaque::FromFFI(const capi::ResultOpaque* ptr) {
+inline const ResultOpaque* ResultOpaque::FromFFI(const ::capi::ResultOpaque* ptr) {
   return reinterpret_cast<const ResultOpaque*>(ptr);
 }
 
-inline ResultOpaque* ResultOpaque::FromFFI(capi::ResultOpaque* ptr) {
+inline ResultOpaque* ResultOpaque::FromFFI(::capi::ResultOpaque* ptr) {
   return reinterpret_cast<ResultOpaque*>(ptr);
 }
 
 inline void ResultOpaque::operator delete(void* ptr) {
-  capi::ResultOpaque_destroy(reinterpret_cast<capi::ResultOpaque*>(ptr));
+  capi::ResultOpaque_destroy(reinterpret_cast<::capi::ResultOpaque*>(ptr));
 }
 
 

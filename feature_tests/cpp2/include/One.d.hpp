@@ -9,6 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+namespace capi {typedef struct Two Two; }
 class Two;
 
 
@@ -41,10 +42,10 @@ public:
 
   inline static std::unique_ptr<One> implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold);
 
-  inline const capi::One* AsFFI() const;
-  inline capi::One* AsFFI();
-  inline static const One* FromFFI(const capi::One* ptr);
-  inline static One* FromFFI(capi::One* ptr);
+  inline const ::capi::One* AsFFI() const;
+  inline ::capi::One* AsFFI();
+  inline static const One* FromFFI(const ::capi::One* ptr);
+  inline static One* FromFFI(::capi::One* ptr);
   inline static void operator delete(void* ptr);
 private:
   One() = delete;

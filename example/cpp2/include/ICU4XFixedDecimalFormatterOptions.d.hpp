@@ -15,7 +15,7 @@ class ICU4XFixedDecimalGroupingStrategy;
 
 namespace capi {
     typedef struct ICU4XFixedDecimalFormatterOptions {
-      ICU4XFixedDecimalGroupingStrategy grouping_strategy;
+      ::capi::ICU4XFixedDecimalGroupingStrategy grouping_strategy;
       bool some_other_config;
     } ICU4XFixedDecimalFormatterOptions;
 }
@@ -26,8 +26,8 @@ struct ICU4XFixedDecimalFormatterOptions {
 
   inline static ICU4XFixedDecimalFormatterOptions default_();
 
-  inline capi::ICU4XFixedDecimalFormatterOptions AsFFI() const;
-  inline static ICU4XFixedDecimalFormatterOptions FromFFI(capi::ICU4XFixedDecimalFormatterOptions c_struct);
+  inline ::capi::ICU4XFixedDecimalFormatterOptions AsFFI() const;
+  inline static ICU4XFixedDecimalFormatterOptions FromFFI(::capi::ICU4XFixedDecimalFormatterOptions c_struct);
 };
 
 

@@ -10,6 +10,8 @@ use diplomat_core::hir::{
 };
 use std::borrow::Cow;
 
+use crate::c2::CAPI_NAMESPACE;
+
 impl<'tcx> super::Cpp2Context<'tcx> {
     pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
         if ty.attrs().disable {
@@ -29,6 +31,7 @@ impl<'tcx> super::Cpp2Context<'tcx> {
             c,
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
+            generating_struct_fields: false,
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
@@ -126,6 +129,8 @@ pub(crate) struct TyGenContext<'ccx, 'tcx, 'header> {
     pub(crate) c: C2TyGenContext<'ccx, 'tcx>,
     pub(crate) impl_header: &'header mut Header,
     pub(crate) decl_header: &'header mut Header,
+    /// Are we currently generating struct fields?
+    pub(crate) generating_struct_fields: bool,
 }
 
 impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
@@ -182,6 +187,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &'a str,
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
             c_impl_header: C2Header,
         }
 
@@ -191,6 +197,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             type_name: &type_name,
             ctype: &ctype,
             methods: methods.as_slice(),
+            namespace: ty.attrs.namespace.as_deref(),
             c_impl_header,
         }
         .render_into(self.impl_header)
@@ -246,6 +253,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &'a str,
             dtor_name: &'a str,
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
             c_impl_header: C2Header,
         }
 
@@ -256,6 +264,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &ctype,
             dtor_name: &dtor_name,
             methods: methods.as_slice(),
+            namespace: ty.attrs.namespace.as_deref(),
             c_impl_header,
         }
         .render_into(self.impl_header)
@@ -274,11 +283,13 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let c_header = self.c.gen_struct_def(def);
         let c_impl_header = self.c.gen_impl(def.into());
 
+        self.generating_struct_fields = true;
         let field_decls = def
             .fields
             .iter()
             .map(|field| self.gen_ty_decl(&field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
+        self.generating_struct_fields = false;
 
         let cpp_to_c_fields = def
             .fields
@@ -336,6 +347,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: &'a [NamedExpression<'a>],
             c_to_cpp_fields: &'a [NamedExpression<'a>],
             methods: &'a [MethodInfo<'a>],
+            namespace: Option<&'a str>,
             c_impl_header: C2Header,
         }
 
@@ -347,6 +359,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             cpp_to_c_fields: cpp_to_c_fields.as_slice(),
             c_to_cpp_fields: c_to_cpp_fields.as_slice(),
             methods: methods.as_slice(),
+            namespace: def.attrs.namespace.as_deref(),
             c_impl_header,
         }
         .render_into(self.impl_header)
@@ -486,6 +499,8 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 };
                 let ret = ret.into_owned().into();
 
+                // We don't append a header for this, since we already have a forward.
+                // Note that we also need a forward for the C type in case of structs. The forward handling manages this.
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
                 self.impl_header
@@ -506,9 +521,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
-                self.decl_header
-                    .includes
-                    .insert(self.cx.formatter.fmt_decl_header_path(id));
+                if self.generating_struct_fields {
+                    self.decl_header
+                        .includes
+                        .insert(self.cx.formatter.fmt_decl_header_path(id));
+                }
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_impl_header_path(id));
@@ -527,9 +544,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
 
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
-                self.decl_header
-                    .includes
-                    .insert(self.cx.formatter.fmt_decl_header_path(id));
+                if self.generating_struct_fields {
+                    self.decl_header
+                        .includes
+                        .insert(self.cx.formatter.fmt_decl_header_path(id));
+                }
                 self.impl_header
                     .includes
                     .insert(self.cx.formatter.fmt_impl_header_path(id));

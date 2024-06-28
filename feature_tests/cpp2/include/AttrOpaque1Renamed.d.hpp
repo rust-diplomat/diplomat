@@ -8,20 +8,21 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "CPPRenamedAttrEnum.d.hpp"
 
+namespace capi {typedef struct Unnamespaced Unnamespaced; }
 class Unnamespaced;
 namespace ns {
+namespace capi {typedef struct AttrOpaque1Renamed AttrOpaque1Renamed; }
 class AttrOpaque1Renamed;
 class CPPRenamedAttrEnum;
 }
 
 
+namespace ns {
 namespace capi {
-    typedef struct AttrOpaque1 AttrOpaque1;
+    typedef struct AttrOpaque1Renamed AttrOpaque1Renamed;
 }
 
-namespace ns {
 class AttrOpaque1Renamed {
 public:
 
@@ -35,10 +36,10 @@ public:
 
   inline void use_namespaced(ns::CPPRenamedAttrEnum _n) const;
 
-  inline const capi::AttrOpaque1* AsFFI() const;
-  inline capi::AttrOpaque1* AsFFI();
-  inline static const ns::AttrOpaque1Renamed* FromFFI(const capi::AttrOpaque1* ptr);
-  inline static ns::AttrOpaque1Renamed* FromFFI(capi::AttrOpaque1* ptr);
+  inline const ns::capi::AttrOpaque1Renamed* AsFFI() const;
+  inline ns::capi::AttrOpaque1Renamed* AsFFI();
+  inline static const ns::AttrOpaque1Renamed* FromFFI(const ns::capi::AttrOpaque1Renamed* ptr);
+  inline static ns::AttrOpaque1Renamed* FromFFI(ns::capi::AttrOpaque1Renamed* ptr);
   inline static void operator delete(void* ptr);
 private:
   AttrOpaque1Renamed() = delete;

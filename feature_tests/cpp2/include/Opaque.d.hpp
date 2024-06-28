@@ -8,8 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ImportedStruct.d.hpp"
-#include "MyStruct.d.hpp"
 
 struct ImportedStruct;
 struct MyStruct;
@@ -38,10 +36,10 @@ public:
 
   inline static int8_t cmp();
 
-  inline const capi::Opaque* AsFFI() const;
-  inline capi::Opaque* AsFFI();
-  inline static const Opaque* FromFFI(const capi::Opaque* ptr);
-  inline static Opaque* FromFFI(capi::Opaque* ptr);
+  inline const ::capi::Opaque* AsFFI() const;
+  inline ::capi::Opaque* AsFFI();
+  inline static const Opaque* FromFFI(const ::capi::Opaque* ptr);
+  inline static Opaque* FromFFI(::capi::Opaque* ptr);
   inline static void operator delete(void* ptr);
 private:
   Opaque() = delete;

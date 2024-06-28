@@ -32,7 +32,7 @@ impl<'tcx> DartFormatter<'tcx> {
         strip_prefix: Option<String>,
     ) -> Self {
         Self {
-            c: CFormatter::new(tcx),
+            c: CFormatter::new(tcx, false),
             docs_url_generator,
             strip_prefix,
         }

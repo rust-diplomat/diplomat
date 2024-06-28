@@ -19,10 +19,10 @@ public:
 
   inline static std::unique_ptr<ICU4XLocale> new_(std::string_view name);
 
-  inline const capi::ICU4XLocale* AsFFI() const;
-  inline capi::ICU4XLocale* AsFFI();
-  inline static const ICU4XLocale* FromFFI(const capi::ICU4XLocale* ptr);
-  inline static ICU4XLocale* FromFFI(capi::ICU4XLocale* ptr);
+  inline const ::capi::ICU4XLocale* AsFFI() const;
+  inline ::capi::ICU4XLocale* AsFFI();
+  inline static const ICU4XLocale* FromFFI(const ::capi::ICU4XLocale* ptr);
+  inline static ICU4XLocale* FromFFI(::capi::ICU4XLocale* ptr);
   inline static void operator delete(void* ptr);
 private:
   ICU4XLocale() = delete;
