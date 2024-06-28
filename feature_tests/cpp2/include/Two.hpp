@@ -20,25 +20,24 @@ namespace capi {
     
     } // extern "C"
 }
-
-inline const capi::Two* Two::AsFFI() const {
-  return reinterpret_cast<const capi::Two*>(this);
+inline const ::capi::Two* Two::AsFFI() const {
+  return reinterpret_cast<const ::capi::Two*>(this);
 }
 
-inline capi::Two* Two::AsFFI() {
-  return reinterpret_cast<capi::Two*>(this);
+inline ::capi::Two* Two::AsFFI() {
+  return reinterpret_cast<::capi::Two*>(this);
 }
 
-inline const Two* Two::FromFFI(const capi::Two* ptr) {
+inline const Two* Two::FromFFI(const ::capi::Two* ptr) {
   return reinterpret_cast<const Two*>(ptr);
 }
 
-inline Two* Two::FromFFI(capi::Two* ptr) {
+inline Two* Two::FromFFI(::capi::Two* ptr) {
   return reinterpret_cast<Two*>(ptr);
 }
 
 inline void Two::operator delete(void* ptr) {
-  capi::Two_destroy(reinterpret_cast<capi::Two*>(ptr));
+  capi::Two_destroy(reinterpret_cast<::capi::Two*>(ptr));
 }
 
 

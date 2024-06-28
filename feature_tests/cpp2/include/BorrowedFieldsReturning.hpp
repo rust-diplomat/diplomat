@@ -19,14 +19,13 @@ namespace capi {
     } // extern "C"
 }
 
-
-inline capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
-  return capi::BorrowedFieldsReturning {
+inline ::capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
+  return ::capi::BorrowedFieldsReturning {
     .bytes = { .data = bytes.data(), .len = bytes.size() },
   };
 }
 
-inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(capi::BorrowedFieldsReturning c_struct) {
+inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(::capi::BorrowedFieldsReturning c_struct) {
   return BorrowedFieldsReturning {
     .bytes = std::string_view(c_struct.bytes.data, c_struct.bytes.len),
   };

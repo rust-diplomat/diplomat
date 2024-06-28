@@ -29,10 +29,10 @@ public:
 
   inline std::string_view get_boxed_str() const;
 
-  inline const capi::MyString* AsFFI() const;
-  inline capi::MyString* AsFFI();
-  inline static const MyString* FromFFI(const capi::MyString* ptr);
-  inline static MyString* FromFFI(capi::MyString* ptr);
+  inline const ::capi::MyString* AsFFI() const;
+  inline ::capi::MyString* AsFFI();
+  inline static const MyString* FromFFI(const ::capi::MyString* ptr);
+  inline static MyString* FromFFI(::capi::MyString* ptr);
   inline static void operator delete(void* ptr);
 private:
   MyString() = delete;

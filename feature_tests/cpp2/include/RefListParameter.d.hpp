@@ -17,10 +17,10 @@ namespace capi {
 class RefListParameter {
 public:
 
-  inline const capi::RefListParameter* AsFFI() const;
-  inline capi::RefListParameter* AsFFI();
-  inline static const RefListParameter* FromFFI(const capi::RefListParameter* ptr);
-  inline static RefListParameter* FromFFI(capi::RefListParameter* ptr);
+  inline const ::capi::RefListParameter* AsFFI() const;
+  inline ::capi::RefListParameter* AsFFI();
+  inline static const RefListParameter* FromFFI(const ::capi::RefListParameter* ptr);
+  inline static RefListParameter* FromFFI(::capi::RefListParameter* ptr);
   inline static void operator delete(void* ptr);
 private:
   RefListParameter() = delete;

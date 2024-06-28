@@ -15,20 +15,19 @@
 namespace capi {
     extern "C" {
     
-    Utf16Wrap* Utf16Wrap_from_utf16(const char16_t* input_data, size_t input_len);
+    ::capi::Utf16Wrap* Utf16Wrap_from_utf16(const char16_t* input_data, size_t input_len);
     
-    void Utf16Wrap_get_debug_str(const Utf16Wrap* self, DiplomatWrite* write);
+    void Utf16Wrap_get_debug_str(const ::capi::Utf16Wrap* self, DiplomatWrite* write);
     
-    DiplomatString16View Utf16Wrap_borrow_cont(const Utf16Wrap* self);
+    DiplomatString16View Utf16Wrap_borrow_cont(const ::capi::Utf16Wrap* self);
     
-    DiplomatString16View Utf16Wrap_owned(const Utf16Wrap* self);
+    DiplomatString16View Utf16Wrap_owned(const ::capi::Utf16Wrap* self);
     
     
     void Utf16Wrap_destroy(Utf16Wrap* self);
     
     } // extern "C"
 }
-
 inline std::unique_ptr<Utf16Wrap> Utf16Wrap::from_utf16(std::u16string_view input) {
   auto result = capi::Utf16Wrap_from_utf16(input.data(),
     input.size());
@@ -53,24 +52,24 @@ inline std::u16string_view Utf16Wrap::owned() const {
   return std::u16string_view(result.data, result.len);
 }
 
-inline const capi::Utf16Wrap* Utf16Wrap::AsFFI() const {
-  return reinterpret_cast<const capi::Utf16Wrap*>(this);
+inline const ::capi::Utf16Wrap* Utf16Wrap::AsFFI() const {
+  return reinterpret_cast<const ::capi::Utf16Wrap*>(this);
 }
 
-inline capi::Utf16Wrap* Utf16Wrap::AsFFI() {
-  return reinterpret_cast<capi::Utf16Wrap*>(this);
+inline ::capi::Utf16Wrap* Utf16Wrap::AsFFI() {
+  return reinterpret_cast<::capi::Utf16Wrap*>(this);
 }
 
-inline const Utf16Wrap* Utf16Wrap::FromFFI(const capi::Utf16Wrap* ptr) {
+inline const Utf16Wrap* Utf16Wrap::FromFFI(const ::capi::Utf16Wrap* ptr) {
   return reinterpret_cast<const Utf16Wrap*>(ptr);
 }
 
-inline Utf16Wrap* Utf16Wrap::FromFFI(capi::Utf16Wrap* ptr) {
+inline Utf16Wrap* Utf16Wrap::FromFFI(::capi::Utf16Wrap* ptr) {
   return reinterpret_cast<Utf16Wrap*>(ptr);
 }
 
 inline void Utf16Wrap::operator delete(void* ptr) {
-  capi::Utf16Wrap_destroy(reinterpret_cast<capi::Utf16Wrap*>(ptr));
+  capi::Utf16Wrap_destroy(reinterpret_cast<::capi::Utf16Wrap*>(ptr));
 }
 
 

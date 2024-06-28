@@ -17,9 +17,9 @@
 namespace capi {
     extern "C" {
     
-    MyStruct MyStruct_new();
+    ::capi::MyStruct MyStruct_new();
     
-    uint8_t MyStruct_into_a(MyStruct self);
+    uint8_t MyStruct_into_a(::capi::MyStruct self);
     
     typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
     MyStruct_returns_zst_result_result MyStruct_returns_zst_result();
@@ -27,7 +27,6 @@ namespace capi {
     
     } // extern "C"
 }
-
 inline MyStruct MyStruct::new_() {
   auto result = capi::MyStruct_new();
   return MyStruct::FromFFI(result);
@@ -44,8 +43,8 @@ inline diplomat::result<std::monostate, MyZst> MyStruct::returns_zst_result() {
 }
 
 
-inline capi::MyStruct MyStruct::AsFFI() const {
-  return capi::MyStruct {
+inline ::capi::MyStruct MyStruct::AsFFI() const {
+  return ::capi::MyStruct {
     .a = a,
     .b = b,
     .c = c,
@@ -56,7 +55,7 @@ inline capi::MyStruct MyStruct::AsFFI() const {
   };
 }
 
-inline MyStruct MyStruct::FromFFI(capi::MyStruct c_struct) {
+inline MyStruct MyStruct::FromFFI(::capi::MyStruct c_struct) {
   return MyStruct {
     .a = c_struct.a,
     .b = c_struct.b,
