@@ -207,6 +207,29 @@ cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/dip
 npm install && npm run test
 '''
 
+[tasks.test-js2-example]
+category = "Tests"
+dependencies = ["build-example-wasm"]
+script_runner = "@shell"
+script = '''
+cd example/js2
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
+cd lib
+npm install && npm run test
+'''
+
+
+[tasks.test-js2-example-app]
+category = "Tests"
+dependencies = ["build-example-wasm"]
+script_runner = "@shell"
+script = '''
+cd example/js2
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
+cd lib
+npm install && npm run build
+'''
+
 [tasks.test-js2-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
@@ -471,6 +494,15 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example js2 lib/api
+'''
+
+[tasks.gen-demo-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example demo-gen demo
 '''
 
 [tasks.gen-dotnet-feature]
