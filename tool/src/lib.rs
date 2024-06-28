@@ -16,6 +16,8 @@ pub mod dart;
 #[doc(hidden)]
 pub mod dotnet;
 #[doc(hidden)]
+pub mod java;
+#[doc(hidden)]
 pub mod js;
 #[doc(hidden)]
 pub mod kotlin;
@@ -76,6 +78,30 @@ pub fn gen(
 
     match target_language {
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
+        "java" => {
+            let mut attr_validator = hir::BasicAttributeValidator::new("true");
+            attr_validator.support.renaming = true;
+            attr_validator.support.disabling = true;
+            attr_validator.support.iterators = true;
+            attr_validator.support.iterables = true;
+            attr_validator.support.indexing = true;
+            attr_validator.support.constructors = true;
+            attr_validator.support.named_constructors = true;
+            attr_validator.support.memory_sharing = true;
+            attr_validator.support.accessors = true;
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(context) => context,
+
+                Err(e) => {
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
+                    }
+                    std::process::exit(1);
+                }
+            };
+
+            out_texts = java::run(&tcx, library_config, out_folder)?.take_files();
+        }
         "kotlin" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
             attr_validator.support.renaming = true;
@@ -280,5 +306,37 @@ fn exit_if_path_missing(path: &Path, message: &str) {
             format!("{}", Path::new(&current_dir).join(path).display()).red()
         );
         std::process::exit(1);
+    }
+}
+
+#[cfg(test)]
+pub(crate) mod test {
+
+    use diplomat_core::{
+        ast::{self},
+        hir::{self, TypeContext},
+    };
+    use proc_macro2::TokenStream;
+
+    pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
+        let item = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
+
+        let diplomat_file = ast::File::from(&item);
+
+        let env = diplomat_file.all_types();
+        let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
+        attr_validator.support.renaming = true;
+        attr_validator.support.disabling = true;
+        attr_validator.support.constructors = true;
+
+        match hir::TypeContext::from_ast(&env, attr_validator) {
+            Ok(context) => context,
+            Err(e) => {
+                for (_cx, err) in e {
+                    eprintln!("Lowering error: {}", err);
+                }
+                panic!("Failed to create context")
+            }
+        }
     }
 }

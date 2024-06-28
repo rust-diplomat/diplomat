@@ -80,6 +80,10 @@ pub mod ffi {
             412
         }
 
+        pub fn internal_len(&self) -> usize {
+            self.0.len()
+        }
+
         pub fn returns_imported() -> ImportedStruct {
             unimplemented!()
         }

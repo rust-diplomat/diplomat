@@ -1,0 +1,34 @@
+package {{domain}}.{{lib_name}};
+
+import {{domain}}.{{lib_name}}.ntv.*;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public class {{type_name}} {
+
+    MemorySegment internal;
+    Cleaner.Cleanable cleanable;
+
+    static class {{type_name}}Cleaner implements Runnable {
+
+        MemorySegment segment;
+        {{type_name}}Cleaner(MemorySegment segment) {
+            this.segment = segment;
+        }
+
+        public void run() {
+            {{lib_name}}_h.{{type_name}}_destroy(this.segment);
+        }
+    }
+
+    {{type_name}}() {}
+    {% for method in static_methods %}
+    {{method|indent(4)}}
+    {% endfor %}
+    {% for method in class_methods %}
+    {{method|indent(4)}}
+    {% endfor %}
+}

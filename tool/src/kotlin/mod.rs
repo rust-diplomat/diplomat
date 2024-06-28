@@ -1476,8 +1476,8 @@ mod test {
 
     use crate::common::ErrorStore;
 
-    use super::formatter::test::new_tcx;
     use super::{formatter::KotlinFormatter, TyGenContext};
+    use crate::test::new_tcx;
 
     #[test]
     fn test_enum() {
