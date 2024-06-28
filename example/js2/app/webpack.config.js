@@ -17,7 +17,7 @@ export default {
 	mode: "production",
 	output: {
 	  filename: 'bundle.js',
-	  path: path.resolve(__dirname, 'dist'),
+	  path: path.resolve(__dirname, 'public/dist'),
 	},
 	experiments: {
 	  // Enables using modules with top-level awaits (mainly wasm.mjs)
