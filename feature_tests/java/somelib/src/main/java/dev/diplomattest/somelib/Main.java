@@ -7,6 +7,8 @@ import java.lang.ref.Cleaner;
 public class Main {
     static final Cleaner cleaner = Cleaner.create();
     public static void main(String[] args) {
+        var str = "Whaddap G";
+        var opaque = Opaque.fromStr(str);
         //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
         // to see how IntelliJ IDEA suggests fixing it.
         System.out.printf("Hello and welcome!");
@@ -17,4 +19,5 @@ public class Main {
             System.out.println("i = " + i);
         }
     }
+
 }

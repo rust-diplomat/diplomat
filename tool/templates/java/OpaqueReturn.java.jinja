@@ -1,0 +1,5 @@
+var returnVal = new {{return_ty}}();
+returnVal.internal = nativeVal;
+var cleaner = new {{return_ty}}.{{return_ty}}Cleaner(nativeVal);
+returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+return returnVal;

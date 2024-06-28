@@ -10,16 +10,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class OpaqueTest {
     @Test
     void testOpaque() {
-        var opaque = new Opaque();
-
-        assert opaque.pointer() != 0L;
-
-        try (var arena = Arena.ofConfined()) {
-            var myStruct = new MyStruct(arena);
-            opaque.assertStruct(myStruct);
-        }
-
-        opaque.delete();
-        assert true;
+        var input = "How do you do?";
+        var opaque = Opaque.fromStr(input);
+        assertEquals(input.length() + 1, opaque.internalLen());
     }
 }

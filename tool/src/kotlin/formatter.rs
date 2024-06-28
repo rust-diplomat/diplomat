@@ -367,34 +367,9 @@ pub mod test {
     use std::borrow::Cow;
 
     use super::KotlinFormatter;
-    use diplomat_core::{
-        ast::{self},
-        hir::{self, TypeContext},
-    };
-    use proc_macro2::TokenStream;
 
+    use crate::test::new_tcx;
     use quote::quote;
-
-    pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
-        let item = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
-
-        let diplomat_file = ast::File::from(&item);
-
-        let env = diplomat_file.all_types();
-        let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
-        attr_validator.support.renaming = true;
-        attr_validator.support.disabling = true;
-
-        match hir::TypeContext::from_ast(&env, attr_validator) {
-            Ok(context) => context,
-            Err(e) => {
-                for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
-                }
-                panic!("Failed to create context")
-            }
-        }
-    }
 
     #[test]
     fn test_type_name() {

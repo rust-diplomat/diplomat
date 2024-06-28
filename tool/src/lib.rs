@@ -308,3 +308,35 @@ fn exit_if_path_missing(path: &Path, message: &str) {
         std::process::exit(1);
     }
 }
+
+#[cfg(test)]
+pub(crate) mod test {
+
+    use diplomat_core::{
+        ast::{self},
+        hir::{self, TypeContext},
+    };
+    use proc_macro2::TokenStream;
+
+    pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
+        let item = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
+
+        let diplomat_file = ast::File::from(&item);
+
+        let env = diplomat_file.all_types();
+        let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
+        attr_validator.support.renaming = true;
+        attr_validator.support.disabling = true;
+        attr_validator.support.constructors = true;
+
+        match hir::TypeContext::from_ast(&env, attr_validator) {
+            Ok(context) => context,
+            Err(e) => {
+                for (_cx, err) in e {
+                    eprintln!("Lowering error: {}", err);
+                }
+                panic!("Failed to create context")
+            }
+        }
+    }
+}

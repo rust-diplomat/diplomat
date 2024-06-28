@@ -1,41 +1,67 @@
 package dev.diplomattest.somelib;
 
-import dev.diplomattest.somelib.ntv.somelib_h;
-import dev.diplomattest.somelib.ntv.somelib_h;
+import dev.diplomattest.somelib.ntv.*;
 
-import java.lang.foreign.MemoryLayout;
+
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
+import java.nio.charset.StandardCharsets;
+
 
 public class Opaque {
-    private MemorySegment internal;
-    private final Cleaner.Cleanable cleanable;
+
+    MemorySegment internal;
+    Cleaner.Cleanable cleanable;
+
     static class OpaqueCleaner implements Runnable {
+
         MemorySegment segment;
         OpaqueCleaner(MemorySegment segment) {
             this.segment = segment;
         }
+
         public void run() {
             somelib_h.Opaque_destroy(this.segment);
         }
     }
-    public Opaque() {
-        var invoker = somelib_h.Opaque_new.makeInvoker();
-        var segment = invoker.apply();
-        this.internal = segment;
-        var opaqueCleaner = new OpaqueCleaner(segment);
-        this.cleanable = Main.cleaner.register(this, opaqueCleaner);
+
+    Opaque() {}
+
+    public static Opaque new_() {
+        var nativeInvoker = somelib_h.Opaque_new.makeInvoker();
+        var nativeVal = nativeInvoker.apply();
+        var returnVal = new Opaque();
+        returnVal.internal = nativeVal;
+        var cleaner = new Opaque.OpaqueCleaner(nativeVal);
+        returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+        return returnVal;
     }
 
-    public long pointer() {
-        return internal.address();
+    public static Opaque fromStr(String input) {
+        try (var arena = Arena.ofConfined()) {
+            var inputMemSeg = arena.allocateFrom(input, StandardCharsets.UTF_8);
+            var inputLen = inputMemSeg.byteSize();
+            var nativeVal = somelib_h.Opaque_from_str(inputMemSeg, inputLen);
+            var returnVal = new Opaque();
+            returnVal.internal = nativeVal;
+            var cleaner = new Opaque.OpaqueCleaner(nativeVal);
+            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            return returnVal;
+        }
     }
 
-    public void delete() {
-        somelib_h.Opaque_destroy(this.internal);
+    public static long returnsUsize() {
+        var nativeInvoker = somelib_h.Opaque_returns_usize.makeInvoker();
+        var nativeVal = nativeInvoker.apply();
+        return nativeVal;
     }
 
-    public void assertStruct(MyStruct struct) {
-        somelib_h.Opaque_assert_struct(internal, struct.getNativeStruct$());
+
+    public long internalLen() {
+
+        var nativeVal = somelib_h.Opaque_internal_len(internal);
+        return nativeVal;
     }
+
 }

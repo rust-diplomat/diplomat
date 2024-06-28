@@ -12,6 +12,7 @@ target/
 .idea/misc.xml
 .idea/vcs.xml
 .idea/codeStyles
+.idea/*
 *.iws
 *.iml
 *.ipr

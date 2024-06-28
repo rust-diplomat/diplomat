@@ -1,0 +1,34 @@
+---
+source: tool/src/java/mod.rs
+expression: rendered
+---
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.*;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public class Opaque2 {
+
+    MemorySegment internal;
+    Cleaner.Cleanable cleanable;
+
+    static class Opaque2Cleaner implements Runnable {
+
+        MemorySegment segment;
+        Opaque2Cleaner(MemorySegment segment) {
+            this.segment = segment;
+        }
+
+        public void run() {
+            somelib_h.Opaque2_destroy(this.segment);
+        }
+    }
+
+    Opaque2() {}
+    
+    
+}
