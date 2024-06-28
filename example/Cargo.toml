@@ -20,3 +20,10 @@ writeable = "0.5.2"
 fixed_decimal = "0.5.3"
 icu_provider = { version = "1.2", features = ["serde"] }
 icu_testdata = { version = "1.2" }
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "icu4x_bench"
+harness = false

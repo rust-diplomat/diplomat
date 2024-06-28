@@ -8,10 +8,13 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "OpaqueMutexedString.d.h"
 
 class Utf16Wrap;
 
+
+namespace capi {
+    typedef struct OpaqueMutexedString OpaqueMutexedString;
+}
 
 class OpaqueMutexedString {
 public:

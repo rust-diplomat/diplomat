@@ -21,6 +21,10 @@ The permanent solution depends on where you're seeing npm being run from. If it'
 
 The main thing to do is to see if it's a script mostly moving files around and running things that the user should have installed. If so, I'd change it to an `@shell` script.
 
-For full windows support, it'd be nice to have `npm` as a variable that switches based on OS. I have a fix exclusive to windows: `support/windows_npm_fix.ds`, but it breaks on other systems.
+For full windows support, it'd be nice to have `npm` as a variable that switches based on OS. You can add this line for a windows-exclusive fix (but it breaks on other systems):
+
+```
+npm = which npm
+```
 
 You also don't have to use Cargo make. VS Code tasks also help me circumvent this kind of stuff. But I try to avoid calling npm directly if possible, since everybody should ideally be using the same build tools.

@@ -26,6 +26,28 @@ final class Opaque implements ffi.Finalizable {
     return Opaque._fromFfi(result, []);
   }
 
+  static Opaque? tryFromUtf8(String input) {
+    final temp = ffi2.Arena();
+    final inputView = input.utf8View;
+    final result = _Opaque_try_from_utf8(inputView.allocIn(temp), inputView.length);
+    temp.releaseAll();
+    return result.address == 0 ? null : Opaque._fromFfi(result, []);
+  }
+
+  static Opaque fromStr(String input) {
+    final temp = ffi2.Arena();
+    final inputView = input.utf8View;
+    final result = _Opaque_from_str(inputView.allocIn(temp), inputView.length);
+    temp.releaseAll();
+    return Opaque._fromFfi(result, []);
+  }
+
+  String getDebugStr() {
+    final write = _Write();
+    _Opaque_get_debug_str(_ffi, write._ffi);
+    return write.finalize();
+  }
+
   /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
   ///
   /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
@@ -62,6 +84,21 @@ external void _Opaque_destroy(ffi.Pointer<ffi.Void> self);
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'Opaque_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Opaque_new();
+
+@meta.ResourceIdentifier('Opaque_try_from_utf8')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Opaque_try_from_utf8')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Opaque_try_from_utf8(ffi.Pointer<ffi.Uint8> inputData, int inputLength);
+
+@meta.ResourceIdentifier('Opaque_from_str')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'Opaque_from_str')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Opaque_from_str(ffi.Pointer<ffi.Uint8> inputData, int inputLength);
+
+@meta.ResourceIdentifier('Opaque_get_debug_str')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Opaque_get_debug_str')
+// ignore: non_constant_identifier_names
+external void _Opaque_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @meta.ResourceIdentifier('Opaque_assert_struct')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _MyStructFfi)>(isLeaf: true, symbol: 'Opaque_assert_struct')

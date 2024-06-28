@@ -8,9 +8,9 @@ import com.sun.jna.Structure
 internal interface BorrowedFieldsReturningLib: Library {
 }
 
-class BorrowedFieldsReturningNative: Structure(), Structure.ByValue {
+internal class BorrowedFieldsReturningNative: Structure(), Structure.ByValue {
     @JvmField
-    var bytes: Slice = Slice();
+    internal var bytes: Slice = Slice();
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

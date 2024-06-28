@@ -14,7 +14,7 @@ use std::borrow::Cow;
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub struct Cpp2Formatter<'tcx> {
-    c: CFormatter<'tcx>,
+    pub(crate) c: CFormatter<'tcx>,
 }
 
 impl<'tcx> Cpp2Formatter<'tcx> {
@@ -62,13 +62,6 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_impl_header_path(&self, id: TypeId) -> String {
         let type_name = self.fmt_type_name_unnamespaced(id);
         format!("{type_name}.hpp")
-    }
-
-    pub fn fmt_c_decl_header_path(&self, id: TypeId) -> String {
-        self.c.fmt_decl_header_path(id)
-    }
-    pub fn fmt_c_impl_header_path(&self, id: TypeId) -> String {
-        self.c.fmt_impl_header_path(id)
     }
 
     /// Format an enum variant.

@@ -1,4 +1,8 @@
-{%- if let Some(ns) = namespace -%}
+namespace capi {
+    {{ c_header.body|trim|indent(4) }}
+}
+
+{% if let Some(ns) = namespace -%}
 namespace {{ns}} {
 {%endif-%}
 struct {{type_name_unnamespaced}} {
@@ -8,8 +12,10 @@ struct {{type_name_unnamespaced}} {
 {% for m in methods %}
 	{% include "method_decl.h.jinja" %}
 {% endfor %}
+{%- if !fields.is_empty() %}
 	inline {{ctype}} AsFFI() const;
 	inline static {{type_name}} FromFFI({{ctype}} c_struct);
+{%- endif %}
 };
 
 {% if namespace.is_some() -%}

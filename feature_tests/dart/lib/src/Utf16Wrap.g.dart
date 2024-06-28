@@ -21,6 +21,20 @@ final class Utf16Wrap implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Utf16Wrap_destroy));
 
+  factory Utf16Wrap(String input) {
+    final temp = ffi2.Arena();
+    final inputView = input.utf16View;
+    final result = _Utf16Wrap_from_utf16(inputView.allocIn(temp), inputView.length);
+    temp.releaseAll();
+    return Utf16Wrap._fromFfi(result, []);
+  }
+
+  String getDebugStr() {
+    final write = _Write();
+    _Utf16Wrap_get_debug_str(_ffi, write._ffi);
+    return write.finalize();
+  }
+
   String borrowCont() {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
@@ -38,6 +52,16 @@ final class Utf16Wrap implements ffi.Finalizable {
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Utf16Wrap_destroy')
 // ignore: non_constant_identifier_names
 external void _Utf16Wrap_destroy(ffi.Pointer<ffi.Void> self);
+
+@meta.ResourceIdentifier('Utf16Wrap_from_utf16')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint16>, ffi.Size)>(isLeaf: true, symbol: 'Utf16Wrap_from_utf16')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Utf16Wrap_from_utf16(ffi.Pointer<ffi.Uint16> inputData, int inputLength);
+
+@meta.ResourceIdentifier('Utf16Wrap_get_debug_str')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_get_debug_str')
+// ignore: non_constant_identifier_names
+external void _Utf16Wrap_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 @meta.ResourceIdentifier('Utf16Wrap_borrow_cont')
 @ffi.Native<_SliceUtf16 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_borrow_cont')

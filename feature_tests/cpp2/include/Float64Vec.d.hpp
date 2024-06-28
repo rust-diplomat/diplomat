@@ -8,8 +8,11 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "Float64Vec.d.h"
 
+
+namespace capi {
+    typedef struct Float64Vec Float64Vec;
+}
 
 class Float64Vec {
 public:

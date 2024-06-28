@@ -8,9 +8,5 @@
         {{ param }}
         {%- endfor -%}
     );
-{%- match return_expression %}
-{%- when Some with (statement) %}
-{{statement|indent(4)}}
-{%- when None %}
-{%- endmatch %}
+    {{return_expression|indent(4)}}
 }

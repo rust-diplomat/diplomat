@@ -54,7 +54,7 @@ impl<'tcx> DartFormatter<'tcx> {
         format!(
             "import '{path}'{}{};",
             if as_show_hide.is_some() { " " } else { "" },
-            if let Some(s) = as_show_hide { s } else { "" },
+            as_show_hide.unwrap_or_default(),
         )
         .into()
     }

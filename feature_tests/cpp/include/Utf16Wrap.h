@@ -19,6 +19,10 @@ namespace capi {
 extern "C" {
 #endif
 
+Utf16Wrap* Utf16Wrap_from_utf16(const char16_t* input_data, size_t input_len);
+
+void Utf16Wrap_get_debug_str(const Utf16Wrap* self, DiplomatWrite* write);
+
 DiplomatU16View Utf16Wrap_borrow_cont(const Utf16Wrap* self);
 
 DiplomatU16View Utf16Wrap_owned(const Utf16Wrap* self);

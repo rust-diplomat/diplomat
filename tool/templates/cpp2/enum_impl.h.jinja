@@ -1,26 +1,24 @@
-inline {{type_name}}::{{type_name_unnamespaced}}({{type_name}}::Value cpp_value) {
-	switch (cpp_value) {
+namespace capi {
+    {{ c_impl_header.body|trim|indent(4) }}
+}
+
+
+inline {{ctype}} {{type_name}}::AsFFI() const {
+	return static_cast<{{ctype}}>(value);
+}
+
+inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_enum) {
+	switch (c_enum) {
 {%- for enum_variant in ty.variants %}
-		case {{fmt.fmt_enum_variant(enum_variant)}}:
-			value = {{fmt.fmt_c_enum_variant(ctype, enum_variant)}};
-			break;
+		case {{fmt.fmt_c_enum_variant(ctype, enum_variant)}}:
 {%- endfor %}
+			return static_cast<{{type_name}}::Value>(c_enum);
 		default:
 			abort();
 	}
 }
 
-
 {%- for m in methods %}
 
 {% include "method_impl.h.jinja" %}
 {%- endfor %}
-
-inline {{ctype}} {{type_name}}::AsFFI() const {
-	return value;
-}
-
-inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_enum) {
-	return {{type_name}}(c_enum);
-}
-

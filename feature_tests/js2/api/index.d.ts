@@ -16,6 +16,8 @@ export { ErrorStruct } from "./ErrorStruct.mjs"
 
 export { MyStruct } from "./MyStruct.mjs"
 
+export { MyZst } from "./MyZst.mjs"
+
 export { OptionStruct } from "./OptionStruct.mjs"
 
 export { AttrOpaque1 } from "./AttrOpaque1.mjs"
@@ -25,6 +27,10 @@ export { AttrOpaque2 } from "./AttrOpaque2.mjs"
 export { MyIterable } from "./MyIterable.mjs"
 
 export { MyIterator } from "./MyIterator.mjs"
+
+export { OpaqueIterable } from "./OpaqueIterable.mjs"
+
+export { OpaqueIterator } from "./OpaqueIterator.mjs"
 
 export { Unnamespaced } from "./Unnamespaced.mjs"
 
@@ -39,6 +45,8 @@ export { Two } from "./Two.mjs"
 export { OptionOpaque } from "./OptionOpaque.mjs"
 
 export { OptionOpaqueChar } from "./OptionOpaqueChar.mjs"
+
+export { OptionString } from "./OptionString.mjs"
 
 export { ResultOpaque } from "./ResultOpaque.mjs"
 

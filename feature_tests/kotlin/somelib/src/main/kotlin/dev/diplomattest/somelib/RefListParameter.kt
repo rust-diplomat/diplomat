@@ -10,10 +10,10 @@ internal interface RefListParameterLib: Library {
 
 class RefListParameter internal constructor (
     internal val handle: Pointer,
-
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
-    internal val selfEdges: List<Any>) {
+    internal val selfEdges: List<Any>
+)  {
 
     internal class RefListParameterCleaner(val handle: Pointer, val lib: RefListParameterLib) : Runnable {
         override fun run() {

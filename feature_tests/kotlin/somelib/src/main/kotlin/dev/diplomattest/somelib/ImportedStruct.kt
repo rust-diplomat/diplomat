@@ -8,11 +8,11 @@ import com.sun.jna.Structure
 internal interface ImportedStructLib: Library {
 }
 
-class ImportedStructNative: Structure(), Structure.ByValue {
+internal class ImportedStructNative: Structure(), Structure.ByValue {
     @JvmField
-    var foo: Int = UnimportedEnum.default().toNative();
+    internal var foo: Int = UnimportedEnum.default().toNative();
     @JvmField
-    var count: Byte = 0;
+    internal var count: Byte = 0;
   
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {

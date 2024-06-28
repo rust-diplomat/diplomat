@@ -29,6 +29,51 @@ public partial class Utf16Wrap: IDisposable
         _inner = handle;
     }
 
+    /// <returns>
+    /// A <c>Utf16Wrap</c> allocated on Rust side.
+    /// </returns>
+    public static Utf16Wrap FromUtf16(ushort[] input)
+    {
+        unsafe
+        {
+            byte[] inputBuf = DiplomatUtils.StringToUtf8(input);
+            nuint inputBufLength = (nuint)inputBuf.Length;
+            fixed (byte* inputBufPtr = inputBuf)
+            {
+                Raw.Utf16Wrap* retVal = Raw.Utf16Wrap.FromUtf16(inputBufPtr, inputBufLength);
+                return new Utf16Wrap(retVal);
+            }
+        }
+    }
+
+    public void GetDebugStr(DiplomatWrite write)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Utf16Wrap");
+            }
+            Raw.Utf16Wrap.GetDebugStr(_inner, &write);
+        }
+    }
+
+    public string GetDebugStr()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("Utf16Wrap");
+            }
+            DiplomatWrite write = new DiplomatWrite();
+            Raw.Utf16Wrap.GetDebugStr(_inner, &write);
+            string retVal = write.ToUnicode();
+            write.Dispose();
+            return retVal;
+        }
+    }
+
     public ushort[] BorrowCont()
     {
         unsafe

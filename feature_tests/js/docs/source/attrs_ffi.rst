@@ -25,6 +25,10 @@
 
     .. js:method:: cmp(other)
 
+.. js:class:: MyIndexer
+
+    .. js:method:: get(i)
+
 .. js:class:: MyIterable
 
     .. js:function:: new(x)
@@ -32,6 +36,14 @@
     .. js:method:: iter()
 
 .. js:class:: MyIterator
+
+    .. js:method:: next()
+
+.. js:class:: OpaqueIterable
+
+    .. js:method:: iter()
+
+.. js:class:: OpaqueIterator
 
     .. js:method:: next()
 

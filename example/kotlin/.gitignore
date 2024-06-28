@@ -1,0 +1,7 @@
+somelib/libsomelib.dylib
+somelib/.idea/
+somelib/.gradle/
+somelib/build/
+somelib/gradle/
+somelib/gradlew
+somelib/gradlew.bat

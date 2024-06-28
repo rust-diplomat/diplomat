@@ -4,6 +4,7 @@ pub mod ffi {
     use diplomat_runtime::DiplomatStr16;
 
     use crate::imports::ffi::ImportedStruct;
+    use std::fmt::Write;
     use std::sync::Mutex;
 
     #[diplomat::opaque]
@@ -44,10 +45,26 @@ pub mod ffi {
         g: MyEnum,
     }
 
+    #[diplomat::skip_if_ast]
+    pub struct MyZst;
+
     impl Opaque {
         #[diplomat::attr(supports = constructors, constructor)]
         pub fn new() -> Box<Opaque> {
             Box::new(Opaque("".into()))
+        }
+
+        pub fn try_from_utf8(input: &DiplomatStr) -> Option<Box<Self>> {
+            let s = std::str::from_utf8(input).ok()?;
+            Some(Box::new(Self(s.into())))
+        }
+
+        pub fn from_str(input: &str) -> Box<Self> {
+            Box::new(Self(input.into()))
+        }
+
+        pub fn get_debug_str(&self, write: &mut DiplomatWrite) {
+            let _infallible = write!(write, "{:?}", &self.0);
         }
 
         #[diplomat::rust_link(Something::something, FnInStruct)]
@@ -123,12 +140,19 @@ pub mod ffi {
     }
 
     impl Utf16Wrap {
+        #[diplomat::attr(supports = constructors, constructor)]
+        pub fn from_utf16(input: &DiplomatStr16) -> Box<Self> {
+            Box::new(Self(input.into()))
+        }
+
+        pub fn get_debug_str(&self, write: &mut DiplomatWrite) {
+            let _infallible = write!(write, "{:?}", &self.0);
+        }
+
         pub fn borrow_cont<'a>(&'a self) -> &'a DiplomatStr16 {
             &self.0
         }
-    }
 
-    impl Utf16Wrap {
         pub fn owned<'a>(&'a self) -> Box<DiplomatStr16> {
             self.0.clone().into()
         }
@@ -170,6 +194,11 @@ pub mod ffi {
             assert_eq!(self.e, 5991);
             assert_eq!(self.f, '餐' as DiplomatChar);
             assert_eq!(self.g, MyEnum::B);
+        }
+
+        #[diplomat::skip_if_ast]
+        pub fn returns_zst_result() -> Result<(), MyZst> {
+            Ok(())
         }
     }
 }

@@ -10,8 +10,16 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "RefListParameter.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    
+    void RefListParameter_destroy(RefListParameter* self);
+    
+    } // extern "C"
+}
 
 inline const capi::RefListParameter* RefListParameter::AsFFI() const {
   return reinterpret_cast<const capi::RefListParameter*>(this);

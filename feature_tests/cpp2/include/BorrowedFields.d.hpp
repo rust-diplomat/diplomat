@@ -8,10 +8,17 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "BorrowedFields.d.h"
 
 class Bar;
 
+
+namespace capi {
+    typedef struct BorrowedFields {
+      DiplomatString16View a;
+      DiplomatStringView b;
+      DiplomatStringView c;
+    } BorrowedFields;
+}
 
 struct BorrowedFields {
   std::u16string_view a;

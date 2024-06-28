@@ -10,8 +10,18 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XLocale.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    ICU4XLocale* ICU4XLocale_new(const char* name_data, size_t name_len);
+    
+    
+    void ICU4XLocale_destroy(ICU4XLocale* self);
+    
+    } // extern "C"
+}
 
 inline std::unique_ptr<ICU4XLocale> ICU4XLocale::new_(std::string_view name) {
   auto result = capi::ICU4XLocale_new(name.data(),

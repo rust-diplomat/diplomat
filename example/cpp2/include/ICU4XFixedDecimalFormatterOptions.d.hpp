@@ -8,11 +8,17 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ICU4XFixedDecimalFormatterOptions.d.h"
 #include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
 
 class ICU4XFixedDecimalGroupingStrategy;
 
+
+namespace capi {
+    typedef struct ICU4XFixedDecimalFormatterOptions {
+      ICU4XFixedDecimalGroupingStrategy grouping_strategy;
+      bool some_other_config;
+    } ICU4XFixedDecimalFormatterOptions;
+}
 
 struct ICU4XFixedDecimalFormatterOptions {
   ICU4XFixedDecimalGroupingStrategy grouping_strategy;

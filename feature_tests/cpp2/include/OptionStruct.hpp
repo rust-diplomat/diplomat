@@ -12,8 +12,14 @@
 #include "diplomat_runtime.hpp"
 #include "OptionOpaque.hpp"
 #include "OptionOpaqueChar.hpp"
-#include "OptionStruct.h"
 
+
+namespace capi {
+    extern "C" {
+    
+    
+    } // extern "C"
+}
 
 
 inline capi::OptionStruct OptionStruct::AsFFI() const {

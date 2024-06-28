@@ -33,7 +33,7 @@ struct BorrowedFields {
 
 inline BorrowedFields BorrowedFields::from_bar_and_strings(const Bar& bar, const std::u16string_view dstr16, const std::string_view utf8_str) {
   capi::BorrowedFields diplomat_raw_struct_out_value = capi::BorrowedFields_from_bar_and_strings(bar.AsFFI(), dstr16.data(), dstr16.size(), utf8_str.data(), utf8_str.size());
-  capi::DiplomatU16StringView diplomat_slice_raw_out_value_a = diplomat_raw_struct_out_value.a;
+  capi::DiplomatString16View diplomat_slice_raw_out_value_a = diplomat_raw_struct_out_value.a;
   diplomat::span<const char16_t> slice(diplomat_slice_raw_out_value_a.data, diplomat_slice_raw_out_value_a.len);
   capi::DiplomatStringView diplomat_str_raw_out_value_b = diplomat_raw_struct_out_value.b;
   std::string_view str(diplomat_str_raw_out_value_b.data, diplomat_str_raw_out_value_b.len);

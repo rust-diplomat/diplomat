@@ -10,9 +10,15 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "ImportedStruct.h"
 #include "UnimportedEnum.hpp"
 
+
+namespace capi {
+    extern "C" {
+    
+    
+    } // extern "C"
+}
 
 
 inline capi::ImportedStruct ImportedStruct::AsFFI() const {

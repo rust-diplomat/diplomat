@@ -3,9 +3,9 @@
 #[diplomat::attr(cpp2, rename = "CPPRenamed{0}")]
 #[diplomat::attr(cpp2, namespace = "ns")]
 pub mod ffi {
+    #[derive(Clone)]
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, rename = "AttrOpaque1Renamed")]
-    #[diplomat::attr(kotlin, disable)]
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
@@ -37,10 +37,8 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(cpp2, disable)]
     pub struct AttrOpaque2;
 
-    #[diplomat::attr(kotlin, disable)]
     pub enum AttrEnum {
         A,
         B,
@@ -51,7 +49,6 @@ pub mod ffi {
     #[diplomat::opaque]
     #[diplomat::attr(cpp2, namespace = "")]
     #[diplomat::attr(cpp2, rename = "Unnamespaced")]
-    #[diplomat::attr(kotlin, disable)]
     pub struct Unnamespaced;
 
     impl Unnamespaced {
@@ -85,6 +82,11 @@ pub mod ffi {
     #[diplomat::attr(not(supports = iterators), disable)]
     pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
 
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = indexing), disable)]
+    #[diplomat::attr(dart, disable)]
+    pub struct MyIndexer(Vec<String>);
+
     impl MyIterable {
         #[diplomat::attr(supports = constructors, constructor)]
         pub fn new(x: &[u8]) -> Box<Self> {
@@ -100,6 +102,35 @@ pub mod ffi {
         #[diplomat::attr(*, iterator)]
         pub fn next(&mut self) -> Option<u8> {
             self.0.next().copied()
+        }
+    }
+
+    impl MyIndexer {
+        #[diplomat::attr(*, indexer)]
+        pub fn get<'a>(&'a self, i: usize) -> Option<&'a DiplomatStr> {
+            self.0.get(i).as_ref().map(|string| string.as_bytes())
+        }
+    }
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterables), disable)]
+    struct OpaqueIterable(Vec<AttrOpaque1>);
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(supports = iterators), disable)]
+    struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
+
+    impl OpaqueIterable {
+        #[diplomat::attr(*, iterable)]
+        pub fn iter<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
+            Box::new(OpaqueIterator(Box::new(self.0.iter().cloned())))
+        }
+    }
+
+    impl<'a> OpaqueIterator<'a> {
+        #[diplomat::attr(*, iterator)]
+        pub fn next(&'a mut self) -> Option<Box<AttrOpaque1>> {
+            self.0.next().map(Box::new)
         }
     }
 }

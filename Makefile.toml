@@ -61,18 +61,30 @@ dependencies = [
     "test-c2-example-self-contained",
     "test-c2-feature-self-contained",
 ]
-[tasks.test-wasm]
+[tasks.test-js]
 category = "Tests"
 dependencies = [
-    "test-wasm-example",
-    "test-wasm-example-app",
-    "test-wasm-feature",
+    "test-js-example",
+    "test-js-example-app",
+    "test-js-feature",
 ]
+[tasks.test-js2]
+category = "Tests"
+dependencies = [
+    "test-js2-feature",
+]
+
 [tasks.test-dart]
 category = "Tests"
 dependencies = [
     "test-dart-example",
     "test-dart-feature",
+]
+[tasks.test-kotlin]
+category = "Tests"
+dependencies = [
+    "test-kotlin-example",
+    "test-kotlin-feature",
 ]
 [tasks.test-example]
 category = "Tests"
@@ -81,8 +93,9 @@ dependencies = [
     "test-cpp2-example",
     "test-c-example",
     "test-c2-example",
-    "test-wasm-example",
+    "test-js-example",
     "test-dart-example",
+    "test-kotlin-example",
 ]
 
 [tasks.test-feature]
@@ -90,7 +103,8 @@ category = "Tests"
 dependencies = [
     "test-cpp-feature",
     "test-cpp2-feature",
-    "test-wasm-feature",
+    "test-js-feature",
+    "test-js2-feature",
     "test-dart-feature",
     "test-kotlin-feature",
 ]
@@ -161,80 +175,46 @@ rm *.out
 exec --fail-on-error make
 '''
 
-[tasks.test-wasm-example]
+[tasks.test-js-example]
 category = "Tests"
 dependencies = ["build-example-wasm"]
-script_runner = "@duckscript"
+script_runner = "@shell"
 script = '''
-exit_on_error true
 cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd lib
-exec --fail-on-error npm install
-exec --fail-on-error npm run test
+npm install && npm run test
 '''
 
-[tasks.test-wasm-example-app]
+[tasks.test-js-example-app]
 category = "Tests"
 dependencies = ["build-example-wasm"]
-script_runner = "@duckscript"
+script_runner = "@shell"
 script = '''
-exit_on_error true
 cd example/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cd app
-exec --fail-on-error npm install
-exec --fail-on-error npm run build
+npm install && npm run build
 '''
 
-[tasks.test-wasm-demo-js2]
+[tasks.test-js-feature]
 category = "Tests"
-dependencies = ["build-wasm-demo", "build-example-wasm"]
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
-!include_files ./support/windows_npm_fix.ds
-cd example/js2/lib
-cp ../../demo-gen/demo api
-cp ../../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm api/diplomat_example.wasm
-exec --fail-on-error ${npm} install
-exec --fail-on-error ${npm} run test
-'''
-
-[tasks.test-wasm-example-app-js2]
-category = "Tests"
-dependencies = ["test-wasm-demo-js2"]
+dependencies = ["build-feature-wasm"]
 script_runner = "@shell"
 script = '''
-cd example/js2/app
-npm install
-npm run build
-'''
-
-[tasks.test-wasm-feature]
-category = "Tests"
-dependencies = ["build-feature-wasm"]
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
 cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
-cd app
-exec --fail-on-error npm install
-exec --fail-on-error npm run test
+npm install && npm run test
 '''
 
-[tasks.test-wasm-feature-js2]
+[tasks.test-js2-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
-script_runner = "@duckscript"
+script_runner = "@shell"
 script = '''
-exit_on_error true
 cd feature_tests/js2/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
-!include_files ./support/windows_npm_fix.ds
-exec --fail-on-error ${npm} install
-exec --fail-on-error ${npm} run test
+npm install && npm run test
 '''
 
 [tasks.test-dart-example]
@@ -259,6 +239,17 @@ exec --fail-on-error dart --enable-experiment=native-assets pub get
 exec --fail-on-error dart --enable-experiment=native-assets test
 '''
 
+[tasks.test-kotlin-example]
+category = "Tests"
+script_runner = "@duckscript"
+dependencies = ["build-example"]
+script = '''
+exit_on_error true
+cp target/debug/libdiplomat_example.dylib example/kotlin/somelib/libsomelib.dylib
+cd example/kotlin/somelib
+exec --fail-on-error gradle test --warning-mode all
+'''
+
 [tasks.test-kotlin-feature]
 category = "Tests"
 script_runner = "@duckscript"
@@ -267,7 +258,7 @@ script = '''
 exit_on_error true
 cp target/debug/libdiplomat_feature_tests.dylib feature_tests/kotlin/somelib/libsomelib.dylib
 cd feature_tests/kotlin/somelib
-exec --fail-on-error gradle test --warning-mode all
+exec --fail-on-error gradle test --warning-mode all 
 '''
 
 [tasks.test-c2-example-self-contained]
@@ -319,7 +310,9 @@ dependencies = [
     "gen-c-example",
     "gen-c2-example",
     "gen-js-example",
+    "gen-js2-example",
     "gen-dart-example",
+    "gen-kotlin-example",
 ]
 [tasks.gen-cpp]
 category = "Code generation"
@@ -366,6 +359,7 @@ dependencies = [
 category = "Code generation"
 dependencies = [
     "gen-kotlin-feature",
+    "gen-kotlin-example",
 ]
 
 
@@ -452,6 +446,15 @@ exit_on_error true
 generate_generic feature_tests js api docs/source
 '''
 
+[tasks.gen-js-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example js lib/api lib/docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
+'''
+
 [tasks.gen-js2-feature]
 category = "Code generation"
 script_runner = "@duckscript"
@@ -468,25 +471,6 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example js2 lib/api
-'''
-
-[tasks.gen-js-example]
-category = "Code generation"
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
-!include_files ./support/functions.ds
-generate_generic example js lib/api lib/docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
-'''
-
-[tasks.build-wasm-demo]
-category = "Code generation"
-dependencies = [ "gen-js2-example" ]
-script_runner = "@duckscript"
-script = '''
-exit_on_error true
-!include_files ./support/functions.ds
-generate_generic example demo-gen demo
 '''
 
 [tasks.gen-dotnet-feature]
@@ -527,6 +511,15 @@ exit_on_error true
 generate_generic feature_tests kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
 '''
 
+[tasks.gen-kotlin-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example kotlin somelib "" "-l diplomat-kt-conf.toml" /src/main/kotlin
+'''
+
 # Build deps
 
 [tasks.build-tool]
@@ -554,3 +547,19 @@ description = "Build feature_tests for wasm"
 category = "Plumbing"
 command = "cargo"
 args = ["build", "-p", "diplomat-feature-tests", "--target", "wasm32-unknown-unknown"]
+
+
+[tasks.bench-rust-example]
+description = "Benchmark rust example"
+category = "Benchmark"
+script = '''
+cargo bench --package diplomat-example
+'''
+[tasks.bench-kotlin-example]
+description = "Benchmark kotlin example"
+category = "Benchmark"
+dependencies = ["gen-kotlin-example", "test-kotlin-example"]
+script = '''
+cd example/kotlin/somelib
+gradle jmh --warning-mode all
+'''

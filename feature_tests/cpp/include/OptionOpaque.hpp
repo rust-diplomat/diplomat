@@ -27,6 +27,10 @@ class OptionOpaque {
   static std::optional<OptionOpaque> new_(int32_t i);
   static std::optional<OptionOpaque> new_none();
   static std::optional<OptionStruct> returns();
+  std::optional<intptr_t> option_isize() const;
+  std::optional<size_t> option_usize() const;
+  std::optional<int32_t> option_i32() const;
+  std::optional<uint32_t> option_u32() const;
   static OptionStruct new_struct();
   static OptionStruct new_struct_nones();
   void assert_integer(int32_t i) const;
@@ -90,6 +94,46 @@ inline std::optional<OptionStruct> OptionOpaque::returns() {
     diplomat_optional_out_value_d = std::nullopt;
   }
     diplomat_result_out_value = std::optional<OptionStruct>(OptionStruct{ .a = std::move(diplomat_optional_out_value_a), .b = std::move(diplomat_optional_out_value_b), .c = std::move(diplomat_raw_struct_out_value.c), .d = std::move(diplomat_optional_out_value_d) });
+  } else {
+    diplomat_result_out_value = std::nullopt;
+  }
+  return diplomat_result_out_value;
+}
+inline std::optional<intptr_t> OptionOpaque::option_isize() const {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_option_isize(this->inner.get());
+  std::optional<intptr_t> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = std::optional<intptr_t>(diplomat_result_raw_out_value.ok);
+  } else {
+    diplomat_result_out_value = std::nullopt;
+  }
+  return diplomat_result_out_value;
+}
+inline std::optional<size_t> OptionOpaque::option_usize() const {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_option_usize(this->inner.get());
+  std::optional<size_t> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = std::optional<size_t>(diplomat_result_raw_out_value.ok);
+  } else {
+    diplomat_result_out_value = std::nullopt;
+  }
+  return diplomat_result_out_value;
+}
+inline std::optional<int32_t> OptionOpaque::option_i32() const {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_option_i32(this->inner.get());
+  std::optional<int32_t> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = std::optional<int32_t>(diplomat_result_raw_out_value.ok);
+  } else {
+    diplomat_result_out_value = std::nullopt;
+  }
+  return diplomat_result_out_value;
+}
+inline std::optional<uint32_t> OptionOpaque::option_u32() const {
+  auto diplomat_result_raw_out_value = capi::OptionOpaque_option_u32(this->inner.get());
+  std::optional<uint32_t> diplomat_result_out_value;
+  if (diplomat_result_raw_out_value.is_ok) {
+    diplomat_result_out_value = std::optional<uint32_t>(diplomat_result_raw_out_value.ok);
   } else {
     diplomat_result_out_value = std::nullopt;
   }
