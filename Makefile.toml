@@ -72,6 +72,8 @@ dependencies = [
 category = "Tests"
 dependencies = [
     "test-js2-feature",
+    "test-js2-example",
+    "test-js2-example-app",
 ]
 
 [tasks.test-dart]
@@ -94,6 +96,7 @@ dependencies = [
     "test-c-example",
     "test-c2-example",
     "test-js-example",
+    "test-js2-example",
     "test-dart-example",
     "test-kotlin-example",
 ]
@@ -334,6 +337,7 @@ dependencies = [
     "gen-c2-example",
     "gen-js-example",
     "gen-js2-example",
+    "gen-demo-example",
     "gen-dart-example",
     "gen-kotlin-example",
 ]
