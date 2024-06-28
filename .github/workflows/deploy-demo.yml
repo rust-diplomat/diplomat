@@ -54,7 +54,7 @@ jobs:
           crate: cargo-make
           version: 0.36.13
       - name: Build page
-        run: cargo make test-wasm-example-app-js2
+        run: cargo make test-js2-example-app
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
