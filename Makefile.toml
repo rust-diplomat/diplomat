@@ -217,7 +217,7 @@ script_runner = "@shell"
 script = '''
 cd example/js2
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
-cp ../demo-gen/demo/ lib/api/demo
+cp -r ../demo-gen/demo/ lib/api/demo
 cd lib
 npm install && npm run test
 '''
@@ -230,7 +230,7 @@ script_runner = "@shell"
 script = '''
 cd example/js2
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
-cp ../demo-gen/demo/ lib/api/demo
+cp -r ../demo-gen/demo/ lib/api/demo
 cd app
 npm install && npm run build
 '''
