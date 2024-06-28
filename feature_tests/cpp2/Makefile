@@ -14,7 +14,7 @@ $(ALL_HEADERS):
 	cargo build
 
 ./tests/structs.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/structs.cpp
-	$(CXX) -std=c++17 ./tests/structs.cpp ../../target/debug/libdiplomat_feature_tests.a -ldl -lpthread -lm -g -o ./tests/structs.out
+	$(CXX) -std=c++20 ./tests/structs.cpp ../../target/debug/libdiplomat_feature_tests.a -lstdc++ -ldl -lpthread -lm -g -o ./tests/structs.out
 
 ./tests/result.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/result.cpp
 	$(CXX) -std=c++17 ./tests/result.cpp ../../target/debug/libdiplomat_feature_tests.a -ldl -lpthread -lm -g -o ./tests/result.out

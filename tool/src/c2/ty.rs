@@ -4,8 +4,7 @@ use crate::common::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, FloatType, IntSizeType, IntType, OpaqueOwner, ReturnableStructDef, StructPathLike,
-    TyPosition, Type, TypeDef, TypeId,
+    self, OpaqueOwner, ReturnableStructDef, StructPathLike, TyPosition, Type, TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -430,50 +429,20 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 ty_name
             }
             Type::Slice(ref s) => match s {
-                hir::Slice::Primitive(
-                    _,
-                    hir::PrimitiveType::Int(IntType::U8) | hir::PrimitiveType::Byte,
-                ) => "DiplomatU8View",
-                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U16)) => {
-                    "DiplomatU16View"
+                hir::Slice::Primitive(borrow, prim) => self
+                    .formatter
+                    .fmt_primitive_slice_name(*borrow, *prim)
+                    .into(),
+                hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                    "DiplomatString16View".into()
                 }
-                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U32)) => {
-                    "DiplomatU32View"
+                hir::Slice::Str(_, _) => "DiplomatStringView".into(),
+                hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => {
+                    "DiplomatStrings16View".into()
                 }
-                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::U64)) => {
-                    "DiplomatU64View"
-                }
-                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I8)) => "DiplomatI8View",
-                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I16)) => {
-                    "DiplomatI16View"
-                }
-                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I32)) => {
-                    "DiplomatI32View"
-                }
-                hir::Slice::Primitive(_, hir::PrimitiveType::Int(IntType::I64)) => {
-                    "DiplomatI64View"
-                }
-                hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Usize)) => {
-                    "DiplomatUsizeView"
-                }
-                hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(IntSizeType::Isize)) => {
-                    "DiplomatIsizeView"
-                }
-                hir::Slice::Primitive(_, hir::PrimitiveType::Bool) => "DiplomatBoolView",
-                hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F32)) => {
-                    "DiplomatF32View"
-                }
-                hir::Slice::Primitive(_, hir::PrimitiveType::Float(FloatType::F64)) => {
-                    "DiplomatF64View"
-                }
-                hir::Slice::Primitive(_, hir::PrimitiveType::Char) => "DiplomatCharView",
-                hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => "DiplomatString16View",
-                hir::Slice::Str(_, _) => "DiplomatStringView",
-                hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => "DiplomatStrings16View",
-                hir::Slice::Strs(_) => "DiplomatStringsView",
+                hir::Slice::Strs(_) => "DiplomatStringsView".into(),
                 &_ => unreachable!("unknown AST/HIR variant"),
-            }
-            .into(),
+            },
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
