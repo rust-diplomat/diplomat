@@ -284,12 +284,7 @@ impl Parse for DiplomatBackendAttr {
 }
 
 // #region Demo-Gen specific attributes (/tool/src/demo_gen)
-/// A `#[diplomat::attr(...)]` attribute
-///
-/// Its contents must start with single element that is a CFG-expression
-/// (so it may contain `foo = bar`, `foo = "bar"`, `ident`, `*` atoms,
-/// and `all()`, `not()`, and `any()` combiners), and then be followed by one
-/// or more backend-specific attributes, which can be any valid meta-item
+/// A `#[diplomat::demo(...)]` attribute
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
 #[non_exhaustive]
 pub struct DemoBackendAttr {
