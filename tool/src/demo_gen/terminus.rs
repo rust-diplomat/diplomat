@@ -131,12 +131,26 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         Some(this.terminus_info)
     }
 
+    fn get_attrs_from_type(&self, ty : &Type) -> Vec<MarkupOutCFGAttr> {
+        let demo_attrs = match ty {
+            Type::Enum(e) => e.resolve(&self.ctx.tcx).attrs.demo_attrs.as_ref(),
+            Type::Opaque(o) => o.resolve(&self.ctx.tcx).attrs.demo_attrs.as_ref(),
+            Type::Struct(s) => s.resolve(&self.ctx.tcx).attrs.demo_attrs.as_ref(),
+            Type::Primitive(..) | Type::Slice(..) => return vec![],
+            _ => unreachable!("Unknown HIR type {ty:?}"),
+        };
+
+        return demo_attrs.unwrap_or(&vec![]).iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) }).collect()
+    }
+
     /// Take a parameter passed to a terminus (or a constructor), and either:
     /// 1. Add it to the list of parameters that the terminus function takes for the render engine to call.
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
     /// 
     /// `node` - Represents the current function of the parameter we're evaluating. See [`MethodDependency`] for more on its purpose.
-    fn evaluate_param(&mut self, param_type : Type, param_name : String, node : &mut MethodDependency) {
+    fn evaluate_param(&mut self, param_type : &Type, param_name : String, node : &mut MethodDependency) {
+        let attrs = self.get_attrs_from_type(param_type);
+
         // Helper function for quickly passing a parameter to both our node and the render terminus.
         let out_param = |type_name| {
             let mut param_info = ParamInfo {
@@ -155,9 +169,9 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         match param_type {
             Type::Primitive(_) | Type::Enum(_) | Type::Slice(_) => {
                 let type_name = match param_type {
-                    Type::Primitive(p) => self.ctx.formatter.fmt_primitive_as_ffi(p, true).to_string(),
+                    Type::Primitive(p) => self.ctx.formatter.fmt_primitive_as_ffi(*p, true).to_string(),
                     Type::Slice(hir::Slice::Str(..)) => self.ctx.formatter.fmt_string().to_string(),
-                    Type::Slice(hir::Slice::Primitive(_, p)) => self.ctx.formatter.fmt_primitive_list_type(p).to_string(),
+                    Type::Slice(hir::Slice::Primitive(_, p)) => self.ctx.formatter.fmt_primitive_list_type(*p).to_string(),
                     Type::Slice(hir::Slice::Strs(..)) => "Array<String>".to_string(),
                     Type::Enum(e) => self.ctx.formatter.fmt_type_name(e.tcx_id.into()).to_string(),
                     _ => unreachable!("Unknown primitive type {:?}", param_type)
@@ -171,9 +185,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 let op = o.resolve(self.ctx.tcx);
                 let type_name = self.ctx.formatter.fmt_type_name(o.tcx_id.into());
 
-                let mut attrs = op.attrs.demo_attrs.as_ref().unwrap()
-                .iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) });
-                if attrs.any(|attr| {attr == MarkupOutCFGAttr::External}) {
+                if attrs.contains(&MarkupOutCFGAttr::External) {
                     out_param(type_name.into());
                     return;
                 }
@@ -184,11 +196,11 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     if usable_constructor {
                         break;
                     }
-
-                    let mut attrs = method.attrs.demo_attrs.as_ref().unwrap()
-                    .iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) });
                 
-                    usable_constructor |= attrs.any(|attr| { attr == MarkupOutCFGAttr::DefaultConstructor });
+                
+                    let mut method_attrs = method.attrs.demo_attrs.as_ref().unwrap()
+                    .iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) });
+                    usable_constructor |= method_attrs.any(|attr| { attr == MarkupOutCFGAttr::DefaultConstructor});
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method {
                         usable_constructor |= true;
                     }
@@ -229,7 +241,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
 
                 for field in st.fields.iter() {
                     fields.push(self.ctx.formatter.fmt_param_name(field.name.as_str()).to_string());
-                    self.evaluate_param(field.ty.clone(), field.name.to_string(), &mut child);
+                    self.evaluate_param(&field.ty, field.name.to_string(), &mut child);
                 }
 
                 child.method_js = StructInfo {
@@ -269,7 +281,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
     fn evaluate_constructor(&mut self, method : &Method, node : &mut MethodDependency) -> String {
         method.param_self.as_ref().inspect(|s| {
-            self.evaluate_param(s.ty.clone().into(), "self".into(), node);
+            self.evaluate_param(&s.ty.clone().into(), "self".into(), node);
         }).or_else(|| {
             // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
             node.params.push(ParamInfo {
@@ -280,7 +292,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         });
         
         for param in method.params.iter() {
-            self.evaluate_param(param.ty.clone(), self.ctx.formatter.fmt_param_name(param.name.as_str()).into(), node);
+            self.evaluate_param(&param.ty, self.ctx.formatter.fmt_param_name(param.name.as_str()).into(), node);
         }
 
         // The node that is awaiting this node as a child needs the rendered output:
