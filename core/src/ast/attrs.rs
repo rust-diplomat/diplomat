@@ -53,6 +53,9 @@ pub struct Attrs {
     ///
     /// Inherited.
     pub abi_rename: RenameAttr,
+
+    /// For use by [`crate::hir::Attrs::demo_attrs`]
+    pub demo_attrs : Vec<DemoBackendAttr>,
 }
 
 impl Attrs {
@@ -62,6 +65,7 @@ impl Attrs {
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
             Attr::SkipIfAst => self.skip_if_ast = true,
             Attr::CRename(rename) => self.abi_rename.extend(&rename),
+            Attr::DemoBackend(attr) => self.demo_attrs.push(attr),
         }
     }
 
@@ -79,6 +83,12 @@ impl Attrs {
             Vec::new()
         };
 
+        let demo_attrs = if context == AttrInheritContext::MethodFromImpl {
+            self.demo_attrs.clone()
+        } else {
+            Vec::new()
+        };
+
         let abi_rename = self.abi_rename.attrs_for_inheritance(context, true);
         Self {
             cfg: self.cfg.clone(),
@@ -87,6 +97,7 @@ impl Attrs {
             // HIR only, for methods only. not inherited
             skip_if_ast: false,
             abi_rename,
+            demo_attrs,
         }
     }
 
@@ -113,6 +124,7 @@ enum Attr {
     DiplomatBackend(DiplomatBackendAttr),
     SkipIfAst,
     CRename(RenameAttr),
+    DemoBackend(DemoBackendAttr),
     // More goes here
 }
 
@@ -121,6 +133,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
     let skipast: syn::Path = syn::parse_str("diplomat::skip_if_ast").unwrap();
+    let demo_path : syn::Path = syn::parse_str("diplomat::demo").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
@@ -133,6 +146,11 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
             Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
         } else if a.path() == &skipast {
             Some(Attr::SkipIfAst)
+        } else if a.path() == &demo_path {
+            Some(Attr::DemoBackend(
+                a.parse_args()
+                .expect("Failed to parse malformed diplomat::demo")
+            ))
         } else {
             None
         }
@@ -257,6 +275,25 @@ impl Parse for DiplomatBackendAttr {
         Ok(Self { cfg, meta })
     }
 }
+
+// #region Demo-Gen specific attributes
+/// A `#[diplomat::demo(...)]` attribute
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+#[non_exhaustive]
+pub struct DemoBackendAttr {
+    #[serde(serialize_with = "serialize_meta")]
+    pub meta: Meta,
+}
+
+/// Meant to be used with Attribute::parse_args()
+impl Parse for DemoBackendAttr {
+    fn parse(input : ParseStream<'_>) -> syn::Result<Self> {
+        let meta = input.parse()?;
+        Ok(Self { meta })
+    }
+}
+
+// #endregion
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) enum AttrInheritContext {

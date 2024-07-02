@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<title>Diplomat Automatic Demo Generation Web Example</title>
+		<script src="dist/bundle.js"></script>
+	</head>
+	<body>
+		
+	</body>
+</html>
+
+<template id="terminus">
+	<div>
+		<slot name="funcName"></slot>
+		<slot name="parameters"></slot>
+		<button onclick="submit()">Submit</button>
+		<slot name="output">Output Shown Here</slot>
+	</div>
+</template>
+
+<template id="enum">
+	<label><slot name="param-name"></slot></label>
+	<select oninput="valueChange()">
+		<!-- Select doesn't evaluate anything other than option nodes, so to allow dropdowns (in addition to other HTML elements), we just search for whatever element has the #options id to insert the children of enum-option into.-->
+		<option id="options"></option>
+	</select>
+</template>
+
+<template id="enum-option">
+	<option>
+		<slot name="option-text"></slot>
+	</option>
+</template>
+
+<template id="string">
+	<label><slot name="param-name"></slot></label>
+	<input type="text" oninput="valueChange()"/>
+</template>
+
+<template id="number">
+	<label><slot name="param-name"></slot></label>
+	<input type="number" oninput="valueChange()"/>
+</template>
+
+<template id="boolean">
+	<label><slot name="param-name" for="bool"></slot></label>
+	<input type="checkbox" id="bool" oninput="valueChange()"/>
+</template>

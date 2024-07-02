@@ -1,0 +1,34 @@
+{
+    "name": "demo",
+    "version": "0.0.1",
+    "description": "Diplomat WASM example. Also has automatic demo generation in /demo",
+    "main": "./api/index.mjs",
+    "exports": {
+        ".": "./api/index.mjs",
+        "./demo": "./api/demo/index.mjs"
+    },
+    "ava": {
+        "files": [
+            "test/*.mjs"
+        ]
+    },
+    "scripts": {
+        "test": "ava"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/rust-diplomat/diplomat.git"
+    },
+    "keywords": [
+        "i18n"
+    ],
+    "author": "The ICU4X Project Developers",
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/rust-diplomat/diplomat/issues"
+    },
+    "homepage": "https://github.com/rust-diplomat/diplomat#readme",
+    "devDependencies": {
+        "ava": "^6.1.3"
+    }
+}

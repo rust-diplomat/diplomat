@@ -68,6 +68,14 @@ dependencies = [
     "test-js-example-app",
     "test-js-feature",
 ]
+[tasks.test-js2]
+category = "Tests"
+dependencies = [
+    "test-js2-feature",
+    "test-js2-example",
+    "test-js2-example-app",
+]
+
 [tasks.test-dart]
 category = "Tests"
 dependencies = [
@@ -88,6 +96,7 @@ dependencies = [
     "test-c-example",
     "test-c2-example",
     "test-js-example",
+    "test-js2-example",
     "test-dart-example",
     "test-kotlin-example",
 ]
@@ -98,6 +107,7 @@ dependencies = [
     "test-cpp-feature",
     "test-cpp2-feature",
     "test-js-feature",
+    "test-js2-feature",
     "test-dart-feature",
     "test-kotlin-feature",
 ]
@@ -196,6 +206,41 @@ dependencies = ["build-feature-wasm"]
 script_runner = "@shell"
 script = '''
 cd feature_tests/js/
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
+npm install && npm run test
+'''
+
+[tasks.test-js2-example]
+category = "Tests"
+dependencies = ["build-example-wasm"]
+script_runner = "@shell"
+script = '''
+cd example/js2
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
+cp -r ../demo-gen/demo/ lib/api/demo
+cd lib
+npm install && npm run test
+'''
+
+
+[tasks.test-js2-example-app]
+category = "Tests"
+dependencies = ["build-example-wasm"]
+script_runner = "@shell"
+script = '''
+cd example/js2
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
+cp -r ../demo-gen/demo/ lib/api/demo
+cd app
+npm install && npm run build
+'''
+
+[tasks.test-js2-feature]
+category = "Tests"
+dependencies = ["build-feature-wasm"]
+script_runner = "@shell"
+script = '''
+cd feature_tests/js2/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
 npm install && npm run test
 '''
@@ -332,6 +377,7 @@ dependencies = [
     "gen-c-feature",
     "gen-c2-feature",
     "gen-js-feature",
+    "gen-js2-feature",
     "gen-dotnet-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
@@ -345,6 +391,8 @@ dependencies = [
     "gen-c-example",
     "gen-c2-example",
     "gen-js-example",
+    "gen-js2-example",
+    "gen-demo-example",
     "gen-dart-example",
     "gen-kotlin-example",
 ]
@@ -487,6 +535,33 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example js lib/api lib/docs/source "--docs-base-urls=*:https://unicode-org.github.io/icu4x-docs/doc/"
+'''
+
+[tasks.gen-js2-feature]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests js2 api
+'''
+
+[tasks.gen-js2-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example js2 lib/api
+'''
+
+[tasks.gen-demo-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example demo-gen demo
 '''
 
 [tasks.gen-dotnet-feature]

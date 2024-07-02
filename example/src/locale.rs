@@ -5,6 +5,7 @@ pub mod ffi {
     #[diplomat::opaque]
     /// An ICU4X Locale, capable of representing strings like `"en-US"`.
     #[diplomat::rust_link(icu::locid::Locale, Struct)]
+    #[diplomat::demo(input(label = "Locale"))]
     pub struct ICU4XLocale(pub Locale);
 
     impl ICU4XLocale {

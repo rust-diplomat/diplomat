@@ -41,7 +41,45 @@ pub struct Attrs {
     /// This attribute does not participate in inheritance and must always
     /// be specified on individual methods
     pub special_method: Option<SpecialMethod>,
+
+    /// From #[diplomat::demo()]. Created from [`crate::ast::attrs::Attrs::demo_attrs`].
+    /// List of attributes specific to automatic demo generation.
+    /// Currently just for demo-gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
+    pub demo_attrs : DemoInfo,
 }
+
+// #region: Demo specific attributes.
+
+/// For `#[diplomat::demo(input(...))]`, stored in [DemoInfo::input_cfg].
+#[derive(Clone, Default, Debug)]
+pub struct DemoInputCFG {
+    /// `#[diplomat(input(label = "..."))]`
+    /// Label that this input parameter should have.
+    /// 
+    /// For instance <label for="v">Number Here</label><input name="v"/>
+    pub label : String,
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct DemoInfo {
+    /// `#[diplomat::demo(enable)]`. If automatic generation is disabled by default (TODO: Right now there is no such option), then the below render terminus will be allowed to generate. 
+	/// `#[diplomat::demo(disable)]`. If automatic generations is enabled by default, the below render terminus will not be allowed to generate.
+    /// TODO: If demo generation is its own separate backend, this serves no real purpose, since [`Attrs::disable`] already handles this for us.
+    pub enabled : bool,
+
+	///	`#[diplomat::demo(default_constructor)]`
+	/// We search for any methods specially tagged with `Constructor`, but if there's are no default Constructors and there's NamedConstructor that you want to be default instead, use this.
+	/// TODO: Should probably ignore other `Constructors` if a default has been set.
+    pub default_constructor : bool,
+
+	/// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
+    pub external : bool,
+
+	/// `#[diplomat::demo(input(...))]`
+    pub input_cfg: DemoInputCFG,
+}
+
+// #endregion
 
 /// Attributes that mark methods as "special"
 #[non_exhaustive]
@@ -118,6 +156,7 @@ impl Attrs {
 
         let support = validator.attrs_supported();
         let backend = validator.primary_name();
+
         for attr in &ast.attrs {
             let satisfies = match validator.satisfies_cfg(&attr.cfg) {
                 Ok(satisfies) => satisfies,
@@ -290,6 +329,40 @@ impl Attrs {
             }
         }
 
+        
+        for attr in &ast.demo_attrs {
+            let path = attr.meta.path();
+            if let Some(path_ident) = path.get_ident() {
+                if path_ident == "external" {
+                    this.demo_attrs.external = true;
+                } else if path_ident == "default_constructor" {
+                    this.demo_attrs.default_constructor = true;
+                } else if path_ident == "enable" {
+                    this.demo_attrs.enabled = true;
+                } else if path_ident == "disable" {
+                    this.demo_attrs.enabled = false;
+                } else if path_ident == "input" {
+                    // TODO: Move this to AST.
+                    let meta_list = attr.meta.require_list().expect("Could not get MetaList, expected #[diplomat::demo(input(...))]");
+    
+                    meta_list.parse_nested_meta(|meta| {
+                        if meta.path.is_ident("label") {
+                            let value = meta.value()?;
+                            let s : syn::LitStr = value.parse()?;
+                            this.demo_attrs.input_cfg.label = s.value();
+                            Ok(())
+                        } else {
+                            Err(meta.error(format!("Unsupported ident {:?}", meta.path.get_ident())))
+                        }
+                    }).expect("Could not read input(...)");
+                } else { 
+                    panic!("Unknown demo_attr: {path_ident:?}");
+                }
+            } else {
+                panic!("Unknown demo_attr: {path:?}");
+            }
+        }
+
         this
     }
 
@@ -307,6 +380,7 @@ impl Attrs {
             rename: _,
             abi_rename: _,
             special_method,
+            demo_attrs: _,
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
@@ -592,25 +666,121 @@ impl Attrs {
             abi_rename: Default::default(),
             // Never inherited
             special_method: None,
+            demo_attrs: Default::default(),
         }
     }
 }
 
+/// Non-exhaustive list of what attributes your backend is able to handle, based on #[diplomat::attr(...)] contents.
+/// Set this through an [`AttributeValidator`].
+///
+/// See [`SpecialMethod`] and [`Attrs`] for your specific implementation needs.
+///
+/// For example, the current dart backend supports [`BackendAttrSupport::constructors`]. So when it encounters:
+/// ```ignore
+/// struct Sample {}
+/// impl Sample {
+///     #[diplomat::attr(supports = constructors, constructor)]
+///     pub fn new() -> Box<Self> {
+///         Box::new(Sample{})
+///     }
+/// }
+///
+/// ```
+///
+/// It generates
+/// ```dart
+/// factory Sample()
+/// ```
+///
+/// If a backend does not support a specific `#[diplomat::attr(...)]`, it will error.
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
+    /// Supports not including any items with `#[diplomat::attr(..., disable)]`
     pub disabling: bool,
+    /// I.E., changing `rust_function_name` to `camelCaseFunctionName`
+    ///
+    /// Note that [`Attrs::abi_rename`] is required to always be supported.
     pub renaming: bool,
+    /// I.E.
+    /// ```cpp
+    /// namespace SampleNamespace {}
+    /// ```
     pub namespacing: bool,
+    /// I.E.
+    /// ```js
+    /// class Sample {
+    ///     constructor() { }
+    /// }
+    /// ```
     pub constructors: bool,
+    /// I.E.
+    /// ```dart
+    /// factory Sample.constructor1()
+    /// factory Sample.fromJSON()
+    /// ```
     pub named_constructors: bool,
+    /// Can a constructor return an error?
+    /// I.E.
+    /// ```dart
+    /// factory Sample() {
+    ///     throw("I didn't like that.");
+    /// }
+    /// ```
     pub fallible_constructors: bool,
+    /// I.E.
+    /// ```dart
+    /// class Sample {
+    ///     String get item1
+    ///     String set item2
+    /// }
+    /// ```
+    /// See [`SpecialMethod::Getter`] and [`SpecialMethod::Setter`]
     pub accessors: bool,
+    /// Do classes have a function for string representation?
+    /// I.E.
+    /// ```dart
+    /// class Sample {
+    ///     @override
+    ///     String toString()
+    /// }
+    /// ```
     pub stringifiers: bool,
+    /// I.E.
+    /// ```dart
+    /// class Sample {
+    ///     @override bool operator ==(Object other) => ...;
+    /// }
+    /// ```
     pub comparators: bool,
+    /// Can items with `#[diplomat::attr(supports= memory_sharing)]` be shared across threads?
+    /// For instance:
+    /// ```cpp
+    /// HeapItem* item = new HeapItem();
+    /// ```
+    /// Would be an item that supports memory sharing.
     pub memory_sharing: bool,
+    /// I.E.
+    /// ```dart
+    /// class MyIterator implements Iterator {
+    ///     int next()
+    /// }
+    /// ```
     pub iterators: bool,
+    /// I.E.
+    /// ```dart
+    /// class Sample implements Iterable {
+    ///     Iterator get iterator
+    /// }
+    /// ```
     pub iterables: bool,
+    /// I.E.
+    /// ```dart
+    /// class Sample {
+    ///     int operator [](int index)
+    /// }
+    /// ```
     pub indexing: bool,
     // more to be added: namespace, etc
 }

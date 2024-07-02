@@ -1,0 +1,14 @@
+{%- if !typescript -%}
+{%- for import in imports %}
+{{- import }}
+{% endfor %}
+{% endif -%}
+
+export function {{function_name}}(
+	{%- for param in params -%}
+	{{param.js}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}
+	{%- endfor -%}
+){% if typescript %};{% else %} {
+	return {{node_call_stack|indent(4)}};
+}
+{%- endif %}
