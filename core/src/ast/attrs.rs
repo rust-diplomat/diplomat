@@ -54,14 +54,7 @@ pub struct Attrs {
     /// Inherited.
     pub abi_rename: RenameAttr,
 
-    /// For the demo HIR backend.
-    /// I get that this is weird since the documentation above specifies attributes for AST backend and diplomat macro reads only.
-    /// This is implemented very similarly to how [`Attrs::attrs`] is lowered and copied over to the HIR backend.
-    /// 
-    /// If there's an issue with this, I'm open to discussion.
-    /// 
-    /// There's some logic in the HIR attrs.rs file for handling these,
-    /// but I'm putting most of the logic in tool/src/demo_gen/attrs.rs to try and compartmentalize where I can.
+    /// For use by [`crate::hir::Attrs::demo_attrs`]
     pub demo_attrs : Vec<DemoBackendAttr>,
 }
 
@@ -283,7 +276,7 @@ impl Parse for DiplomatBackendAttr {
     }
 }
 
-// #region Demo-Gen specific attributes (/tool/src/demo_gen)
+// #region Demo-Gen specific attributes
 /// A `#[diplomat::demo(...)]` attribute
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
 #[non_exhaustive]

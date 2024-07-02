@@ -7,7 +7,6 @@ use terminus::{RenderTerminusContext, TerminusInfo};
 use crate::{common::{ErrorStore, FileMap}, js2::{formatter::JSFormatter, FileType}};
 
 mod terminus;
-mod attrs;
 
 pub struct WebDemoGenerationContext<'tcx> {
     tcx: &'tcx TypeContext,

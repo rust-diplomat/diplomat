@@ -1,8 +1,8 @@
-use std::{fmt::Write, collections::BTreeSet};
+use std::collections::BTreeSet;
 
 use diplomat_core::hir::{self, Method, Type};
 
-use super::{attrs::MarkupOutCFGAttr, WebDemoGenerationContext};
+use super::WebDemoGenerationContext;
 use askama::{self, Template};
 
 #[derive(Clone)]
@@ -131,26 +131,12 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         Some(this.terminus_info)
     }
 
-    fn get_attrs_from_type(&self, ty : &Type) -> Vec<MarkupOutCFGAttr> {
-        let demo_attrs = match ty {
-            Type::Enum(e) => e.resolve(&self.ctx.tcx).attrs.demo_attrs.as_ref(),
-            Type::Opaque(o) => o.resolve(&self.ctx.tcx).attrs.demo_attrs.as_ref(),
-            Type::Struct(s) => s.resolve(&self.ctx.tcx).attrs.demo_attrs.as_ref(),
-            Type::Primitive(..) | Type::Slice(..) => return vec![],
-            _ => unreachable!("Unknown HIR type {ty:?}"),
-        };
-
-        return demo_attrs.unwrap_or(&vec![]).iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) }).collect()
-    }
-
     /// Take a parameter passed to a terminus (or a constructor), and either:
     /// 1. Add it to the list of parameters that the terminus function takes for the render engine to call.
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
     /// 
     /// `node` - Represents the current function of the parameter we're evaluating. See [`MethodDependency`] for more on its purpose.
     fn evaluate_param(&mut self, param_type : &Type, param_name : String, node : &mut MethodDependency) {
-        let attrs = self.get_attrs_from_type(param_type);
-
         // Helper function for quickly passing a parameter to both our node and the render terminus.
         let out_param = |type_name| {
             let mut param_info = ParamInfo {
@@ -180,12 +166,14 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 out_param(type_name);
             },
             Type::Opaque(o) => {
+                let attrs = &o.resolve(&self.ctx.tcx).attrs.demo_attrs;
+
                 // We need to find a constructor that we can call.
                 // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
                 let op = o.resolve(self.ctx.tcx);
                 let type_name = self.ctx.formatter.fmt_type_name(o.tcx_id.into());
 
-                if attrs.contains(&MarkupOutCFGAttr::External) {
+                if attrs.external {
                     out_param(type_name.into());
                     return;
                 }
@@ -198,9 +186,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     }
                 
                 
-                    let mut method_attrs = method.attrs.demo_attrs.as_ref().unwrap()
-                    .iter().map(|attr| { MarkupOutCFGAttr::from_demo_attr(attr.clone()) });
-                    usable_constructor |= method_attrs.any(|attr| { attr == MarkupOutCFGAttr::DefaultConstructor});
+                    let method_attrs = &method.attrs.demo_attrs;
+                    usable_constructor |= method_attrs.default_constructor;
                     if let Some(diplomat_core::hir::SpecialMethod::Constructor) = method.attrs.special_method {
                         usable_constructor |= true;
                     }
