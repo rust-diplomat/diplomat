@@ -1,10 +1,7 @@
-use std::{
-    borrow::Cow,
-    fmt::{Display, Write},
-};
+use std::fmt::{Display, Write};
 
 use askama::{self, Template};
-use diplomat_core::hir::{self, Method, Param, SelfType, Type, TypeContext, TypeId};
+use diplomat_core::hir::TypeContext;
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{

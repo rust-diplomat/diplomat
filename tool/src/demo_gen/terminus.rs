@@ -262,7 +262,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 struct StructInfo {
                     fields: Vec<String>,
                     type_name: String,
-                };
+                }
 
                 let mut fields = Vec::new();
 
