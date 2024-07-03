@@ -122,4 +122,34 @@ impl<'tcx> CFormatter<'tcx> {
         };
         s.into()
     }
+    /// Get the primitive type as a C type
+    pub fn fmt_primitive_slice_name(
+        &self,
+        borrow: Option<hir::Borrow>,
+        prim: hir::PrimitiveType,
+    ) -> String {
+        use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
+        let prim = match prim {
+            PrimitiveType::Bool => "Bool",
+            PrimitiveType::Char => "Char",
+            PrimitiveType::Int(IntType::I8) => "I8",
+            PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "U8",
+            PrimitiveType::Int(IntType::I16) => "I16",
+            PrimitiveType::Int(IntType::U16) => "U16",
+            PrimitiveType::Int(IntType::I32) => "I32",
+            PrimitiveType::Int(IntType::U32) => "U32",
+            PrimitiveType::Int(IntType::I64) => "I64",
+            PrimitiveType::Int(IntType::U64) => "U64",
+            PrimitiveType::Int128(_) => panic!("i128 not supported in C"),
+            PrimitiveType::IntSize(IntSizeType::Isize) => "Isize",
+            PrimitiveType::IntSize(IntSizeType::Usize) => "Usize",
+            PrimitiveType::Float(FloatType::F32) => "F32",
+            PrimitiveType::Float(FloatType::F64) => "F64",
+        };
+        let mtb = match borrow {
+            Some(borrow) if borrow.mutability.is_immutable() => "",
+            _ => "Mut",
+        };
+        format!("Diplomat{prim}View{mtb}")
+    }
 }
