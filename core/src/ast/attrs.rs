@@ -55,7 +55,7 @@ pub struct Attrs {
     pub abi_rename: RenameAttr,
 
     /// For use by [`crate::hir::Attrs::demo_attrs`]
-    pub demo_attrs : Vec<DemoBackendAttr>,
+    pub demo_attrs: Vec<DemoBackendAttr>,
 }
 
 impl Attrs {
@@ -133,7 +133,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
     let skipast: syn::Path = syn::parse_str("diplomat::skip_if_ast").unwrap();
-    let demo_path : syn::Path = syn::parse_str("diplomat::demo").unwrap();
+    let demo_path: syn::Path = syn::parse_str("diplomat::demo").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
@@ -149,7 +149,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
         } else if a.path() == &demo_path {
             Some(Attr::DemoBackend(
                 a.parse_args()
-                .expect("Failed to parse malformed diplomat::demo")
+                    .expect("Failed to parse malformed diplomat::demo"),
             ))
         } else {
             None
@@ -287,7 +287,7 @@ pub struct DemoBackendAttr {
 
 /// Meant to be used with Attribute::parse_args()
 impl Parse for DemoBackendAttr {
-    fn parse(input : ParseStream<'_>) -> syn::Result<Self> {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let meta = input.parse()?;
         Ok(Self { meta })
     }

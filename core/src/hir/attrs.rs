@@ -45,7 +45,7 @@ pub struct Attrs {
     /// From #[diplomat::demo()]. Created from [`crate::ast::attrs::Attrs::demo_attrs`].
     /// List of attributes specific to automatic demo generation.
     /// Currently just for demo-gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
-    pub demo_attrs : DemoInfo,
+    pub demo_attrs: DemoInfo,
 }
 
 // #region: Demo specific attributes.
@@ -55,27 +55,27 @@ pub struct Attrs {
 pub struct DemoInputCFG {
     /// `#[diplomat(input(label = "..."))]`
     /// Label that this input parameter should have.
-    /// 
+    ///
     /// For instance <label for="v">Number Here</label><input name="v"/>
-    pub label : String,
+    pub label: String,
 }
 
 #[derive(Clone, Default, Debug)]
 pub struct DemoInfo {
-    /// `#[diplomat::demo(enable)]`. If automatic generation is disabled by default (TODO: Right now there is no such option), then the below render terminus will be allowed to generate. 
-	/// `#[diplomat::demo(disable)]`. If automatic generations is enabled by default, the below render terminus will not be allowed to generate.
+    /// `#[diplomat::demo(enable)]`. If automatic generation is disabled by default (TODO: Right now there is no such option), then the below render terminus will be allowed to generate.
+    /// `#[diplomat::demo(disable)]`. If automatic generations is enabled by default, the below render terminus will not be allowed to generate.
     /// TODO: If demo generation is its own separate backend, this serves no real purpose, since [`Attrs::disable`] already handles this for us.
-    pub enabled : bool,
+    pub enabled: bool,
 
-	///	`#[diplomat::demo(default_constructor)]`
-	/// We search for any methods specially tagged with `Constructor`, but if there's are no default Constructors and there's NamedConstructor that you want to be default instead, use this.
-	/// TODO: Should probably ignore other `Constructors` if a default has been set.
-    pub default_constructor : bool,
+    ///	`#[diplomat::demo(default_constructor)]`
+    /// We search for any methods specially tagged with `Constructor`, but if there's are no default Constructors and there's NamedConstructor that you want to be default instead, use this.
+    /// TODO: Should probably ignore other `Constructors` if a default has been set.
+    pub default_constructor: bool,
 
-	/// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
-    pub external : bool,
+    /// `#[diplomat::demo(external)]` represents an item that we will not evaluate, and should be passed to the rendering engine to provide.
+    pub external: bool,
 
-	/// `#[diplomat::demo(input(...))]`
+    /// `#[diplomat::demo(input(...))]`
     pub input_cfg: DemoInputCFG,
 }
 
@@ -329,7 +329,6 @@ impl Attrs {
             }
         }
 
-        
         for attr in &ast.demo_attrs {
             let path = attr.meta.path();
             if let Some(path_ident) = path.get_ident() {
@@ -343,19 +342,27 @@ impl Attrs {
                     this.demo_attrs.enabled = false;
                 } else if path_ident == "input" {
                     // TODO: Move this to AST.
-                    let meta_list = attr.meta.require_list().expect("Could not get MetaList, expected #[diplomat::demo(input(...))]");
-    
-                    meta_list.parse_nested_meta(|meta| {
-                        if meta.path.is_ident("label") {
-                            let value = meta.value()?;
-                            let s : syn::LitStr = value.parse()?;
-                            this.demo_attrs.input_cfg.label = s.value();
-                            Ok(())
-                        } else {
-                            Err(meta.error(format!("Unsupported ident {:?}", meta.path.get_ident())))
-                        }
-                    }).expect("Could not read input(...)");
-                } else { 
+                    let meta_list = attr
+                        .meta
+                        .require_list()
+                        .expect("Could not get MetaList, expected #[diplomat::demo(input(...))]");
+
+                    meta_list
+                        .parse_nested_meta(|meta| {
+                            if meta.path.is_ident("label") {
+                                let value = meta.value()?;
+                                let s: syn::LitStr = value.parse()?;
+                                this.demo_attrs.input_cfg.label = s.value();
+                                Ok(())
+                            } else {
+                                Err(meta.error(format!(
+                                    "Unsupported ident {:?}",
+                                    meta.path.get_ident()
+                                )))
+                            }
+                        })
+                        .expect("Could not read input(...)");
+                } else {
                     panic!("Unknown demo_attr: {path_ident:?}");
                 }
             } else {

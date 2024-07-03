@@ -14,13 +14,13 @@ pub mod cpp2;
 #[doc(hidden)]
 pub mod dart;
 #[doc(hidden)]
+pub mod demo_gen;
+#[doc(hidden)]
 pub mod dotnet;
 #[doc(hidden)]
 pub mod js;
 #[doc(hidden)]
 pub mod js2;
-#[doc(hidden)]
-pub mod demo_gen;
 #[doc(hidden)]
 pub mod kotlin;
 
@@ -116,7 +116,7 @@ pub fn gen(
             // For finding default constructors of opaques:
             attr_validator.support.constructors = true;
             attr_validator.support.fallible_constructors = true;
-            
+
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
                 Err(e) => {
@@ -131,7 +131,7 @@ pub fn gen(
             match demo_gen::WebDemoGenerationContext::run(&tcx, docs_url_gen, strip_prefix) {
                 Ok(mut files) => {
                     out_texts = files.take_files();
-                },
+                }
                 Err(errors) => {
                     eprintln!("Found errors whilst generating {target_language}:");
                     for error in errors {
@@ -140,7 +140,7 @@ pub fn gen(
                     errors_found = true;
                 }
             };
-        },
+        }
         "kotlin" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
             attr_validator.support.renaming = true;
