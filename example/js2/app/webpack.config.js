@@ -4,9 +4,9 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default {
-	entry: './src/index.js',
+	entry: './src/index.mjs',
 	resolve: {
-	  extensions: ['.js'],
+	  extensions: ['.mjs'],
 	  fallback: {
 		// Required to not error when `fs` can't be bundled, which is okay because
 		// we're only anticipating webpacking for the browser which uses `fetch`
@@ -16,7 +16,7 @@ export default {
 	},
 	mode: "production",
 	output: {
-	  filename: 'bundle.js',
+	  filename: 'bundle.mjs',
 	  path: path.resolve(__dirname, 'public/dist'),
 	},
 	experiments: {
