@@ -141,6 +141,15 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         Some(this.terminus_info)
     }
 
+    fn get_type_demo_attrs(&self, ty : &Type) -> Option<DemoInfo> {
+        match ty {
+            Type::Enum(e) => Some(e.resolve(&self.ctx.tcx).attrs.demo_attrs.clone()),
+            Type::Opaque(o) => Some(o.resolve(&self.ctx.tcx).attrs.demo_attrs.clone()),
+            Type::Struct(s) => Some(s.resolve(&self.ctx.tcx).attrs.demo_attrs.clone()),
+            Type::Slice(..) | Type::Primitive(..) | _ => None,
+        }
+    }
+
     /// Take a parameter passed to a terminus (or a constructor), and either:
     /// 1. Add it to the list of parameters that the terminus function takes for the render engine to call.
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
@@ -151,16 +160,20 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         param_type: &Type,
         param_name: String,
         node: &mut MethodDependency,
-        param_attributes : DemoInfo,
     ) {
+        let attrs = self.get_type_demo_attrs(param_type);
 
         // Helper function for quickly passing a parameter to both our node and the render terminus.
         let out_param = |type_name| {
-            let mut label = param_attributes.input_cfg.label;
-            if label.is_empty() {
-                label = param_name;
-            }
-
+            // This only works for enums, since otherwise we break the type into its component parts.
+            let label = attrs.and_then(|attrs| { 
+                if attrs.input_cfg.label.is_empty() {
+                    None
+                } else {
+                    Some(attrs.input_cfg.label) 
+                }
+            }).unwrap_or(param_name);
+            
             let mut param_info = ParamInfo {
                 js: label,
                 type_name,
@@ -281,7 +294,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                             .to_string(),
                     );
 
-                    self.evaluate_param(&field.ty, field.name.to_string(), &mut child, DemoInfo::default());
+                    self.evaluate_param(&field.ty, field.name.to_string(), &mut child);
                 }
 
                 child.method_js = StructInfo {
@@ -327,15 +340,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             .as_ref()
             .inspect(|s| {
                 let ty = s.ty.clone().into();
-
-                let default = DemoInfo::default();
-                let attrs = match &ty {
-                    Type::Enum(e) => &e.resolve(&self.ctx.tcx).attrs.demo_attrs,
-                    Type::Opaque(o) => &o.resolve(&self.ctx.tcx).attrs.demo_attrs,
-                    Type::Struct(s) => &s.resolve(&self.ctx.tcx).attrs.demo_attrs,
-                    _ => &default,
-                };
-                self.evaluate_param(&ty, "self".into(), node, attrs.clone());
+                self.evaluate_param(&ty, "self".into(), node);
             })
             .or_else(|| {
                 // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
@@ -353,9 +358,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     .formatter
                     .fmt_param_name(param.name.as_str())
                     .into(),
-                node,
-                // FIXME:
-                DemoInfo::default(),
+                node
             );
         }
 
