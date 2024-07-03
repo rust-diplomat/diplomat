@@ -24,14 +24,6 @@ export { AttrOpaque1 } from "./AttrOpaque1.mjs"
 
 export { AttrOpaque2 } from "./AttrOpaque2.mjs"
 
-export { MyIterable } from "./MyIterable.mjs"
-
-export { MyIterator } from "./MyIterator.mjs"
-
-export { OpaqueIterable } from "./OpaqueIterable.mjs"
-
-export { OpaqueIterator } from "./OpaqueIterator.mjs"
-
 export { Unnamespaced } from "./Unnamespaced.mjs"
 
 export { Bar } from "./Bar.mjs"
