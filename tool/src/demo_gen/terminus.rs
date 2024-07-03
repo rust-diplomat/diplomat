@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use diplomat_core::hir::{self, Method, Type};
+use diplomat_core::hir::{self, DemoInfo, Method, Type};
 
 use super::WebDemoGenerationContext;
 use askama::{self, Template};
@@ -20,7 +20,7 @@ pub struct ParamInfo {
 /// formatWrite requires ICU4XFixedDecimal as a parameter, and so we need to call ICU4XFixedDecimal.new().
 /// We then add ICU4XFixedDecimal.new() as a child of our root, and add it as a parameter to be called by formatWrite.
 ///
-/// I think the final render should look something like this:
+/// The final render looks something like this:
 /// ```typescript
 /// function formatWrite(locale : ICU4XLocale, provider : ICU4XDataProvider, options : ICU4XFixedDecimalFormatterOptions, v : number) {
 ///     return ICU4XFixedDecimalFormatter.formatWrite
@@ -151,11 +151,18 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         param_type: &Type,
         param_name: String,
         node: &mut MethodDependency,
+        param_attributes : DemoInfo,
     ) {
+
         // Helper function for quickly passing a parameter to both our node and the render terminus.
         let out_param = |type_name| {
+            let mut label = param_attributes.input_cfg.label;
+            if label.is_empty() {
+                label = param_name;
+            }
+
             let mut param_info = ParamInfo {
-                js: param_name,
+                js: label,
                 type_name,
             };
 
@@ -273,7 +280,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                             .fmt_param_name(field.name.as_str())
                             .to_string(),
                     );
-                    self.evaluate_param(&field.ty, field.name.to_string(), &mut child);
+
+                    self.evaluate_param(&field.ty, field.name.to_string(), &mut child, DemoInfo::default());
                 }
 
                 child.method_js = StructInfo {
@@ -318,7 +326,16 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             .param_self
             .as_ref()
             .inspect(|s| {
-                self.evaluate_param(&s.ty.clone().into(), "self".into(), node);
+                let ty = s.ty.clone().into();
+
+                let default = DemoInfo::default();
+                let attrs = match &ty {
+                    Type::Enum(e) => &e.resolve(&self.ctx.tcx).attrs.demo_attrs,
+                    Type::Opaque(o) => &o.resolve(&self.ctx.tcx).attrs.demo_attrs,
+                    Type::Struct(s) => &s.resolve(&self.ctx.tcx).attrs.demo_attrs,
+                    _ => &default,
+                };
+                self.evaluate_param(&ty, "self".into(), node, attrs.clone());
             })
             .or_else(|| {
                 // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
@@ -337,6 +354,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     .fmt_param_name(param.name.as_str())
                     .into(),
                 node,
+                // FIXME:
+                DemoInfo::default(),
             );
         }
 

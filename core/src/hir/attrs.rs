@@ -55,7 +55,7 @@ pub struct Attrs {
 #[derive(Clone, Default, Debug)]
 pub struct DemoInputCFG {
     /// `#[diplomat(input(label = "..."))]`
-    /// Label that this input parameter should have.
+    /// Label that this input parameter should have. Let demo-gen pick a valid name if this is empty.
     ///
     /// For instance <label for="v">Number Here</label><input name="v"/>
     pub label: String,
