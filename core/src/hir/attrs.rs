@@ -51,6 +51,7 @@ pub struct Attrs {
 // #region: Demo specific attributes.
 
 /// For `#[diplomat::demo(input(...))]`, stored in [DemoInfo::input_cfg].
+#[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct DemoInputCFG {
     /// `#[diplomat(input(label = "..."))]`
@@ -60,6 +61,7 @@ pub struct DemoInputCFG {
     pub label: String,
 }
 
+#[non_exhaustive]
 #[derive(Clone, Default, Debug)]
 pub struct DemoInfo {
     /// `#[diplomat::demo(enable)]`. If automatic generation is disabled by default (TODO: Right now there is no such option), then the below render terminus will be allowed to generate.
@@ -67,7 +69,7 @@ pub struct DemoInfo {
     /// TODO: If demo generation is its own separate backend, this serves no real purpose, since [`Attrs::disable`] already handles this for us.
     pub enabled: bool,
 
-    ///	`#[diplomat::demo(default_constructor)]`
+    /// `#[diplomat::demo(default_constructor)]`
     /// We search for any methods specially tagged with `Constructor`, but if there's are no default Constructors and there's NamedConstructor that you want to be default instead, use this.
     /// TODO: Should probably ignore other `Constructors` if a default has been set.
     pub default_constructor: bool,
