@@ -10,6 +10,8 @@ class ParameterTemplate extends HTMLElement {
 			input.setAttribute("oninput", "");
 			input.addEventListener("input", this.input.bind(this));
 		}
+
+		this.classList.add("terminus-parameter");
 		
 		const shadowRoot = this.attachShadow({ mode: "open" });
 		shadowRoot.appendChild(clone);
