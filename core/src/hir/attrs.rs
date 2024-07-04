@@ -367,9 +367,16 @@ impl Attrs {
                                         input_meta.path.get_ident()
                                     )))
                                 }
-                            }).expect("Could not read input(arg_name(...)) ");
+                            })
+                            .expect("Could not read input(arg_name(...)) ");
 
-                            this.demo_attrs.input_cfg.insert(meta.path.get_ident().expect("Expected parameter name.").to_string(), input_cfg);
+                            this.demo_attrs.input_cfg.insert(
+                                meta.path
+                                    .get_ident()
+                                    .expect("Expected parameter name.")
+                                    .to_string(),
+                                input_cfg,
+                            );
                             Ok(())
                         })
                         .expect("Could not read input(...)");

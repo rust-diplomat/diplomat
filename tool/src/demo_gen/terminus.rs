@@ -10,7 +10,7 @@ pub struct ParamInfo {
     /// Either the name of the parameter (i.e, when a primitive is created as an argument for the render terminus), or the javascript that represents this parameter.
     pub js: String,
     /// The label to give this parameter. Used only in the `RenderInfo` out object. Can be blank if not intended to be used there.
-    pub label : String,
+    pub label: String,
     /// For typescript and RenderInfo output. Type that this parameter is.
     pub type_name: String,
 }
@@ -143,7 +143,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         Some(this.terminus_info)
     }
 
-    fn get_type_demo_attrs(&self, ty : &Type) -> Option<DemoInfo> {
+    fn get_type_demo_attrs(&self, ty: &Type) -> Option<DemoInfo> {
         match ty {
             Type::Enum(e) => Some(e.resolve(&self.ctx.tcx).attrs.demo_attrs.clone()),
             Type::Opaque(o) => Some(o.resolve(&self.ctx.tcx).attrs.demo_attrs.clone()),
@@ -162,24 +162,28 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         param_type: &Type,
         param_name: String,
         node: &mut MethodDependency,
-        method_attrs : DemoInfo,
+        method_attrs: DemoInfo,
     ) {
         let attrs = Some(method_attrs); /*self.get_type_demo_attrs(param_type).or(Some(method_attrs));*/
         // Helper function for quickly passing a parameter to both our node and the render terminus.
         let out_param = |type_name| {
             // This only works for enums, since otherwise we break the type into its component parts.
-            let label = attrs.and_then(|attrs| { 
-                let label = attrs.input_cfg.get(&param_name).and_then(|cfg| {
-                    Some(cfg.label.clone())
-                }).unwrap_or_default();
+            let label = attrs
+                .and_then(|attrs| {
+                    let label = attrs
+                        .input_cfg
+                        .get(&param_name)
+                        .and_then(|cfg| Some(cfg.label.clone()))
+                        .unwrap_or_default();
 
-                if label.is_empty() {
-                    None
-                } else {
-                    Some(label) 
-                }
-            }).unwrap_or(param_name.clone());
-            
+                    if label.is_empty() {
+                        None
+                    } else {
+                        Some(label)
+                    }
+                })
+                .unwrap_or(param_name.clone());
+
             let mut param_info = ParamInfo {
                 js: param_name,
                 label,
@@ -302,7 +306,12 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                             .to_string(),
                     );
 
-                    self.evaluate_param(&field.ty, field.name.to_string(), &mut child, st.attrs.demo_attrs.clone());
+                    self.evaluate_param(
+                        &field.ty,
+                        field.name.to_string(),
+                        &mut child,
+                        st.attrs.demo_attrs.clone(),
+                    );
                 }
 
                 child.method_js = StructInfo {
@@ -369,7 +378,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     .fmt_param_name(param.name.as_str())
                     .into(),
                 node,
-                method.attrs.demo_attrs.clone()
+                method.attrs.demo_attrs.clone(),
             );
         }
 
