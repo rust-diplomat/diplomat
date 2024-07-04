@@ -39,9 +39,9 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
 
         let errors = this.errors.take_all();
         if errors.is_empty() {
-            return Ok(this.files);
+            Ok(this.files)
         } else {
-            return Err(errors);
+            Err(errors)
         }
     }
 
@@ -83,7 +83,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                 }
             }
 
-            if termini.len() > 0 {
+            if !termini.is_empty() {
                 for file_type in FILE_TYPES {
                     let type_name = self.formatter.fmt_type_name(id);
                     let file_name = self.formatter.fmt_file_name(&type_name, &file_type);
@@ -95,7 +95,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                         writeln!(method_str, "{}", terminus.render().unwrap()).unwrap();
                     }
 
-                    self.files.add_file(format!("{file_name}"), method_str);
+                    self.files.add_file(file_name.to_string(), method_str);
                 }
 
                 out_info.termini.append(&mut termini);

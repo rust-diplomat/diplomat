@@ -55,7 +55,7 @@ pub struct RenderTerminusContext<'a, 'tcx> {
     pub terminus_info: TerminusInfo,
 }
 
-impl<'a> MethodDependency {
+impl MethodDependency {
     pub fn new(method_js: String) -> Self {
         MethodDependency {
             method_js,
@@ -143,12 +143,13 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         Some(this.terminus_info)
     }
 
-    fn get_type_demo_attrs(&self, ty: &Type) -> Option<DemoInfo> {
+    /// Currently unused, plan to hopefully use this in the future for quickly grabbing parameter information.
+    fn _get_type_demo_attrs(&self, ty: &Type) -> Option<DemoInfo> {
         match ty {
-            Type::Enum(e) => Some(e.resolve(&self.ctx.tcx).attrs.demo_attrs.clone()),
-            Type::Opaque(o) => Some(o.resolve(&self.ctx.tcx).attrs.demo_attrs.clone()),
-            Type::Struct(s) => Some(s.resolve(&self.ctx.tcx).attrs.demo_attrs.clone()),
-            Type::Slice(..) | Type::Primitive(..) | _ => None,
+            Type::Enum(e) => Some(e.resolve(self.ctx.tcx).attrs.demo_attrs.clone()),
+            Type::Opaque(o) => Some(o.resolve(self.ctx.tcx).attrs.demo_attrs.clone()),
+            Type::Struct(s) => Some(s.resolve(self.ctx.tcx).attrs.demo_attrs.clone()),
+            _ => None,
         }
     }
 
@@ -173,7 +174,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     let label = attrs
                         .input_cfg
                         .get(&param_name)
-                        .and_then(|cfg| Some(cfg.label.clone()))
+                        .map(|cfg| cfg.label.clone())
                         .unwrap_or_default();
 
                     if label.is_empty() {
@@ -222,7 +223,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 out_param(type_name);
             }
             Type::Opaque(o) => {
-                let attrs = &o.resolve(&self.ctx.tcx).attrs.demo_attrs;
+                let attrs = &o.resolve(self.ctx.tcx).attrs.demo_attrs;
 
                 // We need to find a constructor that we can call.
                 // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
@@ -275,7 +276,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 }
             }
             Type::Struct(s) => {
-                let st = s.resolve(&self.ctx.tcx);
+                let st = s.resolve(self.ctx.tcx);
 
                 let type_name = self.ctx.formatter.fmt_type_name(s.tcx_id.into());
 
@@ -383,6 +384,6 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         }
 
         // The node that is awaiting this node as a child needs the rendered output:
-        return node.render().unwrap();
+        node.render().unwrap()
     }
 }
