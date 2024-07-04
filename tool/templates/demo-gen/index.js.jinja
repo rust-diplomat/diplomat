@@ -13,7 +13,7 @@ export const RenderInfo = {
 			parameters: [
 				{% for param in terminus.params %}
 				{
-					name: "{{param.js}}",
+					name: "{{param.label}}",
 					type: "{{param.type_name}}"
 				}{% if !loop.last %},{% endif %}
 				{% endfor %}

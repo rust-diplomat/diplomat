@@ -30,6 +30,7 @@ pub mod ffi {
         Min2,
     }
 
+    #[diplomat::demo(input(grouping_strategy(label = "ICU4X Fixed Decimal Grouping Strategy"), some_other_config(label = "Useless Config (Ignore)")))]
     pub struct ICU4XFixedDecimalFormatterOptions {
         pub grouping_strategy: ICU4XFixedDecimalGroupingStrategy,
         pub some_other_config: bool,

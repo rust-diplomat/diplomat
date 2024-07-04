@@ -9,7 +9,9 @@ use askama::{self, Template};
 pub struct ParamInfo {
     /// Either the name of the parameter (i.e, when a primitive is created as an argument for the render terminus), or the javascript that represents this parameter.
     pub js: String,
-    /// For typescript only.
+    /// The label to give this parameter. Used only in the `RenderInfo` out object. Can be blank if not intended to be used there.
+    pub label : String,
+    /// For typescript and RenderInfo output. Type that this parameter is.
     pub type_name: String,
 }
 
@@ -160,22 +162,27 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         param_type: &Type,
         param_name: String,
         node: &mut MethodDependency,
+        method_attrs : DemoInfo,
     ) {
-        let attrs = self.get_type_demo_attrs(param_type);
-
+        let attrs = Some(method_attrs); /*self.get_type_demo_attrs(param_type).or(Some(method_attrs));*/
         // Helper function for quickly passing a parameter to both our node and the render terminus.
         let out_param = |type_name| {
             // This only works for enums, since otherwise we break the type into its component parts.
             let label = attrs.and_then(|attrs| { 
-                if attrs.input_cfg.label.is_empty() {
+                let label = attrs.input_cfg.get(&param_name).and_then(|cfg| {
+                    Some(cfg.label.clone())
+                }).unwrap_or_default();
+
+                if label.is_empty() {
                     None
                 } else {
-                    Some(attrs.input_cfg.label) 
+                    Some(label) 
                 }
-            }).unwrap_or(param_name);
+            }).unwrap_or(param_name.clone());
             
             let mut param_info = ParamInfo {
-                js: label,
+                js: param_name,
+                label,
                 type_name,
             };
 
@@ -254,6 +261,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                         let call = self.evaluate_constructor(method, &mut child);
                         node.params.push(ParamInfo {
                             js: call,
+                            label: "".into(),
                             type_name: String::default(),
                         });
                     }
@@ -294,7 +302,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                             .to_string(),
                     );
 
-                    self.evaluate_param(&field.ty, field.name.to_string(), &mut child);
+                    self.evaluate_param(&field.ty, field.name.to_string(), &mut child, st.attrs.demo_attrs.clone());
                 }
 
                 child.method_js = StructInfo {
@@ -307,6 +315,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 node.params.push(ParamInfo {
                     type_name: type_name.to_string(),
                     js: child.render().unwrap(),
+                    label: "".into(),
                 });
             }
             _ => unreachable!("Unknown HIR type {:?}", param_type),
@@ -340,13 +349,14 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             .as_ref()
             .inspect(|s| {
                 let ty = s.ty.clone().into();
-                self.evaluate_param(&ty, "self".into(), node);
+                self.evaluate_param(&ty, "self".into(), node, method.attrs.demo_attrs.clone());
             })
             .or_else(|| {
                 // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
                 node.params.push(ParamInfo {
                     js: self.ctx.formatter.fmt_null().into(),
                     type_name: self.ctx.formatter.fmt_null().into(),
+                    label: "".into(),
                 });
                 None
             });
@@ -358,7 +368,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     .formatter
                     .fmt_param_name(param.name.as_str())
                     .into(),
-                node
+                node,
+                method.attrs.demo_attrs.clone()
             );
         }
 

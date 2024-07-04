@@ -13,22 +13,22 @@ export const RenderInfo = {
 			parameters: [
 				
 				{
-					name: "name",
+					name: "Locale Name",
 					type: "string"
 				},
 				
 				{
-					name: "grouping_strategy",
+					name: "ICU4X Fixed Decimal Grouping Strategy",
 					type: "ICU4XFixedDecimalGroupingStrategy"
 				},
 				
 				{
-					name: "some_other_config",
+					name: "Useless Config (Ignore)",
 					type: "boolean"
 				},
 				
 				{
-					name: "v",
+					name: "ICU4XFixedDecimal Value",
 					type: "number"
 				}
 				
@@ -42,7 +42,7 @@ export const RenderInfo = {
 			parameters: [
 				
 				{
-					name: "v",
+					name: "ICU4XFixedDecimal Value",
 					type: "number"
 				}
 				

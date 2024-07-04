@@ -1,5 +1,7 @@
 //! #[diplomat::attr] and other attributes
 
+use std::collections::HashMap;
+
 use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
@@ -78,7 +80,8 @@ pub struct DemoInfo {
     pub external: bool,
 
     /// `#[diplomat::demo(input(...))]`
-    pub input_cfg: DemoInputCFG,
+    /// FIXME: We require a hashmap for parameters specifically. Per https://github.com/rust-diplomat/diplomat/issues/521, I think it'd be easier to be able to put these attributes above the parameters directly.
+    pub input_cfg: HashMap<String, DemoInputCFG>,
 }
 
 // #endregion
@@ -351,17 +354,23 @@ impl Attrs {
 
                     meta_list
                         .parse_nested_meta(|meta| {
-                            if meta.path.is_ident("label") {
-                                let value = meta.value()?;
-                                let s: syn::LitStr = value.parse()?;
-                                this.demo_attrs.input_cfg.label = s.value();
-                                Ok(())
-                            } else {
-                                Err(meta.error(format!(
-                                    "Unsupported ident {:?}",
-                                    meta.path.get_ident()
-                                )))
-                            }
+                            let mut input_cfg = DemoInputCFG::default();
+                            meta.parse_nested_meta(|input_meta| {
+                                if input_meta.path.is_ident("label") {
+                                    let value = input_meta.value()?;
+                                    let s: syn::LitStr = value.parse()?;
+                                    input_cfg.label = s.value();
+                                    Ok(())
+                                } else {
+                                    Err(input_meta.error(format!(
+                                        "Unsupported ident {:?}",
+                                        input_meta.path.get_ident()
+                                    )))
+                                }
+                            }).expect("Could not read input(arg_name(...)) ");
+
+                            this.demo_attrs.input_cfg.insert(meta.path.get_ident().expect("Expected parameter name.").to_string(), input_cfg);
+                            Ok(())
                         })
                         .expect("Could not read input(...)");
                 } else {
