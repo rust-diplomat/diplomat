@@ -354,22 +354,19 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
 
     /// Read a constructor that will be created by our terminus, and add any parameters we might need.
     fn evaluate_constructor(&mut self, method: &Method, node: &mut MethodDependency) -> String {
-        method
-            .param_self
-            .as_ref()
-            .inspect(|s| {
-                let ty = s.ty.clone().into();
-                self.evaluate_param(&ty, "self".into(), node, method.attrs.demo_attrs.clone());
-            })
-            .or_else(|| {
-                // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
-                node.params.push(ParamInfo {
-                    js: self.ctx.formatter.fmt_null().into(),
-                    type_name: self.ctx.formatter.fmt_null().into(),
-                    label: "".into(),
-                });
-                None
+        let param_self = method.param_self.as_ref();
+
+        if param_self.is_some() {
+            let ty = param_self.unwrap().ty.clone().into();
+            self.evaluate_param(&ty, "self".into(), node, method.attrs.demo_attrs.clone());
+        } else {
+            // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
+            node.params.push(ParamInfo {
+                js: self.ctx.formatter.fmt_null().into(),
+                type_name: self.ctx.formatter.fmt_null().into(),
+                label: "".into(),
             });
+        }
 
         for param in method.params.iter() {
             self.evaluate_param(
