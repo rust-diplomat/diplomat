@@ -4,6 +4,7 @@
 		<meta charset="utf-8"/>
 		<title>Diplomat Automatic Demo Generation Web Example</title>
 		<script src="dist/bundle.mjs" type="module"></script>
+		<link rel="stylesheet" href="dist/index.css"/>
 	</head>
 	<body>
 		<div id="main" class="container">
@@ -19,6 +20,7 @@
 </html>
 
 <template id="terminus">
+	<link rel="stylesheet" href="dist/index.css"/>
 	<div class="tab-pane" role="tabpanel">
 		<div class="vstack gap-2">
 			<slot name="funcName"></slot>
@@ -36,6 +38,7 @@
 
 <template id="enum">
 	<label><slot name="param-name"></slot></label>
+	<link rel="stylesheet" href="dist/index.css"/>
 	<select oninput="valueChange()">
 		<!-- Select doesn't evaluate anything other than option nodes, so to allow dropdowns (in addition to other HTML elements), we just search for whatever element has the #options id to insert the children of enum-option into.-->
 		<option id="options"></option>
@@ -43,6 +46,7 @@
 </template>
 
 <template id="enum-option">
+	<link rel="stylesheet" href="dist/index.css"/>
 	<option>
 		<slot name="option-text"></slot>
 	</option>
@@ -50,15 +54,18 @@
 
 <template id="string">
 	<label><slot name="param-name"></slot></label>
+	<link rel="stylesheet" href="dist/index.css"/>
 	<input type="text" oninput="valueChange()"/>
 </template>
 
 <template id="number">
 	<label><slot name="param-name"></slot></label>
+	<link rel="stylesheet" href="dist/index.css"/>
 	<input type="number" oninput="valueChange()"/>
 </template>
 
 <template id="boolean">
 	<label><slot name="param-name" for="bool"></slot></label>
+	<link rel="stylesheet" href="dist/index.css"/>
 	<input type="checkbox" id="bool" oninput="valueChange()"/>
 </template>
