@@ -172,6 +172,8 @@ export class TerminusRender extends HTMLElement {
 		super();
 		let clone = TerminusRender.template.cloneNode(true);
 
+		this.id = terminus.funcName;
+
 		this.#func = terminus.func;
 
 		let button = clone.querySelector("button[onclick='submit()']");

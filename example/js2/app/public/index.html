@@ -12,8 +12,7 @@
 				<ul class="nav nav-pills mb-3" role="tablist" id="navigation">
 				</ul>
 			</div>
-			<div class="tab-content">
-				
+			<div class="tab-content" id="termini">
 			</div>
 		</div>
 	</body>
@@ -23,7 +22,7 @@
 	<link rel="stylesheet" href="dist/index.css"/>
 	<div class="tab-pane" role="tabpanel">
 		<div class="vstack gap-2">
-			<slot name="funcName"></slot>
+			<h1><slot name="funcName"></slot></h1>
 			<slot name="parameters"></slot>
 			<button type="submit" class="btn btn-primary" onclick="submit()">Submit</button>
 			<div class="card">
