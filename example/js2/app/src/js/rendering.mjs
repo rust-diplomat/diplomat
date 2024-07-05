@@ -14,8 +14,6 @@ class ParameterTemplate extends HTMLElement {
 			input.addEventListener("input", this.input.bind(this));
 		}
 		
-		
-		// const baseShadowRoot = baseClone.attachShadow({ mode: "open" });
 		clone.slot = "parameter";
 		baseClone.appendChild(clone);
 
