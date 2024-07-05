@@ -4,19 +4,33 @@
 		<meta charset="utf-8"/>
 		<title>Diplomat Automatic Demo Generation Web Example</title>
 		<script src="dist/bundle.mjs" type="module"></script>
-		<link rel="stylesheet" href="main.css"/>
 	</head>
 	<body>
-		
+		<div id="main" class="container">
+			<div>
+				<ul class="nav nav-pills mb-3" role="tablist" id="navigation">
+				</ul>
+			</div>
+			<div class="tab-content">
+				
+			</div>
+		</div>
 	</body>
 </html>
 
 <template id="terminus">
-	<div>
-		<slot name="funcName"></slot>
-		<slot name="parameters"></slot>
-		<button onclick="submit()">Submit</button>
-		<slot name="output">Output Shown Here</slot>
+	<div class="tab-pane" role="tabpanel">
+		<div class="vstack gap-2">
+			<slot name="funcName"></slot>
+			<slot name="parameters"></slot>
+			<button onclick="submit()">Submit</button>
+			<div class="card">
+				<div class="card-header">Output</div>
+				<div class="card-body">
+					<p class="card-text"><slot name="output">Output Shown Here</slot></p>
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
