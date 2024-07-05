@@ -1,6 +1,9 @@
 class ParameterTemplate extends HTMLElement {
+	static baseTemplate = document.querySelector("#parameter").content;
 	constructor(template, ...args) {
 		super();
+		let baseClone = ParameterTemplate.baseTemplate.cloneNode(true);
+
 		let clone = template.cloneNode(true);
 
 		this.initialize(clone, ...args);
@@ -10,11 +13,14 @@ class ParameterTemplate extends HTMLElement {
 			input.setAttribute("oninput", "");
 			input.addEventListener("input", this.input.bind(this));
 		}
-
-		this.classList.add("terminus-parameter");
 		
+		
+		// const baseShadowRoot = baseClone.attachShadow({ mode: "open" });
+		clone.slot = "parameter";
+		baseClone.appendChild(clone);
+
 		const shadowRoot = this.attachShadow({ mode: "open" });
-		shadowRoot.appendChild(clone);
+		shadowRoot.appendChild(baseClone);
 	}
 
 	getEventValue(event) {
@@ -31,6 +37,8 @@ class ParameterTemplate extends HTMLElement {
 
 	}
 }
+
+customElements.define("terminus-param", ParameterTemplate);
 
 class BooleanTemplate extends ParameterTemplate {
 	static template = document.querySelector("template#boolean").content;
