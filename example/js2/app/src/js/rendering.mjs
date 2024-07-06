@@ -8,7 +8,7 @@ class ParameterTemplate extends HTMLElement {
 
 		this.initialize(clone, ...args);
 
-		let input = clone.querySelector("*[oninput='valueChange()']");
+		let input = clone.querySelector("*[data-oninput]");
 		if (input !== null) {
 			input.setAttribute("oninput", "");
 			input.addEventListener("input", this.input.bind(this));
@@ -92,9 +92,7 @@ class EnumTemplate extends ParameterTemplate {
 
 	default;
 	initialize(clone, enumType) {
-		let options = clone.querySelector("#options").parentNode;
-
-		clone.querySelector("#options").remove();
+		let options = clone.querySelector("*[data-options]");
 
 		this.default = enumType.values.values()[0];
 
@@ -176,12 +174,12 @@ export class TerminusRender extends HTMLElement {
 
 		this.#func = terminus.func;
 
-		let button = clone.querySelector("button[onclick='submit()']");
+		let button = clone.querySelector("*[data-submit]");
 		button.setAttribute("onclick", "");
 		button.addEventListener("click", this.submit.bind(this));
 
 		let funcText = document.createElement("span");
-		funcText.slot = "funcName";
+		funcText.slot = "func-name";
 		funcText.innerText = terminus.funcName;
 		this.appendChild(funcText);
 
@@ -208,3 +206,28 @@ export class TerminusRender extends HTMLElement {
 }
 
 customElements.define("terminus-render", TerminusRender);
+
+export class TerminusNavigation extends HTMLElement {
+	static navTemplate = document.querySelector("#terminus-nav").content;
+
+	static isActive = true;
+	constructor(terminus) {
+		super();
+		let clone = TerminusNavigation.navTemplate.cloneNode(true);
+
+		if (TerminusNavigation.isActive) {
+			clone.querySelector("*[data-active]").classList.add("active");
+			TerminusNavigation.isActive = false;
+		}
+
+		var span = document.createElement("span");
+		span.slot = "func-name";
+		span.innerText = terminus.funcName;
+		this.appendChild(span);
+		
+		const shadowRoot = this.attachShadow({ mode: "open" });
+		shadowRoot.appendChild(clone);
+	}
+}
+
+customElements.define("terminus-navigation", TerminusNavigation);
