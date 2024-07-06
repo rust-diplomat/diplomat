@@ -206,28 +206,3 @@ export class TerminusRender extends HTMLElement {
 }
 
 customElements.define("terminus-render", TerminusRender);
-
-export class TerminusNavigation extends HTMLElement {
-	static navTemplate = document.querySelector("#terminus-nav").content;
-
-	static isActive = true;
-	constructor(terminus) {
-		super();
-		let clone = TerminusNavigation.navTemplate.cloneNode(true);
-
-		if (TerminusNavigation.isActive) {
-			clone.querySelector("*[data-active]").classList.add("active");
-			TerminusNavigation.isActive = false;
-		}
-
-		var span = document.createElement("span");
-		span.slot = "func-name";
-		span.innerText = terminus.funcName;
-		this.appendChild(span);
-		
-		const shadowRoot = this.attachShadow({ mode: "open" });
-		shadowRoot.appendChild(clone);
-	}
-}
-
-customElements.define("terminus-navigation", TerminusNavigation);

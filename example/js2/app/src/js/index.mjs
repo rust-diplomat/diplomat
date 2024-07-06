@@ -1,9 +1,38 @@
 import { RenderInfo } from "mini-icu4x/demo";
 import * as lib from "mini-icu4x";
-import { TerminusRender, TerminusNavigation } from "./rendering.mjs";
-import bootstrap from "bootstrap";
+import { TerminusRender } from "./rendering.mjs";
+
+var nav = document.getElementById("termini-navigation");
+
+var currentlySelected = null;
+var navSelected = null;
 
 RenderInfo.termini.forEach((t) => {
-	document.getElementById("termini").appendChild(new TerminusRender(t, lib));
-	document.getElementById("termini-navigation").appendChild(new TerminusNavigation(t));
+	var renderOut = new TerminusRender(t, lib);
+	document.getElementById("termini").appendChild(renderOut);
+	
+	renderOut.classList.add("tab-pane");
+	renderOut.role = "tabpanel";
+	
+	var outNav = document.createElement("li");
+	outNav.innerHTML = `<button class="nav-link ${navSelected === null ? "active" : ""}" id="${t.funcName}-nav" data-toggle="pill" role="tab" aria-selected="${navSelected === null}" aria-controls="${t.funcName}">${t.funcName}</button>`;
+	outNav.classList.add("nav-item");
+	outNav.addEventListener("click", () => {
+		currentlySelected.classList.remove("active");
+		navSelected.classList.remove("active");
+
+		renderOut.classList.add("active");
+		outNav.children[0].classList.add("active");
+
+		navSelected = outNav.children[0];
+		currentlySelected = renderOut;
+	});
+
+	nav.appendChild(outNav);
+	
+	if (currentlySelected === null) {
+		renderOut.classList.add("active");
+		currentlySelected = renderOut;
+		navSelected = outNav.children[0];
+	}
 });
