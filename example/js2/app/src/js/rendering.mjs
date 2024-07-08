@@ -85,8 +85,10 @@ customElements.define("terminus-enum-option", EnumOption);
 class EnumTemplate extends ParameterTemplate {
 	static template = document.querySelector("template#enum").content;
 
+	#enumType;
 	constructor(enumType) {
 		super(EnumTemplate.template, enumType);
+		this.#enumType = enumType;
 	}
 
 	default;
@@ -98,6 +100,10 @@ class EnumTemplate extends ParameterTemplate {
 		for (let value of enumType.values) {
 			options.append(...(new EnumOption(value[0])).children);
 		}
+	}
+
+	getEventValue(event) {
+		return this.#enumType[event.target.value];
 	}
 }
 
