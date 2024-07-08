@@ -326,6 +326,8 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 .render()
                 .unwrap();
 
+                child.self_arg = self.ctx.formatter.fmt_null().into();
+
                 node.params.push(ParamInfo {
                     type_name: type_name.to_string(),
                     js: child.render().unwrap(),

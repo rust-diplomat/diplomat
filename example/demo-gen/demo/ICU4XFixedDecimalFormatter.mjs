@@ -20,7 +20,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
                 [
                 ]
             )(),
-            ((...args) => {
+            (function (...args) {
             	let out = new ICU4XFixedDecimalFormatterOptions();
             	
             	out.groupingStrategy = args[0];
@@ -29,7 +29,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
             	
             	return out;
             }).apply(
-                ,
+                null,
                 [
                     arguments[1],
                     arguments[2]
