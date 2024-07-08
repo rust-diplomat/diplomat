@@ -31,8 +31,11 @@ pub struct Method {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum SuccessType {
+    /// Conceptually returns a string, which gets written to the `write: DiplomatWrite` argument
     Write,
+    /// A Diplomat type. Some types can be outputs, but not inputs, which is expressed by the `OutType` parameter.
     OutType(OutType),
+    /// A `()` type in Rust.
     Unit,
 }
 

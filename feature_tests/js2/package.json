@@ -1,0 +1,40 @@
+{
+	"name": "diplomat-wasm-js2-feature-tests",
+	"version": "0.0.1",
+	"description": "Diplomat WASM with JS2 HIR Backend Feature Tests",
+	"main": "./api/index.mjs",
+	"exports": {
+		".": "./api/index.mjs"
+	},
+	"type": "module",
+	"directories": {
+		"doc": "docs",
+		"test": "test"
+	},
+	"ava": {
+		"files": [
+			"test/*.mjs"
+		]
+	},
+	"scripts": {
+		"build": "tsc",
+		"test": "ava"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/rust-diplomat/diplomat.git"
+	},
+	"keywords": [
+		"i18n"
+	],
+	"author": "The ICU4X Project Developers",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/rust-diplomat/diplomat/issues"
+	},
+	"homepage": "https://github.com/rust-diplomat/diplomat#readme",
+	"devDependencies": {
+		"ava": "^6.1.3",
+		"typescript": "^5.5.2"
+	}
+}

@@ -596,21 +596,116 @@ impl Attrs {
     }
 }
 
+/// Non-exhaustive list of what attributes your backend is able to handle, based on #[diplomat::attr(...)] contents.
+/// Set this through an [`AttributeValidator`].
+///
+/// See [`SpecialMethod`] and [`Attrs`] for your specific implementation needs.
+///
+/// For example, the current dart backend supports [`BackendAttrSupport::constructors`]. So when it encounters:
+/// ```ignore
+/// struct Sample {}
+/// impl Sample {
+///     #[diplomat::attr(supports = constructors, constructor)]
+///     pub fn new() -> Box<Self> {
+///         Box::new(Sample{})
+///     }
+/// }
+///
+/// ```
+///
+/// It generates
+/// ```dart
+/// factory Sample()
+/// ```
+///
+/// If a backend does not support a specific `#[diplomat::attr(...)]`, it will error.
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
+    /// Supports not including any items with `#[diplomat::attr(..., disable)]`
     pub disabling: bool,
+    /// I.E., changing `rust_function_name` to `camelCaseFunctionName`
+    ///
+    /// Note that [`Attrs::abi_rename`] is required to always be supported.
     pub renaming: bool,
+    /// I.E.
+    /// ```cpp
+    /// namespace SampleNamespace {}
+    /// ```
     pub namespacing: bool,
+    /// I.E.
+    /// ```js
+    /// class Sample {
+    ///     constructor() { }
+    /// }
+    /// ```
     pub constructors: bool,
+    /// I.E.
+    /// ```dart
+    /// factory Sample.constructor1()
+    /// factory Sample.fromJSON()
+    /// ```
     pub named_constructors: bool,
+    /// Can a constructor return an error?
+    /// I.E.
+    /// ```dart
+    /// factory Sample() {
+    ///     throw("I didn't like that.");
+    /// }
+    /// ```
     pub fallible_constructors: bool,
+    /// I.E.
+    /// ```dart
+    /// class Sample {
+    ///     String get item1
+    ///     String set item2
+    /// }
+    /// ```
+    /// See [`SpecialMethod::Getter`] and [`SpecialMethod::Setter`]
     pub accessors: bool,
+    /// Do classes have a function for string representation?
+    /// I.E.
+    /// ```dart
+    /// class Sample {
+    ///     @override
+    ///     String toString()
+    /// }
+    /// ```
     pub stringifiers: bool,
+    /// I.E.
+    /// ```dart
+    /// class Sample {
+    ///     @override bool operator ==(Object other) => ...;
+    /// }
+    /// ```
     pub comparators: bool,
+    /// Can items with `#[diplomat::attr(supports= memory_sharing)]` be shared across threads?
+    /// For instance:
+    /// ```cpp
+    /// HeapItem* item = new HeapItem();
+    /// ```
+    /// Would be an item that supports memory sharing.
     pub memory_sharing: bool,
+    /// I.E.
+    /// ```dart
+    /// class MyIterator implements Iterator {
+    ///     int next()
+    /// }
+    /// ```
     pub iterators: bool,
+    /// I.E.
+    /// ```dart
+    /// class Sample implements Iterable {
+    ///     Iterator get iterator
+    /// }
+    /// ```
     pub iterables: bool,
+    /// I.E.
+    /// ```dart
+    /// class Sample {
+    ///     int operator [](int index)
+    /// }
+    /// ```
     pub indexing: bool,
     // more to be added: namespace, etc
 }

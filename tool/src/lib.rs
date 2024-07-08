@@ -18,10 +18,13 @@ pub mod dotnet;
 #[doc(hidden)]
 pub mod js;
 #[doc(hidden)]
+pub mod js2;
+#[doc(hidden)]
 pub mod kotlin;
 
 mod docs_util;
 mod layout;
+mod layout_hir;
 mod util;
 
 use colored::*;
@@ -75,6 +78,35 @@ pub fn gen(
     let mut errors_found = false;
 
     match target_language {
+        "js2" => {
+            let mut attr_validator = hir::BasicAttributeValidator::new("js2");
+            attr_validator.other_backend_names.push("js".into());
+
+            attr_validator.support.renaming = true;
+            attr_validator.support.disabling = true;
+            attr_validator.support.accessors = true;
+
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(context) => context,
+                Err(e) => {
+                    eprintln!("Lowering AST to HIR for Javascript backend failed:");
+                    for (ctx, err) in e {
+                        eprintln!("\tLowering error in {ctx}: {err}");
+                    }
+                    std::process::exit(-1);
+                }
+            };
+            match js2::JSGenerationContext::run(&tcx, docs_url_gen, strip_prefix) {
+                Ok(mut files) => out_texts = files.take_files(),
+                Err(errors) => {
+                    eprintln!("Found errors whilst generating {target_language}:");
+                    for error in errors {
+                        eprintln!("\t{}: {}", error.0, error.1);
+                    }
+                    errors_found = true;
+                }
+            };
+        }
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "kotlin" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
