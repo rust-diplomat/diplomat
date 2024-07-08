@@ -38,7 +38,7 @@ export default {
 		"fs": false,
 	  },
 	},
-	mode: "production",
+	mode: "development",
 	output: {
 	  filename: 'bundle.mjs',
 	  path: path.resolve(__dirname, 'public/dist'),
