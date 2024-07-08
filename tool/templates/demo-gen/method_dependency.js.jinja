@@ -1,5 +1,8 @@
-{{ method_js }}.call(
-    {%- for param in params %}
-    {{ param.js|indent(4) }}{% if !loop.last %},{% endif -%}
-    {% endfor %}
-)
+{{ method_js }}.apply(
+    {{ self_arg }},
+    [
+        {%- for param in params %}
+        {{ param.js|indent(8) }}{% if !loop.last %},{% endif -%}
+        {% endfor %}
+    ]
+)()

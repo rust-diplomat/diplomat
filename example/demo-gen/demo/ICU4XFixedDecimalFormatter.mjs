@@ -5,16 +5,21 @@ import { ICU4XFixedDecimalFormatterOptions } from "../ICU4XFixedDecimalFormatter
 import { ICU4XLocale } from "../ICU4XLocale.mjs"
 
 export function formatWrite(name, grouping_strategy, some_other_config, v) {
-	return (function (...args) { return this.formatWrite(...args) }).call(
-        ICU4XFixedDecimalFormatter.tryNew.call(
-            null,
-            ICU4XLocale.new_.call(
+	return (function (...args) { return this.formatWrite(...args) }).apply(
+        ICU4XFixedDecimalFormatter.tryNew.apply(
+        null,
+        [
+            ICU4XLocale.new_.apply(
                 null,
-                arguments[0]
-            ),
-            ICU4XDataProvider.newStatic.call(
-                null
-            ),
+                [
+                    arguments[0]
+                ]
+            )(),
+            ICU4XDataProvider.newStatic.apply(
+                null,
+                [
+                ]
+            )(),
             ((...args) => {
             	let out = new ICU4XFixedDecimalFormatterOptions();
             	
@@ -23,14 +28,22 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
             	out.someOtherConfig = args[1];
             	
             	return out;
-            }).call(
-                arguments[1],
-                arguments[2]
-            )
-        ),
-        ICU4XFixedDecimal.new_.call(
-            null,
-            arguments[3]
-        )
-    );
+            }).apply(
+                ,
+                [
+                    arguments[1],
+                    arguments[2]
+                ]
+            )()
+        ]
+    )(),
+        [
+            ICU4XFixedDecimal.new_.apply(
+                null,
+                [
+                    arguments[3]
+                ]
+            )()
+        ]
+    )();
 }

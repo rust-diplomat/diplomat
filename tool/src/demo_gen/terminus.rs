@@ -26,7 +26,7 @@ pub struct ParamInfo {
 /// ```typescript
 /// function formatWrite(locale : ICU4XLocale, provider : ICU4XDataProvider, options : ICU4XFixedDecimalFormatterOptions, v : number) {
 ///     return ICU4XFixedDecimalFormatter.formatWrite
-///     .call(
+///     .apply(
 ///         ICU4XFixedDecimalFormatter.tryNew.call(
 ///             null,
 ///             locale,
@@ -46,6 +46,9 @@ struct MethodDependency {
     /// Javascript to invoke for this method.
     method_js: String,
 
+    /// Self argument to invoke during .apply(selfArg, parameters)
+    self_arg : String,
+
     /// Parameters to pass into the method.
     params: Vec<ParamInfo>,
 }
@@ -59,6 +62,7 @@ impl MethodDependency {
     pub fn new(method_js: String) -> Self {
         MethodDependency {
             method_js,
+            self_arg : String::new(),
             params: Vec::new(),
         }
     }
@@ -359,13 +363,11 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         if param_self.is_some() {
             let ty = param_self.unwrap().ty.clone().into();
             self.evaluate_param(&ty, "self".into(), node, method.attrs.demo_attrs.clone());
+
+            node.self_arg = node.params.pop().unwrap().js;
         } else {
             // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
-            node.params.push(ParamInfo {
-                js: self.ctx.formatter.fmt_null().into(),
-                type_name: self.ctx.formatter.fmt_null().into(),
-                label: "".into(),
-            });
+            node.self_arg = self.ctx.formatter.fmt_null().to_string();
         }
 
         for param in method.params.iter() {
