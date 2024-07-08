@@ -1,4 +1,6 @@
 class ParameterTemplate extends HTMLElement {
+	default = null;
+
 	static baseTemplate = document.querySelector("#parameter").content;
 	constructor(template, ...args) {
 		super();
@@ -38,6 +40,7 @@ class ParameterTemplate extends HTMLElement {
 customElements.define("terminus-param", ParameterTemplate);
 
 class BooleanTemplate extends ParameterTemplate {
+	default = false;
 	static template = document.querySelector("template#boolean").content;
 	constructor() {
 		super(BooleanTemplate.template);
@@ -47,6 +50,7 @@ class BooleanTemplate extends ParameterTemplate {
 customElements.define("terminus-param-boolean", BooleanTemplate);
 
 class NumberTemplate extends ParameterTemplate {
+	default = 0;
 	static template = document.querySelector("template#number").content;
 	constructor() {
 		super(NumberTemplate.template);
@@ -60,6 +64,7 @@ class NumberTemplate extends ParameterTemplate {
 customElements.define("terminus-param-number", NumberTemplate);
 
 class StringTemplate extends ParameterTemplate {
+	default = "";
 	static template = document.querySelector("template#string").content;
 	constructor() {
 		super(StringTemplate.template);
@@ -91,11 +96,10 @@ class EnumTemplate extends ParameterTemplate {
 		this.#enumType = enumType;
 	}
 
-	default;
 	initialize(clone, enumType) {
 		let options = clone.querySelector("*[data-options]");
 
-		this.default = enumType.values.values()[0];
+		this.default = enumType.values.values().next().value;
 
 		for (let value of enumType.values) {
 			options.append(...(new EnumOption(value[0])).children);
@@ -148,6 +152,7 @@ class TerminusParams extends HTMLElement {
 			}
 
 			newChild.addEventListener("parameter-input", this.input.bind(this, i));
+			this.#params[i] = newChild.default;
 
 			newChild.appendChild(paramName);
 			this.appendChild(newChild);
