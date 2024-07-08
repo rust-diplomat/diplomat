@@ -10,7 +10,6 @@ class ParameterTemplate extends HTMLElement {
 
 		let input = clone.querySelector("*[data-oninput]");
 		if (input !== null) {
-			input.setAttribute("oninput", "");
 			input.addEventListener("input", this.input.bind(this));
 		}
 		
@@ -175,7 +174,6 @@ export class TerminusRender extends HTMLElement {
 		this.#func = terminus.func;
 
 		let button = clone.querySelector("*[data-submit]");
-		button.setAttribute("onclick", "");
 		button.addEventListener("click", this.submit.bind(this));
 
 		let funcText = document.createElement("span");
