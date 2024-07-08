@@ -5,6 +5,7 @@ import { ICU4XFixedDecimalFormatterOptions } from "../ICU4XFixedDecimalFormatter
 import { ICU4XLocale } from "../ICU4XLocale.mjs"
 
 export function formatWrite(name, grouping_strategy, some_other_config, v) {
+	var terminusArgs = arguments;
 	return (function (...args) { return this.formatWrite(...args) }).apply(
         ICU4XFixedDecimalFormatter.tryNew.apply(
         null,
@@ -12,7 +13,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
             ICU4XLocale.new_.apply(
                 null,
                 [
-                    arguments[0]
+                    terminusArgs[0]
                 ]
             ),
             ICU4XDataProvider.newStatic.apply(
@@ -31,8 +32,8 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
             }).apply(
                 null,
                 [
-                    arguments[1],
-                    arguments[2]
+                    terminusArgs[1],
+                    terminusArgs[2]
                 ]
             )
         ]
@@ -41,7 +42,7 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
             ICU4XFixedDecimal.new_.apply(
                 null,
                 [
-                    arguments[3]
+                    terminusArgs[3]
                 ]
             )
         ]
