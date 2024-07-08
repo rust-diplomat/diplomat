@@ -14,12 +14,12 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
                 [
                     arguments[0]
                 ]
-            )(),
+            ),
             ICU4XDataProvider.newStatic.apply(
                 null,
                 [
                 ]
-            )(),
+            ),
             (function (...args) {
             	let out = new ICU4XFixedDecimalFormatterOptions();
             	
@@ -34,16 +34,16 @@ export function formatWrite(name, grouping_strategy, some_other_config, v) {
                     arguments[1],
                     arguments[2]
                 ]
-            )()
+            )
         ]
-    )(),
+    ),
         [
             ICU4XFixedDecimal.new_.apply(
                 null,
                 [
                     arguments[3]
                 ]
-            )()
+            )
         ]
-    )();
+    );
 }

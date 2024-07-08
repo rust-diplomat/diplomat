@@ -7,8 +7,8 @@ export function toString(v) {
         [
             arguments[0]
         ]
-    )(),
+    ),
         [
         ]
-    )();
+    );
 }
