@@ -117,21 +117,6 @@ impl<'tcx> CFormatter<'tcx> {
         method.attrs.abi_rename.apply(put_together.into()).into()
     }
 
-    pub fn fmt_method_name_namespaced(&self, ty: TypeId, method: &hir::Method) -> String {
-        let method = self.fmt_method_name(ty, method);
-
-        if self.is_for_cpp {
-            let resolved = self.tcx.resolve_type(ty);
-            if let Some(ref ns) = resolved.attrs().namespace {
-                format!("{ns}::{CAPI_NAMESPACE}::{method}")
-            } else {
-                format!("::{CAPI_NAMESPACE}::{method}")
-            }
-        } else {
-            method
-        }
-    }
-
     /// Resolve and format a type's destructor
     pub fn fmt_dtor_name(&self, ty: TypeId) -> String {
         let ty_name = self.fmt_type_name_for_abi(ty);
