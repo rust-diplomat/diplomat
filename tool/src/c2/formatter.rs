@@ -189,4 +189,12 @@ impl<'tcx> CFormatter<'tcx> {
         };
         format!("Diplomat{prim}View{mtb}")
     }
+
+    pub(crate) fn fmt_diplomat_write(&self) -> &'static str {
+        if self.is_for_cpp {
+            "::capi::DiplomatWrite*"
+        } else {
+            "DiplomatWrite*"
+        }
+    }
 }
