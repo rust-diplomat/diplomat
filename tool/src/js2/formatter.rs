@@ -66,7 +66,7 @@ impl<'tcx> JSFormatter<'tcx> {
         strip_prefix: Option<String>,
     ) -> Self {
         Self {
-            c_formatter: CFormatter::new(tcx),
+            c_formatter: CFormatter::new(tcx, false),
             docs_url_gen,
             strip_prefix,
         }
