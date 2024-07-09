@@ -23,7 +23,7 @@ namespace capi {
     
     void MyString_set_str(::capi::MyString* self, const char* new_str_data, size_t new_str_len);
     
-    void MyString_get_str(const ::capi::MyString* self, DiplomatWrite* write);
+    void MyString_get_str(const ::capi::MyString* self, ::capi::DiplomatWrite* write);
     
     DiplomatStringView MyString_get_boxed_str(const ::capi::MyString* self);
     
@@ -61,7 +61,7 @@ inline void MyString::set_str(std::string_view new_str) {
 
 inline std::string MyString::get_str() const {
   std::string output;
-  capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::MyString_get_str(this->AsFFI(),
     &write);
   return output;

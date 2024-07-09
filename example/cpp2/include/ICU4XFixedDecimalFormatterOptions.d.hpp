@@ -10,25 +10,29 @@
 #include "diplomat_runtime.hpp"
 #include "ICU4XFixedDecimalGroupingStrategy.d.hpp"
 
+namespace icu4x {
+struct ICU4XFixedDecimalFormatterOptions;
 class ICU4XFixedDecimalGroupingStrategy;
+}
 
 
+namespace icu4x {
 namespace capi {
     typedef struct ICU4XFixedDecimalFormatterOptions {
-      ::capi::ICU4XFixedDecimalGroupingStrategy grouping_strategy;
+      icu4x::capi::ICU4XFixedDecimalGroupingStrategy grouping_strategy;
       bool some_other_config;
     } ICU4XFixedDecimalFormatterOptions;
 }
 
 struct ICU4XFixedDecimalFormatterOptions {
-  ICU4XFixedDecimalGroupingStrategy grouping_strategy;
+  icu4x::ICU4XFixedDecimalGroupingStrategy grouping_strategy;
   bool some_other_config;
 
-  inline static ICU4XFixedDecimalFormatterOptions default_();
+  inline static icu4x::ICU4XFixedDecimalFormatterOptions default_();
 
-  inline ::capi::ICU4XFixedDecimalFormatterOptions AsFFI() const;
-  inline static ICU4XFixedDecimalFormatterOptions FromFFI(::capi::ICU4XFixedDecimalFormatterOptions c_struct);
+  inline icu4x::capi::ICU4XFixedDecimalFormatterOptions AsFFI() const;
+  inline static icu4x::ICU4XFixedDecimalFormatterOptions FromFFI(icu4x::capi::ICU4XFixedDecimalFormatterOptions c_struct);
 };
 
-
+}
 #endif // ICU4XFixedDecimalFormatterOptions_D_HPP

@@ -4,7 +4,7 @@
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
-    std::unique_ptr<ICU4XFixedDecimal> fd = ICU4XFixedDecimal::new_(123);
+    std::unique_ptr<icu4x::ICU4XFixedDecimal> fd = icu4x::ICU4XFixedDecimal::new_(123);
 
     simple_assert("constructing FixedDecimal", !fd->to_string().is_err());
 
@@ -24,11 +24,11 @@ int main(int argc, char *argv[]) {
 
     // simple_assert_eq("Formatting FixedDecimal to DiplomatWrite", fd_out, "12.3");
 
-    std::unique_ptr<ICU4XLocale> locale = ICU4XLocale::new_("bn");
+    std::unique_ptr<icu4x::ICU4XLocale> locale = icu4x::ICU4XLocale::new_("bn");
 
-    std::unique_ptr<ICU4XDataProvider> data_provider = ICU4XDataProvider::new_static();
+    std::unique_ptr<icu4x::ICU4XDataProvider> data_provider = icu4x::ICU4XDataProvider::new_static();
 
-    auto fdf = ICU4XFixedDecimalFormatter::try_new(*locale, *data_provider, ICU4XFixedDecimalFormatterOptions::default_());
+    auto fdf = icu4x::ICU4XFixedDecimalFormatter::try_new(*locale, *data_provider, icu4x::ICU4XFixedDecimalFormatterOptions::default_());
 
     simple_assert("Formatting FixedDecimal", fdf.is_ok());
 

@@ -9,7 +9,13 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+namespace icu4x {
+namespace capi {typedef struct ICU4XDataProvider ICU4XDataProvider; }
+class ICU4XDataProvider;
+}
 
+
+namespace icu4x {
 namespace capi {
     typedef struct ICU4XDataProvider ICU4XDataProvider;
 }
@@ -17,23 +23,23 @@ namespace capi {
 class ICU4XDataProvider {
 public:
 
-  inline static std::unique_ptr<ICU4XDataProvider> new_static();
+  inline static std::unique_ptr<icu4x::ICU4XDataProvider> new_static();
 
   inline static diplomat::result<std::monostate, std::monostate> returns_result();
 
-  inline const ::capi::ICU4XDataProvider* AsFFI() const;
-  inline ::capi::ICU4XDataProvider* AsFFI();
-  inline static const ICU4XDataProvider* FromFFI(const ::capi::ICU4XDataProvider* ptr);
-  inline static ICU4XDataProvider* FromFFI(::capi::ICU4XDataProvider* ptr);
+  inline const icu4x::capi::ICU4XDataProvider* AsFFI() const;
+  inline icu4x::capi::ICU4XDataProvider* AsFFI();
+  inline static const icu4x::ICU4XDataProvider* FromFFI(const icu4x::capi::ICU4XDataProvider* ptr);
+  inline static icu4x::ICU4XDataProvider* FromFFI(icu4x::capi::ICU4XDataProvider* ptr);
   inline static void operator delete(void* ptr);
 private:
   ICU4XDataProvider() = delete;
-  ICU4XDataProvider(const ICU4XDataProvider&) = delete;
-  ICU4XDataProvider(ICU4XDataProvider&&) noexcept = delete;
-  ICU4XDataProvider operator=(const ICU4XDataProvider&) = delete;
-  ICU4XDataProvider operator=(ICU4XDataProvider&&) noexcept = delete;
+  ICU4XDataProvider(const icu4x::ICU4XDataProvider&) = delete;
+  ICU4XDataProvider(icu4x::ICU4XDataProvider&&) noexcept = delete;
+  ICU4XDataProvider operator=(const icu4x::ICU4XDataProvider&) = delete;
+  ICU4XDataProvider operator=(icu4x::ICU4XDataProvider&&) noexcept = delete;
   static void operator delete[](void*, size_t) = delete;
 };
 
-
+}
 #endif // ICU4XDataProvider_D_HPP

@@ -1,4 +1,5 @@
 #[diplomat::bridge]
+#[diplomat::attr(supports = namespacing, namespace = "icu4x")]
 pub mod ffi {
     use icu_provider::AnyProvider;
 

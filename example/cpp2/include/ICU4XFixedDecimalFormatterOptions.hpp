@@ -13,30 +13,32 @@
 #include "ICU4XFixedDecimalGroupingStrategy.hpp"
 
 
+namespace icu4x {
 namespace capi {
     extern "C" {
     
-    ::capi::ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions_default();
+    icu4x::capi::ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions_default();
     
     
     } // extern "C"
 }
-inline ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::default_() {
+}
+inline icu4x::ICU4XFixedDecimalFormatterOptions icu4x::ICU4XFixedDecimalFormatterOptions::default_() {
   auto result = capi::ICU4XFixedDecimalFormatterOptions_default();
-  return ICU4XFixedDecimalFormatterOptions::FromFFI(result);
+  return icu4x::ICU4XFixedDecimalFormatterOptions::FromFFI(result);
 }
 
 
-inline ::capi::ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::AsFFI() const {
-  return ::capi::ICU4XFixedDecimalFormatterOptions {
+inline icu4x::capi::ICU4XFixedDecimalFormatterOptions icu4x::ICU4XFixedDecimalFormatterOptions::AsFFI() const {
+  return icu4x::capi::ICU4XFixedDecimalFormatterOptions {
     .grouping_strategy = grouping_strategy.AsFFI(),
     .some_other_config = some_other_config,
   };
 }
 
-inline ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::FromFFI(::capi::ICU4XFixedDecimalFormatterOptions c_struct) {
-  return ICU4XFixedDecimalFormatterOptions {
-    .grouping_strategy = ICU4XFixedDecimalGroupingStrategy::FromFFI(c_struct.grouping_strategy),
+inline icu4x::ICU4XFixedDecimalFormatterOptions icu4x::ICU4XFixedDecimalFormatterOptions::FromFFI(icu4x::capi::ICU4XFixedDecimalFormatterOptions c_struct) {
+  return icu4x::ICU4XFixedDecimalFormatterOptions {
+    .grouping_strategy = icu4x::ICU4XFixedDecimalGroupingStrategy::FromFFI(c_struct.grouping_strategy),
     .some_other_config = c_struct.some_other_config,
   };
 }
