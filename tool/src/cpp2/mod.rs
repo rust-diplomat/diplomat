@@ -38,8 +38,7 @@ impl<'tcx> Cpp2Context<'tcx> {
             .unwrap();
 
         self.files.add_file(
-            // TODO rename to diplomat_c_runtime.hpp once C++1 is removed
-            "diplomat_runtime.h".into(),
+            "diplomat_c_runtime.hpp".into(),
             c_runtime,
         );
 
