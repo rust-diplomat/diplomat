@@ -15,7 +15,7 @@ class UnimportedEnum;
 
 namespace capi {
     typedef struct ImportedStruct {
-      UnimportedEnum foo;
+      ::capi::UnimportedEnum foo;
       uint8_t count;
     } ImportedStruct;
 }
@@ -24,8 +24,8 @@ struct ImportedStruct {
   UnimportedEnum foo;
   uint8_t count;
 
-  inline capi::ImportedStruct AsFFI() const;
-  inline static ImportedStruct FromFFI(capi::ImportedStruct c_struct);
+  inline ::capi::ImportedStruct AsFFI() const;
+  inline static ImportedStruct FromFFI(::capi::ImportedStruct c_struct);
 };
 
 

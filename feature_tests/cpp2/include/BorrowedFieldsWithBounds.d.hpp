@@ -9,6 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+namespace capi {typedef struct Foo Foo; }
 class Foo;
 
 
@@ -27,8 +28,8 @@ struct BorrowedFieldsWithBounds {
 
   inline static diplomat::result<BorrowedFieldsWithBounds, diplomat::Utf8Error> from_foo_and_strings(const Foo& foo, std::u16string_view dstr16_x, std::string_view utf8_str_z);
 
-  inline capi::BorrowedFieldsWithBounds AsFFI() const;
-  inline static BorrowedFieldsWithBounds FromFFI(capi::BorrowedFieldsWithBounds c_struct);
+  inline ::capi::BorrowedFieldsWithBounds AsFFI() const;
+  inline static BorrowedFieldsWithBounds FromFFI(::capi::BorrowedFieldsWithBounds c_struct);
 };
 
 

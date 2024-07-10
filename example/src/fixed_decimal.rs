@@ -1,4 +1,5 @@
 #[diplomat::bridge]
+#[diplomat::attr(supports = namespacing, namespace = "icu4x")]
 pub mod ffi {
     use diplomat_runtime::DiplomatWrite;
     use fixed_decimal::FixedDecimal;

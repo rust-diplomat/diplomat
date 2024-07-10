@@ -1,6 +1,7 @@
 #![allow(clippy::result_unit_err, clippy::should_implement_trait)]
 
 #[diplomat::bridge]
+#[diplomat::attr(supports = namespacing, namespace = "icu4x")]
 pub mod ffi {
     use diplomat_runtime::DiplomatWrite;
     use icu::decimal::{options::GroupingStrategy, FixedDecimalFormatter};

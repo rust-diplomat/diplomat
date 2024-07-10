@@ -19,6 +19,7 @@ namespace capi {
     } ContiguousEnum;
 }
 
+
 class ContiguousEnum {
 public:
   enum Value {
@@ -35,8 +36,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline capi::ContiguousEnum AsFFI() const;
-  inline static ContiguousEnum FromFFI(capi::ContiguousEnum c_enum);
+  inline ::capi::ContiguousEnum AsFFI() const;
+  inline static ContiguousEnum FromFFI(::capi::ContiguousEnum c_enum);
 private:
     Value value;
 };

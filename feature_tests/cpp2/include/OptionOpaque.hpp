@@ -16,39 +16,38 @@
 namespace capi {
     extern "C" {
     
-    OptionOpaque* OptionOpaque_new(int32_t i);
+    ::capi::OptionOpaque* OptionOpaque_new(int32_t i);
     
-    OptionOpaque* OptionOpaque_new_none();
+    ::capi::OptionOpaque* OptionOpaque_new_none();
     
-    typedef struct OptionOpaque_returns_result {union {OptionStruct ok; }; bool is_ok;} OptionOpaque_returns_result;
+    typedef struct OptionOpaque_returns_result {union {::capi::OptionStruct ok; }; bool is_ok;} OptionOpaque_returns_result;
     OptionOpaque_returns_result OptionOpaque_returns();
     
     typedef struct OptionOpaque_option_isize_result {union {intptr_t ok; }; bool is_ok;} OptionOpaque_option_isize_result;
-    OptionOpaque_option_isize_result OptionOpaque_option_isize(const OptionOpaque* self);
+    OptionOpaque_option_isize_result OptionOpaque_option_isize(const ::capi::OptionOpaque* self);
     
     typedef struct OptionOpaque_option_usize_result {union {size_t ok; }; bool is_ok;} OptionOpaque_option_usize_result;
-    OptionOpaque_option_usize_result OptionOpaque_option_usize(const OptionOpaque* self);
+    OptionOpaque_option_usize_result OptionOpaque_option_usize(const ::capi::OptionOpaque* self);
     
     typedef struct OptionOpaque_option_i32_result {union {int32_t ok; }; bool is_ok;} OptionOpaque_option_i32_result;
-    OptionOpaque_option_i32_result OptionOpaque_option_i32(const OptionOpaque* self);
+    OptionOpaque_option_i32_result OptionOpaque_option_i32(const ::capi::OptionOpaque* self);
     
     typedef struct OptionOpaque_option_u32_result {union {uint32_t ok; }; bool is_ok;} OptionOpaque_option_u32_result;
-    OptionOpaque_option_u32_result OptionOpaque_option_u32(const OptionOpaque* self);
+    OptionOpaque_option_u32_result OptionOpaque_option_u32(const ::capi::OptionOpaque* self);
     
-    OptionStruct OptionOpaque_new_struct();
+    ::capi::OptionStruct OptionOpaque_new_struct();
     
-    OptionStruct OptionOpaque_new_struct_nones();
+    ::capi::OptionStruct OptionOpaque_new_struct_nones();
     
-    void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
+    void OptionOpaque_assert_integer(const ::capi::OptionOpaque* self, int32_t i);
     
-    bool OptionOpaque_option_opaque_argument(const OptionOpaque* arg);
+    bool OptionOpaque_option_opaque_argument(const ::capi::OptionOpaque* arg);
     
     
     void OptionOpaque_destroy(OptionOpaque* self);
     
     } // extern "C"
 }
-
 inline std::unique_ptr<OptionOpaque> OptionOpaque::new_(int32_t i) {
   auto result = capi::OptionOpaque_new(i);
   return std::unique_ptr<OptionOpaque>(OptionOpaque::FromFFI(result));
@@ -104,24 +103,24 @@ inline bool OptionOpaque::option_opaque_argument(const OptionOpaque* arg) {
   return result;
 }
 
-inline const capi::OptionOpaque* OptionOpaque::AsFFI() const {
-  return reinterpret_cast<const capi::OptionOpaque*>(this);
+inline const ::capi::OptionOpaque* OptionOpaque::AsFFI() const {
+  return reinterpret_cast<const ::capi::OptionOpaque*>(this);
 }
 
-inline capi::OptionOpaque* OptionOpaque::AsFFI() {
-  return reinterpret_cast<capi::OptionOpaque*>(this);
+inline ::capi::OptionOpaque* OptionOpaque::AsFFI() {
+  return reinterpret_cast<::capi::OptionOpaque*>(this);
 }
 
-inline const OptionOpaque* OptionOpaque::FromFFI(const capi::OptionOpaque* ptr) {
+inline const OptionOpaque* OptionOpaque::FromFFI(const ::capi::OptionOpaque* ptr) {
   return reinterpret_cast<const OptionOpaque*>(ptr);
 }
 
-inline OptionOpaque* OptionOpaque::FromFFI(capi::OptionOpaque* ptr) {
+inline OptionOpaque* OptionOpaque::FromFFI(::capi::OptionOpaque* ptr) {
   return reinterpret_cast<OptionOpaque*>(ptr);
 }
 
 inline void OptionOpaque::operator delete(void* ptr) {
-  capi::OptionOpaque_destroy(reinterpret_cast<capi::OptionOpaque*>(ptr));
+  capi::OptionOpaque_destroy(reinterpret_cast<::capi::OptionOpaque*>(ptr));
 }
 
 

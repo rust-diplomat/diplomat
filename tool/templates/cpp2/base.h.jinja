@@ -26,7 +26,8 @@ namespace {{ns}} {
 {%- for forward in namespace_forward.1 %}
 {%- match forward %}
 	{%- when Forward::Class with (name) ~%}
-		class {{ name }};
+		namespace capi {typedef struct {{name}} {{name}}; }
+class {{ name }};
 	{%- when Forward::Struct with (name) ~%}
 		struct {{ name }};
 	{%- when Forward::EnumStruct with (name) ~%}

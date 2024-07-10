@@ -1,10 +1,10 @@
-namespace capi {
-    {{ c_header.body|trim|indent(4) }}
-}
-
 {% if let Some(ns) = namespace -%}
 namespace {{ns}} {
 {%endif-%}
+namespace {{self::CAPI_NAMESPACE}} {
+    {{ c_header.body|trim|indent(4) }}
+}
+
 struct {{type_name_unnamespaced}} {
 {%- for field in fields %}
 	{{field.type_name}} {{field.var_name}};

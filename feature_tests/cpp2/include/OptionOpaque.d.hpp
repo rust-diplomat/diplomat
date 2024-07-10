@@ -42,10 +42,10 @@ public:
 
   inline static bool option_opaque_argument(const OptionOpaque* arg);
 
-  inline const capi::OptionOpaque* AsFFI() const;
-  inline capi::OptionOpaque* AsFFI();
-  inline static const OptionOpaque* FromFFI(const capi::OptionOpaque* ptr);
-  inline static OptionOpaque* FromFFI(capi::OptionOpaque* ptr);
+  inline const ::capi::OptionOpaque* AsFFI() const;
+  inline ::capi::OptionOpaque* AsFFI();
+  inline static const OptionOpaque* FromFFI(const ::capi::OptionOpaque* ptr);
+  inline static OptionOpaque* FromFFI(::capi::OptionOpaque* ptr);
   inline static void operator delete(void* ptr);
 private:
   OptionOpaque() = delete;

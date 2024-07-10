@@ -9,6 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
+namespace capi {typedef struct Foo Foo; }
 class Foo;
 
 
@@ -21,10 +22,10 @@ public:
 
   inline const Foo& foo() const;
 
-  inline const capi::Bar* AsFFI() const;
-  inline capi::Bar* AsFFI();
-  inline static const Bar* FromFFI(const capi::Bar* ptr);
-  inline static Bar* FromFFI(capi::Bar* ptr);
+  inline const ::capi::Bar* AsFFI() const;
+  inline ::capi::Bar* AsFFI();
+  inline static const Bar* FromFFI(const ::capi::Bar* ptr);
+  inline static Bar* FromFFI(::capi::Bar* ptr);
   inline static void operator delete(void* ptr);
 private:
   Bar() = delete;

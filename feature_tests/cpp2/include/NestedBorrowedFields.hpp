@@ -19,12 +19,11 @@
 namespace capi {
     extern "C" {
     
-    NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const Bar* bar, const Foo* foo, const char16_t* dstr16_x_data, size_t dstr16_x_len, const char16_t* dstr16_z_data, size_t dstr16_z_len, const char* utf8_str_y_data, size_t utf8_str_y_len, const char* utf8_str_z_data, size_t utf8_str_z_len);
+    ::capi::NestedBorrowedFields NestedBorrowedFields_from_bar_and_foo_and_strings(const ::capi::Bar* bar, const ::capi::Foo* foo, const char16_t* dstr16_x_data, size_t dstr16_x_len, const char16_t* dstr16_z_data, size_t dstr16_z_len, const char* utf8_str_y_data, size_t utf8_str_y_len, const char* utf8_str_z_data, size_t utf8_str_z_len);
     
     
     } // extern "C"
 }
-
 inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowedFields::from_bar_and_foo_and_strings(const Bar& bar, const Foo& foo, std::u16string_view dstr16_x, std::u16string_view dstr16_z, std::string_view utf8_str_y, std::string_view utf8_str_z) {
   if (!capi::diplomat_is_str(utf8_str_y.data(), utf8_str_y.size())) {
     return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
@@ -46,15 +45,15 @@ inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowe
 }
 
 
-inline capi::NestedBorrowedFields NestedBorrowedFields::AsFFI() const {
-  return capi::NestedBorrowedFields {
+inline ::capi::NestedBorrowedFields NestedBorrowedFields::AsFFI() const {
+  return ::capi::NestedBorrowedFields {
     .fields = fields.AsFFI(),
     .bounds = bounds.AsFFI(),
     .bounds2 = bounds2.AsFFI(),
   };
 }
 
-inline NestedBorrowedFields NestedBorrowedFields::FromFFI(capi::NestedBorrowedFields c_struct) {
+inline NestedBorrowedFields NestedBorrowedFields::FromFFI(::capi::NestedBorrowedFields c_struct) {
   return NestedBorrowedFields {
     .fields = BorrowedFields::FromFFI(c_struct.fields),
     .bounds = BorrowedFieldsWithBounds::FromFFI(c_struct.bounds),

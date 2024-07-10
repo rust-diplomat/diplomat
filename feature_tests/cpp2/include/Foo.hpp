@@ -19,24 +19,23 @@
 namespace capi {
     extern "C" {
     
-    Foo* Foo_new(const char* x_data, size_t x_len);
+    ::capi::Foo* Foo_new(const char* x_data, size_t x_len);
     
-    Bar* Foo_get_bar(const Foo* self);
+    ::capi::Bar* Foo_get_bar(const ::capi::Foo* self);
     
-    Foo* Foo_new_static(const char* x_data, size_t x_len);
+    ::capi::Foo* Foo_new_static(const char* x_data, size_t x_len);
     
-    BorrowedFieldsReturning Foo_as_returning(const Foo* self);
+    ::capi::BorrowedFieldsReturning Foo_as_returning(const ::capi::Foo* self);
     
-    Foo* Foo_extract_from_fields(BorrowedFields fields);
+    ::capi::Foo* Foo_extract_from_fields(::capi::BorrowedFields fields);
     
-    Foo* Foo_extract_from_bounds(BorrowedFieldsWithBounds bounds, const char* another_string_data, size_t another_string_len);
+    ::capi::Foo* Foo_extract_from_bounds(::capi::BorrowedFieldsWithBounds bounds, const char* another_string_data, size_t another_string_len);
     
     
     void Foo_destroy(Foo* self);
     
     } // extern "C"
 }
-
 inline std::unique_ptr<Foo> Foo::new_(std::string_view x) {
   auto result = capi::Foo_new(x.data(),
     x.size());
@@ -71,24 +70,24 @@ inline std::unique_ptr<Foo> Foo::extract_from_bounds(BorrowedFieldsWithBounds bo
   return std::unique_ptr<Foo>(Foo::FromFFI(result));
 }
 
-inline const capi::Foo* Foo::AsFFI() const {
-  return reinterpret_cast<const capi::Foo*>(this);
+inline const ::capi::Foo* Foo::AsFFI() const {
+  return reinterpret_cast<const ::capi::Foo*>(this);
 }
 
-inline capi::Foo* Foo::AsFFI() {
-  return reinterpret_cast<capi::Foo*>(this);
+inline ::capi::Foo* Foo::AsFFI() {
+  return reinterpret_cast<::capi::Foo*>(this);
 }
 
-inline const Foo* Foo::FromFFI(const capi::Foo* ptr) {
+inline const Foo* Foo::FromFFI(const ::capi::Foo* ptr) {
   return reinterpret_cast<const Foo*>(ptr);
 }
 
-inline Foo* Foo::FromFFI(capi::Foo* ptr) {
+inline Foo* Foo::FromFFI(::capi::Foo* ptr) {
   return reinterpret_cast<Foo*>(ptr);
 }
 
 inline void Foo::operator delete(void* ptr) {
-  capi::Foo_destroy(reinterpret_cast<capi::Foo*>(ptr));
+  capi::Foo_destroy(reinterpret_cast<::capi::Foo*>(ptr));
 }
 
 

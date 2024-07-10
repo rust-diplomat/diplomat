@@ -15,24 +15,23 @@
 namespace capi {
     extern "C" {
     
-    MyString* MyString_new(const char* v_data, size_t v_len);
+    ::capi::MyString* MyString_new(const char* v_data, size_t v_len);
     
-    MyString* MyString_new_unsafe(const char* v_data, size_t v_len);
+    ::capi::MyString* MyString_new_unsafe(const char* v_data, size_t v_len);
     
-    MyString* MyString_new_owned(const char* v_data, size_t v_len);
+    ::capi::MyString* MyString_new_owned(const char* v_data, size_t v_len);
     
-    void MyString_set_str(MyString* self, const char* new_str_data, size_t new_str_len);
+    void MyString_set_str(::capi::MyString* self, const char* new_str_data, size_t new_str_len);
     
-    void MyString_get_str(const MyString* self, DiplomatWrite* write);
+    void MyString_get_str(const ::capi::MyString* self, ::capi::DiplomatWrite* write);
     
-    DiplomatStringView MyString_get_boxed_str(const MyString* self);
+    DiplomatStringView MyString_get_boxed_str(const ::capi::MyString* self);
     
     
     void MyString_destroy(MyString* self);
     
     } // extern "C"
 }
-
 inline std::unique_ptr<MyString> MyString::new_(std::string_view v) {
   auto result = capi::MyString_new(v.data(),
     v.size());
@@ -62,7 +61,7 @@ inline void MyString::set_str(std::string_view new_str) {
 
 inline std::string MyString::get_str() const {
   std::string output;
-  capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::MyString_get_str(this->AsFFI(),
     &write);
   return output;
@@ -73,24 +72,24 @@ inline std::string_view MyString::get_boxed_str() const {
   return std::string_view(result.data, result.len);
 }
 
-inline const capi::MyString* MyString::AsFFI() const {
-  return reinterpret_cast<const capi::MyString*>(this);
+inline const ::capi::MyString* MyString::AsFFI() const {
+  return reinterpret_cast<const ::capi::MyString*>(this);
 }
 
-inline capi::MyString* MyString::AsFFI() {
-  return reinterpret_cast<capi::MyString*>(this);
+inline ::capi::MyString* MyString::AsFFI() {
+  return reinterpret_cast<::capi::MyString*>(this);
 }
 
-inline const MyString* MyString::FromFFI(const capi::MyString* ptr) {
+inline const MyString* MyString::FromFFI(const ::capi::MyString* ptr) {
   return reinterpret_cast<const MyString*>(ptr);
 }
 
-inline MyString* MyString::FromFFI(capi::MyString* ptr) {
+inline MyString* MyString::FromFFI(::capi::MyString* ptr) {
   return reinterpret_cast<MyString*>(ptr);
 }
 
 inline void MyString::operator delete(void* ptr) {
-  capi::MyString_destroy(reinterpret_cast<capi::MyString*>(ptr));
+  capi::MyString_destroy(reinterpret_cast<::capi::MyString*>(ptr));
 }
 
 

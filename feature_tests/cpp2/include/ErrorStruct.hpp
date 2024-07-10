@@ -19,15 +19,14 @@ namespace capi {
     } // extern "C"
 }
 
-
-inline capi::ErrorStruct ErrorStruct::AsFFI() const {
-  return capi::ErrorStruct {
+inline ::capi::ErrorStruct ErrorStruct::AsFFI() const {
+  return ::capi::ErrorStruct {
     .i = i,
     .j = j,
   };
 }
 
-inline ErrorStruct ErrorStruct::FromFFI(capi::ErrorStruct c_struct) {
+inline ErrorStruct ErrorStruct::FromFFI(::capi::ErrorStruct c_struct) {
   return ErrorStruct {
     .i = c_struct.i,
     .j = c_struct.j,

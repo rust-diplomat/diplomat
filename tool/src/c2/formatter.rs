@@ -14,21 +14,58 @@ use std::borrow::Cow;
 /// of C types and methods.
 pub struct CFormatter<'tcx> {
     tcx: &'tcx TypeContext,
+    is_for_cpp: bool,
 }
 
+pub(crate) const CAPI_NAMESPACE: &str = "capi";
+
 impl<'tcx> CFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext) -> Self {
-        Self { tcx }
+    pub fn new(tcx: &'tcx TypeContext, is_for_cpp: bool) -> Self {
+        Self { tcx, is_for_cpp }
     }
     pub fn tcx(&self) -> &'tcx TypeContext {
         self.tcx
     }
 
-    /// Resolve and format a named type for use in code
+    /// Resolve and format a named type for use in code (without the namespace)
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        // Currently don't do anything fancy
-        // Eventually apply rename rules and such
+        let resolved = self.tcx.resolve_type(id);
+        let name = resolved.name().as_str().into();
+        // Only apply renames in cpp mode, in pure C mode you'd want the
+        // method names to match the type names.
+        // Potential future improvement: Use alias attributes in pure C mode.
+        if self.is_for_cpp {
+            resolved.attrs().rename.apply(name)
+        } else {
+            name
+        }
+    }
+
+    /// Format the type name for usage in ABI-relevant contexts: methods/dtors
+    pub fn fmt_type_name_for_abi(&self, id: TypeId) -> Cow<'tcx, str> {
         self.tcx.resolve_type(id).name().as_str().into()
+    }
+    /// Resolve and format a named type for use in code (with a namespace, if needed by C++)
+    pub fn fmt_type_name_maybe_namespaced(&self, id: TypeId) -> Cow<'tcx, str> {
+        let resolved = self.tcx.resolve_type(id);
+        let name = resolved.name().as_str().into();
+        // Only apply renames in cpp mode, in pure C mode you'd want the
+        // method names to match the type names.
+        // Potential future improvement: Use alias attributes in pure C mode.
+        let name = if self.is_for_cpp {
+            resolved.attrs().rename.apply(name)
+        } else {
+            name
+        };
+        if self.is_for_cpp {
+            if let Some(ref ns) = resolved.attrs().namespace {
+                format!("{ns}::{CAPI_NAMESPACE}::{name}").into()
+            } else {
+                format!("::{CAPI_NAMESPACE}::{name}").into()
+            }
+        } else {
+            name
+        }
     }
 
     /// Resolve and format a named type for use in diagnostics
@@ -74,7 +111,7 @@ impl<'tcx> CFormatter<'tcx> {
 
     /// Format a method
     pub fn fmt_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
-        let ty_name = self.fmt_type_name(ty);
+        let ty_name = self.fmt_type_name_for_abi(ty);
         let method_name = method.name.as_str();
         let put_together = format!("{ty_name}_{method_name}");
         method.attrs.abi_rename.apply(put_together.into()).into()
@@ -82,7 +119,7 @@ impl<'tcx> CFormatter<'tcx> {
 
     /// Resolve and format a type's destructor
     pub fn fmt_dtor_name(&self, ty: TypeId) -> String {
-        let ty_name = self.fmt_type_name(ty);
+        let ty_name = self.fmt_type_name_for_abi(ty);
         let renamed = self.tcx.resolve_type(ty).attrs().abi_rename.apply(ty_name);
         format!("{renamed}_destroy")
     }
@@ -151,5 +188,13 @@ impl<'tcx> CFormatter<'tcx> {
             _ => "Mut",
         };
         format!("Diplomat{prim}View{mtb}")
+    }
+
+    pub(crate) fn fmt_diplomat_write(&self) -> &'static str {
+        if self.is_for_cpp {
+            "::capi::DiplomatWrite*"
+        } else {
+            "DiplomatWrite*"
+        }
     }
 }

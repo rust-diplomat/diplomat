@@ -23,7 +23,7 @@ namespace capi {
       uint64_t d;
       int32_t e;
       char32_t f;
-      MyEnum g;
+      ::capi::MyEnum g;
     } MyStruct;
 }
 
@@ -42,8 +42,8 @@ struct MyStruct {
 
   inline static diplomat::result<std::monostate, MyZst> returns_zst_result();
 
-  inline capi::MyStruct AsFFI() const;
-  inline static MyStruct FromFFI(capi::MyStruct c_struct);
+  inline ::capi::MyStruct AsFFI() const;
+  inline static MyStruct FromFFI(::capi::MyStruct c_struct);
 };
 
 

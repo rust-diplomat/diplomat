@@ -10,6 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace icu4x {
 namespace capi {
     typedef enum ICU4XFixedDecimalGroupingStrategy {
       ICU4XFixedDecimalGroupingStrategy_Auto = 0,
@@ -18,6 +19,7 @@ namespace capi {
       ICU4XFixedDecimalGroupingStrategy_Min2 = 3,
     } ICU4XFixedDecimalGroupingStrategy;
 }
+
 
 class ICU4XFixedDecimalGroupingStrategy {
 public:
@@ -35,11 +37,11 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline capi::ICU4XFixedDecimalGroupingStrategy AsFFI() const;
-  inline static ICU4XFixedDecimalGroupingStrategy FromFFI(capi::ICU4XFixedDecimalGroupingStrategy c_enum);
+  inline icu4x::capi::ICU4XFixedDecimalGroupingStrategy AsFFI() const;
+  inline static icu4x::ICU4XFixedDecimalGroupingStrategy FromFFI(icu4x::capi::ICU4XFixedDecimalGroupingStrategy c_enum);
 private:
     Value value;
 };
 
-
+}
 #endif // ICU4XFixedDecimalGroupingStrategy_D_HPP

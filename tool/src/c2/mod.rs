@@ -3,6 +3,7 @@ mod header;
 mod ty;
 
 pub use self::formatter::CFormatter;
+pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
 pub(crate) use self::ty::TyGenContext;
 
@@ -33,7 +34,7 @@ impl<'tcx> CContext<'tcx> {
         CContext {
             tcx,
             files,
-            formatter: CFormatter::new(tcx),
+            formatter: CFormatter::new(tcx, is_for_cpp),
             errors: ErrorStore::default(),
             is_for_cpp,
         }

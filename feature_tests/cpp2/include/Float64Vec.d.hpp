@@ -45,10 +45,10 @@ public:
 
   inline std::optional<double> get(size_t i) const;
 
-  inline const capi::Float64Vec* AsFFI() const;
-  inline capi::Float64Vec* AsFFI();
-  inline static const Float64Vec* FromFFI(const capi::Float64Vec* ptr);
-  inline static Float64Vec* FromFFI(capi::Float64Vec* ptr);
+  inline const ::capi::Float64Vec* AsFFI() const;
+  inline ::capi::Float64Vec* AsFFI();
+  inline static const Float64Vec* FromFFI(const ::capi::Float64Vec* ptr);
+  inline static Float64Vec* FromFFI(::capi::Float64Vec* ptr);
   inline static void operator delete(void* ptr);
 private:
   Float64Vec() = delete;

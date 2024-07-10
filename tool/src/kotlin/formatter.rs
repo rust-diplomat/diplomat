@@ -24,7 +24,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, strip_prefix: Option<String>) -> Self {
         Self {
             tcx,
-            c: CFormatter::new(tcx),
+            c: CFormatter::new(tcx, false),
             strip_prefix,
         }
     }
