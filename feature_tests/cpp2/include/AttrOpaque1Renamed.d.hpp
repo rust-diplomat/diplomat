@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "CPPRenamedAttrEnum.d.hpp"
 
 namespace capi {typedef struct Unnamespaced Unnamespaced; }
 class Unnamespaced;
