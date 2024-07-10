@@ -187,12 +187,16 @@ impl<'tcx> CFormatter<'tcx> {
             Some(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
         };
-        format!("Diplomat{prim}View{mtb}")
+        if self.is_for_cpp {
+            format!("Diplomat{prim}View{mtb}")
+        } else {
+            format!("diplomat::capi::Diplomat{prim}View{mtb}")
+        }
     }
 
     pub(crate) fn fmt_diplomat_write(&self) -> &'static str {
         if self.is_for_cpp {
-            "::capi::DiplomatWrite*"
+            "diplomat::capi::DiplomatWrite*"
         } else {
             "DiplomatWrite*"
         }

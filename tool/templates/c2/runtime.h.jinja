@@ -20,7 +20,7 @@ typedef uint32_t char32_t;
 
 
 {% if is_for_cpp -%}
-namespace capi {
+namespace diplomat::capi {
 {%- endif %}
 
 
@@ -84,7 +84,7 @@ MAKE_SLICES(Strings, DiplomatStringView)
 MAKE_SLICES(Strings16, DiplomatString16View)
 
 {% if is_for_cpp -%}
-} // namespace capi
+} // namespace diplomat::capi
 {%- endif %}
 
 #endif

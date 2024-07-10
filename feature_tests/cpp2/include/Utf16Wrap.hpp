@@ -17,7 +17,7 @@ namespace capi {
     
     ::capi::Utf16Wrap* Utf16Wrap_from_utf16(const char16_t* input_data, size_t input_len);
     
-    void Utf16Wrap_get_debug_str(const ::capi::Utf16Wrap* self, ::capi::DiplomatWrite* write);
+    void Utf16Wrap_get_debug_str(const ::capi::Utf16Wrap* self, diplomat::capi::DiplomatWrite* write);
     
     DiplomatString16View Utf16Wrap_borrow_cont(const ::capi::Utf16Wrap* self);
     
@@ -36,7 +36,7 @@ inline std::unique_ptr<Utf16Wrap> Utf16Wrap::from_utf16(std::u16string_view inpu
 
 inline std::string Utf16Wrap::get_debug_str() const {
   std::string output;
-  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::Utf16Wrap_get_debug_str(this->AsFFI(),
     &write);
   return output;

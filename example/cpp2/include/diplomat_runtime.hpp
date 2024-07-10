@@ -165,6 +165,6 @@ private:
 
 #endif // __cplusplus >= 202002L
 
-}
+} // namespace diplomat
 
 #endif

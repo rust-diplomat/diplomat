@@ -37,15 +37,11 @@ impl<'tcx> Cpp2Context<'tcx> {
             .render_into(&mut c_runtime)
             .unwrap();
 
-        self.files.add_file(
-            "diplomat_c_runtime.hpp".into(),
-            c_runtime,
-        );
+        self.files
+            .add_file("diplomat_c_runtime.hpp".into(), c_runtime);
 
-        self.files.add_file(
-            "diplomat_runtime.hpp".into(),
-            RUNTIME_HPP.into(),
-        );
+        self.files
+            .add_file("diplomat_runtime.hpp".into(), RUNTIME_HPP.into());
 
         for (id, ty) in self.tcx.all_types() {
             self.gen_ty(id, ty)

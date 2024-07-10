@@ -23,7 +23,7 @@ namespace capi {
     typedef struct icu4x_ICU4XFixedDecimalFormatter_try_new_mv1_result {union {icu4x::capi::ICU4XFixedDecimalFormatter* ok; }; bool is_ok;} icu4x_ICU4XFixedDecimalFormatter_try_new_mv1_result;
     icu4x_ICU4XFixedDecimalFormatter_try_new_mv1_result icu4x_ICU4XFixedDecimalFormatter_try_new_mv1(const icu4x::capi::ICU4XLocale* locale, const icu4x::capi::ICU4XDataProvider* provider, icu4x::capi::ICU4XFixedDecimalFormatterOptions options);
     
-    void icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(const icu4x::capi::ICU4XFixedDecimalFormatter* self, const icu4x::capi::ICU4XFixedDecimal* value, ::capi::DiplomatWrite* write);
+    void icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(const icu4x::capi::ICU4XFixedDecimalFormatter* self, const icu4x::capi::ICU4XFixedDecimal* value, diplomat::capi::DiplomatWrite* write);
     
     
     void icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(ICU4XFixedDecimalFormatter* self);
@@ -40,7 +40,7 @@ inline diplomat::result<std::unique_ptr<icu4x::ICU4XFixedDecimalFormatter>, std:
 
 inline std::string icu4x::ICU4XFixedDecimalFormatter::format_write(const icu4x::ICU4XFixedDecimal& value) const {
   std::string output;
-  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(this->AsFFI(),
     value.AsFFI(),
     &write);

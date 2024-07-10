@@ -37,7 +37,7 @@ namespace capi {
     
     void Float64Vec_set_value(::capi::Float64Vec* self, const double* new_slice_data, size_t new_slice_len);
     
-    void Float64Vec_to_string(const ::capi::Float64Vec* self, ::capi::DiplomatWrite* write);
+    void Float64Vec_to_string(const ::capi::Float64Vec* self, diplomat::capi::DiplomatWrite* write);
     
     DiplomatF64View Float64Vec_borrow(const ::capi::Float64Vec* self);
     
@@ -115,7 +115,7 @@ inline void Float64Vec::set_value(diplomat::span<const double> new_slice) {
 
 inline std::string Float64Vec::to_string() const {
   std::string output;
-  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::Float64Vec_to_string(this->AsFFI(),
     &write);
   return output;

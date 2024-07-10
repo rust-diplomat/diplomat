@@ -23,7 +23,7 @@ namespace capi {
     
     ::capi::Opaque* Opaque_from_str(const char* input_data, size_t input_len);
     
-    void Opaque_get_debug_str(const ::capi::Opaque* self, ::capi::DiplomatWrite* write);
+    void Opaque_get_debug_str(const ::capi::Opaque* self, diplomat::capi::DiplomatWrite* write);
     
     void Opaque_assert_struct(const ::capi::Opaque* self, ::capi::MyStruct s);
     
@@ -50,7 +50,7 @@ inline std::unique_ptr<Opaque> Opaque::try_from_utf8(std::string_view input) {
 }
 
 inline diplomat::result<std::unique_ptr<Opaque>, diplomat::Utf8Error> Opaque::from_str(std::string_view input) {
-  if (!capi::diplomat_is_str(input.data(), input.size())) {
+  if (!diplomat::capi::diplomat_is_str(input.data(), input.size())) {
     return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
   }
   auto result = capi::Opaque_from_str(input.data(),
@@ -60,7 +60,7 @@ inline diplomat::result<std::unique_ptr<Opaque>, diplomat::Utf8Error> Opaque::fr
 
 inline std::string Opaque::get_debug_str() const {
   std::string output;
-  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   capi::Opaque_get_debug_str(this->AsFFI(),
     &write);
   return output;

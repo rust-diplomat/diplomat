@@ -21,7 +21,7 @@ namespace capi {
     void icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(icu4x::capi::ICU4XFixedDecimal* self, int16_t power);
     
     typedef struct icu4x_ICU4XFixedDecimal_to_string_mv1_result { bool is_ok;} icu4x_ICU4XFixedDecimal_to_string_mv1_result;
-    icu4x_ICU4XFixedDecimal_to_string_mv1_result icu4x_ICU4XFixedDecimal_to_string_mv1(const icu4x::capi::ICU4XFixedDecimal* self, ::capi::DiplomatWrite* write);
+    icu4x_ICU4XFixedDecimal_to_string_mv1_result icu4x_ICU4XFixedDecimal_to_string_mv1(const icu4x::capi::ICU4XFixedDecimal* self, diplomat::capi::DiplomatWrite* write);
     
     
     void icu4x_ICU4XFixedDecimal_mv1_destroy(ICU4XFixedDecimal* self);
@@ -41,7 +41,7 @@ inline void icu4x::ICU4XFixedDecimal::multiply_pow10(int16_t power) {
 
 inline diplomat::result<std::string, std::monostate> icu4x::ICU4XFixedDecimal::to_string() const {
   std::string output;
-  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   auto result = capi::icu4x_ICU4XFixedDecimal_to_string_mv1(this->AsFFI(),
     &write);
   return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());

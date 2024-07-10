@@ -18,7 +18,7 @@ namespace capi {
     ::capi::OptionString* OptionString_new(const char* diplomat_str_data, size_t diplomat_str_len);
     
     typedef struct OptionString_write_result { bool is_ok;} OptionString_write_result;
-    OptionString_write_result OptionString_write(const ::capi::OptionString* self, ::capi::DiplomatWrite* write);
+    OptionString_write_result OptionString_write(const ::capi::OptionString* self, diplomat::capi::DiplomatWrite* write);
     
     typedef struct OptionString_borrow_result {union {DiplomatStringView ok; }; bool is_ok;} OptionString_borrow_result;
     OptionString_borrow_result OptionString_borrow(const ::capi::OptionString* self);
@@ -36,7 +36,7 @@ inline std::unique_ptr<OptionString> OptionString::new_(std::string_view diploma
 
 inline diplomat::result<std::string, std::monostate> OptionString::write() const {
   std::string output;
-  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
   auto result = capi::OptionString_write(this->AsFFI(),
     &write);
   return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
