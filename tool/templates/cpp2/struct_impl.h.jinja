@@ -1,12 +1,4 @@
-{% if let Some(ns) = namespace -%}
-namespace {{ns}} {
-{%endif-%}
-namespace {{self::CAPI_NAMESPACE}} {
-    {{ c_impl_header.body|trim|indent(4) }}
-}
-{% if namespace.is_some() -%}
-}
-{%endif-%}
+{% include "c_include.h.jinja" %}
 
 {% for m in methods -%}
 {% include "method_impl.h.jinja" %}

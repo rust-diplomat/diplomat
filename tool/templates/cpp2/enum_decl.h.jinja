@@ -1,11 +1,8 @@
+{% include "c_include.h.jinja" %}
+
 {% if let Some(ns) = namespace -%}
 namespace {{ns}} {
-{%endif-%}
-namespace {{self::CAPI_NAMESPACE}} {
-    {{ c_header.body|trim|indent(4) }}
-}
-
-
+{% endif -%}
 class {{type_name_unnamespaced}} {
 public:
 	enum Value {
@@ -33,5 +30,5 @@ private:
 };
 
 {% if namespace.is_some() -%}
-}
+} // namespace
 {%-endif%}

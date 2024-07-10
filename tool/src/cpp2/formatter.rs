@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use crate::c2::CFormatter;
+use crate::c2::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
 use std::borrow::Cow;
 
@@ -162,11 +162,20 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        format!("capi::{}", self.c.fmt_method_name(ty, method)).into()
+    fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {
+        let resolved = self.c.tcx().resolve_type(ty);
+        if let Some(ref ns) = resolved.attrs().namespace {
+            format!("{ns}::{CAPI_NAMESPACE}::{name}").into()
+        } else {
+            format!("diplomat::{CAPI_NAMESPACE}::{name}").into()
+        }
     }
-    pub fn fmt_c_dtor_name<'a>(&self, ty: TypeId) -> Cow<'a, str> {
-        format!("capi::{}", self.c.fmt_dtor_name(ty)).into()
+
+    pub fn fmt_c_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
+        self.namespace_c_method_name(ty, &self.c.fmt_method_name(ty, method))
+    }
+    pub fn fmt_c_dtor_name(&self, ty: TypeId) -> String {
+        self.namespace_c_method_name(ty, &self.c.fmt_dtor_name(ty))
     }
     /// Get the primitive type as a C type
     pub fn fmt_primitive_as_c(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {

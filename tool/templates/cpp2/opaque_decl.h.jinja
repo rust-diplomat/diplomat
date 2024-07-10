@@ -5,13 +5,11 @@
 {% let const_ref = fmt.fmt_borrowed(type_name, Mutability::Immutable) -%}
 {% let move_ref = fmt.fmt_move_ref(type_name) -%}
 
-{%- if let Some(ns) = namespace -%}
-namespace {{ns}} {
-{%endif-%}
-namespace {{self::CAPI_NAMESPACE}} {
-    {{ c_header.body|trim|indent(4) }}
-}
+{% include "c_include.h.jinja" %}
 
+{% if let Some(ns) = namespace -%}
+namespace {{ns}} {
+{% endif -%}
 class {{type_name_unnamespaced}} {
 public:
 {% for m in methods %}
@@ -32,5 +30,5 @@ private:
 };
 
 {% if namespace.is_some() -%}
-}
+} // namespace
 {%-endif%}

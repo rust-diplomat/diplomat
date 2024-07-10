@@ -61,7 +61,7 @@ impl<'tcx> CFormatter<'tcx> {
             if let Some(ref ns) = resolved.attrs().namespace {
                 format!("{ns}::{CAPI_NAMESPACE}::{name}").into()
             } else {
-                format!("::{CAPI_NAMESPACE}::{name}").into()
+                format!("diplomat::{CAPI_NAMESPACE}::{name}").into()
             }
         } else {
             name
