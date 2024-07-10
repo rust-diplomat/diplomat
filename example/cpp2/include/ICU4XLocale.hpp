@@ -16,16 +16,16 @@ namespace icu4x {
 namespace capi {
     extern "C" {
     
-    icu4x::capi::ICU4XLocale* ICU4XLocale_new(const char* name_data, size_t name_len);
+    icu4x::capi::ICU4XLocale* icu4x_ICU4XLocale_new_mv1(const char* name_data, size_t name_len);
     
     
-    void ICU4XLocale_destroy(ICU4XLocale* self);
+    void icu4x_ICU4XLocale_mv1_destroy(ICU4XLocale* self);
     
     } // extern "C"
 }
 }
 inline std::unique_ptr<icu4x::ICU4XLocale> icu4x::ICU4XLocale::new_(std::string_view name) {
-  auto result = capi::ICU4XLocale_new(name.data(),
+  auto result = capi::icu4x_ICU4XLocale_new_mv1(name.data(),
     name.size());
   return std::unique_ptr<icu4x::ICU4XLocale>(icu4x::ICU4XLocale::FromFFI(result));
 }
@@ -47,7 +47,7 @@ inline icu4x::ICU4XLocale* icu4x::ICU4XLocale::FromFFI(icu4x::capi::ICU4XLocale*
 }
 
 inline void icu4x::ICU4XLocale::operator delete(void* ptr) {
-  capi::ICU4XLocale_destroy(reinterpret_cast<icu4x::capi::ICU4XLocale*>(ptr));
+  capi::icu4x_ICU4XLocale_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XLocale*>(ptr));
 }
 
 

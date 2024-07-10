@@ -6,7 +6,7 @@ import com.sun.jna.Pointer
 
 internal interface ICU4XLocaleLib: Library {
     fun ICU4XLocale_destroy(handle: Pointer)
-    fun ICU4XLocale_new(name: Slice): Pointer
+    fun icu4x_ICU4XLocale_new_mv1(name: Slice): Pointer
 }
 
 class ICU4XLocale internal constructor (
@@ -29,7 +29,7 @@ class ICU4XLocale internal constructor (
         fun new_(name: String): ICU4XLocale {
             val (nameMem, nameSlice) = PrimitiveArrayTools.readUtf8(name)
             
-            val returnVal = lib.ICU4XLocale_new(nameSlice);
+            val returnVal = lib.icu4x_ICU4XLocale_new_mv1(nameSlice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = ICU4XLocale(handle, selfEdges)

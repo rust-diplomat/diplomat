@@ -22,32 +22,32 @@ final class ICU4XDataProvider implements ffi.Finalizable {
     }
   }
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ICU4XDataProvider_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XDataProvider_mv1_destroy));
 
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory ICU4XDataProvider.static_() {
-    final result = _ICU4XDataProvider_new_static();
+    final result = _icu4x_ICU4XDataProvider_new_static_mv1();
     return ICU4XDataProvider._fromFfi(result, []);
   }
 
   /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
   static bool returnsResult() {
-    final result = _ICU4XDataProvider_returns_result();
+    final result = _icu4x_ICU4XDataProvider_returns_result_mv1();
     return result.isOk;
   }
 }
 
-@meta.ResourceIdentifier('ICU4XDataProvider_destroy')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XDataProvider_destroy')
+@meta.ResourceIdentifier('icu4x_ICU4XDataProvider_mv1_destroy')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XDataProvider_mv1_destroy')
 // ignore: non_constant_identifier_names
-external void _ICU4XDataProvider_destroy(ffi.Pointer<ffi.Void> self);
+external void _icu4x_ICU4XDataProvider_mv1_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('ICU4XDataProvider_new_static')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'ICU4XDataProvider_new_static')
+@meta.ResourceIdentifier('icu4x_ICU4XDataProvider_new_static_mv1')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'icu4x_ICU4XDataProvider_new_static_mv1')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _ICU4XDataProvider_new_static();
+external ffi.Pointer<ffi.Opaque> _icu4x_ICU4XDataProvider_new_static_mv1();
 
-@meta.ResourceIdentifier('ICU4XDataProvider_returns_result')
-@ffi.Native<_ResultVoidVoid Function()>(isLeaf: true, symbol: 'ICU4XDataProvider_returns_result')
+@meta.ResourceIdentifier('icu4x_ICU4XDataProvider_returns_result_mv1')
+@ffi.Native<_ResultVoidVoid Function()>(isLeaf: true, symbol: 'icu4x_ICU4XDataProvider_returns_result_mv1')
 // ignore: non_constant_identifier_names
-external _ResultVoidVoid _ICU4XDataProvider_returns_result();
+external _ResultVoidVoid _icu4x_ICU4XDataProvider_returns_result_mv1();

@@ -6,7 +6,7 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 internal interface ICU4XFixedDecimalFormatterOptionsLib: Library {
-    fun ICU4XFixedDecimalFormatterOptions_default(): ICU4XFixedDecimalFormatterOptionsNative
+    fun icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1(): ICU4XFixedDecimalFormatterOptionsNative
 }
 
 internal class ICU4XFixedDecimalFormatterOptionsNative: Structure(), Structure.ByValue {
@@ -33,7 +33,7 @@ class ICU4XFixedDecimalFormatterOptions internal constructor (
         
         fun default_(): ICU4XFixedDecimalFormatterOptions {
             
-            val returnVal = lib.ICU4XFixedDecimalFormatterOptions_default();
+            val returnVal = lib.icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();
             
             val returnStruct = ICU4XFixedDecimalFormatterOptions(returnVal)
             return returnStruct

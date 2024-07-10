@@ -23,7 +23,7 @@ struct ICU4XFixedDecimalFormatterOptions {
 
 
 inline ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions::default_() {
-  capi::ICU4XFixedDecimalFormatterOptions diplomat_raw_struct_out_value = capi::ICU4XFixedDecimalFormatterOptions_default();
+  capi::ICU4XFixedDecimalFormatterOptions diplomat_raw_struct_out_value = capi::icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();
   return ICU4XFixedDecimalFormatterOptions{ .grouping_strategy = std::move(static_cast<ICU4XFixedDecimalGroupingStrategy>(diplomat_raw_struct_out_value.grouping_strategy)), .some_other_config = std::move(diplomat_raw_struct_out_value.some_other_config) };
 }
 #endif

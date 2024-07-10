@@ -18,7 +18,7 @@ class ICU4XLocale;
  */
 struct ICU4XLocaleDeleter {
   void operator()(capi::ICU4XLocale* l) const noexcept {
-    capi::ICU4XLocale_destroy(l);
+    capi::icu4x_ICU4XLocale_mv1_destroy(l);
   }
 };
 
@@ -46,6 +46,6 @@ class ICU4XLocale {
 
 
 inline ICU4XLocale ICU4XLocale::new_(const std::string_view name) {
-  return ICU4XLocale(capi::ICU4XLocale_new(name.data(), name.size()));
+  return ICU4XLocale(capi::icu4x_ICU4XLocale_new_mv1(name.data(), name.size()));
 }
 #endif

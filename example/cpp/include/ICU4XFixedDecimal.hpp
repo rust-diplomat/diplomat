@@ -18,7 +18,7 @@ class ICU4XFixedDecimal;
  */
 struct ICU4XFixedDecimalDeleter {
   void operator()(capi::ICU4XFixedDecimal* l) const noexcept {
-    capi::ICU4XFixedDecimal_destroy(l);
+    capi::icu4x_ICU4XFixedDecimal_mv1_destroy(l);
   }
 };
 
@@ -65,14 +65,14 @@ class ICU4XFixedDecimal {
 
 
 inline ICU4XFixedDecimal ICU4XFixedDecimal::new_(int32_t v) {
-  return ICU4XFixedDecimal(capi::ICU4XFixedDecimal_new(v));
+  return ICU4XFixedDecimal(capi::icu4x_ICU4XFixedDecimal_new_mv1(v));
 }
 inline void ICU4XFixedDecimal::multiply_pow10(int16_t power) {
-  capi::ICU4XFixedDecimal_multiply_pow10(this->inner.get(), power);
+  capi::icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(this->inner.get(), power);
 }
 template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU4XFixedDecimal::to_string_to_write(W& to) const {
   capi::DiplomatWrite to_writer = diplomat::WriteTrait<W>::Construct(to);
-  auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &to_writer);
+  auto diplomat_result_raw_out_value = capi::icu4x_ICU4XFixedDecimal_to_string_mv1(this->inner.get(), &to_writer);
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());
@@ -84,7 +84,7 @@ template<typename W> inline diplomat::result<std::monostate, std::monostate> ICU
 inline diplomat::result<std::string, std::monostate> ICU4XFixedDecimal::to_string() const {
   std::string diplomat_write_string;
   capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
-  auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimal_to_string(this->inner.get(), &diplomat_write_out);
+  auto diplomat_result_raw_out_value = capi::icu4x_ICU4XFixedDecimal_to_string_mv1(this->inner.get(), &diplomat_write_out);
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());

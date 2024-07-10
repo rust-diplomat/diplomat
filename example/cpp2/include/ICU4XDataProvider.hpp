@@ -16,24 +16,24 @@ namespace icu4x {
 namespace capi {
     extern "C" {
     
-    icu4x::capi::ICU4XDataProvider* ICU4XDataProvider_new_static();
+    icu4x::capi::ICU4XDataProvider* icu4x_ICU4XDataProvider_new_static_mv1();
     
-    typedef struct ICU4XDataProvider_returns_result_result { bool is_ok;} ICU4XDataProvider_returns_result_result;
-    ICU4XDataProvider_returns_result_result ICU4XDataProvider_returns_result();
+    typedef struct icu4x_ICU4XDataProvider_returns_result_mv1_result { bool is_ok;} icu4x_ICU4XDataProvider_returns_result_mv1_result;
+    icu4x_ICU4XDataProvider_returns_result_mv1_result icu4x_ICU4XDataProvider_returns_result_mv1();
     
     
-    void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
+    void icu4x_ICU4XDataProvider_mv1_destroy(ICU4XDataProvider* self);
     
     } // extern "C"
 }
 }
 inline std::unique_ptr<icu4x::ICU4XDataProvider> icu4x::ICU4XDataProvider::new_static() {
-  auto result = capi::ICU4XDataProvider_new_static();
+  auto result = capi::icu4x_ICU4XDataProvider_new_static_mv1();
   return std::unique_ptr<icu4x::ICU4XDataProvider>(icu4x::ICU4XDataProvider::FromFFI(result));
 }
 
 inline diplomat::result<std::monostate, std::monostate> icu4x::ICU4XDataProvider::returns_result() {
-  auto result = capi::ICU4XDataProvider_returns_result();
+  auto result = capi::icu4x_ICU4XDataProvider_returns_result_mv1();
   return result.is_ok ? diplomat::result<std::monostate, std::monostate>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, std::monostate>(diplomat::Err<std::monostate>());
 }
 
@@ -54,7 +54,7 @@ inline icu4x::ICU4XDataProvider* icu4x::ICU4XDataProvider::FromFFI(icu4x::capi::
 }
 
 inline void icu4x::ICU4XDataProvider::operator delete(void* ptr) {
-  capi::ICU4XDataProvider_destroy(reinterpret_cast<icu4x::capi::ICU4XDataProvider*>(ptr));
+  capi::icu4x_ICU4XDataProvider_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XDataProvider*>(ptr));
 }
 
 

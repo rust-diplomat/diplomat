@@ -22,24 +22,24 @@ final class ICU4XLocale implements ffi.Finalizable {
     }
   }
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ICU4XLocale_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XLocale_mv1_destroy));
 
   /// Construct an [`ICU4XLocale`] from a locale identifier represented as a string.
   factory ICU4XLocale(String name) {
     final temp = ffi2.Arena();
     final nameView = name.utf8View;
-    final result = _ICU4XLocale_new(nameView.allocIn(temp), nameView.length);
+    final result = _icu4x_ICU4XLocale_new_mv1(nameView.allocIn(temp), nameView.length);
     temp.releaseAll();
     return ICU4XLocale._fromFfi(result, []);
   }
 }
 
-@meta.ResourceIdentifier('ICU4XLocale_destroy')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XLocale_destroy')
+@meta.ResourceIdentifier('icu4x_ICU4XLocale_mv1_destroy')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XLocale_mv1_destroy')
 // ignore: non_constant_identifier_names
-external void _ICU4XLocale_destroy(ffi.Pointer<ffi.Void> self);
+external void _icu4x_ICU4XLocale_mv1_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('ICU4XLocale_new')
-@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'ICU4XLocale_new')
+@meta.ResourceIdentifier('icu4x_ICU4XLocale_new_mv1')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Uint8>, ffi.Size)>(isLeaf: true, symbol: 'icu4x_ICU4XLocale_new_mv1')
 // ignore: non_constant_identifier_names
-external ffi.Pointer<ffi.Opaque> _ICU4XLocale_new(ffi.Pointer<ffi.Uint8> nameData, int nameLength);
+external ffi.Pointer<ffi.Opaque> _icu4x_ICU4XLocale_new_mv1(ffi.Pointer<ffi.Uint8> nameData, int nameLength);

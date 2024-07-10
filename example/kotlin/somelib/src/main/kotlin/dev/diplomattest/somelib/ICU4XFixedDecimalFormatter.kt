@@ -6,8 +6,8 @@ import com.sun.jna.Pointer
 
 internal interface ICU4XFixedDecimalFormatterLib: Library {
     fun ICU4XFixedDecimalFormatter_destroy(handle: Pointer)
-    fun ICU4XFixedDecimalFormatter_try_new(locale: Pointer, provider: Pointer, options: ICU4XFixedDecimalFormatterOptionsNative): ResultPointerUnit
-    fun ICU4XFixedDecimalFormatter_format_write(handle: Pointer, value: Pointer, write: Pointer): Unit
+    fun icu4x_ICU4XFixedDecimalFormatter_try_new_mv1(locale: Pointer, provider: Pointer, options: ICU4XFixedDecimalFormatterOptionsNative): ResultPointerUnit
+    fun icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(handle: Pointer, value: Pointer, write: Pointer): Unit
 }
 
 class ICU4XFixedDecimalFormatter internal constructor (
@@ -29,7 +29,7 @@ class ICU4XFixedDecimalFormatter internal constructor (
         
         fun tryNew(locale: ICU4XLocale, provider: ICU4XDataProvider, options: ICU4XFixedDecimalFormatterOptions): Res<ICU4XFixedDecimalFormatter, Unit> {
             
-            val returnVal = lib.ICU4XFixedDecimalFormatter_try_new(locale.handle, provider.handle, options.nativeStruct);
+            val returnVal = lib.icu4x_ICU4XFixedDecimalFormatter_try_new_mv1(locale.handle, provider.handle, options.nativeStruct);
             if (returnVal.isOk == 1.toByte()) {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.ok 
@@ -45,7 +45,7 @@ class ICU4XFixedDecimalFormatter internal constructor (
     
     fun formatWrite(value: ICU4XFixedDecimal): String {
         val write = DW.lib.diplomat_buffer_write_create(0)
-        val returnVal = lib.ICU4XFixedDecimalFormatter_format_write(handle, value.handle, write);
+        val returnVal = lib.icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(handle, value.handle, write);
         
         val returnString = DW.writeToString(write)
         return returnString

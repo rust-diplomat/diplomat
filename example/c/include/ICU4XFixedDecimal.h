@@ -20,12 +20,12 @@ namespace capi {
 extern "C" {
 #endif
 
-ICU4XFixedDecimal* ICU4XFixedDecimal_new(int32_t v);
+ICU4XFixedDecimal* icu4x_ICU4XFixedDecimal_new_mv1(int32_t v);
 
-void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);
+void icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(ICU4XFixedDecimal* self, int16_t power);
 
-diplomat_result_void_void ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWrite* to);
-void ICU4XFixedDecimal_destroy(ICU4XFixedDecimal* self);
+diplomat_result_void_void icu4x_ICU4XFixedDecimal_to_string_mv1(const ICU4XFixedDecimal* self, DiplomatWrite* to);
+void icu4x_ICU4XFixedDecimal_mv1_destroy(ICU4XFixedDecimal* self);
 
 #ifdef __cplusplus
 } // extern "C"

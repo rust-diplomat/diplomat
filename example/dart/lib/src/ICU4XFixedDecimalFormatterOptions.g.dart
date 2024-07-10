@@ -32,7 +32,7 @@ final class ICU4XFixedDecimalFormatterOptions {
   }
 
   factory ICU4XFixedDecimalFormatterOptions({ICU4XFixedDecimalGroupingStrategy? groupingStrategy, bool? someOtherConfig}) {
-    final result = _ICU4XFixedDecimalFormatterOptions_default();
+    final result = _icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();
     final dart = ICU4XFixedDecimalFormatterOptions._fromFfi(result);
     if (groupingStrategy != null) {
       dart.groupingStrategy = groupingStrategy;
@@ -56,7 +56,7 @@ final class ICU4XFixedDecimalFormatterOptions {
       ]);
 }
 
-@meta.ResourceIdentifier('ICU4XFixedDecimalFormatterOptions_default')
-@ffi.Native<_ICU4XFixedDecimalFormatterOptionsFfi Function()>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatterOptions_default')
+@meta.ResourceIdentifier('icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1')
+@ffi.Native<_ICU4XFixedDecimalFormatterOptionsFfi Function()>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1')
 // ignore: non_constant_identifier_names
-external _ICU4XFixedDecimalFormatterOptionsFfi _ICU4XFixedDecimalFormatterOptions_default();
+external _ICU4XFixedDecimalFormatterOptionsFfi _icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();

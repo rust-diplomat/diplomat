@@ -20,10 +20,10 @@ namespace capi {
 extern "C" {
 #endif
 
-ICU4XDataProvider* ICU4XDataProvider_new_static();
+ICU4XDataProvider* icu4x_ICU4XDataProvider_new_static_mv1();
 
-diplomat_result_void_void ICU4XDataProvider_returns_result();
-void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
+diplomat_result_void_void icu4x_ICU4XDataProvider_returns_result_mv1();
+void icu4x_ICU4XDataProvider_mv1_destroy(ICU4XDataProvider* self);
 
 #ifdef __cplusplus
 } // extern "C"
