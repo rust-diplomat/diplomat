@@ -70,7 +70,7 @@ public enum MyEnum {
     public static MyEnum getA() {
         var nativeInvoker = somelib_h.MyEnum_get_a.makeInvoker();
         var nativeVal = nativeInvoker.apply();
-        return MyEnum.fromInt(nativeVal)
+        return MyEnum.fromInt(nativeVal);
     }
 
 }

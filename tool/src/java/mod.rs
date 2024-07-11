@@ -442,7 +442,7 @@ return string;"#,
             }
             hir::Type::Enum(e) => {
                 let enum_ty = self.tcx.resolve_enum(e.tcx_id).name.as_str();
-                format!(r#"return {enum_ty}.fromInt(nativeVal)"#).into()
+                format!(r#"return {enum_ty}.fromInt(nativeVal);"#).into()
             }
             hir::Type::Slice(ref slice) => self.gen_slice_return_conversion(slice)?,
             unknown => panic!("Got to unknown return type: {unknown:?}"),
