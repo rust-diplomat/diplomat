@@ -58,10 +58,7 @@ pub(super) struct JSFormatter<'tcx> {
 }
 
 impl<'tcx> JSFormatter<'tcx> {
-    pub fn new(
-        tcx: &'tcx TypeContext,
-        docs_url_gen: &'tcx DocsUrlGenerator,
-    ) -> Self {
+    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
         Self {
             c_formatter: CFormatter::new(tcx, false),
             docs_url_gen,
@@ -71,7 +68,10 @@ impl<'tcx> JSFormatter<'tcx> {
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let type_def = self.c_formatter.tcx().resolve_type(id);
 
-        type_def.attrs().rename.apply(type_def.name().as_str().into())
+        type_def
+            .attrs()
+            .rename
+            .apply(type_def.name().as_str().into())
     }
 
     pub fn fmt_type_name_diagnostics(&self, type_id: TypeId) -> Cow<'tcx, str> {

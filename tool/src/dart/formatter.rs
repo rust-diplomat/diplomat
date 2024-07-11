@@ -25,10 +25,7 @@ const INVALID_FIELD_NAMES: &[&str] = &["new", "static", "default"];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> DartFormatter<'tcx> {
-    pub fn new(
-        tcx: &'tcx TypeContext,
-        docs_url_generator: &'tcx DocsUrlGenerator,
-    ) -> Self {
+    pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
         Self {
             c: CFormatter::new(tcx, false),
             docs_url_generator,
