@@ -18,7 +18,6 @@ use std::borrow::Cow;
 pub(super) struct DartFormatter<'tcx> {
     c: CFormatter<'tcx>,
     docs_url_generator: &'tcx DocsUrlGenerator,
-    strip_prefix: Option<String>,
 }
 
 const INVALID_METHOD_NAMES: &[&str] = &["new", "static", "default"];
@@ -26,15 +25,10 @@ const INVALID_FIELD_NAMES: &[&str] = &["new", "static", "default"];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> DartFormatter<'tcx> {
-    pub fn new(
-        tcx: &'tcx TypeContext,
-        docs_url_generator: &'tcx DocsUrlGenerator,
-        strip_prefix: Option<String>,
-    ) -> Self {
+    pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
         Self {
             c: CFormatter::new(tcx, false),
             docs_url_generator,
-            strip_prefix,
         }
     }
 
@@ -72,10 +66,6 @@ impl<'tcx> DartFormatter<'tcx> {
             .trim()
             .replace('\n', "\n/// ")
             .replace(" \n", "\n")
-            .replace(
-                &format!("`{}", self.strip_prefix.as_deref().unwrap_or("")),
-                "`",
-            )
     }
 
     pub fn fmt_destructor_name(&self, id: TypeId) -> String {
@@ -86,22 +76,13 @@ impl<'tcx> DartFormatter<'tcx> {
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
 
-        let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
-            resolved
-                .name()
-                .as_str()
-                .strip_prefix(strip_prefix)
-                .unwrap_or(resolved.name().as_str())
-                .into()
-        } else {
-            resolved.name().as_str().into()
-        };
+        let candidate = resolved.name().as_str();
 
-        if DISALLOWED_CORE_TYPES.contains(&&*candidate) {
+        if DISALLOWED_CORE_TYPES.contains(&candidate) {
             panic!("{candidate:?} is not a valid Dart type name. Please rename.");
         }
 
-        resolved.attrs().rename.apply(candidate)
+        resolved.attrs().rename.apply(candidate.into())
     }
 
     /// Resolve and format a named type for use in diagnostics

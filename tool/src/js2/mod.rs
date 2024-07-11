@@ -50,11 +50,10 @@ impl<'tcx> JSGenerationContext<'tcx> {
     pub fn run(
         tcx: &'tcx TypeContext,
         docs: &'tcx DocsUrlGenerator,
-        strip_prefix: Option<String>,
     ) -> Result<FileMap, Vec<(impl Display + 'tcx, String)>> {
         let mut this = Self {
             tcx,
-            formatter: JSFormatter::new(tcx, docs, strip_prefix),
+            formatter: JSFormatter::new(tcx, docs),
 
             errors: ErrorStore::default(),
 

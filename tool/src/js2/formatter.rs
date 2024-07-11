@@ -55,40 +55,23 @@ pub(super) struct JSFormatter<'tcx> {
 
     /// For generating doc.rs links
     docs_url_gen: &'tcx DocsUrlGenerator,
-    /// If there's something we need to remove during formatting. Set by user.
-    strip_prefix: Option<String>,
 }
 
 impl<'tcx> JSFormatter<'tcx> {
-    pub fn new(
-        tcx: &'tcx TypeContext,
-        docs_url_gen: &'tcx DocsUrlGenerator,
-        strip_prefix: Option<String>,
-    ) -> Self {
+    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
         Self {
             c_formatter: CFormatter::new(tcx, false),
             docs_url_gen,
-            strip_prefix,
         }
     }
 
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let type_def = self.c_formatter.tcx().resolve_type(id);
 
-        let candidate: Cow<str>;
-
-        if let Some(strip_prefix) = self.strip_prefix.as_ref() {
-            candidate = type_def
-                .name()
-                .as_str()
-                .strip_prefix(strip_prefix)
-                .unwrap_or(type_def.name().as_str())
-                .into();
-        } else {
-            candidate = type_def.name().as_str().into();
-        }
-
-        type_def.attrs().rename.apply(candidate)
+        type_def
+            .attrs()
+            .rename
+            .apply(type_def.name().as_str().into())
     }
 
     pub fn fmt_type_name_diagnostics(&self, type_id: TypeId) -> Cow<'tcx, str> {
