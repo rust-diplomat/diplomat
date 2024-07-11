@@ -22,14 +22,14 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
     }
   }
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_ICU4XFixedDecimalFormatter_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XFixedDecimalFormatter_mv1_destroy));
 
   /// Creates a new [`ICU4XFixedDecimalFormatter`] from locale data.
   ///
   /// See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
   static ICU4XFixedDecimalFormatter? tryNew(ICU4XLocale locale, ICU4XDataProvider provider, ICU4XFixedDecimalFormatterOptions options) {
     final temp = ffi2.Arena();
-    final result = _ICU4XFixedDecimalFormatter_try_new(locale._ffi, provider._ffi, options._toFfi(temp));
+    final result = _icu4x_ICU4XFixedDecimalFormatter_try_new_mv1(locale._ffi, provider._ffi, options._toFfi(temp));
     temp.releaseAll();
     if (!result.isOk) {
       return null;
@@ -42,22 +42,22 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   /// See the [Rust documentation for `format`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.format) for more information.
   String formatWrite(ICU4XFixedDecimal value) {
     final write = _Write();
-    _ICU4XFixedDecimalFormatter_format_write(_ffi, value._ffi, write._ffi);
+    _icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(_ffi, value._ffi, write._ffi);
     return write.finalize();
   }
 }
 
-@meta.ResourceIdentifier('ICU4XFixedDecimalFormatter_destroy')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatter_destroy')
+@meta.ResourceIdentifier('icu4x_ICU4XFixedDecimalFormatter_mv1_destroy')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimalFormatter_mv1_destroy')
 // ignore: non_constant_identifier_names
-external void _ICU4XFixedDecimalFormatter_destroy(ffi.Pointer<ffi.Void> self);
+external void _icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(ffi.Pointer<ffi.Void> self);
 
-@meta.ResourceIdentifier('ICU4XFixedDecimalFormatter_try_new')
-@ffi.Native<_ResultOpaqueVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, _ICU4XFixedDecimalFormatterOptionsFfi)>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatter_try_new')
+@meta.ResourceIdentifier('icu4x_ICU4XFixedDecimalFormatter_try_new_mv1')
+@ffi.Native<_ResultOpaqueVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, _ICU4XFixedDecimalFormatterOptionsFfi)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimalFormatter_try_new_mv1')
 // ignore: non_constant_identifier_names
-external _ResultOpaqueVoid _ICU4XFixedDecimalFormatter_try_new(ffi.Pointer<ffi.Opaque> locale, ffi.Pointer<ffi.Opaque> provider, _ICU4XFixedDecimalFormatterOptionsFfi options);
+external _ResultOpaqueVoid _icu4x_ICU4XFixedDecimalFormatter_try_new_mv1(ffi.Pointer<ffi.Opaque> locale, ffi.Pointer<ffi.Opaque> provider, _ICU4XFixedDecimalFormatterOptionsFfi options);
 
-@meta.ResourceIdentifier('ICU4XFixedDecimalFormatter_format_write')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'ICU4XFixedDecimalFormatter_format_write')
+@meta.ResourceIdentifier('icu4x_ICU4XFixedDecimalFormatter_format_write_mv1')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimalFormatter_format_write_mv1')
 // ignore: non_constant_identifier_names
-external void _ICU4XFixedDecimalFormatter_format_write(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> value, ffi.Pointer<ffi.Opaque> write);
+external void _icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> value, ffi.Pointer<ffi.Opaque> write);

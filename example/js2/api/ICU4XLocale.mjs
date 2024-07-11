@@ -9,7 +9,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 */
 
 const ICU4XLocale_box_destroy_registry = new FinalizationRegistry((ptr) => {
-    wasm.ICU4XLocale_destroy(ptr);
+    wasm.icu4x_ICU4XLocale_mv1_destroy(ptr);
 });
 export class ICU4XLocale {
     // Internal ptr reference:
@@ -36,7 +36,7 @@ export class ICU4XLocale {
     static new_(name) {
         
         const nameSlice = diplomatRuntime.DiplomatBuf.str8(wasm, name);
-        const result = wasm.ICU4XLocale_new(nameSlice.ptr, nameSlice.size);
+        const result = wasm.icu4x_ICU4XLocale_new_mv1(nameSlice.ptr, nameSlice.size);
     
         try {
     

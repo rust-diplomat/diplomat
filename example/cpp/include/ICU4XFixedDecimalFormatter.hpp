@@ -22,7 +22,7 @@ class ICU4XFixedDecimal;
  */
 struct ICU4XFixedDecimalFormatterDeleter {
   void operator()(capi::ICU4XFixedDecimalFormatter* l) const noexcept {
-    capi::ICU4XFixedDecimalFormatter_destroy(l);
+    capi::icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(l);
   }
 };
 
@@ -71,7 +71,7 @@ class ICU4XFixedDecimalFormatter {
 
 inline diplomat::result<ICU4XFixedDecimalFormatter, std::monostate> ICU4XFixedDecimalFormatter::try_new(const ICU4XLocale& locale, const ICU4XDataProvider& provider, ICU4XFixedDecimalFormatterOptions options) {
   ICU4XFixedDecimalFormatterOptions diplomat_wrapped_struct_options = options;
-  auto diplomat_result_raw_out_value = capi::ICU4XFixedDecimalFormatter_try_new(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatterOptions{ .grouping_strategy = static_cast<capi::ICU4XFixedDecimalGroupingStrategy>(diplomat_wrapped_struct_options.grouping_strategy), .some_other_config = diplomat_wrapped_struct_options.some_other_config });
+  auto diplomat_result_raw_out_value = capi::icu4x_ICU4XFixedDecimalFormatter_try_new_mv1(locale.AsFFI(), provider.AsFFI(), capi::ICU4XFixedDecimalFormatterOptions{ .grouping_strategy = static_cast<capi::ICU4XFixedDecimalGroupingStrategy>(diplomat_wrapped_struct_options.grouping_strategy), .some_other_config = diplomat_wrapped_struct_options.some_other_config });
   diplomat::result<ICU4XFixedDecimalFormatter, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<ICU4XFixedDecimalFormatter>(ICU4XFixedDecimalFormatter(diplomat_result_raw_out_value.ok));
@@ -82,12 +82,12 @@ inline diplomat::result<ICU4XFixedDecimalFormatter, std::monostate> ICU4XFixedDe
 }
 template<typename W> inline void ICU4XFixedDecimalFormatter::format_write_to_write(const ICU4XFixedDecimal& value, W& write) const {
   capi::DiplomatWrite write_writer = diplomat::WriteTrait<W>::Construct(write);
-  capi::ICU4XFixedDecimalFormatter_format_write(this->inner.get(), value.AsFFI(), &write_writer);
+  capi::icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(this->inner.get(), value.AsFFI(), &write_writer);
 }
 inline std::string ICU4XFixedDecimalFormatter::format_write(const ICU4XFixedDecimal& value) const {
   std::string diplomat_write_string;
   capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
-  capi::ICU4XFixedDecimalFormatter_format_write(this->inner.get(), value.AsFFI(), &diplomat_write_out);
+  capi::icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(this->inner.get(), value.AsFFI(), &diplomat_write_out);
   return diplomat_write_string;
 }
 #endif

@@ -7,7 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 */
 
 const ICU4XFixedDecimal_box_destroy_registry = new FinalizationRegistry((ptr) => {
-    wasm.ICU4XFixedDecimal_destroy(ptr);
+    wasm.icu4x_ICU4XFixedDecimal_mv1_destroy(ptr);
 });
 export class ICU4XFixedDecimal {
     // Internal ptr reference:
@@ -32,7 +32,7 @@ export class ICU4XFixedDecimal {
 
 
     static new_(v) {
-        const result = wasm.ICU4XFixedDecimal_new(v);
+        const result = wasm.icu4x_ICU4XFixedDecimal_new_mv1(v);
     
         try {
     
@@ -43,7 +43,7 @@ export class ICU4XFixedDecimal {
     }
 
     multiplyPow10(power) {
-        wasm.ICU4XFixedDecimal_multiply_pow10(this.ffiValue, power);
+        wasm.icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(this.ffiValue, power);
     
         try {
     
@@ -55,7 +55,7 @@ export class ICU4XFixedDecimal {
     toString() {
         
         const write = wasm.diplomat_buffer_write_create(0);
-        const result = wasm.ICU4XFixedDecimal_to_string(this.ffiValue, write);
+        const result = wasm.icu4x_ICU4XFixedDecimal_to_string_mv1(this.ffiValue, write);
     
         try {
     

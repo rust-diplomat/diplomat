@@ -19,13 +19,13 @@
 
 
 
-typedef struct ICU4XFixedDecimalFormatter_try_new_result {union {ICU4XFixedDecimalFormatter* ok; }; bool is_ok;} ICU4XFixedDecimalFormatter_try_new_result;
-ICU4XFixedDecimalFormatter_try_new_result ICU4XFixedDecimalFormatter_try_new(const ICU4XLocale* locale, const ICU4XDataProvider* provider, ICU4XFixedDecimalFormatterOptions options);
+typedef struct icu4x_ICU4XFixedDecimalFormatter_try_new_mv1_result {union {ICU4XFixedDecimalFormatter* ok; }; bool is_ok;} icu4x_ICU4XFixedDecimalFormatter_try_new_mv1_result;
+icu4x_ICU4XFixedDecimalFormatter_try_new_mv1_result icu4x_ICU4XFixedDecimalFormatter_try_new_mv1(const ICU4XLocale* locale, const ICU4XDataProvider* provider, ICU4XFixedDecimalFormatterOptions options);
 
-void ICU4XFixedDecimalFormatter_format_write(const ICU4XFixedDecimalFormatter* self, const ICU4XFixedDecimal* value, DiplomatWrite* write);
+void icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(const ICU4XFixedDecimalFormatter* self, const ICU4XFixedDecimal* value, DiplomatWrite* write);
 
 
-void ICU4XFixedDecimalFormatter_destroy(ICU4XFixedDecimalFormatter* self);
+void icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(ICU4XFixedDecimalFormatter* self);
 
 
 

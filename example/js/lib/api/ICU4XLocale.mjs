@@ -2,7 +2,7 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 const ICU4XLocale_box_destroy_registry = new FinalizationRegistry(underlying => {
-  wasm.ICU4XLocale_destroy(underlying);
+  wasm.icu4x_ICU4XLocale_mv1_destroy(underlying);
 });
 
 export class ICU4XLocale {
@@ -17,7 +17,7 @@ export class ICU4XLocale {
 
   static new(arg_name) {
     const buf_arg_name = diplomatRuntime.DiplomatBuf.str8(wasm, arg_name);
-    const diplomat_out = new ICU4XLocale(wasm.ICU4XLocale_new(buf_arg_name.ptr, buf_arg_name.size), true, []);
+    const diplomat_out = new ICU4XLocale(wasm.icu4x_ICU4XLocale_new_mv1(buf_arg_name.ptr, buf_arg_name.size), true, []);
     buf_arg_name.free();
     return diplomat_out;
   }

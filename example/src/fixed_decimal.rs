@@ -1,4 +1,5 @@
 #[diplomat::bridge]
+#[diplomat::abi_rename = "icu4x_{0}_mv1"]
 #[diplomat::attr(supports = namespacing, namespace = "icu4x")]
 pub mod ffi {
     use diplomat_runtime::DiplomatWrite;

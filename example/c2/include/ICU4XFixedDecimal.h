@@ -15,15 +15,15 @@
 
 
 
-ICU4XFixedDecimal* ICU4XFixedDecimal_new(int32_t v);
+ICU4XFixedDecimal* icu4x_ICU4XFixedDecimal_new_mv1(int32_t v);
 
-void ICU4XFixedDecimal_multiply_pow10(ICU4XFixedDecimal* self, int16_t power);
+void icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(ICU4XFixedDecimal* self, int16_t power);
 
-typedef struct ICU4XFixedDecimal_to_string_result { bool is_ok;} ICU4XFixedDecimal_to_string_result;
-ICU4XFixedDecimal_to_string_result ICU4XFixedDecimal_to_string(const ICU4XFixedDecimal* self, DiplomatWrite* write);
+typedef struct icu4x_ICU4XFixedDecimal_to_string_mv1_result { bool is_ok;} icu4x_ICU4XFixedDecimal_to_string_mv1_result;
+icu4x_ICU4XFixedDecimal_to_string_mv1_result icu4x_ICU4XFixedDecimal_to_string_mv1(const ICU4XFixedDecimal* self, DiplomatWrite* write);
 
 
-void ICU4XFixedDecimal_destroy(ICU4XFixedDecimal* self);
+void icu4x_ICU4XFixedDecimal_mv1_destroy(ICU4XFixedDecimal* self);
 
 
 

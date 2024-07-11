@@ -18,7 +18,7 @@ class ICU4XDataProvider;
  */
 struct ICU4XDataProviderDeleter {
   void operator()(capi::ICU4XDataProvider* l) const noexcept {
-    capi::ICU4XDataProvider_destroy(l);
+    capi::icu4x_ICU4XDataProvider_mv1_destroy(l);
   }
 };
 
@@ -51,10 +51,10 @@ class ICU4XDataProvider {
 
 
 inline ICU4XDataProvider ICU4XDataProvider::new_static() {
-  return ICU4XDataProvider(capi::ICU4XDataProvider_new_static());
+  return ICU4XDataProvider(capi::icu4x_ICU4XDataProvider_new_static_mv1());
 }
 inline diplomat::result<std::monostate, std::monostate> ICU4XDataProvider::returns_result() {
-  auto diplomat_result_raw_out_value = capi::ICU4XDataProvider_returns_result();
+  auto diplomat_result_raw_out_value = capi::icu4x_ICU4XDataProvider_returns_result_mv1();
   diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
   if (diplomat_result_raw_out_value.is_ok) {
     diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());

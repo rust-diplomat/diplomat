@@ -6,9 +6,9 @@ import com.sun.jna.Pointer
 
 internal interface ICU4XFixedDecimalLib: Library {
     fun ICU4XFixedDecimal_destroy(handle: Pointer)
-    fun ICU4XFixedDecimal_new(v: Int): Pointer
-    fun ICU4XFixedDecimal_multiply_pow10(handle: Pointer, power: Short): Unit
-    fun ICU4XFixedDecimal_to_string(handle: Pointer, write: Pointer): ResultUnitUnit
+    fun icu4x_ICU4XFixedDecimal_new_mv1(v: Int): Pointer
+    fun icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(handle: Pointer, power: Short): Unit
+    fun icu4x_ICU4XFixedDecimal_to_string_mv1(handle: Pointer, write: Pointer): ResultUnitUnit
 }
 
 class ICU4XFixedDecimal internal constructor (
@@ -30,7 +30,7 @@ class ICU4XFixedDecimal internal constructor (
         
         fun new_(v: Int): ICU4XFixedDecimal {
             
-            val returnVal = lib.ICU4XFixedDecimal_new(v);
+            val returnVal = lib.icu4x_ICU4XFixedDecimal_new_mv1(v);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = ICU4XFixedDecimal(handle, selfEdges)
@@ -42,13 +42,13 @@ class ICU4XFixedDecimal internal constructor (
     
     fun multiplyPow10(power: Short): Unit {
         
-        val returnVal = lib.ICU4XFixedDecimal_multiply_pow10(handle, power);
+        val returnVal = lib.icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(handle, power);
         
     }
     
     fun toString_(): Res<String, Unit> {
         val write = DW.lib.diplomat_buffer_write_create(0)
-        val returnVal = lib.ICU4XFixedDecimal_to_string(handle, write);
+        val returnVal = lib.icu4x_ICU4XFixedDecimal_to_string_mv1(handle, write);
         if (returnVal.isOk == 1.toByte()) {
             
             val returnString = DW.writeToString(write)

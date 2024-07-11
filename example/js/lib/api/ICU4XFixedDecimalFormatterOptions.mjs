@@ -11,7 +11,7 @@ export class ICU4XFixedDecimalFormatterOptions {
   static default() {
     return (() => {
       const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-      wasm.ICU4XFixedDecimalFormatterOptions_default(diplomat_receive_buffer);
+      wasm.icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1(diplomat_receive_buffer);
       const out = new ICU4XFixedDecimalFormatterOptions(diplomat_receive_buffer);
       wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
       return out;

@@ -24,8 +24,8 @@ namespace capi {
 extern "C" {
 #endif
 
-ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions_default();
-void ICU4XFixedDecimalFormatterOptions_destroy(ICU4XFixedDecimalFormatterOptions* self);
+ICU4XFixedDecimalFormatterOptions icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();
+void icu4x_ICU4XFixedDecimalFormatterOptions_mv1_destroy(ICU4XFixedDecimalFormatterOptions* self);
 
 #ifdef __cplusplus
 } // extern "C"

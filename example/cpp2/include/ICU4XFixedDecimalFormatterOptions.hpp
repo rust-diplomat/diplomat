@@ -17,14 +17,14 @@ namespace icu4x {
 namespace capi {
     extern "C" {
     
-    icu4x::capi::ICU4XFixedDecimalFormatterOptions ICU4XFixedDecimalFormatterOptions_default();
+    icu4x::capi::ICU4XFixedDecimalFormatterOptions icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();
     
     
     } // extern "C"
 }
 }
 inline icu4x::ICU4XFixedDecimalFormatterOptions icu4x::ICU4XFixedDecimalFormatterOptions::default_() {
-  auto result = capi::ICU4XFixedDecimalFormatterOptions_default();
+  auto result = capi::icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();
   return icu4x::ICU4XFixedDecimalFormatterOptions::FromFFI(result);
 }
 

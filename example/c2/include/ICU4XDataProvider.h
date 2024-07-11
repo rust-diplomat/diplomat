@@ -15,13 +15,13 @@
 
 
 
-ICU4XDataProvider* ICU4XDataProvider_new_static();
+ICU4XDataProvider* icu4x_ICU4XDataProvider_new_static_mv1();
 
-typedef struct ICU4XDataProvider_returns_result_result { bool is_ok;} ICU4XDataProvider_returns_result_result;
-ICU4XDataProvider_returns_result_result ICU4XDataProvider_returns_result();
+typedef struct icu4x_ICU4XDataProvider_returns_result_mv1_result { bool is_ok;} icu4x_ICU4XDataProvider_returns_result_mv1_result;
+icu4x_ICU4XDataProvider_returns_result_mv1_result icu4x_ICU4XDataProvider_returns_result_mv1();
 
 
-void ICU4XDataProvider_destroy(ICU4XDataProvider* self);
+void icu4x_ICU4XDataProvider_mv1_destroy(ICU4XDataProvider* self);
 
 
 

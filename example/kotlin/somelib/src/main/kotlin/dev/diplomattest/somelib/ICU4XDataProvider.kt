@@ -6,8 +6,8 @@ import com.sun.jna.Pointer
 
 internal interface ICU4XDataProviderLib: Library {
     fun ICU4XDataProvider_destroy(handle: Pointer)
-    fun ICU4XDataProvider_new_static(): Pointer
-    fun ICU4XDataProvider_returns_result(): ResultUnitUnit
+    fun icu4x_ICU4XDataProvider_new_static_mv1(): Pointer
+    fun icu4x_ICU4XDataProvider_returns_result_mv1(): ResultUnitUnit
 }
 
 class ICU4XDataProvider internal constructor (
@@ -29,7 +29,7 @@ class ICU4XDataProvider internal constructor (
         
         fun newStatic(): ICU4XDataProvider {
             
-            val returnVal = lib.ICU4XDataProvider_new_static();
+            val returnVal = lib.icu4x_ICU4XDataProvider_new_static_mv1();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = ICU4XDataProvider(handle, selfEdges)
@@ -40,7 +40,7 @@ class ICU4XDataProvider internal constructor (
         
         fun returnsResult(): Res<Unit, Unit> {
             
-            val returnVal = lib.ICU4XDataProvider_returns_result();
+            val returnVal = lib.icu4x_ICU4XDataProvider_returns_result_mv1();
             if (returnVal.isOk == 1.toByte()) {
                 Unit.ok()
             } else {
