@@ -22,7 +22,7 @@ class ICU4XFixedDecimal;
  */
 struct ICU4XFixedDecimalFormatterDeleter {
   void operator()(capi::ICU4XFixedDecimalFormatter* l) const noexcept {
-    capi::icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(l);
+    capi::icu4x_ICU4XFixedDecimalFormatter_destroy_mv1(l);
   }
 };
 

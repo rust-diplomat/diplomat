@@ -23,7 +23,7 @@ typedef struct icu4x_ICU4XFixedDecimal_to_string_mv1_result { bool is_ok;} icu4x
 icu4x_ICU4XFixedDecimal_to_string_mv1_result icu4x_ICU4XFixedDecimal_to_string_mv1(const ICU4XFixedDecimal* self, DiplomatWrite* write);
 
 
-void icu4x_ICU4XFixedDecimal_mv1_destroy(ICU4XFixedDecimal* self);
+void icu4x_ICU4XFixedDecimal_destroy_mv1(ICU4XFixedDecimal* self);
 
 
 

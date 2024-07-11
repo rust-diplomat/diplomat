@@ -24,7 +24,7 @@ namespace capi {
     icu4x_ICU4XFixedDecimal_to_string_mv1_result icu4x_ICU4XFixedDecimal_to_string_mv1(const icu4x::capi::ICU4XFixedDecimal* self, diplomat::capi::DiplomatWrite* write);
     
     
-    void icu4x_ICU4XFixedDecimal_mv1_destroy(ICU4XFixedDecimal* self);
+    void icu4x_ICU4XFixedDecimal_destroy_mv1(ICU4XFixedDecimal* self);
     
     } // extern "C"
 } // namespace capi
@@ -65,7 +65,7 @@ inline icu4x::ICU4XFixedDecimal* icu4x::ICU4XFixedDecimal::FromFFI(icu4x::capi::
 }
 
 inline void icu4x::ICU4XFixedDecimal::operator delete(void* ptr) {
-  icu4x::capi::icu4x_ICU4XFixedDecimal_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XFixedDecimal*>(ptr));
+  icu4x::capi::icu4x_ICU4XFixedDecimal_destroy_mv1(reinterpret_cast<icu4x::capi::ICU4XFixedDecimal*>(ptr));
 }
 
 

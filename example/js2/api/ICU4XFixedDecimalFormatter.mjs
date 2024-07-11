@@ -13,7 +13,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 */
 
 const ICU4XFixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr) => {
-    wasm.icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(ptr);
+    wasm.icu4x_ICU4XFixedDecimalFormatter_destroy_mv1(ptr);
 });
 export class ICU4XFixedDecimalFormatter {
     // Internal ptr reference:

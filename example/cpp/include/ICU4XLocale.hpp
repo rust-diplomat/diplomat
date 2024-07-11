@@ -18,7 +18,7 @@ class ICU4XLocale;
  */
 struct ICU4XLocaleDeleter {
   void operator()(capi::ICU4XLocale* l) const noexcept {
-    capi::icu4x_ICU4XLocale_mv1_destroy(l);
+    capi::icu4x_ICU4XLocale_destroy_mv1(l);
   }
 };
 

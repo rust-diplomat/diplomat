@@ -3,7 +3,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs"
 import { ICU4XFixedDecimalGroupingStrategy_js_to_rust, ICU4XFixedDecimalGroupingStrategy_rust_to_js } from "./ICU4XFixedDecimalGroupingStrategy.mjs"
 
 const ICU4XFixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry(underlying => {
-  wasm.icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(underlying);
+  wasm.icu4x_ICU4XFixedDecimalFormatter_destroy_mv1(underlying);
 });
 
 export class ICU4XFixedDecimalFormatter {

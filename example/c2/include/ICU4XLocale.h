@@ -18,7 +18,7 @@
 ICU4XLocale* icu4x_ICU4XLocale_new_mv1(const char* name_data, size_t name_len);
 
 
-void icu4x_ICU4XLocale_mv1_destroy(ICU4XLocale* self);
+void icu4x_ICU4XLocale_destroy_mv1(ICU4XLocale* self);
 
 
 
