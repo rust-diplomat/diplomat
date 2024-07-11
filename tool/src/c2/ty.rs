@@ -74,6 +74,7 @@ struct EnumTemplate<'a> {
     ty: &'a hir::EnumDef,
     fmt: &'a CFormatter<'a>,
     ty_name: &'a str,
+    is_for_cpp: bool,
 }
 
 #[derive(Template)]
@@ -81,12 +82,14 @@ struct EnumTemplate<'a> {
 struct StructTemplate<'a> {
     ty_name: Cow<'a, str>,
     fields: Vec<(Cow<'a, str>, Cow<'a, str>)>,
+    is_for_cpp: bool,
 }
 
 #[derive(Template)]
 #[template(path = "c2/opaque.h.jinja", escape = "none")]
 struct OpaqueTemplate<'a> {
     ty_name: Cow<'a, str>,
+    is_for_cpp: bool,
 }
 
 #[derive(Template)]
@@ -125,6 +128,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             ty: def,
             fmt: self.formatter,
             ty_name: &ty_name,
+            is_for_cpp: self.is_for_cpp,
         }
         .render_into(&mut decl_header)
         .unwrap();
@@ -135,9 +139,12 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
     pub fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id);
-        OpaqueTemplate { ty_name }
-            .render_into(&mut decl_header)
-            .unwrap();
+        OpaqueTemplate {
+            ty_name,
+            is_for_cpp: self.is_for_cpp,
+        }
+        .render_into(&mut decl_header)
+        .unwrap();
 
         decl_header
     }
@@ -156,9 +163,13 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             );
         }
 
-        StructTemplate { ty_name, fields }
-            .render_into(&mut decl_header)
-            .unwrap();
+        StructTemplate {
+            ty_name,
+            fields,
+            is_for_cpp: self.is_for_cpp,
+        }
+        .render_into(&mut decl_header)
+        .unwrap();
 
         decl_header
     }

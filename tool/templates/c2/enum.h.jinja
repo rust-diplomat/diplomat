@@ -1,7 +1,8 @@
-typedef enum {{ ty_name }} {
+{% if !is_for_cpp -%} typedef {% endif -%}
+enum {{ ty_name }} {
   {%- for enum_variant in ty.variants %}
   {{fmt.fmt_enum_variant(ty_name, enum_variant)}} = {{ enum_variant.discriminant }},
   {%- endfor %}
-} {{ ty_name }};
+} {%- if !is_for_cpp %} {{ ty_name }} {%- endif %};
 
 
