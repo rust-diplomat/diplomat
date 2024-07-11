@@ -12,6 +12,9 @@ class OpaqueTest {
     void testOpaque() {
         var input = "How do you do?";
         var opaque = Opaque.fromStr(input);
-        assertEquals(input.length() + 1, opaque.internalLen());
+        System.out.println("instantiated");
+        System.out.println(opaque.getDebugStr());
+        System.out.println("done debuging");
+        assertEquals(input.length(), opaque.internalLen());
     }
 }

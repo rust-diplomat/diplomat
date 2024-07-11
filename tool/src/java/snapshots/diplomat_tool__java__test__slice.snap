@@ -1,0 +1,147 @@
+---
+source: tool/src/java/mod.rs
+expression: res
+---
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.*;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public class Float64Vec {
+
+    MemorySegment internal;
+    Cleaner.Cleanable cleanable;
+
+    static class Float64VecCleaner implements Runnable {
+
+        MemorySegment segment;
+        Float64VecCleaner(MemorySegment segment) {
+            this.segment = segment;
+        }
+
+        public void run() {
+            somelib_h.Float64Vec_destroy(this.segment);
+        }
+    }
+
+    Float64Vec() {}
+    
+    public static Float64Vec new_(double[] v) {
+        try (var arena = Arena.ofConfined()) {
+            var vLen = v.length;
+            var vMemSeg = arena.allocate(JAVA_DOUBLE, vLen);
+            for (var i = 0; i < vLen; i++) {
+                vMemSeg.setAtIndex(JAVA_DOUBLE, i, v[i]);
+            }
+            var nativeVal = somelib_h.Float64Vec_new(vMemSeg, vLen);
+            var returnVal = new Float64Vec();
+            returnVal.internal = nativeVal;
+            var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
+            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            return returnVal;
+        }
+    }
+    
+    
+    public double[] asSlice() {
+        
+        var nativeVal = somelib_h.Float64Vec_as_slice(internal);
+        var data = dev.diplomattestsomelib.ntv.DiplomatF64View.data(nativeVal);
+        var len = dev.diplomattestsomelib.ntv.DiplomatF64View.len(nativeVal);
+        return SliceUtils.doubleSlice(nativeVal);
+    }
+    
+}
+============================
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.*;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public class MyString {
+
+    MemorySegment internal;
+    Cleaner.Cleanable cleanable;
+
+    static class MyStringCleaner implements Runnable {
+
+        MemorySegment segment;
+        MyStringCleaner(MemorySegment segment) {
+            this.segment = segment;
+        }
+
+        public void run() {
+            somelib_h.MyString_destroy(this.segment);
+        }
+    }
+
+    MyString() {}
+    
+    public static MyString(String v) {
+        try (var arena = Arena.ofConfined()) {
+            var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vMemSeg.byteSize();
+            var nativeVal = somelib_h.MyString_new(vMemSeg, vLen - 1);
+            this.internal = nativeVal;
+            var cleaner = new MyString.MyStringCleaner(nativeVal);
+            this.cleanable = Main.cleaner.register(this, cleaner);
+        }
+    }
+    
+    public static MyString newUnsafe(String v) {
+        try (var arena = Arena.ofConfined()) {
+            var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vMemSeg.byteSize();
+            var nativeVal = somelib_h.MyString_new_unsafe(vMemSeg, vLen - 1);
+            var returnVal = new MyString();
+            returnVal.internal = nativeVal;
+            var cleaner = new MyString.MyStringCleaner(nativeVal);
+            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            return returnVal;
+        }
+    }
+    
+    public static MyString newOwned(String v) {
+        try (var arena = Arena.ofConfined()) {
+            var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
+            var vLen = vMemSeg.byteSize();
+            var nativeVal = somelib_h.MyString_new_owned(vMemSeg, vLen - 1);
+            var returnVal = new MyString();
+            returnVal.internal = nativeVal;
+            var cleaner = new MyString.MyStringCleaner(nativeVal);
+            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            return returnVal;
+        }
+    }
+    
+    
+    public  setStr(String newStr) {
+        try (var arena = Arena.ofConfined()) {
+            
+            var new_strMemSeg = arena.allocateFrom(new_str, StandardCharsets.UTF_8);
+            var new_strLen = new_strMemSeg.byteSize();
+            var nativeVal = somelib_h.MyString_set_str(internal, new_strMemSeg, new_strLen - 1);
+            
+        }
+    }
+    
+    public String getStr() {
+        
+        var writeable = somelib_h.diplomat_buffer_write_create(0);
+        somelib_h.MyString_get_str(internal, writeable);
+        var buffer = DiplomatWrite.buf(writeable);
+        var string = buffer.getString(0, StandardCharsets.UTF_8);
+        somelib_h.diplomat_buffer_write_destroy(writeable);
+        return string;
+    }
+    
+}
+============================

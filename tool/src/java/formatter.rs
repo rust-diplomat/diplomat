@@ -3,8 +3,8 @@ use std::borrow::Cow;
 use diplomat_core::{
     ast::Ident,
     hir::{
-        self, FloatType, IntType, OutType, PrimitiveType, ReturnType, Slice, SuccessType,
-        TyPosition, Type, TypeContext, TypeId,
+        self, FloatType, IntType, OutType, PrimitiveType, ReturnType, Slice, StructPathLike,
+        SuccessType, TyPosition, Type, TypeContext, TypeId,
     },
 };
 use heck::ToLowerCamelCase;
@@ -13,7 +13,7 @@ use crate::c2::CFormatter;
 
 pub(crate) struct JavaFormatter<'cx> {
     tcx: &'cx TypeContext,
-    c: CFormatter<'cx>,
+    pub c: CFormatter<'cx>,
 }
 
 const INVALID_METHOD_NAMES: &[&str] = &[
@@ -54,9 +54,9 @@ impl<'cx> JavaFormatter<'cx> {
 
     pub fn fmt_success_type_java<'a>(&self, success_ty: &'a SuccessType) -> Cow<'a, str> {
         match success_ty {
-            SuccessType::Write => todo!(),
+            SuccessType::Write => "String".into(),
             SuccessType::OutType(ref o) => self.fmt_java_type(o),
-            SuccessType::Unit => todo!(),
+            SuccessType::Unit => "".into(),
             _ => todo!(),
         }
     }
@@ -75,11 +75,14 @@ impl<'cx> JavaFormatter<'cx> {
         match ty {
             hir::Type::Primitive(ref p) => self.fmt_primitive(p),
             hir::Type::Opaque(o) => self.tcx.resolve_opaque(o.tcx_id).name.to_string().into(),
-            hir::Type::Struct(_) => todo!(),
+            hir::Type::Struct(s) => self.tcx.resolve_type(s.id()).name().to_string().into(),
             hir::Type::Enum(e) => self.tcx.resolve_enum(e.tcx_id).name.to_string().into(),
             hir::Type::Slice(Slice::Str(_, _)) => "String".into(),
-            hir::Type::Slice(_) => todo!("Need to work on slices"),
-            _ => todo!(),
+            hir::Type::Slice(Slice::Primitive(_, p)) => {
+                format!("{}[]", self.fmt_primitive(p)).into()
+            }
+            hir::Type::Slice(Slice::Strs(_)) => "String []".into(),
+            ty => todo!("haven't implemented, {ty:?}"),
         }
     }
 

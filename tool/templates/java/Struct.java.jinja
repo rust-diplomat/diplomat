@@ -1,3 +1,36 @@
+package {{domain}}.{{lib_name}};
+
+import {{domain}}.{{lib_name}}.ntv.{{lib_name}}_h;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public class {{type_name}} {
+    {% for field in fields -%}
+    var {{field.ty}} {{field.name}};
+    {% endfor %}
+
+    MemorySegment internal;
+
+    private {{type_name}}() {
+    }
+
+    static {{type_name}} fromSegment(MemorySegment segment) {
+        returnVal.internal = segment;
+        var returnVal = new MyStruct();
+        {% for field in fields -%}
+        returnVal.{{field.name}} = {{domain}}.{{lib_name}}.ntv.{{field.name}}(segment);
+        {% endfor %}
+        return returnVal;
+    }
+    {% for method in methods %}
+    {{method|indent(4)}}
+    {% endfor %}
+}
+
+{#
 package dev.diplomattest.somelib;
 
 import dev.diplomattest.somelib.ntv.somelib_h;
@@ -7,15 +40,18 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 
 public class MyStruct {
-    public byte a;
-    public boolean b;
-    public byte c;
-    public long d;
-    public int e;
-    public char f;
-    public MyEnum g;
+    byte a = 0;
+    boolean b = false;
+    byte c = 0;
+    long d = 0;
+    int e = 0;
+    char f = 0;
+    MyEnum g = MyEnum.defaultValue();
 
     MemorySegment internal = null;
+
+    MyStruct() {
+    }
 
     MyStruct(SegmentAllocator alloc, byte a, boolean b, byte c, long d, int e, char f, MyEnum g) {
         var segment = dev.diplomattest.somelib.ntv.MyStruct.allocate(alloc);
@@ -42,15 +78,9 @@ public class MyStruct {
         returnVal.g = MyEnum.fromInt(dev.diplomattest.somelib.ntv.MyStruct.g(segment));
         return returnVal;
     }
-
-    public static MyStruct new_() {
-        var function = somelib_h.MyStruct_new.makeInvoker();
-        var arena = Arena.global();
-        var nativeVal = function.apply(arena);
-        return MyStruct.fromSegment(nativeVal);
-    }
-
     MemorySegment getNativeStruct$() {
         return internal;
     }
 }
+
+#}

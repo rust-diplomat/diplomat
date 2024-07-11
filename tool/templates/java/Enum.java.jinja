@@ -1,0 +1,41 @@
+package {{domain}}.{{lib_name}};
+
+import {{domain}}.{{lib_name}}.ntv.{{lib_name}}_h;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public enum {{type_name}} {
+    {% for variant in variants -%}
+    {{variant.name}},
+    {% endfor %};
+
+    static {{type_name}} fromInt(int i) {
+        switch (i) {
+            {% for variant in variants -%}
+            case {{variant.index}} -> {
+                return {{type_name}}.{{variant.name}};
+            }
+            {% endfor %}
+        }
+        throw new RuntimeException("Unexpected int for {{type_name}}:" + i);
+    }
+
+    int toInt() {
+        switch (this) {
+            {% for variant in variants -%}
+            case {{variant.name}} -> {
+                return {{variant.index}};
+            }
+            {% endfor %}
+        }
+        throw new RuntimeException("Unexpected variant for {{type_name}}:" + variant);
+    }
+
+    {% for method in methods %}
+    {{method|indent(4)}}
+    {% endfor %}
+}
+

@@ -1,7 +1,134 @@
 ---
 source: tool/src/java/mod.rs
-expression: rendered
+expression: res
 ---
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.somelib_h;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public class OwnedStruct {
+    var byte count;
+    
+
+    MemorySegment internal;
+
+    private OwnedStruct() {
+    }
+
+    static OwnedStruct fromSegment(MemorySegment segment) {
+        returnVal.internal = segment;
+        var returnVal = new MyStruct();
+        returnVal.count = dev.diplomattest.somelib.ntv.count(segment);
+        
+        return returnVal;
+    }
+    
+}
+
+
+============================
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.somelib_h;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public class OwningStruct {
+    var OwnedStruct a;
+    var OwnedStruct b;
+    
+
+    MemorySegment internal;
+
+    private OwningStruct() {
+    }
+
+    static OwningStruct fromSegment(MemorySegment segment) {
+        returnVal.internal = segment;
+        var returnVal = new MyStruct();
+        returnVal.a = dev.diplomattest.somelib.ntv.a(segment);
+        returnVal.b = dev.diplomattest.somelib.ntv.b(segment);
+        
+        return returnVal;
+    }
+    
+    public static Opaque doOpaqueStuff(OwnedStruct input) {
+        var inputNative = input.internal;
+        var nativeVal = somelib_h.OwningStruct_do_opaque_stuff(inputNative);
+        var returnVal = new Opaque();
+        returnVal.internal = nativeVal;
+        var cleaner = new Opaque.OpaqueCleaner(nativeVal);
+        returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+        return returnVal;
+    }
+    
+}
+
+
+============================
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.*;
+
+
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+
+
+public class Float64Vec {
+
+    MemorySegment internal;
+    Cleaner.Cleanable cleanable;
+
+    static class Float64VecCleaner implements Runnable {
+
+        MemorySegment segment;
+        Float64VecCleaner(MemorySegment segment) {
+            this.segment = segment;
+        }
+
+        public void run() {
+            somelib_h.Float64Vec_destroy(this.segment);
+        }
+    }
+
+    Float64Vec() {}
+    
+    public static Float64Vec new_(double[] v) {
+        try (var arena = Arena.ofConfined()) {
+            
+            var nativeVal = somelib_h.Float64Vec_new();
+            var returnVal = new Float64Vec();
+            returnVal.internal = nativeVal;
+            var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
+            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            return returnVal;
+        }
+    }
+    
+    
+    public double[] asBoxedSlice() {
+        
+        var nativeVal = somelib_h.Float64Vec_as_boxed_slice(internal);
+        
+    }
+    
+    public double[] asSlice() {
+        
+        var nativeVal = somelib_h.Float64Vec_as_slice(internal);
+        
+    }
+    
+}
+============================
 package dev.diplomattest.somelib;
 
 import dev.diplomattest.somelib.ntv.*;
@@ -44,7 +171,7 @@ public class Opaque {
         try (var arena = Arena.ofConfined()) {
             var inputMemSeg = arena.allocateFrom(input, StandardCharsets.UTF_8);
             var inputLen = inputMemSeg.byteSize();
-            var nativeVal = somelib_h.Opaque_from_str(inputMemSeg, inputLen);
+            var nativeVal = somelib_h.Opaque_from_str(inputMemSeg, inputLen - 1);
             var returnVal = new Opaque();
             returnVal.internal = nativeVal;
             var cleaner = new Opaque.OpaqueCleaner(nativeVal);
@@ -59,6 +186,12 @@ public class Opaque {
         return nativeVal;
     }
     
+    public static OwningStruct returnsImported() {
+        var nativeInvoker = somelib_h.Opaque_returns_imported.makeInvoker();
+        var nativeVal = nativeInvoker.apply();
+        return new OwningStruct(nativeVal);
+    }
+    
     
     public long internalLen() {
         
@@ -66,4 +199,15 @@ public class Opaque {
         return nativeVal;
     }
     
+    public String getDebugStr() {
+        
+        var writeable = somelib_h.diplomat_buffer_write_create(0);
+        somelib_h.Opaque_get_debug_str(internal, writeable);
+        var buffer = DiplomatWrite.buf(writeable);
+        var string = buffer.getString(0, StandardCharsets.UTF_8);
+        somelib_h.diplomat_buffer_write_destroy(writeable);
+        return string;
+    }
+    
 }
+============================

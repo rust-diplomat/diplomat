@@ -5,6 +5,7 @@ import dev.diplomattest.somelib.ntv.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.lang.ref.Cleaner;
 import java.nio.charset.StandardCharsets;
 
@@ -42,7 +43,8 @@ public class Opaque {
         try (var arena = Arena.ofConfined()) {
             var inputMemSeg = arena.allocateFrom(input, StandardCharsets.UTF_8);
             var inputLen = inputMemSeg.byteSize();
-            var nativeVal = somelib_h.Opaque_from_str(inputMemSeg, inputLen);
+            var inputMemSeg2 = inputMemSeg.asSlice(0, inputLen - 1);
+            var nativeVal = somelib_h.Opaque_from_str(inputMemSeg, inputLen - 1);
             var returnVal = new Opaque();
             returnVal.internal = nativeVal;
             var cleaner = new Opaque.OpaqueCleaner(nativeVal);
@@ -62,6 +64,16 @@ public class Opaque {
 
         var nativeVal = somelib_h.Opaque_internal_len(internal);
         return nativeVal;
+    }
+
+    public String getDebugStr() {
+
+        var writeable = somelib_h.diplomat_buffer_write_create(0);
+        somelib_h.Opaque_get_debug_str(internal, writeable);
+        var buffer = DiplomatWrite.buf(writeable);
+        var string = buffer.getString(0, StandardCharsets.UTF_8);
+        somelib_h.diplomat_buffer_write_destroy(writeable);
+        return string;
     }
 
 }
