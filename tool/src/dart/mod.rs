@@ -20,9 +20,8 @@ mod formatter;
 pub fn run<'cx>(
     tcx: &'cx TypeContext,
     docs_url_generator: &'cx DocsUrlGenerator,
-    strip_prefix: Option<String>,
 ) -> Result<FileMap, Vec<(impl Display + 'cx, String)>> {
-    let formatter = DartFormatter::new(tcx, docs_url_generator, strip_prefix);
+    let formatter = DartFormatter::new(tcx, docs_url_generator);
 
     let files = FileMap::default();
     let errors = ErrorStore::default();

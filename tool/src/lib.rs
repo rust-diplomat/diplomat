@@ -46,7 +46,6 @@ pub fn gen(
     docs_url_gen: &ast::DocsUrlGenerator,
     library_config: Option<&Path>,
     silent: bool,
-    strip_prefix: Option<String>,
 ) -> std::io::Result<()> {
     // Check that user-provided paths exist. Exit early with a nice error message
     // if anything doesn't exist.
@@ -96,7 +95,7 @@ pub fn gen(
                     std::process::exit(-1);
                 }
             };
-            match js2::JSGenerationContext::run(&tcx, docs_url_gen, strip_prefix) {
+            match js2::JSGenerationContext::run(&tcx, docs_url_gen) {
                 Ok(mut files) => out_texts = files.take_files(),
                 Err(errors) => {
                     eprintln!("Found errors whilst generating {target_language}:");
@@ -153,7 +152,7 @@ pub fn gen(
                     std::process::exit(1);
                 }
             };
-            match dart::run(&tcx, docs_url_gen, strip_prefix) {
+            match dart::run(&tcx, docs_url_gen) {
                 Ok(mut files) => out_texts = files.take_files(),
                 Err(errors) => {
                     eprintln!("Found errors whilst generating {target_language}:");
