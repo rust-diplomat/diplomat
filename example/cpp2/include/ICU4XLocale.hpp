@@ -22,10 +22,11 @@ namespace capi {
     void icu4x_ICU4XLocale_mv1_destroy(ICU4XLocale* self);
     
     } // extern "C"
-}
-}
+} // namespace capi
+} // namespace
+
 inline std::unique_ptr<icu4x::ICU4XLocale> icu4x::ICU4XLocale::new_(std::string_view name) {
-  auto result = capi::icu4x_ICU4XLocale_new_mv1(name.data(),
+  auto result = icu4x::capi::icu4x_ICU4XLocale_new_mv1(name.data(),
     name.size());
   return std::unique_ptr<icu4x::ICU4XLocale>(icu4x::ICU4XLocale::FromFFI(result));
 }
@@ -47,7 +48,7 @@ inline icu4x::ICU4XLocale* icu4x::ICU4XLocale::FromFFI(icu4x::capi::ICU4XLocale*
 }
 
 inline void icu4x::ICU4XLocale::operator delete(void* ptr) {
-  capi::icu4x_ICU4XLocale_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XLocale*>(ptr));
+  icu4x::capi::icu4x_ICU4XLocale_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XLocale*>(ptr));
 }
 
 

@@ -13,9 +13,11 @@ struct ErrorStruct;
 class ErrorEnum;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct ResultOpaque ResultOpaque;
-}
+} // namespace capi
+} // namespace
 
 class ResultOpaque {
 public:
@@ -38,10 +40,10 @@ public:
 
   inline void assert_integer(int32_t i) const;
 
-  inline const ::capi::ResultOpaque* AsFFI() const;
-  inline ::capi::ResultOpaque* AsFFI();
-  inline static const ResultOpaque* FromFFI(const ::capi::ResultOpaque* ptr);
-  inline static ResultOpaque* FromFFI(::capi::ResultOpaque* ptr);
+  inline const diplomat::capi::ResultOpaque* AsFFI() const;
+  inline diplomat::capi::ResultOpaque* AsFFI();
+  inline static const ResultOpaque* FromFFI(const diplomat::capi::ResultOpaque* ptr);
+  inline static ResultOpaque* FromFFI(diplomat::capi::ResultOpaque* ptr);
   inline static void operator delete(void* ptr);
 private:
   ResultOpaque() = delete;

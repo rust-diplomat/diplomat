@@ -20,8 +20,9 @@ namespace capi {
     void namespace_AttrOpaque2_destroy(CPPRenamedAttrOpaque2* self);
     
     } // extern "C"
-}
-}
+} // namespace capi
+} // namespace
+
 inline const ns::capi::CPPRenamedAttrOpaque2* ns::CPPRenamedAttrOpaque2::AsFFI() const {
   return reinterpret_cast<const ns::capi::CPPRenamedAttrOpaque2*>(this);
 }
@@ -39,7 +40,7 @@ inline ns::CPPRenamedAttrOpaque2* ns::CPPRenamedAttrOpaque2::FromFFI(ns::capi::C
 }
 
 inline void ns::CPPRenamedAttrOpaque2::operator delete(void* ptr) {
-  capi::namespace_AttrOpaque2_destroy(reinterpret_cast<ns::capi::CPPRenamedAttrOpaque2*>(ptr));
+  ns::capi::namespace_AttrOpaque2_destroy(reinterpret_cast<ns::capi::CPPRenamedAttrOpaque2*>(ptr));
 }
 
 

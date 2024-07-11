@@ -18,8 +18,10 @@ class ICU4XLocale;
 namespace icu4x {
 namespace capi {
     typedef struct ICU4XLocale ICU4XLocale;
-}
+} // namespace capi
+} // namespace
 
+namespace icu4x {
 class ICU4XLocale {
 public:
 
@@ -39,5 +41,5 @@ private:
   static void operator delete[](void*, size_t) = delete;
 };
 
-}
+} // namespace
 #endif // ICU4XLocale_D_HPP

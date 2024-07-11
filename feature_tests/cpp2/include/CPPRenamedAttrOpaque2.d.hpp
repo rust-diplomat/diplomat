@@ -13,8 +13,10 @@
 namespace ns {
 namespace capi {
     typedef struct CPPRenamedAttrOpaque2 CPPRenamedAttrOpaque2;
-}
+} // namespace capi
+} // namespace
 
+namespace ns {
 class CPPRenamedAttrOpaque2 {
 public:
 
@@ -32,5 +34,5 @@ private:
   static void operator delete[](void*, size_t) = delete;
 };
 
-}
+} // namespace
 #endif // CPPRenamedAttrOpaque2_D_HPP

@@ -13,27 +13,30 @@
 #include "CyclicStructB.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
-    ::capi::CyclicStructB CyclicStructA_get_b();
+    diplomat::capi::CyclicStructB CyclicStructA_get_b();
     
     
     } // extern "C"
-}
+} // namespace capi
+} // namespace
+
 inline CyclicStructB CyclicStructA::get_b() {
-  auto result = capi::CyclicStructA_get_b();
+  auto result = diplomat::capi::CyclicStructA_get_b();
   return CyclicStructB::FromFFI(result);
 }
 
 
-inline ::capi::CyclicStructA CyclicStructA::AsFFI() const {
-  return ::capi::CyclicStructA {
+inline diplomat::capi::CyclicStructA CyclicStructA::AsFFI() const {
+  return diplomat::capi::CyclicStructA {
     .a = a.AsFFI(),
   };
 }
 
-inline CyclicStructA CyclicStructA::FromFFI(::capi::CyclicStructA c_struct) {
+inline CyclicStructA CyclicStructA::FromFFI(diplomat::capi::CyclicStructA c_struct) {
   return CyclicStructA {
     .a = CyclicStructB::FromFFI(c_struct.a),
   };

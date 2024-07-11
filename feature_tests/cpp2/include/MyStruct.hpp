@@ -14,37 +14,40 @@
 #include "MyZst.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
-    ::capi::MyStruct MyStruct_new();
+    diplomat::capi::MyStruct MyStruct_new();
     
-    uint8_t MyStruct_into_a(::capi::MyStruct self);
+    uint8_t MyStruct_into_a(diplomat::capi::MyStruct self);
     
     typedef struct MyStruct_returns_zst_result_result { bool is_ok;} MyStruct_returns_zst_result_result;
     MyStruct_returns_zst_result_result MyStruct_returns_zst_result();
     
     
     } // extern "C"
-}
+} // namespace capi
+} // namespace
+
 inline MyStruct MyStruct::new_() {
-  auto result = capi::MyStruct_new();
+  auto result = diplomat::capi::MyStruct_new();
   return MyStruct::FromFFI(result);
 }
 
 inline uint8_t MyStruct::into_a() {
-  auto result = capi::MyStruct_into_a(this->AsFFI());
+  auto result = diplomat::capi::MyStruct_into_a(this->AsFFI());
   return result;
 }
 
 inline diplomat::result<std::monostate, MyZst> MyStruct::returns_zst_result() {
-  auto result = capi::MyStruct_returns_zst_result();
+  auto result = diplomat::capi::MyStruct_returns_zst_result();
   return result.is_ok ? diplomat::result<std::monostate, MyZst>(diplomat::Ok<std::monostate>()) : diplomat::result<std::monostate, MyZst>(diplomat::Err<MyZst>(MyZst {}));
 }
 
 
-inline ::capi::MyStruct MyStruct::AsFFI() const {
-  return ::capi::MyStruct {
+inline diplomat::capi::MyStruct MyStruct::AsFFI() const {
+  return diplomat::capi::MyStruct {
     .a = a,
     .b = b,
     .c = c,
@@ -55,7 +58,7 @@ inline ::capi::MyStruct MyStruct::AsFFI() const {
   };
 }
 
-inline MyStruct MyStruct::FromFFI(::capi::MyStruct c_struct) {
+inline MyStruct MyStruct::FromFFI(diplomat::capi::MyStruct c_struct) {
   return MyStruct {
     .a = c_struct.a,
     .b = c_struct.b,

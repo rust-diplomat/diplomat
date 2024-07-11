@@ -13,9 +13,11 @@ namespace capi {typedef struct Utf16Wrap Utf16Wrap; }
 class Utf16Wrap;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct OpaqueMutexedString OpaqueMutexedString;
-}
+} // namespace capi
+} // namespace
 
 class OpaqueMutexedString {
 public:
@@ -36,10 +38,10 @@ public:
 
   inline std::unique_ptr<Utf16Wrap> wrapper() const;
 
-  inline const ::capi::OpaqueMutexedString* AsFFI() const;
-  inline ::capi::OpaqueMutexedString* AsFFI();
-  inline static const OpaqueMutexedString* FromFFI(const ::capi::OpaqueMutexedString* ptr);
-  inline static OpaqueMutexedString* FromFFI(::capi::OpaqueMutexedString* ptr);
+  inline const diplomat::capi::OpaqueMutexedString* AsFFI() const;
+  inline diplomat::capi::OpaqueMutexedString* AsFFI();
+  inline static const OpaqueMutexedString* FromFFI(const diplomat::capi::OpaqueMutexedString* ptr);
+  inline static OpaqueMutexedString* FromFFI(diplomat::capi::OpaqueMutexedString* ptr);
   inline static void operator delete(void* ptr);
 private:
   OpaqueMutexedString() = delete;

@@ -10,17 +10,19 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef struct Two Two;
-}
+} // namespace capi
+} // namespace
 
 class Two {
 public:
 
-  inline const ::capi::Two* AsFFI() const;
-  inline ::capi::Two* AsFFI();
-  inline static const Two* FromFFI(const ::capi::Two* ptr);
-  inline static Two* FromFFI(::capi::Two* ptr);
+  inline const diplomat::capi::Two* AsFFI() const;
+  inline diplomat::capi::Two* AsFFI();
+  inline static const Two* FromFFI(const diplomat::capi::Two* ptr);
+  inline static Two* FromFFI(diplomat::capi::Two* ptr);
   inline static void operator delete(void* ptr);
 private:
   Two() = delete;

@@ -18,8 +18,9 @@ namespace capi {
     
     
     } // extern "C"
-}
-}
+} // namespace capi
+} // namespace
+
 inline icu4x::capi::ICU4XFixedDecimalGroupingStrategy icu4x::ICU4XFixedDecimalGroupingStrategy::AsFFI() const {
   return static_cast<icu4x::capi::ICU4XFixedDecimalGroupingStrategy>(value);
 }

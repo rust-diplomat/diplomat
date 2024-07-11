@@ -13,19 +13,22 @@
 class UnimportedEnum;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct ImportedStruct {
-      ::capi::UnimportedEnum foo;
+      diplomat::capi::UnimportedEnum foo;
       uint8_t count;
     } ImportedStruct;
-}
+} // namespace capi
+} // namespace
+
 
 struct ImportedStruct {
   UnimportedEnum foo;
   uint8_t count;
 
-  inline ::capi::ImportedStruct AsFFI() const;
-  inline static ImportedStruct FromFFI(::capi::ImportedStruct c_struct);
+  inline diplomat::capi::ImportedStruct AsFFI() const;
+  inline static ImportedStruct FromFFI(diplomat::capi::ImportedStruct c_struct);
 };
 
 

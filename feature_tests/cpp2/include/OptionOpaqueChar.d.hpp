@@ -10,19 +10,21 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef struct OptionOpaqueChar OptionOpaqueChar;
-}
+} // namespace capi
+} // namespace
 
 class OptionOpaqueChar {
 public:
 
   inline void assert_char(char32_t ch) const;
 
-  inline const ::capi::OptionOpaqueChar* AsFFI() const;
-  inline ::capi::OptionOpaqueChar* AsFFI();
-  inline static const OptionOpaqueChar* FromFFI(const ::capi::OptionOpaqueChar* ptr);
-  inline static OptionOpaqueChar* FromFFI(::capi::OptionOpaqueChar* ptr);
+  inline const diplomat::capi::OptionOpaqueChar* AsFFI() const;
+  inline diplomat::capi::OptionOpaqueChar* AsFFI();
+  inline static const OptionOpaqueChar* FromFFI(const diplomat::capi::OptionOpaqueChar* ptr);
+  inline static OptionOpaqueChar* FromFFI(diplomat::capi::OptionOpaqueChar* ptr);
   inline static void operator delete(void* ptr);
 private:
   OptionOpaqueChar() = delete;

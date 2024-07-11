@@ -10,10 +10,13 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef struct MyZst {
     } MyZst;
-}
+} // namespace capi
+} // namespace
+
 
 struct MyZst {
 

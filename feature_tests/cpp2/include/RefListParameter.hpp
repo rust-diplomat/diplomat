@@ -12,6 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
@@ -19,25 +20,27 @@ namespace capi {
     void RefListParameter_destroy(RefListParameter* self);
     
     } // extern "C"
-}
-inline const ::capi::RefListParameter* RefListParameter::AsFFI() const {
-  return reinterpret_cast<const ::capi::RefListParameter*>(this);
+} // namespace capi
+} // namespace
+
+inline const diplomat::capi::RefListParameter* RefListParameter::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::RefListParameter*>(this);
 }
 
-inline ::capi::RefListParameter* RefListParameter::AsFFI() {
-  return reinterpret_cast<::capi::RefListParameter*>(this);
+inline diplomat::capi::RefListParameter* RefListParameter::AsFFI() {
+  return reinterpret_cast<diplomat::capi::RefListParameter*>(this);
 }
 
-inline const RefListParameter* RefListParameter::FromFFI(const ::capi::RefListParameter* ptr) {
+inline const RefListParameter* RefListParameter::FromFFI(const diplomat::capi::RefListParameter* ptr) {
   return reinterpret_cast<const RefListParameter*>(ptr);
 }
 
-inline RefListParameter* RefListParameter::FromFFI(::capi::RefListParameter* ptr) {
+inline RefListParameter* RefListParameter::FromFFI(diplomat::capi::RefListParameter* ptr) {
   return reinterpret_cast<RefListParameter*>(ptr);
 }
 
 inline void RefListParameter::operator delete(void* ptr) {
-  capi::RefListParameter_destroy(reinterpret_cast<::capi::RefListParameter*>(ptr));
+  diplomat::capi::RefListParameter_destroy(reinterpret_cast<diplomat::capi::RefListParameter*>(ptr));
 }
 
 

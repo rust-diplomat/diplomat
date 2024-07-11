@@ -18,8 +18,10 @@ class ICU4XDataProvider;
 namespace icu4x {
 namespace capi {
     typedef struct ICU4XDataProvider ICU4XDataProvider;
-}
+} // namespace capi
+} // namespace
 
+namespace icu4x {
 class ICU4XDataProvider {
 public:
 
@@ -41,5 +43,5 @@ private:
   static void operator delete[](void*, size_t) = delete;
 };
 
-}
+} // namespace
 #endif // ICU4XDataProvider_D_HPP

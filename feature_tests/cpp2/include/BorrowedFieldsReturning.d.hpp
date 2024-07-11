@@ -10,17 +10,20 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef struct BorrowedFieldsReturning {
       DiplomatStringView bytes;
     } BorrowedFieldsReturning;
-}
+} // namespace capi
+} // namespace
+
 
 struct BorrowedFieldsReturning {
   std::string_view bytes;
 
-  inline ::capi::BorrowedFieldsReturning AsFFI() const;
-  inline static BorrowedFieldsReturning FromFFI(::capi::BorrowedFieldsReturning c_struct);
+  inline diplomat::capi::BorrowedFieldsReturning AsFFI() const;
+  inline static BorrowedFieldsReturning FromFFI(diplomat::capi::BorrowedFieldsReturning c_struct);
 };
 
 

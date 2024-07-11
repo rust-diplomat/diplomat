@@ -16,9 +16,11 @@ struct BorrowedFieldsReturning;
 struct BorrowedFieldsWithBounds;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct Foo Foo;
-}
+} // namespace capi
+} // namespace
 
 class Foo {
 public:
@@ -35,10 +37,10 @@ public:
 
   inline static std::unique_ptr<Foo> extract_from_bounds(BorrowedFieldsWithBounds bounds, std::string_view another_string);
 
-  inline const ::capi::Foo* AsFFI() const;
-  inline ::capi::Foo* AsFFI();
-  inline static const Foo* FromFFI(const ::capi::Foo* ptr);
-  inline static Foo* FromFFI(::capi::Foo* ptr);
+  inline const diplomat::capi::Foo* AsFFI() const;
+  inline diplomat::capi::Foo* AsFFI();
+  inline static const Foo* FromFFI(const diplomat::capi::Foo* ptr);
+  inline static Foo* FromFFI(diplomat::capi::Foo* ptr);
   inline static void operator delete(void* ptr);
 private:
   Foo() = delete;

@@ -21,8 +21,10 @@ class CPPRenamedAttrEnum;
 namespace ns {
 namespace capi {
     typedef struct AttrOpaque1Renamed AttrOpaque1Renamed;
-}
+} // namespace capi
+} // namespace
 
+namespace ns {
 class AttrOpaque1Renamed {
 public:
 
@@ -50,5 +52,5 @@ private:
   static void operator delete[](void*, size_t) = delete;
 };
 
-}
+} // namespace
 #endif // AttrOpaque1Renamed_D_HPP

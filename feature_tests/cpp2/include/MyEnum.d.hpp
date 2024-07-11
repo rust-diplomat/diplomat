@@ -10,6 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef enum MyEnum {
       MyEnum_A = -2,
@@ -19,8 +20,8 @@ namespace capi {
       MyEnum_E = 2,
       MyEnum_F = 3,
     } MyEnum;
-}
-
+} // namespace capi
+} // namespace
 
 class MyEnum {
 public:
@@ -44,8 +45,8 @@ public:
 
   inline static MyEnum get_a();
 
-  inline ::capi::MyEnum AsFFI() const;
-  inline static MyEnum FromFFI(::capi::MyEnum c_enum);
+  inline diplomat::capi::MyEnum AsFFI() const;
+  inline static MyEnum FromFFI(diplomat::capi::MyEnum c_enum);
 private:
     Value value;
 };

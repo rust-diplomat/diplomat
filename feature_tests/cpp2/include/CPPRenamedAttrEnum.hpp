@@ -18,8 +18,9 @@ namespace capi {
     
     
     } // extern "C"
-}
-}
+} // namespace capi
+} // namespace
+
 inline ns::capi::CPPRenamedAttrEnum ns::CPPRenamedAttrEnum::AsFFI() const {
   return static_cast<ns::capi::CPPRenamedAttrEnum>(value);
 }

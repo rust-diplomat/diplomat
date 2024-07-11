@@ -12,6 +12,7 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
@@ -19,25 +20,27 @@ namespace capi {
     void Two_destroy(Two* self);
     
     } // extern "C"
-}
-inline const ::capi::Two* Two::AsFFI() const {
-  return reinterpret_cast<const ::capi::Two*>(this);
+} // namespace capi
+} // namespace
+
+inline const diplomat::capi::Two* Two::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::Two*>(this);
 }
 
-inline ::capi::Two* Two::AsFFI() {
-  return reinterpret_cast<::capi::Two*>(this);
+inline diplomat::capi::Two* Two::AsFFI() {
+  return reinterpret_cast<diplomat::capi::Two*>(this);
 }
 
-inline const Two* Two::FromFFI(const ::capi::Two* ptr) {
+inline const Two* Two::FromFFI(const diplomat::capi::Two* ptr) {
   return reinterpret_cast<const Two*>(ptr);
 }
 
-inline Two* Two::FromFFI(::capi::Two* ptr) {
+inline Two* Two::FromFFI(diplomat::capi::Two* ptr) {
   return reinterpret_cast<Two*>(ptr);
 }
 
 inline void Two::operator delete(void* ptr) {
-  capi::Two_destroy(reinterpret_cast<::capi::Two*>(ptr));
+  diplomat::capi::Two_destroy(reinterpret_cast<diplomat::capi::Two*>(ptr));
 }
 
 

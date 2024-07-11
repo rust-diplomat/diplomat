@@ -10,17 +10,19 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef struct RefListParameter RefListParameter;
-}
+} // namespace capi
+} // namespace
 
 class RefListParameter {
 public:
 
-  inline const ::capi::RefListParameter* AsFFI() const;
-  inline ::capi::RefListParameter* AsFFI();
-  inline static const RefListParameter* FromFFI(const ::capi::RefListParameter* ptr);
-  inline static RefListParameter* FromFFI(::capi::RefListParameter* ptr);
+  inline const diplomat::capi::RefListParameter* AsFFI() const;
+  inline diplomat::capi::RefListParameter* AsFFI();
+  inline static const RefListParameter* FromFFI(const diplomat::capi::RefListParameter* ptr);
+  inline static RefListParameter* FromFFI(diplomat::capi::RefListParameter* ptr);
   inline static void operator delete(void* ptr);
 private:
   RefListParameter() = delete;

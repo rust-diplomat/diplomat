@@ -14,15 +14,18 @@
 #include "OptionOpaqueChar.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
     
     } // extern "C"
-}
+} // namespace capi
+} // namespace
 
-inline ::capi::OptionStruct OptionStruct::AsFFI() const {
-  return ::capi::OptionStruct {
+
+inline diplomat::capi::OptionStruct OptionStruct::AsFFI() const {
+  return diplomat::capi::OptionStruct {
     .a = a ? a->AsFFI() : nullptr,
     .b = b ? b->AsFFI() : nullptr,
     .c = c,
@@ -30,7 +33,7 @@ inline ::capi::OptionStruct OptionStruct::AsFFI() const {
   };
 }
 
-inline OptionStruct OptionStruct::FromFFI(::capi::OptionStruct c_struct) {
+inline OptionStruct OptionStruct::FromFFI(diplomat::capi::OptionStruct c_struct) {
   return OptionStruct {
     .a = std::unique_ptr<OptionOpaque>(OptionOpaque::FromFFI(c_struct.a)),
     .b = std::unique_ptr<OptionOpaqueChar>(OptionOpaqueChar::FromFFI(c_struct.b)),

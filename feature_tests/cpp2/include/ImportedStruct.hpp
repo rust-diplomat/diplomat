@@ -13,21 +13,24 @@
 #include "UnimportedEnum.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
     
     } // extern "C"
-}
+} // namespace capi
+} // namespace
 
-inline ::capi::ImportedStruct ImportedStruct::AsFFI() const {
-  return ::capi::ImportedStruct {
+
+inline diplomat::capi::ImportedStruct ImportedStruct::AsFFI() const {
+  return diplomat::capi::ImportedStruct {
     .foo = foo.AsFFI(),
     .count = count,
   };
 }
 
-inline ImportedStruct ImportedStruct::FromFFI(::capi::ImportedStruct c_struct) {
+inline ImportedStruct ImportedStruct::FromFFI(diplomat::capi::ImportedStruct c_struct) {
   return ImportedStruct {
     .foo = UnimportedEnum::FromFFI(c_struct.foo),
     .count = c_struct.count,

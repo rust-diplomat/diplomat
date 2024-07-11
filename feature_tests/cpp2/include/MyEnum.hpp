@@ -12,28 +12,31 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
-    int8_t MyEnum_into_value(::capi::MyEnum self);
+    int8_t MyEnum_into_value(diplomat::capi::MyEnum self);
     
-    ::capi::MyEnum MyEnum_get_a();
+    diplomat::capi::MyEnum MyEnum_get_a();
     
     
     } // extern "C"
-}
-inline ::capi::MyEnum MyEnum::AsFFI() const {
-  return static_cast<::capi::MyEnum>(value);
+} // namespace capi
+} // namespace
+
+inline diplomat::capi::MyEnum MyEnum::AsFFI() const {
+  return static_cast<diplomat::capi::MyEnum>(value);
 }
 
-inline MyEnum MyEnum::FromFFI(::capi::MyEnum c_enum) {
+inline MyEnum MyEnum::FromFFI(diplomat::capi::MyEnum c_enum) {
   switch (c_enum) {
-    case ::capi::MyEnum_A:
-    case ::capi::MyEnum_B:
-    case ::capi::MyEnum_C:
-    case ::capi::MyEnum_D:
-    case ::capi::MyEnum_E:
-    case ::capi::MyEnum_F:
+    case diplomat::capi::MyEnum_A:
+    case diplomat::capi::MyEnum_B:
+    case diplomat::capi::MyEnum_C:
+    case diplomat::capi::MyEnum_D:
+    case diplomat::capi::MyEnum_E:
+    case diplomat::capi::MyEnum_F:
       return static_cast<MyEnum::Value>(c_enum);
     default:
       abort();
@@ -41,12 +44,12 @@ inline MyEnum MyEnum::FromFFI(::capi::MyEnum c_enum) {
 }
 
 inline int8_t MyEnum::into_value() {
-  auto result = capi::MyEnum_into_value(this->AsFFI());
+  auto result = diplomat::capi::MyEnum_into_value(this->AsFFI());
   return result;
 }
 
 inline MyEnum MyEnum::get_a() {
-  auto result = capi::MyEnum_get_a();
+  auto result = diplomat::capi::MyEnum_get_a();
   return MyEnum::FromFFI(result);
 }
 #endif // MyEnum_HPP

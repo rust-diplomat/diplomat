@@ -13,39 +13,42 @@
 #include "Foo.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
-    const ::capi::Foo* Bar_foo(const ::capi::Bar* self);
+    const diplomat::capi::Foo* Bar_foo(const diplomat::capi::Bar* self);
     
     
     void Bar_destroy(Bar* self);
     
     } // extern "C"
-}
+} // namespace capi
+} // namespace
+
 inline const Foo& Bar::foo() const {
-  auto result = capi::Bar_foo(this->AsFFI());
+  auto result = diplomat::capi::Bar_foo(this->AsFFI());
   return *Foo::FromFFI(result);
 }
 
-inline const ::capi::Bar* Bar::AsFFI() const {
-  return reinterpret_cast<const ::capi::Bar*>(this);
+inline const diplomat::capi::Bar* Bar::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::Bar*>(this);
 }
 
-inline ::capi::Bar* Bar::AsFFI() {
-  return reinterpret_cast<::capi::Bar*>(this);
+inline diplomat::capi::Bar* Bar::AsFFI() {
+  return reinterpret_cast<diplomat::capi::Bar*>(this);
 }
 
-inline const Bar* Bar::FromFFI(const ::capi::Bar* ptr) {
+inline const Bar* Bar::FromFFI(const diplomat::capi::Bar* ptr) {
   return reinterpret_cast<const Bar*>(ptr);
 }
 
-inline Bar* Bar::FromFFI(::capi::Bar* ptr) {
+inline Bar* Bar::FromFFI(diplomat::capi::Bar* ptr) {
   return reinterpret_cast<Bar*>(ptr);
 }
 
 inline void Bar::operator delete(void* ptr) {
-  capi::Bar_destroy(reinterpret_cast<::capi::Bar*>(ptr));
+  diplomat::capi::Bar_destroy(reinterpret_cast<diplomat::capi::Bar*>(ptr));
 }
 
 

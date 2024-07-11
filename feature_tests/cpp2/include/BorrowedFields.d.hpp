@@ -13,13 +13,16 @@ namespace capi {typedef struct Bar Bar; }
 class Bar;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct BorrowedFields {
       DiplomatString16View a;
       DiplomatStringView b;
       DiplomatStringView c;
     } BorrowedFields;
-}
+} // namespace capi
+} // namespace
+
 
 struct BorrowedFields {
   std::u16string_view a;
@@ -28,8 +31,8 @@ struct BorrowedFields {
 
   inline static diplomat::result<BorrowedFields, diplomat::Utf8Error> from_bar_and_strings(const Bar& bar, std::u16string_view dstr16, std::string_view utf8_str);
 
-  inline ::capi::BorrowedFields AsFFI() const;
-  inline static BorrowedFields FromFFI(::capi::BorrowedFields c_struct);
+  inline diplomat::capi::BorrowedFields AsFFI() const;
+  inline static BorrowedFields FromFFI(diplomat::capi::BorrowedFields c_struct);
 };
 
 

@@ -10,6 +10,7 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef enum ContiguousEnum {
       ContiguousEnum_C = 0,
@@ -17,8 +18,8 @@ namespace capi {
       ContiguousEnum_E = 2,
       ContiguousEnum_F = 3,
     } ContiguousEnum;
-}
-
+} // namespace capi
+} // namespace
 
 class ContiguousEnum {
 public:
@@ -36,8 +37,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline ::capi::ContiguousEnum AsFFI() const;
-  inline static ContiguousEnum FromFFI(::capi::ContiguousEnum c_enum);
+  inline diplomat::capi::ContiguousEnum AsFFI() const;
+  inline static ContiguousEnum FromFFI(diplomat::capi::ContiguousEnum c_enum);
 private:
     Value value;
 };

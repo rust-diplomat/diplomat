@@ -13,19 +13,21 @@ namespace capi {typedef struct Foo Foo; }
 class Foo;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct Bar Bar;
-}
+} // namespace capi
+} // namespace
 
 class Bar {
 public:
 
   inline const Foo& foo() const;
 
-  inline const ::capi::Bar* AsFFI() const;
-  inline ::capi::Bar* AsFFI();
-  inline static const Bar* FromFFI(const ::capi::Bar* ptr);
-  inline static Bar* FromFFI(::capi::Bar* ptr);
+  inline const diplomat::capi::Bar* AsFFI() const;
+  inline diplomat::capi::Bar* AsFFI();
+  inline static const Bar* FromFFI(const diplomat::capi::Bar* ptr);
+  inline static Bar* FromFFI(diplomat::capi::Bar* ptr);
   inline static void operator delete(void* ptr);
 private:
   Bar() = delete;
