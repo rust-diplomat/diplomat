@@ -18,7 +18,7 @@ class ICU4XDataProvider;
  */
 struct ICU4XDataProviderDeleter {
   void operator()(capi::ICU4XDataProvider* l) const noexcept {
-    capi::icu4x_ICU4XDataProvider_mv1_destroy(l);
+    capi::icu4x_ICU4XDataProvider_destroy_mv1(l);
   }
 };
 

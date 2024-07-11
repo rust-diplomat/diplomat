@@ -22,7 +22,7 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
     }
   }
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XFixedDecimalFormatter_mv1_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XFixedDecimalFormatter_destroy_mv1));
 
   /// Creates a new [`ICU4XFixedDecimalFormatter`] from locale data.
   ///
@@ -47,10 +47,10 @@ final class ICU4XFixedDecimalFormatter implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier('icu4x_ICU4XFixedDecimalFormatter_mv1_destroy')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimalFormatter_mv1_destroy')
+@meta.ResourceIdentifier('icu4x_ICU4XFixedDecimalFormatter_destroy_mv1')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimalFormatter_destroy_mv1')
 // ignore: non_constant_identifier_names
-external void _icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(ffi.Pointer<ffi.Void> self);
+external void _icu4x_ICU4XFixedDecimalFormatter_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
 @meta.ResourceIdentifier('icu4x_ICU4XFixedDecimalFormatter_try_new_mv1')
 @ffi.Native<_ResultOpaqueVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, _ICU4XFixedDecimalFormatterOptionsFfi)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimalFormatter_try_new_mv1')

@@ -23,7 +23,7 @@ extern "C" {
 ICU4XDataProvider* icu4x_ICU4XDataProvider_new_static_mv1();
 
 diplomat_result_void_void icu4x_ICU4XDataProvider_returns_result_mv1();
-void icu4x_ICU4XDataProvider_mv1_destroy(ICU4XDataProvider* self);
+void icu4x_ICU4XDataProvider_destroy_mv1(ICU4XDataProvider* self);
 
 #ifdef __cplusplus
 } // extern "C"

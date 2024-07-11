@@ -18,7 +18,7 @@ class ICU4XFixedDecimal;
  */
 struct ICU4XFixedDecimalDeleter {
   void operator()(capi::ICU4XFixedDecimal* l) const noexcept {
-    capi::icu4x_ICU4XFixedDecimal_mv1_destroy(l);
+    capi::icu4x_ICU4XFixedDecimal_destroy_mv1(l);
   }
 };
 

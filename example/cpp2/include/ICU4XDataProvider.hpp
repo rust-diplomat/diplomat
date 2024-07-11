@@ -22,7 +22,7 @@ namespace capi {
     icu4x_ICU4XDataProvider_returns_result_mv1_result icu4x_ICU4XDataProvider_returns_result_mv1();
     
     
-    void icu4x_ICU4XDataProvider_mv1_destroy(ICU4XDataProvider* self);
+    void icu4x_ICU4XDataProvider_destroy_mv1(ICU4XDataProvider* self);
     
     } // extern "C"
 } // namespace capi
@@ -55,7 +55,7 @@ inline icu4x::ICU4XDataProvider* icu4x::ICU4XDataProvider::FromFFI(icu4x::capi::
 }
 
 inline void icu4x::ICU4XDataProvider::operator delete(void* ptr) {
-  icu4x::capi::icu4x_ICU4XDataProvider_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XDataProvider*>(ptr));
+  icu4x::capi::icu4x_ICU4XDataProvider_destroy_mv1(reinterpret_cast<icu4x::capi::ICU4XDataProvider*>(ptr));
 }
 
 

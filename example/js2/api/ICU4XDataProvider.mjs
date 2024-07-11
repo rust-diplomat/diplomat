@@ -9,7 +9,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 */
 
 const ICU4XDataProvider_box_destroy_registry = new FinalizationRegistry((ptr) => {
-    wasm.icu4x_ICU4XDataProvider_mv1_destroy(ptr);
+    wasm.icu4x_ICU4XDataProvider_destroy_mv1(ptr);
 });
 export class ICU4XDataProvider {
     // Internal ptr reference:

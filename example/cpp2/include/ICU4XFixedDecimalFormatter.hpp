@@ -26,7 +26,7 @@ namespace capi {
     void icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(const icu4x::capi::ICU4XFixedDecimalFormatter* self, const icu4x::capi::ICU4XFixedDecimal* value, diplomat::capi::DiplomatWrite* write);
     
     
-    void icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(ICU4XFixedDecimalFormatter* self);
+    void icu4x_ICU4XFixedDecimalFormatter_destroy_mv1(ICU4XFixedDecimalFormatter* self);
     
     } // extern "C"
 } // namespace capi
@@ -65,7 +65,7 @@ inline icu4x::ICU4XFixedDecimalFormatter* icu4x::ICU4XFixedDecimalFormatter::Fro
 }
 
 inline void icu4x::ICU4XFixedDecimalFormatter::operator delete(void* ptr) {
-  icu4x::capi::icu4x_ICU4XFixedDecimalFormatter_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XFixedDecimalFormatter*>(ptr));
+  icu4x::capi::icu4x_ICU4XFixedDecimalFormatter_destroy_mv1(reinterpret_cast<icu4x::capi::ICU4XFixedDecimalFormatter*>(ptr));
 }
 
 

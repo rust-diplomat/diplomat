@@ -19,7 +19,7 @@ namespace capi {
     icu4x::capi::ICU4XLocale* icu4x_ICU4XLocale_new_mv1(const char* name_data, size_t name_len);
     
     
-    void icu4x_ICU4XLocale_mv1_destroy(ICU4XLocale* self);
+    void icu4x_ICU4XLocale_destroy_mv1(ICU4XLocale* self);
     
     } // extern "C"
 } // namespace capi
@@ -48,7 +48,7 @@ inline icu4x::ICU4XLocale* icu4x::ICU4XLocale::FromFFI(icu4x::capi::ICU4XLocale*
 }
 
 inline void icu4x::ICU4XLocale::operator delete(void* ptr) {
-  icu4x::capi::icu4x_ICU4XLocale_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XLocale*>(ptr));
+  icu4x::capi::icu4x_ICU4XLocale_destroy_mv1(reinterpret_cast<icu4x::capi::ICU4XLocale*>(ptr));
 }
 
 

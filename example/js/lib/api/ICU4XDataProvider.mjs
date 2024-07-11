@@ -2,7 +2,7 @@ import wasm from "./diplomat-wasm.mjs"
 import * as diplomatRuntime from "./diplomat-runtime.mjs"
 
 const ICU4XDataProvider_box_destroy_registry = new FinalizationRegistry(underlying => {
-  wasm.icu4x_ICU4XDataProvider_mv1_destroy(underlying);
+  wasm.icu4x_ICU4XDataProvider_destroy_mv1(underlying);
 });
 
 export class ICU4XDataProvider {

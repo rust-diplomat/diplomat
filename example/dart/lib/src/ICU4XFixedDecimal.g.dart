@@ -20,7 +20,7 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
     }
   }
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XFixedDecimal_mv1_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XFixedDecimal_destroy_mv1));
 
   /// Construct an [`ICU4XFixedDecimal`] from an integer.
   factory ICU4XFixedDecimal(int v) {
@@ -48,10 +48,10 @@ final class ICU4XFixedDecimal implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier('icu4x_ICU4XFixedDecimal_mv1_destroy')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimal_mv1_destroy')
+@meta.ResourceIdentifier('icu4x_ICU4XFixedDecimal_destroy_mv1')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimal_destroy_mv1')
 // ignore: non_constant_identifier_names
-external void _icu4x_ICU4XFixedDecimal_mv1_destroy(ffi.Pointer<ffi.Void> self);
+external void _icu4x_ICU4XFixedDecimal_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
 @meta.ResourceIdentifier('icu4x_ICU4XFixedDecimal_new_mv1')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'icu4x_ICU4XFixedDecimal_new_mv1')

@@ -22,7 +22,7 @@ final class ICU4XDataProvider implements ffi.Finalizable {
     }
   }
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XDataProvider_mv1_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_ICU4XDataProvider_destroy_mv1));
 
   /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
   factory ICU4XDataProvider.static_() {
@@ -37,10 +37,10 @@ final class ICU4XDataProvider implements ffi.Finalizable {
   }
 }
 
-@meta.ResourceIdentifier('icu4x_ICU4XDataProvider_mv1_destroy')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XDataProvider_mv1_destroy')
+@meta.ResourceIdentifier('icu4x_ICU4XDataProvider_destroy_mv1')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_ICU4XDataProvider_destroy_mv1')
 // ignore: non_constant_identifier_names
-external void _icu4x_ICU4XDataProvider_mv1_destroy(ffi.Pointer<ffi.Void> self);
+external void _icu4x_ICU4XDataProvider_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
 @meta.ResourceIdentifier('icu4x_ICU4XDataProvider_new_static_mv1')
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'icu4x_ICU4XDataProvider_new_static_mv1')
