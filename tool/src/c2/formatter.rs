@@ -48,7 +48,7 @@ impl<'tcx> CFormatter<'tcx> {
     /// Resolve and format a named type for use in code (with a namespace, if needed by C++)
     pub fn fmt_type_name_maybe_namespaced(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.tcx.resolve_type(id);
-        let name = resolved.name().as_str().into();
+        let name: Cow<_> = resolved.name().as_str().into();
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.
         // Potential future improvement: Use alias attributes in pure C mode.

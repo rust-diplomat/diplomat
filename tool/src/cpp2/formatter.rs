@@ -165,9 +165,9 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {
         let resolved = self.c.tcx().resolve_type(ty);
         if let Some(ref ns) = resolved.attrs().namespace {
-            format!("{ns}::{CAPI_NAMESPACE}::{name}").into()
+            format!("{ns}::{CAPI_NAMESPACE}::{name}")
         } else {
-            format!("diplomat::{CAPI_NAMESPACE}::{name}").into()
+            format!("diplomat::{CAPI_NAMESPACE}::{name}")
         }
     }
 
