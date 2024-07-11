@@ -12,19 +12,22 @@
 struct CyclicStructA;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct CyclicStructB {
       uint8_t field;
     } CyclicStructB;
-}
+} // namespace capi
+} // namespace
+
 
 struct CyclicStructB {
   uint8_t field;
 
   inline static CyclicStructA get_a();
 
-  inline ::capi::CyclicStructB AsFFI() const;
-  inline static CyclicStructB FromFFI(::capi::CyclicStructB c_struct);
+  inline diplomat::capi::CyclicStructB AsFFI() const;
+  inline static CyclicStructB FromFFI(diplomat::capi::CyclicStructB c_struct);
 };
 
 

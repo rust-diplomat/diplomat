@@ -17,9 +17,10 @@ namespace capi {
       CPPRenamedAttrEnum_B = 1,
       CPPRenamedAttrEnum_C = 2,
     } CPPRenamedAttrEnum;
-}
+} // namespace capi
+} // namespace
 
-
+namespace ns {
 class CPPRenamedAttrEnum {
 public:
   enum Value {
@@ -41,5 +42,5 @@ private:
     Value value;
 };
 
-}
+} // namespace
 #endif // CPPRenamedAttrEnum_D_HPP

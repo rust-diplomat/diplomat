@@ -22,8 +22,11 @@ namespace capi {
       icu4x::capi::ICU4XFixedDecimalGroupingStrategy grouping_strategy;
       bool some_other_config;
     } ICU4XFixedDecimalFormatterOptions;
-}
+} // namespace capi
+} // namespace
 
+
+namespace icu4x {
 struct ICU4XFixedDecimalFormatterOptions {
   icu4x::ICU4XFixedDecimalGroupingStrategy grouping_strategy;
   bool some_other_config;
@@ -34,5 +37,5 @@ struct ICU4XFixedDecimalFormatterOptions {
   inline static icu4x::ICU4XFixedDecimalFormatterOptions FromFFI(icu4x::capi::ICU4XFixedDecimalFormatterOptions c_struct);
 };
 
-}
+} // namespace
 #endif // ICU4XFixedDecimalFormatterOptions_D_HPP

@@ -10,9 +10,11 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef struct OptionString OptionString;
-}
+} // namespace capi
+} // namespace
 
 class OptionString {
 public:
@@ -23,10 +25,10 @@ public:
 
   inline std::optional<std::string_view> borrow() const;
 
-  inline const ::capi::OptionString* AsFFI() const;
-  inline ::capi::OptionString* AsFFI();
-  inline static const OptionString* FromFFI(const ::capi::OptionString* ptr);
-  inline static OptionString* FromFFI(::capi::OptionString* ptr);
+  inline const diplomat::capi::OptionString* AsFFI() const;
+  inline diplomat::capi::OptionString* AsFFI();
+  inline static const OptionString* FromFFI(const diplomat::capi::OptionString* ptr);
+  inline static OptionString* FromFFI(diplomat::capi::OptionString* ptr);
   inline static void operator delete(void* ptr);
 private:
   OptionString() = delete;

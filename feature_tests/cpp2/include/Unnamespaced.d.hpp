@@ -16,9 +16,11 @@ class CPPRenamedAttrEnum;
 }
 
 
+namespace diplomat {
 namespace capi {
     typedef struct Unnamespaced Unnamespaced;
-}
+} // namespace capi
+} // namespace
 
 class Unnamespaced {
 public:
@@ -27,10 +29,10 @@ public:
 
   inline void use_namespaced(const ns::AttrOpaque1Renamed& _n) const;
 
-  inline const ::capi::Unnamespaced* AsFFI() const;
-  inline ::capi::Unnamespaced* AsFFI();
-  inline static const Unnamespaced* FromFFI(const ::capi::Unnamespaced* ptr);
-  inline static Unnamespaced* FromFFI(::capi::Unnamespaced* ptr);
+  inline const diplomat::capi::Unnamespaced* AsFFI() const;
+  inline diplomat::capi::Unnamespaced* AsFFI();
+  inline static const Unnamespaced* FromFFI(const diplomat::capi::Unnamespaced* ptr);
+  inline static Unnamespaced* FromFFI(diplomat::capi::Unnamespaced* ptr);
   inline static void operator delete(void* ptr);
 private:
   Unnamespaced() = delete;

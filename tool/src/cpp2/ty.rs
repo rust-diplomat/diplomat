@@ -188,7 +188,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &'a str,
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
-            c_impl_header: C2Header,
+            c_header: C2Header,
         }
 
         ImplTemplate {
@@ -198,7 +198,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             ctype: &ctype,
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
-            c_impl_header,
+            c_header: c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -254,7 +254,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             dtor_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
-            c_impl_header: C2Header,
+            c_header: C2Header,
         }
 
         ImplTemplate {
@@ -265,7 +265,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             dtor_name: &dtor_name,
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
-            c_impl_header,
+            c_header: c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -348,7 +348,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             c_to_cpp_fields: &'a [NamedExpression<'a>],
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
-            c_impl_header: C2Header,
+            c_header: C2Header,
         }
 
         ImplTemplate {
@@ -360,7 +360,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             c_to_cpp_fields: c_to_cpp_fields.as_slice(),
             methods: methods.as_slice(),
             namespace: def.attrs.namespace.as_deref(),
-            c_impl_header,
+            c_header: c_impl_header,
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -379,7 +379,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             method.name.as_str().into(),
         );
         let method_name = self.cx.formatter.fmt_method_name(method);
-        let c_method_name = self.cx.formatter.fmt_c_method_name(id, method);
+        let c_method_name = self.cx.formatter.fmt_c_method_name(id, method).into();
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -395,7 +395,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             param_decls.push(decls);
             if let Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8)) = param.ty {
                 param_validations.push(format!(
-                    "if (!capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
+                    "if (!diplomat::capi::diplomat_is_str({param}.data(), {param}.size())) {{\n  return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());\n}}",
                     param = param.name.as_str(),
                 ));
                 returns_utf8_err = true;

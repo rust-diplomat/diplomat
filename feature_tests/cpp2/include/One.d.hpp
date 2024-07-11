@@ -13,9 +13,11 @@ namespace capi {typedef struct Two Two; }
 class Two;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct One One;
-}
+} // namespace capi
+} // namespace
 
 class One {
 public:
@@ -42,10 +44,10 @@ public:
 
   inline static std::unique_ptr<One> implicit_bounds_deep(const One& explicit_, const One& implicit_1, const One& implicit_2, const One& nohold);
 
-  inline const ::capi::One* AsFFI() const;
-  inline ::capi::One* AsFFI();
-  inline static const One* FromFFI(const ::capi::One* ptr);
-  inline static One* FromFFI(::capi::One* ptr);
+  inline const diplomat::capi::One* AsFFI() const;
+  inline diplomat::capi::One* AsFFI();
+  inline static const One* FromFFI(const diplomat::capi::One* ptr);
+  inline static One* FromFFI(diplomat::capi::One* ptr);
   inline static void operator delete(void* ptr);
 private:
   One() = delete;

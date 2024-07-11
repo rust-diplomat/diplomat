@@ -21,10 +21,11 @@ namespace capi {
     
     
     } // extern "C"
-}
-}
+} // namespace capi
+} // namespace
+
 inline icu4x::ICU4XFixedDecimalFormatterOptions icu4x::ICU4XFixedDecimalFormatterOptions::default_() {
-  auto result = capi::icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();
+  auto result = icu4x::capi::icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1();
   return icu4x::ICU4XFixedDecimalFormatterOptions::FromFFI(result);
 }
 

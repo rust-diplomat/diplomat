@@ -10,13 +10,14 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef enum ErrorEnum {
       ErrorEnum_Foo = 0,
       ErrorEnum_Bar = 1,
     } ErrorEnum;
-}
-
+} // namespace capi
+} // namespace
 
 class ErrorEnum {
 public:
@@ -32,8 +33,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline ::capi::ErrorEnum AsFFI() const;
-  inline static ErrorEnum FromFFI(::capi::ErrorEnum c_enum);
+  inline diplomat::capi::ErrorEnum AsFFI() const;
+  inline static ErrorEnum FromFFI(diplomat::capi::ErrorEnum c_enum);
 private:
     Value value;
 };

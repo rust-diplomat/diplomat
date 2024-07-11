@@ -13,19 +13,21 @@ namespace capi {typedef struct RefListParameter RefListParameter; }
 class RefListParameter;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct RefList RefList;
-}
+} // namespace capi
+} // namespace
 
 class RefList {
 public:
 
   inline static std::unique_ptr<RefList> node(const RefListParameter& data);
 
-  inline const ::capi::RefList* AsFFI() const;
-  inline ::capi::RefList* AsFFI();
-  inline static const RefList* FromFFI(const ::capi::RefList* ptr);
-  inline static RefList* FromFFI(::capi::RefList* ptr);
+  inline const diplomat::capi::RefList* AsFFI() const;
+  inline diplomat::capi::RefList* AsFFI();
+  inline static const RefList* FromFFI(const diplomat::capi::RefList* ptr);
+  inline static RefList* FromFFI(diplomat::capi::RefList* ptr);
   inline static void operator delete(void* ptr);
 private:
   RefList() = delete;

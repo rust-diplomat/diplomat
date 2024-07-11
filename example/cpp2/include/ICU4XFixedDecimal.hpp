@@ -21,28 +21,29 @@ namespace capi {
     void icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(icu4x::capi::ICU4XFixedDecimal* self, int16_t power);
     
     typedef struct icu4x_ICU4XFixedDecimal_to_string_mv1_result { bool is_ok;} icu4x_ICU4XFixedDecimal_to_string_mv1_result;
-    icu4x_ICU4XFixedDecimal_to_string_mv1_result icu4x_ICU4XFixedDecimal_to_string_mv1(const icu4x::capi::ICU4XFixedDecimal* self, ::capi::DiplomatWrite* write);
+    icu4x_ICU4XFixedDecimal_to_string_mv1_result icu4x_ICU4XFixedDecimal_to_string_mv1(const icu4x::capi::ICU4XFixedDecimal* self, diplomat::capi::DiplomatWrite* write);
     
     
     void icu4x_ICU4XFixedDecimal_mv1_destroy(ICU4XFixedDecimal* self);
     
     } // extern "C"
-}
-}
+} // namespace capi
+} // namespace
+
 inline std::unique_ptr<icu4x::ICU4XFixedDecimal> icu4x::ICU4XFixedDecimal::new_(int32_t v) {
-  auto result = capi::icu4x_ICU4XFixedDecimal_new_mv1(v);
+  auto result = icu4x::capi::icu4x_ICU4XFixedDecimal_new_mv1(v);
   return std::unique_ptr<icu4x::ICU4XFixedDecimal>(icu4x::ICU4XFixedDecimal::FromFFI(result));
 }
 
 inline void icu4x::ICU4XFixedDecimal::multiply_pow10(int16_t power) {
-  capi::icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(this->AsFFI(),
+  icu4x::capi::icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(this->AsFFI(),
     power);
 }
 
 inline diplomat::result<std::string, std::monostate> icu4x::ICU4XFixedDecimal::to_string() const {
   std::string output;
-  ::capi::DiplomatWrite write = diplomat::WriteFromString(output);
-  auto result = capi::icu4x_ICU4XFixedDecimal_to_string_mv1(this->AsFFI(),
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  auto result = icu4x::capi::icu4x_ICU4XFixedDecimal_to_string_mv1(this->AsFFI(),
     &write);
   return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
 }
@@ -64,7 +65,7 @@ inline icu4x::ICU4XFixedDecimal* icu4x::ICU4XFixedDecimal::FromFFI(icu4x::capi::
 }
 
 inline void icu4x::ICU4XFixedDecimal::operator delete(void* ptr) {
-  capi::icu4x_ICU4XFixedDecimal_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XFixedDecimal*>(ptr));
+  icu4x::capi::icu4x_ICU4XFixedDecimal_mv1_destroy(reinterpret_cast<icu4x::capi::ICU4XFixedDecimal*>(ptr));
 }
 
 

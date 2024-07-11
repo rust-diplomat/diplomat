@@ -13,9 +13,11 @@ struct ImportedStruct;
 struct MyStruct;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct Opaque Opaque;
-}
+} // namespace capi
+} // namespace
 
 class Opaque {
 public:
@@ -36,10 +38,10 @@ public:
 
   inline static int8_t cmp();
 
-  inline const ::capi::Opaque* AsFFI() const;
-  inline ::capi::Opaque* AsFFI();
-  inline static const Opaque* FromFFI(const ::capi::Opaque* ptr);
-  inline static Opaque* FromFFI(::capi::Opaque* ptr);
+  inline const diplomat::capi::Opaque* AsFFI() const;
+  inline diplomat::capi::Opaque* AsFFI();
+  inline static const Opaque* FromFFI(const diplomat::capi::Opaque* ptr);
+  inline static Opaque* FromFFI(diplomat::capi::Opaque* ptr);
   inline static void operator delete(void* ptr);
 private:
   Opaque() = delete;

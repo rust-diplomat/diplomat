@@ -10,9 +10,11 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef struct Utf16Wrap Utf16Wrap;
-}
+} // namespace capi
+} // namespace
 
 class Utf16Wrap {
 public:
@@ -25,10 +27,10 @@ public:
 
   inline std::u16string_view owned() const;
 
-  inline const ::capi::Utf16Wrap* AsFFI() const;
-  inline ::capi::Utf16Wrap* AsFFI();
-  inline static const Utf16Wrap* FromFFI(const ::capi::Utf16Wrap* ptr);
-  inline static Utf16Wrap* FromFFI(::capi::Utf16Wrap* ptr);
+  inline const diplomat::capi::Utf16Wrap* AsFFI() const;
+  inline diplomat::capi::Utf16Wrap* AsFFI();
+  inline static const Utf16Wrap* FromFFI(const diplomat::capi::Utf16Wrap* ptr);
+  inline static Utf16Wrap* FromFFI(diplomat::capi::Utf16Wrap* ptr);
   inline static void operator delete(void* ptr);
 private:
   Utf16Wrap() = delete;

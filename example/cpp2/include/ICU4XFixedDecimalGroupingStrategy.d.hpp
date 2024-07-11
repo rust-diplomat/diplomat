@@ -18,9 +18,10 @@ namespace capi {
       ICU4XFixedDecimalGroupingStrategy_Always = 2,
       ICU4XFixedDecimalGroupingStrategy_Min2 = 3,
     } ICU4XFixedDecimalGroupingStrategy;
-}
+} // namespace capi
+} // namespace
 
-
+namespace icu4x {
 class ICU4XFixedDecimalGroupingStrategy {
 public:
   enum Value {
@@ -43,5 +44,5 @@ private:
     Value value;
 };
 
-}
+} // namespace
 #endif // ICU4XFixedDecimalGroupingStrategy_D_HPP

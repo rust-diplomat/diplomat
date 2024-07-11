@@ -14,6 +14,7 @@ struct MyZst;
 class MyEnum;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct MyStruct {
       uint8_t a;
@@ -22,9 +23,11 @@ namespace capi {
       uint64_t d;
       int32_t e;
       char32_t f;
-      ::capi::MyEnum g;
+      diplomat::capi::MyEnum g;
     } MyStruct;
-}
+} // namespace capi
+} // namespace
+
 
 struct MyStruct {
   uint8_t a;
@@ -41,8 +44,8 @@ struct MyStruct {
 
   inline static diplomat::result<std::monostate, MyZst> returns_zst_result();
 
-  inline ::capi::MyStruct AsFFI() const;
-  inline static MyStruct FromFFI(::capi::MyStruct c_struct);
+  inline diplomat::capi::MyStruct AsFFI() const;
+  inline static MyStruct FromFFI(diplomat::capi::MyStruct c_struct);
 };
 
 

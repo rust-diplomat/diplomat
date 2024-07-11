@@ -1,10 +1,9 @@
+{% include "c_include.h.jinja" %}
+
+
 {% if let Some(ns) = namespace -%}
 namespace {{ns}} {
-{%endif-%}
-namespace {{self::CAPI_NAMESPACE}} {
-    {{ c_header.body|trim|indent(4) }}
-}
-
+{% endif -%}
 struct {{type_name_unnamespaced}} {
 {%- for field in fields %}
 	{{field.type_name}} {{field.var_name}};
@@ -19,5 +18,5 @@ struct {{type_name_unnamespaced}} {
 };
 
 {% if namespace.is_some() -%}
-}
+} // namespace
 {%-endif%}

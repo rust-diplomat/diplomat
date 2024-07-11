@@ -18,8 +18,10 @@ class ICU4XFixedDecimal;
 namespace icu4x {
 namespace capi {
     typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
-}
+} // namespace capi
+} // namespace
 
+namespace icu4x {
 class ICU4XFixedDecimal {
 public:
 
@@ -43,5 +45,5 @@ private:
   static void operator delete[](void*, size_t) = delete;
 };
 
-}
+} // namespace
 #endif // ICU4XFixedDecimal_D_HPP

@@ -25,8 +25,10 @@ struct ICU4XFixedDecimalFormatterOptions;
 namespace icu4x {
 namespace capi {
     typedef struct ICU4XFixedDecimalFormatter ICU4XFixedDecimalFormatter;
-}
+} // namespace capi
+} // namespace
 
+namespace icu4x {
 class ICU4XFixedDecimalFormatter {
 public:
 
@@ -48,5 +50,5 @@ private:
   static void operator delete[](void*, size_t) = delete;
 };
 
-}
+} // namespace
 #endif // ICU4XFixedDecimalFormatter_D_HPP

@@ -12,20 +12,23 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
     
     } // extern "C"
-}
+} // namespace capi
+} // namespace
 
-inline ::capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
-  return ::capi::BorrowedFieldsReturning {
+
+inline diplomat::capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
+  return diplomat::capi::BorrowedFieldsReturning {
     .bytes = { .data = bytes.data(), .len = bytes.size() },
   };
 }
 
-inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(::capi::BorrowedFieldsReturning c_struct) {
+inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(diplomat::capi::BorrowedFieldsReturning c_struct) {
   return BorrowedFieldsReturning {
     .bytes = std::string_view(c_struct.bytes.data, c_struct.bytes.len),
   };

@@ -10,9 +10,11 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef struct MyString MyString;
-}
+} // namespace capi
+} // namespace
 
 class MyString {
 public:
@@ -29,10 +31,10 @@ public:
 
   inline std::string_view get_boxed_str() const;
 
-  inline const ::capi::MyString* AsFFI() const;
-  inline ::capi::MyString* AsFFI();
-  inline static const MyString* FromFFI(const ::capi::MyString* ptr);
-  inline static MyString* FromFFI(::capi::MyString* ptr);
+  inline const diplomat::capi::MyString* AsFFI() const;
+  inline diplomat::capi::MyString* AsFFI();
+  inline static const MyString* FromFFI(const diplomat::capi::MyString* ptr);
+  inline static MyString* FromFFI(diplomat::capi::MyString* ptr);
   inline static void operator delete(void* ptr);
 private:
   MyString() = delete;

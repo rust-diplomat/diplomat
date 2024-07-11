@@ -10,14 +10,15 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     typedef enum UnimportedEnum {
       UnimportedEnum_A = 0,
       UnimportedEnum_B = 1,
       UnimportedEnum_C = 2,
     } UnimportedEnum;
-}
-
+} // namespace capi
+} // namespace
 
 class UnimportedEnum {
 public:
@@ -34,8 +35,8 @@ public:
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline ::capi::UnimportedEnum AsFFI() const;
-  inline static UnimportedEnum FromFFI(::capi::UnimportedEnum c_enum);
+  inline diplomat::capi::UnimportedEnum AsFFI() const;
+  inline static UnimportedEnum FromFFI(diplomat::capi::UnimportedEnum c_enum);
 private:
     Value value;
 };

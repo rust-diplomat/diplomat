@@ -15,14 +15,17 @@ namespace capi {typedef struct OptionOpaqueChar OptionOpaqueChar; }
 class OptionOpaqueChar;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct OptionStruct {
-      ::capi::OptionOpaque* a;
-      ::capi::OptionOpaqueChar* b;
+      diplomat::capi::OptionOpaque* a;
+      diplomat::capi::OptionOpaqueChar* b;
       uint32_t c;
-      ::capi::OptionOpaque* d;
+      diplomat::capi::OptionOpaque* d;
     } OptionStruct;
-}
+} // namespace capi
+} // namespace
+
 
 struct OptionStruct {
   std::unique_ptr<OptionOpaque> a;
@@ -30,8 +33,8 @@ struct OptionStruct {
   uint32_t c;
   std::unique_ptr<OptionOpaque> d;
 
-  inline ::capi::OptionStruct AsFFI() const;
-  inline static OptionStruct FromFFI(::capi::OptionStruct c_struct);
+  inline diplomat::capi::OptionStruct AsFFI() const;
+  inline static OptionStruct FromFFI(diplomat::capi::OptionStruct c_struct);
 };
 
 

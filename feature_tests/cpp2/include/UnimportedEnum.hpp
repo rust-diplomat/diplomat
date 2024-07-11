@@ -12,21 +12,24 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
     
     } // extern "C"
-}
-inline ::capi::UnimportedEnum UnimportedEnum::AsFFI() const {
-  return static_cast<::capi::UnimportedEnum>(value);
+} // namespace capi
+} // namespace
+
+inline diplomat::capi::UnimportedEnum UnimportedEnum::AsFFI() const {
+  return static_cast<diplomat::capi::UnimportedEnum>(value);
 }
 
-inline UnimportedEnum UnimportedEnum::FromFFI(::capi::UnimportedEnum c_enum) {
+inline UnimportedEnum UnimportedEnum::FromFFI(diplomat::capi::UnimportedEnum c_enum) {
   switch (c_enum) {
-    case ::capi::UnimportedEnum_A:
-    case ::capi::UnimportedEnum_B:
-    case ::capi::UnimportedEnum_C:
+    case diplomat::capi::UnimportedEnum_A:
+    case diplomat::capi::UnimportedEnum_B:
+    case diplomat::capi::UnimportedEnum_C:
       return static_cast<UnimportedEnum::Value>(c_enum);
     default:
       abort();

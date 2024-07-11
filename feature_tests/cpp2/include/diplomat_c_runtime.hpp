@@ -19,7 +19,7 @@ typedef uint32_t char32_t;
 #endif
 
 
-namespace capi {
+namespace diplomat::capi {
 
 
 typedef struct DiplomatWrite {
@@ -77,6 +77,6 @@ MAKE_SLICES(String16, char16_t)
 MAKE_SLICES(Strings, DiplomatStringView)
 MAKE_SLICES(Strings16, DiplomatString16View)
 
-} // namespace capi
+} // namespace diplomat::capi
 
 #endif

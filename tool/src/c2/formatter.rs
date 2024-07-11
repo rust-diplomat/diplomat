@@ -48,7 +48,7 @@ impl<'tcx> CFormatter<'tcx> {
     /// Resolve and format a named type for use in code (with a namespace, if needed by C++)
     pub fn fmt_type_name_maybe_namespaced(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.tcx.resolve_type(id);
-        let name = resolved.name().as_str().into();
+        let name: Cow<_> = resolved.name().as_str().into();
         // Only apply renames in cpp mode, in pure C mode you'd want the
         // method names to match the type names.
         // Potential future improvement: Use alias attributes in pure C mode.
@@ -61,7 +61,7 @@ impl<'tcx> CFormatter<'tcx> {
             if let Some(ref ns) = resolved.attrs().namespace {
                 format!("{ns}::{CAPI_NAMESPACE}::{name}").into()
             } else {
-                format!("::{CAPI_NAMESPACE}::{name}").into()
+                format!("diplomat::{CAPI_NAMESPACE}::{name}").into()
             }
         } else {
             name
@@ -187,12 +187,16 @@ impl<'tcx> CFormatter<'tcx> {
             Some(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
         };
-        format!("Diplomat{prim}View{mtb}")
+        if self.is_for_cpp {
+            format!("Diplomat{prim}View{mtb}")
+        } else {
+            format!("diplomat::capi::Diplomat{prim}View{mtb}")
+        }
     }
 
     pub(crate) fn fmt_diplomat_write(&self) -> &'static str {
         if self.is_for_cpp {
-            "::capi::DiplomatWrite*"
+            "diplomat::capi::DiplomatWrite*"
         } else {
             "DiplomatWrite*"
         }

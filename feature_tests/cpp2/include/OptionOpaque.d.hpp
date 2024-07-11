@@ -12,9 +12,11 @@
 struct OptionStruct;
 
 
+namespace diplomat {
 namespace capi {
     typedef struct OptionOpaque OptionOpaque;
-}
+} // namespace capi
+} // namespace
 
 class OptionOpaque {
 public:
@@ -41,10 +43,10 @@ public:
 
   inline static bool option_opaque_argument(const OptionOpaque* arg);
 
-  inline const ::capi::OptionOpaque* AsFFI() const;
-  inline ::capi::OptionOpaque* AsFFI();
-  inline static const OptionOpaque* FromFFI(const ::capi::OptionOpaque* ptr);
-  inline static OptionOpaque* FromFFI(::capi::OptionOpaque* ptr);
+  inline const diplomat::capi::OptionOpaque* AsFFI() const;
+  inline diplomat::capi::OptionOpaque* AsFFI();
+  inline static const OptionOpaque* FromFFI(const diplomat::capi::OptionOpaque* ptr);
+  inline static OptionOpaque* FromFFI(diplomat::capi::OptionOpaque* ptr);
   inline static void operator delete(void* ptr);
 private:
   OptionOpaque() = delete;

@@ -7,6 +7,8 @@ use askama::Template;
 use diplomat_core::hir::TypeContext;
 use formatter::Cpp2Formatter;
 
+pub(crate) static RUNTIME_HPP: &str = include_str!("../../templates/cpp2/runtime.hpp");
+
 /// This is the main object that drives this backend. Most execution steps
 /// for this backend will be found as methods on this context
 pub struct Cpp2Context<'tcx> {
@@ -35,16 +37,11 @@ impl<'tcx> Cpp2Context<'tcx> {
             .render_into(&mut c_runtime)
             .unwrap();
 
-        self.files.add_file(
-            // TODO rename to diplomat_c_runtime.hpp once C++1 is removed
-            "diplomat_runtime.h".into(),
-            c_runtime,
-        );
+        self.files
+            .add_file("diplomat_c_runtime.hpp".into(), c_runtime);
 
-        self.files.add_file(
-            "diplomat_runtime.hpp".into(),
-            crate::cpp::RUNTIME_HPP.into(),
-        );
+        self.files
+            .add_file("diplomat_runtime.hpp".into(), RUNTIME_HPP.into());
 
         for (id, ty) in self.tcx.all_types() {
             self.gen_ty(id, ty)

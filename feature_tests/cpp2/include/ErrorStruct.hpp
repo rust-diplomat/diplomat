@@ -12,21 +12,24 @@
 #include "diplomat_runtime.hpp"
 
 
+namespace diplomat {
 namespace capi {
     extern "C" {
     
     
     } // extern "C"
-}
+} // namespace capi
+} // namespace
 
-inline ::capi::ErrorStruct ErrorStruct::AsFFI() const {
-  return ::capi::ErrorStruct {
+
+inline diplomat::capi::ErrorStruct ErrorStruct::AsFFI() const {
+  return diplomat::capi::ErrorStruct {
     .i = i,
     .j = j,
   };
 }
 
-inline ErrorStruct ErrorStruct::FromFFI(::capi::ErrorStruct c_struct) {
+inline ErrorStruct ErrorStruct::FromFFI(diplomat::capi::ErrorStruct c_struct) {
   return ErrorStruct {
     .i = c_struct.i,
     .j = c_struct.j,
