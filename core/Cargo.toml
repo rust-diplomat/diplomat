@@ -33,7 +33,7 @@ serde = { version = "1.0", features = ["derive", "alloc"], default-features = fa
 displaydoc = { version = "0.2", optional = true }
 smallvec = "1.9.0"
 strck_ident = { version = "0.1", features = ["rust"] }
-either = {version = "1.9.0", optional = true, default_features = false}
+either = {version = "1.9.0", optional = true, default-features = false}
 
 [dev-dependencies]
 insta = "1.7.1"
