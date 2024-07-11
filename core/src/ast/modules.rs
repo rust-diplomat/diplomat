@@ -170,8 +170,6 @@ impl Module {
 
                 Item::Impl(imp) => {
                     if analyze_types {
-                        assert!(imp.trait_.is_none());
-
                         let self_path = match imp.self_ty.as_ref() {
                             syn::Type::Path(s) => PathType::from(s),
                             _ => panic!("Self type not found"),
