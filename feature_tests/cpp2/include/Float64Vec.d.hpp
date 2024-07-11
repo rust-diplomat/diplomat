@@ -12,7 +12,7 @@
 
 namespace diplomat {
 namespace capi {
-    typedef struct Float64Vec Float64Vec;
+    struct Float64Vec;
 } // namespace capi
 } // namespace
 

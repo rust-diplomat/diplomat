@@ -16,5 +16,4 @@ typedef struct ICU4XLocale ICU4XLocale;
 
 
 
-
 #endif // ICU4XLocale_D_H

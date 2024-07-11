@@ -12,7 +12,7 @@
 
 namespace ns {
 namespace capi {
-    typedef struct CPPRenamedAttrOpaque2 CPPRenamedAttrOpaque2;
+    struct CPPRenamedAttrOpaque2;
 } // namespace capi
 } // namespace
 

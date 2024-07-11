@@ -9,13 +9,13 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {typedef struct RefListParameter RefListParameter; }
+namespace diplomat::capi { struct RefListParameter; }
 class RefListParameter;
 
 
 namespace diplomat {
 namespace capi {
-    typedef struct RefList RefList;
+    struct RefList;
 } // namespace capi
 } // namespace
 

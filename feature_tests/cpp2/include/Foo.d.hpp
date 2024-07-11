@@ -9,7 +9,7 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {typedef struct Bar Bar; }
+namespace diplomat::capi { struct Bar; }
 class Bar;
 struct BorrowedFields;
 struct BorrowedFieldsReturning;
@@ -18,7 +18,7 @@ struct BorrowedFieldsWithBounds;
 
 namespace diplomat {
 namespace capi {
-    typedef struct Foo Foo;
+    struct Foo;
 } // namespace capi
 } // namespace
 

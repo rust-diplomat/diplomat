@@ -12,10 +12,10 @@
 
 namespace diplomat {
 namespace capi {
-    typedef struct ErrorStruct {
+    struct ErrorStruct {
       int32_t i;
       int32_t j;
-    } ErrorStruct;
+    };
 } // namespace capi
 } // namespace
 

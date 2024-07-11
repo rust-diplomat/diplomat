@@ -10,14 +10,14 @@
 #include "diplomat_runtime.hpp"
 
 namespace icu4x {
-namespace capi {typedef struct ICU4XFixedDecimal ICU4XFixedDecimal; }
+namespace capi { struct ICU4XFixedDecimal; }
 class ICU4XFixedDecimal;
 }
 
 
 namespace icu4x {
 namespace capi {
-    typedef struct ICU4XFixedDecimal ICU4XFixedDecimal;
+    struct ICU4XFixedDecimal;
 } // namespace capi
 } // namespace
 

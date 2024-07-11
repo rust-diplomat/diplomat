@@ -9,17 +9,17 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {typedef struct Foo Foo; }
+namespace diplomat::capi { struct Foo; }
 class Foo;
 
 
 namespace diplomat {
 namespace capi {
-    typedef struct BorrowedFieldsWithBounds {
+    struct BorrowedFieldsWithBounds {
       DiplomatString16View field_a;
       DiplomatStringView field_b;
       DiplomatStringView field_c;
-    } BorrowedFieldsWithBounds;
+    };
 } // namespace capi
 } // namespace
 

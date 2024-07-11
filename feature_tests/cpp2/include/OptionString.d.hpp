@@ -12,7 +12,7 @@
 
 namespace diplomat {
 namespace capi {
-    typedef struct OptionString OptionString;
+    struct OptionString;
 } // namespace capi
 } // namespace
 

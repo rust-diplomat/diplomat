@@ -12,9 +12,9 @@
 
 namespace diplomat {
 namespace capi {
-    typedef struct BorrowedFieldsReturning {
+    struct BorrowedFieldsReturning {
       DiplomatStringView bytes;
-    } BorrowedFieldsReturning;
+    };
 } // namespace capi
 } // namespace
 

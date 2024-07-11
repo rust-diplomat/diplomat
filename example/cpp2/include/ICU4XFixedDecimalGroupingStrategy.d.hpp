@@ -12,12 +12,12 @@
 
 namespace icu4x {
 namespace capi {
-    typedef enum ICU4XFixedDecimalGroupingStrategy {
+    enum ICU4XFixedDecimalGroupingStrategy {
       ICU4XFixedDecimalGroupingStrategy_Auto = 0,
       ICU4XFixedDecimalGroupingStrategy_Never = 1,
       ICU4XFixedDecimalGroupingStrategy_Always = 2,
       ICU4XFixedDecimalGroupingStrategy_Min2 = 3,
-    } ICU4XFixedDecimalGroupingStrategy;
+    };
 } // namespace capi
 } // namespace
 

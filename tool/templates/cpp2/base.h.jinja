@@ -26,7 +26,7 @@ namespace {{ns}} {
 {%- for forward in namespace_forward.1 %}
 {%- match forward %}
 	{%- when Forward::Class with (name) ~%}
-		namespace capi {typedef struct {{name}} {{name}}; }
+		namespace {% if namespace_forward.0.is_none() -%} diplomat:: {%- endif -%} capi { struct {{name}}; }
 class {{ name }};
 	{%- when Forward::Struct with (name) ~%}
 		struct {{ name }};

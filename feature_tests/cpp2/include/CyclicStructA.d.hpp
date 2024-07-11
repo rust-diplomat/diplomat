@@ -15,9 +15,9 @@ struct CyclicStructB;
 
 namespace diplomat {
 namespace capi {
-    typedef struct CyclicStructA {
+    struct CyclicStructA {
       diplomat::capi::CyclicStructB a;
-    } CyclicStructA;
+    };
 } // namespace capi
 } // namespace
 

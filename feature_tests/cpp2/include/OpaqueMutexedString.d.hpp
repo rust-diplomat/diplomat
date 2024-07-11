@@ -9,13 +9,13 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {typedef struct Utf16Wrap Utf16Wrap; }
+namespace diplomat::capi { struct Utf16Wrap; }
 class Utf16Wrap;
 
 
 namespace diplomat {
 namespace capi {
-    typedef struct OpaqueMutexedString OpaqueMutexedString;
+    struct OpaqueMutexedString;
 } // namespace capi
 } // namespace
 

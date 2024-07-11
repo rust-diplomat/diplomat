@@ -16,5 +16,4 @@ typedef struct Bar Bar;
 
 
 
-
 #endif // Bar_D_H

@@ -15,10 +15,10 @@ class UnimportedEnum;
 
 namespace diplomat {
 namespace capi {
-    typedef struct ImportedStruct {
+    struct ImportedStruct {
       diplomat::capi::UnimportedEnum foo;
       uint8_t count;
-    } ImportedStruct;
+    };
 } // namespace capi
 } // namespace
 

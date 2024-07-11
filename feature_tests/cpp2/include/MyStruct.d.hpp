@@ -16,7 +16,7 @@ class MyEnum;
 
 namespace diplomat {
 namespace capi {
-    typedef struct MyStruct {
+    struct MyStruct {
       uint8_t a;
       bool b;
       uint8_t c;
@@ -24,7 +24,7 @@ namespace capi {
       int32_t e;
       char32_t f;
       diplomat::capi::MyEnum g;
-    } MyStruct;
+    };
 } // namespace capi
 } // namespace
 

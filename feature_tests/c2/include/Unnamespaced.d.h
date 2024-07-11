@@ -16,5 +16,4 @@ typedef struct Unnamespaced Unnamespaced;
 
 
 
-
 #endif // Unnamespaced_D_H

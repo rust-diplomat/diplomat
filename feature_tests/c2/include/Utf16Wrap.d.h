@@ -16,5 +16,4 @@ typedef struct Utf16Wrap Utf16Wrap;
 
 
 
-
 #endif // Utf16Wrap_D_H

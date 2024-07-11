@@ -9,10 +9,10 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {typedef struct Unnamespaced Unnamespaced; }
+namespace diplomat::capi { struct Unnamespaced; }
 class Unnamespaced;
 namespace ns {
-namespace capi {typedef struct AttrOpaque1Renamed AttrOpaque1Renamed; }
+namespace capi { struct AttrOpaque1Renamed; }
 class AttrOpaque1Renamed;
 class CPPRenamedAttrEnum;
 }
@@ -20,7 +20,7 @@ class CPPRenamedAttrEnum;
 
 namespace ns {
 namespace capi {
-    typedef struct AttrOpaque1Renamed AttrOpaque1Renamed;
+    struct AttrOpaque1Renamed;
 } // namespace capi
 } // namespace
 
