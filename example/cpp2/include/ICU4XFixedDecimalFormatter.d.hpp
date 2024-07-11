@@ -10,13 +10,13 @@
 #include "diplomat_runtime.hpp"
 
 namespace icu4x {
-namespace capi {typedef struct ICU4XDataProvider ICU4XDataProvider; }
+namespace capi { struct ICU4XDataProvider; }
 class ICU4XDataProvider;
-namespace capi {typedef struct ICU4XFixedDecimal ICU4XFixedDecimal; }
+namespace capi { struct ICU4XFixedDecimal; }
 class ICU4XFixedDecimal;
-namespace capi {typedef struct ICU4XFixedDecimalFormatter ICU4XFixedDecimalFormatter; }
+namespace capi { struct ICU4XFixedDecimalFormatter; }
 class ICU4XFixedDecimalFormatter;
-namespace capi {typedef struct ICU4XLocale ICU4XLocale; }
+namespace capi { struct ICU4XLocale; }
 class ICU4XLocale;
 struct ICU4XFixedDecimalFormatterOptions;
 }
@@ -24,7 +24,7 @@ struct ICU4XFixedDecimalFormatterOptions;
 
 namespace icu4x {
 namespace capi {
-    typedef struct ICU4XFixedDecimalFormatter ICU4XFixedDecimalFormatter;
+    struct ICU4XFixedDecimalFormatter;
 } // namespace capi
 } // namespace
 

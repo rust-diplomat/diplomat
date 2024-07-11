@@ -11,9 +11,9 @@
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsWithBounds.d.hpp"
 
-namespace capi {typedef struct Bar Bar; }
+namespace diplomat::capi { struct Bar; }
 class Bar;
-namespace capi {typedef struct Foo Foo; }
+namespace diplomat::capi { struct Foo; }
 class Foo;
 struct BorrowedFields;
 struct BorrowedFieldsWithBounds;
@@ -21,11 +21,11 @@ struct BorrowedFieldsWithBounds;
 
 namespace diplomat {
 namespace capi {
-    typedef struct NestedBorrowedFields {
+    struct NestedBorrowedFields {
       diplomat::capi::BorrowedFields fields;
       diplomat::capi::BorrowedFieldsWithBounds bounds;
       diplomat::capi::BorrowedFieldsWithBounds bounds2;
-    } NestedBorrowedFields;
+    };
 } // namespace capi
 } // namespace
 

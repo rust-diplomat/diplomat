@@ -16,5 +16,4 @@ typedef struct ICU4XDataProvider ICU4XDataProvider;
 
 
 
-
 #endif // ICU4XDataProvider_D_H

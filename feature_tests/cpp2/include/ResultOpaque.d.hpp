@@ -15,7 +15,7 @@ class ErrorEnum;
 
 namespace diplomat {
 namespace capi {
-    typedef struct ResultOpaque ResultOpaque;
+    struct ResultOpaque;
 } // namespace capi
 } // namespace
 

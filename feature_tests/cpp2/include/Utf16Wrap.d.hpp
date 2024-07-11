@@ -12,7 +12,7 @@
 
 namespace diplomat {
 namespace capi {
-    typedef struct Utf16Wrap Utf16Wrap;
+    struct Utf16Wrap;
 } // namespace capi
 } // namespace
 

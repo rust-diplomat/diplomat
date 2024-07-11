@@ -9,13 +9,13 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {typedef struct Two Two; }
+namespace diplomat::capi { struct Two; }
 class Two;
 
 
 namespace diplomat {
 namespace capi {
-    typedef struct One One;
+    struct One;
 } // namespace capi
 } // namespace
 

@@ -16,5 +16,4 @@ typedef struct Foo Foo;
 
 
 
-
 #endif // Foo_D_H

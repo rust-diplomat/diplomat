@@ -16,5 +16,4 @@ typedef struct ICU4XFixedDecimalFormatter ICU4XFixedDecimalFormatter;
 
 
 
-
 #endif // ICU4XFixedDecimalFormatter_D_H

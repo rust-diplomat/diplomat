@@ -16,5 +16,4 @@ typedef struct Opaque Opaque;
 
 
 
-
 #endif // Opaque_D_H

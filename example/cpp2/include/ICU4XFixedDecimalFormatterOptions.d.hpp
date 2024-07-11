@@ -18,10 +18,10 @@ class ICU4XFixedDecimalGroupingStrategy;
 
 namespace icu4x {
 namespace capi {
-    typedef struct ICU4XFixedDecimalFormatterOptions {
+    struct ICU4XFixedDecimalFormatterOptions {
       icu4x::capi::ICU4XFixedDecimalGroupingStrategy grouping_strategy;
       bool some_other_config;
-    } ICU4XFixedDecimalFormatterOptions;
+    };
 } // namespace capi
 } // namespace
 

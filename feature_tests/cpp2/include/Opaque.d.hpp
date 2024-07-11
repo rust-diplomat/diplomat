@@ -15,7 +15,7 @@ struct MyStruct;
 
 namespace diplomat {
 namespace capi {
-    typedef struct Opaque Opaque;
+    struct Opaque;
 } // namespace capi
 } // namespace
 

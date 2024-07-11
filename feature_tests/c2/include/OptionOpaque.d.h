@@ -16,5 +16,4 @@ typedef struct OptionOpaque OptionOpaque;
 
 
 
-
 #endif // OptionOpaque_D_H

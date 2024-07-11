@@ -16,5 +16,4 @@ typedef struct ResultOpaque ResultOpaque;
 
 
 
-
 #endif // ResultOpaque_D_H

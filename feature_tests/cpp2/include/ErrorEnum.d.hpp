@@ -12,10 +12,10 @@
 
 namespace diplomat {
 namespace capi {
-    typedef enum ErrorEnum {
+    enum ErrorEnum {
       ErrorEnum_Foo = 0,
       ErrorEnum_Bar = 1,
-    } ErrorEnum;
+    };
 } // namespace capi
 } // namespace
 

@@ -14,7 +14,7 @@ struct OptionStruct;
 
 namespace diplomat {
 namespace capi {
-    typedef struct OptionOpaque OptionOpaque;
+    struct OptionOpaque;
 } // namespace capi
 } // namespace
 

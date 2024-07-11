@@ -12,7 +12,7 @@
 
 namespace diplomat {
 namespace capi {
-    typedef struct RefListParameter RefListParameter;
+    struct RefListParameter;
 } // namespace capi
 } // namespace
 

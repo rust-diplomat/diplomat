@@ -10,14 +10,14 @@
 #include "diplomat_runtime.hpp"
 
 namespace icu4x {
-namespace capi {typedef struct ICU4XLocale ICU4XLocale; }
+namespace capi { struct ICU4XLocale; }
 class ICU4XLocale;
 }
 
 
 namespace icu4x {
 namespace capi {
-    typedef struct ICU4XLocale ICU4XLocale;
+    struct ICU4XLocale;
 } // namespace capi
 } // namespace
 

@@ -12,12 +12,12 @@
 
 namespace diplomat {
 namespace capi {
-    typedef enum ContiguousEnum {
+    enum ContiguousEnum {
       ContiguousEnum_C = 0,
       ContiguousEnum_D = 1,
       ContiguousEnum_E = 2,
       ContiguousEnum_F = 3,
-    } ContiguousEnum;
+    };
 } // namespace capi
 } // namespace
 

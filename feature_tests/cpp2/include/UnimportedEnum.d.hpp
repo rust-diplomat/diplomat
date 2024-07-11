@@ -12,11 +12,11 @@
 
 namespace diplomat {
 namespace capi {
-    typedef enum UnimportedEnum {
+    enum UnimportedEnum {
       UnimportedEnum_A = 0,
       UnimportedEnum_B = 1,
       UnimportedEnum_C = 2,
-    } UnimportedEnum;
+    };
 } // namespace capi
 } // namespace
 

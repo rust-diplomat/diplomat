@@ -12,11 +12,11 @@
 
 namespace ns {
 namespace capi {
-    typedef enum CPPRenamedAttrEnum {
+    enum CPPRenamedAttrEnum {
       CPPRenamedAttrEnum_A = 0,
       CPPRenamedAttrEnum_B = 1,
       CPPRenamedAttrEnum_C = 2,
-    } CPPRenamedAttrEnum;
+    };
 } // namespace capi
 } // namespace
 

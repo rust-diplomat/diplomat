@@ -9,20 +9,20 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-namespace capi {typedef struct OptionOpaque OptionOpaque; }
+namespace diplomat::capi { struct OptionOpaque; }
 class OptionOpaque;
-namespace capi {typedef struct OptionOpaqueChar OptionOpaqueChar; }
+namespace diplomat::capi { struct OptionOpaqueChar; }
 class OptionOpaqueChar;
 
 
 namespace diplomat {
 namespace capi {
-    typedef struct OptionStruct {
+    struct OptionStruct {
       diplomat::capi::OptionOpaque* a;
       diplomat::capi::OptionOpaqueChar* b;
       uint32_t c;
       diplomat::capi::OptionOpaque* d;
-    } OptionStruct;
+    };
 } // namespace capi
 } // namespace
 
