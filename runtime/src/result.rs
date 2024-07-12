@@ -47,6 +47,18 @@ impl<T, E> From<Result<T, E>> for DiplomatResult<T, E> {
     }
 }
 
+impl<T> From<Option<T>> for DiplomatResult<T, ()> {
+    fn from(option: Option<T>) -> Self {
+        option.ok_or(()).into()
+    }
+}
+
+impl<T> From<DiplomatResult<T, ()>> for Option<T> {
+    fn from(result: DiplomatResult<T, ()>) -> Self {
+        Result::<T, ()>::from(result).ok()
+    }
+}
+
 impl<T, E> From<DiplomatResult<T, E>> for Result<T, E> {
     fn from(mut result: DiplomatResult<T, E>) -> Result<T, E> {
         unsafe {

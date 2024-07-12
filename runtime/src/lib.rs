@@ -23,6 +23,10 @@ pub use callback::DiplomatCallback;
 mod result;
 pub use result::DiplomatResult;
 
+/// A type to represent Option<T> over FFI. Prefer using Option<T> with boxes and reference
+/// types, and in return types, use this in structs/fn args.
+pub type DiplomatOption<T> = DiplomatResult<T, ()>;
+
 /// Like [`char`], but unvalidated.
 pub type DiplomatChar = u32;
 
