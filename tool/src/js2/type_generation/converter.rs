@@ -473,7 +473,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
 						format!("throw new diplomatRuntime.FFIError({})", self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment))
 					},
-					_ => "throw diplomatRuntime.FFIError(null)".into(),
+                    // We don't want an error, we just want a null value that we can process.
+                    ReturnType::Nullable(_) => "return null".into(),
+                    // Otherwise we just error out with the Unit error:
+					_ => "throw new diplomatRuntime.FFIError(null)".into(),
 				});
 
                 Some(match ok {

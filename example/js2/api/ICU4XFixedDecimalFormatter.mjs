@@ -47,7 +47,7 @@ export class ICU4XFixedDecimalFormatter {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw diplomatRuntime.FFIError(null);
+                throw new diplomatRuntime.FFIError(null);
             }
             return new ICU4XFixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {
