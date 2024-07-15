@@ -71,7 +71,7 @@ export class OptionString {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
-                throw diplomatRuntime.FFIError(null);
+                return null;
             }
             return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string8");
         } finally {
