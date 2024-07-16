@@ -120,7 +120,7 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     /// Resolve and format a type's destructor
-    pub fn fmt_dtor_name(&self, ty: TypeId) -> String {
+    pub fn fmt_dtor_name_for_abi(&self, ty: TypeId) -> String {
         let ty_name = self.fmt_type_name_for_abi(ty);
         let dtor_name = format!("{ty_name}_destroy");
         self.tcx
@@ -129,6 +129,12 @@ impl<'tcx> CFormatter<'tcx> {
             .abi_rename
             .apply(dtor_name.into())
             .into()
+    }
+
+    /// Resolve and format a type's destructor
+    pub fn fmt_dtor_name(&self, ty: TypeId) -> String {
+        let ty_name = self.fmt_type_name(ty);
+        format!("{ty_name}_destroy").into()
     }
 
     pub fn fmt_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {

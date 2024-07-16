@@ -32,7 +32,10 @@ icu4x_FixedDecimal_to_string_result icu4x_FixedDecimal_to_string(const icu4x_Fix
 }
 
 
-void icu4x_FixedDecimal_destroy_mv1(icu4x_FixedDecimal* self);
+void icu4x_FixedDecimal_destroy(icu4x_FixedDecimal* self) {
+    void icu4x_FixedDecimal_destroy_mv1(icu4x_FixedDecimal* self);
+    icu4x_FixedDecimal_destroy_mv1(self);
+}
 
 
 

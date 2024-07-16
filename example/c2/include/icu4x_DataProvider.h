@@ -27,7 +27,10 @@ icu4x_DataProvider_returns_result_result icu4x_DataProvider_returns_result() {
 }
 
 
-void icu4x_DataProvider_destroy_mv1(icu4x_DataProvider* self);
+void icu4x_DataProvider_destroy(icu4x_DataProvider* self) {
+    void icu4x_DataProvider_destroy_mv1(icu4x_DataProvider* self);
+    icu4x_DataProvider_destroy_mv1(self);
+}
 
 
 

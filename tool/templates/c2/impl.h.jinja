@@ -13,8 +13,15 @@ extern "C" {
 {% endif -%}
 {% endfor %}
 {%~ match dtor_name %}
-{% when Some with (dtor_name) ~%}
+{% when Some with ((dtor_name_abi, dtor_name)) ~%}
+{% if dtor_name == dtor_name_abi -%}
 void {{ dtor_name }}({{ ty_name }}* self);
+{% else -%}
+void {{ dtor_name }}({{ ty_name }}* self) {
+    void {{ dtor_name_abi }}({{ ty_name }}* self);
+    {{ dtor_name_abi }}(self);
+}
+{% endif -%}
 {%~ when None %}
 {%- endmatch %}
 {% if is_for_cpp -%}

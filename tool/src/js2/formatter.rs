@@ -307,7 +307,7 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     pub fn fmt_destructor_name(&self, type_id: TypeId) -> String {
-        self.c_formatter.fmt_dtor_name(type_id)
+        self.c_formatter.fmt_dtor_name_for_abi(type_id)
     }
     // #endregion
 }

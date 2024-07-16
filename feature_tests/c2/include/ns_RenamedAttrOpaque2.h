@@ -16,7 +16,10 @@
 
 
 
-void namespace_AttrOpaque2_destroy(ns_RenamedAttrOpaque2* self);
+void ns_RenamedAttrOpaque2_destroy(ns_RenamedAttrOpaque2* self) {
+    void namespace_AttrOpaque2_destroy(ns_RenamedAttrOpaque2* self);
+    namespace_AttrOpaque2_destroy(self);
+}
 
 
 

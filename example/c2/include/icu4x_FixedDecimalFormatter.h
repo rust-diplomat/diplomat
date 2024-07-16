@@ -31,7 +31,10 @@ void icu4x_FixedDecimalFormatter_format_write(const icu4x_FixedDecimalFormatter*
 }
 
 
-void icu4x_FixedDecimalFormatter_destroy_mv1(icu4x_FixedDecimalFormatter* self);
+void icu4x_FixedDecimalFormatter_destroy(icu4x_FixedDecimalFormatter* self) {
+    void icu4x_FixedDecimalFormatter_destroy_mv1(icu4x_FixedDecimalFormatter* self);
+    icu4x_FixedDecimalFormatter_destroy_mv1(self);
+}
 
 
 

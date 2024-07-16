@@ -43,7 +43,10 @@ void ns_AttrOpaque1Renamed_use_namespaced(const ns_AttrOpaque1Renamed* self, ns_
 }
 
 
-void namespace_AttrOpaque1_destroy(ns_AttrOpaque1Renamed* self);
+void ns_AttrOpaque1Renamed_destroy(ns_AttrOpaque1Renamed* self) {
+    void namespace_AttrOpaque1_destroy(ns_AttrOpaque1Renamed* self);
+    namespace_AttrOpaque1_destroy(self);
+}
 
 
 

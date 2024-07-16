@@ -28,7 +28,10 @@ void Unnamespaced_use_namespaced(const Unnamespaced* self, const ns_AttrOpaque1R
 }
 
 
-void namespace_Unnamespaced_destroy(Unnamespaced* self);
+void Unnamespaced_destroy(Unnamespaced* self) {
+    void namespace_Unnamespaced_destroy(Unnamespaced* self);
+    namespace_Unnamespaced_destroy(self);
+}
 
 
 

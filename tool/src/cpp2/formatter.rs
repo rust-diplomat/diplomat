@@ -175,7 +175,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.namespace_c_method_name(ty, &self.c.fmt_method_name_for_abi(ty, method))
     }
     pub fn fmt_c_dtor_name(&self, ty: TypeId) -> String {
-        self.namespace_c_method_name(ty, &self.c.fmt_dtor_name(ty))
+        self.namespace_c_method_name(ty, &self.c.fmt_dtor_name_for_abi(ty))
     }
     /// Get the primitive type as a C type
     pub fn fmt_primitive_as_c(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {

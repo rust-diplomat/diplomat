@@ -69,7 +69,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_destructor_name(&self, id: TypeId) -> String {
-        self.c.fmt_dtor_name(id)
+        self.c.fmt_dtor_name_for_abi(id)
     }
 
     /// Resolve and format a named type for use in code

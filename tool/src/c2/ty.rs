@@ -98,7 +98,7 @@ struct ImplTemplate<'a> {
     methods: Vec<MethodTemplate<'a>>,
     is_for_cpp: bool,
     ty_name: Cow<'a, str>,
-    dtor_name: Option<String>,
+    dtor_name: Option<(String, String)>,
 }
 
 struct MethodTemplate<'a> {
@@ -195,10 +195,17 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         let ty_name = self.formatter.fmt_type_name(self.id);
 
         let dtor_name = if let TypeDef::Opaque(_) = ty {
-            Some(self.formatter.fmt_dtor_name(self.id))
+            let abi_name = self.formatter.fmt_dtor_name_for_abi(self.id);
+            let name = if !self.is_for_cpp {
+                self.formatter.fmt_dtor_name(self.id)
+            } else {
+                abi_name.clone()
+            };
+            Some((abi_name, name))
         } else {
             None
         };
+
         ImplTemplate {
             ty_name,
             methods,
