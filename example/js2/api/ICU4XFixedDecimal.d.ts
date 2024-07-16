@@ -12,7 +12,7 @@ export class ICU4XFixedDecimal {
 
     static new_(v: number): ICU4XFixedDecimal;
 
-    multiplyPow10(power: number): void;
+    multiplyPow10(power: number);
 
     toString(): string | undefined;
 
