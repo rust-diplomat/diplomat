@@ -67,7 +67,7 @@ public partial class AttrOpaque1: IDisposable
         }
     }
 
-    public void MethodDisabledcpp()
+    public void MethodDisabled()
     {
         unsafe
         {
@@ -75,7 +75,7 @@ public partial class AttrOpaque1: IDisposable
             {
                 throw new ObjectDisposedException("AttrOpaque1");
             }
-            Raw.AttrOpaque1.MethodDisabledcpp(_inner);
+            Raw.AttrOpaque1.MethodDisabled(_inner);
         }
     }
 

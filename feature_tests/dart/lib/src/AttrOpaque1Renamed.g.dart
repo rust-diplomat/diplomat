@@ -36,10 +36,6 @@ final class AttrOpaque1Renamed implements ffi.Finalizable {
     return result;
   }
 
-  void methodDisabledcpp() {
-    _namespace_AttrOpaque1_method_disabledcpp(_ffi);
-  }
-
   void useUnnamespaced(Unnamespaced un) {
     _namespace_AttrOpaque1_use_unnamespaced(_ffi, un._ffi);
   }
@@ -68,11 +64,6 @@ external int _namespace_AttrOpaque1_method(ffi.Pointer<ffi.Opaque> self);
 @ffi.Native<ffi.Uint8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'renamed_on_abi_only')
 // ignore: non_constant_identifier_names
 external int _renamed_on_abi_only(ffi.Pointer<ffi.Opaque> self);
-
-@meta.ResourceIdentifier('namespace_AttrOpaque1_method_disabledcpp')
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_method_disabledcpp')
-// ignore: non_constant_identifier_names
-external void _namespace_AttrOpaque1_method_disabledcpp(ffi.Pointer<ffi.Opaque> self);
 
 @meta.ResourceIdentifier('namespace_AttrOpaque1_use_unnamespaced')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_AttrOpaque1_use_unnamespaced')

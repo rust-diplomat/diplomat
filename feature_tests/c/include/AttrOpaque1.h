@@ -27,7 +27,7 @@ uint8_t namespace_AttrOpaque1_method(const AttrOpaque1* self);
 
 uint8_t renamed_on_abi_only(const AttrOpaque1* self);
 
-void namespace_AttrOpaque1_method_disabledcpp(const AttrOpaque1* self);
+void namespace_AttrOpaque1_method_disabled(const AttrOpaque1* self);
 
 void namespace_AttrOpaque1_use_unnamespaced(const AttrOpaque1* self, const Unnamespaced* _un);
 

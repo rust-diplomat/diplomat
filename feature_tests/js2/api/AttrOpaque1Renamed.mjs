@@ -63,16 +63,6 @@ export class AttrOpaque1Renamed {
         }
     }
 
-    methodDisabledcpp() {
-        wasm.namespace_AttrOpaque1_method_disabledcpp(this.ffiValue);
-    
-        try {
-    
-        } finally {
-        
-        }
-    }
-
     useUnnamespaced(un) {
         wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
     

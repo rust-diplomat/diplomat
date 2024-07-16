@@ -28,7 +28,7 @@ class AttrOpaque1 {
   static AttrOpaque1 new_();
   uint8_t method() const;
   uint8_t abirenamed() const;
-  void method_disabledcpp() const;
+  void method_disabled() const;
   void use_unnamespaced(const Unnamespaced& _un) const;
   void use_namespaced(AttrEnum _n) const;
   inline const capi::AttrOpaque1* AsFFI() const { return this->inner.get(); }
@@ -52,8 +52,8 @@ inline uint8_t AttrOpaque1::method() const {
 inline uint8_t AttrOpaque1::abirenamed() const {
   return capi::renamed_on_abi_only(this->inner.get());
 }
-inline void AttrOpaque1::method_disabledcpp() const {
-  capi::namespace_AttrOpaque1_method_disabledcpp(this->inner.get());
+inline void AttrOpaque1::method_disabled() const {
+  capi::namespace_AttrOpaque1_method_disabled(this->inner.get());
 }
 inline void AttrOpaque1::use_unnamespaced(const Unnamespaced& _un) const {
   capi::namespace_AttrOpaque1_use_unnamespaced(this->inner.get(), _un.AsFFI());

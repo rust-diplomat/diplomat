@@ -27,9 +27,9 @@ pub mod ffi {
             123
         }
 
-        #[diplomat::attr(cpp2, disable)]
-        pub fn method_disabledcpp(&self) {
-            println!("disabled in cpp");
+        #[diplomat::attr(*, disable)]
+        pub fn method_disabled(&self) {
+            println!("disabled in hir");
         }
 
         pub fn use_unnamespaced(&self, _un: &Unnamespaced) {}

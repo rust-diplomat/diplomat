@@ -15,8 +15,6 @@ export class AttrOpaque1Renamed {
 
     get abirenamed(): number;
 
-    methodDisabledcpp(): void;
-
     useUnnamespaced(un: Unnamespaced): void;
 
     useNamespaced(n: RenamedAttrEnum): void;

@@ -20,7 +20,7 @@
     .. cpp:function:: uint8_t abirenamed() const
 
 
-    .. cpp:function:: void method_disabledcpp() const
+    .. cpp:function:: void method_disabled() const
 
 
     .. cpp:function:: void use_unnamespaced(const Unnamespaced& _un) const
