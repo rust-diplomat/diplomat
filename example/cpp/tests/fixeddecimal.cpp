@@ -1,9 +1,9 @@
 #include <iostream>
-#include "../include/ICU4XFixedDecimalFormatter.hpp"
+#include "../include/FixedDecimalFormatter.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
-    ICU4XFixedDecimal fd = ICU4XFixedDecimal::new_(123);
+    FixedDecimal fd = FixedDecimal::new_(123);
 
     simple_assert("constructing FixedDecimal", !fd.to_string().is_err());
 
@@ -23,11 +23,11 @@ int main(int argc, char *argv[]) {
 
     simple_assert_eq("Formatting FixedDecimal to Write", fd_out, "12.3");
 
-    ICU4XLocale locale = ICU4XLocale::new_("bn");
+    Locale locale = Locale::new_("bn");
 
-    ICU4XDataProvider data_provider = ICU4XDataProvider::new_static();
+    DataProvider data_provider = DataProvider::new_static();
 
-    auto fdf = ICU4XFixedDecimalFormatter::try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions::default_());
+    auto fdf = FixedDecimalFormatter::try_new(locale, data_provider, FixedDecimalFormatterOptions::default_());
 
     simple_assert("Formatting FixedDecimal", fdf.is_ok());
 

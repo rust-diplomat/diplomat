@@ -5,17 +5,17 @@ pub mod ffi {
     use icu_provider::AnyProvider;
 
     #[diplomat::opaque]
-    /// An ICU4X data provider, capable of loading ICU4X data keys from some source.
+    /// An  data provider, capable of loading  data keys from some source.
     #[diplomat::rust_link(icu_provider, Mod)]
-    pub struct ICU4XDataProvider(pub Box<dyn AnyProvider>);
+    pub struct DataProvider(pub Box<dyn AnyProvider>);
 
-    impl ICU4XDataProvider {
+    impl DataProvider {
         #[diplomat::rust_link(icu_testdata::get_static_provider, Fn)]
         #[diplomat::attr(supports = named_constructors, named_constructor = "static")]
-        pub fn new_static() -> Box<ICU4XDataProvider> {
+        pub fn new_static() -> Box<DataProvider> {
             #[allow(deprecated)]
             let provider = icu_testdata::any();
-            Box::new(ICU4XDataProvider(Box::new(provider)))
+            Box::new(DataProvider(Box::new(provider)))
         }
 
         #[allow(clippy::result_unit_err)]
