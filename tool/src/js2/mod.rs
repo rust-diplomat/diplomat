@@ -30,7 +30,7 @@ pub struct JSGenerationContext<'tcx> {
     /// Exports for the root level index.js file.
     exports: Vec<Cow<'tcx, str>>,
     /// Exports for typescript index.d.ts file.
-    ts_exports : Vec<Cow<'tcx, str>>
+    ts_exports: Vec<Cow<'tcx, str>>,
 }
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?
