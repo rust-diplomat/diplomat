@@ -56,9 +56,13 @@ pub mod ffi {
         ) -> Result<Box<FixedDecimalFormatter>, ()> {
             let locale = DataLocale::from(locale.0.as_ref());
             let provider = provider.0.as_ref();
-            icu::decimal::FixedDecimalFormatter::try_new_with_any_provider(provider, &locale, options.into())
-                .map_err(|_| ())
-                .map(|x| Box::new(FixedDecimalFormatter(x)))
+            icu::decimal::FixedDecimalFormatter::try_new_with_any_provider(
+                provider,
+                &locale,
+                options.into(),
+            )
+            .map_err(|_| ())
+            .map(|x| Box::new(FixedDecimalFormatter(x)))
         }
 
         /// Formats a [`FixedDecimal`] to a string.
