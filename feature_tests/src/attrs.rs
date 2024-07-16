@@ -1,7 +1,7 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "namespace_{0}"]
 #[diplomat::attr(supports = renaming, rename = "Renamed{0}")]
-#[diplomat::attr(cpp2, namespace = "ns")]
+#[diplomat::attr(supports = namespacing, namespace = "ns")]
 pub mod ffi {
     #[derive(Clone)]
     #[diplomat::opaque]
@@ -47,7 +47,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(cpp2, namespace = "")]
+    #[diplomat::attr(supports = namespacing, namespace = "")]
     #[diplomat::attr(supports = renaming, rename = "Unnamespaced")]
     pub struct Unnamespaced;
 
