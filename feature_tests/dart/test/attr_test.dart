@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   test("Verify iterator behavior", () {
-    final it = new MyIterable([10, 20, 30, 40, 50]);
+    final it = new RenamedMyIterable([10, 20, 30, 40, 50]);
 
     int next = 10;
     for (int i in it) {

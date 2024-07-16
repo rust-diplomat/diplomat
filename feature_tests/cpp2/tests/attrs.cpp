@@ -1,6 +1,6 @@
 #include <iostream>
 #include "../include/AttrOpaque1Renamed.hpp"
-#include "../include/CPPRenamedAttrEnum.hpp"
+#include "../include/RenamedAttrEnum.hpp"
 #include "../include/Unnamespaced.hpp"
 #include "assert.hpp"
 
@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     renamed = (void*)ns::capi::namespace_AttrOpaque1_method;
     std::cout<<"Renamed function at "<<renamed<<std::endl;
 
-    ns::CPPRenamedAttrEnum e = ns::CPPRenamedAttrEnum::A;
+    ns::RenamedAttrEnum e = ns::RenamedAttrEnum::A;
 
     std::unique_ptr<Unnamespaced> un = Unnamespaced::make(e);
     un->use_namespaced(*r);
