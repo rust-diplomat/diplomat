@@ -95,11 +95,6 @@ impl<'tcx> JSGenerationContext<'tcx> {
             self.generate_file_from_type(id, ty);
         }
 
-        let mut export_str: String = String::new();
-        for export in self.exports.iter() {
-            writeln!(export_str, "{export}").expect("Could not write into export_str");
-        }
-
         #[derive(Template)]
         #[template(path = "js2/index.js.jinja", escape = "none")]
         struct IndexTemplate<'a> {
