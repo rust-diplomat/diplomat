@@ -24,17 +24,9 @@ export { MyZst } from "./MyZst"
 
 export { OptionStruct } from "./OptionStruct"
 
-export { AttrOpaque1 } from "./AttrOpaque1"
+export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 
-export { AttrOpaque2 } from "./AttrOpaque2"
-
-export { MyIterable } from "./MyIterable"
-
-export { MyIterator } from "./MyIterator"
-
-export { OpaqueIterable } from "./OpaqueIterable"
-
-export { OpaqueIterator } from "./OpaqueIterator"
+export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2"
 
 export { Unnamespaced } from "./Unnamespaced"
 
@@ -68,7 +60,7 @@ export { OpaqueMutexedString } from "./OpaqueMutexedString"
 
 export { Utf16Wrap } from "./Utf16Wrap"
 
-export { AttrEnum } from "./AttrEnum"
+export { RenamedAttrEnum } from "./RenamedAttrEnum"
 
 export { UnimportedEnum } from "./UnimportedEnum"
 
