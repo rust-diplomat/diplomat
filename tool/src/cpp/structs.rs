@@ -40,7 +40,7 @@ pub fn gen_struct<W: fmt::Write>(
                 writeln!(
                     &mut deleter_operator_body,
                     "capi::{}(l);",
-                    custom_type.dtor_name()
+                    opaque.dtor_abi_name
                 )?;
                 writeln!(&mut deleter_body, "}}")?;
                 writeln!(out, "}};")?;

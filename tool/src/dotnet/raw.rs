@@ -129,7 +129,7 @@ pub fn gen<'ast>(
                 writeln!(
                     out,
                     r#"[DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "{}", ExactSpelling = true)]"#,
-                    typ.dtor_name()
+                    opaque.dtor_abi_name
                 )?;
                 writeln!(out, "public static unsafe extern void Destroy({}* self);", typ.name())
             })

@@ -153,16 +153,18 @@ fn gen_struct_header(
         writeln!(out)?;
     }
 
-    write!(out, "void {}(", typ.dtor_name())?;
-    gen_type(
-        &ast::TypeName::Box(Box::new(ast::TypeName::Named(ast::PathType::new(
-            ast::Path::empty().sub_path(typ.name().clone()),
-        )))),
-        in_path,
-        env,
-        out,
-    )?;
-    writeln!(out, " self);")?;
+    if let ast::CustomType::Opaque(opaque) = typ {
+        write!(out, "void {}(", opaque.dtor_abi_name)?;
+        gen_type(
+            &ast::TypeName::Box(Box::new(ast::TypeName::Named(ast::PathType::new(
+                ast::Path::empty().sub_path(typ.name().clone()),
+            )))),
+            in_path,
+            env,
+            out,
+        )?;
+        writeln!(out, " self);")?;
+    }
 
     writeln!(out)?;
 
