@@ -1,5 +1,5 @@
-#ifndef AttrOpaque1_D_H
-#define AttrOpaque1_D_H
+#ifndef icu4x_Locale_D_H
+#define icu4x_Locale_D_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -11,9 +11,9 @@
 
 
 
-typedef struct AttrOpaque1 AttrOpaque1;
+typedef struct icu4x_Locale icu4x_Locale;
 
 
 
 
-#endif // AttrOpaque1_D_H
+#endif // icu4x_Locale_D_H

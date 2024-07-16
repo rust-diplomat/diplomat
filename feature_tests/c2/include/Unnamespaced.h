@@ -7,8 +7,8 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#include "AttrEnum.d.h"
-#include "AttrOpaque1.d.h"
+#include "ns_AttrOpaque1Renamed.d.h"
+#include "ns_RenamedAttrEnum.d.h"
 
 #include "Unnamespaced.d.h"
 
@@ -17,13 +17,13 @@
 
 
 
-Unnamespaced* Unnamespaced_make(AttrEnum _e) {
-    Unnamespaced* namespace_Unnamespaced_make(AttrEnum _e);
+Unnamespaced* Unnamespaced_make(ns_RenamedAttrEnum _e) {
+    Unnamespaced* namespace_Unnamespaced_make(ns_RenamedAttrEnum _e);
     return namespace_Unnamespaced_make(_e);
 }
 
-void Unnamespaced_use_namespaced(const Unnamespaced* self, const AttrOpaque1* _n) {
-    void namespace_Unnamespaced_use_namespaced(const Unnamespaced* self, const AttrOpaque1* _n);
+void Unnamespaced_use_namespaced(const Unnamespaced* self, const ns_AttrOpaque1Renamed* _n) {
+    void namespace_Unnamespaced_use_namespaced(const Unnamespaced* self, const ns_AttrOpaque1Renamed* _n);
     return namespace_Unnamespaced_use_namespaced(self, _n);
 }
 

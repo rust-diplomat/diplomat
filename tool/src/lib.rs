@@ -174,6 +174,8 @@ pub fn gen(
         "c2" => {
             let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
             attr_validator.other_backend_names.push("c".into());
+            attr_validator.support.renaming = true;
+            attr_validator.support.namespacing = true;
             attr_validator.support.memory_sharing = true;
             attr_validator.support.disabling = true;
 

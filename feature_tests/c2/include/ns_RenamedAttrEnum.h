@@ -1,5 +1,5 @@
-#ifndef AttrEnum_H
-#define AttrEnum_H
+#ifndef ns_RenamedAttrEnum_H
+#define ns_RenamedAttrEnum_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -8,7 +8,7 @@
 #include "diplomat_runtime.h"
 
 
-#include "AttrEnum.d.h"
+#include "ns_RenamedAttrEnum.d.h"
 
 
 
@@ -20,4 +20,4 @@
 
 
 
-#endif // AttrEnum_H
+#endif // ns_RenamedAttrEnum_H
