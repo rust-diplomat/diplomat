@@ -13,8 +13,8 @@ export class MyStruct {
     get c() : number;
     set c(value: number); 
     #d;
-    get d() : number;
-    set d(value: number); 
+    get d() : bigint;
+    set d(value: bigint); 
     #e;
     get e() : number;
     set e(value: number); 

@@ -150,13 +150,11 @@ impl<'tcx> JSFormatter<'tcx> {
             match primitive {
                 hir::PrimitiveType::Bool => "boolean",
                 hir::PrimitiveType::Char => "char",
+                hir::PrimitiveType::Int(hir::IntType::I64) | hir::PrimitiveType::Int(hir::IntType::U64) | hir::PrimitiveType::Int128(_) => "bigint",
                 hir::PrimitiveType::Int(_)
                 | hir::PrimitiveType::IntSize(_)
                 | hir::PrimitiveType::Byte
                 | hir::PrimitiveType::Float(_) => "number",
-                hir::PrimitiveType::Int128(_) => {
-                    panic!("Javascript backend does not currently support BigInt.")
-                }
             }
         } else {
             match primitive {
@@ -209,12 +207,10 @@ impl<'tcx> JSFormatter<'tcx> {
             hir::PrimitiveType::Bool => "Array<boolean>",
             hir::PrimitiveType::Char => "Array<char>",
             hir::PrimitiveType::Byte => "Uint8Array",
+            hir::PrimitiveType::Int(hir::IntType::I64) | hir::PrimitiveType::Int(hir::IntType::U64) | hir::PrimitiveType::Int128(_) => "Array<bigint>",
             hir::PrimitiveType::Int(_)
             | hir::PrimitiveType::IntSize(_)
             | hir::PrimitiveType::Float(_) => "Array<number>",
-            hir::PrimitiveType::Int128(_) => {
-                panic!("Javascript backend does not currently support BigInt.")
-            }
         }
     }
 
@@ -235,9 +231,8 @@ impl<'tcx> JSFormatter<'tcx> {
             hir::PrimitiveType::IntSize(hir::IntSizeType::Usize) => "usize",
             hir::PrimitiveType::Float(hir::FloatType::F32) => "f32",
             hir::PrimitiveType::Float(hir::FloatType::F64) => "f64",
-            hir::PrimitiveType::Int128(_) => {
-                panic!("Javascript backend does not currently support BigInt")
-            }
+            hir::PrimitiveType::Int128(hir::Int128Type::I128) => "i128",
+            hir::PrimitiveType::Int128(hir::Int128Type::U128) => "u128"
         }
     }
 
