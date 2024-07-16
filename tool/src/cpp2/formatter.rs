@@ -172,7 +172,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     }
 
     pub fn fmt_c_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
-        self.namespace_c_method_name(ty, &self.c.fmt_method_name(ty, method))
+        self.namespace_c_method_name(ty, &self.c.fmt_method_name_for_abi(ty, method))
     }
     pub fn fmt_c_dtor_name(&self, ty: TypeId) -> String {
         self.namespace_c_method_name(ty, &self.c.fmt_dtor_name(ty))

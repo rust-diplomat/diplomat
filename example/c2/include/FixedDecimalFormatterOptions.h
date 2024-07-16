@@ -15,7 +15,10 @@
 
 
 
-FixedDecimalFormatterOptions icu4x_FixedDecimalFormatterOptions_default_mv1();
+FixedDecimalFormatterOptions FixedDecimalFormatterOptions_default() {
+    FixedDecimalFormatterOptions icu4x_FixedDecimalFormatterOptions_default_mv1();
+    return icu4x_FixedDecimalFormatterOptions_default_mv1();
+}
 
 
 

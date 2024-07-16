@@ -17,9 +17,15 @@
 
 
 
-Unnamespaced* namespace_Unnamespaced_make(AttrEnum _e);
+Unnamespaced* Unnamespaced_make(AttrEnum _e) {
+    Unnamespaced* namespace_Unnamespaced_make(AttrEnum _e);
+    return namespace_Unnamespaced_make(_e);
+}
 
-void namespace_Unnamespaced_use_namespaced(const Unnamespaced* self, const AttrOpaque1* _n);
+void Unnamespaced_use_namespaced(const Unnamespaced* self, const AttrOpaque1* _n) {
+    void namespace_Unnamespaced_use_namespaced(const Unnamespaced* self, const AttrOpaque1* _n);
+    return namespace_Unnamespaced_use_namespaced(self, _n);
+}
 
 
 void namespace_Unnamespaced_destroy(Unnamespaced* self);

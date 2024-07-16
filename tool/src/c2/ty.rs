@@ -104,7 +104,10 @@ struct ImplTemplate<'a> {
 struct MethodTemplate<'a> {
     return_ty: Cow<'a, str>,
     params: String,
+    params_inv: String,
     name: Cow<'a, str>,
+    abi_name: Cow<'a, str>,
+    maybe_result_typedef: String,
 }
 
 /// The context used for generating a particular type
@@ -219,7 +222,13 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
     fn gen_method(&self, method: &'tcx hir::Method, header: &mut Header) -> MethodTemplate<'tcx> {
         use diplomat_core::hir::{ReturnType, SuccessType};
-        let method_name = self.formatter.fmt_method_name(self.id, method);
+        let abi_method_name = self.formatter.fmt_method_name_for_abi(self.id, method);
+        let method_name = if !self.is_for_cpp {
+            self.formatter.fmt_method_name(self.id, method)
+        } else {
+            abi_method_name.clone()
+        };
+        let mut maybe_result_typedef = String::new();
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
@@ -260,12 +269,14 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     SuccessType::OutType(o) => Some(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                self.gen_result_ty(&method_name, ok_ty, err, header).into()
+                self.gen_result_ty(&mut maybe_result_typedef, &method_name, ok_ty, err, header)
+                    .into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
         let mut params = String::new();
+        let mut params_inv = String::new();
         let mut first = true;
         for (decl_ty, decl_name) in param_decls {
             let comma = if first {
@@ -275,17 +286,22 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 ", "
             };
             write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
+            write!(&mut params_inv, "{comma}{decl_name}").unwrap();
         }
 
         MethodTemplate {
             name: method_name.into(),
+            abi_name: abi_method_name.into(),
             return_ty,
             params,
+            params_inv,
+            maybe_result_typedef,
         }
     }
 
     pub fn gen_result_ty(
         &self,
+        typedef: &mut String,
         fn_name: &str,
         ok_ty: Option<&hir::OutType>,
         err_ty: Option<&hir::OutType>,
@@ -334,7 +350,12 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
         // We can't use an anonymous struct here: C++ doesn't like producing those in return types
         // Instead we name it something unique per-function. This is a bit ugly but works just fine.
-        format!("typedef struct {fn_name}_result {{{union_def} bool is_ok;}} {fn_name}_result;\n{fn_name}_result")
+        writeln!(
+            typedef,
+            "typedef struct {fn_name}_result {{{union_def} bool is_ok;}} {fn_name}_result;"
+        )
+        .unwrap();
+        format!("{fn_name}_result")
     }
 
     /// Generates a list of decls for a given type, returned as (type, name)

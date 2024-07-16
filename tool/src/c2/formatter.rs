@@ -110,11 +110,17 @@ impl<'tcx> CFormatter<'tcx> {
     }
 
     /// Format a method
-    pub fn fmt_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
+    pub fn fmt_method_name_for_abi(&self, ty: TypeId, method: &hir::Method) -> String {
         let ty_name = self.fmt_type_name_for_abi(ty);
         let method_name = method.name.as_str();
         let put_together = format!("{ty_name}_{method_name}");
         method.attrs.abi_rename.apply(put_together.into()).into()
+    }
+
+    pub(in crate::c2) fn fmt_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
+        let ty_name = self.fmt_type_name(ty);
+        let method_name = method.name.as_str();
+        format!("{ty_name}_{method_name}")
     }
 
     /// Resolve and format a type's destructor

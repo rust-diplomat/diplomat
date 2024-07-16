@@ -151,7 +151,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
+        self.c.fmt_method_name_for_abi(ty, method).into()
     }
 
     pub fn fmt_string(&self) -> &'static str {

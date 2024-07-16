@@ -284,7 +284,9 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     pub fn fmt_c_method_name<'a>(&self, type_id: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c_formatter.fmt_method_name(type_id, method).into()
+        self.c_formatter
+            .fmt_method_name_for_abi(type_id, method)
+            .into()
     }
 
     pub fn fmt_param_name<'a>(&self, param_name: &'a str) -> Cow<'a, str> {

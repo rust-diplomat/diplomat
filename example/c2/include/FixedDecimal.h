@@ -15,12 +15,21 @@
 
 
 
-FixedDecimal* icu4x_FixedDecimal_new_mv1(int32_t v);
+FixedDecimal* FixedDecimal_new(int32_t v) {
+    FixedDecimal* icu4x_FixedDecimal_new_mv1(int32_t v);
+    return icu4x_FixedDecimal_new_mv1(v);
+}
 
-void icu4x_FixedDecimal_multiply_pow10_mv1(FixedDecimal* self, int16_t power);
+void FixedDecimal_multiply_pow10(FixedDecimal* self, int16_t power) {
+    void icu4x_FixedDecimal_multiply_pow10_mv1(FixedDecimal* self, int16_t power);
+    return icu4x_FixedDecimal_multiply_pow10_mv1(self, power);
+}
 
-typedef struct icu4x_FixedDecimal_to_string_mv1_result { bool is_ok;} icu4x_FixedDecimal_to_string_mv1_result;
-icu4x_FixedDecimal_to_string_mv1_result icu4x_FixedDecimal_to_string_mv1(const FixedDecimal* self, DiplomatWrite* write);
+typedef struct FixedDecimal_to_string_result { bool is_ok;} FixedDecimal_to_string_result;
+FixedDecimal_to_string_result FixedDecimal_to_string(const FixedDecimal* self, DiplomatWrite* write) {
+    FixedDecimal_to_string_result icu4x_FixedDecimal_to_string_mv1(const FixedDecimal* self, DiplomatWrite* write);
+    return icu4x_FixedDecimal_to_string_mv1(self, write);
+}
 
 
 void icu4x_FixedDecimal_destroy_mv1(FixedDecimal* self);

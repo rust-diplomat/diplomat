@@ -2,7 +2,15 @@
 extern "C" {
 {%- endif %}
 {% for method in methods %}
+{% if !method.maybe_result_typedef.is_empty() -%} {{ method.maybe_result_typedef }} {%- endif -%}
+{% if method.name == method.abi_name -%}
 {{ method.return_ty }} {{ method.name }}({{ method.params }});
+{% else -%}
+{{ method.return_ty }} {{ method.name }}({{ method.params }}) {
+    {{ method.return_ty }} {{method.abi_name}}({{ method.params }});
+    return {{ method.abi_name }}({{ method.params_inv }});
+}
+{% endif -%}
 {% endfor %}
 {%~ match dtor_name %}
 {% when Some with (dtor_name) ~%}
