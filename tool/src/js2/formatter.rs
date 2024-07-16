@@ -206,7 +206,7 @@ impl<'tcx> JSFormatter<'tcx> {
 
     pub fn fmt_primitive_list_type(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
-            hir::PrimitiveType::Bool => "Array<bool>",
+            hir::PrimitiveType::Bool => "Array<boolean>",
             hir::PrimitiveType::Char => "Array<char>",
             hir::PrimitiveType::Byte => "Uint8Array",
             hir::PrimitiveType::Int(_)
@@ -220,7 +220,7 @@ impl<'tcx> JSFormatter<'tcx> {
 
     pub fn fmt_primitive_list_view(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
-            hir::PrimitiveType::Bool => "bool",
+            hir::PrimitiveType::Bool => "boolean",
             hir::PrimitiveType::Char => "u16",
             hir::PrimitiveType::Byte => "u8",
             hir::PrimitiveType::Int(hir::IntType::I8) => "i8",
