@@ -257,6 +257,7 @@ impl<'ast> LoweringContext<'ast> {
         let ast_opaque = item.item;
         self.errors.set_item(ast_opaque.name.as_str());
         let name = self.lower_ident(&ast_opaque.name, "opaque name");
+        let dtor_abi_name = self.lower_ident(&ast_opaque.dtor_abi_name, "opaque dtor abi name");
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_opaque.attrs,
@@ -284,6 +285,7 @@ impl<'ast> LoweringContext<'ast> {
             attrs,
             lifetimes?,
             special_method_presence,
+            dtor_abi_name?,
         );
         self.attr_validator.validate(
             &def.attrs,
@@ -482,7 +484,7 @@ impl<'ast> LoweringContext<'ast> {
         let hir_method = Method {
             docs: method.docs.clone(),
             name: name?,
-            abi_name: abi_name,
+            abi_name,
             lifetime_env,
             param_self,
             params,
