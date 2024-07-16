@@ -1,9 +1,9 @@
 ``data_provider::ffi``
 ======================
 
-.. js:class:: ICU4XDataProvider
+.. js:class:: DataProvider
 
-    An ICU4X data provider, capable of loading ICU4X data keys from some source.
+    An  data provider, capable of loading  data keys from some source.
 
     See the `Rust documentation for icu_provider <https://unicode-org.github.io/icu4x-docs/doc/icu_provider/index.html>`__ for more information.
 

@@ -1,39 +1,39 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "include/ICU4XFixedDecimalFormatter.h"
+#include "include/FixedDecimalFormatter.h"
 
-void print_decimal(ICU4XFixedDecimal* fd) {
+void print_decimal(FixedDecimal* fd) {
     char output[40];
     DiplomatWrite out = diplomat_simple_write(output, 40);
-    assert(icu4x_ICU4XFixedDecimal_to_string_mv1(fd, &out).is_ok == true);
+    assert(icu4x_FixedDecimal_to_string_mv1(fd, &out).is_ok == true);
     output[out.len] = '\0';
     printf("%s\n", output);
 }
 
-void format_decimal(ICU4XFixedDecimalFormatter* fdf, ICU4XFixedDecimal* fd) {
+void format_decimal(FixedDecimalFormatter* fdf, FixedDecimal* fd) {
     char output[40];
     DiplomatWrite out = diplomat_simple_write(output, 40);
-    icu4x_ICU4XFixedDecimalFormatter_format_write_mv1(fdf, fd, &out);
+    icu4x_FixedDecimalFormatter_format_write_mv1(fdf, fd, &out);
     output[out.len] = '\0';
     printf("%s\n", output);
 }
 
 int main(int argc, char *argv[]) {
-    ICU4XFixedDecimal* fd = icu4x_ICU4XFixedDecimal_new_mv1(123);
+    FixedDecimal* fd = icu4x_FixedDecimal_new_mv1(123);
 
     print_decimal(fd);
 
-    icu4x_ICU4XFixedDecimal_multiply_pow10_mv1(fd, -1);
+    icu4x_FixedDecimal_multiply_pow10_mv1(fd, -1);
     printf("multiplied by 0.1\n");
 
     print_decimal(fd);
 
-    ICU4XLocale* locale = icu4x_ICU4XLocale_new_mv1("bn", 2);
+    Locale* locale = icu4x_Locale_new_mv1("bn", 2);
 
-    ICU4XDataProvider* data_provider = icu4x_ICU4XDataProvider_new_static_mv1();
+    DataProvider* data_provider = icu4x_DataProvider_new_static_mv1();
 
-    diplomat_result_box_ICU4XFixedDecimalFormatter_void fdf = icu4x_ICU4XFixedDecimalFormatter_try_new_mv1(locale, data_provider, icu4x_ICU4XFixedDecimalFormatterOptions_default_mv1());
+    diplomat_result_box_FixedDecimalFormatter_void fdf = icu4x_FixedDecimalFormatter_try_new_mv1(locale, data_provider, icu4x_FixedDecimalFormatterOptions_default_mv1());
     printf("success: %d\n", fdf.is_ok);
     format_decimal(fdf.ok, fd);
 }

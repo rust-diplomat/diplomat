@@ -3,35 +3,35 @@ use diplomat_example::{data_provider, decimal, fixed_decimal, locale};
 
 pub fn criterion_benchmark_locale(c: &mut Criterion) {
     c.bench_function("create locale", |b| {
-        b.iter(|| black_box(locale::ffi::ICU4XLocale::new("en".as_bytes())))
+        b.iter(|| black_box(locale::ffi::Locale::new("en".as_bytes())))
     });
 }
 
 pub fn criterion_benchmark_provider(c: &mut Criterion) {
     c.bench_function("create provider", |b| {
-        b.iter(|| black_box(data_provider::ffi::ICU4XDataProvider::new_static()))
+        b.iter(|| black_box(data_provider::ffi::DataProvider::new_static()))
     });
 }
 
 pub fn criterion_benchmark_options(c: &mut Criterion) {
     c.bench_function("create options", |b| {
-        b.iter(|| black_box(decimal::ffi::ICU4XFixedDecimalFormatterOptions::default()))
+        b.iter(|| black_box(decimal::ffi::FixedDecimalFormatterOptions::default()))
     });
 }
 
 pub fn criterion_benchmark_decimal(c: &mut Criterion) {
     c.bench_function("create decimal", |b| {
-        b.iter(|| fixed_decimal::ffi::ICU4XFixedDecimal::new(black_box(123)))
+        b.iter(|| fixed_decimal::ffi::FixedDecimal::new(black_box(123)))
     });
 }
 
 pub fn criterion_benchmark_formatter(c: &mut Criterion) {
-    let loc = locale::ffi::ICU4XLocale::new("en".as_bytes());
-    let prov = data_provider::ffi::ICU4XDataProvider::new_static();
+    let loc = locale::ffi::Locale::new("en".as_bytes());
+    let prov = data_provider::ffi::DataProvider::new_static();
     c.bench_function("create formatter", |b| {
         b.iter(|| {
-            let options = decimal::ffi::ICU4XFixedDecimalFormatterOptions::default();
-            black_box(decimal::ffi::ICU4XFixedDecimalFormatter::try_new(
+            let options = decimal::ffi::FixedDecimalFormatterOptions::default();
+            black_box(decimal::ffi::FixedDecimalFormatter::try_new(
                 &loc, &prov, options,
             ))
         })
@@ -39,11 +39,11 @@ pub fn criterion_benchmark_formatter(c: &mut Criterion) {
 }
 
 pub fn criterion_benchmark_format(c: &mut Criterion) {
-    let x = fixed_decimal::ffi::ICU4XFixedDecimal::new(black_box(123));
-    let loc = locale::ffi::ICU4XLocale::new("en".as_bytes());
-    let options = decimal::ffi::ICU4XFixedDecimalFormatterOptions::default();
-    let prov = data_provider::ffi::ICU4XDataProvider::new_static();
-    let formatter = decimal::ffi::ICU4XFixedDecimalFormatter::try_new(&loc, &prov, options)
+    let x = fixed_decimal::ffi::FixedDecimal::new(black_box(123));
+    let loc = locale::ffi::Locale::new("en".as_bytes());
+    let options = decimal::ffi::FixedDecimalFormatterOptions::default();
+    let prov = data_provider::ffi::DataProvider::new_static();
+    let formatter = decimal::ffi::FixedDecimalFormatter::try_new(&loc, &prov, options)
         .expect("Failed to create formatter");
     c.bench_function("format", |b| {
         b.iter(|| {
