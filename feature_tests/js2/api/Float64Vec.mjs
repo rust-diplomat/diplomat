@@ -30,7 +30,7 @@ export class Float64Vec {
 
     static newBool(v) {
         
-        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "bool");
+        const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "boolean");
         const result = wasm.Float64Vec_new_bool(vSlice.ptr, vSlice.size);
     
         try {

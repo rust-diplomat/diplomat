@@ -26,7 +26,7 @@ export class OptionOpaque {
 
     static newStructNones(): OptionStruct;
 
-    assertInteger(i: number): void;
+    assertInteger(i: number);
 
     static optionOpaqueArgument(arg: OptionOpaque | undefined): boolean;
 

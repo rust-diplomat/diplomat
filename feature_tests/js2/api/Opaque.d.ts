@@ -17,7 +17,7 @@ export class Opaque {
 
     getDebugStr(): string;
 
-    assertStruct(s: MyStruct): void;
+    assertStruct(s: MyStruct);
 
     static returnsUsize(): number;
 

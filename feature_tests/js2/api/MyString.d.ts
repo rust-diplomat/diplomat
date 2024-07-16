@@ -15,7 +15,7 @@ export class MyString {
 
     static newFromFirst(v: Array<String>): MyString;
 
-    set str(newStr: string): void;
+    set str(newStr: string);
 
     get str(): string;
 

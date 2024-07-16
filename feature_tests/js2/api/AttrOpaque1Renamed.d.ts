@@ -15,9 +15,9 @@ export class AttrOpaque1Renamed {
 
     get abirenamed(): number;
 
-    useUnnamespaced(un: Unnamespaced): void;
+    useUnnamespaced(un: Unnamespaced);
 
-    useNamespaced(n: RenamedAttrEnum): void;
+    useNamespaced(n: RenamedAttrEnum);
 
     
 

@@ -10,7 +10,7 @@ export class OpaqueMutexedString {
 
     static fromUsize(number: number): OpaqueMutexedString;
 
-    change(number: number): void;
+    change(number: number);
 
     borrow(): OpaqueMutexedString;
 

@@ -18,13 +18,13 @@ export class ResultOpaque {
 
     static newFailingStruct(i: number): ResultOpaque;
 
-    static newInErr(i: number): void;
+    static newInErr(i: number);
 
     static newInt(i: number): number | undefined;
 
     static newInEnumErr(i: number): ErrorEnum;
 
-    assertInteger(i: number): void;
+    assertInteger(i: number);
 
     
 

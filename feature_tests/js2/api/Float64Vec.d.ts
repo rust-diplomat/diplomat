@@ -7,7 +7,7 @@ export class Float64Vec {
     get ffiValue(): pointer;
 
 
-    static newBool(v: Array<bool>): Float64Vec;
+    static newBool(v: Array<boolean>): Float64Vec;
 
     static newI16(v: Array<number>): Float64Vec;
 
@@ -25,9 +25,9 @@ export class Float64Vec {
 
     get asSlice(): Array<number>;
 
-    fillSlice(v: Array<number>): void;
+    fillSlice(v: Array<number>);
 
-    setValue(newSlice: Array<number>): void;
+    setValue(newSlice: Array<number>);
 
     toString(): string;
 

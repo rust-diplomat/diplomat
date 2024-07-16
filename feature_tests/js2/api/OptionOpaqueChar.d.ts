@@ -7,7 +7,7 @@ export class OptionOpaqueChar {
     get ffiValue(): pointer;
 
 
-    assertChar(ch: char): void;
+    assertChar(ch: char);
 
     
 
