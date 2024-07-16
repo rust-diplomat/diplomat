@@ -171,24 +171,11 @@ pub fn gen(
         "dotnet" => {
             dotnet::gen_bindings(&env, library_config, docs_url_gen, &mut out_texts).unwrap()
         }
-        "c2" | "cpp-c2" | "cpp2" => {
+        "c2" => {
             let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
-
-            if target_language == "c2" {
-                attr_validator.other_backend_names.push("c".into());
-            } else {
-                attr_validator.other_backend_names.push("cpp".into());
-                // C backends cannot rename types using backend attributes
-                // In the future we may add a c_rename attribute
-                attr_validator.support.renaming = true;
-
-                attr_validator.support.namespacing = true;
-            }
-
+            attr_validator.other_backend_names.push("c".into());
             attr_validator.support.memory_sharing = true;
             attr_validator.support.disabling = true;
-            // cpp-c2 is a testing backend, we're not going to treat it as a real c/cpp backend
-            // since the ast-cpp backend doesn't know about attributes.
 
             let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
                 Ok(context) => context,
@@ -199,10 +186,8 @@ pub fn gen(
                     std::process::exit(1);
                 }
             };
-            let files = common::FileMap::default();
-            let mut context = c2::CContext::new(&tcx, files, target_language != "c2");
+            let mut context = c2::CContext::new(&tcx, Default::default(), false);
             context.run();
-
             let errors = context.errors.take_all();
 
             if !errors.is_empty() {
@@ -214,25 +199,37 @@ pub fn gen(
             }
 
             out_texts = context.files.take_files();
+        }
 
-            if target_language == "cpp-c2" {
-                cpp::gen_bindings(&env, library_config, docs_url_gen, &mut out_texts).unwrap()
-            }
-            if target_language == "cpp2" {
-                let files = common::FileMap::default();
-                let mut context = cpp2::Cpp2Context::new(&tcx, files);
-                context.run();
-                out_texts = context.files.take_files();
+        "cpp2" => {
+            let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
+            attr_validator.other_backend_names.push("cpp".into());
+            attr_validator.support.renaming = true;
+            attr_validator.support.namespacing = true;
+            attr_validator.support.memory_sharing = true;
+            attr_validator.support.disabling = true;
 
-                let errors = context.errors.take_all();
-
-                if !errors.is_empty() {
-                    eprintln!("Found errors whilst generating {target_language}:");
-                    for error in errors {
-                        eprintln!("\t{}: {}", error.0, error.1);
+            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
+                Ok(context) => context,
+                Err(e) => {
+                    for (ctx, err) in e {
+                        eprintln!("Lowering error in {ctx}: {err}");
                     }
-                    errors_found = true;
+                    std::process::exit(1);
                 }
+            };
+
+            let mut context = cpp2::Cpp2Context::new(&tcx, Default::default());
+            context.run();
+            out_texts = context.files.take_files();
+            let errors = context.errors.take_all();
+
+            if !errors.is_empty() {
+                eprintln!("Found errors whilst generating {target_language}:");
+                for error in errors {
+                    eprintln!("\t{}: {}", error.0, error.1);
+                }
+                errors_found = true;
             }
         }
         o => panic!("Unknown target: {}", o),
