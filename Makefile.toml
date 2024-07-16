@@ -270,7 +270,7 @@ exit_on_error true
 cd example/c2/include
 files_list = glob_array "./*.h"
 for file in ${files_list}
-    exec gcc ${file}
+    exec --fail-on-error gcc ${file}
 end
 '''
 
@@ -283,7 +283,7 @@ exit_on_error true
 cd feature_tests/c2/include
 files_list = glob_array "./*.h"
 for file in ${files_list}
-    exec gcc ${file}
+    exec --fail-on-error gcc ${file}
 end
 '''
 
@@ -305,7 +305,7 @@ cd example/cpp2/include
 files_list = glob_array "./*.hpp"
 for file in ${files_list}
     echo "Testing self-containedness of ${file}"
-    exec ${cxx}  -std=${cxx_std} ${file}
+    exec --fail-on-error ${cxx}  -std=${cxx_std} ${file}
 end
 '''
 
@@ -327,7 +327,7 @@ cd feature_tests/cpp2/include
 files_list = glob_array "./*.hpp"
 for file in ${files_list}
     echo "Testing self-containedness of ${file}"
-    exec ${cxx}  -std=${cxx_std} ${file}
+    exec --fail-on-error ${cxx}  -std=${cxx_std} ${file}
 
 end
 '''

@@ -193,9 +193,9 @@ impl<'tcx> CFormatter<'tcx> {
             _ => "Mut",
         };
         if self.is_for_cpp {
-            format!("Diplomat{prim}View{mtb}")
-        } else {
             format!("diplomat::capi::Diplomat{prim}View{mtb}")
+        } else {
+            format!("Diplomat{prim}View{mtb}")
         }
     }
 
