@@ -2,7 +2,7 @@
 
 part of 'lib.g.dart';
 
-final class AttrOpaque2 implements ffi.Finalizable {
+final class RenamedAttrOpaque2 implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
@@ -13,7 +13,7 @@ final class AttrOpaque2 implements ffi.Finalizable {
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  AttrOpaque2._fromFfi(this._ffi, this._selfEdge) {
+  RenamedAttrOpaque2._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }

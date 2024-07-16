@@ -2,7 +2,7 @@
 
 part of 'lib.g.dart';
 
-final class MyIterable with core.Iterable<int> implements ffi.Finalizable {
+final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
@@ -13,7 +13,7 @@ final class MyIterable with core.Iterable<int> implements ffi.Finalizable {
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  MyIterable._fromFfi(this._ffi, this._selfEdge) {
+  RenamedMyIterable._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
@@ -21,19 +21,19 @@ final class MyIterable with core.Iterable<int> implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIterable_destroy));
 
-  factory MyIterable(core.List<int> x) {
+  factory RenamedMyIterable(core.List<int> x) {
     final temp = ffi2.Arena();
     final xView = x.uint8View;
     final result = _namespace_MyIterable_new(xView.allocIn(temp), xView.length);
     temp.releaseAll();
-    return MyIterable._fromFfi(result, []);
+    return RenamedMyIterable._fromFfi(result, []);
   }
 
-  MyIterator get iterator {
+  RenamedMyIterator get iterator {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _namespace_MyIterable_iter(_ffi);
-    return MyIterator._fromFfi(result, [], aEdges);
+    return RenamedMyIterator._fromFfi(result, [], aEdges);
   }
 }
 

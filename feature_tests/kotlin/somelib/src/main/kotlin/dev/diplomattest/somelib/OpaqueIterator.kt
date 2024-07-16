@@ -8,7 +8,7 @@ internal interface OpaqueIteratorLib: Library {
     fun OpaqueIterator_destroy(handle: Pointer)
     fun namespace_OpaqueIterator_next(handle: Pointer): Pointer?
 }
-typealias OpaqueIteratorIteratorItem = AttrOpaque1?
+typealias OpaqueIteratorIteratorItem = AttrOpaque1Renamed?
 
 class OpaqueIterator internal constructor (
     internal val handle: Pointer,
@@ -16,7 +16,7 @@ class OpaqueIterator internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any>,
-): Iterator<AttrOpaque1?> {
+): Iterator<AttrOpaque1Renamed?> {
 
     internal class OpaqueIteratorCleaner(val handle: Pointer, val lib: OpaqueIteratorLib) : Runnable {
         override fun run() {
@@ -29,7 +29,7 @@ class OpaqueIterator internal constructor (
         internal val lib: OpaqueIteratorLib = Native.load("somelib", libClass)
     }
     
-    internal fun nextInternal(): AttrOpaque1? {
+    internal fun nextInternal(): AttrOpaque1Renamed? {
         
         val returnVal = lib.namespace_OpaqueIterator_next(handle);
         val selfEdges: List<Any> = listOf()
@@ -46,7 +46,7 @@ class OpaqueIterator internal constructor (
        return iterVal != null
     }
 
-    override fun next(): AttrOpaque1?{
+    override fun next(): AttrOpaque1Renamed?{
         val returnVal = iterVal
         if (returnVal == null) {
             throw NoSuchElementException()

@@ -10,7 +10,7 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "CPPRenamedAttrEnum.hpp"
+#include "RenamedAttrEnum.hpp"
 #include "Unnamespaced.hpp"
 
 
@@ -26,7 +26,7 @@ namespace capi {
     
     void namespace_AttrOpaque1_use_unnamespaced(const ns::capi::AttrOpaque1Renamed* self, const diplomat::capi::Unnamespaced* _un);
     
-    void namespace_AttrOpaque1_use_namespaced(const ns::capi::AttrOpaque1Renamed* self, ns::capi::CPPRenamedAttrEnum _n);
+    void namespace_AttrOpaque1_use_namespaced(const ns::capi::AttrOpaque1Renamed* self, ns::capi::RenamedAttrEnum _n);
     
     
     void namespace_AttrOpaque1_destroy(AttrOpaque1Renamed* self);
@@ -55,7 +55,7 @@ inline void ns::AttrOpaque1Renamed::use_unnamespaced(const Unnamespaced& _un) co
     _un.AsFFI());
 }
 
-inline void ns::AttrOpaque1Renamed::use_namespaced(ns::CPPRenamedAttrEnum _n) const {
+inline void ns::AttrOpaque1Renamed::use_namespaced(ns::RenamedAttrEnum _n) const {
   ns::capi::namespace_AttrOpaque1_use_namespaced(this->AsFFI(),
     _n.AsFFI());
 }

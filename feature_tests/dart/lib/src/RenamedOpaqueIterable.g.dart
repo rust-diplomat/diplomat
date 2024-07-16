@@ -2,7 +2,7 @@
 
 part of 'lib.g.dart';
 
-final class OpaqueIterable with core.Iterable<AttrOpaque1> implements ffi.Finalizable {
+final class RenamedOpaqueIterable with core.Iterable<AttrOpaque1Renamed> implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
@@ -13,7 +13,7 @@ final class OpaqueIterable with core.Iterable<AttrOpaque1> implements ffi.Finali
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  OpaqueIterable._fromFfi(this._ffi, this._selfEdge) {
+  RenamedOpaqueIterable._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
@@ -21,11 +21,11 @@ final class OpaqueIterable with core.Iterable<AttrOpaque1> implements ffi.Finali
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_OpaqueIterable_destroy));
 
-  OpaqueIterator get iterator {
+  RenamedOpaqueIterator get iterator {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
     final result = _namespace_OpaqueIterable_iter(_ffi);
-    return OpaqueIterator._fromFfi(result, [], aEdges);
+    return RenamedOpaqueIterator._fromFfi(result, [], aEdges);
   }
 }
 

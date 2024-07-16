@@ -24,9 +24,9 @@ export { MyZst } from "./MyZst.mjs"
 
 export { OptionStruct } from "./OptionStruct.mjs"
 
-export { AttrOpaque1 } from "./AttrOpaque1.mjs"
+export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
 
-export { AttrOpaque2 } from "./AttrOpaque2.mjs"
+export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2.mjs"
 
 export { Unnamespaced } from "./Unnamespaced.mjs"
 
@@ -60,7 +60,7 @@ export { OpaqueMutexedString } from "./OpaqueMutexedString.mjs"
 
 export { Utf16Wrap } from "./Utf16Wrap.mjs"
 
-export { AttrEnum } from "./AttrEnum.mjs"
+export { RenamedAttrEnum } from "./RenamedAttrEnum.mjs"
 
 export { UnimportedEnum } from "./UnimportedEnum.mjs"
 

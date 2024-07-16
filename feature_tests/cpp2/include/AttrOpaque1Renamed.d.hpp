@@ -14,7 +14,7 @@ class Unnamespaced;
 namespace ns {
 namespace capi { struct AttrOpaque1Renamed; }
 class AttrOpaque1Renamed;
-class CPPRenamedAttrEnum;
+class RenamedAttrEnum;
 }
 
 
@@ -36,7 +36,7 @@ public:
 
   inline void use_unnamespaced(const Unnamespaced& _un) const;
 
-  inline void use_namespaced(ns::CPPRenamedAttrEnum _n) const;
+  inline void use_namespaced(ns::RenamedAttrEnum _n) const;
 
   inline const ns::capi::AttrOpaque1Renamed* AsFFI() const;
   inline ns::capi::AttrOpaque1Renamed* AsFFI();

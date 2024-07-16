@@ -2,7 +2,7 @@
 
 part of 'lib.g.dart';
 
-final class MyIterator implements ffi.Finalizable, core.Iterator<int> {
+final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
@@ -15,7 +15,7 @@ final class MyIterator implements ffi.Finalizable, core.Iterator<int> {
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  MyIterator._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
+  RenamedMyIterator._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }

@@ -2,7 +2,7 @@
 
 part of 'lib.g.dart';
 
-final class AttrOpaque1 implements ffi.Finalizable {
+final class AttrOpaque1Renamed implements ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
@@ -13,7 +13,7 @@ final class AttrOpaque1 implements ffi.Finalizable {
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  AttrOpaque1._fromFfi(this._ffi, this._selfEdge) {
+  AttrOpaque1Renamed._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
@@ -21,12 +21,12 @@ final class AttrOpaque1 implements ffi.Finalizable {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_AttrOpaque1_destroy));
 
-  factory AttrOpaque1() {
+  factory AttrOpaque1Renamed() {
     final result = _namespace_AttrOpaque1_new();
-    return AttrOpaque1._fromFfi(result, []);
+    return AttrOpaque1Renamed._fromFfi(result, []);
   }
 
-  int get method {
+  int get methodRenamed {
     final result = _namespace_AttrOpaque1_method(_ffi);
     return result;
   }
@@ -44,7 +44,7 @@ final class AttrOpaque1 implements ffi.Finalizable {
     _namespace_AttrOpaque1_use_unnamespaced(_ffi, un._ffi);
   }
 
-  void useNamespaced(AttrEnum n) {
+  void useNamespaced(RenamedAttrEnum n) {
     _namespace_AttrOpaque1_use_namespaced(_ffi, n.index);
   }
 }

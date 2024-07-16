@@ -12,7 +12,7 @@
 namespace ns {
 namespace capi { struct AttrOpaque1Renamed; }
 class AttrOpaque1Renamed;
-class CPPRenamedAttrEnum;
+class RenamedAttrEnum;
 }
 
 
@@ -25,7 +25,7 @@ namespace capi {
 class Unnamespaced {
 public:
 
-  inline static std::unique_ptr<Unnamespaced> make(ns::CPPRenamedAttrEnum _e);
+  inline static std::unique_ptr<Unnamespaced> make(ns::RenamedAttrEnum _e);
 
   inline void use_namespaced(const ns::AttrOpaque1Renamed& _n) const;
 
