@@ -8,12 +8,12 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart' as ffi2 show Arena, calloc;
 import 'package:meta/meta.dart' as meta;
-part 'ICU4XDataProvider.g.dart';
-part 'ICU4XFixedDecimal.g.dart';
-part 'ICU4XFixedDecimalFormatter.g.dart';
-part 'ICU4XFixedDecimalFormatterOptions.g.dart';
-part 'ICU4XFixedDecimalGroupingStrategy.g.dart';
-part 'ICU4XLocale.g.dart';
+part 'DataProvider.g.dart';
+part 'FixedDecimal.g.dart';
+part 'FixedDecimalFormatter.g.dart';
+part 'FixedDecimalFormatterOptions.g.dart';
+part 'FixedDecimalGroupingStrategy.g.dart';
+part 'Locale.g.dart';
 
 /// A [Rune] is a Unicode code point, such as `a`, or `💡`.
 /// 
