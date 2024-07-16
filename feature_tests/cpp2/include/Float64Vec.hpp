@@ -30,9 +30,9 @@ namespace capi {
     
     diplomat::capi::Float64Vec* Float64Vec_new_f64_be_bytes(const uint8_t* v_data, size_t v_len);
     
-    DiplomatF64ViewMut Float64Vec_as_boxed_slice(const diplomat::capi::Float64Vec* self);
+    diplomat::capi::DiplomatF64ViewMut Float64Vec_as_boxed_slice(const diplomat::capi::Float64Vec* self);
     
-    DiplomatF64View Float64Vec_as_slice(const diplomat::capi::Float64Vec* self);
+    diplomat::capi::DiplomatF64View Float64Vec_as_slice(const diplomat::capi::Float64Vec* self);
     
     void Float64Vec_fill_slice(const diplomat::capi::Float64Vec* self, double* v_data, size_t v_len);
     
@@ -40,7 +40,7 @@ namespace capi {
     
     void Float64Vec_to_string(const diplomat::capi::Float64Vec* self, diplomat::capi::DiplomatWrite* write);
     
-    DiplomatF64View Float64Vec_borrow(const diplomat::capi::Float64Vec* self);
+    diplomat::capi::DiplomatF64View Float64Vec_borrow(const diplomat::capi::Float64Vec* self);
     
     typedef struct Float64Vec_get_result {union {double ok; }; bool is_ok;} Float64Vec_get_result;
     Float64Vec_get_result Float64Vec_get(const diplomat::capi::Float64Vec* self, size_t i);
