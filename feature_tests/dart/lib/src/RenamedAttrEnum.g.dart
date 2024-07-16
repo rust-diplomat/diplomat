@@ -2,10 +2,10 @@
 
 part of 'lib.g.dart';
 
-enum AttrEnum {
+enum RenamedAttrEnum {
   a,
 
   b,
 
-  c;
+  Renamed;
 }

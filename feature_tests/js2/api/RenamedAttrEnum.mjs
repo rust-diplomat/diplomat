@@ -3,26 +3,26 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 // Base enumerator definition
-export class AttrEnum {
+export class RenamedAttrEnum {
     #value = undefined;
 
     static values = new Map([
         ["A", 0],
         ["B", 1],
-        ["C", 2]
+        ["Renamed", 2]
     ]);
     constructor(value) {
-        if (value instanceof AttrEnum) {
+        if (value instanceof RenamedAttrEnum) {
             this.#value = value.value;
             return;
         }
 
-        if (AttrEnum.values.has(value)) {
+        if (RenamedAttrEnum.values.has(value)) {
             this.#value = value;
             return;
         }
 
-        throw TypeError(value + " is not a AttrEnum and does not correspond to any of its enumerator values.");
+        throw TypeError(value + " is not a RenamedAttrEnum and does not correspond to any of its enumerator values.");
     }
 
     get value() {
@@ -30,14 +30,14 @@ export class AttrEnum {
     }
 
     get ffiValue() {
-        return AttrEnum.values.get(this.#value);
+        return RenamedAttrEnum.values.get(this.#value);
     }
 
-    static A = new AttrEnum("A");
+    static A = new RenamedAttrEnum("A");
 
-    static B = new AttrEnum("B");
+    static B = new RenamedAttrEnum("B");
 
-    static C = new AttrEnum("C");
+    static Renamed = new RenamedAttrEnum("Renamed");
 
 
     

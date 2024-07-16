@@ -2,7 +2,7 @@
 
 part of 'lib.g.dart';
 
-final class Comparable implements ffi.Finalizable, core.Comparable<Comparable> {
+final class RenamedComparable implements ffi.Finalizable, core.Comparable<RenamedComparable> {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
@@ -13,7 +13,7 @@ final class Comparable implements ffi.Finalizable, core.Comparable<Comparable> {
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  Comparable._fromFfi(this._ffi, this._selfEdge) {
+  RenamedComparable._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
@@ -21,18 +21,18 @@ final class Comparable implements ffi.Finalizable, core.Comparable<Comparable> {
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_Comparable_destroy));
 
-  static Comparable new_(int int) {
+  static RenamedComparable new_(int int) {
     final result = _namespace_Comparable_new(int);
-    return Comparable._fromFfi(result, []);
+    return RenamedComparable._fromFfi(result, []);
   }
 
-  int compareTo(Comparable other) {
+  int compareTo(RenamedComparable other) {
     final result = _namespace_Comparable_cmp(_ffi, other._ffi);
     return result;
   }
 
   @override
-  bool operator ==(Object other) => other is Comparable && compareTo(other) == 0;
+  bool operator ==(Object other) => other is RenamedComparable && compareTo(other) == 0;
   @override
   int get hashCode => 42; // Cannot get hash from Rust, so a constant is the only correct impl
 }

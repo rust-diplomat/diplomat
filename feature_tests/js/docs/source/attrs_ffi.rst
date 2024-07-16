@@ -11,7 +11,7 @@
 
     .. js:method:: abirenamed()
 
-    .. js:method:: method_disabledcpp()
+    .. js:method:: method_disabled()
 
     .. js:method:: use_unnamespaced(_un)
 

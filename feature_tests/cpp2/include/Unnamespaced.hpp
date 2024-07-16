@@ -11,14 +11,14 @@
 #include <optional>
 #include "diplomat_runtime.hpp"
 #include "AttrOpaque1Renamed.hpp"
-#include "CPPRenamedAttrEnum.hpp"
+#include "RenamedAttrEnum.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::Unnamespaced* namespace_Unnamespaced_make(ns::capi::CPPRenamedAttrEnum _e);
+    diplomat::capi::Unnamespaced* namespace_Unnamespaced_make(ns::capi::RenamedAttrEnum _e);
     
     void namespace_Unnamespaced_use_namespaced(const diplomat::capi::Unnamespaced* self, const ns::capi::AttrOpaque1Renamed* _n);
     
@@ -29,7 +29,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<Unnamespaced> Unnamespaced::make(ns::CPPRenamedAttrEnum _e) {
+inline std::unique_ptr<Unnamespaced> Unnamespaced::make(ns::RenamedAttrEnum _e) {
   auto result = diplomat::capi::namespace_Unnamespaced_make(_e.AsFFI());
   return std::unique_ptr<Unnamespaced>(Unnamespaced::FromFFI(result));
 }

@@ -25,8 +25,8 @@ public partial struct AttrOpaque1
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "renamed_on_abi_only", ExactSpelling = true)]
     public static unsafe extern byte RenamedOnAbiOnly(AttrOpaque1* self);
 
-    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_method_disabledcpp", ExactSpelling = true)]
-    public static unsafe extern void NamespaceMethodDisabledcpp(AttrOpaque1* self);
+    [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_method_disabled", ExactSpelling = true)]
+    public static unsafe extern void NamespaceMethodDisabled(AttrOpaque1* self);
 
     [DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "namespace_AttrOpaque1_use_unnamespaced", ExactSpelling = true)]
     public static unsafe extern void NamespaceUseUnnamespaced(AttrOpaque1* self, Unnamespaced* un);

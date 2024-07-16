@@ -2,7 +2,7 @@
 
 part of 'lib.g.dart';
 
-final class OpaqueIterator implements ffi.Finalizable, core.Iterator<AttrOpaque1> {
+final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<AttrOpaque1Renamed> {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive
@@ -15,7 +15,7 @@ final class OpaqueIterator implements ffi.Finalizable, core.Iterator<AttrOpaque1
   // corresponding to data this may borrow from. These should be flat arrays containing
   // references to objects, and this object will hold on to them to keep them alive and
   // maintain borrow validity.
-  OpaqueIterator._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
+  RenamedOpaqueIterator._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
       _finalizer.attach(this, _ffi.cast());
     }
@@ -23,18 +23,18 @@ final class OpaqueIterator implements ffi.Finalizable, core.Iterator<AttrOpaque1
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_OpaqueIterator_destroy));
 
-  AttrOpaque1? _current;
+  AttrOpaque1Renamed? _current;
 
-  AttrOpaque1 get current => _current!;
+  AttrOpaque1Renamed get current => _current!;
 
   bool moveNext() {
     _current = _iteratorNext();
     return _current != null;
   }
 
-  AttrOpaque1? _iteratorNext() {
+  AttrOpaque1Renamed? _iteratorNext() {
     final result = _namespace_OpaqueIterator_next(_ffi);
-    return result.address == 0 ? null : AttrOpaque1._fromFfi(result, []);
+    return result.address == 0 ? null : AttrOpaque1Renamed._fromFfi(result, []);
   }
 }
 

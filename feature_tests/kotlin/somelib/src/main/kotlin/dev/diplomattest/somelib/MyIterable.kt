@@ -15,7 +15,7 @@ class MyIterable internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>
-): Iterable<MyIteratorIteratorItem> {
+): Iterable<RenamedMyIteratorIteratorItem> {
 
     internal class MyIterableCleaner(val handle: Pointer, val lib: MyIterableLib) : Runnable {
         override fun run() {
@@ -27,7 +27,7 @@ class MyIterable internal constructor (
         internal val libClass: Class<MyIterableLib> = MyIterableLib::class.java
         internal val lib: MyIterableLib = Native.load("somelib", libClass)
         
-        fun new_(x: UByteArray): MyIterable {
+        fun new_(x: UByteArray): RenamedMyIterable {
             val (xMem, xSlice) = PrimitiveArrayTools.native(x)
             
             val returnVal = lib.namespace_MyIterable_new(xSlice);
@@ -40,7 +40,7 @@ class MyIterable internal constructor (
         }
     }
     
-    override fun iterator(): MyIterator {
+    override fun iterator(): RenamedMyIterator {
         
         val returnVal = lib.namespace_MyIterable_iter(handle);
         val selfEdges: List<Any> = listOf()

@@ -1,5 +1,5 @@
-#ifndef CPPRenamedAttrEnum_D_HPP
-#define CPPRenamedAttrEnum_D_HPP
+#ifndef RenamedAttrEnum_D_HPP
+#define RenamedAttrEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -12,35 +12,35 @@
 
 namespace ns {
 namespace capi {
-    enum CPPRenamedAttrEnum {
-      CPPRenamedAttrEnum_A = 0,
-      CPPRenamedAttrEnum_B = 1,
-      CPPRenamedAttrEnum_C = 2,
+    enum RenamedAttrEnum {
+      RenamedAttrEnum_A = 0,
+      RenamedAttrEnum_B = 1,
+      RenamedAttrEnum_C = 2,
     };
 } // namespace capi
 } // namespace
 
 namespace ns {
-class CPPRenamedAttrEnum {
+class RenamedAttrEnum {
 public:
   enum Value {
     A = 0,
     B = 1,
-    CPPRenamed = 2,
+    Renamed = 2,
   };
 
-  CPPRenamedAttrEnum() = default;
+  RenamedAttrEnum() = default;
   // Implicit conversions between enum and ::Value
-  constexpr CPPRenamedAttrEnum(Value v) : value(v) {}
+  constexpr RenamedAttrEnum(Value v) : value(v) {}
   constexpr operator Value() const { return value; }
   // Prevent usage as boolean value
   explicit operator bool() const = delete;
 
-  inline ns::capi::CPPRenamedAttrEnum AsFFI() const;
-  inline static ns::CPPRenamedAttrEnum FromFFI(ns::capi::CPPRenamedAttrEnum c_enum);
+  inline ns::capi::RenamedAttrEnum AsFFI() const;
+  inline static ns::RenamedAttrEnum FromFFI(ns::capi::RenamedAttrEnum c_enum);
 private:
     Value value;
 };
 
 } // namespace
-#endif // CPPRenamedAttrEnum_D_HPP
+#endif // RenamedAttrEnum_D_HPP

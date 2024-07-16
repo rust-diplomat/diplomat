@@ -9,7 +9,6 @@ internal interface AttrOpaque1Lib: Library {
     fun namespace_AttrOpaque1_new(): Pointer
     fun namespace_AttrOpaque1_method(handle: Pointer): Byte
     fun renamed_on_abi_only(handle: Pointer): Byte
-    fun namespace_AttrOpaque1_method_disabledcpp(handle: Pointer): Unit
     fun namespace_AttrOpaque1_use_unnamespaced(handle: Pointer, un: Pointer): Unit
     fun namespace_AttrOpaque1_use_namespaced(handle: Pointer, n: Int): Unit
 }
@@ -31,7 +30,7 @@ class AttrOpaque1 internal constructor (
         internal val libClass: Class<AttrOpaque1Lib> = AttrOpaque1Lib::class.java
         internal val lib: AttrOpaque1Lib = Native.load("somelib", libClass)
         
-        fun new_(): AttrOpaque1 {
+        fun totally_not_new(): AttrOpaque1Renamed {
             
             val returnVal = lib.namespace_AttrOpaque1_new();
             val selfEdges: List<Any> = listOf()
@@ -43,7 +42,7 @@ class AttrOpaque1 internal constructor (
         }
     }
     
-    fun method(): UByte {
+    fun method_renamed(): UByte {
         
         val returnVal = lib.namespace_AttrOpaque1_method(handle);
         return returnVal.toUByte()
@@ -55,19 +54,13 @@ class AttrOpaque1 internal constructor (
         return returnVal.toUByte()
     }
     
-    fun methodDisabledcpp(): Unit {
-        
-        val returnVal = lib.namespace_AttrOpaque1_method_disabledcpp(handle);
-        
-    }
-    
     fun useUnnamespaced(un: Unnamespaced): Unit {
         
         val returnVal = lib.namespace_AttrOpaque1_use_unnamespaced(handle, un.handle);
         
     }
     
-    fun useNamespaced(n: AttrEnum): Unit {
+    fun useNamespaced(n: RenamedAttrEnum): Unit {
         
         val returnVal = lib.namespace_AttrOpaque1_use_namespaced(handle, n.toNative());
         

@@ -20,7 +20,7 @@ export class AttrOpaque1 {
 
   /**
    */
-  method_disabledcpp(): void;
+  method_disabled(): void;
 
   /**
    */
