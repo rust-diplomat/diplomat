@@ -478,9 +478,11 @@ impl<'ast> LoweringContext<'ast> {
             self.attr_validator
                 .attr_from_ast(&method.attrs, method_parent_attrs, &mut self.errors);
 
+        let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
         let hir_method = Method {
             docs: method.docs.clone(),
             name: name?,
+            abi_name: abi_name,
             lifetime_env,
             param_self,
             params,

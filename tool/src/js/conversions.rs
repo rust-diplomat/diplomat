@@ -249,10 +249,7 @@ pub struct Invocation {
 impl Invocation {
     /// Create a new [`Invocation`].
     pub fn new(abi_name: ast::Ident, args: Vec<String>) -> Self {
-        Invocation {
-            abi_name,
-            args,
-        }
+        Invocation { abi_name, args }
     }
 
     /// Invoke the function without passing in a return buffer.
