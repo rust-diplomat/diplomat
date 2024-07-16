@@ -459,7 +459,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let (param_self, param_ltl) = if let Some(self_param) = method.self_param.as_ref() {
             let (param_self, param_ltl) =
-                self.lower_self_param(self_param, self_param_ltl, &method.full_path_name, in_path)?;
+                self.lower_self_param(self_param, self_param_ltl, &method.abi_name, in_path)?;
             (Some(param_self), param_ltl)
         } else {
             (None, SelfParamLifetimeLowerer::no_self_ref(self_param_ltl))

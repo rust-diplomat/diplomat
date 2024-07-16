@@ -31,7 +31,7 @@ declared_types:
           docs:
             - ""
             - []
-          full_path_name: NonOpaqueStruct_new
+          abi_name: NonOpaqueStruct_new
           self_param: ~
           params:
             - name: x
@@ -49,7 +49,7 @@ declared_types:
           docs:
             - ""
             - []
-          full_path_name: NonOpaqueStruct_set_a
+          abi_name: NonOpaqueStruct_set_a
           self_param:
             reference:
               - Anonymous
@@ -80,7 +80,7 @@ declared_types:
           docs:
             - ""
             - []
-          full_path_name: OpaqueStruct_new
+          abi_name: OpaqueStruct_new
           self_param: ~
           params: []
           return_type:
@@ -96,7 +96,7 @@ declared_types:
           docs:
             - ""
             - []
-          full_path_name: OpaqueStruct_get_string
+          abi_name: OpaqueStruct_get_string
           self_param:
             reference:
               - Anonymous

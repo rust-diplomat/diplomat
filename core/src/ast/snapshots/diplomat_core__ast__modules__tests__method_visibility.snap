@@ -18,7 +18,7 @@ declared_types:
           docs:
             - ""
             - []
-          full_path_name: Foo_pub_fn
+          abi_name: Foo_pub_fn
           self_param: ~
           params: []
           return_type: ~

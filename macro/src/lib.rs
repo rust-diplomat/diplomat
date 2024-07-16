@@ -207,7 +207,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
 fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
-    let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());
+    let extern_ident = Ident::new(m.abi_name.as_str(), Span::call_site());
 
     let mut all_params = vec![];
     m.params.iter().for_each(|p| {

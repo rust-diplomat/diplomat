@@ -12,7 +12,7 @@ docs:
           - batz
       typ: FnInStruct
       display: Normal
-full_path_name: MyStructContainingMethod_foo
+abi_name: MyStructContainingMethod_foo
 self_param:
   reference:
     - Anonymous

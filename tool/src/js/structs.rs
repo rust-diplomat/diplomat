@@ -326,7 +326,7 @@ fn gen_method<W: fmt::Write>(
             let diplomat_out = display::expr(|f| {
                 let display_return_type = display::expr(|f| {
                     let invocation =
-                        Invocation::new(method.full_path_name.clone(), all_param_exprs.clone());
+                        Invocation::new(method.abi_name.clone(), all_param_exprs.clone());
 
                     if let Some(ref typ) = method.return_type {
                         let mut borrows: Vec<Argument> = entries

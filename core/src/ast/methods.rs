@@ -16,8 +16,8 @@ pub struct Method {
     /// Lines of documentation for the method.
     pub docs: Docs,
 
-    /// The name of the FFI function wrapping around the method.
-    pub full_path_name: Ident,
+    /// The name of the generated `extern "C"` function
+    pub abi_name: Ident,
 
     /// The `self` param of the method, if any.
     pub self_param: Option<SelfParam>,
@@ -95,7 +95,7 @@ impl Method {
         Method {
             name: Ident::from(method_ident),
             docs: Docs::from_attrs(&m.attrs),
-            full_path_name: Ident::from(&extern_ident),
+            abi_name: Ident::from(&extern_ident),
             self_param,
             params: all_params,
             return_type: return_ty,

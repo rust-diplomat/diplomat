@@ -68,7 +68,7 @@ pub fn gen_method<W: fmt::Write>(
         }
     }
 
-    write!(out, " {}(", method.full_path_name)?;
+    write!(out, " {}(", method.abi_name)?;
 
     let mut first = true;
     if let Some(self_param) = &method.self_param {
