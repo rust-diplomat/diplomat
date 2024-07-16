@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::collections::BTreeSet;
-use std::fmt::{Display, Write};
+use std::fmt::Display;
 
 use diplomat_core::ast::DocsUrlGenerator;
 
