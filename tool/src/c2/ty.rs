@@ -98,13 +98,13 @@ struct ImplTemplate<'a> {
     methods: Vec<MethodTemplate<'a>>,
     is_for_cpp: bool,
     ty_name: Cow<'a, str>,
-    dtor_name: Option<String>,
+    dtor_name: Option<&'a str>,
 }
 
 struct MethodTemplate<'a> {
     return_ty: Cow<'a, str>,
     params: String,
-    name: Cow<'a, str>,
+    abi_name: &'a str,
 }
 
 /// The context used for generating a particular type
@@ -191,8 +191,8 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
         let ty_name = self.formatter.fmt_type_name(self.id);
 
-        let dtor_name = if let TypeDef::Opaque(_) = ty {
-            Some(self.formatter.fmt_dtor_name(self.id))
+        let dtor_name = if let TypeDef::Opaque(opaque) = ty {
+            Some(opaque.dtor_abi_name.as_str())
         } else {
             None
         };
@@ -219,7 +219,10 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
 
     fn gen_method(&self, method: &'tcx hir::Method, header: &mut Header) -> MethodTemplate<'tcx> {
         use diplomat_core::hir::{ReturnType, SuccessType};
-        let method_name = self.formatter.fmt_method_name(self.id, method);
+        let abi_name = method.abi_name.as_str();
+        // Right now these are the same, but we may eventually support renaming
+        // and should be sure to use method_name when naming the result type
+        let method_name = abi_name;
         let mut param_decls = Vec::new();
         if let Some(ref self_ty) = method.param_self {
             let self_ty = self_ty.ty.clone().into();
@@ -260,7 +263,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     SuccessType::OutType(o) => Some(o),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
-                self.gen_result_ty(&method_name, ok_ty, err, header).into()
+                self.gen_result_ty(method_name, ok_ty, err, header).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         };
@@ -278,7 +281,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         }
 
         MethodTemplate {
-            name: method_name.into(),
+            abi_name,
             return_ty,
             params,
         }

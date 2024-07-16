@@ -283,10 +283,6 @@ impl<'tcx> JSFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_c_method_name<'a>(&self, type_id: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c_formatter.fmt_method_name(type_id, method).into()
-    }
-
     pub fn fmt_param_name<'a>(&self, param_name: &'a str) -> Cow<'a, str> {
         param_name.to_lower_camel_case().into()
     }
@@ -304,8 +300,5 @@ impl<'tcx> JSFormatter<'tcx> {
         variant.attrs.rename.apply(name)
     }
 
-    pub fn fmt_destructor_name(&self, type_id: TypeId) -> String {
-        self.c_formatter.fmt_dtor_name(type_id)
-    }
     // #endregion
 }

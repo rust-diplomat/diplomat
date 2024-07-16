@@ -58,10 +58,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "Array<String>"
     }
 
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
-    }
-
     pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
         match prim {
             PrimitiveType::Bool => "Byte",

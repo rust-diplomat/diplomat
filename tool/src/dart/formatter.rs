@@ -68,10 +68,6 @@ impl<'tcx> DartFormatter<'tcx> {
             .replace(" \n", "\n")
     }
 
-    pub fn fmt_destructor_name(&self, id: TypeId) -> String {
-        self.c.fmt_dtor_name(id)
-    }
-
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_type(id);
@@ -148,10 +144,6 @@ impl<'tcx> DartFormatter<'tcx> {
         } else {
             name
         }
-    }
-
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
     }
 
     pub fn fmt_string(&self) -> &'static str {

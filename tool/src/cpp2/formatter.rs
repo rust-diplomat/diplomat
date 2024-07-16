@@ -162,7 +162,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {
+    pub fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {
         let resolved = self.c.tcx().resolve_type(ty);
         if let Some(ref ns) = resolved.attrs().namespace {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")
@@ -171,12 +171,6 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_c_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
-        self.namespace_c_method_name(ty, &self.c.fmt_method_name(ty, method))
-    }
-    pub fn fmt_c_dtor_name(&self, ty: TypeId) -> String {
-        self.namespace_c_method_name(ty, &self.c.fmt_dtor_name(ty))
-    }
     /// Get the primitive type as a C type
     pub fn fmt_primitive_as_c(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
         self.c.fmt_primitive_as_c(prim)
