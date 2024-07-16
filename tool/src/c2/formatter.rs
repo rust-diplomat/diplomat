@@ -48,7 +48,7 @@ impl<'tcx> CFormatter<'tcx> {
     pub fn fmt_type_name_for_abi(&self, id: TypeId) -> Cow<'tcx, str> {
         self.tcx.resolve_type(id).name().as_str().into()
     }
-    /// Resolve and format a named type for use in code (with a namespace, if needed by C++)
+    /// Resolve and format a named type for use in code (with a C++ namespace, if needed by C++)
     pub fn fmt_type_name_maybe_namespaced(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.tcx.resolve_type(id);
         let name = resolved
