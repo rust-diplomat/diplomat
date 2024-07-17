@@ -4,16 +4,12 @@ import type { OptionOpaqueChar } from "./OptionOpaqueChar"
 import type { pointer, char } from "./diplomat-runtime.d.ts";
 
 export class OptionStruct {
-    #a;
     get a() : OptionOpaque | null;
     
-    #b;
     get b() : OptionOpaqueChar | null;
     
-    #c;
     get c() : number;
     
-    #d;
     get d() : OptionOpaque | null;
     
 

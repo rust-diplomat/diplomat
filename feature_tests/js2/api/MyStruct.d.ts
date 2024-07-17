@@ -3,25 +3,18 @@ import type { MyEnum } from "./MyEnum"
 import type { pointer, char } from "./diplomat-runtime.d.ts";
 
 export class MyStruct {
-    #a;
     get a() : number;
     set a(value: number); 
-    #b;
     get b() : boolean;
     set b(value: boolean); 
-    #c;
     get c() : number;
     set c(value: number); 
-    #d;
     get d() : bigint;
     set d(value: bigint); 
-    #e;
     get e() : number;
     set e(value: number); 
-    #f;
     get f() : char;
     set f(value: char); 
-    #g;
     get g() : MyEnum;
     set g(value: MyEnum); 
 

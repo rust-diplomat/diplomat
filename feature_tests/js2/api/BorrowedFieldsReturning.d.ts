@@ -2,7 +2,6 @@
 import type { pointer, char } from "./diplomat-runtime.d.ts";
 
 export class BorrowedFieldsReturning {
-    #bytes;
     get bytes() : string;
     set bytes(value: string); 
 

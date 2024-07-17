@@ -3,10 +3,8 @@ import type { FixedDecimalGroupingStrategy } from "./FixedDecimalGroupingStrateg
 import type { pointer, char } from "./diplomat-runtime.d.ts";
 
 export class FixedDecimalFormatterOptions {
-    #groupingStrategy;
     get groupingStrategy() : FixedDecimalGroupingStrategy;
     set groupingStrategy(value: FixedDecimalGroupingStrategy); 
-    #someOtherConfig;
     get someOtherConfig() : boolean;
     set someOtherConfig(value: boolean); 
 
