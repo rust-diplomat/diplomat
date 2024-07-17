@@ -1,4 +1,4 @@
-use std::fmt::{Display, Write};
+use std::{collections::BTreeSet, fmt::{Display, Write}};
 
 use askama::{self, Template};
 use diplomat_core::hir::TypeContext;
@@ -101,6 +101,7 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
             }
 
             if !termini.is_empty() {
+                let mut imports = BTreeSet::new();
                 for file_type in FILE_TYPES {
                     let type_name = self.formatter.fmt_type_name(id);
                     let file_name = self.formatter.fmt_file_name(&type_name, &file_type);
@@ -110,9 +111,18 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                     for terminus in &mut termini {
                         terminus.typescript = file_type.is_typescript();
                         writeln!(method_str, "{}", terminus.render().unwrap()).unwrap();
+
+                        
+                        imports.append(&mut terminus.imports);
                     }
 
-                    self.files.add_file(file_name.to_string(), method_str);
+                    let mut import_str = String::new();
+                    
+                    for import in imports.iter() {
+                        writeln!(import_str, "{}", import).unwrap();
+                    }
+
+                    self.files.add_file(file_name.to_string(), format!("{import_str}{method_str}"));
                 }
 
                 // Only push the first one, 

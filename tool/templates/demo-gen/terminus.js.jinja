@@ -1,9 +1,3 @@
-{%- if !typescript -%}
-{%- for import in imports %}
-{{- import }}
-{% endfor %}
-{% endif -%}
-
 export function {{function_name}}(
 	{%- for param in params -%}
 	{{param.js}}{% if typescript %}: {{param.type_name}}{% endif %}{% if !loop.last %}, {% endif %}

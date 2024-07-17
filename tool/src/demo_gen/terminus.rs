@@ -89,7 +89,7 @@ pub(super) struct TerminusInfo {
     pub typescript: bool,
 
     /// List of JS imports that this terminus needs.
-    imports: BTreeSet<String>,
+    pub imports: BTreeSet<String>,
 }
 
 impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
