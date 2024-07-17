@@ -28,7 +28,6 @@ namespace capi {
 extern "C" {
 #endif
 
-void OptionStruct_destroy(OptionStruct* self);
 
 #ifdef __cplusplus
 } // extern "C"

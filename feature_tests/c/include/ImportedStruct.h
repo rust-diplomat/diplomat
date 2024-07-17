@@ -24,7 +24,6 @@ namespace capi {
 extern "C" {
 #endif
 
-void ImportedStruct_destroy(ImportedStruct* self);
 
 #ifdef __cplusplus
 } // extern "C"

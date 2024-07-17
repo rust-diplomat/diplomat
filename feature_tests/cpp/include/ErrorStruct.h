@@ -22,7 +22,6 @@ namespace capi {
 extern "C" {
 #endif
 
-void ErrorStruct_destroy(ErrorStruct* self);
 
 #ifdef __cplusplus
 } // extern "C"
