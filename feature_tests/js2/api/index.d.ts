@@ -1,71 +1,71 @@
 
-export { FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char } from './diplomat-runtime';
+export { FFIError, char } from './diplomat-runtime';
 
 
-export { ImportedStruct } from "./ImportedStruct.mjs"
+export { ImportedStruct } from "./ImportedStruct"
 
-export { BorrowedFields } from "./BorrowedFields.mjs"
+export { BorrowedFields } from "./BorrowedFields"
 
-export { BorrowedFieldsReturning } from "./BorrowedFieldsReturning.mjs"
+export { BorrowedFieldsReturning } from "./BorrowedFieldsReturning"
 
-export { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds.mjs"
+export { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds"
 
-export { NestedBorrowedFields } from "./NestedBorrowedFields.mjs"
+export { NestedBorrowedFields } from "./NestedBorrowedFields"
 
-export { ErrorStruct } from "./ErrorStruct.mjs"
+export { ErrorStruct } from "./ErrorStruct"
 
-export { CyclicStructA } from "./CyclicStructA.mjs"
+export { CyclicStructA } from "./CyclicStructA"
 
-export { CyclicStructB } from "./CyclicStructB.mjs"
+export { CyclicStructB } from "./CyclicStructB"
 
-export { MyStruct } from "./MyStruct.mjs"
+export { MyStruct } from "./MyStruct"
 
-export { MyZst } from "./MyZst.mjs"
+export { MyZst } from "./MyZst"
 
-export { OptionStruct } from "./OptionStruct.mjs"
+export { OptionStruct } from "./OptionStruct"
 
-export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
+export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 
-export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2.mjs"
+export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2"
 
-export { Unnamespaced } from "./Unnamespaced.mjs"
+export { Unnamespaced } from "./Unnamespaced"
 
-export { Bar } from "./Bar.mjs"
+export { Bar } from "./Bar"
 
-export { Foo } from "./Foo.mjs"
+export { Foo } from "./Foo"
 
-export { One } from "./One.mjs"
+export { One } from "./One"
 
-export { Two } from "./Two.mjs"
+export { Two } from "./Two"
 
-export { OptionOpaque } from "./OptionOpaque.mjs"
+export { OptionOpaque } from "./OptionOpaque"
 
-export { OptionOpaqueChar } from "./OptionOpaqueChar.mjs"
+export { OptionOpaqueChar } from "./OptionOpaqueChar"
 
-export { OptionString } from "./OptionString.mjs"
+export { OptionString } from "./OptionString"
 
-export { ResultOpaque } from "./ResultOpaque.mjs"
+export { ResultOpaque } from "./ResultOpaque"
 
-export { RefList } from "./RefList.mjs"
+export { RefList } from "./RefList"
 
-export { RefListParameter } from "./RefListParameter.mjs"
+export { RefListParameter } from "./RefListParameter"
 
-export { Float64Vec } from "./Float64Vec.mjs"
+export { Float64Vec } from "./Float64Vec"
 
-export { MyString } from "./MyString.mjs"
+export { MyString } from "./MyString"
 
-export { Opaque } from "./Opaque.mjs"
+export { Opaque } from "./Opaque"
 
-export { OpaqueMutexedString } from "./OpaqueMutexedString.mjs"
+export { OpaqueMutexedString } from "./OpaqueMutexedString"
 
-export { Utf16Wrap } from "./Utf16Wrap.mjs"
+export { Utf16Wrap } from "./Utf16Wrap"
 
-export { RenamedAttrEnum } from "./RenamedAttrEnum.mjs"
+export { RenamedAttrEnum } from "./RenamedAttrEnum"
 
-export { UnimportedEnum } from "./UnimportedEnum.mjs"
+export { UnimportedEnum } from "./UnimportedEnum"
 
-export { ErrorEnum } from "./ErrorEnum.mjs"
+export { ErrorEnum } from "./ErrorEnum"
 
-export { ContiguousEnum } from "./ContiguousEnum.mjs"
+export { ContiguousEnum } from "./ContiguousEnum"
 
-export { MyEnum } from "./MyEnum.mjs"
+export { MyEnum } from "./MyEnum"

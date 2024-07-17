@@ -31,7 +31,29 @@ pub fn gen_bindings(
         .write_str(include_str!("../../templates/js2/runtime.mjs"))?;
     outs.entry("diplomat-runtime.d.ts".to_string())
         .or_default()
-        .write_str(include_str!("../../templates/js2/runtime.d.ts"))?;
+        .write_str(concat!(
+            "/**\n",
+            " * An error that occurred in Rust.\n",
+            " */\n",
+            "export class FFIError<E> extends Error {\n",
+            "\terror_value: E;\n",
+            "}\n",
+            "\n",
+            "export type u8 = number;\n",
+            "export type i8 = number;\n",
+            "export type u16 = number;\n",
+            "export type i16 = number;\n",
+            "export type u32 = number;\n",
+            "export type i32 = number;\n",
+            "export type u64 = bigint;\n",
+            "export type i64 = bigint;\n",
+            "export type usize = number;\n",
+            "export type isize = number;\n",
+            "export type f32 = number;\n",
+            "export type f64 = number;\n",
+            "export type char = string;\n",
+            "export type pointer = number;",
+        ))?;
     outs.entry("diplomat-wasm.mjs".to_string())
         .or_default()
         .write_str(include_str!("../../templates/js2/wasm.mjs"))?;

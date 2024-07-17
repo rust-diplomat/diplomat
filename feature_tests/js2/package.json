@@ -2,9 +2,11 @@
 	"name": "diplomat-wasm-js2-feature-tests",
 	"version": "0.0.1",
 	"description": "Diplomat WASM with JS2 HIR Backend Feature Tests",
-	"main": "./api/index.mjs",
 	"exports": {
-		".": "./api/index.mjs"
+		".": {
+			"default": "./api/index.mjs",
+			"types": "./api/index.d.ts"
+		}
 	},
 	"type": "module",
 	"directories": {
@@ -17,7 +19,7 @@
 		]
 	},
 	"scripts": {
-		"build": "tsc",
+		"pretest": "tsc",
 		"test": "ava"
 	},
 	"repository": {

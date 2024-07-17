@@ -105,7 +105,7 @@ export class DiplomatBuf {
 	}
 
 	static slice = (wasm, list, rustType) => {
-	const elementSize = rustType == "u8" || rustType == "i8" || rustType == "bool" ? 1 :
+	const elementSize = rustType == "u8" || rustType == "i8" || rustType == "boolean" ? 1 :
 		rustType == "u16" || rustType == "i16" ? 2 :
 		rustType == "u64" || rustType == "i64" || rustType == "f64" ? 8 :
 			4;
@@ -115,11 +115,11 @@ export class DiplomatBuf {
 
 	// Create an array view of the buffer. This gives us the `set` method which correctly handles untyped values
 	const destination =
-		rustType == "u8" || rustType == "bool" ? new Uint8Array(wasm.memory.buffer, ptr, byteLength) :
+		rustType == "u8" || rustType == "boolean" ? new Uint8Array(wasm.memory.buffer, ptr, byteLength) :
 		rustType == "i8" ? new Int8Array(wasm.memory.buffer, ptr, byteLength) :
 			rustType == "u16" ? new Uint16Array(wasm.memory.buffer, ptr, byteLength) :
 			rustType == "i16" ? new Int16Array(wasm.memory.buffer, ptr, byteLength) :
-				rustType == "i32" || rustType == "isize" ? new Int32Array(wasm.memory.buffer, ptr, byteLength) :
+				rustType == "i32" ? new Int32Array(wasm.memory.buffer, ptr, byteLength) :
 				rustType == "u64" ? new BigUint64Array(wasm.memory.buffer, ptr, byteLength) :
 					rustType == "i64" ? new BigInt64Array(wasm.memory.buffer, ptr, byteLength) :
 					rustType == "f32" ? new Float32Array(wasm.memory.buffer, ptr, byteLength) :
@@ -160,7 +160,7 @@ export class DiplomatBuf {
 		var arrayType;
 		switch (bufferType) {
 			case "u8":
-			case "bool":
+			case "boolean":
 				arrayType = Uint8Array;
 				break;
 			case "i8":
@@ -173,11 +173,9 @@ export class DiplomatBuf {
 				arrayType = Int16Array;
 				break;
 			case "i32":
-			case "isize":
 				arrayType = Int32Array;
 				break;
 			case "u32":
-			case "usize":
 				arrayType = Uint32Array;
 				break;
 			case "i64":

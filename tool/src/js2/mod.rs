@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::collections::BTreeSet;
-use std::fmt::{Display, Write};
+use std::fmt::Display;
 
 use diplomat_core::ast::DocsUrlGenerator;
 
@@ -29,6 +29,8 @@ pub struct JSGenerationContext<'tcx> {
 
     /// Exports for the root level index.js file.
     exports: Vec<Cow<'tcx, str>>,
+    /// Exports for typescript index.d.ts file.
+    ts_exports: Vec<Cow<'tcx, str>>,
 }
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?
@@ -60,6 +62,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
             files: FileMap::default(),
 
             exports: Vec::new(),
+            ts_exports: Vec::new(),
         };
         this.init();
 
@@ -92,11 +95,6 @@ impl<'tcx> JSGenerationContext<'tcx> {
             self.generate_file_from_type(id, ty);
         }
 
-        let mut export_str: String = String::new();
-        for export in self.exports.iter() {
-            writeln!(export_str, "{export}").expect("Could not write into export_str");
-        }
-
         #[derive(Template)]
         #[template(path = "js2/index.js.jinja", escape = "none")]
         struct IndexTemplate<'a> {
@@ -113,6 +111,7 @@ impl<'tcx> JSGenerationContext<'tcx> {
             .add_file("index.mjs".into(), out_index.render().unwrap());
 
         out_index.typescript = true;
+        out_index.exports = &self.ts_exports;
 
         self.files
             .add_file("index.d.ts".into(), out_index.render().unwrap());
@@ -169,11 +168,15 @@ impl<'tcx> JSGenerationContext<'tcx> {
                 .add_file(file_name, context.generate_base(contents));
         }
 
-        // TODO: Typescript variant.
         self.exports.push(
             self.formatter
                 .fmt_export_statement(&name, false, "./".into())
                 .into(),
         );
+        self.ts_exports.push(
+            self.formatter
+                .fmt_export_statement(&name, true, "./".into())
+                .into(),
+        )
     }
 }

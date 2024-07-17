@@ -372,11 +372,14 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 "get {}",
                 self.js_ctx.formatter.fmt_method_field_name(name, method)
             ),
-            Some(SpecialMethod::Setter(name)) => format!(
-                "set {}",
-                self.js_ctx.formatter.fmt_method_field_name(name, method)
-            ),
-
+            Some(SpecialMethod::Setter(name)) => {
+                // Setters cannot have return type annotations
+                method_info.return_type = Default::default();
+                format!(
+                    "set {}",
+                    self.js_ctx.formatter.fmt_method_field_name(name, method)
+                )
+            }
             Some(SpecialMethod::Iterable) => "[Symbol.iterator]".to_string(),
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
