@@ -6,21 +6,25 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 
 import java.util.Collections
+import java.util.concurrent.Callable
 
-class CallbackWrapper(val cb: (Int) -> Int): Runnable {
+class CallbackWrapper(val cb: (Int) -> Int) {
     var arg0: Int = Int.MIN_VALUE
 
     fun set_arg0(new_arg0: Int) {
         arg0 = new_arg0
+        println("here!! arg0 " + arg0)
     }
 
-    override fun run() {
+    fun run_callback(): Int {
+        println("hereeeee")
         if (arg0 == Int.MIN_VALUE) {
             // throw an error
             // but also this sucks as error checking
         }
         val ret = this.cb.invoke(arg0);
         println("here: " + ret);
+        return ret;
     }
 }
 
@@ -30,7 +34,7 @@ interface DiplomatCallback_Lib: Library {
     fun diplomat_callback_create_for_jvm__callback(env: JNIEnv, callback_wrapper: Object): Pointer
 
     // specific to this callback
-    fun GEND_BRIDGE_test_run_fn(diplomatCallback: Pointer)
+    fun GEND_BRIDGE_test_run_fn(diplomatCallback: Pointer): Int
 }
 
 class DiplomatCallback internal constructor (
@@ -53,12 +57,12 @@ class DiplomatCallback internal constructor (
         internal val lib: DiplomatCallback_Lib = Native.load("somelib", libClass,
             Collections.singletonMap(Library.OPTION_ALLOW_OBJECTS, true))
 
-        fun diplomat_callback_create_for_jvm(callback_wrapper: Runnable): Pointer {
+        fun diplomat_callback_create_for_jvm(callback_wrapper: CallbackWrapper): Pointer {
             return lib.diplomat_callback_create_for_jvm__callback(JNIEnv.CURRENT, callback_wrapper as Object);
         }
 
-        fun GEND_BRIDGE_test_run_fn(diplomatCallback: Pointer) {
-            lib.GEND_BRIDGE_test_run_fn(diplomatCallback);
+        fun GEND_BRIDGE_test_run_fn(diplomatCallback: Pointer): Int {
+            return lib.GEND_BRIDGE_test_run_fn(diplomatCallback);
         }
     }
 }
@@ -69,14 +73,15 @@ object Main {
         return x*2;
     }
 
-    fun callTestFunRust(cb: (Int) -> Int) {
+    fun callTestFunRust(cb: (Int) -> Int): Int {
         var cb_wrapper = CallbackWrapper(cb);
         var diplomat_cb_lib = DiplomatCallback.diplomat_callback_create_for_jvm(cb_wrapper);
-        DiplomatCallback.GEND_BRIDGE_test_run_fn(diplomat_cb_lib);
+        return DiplomatCallback.GEND_BRIDGE_test_run_fn(diplomat_cb_lib)
     }
 
     @JvmStatic
     fun main(args: Array<String>) {
-        callTestFunRust(::callback);
+        var res = callTestFunRust(::callback);
+        println("Result: " + res);
     }
 }
