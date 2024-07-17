@@ -71,7 +71,17 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
 
             {
                 let type_name = self.formatter.fmt_type_name(id);
+                
+                let ty = self.tcx.resolve_type(id);
+                if ty.attrs().disable {
+                    continue;
+                }
+
                 for method in methods {
+                    if method.attrs.disable {
+                        continue;
+                    }
+
                     let val = RenderTerminusContext::evaluate_terminus(
                         self,
                         type_name.to_string(),

@@ -113,6 +113,8 @@ pub fn gen(
         "demo-gen" => {
             let mut attr_validator = hir::BasicAttributeValidator::new("demo-gen");
 
+            attr_validator.support.disabling = true;
+
             // For finding default constructors of opaques:
             attr_validator.support.constructors = true;
             attr_validator.support.fallible_constructors = true;

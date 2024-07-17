@@ -216,29 +216,41 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                         self.ctx.formatter.fmt_primitive_list_type(*p).to_string()
                     }
                     Type::Slice(hir::Slice::Strs(..)) => "Array<String>".to_string(),
-                    Type::Enum(e) => self
+                    Type::Enum(e) => {
+                        let type_name = self
                         .ctx
                         .formatter
                         .fmt_type_name(e.tcx_id.into())
-                        .to_string(),
+                        .to_string();
+                        
+                        if e.resolve(&self.ctx.tcx).attrs.disable {
+                            self.ctx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                        }
+
+                        type_name
+                    },
                     _ => unreachable!("Unknown primitive type {:?}", param_type),
                 };
 
                 out_param(type_name);
             }
             Type::Opaque(o) => {
-                let attrs = &o.resolve(self.ctx.tcx).attrs.demo_attrs;
-
-                // We need to find a constructor that we can call.
-                // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
                 let op = o.resolve(self.ctx.tcx);
                 let type_name = self.ctx.formatter.fmt_type_name(o.tcx_id.into());
+
+                let all_attrs = &o.resolve(self.ctx.tcx).attrs;
+                if all_attrs.disable {
+                    self.ctx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                }
+                let attrs = &all_attrs.demo_attrs;
 
                 if attrs.external {
                     out_param(type_name.into());
                     return;
                 }
 
+                // We need to find a constructor that we can call.
+                // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
                 let mut usable_constructor = false;
 
                 for method in op.methods.iter() {
@@ -283,6 +295,9 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 let st = s.resolve(self.ctx.tcx);
 
                 let type_name = self.ctx.formatter.fmt_type_name(s.tcx_id.into());
+                if st.attrs.disable {
+                    self.ctx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                }
 
                 self.terminus_info
                     .imports
