@@ -7,11 +7,11 @@ export class OptionString {
     get ffiValue(): pointer;
 
 
-    static new_(diplomatStr: string): OptionString | undefined;
+    static new_(diplomatStr: string): OptionString | null;
 
-    write(): string | undefined;
+    write(): string | null;
 
-    borrow(): string | undefined;
+    borrow(): string | null;
 
     
 

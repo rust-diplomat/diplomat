@@ -223,7 +223,7 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     pub fn fmt_nullable(&self, ident: &str) -> String {
-        format!("{ident} | undefined")
+        format!("{ident} | null")
     }
 
     pub fn fmt_string(&self) -> &'static str {

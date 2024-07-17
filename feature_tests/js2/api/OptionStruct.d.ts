@@ -5,16 +5,16 @@ import type { pointer, char } from "./diplomat-runtime.d.ts";
 
 export class OptionStruct {
     #a;
-    get a() : OptionOpaque | undefined;
+    get a() : OptionOpaque | null;
     
     #b;
-    get b() : OptionOpaqueChar | undefined;
+    get b() : OptionOpaqueChar | null;
     
     #c;
     get c() : number;
     
     #d;
-    get d() : OptionOpaque | undefined;
+    get d() : OptionOpaque | null;
     
 
     

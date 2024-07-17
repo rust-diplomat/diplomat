@@ -14,7 +14,7 @@ export class FixedDecimal {
 
     multiplyPow10(power: number): void;
 
-    toString(): string | undefined;
+    toString(): string | null;
 
     
 
