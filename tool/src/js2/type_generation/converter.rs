@@ -472,7 +472,15 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						}
 
 						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
-						format!("throw new diplomatRuntime.FFIError({})", self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment))
+                        let type_name = self.js_ctx.formatter.fmt_type_name(e.id().unwrap());
+                        let cause = self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment);
+						format!(
+                            "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
+                            message = match e {
+                                Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
+                                _ => format!("'{type_name}: ' + cause.toString()"),
+                            },
+                        )
 					},
                     ReturnType::Nullable(_) | ReturnType::Fallible(_, None)=> "return null".into(),
                     return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),

@@ -29,6 +29,16 @@ pub fn gen_bindings(
     outs.entry("diplomat-runtime.mjs".to_string())
         .or_default()
         .write_str(include_str!("../../templates/js2/runtime.mjs"))?;
+    outs.get_mut("diplomat-runtime.mjs")
+        .unwrap()
+        .write_str(concat!(
+            "export class FFIError extends Error {\n",
+            "	constructor(error_value) {\n",
+            "	super('Error over FFI');\n",
+            "	this.error_value = error_value; // (2)\n",
+            "	}\n",
+            "}\n",
+        ))?;
     outs.entry("diplomat-runtime.d.ts".to_string())
         .or_default()
         .write_str(concat!(

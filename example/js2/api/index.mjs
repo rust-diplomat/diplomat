@@ -1,6 +1,4 @@
 
-export { FFIError } from './diplomat-runtime.mjs';
-
 
 export { FixedDecimalFormatterOptions } from "./FixedDecimalFormatterOptions.mjs"
 

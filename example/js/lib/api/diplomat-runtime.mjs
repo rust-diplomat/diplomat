@@ -14,19 +14,12 @@ export function withDiplomatWrite(wasm, callback) {
 	callback(write);
 	const outStringPtr = wasm.diplomat_buffer_write_get_bytes(write);
 	if (outStringPtr == null) {
-		throw FFIError("Out of memory");
+		throw Error("Out of memory");
 	}
 	const outStringLen = wasm.diplomat_buffer_write_len(write);
 	return readString8(wasm, outStringPtr, outStringLen);
 	} finally {
 	wasm.diplomat_buffer_write_destroy(write);
-	}
-}
-
-export class FFIError extends Error {
-	constructor(error_value) {
-	super("Error over FFI");
-	this.error_value = error_value; // (2)
 	}
 }
 
@@ -209,3 +202,9 @@ export class DiplomatBuf {
 }
 
 const DiplomatBufferFinalizer = new FinalizationRegistry(free => free());
+export class FFIError extends Error {
+	constructor(error_value) {
+	super('Error over FFI');
+	this.error_value = error_value; // (2)
+	}
+}

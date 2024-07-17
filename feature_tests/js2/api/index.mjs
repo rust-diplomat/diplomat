@@ -1,6 +1,4 @@
 
-export { FFIError } from './diplomat-runtime.mjs';
-
 
 export { ImportedStruct } from "./ImportedStruct.mjs"
 

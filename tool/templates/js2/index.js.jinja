@@ -1,7 +1,5 @@
 {% if typescript %}
-export { FFIError, char } from './diplomat-runtime';
-{% else %}
-export { FFIError } from './diplomat-runtime.mjs';
+export { char } from './diplomat-runtime';
 {% endif %}
 {% for export_stmt in exports %}
 {{export_stmt}}

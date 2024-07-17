@@ -1,5 +1,5 @@
 
-export { FFIError, char } from './diplomat-runtime';
+export { char } from './diplomat-runtime';
 
 
 export { FixedDecimalFormatterOptions } from "./FixedDecimalFormatterOptions"

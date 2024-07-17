@@ -128,7 +128,8 @@ export class MyStruct {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw new diplomatRuntime.FFIError(new MyZst()._fromFFI(diplomat_receive_buffer));
+                const cause = new MyZst()._fromFFI(diplomat_receive_buffer);
+                throw new Error('MyZst: ' + cause.toString(), { cause });
             }
     
         } finally {
