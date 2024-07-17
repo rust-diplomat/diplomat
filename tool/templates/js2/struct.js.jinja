@@ -4,7 +4,9 @@
 {% endif -%}
 export class {{type_name}} {
     {%- for field in fields %}
+    {% if !typescript -%}
     #{{field.field_name}};
+    {% endif -%}
     get {{field.field_name}}() {% if typescript %}: {{field.js_type_name}};{% else %} {
         return this.#{{field.field_name}};
     }{% endif %}

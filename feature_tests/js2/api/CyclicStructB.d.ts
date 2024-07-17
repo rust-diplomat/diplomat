@@ -3,7 +3,6 @@ import type { CyclicStructA } from "./CyclicStructA"
 import type { pointer, char } from "./diplomat-runtime.d.ts";
 
 export class CyclicStructB {
-    #field;
     get field() : number;
     set field(value: number); 
 
