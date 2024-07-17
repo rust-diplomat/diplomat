@@ -52,13 +52,20 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
     /// This JS should include:
     /// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs.
     pub fn init(&mut self) {
+        struct TerminusExport {
+            type_name : String,
+            js_file_name : String
+        }
+
         #[derive(Template)]
         #[template(path = "demo-gen/index.js.jinja", escape = "none")]
         struct IndexInfo {
-            termini: Vec<TerminusInfo>,
+            termini_exports: Vec<TerminusExport>,
+            termini: Vec<TerminusInfo>
         }
 
         let mut out_info = IndexInfo {
+            termini_exports: Vec::new(),
             termini: Vec::new(),
         };
 
@@ -108,6 +115,12 @@ impl<'tcx> WebDemoGenerationContext<'tcx> {
                     self.files.add_file(file_name.to_string(), method_str);
                 }
 
+                // Only push the first one, 
+                out_info.termini_exports.push(TerminusExport {
+                    type_name: termini[0].type_name.clone(),
+                    js_file_name : termini[0].js_file_name.clone()
+                });
+                
                 out_info.termini.append(&mut termini);
             }
         }
