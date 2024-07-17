@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 void MyStruct_write(const MyStruct* self, DiplomatWrite* to);
-void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus
 } // extern "C"

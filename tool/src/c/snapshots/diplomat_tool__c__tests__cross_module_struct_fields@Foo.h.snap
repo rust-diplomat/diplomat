@@ -27,11 +27,9 @@ namespace capi {
 extern "C" {
 #endif
 
-void Foo_destroy(Foo* self);
 
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
 #endif
 #endif
-
