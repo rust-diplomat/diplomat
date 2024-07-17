@@ -23,7 +23,7 @@ export class Float64Vec {
   }
 
   static new_bool(arg_v) {
-    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "bool");
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "boolean");
     const diplomat_out = new Float64Vec(wasm.Float64Vec_new_bool(buf_arg_v.ptr, buf_arg_v.size), true, []);
     buf_arg_v.free();
     return diplomat_out;
@@ -44,14 +44,14 @@ export class Float64Vec {
   }
 
   static new_isize(arg_v) {
-    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "isize");
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "i32");
     const diplomat_out = new Float64Vec(wasm.Float64Vec_new_isize(buf_arg_v.ptr, buf_arg_v.size), true, []);
     buf_arg_v.free();
     return diplomat_out;
   }
 
   static new_usize(arg_v) {
-    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "usize");
+    const buf_arg_v = diplomatRuntime.DiplomatBuf.slice(wasm, arg_v, "u32");
     const diplomat_out = new Float64Vec(wasm.Float64Vec_new_usize(buf_arg_v.ptr, buf_arg_v.size), true, []);
     buf_arg_v.free();
     return diplomat_out;

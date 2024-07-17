@@ -5,7 +5,7 @@
     {%- if typescript %}: {{ param.ty -}}{%- endif -%}
     {%- if !loop.last -%}, {% endif -%}
 {%- endfor -%}
-) {%- if typescript %}{% if return_type != ": void" %}{{ return_type }}{% endif %};{% else %} {
+) {%- if typescript %}{{ return_type }};{% else %} {
     {% for slice in slice_params %}
     const {{slice.name}}Slice = {{slice.slice_expr}};
     {% endfor -%}

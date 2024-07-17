@@ -145,39 +145,16 @@ impl<'tcx> JSFormatter<'tcx> {
 
     /// Generate a primitive type.
     /// `cast: bool` - Basically, do we want to use `number` instead of `u8`?
-    pub fn fmt_primitive_as_ffi(&self, primitive: hir::PrimitiveType, cast: bool) -> &'static str {
-        if cast {
-            match primitive {
-                hir::PrimitiveType::Bool => "boolean",
-                hir::PrimitiveType::Char => "char",
-                hir::PrimitiveType::Int(hir::IntType::I64)
-                | hir::PrimitiveType::Int(hir::IntType::U64)
-                | hir::PrimitiveType::Int128(_) => "bigint",
-                hir::PrimitiveType::Int(_)
-                | hir::PrimitiveType::IntSize(_)
-                | hir::PrimitiveType::Byte
-                | hir::PrimitiveType::Float(_) => "number",
-            }
-        } else {
-            match primitive {
-                hir::PrimitiveType::Bool => "boolean",
-                hir::PrimitiveType::Char => "char",
-                hir::PrimitiveType::Int(hir::IntType::I8) => "i8",
-                hir::PrimitiveType::Int(hir::IntType::U8) | hir::PrimitiveType::Byte => "u8",
-                hir::PrimitiveType::Int(hir::IntType::I16) => "i16",
-                hir::PrimitiveType::Int(hir::IntType::U16) => "u16",
-                hir::PrimitiveType::Int(hir::IntType::I32) => "i32",
-                hir::PrimitiveType::Int(hir::IntType::U32) => "u32",
-                hir::PrimitiveType::Int(hir::IntType::I64) => "i64",
-                hir::PrimitiveType::Int(hir::IntType::U64) => "u64",
-                hir::PrimitiveType::IntSize(hir::IntSizeType::Isize) => "isize",
-                hir::PrimitiveType::IntSize(hir::IntSizeType::Usize) => "usize",
-                hir::PrimitiveType::Float(hir::FloatType::F32) => "f32",
-                hir::PrimitiveType::Float(hir::FloatType::F64) => "f64",
-                hir::PrimitiveType::Int128(_) => {
-                    panic!("Javascript backend does not currently support BigInt.")
-                }
-            }
+    pub fn fmt_primitive_as_ffi(&self, primitive: hir::PrimitiveType) -> &'static str {
+        match primitive {
+            hir::PrimitiveType::Bool => "boolean",
+            hir::PrimitiveType::Char => "char",
+            hir::PrimitiveType::Int(hir::IntType::I64 | hir::IntType::U64)
+            | hir::PrimitiveType::Int128(_) => "bigint",
+            hir::PrimitiveType::Int(_)
+            | hir::PrimitiveType::IntSize(_)
+            | hir::PrimitiveType::Byte
+            | hir::PrimitiveType::Float(_) => "number",
         }
     }
 
@@ -199,7 +176,7 @@ impl<'tcx> JSFormatter<'tcx> {
             hir::PrimitiveType::Float(hir::FloatType::F32) => "Float32Array",
             hir::PrimitiveType::Float(hir::FloatType::F64) => "Float64Array",
             hir::PrimitiveType::Int128(..) => {
-                panic!("Int128 is not a supported type for the JS backend.")
+                panic!("Int128 slices are not a supported type for the JS backend.")
             }
         }
     }
@@ -209,12 +186,13 @@ impl<'tcx> JSFormatter<'tcx> {
             hir::PrimitiveType::Bool => "Array<boolean>",
             hir::PrimitiveType::Char => "Array<char>",
             hir::PrimitiveType::Byte => "Uint8Array",
-            hir::PrimitiveType::Int(hir::IntType::I64)
-            | hir::PrimitiveType::Int(hir::IntType::U64)
-            | hir::PrimitiveType::Int128(_) => "Array<bigint>",
+            hir::PrimitiveType::Int(hir::IntType::I64 | hir::IntType::U64) => "Array<bigint>",
             hir::PrimitiveType::Int(_)
             | hir::PrimitiveType::IntSize(_)
             | hir::PrimitiveType::Float(_) => "Array<number>",
+            hir::PrimitiveType::Int128(_) => {
+                panic!("Int128 slices are not a supported type for the JS backend.")
+            }
         }
     }
 
@@ -227,12 +205,12 @@ impl<'tcx> JSFormatter<'tcx> {
             hir::PrimitiveType::Int(hir::IntType::U8) => "u8",
             hir::PrimitiveType::Int(hir::IntType::I16) => "i16",
             hir::PrimitiveType::Int(hir::IntType::U16) => "u16",
-            hir::PrimitiveType::Int(hir::IntType::I32) => "i32",
-            hir::PrimitiveType::Int(hir::IntType::U32) => "u32",
+            hir::PrimitiveType::Int(hir::IntType::I32)
+            | hir::PrimitiveType::IntSize(hir::IntSizeType::Isize) => "i32",
+            hir::PrimitiveType::Int(hir::IntType::U32)
+            | hir::PrimitiveType::IntSize(hir::IntSizeType::Usize) => "u32",
             hir::PrimitiveType::Int(hir::IntType::I64) => "i64",
             hir::PrimitiveType::Int(hir::IntType::U64) => "u64",
-            hir::PrimitiveType::IntSize(hir::IntSizeType::Isize) => "isize",
-            hir::PrimitiveType::IntSize(hir::IntSizeType::Usize) => "usize",
             hir::PrimitiveType::Float(hir::FloatType::F32) => "f32",
             hir::PrimitiveType::Float(hir::FloatType::F64) => "f64",
             hir::PrimitiveType::Int128(hir::Int128Type::I128) => "i128",

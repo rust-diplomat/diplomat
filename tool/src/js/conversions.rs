@@ -122,7 +122,12 @@ pub fn gen_value_js_to_rust<'env>(
             if let ast::TypeName::PrimitiveSlice(.., prim) = typ {
                 pre_logic.push(format!(
                     "const {param_name_buf} = diplomatRuntime.DiplomatBuf.slice(wasm, {param_name}, {rust_type:?});",
-                    rust_type = prim.to_string(),
+                    rust_type = match prim {
+                        ast::PrimitiveType::bool => "boolean".to_string(),
+                        ast::PrimitiveType::isize => ast::PrimitiveType::i32.to_string(),
+                        ast::PrimitiveType::usize => ast::PrimitiveType::u32.to_string(),
+                        prim => prim.to_string(),
+                    }
                 ));
             } else if let ast::TypeName::StrReference(_, encoding) = typ {
                 pre_logic.push(format!(

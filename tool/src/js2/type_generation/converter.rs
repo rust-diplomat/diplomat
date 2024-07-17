@@ -36,11 +36,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
     /// We use this to double-check our Javascript work as well.
     pub(super) fn gen_js_type_str<P: hir::TyPosition>(&mut self, ty: &Type<P>) -> Cow<'tcx, str> {
         match *ty {
-            Type::Primitive(primitive) => self
-                .js_ctx
-                .formatter
-                .fmt_primitive_as_ffi(primitive, true)
-                .into(),
+            Type::Primitive(primitive) => {
+                self.js_ctx.formatter.fmt_primitive_as_ffi(primitive).into()
+            }
             Type::Opaque(ref op) => {
                 let opaque_id = op.tcx_id.into();
                 let type_name = self.js_ctx.formatter.fmt_type_name(opaque_id);
@@ -307,7 +305,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             | ReturnType::Nullable(SuccessType::Unit) => self
                 .js_ctx
                 .formatter
-                .fmt_primitive_as_ffi(hir::PrimitiveType::Bool, true)
+                .fmt_primitive_as_ffi(hir::PrimitiveType::Bool)
                 .into(),
 
             // A nullable out type. Something like `MyStruct?` in Typescript.
