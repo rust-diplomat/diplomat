@@ -3,9 +3,11 @@ package {{domain}}.{{lib_name}};
 import {{domain}}.{{lib_name}}.ntv.*;
 
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
-
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
 
 public class {{type_name}} {
 

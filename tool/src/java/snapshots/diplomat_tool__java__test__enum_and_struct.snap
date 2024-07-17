@@ -1,3 +1,56 @@
+---
+source: tool/src/java/mod.rs
+expression: res
+---
+package dev.diplomattest.somelib;
+
+import dev.diplomattest.somelib.ntv.somelib_h;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
+import java.lang.ref.Cleaner;
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
+
+public class MyStruct {
+    byte a;
+    boolean b;
+    byte c;
+    long d;
+    int e;
+    int f;
+    MyEnum g;
+    
+
+    MemorySegment internal;
+
+    private MyStruct() {
+    }
+
+    static MyStruct fromSegment(MemorySegment segment) {
+        var returnVal = new MyStruct();
+        returnVal.internal = segment;
+        returnVal.a = dev.diplomattest.somelib.ntv.MyStruct.a(segment);
+        returnVal.b = dev.diplomattest.somelib.ntv.MyStruct.b(segment);
+        returnVal.c = dev.diplomattest.somelib.ntv.MyStruct.c(segment);
+        returnVal.d = dev.diplomattest.somelib.ntv.MyStruct.d(segment);
+        returnVal.e = dev.diplomattest.somelib.ntv.MyStruct.e(segment);
+        returnVal.f = dev.diplomattest.somelib.ntv.MyStruct.f(segment);
+        returnVal.g = dev.diplomattest.somelib.ntv.MyStruct.g(segment);
+        
+        return returnVal;
+    }
+    
+    public static MyStruct new_() {
+        var nativeInvoker = somelib_h.MyStruct_new.makeInvoker();
+        var nativeVal = nativeInvoker.apply();
+        return new MyStruct(nativeVal);
+    }
+    
+}
+
+
+============================
 package dev.diplomattest.somelib;
 
 import dev.diplomattest.somelib.ntv.somelib_h;
@@ -38,7 +91,7 @@ public enum MyEnum {
             case 3 -> {
                 return MyEnum.F;
             }
-
+            
         }
         throw new RuntimeException("Unexpected int for MyEnum:" + i);
     }
@@ -63,16 +116,18 @@ public enum MyEnum {
             case F -> {
                 return 3;
             }
-
+            
         }
         throw new RuntimeException("Unexpected variant for MyEnum:" + this);
     }
 
-
+    
     public static MyEnum getA() {
         var nativeInvoker = somelib_h.MyEnum_get_a.makeInvoker();
         var nativeVal = nativeInvoker.apply();
         return MyEnum.fromInt(nativeVal);
     }
-
+    
 }
+
+============================

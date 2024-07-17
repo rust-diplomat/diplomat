@@ -5,7 +5,6 @@ import dev.diplomattest.somelib.ntv.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
 import java.lang.ref.Cleaner;
 import java.nio.charset.StandardCharsets;
 
@@ -35,7 +34,7 @@ public class Opaque {
         var returnVal = new Opaque();
         returnVal.internal = nativeVal;
         var cleaner = new Opaque.OpaqueCleaner(nativeVal);
-        returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
         return returnVal;
     }
 
@@ -48,7 +47,7 @@ public class Opaque {
             var returnVal = new Opaque();
             returnVal.internal = nativeVal;
             var cleaner = new Opaque.OpaqueCleaner(nativeVal);
-            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
         }
     }

@@ -7,9 +7,11 @@ package dev.diplomattest.somelib;
 import dev.diplomattest.somelib.ntv.*;
 
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
-
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
 
 public class Opaque2 {
 

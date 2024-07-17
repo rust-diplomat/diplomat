@@ -3,9 +3,11 @@ package {{domain}}.{{lib_name}};
 import {{domain}}.{{lib_name}}.ntv.{{lib_name}}_h;
 
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
-
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
 
 public enum {{type_name}} {
     {% for variant in variants -%}
@@ -31,7 +33,7 @@ public enum {{type_name}} {
             }
             {% endfor %}
         }
-        throw new RuntimeException("Unexpected variant for {{type_name}}:" + variant);
+        throw new RuntimeException("Unexpected variant for {{type_name}}:" + this);
     }
 
     {% for method in methods %}

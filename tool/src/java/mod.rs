@@ -245,43 +245,43 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
     ) -> ParamConversion<'b> {
         let diplomat_core::hir::Param { name, ty, .. } = param;
         // let java_ty = self.formatter.fmt_java_type(ty);
-        let Config { domain, lib_name } = &self.tcx_config;
         let converted_value: Cow<'b, str> = format!("{name}Native").into();
+        let name = self.formatter.fmt_param_name(name.as_str());
         let (conversion, converted_value) = match ty {
-            hir::Type::Primitive(_) => (name.as_str().into(), converted_value),
+            hir::Type::Primitive(_) => (name.into(), converted_value),
             hir::Type::Opaque(_) => (format!("{name}.internal").into(), converted_value),
             hir::Type::Struct(_) => (
                 format!(r#"var {name}Native = {name}.internal;"#).into(),
                 converted_value,
             ),
             hir::Type::Enum(_) => todo!(),
-            hir::Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf8)) => (
-                // java allocates native strings as null-terminated so we truncate the last
-                // character
-                format!(
-                    r#"var {name}MemSeg = arena.allocateFrom({name}, StandardCharsets.UTF_8);
+            hir::Type::Slice(Slice::Str(borrow, StringEncoding::UnvalidatedUtf16)) => {
+                let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
+                (
+                    format!(
+                        r#"var {name}MemSeg = {arena_name}.allocateFrom({name}, StandardCharsets.UTF_16);
 var {name}Len = {name}MemSeg.byteSize();"#
+                    )
+                    .into(),
+                    format!("{name}MemSeg, {name}Len - 1").into(),
                 )
-                .into(),
-                format!("{name}MemSeg, {name}Len - 1").into(),
-            ),
-            hir::Type::Slice(Slice::Str(_, StringEncoding::UnvalidatedUtf16)) => (
-                format!(
-                    r#"var {name}MemSeg = arena.allocateFrom({name}, StandardCharsets.UTF_16);
+            }
+            hir::Type::Slice(Slice::Str(
+                borrow,
+                StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8,
+            )) => {
+                let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
+                (
+                    format!(
+                        r#"var {name}MemSeg = {arena_name}.allocateFrom({name}, StandardCharsets.UTF_8);
 var {name}Len = {name}MemSeg.byteSize();"#
+                    )
+                    .into(),
+                    format!("{name}MemSeg, {name}Len - 1").into(),
+                    // by default java native creates null terminated strings
                 )
-                .into(),
-                format!("{name}MemSeg, {name}Len - 1").into(),
-            ),
-            hir::Type::Slice(Slice::Str(_, StringEncoding::Utf8)) => (
-                format!(
-                    r#"var {name}MemSeg = arena.allocateFrom({name}, StandardCharsets.UTF_8);
-var {name}Len = {name}MemSeg.byteSize();"#
-                )
-                .into(),
-                format!("{name}MemSeg, {name}Len - 1").into(),
-            ),
-            hir::Type::Slice(Slice::Primitive(_, p)) => {
+            }
+            hir::Type::Slice(Slice::Primitive(borrow, p)) => {
                 let primitive_ty = match p {
                     hir::PrimitiveType::Bool => "JAVA_BOOLEAN",
                     hir::PrimitiveType::Char => "JAVA_INT",
@@ -297,19 +297,32 @@ var {name}Len = {name}MemSeg.byteSize();"#
                     hir::PrimitiveType::Float(hir::FloatType::F32) => "JAVA_FLOAT",
                     hir::PrimitiveType::Float(hir::FloatType::F64) => "JAVA_DOUBLE",
                 };
+                let arena_name = borrow.map(|_| "arena").unwrap_or("Arena.global()");
                 (
                     format!(
                         r#"var {name}Len = {name}.length;
-var {name}MemSeg = arena.allocate({primitive_ty}, {name}Len);
-for (var i = 0; i < {name}Len; i++) {{
-    {name}MemSeg.setAtIndex({primitive_ty}, i, {name}[i]);
-}}"#
+var {name}MemSeg = {arena_name}.allocateFrom({primitive_ty}, {name});"#
                     )
                     .into(),
                     format!("{name}MemSeg, {name}Len").into(),
                 )
             }
-            // hir::Type::Slice(Slice::Strs(_)) => ("".into(), "".into()),
+            hir::Type::Slice(Slice::Strs(StringEncoding::UnvalidatedUtf16)) => (
+                format!(
+                    r#"var {name}Data = SliceUtils.strs16(arena, {name});
+var {name}Len = {name}.length;"#
+                )
+                .into(),
+                format!(r#"{name}Data, {name}Len"#).into(),
+            ),
+            hir::Type::Slice(Slice::Strs(_)) => (
+                format!(
+                    r#"var {name}Data = SliceUtils.strs8(arena, {name});
+var {name}Len = {name}.length;"#
+                )
+                .into(),
+                format!(r#"{name}Data, {name}Len"#).into(),
+            ),
             x => panic!("Unexpected slice type {x:?}"),
         };
         ParamConversion {
@@ -320,30 +333,15 @@ for (var i = 0; i < {name}Len; i++) {{
 
     fn gen_slice_return_conversion(&self, ty: &Slice) -> Result<Cow<'cx, str>, String> {
         let return_conversion: Cow<'cx, str> = match ty {
-            Slice::Str(None, _) | Slice::Primitive(None, _) => {
-                // We can probably do boxed returns by just relying on jna
-                // public double[] asBoxedSLice() {
-                //     try (var arena = Arena.ofConfined()) {
-                //         var nativeVal = somelib_h.Float64Vec_as_boxed_slice(arena, internal);
-                //         var data = dev.diplomattest.somelib.ntv.DiplomatF64View.data(nativeVal);
-                //         var len = dev.diplomattest.somelib.ntv.DiplomatF64View.len(nativeVal);
-                //         var returnVal = data.asSlice(0, len * JAVA_DOUBLE.byteSize()).toArray(JAVA_DOUBLE);
-                //         Native.free(data.address());
-                //         return returnVal;
-                //     }
-                // }
-                return "method returns owned slice but java backend doesn't support owned slices in return position".to_string().wrap_err();
+            Slice::Str(_, encoding) => match encoding {
+                StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8 => {
+                    "return SliceUtils.readUtf8(nativeVal);"
+                }
+                StringEncoding::UnvalidatedUtf16 => "return SliceUtils.readUtf16(nativeVal);",
+                _ => unreachable!("Not a valid string encoding for diplomat"),
             }
-            Slice::Str(Some(_), StringEncoding::Utf8) => {
-                "return SliceUtils.readUtf8(nativeVal);".into()
-            }
-            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf8) => {
-                "return SliceUtils.readUtf8(nativeVal);".into()
-            }
-            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => {
-                "return SliceUtils.readUtf16(nativeVal);".into()
-            }
-            Slice::Primitive(Some(_), p) => {
+            .into(),
+            Slice::Primitive(_, p) => {
                 let lib_name = self.tcx_config.lib_name.as_ref();
                 let domain = self.tcx_config.domain.as_ref();
                 let primitive_ty = match p {
@@ -369,20 +367,14 @@ for (var i = 0; i < {name}Len; i++) {{
 
                 let java_primitive_ty = self.formatter.fmt_primitive(p);
                 format!(
-                    r#"var data = {domain}{lib_name}.ntv.Diplomat{primitive_ty}View.data(nativeVal);
-var len = {domain}{lib_name}.ntv.Diplomat{primitive_ty}View.len(nativeVal);
-return SliceUtils.{java_primitive_ty}Slice(nativeVal);"#
+                    r#"var data = {domain}.{lib_name}.ntv.Diplomat{primitive_ty}View.data(nativeVal);
+var len = {domain}.{lib_name}.ntv.Diplomat{primitive_ty}View.len(nativeVal);
+return SliceUtils.{java_primitive_ty}SliceToArray(nativeVal);"#
                 )
                 .into()
             }
-            Slice::Strs(StringEncoding::Utf8) => {
-                todo!("strs utf8 not ready")
-            }
-            Slice::Strs(StringEncoding::UnvalidatedUtf8) => {
-                todo!("strs utf8 not ready")
-            }
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => {
-                todo!("strs utf16 not ready")
+            Slice::Strs(_) => {
+                panic!("[&str] not allowed in return position")
             }
             _ => todo!(),
         };
@@ -463,18 +455,18 @@ return string;"#,
         methods
             .iter()
             .filter_map(|method| -> Option<(bool, Cow<'cx, str>)> {
-                let method_name = match method.attrs.special_method {
+                let (method_name, is_valid_constructor) = match method.attrs.special_method {
                     // We need to reserve the default constructor for internal methods so a constructor
                     // must always have params
-                    Some(SpecialMethod::Constructor) if !method.params.is_empty() => None,
+                    Some(SpecialMethod::Constructor) if !method.params.is_empty() => (None, true),
                     Some(SpecialMethod::Constructor) => {
                         eprintln!(
                             "Attempted to create constructor for {:?} type {:?}",
                             method.name, ty_name
                         );
-                        Some(self.formatter.fmt_method_name(method))
+                        (Some(self.formatter.fmt_method_name(method)), false)
                     }
-                    _ => Some(self.formatter.fmt_method_name(method)),
+                    _ => (Some(self.formatter.fmt_method_name(method)), false),
                 };
 
                 let return_ty = self.formatter.fmt_return_type_java(&method.output);
@@ -507,8 +499,26 @@ return string;"#,
                         .params
                         .iter()
                         .any(|diplomat_core::hir::Param { ty, .. }| {
-                            matches!(ty, diplomat_core::hir::Type::Slice(_))
+                            matches!(
+                                ty,
+                                diplomat_core::hir::Type::Slice(
+                                    Slice::Str(Some(_), _)
+                                        | Slice::Primitive(Some(_), _)
+                                        | Slice::Strs(_)
+                                )
+                            )
                         });
+                let allocations = allocations
+                    || match &method.output {
+                        ReturnType::Infallible(SuccessType::OutType(o))
+                        | ReturnType::Fallible(SuccessType::OutType(o), _)
+                        | ReturnType::Nullable(SuccessType::OutType(o)) => matches!(
+                            o,
+                            hir::Type::Slice(Slice::Str(Some(_), _) | Slice::Primitive(Some(_), _),)
+                        ),
+                        _ => false,
+                    };
+
                 let params = method
                     .params
                     .iter()
@@ -517,13 +527,33 @@ return string;"#,
                         ty: self.formatter.fmt_java_type(ty),
                     })
                     .collect();
-                let mut param_conversions: Vec<_> = method
-                    .param_self
-                    .iter()
-                    .map(|_| ParamConversion {
+
+                let boxed_return = match &method.output {
+                    ReturnType::Fallible(SuccessType::OutType(o), _)
+                    | ReturnType::Nullable(SuccessType::OutType(o))
+                    | ReturnType::Infallible(SuccessType::OutType(o)) => match o {
+                        hir::Type::Slice(Slice::Str(None, _) | Slice::Primitive(None, _)) => {
+                            Some(ParamConversion {
+                                converted_value: "boxArena".into(),
+                                conversion_def: "var boxArena = Arena.ofConfined();".into(),
+                            })
+                        }
+                        hir::Type::Slice(Slice::Str(Some(_), _) | Slice::Primitive(Some(_), _)) => {
+                            Some(ParamConversion {
+                                converted_value: "arena".into(),
+                                conversion_def: "".into(),
+                            })
+                        }
+                        _ => None,
+                    },
+                    _ => None,
+                };
+                let mut param_conversions: Vec<_> = boxed_return
+                    .into_iter()
+                    .chain(method.param_self.iter().map(|_| ParamConversion {
                         converted_value: "internal".into(),
                         conversion_def: "".into(),
-                    })
+                    }))
                     .chain(
                         method
                             .params
@@ -559,7 +589,7 @@ return string;"#,
                 );
                 let method_rendered = MethodTpl {
                     method_name,
-                    is_static: method.param_self.is_none(),
+                    is_static: method.param_self.is_none() && !is_valid_constructor,
                     return_ty,
                     native_method,
                     native_invocation,
@@ -735,10 +765,10 @@ mod test {
                         Box::new(Self(String::from_utf8(v.into()).unwrap()))
                     }
 
-                    // #[diplomat::skip_if_ast]
-                    // pub fn new_from_first(v: &[&DiplomatStr]) -> Box<MyString> {
-                    //     Box::new(Self(core::str::from_utf8(v[0]).unwrap().into()))
-                    // }
+                    #[diplomat::skip_if_ast]
+                    pub fn new_from_first(v: &[&DiplomatStr]) -> Box<MyString> {
+                        Box::new(Self(core::str::from_utf8(v[0]).unwrap().into()))
+                    }
 
                     #[diplomat::attr(supports = accessors, setter = "str")]
                     pub fn set_str(&mut self, new_str: &DiplomatStr) {
@@ -809,10 +839,50 @@ mod test {
     }
 
     #[test]
-    fn test_enum() {
+    fn test_enum_and_struct() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
+
+                pub struct MyStruct {
+                    a: u8,
+                    b: bool,
+                    c: u8,
+                    d: u64,
+                    e: i32,
+                    f: DiplomatChar,
+                    g: MyEnum,
+                }
+
+                impl MyStruct {
+                    #[diplomat::attr(supports = constructors, constructor)]
+                    pub fn new() -> MyStruct {
+                        MyStruct {
+                            a: 17,
+                            b: true,
+                            c: 209,
+                            d: 1234,
+                            e: 5991,
+                            f: '餐' as DiplomatChar,
+                            g: MyEnum::B,
+                        }
+                    }
+
+                    pub fn into_a(self) -> u8 {
+                        self.a
+                    }
+
+                    fn assert_value(&self) {
+                        assert_eq!(self.a, 17);
+                        assert!(self.b);
+                        assert_eq!(self.c, 209);
+                        assert_eq!(self.d, 1234);
+                        assert_eq!(self.e, 5991);
+                        assert_eq!(self.f, '餐' as DiplomatChar);
+                        assert_eq!(self.g, MyEnum::B);
+                    }
+
+                }
 
                 #[derive(Debug, PartialEq, Eq)]
                 pub enum MyEnum {
@@ -854,6 +924,10 @@ mod test {
         let mut res = String::new();
         for (ty, def) in tcx.all_types() {
             let rendered = match (ty, def) {
+                (_, TypeDef::Struct(struct_def)) => {
+                    let (_, rendered) = tcx_gen.gen_struct_def(struct_def, ty);
+                    rendered
+                }
                 (TypeId::Enum(enum_id), TypeDef::Enum(enum_def)) => {
                     let (_, rendered) = tcx_gen.gen_enum_def(enum_def, enum_id);
                     rendered
@@ -866,6 +940,7 @@ mod test {
         }
         insta::assert_snapshot!(res);
     }
+
     #[test]
     fn test_opaque() {
         let tk_stream = quote! {

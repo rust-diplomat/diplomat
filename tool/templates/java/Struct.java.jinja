@@ -2,14 +2,15 @@ package {{domain}}.{{lib_name}};
 
 import {{domain}}.{{lib_name}}.ntv.{{lib_name}}_h;
 
-
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
-
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
 
 public class {{type_name}} {
     {% for field in fields -%}
-    var {{field.ty}} {{field.name}};
+    {{field.ty}} {{field.name}};
     {% endfor %}
 
     MemorySegment internal;
@@ -18,10 +19,10 @@ public class {{type_name}} {
     }
 
     static {{type_name}} fromSegment(MemorySegment segment) {
+        var returnVal = new {{type_name}}();
         returnVal.internal = segment;
-        var returnVal = new MyStruct();
         {% for field in fields -%}
-        returnVal.{{field.name}} = {{domain}}.{{lib_name}}.ntv.{{field.name}}(segment);
+        returnVal.{{field.name}} = {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.name}}(segment);
         {% endfor %}
         return returnVal;
     }

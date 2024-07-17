@@ -1,6 +1,6 @@
-package {{domain}}.{{lib_name}};
+package dev.diplomattest.somelib;
 
-import {{domain}}.{{lib_name}}.ntv.*;
+import dev.diplomattest.somelib.ntv.*;
 
 import java.lang.foreign.*;
 import java.lang.ref.Cleaner;

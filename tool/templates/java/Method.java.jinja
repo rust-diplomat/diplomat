@@ -8,6 +8,7 @@ public{% if is_static %} static {% else %} {% endif %}{{return_ty}}
 {{param.ty}} {{param.name}}{% if loop.last%}{% else %},{% endif -%}
 {%- endfor -%}
 ) {
+    {# need to match on the type of allocations? #}
     {% if allocations -%}
     try (var arena = Arena.ofConfined()) {
         {% for conv in param_conversions -%}
@@ -16,7 +17,7 @@ public{% if is_static %} static {% else %} {% endif %}{{return_ty}}
         {% if param_conversions.is_empty() -%}
         var nativeInvoker = {{native_method}}.makeInvoker();
         {% endif -%}
-        var nativeVal = {{native_invocation}}(
+        {% if native_return_void %}{% else %}var nativeVal = {% endif %}{{native_invocation}}(
             {%- for conv in param_conversions -%}
             {{conv.converted_value}}{% if loop.last %}{% else %}, {% endif -%}
             {% endfor -%}

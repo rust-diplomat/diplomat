@@ -7,9 +7,11 @@ package dev.diplomattest.somelib;
 import dev.diplomattest.somelib.ntv.*;
 
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
-
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
 
 public class Float64Vec {
 
@@ -33,26 +35,35 @@ public class Float64Vec {
     public static Float64Vec new_(double[] v) {
         try (var arena = Arena.ofConfined()) {
             var vLen = v.length;
-            var vMemSeg = arena.allocate(JAVA_DOUBLE, vLen);
-            for (var i = 0; i < vLen; i++) {
-                vMemSeg.setAtIndex(JAVA_DOUBLE, i, v[i]);
-            }
+            var vMemSeg = arena.allocateFrom(JAVA_DOUBLE, v);
             var nativeVal = somelib_h.Float64Vec_new(vMemSeg, vLen);
             var returnVal = new Float64Vec();
             returnVal.internal = nativeVal;
             var cleaner = new Float64Vec.Float64VecCleaner(nativeVal);
-            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
         }
     }
     
     
-    public double[] asSlice() {
+    public double[] asBoxedSlice() {
+        var boxArena = Arena.ofConfined();
         
-        var nativeVal = somelib_h.Float64Vec_as_slice(internal);
-        var data = dev.diplomattestsomelib.ntv.DiplomatF64View.data(nativeVal);
-        var len = dev.diplomattestsomelib.ntv.DiplomatF64View.len(nativeVal);
-        return SliceUtils.doubleSlice(nativeVal);
+        var nativeVal = somelib_h.Float64Vec_as_boxed_slice(boxArena, internal);
+        var data = dev.diplomattest.somelib.ntv.DiplomatF64View.data(nativeVal);
+        var len = dev.diplomattest.somelib.ntv.DiplomatF64View.len(nativeVal);
+        return SliceUtils.doubleSliceToArray(nativeVal);
+    }
+    
+    public double[] asSlice() {
+        try (var arena = Arena.ofConfined()) {
+            
+            
+            var nativeVal = somelib_h.Float64Vec_as_slice(arena, internal);
+            var data = dev.diplomattest.somelib.ntv.DiplomatF64View.data(nativeVal);
+            var len = dev.diplomattest.somelib.ntv.DiplomatF64View.len(nativeVal);
+            return SliceUtils.doubleSliceToArray(nativeVal);
+        }
     }
     
 }
@@ -62,9 +73,11 @@ package dev.diplomattest.somelib;
 import dev.diplomattest.somelib.ntv.*;
 
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
-
+import static java.lang.foreign.ValueLayout.*;
+import java.nio.charset.StandardCharsets;
 
 public class MyString {
 
@@ -85,14 +98,14 @@ public class MyString {
 
     MyString() {}
     
-    public static MyString(String v) {
+    public MyString(String v) {
         try (var arena = Arena.ofConfined()) {
             var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
             var vLen = vMemSeg.byteSize();
             var nativeVal = somelib_h.MyString_new(vMemSeg, vLen - 1);
             this.internal = nativeVal;
             var cleaner = new MyString.MyStringCleaner(nativeVal);
-            this.cleanable = Main.cleaner.register(this, cleaner);
+            this.cleanable = Lib.cleaner.register(this, cleaner);
         }
     }
     
@@ -104,31 +117,42 @@ public class MyString {
             var returnVal = new MyString();
             returnVal.internal = nativeVal;
             var cleaner = new MyString.MyStringCleaner(nativeVal);
-            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
         }
     }
     
     public static MyString newOwned(String v) {
+        var vMemSeg = Arena.global().allocateFrom(v, StandardCharsets.UTF_8);
+        var vLen = vMemSeg.byteSize();
+        var nativeVal = somelib_h.MyString_new_owned(vMemSeg, vLen - 1);
+        var returnVal = new MyString();
+        returnVal.internal = nativeVal;
+        var cleaner = new MyString.MyStringCleaner(nativeVal);
+        returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
+        return returnVal;
+    }
+    
+    public static MyString newFromFirst(String [] v) {
         try (var arena = Arena.ofConfined()) {
-            var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
-            var vLen = vMemSeg.byteSize();
-            var nativeVal = somelib_h.MyString_new_owned(vMemSeg, vLen - 1);
+            var vData = SliceUtils.strs8(arena, v);
+            var vLen = v.length;
+            var nativeVal = somelib_h.MyString_new_from_first(vData, vLen);
             var returnVal = new MyString();
             returnVal.internal = nativeVal;
             var cleaner = new MyString.MyStringCleaner(nativeVal);
-            returnVal.cleanable = Main.cleaner.register(returnVal, cleaner);
+            returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
             return returnVal;
         }
     }
     
     
-    public  setStr(String newStr) {
+    public void setStr(String newStr) {
         try (var arena = Arena.ofConfined()) {
             
-            var new_strMemSeg = arena.allocateFrom(new_str, StandardCharsets.UTF_8);
-            var new_strLen = new_strMemSeg.byteSize();
-            var nativeVal = somelib_h.MyString_set_str(internal, new_strMemSeg, new_strLen - 1);
+            var newStrMemSeg = arena.allocateFrom(newStr, StandardCharsets.UTF_8);
+            var newStrLen = newStrMemSeg.byteSize();
+            somelib_h.MyString_set_str(internal, newStrMemSeg, newStrLen - 1);
             
         }
     }
@@ -141,6 +165,13 @@ public class MyString {
         var string = buffer.getString(0, StandardCharsets.UTF_8);
         somelib_h.diplomat_buffer_write_destroy(writeable);
         return string;
+    }
+    
+    public String getBoxedStr() {
+        var boxArena = Arena.ofConfined();
+        
+        var nativeVal = somelib_h.MyString_get_boxed_str(boxArena, internal);
+        return SliceUtils.readUtf8(nativeVal);
     }
     
 }

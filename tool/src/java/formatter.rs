@@ -47,7 +47,7 @@ impl<'cx> JavaFormatter<'cx> {
     pub fn fmt_return_type_java<'a>(&self, return_ty: &'a ReturnType) -> Cow<'a, str> {
         match return_ty {
             ReturnType::Infallible(ref success) => self.fmt_success_type_java(success),
-            ReturnType::Fallible(_, _) => todo!(),
+            ReturnType::Fallible(ref success, _) => todo!(),
             ReturnType::Nullable(_) => todo!(),
         }
     }
@@ -56,7 +56,7 @@ impl<'cx> JavaFormatter<'cx> {
         match success_ty {
             SuccessType::Write => "String".into(),
             SuccessType::OutType(ref o) => self.fmt_java_type(o),
-            SuccessType::Unit => "".into(),
+            SuccessType::Unit => "void".into(),
             _ => todo!(),
         }
     }
