@@ -141,7 +141,7 @@ class TerminusParams extends HTMLElement {
 					this.#params[i] = 0;
 					break;
 				default:
-					if (param.type in lib) {
+					if (param.type in lib && "values" in lib[param.type]) {
 						newChild = new EnumTemplate(lib[param.type]);
 						this.#params[i] = newChild.default
 					} else {
