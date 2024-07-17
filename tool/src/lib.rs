@@ -111,7 +111,7 @@ pub fn gen(
         }
         "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
         "demo-gen" => {
-            let mut attr_validator = hir::BasicAttributeValidator::new("demo-gen");
+            let mut attr_validator = hir::BasicAttributeValidator::new("demo_gen");
 
             attr_validator.support.disabling = true;
 
