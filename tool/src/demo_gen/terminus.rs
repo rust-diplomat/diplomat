@@ -288,7 +288,12 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     }
                 }
                 if !usable_constructor {
-                    self.ctx.errors.push_error(format!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::attr(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_js));
+                    self.ctx.errors.push_error(format!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::demo(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_js));
+                    node.params.push(ParamInfo {
+                        js: format!("null/*Could not find a usable constructor for {}. Try adding #[diplomat::demo(default_constructor)]*/", op.name.as_str()),
+                        label: String::default(),
+                        type_name: String::default(),
+                    });
                 }
             }
             Type::Struct(s) => {
