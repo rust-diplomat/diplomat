@@ -10,7 +10,7 @@ test("Verify result methods", t => {
     t.is(error_foo.error_value.value, "Foo");
     const error_bar = t.throws(() => ResultOpaque.newFailingBar());
     t.is(error_bar.error_value.value, "Bar");
-    t.throws(() => ResultOpaque.newFailingUnit());
+    t.is(ResultOpaque.newFailingUnit(), null);
     const error_struct = t.throws(() => ResultOpaque.newFailingStruct(109));
     t.is(error_struct.error_value.i, 109);
 

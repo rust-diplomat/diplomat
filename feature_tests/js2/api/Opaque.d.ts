@@ -11,7 +11,7 @@ export class Opaque {
 
     static new_(): Opaque;
 
-    static tryFromUtf8(input: string): Opaque | undefined;
+    static tryFromUtf8(input: string): Opaque | null;
 
     static fromStr(input: string): Opaque;
 

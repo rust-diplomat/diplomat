@@ -33,7 +33,7 @@ export class Float64Vec {
 
     borrow(): Array<number>;
 
-    get(i: number): number | undefined;
+    get(i: number): number | null;
 
     
 

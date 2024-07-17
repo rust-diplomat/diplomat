@@ -34,7 +34,7 @@ export class OptionOpaque {
     
         try {
     
-            return ((result == 0) ? undefined : new OptionOpaque(result, []));
+            return result == 0 ? null : new OptionOpaque(result, []);
         } finally {
         
         }
@@ -45,7 +45,7 @@ export class OptionOpaque {
     
         try {
     
-            return ((result == 0) ? undefined : new OptionOpaque(result, []));
+            return result == 0 ? null : new OptionOpaque(result, []);
         } finally {
         
         }

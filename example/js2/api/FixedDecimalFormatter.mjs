@@ -47,7 +47,7 @@ export class FixedDecimalFormatter {
         try {
     
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                throw new diplomatRuntime.FFIError(null);
+                return null;
             }
             return new FixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
         } finally {

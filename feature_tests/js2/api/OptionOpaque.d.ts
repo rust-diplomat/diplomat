@@ -8,19 +8,19 @@ export class OptionOpaque {
     get ffiValue(): pointer;
 
 
-    static new_(i: number): OptionOpaque | undefined;
+    static new_(i: number): OptionOpaque | null;
 
-    static newNone(): OptionOpaque | undefined;
+    static newNone(): OptionOpaque | null;
 
-    static returns(): OptionStruct | undefined;
+    static returns(): OptionStruct | null;
 
-    optionIsize(): number | undefined;
+    optionIsize(): number | null;
 
-    optionUsize(): number | undefined;
+    optionUsize(): number | null;
 
-    optionI32(): number | undefined;
+    optionI32(): number | null;
 
-    optionU32(): number | undefined;
+    optionU32(): number | null;
 
     static newStruct(): OptionStruct;
 
@@ -28,7 +28,7 @@ export class OptionOpaque {
 
     assertInteger(i: number): void;
 
-    static optionOpaqueArgument(arg: OptionOpaque | undefined): boolean;
+    static optionOpaqueArgument(arg: OptionOpaque | null): boolean;
 
     
 

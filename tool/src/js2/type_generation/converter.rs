@@ -160,7 +160,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 }
 
                 if op.is_optional() {
-                    format!("(({variable_name} == 0) ? undefined : new {type_name}({variable_name}, {edges}))").into()
+                    format!(
+                        "{variable_name} == 0 ? null : new {type_name}({variable_name}, {edges})"
+                    )
+                    .into()
                 } else {
                     format!("new {type_name}({variable_name}, {edges})").into()
                 }
@@ -399,7 +402,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 method_info
                     .cleanup_expressions
                     .push("wasm.diplomat_buffer_write_destroy(write);".into());
-                Some("if (!(result == 1)) {\n     throw new diplomatRuntime.FFIError(null);}\n    return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
+                Some("return result == 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
             }
 
             // Result<Type, Error> or Option<Type>
@@ -471,10 +474,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
 						format!("throw new diplomatRuntime.FFIError({})", self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment))
 					},
-                    // We don't want an error, we just want a null value that we can process.
-                    ReturnType::Nullable(_) => "return null".into(),
-                    // Otherwise we just error out with the Unit error:
-					_ => "throw new diplomatRuntime.FFIError(null)".into(),
+                    ReturnType::Nullable(_) | ReturnType::Fallible(_, None)=> "return null".into(),
+                    return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
 				});
 
                 Some(match ok {

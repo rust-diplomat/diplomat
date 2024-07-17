@@ -35,7 +35,7 @@ export class OptionString {
     
         try {
     
-            return ((result == 0) ? undefined : new OptionString(result, []));
+            return result == 0 ? null : new OptionString(result, []);
         } finally {
         
             diplomatStrSlice.free();
@@ -50,9 +50,7 @@ export class OptionString {
     
         try {
     
-            if (!(result == 1)) {
-                 throw new diplomatRuntime.FFIError(null);}
-                return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return result == 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
         } finally {
         
             wasm.diplomat_buffer_write_destroy(write);
