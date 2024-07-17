@@ -202,7 +202,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 let id = enum_path.tcx_id.into();
                 let type_name = self.js_ctx.formatter.fmt_type_name(id);
                 // Based on Dart specifics, but if storing too many things in memory isn't an issue we could just make a reverse-lookup map in the enum template.
-                format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})();").into()
+                format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})()").into()
             }
             Type::Slice(slice) => {
                 // Slices are always returned to us by way of pointers, so we take advantage of a helper function:
