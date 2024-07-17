@@ -1510,7 +1510,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (type_id, TypeDef::Enum(enum_def)) = all_types
+        if let (_id, TypeDef::Enum(enum_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -1526,7 +1526,7 @@ mod test {
             let type_name = enum_def.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, enum_code) =
-                ty_gen_cx.gen_enum_def(enum_def, type_id, &type_name, "dev.gigapixel", "somelib");
+                ty_gen_cx.gen_enum_def(enum_def, &type_name, "dev.gigapixel", "somelib");
             insta::assert_snapshot!(enum_code)
         }
     }
@@ -1574,7 +1574,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (type_id, TypeDef::Struct(strct)) = all_types
+        if let (_id, TypeDef::Struct(strct)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -1590,7 +1590,7 @@ mod test {
             let type_name = strct.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, struct_code) =
-                ty_gen_cx.gen_struct_def(strct, type_id, &type_name, "dev.gigapixel", "somelib");
+                ty_gen_cx.gen_struct_def(strct, &type_name, "dev.gigapixel", "somelib");
             insta::assert_snapshot!(struct_code)
         }
     }
@@ -1679,7 +1679,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (type_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
