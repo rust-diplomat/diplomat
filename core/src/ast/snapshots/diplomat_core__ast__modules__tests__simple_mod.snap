@@ -1,6 +1,6 @@
 ---
 source: core/src/ast/modules.rs
-expression: "Module::from_syn(&syn::parse_quote! {\n                mod ffi\n                {\n                    struct NonOpaqueStruct\n                    { a : i32, b : Box < NonOpaqueStruct > } impl\n                    NonOpaqueStruct\n                    {\n                        pub fn new(x : i32) -> NonOpaqueStruct\n                        { unimplemented! () ; } pub fn\n                        set_a(& mut self, new_a : i32) { self.a = new_a ; }\n                    } #[diplomat :: opaque] struct OpaqueStruct\n                    { a : SomeExternalType } impl OpaqueStruct\n                    {\n                        pub fn new() -> Box < OpaqueStruct > { unimplemented! () ; }\n                        pub fn get_string(& self) -> String { unimplemented! () }\n                    }\n                }\n            }, true)"
+expression: "Module::from_syn(&syn::parse_quote! {\n                mod ffi\n                {\n                    struct NonOpaqueStruct { a: i32, b: Box<NonOpaqueStruct> }\n                    impl NonOpaqueStruct\n                    {\n                        pub fn new(x: i32) -> NonOpaqueStruct { unimplemented!(); }\n                        pub fn set_a(&mut self, new_a: i32) { self.a = new_a; }\n                    } #[diplomat::opaque] struct OpaqueStruct\n                    { a: SomeExternalType } impl OpaqueStruct\n                    {\n                        pub fn new() -> Box<OpaqueStruct> { unimplemented!(); } pub\n                        fn get_string(&self) -> String { unimplemented!() }\n                    }\n                }\n            }, true)"
 ---
 name: ffi
 imports: []
@@ -117,6 +117,6 @@ declared_types:
           attrs: {}
       mutability: Immutable
       attrs: {}
+      dtor_abi_name: OpaqueStruct_destroy
 sub_modules: []
 attrs: {}
-

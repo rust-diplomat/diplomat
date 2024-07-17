@@ -46,6 +46,7 @@ TypeContext {
                         [],
                     ),
                     name: "new",
+                    abi_name: "OutStruct_new",
                     lifetime_env: LifetimeEnv {
                         nodes: [
                             BoundedLifetime {
@@ -172,6 +173,7 @@ TypeContext {
                         [],
                     ),
                     name: "rustc_elision",
+                    abi_name: "Struct_rustc_elision",
                     lifetime_env: LifetimeEnv {
                         nodes: [
                             BoundedLifetime {
@@ -310,6 +312,7 @@ TypeContext {
                 iterator: None,
                 iterable: None,
             },
+            dtor_abi_name: "Opaque_destroy",
         },
     ],
     enums: [],
