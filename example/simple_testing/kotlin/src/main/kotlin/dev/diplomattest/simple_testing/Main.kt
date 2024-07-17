@@ -5,51 +5,20 @@ import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 
-import java.util.Collections;
-
-internal interface FFIArgsWrapper_f_Lib: Library {
-    fun FFIArgsWrapper_f_destroy(handle: Pointer)
-    fun get_arg0_from_ffiargswrapper_f_pointer(handle: Pointer): Int
-}
-
-class FFIArgsWrapper_f internal constructor (
-    internal val handle: Pointer,
-    // These ensure that anything that is borrowed is kept alive and not cleaned
-    // up by the garbage collector.
-    internal val selfEdges: List<Any>
-)  {
-
-    internal class FFIArgsWrapper_fCleaner(val handle: Pointer, val lib: FFIArgsWrapper_f_Lib) : Runnable {
-        override fun run() {
-            lib.FFIArgsWrapper_f_destroy(handle)
-        }
-    }
-
-    companion object {
-        internal val libClass: Class<FFIArgsWrapper_f_Lib> = FFIArgsWrapper_f_Lib::class.java
-        internal val lib: FFIArgsWrapper_f_Lib = Native.load("somelib", libClass, 
-            Collections.singletonMap(Library.OPTION_ALLOW_OBJECTS, true))
-
-        fun get_arg0_from_ffiargswrapper_f_pointer(handle: Pointer): Int {
-            return lib.get_arg0_from_ffiargswrapper_f_pointer(handle);
-        }
-    }
-}
+import java.util.Collections
 
 class CallbackWrapper(val cb: (Int) -> Int): Runnable {
-    var args: Pointer = Pointer(0)
+    var arg0: Int = Int.MIN_VALUE
 
-    fun set_args_pointer(native_arg_pointer: Long) {
-        args = Pointer(native_arg_pointer);
+    fun set_arg0(new_arg0: Int) {
+        arg0 = new_arg0
     }
 
     override fun run() {
-        if (Pointer.nativeValue(args) == 0L) {
-            throw IllegalStateException("callback args not initialized (null pointer)");
+        if (arg0 == Int.MIN_VALUE) {
+            // throw an error
+            // but also this sucks as error checking
         }
-
-        var arg0 = FFIArgsWrapper_f.get_arg0_from_ffiargswrapper_f_pointer(args);
-
         val ret = this.cb.invoke(arg0);
         println("here: " + ret);
     }
@@ -58,7 +27,7 @@ class CallbackWrapper(val cb: (Int) -> Int): Runnable {
 interface DiplomatCallback_Lib: Library {
     // general use
     fun diplomat_callback_destroy(diplomatCallback: Pointer)
-    fun diplomat_callback_create_for_jvm(env: JNIEnv, callback_wrapper: Object): Pointer
+    fun diplomat_callback_create_for_jvm__callback(env: JNIEnv, callback_wrapper: Object): Pointer
 
     // specific to this callback
     fun GEND_BRIDGE_test_run_fn(diplomatCallback: Pointer)
@@ -85,7 +54,7 @@ class DiplomatCallback internal constructor (
             Collections.singletonMap(Library.OPTION_ALLOW_OBJECTS, true))
 
         fun diplomat_callback_create_for_jvm(callback_wrapper: Runnable): Pointer {
-            return lib.diplomat_callback_create_for_jvm(JNIEnv.CURRENT, callback_wrapper as Object);
+            return lib.diplomat_callback_create_for_jvm__callback(JNIEnv.CURRENT, callback_wrapper as Object);
         }
 
         fun GEND_BRIDGE_test_run_fn(diplomatCallback: Pointer) {
@@ -100,14 +69,14 @@ object Main {
         return x*2;
     }
 
-    fun callTestFunRust() {
-        var cb_wrapper = CallbackWrapper(::callback);
+    fun callTestFunRust(cb: (Int) -> Int) {
+        var cb_wrapper = CallbackWrapper(cb);
         var diplomat_cb_lib = DiplomatCallback.diplomat_callback_create_for_jvm(cb_wrapper);
         DiplomatCallback.GEND_BRIDGE_test_run_fn(diplomat_cb_lib);
     }
 
     @JvmStatic
     fun main(args: Array<String>) {
-        callTestFunRust();
+        callTestFunRust(::callback);
     }
 }
