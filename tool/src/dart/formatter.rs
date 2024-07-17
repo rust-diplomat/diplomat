@@ -81,12 +81,6 @@ impl<'tcx> DartFormatter<'tcx> {
         resolved.attrs().rename.apply(candidate.into())
     }
 
-    /// Resolve and format a named type for use in diagnostics
-    /// (don't apply rename rules and such)
-    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.c.fmt_type_name_diagnostics(id)
-    }
-
     /// Format an enum variant.
     pub fn fmt_enum_variant(&self, variant: &'tcx hir::EnumVariant) -> Cow<'tcx, str> {
         let name = variant.name.as_str().to_lower_camel_case().into();

@@ -183,7 +183,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 continue;
             }
             let _guard = self.errors.set_context_method(
-                self.formatter.fmt_type_name_diagnostics(self.id),
+                self.tcx.fmt_type_name_diagnostics(self.id),
                 method.name.as_str().into(),
             );
             methods.push(self.gen_method(method, &mut impl_header));

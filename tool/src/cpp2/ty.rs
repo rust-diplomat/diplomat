@@ -266,7 +266,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &self.cx.formatter,
             type_name: &type_name,
             ctype: &ctype,
-            dtor_name: dtor_name,
+            dtor_name,
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             c_header: c_impl_header,
@@ -379,7 +379,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             return None;
         }
         let _guard = self.cx.errors.set_context_method(
-            self.cx.formatter.fmt_type_name_diagnostics(id),
+            self.cx.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
         let method_name = self.cx.formatter.fmt_method_name(method);
@@ -453,7 +453,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             method,
             return_ty,
             method_name,
-            abi_name: abi_name,
+            abi_name,
             pre_qualifiers,
             post_qualifiers,
             param_decls,

@@ -12,6 +12,7 @@ use crate::hir;
 use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ops::Index;
 
@@ -141,6 +142,12 @@ impl TypeContext {
     /// Prefer using `resolve_type()` for simplicity.
     pub fn resolve_enum(&self, id: EnumId) -> &EnumDef {
         self.enums.index(id.0)
+    }
+
+    /// Resolve and format a named type for use in diagnostics
+    /// (don't apply rename rules and such)
+    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<str> {
+        self.resolve_type(id).name().as_str().into()
     }
 
     /// Lower the AST to the HIR while simultaneously performing validation.

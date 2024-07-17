@@ -260,7 +260,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         let mut visitor = method.borrowing_param_visitor(self.js_ctx.tcx);
 
         let _guard = self.js_ctx.errors.set_context_method(
-            self.js_ctx.formatter.fmt_type_name_diagnostics(type_id),
+            self.js_ctx.tcx.fmt_type_name_diagnostics(type_id),
             method.name.as_str().into(),
         );
 

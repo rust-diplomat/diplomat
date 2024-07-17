@@ -74,10 +74,6 @@ impl<'tcx> JSFormatter<'tcx> {
             .apply(type_def.name().as_str().into())
     }
 
-    pub fn fmt_type_name_diagnostics(&self, type_id: TypeId) -> Cow<'tcx, str> {
-        self.c_formatter.fmt_type_name_diagnostics(type_id)
-    }
-
     pub fn fmt_file_name_extensionless(&self, type_name: &str) -> String {
         type_name.to_string()
     }

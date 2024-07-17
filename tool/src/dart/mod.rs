@@ -389,7 +389,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut visitor = method.borrowing_param_visitor(self.tcx);
 
         let _guard = self.errors.set_context_method(
-            self.formatter.fmt_type_name_diagnostics(id),
+            self.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
 
