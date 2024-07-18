@@ -8,13 +8,9 @@ mod dart;
 mod js2;
 mod kotlin;
 
-// Legacy
-mod layout;
-
 mod common;
 mod docs_util;
 mod layout_hir;
-mod util;
 
 use colored::*;
 use core::panic;
