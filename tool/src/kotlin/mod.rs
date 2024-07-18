@@ -17,7 +17,7 @@ use std::path::Path;
 mod formatter;
 use formatter::KotlinFormatter;
 
-use crate::common::{ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
@@ -1494,7 +1494,7 @@ mod test {
     use diplomat_core::hir::TypeDef;
     use quote::quote;
 
-    use crate::common::ErrorStore;
+    use crate::ErrorStore;
 
     use super::formatter::test::new_tcx;
     use super::{formatter::KotlinFormatter, TyGenContext};

@@ -8,11 +8,12 @@ use diplomat_core::hir::{BackendAttrSupport, TypeContext, TypeDef};
 use askama::{self, Template};
 use type_generation::TyGenContext;
 
-use crate::common::{ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 
 use self::formatter::JSFormatter;
 
 mod formatter;
+mod layout;
 mod type_generation;
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?

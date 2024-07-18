@@ -341,7 +341,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 let mut result = "result";
                 match o {
                     Type::Struct(_) | Type::Slice(_) => {
-                        let layout = crate::layout_hir::type_size_alignment(o, self.tcx);
+                        let layout = crate::js::layout::type_size_alignment(o, self.tcx);
                         let size = layout.size();
                         let align = layout.align();
 
@@ -392,16 +392,16 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             // Result<Type, Error> or Option<Type>
             ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
                 let layout = match ok {
-                    SuccessType::Unit => crate::layout_hir::unit_size_alignment(),
+                    SuccessType::Unit => crate::js::layout::unit_size_alignment(),
                     SuccessType::OutType(ref o) => {
-                        crate::layout_hir::type_size_alignment(o, self.tcx)
+                        crate::js::layout::type_size_alignment(o, self.tcx)
                     }
                     SuccessType::Write => match return_type {
                         ReturnType::Fallible(_, ref err) if err.is_some() => {
-                            crate::layout_hir::type_size_alignment(&err.clone().unwrap(), self.tcx)
+                            crate::js::layout::type_size_alignment(&err.clone().unwrap(), self.tcx)
                         }
                         ReturnType::Fallible(_, None) | ReturnType::Nullable(_) => {
-                            crate::layout_hir::unit_size_alignment()
+                            crate::js::layout::unit_size_alignment()
                         }
                         _ => unreachable!("AST/HIR variant {:?} unknown.", return_type),
                     },
@@ -413,7 +413,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                     match return_type {
                         // We already account for an error in the Write match up above:
                         ReturnType::Fallible(_, e) if e.is_some() => {
-                            crate::layout_hir::type_size_alignment(&e.clone().unwrap(), self.tcx)
+                            crate::js::layout::type_size_alignment(&e.clone().unwrap(), self.tcx)
                                 .size()
                         }
                         _ => 0,

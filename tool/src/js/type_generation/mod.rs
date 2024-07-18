@@ -12,7 +12,7 @@ use diplomat_core::hir::{
 use askama::{self, Template};
 
 use super::formatter::JSFormatter;
-use crate::common::ErrorStore;
+use crate::ErrorStore;
 
 mod converter;
 use converter::StructBorrowContext;
@@ -136,7 +136,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
-        let (offsets, _) = crate::layout_hir::struct_offsets_size_max_align(
+        let (offsets, _) = crate::js::layout::struct_offsets_size_max_align(
             struct_def.fields.iter().map(|f| &f.ty),
             self.tcx,
         );

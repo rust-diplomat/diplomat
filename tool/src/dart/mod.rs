@@ -1,4 +1,4 @@
-use crate::common::{ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::borrowing_param::{

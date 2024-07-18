@@ -7,7 +7,7 @@ pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
 pub(crate) use self::ty::TyGenContext;
 
-use crate::common::{ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir;
 use diplomat_core::hir::BackendAttrSupport;

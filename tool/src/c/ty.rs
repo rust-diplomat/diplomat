@@ -1,6 +1,6 @@
 use super::formatter::CFormatter;
 use super::header::Header;
-use crate::common::ErrorStore;
+use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{

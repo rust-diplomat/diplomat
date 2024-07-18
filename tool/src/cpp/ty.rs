@@ -2,7 +2,7 @@ use super::header::Header;
 use super::Cpp2Formatter;
 use crate::c::Header as C2Header;
 use crate::c::TyGenContext as C2TyGenContext;
-use crate::common::ErrorStore;
+use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
     self, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
