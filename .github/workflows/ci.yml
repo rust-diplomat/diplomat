@@ -47,16 +47,6 @@ jobs:
     - name: Test code is fresh
       run: git add . && git diff --cached --exit-code
 
-  test-c:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Install cargo-make
-      uses: taiki-e/install-action@cargo-make
-
-    - name: Test C
-      run: cargo make test-c
 
   test-c2:
     runs-on: ubuntu-latest
@@ -69,19 +59,6 @@ jobs:
     - name: Test C2
       run: cargo make test-c2
 
-  test-cpp:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Install cargo-make
-      uses: taiki-e/install-action@cargo-make
-
-    - name: Test C++
-      run: cargo make test-cpp
-
-    - name: Test C++ (clang)
-      run: CXX=clang++ cargo make test-cpp
 
   test-cpp2:
     runs-on: ubuntu-latest
@@ -113,32 +90,6 @@ jobs:
     - name: Test C++2 self-contained (g++, c++23)
       run: CXX=g++ CXX_STD=c++23 cargo make test-cpp2-self-contained
 
-  test-js: 
-    runs-on: ubuntu-latest
-    strategy:
-      matrix: 
-        node-version: [
-          18.20.3, # supported until 2025-04-30
-          20.14.0, # supported until 2026-04-30
-          22.3.0, # current, supported until 2027-04-30
-        ]
-      fail-fast: false
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Install cargo-make
-      uses: taiki-e/install-action@cargo-make
-
-    - name: Load Rust toolchain for WASM.
-      run: rustup target add wasm32-unknown-unknown
-
-    - name: Install Node.js
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-
-    - name: Test JS
-      run: cargo make test-js
       
   test-dart:
     runs-on: ubuntu-latest
