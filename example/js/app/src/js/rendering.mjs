@@ -145,8 +145,10 @@ class TerminusParams extends HTMLElement {
 						newChild = new EnumTemplate(lib[param.type]);
 						this.#params[i] = newChild.default
 					} else {
-						evaluateExternal(param);
-						return;
+						let updateParamEvent = (value) => {
+							this.#params[i] = value;
+						};
+						evaluateExternal(param, updateParamEvent);
 					}
 					break;
 			}
