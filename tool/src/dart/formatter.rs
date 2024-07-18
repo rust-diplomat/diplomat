@@ -1,7 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::ast::{DocsUrlGenerator, MarkdownStyle};
-use diplomat_core::hir::{self, TypeContext, TypeId};
+use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -58,7 +57,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_gen, MarkdownStyle::Normal)
+        docs.to_markdown(self.docs_url_gen)
             .trim()
             .replace('\n', "\n/// ")
             .replace(" \n", "\n")
