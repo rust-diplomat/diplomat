@@ -46,7 +46,7 @@ pub struct Attrs {
 
     /// From #[diplomat::demo()]. Created from [`crate::ast::attrs::Attrs::demo_attrs`].
     /// List of attributes specific to automatic demo generation.
-    /// Currently just for demo-gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
+    /// Currently just for demo_gen in diplomat-tool (which generates sample webpages), but could be used for broader purposes (i.e., demo Android apps)
     pub demo_attrs: DemoInfo,
 }
 
@@ -57,7 +57,7 @@ pub struct Attrs {
 #[derive(Clone, Default, Debug)]
 pub struct DemoInputCFG {
     /// `#[diplomat(input(label = "..."))]`
-    /// Label that this input parameter should have. Let demo-gen pick a valid name if this is empty.
+    /// Label that this input parameter should have. Let demo_gen pick a valid name if this is empty.
     ///
     /// For instance <label for="v">Number Here</label><input name="v"/>
     pub label: String,

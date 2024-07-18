@@ -56,7 +56,7 @@ pub fn gen(
         "cpp" => cpp::attr_support(),
         "dart" => dart::attr_support(),
         "js" => js::attr_support(),
-        "demo-gen" => demo_gen::attr_support(),
+        "demo_gen" => demo_gen::attr_support(),
         "kotlin" => kotlin::attr_support(),
         o => panic!("Unknown target: {}", o),
     };
@@ -73,7 +73,7 @@ pub fn gen(
         "cpp" => cpp::run(&tcx),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
-        "demo-gen" => demo_gen::run(&tcx, docs_url_gen),
+        "demo_gen" => demo_gen::run(&tcx, docs_url_gen),
         "kotlin" => kotlin::run(&tcx, library_config),
         o => panic!("Unknown target: {}", o),
     };

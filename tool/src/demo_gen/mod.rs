@@ -54,7 +54,7 @@ pub(crate) fn run<'tcx>(
     }
 
     #[derive(Template)]
-    #[template(path = "demo-gen/index.js.jinja", escape = "none")]
+    #[template(path = "demo_gen/index.js.jinja", escape = "none")]
     struct IndexInfo {
         termini_exports: Vec<TerminusExport>,
         termini: Vec<TerminusInfo>

@@ -276,7 +276,7 @@ impl Parse for DiplomatBackendAttr {
     }
 }
 
-// #region Demo-Gen specific attributes
+// #region demo_gen specific attributes
 /// A `#[diplomat::demo(...)]` attribute
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
 #[non_exhaustive]

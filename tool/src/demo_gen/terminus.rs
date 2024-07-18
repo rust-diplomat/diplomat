@@ -42,7 +42,7 @@ pub struct ParamInfo {
 /// }
 /// ```
 #[derive(Template)]
-#[template(path = "demo-gen/method_dependency.js.jinja", escape = "none")]
+#[template(path = "demo_gen/method_dependency.js.jinja", escape = "none")]
 struct MethodDependency {
     /// Javascript to invoke for this method.
     method_js: String,
@@ -72,7 +72,7 @@ impl MethodDependency {
 }
 
 #[derive(Template)]
-#[template(path = "demo-gen/terminus.js.jinja", escape = "none")]
+#[template(path = "demo_gen/terminus.js.jinja", escape = "none")]
 pub(super) struct TerminusInfo {
     /// Name of the function for the render engine to call
     pub function_name: String,
@@ -288,7 +288,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 let mut child = MethodDependency::new("".to_string());
 
                 #[derive(Template)]
-                #[template(path = "demo-gen/struct.js.jinja", escape = "none")]
+                #[template(path = "demo_gen/struct.js.jinja", escape = "none")]
                 struct StructInfo {
                     fields: Vec<String>,
                     type_name: String,
