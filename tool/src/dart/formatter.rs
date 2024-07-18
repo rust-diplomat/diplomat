@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, TypeContext, TypeId, DocsUrlGenerator};
+use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
