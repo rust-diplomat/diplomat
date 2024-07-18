@@ -56,9 +56,9 @@ struct MethodDependency {
 }
 
 pub struct RenderTerminusContext<'tcx> {
-    tcx : &'tcx TypeContext,
-    formatter : &'tcx JSFormatter<'tcx>,
-    errors : &'tcx ErrorStore<'tcx, String>,
+    pub tcx : &'tcx TypeContext,
+    pub formatter : &'tcx JSFormatter<'tcx>,
+    pub errors : &'tcx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
 }
 
@@ -87,7 +87,7 @@ pub(super) struct TerminusInfo {
     pub js_file_name: String,
 
     /// Final result of recursively calling [`RenderTerminusContext::evaluate_constructor`] on [`MethodDependency`]
-    node_call_stack: String,
+    pub node_call_stack: String,
 
     /// Are we a typescript file? Set by [`super::WebDemoGenerationContext::init`]
     pub typescript: bool,
@@ -99,58 +99,27 @@ pub(super) struct TerminusInfo {
 impl<'tcx> RenderTerminusContext<'tcx> {
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
-    pub fn evaluate_terminus(
-        tcx : &'tcx TypeContext,
-        formatter : &'tcx JSFormatter,
-        errors : &'tcx ErrorStore<'tcx, String>,
-        type_name: String,
-        method: &Method,
-    ) -> Option<TerminusInfo> {
-        if !method.output.success_type().is_write() {
-            return None;
-        }
-
+    pub fn evaluate(&mut self, type_name : String, method : &Method) -> TerminusInfo {
         // TODO: I think it would be nice to have a stack of the current namespace a given parameter.
         // For instance, ICU4XFixedDecimalFormatter.formatWrite() needs a constructed ICU4XFixedDecimal, which takes an i32 called v as input.
         // Someone just trying to read the .d.ts file will only see function formatWrite(v: number); which doesn't really help them figure out where that's from or why it's there.
-        let mut this = RenderTerminusContext {
-            tcx,
-            formatter,
-            errors,
-            terminus_info: TerminusInfo {
-                function_name: formatter.fmt_method_name(method),
-                params: Vec::new(),
-
-                type_name: type_name.clone(),
-
-                js_file_name: formatter
-                    .fmt_file_name(&type_name, &crate::js::FileType::Module),
-
-                node_call_stack: String::default(),
-
-                // We set this in the init function of WebDemoGenerationContext.
-                typescript: false,
-
-                imports: BTreeSet::new(),
-            },
-        };
 
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
         let mut root =
-            MethodDependency::new(this.get_constructor_js(type_name.to_string(), method));
+            MethodDependency::new(self.get_constructor_js(type_name, method));
 
         // And then we just treat the terminus as a regular constructor method:
-        this.terminus_info.node_call_stack = this.evaluate_constructor(method, &mut root);
+        self.terminus_info.node_call_stack = self.evaluate_constructor(method, &mut root);
 
-        this.terminus_info
+        self.terminus_info
             .imports
             .insert(
-                formatter
+                self.formatter
                     .fmt_import_statement(&type_name, false, "../".into()),
             );
 
-        Some(this.terminus_info)
+        self.terminus_info
     }
 
     /// Currently unused, plan to hopefully use this in the future for quickly grabbing parameter information.

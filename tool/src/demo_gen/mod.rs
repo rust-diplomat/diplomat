@@ -90,20 +90,35 @@ pub(crate) fn run<'tcx>(
             }
 
             for method in methods {
-                if method.attrs.disable {
+                if method.attrs.disable || !method.output.success_type().is_write() {
                     continue;
                 }
 
-                let val = RenderTerminusContext::evaluate_terminus(
-                    &tcx,
-                    &formatter,
-                    &errors,
-                    type_name.to_string(),
-                    method,
-                );
-                if let Some(t) = val {
-                    termini.push(t);
-                }
+                let mut ctx = RenderTerminusContext {
+                    tcx: &tcx,
+                    formatter: &formatter,
+                    errors: &errors,
+                    terminus_info: TerminusInfo {
+                        function_name: formatter.fmt_method_name(method),
+                        params: Vec::new(),
+        
+                        type_name: type_name.clone().into(),
+        
+                        js_file_name: formatter
+                            .fmt_file_name(&type_name, &crate::js::FileType::Module),
+        
+                        node_call_stack: String::default(),
+        
+                        // We set this in the init function of WebDemoGenerationContext.
+                        typescript: false,
+        
+                        imports: BTreeSet::new(),
+                    },
+                };
+
+                let val = ctx.evaluate(type_name.into(), method);
+                
+                termini.push(val);
             }
         }
 
