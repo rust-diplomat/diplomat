@@ -48,7 +48,7 @@ jobs:
       run: git add . && git diff --cached --exit-code
 
 
-  test-c2:
+  test-c:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -56,11 +56,11 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    - name: Test C2
-      run: cargo make test-c2
+    - name: Test C
+      run: cargo make test-c
 
 
-  test-cpp2:
+  test-cpp:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -68,12 +68,12 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    - name: Test C++2 (clang)
-      run: CXX=clang++-14 cargo make test-cpp2
+    - name: Test C++ (clang)
+      run: CXX=clang++-14 cargo make test-cpp
 
-    - name: Test C++2 (gcc)
-      run: CXX=g++ cargo make test-cpp2
-  test-cpp2-self-contained:
+    - name: Test C++ (gcc)
+      run: CXX=g++ cargo make test-cpp
+  test-cpp-self-contained:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -81,14 +81,14 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    - name: Test C++2 self-contained (clang)
-      run: CXX=clang++-14 cargo make test-cpp2-self-contained
+    - name: Test C++ self-contained (clang)
+      run: CXX=clang++-14 cargo make test-cpp-self-contained
 
-    - name: Test C++2 self-contained (clang, c++20)
-      run: CXX=clang++-14 CXX_STD=c++20 cargo make test-cpp2-self-contained
+    - name: Test C++ self-contained (clang, c++20)
+      run: CXX=clang++-14 CXX_STD=c++20 cargo make test-cpp-self-contained
 
-    - name: Test C++2 self-contained (g++, c++23)
-      run: CXX=g++ CXX_STD=c++23 cargo make test-cpp2-self-contained
+    - name: Test C++ self-contained (g++, c++23)
+      run: CXX=g++ CXX_STD=c++23 cargo make test-cpp-self-contained
 
       
   test-dart:

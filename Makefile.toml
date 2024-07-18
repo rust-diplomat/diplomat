@@ -19,7 +19,7 @@ description = "Test only the native"
 category = "Tests"
 dependencies = [
     "test-cpp",
-    "test-c2",
+    "test-c",
 ]
 [tasks.gen]
 category = "Code generation"
@@ -36,25 +36,25 @@ dependencies = [
     "test-feature",
 ]
 
-[tasks.test-cpp2]
+[tasks.test-cpp]
 category = "Tests"
 dependencies = [
-    "test-cpp2-example",
-    "test-cpp2-feature",
+    "test-cpp-example",
+    "test-cpp-feature",
 ]
 
-[tasks.test-c2]
+[tasks.test-c]
 category = "Tests"
 dependencies = [
-    "test-c2-example",
-    "test-c2-example-self-contained",
-    "test-c2-feature-self-contained",
+    "test-c-example",
+    "test-c-example-self-contained",
+    "test-c-feature-self-contained",
 ]
 
-[tasks.test-js2]
+[tasks.test-js]
 category = "Tests"
 dependencies = [
-    "test-js2-feature",
+    "test-js-feature",
 ]
 
 [tasks.test-dart]
@@ -72,8 +72,8 @@ dependencies = [
 [tasks.test-example]
 category = "Tests"
 dependencies = [
-    "test-cpp2-example",
-    "test-c2-example",
+    "test-cpp-example",
+    "test-c-example",
     "test-dart-example",
     "test-kotlin-example",
 ]
@@ -81,59 +81,59 @@ dependencies = [
 [tasks.test-feature]
 category = "Tests"
 dependencies = [
-    "test-cpp2-feature",
-    "test-js2-feature",
+    "test-cpp-feature",
+    "test-js-feature",
     "test-dart-feature",
     "test-kotlin-feature",
 ]
 
 
 
-[tasks.test-cpp2-example]
+[tasks.test-cpp-example]
 category = "Tests"
 dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd example/cpp2
+cd example/cpp
 rm tests/*.out
 exec --fail-on-error make
 '''
 
 
 
-[tasks.test-cpp2-feature]
+[tasks.test-cpp-feature]
 category = "Tests"
 dependencies = ["build-feature"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd feature_tests/cpp2
+cd feature_tests/cpp
 rm tests/*.out
 exec --fail-on-error make
 '''
 
 
 
-[tasks.test-c2-example]
+[tasks.test-c-example]
 category = "Tests"
 dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd example/c2
+cd example/c
 rm *.out
 exec --fail-on-error make
 '''
 
 
 
-[tasks.test-js2-feature]
+[tasks.test-js-feature]
 category = "Tests"
 dependencies = ["build-feature-wasm"]
 script_runner = "@shell"
 script = '''
-cd feature_tests/js2/
+cd feature_tests/js/
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/diplomat_feature_tests.wasm
 npm install && npm run test
 '''
@@ -182,33 +182,33 @@ cd feature_tests/kotlin/somelib
 exec --fail-on-error gradle test --warning-mode all 
 '''
 
-[tasks.test-c2-example-self-contained]
+[tasks.test-c-example-self-contained]
 category = "Tests"
 dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd example/c2/include
+cd example/c/include
 files_list = glob_array "./*.h"
 for file in ${files_list}
     exec --fail-on-error gcc ${file}
 end
 '''
 
-[tasks.test-c2-feature-self-contained]
+[tasks.test-c-feature-self-contained]
 category = "Tests"
 dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
-cd feature_tests/c2/include
+cd feature_tests/c/include
 files_list = glob_array "./*.h"
 for file in ${files_list}
     exec --fail-on-error gcc ${file}
 end
 '''
 
-[tasks.test-cpp2-example-self-contained]
+[tasks.test-cpp-example-self-contained]
 category = "Tests"
 script_runner = "@duckscript"
 script = '''
@@ -222,7 +222,7 @@ if is_empty ${cxx_std}
     cxx_std = set "c++17"
 end
 
-cd example/cpp2/include
+cd example/cpp/include
 files_list = glob_array "./*.hpp"
 for file in ${files_list}
     echo "Testing self-containedness of ${file}"
@@ -230,7 +230,7 @@ for file in ${files_list}
 end
 '''
 
-[tasks.test-cpp2-feature-self-contained]
+[tasks.test-cpp-feature-self-contained]
 category = "Tests"
 script_runner = "@duckscript"
 script = '''
@@ -244,7 +244,7 @@ if is_empty ${cxx_std}
     cxx_std = set "c++17"
 end
 
-cd feature_tests/cpp2/include
+cd feature_tests/cpp/include
 files_list = glob_array "./*.hpp"
 for file in ${files_list}
     echo "Testing self-containedness of ${file}"
@@ -253,11 +253,11 @@ for file in ${files_list}
 end
 '''
 
-[tasks.test-cpp2-self-contained]
+[tasks.test-cpp-self-contained]
 category = "Tests"
 dependencies = [
-    "test-cpp2-feature-self-contained",
-    "test-cpp2-example-self-contained",
+    "test-cpp-feature-self-contained",
+    "test-cpp-example-self-contained",
 ]
 
 
@@ -265,9 +265,9 @@ dependencies = [
 [tasks.gen-feature]
 category = "Code generation"
 dependencies = [
-    "gen-cpp2-feature",
-    "gen-c2-feature",
-    "gen-js2-feature",
+    "gen-cpp-feature",
+    "gen-c-feature",
+    "gen-js-feature",
     "gen-dart-feature",
     "gen-kotlin-feature",
 ]
@@ -275,25 +275,25 @@ dependencies = [
 [tasks.gen-example]
 category = "Code generation"
 dependencies = [
-    "gen-cpp2-example",
-    "gen-c2-example",
-    "gen-js2-example",
+    "gen-cpp-example",
+    "gen-c-example",
+    "gen-js-example",
     "gen-dart-example",
     "gen-kotlin-example",
 ]
 
 
-[tasks.gen-c2]
+[tasks.gen-c]
 category = "Code generation"
 dependencies = [
-    "gen-c2-feature",
-    "gen-c2-example"
+    "gen-c-feature",
+    "gen-c-example"
 ]
-[tasks.gen-cpp2]
+[tasks.gen-cpp]
 category = "Code generation"
 dependencies = [
-    "gen-cpp2-feature",
-    "gen-cpp2-example"
+    "gen-cpp-feature",
+    "gen-cpp-example"
 ]
 
 [tasks.gen-dart]
@@ -312,59 +312,59 @@ dependencies = [
 
 
 
-[tasks.gen-c2-feature]
+[tasks.gen-c-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests c2 include
+generate_generic feature_tests c include
 '''
 
-[tasks.gen-c2-example]
+[tasks.gen-c-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example c2 include
+generate_generic example c include
 '''
 
-[tasks.gen-cpp2-feature]
+[tasks.gen-cpp-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests cpp2 include
+generate_generic feature_tests cpp include
 '''
 
-[tasks.gen-cpp2-example]
+[tasks.gen-cpp-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example cpp2 include
+generate_generic example cpp include
 '''
 
 
-[tasks.gen-js2-feature]
+[tasks.gen-js-feature]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests js2 api
+generate_generic feature_tests js api
 '''
 
-[tasks.gen-js2-example]
+[tasks.gen-js-example]
 category = "Code generation"
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic example js2 api
+generate_generic example js api
 '''
 
 
