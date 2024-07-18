@@ -1,6 +1,8 @@
 use std::collections::BTreeSet;
 
-use diplomat_core::hir::{self, DemoInfo, Method, Type};
+use diplomat_core::hir::{self, DemoInfo, Method, Type, TypeContext};
+
+use crate::{js::formatter::JSFormatter, ErrorStore};
 
 use super::WebDemoGenerationContext;
 use askama::{self, Template};
@@ -53,8 +55,10 @@ struct MethodDependency {
     params: Vec<ParamInfo>,
 }
 
-pub struct RenderTerminusContext<'a, 'tcx> {
-    pub ctx: &'a WebDemoGenerationContext<'tcx>,
+pub struct RenderTerminusContext<'tcx> {
+    tcx : &'tcx TypeContext,
+    formatter : &'tcx JSFormatter<'tcx>,
+    errors : &'tcx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
 }
 
@@ -92,11 +96,13 @@ pub(super) struct TerminusInfo {
     pub imports: BTreeSet<String>,
 }
 
-impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
+impl<'tcx> RenderTerminusContext<'tcx> {
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
     pub fn evaluate_terminus(
-        ctx: &'a WebDemoGenerationContext<'tcx>,
+        tcx : &'tcx TypeContext,
+        formatter : &'tcx JSFormatter,
+        errors : &'tcx ErrorStore<'tcx, String>,
         type_name: String,
         method: &Method,
     ) -> Option<TerminusInfo> {
@@ -108,15 +114,16 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         // For instance, ICU4XFixedDecimalFormatter.formatWrite() needs a constructed ICU4XFixedDecimal, which takes an i32 called v as input.
         // Someone just trying to read the .d.ts file will only see function formatWrite(v: number); which doesn't really help them figure out where that's from or why it's there.
         let mut this = RenderTerminusContext {
-            ctx,
+            tcx,
+            formatter,
+            errors,
             terminus_info: TerminusInfo {
-                function_name: ctx.formatter.fmt_method_name(method),
+                function_name: formatter.fmt_method_name(method),
                 params: Vec::new(),
 
                 type_name: type_name.clone(),
 
-                js_file_name: ctx
-                    .formatter
+                js_file_name: formatter
                     .fmt_file_name(&type_name, &crate::js::FileType::Module),
 
                 node_call_stack: String::default(),
@@ -139,8 +146,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
         this.terminus_info
             .imports
             .insert(
-                this.ctx
-                    .formatter
+                formatter
                     .fmt_import_statement(&type_name, false, "../".into()),
             );
 
@@ -150,9 +156,9 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     /// Currently unused, plan to hopefully use this in the future for quickly grabbing parameter information.
     fn _get_type_demo_attrs(&self, ty: &Type) -> Option<DemoInfo> {
         match ty {
-            Type::Enum(e) => Some(e.resolve(self.ctx.tcx).attrs.demo_attrs.clone()),
-            Type::Opaque(o) => Some(o.resolve(self.ctx.tcx).attrs.demo_attrs.clone()),
-            Type::Struct(s) => Some(s.resolve(self.ctx.tcx).attrs.demo_attrs.clone()),
+            Type::Enum(e) => Some(e.resolve(self.tcx).attrs.demo_attrs.clone()),
+            Type::Opaque(o) => Some(o.resolve(self.tcx).attrs.demo_attrs.clone()),
+            Type::Struct(s) => Some(s.resolve(self.tcx).attrs.demo_attrs.clone()),
             _ => None,
         }
     }
@@ -207,24 +213,22 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             Type::Primitive(_) | Type::Enum(_) | Type::Slice(_) => {
                 let type_name = match param_type {
                     Type::Primitive(p) => self
-                        .ctx
                         .formatter
-                        .fmt_primitive_as_ffi(*p, true)
+                        .fmt_primitive_as_ffi(*p)
                         .to_string(),
-                    Type::Slice(hir::Slice::Str(..)) => self.ctx.formatter.fmt_string().to_string(),
+                    Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().to_string(),
                     Type::Slice(hir::Slice::Primitive(_, p)) => {
-                        self.ctx.formatter.fmt_primitive_list_type(*p).to_string()
+                        self.formatter.fmt_primitive_list_type(*p).to_string()
                     }
                     Type::Slice(hir::Slice::Strs(..)) => "Array<String>".to_string(),
                     Type::Enum(e) => {
                         let type_name = self
-                        .ctx
                         .formatter
                         .fmt_type_name(e.tcx_id.into())
                         .to_string();
                         
-                        if e.resolve(&self.ctx.tcx).attrs.disable {
-                            self.ctx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                        if e.resolve(&self.tcx).attrs.disable {
+                            self.errors.push_error(format!("Found usage of disabled type {type_name}"))
                         }
 
                         type_name
@@ -235,12 +239,12 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 out_param(type_name);
             }
             Type::Opaque(o) => {
-                let op = o.resolve(self.ctx.tcx);
-                let type_name = self.ctx.formatter.fmt_type_name(o.tcx_id.into());
+                let op = o.resolve(self.tcx);
+                let type_name = self.formatter.fmt_type_name(o.tcx_id.into());
 
-                let all_attrs = &o.resolve(self.ctx.tcx).attrs;
+                let all_attrs = &o.resolve(self.tcx).attrs;
                 if all_attrs.disable {
-                    self.ctx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                    self.errors.push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 let attrs = &all_attrs.demo_attrs;
 
@@ -269,7 +273,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     if usable_constructor {
                         self.terminus_info
                             .imports
-                            .insert(self.ctx.formatter.fmt_import_statement(
+                            .insert(self.formatter.fmt_import_statement(
                                 &type_name.clone(),
                                 false,
                                 "../".into(),
@@ -288,7 +292,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                     }
                 }
                 if !usable_constructor {
-                    self.ctx.errors.push_error(format!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::demo(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_js));
+                    self.errors.push_error(format!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::demo(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_js));
                     node.params.push(ParamInfo {
                         js: format!("null/*Could not find a usable constructor for {}. Try adding #[diplomat::demo(default_constructor)]*/", op.name.as_str()),
                         label: String::default(),
@@ -297,16 +301,16 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 }
             }
             Type::Struct(s) => {
-                let st = s.resolve(self.ctx.tcx);
+                let st = s.resolve(self.tcx);
 
-                let type_name = self.ctx.formatter.fmt_type_name(s.tcx_id.into());
+                let type_name = self.formatter.fmt_type_name(s.tcx_id.into());
                 if st.attrs.disable {
-                    self.ctx.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                    self.errors.push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
                 self.terminus_info
                     .imports
-                    .insert(self.ctx.formatter.fmt_import_statement(
+                    .insert(self.formatter.fmt_import_statement(
                         &type_name,
                         false,
                         "../".into(),
@@ -325,7 +329,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
 
                 for field in st.fields.iter() {
                     fields.push(
-                        self.ctx
+                        self
                             .formatter
                             .fmt_param_name(field.name.as_str())
                             .to_string(),
@@ -346,7 +350,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
                 .render()
                 .unwrap();
 
-                child.self_arg = self.ctx.formatter.fmt_null().into();
+                child.self_arg = self.formatter.fmt_null().into();
 
                 node.params.push(ParamInfo {
                     type_name: type_name.to_string(),
@@ -369,7 +373,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
     ///
     /// `method` - The method we're trying to call.
     fn get_constructor_js(&self, owner_type_name: String, method: &Method) -> String {
-        let method_name = self.ctx.formatter.fmt_method_name(method);
+        let method_name = self.formatter.fmt_method_name(method);
         if method.param_self.is_some() {
             // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
             format!("(function (...args) {{ return this.{method_name}(...args) }})",)
@@ -389,13 +393,13 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
             node.self_arg = node.params.pop().unwrap().js;
         } else {
             // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
-            node.self_arg = self.ctx.formatter.fmt_null().to_string();
+            node.self_arg = self.formatter.fmt_null().to_string();
         }
 
         for param in method.params.iter() {
             self.evaluate_param(
                 &param.ty,
-                self.ctx
+                self
                     .formatter
                     .fmt_param_name(param.name.as_str())
                     .into(),

@@ -17,13 +17,13 @@ mod layout;
 mod type_generation;
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?
-enum FileType {
+pub enum FileType {
     Module,
     Typescript,
 }
 
 impl FileType {
-    fn is_typescript(&self) -> bool {
+    pub fn is_typescript(&self) -> bool {
         match self {
             FileType::Module => false,
             FileType::Typescript => true,

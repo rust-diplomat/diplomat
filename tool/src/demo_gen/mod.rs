@@ -1,11 +1,11 @@
-use std::{collections::BTreeSet, fmt::{Display, Write}};
+use std::{collections::BTreeSet, fmt::Write};
 
 use askama::{self, Template};
-use diplomat_core::hir::TypeContext;
+use diplomat_core::hir::{BackendAttrSupport, TypeContext};
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
-    common::{ErrorStore, FileMap},
+    ErrorStore, FileMap,
     js::{formatter::JSFormatter, FileType},
 };
 
@@ -20,122 +20,130 @@ pub struct WebDemoGenerationContext<'tcx> {
     formatter: JSFormatter<'tcx>,
 }
 
-impl<'tcx> WebDemoGenerationContext<'tcx> {
-    pub fn run(
-        tcx: &'tcx TypeContext,
-        docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
-        strip_prefix: Option<String>,
-    ) -> Result<FileMap, Vec<(impl Display + 'tcx, String)>> {
-        let mut this = WebDemoGenerationContext {
-            tcx,
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
 
-            files: FileMap::default(),
-            errors: ErrorStore::default(),
+    a.renaming = true;
+    a.namespacing = false;
+    a.memory_sharing = false;
+    a.non_exhaustive_structs = true;
+    a.method_overloading = false;
 
-            formatter: JSFormatter::new(tcx, docs, strip_prefix),
-        };
+    // For finding default constructors of opaques:
+    a.constructors = true;
+    a.named_constructors = false;
+    a.fallible_constructors = true;
+    a.accessors = true;
+    a.comparators = false;
+    a.stringifiers = false; // TODO
+    a.iterators = false; // TODO
+    a.iterables = false; // TODO
+    a.indexing = false;
 
-        this.init();
+    a
+}
 
-        let errors = this.errors.take_all();
-        if errors.is_empty() {
-            Ok(this.files)
-        } else {
-            Err(errors)
-        }
+/// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
+/// Generate markup.
+///
+/// That is, only generate .js files to be used in final rendering.
+/// This JS should include:
+/// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs.
+pub(crate) fn run<'tcx>(
+    tcx : &'tcx TypeContext,
+    docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
+) -> (FileMap, ErrorStore<'tcx, String>) {
+    let formatter = JSFormatter::new(tcx, docs);
+    let errors = ErrorStore::default();
+    let files = FileMap::default();
+
+    struct TerminusExport {
+        type_name : String,
+        js_file_name : String
     }
 
-    /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
-    /// Generate markup.
-    ///
-    /// That is, only generate .js files to be used in final rendering.
-    /// This JS should include:
-    /// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs.
-    pub fn init(&mut self) {
-        struct TerminusExport {
-            type_name : String,
-            js_file_name : String
-        }
+    #[derive(Template)]
+    #[template(path = "demo-gen/index.js.jinja", escape = "none")]
+    struct IndexInfo {
+        termini_exports: Vec<TerminusExport>,
+        termini: Vec<TerminusInfo>
+    }
 
-        #[derive(Template)]
-        #[template(path = "demo-gen/index.js.jinja", escape = "none")]
-        struct IndexInfo {
-            termini_exports: Vec<TerminusExport>,
-            termini: Vec<TerminusInfo>
-        }
+    let mut out_info = IndexInfo {
+        termini_exports: Vec::new(),
+        termini: Vec::new(),
+    };
 
-        let mut out_info = IndexInfo {
-            termini_exports: Vec::new(),
-            termini: Vec::new(),
-        };
+    for (id, ty) in tcx.all_types() {
+        let methods = ty.methods();
 
-        for (id, ty) in self.tcx.all_types() {
-            let methods = ty.methods();
+        const FILE_TYPES: [FileType; 2] = [FileType::Module, FileType::Typescript];
 
-            const FILE_TYPES: [FileType; 2] = [FileType::Module, FileType::Typescript];
+        let mut termini = Vec::new();
 
-            let mut termini = Vec::new();
+        {
+            let type_name = formatter.fmt_type_name(id);
+            
+            let ty = tcx.resolve_type(id);
+            if ty.attrs().disable {
+                continue;
+            }
 
-            {
-                let type_name = self.formatter.fmt_type_name(id);
-                
-                let ty = self.tcx.resolve_type(id);
-                if ty.attrs().disable {
+            for method in methods {
+                if method.attrs.disable {
                     continue;
                 }
 
-                for method in methods {
-                    if method.attrs.disable {
-                        continue;
-                    }
-
-                    let val = RenderTerminusContext::evaluate_terminus(
-                        self,
-                        type_name.to_string(),
-                        method,
-                    );
-                    if let Some(t) = val {
-                        termini.push(t);
-                    }
+                let val = RenderTerminusContext::evaluate_terminus(
+                    &tcx,
+                    &formatter,
+                    &errors,
+                    type_name.to_string(),
+                    method,
+                );
+                if let Some(t) = val {
+                    termini.push(t);
                 }
-            }
-
-            if !termini.is_empty() {
-                let mut imports = BTreeSet::new();
-                for file_type in FILE_TYPES {
-                    let type_name = self.formatter.fmt_type_name(id);
-                    let file_name = self.formatter.fmt_file_name(&type_name, &file_type);
-
-                    let mut method_str = String::new();
-
-                    for terminus in &mut termini {
-                        terminus.typescript = file_type.is_typescript();
-                        writeln!(method_str, "{}", terminus.render().unwrap()).unwrap();
-
-                        
-                        imports.append(&mut terminus.imports);
-                    }
-
-                    let mut import_str = String::new();
-                    
-                    for import in imports.iter() {
-                        writeln!(import_str, "{}", import).unwrap();
-                    }
-
-                    self.files.add_file(file_name.to_string(), format!("{import_str}{method_str}"));
-                }
-
-                // Only push the first one, 
-                out_info.termini_exports.push(TerminusExport {
-                    type_name: termini[0].type_name.clone(),
-                    js_file_name : termini[0].js_file_name.clone()
-                });
-                
-                out_info.termini.append(&mut termini);
             }
         }
 
-        self.files
-            .add_file("index.mjs".into(), out_info.render().unwrap());
+        if !termini.is_empty() {
+            let mut imports = BTreeSet::new();
+            for file_type in FILE_TYPES {
+                let type_name = formatter.fmt_type_name(id);
+                let file_name = formatter.fmt_file_name(&type_name, &file_type);
+
+                let mut method_str = String::new();
+
+                for terminus in &mut termini {
+                    terminus.typescript = file_type.is_typescript();
+                    writeln!(method_str, "{}", terminus.render().unwrap()).unwrap();
+
+                    
+                    imports.append(&mut terminus.imports);
+                }
+
+                let mut import_str = String::new();
+                
+                for import in imports.iter() {
+                    writeln!(import_str, "{}", import).unwrap();
+                }
+
+                files.add_file(file_name.to_string(), format!("{import_str}{method_str}"));
+            }
+
+            // Only push the first one, 
+            out_info.termini_exports.push(TerminusExport {
+                type_name: termini[0].type_name.clone(),
+                js_file_name : termini[0].js_file_name.clone()
+            });
+            
+            out_info.termini.append(&mut termini);
+        }
     }
+
+    files
+        .add_file("index.mjs".into(), out_info.render().unwrap());
+
+    (files, errors)
 }
