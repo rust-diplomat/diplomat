@@ -12,7 +12,7 @@ use crate::{ErrorStore, FileMap};
 
 use self::formatter::JSFormatter;
 
-mod formatter;
+pub mod formatter;
 mod layout;
 mod type_generation;
 
