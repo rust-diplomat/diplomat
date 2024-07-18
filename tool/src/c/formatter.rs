@@ -12,7 +12,7 @@ use std::borrow::Cow;
 ///
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
-pub struct CFormatter<'tcx> {
+pub(crate) struct CFormatter<'tcx> {
     tcx: &'tcx TypeContext,
     is_for_cpp: bool,
 }
