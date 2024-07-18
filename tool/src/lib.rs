@@ -2,10 +2,10 @@
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
 // Backends
-mod c2;
-mod cpp2;
+mod c;
+mod cpp;
 mod dart;
-mod js2;
+mod js;
 mod kotlin;
 
 mod common;
@@ -60,10 +60,10 @@ pub fn gen(
     let target_language = target_language.strip_suffix('2').unwrap_or(target_language);
     let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
     attr_validator.support = match target_language {
-        "c" => c2::attr_support(),
-        "cpp" => cpp2::attr_support(),
+        "c" => c::attr_support(),
+        "cpp" => cpp::attr_support(),
         "dart" => dart::attr_support(),
-        "js" => js2::attr_support(),
+        "js" => js::attr_support(),
         "kotlin" => kotlin::attr_support(),
         o => panic!("Unknown target: {}", o),
     };
@@ -76,10 +76,10 @@ pub fn gen(
     });
 
     let (files, errors) = match target_language {
-        "c" => c2::run(&tcx),
-        "cpp" => cpp2::run(&tcx),
+        "c" => c::run(&tcx),
+        "cpp" => cpp::run(&tcx),
         "dart" => dart::run(&tcx, docs_url_gen),
-        "js" => js2::run(&tcx, docs_url_gen),
+        "js" => js::run(&tcx, docs_url_gen),
         "kotlin" => kotlin::run(&tcx, library_config),
         o => panic!("Unknown target: {}", o),
     };

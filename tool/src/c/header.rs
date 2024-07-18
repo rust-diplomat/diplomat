@@ -72,7 +72,7 @@ impl fmt::Write for Header {
 }
 
 #[derive(Template)]
-#[template(path = "c2/base.h.jinja", escape = "none")]
+#[template(path = "c/base.h.jinja", escape = "none")]
 struct HeaderTemplate<'a> {
     header_guard: Cow<'a, str>,
     decl_include: Option<&'a String>,

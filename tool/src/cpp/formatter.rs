@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use crate::c2::{CFormatter, CAPI_NAMESPACE};
+use crate::c::{CFormatter, CAPI_NAMESPACE};
 use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
 use std::borrow::Cow;
 

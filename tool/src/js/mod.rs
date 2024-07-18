@@ -64,15 +64,15 @@ pub(crate) fn run<'tcx>(
 
     files.add_file(
         "diplomat-runtime.mjs".into(),
-        include_str!("../../templates/js2/runtime.mjs").into(),
+        include_str!("../../templates/js/runtime.mjs").into(),
     );
     files.add_file(
         "diplomat-runtime.d.ts".into(),
-        include_str!("../../templates/js2/runtime.d.ts").into(),
+        include_str!("../../templates/js/runtime.d.ts").into(),
     );
     files.add_file(
         "diplomat-wasm.mjs".into(),
-        include_str!("../../templates/js2/wasm.mjs").into(),
+        include_str!("../../templates/js/wasm.mjs").into(),
     );
 
     for (id, ty) in tcx.all_types() {
@@ -131,7 +131,7 @@ pub(crate) fn run<'tcx>(
     }
 
     #[derive(Template)]
-    #[template(path = "js2/index.js.jinja", escape = "none")]
+    #[template(path = "js/index.js.jinja", escape = "none")]
     struct IndexTemplate<'a> {
         exports: &'a Vec<Cow<'a, str>>,
         typescript: bool,

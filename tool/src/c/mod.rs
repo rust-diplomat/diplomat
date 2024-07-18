@@ -36,7 +36,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 pub fn gen_runtime(is_for_cpp: bool) -> String {
     #[derive(Template)]
-    #[template(path = "c2/runtime.h.jinja", escape = "none")]
+    #[template(path = "c/runtime.h.jinja", escape = "none")]
     struct RuntimeTemplate {
         is_for_cpp: bool,
     }

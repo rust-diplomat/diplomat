@@ -14,7 +14,7 @@ pub enum Forward {
 }
 
 #[derive(Template)]
-#[template(path = "cpp2/base.h.jinja", escape = "none")]
+#[template(path = "cpp/base.h.jinja", escape = "none")]
 struct HeaderTemplate<'a> {
     header_guard: Cow<'a, str>,
     decl_include: Option<Cow<'a, str>>,

@@ -28,7 +28,7 @@ pub(super) struct TyGenContext<'ctx, 'tcx> {
 impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     pub(super) fn generate_base(&self, body: String) -> String {
         #[derive(Template)]
-        #[template(path = "js2/base.js.jinja", escape = "none")]
+        #[template(path = "js/base.js.jinja", escape = "none")]
         struct BaseTemplate<'info> {
             body: String,
             typescript: bool,
@@ -61,7 +61,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         methods.push(special_method_body);
 
         #[derive(Template)]
-        #[template(path = "js2/enum.js.jinja", escape = "none")]
+        #[template(path = "js/enum.js.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             enum_def: &'a EnumDef,
             formatter: &'a JSFormatter<'a>,
@@ -104,7 +104,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         let destructor = opaque_def.dtor_abi_name.as_str();
 
         #[derive(Template)]
-        #[template(path = "js2/opaque.js.jinja", escape = "none")]
+        #[template(path = "js/opaque.js.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
             typescript: bool,
@@ -217,7 +217,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         );
 
         #[derive(Template)]
-        #[template(path = "js2/struct.js.jinja", escape = "none")]
+        #[template(path = "js/struct.js.jinja", escape = "none")]
         struct ImplTemplate<'a, P: hir::TyPosition> {
             type_name: &'a str,
             mutable: bool,
@@ -405,7 +405,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
         typescript: bool,
     ) -> String {
         #[derive(Template)]
-        #[template(path = "js2/iterator.js.jinja", escape = "none")]
+        #[template(path = "js/iterator.js.jinja", escape = "none")]
         struct SpecialMethodInfo<'a> {
             iterator: Option<Cow<'a, str>>,
             typescript: bool,
@@ -439,7 +439,7 @@ struct SliceParam<'a> {
 }
 
 #[derive(Default, Template)]
-#[template(path = "js2/method.js.jinja", escape = "none")]
+#[template(path = "js/method.js.jinja", escape = "none")]
 struct MethodInfo<'info> {
     method: Option<&'info Method>,
     method_decl: String,

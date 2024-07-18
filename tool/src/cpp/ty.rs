@@ -1,7 +1,7 @@
 use super::header::Header;
 use super::Cpp2Formatter;
-use crate::c2::Header as C2Header;
-use crate::c2::TyGenContext as C2TyGenContext;
+use crate::c::Header as C2Header;
+use crate::c::TyGenContext as C2TyGenContext;
 use crate::common::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
@@ -10,7 +10,7 @@ use diplomat_core::hir::{
 };
 use std::borrow::Cow;
 
-use crate::c2::CAPI_NAMESPACE;
+use crate::c::CAPI_NAMESPACE;
 
 /// An expression with a corresponding variable name, such as a struct field or a function parameter.
 struct NamedExpression<'a> {
@@ -88,7 +88,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "cpp2/enum_decl.h.jinja", escape = "none")]
+        #[template(path = "cpp/enum_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
             ty: &'a hir::EnumDef,
             fmt: &'a Cpp2Formatter<'a>,
@@ -114,7 +114,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         .unwrap();
 
         #[derive(Template)]
-        #[template(path = "cpp2/enum_impl.h.jinja", escape = "none")]
+        #[template(path = "cpp/enum_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             ty: &'a hir::EnumDef,
             fmt: &'a Cpp2Formatter<'a>,
@@ -156,7 +156,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "cpp2/opaque_decl.h.jinja", escape = "none")]
+        #[template(path = "cpp/opaque_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             fmt: &'a Cpp2Formatter<'a>,
@@ -182,7 +182,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         .unwrap();
 
         #[derive(Template)]
-        #[template(path = "cpp2/opaque_impl.h.jinja", escape = "none")]
+        #[template(path = "cpp/opaque_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             fmt: &'a Cpp2Formatter<'a>,
@@ -243,7 +243,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             .collect::<Vec<_>>();
 
         #[derive(Template)]
-        #[template(path = "cpp2/struct_decl.h.jinja", escape = "none")]
+        #[template(path = "cpp/struct_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             // fmt: &'a Cpp2Formatter<'a>,
@@ -271,7 +271,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         .unwrap();
 
         #[derive(Template)]
-        #[template(path = "cpp2/struct_impl.h.jinja", escape = "none")]
+        #[template(path = "cpp/struct_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             // ty: &'a hir::OpaqueDef,
             // fmt: &'a Cpp2Formatter<'a>,

@@ -10,7 +10,7 @@ use std::borrow::Cow;
 use std::fmt::Write;
 
 #[derive(Template)]
-#[template(path = "c2/enum.h.jinja", escape = "none")]
+#[template(path = "c/enum.h.jinja", escape = "none")]
 struct EnumTemplate<'a> {
     ty: &'a hir::EnumDef,
     fmt: &'a CFormatter<'a>,
@@ -19,7 +19,7 @@ struct EnumTemplate<'a> {
 }
 
 #[derive(Template)]
-#[template(path = "c2/struct.h.jinja", escape = "none")]
+#[template(path = "c/struct.h.jinja", escape = "none")]
 struct StructTemplate<'a> {
     ty_name: Cow<'a, str>,
     fields: Vec<(Cow<'a, str>, Cow<'a, str>)>,
@@ -27,14 +27,14 @@ struct StructTemplate<'a> {
 }
 
 #[derive(Template)]
-#[template(path = "c2/opaque.h.jinja", escape = "none")]
+#[template(path = "c/opaque.h.jinja", escape = "none")]
 struct OpaqueTemplate<'a> {
     ty_name: Cow<'a, str>,
     is_for_cpp: bool,
 }
 
 #[derive(Template)]
-#[template(path = "c2/impl.h.jinja", escape = "none")]
+#[template(path = "c/impl.h.jinja", escape = "none")]
 struct ImplTemplate<'a> {
     methods: Vec<MethodTemplate<'a>>,
     is_for_cpp: bool,
