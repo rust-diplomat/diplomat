@@ -3,7 +3,7 @@
 //!
 //! C-specific abstractions that are also useful for other backends
 //! (since all backends eventually go through the C API), like CFormatter,
-//! should live in the c2 module, not here.
+//! should live in the c module, not here.
 
 use core::mem;
 use std::borrow::Cow;

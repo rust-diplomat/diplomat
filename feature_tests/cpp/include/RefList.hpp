@@ -1,47 +1,55 @@
 #ifndef RefList_HPP
 #define RefList_HPP
+
+#include "RefList.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
-
-#include "RefList.h"
-
-class RefListParameter;
-class RefList;
-
-/**
- * A destruction policy for using RefList with std::unique_ptr.
- */
-struct RefListDeleter {
-  void operator()(capi::RefList* l) const noexcept {
-    capi::RefList_destroy(l);
-  }
-};
-class RefList {
- public:
-
-  /**
-   * Lifetimes: `data` must live at least as long as the output.
-   */
-  static RefList node(const RefListParameter& data);
-  inline const capi::RefList* AsFFI() const { return this->inner.get(); }
-  inline capi::RefList* AsFFIMut() { return this->inner.get(); }
-  inline explicit RefList(capi::RefList* i) : inner(i) {}
-  RefList() = default;
-  RefList(RefList&&) noexcept = default;
-  RefList& operator=(RefList&& other) noexcept = default;
- private:
-  std::unique_ptr<capi::RefList, RefListDeleter> inner;
-};
-
 #include "RefListParameter.hpp"
 
-inline RefList RefList::node(const RefListParameter& data) {
-  return RefList(capi::RefList_node(data.AsFFI()));
+
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    diplomat::capi::RefList* RefList_node(const diplomat::capi::RefListParameter* data);
+    
+    
+    void RefList_destroy(RefList* self);
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
+
+inline std::unique_ptr<RefList> RefList::node(const RefListParameter& data) {
+  auto result = diplomat::capi::RefList_node(data.AsFFI());
+  return std::unique_ptr<RefList>(RefList::FromFFI(result));
 }
-#endif
+
+inline const diplomat::capi::RefList* RefList::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::RefList*>(this);
+}
+
+inline diplomat::capi::RefList* RefList::AsFFI() {
+  return reinterpret_cast<diplomat::capi::RefList*>(this);
+}
+
+inline const RefList* RefList::FromFFI(const diplomat::capi::RefList* ptr) {
+  return reinterpret_cast<const RefList*>(ptr);
+}
+
+inline RefList* RefList::FromFFI(diplomat::capi::RefList* ptr) {
+  return reinterpret_cast<RefList*>(ptr);
+}
+
+inline void RefList::operator delete(void* ptr) {
+  diplomat::capi::RefList_destroy(reinterpret_cast<diplomat::capi::RefList*>(ptr));
+}
+
+
+#endif // RefList_HPP

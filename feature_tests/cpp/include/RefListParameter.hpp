@@ -1,36 +1,47 @@
 #ifndef RefListParameter_HPP
 #define RefListParameter_HPP
+
+#include "RefListParameter.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-#include "RefListParameter.h"
+
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    
+    void RefListParameter_destroy(RefListParameter* self);
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
+
+inline const diplomat::capi::RefListParameter* RefListParameter::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::RefListParameter*>(this);
+}
+
+inline diplomat::capi::RefListParameter* RefListParameter::AsFFI() {
+  return reinterpret_cast<diplomat::capi::RefListParameter*>(this);
+}
+
+inline const RefListParameter* RefListParameter::FromFFI(const diplomat::capi::RefListParameter* ptr) {
+  return reinterpret_cast<const RefListParameter*>(ptr);
+}
+
+inline RefListParameter* RefListParameter::FromFFI(diplomat::capi::RefListParameter* ptr) {
+  return reinterpret_cast<RefListParameter*>(ptr);
+}
+
+inline void RefListParameter::operator delete(void* ptr) {
+  diplomat::capi::RefListParameter_destroy(reinterpret_cast<diplomat::capi::RefListParameter*>(ptr));
+}
 
 
-/**
- * A destruction policy for using RefListParameter with std::unique_ptr.
- */
-struct RefListParameterDeleter {
-  void operator()(capi::RefListParameter* l) const noexcept {
-    capi::RefListParameter_destroy(l);
-  }
-};
-class RefListParameter {
- public:
-  inline const capi::RefListParameter* AsFFI() const { return this->inner.get(); }
-  inline capi::RefListParameter* AsFFIMut() { return this->inner.get(); }
-  inline explicit RefListParameter(capi::RefListParameter* i) : inner(i) {}
-  RefListParameter() = default;
-  RefListParameter(RefListParameter&&) noexcept = default;
-  RefListParameter& operator=(RefListParameter&& other) noexcept = default;
- private:
-  std::unique_ptr<capi::RefListParameter, RefListParameterDeleter> inner;
-};
-
-
-#endif
+#endif // RefListParameter_HPP

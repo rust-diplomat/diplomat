@@ -1,96 +1,72 @@
 #ifndef FixedDecimal_HPP
 #define FixedDecimal_HPP
+
+#include "FixedDecimal.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-#include "FixedDecimal.h"
 
-class FixedDecimal;
+namespace icu4x {
+namespace capi {
+    extern "C" {
+    
+    icu4x::capi::FixedDecimal* icu4x_FixedDecimal_new_mv1(int32_t v);
+    
+    void icu4x_FixedDecimal_multiply_pow10_mv1(icu4x::capi::FixedDecimal* self, int16_t power);
+    
+    typedef struct icu4x_FixedDecimal_to_string_mv1_result { bool is_ok;} icu4x_FixedDecimal_to_string_mv1_result;
+    icu4x_FixedDecimal_to_string_mv1_result icu4x_FixedDecimal_to_string_mv1(const icu4x::capi::FixedDecimal* self, diplomat::capi::DiplomatWrite* write);
+    
+    
+    void icu4x_FixedDecimal_destroy_mv1(FixedDecimal* self);
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
 
-/**
- * A destruction policy for using FixedDecimal with std::unique_ptr.
- */
-struct FixedDecimalDeleter {
-  void operator()(capi::FixedDecimal* l) const noexcept {
-    capi::icu4x_FixedDecimal_destroy_mv1(l);
-  }
-};
-
-/**
- * See the [Rust documentation for `FixedDecimal`](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html) for more information.
- */
-class FixedDecimal {
- public:
-
-  /**
-   * Construct an [`FixedDecimal`] from an integer.
-   */
-  static FixedDecimal new_(int32_t v);
-
-  /**
-   * Multiply the [`FixedDecimal`] by a given power of ten.
-   * 
-   * See the [Rust documentation for `multiply_pow10`](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
-   */
-  void multiply_pow10(int16_t power);
-
-  /**
-   * Format the [`FixedDecimal`] as a string.
-   * 
-   * See the [Rust documentation for `write_to`](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
-   */
-  template<typename W> diplomat::result<std::monostate, std::monostate> to_string_to_write(W& to) const;
-
-  /**
-   * Format the [`FixedDecimal`] as a string.
-   * 
-   * See the [Rust documentation for `write_to`](https://unicode-org.github.io/icu4x-docs/doc/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
-   */
-  diplomat::result<std::string, std::monostate> to_string() const;
-  inline const capi::FixedDecimal* AsFFI() const { return this->inner.get(); }
-  inline capi::FixedDecimal* AsFFIMut() { return this->inner.get(); }
-  inline explicit FixedDecimal(capi::FixedDecimal* i) : inner(i) {}
-  FixedDecimal() = default;
-  FixedDecimal(FixedDecimal&&) noexcept = default;
-  FixedDecimal& operator=(FixedDecimal&& other) noexcept = default;
- private:
-  std::unique_ptr<capi::FixedDecimal, FixedDecimalDeleter> inner;
-};
-
-
-inline FixedDecimal FixedDecimal::new_(int32_t v) {
-  return FixedDecimal(capi::icu4x_FixedDecimal_new_mv1(v));
+inline std::unique_ptr<icu4x::FixedDecimal> icu4x::FixedDecimal::new_(int32_t v) {
+  auto result = icu4x::capi::icu4x_FixedDecimal_new_mv1(v);
+  return std::unique_ptr<icu4x::FixedDecimal>(icu4x::FixedDecimal::FromFFI(result));
 }
-inline void FixedDecimal::multiply_pow10(int16_t power) {
-  capi::icu4x_FixedDecimal_multiply_pow10_mv1(this->inner.get(), power);
+
+inline void icu4x::FixedDecimal::multiply_pow10(int16_t power) {
+  icu4x::capi::icu4x_FixedDecimal_multiply_pow10_mv1(this->AsFFI(),
+    power);
 }
-template<typename W> inline diplomat::result<std::monostate, std::monostate> FixedDecimal::to_string_to_write(W& to) const {
-  capi::DiplomatWrite to_writer = diplomat::WriteTrait<W>::Construct(to);
-  auto diplomat_result_raw_out_value = capi::icu4x_FixedDecimal_to_string_mv1(this->inner.get(), &to_writer);
-  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
-  if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());
-  } else {
-    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
-  }
-  return diplomat_result_out_value;
+
+inline diplomat::result<std::string, std::monostate> icu4x::FixedDecimal::to_string() const {
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  auto result = icu4x::capi::icu4x_FixedDecimal_to_string_mv1(this->AsFFI(),
+    &write);
+  return result.is_ok ? diplomat::result<std::string, std::monostate>(diplomat::Ok<std::string>(std::move(output))) : diplomat::result<std::string, std::monostate>(diplomat::Err<std::monostate>());
 }
-inline diplomat::result<std::string, std::monostate> FixedDecimal::to_string() const {
-  std::string diplomat_write_string;
-  capi::DiplomatWrite diplomat_write_out = diplomat::WriteFromString(diplomat_write_string);
-  auto diplomat_result_raw_out_value = capi::icu4x_FixedDecimal_to_string_mv1(this->inner.get(), &diplomat_write_out);
-  diplomat::result<std::monostate, std::monostate> diplomat_result_out_value;
-  if (diplomat_result_raw_out_value.is_ok) {
-    diplomat_result_out_value = diplomat::Ok<std::monostate>(std::monostate());
-  } else {
-    diplomat_result_out_value = diplomat::Err<std::monostate>(std::monostate());
-  }
-  return diplomat_result_out_value.replace_ok(std::move(diplomat_write_string));
+
+inline const icu4x::capi::FixedDecimal* icu4x::FixedDecimal::AsFFI() const {
+  return reinterpret_cast<const icu4x::capi::FixedDecimal*>(this);
 }
-#endif
+
+inline icu4x::capi::FixedDecimal* icu4x::FixedDecimal::AsFFI() {
+  return reinterpret_cast<icu4x::capi::FixedDecimal*>(this);
+}
+
+inline const icu4x::FixedDecimal* icu4x::FixedDecimal::FromFFI(const icu4x::capi::FixedDecimal* ptr) {
+  return reinterpret_cast<const icu4x::FixedDecimal*>(ptr);
+}
+
+inline icu4x::FixedDecimal* icu4x::FixedDecimal::FromFFI(icu4x::capi::FixedDecimal* ptr) {
+  return reinterpret_cast<icu4x::FixedDecimal*>(ptr);
+}
+
+inline void icu4x::FixedDecimal::operator delete(void* ptr) {
+  icu4x::capi::icu4x_FixedDecimal_destroy_mv1(reinterpret_cast<icu4x::capi::FixedDecimal*>(ptr));
+}
+
+
+#endif // FixedDecimal_HPP

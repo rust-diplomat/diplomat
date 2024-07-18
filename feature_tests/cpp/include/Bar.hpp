@@ -1,36 +1,55 @@
 #ifndef Bar_HPP
 #define Bar_HPP
+
+#include "Bar.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
-
-#include "Bar.h"
-
-
-/**
- * A destruction policy for using Bar with std::unique_ptr.
- */
-struct BarDeleter {
-  void operator()(capi::Bar* l) const noexcept {
-    capi::Bar_destroy(l);
-  }
-};
-class Bar {
- public:
-  inline const capi::Bar* AsFFI() const { return this->inner.get(); }
-  inline capi::Bar* AsFFIMut() { return this->inner.get(); }
-  inline explicit Bar(capi::Bar* i) : inner(i) {}
-  Bar() = default;
-  Bar(Bar&&) noexcept = default;
-  Bar& operator=(Bar&& other) noexcept = default;
- private:
-  std::unique_ptr<capi::Bar, BarDeleter> inner;
-};
+#include "Foo.hpp"
 
 
-#endif
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    const diplomat::capi::Foo* Bar_foo(const diplomat::capi::Bar* self);
+    
+    
+    void Bar_destroy(Bar* self);
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
+
+inline const Foo& Bar::foo() const {
+  auto result = diplomat::capi::Bar_foo(this->AsFFI());
+  return *Foo::FromFFI(result);
+}
+
+inline const diplomat::capi::Bar* Bar::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::Bar*>(this);
+}
+
+inline diplomat::capi::Bar* Bar::AsFFI() {
+  return reinterpret_cast<diplomat::capi::Bar*>(this);
+}
+
+inline const Bar* Bar::FromFFI(const diplomat::capi::Bar* ptr) {
+  return reinterpret_cast<const Bar*>(ptr);
+}
+
+inline Bar* Bar::FromFFI(diplomat::capi::Bar* ptr) {
+  return reinterpret_cast<Bar*>(ptr);
+}
+
+inline void Bar::operator delete(void* ptr) {
+  diplomat::capi::Bar_destroy(reinterpret_cast<diplomat::capi::Bar*>(ptr));
+}
+
+
+#endif // Bar_HPP

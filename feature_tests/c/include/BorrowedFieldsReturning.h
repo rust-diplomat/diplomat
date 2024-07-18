@@ -1,29 +1,23 @@
 #ifndef BorrowedFieldsReturning_H
 #define BorrowedFieldsReturning_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#ifdef __cplusplus
-namespace capi {
-#endif
 
-typedef struct BorrowedFieldsReturning {
-    DiplomatStringView bytes;
-} BorrowedFieldsReturning;
-#ifdef __cplusplus
-} // namespace capi
-#endif
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif
+#include "BorrowedFieldsReturning.d.h"
 
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif
-#endif
+
+
+
+
+
+
+
+
+
+#endif // BorrowedFieldsReturning_H
