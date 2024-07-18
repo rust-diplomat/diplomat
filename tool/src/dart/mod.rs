@@ -1,28 +1,49 @@
-use crate::common::{ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::ast::DocsUrlGenerator;
 use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
-    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, SpecialMethod,
-    SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, BackendAttrSupport, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType,
+    SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type,
+    TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnableStructDef, TypeContext};
 use formatter::DartFormatter;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::{Display, Write};
+use std::fmt::Write;
 
 mod formatter;
 
-/// Run file generation
-pub fn run<'cx>(
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
+
+    a.renaming = true;
+    a.namespacing = false;
+    a.memory_sharing = false;
+    a.non_exhaustive_structs = true;
+    a.method_overloading = false;
+
+    a.constructors = true;
+    a.named_constructors = true;
+    a.fallible_constructors = true;
+    a.accessors = true;
+    a.stringifiers = true;
+    a.comparators = true;
+    a.iterators = true;
+    a.iterables = true;
+    a.indexing = true;
+
+    a
+}
+
+pub(crate) fn run<'cx>(
     tcx: &'cx TypeContext,
-    docs_url_generator: &'cx DocsUrlGenerator,
-    strip_prefix: Option<String>,
-) -> Result<FileMap, Vec<(impl Display + 'cx, String)>> {
-    let formatter = DartFormatter::new(tcx, docs_url_generator, strip_prefix);
+    docs_url_gen: &'cx DocsUrlGenerator,
+) -> (FileMap, ErrorStore<'cx, String>) {
+    let formatter = DartFormatter::new(tcx, docs_url_gen);
 
     let files = FileMap::default();
     let errors = ErrorStore::default();
@@ -30,7 +51,7 @@ pub fn run<'cx>(
     let mut directives = BTreeSet::default();
     let mut helper_classes = BTreeMap::default();
 
-    let mut tgcx = TyGenContext {
+    let mut context = TyGenContext {
         tcx,
         errors: &errors,
         helper_classes: &mut helper_classes,
@@ -38,8 +59,8 @@ pub fn run<'cx>(
     };
 
     // Needed for ListStringView
-    tgcx.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
-    tgcx.gen_slice(&hir::Slice::Str(
+    context.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
+    context.gen_slice(&hir::Slice::Str(
         None,
         hir::StringEncoding::UnvalidatedUtf16,
     ));
@@ -49,7 +70,7 @@ pub fn run<'cx>(
             continue;
         }
 
-        let (file_name, body) = tgcx.gen(id);
+        let (file_name, body) = context.gen(id);
 
         directives.insert(formatter.fmt_part(&file_name));
 
@@ -85,12 +106,7 @@ pub fn run<'cx>(
         ),
     );
 
-    let errors = errors.take_all();
-    if !errors.is_empty() {
-        Err(errors)
-    } else {
-        Ok(files)
-    }
+    (files, errors)
 }
 
 fn render_class(
@@ -184,7 +200,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
-        let destructor = self.formatter.fmt_destructor_name(id);
+        let destructor = &ty.dtor_abi_name;
         let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
@@ -193,7 +209,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             docs: String,
-            destructor: String,
+            destructor: &'a str,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
         }
@@ -201,7 +217,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         ImplTemplate {
             type_name,
             methods: methods.as_slice(),
-            destructor,
+            destructor: destructor.as_str(),
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
             special,
@@ -390,11 +406,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut visitor = method.borrowing_param_visitor(self.tcx);
 
         let _guard = self.errors.set_context_method(
-            self.formatter.fmt_type_name_diagnostics(id),
+            self.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
 
-        let c_method_name = self.formatter.fmt_c_method_name(id, method);
+        let abi_name = method.abi_name.as_str();
 
         let mut param_decls_dart = Vec::new();
         let mut param_types_ffi = Vec::new();
@@ -564,7 +580,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             method,
             docs,
             declaration,
-            c_method_name,
+            abi_name,
             param_types_ffi,
             param_types_ffi_cast,
             param_names_ffi,
@@ -1216,8 +1232,8 @@ struct MethodInfo<'a> {
     docs: String,
     /// The declaration (everything before the parameter list)
     declaration: String,
-    /// The C method name
-    c_method_name: Cow<'a, str>,
+    /// The ABI name of the method
+    abi_name: &'a str,
 
     // The types for the FFI declaration. The uncast types are the types
     // from the `dart:ffi` package, the cast types are native Dart types.

@@ -201,6 +201,30 @@ pub mod ffi {
             Ok(())
         }
     }
+
+    // Test that cycles between structs work even when
+    // they reference each other in the methods
+    #[derive(Default)]
+    #[diplomat::skip_if_ast]
+    pub struct CyclicStructA {
+        pub a: CyclicStructB,
+    }
+    #[derive(Default)]
+    #[diplomat::skip_if_ast]
+    pub struct CyclicStructB {
+        pub field: u8,
+    }
+
+    impl CyclicStructA {
+        pub fn get_b() -> CyclicStructB {
+            Default::default()
+        }
+    }
+    impl CyclicStructB {
+        pub fn get_a() -> CyclicStructA {
+            Default::default()
+        }
+    }
 }
 
 #[allow(unused)]

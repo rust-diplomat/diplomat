@@ -1,39 +1,40 @@
 #include <iostream>
-#include "../include/ICU4XFixedDecimalFormatter.hpp"
+#include "../include/FixedDecimalFormatter.hpp"
+#include "../include/Locale.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
-    ICU4XFixedDecimal fd = ICU4XFixedDecimal::new_(123);
+    std::unique_ptr<icu4x::FixedDecimal> fd = icu4x::FixedDecimal::new_(123);
 
-    simple_assert("constructing FixedDecimal", !fd.to_string().is_err());
+    simple_assert("constructing FixedDecimal", !fd->to_string().is_err());
 
-    std::string fd_out = fd.to_string().ok().value();
+    std::string fd_out = fd->to_string().ok().value();
 
     simple_assert_eq("Stringifying FixedDecimal", fd_out, "123");
 
-    fd.multiply_pow10(-1);
+    fd->multiply_pow10(-1);
 
-    fd_out = fd.to_string().ok().value();
+    fd_out = fd->to_string().ok().value();
 
     simple_assert_eq("Multiplying FixedDecimal", fd_out, "12.3");
 
-    std::string out;
+    // std::string out;
 
-    fd.to_string_to_write(out);
+    // fd->to_string_to_write(out);
 
-    simple_assert_eq("Formatting FixedDecimal to Write", fd_out, "12.3");
+    // simple_assert_eq("Formatting FixedDecimal to DiplomatWrite", fd_out, "12.3");
 
-    ICU4XLocale locale = ICU4XLocale::new_("bn");
+    std::unique_ptr<icu4x::Locale> locale = icu4x::Locale::new_("bn");
 
-    ICU4XDataProvider data_provider = ICU4XDataProvider::new_static();
+    std::unique_ptr<icu4x::DataProvider> data_provider = icu4x::DataProvider::new_static();
 
-    auto fdf = ICU4XFixedDecimalFormatter::try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions::default_());
+    auto fdf = icu4x::FixedDecimalFormatter::try_new(*locale, *data_provider, icu4x::FixedDecimalFormatterOptions::default_());
 
     simple_assert("Formatting FixedDecimal", fdf.is_ok());
 
-    out = std::move(fdf).ok().value().format_write(fd);
+    std::string fdf_out = std::move(fdf).ok().value()->format_write(*fd);
 
-    simple_assert_eq("Formatting FixedDecimal", out, "১২.৩");
+    simple_assert_eq("Formatting FixedDecimal", fdf_out, "১২.৩");
 
-    std::cout << "Formatted value is " << out << std::endl;
+    std::cout << "Formatted value is " << fdf_out << std::endl;
 }

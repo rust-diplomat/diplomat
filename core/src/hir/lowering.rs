@@ -257,6 +257,7 @@ impl<'ast> LoweringContext<'ast> {
         let ast_opaque = item.item;
         self.errors.set_item(ast_opaque.name.as_str());
         let name = self.lower_ident(&ast_opaque.name, "opaque name");
+        let dtor_abi_name = self.lower_ident(&ast_opaque.dtor_abi_name, "opaque dtor abi name");
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_opaque.attrs,
@@ -284,6 +285,7 @@ impl<'ast> LoweringContext<'ast> {
             attrs,
             lifetimes?,
             special_method_presence,
+            dtor_abi_name?,
         );
         self.attr_validator.validate(
             &def.attrs,
@@ -459,7 +461,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let (param_self, param_ltl) = if let Some(self_param) = method.self_param.as_ref() {
             let (param_self, param_ltl) =
-                self.lower_self_param(self_param, self_param_ltl, &method.full_path_name, in_path)?;
+                self.lower_self_param(self_param, self_param_ltl, &method.abi_name, in_path)?;
             (Some(param_self), param_ltl)
         } else {
             (None, SelfParamLifetimeLowerer::no_self_ref(self_param_ltl))
@@ -478,9 +480,11 @@ impl<'ast> LoweringContext<'ast> {
             self.attr_validator
                 .attr_from_ast(&method.attrs, method_parent_attrs, &mut self.errors);
 
+        let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
         let hir_method = Method {
             docs: method.docs.clone(),
             name: name?,
+            abi_name,
             lifetime_env,
             param_self,
             params,

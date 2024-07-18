@@ -1,65 +1,106 @@
 #ifndef OpaqueMutexedString_HPP
 #define OpaqueMutexedString_HPP
+
+#include "OpaqueMutexedString.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
-
-#include "OpaqueMutexedString.h"
-
-class OpaqueMutexedString;
-class Utf16Wrap;
-
-/**
- * A destruction policy for using OpaqueMutexedString with std::unique_ptr.
- */
-struct OpaqueMutexedStringDeleter {
-  void operator()(capi::OpaqueMutexedString* l) const noexcept {
-    capi::OpaqueMutexedString_destroy(l);
-  }
-};
-class OpaqueMutexedString {
- public:
-  static OpaqueMutexedString from_usize(size_t number);
-  void change(size_t number) const;
-  size_t get_len_and_add(size_t other) const;
-
-  /**
-   * Lifetimes: `this` must live at least as long as the output.
-   */
-  const std::string_view dummy_str() const;
-  Utf16Wrap wrapper() const;
-  inline const capi::OpaqueMutexedString* AsFFI() const { return this->inner.get(); }
-  inline capi::OpaqueMutexedString* AsFFIMut() { return this->inner.get(); }
-  inline explicit OpaqueMutexedString(capi::OpaqueMutexedString* i) : inner(i) {}
-  OpaqueMutexedString() = default;
-  OpaqueMutexedString(OpaqueMutexedString&&) noexcept = default;
-  OpaqueMutexedString& operator=(OpaqueMutexedString&& other) noexcept = default;
- private:
-  std::unique_ptr<capi::OpaqueMutexedString, OpaqueMutexedStringDeleter> inner;
-};
-
 #include "Utf16Wrap.hpp"
 
-inline OpaqueMutexedString OpaqueMutexedString::from_usize(size_t number) {
-  return OpaqueMutexedString(capi::OpaqueMutexedString_from_usize(number));
+
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_from_usize(size_t number);
+    
+    void OpaqueMutexedString_change(const diplomat::capi::OpaqueMutexedString* self, size_t number);
+    
+    const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow(const diplomat::capi::OpaqueMutexedString* self);
+    
+    const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow_other(const diplomat::capi::OpaqueMutexedString* other);
+    
+    const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString_borrow_self_or_other(const diplomat::capi::OpaqueMutexedString* self, const diplomat::capi::OpaqueMutexedString* other);
+    
+    size_t OpaqueMutexedString_get_len_and_add(const diplomat::capi::OpaqueMutexedString* self, size_t other);
+    
+    DiplomatStringView OpaqueMutexedString_dummy_str(const diplomat::capi::OpaqueMutexedString* self);
+    
+    diplomat::capi::Utf16Wrap* OpaqueMutexedString_wrapper(const diplomat::capi::OpaqueMutexedString* self);
+    
+    
+    void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
+
+inline std::unique_ptr<OpaqueMutexedString> OpaqueMutexedString::from_usize(size_t number) {
+  auto result = diplomat::capi::OpaqueMutexedString_from_usize(number);
+  return std::unique_ptr<OpaqueMutexedString>(OpaqueMutexedString::FromFFI(result));
 }
+
 inline void OpaqueMutexedString::change(size_t number) const {
-  capi::OpaqueMutexedString_change(this->inner.get(), number);
+  diplomat::capi::OpaqueMutexedString_change(this->AsFFI(),
+    number);
 }
+
+inline const OpaqueMutexedString& OpaqueMutexedString::borrow() const {
+  auto result = diplomat::capi::OpaqueMutexedString_borrow(this->AsFFI());
+  return *OpaqueMutexedString::FromFFI(result);
+}
+
+inline const OpaqueMutexedString& OpaqueMutexedString::borrow_other(const OpaqueMutexedString& other) {
+  auto result = diplomat::capi::OpaqueMutexedString_borrow_other(other.AsFFI());
+  return *OpaqueMutexedString::FromFFI(result);
+}
+
+inline const OpaqueMutexedString& OpaqueMutexedString::borrow_self_or_other(const OpaqueMutexedString& other) const {
+  auto result = diplomat::capi::OpaqueMutexedString_borrow_self_or_other(this->AsFFI(),
+    other.AsFFI());
+  return *OpaqueMutexedString::FromFFI(result);
+}
+
 inline size_t OpaqueMutexedString::get_len_and_add(size_t other) const {
-  return capi::OpaqueMutexedString_get_len_and_add(this->inner.get(), other);
+  auto result = diplomat::capi::OpaqueMutexedString_get_len_and_add(this->AsFFI(),
+    other);
+  return result;
 }
-inline const std::string_view OpaqueMutexedString::dummy_str() const {
-  capi::DiplomatStringView diplomat_str_raw_out_value = capi::OpaqueMutexedString_dummy_str(this->inner.get());
-  std::string_view str(diplomat_str_raw_out_value.data, diplomat_str_raw_out_value.len);
-  return str;
+
+inline std::string_view OpaqueMutexedString::dummy_str() const {
+  auto result = diplomat::capi::OpaqueMutexedString_dummy_str(this->AsFFI());
+  return std::string_view(result.data, result.len);
 }
-inline Utf16Wrap OpaqueMutexedString::wrapper() const {
-  return Utf16Wrap(capi::OpaqueMutexedString_wrapper(this->inner.get()));
+
+inline std::unique_ptr<Utf16Wrap> OpaqueMutexedString::wrapper() const {
+  auto result = diplomat::capi::OpaqueMutexedString_wrapper(this->AsFFI());
+  return std::unique_ptr<Utf16Wrap>(Utf16Wrap::FromFFI(result));
 }
-#endif
+
+inline const diplomat::capi::OpaqueMutexedString* OpaqueMutexedString::AsFFI() const {
+  return reinterpret_cast<const diplomat::capi::OpaqueMutexedString*>(this);
+}
+
+inline diplomat::capi::OpaqueMutexedString* OpaqueMutexedString::AsFFI() {
+  return reinterpret_cast<diplomat::capi::OpaqueMutexedString*>(this);
+}
+
+inline const OpaqueMutexedString* OpaqueMutexedString::FromFFI(const diplomat::capi::OpaqueMutexedString* ptr) {
+  return reinterpret_cast<const OpaqueMutexedString*>(ptr);
+}
+
+inline OpaqueMutexedString* OpaqueMutexedString::FromFFI(diplomat::capi::OpaqueMutexedString* ptr) {
+  return reinterpret_cast<OpaqueMutexedString*>(ptr);
+}
+
+inline void OpaqueMutexedString::operator delete(void* ptr) {
+  diplomat::capi::OpaqueMutexedString_destroy(reinterpret_cast<diplomat::capi::OpaqueMutexedString*>(ptr));
+}
+
+
+#endif // OpaqueMutexedString_HPP

@@ -1,10 +1,10 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaquePath, Optional, OutType, Param, PrimitiveType, ReturnableStructDef, SelfType, Slice,
-    SpecialMethod, StringEncoding, StructField, StructPathLike, TyPosition, Type, TypeContext,
-    TypeDef, TypeId,
+    self, BackendAttrSupport, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic,
+    Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType, ReturnableStructDef,
+    SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPathLike, TyPosition, Type,
+    TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -17,8 +17,30 @@ use std::path::Path;
 mod formatter;
 use formatter::KotlinFormatter;
 
-use crate::common::{ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 use serde::{Deserialize, Serialize};
+
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
+
+    a.renaming = true;
+    a.namespacing = false; // TODO
+    a.memory_sharing = false;
+    a.non_exhaustive_structs = true;
+    a.method_overloading = true;
+
+    a.constructors = false; // TODO
+    a.named_constructors = false; // TODO
+    a.fallible_constructors = false; // TODO
+    a.accessors = false;
+    a.stringifiers = false; // TODO
+    a.comparators = false; // TODO
+    a.iterators = true;
+    a.iterables = true;
+    a.indexing = true;
+
+    a
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct KotlinConfig {
@@ -26,7 +48,10 @@ struct KotlinConfig {
     lib_name: String,
 }
 
-pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
+pub(crate) fn run<'tcx>(
+    tcx: &'tcx TypeContext,
+    conf_path: Option<&Path>,
+) -> (FileMap, ErrorStore<'tcx, String>) {
     let conf_path = conf_path.expect("Kotlin library needs to be called with config");
 
     let conf_str = std::fs::read_to_string(conf_path)
@@ -47,7 +72,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
         formatter: &formatter,
     };
 
-    for (id, ty) in tcx.all_types() {
+    for (_id, ty) in tcx.all_types() {
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
         if ty.attrs().disable {
             continue;
@@ -56,8 +81,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
             TypeDef::Opaque(o) => {
                 let type_name = o.name.to_string();
 
-                let (file_name, body) =
-                    ty_gen_cx.gen_opaque_def(o, id, &type_name, &domain, &lib_name);
+                let (file_name, body) = ty_gen_cx.gen_opaque_def(o, &type_name, &domain, &lib_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -65,8 +89,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
             TypeDef::OutStruct(o) => {
                 let type_name = o.name.to_string();
 
-                let (file_name, body) =
-                    ty_gen_cx.gen_struct_def(o, id, &type_name, &domain, &lib_name);
+                let (file_name, body) = ty_gen_cx.gen_struct_def(o, &type_name, &domain, &lib_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -75,7 +98,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
                 let type_name = struct_def.name.to_string();
 
                 let (file_name, body) =
-                    ty_gen_cx.gen_struct_def(struct_def, id, &type_name, &domain, &lib_name);
+                    ty_gen_cx.gen_struct_def(struct_def, &type_name, &domain, &lib_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -84,7 +107,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
                 let type_name = enum_def.name.to_string();
 
                 let (file_name, body) =
-                    ty_gen_cx.gen_enum_def(enum_def, id, &type_name, &domain, &lib_name);
+                    ty_gen_cx.gen_enum_def(enum_def, &type_name, &domain, &lib_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
@@ -160,7 +183,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
         init,
     );
 
-    files
+    (files, errors)
 }
 
 #[derive(Template, Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
@@ -830,7 +853,6 @@ retutnVal.option() ?: return null
     fn gen_method(
         &mut self,
         special_methods: &mut SpecialMethods,
-        id: TypeId,
         method: &'cx hir::Method,
         self_type: Option<&'cx SelfType>,
     ) -> String {
@@ -839,7 +861,7 @@ retutnVal.option() ?: return null
         }
 
         let mut visitor = method.borrowing_param_visitor(self.tcx);
-        let native_method_name = self.formatter.fmt_c_method_name(id, method);
+        let native_method_name = method.abi_name.as_str();
 
         let mut param_decls_kt = Vec::with_capacity(method.params.len());
         let mut param_types_ffi = Vec::with_capacity(method.params.len());
@@ -997,7 +1019,7 @@ retutnVal.option() ?: return null
         .expect("Failed to render string for method")
     }
 
-    fn gen_native_method_info(&mut self, id: TypeId, method: &'cx hir::Method) -> NativeMethodInfo {
+    fn gen_native_method_info(&mut self, method: &'cx hir::Method) -> NativeMethodInfo {
         let mut param_decls = Vec::with_capacity(method.params.len());
 
         let mut visitor = method.borrowing_param_visitor(self.tcx);
@@ -1030,7 +1052,7 @@ retutnVal.option() ?: return null
             param_decls.push("write: Pointer".into())
         }
         let params = param_decls.join(", ");
-        let native_method = self.formatter.fmt_c_method_name(id, method);
+        let native_method = &method.abi_name;
         let return_ty = self.gen_return_type_name_ffi(&method.output);
 
         NativeMethodInfo {
@@ -1041,7 +1063,6 @@ retutnVal.option() ?: return null
     fn gen_opaque_def(
         &mut self,
         ty: &'cx hir::OpaqueDef,
-        id: TypeId,
         type_name: &str,
         domain: &str,
         lib_name: &str,
@@ -1050,7 +1071,7 @@ retutnVal.option() ?: return null
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .map(|method| self.gen_native_method_info(id, method))
+            .map(|method| self.gen_native_method_info(method))
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
@@ -1065,7 +1086,7 @@ retutnVal.option() ?: return null
                     .map(|self_param| (&self_param.ty, method))
             })
             .map(|(self_param, method)| {
-                self.gen_method(&mut special_methods, id, method, Some(self_param))
+                self.gen_method(&mut special_methods, method, Some(self_param))
             })
             .collect::<Vec<_>>();
 
@@ -1075,7 +1096,7 @@ retutnVal.option() ?: return null
             .iter()
             .filter(|m| !m.attrs.disable)
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(&mut unused_special_methods, id, method, None))
+            .map(|method| self.gen_method(&mut unused_special_methods, method, None))
             .collect::<Vec<_>>();
 
         let lifetimes = ty
@@ -1122,7 +1143,7 @@ retutnVal.option() ?: return null
     fn gen_struct_def<P: TyPosition>(
         &mut self,
         ty: &'cx hir::StructDef<P>,
-        id: TypeId,
+
         type_name: &str,
         domain: &str,
         lib_name: &str,
@@ -1131,7 +1152,7 @@ retutnVal.option() ?: return null
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .map(|method| self.gen_native_method_info(id, method))
+            .map(|method| self.gen_native_method_info(method))
             .collect::<Vec<_>>();
 
         let mut unused_special_methods = SpecialMethods::default();
@@ -1145,7 +1166,7 @@ retutnVal.option() ?: return null
                     .map(|self_param| (&self_param.ty, method))
             })
             .map(|(self_param, method)| {
-                self.gen_method(&mut unused_special_methods, id, method, Some(self_param))
+                self.gen_method(&mut unused_special_methods, method, Some(self_param))
             })
             .collect::<Vec<_>>();
 
@@ -1153,7 +1174,7 @@ retutnVal.option() ?: return null
             .methods
             .iter()
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(&mut unused_special_methods, id, method, None))
+            .map(|method| self.gen_method(&mut unused_special_methods, method, None))
             .collect::<Vec<_>>();
 
         let lifetimes = ty
@@ -1228,7 +1249,6 @@ retutnVal.option() ?: return null
     fn gen_enum_def(
         &mut self,
         ty: &'cx hir::EnumDef,
-        id: TypeId,
         type_name: &str,
         domain: &str,
         lib_name: &str,
@@ -1237,7 +1257,7 @@ retutnVal.option() ?: return null
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
-            .map(|method| self.gen_native_method_info(id, method))
+            .map(|method| self.gen_native_method_info(method))
             .collect::<Vec<_>>();
 
         let mut special_methods = SpecialMethods::default();
@@ -1252,7 +1272,7 @@ retutnVal.option() ?: return null
                     .map(|self_param| (&self_param.ty, method))
             })
             .map(|(self_param, method)| {
-                self.gen_method(&mut special_methods, id, method, Some(self_param))
+                self.gen_method(&mut special_methods, method, Some(self_param))
             })
             .collect::<Vec<_>>();
 
@@ -1261,7 +1281,7 @@ retutnVal.option() ?: return null
             .iter()
             .filter(|m| !m.attrs.disable)
             .filter(|method| method.param_self.is_none())
-            .map(|method| self.gen_method(&mut special_methods, id, method, None))
+            .map(|method| self.gen_method(&mut special_methods, method, None))
             .collect::<Vec<_>>();
 
         #[derive(Clone, Debug)]
@@ -1422,7 +1442,7 @@ struct SpecialMethodsImpl {
 }
 
 impl SpecialMethodsImpl {
-    pub fn new(
+    fn new(
         SpecialMethods {
             iterator_type,
             indexer_type,
@@ -1452,7 +1472,7 @@ struct MethodTpl<'a> {
     // todo: comment: String,
     declaration: String,
     /// The C method name
-    native_method_name: Cow<'a, str>,
+    native_method_name: &'a str,
 
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
@@ -1474,7 +1494,7 @@ mod test {
     use diplomat_core::hir::TypeDef;
     use quote::quote;
 
-    use crate::common::ErrorStore;
+    use crate::ErrorStore;
 
     use super::formatter::test::new_tcx;
     use super::{formatter::KotlinFormatter, TyGenContext};
@@ -1515,7 +1535,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (type_id, TypeDef::Enum(enum_def)) = all_types
+        if let (_id, TypeDef::Enum(enum_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -1531,7 +1551,7 @@ mod test {
             let type_name = enum_def.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, enum_code) =
-                ty_gen_cx.gen_enum_def(enum_def, type_id, &type_name, "dev.gigapixel", "somelib");
+                ty_gen_cx.gen_enum_def(enum_def, &type_name, "dev.gigapixel", "somelib");
             insta::assert_snapshot!(enum_code)
         }
     }
@@ -1579,7 +1599,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (type_id, TypeDef::Struct(strct)) = all_types
+        if let (_id, TypeDef::Struct(strct)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -1595,7 +1615,7 @@ mod test {
             let type_name = strct.name.to_string();
             // test that we can render and that it doesn't panic
             let (_, struct_code) =
-                ty_gen_cx.gen_struct_def(strct, type_id, &type_name, "dev.gigapixel", "somelib");
+                ty_gen_cx.gen_struct_def(strct, &type_name, "dev.gigapixel", "somelib");
             insta::assert_snapshot!(struct_code)
         }
     }
@@ -1684,7 +1704,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (type_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -1699,13 +1719,8 @@ mod test {
             };
             let type_name = opaque_def.name.to_string();
             // test that we can render and that it doesn't panic
-            let (_, result) = ty_gen_cx.gen_opaque_def(
-                opaque_def,
-                type_id,
-                &type_name,
-                "dev.gigapixel",
-                "somelib",
-            );
+            let (_, result) =
+                ty_gen_cx.gen_opaque_def(opaque_def, &type_name, "dev.gigapixel", "somelib");
             insta::assert_snapshot!(result)
         }
     }

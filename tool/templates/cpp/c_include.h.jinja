@@ -1,0 +1,9 @@
+{% if let Some(ns) = namespace -%}
+namespace {{ns}} {
+{% else -%}
+namespace diplomat {
+{% endif -%}
+namespace {{self::CAPI_NAMESPACE}} {
+    {{ c_header.body|trim|indent(4) }}
+} // namespace {{self::CAPI_NAMESPACE}}
+} // namespace

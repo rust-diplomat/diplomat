@@ -1,24 +1,12 @@
-import test from 'ava';
+import test from "ava";
 
-import { ICU4XFixedDecimal, ICU4XLocale, ICU4XDataProvider, ICU4XFixedDecimalFormatter, ICU4XFixedDecimalFormatterOptions } from "demo";
+import { ICU4XFixedDecimalDemo, ICU4XFixedDecimalFormatterDemo } from "demo/demo"; 
+import { ICU4XFixedDecimalGroupingStrategy } from "../api/ICU4XFixedDecimalGroupingStrategy.mjs";
 
-test("multiply a fixed decimal by 0.1", t => {
-    const my_decimal = ICU4XFixedDecimal.new(123);
-
-    my_decimal.multiply_pow10(-1);
-    t.is(my_decimal.to_string(), "12.3");
+test("Format write returns a formatted decimal.", t => {
+	t.is("1,000", ICU4XFixedDecimalFormatterDemo.formatWrite("en", ICU4XFixedDecimalGroupingStrategy.Auto, false, 1000));
 });
 
-test("format a fixed decimal", t => {
-    const my_decimal = ICU4XFixedDecimal.new(123);
-
-    my_decimal.multiply_pow10(-1);
-
-    const locale = ICU4XLocale.new("bn");
-
-    const data_provider = ICU4XDataProvider.new_static();
-
-    const fdf = ICU4XFixedDecimalFormatter.try_new(locale, data_provider, ICU4XFixedDecimalFormatterOptions.default());
-
-    t.is(fdf.format_write(my_decimal), "১২.৩");
+test("toString returns the proper string.", t => {
+	t.is("1000", ICU4XFixedDecimalDemo.toString(1000));
 });

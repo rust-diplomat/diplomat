@@ -1,21 +1,38 @@
 #ifndef UnimportedEnum_HPP
 #define UnimportedEnum_HPP
+
+#include "UnimportedEnum.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-#include "UnimportedEnum.h"
 
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
 
-enum struct UnimportedEnum {
-  A = 0,
-  B = 1,
-  C = 2,
-};
+inline diplomat::capi::UnimportedEnum UnimportedEnum::AsFFI() const {
+  return static_cast<diplomat::capi::UnimportedEnum>(value);
+}
 
-#endif
+inline UnimportedEnum UnimportedEnum::FromFFI(diplomat::capi::UnimportedEnum c_enum) {
+  switch (c_enum) {
+    case diplomat::capi::UnimportedEnum_A:
+    case diplomat::capi::UnimportedEnum_B:
+    case diplomat::capi::UnimportedEnum_C:
+      return static_cast<UnimportedEnum::Value>(c_enum);
+    default:
+      abort();
+  }
+}
+#endif // UnimportedEnum_HPP

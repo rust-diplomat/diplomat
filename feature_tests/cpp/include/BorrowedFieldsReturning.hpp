@@ -1,21 +1,38 @@
 #ifndef BorrowedFieldsReturning_HPP
 #define BorrowedFieldsReturning_HPP
+
+#include "BorrowedFieldsReturning.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-#include "BorrowedFieldsReturning.h"
+
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
 
 
-struct BorrowedFieldsReturning {
- public:
-  std::string_view bytes;
-};
+inline diplomat::capi::BorrowedFieldsReturning BorrowedFieldsReturning::AsFFI() const {
+  return diplomat::capi::BorrowedFieldsReturning {
+    .bytes = { .data = bytes.data(), .len = bytes.size() },
+  };
+}
+
+inline BorrowedFieldsReturning BorrowedFieldsReturning::FromFFI(diplomat::capi::BorrowedFieldsReturning c_struct) {
+  return BorrowedFieldsReturning {
+    .bytes = std::string_view(c_struct.bytes.data, c_struct.bytes.len),
+  };
+}
 
 
-#endif
+#endif // BorrowedFieldsReturning_HPP

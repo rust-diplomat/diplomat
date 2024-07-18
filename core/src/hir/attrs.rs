@@ -179,10 +179,6 @@ impl Attrs {
                                 errors.push(LoweringError::Other(
                                     "Duplicate `disable` attribute".into(),
                                 ));
-                            } else if !support.disabling {
-                                errors.push(LoweringError::Other(format!(
-                                    "`disable` not supported in backend {backend}"
-                                )))
                             } else {
                                 this.disable = true;
                             }
@@ -722,108 +718,60 @@ impl Attrs {
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
-    /// Supports not including any items with `#[diplomat::attr(..., disable)]`
-    pub disabling: bool,
-    /// I.E., changing `rust_function_name` to `camelCaseFunctionName`
+    /// Renaming types/methods, usually to make them more idiomatic.
     ///
-    /// Note that [`Attrs::abi_rename`] is required to always be supported.
+    /// This is supported by all backends *except for C*.
     pub renaming: bool,
-    /// I.E.
-    /// ```cpp
-    /// namespace SampleNamespace {}
-    /// ```
+    /// Namespacing types, e.g. C++ `namespace`.
     pub namespacing: bool,
-    /// I.E.
-    /// ```js
-    /// class Sample {
-    ///     constructor() { }
-    /// }
-    /// ```
-    pub constructors: bool,
-    /// I.E.
-    /// ```dart
-    /// factory Sample.constructor1()
-    /// factory Sample.fromJSON()
-    /// ```
-    pub named_constructors: bool,
-    /// Can a constructor return an error?
-    /// I.E.
-    /// ```dart
-    /// factory Sample() {
-    ///     throw("I didn't like that.");
-    /// }
-    /// ```
-    pub fallible_constructors: bool,
-    /// I.E.
-    /// ```dart
-    /// class Sample {
-    ///     String get item1
-    ///     String set item2
-    /// }
-    /// ```
-    /// See [`SpecialMethod::Getter`] and [`SpecialMethod::Setter`]
-    pub accessors: bool,
-    /// Do classes have a function for string representation?
-    /// I.E.
-    /// ```dart
-    /// class Sample {
-    ///     @override
-    ///     String toString()
-    /// }
-    /// ```
-    pub stringifiers: bool,
-    /// I.E.
-    /// ```dart
-    /// class Sample {
-    ///     @override bool operator ==(Object other) => ...;
-    /// }
-    /// ```
-    pub comparators: bool,
-    /// Can items with `#[diplomat::attr(supports= memory_sharing)]` be shared across threads?
-    /// For instance:
-    /// ```cpp
-    /// HeapItem* item = new HeapItem();
-    /// ```
-    /// Would be an item that supports memory sharing.
+    /// Rust can directly acccess the memory of this language, like C and C++.
+    /// This is not supported in any garbage-collected language.
     pub memory_sharing: bool,
-    /// I.E.
-    /// ```dart
-    /// class MyIterator implements Iterator {
-    ///     int next()
-    /// }
-    /// ```
+    /// This language's structs are non-exhaustive by default, i.e. adding
+    /// fields is not a breaking change.
+    pub non_exhaustive_structs: bool,
+    /// Whether the language supports method overloading
+    pub method_overloading: bool,
+
+    // Special methods
+    /// Marking a method as a constructor to generate special constructor methods.
+    pub constructors: bool,
+    /// Marking a method as a named constructor to generate special named constructor methods.
+    pub named_constructors: bool,
+    /// Marking constructors as being able to return errors. This is possible in languages where
+    /// errors are thrown as exceptions (Dart), but not for example in C++, where errors are
+    /// returned as values (constructors usually have to return the type itself).
+    pub fallible_constructors: bool,
+    /// Marking methods as field getters and setters, see [`SpecialMethod::Getter`] and [`SpecialMethod::Setter`]
+    pub accessors: bool,
+    /// Marking a method as the `to_string` method, which is special in this language.
+    pub stringifiers: bool,
+    /// Marking a method as the `compare_to` method, which is special in this language.
+    pub comparators: bool,
+    /// Marking a method as the `next` method, which is special in this language.
     pub iterators: bool,
-    /// I.E.
-    /// ```dart
-    /// class Sample implements Iterable {
-    ///     Iterator get iterator
-    /// }
-    /// ```
+    /// Marking a method as the `iterator` method, which is special in this language.
     pub iterables: bool,
-    /// I.E.
-    /// ```dart
-    /// class Sample {
-    ///     int operator [](int index)
-    /// }
-    /// ```
+    /// Marking a method as the `[]` operator, which is special in this language.
     pub indexing: bool,
-    // more to be added: namespace, etc
 }
 
 impl BackendAttrSupport {
     #[cfg(test)]
     fn all_true() -> Self {
         Self {
-            disabling: true,
             renaming: true,
             namespacing: true,
+            memory_sharing: true,
+            non_exhaustive_structs: true,
+            method_overloading: true,
+
             constructors: true,
             named_constructors: true,
             fallible_constructors: true,
             accessors: true,
             stringifiers: true,
             comparators: true,
-            memory_sharing: true,
             iterators: true,
             iterables: true,
             indexing: true,
@@ -922,34 +870,39 @@ impl AttributeValidator for BasicAttributeValidator {
         Ok(if name == "supports" {
             // destructure so new fields are forced to be added
             let BackendAttrSupport {
-                disabling,
                 renaming,
                 namespacing,
+                memory_sharing,
+                non_exhaustive_structs,
+                method_overloading,
+
                 constructors,
                 named_constructors,
                 fallible_constructors,
                 accessors,
                 stringifiers,
                 comparators,
-                memory_sharing,
                 iterators,
                 iterables,
                 indexing,
             } = self.support;
             match value {
-                "disabling" => disabling,
                 "renaming" => renaming,
                 "namespacing" => namespacing,
+                "memory_sharing" => memory_sharing,
+                "non_exhaustive_structs" => non_exhaustive_structs,
+                "method_overloading" => method_overloading,
+
                 "constructors" => constructors,
                 "named_constructors" => named_constructors,
                 "fallible_constructors" => fallible_constructors,
                 "accessors" => accessors,
                 "stringifiers" => stringifiers,
                 "comparators" => comparators,
-                "memory_sharing" => memory_sharing,
                 "iterators" => iterators,
                 "iterables" => iterables,
                 "indexing" => indexing,
+
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

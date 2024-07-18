@@ -1,0 +1,63 @@
+{%- let method = method.unwrap() -%}
+{{method_decl}}(
+{%- for param in parameters -%}
+    {{- param.name -}}
+    {%- if typescript %}: {{ param.ty -}}{%- endif -%}
+    {%- if !loop.last -%}, {% endif -%}
+{%- endfor -%}
+) {%- if typescript %}{{ return_type }};{% else %} {
+    {% for slice in slice_params %}
+    const {{slice.name}}Slice = {{slice.slice_expr}};
+    {% endfor -%}
+
+    {%- if needs_slice_cleanup %}
+    let slice_cleanup_callbacks = [];
+    {% endif -%}
+
+    {%- for alloc_stmt in alloc_expressions %}
+    {{alloc_stmt|indent(4)}}
+    {% endfor -%}
+    
+    {% let lifetimes = lifetimes.unwrap() -%}
+    {% for lifetime in lifetimes.all_lifetimes() -%}
+    {%- let maybe_lifetime_info = method_lifetimes_map.get(lifetime) -%}
+    {%- if maybe_lifetime_info.is_some() -%}
+    {%- let lifetime_info = maybe_lifetime_info.unwrap() %}
+    // This lifetime edge depends on lifetimes {#+ -#}
+    {%- for longer in lifetime_info.all_longer_lifetimes.iter().copied() -%}
+    {%- if !loop.first -%}, {% endif %}'{{lifetimes.fmt_lifetime(longer)}}
+    {%- endfor %}
+    let {{lifetimes.fmt_lifetime(lifetime)}}Edges = [
+        {%- for incoming_edge in lifetime_info.incoming_edges.iter() %}
+        {%- if !loop.first %}, {% endif -%} {{self::display_lifetime_edge(incoming_edge)}}
+        {%- endfor -%}
+    ];
+    {% endif -%}
+    {%- endfor -%}
+
+
+    {%~ if !method.output.is_ffi_unit() %}const result = {% endif %}wasm.{{ abi_name }}(
+        {%- for param in param_conversions -%}
+        {%- if !loop.first %}, {% endif -%}
+        {{ param }}
+        {%- endfor -%}
+    );
+
+    try {
+    {%~ match return_expression -%}
+    {%- when Some with (statement) %}
+        {{ statement|indent(8) -}}
+    {% when None -%}
+    {%- endmatch %}
+    } finally {
+    {% if needs_slice_cleanup %}
+        for (let cleanup of slice_cleanup_callbacks) {
+            cleanup();
+        }
+    {% endif -%}
+    {% for cleanup in cleanup_expressions %}
+        {{cleanup|indent(8)}}
+    {% endfor %}
+    }
+}
+{%- endif -%}

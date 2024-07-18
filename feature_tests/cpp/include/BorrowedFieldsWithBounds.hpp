@@ -1,44 +1,57 @@
 #ifndef BorrowedFieldsWithBounds_HPP
 #define BorrowedFieldsWithBounds_HPP
+
+#include "BorrowedFieldsWithBounds.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
-
-#include "BorrowedFieldsWithBounds.h"
-
-class Foo;
-struct BorrowedFieldsWithBounds;
-
-struct BorrowedFieldsWithBounds {
- public:
-  std::u16string_view field_a;
-  std::string_view field_b;
-  std::string_view field_c;
-
-  /**
-   * Lifetimes: `foo`, `dstr16_x`, `utf8_str_z` must live at least as long as the output.
-   * 
-   * 
-   * Warning: Passing ill-formed UTF-8 is undefined behavior (and may be memory-unsafe).
-   */
-  static BorrowedFieldsWithBounds from_foo_and_strings(const Foo& foo, const std::u16string_view dstr16_x, const std::string_view utf8_str_z);
-};
-
 #include "Foo.hpp"
 
-inline BorrowedFieldsWithBounds BorrowedFieldsWithBounds::from_foo_and_strings(const Foo& foo, const std::u16string_view dstr16_x, const std::string_view utf8_str_z) {
-  capi::BorrowedFieldsWithBounds diplomat_raw_struct_out_value = capi::BorrowedFieldsWithBounds_from_foo_and_strings(foo.AsFFI(), dstr16_x.data(), dstr16_x.size(), utf8_str_z.data(), utf8_str_z.size());
-  capi::DiplomatString16View diplomat_slice_raw_out_value_field_a = diplomat_raw_struct_out_value.field_a;
-  diplomat::span<const char16_t> slice(diplomat_slice_raw_out_value_field_a.data, diplomat_slice_raw_out_value_field_a.len);
-  capi::DiplomatStringView diplomat_str_raw_out_value_field_b = diplomat_raw_struct_out_value.field_b;
-  std::string_view str(diplomat_str_raw_out_value_field_b.data, diplomat_str_raw_out_value_field_b.len);
-  capi::DiplomatStringView diplomat_str_raw_out_value_field_c = diplomat_raw_struct_out_value.field_c;
-  std::string_view str(diplomat_str_raw_out_value_field_c.data, diplomat_str_raw_out_value_field_c.len);
-  return BorrowedFieldsWithBounds{ .field_a = std::move(slice), .field_b = std::move(str), .field_c = std::move(str) };
+
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    diplomat::capi::BorrowedFieldsWithBounds BorrowedFieldsWithBounds_from_foo_and_strings(const diplomat::capi::Foo* foo, const char16_t* dstr16_x_data, size_t dstr16_x_len, const char* utf8_str_z_data, size_t utf8_str_z_len);
+    
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
+
+inline diplomat::result<BorrowedFieldsWithBounds, diplomat::Utf8Error> BorrowedFieldsWithBounds::from_foo_and_strings(const Foo& foo, std::u16string_view dstr16_x, std::string_view utf8_str_z) {
+  if (!diplomat::capi::diplomat_is_str(utf8_str_z.data(), utf8_str_z.size())) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+  }
+  auto result = diplomat::capi::BorrowedFieldsWithBounds_from_foo_and_strings(foo.AsFFI(),
+    dstr16_x.data(),
+    dstr16_x.size(),
+    utf8_str_z.data(),
+    utf8_str_z.size());
+  return diplomat::Ok<BorrowedFieldsWithBounds>(std::move(BorrowedFieldsWithBounds::FromFFI(result)));
 }
-#endif
+
+
+inline diplomat::capi::BorrowedFieldsWithBounds BorrowedFieldsWithBounds::AsFFI() const {
+  return diplomat::capi::BorrowedFieldsWithBounds {
+    .field_a = { .data = field_a.data(), .len = field_a.size() },
+    .field_b = { .data = field_b.data(), .len = field_b.size() },
+    .field_c = { .data = field_c.data(), .len = field_c.size() },
+  };
+}
+
+inline BorrowedFieldsWithBounds BorrowedFieldsWithBounds::FromFFI(diplomat::capi::BorrowedFieldsWithBounds c_struct) {
+  return BorrowedFieldsWithBounds {
+    .field_a = std::u16string_view(c_struct.field_a.data, c_struct.field_a.len),
+    .field_b = std::string_view(c_struct.field_b.data, c_struct.field_b.len),
+    .field_c = std::string_view(c_struct.field_c.data, c_struct.field_c.len),
+  };
+}
+
+
+#endif // BorrowedFieldsWithBounds_HPP
