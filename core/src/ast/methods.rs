@@ -197,7 +197,7 @@ impl Method {
             .as_ref()
             .map(|return_type| match return_type {
                 TypeName::Unit => true,
-                TypeName::Result(ok, _, _) | TypeName::Option(ok) => {
+                TypeName::Result(ok, _, _) | TypeName::Option(ok, _) => {
                     matches!(ok.as_ref(), TypeName::Unit)
                 }
 
