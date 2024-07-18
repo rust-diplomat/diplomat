@@ -372,8 +372,7 @@ pub mod test {
 
         let env = diplomat_file.all_types();
         let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
-        attr_validator.support.renaming = true;
-        attr_validator.support.disabling = true;
+        attr_validator.support = super::super::attr_support();
 
         match hir::TypeContext::from_ast(&env, attr_validator) {
             Ok(context) => context,

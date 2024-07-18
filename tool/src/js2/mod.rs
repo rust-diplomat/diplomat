@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 
 use diplomat_core::ast::DocsUrlGenerator;
 
-use diplomat_core::hir::{TypeContext, TypeDef};
+use diplomat_core::hir::{BackendAttrSupport, TypeContext, TypeDef};
 
 use askama::{self, Template};
 use type_generation::TyGenContext;
@@ -28,6 +28,28 @@ impl FileType {
             FileType::Typescript => true,
         }
     }
+}
+
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
+
+    a.renaming = true;
+    a.namespacing = false;
+    a.memory_sharing = false;
+    a.non_exhaustive_structs = true;
+    a.method_overloading = false;
+
+    a.constructors = false;
+    a.named_constructors = false;
+    a.fallible_constructors = false;
+    a.accessors = true;
+    a.comparators = false;
+    a.stringifiers = false; // TODO
+    a.iterators = false; // TODO
+    a.iterables = false; // TODO
+    a.indexing = false;
+
+    a
 }
 
 pub(crate) fn run<'tcx>(
