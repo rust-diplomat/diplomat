@@ -1,15 +1,15 @@
-import * as ICU4XFixedDecimalFormatterDemo from "./ICU4XFixedDecimalFormatter.mjs";
-export * as ICU4XFixedDecimalFormatterDemo from "./ICU4XFixedDecimalFormatter.mjs";
-import * as ICU4XFixedDecimalDemo from "./ICU4XFixedDecimal.mjs";
-export * as ICU4XFixedDecimalDemo from "./ICU4XFixedDecimal.mjs";
+import * as FixedDecimalFormatterDemo from "./FixedDecimalFormatter.mjs";
+export * as FixedDecimalFormatterDemo from "./FixedDecimalFormatter.mjs";
+import * as FixedDecimalDemo from "./FixedDecimal.mjs";
+export * as FixedDecimalDemo from "./FixedDecimal.mjs";
 
 
 export const RenderInfo = {
 	termini: [
 		{
-			func: ICU4XFixedDecimalFormatterDemo.formatWrite,
+			func: FixedDecimalFormatterDemo.formatWrite,
 			// For avoiding webpacking minifying issues:
-			funcName: "ICU4XFixedDecimalFormatter.formatWrite",
+			funcName: "FixedDecimalFormatter.formatWrite",
 			parameters: [
 				
 				{
@@ -19,7 +19,7 @@ export const RenderInfo = {
 				
 				{
 					name: "ICU4X Fixed Decimal Grouping Strategy",
-					type: "ICU4XFixedDecimalGroupingStrategy"
+					type: "FixedDecimalGroupingStrategy"
 				},
 				
 				{
@@ -36,9 +36,9 @@ export const RenderInfo = {
 		},
 		
 		{
-			func: ICU4XFixedDecimalDemo.toString,
+			func: FixedDecimalDemo.toString,
 			// For avoiding webpacking minifying issues:
-			funcName: "ICU4XFixedDecimal.toString",
+			funcName: "FixedDecimal.toString",
 			parameters: [
 				
 				{
