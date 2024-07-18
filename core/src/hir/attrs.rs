@@ -828,15 +828,12 @@ mod tests {
     macro_rules! uitest_lowering_attr {
         ($($file:tt)*) => {
             let parsed: syn::File = syn::parse_quote! { $($file)* };
-            let custom_types = crate::ast::File::from(&parsed);
-            let env = custom_types.all_types();
 
             let mut output = String::new();
 
-
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support = hir::BackendAttrSupport::all_true();
-            match hir::TypeContext::from_ast(&env, attr_validator) {
+            match hir::TypeContext::from_syn(&parsed, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
                     for (ctx, err) in e {

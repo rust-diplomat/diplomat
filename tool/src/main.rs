@@ -40,7 +40,7 @@ fn main() -> std::io::Result<()> {
         &opt.entry,
         &opt.target_language,
         &opt.out_folder,
-        &diplomat_core::ast::DocsUrlGenerator::with_base_urls(
+        &diplomat_core::hir::DocsUrlGenerator::with_base_urls(
             opt.docs_base_urls
                 .iter()
                 .filter_map(|entry| entry.strip_prefix("*:").map(ToString::to_string))

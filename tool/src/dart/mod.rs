@@ -1,21 +1,22 @@
-use crate::{ErrorStore, FileMap};
-use askama::Template;
-use diplomat_core::ast::DocsUrlGenerator;
-use diplomat_core::hir::borrowing_param::{
-    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
-};
-use diplomat_core::hir::{
-    self, BackendAttrSupport, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType,
-    SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type,
-    TypeDef, TypeId,
-};
-use diplomat_core::hir::{ReturnableStructDef, TypeContext};
-use formatter::DartFormatter;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
+use crate::{ErrorStore, FileMap};
+use diplomat_core::hir::{
+    self,
+    borrowing_param::{
+        BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
+    },
+    BackendAttrSupport, DocsUrlGenerator, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner,
+    ReturnType, ReturnableStructDef, SelfType, SpecialMethod, SpecialMethodPresence,
+    StructPathLike, SuccessType, TyPosition, Type, TypeContext, TypeDef, TypeId,
+};
+
+use askama::Template;
+
 mod formatter;
+use formatter::DartFormatter;
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
