@@ -104,7 +104,7 @@ pub fn gen(
 
 /// This type abstracts over files being written to.
 #[derive(Default, Debug)]
-pub struct FileMap {
+struct FileMap {
     // The context types exist as a way to avoid passing around a billion different
     // parameters. However, passing them around as &mut self restricts the amount of
     // borrowing that can be done. We instead use a RefCell to guard the specifically mutable bits.
@@ -112,18 +112,11 @@ pub struct FileMap {
 }
 
 impl FileMap {
-    #[allow(dead_code)]
-    pub fn new(files: HashMap<String, String>) -> Self {
-        FileMap {
-            files: RefCell::new(files),
-        }
-    }
-
-    pub fn take_files(self) -> HashMap<String, String> {
+    fn take_files(self) -> HashMap<String, String> {
         mem::take(&mut *self.files.borrow_mut())
     }
 
-    pub fn add_file(&self, name: String, contents: String) {
+    fn add_file(&self, name: String, contents: String) {
         if self.files.borrow().get(&name).is_some() {
             panic!("File map already contains {}", name)
         }
