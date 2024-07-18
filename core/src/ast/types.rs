@@ -344,8 +344,8 @@ pub enum TypeName {
     Reference(Lifetime, Mutability, Box<TypeName>),
     /// A `Box<T>` type.
     Box(Box<TypeName>),
-    /// A `Option<T>` type.
-    Option(Box<TypeName>),
+    /// An `Option<T>` or DiplomatOption type.
+    Option(Box<TypeName>, StdlibOrDiplomat),
     /// A `Result<T, E>` or `diplomat_runtime::DiplomatResult` type.
     Result(Box<TypeName>, Box<TypeName>, StdlibOrDiplomat),
     Write,
@@ -537,9 +537,13 @@ impl TypeName {
                 let underlying = underlying.to_syn();
                 syn::parse_quote_spanned!(Span::call_site() => Box<#underlying>)
             }
-            TypeName::Option(underlying) => {
+            TypeName::Option(underlying, StdlibOrDiplomat::Stdlib) => {
                 let underlying = underlying.to_syn();
                 syn::parse_quote_spanned!(Span::call_site() => Option<#underlying>)
+            }
+            TypeName::Option(underlying, StdlibOrDiplomat::Diplomat) => {
+                let underlying = underlying.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOption<#underlying>)
             }
             TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
                 let ok = ok.to_syn();
@@ -718,12 +722,22 @@ impl TypeName {
                     } else {
                         panic!("Expected angle brackets for Box type")
                     }
-                } else if p_len == 1 && p.path.segments[0].ident == "Option" {
+                } else if p_len == 1 && p.path.segments[0].ident == "Option"
+                    || is_runtime_type(p, "DiplomatOption")
+                {
                     if let syn::PathArguments::AngleBracketed(type_args) =
                         &p.path.segments[0].arguments
                     {
                         if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
-                            TypeName::Option(Box::new(TypeName::from_syn(tpe, self_path_type)))
+                            let stdlib = if p.path.segments[0].ident == "Option" {
+                                StdlibOrDiplomat::Stdlib
+                            } else {
+                                StdlibOrDiplomat::Diplomat
+                            };
+                            TypeName::Option(
+                                Box::new(TypeName::from_syn(tpe, self_path_type)),
+                                stdlib,
+                            )
                         } else {
                             panic!("Expected first type argument for Option to be a type")
                         }
@@ -929,7 +943,7 @@ impl TypeName {
                 ty.visit_lifetimes(visit)?;
                 visit(lt, LifetimeOrigin::Reference)
             }
-            TypeName::Box(ty) | TypeName::Option(ty) => ty.visit_lifetimes(visit),
+            TypeName::Box(ty) | TypeName::Option(ty, _) => ty.visit_lifetimes(visit),
             TypeName::Result(ok, err, _) => {
                 ok.visit_lifetimes(visit)?;
                 err.visit_lifetimes(visit)
@@ -1045,7 +1059,8 @@ impl fmt::Display for TypeName {
                 write!(f, "{}{typ}", ReferenceDisplay(lifetime, mutability))
             }
             TypeName::Box(typ) => write!(f, "Box<{typ}>"),
-            TypeName::Option(typ) => write!(f, "Option<{typ}>"),
+            TypeName::Option(typ, StdlibOrDiplomat::Stdlib) => write!(f, "Option<{typ}>"),
+            TypeName::Option(typ, StdlibOrDiplomat::Diplomat) => write!(f, "DiplomatOption<{typ}>"),
             TypeName::Result(ok, err, _) => {
                 write!(f, "Result<{ok}, {err}>")
             }
