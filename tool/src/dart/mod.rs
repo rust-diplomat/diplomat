@@ -12,16 +12,15 @@ use diplomat_core::hir::{ReturnableStructDef, TypeContext};
 use formatter::DartFormatter;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::{Display, Write};
+use std::fmt::Write;
 
 mod formatter;
 
-/// Run file generation
-pub fn run<'cx>(
+pub(crate) fn run<'cx>(
     tcx: &'cx TypeContext,
-    docs_url_generator: &'cx DocsUrlGenerator,
-) -> Result<FileMap, Vec<(impl Display + 'cx, String)>> {
-    let formatter = DartFormatter::new(tcx, docs_url_generator);
+    docs_url_gen: &'cx DocsUrlGenerator,
+) -> (FileMap, ErrorStore<'cx, String>) {
+    let formatter = DartFormatter::new(tcx, docs_url_gen);
 
     let files = FileMap::default();
     let errors = ErrorStore::default();
@@ -29,7 +28,7 @@ pub fn run<'cx>(
     let mut directives = BTreeSet::default();
     let mut helper_classes = BTreeMap::default();
 
-    let mut tgcx = TyGenContext {
+    let mut context = TyGenContext {
         tcx,
         errors: &errors,
         helper_classes: &mut helper_classes,
@@ -37,8 +36,8 @@ pub fn run<'cx>(
     };
 
     // Needed for ListStringView
-    tgcx.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
-    tgcx.gen_slice(&hir::Slice::Str(
+    context.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
+    context.gen_slice(&hir::Slice::Str(
         None,
         hir::StringEncoding::UnvalidatedUtf16,
     ));
@@ -48,7 +47,7 @@ pub fn run<'cx>(
             continue;
         }
 
-        let (file_name, body) = tgcx.gen(id);
+        let (file_name, body) = context.gen(id);
 
         directives.insert(formatter.fmt_part(&file_name));
 
@@ -84,12 +83,7 @@ pub fn run<'cx>(
         ),
     );
 
-    let errors = errors.take_all();
-    if !errors.is_empty() {
-        Err(errors)
-    } else {
-        Ok(files)
-    }
+    (files, errors)
 }
 
 fn render_class(

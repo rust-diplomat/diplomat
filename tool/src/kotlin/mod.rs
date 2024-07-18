@@ -26,7 +26,10 @@ struct KotlinConfig {
     lib_name: String,
 }
 
-pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
+pub(crate) fn run<'tcx>(
+    tcx: &'tcx TypeContext,
+    conf_path: Option<&Path>,
+) -> (FileMap, ErrorStore<'tcx, String>) {
     let conf_path = conf_path.expect("Kotlin library needs to be called with config");
 
     let conf_str = std::fs::read_to_string(conf_path)
@@ -158,7 +161,7 @@ pub fn run(tcx: &TypeContext, conf_path: Option<&Path>) -> FileMap {
         init,
     );
 
-    files
+    (files, errors)
 }
 
 #[derive(Template, Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
@@ -1417,7 +1420,7 @@ struct SpecialMethodsImpl {
 }
 
 impl SpecialMethodsImpl {
-    pub fn new(
+    fn new(
         SpecialMethods {
             iterator_type,
             indexer_type,

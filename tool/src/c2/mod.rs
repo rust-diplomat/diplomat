@@ -2,60 +2,80 @@ mod formatter;
 mod header;
 mod ty;
 
-pub use self::formatter::CFormatter;
+pub(crate) use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
 pub(crate) use self::ty::TyGenContext;
 
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
-use diplomat_core::hir::TypeContext;
+use diplomat_core::hir;
 
-/// This is the main object that drives this backend. Most execution steps
-/// for this backend will be found as methods on this context
-pub struct CContext<'tcx> {
-    pub tcx: &'tcx TypeContext,
-    pub formatter: CFormatter<'tcx>,
-    pub files: FileMap,
-
-    pub errors: ErrorStore<'tcx, String>,
-    /// Whether this is being generated for C++ (needs extern C, namespaces, etc)
-    pub is_for_cpp: bool,
-}
-
-#[derive(Template)]
-#[template(path = "c2/runtime.h.jinja", escape = "none")]
-pub(crate) struct RuntimeTemplate {
-    pub is_for_cpp: bool,
-}
-
-impl<'tcx> CContext<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, files: FileMap, is_for_cpp: bool) -> Self {
-        CContext {
-            tcx,
-            files,
-            formatter: CFormatter::new(tcx, is_for_cpp),
-            errors: ErrorStore::default(),
-            is_for_cpp,
-        }
+pub fn gen_runtime(is_for_cpp: bool) -> String {
+    #[derive(Template)]
+    #[template(path = "c2/runtime.h.jinja", escape = "none")]
+    struct RuntimeTemplate {
+        is_for_cpp: bool,
     }
-
-    /// Run file generation
-    ///
-    /// Will populate self.files as a result
-    pub fn run(&self) {
-        let mut runtime = String::new();
-        RuntimeTemplate {
-            is_for_cpp: self.is_for_cpp,
-        }
+    let mut runtime = String::new();
+    RuntimeTemplate { is_for_cpp }
         .render_into(&mut runtime)
         .unwrap();
+    runtime
+}
 
-        self.files.add_file("diplomat_runtime.h".into(), runtime);
-        for (id, ty) in self.tcx.all_types() {
-            self.gen_ty(id, ty)
+pub fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
+    let files = FileMap::default();
+    let formatter = CFormatter::new(tcx, false);
+    let errors = ErrorStore::default();
+
+    files.add_file("diplomat_runtime.h".into(), gen_runtime(false));
+
+    for (id, ty) in tcx.all_types() {
+        if ty.attrs().disable {
+            // Skip type if disabled
+            continue;
         }
+        if let hir::TypeDef::Struct(s) = ty {
+            if s.fields.is_empty() {
+                // Skip ZST
+                continue;
+            }
+        }
+        if let hir::TypeDef::OutStruct(s) = ty {
+            if s.fields.is_empty() {
+                // Skip ZST
+                continue;
+            }
+        }
+
+        let decl_header_path = formatter.fmt_decl_header_path(id);
+        let impl_header_path = formatter.fmt_impl_header_path(id);
+
+        let _guard = errors.set_context_ty(ty.name().as_str().into());
+        let context = TyGenContext {
+            tcx,
+            formatter: &formatter,
+            errors: &errors,
+            is_for_cpp: false,
+            id,
+            decl_header_path: &decl_header_path,
+            impl_header_path: &impl_header_path,
+        };
+
+        let decl_header = match ty {
+            hir::TypeDef::Enum(e) => context.gen_enum_def(e),
+            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o),
+            hir::TypeDef::Struct(s) => context.gen_struct_def(s),
+            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s),
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
+        let impl_header = context.gen_impl(ty);
+
+        files.add_file(decl_header_path, decl_header.to_string());
+        files.add_file(impl_header_path, impl_header.to_string());
     }
 
-    // further methods can be found in ty.rs and formatter.rs
+    (files, errors)
 }

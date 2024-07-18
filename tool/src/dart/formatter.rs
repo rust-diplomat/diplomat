@@ -16,7 +16,7 @@ use std::borrow::Cow;
 /// of C types and methods.
 pub(super) struct DartFormatter<'tcx> {
     tcx: &'tcx TypeContext,
-    docs_url_generator: &'tcx DocsUrlGenerator,
+    docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
 const INVALID_METHOD_NAMES: &[&str] = &["new", "static", "default"];
@@ -24,11 +24,8 @@ const INVALID_FIELD_NAMES: &[&str] = &["new", "static", "default"];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> DartFormatter<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
-        Self {
-            tcx,
-            docs_url_generator,
-        }
+    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+        Self { tcx, docs_url_gen }
     }
 
     pub fn fmt_lifetime_edge_array(
@@ -61,7 +58,7 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_generator, MarkdownStyle::Normal)
+        docs.to_markdown(self.docs_url_gen, MarkdownStyle::Normal)
             .trim()
             .replace('\n', "\n/// ")
             .replace(" \n", "\n")

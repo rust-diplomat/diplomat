@@ -9,65 +9,6 @@ use diplomat_core::hir::{
 use std::borrow::Cow;
 use std::fmt::Write;
 
-impl<'tcx> super::CContext<'tcx> {
-    pub fn gen_ty(&self, id: TypeId, ty: TypeDef<'tcx>) {
-        if ty.attrs().disable {
-            // Skip type if disabled
-            return;
-        }
-        if let TypeDef::Struct(s) = ty {
-            if s.fields.is_empty() {
-                // Skip ZST
-                return;
-            }
-        }
-        if let TypeDef::OutStruct(s) = ty {
-            if s.fields.is_empty() {
-                // Skip ZST
-                return;
-            }
-        }
-
-        let decl_header_path = self.formatter.fmt_decl_header_path(id);
-        let impl_header_path = self.formatter.fmt_impl_header_path(id);
-
-        let _guard = self.errors.set_context_ty(ty.name().as_str().into());
-        let tygen = self.ty_gen_context(id, decl_header_path, impl_header_path);
-
-        let decl_header = match ty {
-            TypeDef::Enum(e) => tygen.gen_enum_def(e),
-            TypeDef::Opaque(o) => tygen.gen_opaque_def(o),
-            TypeDef::Struct(s) => tygen.gen_struct_def(s),
-            TypeDef::OutStruct(s) => tygen.gen_struct_def(s),
-            _ => unreachable!("unknown AST/HIR variant"),
-        };
-
-        let impl_header = tygen.gen_impl(ty);
-
-        self.files
-            .add_file(tygen.decl_header_path, decl_header.to_string());
-        self.files
-            .add_file(tygen.impl_header_path, impl_header.to_string());
-    }
-
-    pub(crate) fn ty_gen_context<'cx>(
-        &'cx self,
-        id: TypeId,
-        decl_header_path: String,
-        impl_header_path: String,
-    ) -> TyGenContext<'cx, 'tcx> {
-        TyGenContext {
-            tcx: self.tcx,
-            formatter: &self.formatter,
-            errors: &self.errors,
-            is_for_cpp: self.is_for_cpp,
-            id,
-            decl_header_path,
-            impl_header_path,
-        }
-    }
-}
-
 #[derive(Template)]
 #[template(path = "c2/enum.h.jinja", escape = "none")]
 struct EnumTemplate<'a> {
@@ -116,12 +57,12 @@ pub(crate) struct TyGenContext<'cx, 'tcx> {
     pub(crate) errors: &'cx ErrorStore<'tcx, String>,
     pub(crate) is_for_cpp: bool,
     pub(crate) id: TypeId,
-    pub(crate) decl_header_path: String,
-    pub(crate) impl_header_path: String,
+    pub(crate) decl_header_path: &'cx String,
+    pub(crate) impl_header_path: &'cx String,
 }
 
 impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
-    pub fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
+    pub(crate) fn gen_enum_def(&self, def: &'tcx hir::EnumDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id);
         EnumTemplate {
@@ -136,7 +77,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         decl_header
     }
 
-    pub fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
+    pub(crate) fn gen_opaque_def(&self, _def: &'tcx hir::OpaqueDef) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id);
         OpaqueTemplate {
@@ -149,7 +90,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         decl_header
     }
 
-    pub fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
+    pub(crate) fn gen_struct_def<P: TyPosition>(&self, def: &'tcx hir::StructDef<P>) -> Header {
         let mut decl_header = Header::new(self.decl_header_path.clone(), self.is_for_cpp);
         let ty_name = self.formatter.fmt_type_name(self.id);
         let mut fields = vec![];
@@ -174,7 +115,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         decl_header
     }
 
-    pub fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
+    pub(crate) fn gen_impl(&self, ty: hir::TypeDef<'tcx>) -> Header {
         let mut impl_header = Header::new(self.impl_header_path.clone(), self.is_for_cpp);
         let mut methods = vec![];
         for method in ty.methods() {
@@ -211,8 +152,8 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         // a header will get its own includes. Instead of
         // trying to avoid pushing them, it's cleaner to just pull them out
         // once done
-        impl_header.includes.remove(&self.impl_header_path);
-        impl_header.includes.remove(&self.decl_header_path);
+        impl_header.includes.remove(self.impl_header_path);
+        impl_header.includes.remove(self.decl_header_path);
 
         impl_header
     }
@@ -287,7 +228,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         }
     }
 
-    pub fn gen_result_ty(
+    fn gen_result_ty(
         &self,
         fn_name: &str,
         ok_ty: Option<&hir::OutType>,
@@ -344,7 +285,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
     ///
     /// Might return multiple in the case of slices and strings. The `is_struct` parameter
     /// affects whether the decls are generated for a struct field or method
-    pub fn gen_ty_decl<'a, P: TyPosition>(
+    fn gen_ty_decl<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
         ident: &'a str,

@@ -2,6 +2,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct CallableLibraryType {
+    #[allow(dead_code)]
     pub name: String,
     pub expr: String,
     pub is_call: bool,

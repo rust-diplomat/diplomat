@@ -18,6 +18,9 @@ mod raw;
 mod types;
 mod util;
 
+#[cfg(test)]
+mod tests;
+
 static RUNTIME_CS: &str = include_str!("Runtime.cs");
 
 const INDENTATION: &str = "    ";
