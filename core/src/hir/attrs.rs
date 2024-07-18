@@ -632,6 +632,10 @@ pub struct BackendAttrSupport {
     pub non_exhaustive_structs: bool,
     /// Whether the language supports method overloading
     pub method_overloading: bool,
+    /// Whether the language uses UTF-8 strings
+    pub utf8_strings: bool,
+    /// Whether the language uses UTF-16 strings
+    pub utf16_strings: bool,
 
     // Special methods
     /// Marking a method as a constructor to generate special constructor methods.
@@ -665,6 +669,8 @@ impl BackendAttrSupport {
             memory_sharing: true,
             non_exhaustive_structs: true,
             method_overloading: true,
+            utf8_strings: true,
+            utf16_strings: true,
 
             constructors: true,
             named_constructors: true,
@@ -775,6 +781,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 memory_sharing,
                 non_exhaustive_structs,
                 method_overloading,
+                utf8_strings,
+                utf16_strings,
 
                 constructors,
                 named_constructors,
@@ -792,6 +800,8 @@ impl AttributeValidator for BasicAttributeValidator {
                 "memory_sharing" => memory_sharing,
                 "non_exhaustive_structs" => non_exhaustive_structs,
                 "method_overloading" => method_overloading,
+                "utf8_strings" => utf8_strings,
+                "utf16_strings" => utf16_strings,
 
                 "constructors" => constructors,
                 "named_constructors" => named_constructors,

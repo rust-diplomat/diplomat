@@ -26,6 +26,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.memory_sharing = false;
     a.non_exhaustive_structs = true;
     a.method_overloading = false;
+    a.utf8_strings = false;
+    a.utf16_strings = true;
 
     a.constructors = true;
     a.named_constructors = true;
