@@ -9,10 +9,6 @@ mod js2;
 mod kotlin;
 
 // Legacy
-mod c;
-mod cpp;
-mod dotnet;
-mod js;
 mod layout;
 
 mod common;
@@ -33,7 +29,7 @@ pub use ast::DocsUrlGenerator;
 #[allow(clippy::too_many_arguments)]
 pub fn gen(
     entry: &Path,
-    mut target_language: &str,
+    target_language: &str,
     out_folder: &Path,
     docs_out_folder: Option<&Path>,
     docs_url_gen: &ast::DocsUrlGenerator,
@@ -63,44 +59,8 @@ pub fn gen(
 
     let env = ast::File::from(&syn_inline_mod::parse_and_inline_modules(entry)).all_types();
 
-    // Legacy AST path
-    match target_language {
-        "c" => {
-            let mut files = HashMap::new();
-            c::gen_bindings(&env, &mut files).unwrap();
-            return write_files(files, out_folder, silent, target_language);
-        }
-        "cpp" => {
-            let mut files = HashMap::new();
-            c::gen_bindings(&env, &mut files).unwrap();
-            cpp::gen_bindings(&env, library_config, docs_url_gen, &mut files).unwrap();
-            if let Some(docs_out_folder) = docs_out_folder {
-                let mut docs_files = HashMap::new();
-                cpp::docs::gen_docs(&env, library_config, &mut docs_files, docs_url_gen).unwrap();
-                write_files(docs_files, docs_out_folder, silent, "cpp-docs")?;
-            }
-            return write_files(files, out_folder, silent, target_language);
-        }
-        "dotnet" => {
-            let mut files = HashMap::new();
-            dotnet::gen_bindings(&env, library_config, docs_url_gen, &mut files).unwrap();
-            return write_files(files, out_folder, silent, target_language);
-        }
-        "js" => {
-            let mut files = HashMap::new();
-            js::gen_bindings(&env, &mut files, Some(docs_url_gen)).unwrap();
-            if let Some(docs_out_folder) = docs_out_folder {
-                let mut docs_files = HashMap::new();
-                js::docs::gen_docs(&env, &mut docs_files, docs_url_gen).unwrap();
-                write_files(docs_files, docs_out_folder, silent, "js-docs")?;
-            }
-            return write_files(files, out_folder, silent, target_language);
-        }
-        _hir => {
-            target_language = target_language.strip_suffix('2').unwrap_or(target_language);
-        }
-    }
-
+    // The HIR backends used to be named "c2", "js2", etc
+    let target_language = target_language.strip_suffix('2').unwrap_or(target_language);
     let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
     attr_validator.support = match target_language {
         "c" => c2::attr_support(),
