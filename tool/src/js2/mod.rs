@@ -8,12 +8,11 @@ use diplomat_core::hir::{BackendAttrSupport, TypeContext, TypeDef};
 use askama::{self, Template};
 use type_generation::TyGenContext;
 
-use crate::{ErrorStore, FileMap};
+use crate::common::{ErrorStore, FileMap};
 
 use self::formatter::JSFormatter;
 
 mod formatter;
-mod layout;
 mod type_generation;
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?
@@ -54,15 +53,15 @@ pub(crate) fn run<'tcx>(
 
     files.add_file(
         "diplomat-runtime.mjs".into(),
-        include_str!("../../templates/js/runtime.mjs").into(),
+        include_str!("../../templates/js2/runtime.mjs").into(),
     );
     files.add_file(
         "diplomat-runtime.d.ts".into(),
-        include_str!("../../templates/js/runtime.d.ts").into(),
+        include_str!("../../templates/js2/runtime.d.ts").into(),
     );
     files.add_file(
         "diplomat-wasm.mjs".into(),
-        include_str!("../../templates/js/wasm.mjs").into(),
+        include_str!("../../templates/js2/wasm.mjs").into(),
     );
 
     for (id, ty) in tcx.all_types() {
@@ -121,7 +120,7 @@ pub(crate) fn run<'tcx>(
     }
 
     #[derive(Template)]
-    #[template(path = "js/index.js.jinja", escape = "none")]
+    #[template(path = "js2/index.js.jinja", escape = "none")]
     struct IndexTemplate<'a> {
         exports: &'a Vec<Cow<'a, str>>,
         typescript: bool,

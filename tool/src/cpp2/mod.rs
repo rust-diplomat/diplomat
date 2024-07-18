@@ -2,7 +2,7 @@ mod formatter;
 mod header;
 mod ty;
 
-use crate::{ErrorStore, FileMap};
+use crate::common::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport};
 use formatter::Cpp2Formatter;
 use ty::TyGenContext;
@@ -23,11 +23,14 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let formatter = Cpp2Formatter::new(tcx);
     let errors = ErrorStore::default();
 
-    files.add_file("diplomat_c_runtime.hpp".into(), crate::c::gen_runtime(true));
+    files.add_file(
+        "diplomat_c_runtime.hpp".into(),
+        crate::c2::gen_runtime(true),
+    );
 
     files.add_file(
         "diplomat_runtime.hpp".into(),
-        include_str!("../../templates/cpp/runtime.hpp").into(),
+        include_str!("../../templates/cpp2/runtime.hpp").into(),
     );
 
     for (id, ty) in tcx.all_types() {
@@ -44,7 +47,7 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
         let mut context = TyGenContext {
             formatter: &formatter,
             errors: &errors,
-            c: crate::c::TyGenContext {
+            c: crate::c2::TyGenContext {
                 tcx,
                 formatter: &formatter.c,
                 errors: &errors,

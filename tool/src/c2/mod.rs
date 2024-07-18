@@ -7,7 +7,7 @@ pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
 pub(crate) use self::ty::TyGenContext;
 
-use crate::{ErrorStore, FileMap};
+use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir;
 use diplomat_core::hir::BackendAttrSupport;
@@ -25,7 +25,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 pub fn gen_runtime(is_for_cpp: bool) -> String {
     #[derive(Template)]
-    #[template(path = "c/runtime.h.jinja", escape = "none")]
+    #[template(path = "c2/runtime.h.jinja", escape = "none")]
     struct RuntimeTemplate {
         is_for_cpp: bool,
     }

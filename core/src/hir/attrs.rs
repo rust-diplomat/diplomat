@@ -116,8 +116,6 @@ impl Attrs {
         // No special inheritance, was already appropriately inherited in AST
         this.abi_rename = ast.abi_rename.clone();
 
-        let support = validator.attrs_supported();
-        let backend = validator.primary_name();
         for attr in &ast.attrs {
             let satisfies = match validator.satisfies_cfg(&attr.cfg) {
                 Ok(satisfies) => satisfies,
@@ -156,12 +154,6 @@ impl Attrs {
                             ))),
                         }
                     } else if path == "namespace" {
-                        if !support.namespacing {
-                            errors.push(LoweringError::Other(format!(
-                                "`namespace` not supported in backend {backend}"
-                            )));
-                            continue;
-                        }
                         match StandardAttribute::from_meta(&attr.meta) {
                             Ok(StandardAttribute::String(s)) if s.is_empty() => {
                                 this.namespace = None
@@ -188,46 +180,16 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "constructor" {
-                            if !support.constructors {
-                                errors.push(LoweringError::Other(format!(
-                                    "constructor not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Constructor
                         } else if path == "stringifier" {
-                            if !support.stringifiers {
-                                errors.push(LoweringError::Other(format!(
-                                    "stringifier not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Stringifier
                         } else if path == "iterable" {
-                            if !support.iterables {
-                                errors.push(LoweringError::Other(format!(
-                                    "iterable not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Iterable
                         } else if path == "iterator" {
-                            if !support.iterators {
-                                errors.push(LoweringError::Other(format!(
-                                    "iterator not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Iterator
                         } else if path == "indexer" {
-                            if !support.indexing {
-                                errors.push(LoweringError::Other(format!(
-                                    "indexing not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Indexer
                         } else {
-                            if !support.comparators {
-                                errors.push(LoweringError::Other(format!(
-                                    "comparison overload not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Comparison
                         };
 
@@ -240,25 +202,10 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "named_constructor" {
-                            if !support.named_constructors {
-                                errors.push(LoweringError::Other(format!(
-                                    "named constructors not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::NamedConstructor
                         } else if path == "getter" {
-                            if !support.accessors {
-                                errors.push(LoweringError::Other(format!(
-                                    "accessors not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Getter
                         } else {
-                            if !support.accessors {
-                                errors.push(LoweringError::Other(format!(
-                                    "accessors not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Setter
                         };
                         match StandardAttribute::from_meta(&attr.meta) {
@@ -601,7 +548,7 @@ impl Attrs {
 /// ```ignore
 /// struct Sample {}
 /// impl Sample {
-///     #[diplomat::attr(supports = constructors, constructor)]
+///     #[diplomat::attr(*, constructor)]
 ///     pub fn new() -> Box<Self> {
 ///         Box::new(Sample{})
 ///     }
@@ -618,12 +565,6 @@ impl Attrs {
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
-    /// Renaming types/methods, usually to make them more idiomatic.
-    ///
-    /// This is supported by all backends *except for C*.
-    pub renaming: bool,
-    /// Namespacing types, e.g. C++ `namespace`.
-    pub namespacing: bool,
     /// Rust can directly acccess the memory of this language, like C and C++.
     /// This is not supported in any garbage-collected language.
     pub memory_sharing: bool,
@@ -632,49 +573,20 @@ pub struct BackendAttrSupport {
     pub non_exhaustive_structs: bool,
     /// Whether the language supports method overloading
     pub method_overloading: bool,
-
-    // Special methods
-    /// Marking a method as a constructor to generate special constructor methods.
-    pub constructors: bool,
-    /// Marking a method as a named constructor to generate special named constructor methods.
-    pub named_constructors: bool,
     /// Marking constructors as being able to return errors. This is possible in languages where
     /// errors are thrown as exceptions (Dart), but not for example in C++, where errors are
     /// returned as values (constructors usually have to return the type itself).
     pub fallible_constructors: bool,
-    /// Marking methods as field getters and setters, see [`SpecialMethod::Getter`] and [`SpecialMethod::Setter`]
-    pub accessors: bool,
-    /// Marking a method as the `to_string` method, which is special in this language.
-    pub stringifiers: bool,
-    /// Marking a method as the `compare_to` method, which is special in this language.
-    pub comparators: bool,
-    /// Marking a method as the `next` method, which is special in this language.
-    pub iterators: bool,
-    /// Marking a method as the `iterator` method, which is special in this language.
-    pub iterables: bool,
-    /// Marking a method as the `[]` operator, which is special in this language.
-    pub indexing: bool,
 }
 
 impl BackendAttrSupport {
     #[cfg(test)]
     fn all_true() -> Self {
         Self {
-            renaming: true,
-            namespacing: true,
             memory_sharing: true,
             non_exhaustive_structs: true,
             method_overloading: true,
-
-            constructors: true,
-            named_constructors: true,
             fallible_constructors: true,
-            accessors: true,
-            stringifiers: true,
-            comparators: true,
-            iterators: true,
-            iterables: true,
-            indexing: true,
         }
     }
 }
@@ -770,39 +682,16 @@ impl AttributeValidator for BasicAttributeValidator {
         Ok(if name == "supports" {
             // destructure so new fields are forced to be added
             let BackendAttrSupport {
-                renaming,
-                namespacing,
                 memory_sharing,
                 non_exhaustive_structs,
                 method_overloading,
-
-                constructors,
-                named_constructors,
                 fallible_constructors,
-                accessors,
-                stringifiers,
-                comparators,
-                iterators,
-                iterables,
-                indexing,
             } = self.support;
             match value {
-                "renaming" => renaming,
-                "namespacing" => namespacing,
                 "memory_sharing" => memory_sharing,
                 "non_exhaustive_structs" => non_exhaustive_structs,
                 "method_overloading" => method_overloading,
-
-                "constructors" => constructors,
-                "named_constructors" => named_constructors,
                 "fallible_constructors" => fallible_constructors,
-                "accessors" => accessors,
-                "stringifiers" => stringifiers,
-                "comparators" => comparators,
-                "iterators" => iterators,
-                "iterables" => iterables,
-                "indexing" => indexing,
-
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
