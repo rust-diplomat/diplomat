@@ -8,7 +8,7 @@ var currentlySelected = null;
 var navSelected = null;
 
 RenderInfo.termini.forEach((t) => {
-	var renderOut = new TerminusRender(t, lib);
+	var renderOut = new TerminusRender(t, lib, null);
 	document.getElementById("termini").appendChild(renderOut);
 	
 	renderOut.classList.add("tab-pane");
