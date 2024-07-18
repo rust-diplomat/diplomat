@@ -573,6 +573,10 @@ pub struct BackendAttrSupport {
     pub non_exhaustive_structs: bool,
     /// Whether the language supports method overloading
     pub method_overloading: bool,
+    /// Whether the language uses UTF-8 strings
+    pub utf8_strings: bool,
+    /// Whether the language uses UTF-16 strings
+    pub utf16_strings: bool,
     /// Marking constructors as being able to return errors. This is possible in languages where
     /// errors are thrown as exceptions (Dart), but not for example in C++, where errors are
     /// returned as values (constructors usually have to return the type itself).
@@ -586,6 +590,8 @@ impl BackendAttrSupport {
             memory_sharing: true,
             non_exhaustive_structs: true,
             method_overloading: true,
+            utf8_strings: true,
+            utf16_strings: true,
             fallible_constructors: true,
         }
     }
@@ -685,12 +691,16 @@ impl AttributeValidator for BasicAttributeValidator {
                 memory_sharing,
                 non_exhaustive_structs,
                 method_overloading,
+                utf8_strings,
+                utf16_strings,
                 fallible_constructors,
             } = self.support;
             match value {
                 "memory_sharing" => memory_sharing,
                 "non_exhaustive_structs" => non_exhaustive_structs,
                 "method_overloading" => method_overloading,
+                "utf8_strings" => utf8_strings,
+                "utf16_strings" => utf16_strings,
                 "fallible_constructors" => fallible_constructors,
                 _ => {
                     return Err(LoweringError::Other(format!(
@@ -717,15 +727,12 @@ mod tests {
     macro_rules! uitest_lowering_attr {
         ($($file:tt)*) => {
             let parsed: syn::File = syn::parse_quote! { $($file)* };
-            let custom_types = crate::ast::File::from(&parsed);
-            let env = custom_types.all_types();
 
             let mut output = String::new();
 
-
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support = hir::BackendAttrSupport::all_true();
-            match hir::TypeContext::from_ast(&env, attr_validator) {
+            match hir::TypeContext::from_syn(&parsed, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
                     for (ctx, err) in e {

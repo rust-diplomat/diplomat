@@ -18,12 +18,14 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.memory_sharing = true;
     a.non_exhaustive_structs = false;
     a.method_overloading = false;
+    a.utf8_strings = true;
+    a.utf16_strings = true;
     a.fallible_constructors = false;
 
     a
 }
 
-pub fn gen_runtime(is_for_cpp: bool) -> String {
+pub(crate) fn gen_runtime(is_for_cpp: bool) -> String {
     #[derive(Template)]
     #[template(path = "c/runtime.h.jinja", escape = "none")]
     struct RuntimeTemplate {
@@ -36,7 +38,7 @@ pub fn gen_runtime(is_for_cpp: bool) -> String {
     runtime
 }
 
-pub fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
+pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let files = FileMap::default();
     let formatter = CFormatter::new(tcx, false);
     let errors = ErrorStore::default();

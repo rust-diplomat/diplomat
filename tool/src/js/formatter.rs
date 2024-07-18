@@ -1,9 +1,6 @@
 use std::borrow::Cow;
 
-use diplomat_core::{
-    ast::DocsUrlGenerator,
-    hir::{self, Docs, EnumVariant, TypeContext, TypeId},
-};
+use diplomat_core::hir::{self, Docs, DocsUrlGenerator, EnumVariant, TypeContext, TypeId};
 use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
 use super::FileType;
@@ -81,7 +78,7 @@ impl<'tcx> JSFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &Docs) -> String {
-        docs.to_markdown(self.docs_url_gen, diplomat_core::ast::MarkdownStyle::Normal)
+        docs.to_markdown(self.docs_url_gen)
             .trim()
             .replace('\n', "\n*")
             .replace(" \n", "\n")

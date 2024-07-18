@@ -354,27 +354,19 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
 #[cfg(test)]
 pub mod test {
+    use super::*;
+
+    use proc_macro2::TokenStream;
+    use quote::quote;
     use std::borrow::Cow;
 
-    use super::KotlinFormatter;
-    use diplomat_core::{
-        ast::{self},
-        hir::{self, TypeContext},
-    };
-    use proc_macro2::TokenStream;
-
-    use quote::quote;
-
     pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
-        let item = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
+        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
 
-        let diplomat_file = ast::File::from(&item);
-
-        let env = diplomat_file.all_types();
         let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
         attr_validator.support = super::super::attr_support();
 
-        match hir::TypeContext::from_ast(&env, attr_validator) {
+        match TypeContext::from_syn(&file, attr_validator) {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {

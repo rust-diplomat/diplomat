@@ -13,8 +13,8 @@ use std::borrow::Cow;
 ///
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
-pub struct Cpp2Formatter<'tcx> {
-    pub(crate) c: CFormatter<'tcx>,
+pub(crate) struct Cpp2Formatter<'tcx> {
+    pub c: CFormatter<'tcx>,
 }
 
 impl<'tcx> Cpp2Formatter<'tcx> {
