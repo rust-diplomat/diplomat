@@ -16,9 +16,6 @@ struct Opt {
     #[clap(value_parser)]
     out_folder: PathBuf,
 
-    #[clap(short, long, value_parser)]
-    docs: Option<PathBuf>,
-
     #[clap(short = 'u', long)]
     docs_base_urls: Vec<String>,
 
@@ -43,7 +40,6 @@ fn main() -> std::io::Result<()> {
         &opt.entry,
         &opt.target_language,
         &opt.out_folder,
-        opt.docs.as_deref(),
         &diplomat_core::ast::DocsUrlGenerator::with_base_urls(
             opt.docs_base_urls
                 .iter()

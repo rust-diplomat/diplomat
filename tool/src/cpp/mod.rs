@@ -2,7 +2,7 @@ mod formatter;
 mod header;
 mod ty;
 
-use crate::common::{ErrorStore, FileMap};
+use crate::{ErrorStore, FileMap};
 use diplomat_core::hir::{self, BackendAttrSupport};
 use formatter::Cpp2Formatter;
 use ty::TyGenContext;
