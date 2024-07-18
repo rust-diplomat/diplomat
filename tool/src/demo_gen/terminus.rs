@@ -117,7 +117,7 @@ impl<'a, 'tcx> RenderTerminusContext<'a, 'tcx> {
 
                 js_file_name: ctx
                     .formatter
-                    .fmt_file_name(&type_name, &crate::js2::FileType::Module),
+                    .fmt_file_name(&type_name, &crate::js::FileType::Module),
 
                 node_call_stack: String::default(),
 

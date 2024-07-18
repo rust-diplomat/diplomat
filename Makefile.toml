@@ -144,7 +144,7 @@ category = "Tests"
 dependencies = ["build-example-wasm"]
 script_runner = "@shell"
 script = '''
-cd example/js2
+cd example/js
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cp -r ../demo-gen/demo/ lib/api/demo
 cd lib
@@ -157,7 +157,7 @@ category = "Tests"
 dependencies = ["build-example-wasm"]
 script_runner = "@shell"
 script = '''
-cd example/js2
+cd example/js
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
 cp -r ../demo-gen/demo/ lib/api/demo
 cd app

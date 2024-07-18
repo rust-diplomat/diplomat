@@ -6,7 +6,7 @@ use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
     common::{ErrorStore, FileMap},
-    js2::{formatter::JSFormatter, FileType},
+    js::{formatter::JSFormatter, FileType},
 };
 
 mod terminus;

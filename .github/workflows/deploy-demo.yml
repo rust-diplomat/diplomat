@@ -54,14 +54,14 @@ jobs:
           crate: cargo-make
           version: 0.36.13
       - name: Build page
-        run: cargo make test-js2-example-app
+        run: cargo make test-js-example-app
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
-          path: 'example/js2/app/public'
+          path: 'example/js/app/public'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

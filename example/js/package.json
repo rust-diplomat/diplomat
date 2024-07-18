@@ -1,7 +1,7 @@
 {
-    "name": "diplomat-wasm-js2-example",
+    "name": "diplomat-wasm-js-example",
     "version": "0.0.1",
-    "description": "Diplomat WASM with JS2 HIR Backend Example",
+    "description": "Diplomat WASM with JS HIR Backend Example",
     "main": "./api/index.mjs",
     "exports": {
         ".": "./api/index.mjs"
