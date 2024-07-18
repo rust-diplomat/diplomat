@@ -18,7 +18,7 @@ export class {{type_name}} {
     {%- endif -%}
     {%- endfor %}
 
-    {%~ if !typescript %}
+    {%~ if !typescript && !fields.is_empty() %}
     // Return this struct in FFI function friendly format.
     // Returns an array that can be expanded with spread syntax (...)
     {% if lifetimes.all_lifetimes().len() != 0 -%}

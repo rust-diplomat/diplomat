@@ -1,8 +1,8 @@
-{% if !is_for_cpp -%} typedef {% endif -%}
+{% if !fields.is_empty() %}{% if !is_for_cpp -%} typedef {% endif -%}
 struct {{ty_name}} {
 {%- for field in fields %}
   {{field.0}} {{field.1}};
 {%- endfor %}
-} {%- if !is_for_cpp %} {{ ty_name }} {%- endif %};
+} {%- if !is_for_cpp %} {{ ty_name }} {%- endif %};{% endif %}
 
 

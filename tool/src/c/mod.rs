@@ -61,18 +61,6 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
             // Skip type if disabled
             continue;
         }
-        if let hir::TypeDef::Struct(s) = ty {
-            if s.fields.is_empty() {
-                // Skip ZST
-                continue;
-            }
-        }
-        if let hir::TypeDef::OutStruct(s) = ty {
-            if s.fields.is_empty() {
-                // Skip ZST
-                continue;
-            }
-        }
 
         let decl_header_path = formatter.fmt_decl_header_path(id);
         let impl_header_path = formatter.fmt_impl_header_path(id);
