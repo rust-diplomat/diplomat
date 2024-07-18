@@ -11,15 +11,6 @@ use crate::{
 
 mod terminus;
 
-pub struct WebDemoGenerationContext<'tcx> {
-    tcx: &'tcx TypeContext,
-
-    files: FileMap,
-    errors: ErrorStore<'tcx, String>,
-
-    formatter: JSFormatter<'tcx>,
-}
-
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
@@ -75,6 +66,8 @@ pub(crate) fn run<'tcx>(
     };
 
     for (id, ty) in tcx.all_types() {
+        let _guard = errors.set_context_ty(ty.name().as_str().into());
+
         let methods = ty.methods();
 
         const FILE_TYPES: [FileType; 2] = [FileType::Module, FileType::Typescript];
@@ -93,6 +86,8 @@ pub(crate) fn run<'tcx>(
                 if method.attrs.disable || !method.output.success_type().is_write() {
                     continue;
                 }
+                
+                let _guard = errors.set_context_method(ty.name().as_str().into(), method.name.as_str().into());
 
                 let mut ctx = RenderTerminusContext {
                     tcx: &tcx,
@@ -116,9 +111,9 @@ pub(crate) fn run<'tcx>(
                     },
                 };
 
-                let val = ctx.evaluate(type_name.into(), method);
+                ctx.evaluate(type_name.clone().into(), method);
                 
-                termini.push(val);
+                termini.push(ctx.terminus_info);
             }
         }
 

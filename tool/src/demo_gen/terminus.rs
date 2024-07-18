@@ -4,7 +4,6 @@ use diplomat_core::hir::{self, DemoInfo, Method, Type, TypeContext};
 
 use crate::{js::formatter::JSFormatter, ErrorStore};
 
-use super::WebDemoGenerationContext;
 use askama::{self, Template};
 
 #[derive(Clone)]
@@ -55,10 +54,10 @@ struct MethodDependency {
     params: Vec<ParamInfo>,
 }
 
-pub struct RenderTerminusContext<'tcx> {
+pub struct RenderTerminusContext<'ctx, 'tcx> {
     pub tcx : &'tcx TypeContext,
-    pub formatter : &'tcx JSFormatter<'tcx>,
-    pub errors : &'tcx ErrorStore<'tcx, String>,
+    pub formatter : &'ctx JSFormatter<'tcx>,
+    pub errors : &'ctx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
 }
 
@@ -96,10 +95,10 @@ pub(super) struct TerminusInfo {
     pub imports: BTreeSet<String>,
 }
 
-impl<'tcx> RenderTerminusContext<'tcx> {
+impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
-    pub fn evaluate(&mut self, type_name : String, method : &Method) -> TerminusInfo {
+    pub fn evaluate(&mut self, type_name : String, method : &Method) {
         // TODO: I think it would be nice to have a stack of the current namespace a given parameter.
         // For instance, ICU4XFixedDecimalFormatter.formatWrite() needs a constructed ICU4XFixedDecimal, which takes an i32 called v as input.
         // Someone just trying to read the .d.ts file will only see function formatWrite(v: number); which doesn't really help them figure out where that's from or why it's there.
@@ -107,19 +106,20 @@ impl<'tcx> RenderTerminusContext<'tcx> {
         // Not making this as part of the RenderTerminusContext because we want each evaluation to have a specific node,
         // which I find easier easier to represent as a parameter to each function than something like an updating the current node in the struct.
         let mut root =
-            MethodDependency::new(self.get_constructor_js(type_name, method));
+            MethodDependency::new(self.get_constructor_js(type_name.to_string(), method));
 
         // And then we just treat the terminus as a regular constructor method:
         self.terminus_info.node_call_stack = self.evaluate_constructor(method, &mut root);
 
+
+        let type_n = type_name.clone();
+        let format = self.formatter.fmt_import_statement(&type_n, false, "../".into());
+
         self.terminus_info
             .imports
             .insert(
-                self.formatter
-                    .fmt_import_statement(&type_name, false, "../".into()),
+                format,
             );
-
-        self.terminus_info
     }
 
     /// Currently unused, plan to hopefully use this in the future for quickly grabbing parameter information.
