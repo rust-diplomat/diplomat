@@ -31,11 +31,9 @@ MyStruct MyStruct_new(uint8_t a, uint8_t b);
 uint8_t MyStruct_get_a(const MyStruct* self);
 
 void MyStruct_set_b(MyStruct* self, uint8_t b);
-void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus
 } // extern "C"
 } // namespace capi
 #endif
 #endif
-

@@ -100,7 +100,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             self.generate_special_method_body(&opaque_def.special_method_presence, self.typescript);
         methods.push(special_method_body);
 
-        let destructor = self.js_ctx.formatter.fmt_destructor_name(type_id);
+        let destructor = opaque_def.dtor_abi_name.as_str();
 
         #[derive(Template)]
         #[template(path = "js2/opaque.js.jinja", escape = "none")]
@@ -110,7 +110,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
             lifetimes: &'a LifetimeEnv,
             methods: Vec<String>,
-            destructor: String,
+            destructor: &'a str,
 
             docs: String,
         }
@@ -260,12 +260,14 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         let mut visitor = method.borrowing_param_visitor(self.js_ctx.tcx);
 
         let _guard = self.js_ctx.errors.set_context_method(
-            self.js_ctx.formatter.fmt_type_name_diagnostics(type_id),
+            self.js_ctx.tcx.fmt_type_name_diagnostics(type_id),
             method.name.as_str().into(),
         );
 
+        let abi_name = method.abi_name.as_str();
+
         let mut method_info = MethodInfo {
-            c_method_name: self.js_ctx.formatter.fmt_c_method_name(type_id, method),
+            abi_name,
             typescript,
             method: Some(method),
             needs_slice_cleanup: false,
@@ -445,7 +447,7 @@ struct MethodInfo<'info> {
     method: Option<&'info Method>,
     method_decl: String,
     /// Native C method name
-    c_method_name: Cow<'info, str>,
+    abi_name: &'info str,
 
     needs_slice_cleanup: bool,
 

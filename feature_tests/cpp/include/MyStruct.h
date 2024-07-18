@@ -32,7 +32,6 @@ extern "C" {
 MyStruct MyStruct_new();
 
 uint8_t MyStruct_into_a(MyStruct self);
-void MyStruct_destroy(MyStruct* self);
 
 #ifdef __cplusplus
 } // extern "C"

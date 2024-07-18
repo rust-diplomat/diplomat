@@ -53,12 +53,6 @@ impl CustomType {
         }
     }
 
-    /// The name of the destructor in C
-    pub fn dtor_name(&self) -> String {
-        let name = format!("{}_destroy", self.name());
-        self.attrs().abi_rename.apply(name.into()).into()
-    }
-
     /// Get the doc lines of the custom type.
     pub fn docs(&self) -> &Docs {
         match self {

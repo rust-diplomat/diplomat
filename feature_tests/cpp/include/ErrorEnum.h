@@ -22,7 +22,6 @@ namespace capi {
 extern "C" {
 #endif
 
-void ErrorEnum_destroy(ErrorEnum* self);
 
 #ifdef __cplusplus
 } // extern "C"

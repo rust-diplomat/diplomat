@@ -245,7 +245,7 @@ type Offset = Option<NonZeroUsize>;
 /// An [`fmt::Display`] type representing an invocation of a WASM function.
 pub struct Invocation {
     /// Name of the method in the WASM namespace.
-    full_path_name: ast::Ident,
+    abi_name: ast::Ident,
 
     /// Arguments to invoke the function with.
     args: Vec<String>, // FIXME: use `Vec<Argument>`
@@ -253,16 +253,13 @@ pub struct Invocation {
 
 impl Invocation {
     /// Create a new [`Invocation`].
-    pub fn new(full_path_name: ast::Ident, args: Vec<String>) -> Self {
-        Invocation {
-            full_path_name,
-            args,
-        }
+    pub fn new(abi_name: ast::Ident, args: Vec<String>) -> Self {
+        Invocation { abi_name, args }
     }
 
     /// Invoke the function without passing in a return buffer.
     pub fn scalar(&self) -> impl fmt::Display + '_ {
-        display::expr(move |f| write!(f, "wasm.{}({})", self.full_path_name, Csv(&self.args[..])))
+        display::expr(move |f| write!(f, "wasm.{}({})", self.abi_name, Csv(&self.args[..])))
     }
 
     /// Invoke the function with a provided return buffer.
@@ -274,7 +271,7 @@ impl Invocation {
             write!(
                 f,
                 "wasm.{}({})",
-                self.full_path_name,
+                self.abi_name,
                 display::expr(|f| {
                     write!(f, "{buf}")?;
                     for param in &self.args {

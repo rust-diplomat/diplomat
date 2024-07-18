@@ -207,7 +207,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
 fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
     let self_ident = Ident::new(strct.name().as_str(), Span::call_site());
     let method_ident = Ident::new(m.name.as_str(), Span::call_site());
-    let extern_ident = Ident::new(m.full_path_name.as_str(), Span::call_site());
+    let extern_ident = Ident::new(m.abi_name.as_str(), Span::call_site());
 
     let mut all_params = vec![];
     m.params.iter().for_each(|p| {
@@ -452,28 +452,30 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
             new_contents.push(gen_custom_type_method(custom_type, m));
         });
 
-        let destroy_ident = Ident::new(custom_type.dtor_name().as_str(), Span::call_site());
+        if let ast::CustomType::Opaque(opaque) = custom_type {
+            let destroy_ident = Ident::new(opaque.dtor_abi_name.as_str(), Span::call_site());
 
-        let type_ident = custom_type.name().to_syn();
+            let type_ident = custom_type.name().to_syn();
 
-        let (lifetime_defs, lifetimes) = if let Some(lifetime_env) = custom_type.lifetimes() {
-            (
-                quote! { <#lifetime_env> },
-                lifetime_env.lifetimes_to_tokens(),
-            )
-        } else {
-            (quote! {}, quote! {})
-        };
+            let (lifetime_defs, lifetimes) = if let Some(lifetime_env) = custom_type.lifetimes() {
+                (
+                    quote! { <#lifetime_env> },
+                    lifetime_env.lifetimes_to_tokens(),
+                )
+            } else {
+                (quote! {}, quote! {})
+            };
 
-        let cfg = cfgs_to_stream(&custom_type.attrs().cfg);
+            let cfg = cfgs_to_stream(&custom_type.attrs().cfg);
 
-        // for now, body is empty since all we need to do is drop the box
-        // TODO(#13): change to take a `*mut` and handle DST boxes appropriately
-        new_contents.push(Item::Fn(syn::parse_quote! {
-            #[no_mangle]
-            #cfg
-            extern "C" fn #destroy_ident#lifetime_defs(this: Box<#type_ident#lifetimes>) {}
-        }));
+            // for now, body is empty since all we need to do is drop the box
+            // TODO(#13): change to take a `*mut` and handle DST boxes appropriately
+            new_contents.push(Item::Fn(syn::parse_quote! {
+                #[no_mangle]
+                #cfg
+                extern "C" fn #destroy_ident#lifetime_defs(this: Box<#type_ident#lifetimes>) {}
+            }));
+        }
     }
 
     ItemMod {

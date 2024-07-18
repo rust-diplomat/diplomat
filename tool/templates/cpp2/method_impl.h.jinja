@@ -19,7 +19,7 @@ inline {##}
 	{% if !m.method.output.is_ffi_unit() -%}
 	auto result = {##}
 	{%- endif -%}
-	{{ m.c_method_name }}(
+	{{ m.abi_name }}(
 		{%- for param in m.cpp_to_c_params %}
 		{%- if !loop.first %},
 		{% endif -%}

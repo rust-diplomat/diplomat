@@ -21,7 +21,6 @@ namespace capi {
 extern "C" {
 #endif
 
-void BorrowedFieldsReturning_destroy(BorrowedFieldsReturning* self);
 
 #ifdef __cplusplus
 } // extern "C"

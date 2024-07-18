@@ -24,7 +24,6 @@ namespace capi {
 extern "C" {
 #endif
 
-void ContiguousEnum_destroy(ContiguousEnum* self);
 
 #ifdef __cplusplus
 } // extern "C"

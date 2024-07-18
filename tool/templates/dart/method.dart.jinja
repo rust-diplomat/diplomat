@@ -33,7 +33,7 @@
     {%- if !m.method.output.is_ffi_unit() %}
     final result = {% else %}
     {% endif -%}
-    _{{ m.c_method_name -}}(
+    _{{ m.abi_name -}}(
         {%- for param in m.param_conversions %}
         {%- if loop.first %}{% else %}, {% endif -%}
         {{ param }}

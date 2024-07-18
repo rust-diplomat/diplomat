@@ -129,7 +129,7 @@ pub fn gen<'ast>(
                 writeln!(
                     out,
                     r#"[DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "{}", ExactSpelling = true)]"#,
-                    typ.dtor_name()
+                    opaque.dtor_abi_name
                 )?;
                 writeln!(out, "public static unsafe extern void Destroy({}* self);", typ.name())
             })
@@ -208,7 +208,7 @@ fn gen_method(
         out,
         " {}(",
         method
-            .full_path_name
+            .abi_name
             .as_str()
             .replace(&format!("{}_", typ.name()), "")
             .to_upper_camel_case()
@@ -320,7 +320,7 @@ fn gen_annotations_for_method(method: &ast::Method, out: &mut dyn fmt::Write) ->
     writeln!(
         out,
         r#"[DllImport(NativeLib, CallingConvention = CallingConvention.Cdecl, EntryPoint = "{}", ExactSpelling = true)]"#,
-        method.full_path_name
+        method.abi_name
     )?;
     match &method.return_type {
         Some(ast::TypeName::Primitive(ast::PrimitiveType::bool)) => {

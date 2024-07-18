@@ -24,7 +24,6 @@ namespace capi {
 extern "C" {
 #endif
 
-void icu4x_FixedDecimalGroupingStrategy_destroy_mv1(FixedDecimalGroupingStrategy* self);
 
 #ifdef __cplusplus
 } // extern "C"

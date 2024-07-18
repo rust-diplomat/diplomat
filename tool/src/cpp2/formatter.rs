@@ -47,12 +47,6 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    /// Resolve and format a named type for use in diagnostics
-    /// (don't apply rename rules and such)
-    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.c.fmt_type_name_diagnostics(id)
-    }
-
     /// Resolve and format the name of a type for use in header names
     pub fn fmt_decl_header_path(&self, id: TypeId) -> String {
         let type_name = self.fmt_type_name_unnamespaced(id);
@@ -162,7 +156,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {
+    pub fn namespace_c_method_name(&self, ty: TypeId, name: &str) -> String {
         let resolved = self.c.tcx().resolve_type(ty);
         if let Some(ref ns) = resolved.attrs().namespace {
             format!("{ns}::{CAPI_NAMESPACE}::{name}")
@@ -171,12 +165,6 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_c_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
-        self.namespace_c_method_name(ty, &self.c.fmt_method_name(ty, method))
-    }
-    pub fn fmt_c_dtor_name(&self, ty: TypeId) -> String {
-        self.namespace_c_method_name(ty, &self.c.fmt_dtor_name(ty))
-    }
     /// Get the primitive type as a C type
     pub fn fmt_primitive_as_c(&self, prim: hir::PrimitiveType) -> Cow<'static, str> {
         self.c.fmt_primitive_as_c(prim)

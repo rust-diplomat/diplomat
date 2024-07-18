@@ -1,6 +1,5 @@
 //! This module contains functions for formatting types
 
-use crate::c2::CFormatter;
 use diplomat_core::ast::{DocsUrlGenerator, MarkdownStyle};
 use diplomat_core::hir::{self, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
@@ -16,7 +15,7 @@ use std::borrow::Cow;
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub(super) struct DartFormatter<'tcx> {
-    c: CFormatter<'tcx>,
+    tcx: &'tcx TypeContext,
     docs_url_generator: &'tcx DocsUrlGenerator,
 }
 
@@ -27,7 +26,7 @@ const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 impl<'tcx> DartFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, docs_url_generator: &'tcx DocsUrlGenerator) -> Self {
         Self {
-            c: CFormatter::new(tcx, false),
+            tcx,
             docs_url_generator,
         }
     }
@@ -68,13 +67,9 @@ impl<'tcx> DartFormatter<'tcx> {
             .replace(" \n", "\n")
     }
 
-    pub fn fmt_destructor_name(&self, id: TypeId) -> String {
-        self.c.fmt_dtor_name(id)
-    }
-
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.c.tcx().resolve_type(id);
+        let resolved = self.tcx.resolve_type(id);
 
         let candidate = resolved.name().as_str();
 
@@ -83,12 +78,6 @@ impl<'tcx> DartFormatter<'tcx> {
         }
 
         resolved.attrs().rename.apply(candidate.into())
-    }
-
-    /// Resolve and format a named type for use in diagnostics
-    /// (don't apply rename rules and such)
-    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.c.fmt_type_name_diagnostics(id)
     }
 
     /// Format an enum variant.
@@ -148,10 +137,6 @@ impl<'tcx> DartFormatter<'tcx> {
         } else {
             name
         }
-    }
-
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
     }
 
     pub fn fmt_string(&self) -> &'static str {

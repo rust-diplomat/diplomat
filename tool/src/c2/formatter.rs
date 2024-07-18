@@ -109,26 +109,6 @@ impl<'tcx> CFormatter<'tcx> {
         ident.into()
     }
 
-    /// Format a method
-    pub fn fmt_method_name(&self, ty: TypeId, method: &hir::Method) -> String {
-        let ty_name = self.fmt_type_name_for_abi(ty);
-        let method_name = method.name.as_str();
-        let put_together = format!("{ty_name}_{method_name}");
-        method.attrs.abi_rename.apply(put_together.into()).into()
-    }
-
-    /// Resolve and format a type's destructor
-    pub fn fmt_dtor_name(&self, ty: TypeId) -> String {
-        let ty_name = self.fmt_type_name_for_abi(ty);
-        let dtor_name = format!("{ty_name}_destroy");
-        self.tcx
-            .resolve_type(ty)
-            .attrs()
-            .abi_rename
-            .apply(dtor_name.into())
-            .into()
-    }
-
     pub fn fmt_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
         // TODO: Where is the right place to put `const` here?
         if mutability.is_mutable() {

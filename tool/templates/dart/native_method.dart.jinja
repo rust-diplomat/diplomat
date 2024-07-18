@@ -1,10 +1,10 @@
-@meta.ResourceIdentifier('{{ m.c_method_name }}')
+@meta.ResourceIdentifier('{{ m.abi_name }}')
 @ffi.Native<{{ m.return_type_ffi }} Function({%- for param in m.param_types_ffi %}
       {%- if !loop.first %}, {% endif -%}
       {{ param }}
-  {%- endfor -%})>(isLeaf: true, symbol: '{{ m.c_method_name }}')
+  {%- endfor -%})>(isLeaf: true, symbol: '{{ m.abi_name }}')
 // ignore: non_constant_identifier_names
-external {{ m.return_type_ffi_cast }} _{{ m.c_method_name }}({%- for (param, name) in m.param_types_ffi_cast.iter().zip(m.param_names_ffi.iter()) %}
+external {{ m.return_type_ffi_cast }} _{{ m.abi_name }}({%- for (param, name) in m.param_types_ffi_cast.iter().zip(m.param_names_ffi.iter()) %}
         {%- if !loop.first %}, {% endif -%}
         {{ param }} {{ name }}
       {%- endfor -%});

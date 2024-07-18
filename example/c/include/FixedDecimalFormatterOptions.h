@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 FixedDecimalFormatterOptions icu4x_FixedDecimalFormatterOptions_default_mv1();
-void icu4x_FixedDecimalFormatterOptions_destroy_mv1(FixedDecimalFormatterOptions* self);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -2,7 +2,7 @@
 extern "C" {
 {%- endif %}
 {% for method in methods %}
-{{ method.return_ty }} {{ method.name }}({{ method.params }});
+{{ method.return_ty }} {{ method.abi_name }}({{ method.params }});
 {% endfor %}
 {%~ match dtor_name %}
 {% when Some with (dtor_name) ~%}

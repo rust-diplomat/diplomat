@@ -106,7 +106,7 @@ struct MethodInfo<'a> {
     /// The C++ method name
     method_name: Cow<'a, str>,
     /// The C method name
-    c_method_name: Cow<'a, str>,
+    abi_name: String,
     /// Qualifiers for the function that come before the declaration (like "static")
     pre_qualifiers: Vec<Cow<'a, str>>,
     /// Qualifiers for the function that come after the declaration (like "const")
@@ -208,7 +208,11 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         let type_name = self.cx.formatter.fmt_type_name(id);
         let type_name_unnamespaced = self.cx.formatter.fmt_type_name_unnamespaced(id);
         let ctype = self.cx.formatter.fmt_c_type_name(id);
-        let dtor_name = self.cx.formatter.fmt_c_dtor_name(id);
+        let dtor_name = self
+            .cx
+            .formatter
+            .namespace_c_method_name(id, ty.dtor_abi_name.as_str());
+
         let c_header = self.c.gen_opaque_def(ty);
         let c_impl_header = self.c.gen_impl(ty.into());
 
@@ -251,7 +255,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
-            dtor_name: &'a str,
+            dtor_name: String,
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
@@ -262,7 +266,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             fmt: &self.cx.formatter,
             type_name: &type_name,
             ctype: &ctype,
-            dtor_name: &dtor_name,
+            dtor_name,
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             c_header: c_impl_header,
@@ -375,11 +379,14 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             return None;
         }
         let _guard = self.cx.errors.set_context_method(
-            self.cx.formatter.fmt_type_name_diagnostics(id),
+            self.cx.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
         let method_name = self.cx.formatter.fmt_method_name(method);
-        let c_method_name = self.cx.formatter.fmt_c_method_name(id, method).into();
+        let abi_name = self
+            .cx
+            .formatter
+            .namespace_c_method_name(id, method.abi_name.as_str());
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -446,7 +453,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             method,
             return_ty,
             method_name,
-            c_method_name,
+            abi_name,
             pre_qualifiers,
             post_qualifiers,
             param_decls,

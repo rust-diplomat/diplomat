@@ -1,4 +1,3 @@
-use crate::c2::CFormatter;
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
@@ -11,7 +10,6 @@ use std::{borrow::Cow, iter::once};
 /// This type mediates all formatting
 pub(super) struct KotlinFormatter<'tcx> {
     tcx: &'tcx TypeContext,
-    c: CFormatter<'tcx>,
     strip_prefix: Option<String>,
 }
 
@@ -22,11 +20,7 @@ const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> KotlinFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, strip_prefix: Option<String>) -> Self {
-        Self {
-            tcx,
-            c: CFormatter::new(tcx, false),
-            strip_prefix,
-        }
+        Self { tcx, strip_prefix }
     }
 
     pub fn fmt_void(&self) -> &'static str {
@@ -56,10 +50,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_str_slices(&self) -> &'static str {
         "Array<String>"
-    }
-
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
     }
 
     pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
@@ -337,7 +327,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.c.tcx().resolve_type(id);
+        let resolved = self.tcx.resolve_type(id);
 
         let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
             resolved

@@ -17,13 +17,22 @@ pub mod borrowing_param;
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Method {
+    /// Documentation specified on the method
     pub docs: Docs,
+    /// The name of the method as initially declared.
     pub name: IdentBuf,
+    /// The name of the generated `extern "C"` function
+    pub abi_name: IdentBuf,
+    /// The lifetimes introduced in this method and surrounding impl block.
     pub lifetime_env: LifetimeEnv,
 
+    /// An &self, &mut self, or Self parameter
     pub param_self: Option<ParamSelf>,
+    /// The parameters of the method
     pub params: Vec<Param>,
+    /// The output type, including whether it returns a Result/Option/Writeable/etc
     pub output: ReturnType,
+    /// Resolved (and inherited) diplomat::attr attributes on this method
     pub attrs: Attrs,
 }
 

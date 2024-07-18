@@ -6,8 +6,6 @@ use diplomat_core::{
 };
 use heck::{ToLowerCamelCase, ToUpperCamelCase};
 
-use crate::c2::CFormatter;
-
 use super::FileType;
 
 const RESERVED: &[&str] = &[
@@ -51,7 +49,7 @@ const RESERVED: &[&str] = &[
 /// Helper class for us to format JS identifiers from the HIR.
 pub(super) struct JSFormatter<'tcx> {
     /// Per [`CFormatter`]'s documentation we use it for support.
-    c_formatter: CFormatter<'tcx>,
+    tcx: &'tcx TypeContext,
 
     /// For generating doc.rs links
     docs_url_gen: &'tcx DocsUrlGenerator,
@@ -59,23 +57,16 @@ pub(super) struct JSFormatter<'tcx> {
 
 impl<'tcx> JSFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
-        Self {
-            c_formatter: CFormatter::new(tcx, false),
-            docs_url_gen,
-        }
+        Self { tcx, docs_url_gen }
     }
 
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let type_def = self.c_formatter.tcx().resolve_type(id);
+        let type_def = self.tcx.resolve_type(id);
 
         type_def
             .attrs()
             .rename
             .apply(type_def.name().as_str().into())
-    }
-
-    pub fn fmt_type_name_diagnostics(&self, type_id: TypeId) -> Cow<'tcx, str> {
-        self.c_formatter.fmt_type_name_diagnostics(type_id)
     }
 
     pub fn fmt_file_name_extensionless(&self, type_name: &str) -> String {
@@ -260,10 +251,6 @@ impl<'tcx> JSFormatter<'tcx> {
         }
     }
 
-    pub fn fmt_c_method_name<'a>(&self, type_id: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c_formatter.fmt_method_name(type_id, method).into()
-    }
-
     pub fn fmt_param_name<'a>(&self, param_name: &'a str) -> Cow<'a, str> {
         param_name.to_lower_camel_case().into()
     }
@@ -281,8 +268,5 @@ impl<'tcx> JSFormatter<'tcx> {
         variant.attrs.rename.apply(name)
     }
 
-    pub fn fmt_destructor_name(&self, type_id: TypeId) -> String {
-        self.c_formatter.fmt_dtor_name(type_id)
-    }
     // #endregion
 }

@@ -8,6 +8,7 @@ Method {
         [],
     ),
     name: "elided",
+    abi_name: "Opaque_elided",
     lifetime_env: LifetimeEnv {
         nodes: [],
         num_lifetimes: 3,

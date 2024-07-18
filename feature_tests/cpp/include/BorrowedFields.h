@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 BorrowedFields BorrowedFields_from_bar_and_strings(const Bar* bar, const char16_t* dstr16_data, size_t dstr16_len, const char* utf8_str_data, size_t utf8_str_len);
-void BorrowedFields_destroy(BorrowedFields* self);
 
 #ifdef __cplusplus
 } // extern "C"

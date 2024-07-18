@@ -183,7 +183,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             .flat_map(|method| self.gen_method_info(id, method, type_name))
             .collect::<Vec<_>>();
 
-        let destructor = self.formatter.fmt_destructor_name(id);
+        let destructor = &ty.dtor_abi_name;
         let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
@@ -192,7 +192,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             docs: String,
-            destructor: String,
+            destructor: &'a str,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
         }
@@ -200,7 +200,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         ImplTemplate {
             type_name,
             methods: methods.as_slice(),
-            destructor,
+            destructor: destructor.as_str(),
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
             special,
@@ -389,11 +389,11 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         let mut visitor = method.borrowing_param_visitor(self.tcx);
 
         let _guard = self.errors.set_context_method(
-            self.formatter.fmt_type_name_diagnostics(id),
+            self.tcx.fmt_type_name_diagnostics(id),
             method.name.as_str().into(),
         );
 
-        let c_method_name = self.formatter.fmt_c_method_name(id, method);
+        let abi_name = method.abi_name.as_str();
 
         let mut param_decls_dart = Vec::new();
         let mut param_types_ffi = Vec::new();
@@ -563,7 +563,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             method,
             docs,
             declaration,
-            c_method_name,
+            abi_name,
             param_types_ffi,
             param_types_ffi_cast,
             param_names_ffi,
@@ -1215,8 +1215,8 @@ struct MethodInfo<'a> {
     docs: String,
     /// The declaration (everything before the parameter list)
     declaration: String,
-    /// The C method name
-    c_method_name: Cow<'a, str>,
+    /// The ABI name of the method
+    abi_name: &'a str,
 
     // The types for the FFI declaration. The uncast types are the types
     // from the `dart:ffi` package, the cast types are native Dart types.

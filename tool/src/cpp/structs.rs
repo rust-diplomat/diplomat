@@ -40,7 +40,7 @@ pub fn gen_struct<W: fmt::Write>(
                 writeln!(
                     &mut deleter_operator_body,
                     "capi::{}(l);",
-                    custom_type.dtor_name()
+                    opaque.dtor_abi_name
                 )?;
                 writeln!(&mut deleter_body, "}}")?;
                 writeln!(out, "}};")?;
@@ -305,7 +305,7 @@ fn gen_method<W: fmt::Write>(
                 writeln!(
                     &mut method_body,
                     "capi::{}({});",
-                    method.full_path_name,
+                    method.abi_name,
                     all_params_invocation.join(", ")
                 )?;
 
@@ -318,7 +318,7 @@ fn gen_method<W: fmt::Write>(
                 let out_expr = gen_rust_to_cpp(
                     &format!(
                         "capi::{}({})",
-                        method.full_path_name,
+                        method.abi_name,
                         all_params_invocation.join(", ")
                     ),
                     "out_value",
