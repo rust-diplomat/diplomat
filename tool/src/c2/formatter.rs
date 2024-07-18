@@ -41,10 +41,6 @@ impl<'tcx> CFormatter<'tcx> {
         }
     }
 
-    /// Format the type name for usage in ABI-relevant contexts: methods/dtors
-    pub fn fmt_type_name_for_abi(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.tcx.resolve_type(id).name().as_str().into()
-    }
     /// Resolve and format a named type for use in code (with a namespace, if needed by C++)
     pub fn fmt_type_name_maybe_namespaced(&self, id: TypeId) -> Cow<'tcx, str> {
         let resolved = self.tcx.resolve_type(id);
@@ -68,12 +64,6 @@ impl<'tcx> CFormatter<'tcx> {
         }
     }
 
-    /// Resolve and format a named type for use in diagnostics
-    /// (don't apply rename rules and such)
-    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.tcx.resolve_type(id).name().as_str().into()
-    }
-
     /// Resolve and format the name of a type for use in header names: decl version
     //
     /// Enums can't be forward-declared in C, but we do want enums to have methods,
@@ -90,10 +80,7 @@ impl<'tcx> CFormatter<'tcx> {
         let type_name = self.fmt_type_name(id);
         format!("{type_name}.h")
     }
-    /// Resolve and format the name of a type for use in header names: result version
-    pub fn fmt_result_header_path(&self, type_name: &str) -> String {
-        format!("{type_name}.d.h")
-    }
+
     /// Format an enum variant.
     pub fn fmt_enum_variant(
         &self,
@@ -116,10 +103,6 @@ impl<'tcx> CFormatter<'tcx> {
         } else {
             format!("const {ident}*").into()
         }
-    }
-
-    pub fn fmt_result_name(&self, ok_ty_name: &str, err_ty_name: &str) -> String {
-        format!("diplomat_result_{ok_ty_name}_{err_ty_name}")
     }
 
     /// Get the primitive type as a C type

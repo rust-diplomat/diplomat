@@ -26,7 +26,7 @@ struct KotlinConfig {
     lib_name: String,
 }
 
-pub fn run<'tcx>(
+pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
     conf_path: Option<&Path>,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
@@ -1420,7 +1420,7 @@ struct SpecialMethodsImpl {
 }
 
 impl SpecialMethodsImpl {
-    pub fn new(
+    fn new(
         SpecialMethods {
             iterator_type,
             indexer_type,

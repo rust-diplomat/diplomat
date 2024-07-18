@@ -6,23 +6,26 @@ use diplomat_core::hir::borrowing_param::{
 };
 use diplomat_core::hir::{
     self, EnumDef, LifetimeEnv, Method, OpaqueDef, SpecialMethod, SpecialMethodPresence, Type,
-    TypeId,
+    TypeContext, TypeId,
 };
 
 use askama::{self, Template};
 
-use super::{formatter::JSFormatter, JSGenerationContext};
+use super::formatter::JSFormatter;
+use crate::common::ErrorStore;
 
 mod converter;
 use converter::StructBorrowContext;
 
-pub(super) struct TypeGenerationContext<'jsctx, 'tcx> {
-    pub js_ctx: &'jsctx JSGenerationContext<'tcx>,
+pub(super) struct TyGenContext<'ctx, 'tcx> {
+    pub tcx: &'tcx TypeContext,
+    pub formatter: &'ctx JSFormatter<'tcx>,
+    pub errors: &'ctx ErrorStore<'tcx, String>,
     pub typescript: bool,
     pub imports: BTreeSet<String>,
 }
 
-impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
+impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
     pub(super) fn generate_base(&self, body: String) -> String {
         #[derive(Template)]
         #[template(path = "js2/base.js.jinja", escape = "none")]
@@ -41,7 +44,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
     }
 
     /// Generate an enumerator's body for a file from the given definition. Called by [`JSGenerationContext::generate_file_from_type`]
-    pub(super) fn generate_enum_from_def(
+    pub(super) fn gen_enum(
         &mut self,
         enum_def: &'tcx EnumDef,
         type_id: TypeId,
@@ -72,19 +75,17 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
         ImplTemplate {
             enum_def,
-            formatter: &self.js_ctx.formatter,
+            formatter: self.formatter,
             type_name,
             typescript: self.typescript,
-
-            doc_str: self.js_ctx.formatter.fmt_docs(&enum_def.docs),
-
+            doc_str: self.formatter.fmt_docs(&enum_def.docs),
             methods,
         }
         .render()
         .unwrap()
     }
 
-    pub(super) fn generate_opaque_from_def(
+    pub(super) fn gen_opaque(
         &mut self,
         opaque_def: &'tcx OpaqueDef,
         type_id: TypeId,
@@ -120,14 +121,14 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             methods,
             destructor,
             typescript: self.typescript,
-            docs: self.js_ctx.formatter.fmt_docs(&opaque_def.docs),
+            docs: self.formatter.fmt_docs(&opaque_def.docs),
             lifetimes: &opaque_def.lifetimes,
         }
         .render()
         .unwrap()
     }
 
-    pub(super) fn generate_struct_from_def<P: hir::TyPosition>(
+    pub(super) fn gen_struct<P: hir::TyPosition>(
         &mut self,
         struct_def: &'tcx hir::StructDef<P>,
         type_id: TypeId,
@@ -137,14 +138,14 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
     ) -> String {
         let (offsets, _) = crate::layout_hir::struct_offsets_size_max_align(
             struct_def.fields.iter().map(|f| &f.ty),
-            self.js_ctx.tcx,
+            self.tcx,
         );
 
         let fields = struct_def.fields.iter().enumerate()
         .map(|field_enumerator| {
             let (i, field) = field_enumerator;
 
-            let field_name = self.js_ctx.formatter.fmt_param_name(field.name.as_str());
+            let field_name = self.formatter.fmt_param_name(field.name.as_str());
 
             let js_type_name = self.gen_js_type_str(&field.ty);
 
@@ -179,7 +180,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 (format!("{slice_expr}"), Some(post_cleanup_statement), None)
             } else {
                 let borrow_info = if let hir::Type::Struct(path) = &field.ty {
-                    StructBorrowInfo::compute_for_struct_field(struct_def, path, self.js_ctx.tcx).map(
+                    StructBorrowInfo::compute_for_struct_field(struct_def, path, self.tcx).map(
                         |param_info| StructBorrowContext {
                             use_env: &struct_def.lifetimes,
                             param_info,
@@ -237,7 +238,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             has_default_constructor: is_out,
             fields,
             methods,
-            docs: self.js_ctx.formatter.fmt_docs(&struct_def.docs),
+            docs: self.formatter.fmt_docs(&struct_def.docs),
             lifetimes: &struct_def.lifetimes,
         }
         .render()
@@ -257,10 +258,10 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             return None;
         }
 
-        let mut visitor = method.borrowing_param_visitor(self.js_ctx.tcx);
+        let mut visitor = method.borrowing_param_visitor(self.tcx);
 
-        let _guard = self.js_ctx.errors.set_context_method(
-            self.js_ctx.tcx.fmt_type_name_diagnostics(type_id),
+        let _guard = self.errors.set_context_method(
+            self.tcx.fmt_type_name_diagnostics(type_id),
             method.name.as_str().into(),
         );
 
@@ -289,7 +290,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
         for param in method.params.iter() {
             let param_info = ParamInfo {
-                name: self.js_ctx.formatter.fmt_param_name(param.name.as_str()),
+                name: self.formatter.fmt_param_name(param.name.as_str()),
                 ty: self.gen_js_type_str(&param.ty),
             };
 
@@ -370,25 +371,21 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         method_info.lifetimes = Some(&method.lifetime_env);
 
         method_info.method_decl = match &method.attrs.special_method {
-            Some(SpecialMethod::Getter(name)) => format!(
-                "get {}",
-                self.js_ctx.formatter.fmt_method_field_name(name, method)
-            ),
+            Some(SpecialMethod::Getter(name)) => {
+                format!("get {}", self.formatter.fmt_method_field_name(name, method))
+            }
             Some(SpecialMethod::Setter(name)) => {
                 // Setters cannot have return type annotations
                 method_info.return_type = Default::default();
-                format!(
-                    "set {}",
-                    self.js_ctx.formatter.fmt_method_field_name(name, method)
-                )
+                format!("set {}", self.formatter.fmt_method_field_name(name, method))
             }
             Some(SpecialMethod::Iterable) => "[Symbol.iterator]".to_string(),
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
             None if method.param_self.is_none() => {
-                format!("static {}", self.js_ctx.formatter.fmt_method_name(method))
+                format!("static {}", self.formatter.fmt_method_name(method))
             }
-            None => self.js_ctx.formatter.fmt_method_name(method),
+            None => self.formatter.fmt_method_name(method),
             _ => panic!(
                 "Method Declaration {:?} not implemented",
                 method.attrs.special_method

@@ -1,29 +1,22 @@
 // Enable once https://github.com/rust-lang/rust/issues/89554 is stable
 // #![deny(non_exhaustive_omitted_patterns)] // diplomat_core uses non_exhaustive a lot; we should never miss its patterns
 
-#[doc(hidden)]
-pub mod c;
-#[doc(hidden)]
-pub mod c2;
-#[doc(hidden)]
-pub mod common;
-#[doc(hidden)]
-pub mod cpp;
-#[doc(hidden)]
-pub mod cpp2;
-#[doc(hidden)]
-pub mod dart;
-#[doc(hidden)]
-pub mod dotnet;
-#[doc(hidden)]
-pub mod js;
-#[doc(hidden)]
-pub mod js2;
-#[doc(hidden)]
-pub mod kotlin;
+// Backends
+mod c2;
+mod cpp2;
+mod dart;
+mod js2;
+mod kotlin;
 
-mod docs_util;
+// Legacy
+mod c;
+mod cpp;
+mod dotnet;
+mod js;
 mod layout;
+
+mod common;
+mod docs_util;
 mod layout_hir;
 mod util;
 

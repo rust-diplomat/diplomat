@@ -2,26 +2,14 @@ mod formatter;
 mod header;
 mod ty;
 
-pub use self::formatter::CFormatter;
+pub(crate) use self::formatter::CFormatter;
 pub(crate) use self::formatter::CAPI_NAMESPACE;
 pub(crate) use self::header::Header;
 pub(crate) use self::ty::TyGenContext;
 
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
-use diplomat_core::hir::TypeContext;
-
-/// This is the main object that drives this backend. Most execution steps
-/// for this backend will be found as methods on this context
-pub struct CContext<'tcx> {
-    pub tcx: &'tcx TypeContext,
-    pub formatter: CFormatter<'tcx>,
-    pub files: FileMap,
-
-    pub errors: ErrorStore<'tcx, String>,
-    /// Whether this is being generated for C++ (needs extern C, namespaces, etc)
-    pub is_for_cpp: bool,
-}
+use diplomat_core::hir;
 
 pub fn gen_runtime(is_for_cpp: bool) -> String {
     #[derive(Template)]
@@ -36,21 +24,58 @@ pub fn gen_runtime(is_for_cpp: bool) -> String {
     runtime
 }
 
-pub fn run(tcx: &TypeContext) -> (FileMap, ErrorStore<String>) {
-    let ctx = CContext {
-        tcx,
-        files: Default::default(),
-        formatter: CFormatter::new(tcx, false),
-        errors: ErrorStore::default(),
-        is_for_cpp: false,
-    };
+pub fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
+    let files = FileMap::default();
+    let formatter = CFormatter::new(tcx, false);
+    let errors = ErrorStore::default();
 
-    ctx.files
-        .add_file("diplomat_runtime.h".into(), gen_runtime(false));
+    files.add_file("diplomat_runtime.h".into(), gen_runtime(false));
 
-    for (id, ty) in ctx.tcx.all_types() {
-        ctx.gen_ty(id, ty)
+    for (id, ty) in tcx.all_types() {
+        if ty.attrs().disable {
+            // Skip type if disabled
+            continue;
+        }
+        if let hir::TypeDef::Struct(s) = ty {
+            if s.fields.is_empty() {
+                // Skip ZST
+                continue;
+            }
+        }
+        if let hir::TypeDef::OutStruct(s) = ty {
+            if s.fields.is_empty() {
+                // Skip ZST
+                continue;
+            }
+        }
+
+        let decl_header_path = formatter.fmt_decl_header_path(id);
+        let impl_header_path = formatter.fmt_impl_header_path(id);
+
+        let _guard = errors.set_context_ty(ty.name().as_str().into());
+        let context = TyGenContext {
+            tcx,
+            formatter: &formatter,
+            errors: &errors,
+            is_for_cpp: false,
+            id,
+            decl_header_path: &decl_header_path,
+            impl_header_path: &impl_header_path,
+        };
+
+        let decl_header = match ty {
+            hir::TypeDef::Enum(e) => context.gen_enum_def(e),
+            hir::TypeDef::Opaque(o) => context.gen_opaque_def(o),
+            hir::TypeDef::Struct(s) => context.gen_struct_def(s),
+            hir::TypeDef::OutStruct(s) => context.gen_struct_def(s),
+            _ => unreachable!("unknown AST/HIR variant"),
+        };
+
+        let impl_header = context.gen_impl(ty);
+
+        files.add_file(decl_header_path, decl_header.to_string());
+        files.add_file(impl_header_path, impl_header.to_string());
     }
 
-    (ctx.files, ctx.errors)
+    (files, errors)
 }

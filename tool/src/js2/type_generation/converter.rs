@@ -6,7 +6,7 @@ use diplomat_core::hir::{
 };
 use std::fmt::Write;
 
-use super::TypeGenerationContext;
+use super::TyGenContext;
 
 /// Part of JSGenerationContext that handles conversions between C and JS.
 /// This is a partial implementation so I don't have really long files.
@@ -30,80 +30,72 @@ pub(super) struct StructBorrowContext<'tcx> {
     pub param_info: StructBorrowInfo<'tcx>,
 }
 
-impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
+impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
     // #region C to JS
     /// Given a type from Rust, convert it into something Typescript will understand.
     /// We use this to double-check our Javascript work as well.
     pub(super) fn gen_js_type_str<P: hir::TyPosition>(&mut self, ty: &Type<P>) -> Cow<'tcx, str> {
         match *ty {
-            Type::Primitive(primitive) => {
-                self.js_ctx.formatter.fmt_primitive_as_ffi(primitive).into()
-            }
+            Type::Primitive(primitive) => self.formatter.fmt_primitive_as_ffi(primitive).into(),
             Type::Opaque(ref op) => {
                 let opaque_id = op.tcx_id.into();
-                let type_name = self.js_ctx.formatter.fmt_type_name(opaque_id);
+                let type_name = self.formatter.fmt_type_name(opaque_id);
 
                 // Add to the import list:
-                self.imports
-                    .insert(self.js_ctx.formatter.fmt_import_statement(
-                        &type_name,
-                        self.typescript,
-                        "./".into(),
-                    ));
+                self.imports.insert(self.formatter.fmt_import_statement(
+                    &type_name,
+                    self.typescript,
+                    "./".into(),
+                ));
 
-                if self.js_ctx.tcx.resolve_type(opaque_id).attrs().disable {
-                    self.js_ctx
-                        .errors
+                if self.tcx.resolve_type(opaque_id).attrs().disable {
+                    self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
                 if op.is_optional() {
-                    self.js_ctx.formatter.fmt_nullable(&type_name).into()
+                    self.formatter.fmt_nullable(&type_name).into()
                 } else {
                     type_name
                 }
             }
             Type::Struct(ref st) => {
                 let id = st.id();
-                let type_name = self.js_ctx.formatter.fmt_type_name(id);
+                let type_name = self.formatter.fmt_type_name(id);
 
                 // Add to the import list:
-                self.imports
-                    .insert(self.js_ctx.formatter.fmt_import_statement(
-                        &type_name,
-                        self.typescript,
-                        "./".into(),
-                    ));
+                self.imports.insert(self.formatter.fmt_import_statement(
+                    &type_name,
+                    self.typescript,
+                    "./".into(),
+                ));
 
-                if self.js_ctx.tcx.resolve_type(id).attrs().disable {
-                    self.js_ctx
-                        .errors
+                if self.tcx.resolve_type(id).attrs().disable {
+                    self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 type_name
             }
             Type::Enum(ref enumerator) => {
                 let enum_id = enumerator.tcx_id.into();
-                let type_name = self.js_ctx.formatter.fmt_type_name(enum_id);
+                let type_name = self.formatter.fmt_type_name(enum_id);
 
                 // Add to the import list:
-                self.imports
-                    .insert(self.js_ctx.formatter.fmt_import_statement(
-                        &type_name,
-                        self.typescript,
-                        "./".into(),
-                    ));
+                self.imports.insert(self.formatter.fmt_import_statement(
+                    &type_name,
+                    self.typescript,
+                    "./".into(),
+                ));
 
-                if self.js_ctx.tcx.resolve_type(enum_id).attrs().disable {
-                    self.js_ctx
-                        .errors
+                if self.tcx.resolve_type(enum_id).attrs().disable {
+                    self.errors
                         .push_error(format!("Using disabled type {type_name}"))
                 }
                 type_name
             }
-            Type::Slice(hir::Slice::Str(..)) => self.js_ctx.formatter.fmt_string().into(),
+            Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().into(),
             Type::Slice(hir::Slice::Primitive(_, p)) => {
-                self.js_ctx.formatter.fmt_primitive_list_type(p).into()
+                self.formatter.fmt_primitive_list_type(p).into()
             }
             Type::Slice(hir::Slice::Strs(..)) => "Array<String>".into(),
             _ => unreachable!("AST/HIR variant {:?} unknown", ty),
@@ -112,9 +104,9 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 
     pub(super) fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'tcx, str> {
         match out_ty {
-            SuccessType::Write => self.js_ctx.formatter.fmt_string().into(),
+            SuccessType::Write => self.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_js_type_str(o),
-            SuccessType::Unit => self.js_ctx.formatter.fmt_void().into(),
+            SuccessType::Unit => self.formatter.fmt_void().into(),
             _ => unreachable!(),
         }
     }
@@ -130,12 +122,11 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             Type::Primitive(..) => variable_name,
             Type::Opaque(ref op) => {
                 let type_id = op.tcx_id.into();
-                let type_name = self.js_ctx.formatter.fmt_type_name(type_id);
+                let type_name = self.formatter.fmt_type_name(type_id);
 
                 let mut edges = if let Some(lt) = op.owner.lifetime() {
                     match lt {
                         hir::MaybeStatic::NonStatic(lt) => self
-                            .js_ctx
                             .formatter
                             .fmt_lifetime_edge_array(lt, lifetime_environment)
                             .into_owned(),
@@ -150,8 +141,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                         hir::MaybeStatic::NonStatic(lt) => write!(
                             edges,
                             ", {}",
-                            self.js_ctx
-                                .formatter
+                            self.formatter
                                 .fmt_lifetime_edge_array(lt, lifetime_environment)
                         )
                         .unwrap(),
@@ -170,7 +160,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             }
             Type::Struct(ref st) => {
                 let id = st.id();
-                let type_name = self.js_ctx.formatter.fmt_type_name(id);
+                let type_name = self.formatter.fmt_type_name(id);
                 let mut edges = String::new();
                 for lt in st.lifetimes().lifetimes() {
                     match lt {
@@ -182,7 +172,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     }
                 }
 
-                let type_def = self.js_ctx.tcx.resolve_type(id);
+                let type_def = self.tcx.resolve_type(id);
                 match type_def {
                     hir::TypeDef::Struct(..) => {
                         format!("new {type_name}()._fromFFI({variable_name}{edges})").into()
@@ -193,15 +183,15 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     _ => unreachable!("Expected struct type def, found {type_def:?}"),
                 }
             }
-            Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.js_ctx.tcx)) => {
+            Type::Enum(ref enum_path) if is_contiguous_enum(enum_path.resolve(self.tcx)) => {
                 let id = enum_path.tcx_id.into();
-                let type_name = self.js_ctx.formatter.fmt_type_name(id);
+                let type_name = self.formatter.fmt_type_name(id);
                 format!("{type_name}[Array.from({type_name}.values.keys())[{variable_name}]]")
                     .into()
             }
             Type::Enum(ref enum_path) => {
                 let id = enum_path.tcx_id.into();
-                let type_name = self.js_ctx.formatter.fmt_type_name(id);
+                let type_name = self.formatter.fmt_type_name(id);
                 // Based on Dart specifics, but if storing too many things in memory isn't an issue we could just make a reverse-lookup map in the enum template.
                 format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})()").into()
             }
@@ -209,7 +199,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 // Slices are always returned to us by way of pointers, so we take advantage of a helper function:
                 match slice {
 					hir::Slice::Primitive(_, primitive_type) => {
-						format!(r#"diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, {variable_name}, "{}")"#, self.js_ctx.formatter.fmt_primitive_list_view(primitive_type)).into()
+						format!(r#"diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, {variable_name}, "{}")"#, self.formatter.fmt_primitive_list_view(primitive_type)).into()
 					},
 					hir::Slice::Str(_, encoding) => {
 						format!(r#"diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, {variable_name}, "string{}")"#, 
@@ -262,7 +252,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     PrimitiveType::Char => "String.fromCharCode(",
                     _ => "",
                 },
-                self.js_ctx.formatter.fmt_primitive_slice(p),
+                self.formatter.fmt_primitive_slice(p),
                 match p {
                     PrimitiveType::Bool => " == 1",
                     PrimitiveType::Char => ")",
@@ -281,14 +271,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
         match *return_type {
             // -> () or a -> Result<(), Error>.
             ReturnType::Infallible(SuccessType::Unit)
-            | ReturnType::Fallible(SuccessType::Unit, Some(_)) => {
-                self.js_ctx.formatter.fmt_void().into()
-            }
+            | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
 
             // Something we can write to? We just treat it as a string.
             ReturnType::Infallible(SuccessType::Write)
             | ReturnType::Fallible(SuccessType::Write, Some(_)) => {
-                self.js_ctx.formatter.fmt_string().into()
+                self.formatter.fmt_string().into()
             }
 
             // Anything we get returned that is not a [`SuccessType::Write`].
@@ -298,26 +286,22 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             // Nullable string (no error on return).
             ReturnType::Fallible(SuccessType::Write, None)
             | ReturnType::Nullable(SuccessType::Write) => self
-                .js_ctx
                 .formatter
-                .fmt_nullable(self.js_ctx.formatter.fmt_string())
+                .fmt_nullable(self.formatter.fmt_string())
                 .into(),
 
             // Something like Option<()>. Basically, did we run successfully?
             ReturnType::Fallible(SuccessType::Unit, None)
             | ReturnType::Nullable(SuccessType::Unit) => self
-                .js_ctx
                 .formatter
                 .fmt_primitive_as_ffi(hir::PrimitiveType::Bool)
                 .into(),
 
             // A nullable out type. Something like `MyStruct?` in Typescript.
             ReturnType::Fallible(SuccessType::OutType(ref o), None)
-            | ReturnType::Nullable(SuccessType::OutType(ref o)) => self
-                .js_ctx
-                .formatter
-                .fmt_nullable(&self.gen_js_type_str(o))
-                .into(),
+            | ReturnType::Nullable(SuccessType::OutType(ref o)) => {
+                self.formatter.fmt_nullable(&self.gen_js_type_str(o)).into()
+            }
 
             _ => unreachable!("AST/HIR variant {:?} unknown.", return_type),
         }
@@ -357,7 +341,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 let mut result = "result";
                 match o {
                     Type::Struct(_) | Type::Slice(_) => {
-                        let layout = crate::layout_hir::type_size_alignment(o, self.js_ctx.tcx);
+                        let layout = crate::layout_hir::type_size_alignment(o, self.tcx);
                         let size = layout.size();
                         let align = layout.align();
 
@@ -410,14 +394,11 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                 let layout = match ok {
                     SuccessType::Unit => crate::layout_hir::unit_size_alignment(),
                     SuccessType::OutType(ref o) => {
-                        crate::layout_hir::type_size_alignment(o, self.js_ctx.tcx)
+                        crate::layout_hir::type_size_alignment(o, self.tcx)
                     }
                     SuccessType::Write => match return_type {
                         ReturnType::Fallible(_, ref err) if err.is_some() => {
-                            crate::layout_hir::type_size_alignment(
-                                &err.clone().unwrap(),
-                                self.js_ctx.tcx,
-                            )
+                            crate::layout_hir::type_size_alignment(&err.clone().unwrap(), self.tcx)
                         }
                         ReturnType::Fallible(_, None) | ReturnType::Nullable(_) => {
                             crate::layout_hir::unit_size_alignment()
@@ -432,11 +413,8 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
                     match return_type {
                         // We already account for an error in the Write match up above:
                         ReturnType::Fallible(_, e) if e.is_some() => {
-                            crate::layout_hir::type_size_alignment(
-                                &e.clone().unwrap(),
-                                self.js_ctx.tcx,
-                            )
-                            .size()
+                            crate::layout_hir::type_size_alignment(&e.clone().unwrap(), self.tcx)
+                                .size()
                         }
                         _ => 0,
                     },
@@ -467,12 +445,12 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
 					ReturnType::Fallible(_, Some(e)) => {
 						// Because we don't add Result<_, Error> types to imports, we do that here:
 						if !self.typescript {
-							let type_name = self.js_ctx.formatter.fmt_type_name(e.id().unwrap());
-							self.imports.insert(self.js_ctx.formatter.fmt_import_statement(&type_name, false, "./".into()));
+							let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+							self.imports.insert(self.formatter.fmt_import_statement(&type_name, false, "./".into()));
 						}
 
 						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
-                        let type_name = self.js_ctx.formatter.fmt_type_name(e.id().unwrap());
+                        let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                         let cause = self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment);
 						format!(
                             "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
@@ -562,7 +540,7 @@ impl<'jsctx, 'tcx> TypeGenerationContext<'jsctx, 'tcx> {
             }
             Type::Slice(hir::Slice::Primitive(_, p)) => format!(
                 r#"diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}")"#,
-                self.js_ctx.formatter.fmt_primitive_list_view(p)
+                self.formatter.fmt_primitive_list_view(p)
             )
             .into(),
             _ => unreachable!("Unknown AST/HIR variant {ty:?}"),
