@@ -9,9 +9,7 @@ mod js;
 mod kotlin;
 
 mod common;
-#[allow(unused)] // HIR backends don't do doc work, let's allow(unused) for now
-mod docs_util;
-mod layout_hir;
+mod layout;
 
 use colored::*;
 use core::panic;
