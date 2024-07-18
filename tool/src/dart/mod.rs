@@ -12,16 +12,16 @@ use diplomat_core::hir::{ReturnableStructDef, TypeContext};
 use formatter::DartFormatter;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::{Display, Write};
+use std::fmt::Write;
 
 mod formatter;
 
 /// Run file generation
 pub fn run<'cx>(
     tcx: &'cx TypeContext,
-    docs_url_generator: &'cx DocsUrlGenerator,
-) -> Result<FileMap, Vec<(impl Display + 'cx, String)>> {
-    let formatter = DartFormatter::new(tcx, docs_url_generator);
+    docs_url_gen: &'cx DocsUrlGenerator,
+) -> (FileMap, ErrorStore<'cx, String>) {
+    let formatter = DartFormatter::new(tcx, docs_url_gen);
 
     let files = FileMap::default();
     let errors = ErrorStore::default();
@@ -84,12 +84,7 @@ pub fn run<'cx>(
         ),
     );
 
-    let errors = errors.take_all();
-    if !errors.is_empty() {
-        Err(errors)
-    } else {
-        Ok(files)
-    }
+    (files, errors)
 }
 
 fn render_class(

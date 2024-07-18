@@ -23,39 +23,34 @@ pub struct CContext<'tcx> {
     pub is_for_cpp: bool,
 }
 
-#[derive(Template)]
-#[template(path = "c2/runtime.h.jinja", escape = "none")]
-pub(crate) struct RuntimeTemplate {
-    pub is_for_cpp: bool,
-}
-
-impl<'tcx> CContext<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, files: FileMap, is_for_cpp: bool) -> Self {
-        CContext {
-            tcx,
-            files,
-            formatter: CFormatter::new(tcx, is_for_cpp),
-            errors: ErrorStore::default(),
-            is_for_cpp,
-        }
+pub fn gen_runtime(is_for_cpp: bool) -> String {
+    #[derive(Template)]
+    #[template(path = "c2/runtime.h.jinja", escape = "none")]
+    struct RuntimeTemplate {
+        is_for_cpp: bool,
     }
-
-    /// Run file generation
-    ///
-    /// Will populate self.files as a result
-    pub fn run(&self) {
-        let mut runtime = String::new();
-        RuntimeTemplate {
-            is_for_cpp: self.is_for_cpp,
-        }
+    let mut runtime = String::new();
+    RuntimeTemplate { is_for_cpp }
         .render_into(&mut runtime)
         .unwrap();
+    runtime
+}
 
-        self.files.add_file("diplomat_runtime.h".into(), runtime);
-        for (id, ty) in self.tcx.all_types() {
-            self.gen_ty(id, ty)
-        }
+pub fn run(tcx: &TypeContext) -> (FileMap, ErrorStore<String>) {
+    let ctx = CContext {
+        tcx,
+        files: Default::default(),
+        formatter: CFormatter::new(tcx, false),
+        errors: ErrorStore::default(),
+        is_for_cpp: false,
+    };
+
+    ctx.files
+        .add_file("diplomat_runtime.h".into(), gen_runtime(false));
+
+    for (id, ty) in ctx.tcx.all_types() {
+        ctx.gen_ty(id, ty)
     }
 
-    // further methods can be found in ty.rs and formatter.rs
+    (ctx.files, ctx.errors)
 }

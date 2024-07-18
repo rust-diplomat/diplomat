@@ -28,7 +28,7 @@ impl FileMap {
         }
     }
 
-    pub fn take_files(&mut self) -> HashMap<String, String> {
+    pub fn take_files(self) -> HashMap<String, String> {
         mem::take(&mut *self.files.borrow_mut())
     }
 

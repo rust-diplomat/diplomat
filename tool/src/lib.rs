@@ -40,7 +40,7 @@ pub use ast::DocsUrlGenerator;
 #[allow(clippy::too_many_arguments)]
 pub fn gen(
     entry: &Path,
-    target_language: &str,
+    mut target_language: &str,
     out_folder: &Path,
     docs_out_folder: Option<&Path>,
     docs_url_gen: &ast::DocsUrlGenerator,
@@ -68,70 +68,60 @@ pub fn gen(
         );
     }
 
-    let lib_file = syn_inline_mod::parse_and_inline_modules(entry);
-    let diplomat_file = ast::File::from(&lib_file);
-    let env = diplomat_file.all_types();
+    let env = ast::File::from(&syn_inline_mod::parse_and_inline_modules(entry)).all_types();
 
-    let mut out_texts: HashMap<String, String> = HashMap::new();
-
-    let mut errors_found = false;
-
+    // Legacy AST path
     match target_language {
-        "js2" => {
-            let mut attr_validator = hir::BasicAttributeValidator::new("js2");
-            attr_validator.other_backend_names.push("js".into());
-
-            attr_validator.support.renaming = true;
-            attr_validator.support.disabling = true;
-            attr_validator.support.accessors = true;
-
-            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
-                Ok(context) => context,
-                Err(e) => {
-                    eprintln!("Lowering AST to HIR for Javascript backend failed:");
-                    for (ctx, err) in e {
-                        eprintln!("\tLowering error in {ctx}: {err}");
-                    }
-                    std::process::exit(-1);
-                }
-            };
-            match js2::JSGenerationContext::run(&tcx, docs_url_gen) {
-                Ok(mut files) => out_texts = files.take_files(),
-                Err(errors) => {
-                    eprintln!("Found errors whilst generating {target_language}:");
-                    for error in errors {
-                        eprintln!("\t{}: {}", error.0, error.1);
-                    }
-                    errors_found = true;
-                }
-            };
+        "c" => {
+            let mut files = HashMap::new();
+            c::gen_bindings(&env, &mut files).unwrap();
+            return write_files(files, out_folder, silent, target_language);
         }
-        "js" => js::gen_bindings(&env, &mut out_texts, Some(docs_url_gen)).unwrap(),
-        "kotlin" => {
-            let mut attr_validator = hir::BasicAttributeValidator::new("kotlin");
-            attr_validator.support.renaming = true;
-            attr_validator.support.disabling = true;
-            attr_validator.support.iterators = true;
-            attr_validator.support.iterables = true;
-            attr_validator.support.indexing = true;
-            attr_validator.support.constructors = true;
-            attr_validator.support.named_constructors = true;
-            attr_validator.support.memory_sharing = true;
-            attr_validator.support.accessors = true;
-            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
-                Ok(context) => context,
+        "cpp" => {
+            let mut files = HashMap::new();
+            c::gen_bindings(&env, &mut files).unwrap();
+            cpp::gen_bindings(&env, library_config, docs_url_gen, &mut files).unwrap();
+            if let Some(docs_out_folder) = docs_out_folder {
+                let mut docs_files = HashMap::new();
+                cpp::docs::gen_docs(&env, library_config, &mut docs_files, docs_url_gen).unwrap();
+                write_files(docs_files, docs_out_folder, silent, "cpp-docs")?;
+            }
+            return write_files(files, out_folder, silent, target_language);
+        }
+        "dotnet" => {
+            let mut files = HashMap::new();
+            dotnet::gen_bindings(&env, library_config, docs_url_gen, &mut files).unwrap();
+            return write_files(files, out_folder, silent, target_language);
+        }
+        "js" => {
+            let mut files = HashMap::new();
+            js::gen_bindings(&env, &mut files, Some(docs_url_gen)).unwrap();
+            if let Some(docs_out_folder) = docs_out_folder {
+                let mut docs_files = HashMap::new();
+                js::docs::gen_docs(&env, &mut docs_files, docs_url_gen).unwrap();
+                write_files(docs_files, docs_out_folder, silent, "js-docs")?;
+            }
+            return write_files(files, out_folder, silent, target_language);
+        }
+        _hir => {
+            target_language = target_language.strip_suffix('2').unwrap_or(target_language);
+        }
+    }
 
-                Err(e) => {
-                    for (ctx, err) in e {
-                        eprintln!("Lowering error in {ctx}: {err}");
-                    }
-                    std::process::exit(1);
-                }
-            };
-            out_texts = kotlin::run(&tcx, library_config).take_files();
+    let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
+    match target_language {
+        "c" => {
+            attr_validator.support.memory_sharing = true;
+            attr_validator.support.disabling = true;
+        }
+
+        "cpp" => {
+            attr_validator.support.renaming = true;
+            attr_validator.support.namespacing = true;
+            attr_validator.support.memory_sharing = true;
+            attr_validator.support.disabling = true;
         }
         "dart" => {
-            let mut attr_validator = hir::BasicAttributeValidator::new("dart");
             attr_validator.support.renaming = true;
             attr_validator.support.disabling = true;
             attr_validator.support.constructors = true;
@@ -143,104 +133,64 @@ pub fn gen(
             attr_validator.support.iterators = true;
             attr_validator.support.iterables = true;
             attr_validator.support.indexing = true;
-            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
-                Ok(context) => context,
-                Err(e) => {
-                    for (ctx, err) in e {
-                        eprintln!("Lowering error in {ctx}: {err}");
-                    }
-                    std::process::exit(1);
-                }
-            };
-            match dart::run(&tcx, docs_url_gen) {
-                Ok(mut files) => out_texts = files.take_files(),
-                Err(errors) => {
-                    eprintln!("Found errors whilst generating {target_language}:");
-                    for error in errors {
-                        eprintln!("\t{}: {}", error.0, error.1);
-                    }
-                    errors_found = true;
-                }
-            };
         }
-        "c" => c::gen_bindings(&env, &mut out_texts).unwrap(),
-        "cpp" => {
-            c::gen_bindings(&env, &mut out_texts).unwrap();
-            cpp::gen_bindings(&env, library_config, docs_url_gen, &mut out_texts).unwrap()
-        }
-        "dotnet" => {
-            dotnet::gen_bindings(&env, library_config, docs_url_gen, &mut out_texts).unwrap()
-        }
-        "c2" => {
-            let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
-            attr_validator.other_backend_names.push("c".into());
-            attr_validator.support.memory_sharing = true;
-            attr_validator.support.disabling = true;
-
-            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
-                Ok(context) => context,
-                Err(e) => {
-                    for (ctx, err) in e {
-                        eprintln!("Lowering error in {ctx}: {err}");
-                    }
-                    std::process::exit(1);
-                }
-            };
-            let mut context = c2::CContext::new(&tcx, Default::default(), false);
-            context.run();
-            let errors = context.errors.take_all();
-
-            if !errors.is_empty() {
-                eprintln!("Found errors whilst generating {target_language}:");
-                for error in errors {
-                    eprintln!("\t{}: {}", error.0, error.1);
-                }
-                errors_found = true;
-            }
-
-            out_texts = context.files.take_files();
-        }
-
-        "cpp2" => {
-            let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
-            attr_validator.other_backend_names.push("cpp".into());
+        "js" => {
             attr_validator.support.renaming = true;
-            attr_validator.support.namespacing = true;
-            attr_validator.support.memory_sharing = true;
             attr_validator.support.disabling = true;
-
-            let tcx = match hir::TypeContext::from_ast(&env, attr_validator) {
-                Ok(context) => context,
-                Err(e) => {
-                    for (ctx, err) in e {
-                        eprintln!("Lowering error in {ctx}: {err}");
-                    }
-                    std::process::exit(1);
-                }
-            };
-
-            let mut context = cpp2::Cpp2Context::new(&tcx, Default::default());
-            context.run();
-            out_texts = context.files.take_files();
-            let errors = context.errors.take_all();
-
-            if !errors.is_empty() {
-                eprintln!("Found errors whilst generating {target_language}:");
-                for error in errors {
-                    eprintln!("\t{}: {}", error.0, error.1);
-                }
-                errors_found = true;
-            }
+            attr_validator.support.accessors = true;
+        }
+        "kotlin" => {
+            attr_validator.support.renaming = true;
+            attr_validator.support.disabling = true;
+            attr_validator.support.iterators = true;
+            attr_validator.support.iterables = true;
+            attr_validator.support.indexing = true;
+            attr_validator.support.constructors = true;
+            attr_validator.support.named_constructors = true;
+            attr_validator.support.memory_sharing = true;
+            attr_validator.support.accessors = true;
         }
         o => panic!("Unknown target: {}", o),
-    }
+    };
 
-    if errors_found {
+    let tcx = hir::TypeContext::from_ast(&env, attr_validator).unwrap_or_else(|e| {
+        for (ctx, err) in e {
+            eprintln!("Lowering error in {ctx}: {err}");
+        }
+        std::process::exit(1);
+    });
+
+    let (files, errors) = match target_language {
+        "c" => c2::run(&tcx),
+        "cpp" => cpp2::run(&tcx),
+        "dart" => dart::run(&tcx, docs_url_gen),
+        "js" => js2::run(&tcx, docs_url_gen),
+        "kotlin" => kotlin::run(&tcx, library_config),
+        o => panic!("Unknown target: {}", o),
+    };
+
+    let errors = errors.take_all();
+    if !errors.is_empty() {
+        eprintln!("Found errors whilst generating {target_language}:");
+        for error in errors {
+            eprintln!("\t{}: {}", error.0, error.1);
+        }
         eprintln!("Not generating files due to errors");
         // Eventually this should use eyre or something
         std::process::exit(1);
     }
 
+    write_files(files.take_files(), out_folder, silent, target_language)?;
+
+    Ok(())
+}
+
+fn write_files(
+    files: HashMap<String, String>,
+    out_folder: &Path,
+    silent: bool,
+    target_language: &str,
+) -> std::io::Result<()> {
     if !silent {
         println!(
             "{}",
@@ -249,8 +199,7 @@ pub fn gen(
                 .bold()
         );
     }
-
-    for (subpath, text) in out_texts {
+    for (subpath, text) in files {
         let out_path = out_folder.join(subpath);
         let parent = out_path.parent().unwrap();
         std::fs::create_dir_all(parent).unwrap();
@@ -260,40 +209,6 @@ pub fn gen(
             println!("{}", format!("  {}", out_path.display()).dimmed());
         }
     }
-
-    if let Some(docs_out_folder) = docs_out_folder {
-        if !silent {
-            println!(
-                "{}",
-                format!("Generating {} docs:", target_language)
-                    .green()
-                    .bold()
-            );
-        }
-
-        let mut docs_out_texts: HashMap<String, String> = HashMap::new();
-
-        match target_language {
-            "js" => js::docs::gen_docs(&env, &mut docs_out_texts, docs_url_gen).unwrap(),
-            "cpp" | "cpp-c2" => {
-                cpp::docs::gen_docs(&env, library_config, &mut docs_out_texts, docs_url_gen)
-                    .unwrap()
-            }
-            "c" => todo!("Docs generation for C"),
-            "dotnet" => todo!("Docs generation for .NET?"),
-            o => panic!("Unknown target: {}", o),
-        }
-
-        for (subpath, text) in docs_out_texts {
-            let out_path = docs_out_folder.join(subpath);
-            let mut out_file = File::create(&out_path)?;
-            out_file.write_all(text.as_bytes())?;
-            if !silent {
-                println!("{}", format!("  {}", out_path.display()).dimmed());
-            }
-        }
-    }
-
     Ok(())
 }
 

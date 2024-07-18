@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::collections::BTreeSet;
-use std::fmt::Display;
 
 use diplomat_core::ast::DocsUrlGenerator;
 
@@ -48,75 +47,63 @@ impl FileType {
     }
 }
 
+pub fn run<'tcx>(
+    tcx: &'tcx TypeContext,
+    docs: &'tcx DocsUrlGenerator,
+) -> (FileMap, ErrorStore<'tcx, String>) {
+    let mut ctx = JSGenerationContext {
+        tcx,
+        formatter: JSFormatter::new(tcx, docs),
+
+        errors: ErrorStore::default(),
+
+        files: FileMap::default(),
+
+        exports: Vec::new(),
+        ts_exports: Vec::new(),
+    };
+    ctx.files.add_file(
+        "diplomat-runtime.mjs".into(),
+        include_str!("../../templates/js2/runtime.mjs").into(),
+    );
+    ctx.files.add_file(
+        "diplomat-runtime.d.ts".into(),
+        include_str!("../../templates/js2/runtime.d.ts").into(),
+    );
+    ctx.files.add_file(
+        "diplomat-wasm.mjs".into(),
+        include_str!("../../templates/js2/wasm.mjs").into(),
+    );
+
+    for (id, ty) in ctx.tcx.all_types() {
+        ctx.generate_file_from_type(id, ty);
+    }
+
+    #[derive(Template)]
+    #[template(path = "js2/index.js.jinja", escape = "none")]
+    struct IndexTemplate<'a> {
+        exports: &'a Vec<Cow<'a, str>>,
+        typescript: bool,
+    }
+
+    let mut out_index = IndexTemplate {
+        exports: &ctx.exports,
+        typescript: false,
+    };
+
+    ctx.files
+        .add_file("index.mjs".into(), out_index.render().unwrap());
+
+    out_index.typescript = true;
+    out_index.exports = &ctx.ts_exports;
+
+    ctx.files
+        .add_file("index.d.ts".into(), out_index.render().unwrap());
+
+    (ctx.files, ctx.errors)
+}
+
 impl<'tcx> JSGenerationContext<'tcx> {
-    pub fn run(
-        tcx: &'tcx TypeContext,
-        docs: &'tcx DocsUrlGenerator,
-    ) -> Result<FileMap, Vec<(impl Display + 'tcx, String)>> {
-        let mut this = Self {
-            tcx,
-            formatter: JSFormatter::new(tcx, docs),
-
-            errors: ErrorStore::default(),
-
-            files: FileMap::default(),
-
-            exports: Vec::new(),
-            ts_exports: Vec::new(),
-        };
-        this.init();
-
-        let errors = this.errors.take_all();
-        if errors.is_empty() {
-            Ok(this.files)
-        } else {
-            Err(errors)
-        }
-    }
-
-    /// Setup. Write out all the pre-written files.
-    ///
-    /// Then iterate through all the types we get from the TypeContext to create separate out files.
-    pub fn init(&mut self) {
-        self.files.add_file(
-            "diplomat-runtime.mjs".into(),
-            include_str!("../../templates/js2/runtime.mjs").into(),
-        );
-        self.files.add_file(
-            "diplomat-runtime.d.ts".into(),
-            include_str!("../../templates/js2/runtime.d.ts").into(),
-        );
-        self.files.add_file(
-            "diplomat-wasm.mjs".into(),
-            include_str!("../../templates/js2/wasm.mjs").into(),
-        );
-
-        for (id, ty) in self.tcx.all_types() {
-            self.generate_file_from_type(id, ty);
-        }
-
-        #[derive(Template)]
-        #[template(path = "js2/index.js.jinja", escape = "none")]
-        struct IndexTemplate<'a> {
-            exports: &'a Vec<Cow<'a, str>>,
-            typescript: bool,
-        }
-
-        let mut out_index = IndexTemplate {
-            exports: &self.exports,
-            typescript: false,
-        };
-
-        self.files
-            .add_file("index.mjs".into(), out_index.render().unwrap());
-
-        out_index.typescript = true;
-        out_index.exports = &self.ts_exports;
-
-        self.files
-            .add_file("index.d.ts".into(), out_index.render().unwrap());
-    }
-
     /// Generate a file's name and body from its given [`TypeId`]
     fn generate_file_from_type(&mut self, type_id: TypeId, ty: hir::TypeDef<'tcx>) {
         let _guard = self.errors.set_context_ty(ty.name().as_str().into());

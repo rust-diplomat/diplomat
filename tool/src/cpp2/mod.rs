@@ -3,7 +3,6 @@ mod header;
 mod ty;
 
 use crate::common::{ErrorStore, FileMap};
-use askama::Template;
 use diplomat_core::hir::TypeContext;
 use formatter::Cpp2Formatter;
 
@@ -18,35 +17,25 @@ pub struct Cpp2Context<'tcx> {
     pub errors: ErrorStore<'tcx, String>,
 }
 
-impl<'tcx> Cpp2Context<'tcx> {
-    pub fn new(tcx: &'tcx TypeContext, files: FileMap) -> Self {
-        Cpp2Context {
-            tcx,
-            files,
-            formatter: Cpp2Formatter::new(tcx),
-            errors: ErrorStore::default(),
-        }
+pub fn run(tcx: &TypeContext) -> (FileMap, ErrorStore<String>) {
+    let ctx = Cpp2Context {
+        tcx,
+        files: Default::default(),
+        formatter: Cpp2Formatter::new(tcx),
+        errors: ErrorStore::default(),
+    };
+
+    ctx.files.add_file(
+        "diplomat_c_runtime.hpp".into(),
+        crate::c2::gen_runtime(true),
+    );
+
+    ctx.files
+        .add_file("diplomat_runtime.hpp".into(), RUNTIME_HPP.into());
+
+    for (id, ty) in ctx.tcx.all_types() {
+        ctx.gen_ty(id, ty)
     }
 
-    /// Run file generation
-    ///
-    /// Will populate self.files as a result
-    pub fn run(&self) {
-        let mut c_runtime = String::new();
-        crate::c2::RuntimeTemplate { is_for_cpp: true }
-            .render_into(&mut c_runtime)
-            .unwrap();
-
-        self.files
-            .add_file("diplomat_c_runtime.hpp".into(), c_runtime);
-
-        self.files
-            .add_file("diplomat_runtime.hpp".into(), RUNTIME_HPP.into());
-
-        for (id, ty) in self.tcx.all_types() {
-            self.gen_ty(id, ty)
-        }
-    }
-
-    // further methods can be found in ty.rs and formatter.rs
+    (ctx.files, ctx.errors)
 }
