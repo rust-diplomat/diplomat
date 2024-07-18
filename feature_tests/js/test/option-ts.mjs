@@ -1,5 +1,5 @@
 import test from 'ava';
-import { OptionOpaque } from "diplomat-wasm-js2-feature-tests";
+import { OptionOpaque } from "diplomat-wasm-js-feature-tests";
 test("Verify option methods", t => {
     const o = OptionOpaque.new_(5);
     o?.assertInteger(5);
