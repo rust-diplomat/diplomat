@@ -3,9 +3,31 @@ mod header;
 mod ty;
 
 use crate::common::{ErrorStore, FileMap};
-use diplomat_core::hir;
+use diplomat_core::hir::{self, BackendAttrSupport};
 use formatter::Cpp2Formatter;
 use ty::TyGenContext;
+
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
+
+    a.renaming = true;
+    a.namespacing = true;
+    a.memory_sharing = true;
+    a.non_exhaustive_structs = false;
+    a.method_overloading = true;
+
+    a.constructors = false; // TODO
+    a.named_constructors = false;
+    a.fallible_constructors = false;
+    a.accessors = false;
+    a.comparators = false; // TODO
+    a.stringifiers = false; // TODO
+    a.iterators = false; // TODO
+    a.iterables = false; // TODO
+    a.indexing = false; // TODO
+
+    a
+}
 
 pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let files = FileMap::default();

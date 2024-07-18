@@ -1,10 +1,10 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{BorrowedLifetimeInfo, ParamBorrowInfo};
 use diplomat_core::hir::{
-    self, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic, Method, Mutability,
-    OpaquePath, Optional, OutType, Param, PrimitiveType, ReturnableStructDef, SelfType, Slice,
-    SpecialMethod, StringEncoding, StructField, StructPathLike, TyPosition, Type, TypeContext,
-    TypeDef,
+    self, BackendAttrSupport, Borrow, Lifetime, LifetimeEnv, Lifetimes, MaybeOwn, MaybeStatic,
+    Method, Mutability, OpaquePath, Optional, OutType, Param, PrimitiveType, ReturnableStructDef,
+    SelfType, Slice, SpecialMethod, StringEncoding, StructField, StructPathLike, TyPosition, Type,
+    TypeContext, TypeDef,
 };
 use diplomat_core::hir::{ReturnType, SuccessType};
 
@@ -19,6 +19,28 @@ use formatter::KotlinFormatter;
 
 use crate::common::{ErrorStore, FileMap};
 use serde::{Deserialize, Serialize};
+
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
+
+    a.renaming = true;
+    a.namespacing = false; // TODO
+    a.memory_sharing = false;
+    a.non_exhaustive_structs = true;
+    a.method_overloading = true;
+
+    a.constructors = false; // TODO
+    a.named_constructors = false; // TODO
+    a.fallible_constructors = false; // TODO
+    a.accessors = false;
+    a.stringifiers = false; // TODO
+    a.comparators = false; // TODO
+    a.iterators = true;
+    a.iterables = true;
+    a.indexing = true;
+
+    a
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct KotlinConfig {

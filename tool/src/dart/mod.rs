@@ -5,8 +5,9 @@ use diplomat_core::hir::borrowing_param::{
     BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
-    self, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType, SelfType, SpecialMethod,
-    SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type, TypeDef, TypeId,
+    self, BackendAttrSupport, Lifetime, LifetimeEnv, MaybeStatic, OpaqueOwner, ReturnType,
+    SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType, TyPosition, Type,
+    TypeDef, TypeId,
 };
 use diplomat_core::hir::{ReturnableStructDef, TypeContext};
 use formatter::DartFormatter;
@@ -15,6 +16,28 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
 mod formatter;
+
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
+
+    a.renaming = true;
+    a.namespacing = false;
+    a.memory_sharing = false;
+    a.non_exhaustive_structs = true;
+    a.method_overloading = false;
+
+    a.constructors = true;
+    a.named_constructors = true;
+    a.fallible_constructors = true;
+    a.accessors = true;
+    a.stringifiers = true;
+    a.comparators = true;
+    a.iterators = true;
+    a.iterables = true;
+    a.indexing = true;
+
+    a
+}
 
 pub(crate) fn run<'cx>(
     tcx: &'cx TypeContext,

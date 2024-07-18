@@ -10,6 +10,29 @@ pub(crate) use self::ty::TyGenContext;
 use crate::common::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir;
+use diplomat_core::hir::BackendAttrSupport;
+
+pub(crate) fn attr_support() -> BackendAttrSupport {
+    let mut a = BackendAttrSupport::default();
+
+    a.renaming = false;
+    a.namespacing = false;
+    a.memory_sharing = true;
+    a.non_exhaustive_structs = false;
+    a.method_overloading = false;
+
+    a.constructors = false;
+    a.named_constructors = false;
+    a.fallible_constructors = false;
+    a.accessors = false;
+    a.comparators = false;
+    a.stringifiers = false;
+    a.iterators = false;
+    a.iterables = false;
+    a.indexing = false;
+
+    a
+}
 
 pub fn gen_runtime(is_for_cpp: bool) -> String {
     #[derive(Template)]

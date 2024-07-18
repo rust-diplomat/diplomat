@@ -102,47 +102,12 @@ pub fn gen(
     }
 
     let mut attr_validator = hir::BasicAttributeValidator::new(target_language);
-    match target_language {
-        "c" => {
-            attr_validator.support.memory_sharing = true;
-            attr_validator.support.disabling = true;
-        }
-
-        "cpp" => {
-            attr_validator.support.renaming = true;
-            attr_validator.support.namespacing = true;
-            attr_validator.support.memory_sharing = true;
-            attr_validator.support.disabling = true;
-        }
-        "dart" => {
-            attr_validator.support.renaming = true;
-            attr_validator.support.disabling = true;
-            attr_validator.support.constructors = true;
-            attr_validator.support.named_constructors = true;
-            attr_validator.support.fallible_constructors = true;
-            attr_validator.support.accessors = true;
-            attr_validator.support.stringifiers = true;
-            attr_validator.support.comparators = true;
-            attr_validator.support.iterators = true;
-            attr_validator.support.iterables = true;
-            attr_validator.support.indexing = true;
-        }
-        "js" => {
-            attr_validator.support.renaming = true;
-            attr_validator.support.disabling = true;
-            attr_validator.support.accessors = true;
-        }
-        "kotlin" => {
-            attr_validator.support.renaming = true;
-            attr_validator.support.disabling = true;
-            attr_validator.support.iterators = true;
-            attr_validator.support.iterables = true;
-            attr_validator.support.indexing = true;
-            attr_validator.support.constructors = true;
-            attr_validator.support.named_constructors = true;
-            attr_validator.support.memory_sharing = true;
-            attr_validator.support.accessors = true;
-        }
+    attr_validator.support = match target_language {
+        "c" => c2::attr_support(),
+        "cpp" => cpp2::attr_support(),
+        "dart" => dart::attr_support(),
+        "js" => js2::attr_support(),
+        "kotlin" => kotlin::attr_support(),
         o => panic!("Unknown target: {}", o),
     };
 

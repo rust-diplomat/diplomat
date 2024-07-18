@@ -6,13 +6,13 @@ import com.sun.jna.Pointer
 
 internal interface Float64VecLib: Library {
     fun Float64Vec_destroy(handle: Pointer)
-    fun Float64Vec_new(v: Slice): Pointer
     fun Float64Vec_new_bool(v: Slice): Pointer
     fun Float64Vec_new_i16(v: Slice): Pointer
     fun Float64Vec_new_u16(v: Slice): Pointer
     fun Float64Vec_new_isize(v: Slice): Pointer
     fun Float64Vec_new_usize(v: Slice): Pointer
     fun Float64Vec_new_f64_be_bytes(v: Slice): Pointer
+    fun Float64Vec_new_from_owned(v: Slice): Pointer
     fun Float64Vec_as_boxed_slice(handle: Pointer): Slice
     fun Float64Vec_as_slice(handle: Pointer): Slice
     fun Float64Vec_fill_slice(handle: Pointer, v: Slice): Unit
@@ -38,18 +38,6 @@ class Float64Vec internal constructor (
     companion object {
         internal val libClass: Class<Float64VecLib> = Float64VecLib::class.java
         internal val lib: Float64VecLib = Native.load("somelib", libClass)
-        
-        fun new_(v: DoubleArray): Float64Vec {
-            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
-            
-            val returnVal = lib.Float64Vec_new(vSlice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = Float64Vec(handle, selfEdges)
-            CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vMem.close()
-            return returnOpaque
-        }
         
         fun newBool(v: BooleanArray): Float64Vec {
             val (vMem, vSlice) = PrimitiveArrayTools.native(v)
@@ -120,6 +108,18 @@ class Float64Vec internal constructor (
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
             vMem.close()
+            return returnOpaque
+        }
+        
+        fun newFromOwned(v: DoubleArray): Float64Vec {
+            val (vMem, vSlice) = PrimitiveArrayTools.native(v)
+            
+            val returnVal = lib.Float64Vec_new_from_owned(vSlice);
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal 
+            val returnOpaque = Float64Vec(handle, selfEdges)
+            CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
+            
             return returnOpaque
         }
     }
