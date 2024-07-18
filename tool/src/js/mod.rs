@@ -13,8 +13,8 @@ use crate::{ErrorStore, FileMap};
 use self::formatter::JSFormatter;
 
 mod formatter;
-mod type_generation;
 mod layout;
+mod type_generation;
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?
 enum FileType {
