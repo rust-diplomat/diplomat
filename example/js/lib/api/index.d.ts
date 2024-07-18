@@ -1,15 +1,15 @@
 
-export { FFIError, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64, char } from './diplomat-runtime';
+export { char } from './diplomat-runtime';
 
 
-export { ICU4XFixedDecimalFormatterOptions } from "./ICU4XFixedDecimalFormatterOptions.mjs"
+export { FixedDecimalFormatterOptions } from "./FixedDecimalFormatterOptions"
 
-export { ICU4XDataProvider } from "./ICU4XDataProvider.mjs"
+export { DataProvider } from "./DataProvider"
 
-export { ICU4XFixedDecimalFormatter } from "./ICU4XFixedDecimalFormatter.mjs"
+export { FixedDecimalFormatter } from "./FixedDecimalFormatter"
 
-export { ICU4XFixedDecimal } from "./ICU4XFixedDecimal.mjs"
+export { FixedDecimal } from "./FixedDecimal"
 
-export { ICU4XLocale } from "./ICU4XLocale.mjs"
+export { Locale } from "./Locale"
 
-export { ICU4XFixedDecimalGroupingStrategy } from "./ICU4XFixedDecimalGroupingStrategy.mjs"
+export { FixedDecimalGroupingStrategy } from "./FixedDecimalGroupingStrategy"
