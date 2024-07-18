@@ -149,6 +149,7 @@ class TerminusParams extends HTMLElement {
 							this.#params[i] = value;
 						};
 						evaluateExternal(param, updateParamEvent);
+						continue;
 					}
 					break;
 			}
