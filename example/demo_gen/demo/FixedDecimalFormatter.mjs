@@ -5,39 +5,40 @@ import { FixedDecimalFormatterOptions } from "../FixedDecimalFormatterOptions.mj
 import { Locale } from "../Locale.mjs"
 export function formatWrite() {
 	var terminusArgs = arguments;
-	return (function (...args) { return this.formatWrite(...args) }).apply(
-        FixedDecimalFormatter.tryNew.apply(
+	return (function (...args) { return args[0].formatWrite(...args) }).apply(
         null,
         [
-            Locale.new_.apply(
+            FixedDecimalFormatter.tryNew.apply(
                 null,
                 [
-                    terminusArgs[0]
+                    Locale.new_.apply(
+                        null,
+                        [
+                            terminusArgs[0]
+                        ]
+                    ),
+                    DataProvider.newStatic.apply(
+                        null,
+                        [
+                        ]
+                    ),
+                    (function (...args) {
+                    	let out = new FixedDecimalFormatterOptions();
+                    	
+                    	out.groupingStrategy = args[0];
+                    	
+                    	out.someOtherConfig = args[1];
+                    	
+                    	return out;
+                    }).apply(
+                        null,
+                        [
+                            terminusArgs[1],
+                            terminusArgs[2]
+                        ]
+                    )
                 ]
             ),
-            DataProvider.newStatic.apply(
-                null,
-                [
-                ]
-            ),
-            (function (...args) {
-            	let out = new FixedDecimalFormatterOptions();
-            	
-            	out.groupingStrategy = args[0];
-            	
-            	out.someOtherConfig = args[1];
-            	
-            	return out;
-            }).apply(
-                null,
-                [
-                    terminusArgs[1],
-                    terminusArgs[2]
-                ]
-            )
-        ]
-    ),
-        [
             FixedDecimal.new_.apply(
                 null,
                 [

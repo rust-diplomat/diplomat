@@ -1,14 +1,15 @@
 import { FixedDecimal } from "../FixedDecimal.mjs"
 export function toString() {
 	var terminusArgs = arguments;
-	return (function (...args) { return this.toString(...args) }).apply(
-        FixedDecimal.new_.apply(
+	return (function (...args) { return args[0].toString(...args) }).apply(
         null,
         [
-            terminusArgs[0]
-        ]
-    ),
-        [
+            FixedDecimal.new_.apply(
+                null,
+                [
+                    terminusArgs[0]
+                ]
+            )
         ]
     );
 }
