@@ -120,20 +120,20 @@ jobs:
     - name: clang++, c++17
       run: cargo make check-cpp
       env:
-        CC: clang++-14
-        C_STD: c++17
+        CXX: clang++-14
+        CXX_STD: c++17
 
     - name: clang++, c++20
       run: cargo make check-cpp
       env:
-        CC: clang++-14
-        C_STD: c++20
+        CXX: clang++-14
+        CXX_STD: c++20
 
     - name: g++, c++23
       run: cargo make check-cpp
       env:
-        CC: g++
-        C_STD: c++23
+        CXX: g++
+        CXX_STD: c++23
 
   test-js: 
     runs-on: ubuntu-latest
