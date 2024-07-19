@@ -1,5 +1,5 @@
-#ifndef RenamedAttrOpaque2_HPP
-#define RenamedAttrOpaque2_HPP
+#ifndef ns_RenamedAttrOpaque2_HPP
+#define ns_RenamedAttrOpaque2_HPP
 
 #include "RenamedAttrOpaque2.d.hpp"
 
@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace ns {
@@ -44,4 +44,4 @@ inline void ns::RenamedAttrOpaque2::operator delete(void* ptr) {
 }
 
 
-#endif // RenamedAttrOpaque2_HPP
+#endif // ns_RenamedAttrOpaque2_HPP

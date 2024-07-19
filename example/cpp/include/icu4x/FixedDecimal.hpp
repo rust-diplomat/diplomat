@@ -1,5 +1,5 @@
-#ifndef FixedDecimal_HPP
-#define FixedDecimal_HPP
+#ifndef icu4x_FixedDecimal_HPP
+#define icu4x_FixedDecimal_HPP
 
 #include "FixedDecimal.d.hpp"
 
@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -69,4 +69,4 @@ inline void icu4x::FixedDecimal::operator delete(void* ptr) {
 }
 
 
-#endif // FixedDecimal_HPP
+#endif // icu4x_FixedDecimal_HPP

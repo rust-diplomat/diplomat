@@ -1,5 +1,5 @@
-#ifndef AttrOpaque1Renamed_D_HPP
-#define AttrOpaque1Renamed_D_HPP
+#ifndef ns_AttrOpaque1Renamed_D_HPP
+#define ns_AttrOpaque1Renamed_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 namespace diplomat::capi { struct Unnamespaced; }
 class Unnamespaced;
@@ -53,4 +53,4 @@ private:
 };
 
 } // namespace
-#endif // AttrOpaque1Renamed_D_HPP
+#endif // ns_AttrOpaque1Renamed_D_HPP

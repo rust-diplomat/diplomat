@@ -10,8 +10,8 @@
 #include <memory>
 #include <optional>
 #include "diplomat_runtime.hpp"
-#include "AttrOpaque1Renamed.hpp"
-#include "RenamedAttrEnum.hpp"
+#include "ns/AttrOpaque1Renamed.hpp"
+#include "ns/RenamedAttrEnum.hpp"
 
 
 namespace diplomat {

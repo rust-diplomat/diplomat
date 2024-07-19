@@ -1,5 +1,5 @@
-#ifndef RenamedAttrEnum_HPP
-#define RenamedAttrEnum_HPP
+#ifndef ns_RenamedAttrEnum_HPP
+#define ns_RenamedAttrEnum_HPP
 
 #include "RenamedAttrEnum.d.hpp"
 
@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace ns {
@@ -35,4 +35,4 @@ inline ns::RenamedAttrEnum ns::RenamedAttrEnum::FromFFI(ns::capi::RenamedAttrEnu
       abort();
   }
 }
-#endif // RenamedAttrEnum_HPP
+#endif // ns_RenamedAttrEnum_HPP

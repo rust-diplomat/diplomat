@@ -1,5 +1,5 @@
-#ifndef DataProvider_HPP
-#define DataProvider_HPP
+#ifndef icu4x_DataProvider_HPP
+#define icu4x_DataProvider_HPP
 
 #include "DataProvider.d.hpp"
 
@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -59,4 +59,4 @@ inline void icu4x::DataProvider::operator delete(void* ptr) {
 }
 
 
-#endif // DataProvider_HPP
+#endif // icu4x_DataProvider_HPP

@@ -9,9 +9,9 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "ErrorEnum.hpp"
 #include "ErrorStruct.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace diplomat {

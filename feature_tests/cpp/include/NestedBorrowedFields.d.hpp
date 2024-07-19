@@ -7,9 +7,9 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "BorrowedFields.d.hpp"
 #include "BorrowedFieldsWithBounds.d.hpp"
+#include "diplomat_runtime.hpp"
 
 namespace diplomat::capi { struct Bar; }
 class Bar;

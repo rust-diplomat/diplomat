@@ -1,5 +1,5 @@
-#ifndef Locale_HPP
-#define Locale_HPP
+#ifndef icu4x_Locale_HPP
+#define icu4x_Locale_HPP
 
 #include "Locale.d.hpp"
 
@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace icu4x {
@@ -52,4 +52,4 @@ inline void icu4x::Locale::operator delete(void* ptr) {
 }
 
 
-#endif // Locale_HPP
+#endif // icu4x_Locale_HPP
