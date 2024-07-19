@@ -213,6 +213,7 @@ export class TerminusRender extends HTMLElement {
 			this.#output.innerText = this.#func(...this.#parameters.paramArray);
 		} catch(e) {
 			this.#output.innerText = e;
+			throw e;
 		}
 	}
 }
