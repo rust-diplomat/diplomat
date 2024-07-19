@@ -131,21 +131,6 @@ export class Float64Vec {
         }
     }
 
-    get asBoxedSlice() {
-        
-        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
-        const result = wasm.Float64Vec_as_boxed_slice(diplomat_receive_buffer, this.ffiValue);
-    
-        try {
-    
-            return diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, diplomat_receive_buffer, "f64");
-        } finally {
-        
-            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
-        
-        }
-    }
-
     get asSlice() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);

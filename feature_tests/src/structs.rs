@@ -152,10 +152,6 @@ pub mod ffi {
         pub fn borrow_cont<'a>(&'a self) -> &'a DiplomatStr16 {
             &self.0
         }
-
-        pub fn owned<'a>(&'a self) -> Box<DiplomatStr16> {
-            self.0.clone().into()
-        }
     }
 
     impl MyEnum {

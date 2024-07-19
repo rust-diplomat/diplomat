@@ -37,9 +37,9 @@ mod ffi {
             let _infallible = write!(write, "{}", self.0);
         }
 
-        #[diplomat::skip_if_ast]
-        pub fn get_boxed_str(&self) -> Box<str> {
-            self.0.as_str().into()
+        pub fn string_transform(foo: &str, write: &mut DiplomatWrite) {
+            let _ = foo;
+            let _ = write;
         }
     }
 
@@ -91,11 +91,6 @@ mod ffi {
         #[diplomat::attr(*, constructor)]
         pub fn new_from_owned(v: Box<[f64]>) -> Box<Float64Vec> {
             Box::new(Self(v.into()))
-        }
-
-        #[diplomat::attr(*, getter = "asBoxedSlice")]
-        pub fn as_boxed_slice(&self) -> Box<[f64]> {
-            self.0.clone().into()
         }
 
         #[diplomat::attr(*, getter = "asSlice")]

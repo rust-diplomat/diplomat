@@ -76,21 +76,6 @@ export class Utf16Wrap {
         }
     }
 
-    owned() {
-        
-        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
-        const result = wasm.Utf16Wrap_owned(diplomat_receive_buffer, this.ffiValue);
-    
-        try {
-    
-            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string16");
-        } finally {
-        
-            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
-        
-        }
-    }
-
     
 
 }
