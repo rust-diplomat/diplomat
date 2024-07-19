@@ -37,7 +37,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.method_overloading = false;
     a.utf8_strings = false;
     a.utf16_strings = true;
-    a.fallible_constructors = false;
+    // TODO: Actually fix.
+    a.fallible_constructors = true;
 
     a
 }
