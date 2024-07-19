@@ -69,12 +69,12 @@ MAKE_SLICES(Strings16, DiplomatString16View)
 } // extern "C"
 } // namespace capi
 
-extern "C" inline void _Flush(capi::DiplomatWrite* w) {
+extern "C" inline void _flush(capi::DiplomatWrite* w) {
   std::string* string = reinterpret_cast<std::string*>(w->context);
   string->resize(w->len);
 };
 
-extern "C" inline bool _Grow(capi::DiplomatWrite* w, uintptr_t requested) {
+extern "C" inline bool _grow(capi::DiplomatWrite* w, uintptr_t requested) {
   std::string* string = reinterpret_cast<std::string*>(w->context);
   string->resize(requested);
   w->cap = string->length();
@@ -88,10 +88,10 @@ inline capi::DiplomatWrite WriteFromString(std::string& string) {
   w.buf = &string[0];
   w.len = string.length();
   w.cap = string.length();
-  // Will never become true, as _Grow is infallible.
+  // Will never become true, as _grow is infallible.
   w.grow_failed = false;
-  w.flush = _Flush;
-  w.grow = _Grow;
+  w.flush = _flush;
+  w.grow = _grow;
   return w;
 };
 
