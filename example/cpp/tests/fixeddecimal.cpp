@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../include/FixedDecimalFormatter.hpp"
-#include "../include/Locale.hpp"
+#include "../include/icu4x/FixedDecimalFormatter.hpp"
+#include "../include/icu4x/Locale.hpp"
 #include "assert.hpp"
 
 int main(int argc, char *argv[]) {
