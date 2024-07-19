@@ -7,8 +7,8 @@ use std::path::Path;
 use askama::Template;
 use diplomat_core::hir::{
     self, EnumDef, EnumId, EnumVariant, FloatType, IntSizeType, IntType, Method, OpaqueDef,
-    ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField, StructPathLike,
-    SuccessType, TypeContext, TypeDef, TypeId,
+    OutType, ReturnType, Slice, SpecialMethod, StringEncoding, StructDef, StructField,
+    StructPathLike, SuccessType, TypeContext, TypeDef, TypeId,
 };
 use formatter::JavaFormatter;
 
@@ -164,6 +164,7 @@ pub(crate) struct MethodTpl<'a> {
     is_static: bool,
     return_ty: Cow<'a, str>,
     native_method: Cow<'a, str>,
+    make_invoker: bool,
     native_invocation: Cow<'a, str>,
     params: Vec<Param<'a>>,
     param_conversions: Vec<ParamConversion<'a>>,
@@ -185,6 +186,7 @@ pub(crate) struct StructTypeTpl<'a> {
 #[derive(Clone, Debug)]
 struct FieldTpl<'a> {
     name: Cow<'a, str>,
+    field_transform: Option<Cow<'a, str>>,
     ty: Cow<'a, str>,
 }
 
@@ -430,7 +432,12 @@ return string;"#,
             }
             hir::Type::Struct(s) => {
                 let ty_name = &self.tcx.resolve_type(s.id()).name();
-                format!(r#"return new {ty_name}(nativeVal);"#).into()
+                format!(
+                    r#"var returnVal = new {ty_name}(returnArena);
+returnVal.initFromSegment(nativeVal);
+return returnVal;"#
+                )
+                .into()
             }
             hir::Type::Enum(e) => {
                 let enum_ty = self.tcx.resolve_enum(e.tcx_id).name.as_str();
@@ -544,6 +551,11 @@ return string;"#,
                                 conversion_def: "".into(),
                             })
                         }
+                        hir::Type::Struct(_) => Some(ParamConversion {
+                            converted_value: "returnArena".into(),
+                            conversion_def: "var returnArena = (SegmentAllocator) Arena.ofAuto();"
+                                .into(),
+                        }),
                         _ => None,
                     },
                     _ => None,
@@ -561,10 +573,13 @@ return string;"#,
                             .map(|param| self.gen_param_conversion(param)),
                     )
                     .collect();
-                if let ReturnType::Fallible(SuccessType::Write, _)
-                | ReturnType::Infallible(SuccessType::Write)
-                | ReturnType::Nullable(SuccessType::Unit) = method.output
-                {
+                let write_return = matches!(
+                    method.output,
+                    ReturnType::Fallible(SuccessType::Write, _)
+                        | ReturnType::Infallible(SuccessType::Write)
+                        | ReturnType::Nullable(SuccessType::Write)
+                );
+                if write_return {
                     param_conversions.push(ParamConversion {
                         converted_value: "writeable".into(),
                         conversion_def: format!(
@@ -578,7 +593,9 @@ return string;"#,
                     self.formatter.fmt_c_method_name(ty_id, method)
                 )
                 .into();
-                let native_invocation = if param_conversions.is_empty() {
+                let make_invoker =
+                    method.params.is_empty() && !write_return && method.param_self.is_none();
+                let native_invocation = if make_invoker {
                     "nativeInvoker.apply".into()
                 } else {
                     native_method.clone()
@@ -593,6 +610,7 @@ return string;"#,
                     return_ty,
                     native_method,
                     native_invocation,
+                    make_invoker,
                     params,
                     param_conversions,
                     return_conversion,
@@ -655,8 +673,25 @@ return string;"#,
             .iter()
             .map(|StructField { name, ty, .. }| {
                 let name = name.as_str().into();
+                let struct_return = match ty {
+                    hir::Type::Enum(enum_def) => Some(
+                        format!("{}.fromInt", self.tcx.resolve_enum(enum_def.tcx_id).name).into(),
+                    ),
+                    hir::Type::Struct(struct_def) => Some(
+                        format!(
+                            "{}.fromSegment",
+                            self.tcx.resolve_struct(struct_def.tcx_id).name
+                        )
+                        .into(),
+                    ),
+                    _ => None,
+                };
                 let ty = self.formatter.fmt_java_type(ty);
-                FieldTpl { name, ty }
+                FieldTpl {
+                    name,
+                    ty,
+                    field_transform: struct_return,
+                }
             })
             .collect();
         let (methods, _) = self.gen_methods(ty, s.name.as_str(), &s.methods);
@@ -971,25 +1006,6 @@ mod test {
 
                     pub fn get_debug_str(&self, write: &mut DiplomatWrite) {
                         let _infallible = write!(write, "{:?}", &self.0);
-                    }
-
-                    pub fn returns_imported() -> OwningStruct {
-                        unimplemented!()
-                    }
-                }
-
-                pub struct OwnedStruct {
-                    count: u8,
-                }
-
-                pub struct OwningStruct {
-                    a: OwnedStruct,
-                    b: OwnedStruct,
-                }
-
-                impl OwningStruct {
-                    pub fn do_opaque_stuff<'a>(input: OwnedStruct) -> Box<Opaque> {
-                        unimplemented!()
                     }
                 }
 

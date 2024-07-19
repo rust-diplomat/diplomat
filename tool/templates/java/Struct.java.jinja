@@ -5,6 +5,7 @@ import {{domain}}.{{lib_name}}.ntv.{{lib_name}}_h;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
+import java.lang.foreign.SegmentAllocator;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
@@ -14,74 +15,26 @@ public class {{type_name}} {
     {% endfor %}
 
     MemorySegment internal;
+    SegmentAllocator arena;
 
-    private {{type_name}}() {
+    private {{type_name}}(SegmentAllocator arena) {
     }
 
-    static {{type_name}} fromSegment(MemorySegment segment) {
-        var returnVal = new {{type_name}}();
-        returnVal.internal = segment;
+    void initFromSegment(MemorySegment segment) {
+        this.internal = segment;
+
         {% for field in fields -%}
-        returnVal.{{field.name}} = {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.name}}(segment);
+        this.{{field.name}} = {% match field.field_transform -%}
+        {% when Some with (transform) -%}
+        {{transform}}({{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.name}}(segment));
+        {% when None -%}
+        {{domain}}.{{lib_name}}.ntv.{{type_name}}.{{field.name}}(segment);
+        {% endmatch -%}
         {% endfor %}
-        return returnVal;
     }
     {% for method in methods %}
     {{method|indent(4)}}
     {% endfor %}
 }
 
-{#
-package dev.diplomattest.somelib;
 
-import dev.diplomattest.somelib.ntv.somelib_h;
-
-import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentAllocator;
-
-public class MyStruct {
-    byte a = 0;
-    boolean b = false;
-    byte c = 0;
-    long d = 0;
-    int e = 0;
-    char f = 0;
-    MyEnum g = MyEnum.defaultValue();
-
-    MemorySegment internal = null;
-
-    MyStruct() {
-    }
-
-    MyStruct(SegmentAllocator alloc, byte a, boolean b, byte c, long d, int e, char f, MyEnum g) {
-        var segment = dev.diplomattest.somelib.ntv.MyStruct.allocate(alloc);
-        dev.diplomattest.somelib.ntv.MyStruct.a(segment, a);
-        dev.diplomattest.somelib.ntv.MyStruct.b(segment, b);
-        dev.diplomattest.somelib.ntv.MyStruct.c(segment, c);
-        dev.diplomattest.somelib.ntv.MyStruct.d(segment, d);
-        dev.diplomattest.somelib.ntv.MyStruct.e(segment, e);
-        dev.diplomattest.somelib.ntv.MyStruct.f(segment, f);
-        dev.diplomattest.somelib.ntv.MyStruct.g(segment, g.toInt());
-        internal = segment;
-    }
-    private MyStruct() {}
-
-    static MyStruct fromSegment(MemorySegment segment) {
-        var returnVal = new MyStruct();
-        returnVal.internal = segment;
-        returnVal.a = dev.diplomattest.somelib.ntv.MyStruct.a(segment);
-        returnVal.b = dev.diplomattest.somelib.ntv.MyStruct.b(segment);
-        returnVal.c = dev.diplomattest.somelib.ntv.MyStruct.c(segment);
-        returnVal.d = dev.diplomattest.somelib.ntv.MyStruct.d(segment);
-        returnVal.e = dev.diplomattest.somelib.ntv.MyStruct.e(segment);
-        returnVal.f = (char) dev.diplomattest.somelib.ntv.MyStruct.f(segment);
-        returnVal.g = MyEnum.fromInt(dev.diplomattest.somelib.ntv.MyStruct.g(segment));
-        return returnVal;
-    }
-    MemorySegment getNativeStruct$() {
-        return internal;
-    }
-}
-
-#}

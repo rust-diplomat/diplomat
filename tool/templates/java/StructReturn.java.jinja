@@ -1,13 +1,3 @@
-var returnVal = new {{return_ty}}();
-returnVal.internal = nativeVal;
-var cleaner = new {{return_ty}}.{{return_ty}}Cleaner(nativeVal);
-returnVal.cleanable = Lib.cleaner.register(returnVal, cleaner);
+var returnVal = new {{return_ty}}(returnArena);
+returnVal.initFromSegment(nativeVal);
 return returnVal;
-
-    public static MyStruct new_() {
-        var returnVal = new MyStruct();
-        var nativeInvoker = somelib_h.MyStruct_new.makeInvoker();
-        var nativeVal = nativeInvoker.apply(returnVal.ownArena);
-        returnVal.initFromSegment(nativeVal);
-        return returnVal;
-    }

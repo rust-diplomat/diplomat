@@ -14,7 +14,7 @@ public{% if is_static %} static {% else %} {% endif %}{{return_ty}}
         {% for conv in param_conversions -%}
         {{conv.conversion_def|indent(8)}}
         {% endfor -%}
-        {% if param_conversions.is_empty() -%}
+        {% if make_invoker -%}
         var nativeInvoker = {{native_method}}.makeInvoker();
         {% endif -%}
         {% if native_return_void %}{% else %}var nativeVal = {% endif %}{{native_invocation}}(
@@ -28,7 +28,7 @@ public{% if is_static %} static {% else %} {% endif %}{{return_ty}}
     {% for conv in param_conversions -%}
     {{conv.conversion_def|indent(4)}}
     {% endfor -%}
-    {% if param_conversions.is_empty() -%}
+    {% if make_invoker -%}
     var nativeInvoker = {{native_method}}.makeInvoker();
     {% endif -%}
     {% if native_return_void %}{% else %}var nativeVal = {% endif %}{{native_invocation}}(

@@ -9,6 +9,7 @@ import dev.diplomattest.somelib.ntv.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.lang.ref.Cleaner;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +34,7 @@ public class Float64Vec {
     Float64Vec() {}
     
     public static Float64Vec new_(double[] v) {
+        
         try (var arena = Arena.ofConfined()) {
             var vLen = v.length;
             var vMemSeg = arena.allocateFrom(JAVA_DOUBLE, v);
@@ -47,6 +49,7 @@ public class Float64Vec {
     
     
     public double[] asBoxedSlice() {
+        
         var boxArena = Arena.ofConfined();
         
         var nativeVal = somelib_h.Float64Vec_as_boxed_slice(boxArena, internal);
@@ -56,6 +59,7 @@ public class Float64Vec {
     }
     
     public double[] asSlice() {
+        
         try (var arena = Arena.ofConfined()) {
             
             
@@ -75,6 +79,7 @@ import dev.diplomattest.somelib.ntv.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.lang.ref.Cleaner;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
@@ -99,6 +104,7 @@ public class MyString {
     MyString() {}
     
     public MyString(String v) {
+        
         try (var arena = Arena.ofConfined()) {
             var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
             var vLen = vMemSeg.byteSize();
@@ -110,6 +116,7 @@ public class MyString {
     }
     
     public static MyString newUnsafe(String v) {
+        
         try (var arena = Arena.ofConfined()) {
             var vMemSeg = arena.allocateFrom(v, StandardCharsets.UTF_8);
             var vLen = vMemSeg.byteSize();
@@ -123,6 +130,7 @@ public class MyString {
     }
     
     public static MyString newOwned(String v) {
+        
         var vMemSeg = Arena.global().allocateFrom(v, StandardCharsets.UTF_8);
         var vLen = vMemSeg.byteSize();
         var nativeVal = somelib_h.MyString_new_owned(vMemSeg, vLen - 1);
@@ -134,6 +142,7 @@ public class MyString {
     }
     
     public static MyString newFromFirst(String [] v) {
+        
         try (var arena = Arena.ofConfined()) {
             var vData = SliceUtils.strs8(arena, v);
             var vLen = v.length;
@@ -148,6 +157,7 @@ public class MyString {
     
     
     public void setStr(String newStr) {
+        
         try (var arena = Arena.ofConfined()) {
             
             var newStrMemSeg = arena.allocateFrom(newStr, StandardCharsets.UTF_8);
@@ -159,6 +169,7 @@ public class MyString {
     
     public String getStr() {
         
+        
         var writeable = somelib_h.diplomat_buffer_write_create(0);
         somelib_h.MyString_get_str(internal, writeable);
         var buffer = DiplomatWrite.buf(writeable);
@@ -168,6 +179,7 @@ public class MyString {
     }
     
     public String getBoxedStr() {
+        
         var boxArena = Arena.ofConfined();
         
         var nativeVal = somelib_h.MyString_get_boxed_str(boxArena, internal);

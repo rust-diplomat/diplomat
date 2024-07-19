@@ -9,6 +9,7 @@ import dev.diplomattest.somelib.ntv.somelib_h;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
+import java.lang.foreign.SegmentAllocator;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
@@ -23,28 +24,32 @@ public class MyStruct {
     
 
     MemorySegment internal;
+    SegmentAllocator arena;
 
-    private MyStruct() {
+    private MyStruct(SegmentAllocator arena) {
     }
 
-    static MyStruct fromSegment(MemorySegment segment) {
-        var returnVal = new MyStruct();
-        returnVal.internal = segment;
-        returnVal.a = dev.diplomattest.somelib.ntv.MyStruct.a(segment);
-        returnVal.b = dev.diplomattest.somelib.ntv.MyStruct.b(segment);
-        returnVal.c = dev.diplomattest.somelib.ntv.MyStruct.c(segment);
-        returnVal.d = dev.diplomattest.somelib.ntv.MyStruct.d(segment);
-        returnVal.e = dev.diplomattest.somelib.ntv.MyStruct.e(segment);
-        returnVal.f = dev.diplomattest.somelib.ntv.MyStruct.f(segment);
-        returnVal.g = dev.diplomattest.somelib.ntv.MyStruct.g(segment);
+    void initFromSegment(MemorySegment segment) {
+        this.internal = segment;
+
+        this.a = dev.diplomattest.somelib.ntv.MyStruct.a(segment);
+        this.b = dev.diplomattest.somelib.ntv.MyStruct.b(segment);
+        this.c = dev.diplomattest.somelib.ntv.MyStruct.c(segment);
+        this.d = dev.diplomattest.somelib.ntv.MyStruct.d(segment);
+        this.e = dev.diplomattest.somelib.ntv.MyStruct.e(segment);
+        this.f = dev.diplomattest.somelib.ntv.MyStruct.f(segment);
+        this.g = MyEnum.fromInt(dev.diplomattest.somelib.ntv.MyStruct.g(segment));
         
-        return returnVal;
     }
     
     public static MyStruct new_() {
+        
+        var returnArena = (SegmentAllocator) Arena.ofAuto();
         var nativeInvoker = somelib_h.MyStruct_new.makeInvoker();
-        var nativeVal = nativeInvoker.apply();
-        return new MyStruct(nativeVal);
+        var nativeVal = nativeInvoker.apply(returnArena);
+        var returnVal = new MyStruct(returnArena);
+        returnVal.initFromSegment(nativeVal);
+        return returnVal;
     }
     
 }
@@ -59,6 +64,7 @@ import dev.diplomattest.somelib.ntv.somelib_h;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.ref.Cleaner;
+import java.lang.foreign.SegmentAllocator;
 import static java.lang.foreign.ValueLayout.*;
 import java.nio.charset.StandardCharsets;
 
@@ -123,6 +129,7 @@ public enum MyEnum {
 
     
     public static MyEnum getA() {
+        
         var nativeInvoker = somelib_h.MyEnum_get_a.makeInvoker();
         var nativeVal = nativeInvoker.apply();
         return MyEnum.fromInt(nativeVal);
