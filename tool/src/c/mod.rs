@@ -8,7 +8,6 @@ pub(crate) use self::header::Header;
 pub(crate) use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};
-use askama::Template;
 use diplomat_core::hir;
 use diplomat_core::hir::BackendAttrSupport;
 
@@ -25,25 +24,16 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a
 }
 
-pub(crate) fn gen_runtime(is_for_cpp: bool) -> String {
-    #[derive(Template)]
-    #[template(path = "c/runtime.h.jinja", escape = "none")]
-    struct RuntimeTemplate {
-        is_for_cpp: bool,
-    }
-    let mut runtime = String::new();
-    RuntimeTemplate { is_for_cpp }
-        .render_into(&mut runtime)
-        .unwrap();
-    runtime
-}
-
 pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let files = FileMap::default();
     let formatter = CFormatter::new(tcx, false);
     let errors = ErrorStore::default();
 
-    files.add_file("diplomat_runtime.h".into(), gen_runtime(false));
+    #[derive(askama::Template)]
+    #[template(path = "c/runtime.h.jinja", escape = "none")]
+    struct Runtime;
+
+    files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {

@@ -25,12 +25,11 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let formatter = Cpp2Formatter::new(tcx);
     let errors = ErrorStore::default();
 
-    files.add_file("diplomat_c_runtime.hpp".into(), crate::c::gen_runtime(true));
+    #[derive(askama::Template)]
+    #[template(path = "cpp/runtime.hpp.jinja", escape = "none")]
+    struct Runtime;
 
-    files.add_file(
-        "diplomat_runtime.hpp".into(),
-        include_str!("../../templates/cpp/runtime.hpp").into(),
-    );
+    files.add_file("diplomat_runtime.hpp".into(), Runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
