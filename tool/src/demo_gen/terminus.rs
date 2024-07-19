@@ -47,9 +47,6 @@ struct MethodDependency {
     /// Javascript to invoke for this method.
     method_js: String,
 
-    /// Self argument to invoke during .apply(selfArg, parameters)
-    self_arg : String,
-
     /// Parameters to pass into the method.
     params: Vec<ParamInfo>,
 }
@@ -65,7 +62,6 @@ impl MethodDependency {
     pub fn new(method_js: String) -> Self {
         MethodDependency {
             method_js,
-            self_arg : String::new(),
             params: Vec::new(),
         }
     }
@@ -319,8 +315,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 .render()
                 .unwrap();
 
-                child.self_arg = self.formatter.fmt_null().into();
-
                 node.params.push(ParamInfo {
                     type_name: type_name.to_string(),
                     js: child.render().unwrap(),
@@ -345,7 +339,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let method_name = self.formatter.fmt_method_name(method);
         if method.param_self.is_some() {
             // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
-            format!("(function (...args) {{ return this.{method_name}(...args) }})",)
+            format!("(function (...args) {{ return args[0].{method_name}(...args) }})",)
         } else {
             format!("{owner_type_name}.{method_name}")
         }
@@ -358,11 +352,6 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         if param_self.is_some() {
             let ty = param_self.unwrap().ty.clone().into();
             self.evaluate_param(&ty, "self".into(), node, method.attrs.demo_attrs.clone());
-
-            node.self_arg = node.params.pop().unwrap().js;
-        } else {
-            // Insert null as our self type when we do jsFunction.call(self, arg1, arg2, ...);
-            node.self_arg = self.formatter.fmt_null().to_string();
         }
 
         for param in method.params.iter() {
