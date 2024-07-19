@@ -49,7 +49,7 @@ pub mod ffi {
     pub struct MyZst;
 
     impl Opaque {
-        #[diplomat::attr(*, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn new() -> Box<Opaque> {
             Box::new(Opaque("".into()))
         }
@@ -140,7 +140,7 @@ pub mod ffi {
     }
 
     impl Utf16Wrap {
-        #[diplomat::attr(*, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn from_utf16(input: &DiplomatStr16) -> Box<Self> {
             Box::new(Self(input.into()))
         }
@@ -165,7 +165,7 @@ pub mod ffi {
     }
 
     impl MyStruct {
-        #[diplomat::attr(*, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn new() -> MyStruct {
             MyStruct {
                 a: 17,

@@ -104,6 +104,18 @@ pub enum AttributeContext<'a, 'b> {
     Module,
 }
 
+fn maybe_error_unsupported(
+    auto_found: bool,
+    attribute: &str,
+    backend: &str,
+    errors: &mut ErrorStore,
+) {
+    if !auto_found {
+        errors.push(LoweringError::Other(format!(
+            "`{attribute}` not supported in backend {backend}"
+        )));
+    }
+}
 impl Attrs {
     pub fn from_ast(
         ast: &ast::Attrs,
@@ -117,8 +129,10 @@ impl Attrs {
         this.abi_rename = ast.abi_rename.clone();
 
         let support = validator.attrs_supported();
+        let backend = validator.primary_name();
         for attr in &ast.attrs {
-            let satisfies = match validator.satisfies_cfg(&attr.cfg) {
+            let mut auto_found = false;
+            let satisfies = match validator.satisfies_cfg(&attr.cfg, Some(&mut auto_found)) {
                 Ok(satisfies) => satisfies,
                 Err(e) => {
                     errors.push(e);
@@ -155,6 +169,10 @@ impl Attrs {
                             ))),
                         }
                     } else if path == "namespace" {
+                        if !support.namespacing {
+                            maybe_error_unsupported(auto_found, "constructor", backend, errors);
+                            continue;
+                        }
                         match StandardAttribute::from_meta(&attr.meta) {
                             Ok(StandardAttribute::String(s)) if s.is_empty() => {
                                 this.namespace = None
@@ -182,31 +200,37 @@ impl Attrs {
                         }
                         let kind = if path == "constructor" {
                             if !support.constructors {
+                                maybe_error_unsupported(auto_found, "constructor", backend, errors);
                                 continue;
                             }
                             SpecialMethod::Constructor
                         } else if path == "stringifier" {
                             if !support.stringifiers {
+                                maybe_error_unsupported(auto_found, "stringifier", backend, errors);
                                 continue;
                             }
                             SpecialMethod::Stringifier
                         } else if path == "iterable" {
                             if !support.iterables {
+                                maybe_error_unsupported(auto_found, "iterable", backend, errors);
                                 continue;
                             }
                             SpecialMethod::Iterable
                         } else if path == "iterator" {
                             if !support.iterators {
+                                maybe_error_unsupported(auto_found, "iterator", backend, errors);
                                 continue;
                             }
                             SpecialMethod::Iterator
                         } else if path == "indexer" {
                             if !support.indexing {
+                                maybe_error_unsupported(auto_found, "indexer", backend, errors);
                                 continue;
                             }
                             SpecialMethod::Indexer
                         } else {
                             if !support.comparators {
+                                maybe_error_unsupported(auto_found, "comparator", backend, errors);
                                 continue;
                             }
                             SpecialMethod::Comparison
@@ -635,7 +659,6 @@ impl BackendAttrSupport {
     #[cfg(test)]
     fn all_true() -> Self {
         Self {
-            renaming: true,
             namespacing: true,
             memory_sharing: true,
             non_exhaustive_structs: true,
@@ -670,12 +693,21 @@ pub trait AttributeValidator {
     fn attrs_supported(&self) -> BackendAttrSupport;
 
     /// Provided, checks if type satisfies a `DiplomatBackendAttrCfg`
-    fn satisfies_cfg(&self, cfg: &DiplomatBackendAttrCfg) -> Result<bool, LoweringError> {
+    ///
+    /// auto_found helps check for `auto`, which is only allowed within `any` and at the top level. When `None`,
+    /// `auto` is not allowed.
+    fn satisfies_cfg(
+        &self,
+        cfg: &DiplomatBackendAttrCfg,
+        mut auto_found: Option<&mut bool>,
+    ) -> Result<bool, LoweringError> {
         Ok(match *cfg {
-            DiplomatBackendAttrCfg::Not(ref c) => !self.satisfies_cfg(c)?,
+            DiplomatBackendAttrCfg::Not(ref c) => !self.satisfies_cfg(c, None)?,
             DiplomatBackendAttrCfg::Any(ref cs) => {
+                #[allow(clippy::needless_option_as_deref)]
+                // False positive: we need this for reborrowing
                 for c in cs {
-                    if self.satisfies_cfg(c)? {
+                    if self.satisfies_cfg(c, auto_found.as_deref_mut())? {
                         return Ok(true);
                     }
                 }
@@ -683,11 +715,19 @@ pub trait AttributeValidator {
             }
             DiplomatBackendAttrCfg::All(ref cs) => {
                 for c in cs {
-                    if !self.satisfies_cfg(c)? {
+                    if !self.satisfies_cfg(c, None)? {
                         return Ok(false);
                     }
                 }
                 true
+            }
+            DiplomatBackendAttrCfg::Auto => {
+                if let Some(found) = auto_found {
+                    *found = true;
+                    return Ok(true);
+                } else {
+                    return Err(LoweringError::Other("auto in diplomat::attr() is only allowed at the top level and within `any`".into()));
+                }
             }
             DiplomatBackendAttrCfg::Star => true,
             DiplomatBackendAttrCfg::BackendName(ref n) => self.is_backend(n),
@@ -805,13 +845,13 @@ mod tests {
     use std::fmt::Write;
 
     macro_rules! uitest_lowering_attr {
-        ($($file:tt)*) => {
+        ($attrs:expr, $($file:tt)*) => {
             let parsed: syn::File = syn::parse_quote! { $($file)* };
 
             let mut output = String::new();
 
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
-            attr_validator.support = hir::BackendAttrSupport::all_true();
+            attr_validator.support = $attrs;
             match hir::TypeContext::from_syn(&parsed, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
@@ -827,8 +867,35 @@ mod tests {
     }
 
     #[test]
+    fn test_auto() {
+        uitest_lowering_attr! { {let mut x = hir::BackendAttrSupport::default(); x.comparators = true; x},
+            #[diplomat::bridge]
+            mod ffi {
+                use std::cmp;
+
+                #[diplomat::opaque]
+                #[diplomat::attr(auto, namespace = "should_not_show_up")]
+                struct Opaque;
+
+
+                impl Opaque {
+                    #[diplomat::attr(auto, comparison)]
+                    pub fn comparator_static(&self, other: &Opaque) -> cmp::Ordering {
+                        todo!()
+                    }
+                    #[diplomat::attr(*, iterator)]
+                    pub fn next(&mut self) -> Option<u8> {
+                        self.0.next()
+                    }
+                }
+
+            }
+        }
+    }
+
+    #[test]
     fn test_comparator() {
-        uitest_lowering_attr! {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
                 use std::cmp;
@@ -842,23 +909,23 @@ mod tests {
 
 
                 impl Opaque {
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparator_static(other: &Opaque) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparator_none(&self) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparator_othertype(other: Struct) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparator_badreturn(&self, other: &Opaque) -> u8 {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_correct(&self, other: &Opaque) -> cmp::Ordering {
                         todo!()
                     }
@@ -868,22 +935,22 @@ mod tests {
                     pub fn ordering_wrong(&self, other: cmp::Ordering) {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_mut(&self, other: &mut Opaque) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_opt(&self, other: Option<&Opaque>) -> cmp::Ordering {
                         todo!()
                     }
                 }
 
                 impl Struct {
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_other(self, other: &Opaque) -> cmp::Ordering {
                         todo!()
                     }
-                    #[diplomat::attr(*, comparison)]
+                    #[diplomat::attr(auto, comparison)]
                     pub fn comparison_correct(self, other: Self) -> cmp::Ordering {
                         todo!()
                     }
@@ -894,7 +961,7 @@ mod tests {
 
     #[test]
     fn test_iterator() {
-        uitest_lowering_attr! {
+        uitest_lowering_attr! { hir::BackendAttrSupport::all_true(),
             #[diplomat::bridge]
             mod ffi {
 
@@ -905,14 +972,14 @@ mod tests {
 
 
                 impl Opaque {
-                    #[diplomat::attr(*, iterable)]
+                    #[diplomat::attr(auto, iterable)]
                     pub fn iterable<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
                         Box::new(OpaqueIterator(self.0.iter()))
                     }
                 }
 
                 impl OpaqueIterator {
-                    #[diplomat::attr(*, iterator)]
+                    #[diplomat::attr(auto, iterator)]
                     pub fn next(&mut self) -> Option<u8> {
                         self.0.next()
                     }
@@ -922,12 +989,12 @@ mod tests {
                 struct Broken;
 
                 impl Broken {
-                    #[diplomat::attr(*, iterable)]
+                    #[diplomat::attr(auto, iterable)]
                     pub fn iterable_no_return(&self) {}
-                    #[diplomat::attr(*, iterable)]
+                    #[diplomat::attr(auto, iterable)]
                     pub fn iterable_no_self() -> Box<BrokenIterator> { todo!() }
 
-                    #[diplomat::attr(*, iterable)]
+                    #[diplomat::attr(auto, iterable)]
                     pub fn iterable_non_custom(&self) -> u8 { todo!() }
                 }
 
@@ -935,12 +1002,12 @@ mod tests {
                 struct BrokenIterator;
 
                 impl BrokenIterator {
-                    #[diplomat::attr(*, iterator)]
+                    #[diplomat::attr(auto, iterator)]
                     pub fn iterator_no_return(&self) {}
-                    #[diplomat::attr(*, iterator)]
+                    #[diplomat::attr(auto, iterator)]
                     pub fn iterator_no_self() -> Option<u8> { todo!() }
 
-                    #[diplomat::attr(*, iterator)]
+                    #[diplomat::attr(auto, iterator)]
                     pub fn iterator_no_option(&self) -> u8 { todo!() }
                 }
             }

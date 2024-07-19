@@ -1,33 +1,33 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "namespace_{0}"]
 #[diplomat::attr(not(any(c)), rename = "Renamed{0}")]
-#[diplomat::attr(*, namespace = "ns")]
+#[diplomat::attr(auto, namespace = "ns")]
 pub mod ffi {
     #[derive(Clone)]
     #[diplomat::opaque]
-    #[diplomat::attr(*, rename = "AttrOpaque1Renamed")]
+    #[diplomat::attr(auto, rename = "AttrOpaque1Renamed")]
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
-        #[diplomat::attr(*, rename = "totally_not_{0}")]
-        #[diplomat::attr(*, constructor)]
+        #[diplomat::attr(auto, rename = "totally_not_{0}")]
+        #[diplomat::attr(auto, constructor)]
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }
 
-        #[diplomat::attr(*, rename = "method_renamed")]
-        #[diplomat::attr(*, getter = "method")]
+        #[diplomat::attr(auto, rename = "method_renamed")]
+        #[diplomat::attr(auto, getter = "method")]
         pub fn method(&self) -> u8 {
             77
         }
 
         #[diplomat::abi_rename("renamed_on_abi_only")]
-        #[diplomat::attr(*, getter = "abirenamed")]
+        #[diplomat::attr(auto, getter = "abirenamed")]
         pub fn abirenamed(&self) -> u8 {
             123
         }
 
-        #[diplomat::attr(*, disable)]
+        #[diplomat::attr(auto, disable)]
         pub fn method_disabled(&self) {
             println!("disabled in hir");
         }
@@ -42,17 +42,17 @@ pub mod ffi {
     pub enum AttrEnum {
         A,
         B,
-        #[diplomat::attr(*, rename = "Renamed")]
+        #[diplomat::attr(auto, rename = "Renamed")]
         C,
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(*, namespace = "")]
-    #[diplomat::attr(*, rename = "Unnamespaced")]
+    #[diplomat::attr(auto, namespace = "")]
+    #[diplomat::attr(auto, rename = "Unnamespaced")]
     pub struct Unnamespaced;
 
     impl Unnamespaced {
-        #[diplomat::attr(*, named_constructor)]
+        #[diplomat::attr(auto, named_constructor)]
         pub fn make(_e: AttrEnum) -> Box<Self> {
             Box::new(Self)
         }
@@ -68,7 +68,7 @@ pub mod ffi {
         pub fn new(int: u8) -> Box<Self> {
             Box::new(Self(int))
         }
-        #[diplomat::attr(*, comparison)]
+        #[diplomat::attr(auto, comparison)]
         pub fn cmp(&self, other: &Comparable) -> core::cmp::Ordering {
             self.0.cmp(&other.0)
         }
@@ -88,25 +88,25 @@ pub mod ffi {
     pub struct MyIndexer(Vec<String>);
 
     impl MyIterable {
-        #[diplomat::attr(*, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn new(x: &[u8]) -> Box<Self> {
             Box::new(Self(x.into()))
         }
-        #[diplomat::attr(*, iterable)]
+        #[diplomat::attr(auto, iterable)]
         pub fn iter<'a>(&'a self) -> Box<MyIterator<'a>> {
             Box::new(MyIterator(self.0.iter()))
         }
     }
 
     impl<'a> MyIterator<'a> {
-        #[diplomat::attr(*, iterator)]
+        #[diplomat::attr(auto, iterator)]
         pub fn next(&mut self) -> Option<u8> {
             self.0.next().copied()
         }
     }
 
     impl MyIndexer {
-        #[diplomat::attr(*, indexer)]
+        #[diplomat::attr(auto, indexer)]
         pub fn get<'a>(&'a self, i: usize) -> Option<&'a DiplomatStr> {
             self.0.get(i).as_ref().map(|string| string.as_bytes())
         }
@@ -121,14 +121,14 @@ pub mod ffi {
     struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
 
     impl OpaqueIterable {
-        #[diplomat::attr(*, iterable)]
+        #[diplomat::attr(auto, iterable)]
         pub fn iter<'a>(&'a self) -> Box<OpaqueIterator<'a>> {
             Box::new(OpaqueIterator(Box::new(self.0.iter().cloned())))
         }
     }
 
     impl<'a> OpaqueIterator<'a> {
-        #[diplomat::attr(*, iterator)]
+        #[diplomat::attr(auto, iterator)]
         pub fn next(&'a mut self) -> Option<Box<AttrOpaque1>> {
             self.0.next().map(Box::new)
         }
