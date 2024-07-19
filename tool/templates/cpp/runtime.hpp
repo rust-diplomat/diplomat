@@ -1,26 +1,30 @@
 #ifndef DIPLOMAT_RUNTIME_CPP_H
 #define DIPLOMAT_RUNTIME_CPP_H
 
-#include <string>
-#include <variant>
 #include <array>
 #include <optional>
+#include <string>
 #include <type_traits>
+#include <variant>
 
 #if __cplusplus >= 202002L
-#include<span>
+#include <span>
 #endif
-
-#include "diplomat_c_runtime.hpp"
 
 namespace diplomat {
 
-extern "C" inline void Flush(capi::DiplomatWrite* w) {
+namespace capi {
+extern "C" {
+// SHARED_CAPI
+} // extern "C"
+} // namespace capi
+
+extern "C" inline void _Flush(capi::DiplomatWrite* w) {
   std::string* string = reinterpret_cast<std::string*>(w->context);
   string->resize(w->len);
 };
 
-extern "C" inline bool Grow(capi::DiplomatWrite* w, uintptr_t requested) {
+extern "C" inline bool _Grow(capi::DiplomatWrite* w, uintptr_t requested) {
   std::string* string = reinterpret_cast<std::string*>(w->context);
   string->resize(requested);
   w->cap = string->length();
@@ -33,25 +37,12 @@ inline capi::DiplomatWrite WriteFromString(std::string& string) {
   w.context = &string;
   w.buf = &string[0];
   w.len = string.length();
-  // Same as length, since C++ strings are not supposed
-  // to be written to past their len; you resize *first*
   w.cap = string.length();
-  // Will never become true, as Grow is infallible.
+  // Will never become true, as _Grow is infallible.
   w.grow_failed = false;
-  w.flush = Flush;
-  w.grow = Grow;
+  w.flush = _Flush;
+  w.grow = _Grow;
   return w;
-};
-
-template<typename T> struct WriteTrait {
-  // static inline capi::DiplomatWrite Construct(T& t);
-};
-
-
-template<> struct WriteTrait<std::string> {
-  static inline capi::DiplomatWrite Construct(std::string& t) {
-    return diplomat::WriteFromString(t);
-  }
 };
 
 template<class T> struct Ok {

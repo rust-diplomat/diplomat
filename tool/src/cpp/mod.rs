@@ -25,12 +25,18 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let formatter = Cpp2Formatter::new(tcx);
     let errors = ErrorStore::default();
 
-    files.add_file("diplomat_c_runtime.hpp".into(), crate::c::gen_runtime(true));
+    let c_runtime = include_str!("../../templates/c/runtime.h")
+        .split_once("// START_SHARED_CAPI")
+        .unwrap()
+        .1
+        .split_once("// END_SHARED_CAPI")
+        .unwrap()
+        .0;
 
-    files.add_file(
-        "diplomat_runtime.hpp".into(),
-        include_str!("../../templates/cpp/runtime.hpp").into(),
-    );
+    let cpp_runtime =
+        include_str!("../../templates/cpp/runtime.hpp").replace("// SHARED_CAPI", c_runtime);
+
+    files.add_file("diplomat_runtime.hpp".into(), cpp_runtime.into());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
