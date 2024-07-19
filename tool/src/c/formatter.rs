@@ -58,7 +58,7 @@ impl<'tcx> CFormatter<'tcx> {
                 return format!("{ns}::{CAPI_NAMESPACE}::{name}").into();
             }
         }
-        self.diplomat_namespace(name.into())
+        self.diplomat_namespace(name)
     }
 
     /// Resolve and format the name of a type for use in header names: decl version

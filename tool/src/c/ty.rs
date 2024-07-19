@@ -386,10 +386,9 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 ty_name
             }
             Type::Slice(ref s) => match s {
-                hir::Slice::Primitive(borrow, prim) => self
-                    .formatter
-                    .fmt_primitive_slice_name(*borrow, *prim)
-                    .into(),
+                hir::Slice::Primitive(borrow, prim) => {
+                    self.formatter.fmt_primitive_slice_name(*borrow, *prim)
+                }
                 hir::Slice::Str(_, encoding) => self.formatter.fmt_str_view_name(*encoding),
                 hir::Slice::Strs(encoding) => self.formatter.fmt_strs_view_name(*encoding),
                 &_ => unreachable!("unknown AST/HIR variant"),
