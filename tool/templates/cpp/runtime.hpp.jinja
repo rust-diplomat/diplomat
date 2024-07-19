@@ -16,7 +16,9 @@ namespace diplomat {
 
 namespace capi {
 extern "C" {
-// SHARED_CAPI
+
+{% include "../c/capi.h.jinja" %}
+
 } // extern "C"
 } // namespace capi
 
@@ -160,3 +162,4 @@ private:
 } // namespace diplomat
 
 #endif
+

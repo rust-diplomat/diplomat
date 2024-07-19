@@ -29,12 +29,11 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let formatter = CFormatter::new(tcx, false);
     let errors = ErrorStore::default();
 
-    files.add_file(
-        "diplomat_runtime.h".into(),
-        include_str!("../../templates/c/runtime.h")
-            .replace("// START_SHARED_CAPI\n", "")
-            .replace("// END_SHARED_CAPI\n", ""),
-    );
+    #[derive(askama::Template)]
+    #[template(path = "c/runtime.h.jinja", escape = "none")]
+    struct Runtime;
+
+    files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
