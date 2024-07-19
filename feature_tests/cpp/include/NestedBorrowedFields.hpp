@@ -50,17 +50,17 @@ inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowe
 
 inline diplomat::capi::NestedBorrowedFields NestedBorrowedFields::AsFFI() const {
   return diplomat::capi::NestedBorrowedFields {
-    .fields = fields.AsFFI(),
-    .bounds = bounds.AsFFI(),
-    .bounds2 = bounds2.AsFFI(),
+    /* .fields = */ fields.AsFFI(),
+    /* .bounds = */ bounds.AsFFI(),
+    /* .bounds2 = */ bounds2.AsFFI(),
   };
 }
 
 inline NestedBorrowedFields NestedBorrowedFields::FromFFI(diplomat::capi::NestedBorrowedFields c_struct) {
   return NestedBorrowedFields {
-    .fields = BorrowedFields::FromFFI(c_struct.fields),
-    .bounds = BorrowedFieldsWithBounds::FromFFI(c_struct.bounds),
-    .bounds2 = BorrowedFieldsWithBounds::FromFFI(c_struct.bounds2),
+    /* .fields = */ BorrowedFields::FromFFI(c_struct.fields),
+    /* .bounds = */ BorrowedFieldsWithBounds::FromFFI(c_struct.bounds),
+    /* .bounds2 = */ BorrowedFieldsWithBounds::FromFFI(c_struct.bounds2),
   };
 }
 
