@@ -1,5 +1,5 @@
-#ifndef RenamedAttrEnum_D_HPP
-#define RenamedAttrEnum_D_HPP
+#ifndef ns_RenamedAttrEnum_D_HPP
+#define ns_RenamedAttrEnum_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace ns {
@@ -43,4 +43,4 @@ private:
 };
 
 } // namespace
-#endif // RenamedAttrEnum_D_HPP
+#endif // ns_RenamedAttrEnum_D_HPP
