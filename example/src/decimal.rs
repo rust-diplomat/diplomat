@@ -52,7 +52,7 @@ pub mod ffi {
     impl FixedDecimalFormatter {
         /// Creates a new [`FixedDecimalFormatter`] from locale data.
         #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter::try_new, FnInStruct)]
-        #[diplomat::attr(all(supports = constructors, supports = fallible_constructors), constructor)]
+        #[diplomat::attr(*, constructor)]
         // TODO constructors: this should ideally be a constructor too
         pub fn try_new(
             locale: &Locale,
