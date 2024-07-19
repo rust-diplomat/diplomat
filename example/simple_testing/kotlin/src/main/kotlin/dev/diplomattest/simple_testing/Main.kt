@@ -18,37 +18,41 @@ interface DiplomatCallback_Lib: Library {
     fun DiplomatCallbackI32ToI32_test_rust_fn_test_call(diplomatCallback: Pointer): Int
 }
 
-class DiplomatCallback internal constructor (
-    internal val handle: Pointer,
-    // These ensure that anything that is borrowed is kept alive and not cleaned
-    // up by the garbage collector.
-    // Note: ^ this comment was copied from other diplomat code
-    internal val selfEdges: List<Any>
+class DiplomatCallbackI32ToI32(
+    val callback_pointer: Pointer,
+    val callback: DiplomatCallback_Lib.DiplomatCallbackI32ToI32,
 )  {
+
     companion object {
         internal val libClass: Class<DiplomatCallback_Lib> = DiplomatCallback_Lib::class.java
         internal val lib: DiplomatCallback_Lib = Native.load("somelib", libClass)
 
-        // create the JNA Callback object
-        internal val callback: DiplomatCallback_Lib.DiplomatCallbackI32ToI32 = object : DiplomatCallback_Lib.DiplomatCallbackI32ToI32{
-            override fun invoke(input: Int): Int {
-                return input*2;
-            }
+        fun test_rust_fn_call_with_callback(dc: DiplomatCallbackI32ToI32): Int {
+            return lib.DiplomatCallbackI32ToI32_test_rust_fn_test_call(dc.callback_pointer);
         }
 
-        internal val callback_pointer = lib.diplomat_callback_create_for_jvm__callback(callback);
-
-        fun test_rust_fn_call_with_callback(): Int {
-            return lib.DiplomatCallbackI32ToI32_test_rust_fn_test_call(callback_pointer);
+        fun fromCallback(cb: (Int) -> Int): DiplomatCallbackI32ToI32 {
+            val callback: DiplomatCallback_Lib.DiplomatCallbackI32ToI32 = object :  DiplomatCallback_Lib.DiplomatCallbackI32ToI32 {
+                override fun invoke(input: Int): Int {
+                    return cb(input);
+                }
+            }
+            val callback_pointer = lib.diplomat_callback_create_for_jvm__callback(callback);
+            return DiplomatCallbackI32ToI32(callback_pointer, callback)
         }
     }
 }
 
 object Main {
+
+    fun callback(x: Int): Int {
+        return x*2;
+    }
     
     @JvmStatic
     fun main(args: Array<String>) {
-        var res = DiplomatCallback.test_rust_fn_call_with_callback(); // calls test_rust_fn with 10, and the callback
+        var cb_wrap = DiplomatCallbackI32ToI32.fromCallback(::callback)
+        var res = DiplomatCallbackI32ToI32.test_rust_fn_call_with_callback(cb_wrap); // calls test_rust_fn with the callback
         println("Result: " + res);
     }
 }
