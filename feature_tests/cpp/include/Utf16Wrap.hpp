@@ -20,9 +20,9 @@ namespace capi {
     
     void Utf16Wrap_get_debug_str(const diplomat::capi::Utf16Wrap* self, diplomat::capi::DiplomatWrite* write);
     
-    DiplomatString16View Utf16Wrap_borrow_cont(const diplomat::capi::Utf16Wrap* self);
+    diplomat::capi::DiplomatString16View Utf16Wrap_borrow_cont(const diplomat::capi::Utf16Wrap* self);
     
-    DiplomatString16View Utf16Wrap_owned(const diplomat::capi::Utf16Wrap* self);
+    diplomat::capi::DiplomatString16View Utf16Wrap_owned(const diplomat::capi::Utf16Wrap* self);
     
     
     void Utf16Wrap_destroy(Utf16Wrap* self);

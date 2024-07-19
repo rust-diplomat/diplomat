@@ -13,7 +13,7 @@
 namespace diplomat {
 namespace capi {
     struct BorrowedFieldsReturning {
-      DiplomatStringView bytes;
+      diplomat::capi::DiplomatStringView bytes;
     };
 } // namespace capi
 } // namespace

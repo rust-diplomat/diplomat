@@ -26,7 +26,7 @@ namespace capi {
     
     void MyString_get_str(const diplomat::capi::MyString* self, diplomat::capi::DiplomatWrite* write);
     
-    DiplomatStringView MyString_get_boxed_str(const diplomat::capi::MyString* self);
+    diplomat::capi::DiplomatStringView MyString_get_boxed_str(const diplomat::capi::MyString* self);
     
     
     void MyString_destroy(MyString* self);
