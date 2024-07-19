@@ -21,12 +21,23 @@ use formatter::DartFormatter;
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
+    a.renaming = true;
+    a.namespacing = false;
     a.memory_sharing = false;
     a.non_exhaustive_structs = true;
     a.method_overloading = false;
     a.utf8_strings = false;
     a.utf16_strings = true;
+
+    a.constructors = true;
+    a.named_constructors = true;
     a.fallible_constructors = true;
+    a.accessors = true;
+    a.stringifiers = true;
+    a.comparators = true;
+    a.iterators = true;
+    a.iterables = true;
+    a.indexing = true;
 
     a
 }
