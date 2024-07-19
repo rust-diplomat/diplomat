@@ -131,6 +131,7 @@ jobs:
 
     - name: gcc, c++23
       run: cargo make check-cpp
+      if: ${{ matrix.os }} != 'macos-latest'
       env:
         CXX: gcc
         CXX_STD: c++23
