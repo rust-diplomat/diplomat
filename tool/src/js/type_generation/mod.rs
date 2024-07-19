@@ -382,14 +382,10 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             Some(SpecialMethod::Iterable) => "[Symbol.iterator]".to_string(),
             Some(SpecialMethod::Iterator) => "#iteratorNext".to_string(),
 
-            None if method.param_self.is_none() => {
+            _ if method.param_self.is_none() => {
                 format!("static {}", self.formatter.fmt_method_name(method))
             }
-            None => self.formatter.fmt_method_name(method),
-            _ => panic!(
-                "Method Declaration {:?} not implemented",
-                method.attrs.special_method
-            ),
+            _ => self.formatter.fmt_method_name(method),
         };
 
         Some(method_info.render().unwrap())

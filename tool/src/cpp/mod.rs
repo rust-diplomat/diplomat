@@ -10,23 +10,12 @@ use ty::TyGenContext;
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
-    a.renaming = true;
-    a.namespacing = true;
     a.memory_sharing = true;
     a.non_exhaustive_structs = false;
     a.method_overloading = true;
     a.utf8_strings = true;
     a.utf16_strings = true;
-
-    a.constructors = false; // TODO
-    a.named_constructors = false;
     a.fallible_constructors = false;
-    a.accessors = false;
-    a.comparators = false; // TODO
-    a.stringifiers = false; // TODO
-    a.iterators = false; // TODO
-    a.iterables = false; // TODO
-    a.indexing = false; // TODO
 
     a
 }
