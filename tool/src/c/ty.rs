@@ -225,7 +225,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             };
             write!(&mut params, "{comma}{decl_ty} {decl_name}").unwrap();
         }
-        
+
         if params.is_empty() {
             params.push_str("void");
         }
