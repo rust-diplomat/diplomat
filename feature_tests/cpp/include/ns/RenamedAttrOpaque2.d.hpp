@@ -1,5 +1,5 @@
-#ifndef RenamedAttrOpaque2_D_HPP
-#define RenamedAttrOpaque2_D_HPP
+#ifndef ns_RenamedAttrOpaque2_D_HPP
+#define ns_RenamedAttrOpaque2_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace ns {
@@ -35,4 +35,4 @@ private:
 };
 
 } // namespace
-#endif // RenamedAttrOpaque2_D_HPP
+#endif // ns_RenamedAttrOpaque2_D_HPP

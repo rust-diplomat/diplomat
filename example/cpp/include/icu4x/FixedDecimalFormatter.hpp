@@ -1,5 +1,5 @@
-#ifndef FixedDecimalFormatter_HPP
-#define FixedDecimalFormatter_HPP
+#ifndef icu4x_FixedDecimalFormatter_HPP
+#define icu4x_FixedDecimalFormatter_HPP
 
 #include "FixedDecimalFormatter.d.hpp"
 
@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 #include "DataProvider.hpp"
 #include "FixedDecimal.hpp"
 #include "FixedDecimalFormatterOptions.hpp"
@@ -69,4 +69,4 @@ inline void icu4x::FixedDecimalFormatter::operator delete(void* ptr) {
 }
 
 
-#endif // FixedDecimalFormatter_HPP
+#endif // icu4x_FixedDecimalFormatter_HPP

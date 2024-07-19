@@ -7,8 +7,8 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "MyEnum.d.hpp"
+#include "diplomat_runtime.hpp"
 
 struct MyZst;
 class MyEnum;

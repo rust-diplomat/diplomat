@@ -1,5 +1,5 @@
-#ifndef FixedDecimalFormatterOptions_D_HPP
-#define FixedDecimalFormatterOptions_D_HPP
+#ifndef icu4x_FixedDecimalFormatterOptions_D_HPP
+#define icu4x_FixedDecimalFormatterOptions_D_HPP
 
 #include <stdio.h>
 #include <stdint.h>
@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 #include "FixedDecimalGroupingStrategy.d.hpp"
 
 namespace icu4x {
@@ -38,4 +38,4 @@ struct FixedDecimalFormatterOptions {
 };
 
 } // namespace
-#endif // FixedDecimalFormatterOptions_D_HPP
+#endif // icu4x_FixedDecimalFormatterOptions_D_HPP
