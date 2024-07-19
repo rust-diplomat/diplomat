@@ -368,7 +368,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         // If the return expression is a std::move, unwrap that, because the linter doesn't like it
         c_to_cpp_return_expression = c_to_cpp_return_expression.map(|expr| {
             if expr.starts_with("std::move") {
-                expr["std::move(".len()..(expr.len() -1)].to_owned().into()
+                expr["std::move(".len()..(expr.len() - 1)].to_owned().into()
             } else {
                 expr
             }

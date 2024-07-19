@@ -940,10 +940,12 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim) => Ok(OutType::Slice(Slice::Primitive(
-                Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
-                PrimitiveType::from_ast(*prim),
-            ))),
+            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim) => {
+                Ok(OutType::Slice(Slice::Primitive(
+                    Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
+                    PrimitiveType::from_ast(*prim),
+                )))
+            }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
