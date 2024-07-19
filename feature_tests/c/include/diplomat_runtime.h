@@ -1,6 +1,7 @@
 #ifndef DIPLOMAT_RUNTIME_C_H
 #define DIPLOMAT_RUNTIME_C_H
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -16,9 +17,9 @@ typedef uint_least16_t char16_t;
 typedef uint_least32_t char32_t;
 #endif
 
-_Static_assert(sizeof(char) == sizeof(uint8_t), "your architecture's `char` is not 8 bits");
-_Static_assert(sizeof(char16_t) == sizeof(uint16_t), "your architecture's `char16_t` is not 16 bits");
-_Static_assert(sizeof(char32_t) == sizeof(uint32_t), "your architecture's `char32_t` is not 32 bits");
+static_assert(sizeof(char) == sizeof(uint8_t), "your architecture's `char` is not 8 bits");
+static_assert(sizeof(char16_t) == sizeof(uint16_t), "your architecture's `char16_t` is not 16 bits");
+static_assert(sizeof(char32_t) == sizeof(uint32_t), "your architecture's `char32_t` is not 32 bits");
 
 
 
