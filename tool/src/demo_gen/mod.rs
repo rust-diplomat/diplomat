@@ -5,33 +5,13 @@ use diplomat_core::hir::{BackendAttrSupport, TypeContext};
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
-    ErrorStore, FileMap,
-    js::{formatter::JSFormatter, FileType},
+    js::{self, formatter::JSFormatter, FileType}, ErrorStore, FileMap
 };
 
 mod terminus;
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
-    let mut a = BackendAttrSupport::default();
-
-    a.renaming = true;
-    a.namespacing = false;
-    a.memory_sharing = false;
-    a.non_exhaustive_structs = true;
-    a.method_overloading = false;
-
-    // For finding default constructors of opaques:
-    a.constructors = true;
-    a.named_constructors = false;
-    a.fallible_constructors = true;
-    a.accessors = true;
-    a.comparators = false;
-    a.stringifiers = false; // TODO
-    a.iterators = false; // TODO
-    a.iterables = false; // TODO
-    a.indexing = false;
-
-    a
+    js::attr_support()
 }
 
 /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
