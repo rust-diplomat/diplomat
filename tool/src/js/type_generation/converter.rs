@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use diplomat_core::hir::{
     self, borrowing_param::StructBorrowInfo, LifetimeEnv, OpaqueOwner, PrimitiveType, ReturnType,
-    SelfType, StructPathLike, SuccessType, TyPosition, Type,
+    ReturnableStructDef, SelfType, StructPathLike, SuccessType, TyPosition, Type,
 };
 use std::fmt::Write;
 
@@ -174,8 +174,14 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
                 let type_def = self.tcx.resolve_type(id);
                 match type_def {
+                    hir::TypeDef::Struct(st) if st.fields.is_empty() => {
+                        format!("new {type_name}()").into()
+                    }
                     hir::TypeDef::Struct(..) => {
                         format!("new {type_name}()._fromFFI({variable_name}{edges})").into()
+                    }
+                    hir::TypeDef::OutStruct(st) if st.fields.is_empty() => {
+                        format!("new {type_name}()").into()
                     }
                     hir::TypeDef::OutStruct(..) => {
                         format!("new {type_name}({variable_name}{edges})").into()
@@ -456,6 +462,11 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                             "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
                             message = match e {
                                 Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
+                                Type::Struct(s) if match s.resolve(self.tcx) {
+                                    ReturnableStructDef::Struct(s) => s.fields.is_empty(),
+                                    ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
+                                    _ => unreachable!()
+                                } => format!("'{type_name}'"),
                                 _ => format!("'{type_name}: ' + cause.toString()"),
                             },
                         )
