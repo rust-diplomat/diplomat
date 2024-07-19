@@ -33,10 +33,10 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
         .unwrap()
         .0;
 
-    let cpp_runtime =
-        include_str!("../../templates/cpp/runtime.hpp").replace("// SHARED_CAPI", c_runtime);
-
-    files.add_file("diplomat_runtime.hpp".into(), cpp_runtime.into());
+    files.add_file(
+        "diplomat_runtime.hpp".into(),
+        include_str!("../../templates/cpp/runtime.hpp").replace("// SHARED_CAPI", c_runtime),
+    );
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
