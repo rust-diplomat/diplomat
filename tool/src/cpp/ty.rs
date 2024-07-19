@@ -590,10 +590,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Slice(..) => {
                 vec![PartiallyNamedExpression {
                     suffix: "".into(),
-                    expression: format!(
-                        "{{ .data = {cpp_name}.data(), .len = {cpp_name}.size() }}"
-                    )
-                    .into(),
+                    expression: format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
                 }]
             }
             _ => unreachable!("unknown AST/HIR variant"),

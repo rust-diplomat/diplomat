@@ -24,15 +24,15 @@ namespace capi {
 
 inline diplomat::capi::ErrorStruct ErrorStruct::AsFFI() const {
   return diplomat::capi::ErrorStruct {
-    .i = i,
-    .j = j,
+    /* .i = */ i,
+    /* .j = */ j,
   };
 }
 
 inline ErrorStruct ErrorStruct::FromFFI(diplomat::capi::ErrorStruct c_struct) {
   return ErrorStruct {
-    .i = c_struct.i,
-    .j = c_struct.j,
+    /* .i = */ c_struct.i,
+    /* .j = */ c_struct.j,
   };
 }
 

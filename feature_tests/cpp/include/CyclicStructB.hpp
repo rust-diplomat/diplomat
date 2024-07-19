@@ -32,13 +32,13 @@ inline CyclicStructA CyclicStructB::get_a() {
 
 inline diplomat::capi::CyclicStructB CyclicStructB::AsFFI() const {
   return diplomat::capi::CyclicStructB {
-    .field = field,
+    /* .field = */ field,
   };
 }
 
 inline CyclicStructB CyclicStructB::FromFFI(diplomat::capi::CyclicStructB c_struct) {
   return CyclicStructB {
-    .field = c_struct.field,
+    /* .field = */ c_struct.field,
   };
 }
 

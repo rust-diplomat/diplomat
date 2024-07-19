@@ -117,23 +117,24 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    - name: clang++, c++17
+    - name: clang, c++17
       run: cargo make check-cpp
       env:
-        CC: clang++-14
-        C_STD: c++17
+        CXX: clang
+        CXX_STD: c++17
 
-    - name: clang++, c++20
+    - name: clang, c++20
       run: cargo make check-cpp
       env:
-        CC: clang++-14
-        C_STD: c++20
+        CXX: clang
+        CXX_STD: c++20
 
-    - name: g++, c++23
+    - name: gcc, c++23
+      if: ${{ matrix.os != 'macos-latest' }} 
       run: cargo make check-cpp
       env:
-        CC: g++
-        C_STD: c++23
+        CXX: gcc
+        CXX_STD: c++23
 
   test-js: 
     runs-on: ubuntu-latest

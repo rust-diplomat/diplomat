@@ -189,15 +189,13 @@ end
 
 cd example/c/include
 files_list = glob_array "./*.h"
-success = set true
+exit_code = set 0
 for file in ${files_list}
     echo "Checking ${file}"
     output = exec --get-exit-code ${cc} -std=${c_std} -pedantic-errors -Wall ${file}
-    success = set ${success} and ${output} == 0
+    exit_code = set ${exit_code} or ${output}
 end
-if not ${success}
-  exit 1
-end
+exit ${exit_code}
 '''
 
 [tasks.check-c-feature]
@@ -216,15 +214,13 @@ end
 
 cd feature_tests/c/include
 files_list = glob_array "./*.h"
-success = set true
+exit_code = set 0
 for file in ${files_list}
     echo "Checking ${file}"
     output = exec --get-exit-code ${cc} -std=${c_std} -pedantic-errors -Wall ${file}
-    success = set ${success} and ${output} == 0
+    exit_code = set ${exit_code} or ${output}
 end
-if not ${success}
-  exit 1
-end
+exit ${exit_code}
 '''
 
 [tasks.check-c]
@@ -250,15 +246,13 @@ end
 
 cd example/cpp/include
 files_list = glob_array "./*.hpp"
-success = set true
+exit_code = set 0
 for file in ${files_list}
     echo "Checking ${file}"
     output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall ${file}
-    success = set ${success} and ${output} == 0
+    exit_code = set ${exit_code} or ${output}
 end
-if not ${success}
-  exit 1
-end
+exit ${exit_code}
 '''
 
 [tasks.check-cpp-feature]
@@ -277,15 +271,13 @@ end
 
 cd feature_tests/cpp/include
 files_list = glob_array "./*.hpp"
-success = set true
+exit_code = set 0
 for file in ${files_list}
     echo "Checking ${file}"
     output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall ${file}
-    success = set ${success} and ${output} == 0
+    exit_code = set ${exit_code} or ${output}
 end
-if not ${success}
-  exit 1
-end
+exit ${exit_code}
 '''
 
 [tasks.check-cpp]

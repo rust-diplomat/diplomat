@@ -39,17 +39,17 @@ inline diplomat::result<BorrowedFields, diplomat::Utf8Error> BorrowedFields::fro
 
 inline diplomat::capi::BorrowedFields BorrowedFields::AsFFI() const {
   return diplomat::capi::BorrowedFields {
-    .a = { .data = a.data(), .len = a.size() },
-    .b = { .data = b.data(), .len = b.size() },
-    .c = { .data = c.data(), .len = c.size() },
+    /* .a = */ {a.data(), a.size()},
+    /* .b = */ {b.data(), b.size()},
+    /* .c = */ {c.data(), c.size()},
   };
 }
 
 inline BorrowedFields BorrowedFields::FromFFI(diplomat::capi::BorrowedFields c_struct) {
   return BorrowedFields {
-    .a = std::u16string_view(c_struct.a.data, c_struct.a.len),
-    .b = std::string_view(c_struct.b.data, c_struct.b.len),
-    .c = std::string_view(c_struct.c.data, c_struct.c.len),
+    /* .a = */ std::u16string_view(c_struct.a.data, c_struct.a.len),
+    /* .b = */ std::string_view(c_struct.b.data, c_struct.b.len),
+    /* .c = */ std::string_view(c_struct.c.data, c_struct.c.len),
   };
 }
 
