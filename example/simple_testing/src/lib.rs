@@ -39,6 +39,7 @@ pub unsafe extern "system" fn diplomat_callback_create_for_jvm__callback(
     unsafe extern "C" fn run_callback(data: *const c_void, arg0: i32) -> i32 {
         unsafe {
             let cb = data.cast::<DiplomatCallbackI32ToI32>();
+            // unwrap and call the "invoke" function on the JNA Callback
             (*cb).unwrap()(arg0)
         }
     }
@@ -62,5 +63,3 @@ pub extern "C" fn DiplomatCallbackI32ToI32_test_rust_fn_test_call(cb_wrap: &Dipl
 }
 
 pub type DiplomatCallbackI32ToI32 = Option<unsafe extern "C" fn(i32) -> i32>;
-
-struct OpaqueFunctionPointer(u64);
