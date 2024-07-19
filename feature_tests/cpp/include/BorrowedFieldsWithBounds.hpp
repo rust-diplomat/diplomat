@@ -33,7 +33,7 @@ inline diplomat::result<BorrowedFieldsWithBounds, diplomat::Utf8Error> BorrowedF
     dstr16_x.size(),
     utf8_str_z.data(),
     utf8_str_z.size());
-  return diplomat::Ok<BorrowedFieldsWithBounds>(std::move(BorrowedFieldsWithBounds::FromFFI(result)));
+  return diplomat::Ok<BorrowedFieldsWithBounds>(BorrowedFieldsWithBounds::FromFFI(result));
 }
 
 
