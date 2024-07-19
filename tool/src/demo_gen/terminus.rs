@@ -339,7 +339,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let method_name = self.formatter.fmt_method_name(method);
         if method.param_self.is_some() {
             // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
-            format!("(function (...args) {{ return args[0].{method_name}(...args) }})",)
+            format!("(function (...args) {{ return args[0].{method_name}(...args.slice(1)) }})",)
         } else {
             format!("{owner_type_name}.{method_name}")
         }

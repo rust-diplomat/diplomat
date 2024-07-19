@@ -5,7 +5,7 @@ import { FixedDecimalFormatterOptions } from "../FixedDecimalFormatterOptions.mj
 import { Locale } from "../Locale.mjs"
 export function formatWrite() {
 	var terminusArgs = arguments;
-	return (function (...args) { return args[0].formatWrite(...args) }).apply(
+	return (function (...args) { return args[0].formatWrite(...args.slice(1)) }).apply(
         null,
         [
             FixedDecimalFormatter.tryNew.apply(
