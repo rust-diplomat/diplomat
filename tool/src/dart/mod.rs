@@ -21,7 +21,6 @@ use formatter::DartFormatter;
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
-    a.renaming = true;
     a.namespacing = false;
     a.memory_sharing = false;
     a.non_exhaustive_structs = true;

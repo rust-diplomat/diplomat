@@ -116,6 +116,7 @@ impl Attrs {
         // No special inheritance, was already appropriately inherited in AST
         this.abi_rename = ast.abi_rename.clone();
 
+        let support = validator.attrs_supported();
         for attr in &ast.attrs {
             let satisfies = match validator.satisfies_cfg(&attr.cfg) {
                 Ok(satisfies) => satisfies,
@@ -575,7 +576,7 @@ impl Attrs {
 /// ```ignore
 /// struct Sample {}
 /// impl Sample {
-///     #[diplomat::attr(supports = constructors, constructor)]
+///     #[diplomat::attr(constructor)]
 ///     pub fn new() -> Box<Self> {
 ///         Box::new(Sample{})
 ///     }
@@ -588,14 +589,10 @@ impl Attrs {
 /// factory Sample()
 /// ```
 ///
-/// If a backend does not support a specific `#[diplomat::attr(...)]`, it will error.
+/// If a backend does not support a specific `#[diplomat::attr(...)]`, it may error.
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
-    /// Renaming types/methods, usually to make them more idiomatic.
-    ///
-    /// This is supported by all backends *except for C*.
-    pub renaming: bool,
     /// Namespacing types, e.g. C++ `namespace`.
     pub namespacing: bool,
     /// Rust can directly acccess the memory of this language, like C and C++.
@@ -750,7 +747,6 @@ impl AttributeValidator for BasicAttributeValidator {
         Ok(if name == "supports" {
             // destructure so new fields are forced to be added
             let BackendAttrSupport {
-                renaming,
                 namespacing,
                 memory_sharing,
                 non_exhaustive_structs,
@@ -769,7 +765,6 @@ impl AttributeValidator for BasicAttributeValidator {
                 indexing,
             } = self.support;
             match value {
-                "renaming" => renaming,
                 "namespacing" => namespacing,
                 "memory_sharing" => memory_sharing,
                 "non_exhaustive_structs" => non_exhaustive_structs,

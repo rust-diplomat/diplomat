@@ -15,7 +15,6 @@ use diplomat_core::hir::BackendAttrSupport;
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
-    a.renaming = false;
     a.namespacing = false;
     a.memory_sharing = true;
     a.non_exhaustive_structs = false;
