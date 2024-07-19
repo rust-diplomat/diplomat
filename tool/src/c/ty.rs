@@ -183,7 +183,10 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         let return_ty: Cow<str> = match method.output {
             ReturnType::Infallible(SuccessType::Unit) => "void".into(),
             ReturnType::Infallible(SuccessType::Write) => {
-                param_decls.push((self.formatter.fmt_diplomat_write().into(), "write".into()));
+                param_decls.push((
+                    format!("{}*", self.formatter.fmt_write_name()).into(),
+                    "write".into(),
+                ));
                 "void".into()
             }
             ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_ty_name(o, header),
@@ -196,8 +199,10 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                 };
                 let ok_ty = match ok {
                     SuccessType::Write => {
-                        param_decls
-                            .push((self.formatter.fmt_diplomat_write().into(), "write".into()));
+                        param_decls.push((
+                            format!("{}*", self.formatter.fmt_write_name()).into(),
+                            "write".into(),
+                        ));
                         None
                     }
                     SuccessType::Unit => None,
@@ -325,11 +330,7 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
             }
             Type::Slice(hir::Slice::Strs(encoding)) => {
                 out.push((
-                    match encoding {
-                        hir::StringEncoding::UnvalidatedUtf16 => "DiplomatStrings16View*",
-                        _ => "DiplomatStringsView*",
-                    }
-                    .into(),
+                    format!("{}*", self.formatter.fmt_strs_view_name(*encoding)).into(),
                     format!("{param_name}_data").into(),
                 ));
                 out.push(("size_t".into(), format!("{param_name}_len").into()));
@@ -389,14 +390,8 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
                     .formatter
                     .fmt_primitive_slice_name(*borrow, *prim)
                     .into(),
-                hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
-                    "DiplomatString16View".into()
-                }
-                hir::Slice::Str(_, _) => "DiplomatStringView".into(),
-                hir::Slice::Strs(hir::StringEncoding::UnvalidatedUtf16) => {
-                    "DiplomatStrings16View".into()
-                }
-                hir::Slice::Strs(_) => "DiplomatStringsView".into(),
+                hir::Slice::Str(_, encoding) => self.formatter.fmt_str_view_name(*encoding),
+                hir::Slice::Strs(encoding) => self.formatter.fmt_strs_view_name(*encoding),
                 &_ => unreachable!("unknown AST/HIR variant"),
             },
             _ => unreachable!("unknown AST/HIR variant"),

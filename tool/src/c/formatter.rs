@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use diplomat_core::hir::{self, TypeContext, TypeId};
+use diplomat_core::hir::{self, StringEncoding, TypeContext, TypeId};
 use std::borrow::Cow;
 
 /// This type mediates all formatting
@@ -55,13 +55,10 @@ impl<'tcx> CFormatter<'tcx> {
         };
         if self.is_for_cpp {
             if let Some(ref ns) = resolved.attrs().namespace {
-                format!("{ns}::{CAPI_NAMESPACE}::{name}").into()
-            } else {
-                format!("diplomat::{CAPI_NAMESPACE}::{name}").into()
+                return format!("{ns}::{CAPI_NAMESPACE}::{name}").into();
             }
-        } else {
-            name
         }
+        self.diplomat_namespace(name.into())
     }
 
     /// Resolve and format the name of a type for use in header names: decl version
@@ -110,6 +107,7 @@ impl<'tcx> CFormatter<'tcx> {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         let s = match prim {
             PrimitiveType::Bool => "bool",
+
             PrimitiveType::Char => "char32_t",
             PrimitiveType::Int(IntType::I8) => "int8_t",
             PrimitiveType::Int(IntType::U8) | PrimitiveType::Byte => "uint8_t",
@@ -132,7 +130,7 @@ impl<'tcx> CFormatter<'tcx> {
         &self,
         borrow: Option<hir::Borrow>,
         prim: hir::PrimitiveType,
-    ) -> String {
+    ) -> Cow<'tcx, str> {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         let prim = match prim {
             PrimitiveType::Bool => "Bool",
@@ -155,18 +153,38 @@ impl<'tcx> CFormatter<'tcx> {
             Some(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
         };
-        if self.is_for_cpp {
-            format!("diplomat::capi::Diplomat{prim}View{mtb}")
-        } else {
-            format!("Diplomat{prim}View{mtb}")
-        }
+        self.diplomat_namespace(format!("Diplomat{prim}View{mtb}").into())
     }
 
-    pub(crate) fn fmt_diplomat_write(&self) -> &'static str {
+    pub(crate) fn fmt_write_name(&self) -> Cow<'tcx, str> {
+        self.diplomat_namespace("DiplomatWrite".into())
+    }
+
+    pub(crate) fn fmt_str_view_name(&self, encoding: StringEncoding) -> Cow<'tcx, str> {
+        self.diplomat_namespace(
+            match encoding {
+                hir::StringEncoding::UnvalidatedUtf16 => "DiplomatString16View",
+                _ => "DiplomatStringView",
+            }
+            .into(),
+        )
+    }
+
+    pub(crate) fn fmt_strs_view_name(&self, encoding: StringEncoding) -> Cow<'tcx, str> {
+        self.diplomat_namespace(
+            match encoding {
+                hir::StringEncoding::UnvalidatedUtf16 => "DiplomatStrings16View",
+                _ => "DiplomatStringsView",
+            }
+            .into(),
+        )
+    }
+
+    fn diplomat_namespace(&self, ty: Cow<'tcx, str>) -> Cow<'tcx, str> {
         if self.is_for_cpp {
-            "diplomat::capi::DiplomatWrite*"
+            format!("diplomat::{CAPI_NAMESPACE}::{ty}").into()
         } else {
-            "DiplomatWrite*"
+            ty
         }
     }
 }
