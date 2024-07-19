@@ -77,7 +77,12 @@ pub fn gen(
         "cpp" => cpp::run(&tcx),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, docs_url_gen),
-        "demo_gen" => demo_gen::run(&tcx, docs_url_gen),
+        "demo_gen" => { 
+            // TODO: Command Line Options.
+            // I.e., being able to replace this with just updating the imports:
+            gen(&entry, "js", &out_folder.join("js"), docs_url_gen, library_config, silent)?;
+            demo_gen::run(&tcx, docs_url_gen)
+        },
         "kotlin" => kotlin::run(&tcx, library_config),
         o => panic!("Unknown target: {}", o),
     };
