@@ -41,11 +41,6 @@ final class Utf16Wrap implements ffi.Finalizable {
     final result = _Utf16Wrap_borrow_cont(_ffi);
     return result._toDart(aEdges);
   }
-
-  String owned() {
-    final result = _Utf16Wrap_owned(_ffi);
-    return result._toDart([]);
-  }
 }
 
 @meta.ResourceIdentifier('Utf16Wrap_destroy')
@@ -67,8 +62,3 @@ external void _Utf16Wrap_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer
 @ffi.Native<_SliceUtf16 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_borrow_cont')
 // ignore: non_constant_identifier_names
 external _SliceUtf16 _Utf16Wrap_borrow_cont(ffi.Pointer<ffi.Opaque> self);
-
-@meta.ResourceIdentifier('Utf16Wrap_owned')
-@ffi.Native<_SliceUtf16 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_owned')
-// ignore: non_constant_identifier_names
-external _SliceUtf16 _Utf16Wrap_owned(ffi.Pointer<ffi.Opaque> self);

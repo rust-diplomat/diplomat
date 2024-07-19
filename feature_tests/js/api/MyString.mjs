@@ -115,17 +115,21 @@ export class MyString {
         }
     }
 
-    getBoxedStr() {
+    static stringTransform(foo) {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
-        const result = wasm.MyString_get_boxed_str(diplomat_receive_buffer, this.ffiValue);
+        const fooSlice = diplomatRuntime.DiplomatBuf.str8(wasm, foo);
+        
+        const write = wasm.diplomat_buffer_write_create(0);
+        wasm.MyString_string_transform(fooSlice.ptr, fooSlice.size, write);
     
         try {
     
-            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string8");
+            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
         } finally {
         
-            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            fooSlice.free();
+        
+            wasm.diplomat_buffer_write_destroy(write);
         
         }
     }

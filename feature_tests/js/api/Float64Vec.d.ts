@@ -21,8 +21,6 @@ export class Float64Vec {
 
     static newFromOwned(v: Array<number>): Float64Vec;
 
-    get asBoxedSlice(): Array<number>;
-
     get asSlice(): Array<number>;
 
     fillSlice(v: Array<number>): void;

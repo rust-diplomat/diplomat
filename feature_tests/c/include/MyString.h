@@ -27,7 +27,7 @@ void MyString_set_str(MyString* self, const char* new_str_data, size_t new_str_l
 
 void MyString_get_str(const MyString* self, DiplomatWrite* write);
 
-DiplomatStringView MyString_get_boxed_str(const MyString* self);
+void MyString_string_transform(const char* foo_data, size_t foo_len, DiplomatWrite* write);
 
 
 void MyString_destroy(MyString* self);

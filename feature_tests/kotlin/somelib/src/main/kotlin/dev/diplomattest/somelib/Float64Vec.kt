@@ -13,7 +13,6 @@ internal interface Float64VecLib: Library {
     fun Float64Vec_new_usize(v: Slice): Pointer
     fun Float64Vec_new_f64_be_bytes(v: Slice): Pointer
     fun Float64Vec_new_from_owned(v: Slice): Pointer
-    fun Float64Vec_as_boxed_slice(handle: Pointer): Slice
     fun Float64Vec_as_slice(handle: Pointer): Slice
     fun Float64Vec_fill_slice(handle: Pointer, v: Slice): Unit
     fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
@@ -122,14 +121,6 @@ class Float64Vec internal constructor (
             
             return returnOpaque
         }
-    }
-    
-    fun asBoxedSlice(): DoubleArray {
-        
-        val returnVal = lib.Float64Vec_as_boxed_slice(handle);
-        val string = PrimitiveArrayTools.getDoubleArray(returnVal)
-        Native.free(Pointer.nativeValue(returnVal.data))
-        return string
     }
     
     fun asSlice(): DoubleArray {

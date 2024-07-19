@@ -26,7 +26,7 @@ namespace capi {
     
     void MyString_get_str(const diplomat::capi::MyString* self, diplomat::capi::DiplomatWrite* write);
     
-    diplomat::capi::DiplomatStringView MyString_get_boxed_str(const diplomat::capi::MyString* self);
+    void MyString_string_transform(const char* foo_data, size_t foo_len, diplomat::capi::DiplomatWrite* write);
     
     
     void MyString_destroy(MyString* self);
@@ -70,9 +70,16 @@ inline std::string MyString::get_str() const {
   return output;
 }
 
-inline std::string_view MyString::get_boxed_str() const {
-  auto result = diplomat::capi::MyString_get_boxed_str(this->AsFFI());
-  return std::string_view(result.data, result.len);
+inline diplomat::result<std::string, diplomat::Utf8Error> MyString::string_transform(std::string_view foo) {
+  if (!diplomat::capi::diplomat_is_str(foo.data(), foo.size())) {
+    return diplomat::Err<diplomat::Utf8Error>(diplomat::Utf8Error());
+  }
+  std::string output;
+  diplomat::capi::DiplomatWrite write = diplomat::WriteFromString(output);
+  diplomat::capi::MyString_string_transform(foo.data(),
+    foo.size(),
+    &write);
+  return diplomat::Ok<std::string>(std::move(output));
 }
 
 inline const diplomat::capi::MyString* MyString::AsFFI() const {

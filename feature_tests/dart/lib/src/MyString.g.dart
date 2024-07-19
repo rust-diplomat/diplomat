@@ -64,9 +64,13 @@ final class MyString implements ffi.Finalizable {
     return write.finalize();
   }
 
-  String getBoxedStr() {
-    final result = _MyString_get_boxed_str(_ffi);
-    return result._toDart([]);
+  static String stringTransform(String foo) {
+    final temp = ffi2.Arena();
+    final fooView = foo.utf8View;
+    final write = _Write();
+    _MyString_string_transform(fooView.allocIn(temp), fooView.length, write._ffi);
+    temp.releaseAll();
+    return write.finalize();
   }
 }
 
@@ -105,7 +109,7 @@ external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Ui
 // ignore: non_constant_identifier_names
 external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
-@meta.ResourceIdentifier('MyString_get_boxed_str')
-@ffi.Native<_SliceUtf8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_boxed_str')
+@meta.ResourceIdentifier('MyString_string_transform')
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Uint8>, ffi.Size, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_string_transform')
 // ignore: non_constant_identifier_names
-external _SliceUtf8 _MyString_get_boxed_str(ffi.Pointer<ffi.Opaque> self);
+external void _MyString_string_transform(ffi.Pointer<ffi.Uint8> fooData, int fooLength, ffi.Pointer<ffi.Opaque> write);

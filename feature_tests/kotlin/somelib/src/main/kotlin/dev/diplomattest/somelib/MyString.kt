@@ -12,7 +12,7 @@ internal interface MyStringLib: Library {
     fun MyString_new_from_first(v: Slice): Pointer
     fun MyString_set_str(handle: Pointer, newStr: Slice): Unit
     fun MyString_get_str(handle: Pointer, write: Pointer): Unit
-    fun MyString_get_boxed_str(handle: Pointer): Slice
+    fun MyString_string_transform(foo: Slice, write: Pointer): Unit
 }
 
 class MyString internal constructor (
@@ -79,6 +79,15 @@ class MyString internal constructor (
             vMem.forEach {it.close()}
             return returnOpaque
         }
+        
+        fun stringTransform(foo: String): String {
+            val (fooMem, fooSlice) = PrimitiveArrayTools.readUtf8(foo)
+            val write = DW.lib.diplomat_buffer_write_create(0)
+            val returnVal = lib.MyString_string_transform(fooSlice, write);
+            
+            val returnString = DW.writeToString(write)
+            return returnString
+        }
     }
     
     fun setStr(newStr: String): Unit {
@@ -94,14 +103,6 @@ class MyString internal constructor (
         
         val returnString = DW.writeToString(write)
         return returnString
-    }
-    
-    fun getBoxedStr(): String {
-        
-        val returnVal = lib.MyString_get_boxed_str(handle);
-        val string = PrimitiveArrayTools.getUtf8(returnVal)
-        Native.free(Pointer.nativeValue(returnVal.data))
-        return string
     }
 
 }

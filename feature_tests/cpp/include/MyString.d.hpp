@@ -29,7 +29,7 @@ public:
 
   inline std::string get_str() const;
 
-  inline std::string_view get_boxed_str() const;
+  inline static diplomat::result<std::string, diplomat::Utf8Error> string_transform(std::string_view foo);
 
   inline const diplomat::capi::MyString* AsFFI() const;
   inline diplomat::capi::MyString* AsFFI();

@@ -365,6 +365,15 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             }
         };
 
+        // If the return expression is a std::move, unwrap that, because the linter doesn't like it
+        c_to_cpp_return_expression = c_to_cpp_return_expression.map(|expr| {
+            if expr.starts_with("std::move") {
+                expr["std::move(".len()..(expr.len() -1)].to_owned().into()
+            } else {
+                expr
+            }
+        });
+
         let pre_qualifiers = if method.param_self.is_none() {
             vec!["static".into()]
         } else {
@@ -724,7 +733,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     ) -> Option<Cow<'a, str>> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
-            ReturnType::Infallible(SuccessType::Write) => Some("output".into()),
+            ReturnType::Infallible(SuccessType::Write) => Some("std::move(output)".into()),
             ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => {
                 Some(self.gen_c_to_cpp_for_type(out_ty, var_name))
             }

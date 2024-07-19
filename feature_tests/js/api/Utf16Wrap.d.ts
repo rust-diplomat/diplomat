@@ -13,8 +13,6 @@ export class Utf16Wrap {
 
     borrowCont(): string;
 
-    owned(): string;
-
     
 
 }

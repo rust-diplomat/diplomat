@@ -75,11 +75,6 @@ final class Float64Vec implements ffi.Finalizable {
     return Float64Vec._fromFfi(result, []);
   }
 
-  core.List<double> get asBoxedSlice {
-    final result = _Float64Vec_as_boxed_slice(_ffi);
-    return result._toDart([]);
-  }
-
   core.List<double> get asSlice {
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [this];
@@ -163,11 +158,6 @@ external ffi.Pointer<ffi.Opaque> _Float64Vec_new_f64_be_bytes(ffi.Pointer<ffi.Ui
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Double>, ffi.Size)>(isLeaf: true, symbol: 'Float64Vec_new_from_owned')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Float64Vec_new_from_owned(ffi.Pointer<ffi.Double> vData, int vLength);
-
-@meta.ResourceIdentifier('Float64Vec_as_boxed_slice')
-@ffi.Native<_SliceDouble Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_as_boxed_slice')
-// ignore: non_constant_identifier_names
-external _SliceDouble _Float64Vec_as_boxed_slice(ffi.Pointer<ffi.Opaque> self);
 
 @meta.ResourceIdentifier('Float64Vec_as_slice')
 @ffi.Native<_SliceDouble Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Float64Vec_as_slice')
