@@ -155,5 +155,12 @@ pub(crate) fn run<'tcx>(
     files
         .add_file("index.mjs".into(), out_info.render().unwrap());
 
+    // TODO: Avoid overwriting these files if one already exists (but update if that is a file present somewhere).
+    // I'm thinking of just putting these in their own folder for that.
+    files.add_file("rendering.mjs".into(), include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into());
+    files.add_file("runtime.mjs".into(), include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into());
+    files.add_file("index.html".into(), include_str!("../../templates/demo_gen/default_renderer/index.html").into());
+
+
     (files, errors)
 }

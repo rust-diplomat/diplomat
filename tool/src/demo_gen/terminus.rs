@@ -109,7 +109,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
 
         let type_n = type_name.clone();
-        let format = self.formatter.fmt_import_statement(&type_n, false, "../".into());
+        let format = self.formatter.fmt_import_statement(&type_n, false, "./js/".into());
 
         self.terminus_info
             .imports
@@ -241,7 +241,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                             .insert(self.formatter.fmt_import_statement(
                                 &type_name.clone(),
                                 false,
-                                "../".into(),
+                                "./js/".into(),
                             ));
 
                         let mut child = MethodDependency::new(
@@ -278,7 +278,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     .insert(self.formatter.fmt_import_statement(
                         &type_name,
                         false,
-                        "../".into(),
+                        "./js/".into(),
                     ));
 
                 let mut child = MethodDependency::new("".to_string());

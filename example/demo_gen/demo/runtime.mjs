@@ -1,5 +1,5 @@
-import { RenderInfo } from "mini-icu4x/demo";
-import * as lib from "mini-icu4x";
+import * as lib from "./js/index.mjs";
+import { RenderInfo } from "./index.mjs";
 import { TerminusRender } from "./rendering.mjs";
 
 var nav = document.getElementById("termini-navigation");

@@ -152,16 +152,13 @@ npm install && npm run test
 '''
 
 
-[tasks.test-js-example-app]
+[tasks.test-demo-example]
 category = "Tests"
 dependencies = ["build-example-wasm"]
 script_runner = "@shell"
 script = '''
-cd example/js
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
-cp -r ../demo_gen/demo/ lib/api/demo
-cd app
-npm install && npm run build
+cd example/demo_gen
+cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm demo/diplomat_example.wasm
 '''
 
 [tasks.test-dart-example]
