@@ -23,7 +23,6 @@ use serde::{Deserialize, Serialize};
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
-    a.renaming = true;
     a.namespacing = false; // TODO
     a.memory_sharing = false;
     a.non_exhaustive_structs = true;
