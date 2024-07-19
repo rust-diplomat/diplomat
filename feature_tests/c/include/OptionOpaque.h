@@ -18,10 +18,10 @@
 
 OptionOpaque* OptionOpaque_new(int32_t i);
 
-OptionOpaque* OptionOpaque_new_none();
+OptionOpaque* OptionOpaque_new_none(void);
 
 typedef struct OptionOpaque_returns_result {union {OptionStruct ok; }; bool is_ok;} OptionOpaque_returns_result;
-OptionOpaque_returns_result OptionOpaque_returns();
+OptionOpaque_returns_result OptionOpaque_returns(void);
 
 typedef struct OptionOpaque_option_isize_result {union {intptr_t ok; }; bool is_ok;} OptionOpaque_option_isize_result;
 OptionOpaque_option_isize_result OptionOpaque_option_isize(const OptionOpaque* self);
@@ -35,9 +35,9 @@ OptionOpaque_option_i32_result OptionOpaque_option_i32(const OptionOpaque* self)
 typedef struct OptionOpaque_option_u32_result {union {uint32_t ok; }; bool is_ok;} OptionOpaque_option_u32_result;
 OptionOpaque_option_u32_result OptionOpaque_option_u32(const OptionOpaque* self);
 
-OptionStruct OptionOpaque_new_struct();
+OptionStruct OptionOpaque_new_struct(void);
 
-OptionStruct OptionOpaque_new_struct_nones();
+OptionStruct OptionOpaque_new_struct_nones(void);
 
 void OptionOpaque_assert_integer(const OptionOpaque* self, int32_t i);
 

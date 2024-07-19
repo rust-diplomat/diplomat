@@ -44,7 +44,7 @@ inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowe
     utf8_str_y.size(),
     utf8_str_z.data(),
     utf8_str_z.size());
-  return diplomat::Ok<NestedBorrowedFields>(std::move(NestedBorrowedFields::FromFFI(result)));
+  return diplomat::Ok<NestedBorrowedFields>(NestedBorrowedFields::FromFFI(result));
 }
 
 

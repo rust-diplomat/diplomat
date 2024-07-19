@@ -16,7 +16,7 @@
 
 
 
-CyclicStructA CyclicStructB_get_a();
+CyclicStructA CyclicStructB_get_a(void);
 
 
 

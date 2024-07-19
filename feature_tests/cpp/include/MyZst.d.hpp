@@ -12,8 +12,7 @@
 
 namespace diplomat {
 namespace capi {
-    struct MyZst {
-    };
+    
 } // namespace capi
 } // namespace
 

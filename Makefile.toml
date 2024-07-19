@@ -1,8 +1,6 @@
 [config]
 default_to_workspace = false
 
-
-
 # If adding a new backend, be sure to update:
 # - test-native (if necessary)
 # - test-example
@@ -21,6 +19,7 @@ dependencies = [
     "test-cpp",
     "test-c",
 ]
+
 [tasks.gen]
 category = "Code generation"
 dependencies = [
@@ -47,8 +46,6 @@ dependencies = [
 category = "Tests"
 dependencies = [
     "test-c-example",
-    "test-c-example-self-contained",
-    "test-c-feature-self-contained",
 ]
 
 [tasks.test-js]
@@ -63,12 +60,14 @@ dependencies = [
     "test-dart-example",
     "test-dart-feature",
 ]
+
 [tasks.test-kotlin]
 category = "Tests"
 dependencies = [
     "test-kotlin-example",
     "test-kotlin-feature",
 ]
+
 [tasks.test-example]
 category = "Tests"
 dependencies = [
@@ -87,8 +86,6 @@ dependencies = [
     "test-kotlin-feature",
 ]
 
-
-
 [tasks.test-cpp-example]
 category = "Tests"
 dependencies = ["build-example"]
@@ -99,8 +96,6 @@ cd example/cpp
 rm tests/*.out
 exec --fail-on-error make
 '''
-
-
 
 [tasks.test-cpp-feature]
 category = "Tests"
@@ -113,8 +108,6 @@ rm tests/*.out
 exec --fail-on-error make
 '''
 
-
-
 [tasks.test-c-example]
 category = "Tests"
 dependencies = ["build-example"]
@@ -125,8 +118,6 @@ cd example/c
 rm *.out
 exec --fail-on-error make
 '''
-
-
 
 [tasks.test-js-feature]
 category = "Tests"
@@ -182,33 +173,68 @@ cd feature_tests/kotlin/somelib
 exec --fail-on-error gradle test --warning-mode all 
 '''
 
-[tasks.test-c-example-self-contained]
+[tasks.check-c-example]
 category = "Tests"
-dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
+cc = get_env CC
+if is_empty ${cc}
+    cc = set "gcc"
+end
+c_std = get_env C_STD
+if is_empty ${c_std}
+    c_std = set "c11"
+end
+
 cd example/c/include
 files_list = glob_array "./*.h"
+success = set true
 for file in ${files_list}
-    exec --fail-on-error gcc ${file}
+    echo "Checking ${file}"
+    output = exec --get-exit-code ${cc} -std=${c_std} -pedantic-errors -Wall ${file}
+    success = set ${success} and ${output} == 0
+end
+if not ${success}
+  exit 1
 end
 '''
 
-[tasks.test-c-feature-self-contained]
+[tasks.check-c-feature]
 category = "Tests"
-dependencies = ["build-example"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
+cc = get_env CC
+if is_empty ${cc}
+    cc = set "gcc"
+end
+c_std = get_env C_STD
+if is_empty ${c_std}
+    c_std = set "c11"
+end
+
 cd feature_tests/c/include
 files_list = glob_array "./*.h"
+success = set true
 for file in ${files_list}
-    exec --fail-on-error gcc ${file}
+    echo "Checking ${file}"
+    output = exec --get-exit-code ${cc} -std=${c_std} -pedantic-errors -Wall ${file}
+    success = set ${success} and ${output} == 0
+end
+if not ${success}
+  exit 1
 end
 '''
 
-[tasks.test-cpp-example-self-contained]
+[tasks.check-c]
+category = "Tests"
+dependencies = [
+    "check-c-feature",
+    "check-c-example",
+]
+
+[tasks.check-cpp-example]
 category = "Tests"
 script_runner = "@duckscript"
 script = '''
@@ -224,13 +250,18 @@ end
 
 cd example/cpp/include
 files_list = glob_array "./*.hpp"
+success = set true
 for file in ${files_list}
-    echo "Testing self-containedness of ${file}"
-    exec --fail-on-error ${cxx}  -std=${cxx_std} ${file}
+    echo "Checking ${file}"
+    output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall ${file}
+    success = set ${success} and ${output} == 0
+end
+if not ${success}
+  exit 1
 end
 '''
 
-[tasks.test-cpp-feature-self-contained]
+[tasks.check-cpp-feature]
 category = "Tests"
 script_runner = "@duckscript"
 script = '''
@@ -246,18 +277,22 @@ end
 
 cd feature_tests/cpp/include
 files_list = glob_array "./*.hpp"
+success = set true
 for file in ${files_list}
-    echo "Testing self-containedness of ${file}"
-    exec --fail-on-error ${cxx}  -std=${cxx_std} ${file}
-
+    echo "Checking ${file}"
+    output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall ${file}
+    success = set ${success} and ${output} == 0
+end
+if not ${success}
+  exit 1
 end
 '''
 
-[tasks.test-cpp-self-contained]
+[tasks.check-cpp]
 category = "Tests"
 dependencies = [
-    "test-cpp-feature-self-contained",
-    "test-cpp-example-self-contained",
+    "check-cpp-feature",
+    "check-cpp-example",
 ]
 
 

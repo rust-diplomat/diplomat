@@ -17,7 +17,7 @@ namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::CyclicStructB CyclicStructA_get_b();
+    diplomat::capi::CyclicStructB CyclicStructA_get_b(void);
     
     
     } // extern "C"
