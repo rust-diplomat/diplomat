@@ -14,144 +14,167 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
     - name: Check rustfmt
       run: cargo fmt --all -- --check
+
     - name: Check clippy
       run: cargo clippy --all-targets --all-features -- -D warnings
+
   build-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
     - name: Build
       run: cargo build --verbose
+
     - name: Run tests
       run: cargo test --verbose
+
   gen:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    # Cargo-make boilerplate
-    - name: Get cargo-make version
-      id: cargo-make-version
-      run: |
-        echo "::set-output name=hash::0.36.13"
-      shell: bash
-    - name: Attempt to load cached cargo-make
-      uses: actions/cache@v2
-      id: cargo-make-cache
-      with:
-        path: |
-          ~/.cargo/bin/cargo-make
-          ~/.cargo/bin/cargo-make.exe
-        key: ${{ runner.os }}-make-${{ steps.cargo-make-version.outputs.hash }}
-    - name: Install cargo-make
-      if: steps.cargo-make-cache.outputs.cache-hit != 'true'
-      uses: actions-rs/install@v0.1.2
-      with:
-        crate: cargo-make
-        version: 0.36.13
 
+    - name: Install cargo-make
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-make@0.36.13 # https://github.com/rust-diplomat/diplomat/issues/440
+        
     - name: Run regeneration
       run: cargo make gen
     - name: Test code is fresh
       run: git add . && git diff --cached --exit-code
-  test-native:
+
+
+  test-c:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    # Cargo-make boilerplate
-    - name: Get cargo-make version
-      id: cargo-make-version
-      run: |
-        echo "::set-output name=hash::$(cargo search cargo-make | grep '^cargo-make =' | md5sum)"
-      shell: bash
-    - name: Attempt to load cached cargo-make
-      uses: actions/cache@v2
-      id: cargo-make-cache
-      with:
-        path: |
-          ~/.cargo/bin/cargo-make
-          ~/.cargo/bin/cargo-make.exe
-        key: ${{ runner.os }}-make-${{ steps.cargo-make-version.outputs.hash }}
+
     - name: Install cargo-make
-      if: steps.cargo-make-cache.outputs.cache-hit != 'true'
-      uses: actions-rs/install@v0.1.2
-      with:
-        crate: cargo-make
-        version: latest
+      uses: taiki-e/install-action@cargo-make
 
-    - name: Native tests
-      run: cargo make test-native
+    - name: Test C
+      run: cargo make test-c
 
-    - name: Clang tests for cpp backend
+  check-c:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+
+    - name: clang, c11
+      run: cargo make check-c
+      env: 
+        CC: clang
+        C_STD: c11
+      
+    - name: gcc, c11
+      run: cargo make check-c
+      env: 
+        CC: gcc
+        C_STD: c11
+
+    - name: gcc, c2x
+      run: cargo make check-c
+      env: 
+        CC: gcc
+        C_STD: c2x
+
+  test-cpp:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+
+    - name: clang
       run: CXX=clang++-14 cargo make test-cpp
 
-    - name: GCC tests for cpp backend
-      run: CXX=g++ cargo make test-cpp2
-  test-wasm:
-    runs-on: ubuntu-latest
+    - name: gcc
+      run: CXX=g++ cargo make test-cpp
+
+  check-cpp:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
     steps:
     - uses: actions/checkout@v2
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+
+    - name: clang, c++17
+      run: cargo make check-cpp
+      env:
+        CXX: clang
+        CXX_STD: c++17
+
+    - name: clang, c++20
+      run: cargo make check-cpp
+      env:
+        CXX: clang
+        CXX_STD: c++20
+
+    - name: gcc, c++23
+      if: ${{ matrix.os != 'macos-latest' }} 
+      run: cargo make check-cpp
+      env:
+        CXX: gcc
+        CXX_STD: c++23
+
+  test-js: 
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        node-version: [
+          18.20.3, # supported until 2025-04-30
+          20.14.0, # supported until 2026-04-30
+          22.3.0, # current, supported until 2027-04-30
+        ]
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+
     - name: Load Rust toolchain for WASM.
       run: rustup target add wasm32-unknown-unknown
-    - name: Install Node.js v14.17.0
+
+    - name: Install Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: 14.17.0
+        node-version: ${{ matrix.node-version }}
 
-    # Cargo-make boilerplate
-    - name: Get cargo-make version
-      id: cargo-make-version
-      run: |
-        echo "::set-output name=hash::$(cargo search cargo-make | grep '^cargo-make =' | md5sum)"
-      shell: bash
-    - name: Attempt to load cached cargo-make
-      uses: actions/cache@v2
-      id: cargo-make-cache
-      with:
-        path: |
-          ~/.cargo/bin/cargo-make
-          ~/.cargo/bin/cargo-make.exe
-        key: ${{ runner.os }}-make-${{ steps.cargo-make-version.outputs.hash }}
-    - name: Install cargo-make
-      if: steps.cargo-make-cache.outputs.cache-hit != 'true'
-      uses: actions-rs/install@v0.1.2
-      with:
-        crate: cargo-make
-        version: latest
-
-    - name: Run wasm tests
-      run: cargo make test-wasm
-
+    - name: Test JS
+      run: cargo make test-js
+      
   test-dart:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+
     - name: Install Dart
       uses: dart-lang/setup-dart@v1
       with:
         sdk: 3.4.0-204.0.dev
 
-    # Cargo-make boilerplate
-    - name: Get cargo-make version
-      id: cargo-make-version
-      run: |
-        echo "::set-output name=hash::$(cargo search cargo-make | grep '^cargo-make =' | md5sum)"
-      shell: bash
-    - name: Attempt to load cached cargo-make
-      uses: actions/cache@v2
-      id: cargo-make-cache
-      with:
-        path: |
-          ~/.cargo/bin/cargo-make
-          ~/.cargo/bin/cargo-make.exe
-        key: ${{ runner.os }}-make-${{ steps.cargo-make-version.outputs.hash }}
-    - name: Install cargo-make
-      if: steps.cargo-make-cache.outputs.cache-hit != 'true'
-      uses: actions-rs/install@v0.1.2
-      with:
-        crate: cargo-make
-        version: latest
-
-    - name: Run Dart tests
+    - name: Test Dart
       run: cargo make test-dart

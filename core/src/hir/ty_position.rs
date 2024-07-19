@@ -1,7 +1,7 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
-    Borrow, LinkedLifetimes, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructId,
-    StructPath, TypeContext, TypeId,
+    Borrow, LinkedLifetimes, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructDef,
+    StructId, StructPath, TypeContext, TypeDef, TypeId,
 };
 use core::fmt::Debug;
 
@@ -87,7 +87,10 @@ use core::fmt::Debug;
 /// Therefore, this trait allows be extremely precise about making invalid states
 /// unrepresentable, while also reducing duplicated code.
 ///
-pub trait TyPosition: Debug + Copy {
+pub trait TyPosition: Debug + Copy
+where
+    for<'tcx> TypeDef<'tcx>: From<&'tcx StructDef<Self>>,
+{
     const IS_OUT_ONLY: bool;
 
     /// Type representing how we can point to opaques, which must always be behind a pointer.
@@ -102,6 +105,8 @@ pub trait TyPosition: Debug + Copy {
     type StructId: Debug;
 
     type StructPath: Debug + StructPathLike;
+
+    fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx>;
 }
 
 /// One of two types implementing [`TyPosition`], representing types that can be
@@ -125,6 +130,10 @@ impl TyPosition for Everywhere {
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
+
+    fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
+        TypeDef::Struct(def)
+    }
 }
 
 impl TyPosition for OutputOnly {
@@ -132,6 +141,10 @@ impl TyPosition for OutputOnly {
     type OpaqueOwnership = MaybeOwn;
     type StructId = OutStructId;
     type StructPath = ReturnableStructPath;
+
+    fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
+        TypeDef::OutStruct(def)
+    }
 }
 
 pub trait StructPathLike {

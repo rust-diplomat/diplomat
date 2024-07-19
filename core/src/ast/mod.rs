@@ -34,4 +34,4 @@ mod idents;
 pub use idents::Ident;
 
 mod docs;
-pub use docs::{DocType, Docs, DocsUrlGenerator, MarkdownStyle, RustLink, RustLinkDisplay};
+pub use docs::{DocType, Docs, DocsUrlGenerator, RustLink, RustLinkDisplay};

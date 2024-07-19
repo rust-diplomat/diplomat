@@ -1,4 +1,3 @@
-use crate::c2::CFormatter;
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
@@ -11,7 +10,6 @@ use std::{borrow::Cow, iter::once};
 /// This type mediates all formatting
 pub(super) struct KotlinFormatter<'tcx> {
     tcx: &'tcx TypeContext,
-    c: CFormatter<'tcx>,
     strip_prefix: Option<String>,
 }
 
@@ -22,11 +20,7 @@ const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> KotlinFormatter<'tcx> {
     pub fn new(tcx: &'tcx TypeContext, strip_prefix: Option<String>) -> Self {
-        Self {
-            tcx,
-            c: CFormatter::new(tcx),
-            strip_prefix,
-        }
+        Self { tcx, strip_prefix }
     }
 
     pub fn fmt_void(&self) -> &'static str {
@@ -56,10 +50,6 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
     pub fn fmt_str_slices(&self) -> &'static str {
         "Array<String>"
-    }
-
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
     }
 
     pub fn fmt_primitive_as_ffi(&self, prim: PrimitiveType) -> &'static str {
@@ -337,7 +327,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     }
 
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.c.tcx().resolve_type(id);
+        let resolved = self.tcx.resolve_type(id);
 
         let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
             resolved
@@ -364,28 +354,19 @@ impl<'tcx> KotlinFormatter<'tcx> {
 
 #[cfg(test)]
 pub mod test {
+    use super::*;
+
+    use proc_macro2::TokenStream;
+    use quote::quote;
     use std::borrow::Cow;
 
-    use super::KotlinFormatter;
-    use diplomat_core::{
-        ast::{self},
-        hir::{self, TypeContext},
-    };
-    use proc_macro2::TokenStream;
-
-    use quote::quote;
-
     pub fn new_tcx(tk_stream: TokenStream) -> TypeContext {
-        let item = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
+        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse item ");
 
-        let diplomat_file = ast::File::from(&item);
-
-        let env = diplomat_file.all_types();
         let mut attr_validator = hir::BasicAttributeValidator::new("kotlin_test");
-        attr_validator.support.renaming = true;
-        attr_validator.support.disabling = true;
+        attr_validator.support = super::super::attr_support();
 
-        match hir::TypeContext::from_ast(&env, attr_validator) {
+        match TypeContext::from_syn(&file, attr_validator) {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {

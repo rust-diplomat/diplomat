@@ -1,0 +1,5 @@
+{% if is_for_cpp -%}
+struct {{ ty_name }};
+{% else -%}
+typedef struct {{ ty_name }} {{ ty_name }};
+{% endif %}

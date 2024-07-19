@@ -116,8 +116,6 @@ impl Attrs {
         // No special inheritance, was already appropriately inherited in AST
         this.abi_rename = ast.abi_rename.clone();
 
-        let support = validator.attrs_supported();
-        let backend = validator.primary_name();
         for attr in &ast.attrs {
             let satisfies = match validator.satisfies_cfg(&attr.cfg) {
                 Ok(satisfies) => satisfies,
@@ -135,10 +133,6 @@ impl Attrs {
                                 errors.push(LoweringError::Other(
                                     "Duplicate `disable` attribute".into(),
                                 ));
-                            } else if !support.disabling {
-                                errors.push(LoweringError::Other(format!(
-                                    "`disable` not supported in backend {backend}"
-                                )))
                             } else {
                                 this.disable = true;
                             }
@@ -160,12 +154,6 @@ impl Attrs {
                             ))),
                         }
                     } else if path == "namespace" {
-                        if !support.namespacing {
-                            errors.push(LoweringError::Other(format!(
-                                "`namespace` not supported in backend {backend}"
-                            )));
-                            continue;
-                        }
                         match StandardAttribute::from_meta(&attr.meta) {
                             Ok(StandardAttribute::String(s)) if s.is_empty() => {
                                 this.namespace = None
@@ -192,46 +180,16 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "constructor" {
-                            if !support.constructors {
-                                errors.push(LoweringError::Other(format!(
-                                    "constructor not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Constructor
                         } else if path == "stringifier" {
-                            if !support.stringifiers {
-                                errors.push(LoweringError::Other(format!(
-                                    "stringifier not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Stringifier
                         } else if path == "iterable" {
-                            if !support.iterables {
-                                errors.push(LoweringError::Other(format!(
-                                    "iterable not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Iterable
                         } else if path == "iterator" {
-                            if !support.iterators {
-                                errors.push(LoweringError::Other(format!(
-                                    "iterator not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Iterator
                         } else if path == "indexer" {
-                            if !support.indexing {
-                                errors.push(LoweringError::Other(format!(
-                                    "indexing not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Indexer
                         } else {
-                            if !support.comparators {
-                                errors.push(LoweringError::Other(format!(
-                                    "comparison overload not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Comparison
                         };
 
@@ -244,25 +202,10 @@ impl Attrs {
                             continue;
                         }
                         let kind = if path == "named_constructor" {
-                            if !support.named_constructors {
-                                errors.push(LoweringError::Other(format!(
-                                    "named constructors not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::NamedConstructor
                         } else if path == "getter" {
-                            if !support.accessors {
-                                errors.push(LoweringError::Other(format!(
-                                    "accessors not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Getter
                         } else {
-                            if !support.accessors {
-                                errors.push(LoweringError::Other(format!(
-                                    "accessors not supported in backend {backend}"
-                                )))
-                            }
                             SpecialMethod::Setter
                         };
                         match StandardAttribute::from_meta(&attr.meta) {
@@ -596,42 +539,60 @@ impl Attrs {
     }
 }
 
+/// Non-exhaustive list of what attributes your backend is able to handle, based on #[diplomat::attr(...)] contents.
+/// Set this through an [`AttributeValidator`].
+///
+/// See [`SpecialMethod`] and [`Attrs`] for your specific implementation needs.
+///
+/// For example, the current dart backend supports [`BackendAttrSupport::constructors`]. So when it encounters:
+/// ```ignore
+/// struct Sample {}
+/// impl Sample {
+///     #[diplomat::attr(*, constructor)]
+///     pub fn new() -> Box<Self> {
+///         Box::new(Sample{})
+///     }
+/// }
+///
+/// ```
+///
+/// It generates
+/// ```dart
+/// factory Sample()
+/// ```
+///
+/// If a backend does not support a specific `#[diplomat::attr(...)]`, it will error.
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 pub struct BackendAttrSupport {
-    pub disabling: bool,
-    pub renaming: bool,
-    pub namespacing: bool,
-    pub constructors: bool,
-    pub named_constructors: bool,
-    pub fallible_constructors: bool,
-    pub accessors: bool,
-    pub stringifiers: bool,
-    pub comparators: bool,
+    /// Rust can directly acccess the memory of this language, like C and C++.
+    /// This is not supported in any garbage-collected language.
     pub memory_sharing: bool,
-    pub iterators: bool,
-    pub iterables: bool,
-    pub indexing: bool,
-    // more to be added: namespace, etc
+    /// This language's structs are non-exhaustive by default, i.e. adding
+    /// fields is not a breaking change.
+    pub non_exhaustive_structs: bool,
+    /// Whether the language supports method overloading
+    pub method_overloading: bool,
+    /// Whether the language uses UTF-8 strings
+    pub utf8_strings: bool,
+    /// Whether the language uses UTF-16 strings
+    pub utf16_strings: bool,
+    /// Marking constructors as being able to return errors. This is possible in languages where
+    /// errors are thrown as exceptions (Dart), but not for example in C++, where errors are
+    /// returned as values (constructors usually have to return the type itself).
+    pub fallible_constructors: bool,
 }
 
 impl BackendAttrSupport {
     #[cfg(test)]
     fn all_true() -> Self {
         Self {
-            disabling: true,
-            renaming: true,
-            namespacing: true,
-            constructors: true,
-            named_constructors: true,
-            fallible_constructors: true,
-            accessors: true,
-            stringifiers: true,
-            comparators: true,
             memory_sharing: true,
-            iterators: true,
-            iterables: true,
-            indexing: true,
+            non_exhaustive_structs: true,
+            method_overloading: true,
+            utf8_strings: true,
+            utf16_strings: true,
+            fallible_constructors: true,
         }
     }
 }
@@ -727,34 +688,20 @@ impl AttributeValidator for BasicAttributeValidator {
         Ok(if name == "supports" {
             // destructure so new fields are forced to be added
             let BackendAttrSupport {
-                disabling,
-                renaming,
-                namespacing,
-                constructors,
-                named_constructors,
-                fallible_constructors,
-                accessors,
-                stringifiers,
-                comparators,
                 memory_sharing,
-                iterators,
-                iterables,
-                indexing,
+                non_exhaustive_structs,
+                method_overloading,
+                utf8_strings,
+                utf16_strings,
+                fallible_constructors,
             } = self.support;
             match value {
-                "disabling" => disabling,
-                "renaming" => renaming,
-                "namespacing" => namespacing,
-                "constructors" => constructors,
-                "named_constructors" => named_constructors,
-                "fallible_constructors" => fallible_constructors,
-                "accessors" => accessors,
-                "stringifiers" => stringifiers,
-                "comparators" => comparators,
                 "memory_sharing" => memory_sharing,
-                "iterators" => iterators,
-                "iterables" => iterables,
-                "indexing" => indexing,
+                "non_exhaustive_structs" => non_exhaustive_structs,
+                "method_overloading" => method_overloading,
+                "utf8_strings" => utf8_strings,
+                "utf16_strings" => utf16_strings,
+                "fallible_constructors" => fallible_constructors,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"
@@ -780,15 +727,12 @@ mod tests {
     macro_rules! uitest_lowering_attr {
         ($($file:tt)*) => {
             let parsed: syn::File = syn::parse_quote! { $($file)* };
-            let custom_types = crate::ast::File::from(&parsed);
-            let env = custom_types.all_types();
 
             let mut output = String::new();
 
-
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support = hir::BackendAttrSupport::all_true();
-            match hir::TypeContext::from_ast(&env, attr_validator) {
+            match hir::TypeContext::from_syn(&parsed, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
                     for (ctx, err) in e {

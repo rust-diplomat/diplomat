@@ -12,6 +12,7 @@ use crate::hir;
 use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ops::Index;
 
@@ -143,12 +144,19 @@ impl TypeContext {
         self.enums.index(id.0)
     }
 
+    /// Resolve and format a named type for use in diagnostics
+    /// (don't apply rename rules and such)
+    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<str> {
+        self.resolve_type(id).name().as_str().into()
+    }
+
     /// Lower the AST to the HIR while simultaneously performing validation.
-    pub fn from_ast<'ast>(
-        env: &'ast Env,
+    pub fn from_syn<'ast>(
+        s: &'ast syn::File,
         attr_validator: impl AttributeValidator + 'static,
     ) -> Result<Self, Vec<ErrorAndContext>> {
-        let (mut ctx, hir) = Self::from_ast_without_validation(env, attr_validator)?;
+        let types = ast::File::from(s).all_types();
+        let (mut ctx, hir) = Self::from_ast_without_validation(&types, attr_validator)?;
         ctx.errors.set_item("(validation)");
         hir.validate(&mut ctx.errors);
         if !ctx.errors.is_empty() {
@@ -487,14 +495,11 @@ mod tests {
     macro_rules! uitest_lowering {
         ($($file:tt)*) => {
             let parsed: syn::File = syn::parse_quote! { $($file)* };
-            let custom_types = crate::ast::File::from(&parsed);
-            let env = custom_types.all_types();
 
             let mut output = String::new();
 
-
             let attr_validator = hir::BasicAttributeValidator::new("tests");
-            match hir::TypeContext::from_ast(&env, attr_validator) {
+            match hir::TypeContext::from_syn(&parsed, attr_validator) {
                 Ok(_context) => (),
                 Err(e) => {
                     for (ctx, err) in e {
@@ -615,7 +620,7 @@ mod tests {
                 struct NonOpaqueStruct {}
 
                 impl NonOpaqueStruct {
-                    fn new(x: i32) -> NonOpaqueStruct {
+                    pub fn new(x: i32) -> NonOpaqueStruct {
                         unimplemented!();
                     }
                 }
@@ -662,9 +667,11 @@ mod tests {
         uitest_lowering! {
             #[diplomat::bridge]
             mod ffi {
-                struct OpaqueStruct;
+                struct NonOpaque;
 
-                enum OpaqueEnum {}
+                impl NonOpaque {
+                    pub fn foo(self) {}
+                }
             }
         };
     }

@@ -29,11 +29,11 @@ syn = { version = "2", features = [ "full", "extra-traits" ] }
 quote = "1.0"
 proc-macro2 = "1.0.27"
 lazy_static = "1.4.0"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive", "alloc"], default-features = false }
 displaydoc = { version = "0.2", optional = true }
 smallvec = "1.9.0"
 strck_ident = { version = "0.1", features = ["rust"] }
-either = {version = "1.9.0", optional = true, default_features = false}
+either = {version = "1.9.0", optional = true, default-features = false}
 
 [dev-dependencies]
-insta = "1.7.1"
+insta = { version = "1.7.1", features = ["yaml"] }

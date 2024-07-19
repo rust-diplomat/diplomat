@@ -1,8 +1,6 @@
 //! This module contains functions for formatting types
 
-use crate::c2::CFormatter;
-use diplomat_core::ast::{DocsUrlGenerator, MarkdownStyle};
-use diplomat_core::hir::{self, TypeContext, TypeId};
+use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext, TypeId};
 use heck::ToLowerCamelCase;
 use std::borrow::Cow;
 
@@ -16,9 +14,8 @@ use std::borrow::Cow;
 /// This type may be used by other backends attempting to figure out the names
 /// of C types and methods.
 pub(super) struct DartFormatter<'tcx> {
-    c: CFormatter<'tcx>,
-    docs_url_generator: &'tcx DocsUrlGenerator,
-    strip_prefix: Option<String>,
+    tcx: &'tcx TypeContext,
+    docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
 const INVALID_METHOD_NAMES: &[&str] = &["new", "static", "default"];
@@ -26,16 +23,8 @@ const INVALID_FIELD_NAMES: &[&str] = &["new", "static", "default"];
 const DISALLOWED_CORE_TYPES: &[&str] = &["Object", "String"];
 
 impl<'tcx> DartFormatter<'tcx> {
-    pub fn new(
-        tcx: &'tcx TypeContext,
-        docs_url_generator: &'tcx DocsUrlGenerator,
-        strip_prefix: Option<String>,
-    ) -> Self {
-        Self {
-            c: CFormatter::new(tcx),
-            docs_url_generator,
-            strip_prefix,
-        }
+    pub fn new(tcx: &'tcx TypeContext, docs_url_gen: &'tcx DocsUrlGenerator) -> Self {
+        Self { tcx, docs_url_gen }
     }
 
     pub fn fmt_lifetime_edge_array(
@@ -54,7 +43,7 @@ impl<'tcx> DartFormatter<'tcx> {
         format!(
             "import '{path}'{}{};",
             if as_show_hide.is_some() { " " } else { "" },
-            if let Some(s) = as_show_hide { s } else { "" },
+            as_show_hide.unwrap_or_default(),
         )
         .into()
     }
@@ -68,46 +57,23 @@ impl<'tcx> DartFormatter<'tcx> {
     }
 
     pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
-        docs.to_markdown(self.docs_url_generator, MarkdownStyle::Normal)
+        docs.to_markdown(self.docs_url_gen)
             .trim()
             .replace('\n', "\n/// ")
             .replace(" \n", "\n")
-            .replace(
-                &format!("`{}", self.strip_prefix.as_deref().unwrap_or("")),
-                "`",
-            )
-    }
-
-    pub fn fmt_destructor_name(&self, id: TypeId) -> String {
-        self.c.fmt_dtor_name(id)
     }
 
     /// Resolve and format a named type for use in code
     pub fn fmt_type_name(&self, id: TypeId) -> Cow<'tcx, str> {
-        let resolved = self.c.tcx().resolve_type(id);
+        let resolved = self.tcx.resolve_type(id);
 
-        let candidate: Cow<str> = if let Some(strip_prefix) = self.strip_prefix.as_ref() {
-            resolved
-                .name()
-                .as_str()
-                .strip_prefix(strip_prefix)
-                .unwrap_or(resolved.name().as_str())
-                .into()
-        } else {
-            resolved.name().as_str().into()
-        };
+        let candidate = resolved.name().as_str();
 
-        if DISALLOWED_CORE_TYPES.contains(&&*candidate) {
+        if DISALLOWED_CORE_TYPES.contains(&candidate) {
             panic!("{candidate:?} is not a valid Dart type name. Please rename.");
         }
 
-        resolved.attrs().rename.apply(candidate)
-    }
-
-    /// Resolve and format a named type for use in diagnostics
-    /// (don't apply rename rules and such)
-    pub fn fmt_type_name_diagnostics(&self, id: TypeId) -> Cow<'tcx, str> {
-        self.c.fmt_type_name_diagnostics(id)
+        resolved.attrs().rename.apply(candidate.into())
     }
 
     /// Format an enum variant.
@@ -167,10 +133,6 @@ impl<'tcx> DartFormatter<'tcx> {
         } else {
             name
         }
-    }
-
-    pub fn fmt_c_method_name<'a>(&self, ty: TypeId, method: &'a hir::Method) -> Cow<'a, str> {
-        self.c.fmt_method_name(ty, method).into()
     }
 
     pub fn fmt_string(&self) -> &'static str {

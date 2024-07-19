@@ -1,51 +1,53 @@
 #ifndef ResultOpaque_H
 #define ResultOpaque_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
-#ifdef __cplusplus
-namespace capi {
-#endif
+#include "ErrorEnum.d.h"
+#include "ErrorStruct.d.h"
 
-typedef struct ResultOpaque ResultOpaque;
-#ifdef __cplusplus
-} // namespace capi
-#endif
-#include "diplomat_result_box_ResultOpaque_ErrorEnum.h"
-#include "diplomat_result_box_ResultOpaque_void.h"
-#include "diplomat_result_box_ResultOpaque_ErrorStruct.h"
-#include "diplomat_result_void_box_ResultOpaque.h"
-#include "diplomat_result_int32_t_void.h"
-#include "diplomat_result_ErrorEnum_box_ResultOpaque.h"
-#ifdef __cplusplus
-namespace capi {
-extern "C" {
-#endif
+#include "ResultOpaque.d.h"
 
-diplomat_result_box_ResultOpaque_ErrorEnum ResultOpaque_new(int32_t i);
 
-diplomat_result_box_ResultOpaque_ErrorEnum ResultOpaque_new_failing_foo();
 
-diplomat_result_box_ResultOpaque_ErrorEnum ResultOpaque_new_failing_bar();
 
-diplomat_result_box_ResultOpaque_void ResultOpaque_new_failing_unit();
 
-diplomat_result_box_ResultOpaque_ErrorStruct ResultOpaque_new_failing_struct(int32_t i);
 
-diplomat_result_void_box_ResultOpaque ResultOpaque_new_in_err(int32_t i);
+typedef struct ResultOpaque_new_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_result;
+ResultOpaque_new_result ResultOpaque_new(int32_t i);
 
-diplomat_result_int32_t_void ResultOpaque_new_int(int32_t i);
+typedef struct ResultOpaque_new_failing_foo_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_failing_foo_result;
+ResultOpaque_new_failing_foo_result ResultOpaque_new_failing_foo(void);
 
-diplomat_result_ErrorEnum_box_ResultOpaque ResultOpaque_new_in_enum_err(int32_t i);
+typedef struct ResultOpaque_new_failing_bar_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_failing_bar_result;
+ResultOpaque_new_failing_bar_result ResultOpaque_new_failing_bar(void);
+
+typedef struct ResultOpaque_new_failing_unit_result {union {ResultOpaque* ok; }; bool is_ok;} ResultOpaque_new_failing_unit_result;
+ResultOpaque_new_failing_unit_result ResultOpaque_new_failing_unit(void);
+
+typedef struct ResultOpaque_new_failing_struct_result {union {ResultOpaque* ok; ErrorStruct err;}; bool is_ok;} ResultOpaque_new_failing_struct_result;
+ResultOpaque_new_failing_struct_result ResultOpaque_new_failing_struct(int32_t i);
+
+typedef struct ResultOpaque_new_in_err_result {union { ResultOpaque* err;}; bool is_ok;} ResultOpaque_new_in_err_result;
+ResultOpaque_new_in_err_result ResultOpaque_new_in_err(int32_t i);
+
+typedef struct ResultOpaque_new_int_result {union {int32_t ok; }; bool is_ok;} ResultOpaque_new_int_result;
+ResultOpaque_new_int_result ResultOpaque_new_int(int32_t i);
+
+typedef struct ResultOpaque_new_in_enum_err_result {union {ErrorEnum ok; ResultOpaque* err;}; bool is_ok;} ResultOpaque_new_in_enum_err_result;
+ResultOpaque_new_in_enum_err_result ResultOpaque_new_in_enum_err(int32_t i);
 
 void ResultOpaque_assert_integer(const ResultOpaque* self, int32_t i);
+
+
 void ResultOpaque_destroy(ResultOpaque* self);
 
-#ifdef __cplusplus
-} // extern "C"
-} // namespace capi
-#endif
-#endif
+
+
+
+
+#endif // ResultOpaque_H

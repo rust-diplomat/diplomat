@@ -64,6 +64,8 @@ pub struct OpaqueStruct {
     pub methods: Vec<Method>,
     pub mutability: Mutability,
     pub attrs: Attrs,
+    /// The ABI name of the generated destructor
+    pub dtor_abi_name: Ident,
 }
 
 impl OpaqueStruct {
@@ -71,13 +73,18 @@ impl OpaqueStruct {
     pub fn new(strct: &syn::ItemStruct, mutability: Mutability, parent_attrs: &Attrs) -> Self {
         let mut attrs = parent_attrs.clone();
         attrs.add_attrs(&strct.attrs);
+        let name = Ident::from(&strct.ident);
+        let dtor_abi_name = format!("{}_destroy", name);
+        let dtor_abi_name = String::from(attrs.abi_rename.apply(dtor_abi_name.into()));
+        let dtor_abi_name = Ident::from(dtor_abi_name);
         OpaqueStruct {
-            name: Ident::from(&strct.ident),
+            name,
             docs: Docs::from_attrs(&strct.attrs),
             lifetimes: LifetimeEnv::from_struct_item(strct, &[]),
             methods: vec![],
             mutability,
             attrs,
+            dtor_abi_name,
         }
     }
 }

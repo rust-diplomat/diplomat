@@ -1,22 +1,40 @@
 #ifndef ErrorStruct_HPP
 #define ErrorStruct_HPP
+
+#include "ErrorStruct.d.hpp"
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <algorithm>
 #include <memory>
-#include <variant>
 #include <optional>
 #include "diplomat_runtime.hpp"
 
-#include "ErrorStruct.h"
+
+namespace diplomat {
+namespace capi {
+    extern "C" {
+    
+    
+    } // extern "C"
+} // namespace capi
+} // namespace
 
 
-struct ErrorStruct {
- public:
-  int32_t i;
-  int32_t j;
-};
+inline diplomat::capi::ErrorStruct ErrorStruct::AsFFI() const {
+  return diplomat::capi::ErrorStruct {
+    /* .i = */ i,
+    /* .j = */ j,
+  };
+}
+
+inline ErrorStruct ErrorStruct::FromFFI(diplomat::capi::ErrorStruct c_struct) {
+  return ErrorStruct {
+    /* .i = */ c_struct.i,
+    /* .j = */ c_struct.j,
+  };
+}
 
 
-#endif
+#endif // ErrorStruct_HPP

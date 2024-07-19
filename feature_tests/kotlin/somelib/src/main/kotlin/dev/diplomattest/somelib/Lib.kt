@@ -416,6 +416,21 @@ class ResultPointerUnit: Structure(), Structure.ByValue  {
         return listOf("union", "isOk")
     }
 }
+internal class ResultUnitMyZstNativeUnion: Union() {
+}
+
+class ResultUnitMyZstNative: Structure(), Structure.ByValue  {
+    @JvmField
+    internal var union: ResultUnitMyZstNativeUnion = ResultUnitMyZstNativeUnion()
+
+    @JvmField
+    internal var isOk: Byte = 0
+
+    // Define the fields of the struct
+    override fun getFieldOrder(): List<String> {
+        return listOf("union", "isOk")
+    }
+}
 internal class ResultUnitPointerUnion: Union() {
     @JvmField
     internal var err: Pointer = Pointer(0)

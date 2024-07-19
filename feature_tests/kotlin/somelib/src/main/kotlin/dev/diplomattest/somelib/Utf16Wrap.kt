@@ -9,7 +9,6 @@ internal interface Utf16WrapLib: Library {
     fun Utf16Wrap_from_utf16(input: Slice): Pointer
     fun Utf16Wrap_get_debug_str(handle: Pointer, write: Pointer): Unit
     fun Utf16Wrap_borrow_cont(handle: Pointer): Slice
-    fun Utf16Wrap_owned(handle: Pointer): Slice
 }
 
 class Utf16Wrap internal constructor (
@@ -54,14 +53,6 @@ class Utf16Wrap internal constructor (
         
         val returnVal = lib.Utf16Wrap_borrow_cont(handle);
             return PrimitiveArrayTools.getUtf16(returnVal)
-    }
-    
-    fun owned(): String {
-        
-        val returnVal = lib.Utf16Wrap_owned(handle);
-        val string = PrimitiveArrayTools.getUtf16(returnVal)
-        Native.free(Pointer.nativeValue(returnVal.data))
-        return string
     }
 
 }

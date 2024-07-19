@@ -115,7 +115,7 @@ class ResultOpaque internal constructor (
             
             val returnVal = lib.ResultOpaque_new_in_err(i);
             if (returnVal.isOk == 1.toByte()) {
-                return Ok(Unit)
+                Unit.ok()
             } else {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.union.err 
