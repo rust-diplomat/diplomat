@@ -47,7 +47,7 @@ inline diplomat::result<std::unique_ptr<MyString>, diplomat::Utf8Error> MyString
   }
   auto result = diplomat::capi::MyString_new_unsafe(v.data(),
     v.size());
-  return diplomat::Ok<std::unique_ptr<MyString>>(std::move(std::unique_ptr<MyString>(MyString::FromFFI(result))));
+  return diplomat::Ok<std::unique_ptr<MyString>>(std::unique_ptr<MyString>(MyString::FromFFI(result)));
 }
 
 inline std::unique_ptr<MyString> MyString::new_owned(std::string_view v) {

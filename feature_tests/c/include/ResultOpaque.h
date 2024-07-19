@@ -21,13 +21,13 @@ typedef struct ResultOpaque_new_result {union {ResultOpaque* ok; ErrorEnum err;}
 ResultOpaque_new_result ResultOpaque_new(int32_t i);
 
 typedef struct ResultOpaque_new_failing_foo_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_failing_foo_result;
-ResultOpaque_new_failing_foo_result ResultOpaque_new_failing_foo();
+ResultOpaque_new_failing_foo_result ResultOpaque_new_failing_foo(void);
 
 typedef struct ResultOpaque_new_failing_bar_result {union {ResultOpaque* ok; ErrorEnum err;}; bool is_ok;} ResultOpaque_new_failing_bar_result;
-ResultOpaque_new_failing_bar_result ResultOpaque_new_failing_bar();
+ResultOpaque_new_failing_bar_result ResultOpaque_new_failing_bar(void);
 
 typedef struct ResultOpaque_new_failing_unit_result {union {ResultOpaque* ok; }; bool is_ok;} ResultOpaque_new_failing_unit_result;
-ResultOpaque_new_failing_unit_result ResultOpaque_new_failing_unit();
+ResultOpaque_new_failing_unit_result ResultOpaque_new_failing_unit(void);
 
 typedef struct ResultOpaque_new_failing_struct_result {union {ResultOpaque* ok; ErrorStruct err;}; bool is_ok;} ResultOpaque_new_failing_struct_result;
 ResultOpaque_new_failing_struct_result ResultOpaque_new_failing_struct(int32_t i);

@@ -356,7 +356,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         if returns_utf8_err {
             if let Some(return_expr) = c_to_cpp_return_expression {
                 c_to_cpp_return_expression =
-                    Some(format!("diplomat::Ok<{return_ty}>(std::move({return_expr}))").into());
+                    Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
                 return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
             } else {
                 c_to_cpp_return_expression =

@@ -189,9 +189,14 @@ end
 
 cd example/c/include
 files_list = glob_array "./*.h"
+success = set true
 for file in ${files_list}
     echo "Checking ${file}"
-    exec --fail-on-error ${cc} -std=${c_std} ${file}
+    output = exec --get-exit-code ${cc} -std=${c_std} -pedantic-errors -Wall ${file}
+    success = set ${success} and ${output} == 0
+end
+if not ${success}
+  exit 1
 end
 '''
 
@@ -211,9 +216,14 @@ end
 
 cd feature_tests/c/include
 files_list = glob_array "./*.h"
+success = set true
 for file in ${files_list}
     echo "Checking ${file}"
-    exec --fail-on-error ${cc} -std=${c_std} ${file}
+    output = exec --get-exit-code ${cc} -std=${c_std} -pedantic-errors -Wall ${file}
+    success = set ${success} and ${output} == 0
+end
+if not ${success}
+  exit 1
 end
 '''
 
@@ -240,9 +250,14 @@ end
 
 cd example/cpp/include
 files_list = glob_array "./*.hpp"
+success = set true
 for file in ${files_list}
     echo "Checking ${file}"
-    exec --fail-on-error ${cxx} -std=${cxx_std} ${file}
+    output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall ${file}
+    success = set ${success} and ${output} == 0
+end
+if not ${success}
+  exit 1
 end
 '''
 
@@ -262,10 +277,14 @@ end
 
 cd feature_tests/cpp/include
 files_list = glob_array "./*.hpp"
+success = set true
 for file in ${files_list}
     echo "Checking ${file}"
-    exec --fail-on-error ${cxx} -std=${cxx_std} ${file}
-
+    output = exec --get-exit-code ${cxx} -std=${cxx_std} -pedantic-errors -Wall ${file}
+    success = set ${success} and ${output} == 0
+end
+if not ${success}
+  exit 1
 end
 '''
 

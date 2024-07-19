@@ -17,7 +17,7 @@
 
 
 
-Opaque* Opaque_new();
+Opaque* Opaque_new(void);
 
 Opaque* Opaque_try_from_utf8(const char* input_data, size_t input_len);
 
@@ -27,11 +27,11 @@ void Opaque_get_debug_str(const Opaque* self, DiplomatWrite* write);
 
 void Opaque_assert_struct(const Opaque* self, MyStruct s);
 
-size_t Opaque_returns_usize();
+size_t Opaque_returns_usize(void);
 
-ImportedStruct Opaque_returns_imported();
+ImportedStruct Opaque_returns_imported(void);
 
-int8_t Opaque_cmp();
+int8_t Opaque_cmp(void);
 
 
 void Opaque_destroy(Opaque* self);
