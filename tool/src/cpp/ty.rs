@@ -356,7 +356,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
         if returns_utf8_err {
             if let Some(return_expr) = c_to_cpp_return_expression {
                 c_to_cpp_return_expression =
-                    Some(format!("diplomat::Ok<{return_ty}>(std::move({return_expr}))").into());
+                    Some(format!("diplomat::Ok<{return_ty}>({return_expr})").into());
                 return_ty = format!("diplomat::result<{return_ty}, diplomat::Utf8Error>").into();
             } else {
                 c_to_cpp_return_expression =
@@ -364,6 +364,15 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
                 return_ty = "diplomat::result<std::monostate, diplomat::Utf8Error>".into();
             }
         };
+
+        // If the return expression is a std::move, unwrap that, because the linter doesn't like it
+        c_to_cpp_return_expression = c_to_cpp_return_expression.map(|expr| {
+            if expr.starts_with("std::move") {
+                expr["std::move(".len()..(expr.len() - 1)].to_owned().into()
+            } else {
+                expr
+            }
+        });
 
         let pre_qualifiers = if method.param_self.is_none() {
             vec!["static".into()]
@@ -590,10 +599,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
             Type::Slice(..) => {
                 vec![PartiallyNamedExpression {
                     suffix: "".into(),
-                    expression: format!(
-                        "{{ .data = {cpp_name}.data(), .len = {cpp_name}.size() }}"
-                    )
-                    .into(),
+                    expression: format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
                 }]
             }
             _ => unreachable!("unknown AST/HIR variant"),
@@ -727,7 +733,7 @@ impl<'ccx, 'tcx: 'ccx, 'header> TyGenContext<'ccx, 'tcx, 'header> {
     ) -> Option<Cow<'a, str>> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
-            ReturnType::Infallible(SuccessType::Write) => Some("output".into()),
+            ReturnType::Infallible(SuccessType::Write) => Some("std::move(output)".into()),
             ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => {
                 Some(self.gen_c_to_cpp_for_type(out_ty, var_name))
             }

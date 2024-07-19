@@ -9,7 +9,7 @@
 inline {{ctype}} {{type_name}}::AsFFI() const {
 	return {{ctype}} {
 {%- for field in cpp_to_c_fields %}
-		.{{field.var_name}} = {{field.expression}},
+		/* .{{field.var_name}} = */ {{field.expression}},
 {%- endfor %}
 	};
 }
@@ -17,7 +17,7 @@ inline {{ctype}} {{type_name}}::AsFFI() const {
 inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_struct) {
 	return {{type_name}} {
 {%- for field in c_to_cpp_fields %}
-		.{{field.var_name}} = {{field.expression}},
+		/* .{{field.var_name}} = */ {{field.expression}},
 {%- endfor %}
 	};
 }

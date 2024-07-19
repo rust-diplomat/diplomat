@@ -9,16 +9,16 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "ImportedStruct.hpp"
 #include "MyStruct.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::Opaque* Opaque_new();
+    diplomat::capi::Opaque* Opaque_new(void);
     
     diplomat::capi::Opaque* Opaque_try_from_utf8(const char* input_data, size_t input_len);
     
@@ -28,11 +28,11 @@ namespace capi {
     
     void Opaque_assert_struct(const diplomat::capi::Opaque* self, diplomat::capi::MyStruct s);
     
-    size_t Opaque_returns_usize();
+    size_t Opaque_returns_usize(void);
     
-    diplomat::capi::ImportedStruct Opaque_returns_imported();
+    diplomat::capi::ImportedStruct Opaque_returns_imported(void);
     
-    int8_t Opaque_cmp();
+    int8_t Opaque_cmp(void);
     
     
     void Opaque_destroy(Opaque* self);
@@ -58,7 +58,7 @@ inline diplomat::result<std::unique_ptr<Opaque>, diplomat::Utf8Error> Opaque::fr
   }
   auto result = diplomat::capi::Opaque_from_str(input.data(),
     input.size());
-  return diplomat::Ok<std::unique_ptr<Opaque>>(std::move(std::unique_ptr<Opaque>(Opaque::FromFFI(result))));
+  return diplomat::Ok<std::unique_ptr<Opaque>>(std::unique_ptr<Opaque>(Opaque::FromFFI(result)));
 }
 
 inline std::string Opaque::get_debug_str() const {

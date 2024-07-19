@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{self, Write};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-pub enum Forward {
+pub(super) enum Forward {
     Class(String),
     #[allow(dead_code)]
     Struct(String),
@@ -26,7 +26,7 @@ struct HeaderTemplate<'a> {
 /// This abstraction allows us to build up headers piece by piece without needing
 /// to precalculate things like the list of dependent headers or forward declarations
 #[derive(Default)]
-pub struct Header {
+pub(super) struct Header {
     /// The path name used for the header file (for example Foo.h)
     pub path: String,
     /// A list of includes
@@ -70,7 +70,7 @@ impl Header {
     pub fn new(path: String) -> Self {
         Header {
             path,
-            includes: BTreeSet::new(),
+            includes: BTreeSet::from_iter(["diplomat_runtime.hpp".into()]),
             decl_include: None,
             forwards: BTreeMap::new(),
             body: String::new(),
@@ -122,8 +122,8 @@ impl fmt::Write for Header {
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let header_guard = &self.path;
-        let header_guard = header_guard.replace(".d.hpp", "_D_HPP");
-        let header_guard = header_guard.replace(".hpp", "_HPP");
+        let header_guard = header_guard.replace(".d.hpp", "_D_HPP").replace('/', "_");
+        let header_guard = header_guard.replace(".hpp", "_HPP").replace('/', "_");
         let body: Cow<str> = if self.body.is_empty() {
             "// No Content\n\n".into()
         } else {
@@ -135,11 +135,26 @@ impl fmt::Display for Header {
             decl_include: self
                 .decl_include
                 .as_ref()
-                .map(|s| Cow::Borrowed(s.as_str())),
+                // The decl is always in the same namespace/directory
+                .map(|s| Cow::Borrowed(s.as_str().split('/').last().unwrap())),
             includes: self
                 .includes
                 .iter()
-                .map(|s| Cow::Borrowed(s.as_str()))
+                .map(|s| {
+                    if let Some((ns, _)) = self.path.split_once('/') {
+                        if let Some((other_ns, file)) = s.split_once('/') {
+                            if ns == other_ns {
+                                Cow::Borrowed(file)
+                            } else {
+                                Cow::Owned(format!("../{s}"))
+                            }
+                        } else {
+                            Cow::Owned(format!("../{s}"))
+                        }
+                    } else {
+                        Cow::Borrowed(s.as_str())
+                    }
+                })
                 .collect(),
             forwards: &self.forwards,
             body,

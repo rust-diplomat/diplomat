@@ -19,7 +19,7 @@ export class MyString {
 
     get str(): string;
 
-    getBoxedStr(): string;
+    static stringTransform(foo: string): string;
 
     
 

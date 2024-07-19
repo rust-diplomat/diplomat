@@ -1,5 +1,5 @@
-#ifndef DataProvider_HPP
-#define DataProvider_HPP
+#ifndef icu4x_DataProvider_HPP
+#define icu4x_DataProvider_HPP
 
 #include "DataProvider.d.hpp"
 
@@ -9,17 +9,17 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 
 
 namespace icu4x {
 namespace capi {
     extern "C" {
     
-    icu4x::capi::DataProvider* icu4x_DataProvider_new_static_mv1();
+    icu4x::capi::DataProvider* icu4x_DataProvider_new_static_mv1(void);
     
     typedef struct icu4x_DataProvider_returns_result_mv1_result { bool is_ok;} icu4x_DataProvider_returns_result_mv1_result;
-    icu4x_DataProvider_returns_result_mv1_result icu4x_DataProvider_returns_result_mv1();
+    icu4x_DataProvider_returns_result_mv1_result icu4x_DataProvider_returns_result_mv1(void);
     
     
     void icu4x_DataProvider_destroy_mv1(DataProvider* self);
@@ -59,4 +59,4 @@ inline void icu4x::DataProvider::operator delete(void* ptr) {
 }
 
 
-#endif // DataProvider_HPP
+#endif // icu4x_DataProvider_HPP

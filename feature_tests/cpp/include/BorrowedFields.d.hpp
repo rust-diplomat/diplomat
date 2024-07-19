@@ -16,9 +16,9 @@ class Bar;
 namespace diplomat {
 namespace capi {
     struct BorrowedFields {
-      DiplomatString16View a;
-      DiplomatStringView b;
-      DiplomatStringView c;
+      diplomat::capi::DiplomatString16View a;
+      diplomat::capi::DiplomatStringView b;
+      diplomat::capi::DiplomatStringView c;
     };
 } // namespace capi
 } // namespace

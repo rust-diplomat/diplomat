@@ -8,68 +8,37 @@ pub(crate) use self::header::Header;
 pub(crate) use self::ty::TyGenContext;
 
 use crate::{ErrorStore, FileMap};
-use askama::Template;
 use diplomat_core::hir;
 use diplomat_core::hir::BackendAttrSupport;
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
-    a.renaming = false;
-    a.namespacing = false;
     a.memory_sharing = true;
     a.non_exhaustive_structs = false;
     a.method_overloading = false;
-
-    a.constructors = false;
-    a.named_constructors = false;
+    a.utf8_strings = true;
+    a.utf16_strings = true;
     a.fallible_constructors = false;
-    a.accessors = false;
-    a.comparators = false;
-    a.stringifiers = false;
-    a.iterators = false;
-    a.iterables = false;
-    a.indexing = false;
 
     a
 }
 
-pub fn gen_runtime(is_for_cpp: bool) -> String {
-    #[derive(Template)]
-    #[template(path = "c/runtime.h.jinja", escape = "none")]
-    struct RuntimeTemplate {
-        is_for_cpp: bool,
-    }
-    let mut runtime = String::new();
-    RuntimeTemplate { is_for_cpp }
-        .render_into(&mut runtime)
-        .unwrap();
-    runtime
-}
-
-pub fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
+pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let files = FileMap::default();
     let formatter = CFormatter::new(tcx, false);
     let errors = ErrorStore::default();
 
-    files.add_file("diplomat_runtime.h".into(), gen_runtime(false));
+    #[derive(askama::Template)]
+    #[template(path = "c/runtime.h.jinja", escape = "none")]
+    struct Runtime;
+
+    files.add_file("diplomat_runtime.h".into(), Runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             // Skip type if disabled
             continue;
-        }
-        if let hir::TypeDef::Struct(s) = ty {
-            if s.fields.is_empty() {
-                // Skip ZST
-                continue;
-            }
-        }
-        if let hir::TypeDef::OutStruct(s) = ty {
-            if s.fields.is_empty() {
-                // Skip ZST
-                continue;
-            }
         }
 
         let decl_header_path = formatter.fmt_decl_header_path(id);

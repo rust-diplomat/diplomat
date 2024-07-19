@@ -9,11 +9,11 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "Bar.hpp"
 #include "BorrowedFields.hpp"
 #include "BorrowedFieldsReturning.hpp"
 #include "BorrowedFieldsWithBounds.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace diplomat {

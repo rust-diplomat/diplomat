@@ -9,8 +9,8 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "Utf16Wrap.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
@@ -29,7 +29,7 @@ namespace capi {
     
     size_t OpaqueMutexedString_get_len_and_add(const diplomat::capi::OpaqueMutexedString* self, size_t other);
     
-    DiplomatStringView OpaqueMutexedString_dummy_str(const diplomat::capi::OpaqueMutexedString* self);
+    diplomat::capi::DiplomatStringView OpaqueMutexedString_dummy_str(const diplomat::capi::OpaqueMutexedString* self);
     
     diplomat::capi::Utf16Wrap* OpaqueMutexedString_wrapper(const diplomat::capi::OpaqueMutexedString* self);
     

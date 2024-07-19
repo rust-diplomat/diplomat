@@ -9,8 +9,8 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "UnimportedEnum.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
@@ -25,15 +25,15 @@ namespace capi {
 
 inline diplomat::capi::ImportedStruct ImportedStruct::AsFFI() const {
   return diplomat::capi::ImportedStruct {
-    .foo = foo.AsFFI(),
-    .count = count,
+    /* .foo = */ foo.AsFFI(),
+    /* .count = */ count,
   };
 }
 
 inline ImportedStruct ImportedStruct::FromFFI(diplomat::capi::ImportedStruct c_struct) {
   return ImportedStruct {
-    .foo = UnimportedEnum::FromFFI(c_struct.foo),
-    .count = c_struct.count,
+    /* .foo = */ UnimportedEnum::FromFFI(c_struct.foo),
+    /* .count = */ c_struct.count,
   };
 }
 

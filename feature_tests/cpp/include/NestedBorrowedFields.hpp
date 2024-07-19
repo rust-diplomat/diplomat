@@ -9,11 +9,11 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "Bar.hpp"
 #include "BorrowedFields.hpp"
 #include "BorrowedFieldsWithBounds.hpp"
 #include "Foo.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
@@ -44,23 +44,23 @@ inline diplomat::result<NestedBorrowedFields, diplomat::Utf8Error> NestedBorrowe
     utf8_str_y.size(),
     utf8_str_z.data(),
     utf8_str_z.size());
-  return diplomat::Ok<NestedBorrowedFields>(std::move(NestedBorrowedFields::FromFFI(result)));
+  return diplomat::Ok<NestedBorrowedFields>(NestedBorrowedFields::FromFFI(result));
 }
 
 
 inline diplomat::capi::NestedBorrowedFields NestedBorrowedFields::AsFFI() const {
   return diplomat::capi::NestedBorrowedFields {
-    .fields = fields.AsFFI(),
-    .bounds = bounds.AsFFI(),
-    .bounds2 = bounds2.AsFFI(),
+    /* .fields = */ fields.AsFFI(),
+    /* .bounds = */ bounds.AsFFI(),
+    /* .bounds2 = */ bounds2.AsFFI(),
   };
 }
 
 inline NestedBorrowedFields NestedBorrowedFields::FromFFI(diplomat::capi::NestedBorrowedFields c_struct) {
   return NestedBorrowedFields {
-    .fields = BorrowedFields::FromFFI(c_struct.fields),
-    .bounds = BorrowedFieldsWithBounds::FromFFI(c_struct.bounds),
-    .bounds2 = BorrowedFieldsWithBounds::FromFFI(c_struct.bounds2),
+    /* .fields = */ BorrowedFields::FromFFI(c_struct.fields),
+    /* .bounds = */ BorrowedFieldsWithBounds::FromFFI(c_struct.bounds),
+    /* .bounds2 = */ BorrowedFieldsWithBounds::FromFFI(c_struct.bounds2),
   };
 }
 

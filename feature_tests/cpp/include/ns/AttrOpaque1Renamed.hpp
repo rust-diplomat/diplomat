@@ -1,5 +1,5 @@
-#ifndef AttrOpaque1Renamed_HPP
-#define AttrOpaque1Renamed_HPP
+#ifndef ns_AttrOpaque1Renamed_HPP
+#define ns_AttrOpaque1Renamed_HPP
 
 #include "AttrOpaque1Renamed.d.hpp"
 
@@ -9,16 +9,16 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../Unnamespaced.hpp"
+#include "../diplomat_runtime.hpp"
 #include "RenamedAttrEnum.hpp"
-#include "Unnamespaced.hpp"
 
 
 namespace ns {
 namespace capi {
     extern "C" {
     
-    ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new();
+    ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new(void);
     
     uint8_t namespace_AttrOpaque1_method(const ns::capi::AttrOpaque1Renamed* self);
     
@@ -81,4 +81,4 @@ inline void ns::AttrOpaque1Renamed::operator delete(void* ptr) {
 }
 
 
-#endif // AttrOpaque1Renamed_HPP
+#endif // ns_AttrOpaque1Renamed_HPP

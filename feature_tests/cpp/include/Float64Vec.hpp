@@ -30,8 +30,6 @@ namespace capi {
     
     diplomat::capi::Float64Vec* Float64Vec_new_f64_be_bytes(const uint8_t* v_data, size_t v_len);
     
-    diplomat::capi::DiplomatF64ViewMut Float64Vec_as_boxed_slice(const diplomat::capi::Float64Vec* self);
-    
     diplomat::capi::DiplomatF64View Float64Vec_as_slice(const diplomat::capi::Float64Vec* self);
     
     void Float64Vec_fill_slice(const diplomat::capi::Float64Vec* self, double* v_data, size_t v_len);
@@ -92,11 +90,6 @@ inline std::unique_ptr<Float64Vec> Float64Vec::new_f64_be_bytes(diplomat::span<c
   auto result = diplomat::capi::Float64Vec_new_f64_be_bytes(v.data(),
     v.size());
   return std::unique_ptr<Float64Vec>(Float64Vec::FromFFI(result));
-}
-
-inline diplomat::span<double> Float64Vec::as_boxed_slice() const {
-  auto result = diplomat::capi::Float64Vec_as_boxed_slice(this->AsFFI());
-  return diplomat::span<double>(result.data, result.len);
 }
 
 inline diplomat::span<const double> Float64Vec::as_slice() const {

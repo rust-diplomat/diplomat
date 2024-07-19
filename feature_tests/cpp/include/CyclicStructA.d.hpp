@@ -7,8 +7,8 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "CyclicStructB.d.hpp"
+#include "diplomat_runtime.hpp"
 
 struct CyclicStructB;
 

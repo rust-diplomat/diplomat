@@ -20,9 +20,7 @@ namespace capi {
     
     void Utf16Wrap_get_debug_str(const diplomat::capi::Utf16Wrap* self, diplomat::capi::DiplomatWrite* write);
     
-    DiplomatString16View Utf16Wrap_borrow_cont(const diplomat::capi::Utf16Wrap* self);
-    
-    DiplomatString16View Utf16Wrap_owned(const diplomat::capi::Utf16Wrap* self);
+    diplomat::capi::DiplomatString16View Utf16Wrap_borrow_cont(const diplomat::capi::Utf16Wrap* self);
     
     
     void Utf16Wrap_destroy(Utf16Wrap* self);
@@ -47,11 +45,6 @@ inline std::string Utf16Wrap::get_debug_str() const {
 
 inline std::u16string_view Utf16Wrap::borrow_cont() const {
   auto result = diplomat::capi::Utf16Wrap_borrow_cont(this->AsFFI());
-  return std::u16string_view(result.data, result.len);
-}
-
-inline std::u16string_view Utf16Wrap::owned() const {
-  auto result = diplomat::capi::Utf16Wrap_owned(this->AsFFI());
   return std::u16string_view(result.data, result.len);
 }
 

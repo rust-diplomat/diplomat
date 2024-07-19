@@ -1,5 +1,5 @@
-#ifndef FixedDecimalFormatterOptions_HPP
-#define FixedDecimalFormatterOptions_HPP
+#ifndef icu4x_FixedDecimalFormatterOptions_HPP
+#define icu4x_FixedDecimalFormatterOptions_HPP
 
 #include "FixedDecimalFormatterOptions.d.hpp"
 
@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
+#include "../diplomat_runtime.hpp"
 #include "FixedDecimalGroupingStrategy.hpp"
 
 
@@ -17,7 +17,7 @@ namespace icu4x {
 namespace capi {
     extern "C" {
     
-    icu4x::capi::FixedDecimalFormatterOptions icu4x_FixedDecimalFormatterOptions_default_mv1();
+    icu4x::capi::FixedDecimalFormatterOptions icu4x_FixedDecimalFormatterOptions_default_mv1(void);
     
     
     } // extern "C"
@@ -32,17 +32,17 @@ inline icu4x::FixedDecimalFormatterOptions icu4x::FixedDecimalFormatterOptions::
 
 inline icu4x::capi::FixedDecimalFormatterOptions icu4x::FixedDecimalFormatterOptions::AsFFI() const {
   return icu4x::capi::FixedDecimalFormatterOptions {
-    .grouping_strategy = grouping_strategy.AsFFI(),
-    .some_other_config = some_other_config,
+    /* .grouping_strategy = */ grouping_strategy.AsFFI(),
+    /* .some_other_config = */ some_other_config,
   };
 }
 
 inline icu4x::FixedDecimalFormatterOptions icu4x::FixedDecimalFormatterOptions::FromFFI(icu4x::capi::FixedDecimalFormatterOptions c_struct) {
   return icu4x::FixedDecimalFormatterOptions {
-    .grouping_strategy = icu4x::FixedDecimalGroupingStrategy::FromFFI(c_struct.grouping_strategy),
-    .some_other_config = c_struct.some_other_config,
+    /* .grouping_strategy = */ icu4x::FixedDecimalGroupingStrategy::FromFFI(c_struct.grouping_strategy),
+    /* .some_other_config = */ c_struct.some_other_config,
   };
 }
 
 
-#endif // FixedDecimalFormatterOptions_HPP
+#endif // icu4x_FixedDecimalFormatterOptions_HPP

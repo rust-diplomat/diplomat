@@ -1,20 +1,18 @@
 use std::borrow::Cow;
 use std::collections::BTreeSet;
 
-use diplomat_core::ast::DocsUrlGenerator;
-
-use diplomat_core::hir::{BackendAttrSupport, TypeContext, TypeDef};
-
-use askama::{self, Template};
-use type_generation::TyGenContext;
-
 use crate::{ErrorStore, FileMap};
+use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext, TypeDef};
 
-use self::formatter::JSFormatter;
+use askama::Template;
 
 pub mod formatter;
-mod layout;
+use formatter::JSFormatter;
+
 mod type_generation;
+use type_generation::TyGenContext;
+
+mod layout;
 
 /// Since the main difference between .mjs and .d.ts is typing, we just want a differentiator for our various helper functions as to what's being generated: .d.ts, or .mjs?
 pub enum FileType {
@@ -34,21 +32,12 @@ impl FileType {
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
-    a.renaming = true;
-    a.namespacing = false;
     a.memory_sharing = false;
     a.non_exhaustive_structs = true;
     a.method_overloading = false;
-
-    a.constructors = false;
-    a.named_constructors = false;
+    a.utf8_strings = false;
+    a.utf16_strings = true;
     a.fallible_constructors = false;
-    a.accessors = true;
-    a.comparators = false;
-    a.stringifiers = false; // TODO
-    a.iterators = false; // TODO
-    a.iterables = false; // TODO
-    a.indexing = false;
 
     a
 }

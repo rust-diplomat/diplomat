@@ -924,8 +924,14 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::StrReference(lifetime, encoding) => Ok(OutType::Slice(Slice::Str(
-                lifetime.as_ref().map(|l| ltl.lower_lifetime(l)),
+            ast::TypeName::PrimitiveSlice(None, _) | ast::TypeName::StrReference(None, _) => {
+                self.errors.push(LoweringError::Other(
+                    "Owned slices cannot be returned".into(),
+                ));
+                Err(())
+            }
+            ast::TypeName::StrReference(Some(l), encoding) => Ok(OutType::Slice(Slice::Str(
+                Some(ltl.lower_lifetime(l)),
                 *encoding,
             ))),
             ast::TypeName::StrSlice(..) => {
@@ -934,11 +940,12 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::PrimitiveSlice(lm, prim) => Ok(OutType::Slice(Slice::Primitive(
-                lm.as_ref()
-                    .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m)),
-                PrimitiveType::from_ast(*prim),
-            ))),
+            ast::TypeName::PrimitiveSlice(Some((lt, m)), prim) => {
+                Ok(OutType::Slice(Slice::Primitive(
+                    Some(Borrow::new(ltl.lower_lifetime(lt), *m)),
+                    PrimitiveType::from_ast(*prim),
+                )))
+            }
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())

@@ -10,21 +10,12 @@ use ty::TyGenContext;
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
-    a.renaming = true;
-    a.namespacing = true;
     a.memory_sharing = true;
     a.non_exhaustive_structs = false;
     a.method_overloading = true;
-
-    a.constructors = false; // TODO
-    a.named_constructors = false;
+    a.utf8_strings = true;
+    a.utf16_strings = true;
     a.fallible_constructors = false;
-    a.accessors = false;
-    a.comparators = false; // TODO
-    a.stringifiers = false; // TODO
-    a.iterators = false; // TODO
-    a.iterables = false; // TODO
-    a.indexing = false; // TODO
 
     a
 }
@@ -34,12 +25,11 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let formatter = Cpp2Formatter::new(tcx);
     let errors = ErrorStore::default();
 
-    files.add_file("diplomat_c_runtime.hpp".into(), crate::c::gen_runtime(true));
+    #[derive(askama::Template)]
+    #[template(path = "cpp/runtime.hpp.jinja", escape = "none")]
+    struct Runtime;
 
-    files.add_file(
-        "diplomat_runtime.hpp".into(),
-        include_str!("../../templates/cpp/runtime.hpp").into(),
-    );
+    files.add_file("diplomat_runtime.hpp".into(), Runtime.to_string());
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {

@@ -16,9 +16,9 @@ class Foo;
 namespace diplomat {
 namespace capi {
     struct BorrowedFieldsWithBounds {
-      DiplomatString16View field_a;
-      DiplomatStringView field_b;
-      DiplomatStringView field_c;
+      diplomat::capi::DiplomatString16View field_a;
+      diplomat::capi::DiplomatStringView field_b;
+      diplomat::capi::DiplomatStringView field_c;
     };
 } // namespace capi
 } // namespace

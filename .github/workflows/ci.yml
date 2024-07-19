@@ -59,6 +59,36 @@ jobs:
     - name: Test C
       run: cargo make test-c
 
+  check-c:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+
+    - name: clang, c11
+      run: cargo make check-c
+      env: 
+        CC: clang
+        C_STD: c11
+      
+    - name: gcc, c11
+      run: cargo make check-c
+      env: 
+        CC: gcc
+        C_STD: c11
+
+    - name: gcc, c2x
+      run: cargo make check-c
+      env: 
+        CC: gcc
+        C_STD: c2x
 
   test-cpp:
     runs-on: ubuntu-latest
@@ -68,27 +98,44 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    - name: Test C++ (clang)
+    - name: clang
       run: CXX=clang++-14 cargo make test-cpp
 
-    - name: Test C++ (gcc)
+    - name: gcc
       run: CXX=g++ cargo make test-cpp
-  test-cpp-self-contained:
-    runs-on: ubuntu-latest
+
+  check-cpp:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
     steps:
     - uses: actions/checkout@v2
 
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
-    - name: Test C++ self-contained (clang)
-      run: CXX=clang++-14 cargo make test-cpp-self-contained
+    - name: clang, c++17
+      run: cargo make check-cpp
+      env:
+        CXX: clang
+        CXX_STD: c++17
 
-    - name: Test C++ self-contained (clang, c++20)
-      run: CXX=clang++-14 CXX_STD=c++20 cargo make test-cpp-self-contained
+    - name: clang, c++20
+      run: cargo make check-cpp
+      env:
+        CXX: clang
+        CXX_STD: c++20
 
-    - name: Test C++ self-contained (g++, c++23)
-      run: CXX=g++ CXX_STD=c++23 cargo make test-cpp-self-contained
+    - name: gcc, c++23
+      if: ${{ matrix.os != 'macos-latest' }} 
+      run: cargo make check-cpp
+      env:
+        CXX: gcc
+        CXX_STD: c++23
+
   test-js: 
     runs-on: ubuntu-latest
     strategy:

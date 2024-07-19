@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../include/AttrOpaque1Renamed.hpp"
-#include "../include/RenamedAttrEnum.hpp"
+#include "../include/ns/AttrOpaque1Renamed.hpp"
+#include "../include/ns/RenamedAttrEnum.hpp"
 #include "../include/Unnamespaced.hpp"
 #include "assert.hpp"
 

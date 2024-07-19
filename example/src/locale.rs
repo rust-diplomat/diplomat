@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
-#[diplomat::attr(supports = namespacing, namespace = "icu4x")]
+#[diplomat::attr(*, namespace = "icu4x")]
 pub mod ffi {
     #[diplomat::opaque]
     /// An  Locale, capable of representing strings like `"en-US"`.
@@ -9,8 +9,8 @@ pub mod ffi {
 
     impl Locale {
         /// Construct an [`Locale`] from a locale identifier represented as a string.
-        #[diplomat::attr(supports = constructors, constructor)]
         #[diplomat::demo(input(name(label = "Locale Name")))]
+        #[diplomat::attr(*, constructor)]
         pub fn new(name: &DiplomatStr) -> Box<Locale> {
             Box::new(Locale(icu::locid::Locale::try_from_bytes(name).unwrap()))
         }

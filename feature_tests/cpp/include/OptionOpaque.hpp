@@ -9,8 +9,8 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "OptionStruct.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
@@ -19,10 +19,10 @@ namespace capi {
     
     diplomat::capi::OptionOpaque* OptionOpaque_new(int32_t i);
     
-    diplomat::capi::OptionOpaque* OptionOpaque_new_none();
+    diplomat::capi::OptionOpaque* OptionOpaque_new_none(void);
     
     typedef struct OptionOpaque_returns_result {union {diplomat::capi::OptionStruct ok; }; bool is_ok;} OptionOpaque_returns_result;
-    OptionOpaque_returns_result OptionOpaque_returns();
+    OptionOpaque_returns_result OptionOpaque_returns(void);
     
     typedef struct OptionOpaque_option_isize_result {union {intptr_t ok; }; bool is_ok;} OptionOpaque_option_isize_result;
     OptionOpaque_option_isize_result OptionOpaque_option_isize(const diplomat::capi::OptionOpaque* self);
@@ -36,9 +36,9 @@ namespace capi {
     typedef struct OptionOpaque_option_u32_result {union {uint32_t ok; }; bool is_ok;} OptionOpaque_option_u32_result;
     OptionOpaque_option_u32_result OptionOpaque_option_u32(const diplomat::capi::OptionOpaque* self);
     
-    diplomat::capi::OptionStruct OptionOpaque_new_struct();
+    diplomat::capi::OptionStruct OptionOpaque_new_struct(void);
     
-    diplomat::capi::OptionStruct OptionOpaque_new_struct_nones();
+    diplomat::capi::OptionStruct OptionOpaque_new_struct_nones(void);
     
     void OptionOpaque_assert_integer(const diplomat::capi::OptionOpaque* self, int32_t i);
     

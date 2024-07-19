@@ -9,15 +9,15 @@
 #include <stdbool.h>
 #include <memory>
 #include <optional>
-#include "diplomat_runtime.hpp"
 #include "CyclicStructA.hpp"
+#include "diplomat_runtime.hpp"
 
 
 namespace diplomat {
 namespace capi {
     extern "C" {
     
-    diplomat::capi::CyclicStructA CyclicStructB_get_a();
+    diplomat::capi::CyclicStructA CyclicStructB_get_a(void);
     
     
     } // extern "C"
@@ -32,13 +32,13 @@ inline CyclicStructA CyclicStructB::get_a() {
 
 inline diplomat::capi::CyclicStructB CyclicStructB::AsFFI() const {
   return diplomat::capi::CyclicStructB {
-    .field = field,
+    /* .field = */ field,
   };
 }
 
 inline CyclicStructB CyclicStructB::FromFFI(diplomat::capi::CyclicStructB c_struct) {
   return CyclicStructB {
-    .field = c_struct.field,
+    /* .field = */ c_struct.field,
   };
 }
 

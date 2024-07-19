@@ -25,8 +25,6 @@ public:
 
   inline std::u16string_view borrow_cont() const;
 
-  inline std::u16string_view owned() const;
-
   inline const diplomat::capi::Utf16Wrap* AsFFI() const;
   inline diplomat::capi::Utf16Wrap* AsFFI();
   inline static const Utf16Wrap* FromFFI(const diplomat::capi::Utf16Wrap* ptr);

@@ -16,17 +16,17 @@ pub mod ffi {
         j: i32,
     }
     impl ResultOpaque {
-        #[diplomat::attr(all(supports = constructors, supports = fallible_constructors), constructor)]
+        #[diplomat::attr(all(*, supports = fallible_constructors), constructor)]
         pub fn new(i: i32) -> Result<Box<ResultOpaque>, ErrorEnum> {
             Ok(Box::new(ResultOpaque(i)))
         }
 
-        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor = "failing_foo")]
+        #[diplomat::attr(all(*, supports = fallible_constructors), named_constructor = "failing_foo")]
         pub fn new_failing_foo() -> Result<Box<ResultOpaque>, ErrorEnum> {
             Err(ErrorEnum::Foo)
         }
 
-        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor = "failing_bar")]
+        #[diplomat::attr(all(*, supports = fallible_constructors), named_constructor = "failing_bar")]
         pub fn new_failing_bar() -> Result<Box<ResultOpaque>, ErrorEnum> {
             Err(ErrorEnum::Bar)
         }
@@ -37,7 +37,7 @@ pub mod ffi {
             Err(())
         }
 
-        #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor = "failing_struct")]
+        #[diplomat::attr(all(*, supports = fallible_constructors), named_constructor = "failing_struct")]
         pub fn new_failing_struct(i: i32) -> Result<Box<ResultOpaque>, ErrorStruct> {
             Err(ErrorStruct { i, j: 12 })
         }
