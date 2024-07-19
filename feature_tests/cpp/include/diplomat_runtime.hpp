@@ -8,6 +8,8 @@
 
 #if __cplusplus >= 202002L
 #include <span>
+#else
+#include <array>
 #endif
 
 namespace diplomat {
@@ -179,7 +181,7 @@ class Utf8Error {};
 
 template<class T> using span = std::span<T>;
 
-#else // __cplusplus >= 202002L
+#else // __cplusplus < 202002L
 
 // C++-17-compatible std::span
 template<class T>
