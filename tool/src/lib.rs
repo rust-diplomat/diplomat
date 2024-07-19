@@ -57,6 +57,7 @@ pub fn gen(
         "dart" => dart::attr_support(),
         "js" => js::attr_support(),
         "demo_gen" => {
+            // So renames and disables are carried across.
             attr_validator.other_backend_names = vec!["js".to_string()];
             demo_gen::attr_support()
         },
