@@ -25,7 +25,6 @@ pub(crate) fn run(tcx: &hir::TypeContext) -> (FileMap, ErrorStore<String>) {
     let formatter = Cpp2Formatter::new(tcx);
     let errors = ErrorStore::default();
 
-    
     #[derive(askama::Template)]
     #[template(path = "cpp/runtime.hpp.jinja", escape = "none")]
     struct Runtime;
