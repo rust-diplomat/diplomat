@@ -56,7 +56,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .rename
             .apply(resolved.name().as_str().into());
         if let Some(ref ns) = resolved.attrs().namespace {
-            format!("{ns}/{type_name}.d.hpp").into()
+            format!("{ns}/{type_name}.d.hpp")
         } else {
             format!("{type_name}.d.hpp")
         }
@@ -70,7 +70,7 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .rename
             .apply(resolved.name().as_str().into());
         if let Some(ref ns) = resolved.attrs().namespace {
-            format!("{ns}/{type_name}.hpp").into()
+            format!("{ns}/{type_name}.hpp")
         } else {
             format!("{type_name}.hpp")
         }
