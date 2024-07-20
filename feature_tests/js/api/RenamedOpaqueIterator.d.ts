@@ -11,6 +11,6 @@ export class RenamedOpaqueIterator {
     #iteratorNext(): AttrOpaque1Renamed | null;
 
     
-    next() : AttrOpaque1Renamed;
+    next() : IteratorResult<AttrOpaque1Renamed>;
 
 }

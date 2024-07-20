@@ -10,6 +10,6 @@ export class RenamedMyIterator {
     #iteratorNext(): number | null;
 
     
-    next() : number;
+    next() : IteratorResult<number>;
 
 }
