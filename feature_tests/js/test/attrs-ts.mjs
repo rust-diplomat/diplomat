@@ -1,5 +1,5 @@
 import test from "ava";
-import { RenamedMyIterable } from "diplomat-wasm-js2-feature-tests";
+import { RenamedMyIterable } from "diplomat-wasm-js-feature-tests";
 test("Verify Iterables and Iterators", t => {
     let iterable = RenamedMyIterable.new_([10, 20, 30, 40, 50]);
     let start = 10;

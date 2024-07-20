@@ -1,5 +1,5 @@
 import test from 'ava';
-import { ErrorEnum, ErrorStruct, ResultOpaque } from 'diplomat-wasm-js2-feature-tests';
+import { ErrorEnum, ErrorStruct, ResultOpaque } from 'diplomat-wasm-js-feature-tests';
 
 test('Verify result methods', t => {
     const s = ResultOpaque.new_(5);

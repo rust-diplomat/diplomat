@@ -1,5 +1,5 @@
 {
-	"name": "diplomat-wasm-js2-feature-tests",
+	"name": "diplomat-wasm-js-feature-tests",
 	"version": "0.0.1",
 	"description": "Diplomat WASM with JS2 HIR Backend Feature Tests",
 	"exports": {
