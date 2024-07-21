@@ -868,7 +868,7 @@ mod tests {
 
     #[test]
     fn test_auto() {
-        uitest_lowering_attr! { {let mut x = hir::BackendAttrSupport::default(); x.comparators = true; x},
+        uitest_lowering_attr! { hir::BackendAttrSupport { comparators: true, ..Default::default()},
             #[diplomat::bridge]
             mod ffi {
                 use std::cmp;
