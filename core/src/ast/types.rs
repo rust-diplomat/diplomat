@@ -1,7 +1,7 @@
 use proc_macro2::Span;
-use quote::ToTokens;
+use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
-use syn::{punctuated::Punctuated, *};
+use syn::*;
 
 use lazy_static::lazy_static;
 use std::collections::HashMap;
@@ -372,102 +372,45 @@ impl TypeName {
     pub fn to_syn(&self) -> syn::Type {
         match self {
             TypeName::Primitive(name) => {
-                syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
+                let s = PRIMITIVE_TO_STRING.get(name).unwrap();
+                let ident = proc_macro2::Ident::new(s, Span::call_site());
+                syn::parse_quote_spanned!(Span::call_site() => #ident)
             }
-            TypeName::Ordering => syn::Type::Path(syn::parse_str("i8").unwrap()),
+            TypeName::Ordering => syn::parse_quote_spanned!(Span::call_site() => i8),
             TypeName::Named(name) | TypeName::SelfType(name) => {
                 // Self also gets expanded instead of turning into `Self` because
                 // this code is used to generate the `extern "C"` functions, which
                 // aren't in an impl block.
-                syn::Type::Path(name.to_syn())
+                let name = name.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => #name)
             }
             TypeName::Reference(lifetime, mutability, underlying) => {
-                syn::Type::Reference(TypeReference {
-                    and_token: syn::token::And(Span::call_site()),
-                    lifetime: lifetime.to_syn(),
-                    mutability: mutability.to_syn(),
-                    elem: Box::new(underlying.to_syn()),
-                })
+                let reference = ReferenceDisplay(lifetime, mutability);
+                let underlying = underlying.to_syn();
+
+                syn::parse_quote_spanned!(Span::call_site() => #reference #underlying)
             }
-            TypeName::Box(underlying) => syn::Type::Path(TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: syn::Ident::new("Box", Span::call_site()),
-                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                            colon2_token: None,
-                            lt_token: syn::token::Lt(Span::call_site()),
-                            args: Punctuated::from_iter(vec![GenericArgument::Type(
-                                underlying.to_syn(),
-                            )]),
-                            gt_token: syn::token::Gt(Span::call_site()),
-                        }),
-                    }]),
-                },
-            }),
-            TypeName::Option(underlying) => syn::Type::Path(TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: syn::Ident::new("Option", Span::call_site()),
-                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                            colon2_token: None,
-                            lt_token: syn::token::Lt(Span::call_site()),
-                            args: Punctuated::from_iter(vec![GenericArgument::Type(
-                                underlying.to_syn(),
-                            )]),
-                            gt_token: syn::token::Gt(Span::call_site()),
-                        }),
-                    }]),
-                },
-            }),
-            TypeName::Result(ok, err, true) => syn::Type::Path(TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: syn::Ident::new("Result", Span::call_site()),
-                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                            colon2_token: None,
-                            lt_token: syn::token::Lt(Span::call_site()),
-                            args: Punctuated::from_iter(vec![
-                                GenericArgument::Type(ok.to_syn()),
-                                GenericArgument::Type(err.to_syn()),
-                            ]),
-                            gt_token: syn::token::Gt(Span::call_site()),
-                        }),
-                    }]),
-                },
-            }),
-            TypeName::Result(ok, err, false) => syn::Type::Path(TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![
-                        PathSegment {
-                            ident: syn::Ident::new("diplomat_runtime", Span::call_site()),
-                            arguments: PathArguments::None,
-                        },
-                        PathSegment {
-                            ident: syn::Ident::new("DiplomatResult", Span::call_site()),
-                            arguments: PathArguments::AngleBracketed(
-                                AngleBracketedGenericArguments {
-                                    colon2_token: None,
-                                    lt_token: syn::token::Lt(Span::call_site()),
-                                    args: Punctuated::from_iter(vec![
-                                        GenericArgument::Type(ok.to_syn()),
-                                        GenericArgument::Type(err.to_syn()),
-                                    ]),
-                                    gt_token: syn::token::Gt(Span::call_site()),
-                                },
-                            ),
-                        },
-                    ]),
-                },
-            }),
-            TypeName::Write => syn::parse_quote!(diplomat_runtime::DiplomatWrite),
+            TypeName::Box(underlying) => {
+                let underlying = underlying.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => Box<#underlying>)
+            }
+            TypeName::Option(underlying) => {
+                let underlying = underlying.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => Option<#underlying>)
+            }
+            TypeName::Result(ok, err, true) => {
+                let ok = ok.to_syn();
+                let err = err.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => Result<#ok, #err>)
+            }
+            TypeName::Result(ok, err, false) => {
+                let ok = ok.to_syn();
+                let err = err.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatResult<#ok, #err>)
+            }
+            TypeName::Write => {
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatWrite)
+            }
             TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8) => {
                 syn::parse_str(&format!(
                     "{}DiplomatStr",
@@ -487,38 +430,38 @@ impl TypeName {
             )
             .unwrap(),
             TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8) => {
-                syn::parse_str("Box<DiplomatStr>").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => Box<DiplomatStr>)
             }
             TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16) => {
-                syn::parse_str("Box<DiplomatStr16>").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => Box<DiplomatStr16>)
             }
             TypeName::StrReference(None, StringEncoding::Utf8) => {
-                syn::parse_str("Box<str>").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => Box<str>)
             }
             TypeName::StrSlice(StringEncoding::UnvalidatedUtf8) => {
-                syn::parse_str("&[&DiplomatStr]").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => &[&DiplomatStr])
             }
             TypeName::StrSlice(StringEncoding::UnvalidatedUtf16) => {
-                syn::parse_str("&[&DiplomatStr16]").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => &[&DiplomatStr16])
             }
-            TypeName::StrSlice(StringEncoding::Utf8) => syn::parse_str("&[&str]").unwrap(),
+            TypeName::StrSlice(StringEncoding::Utf8) => {
+                syn::parse_quote_spanned!(Span::call_site() => &[&str])
+            }
             TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
                 let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
-                let formatted_str = format!(
-                    "{}[{}]",
-                    ReferenceDisplay(lifetime, mutability),
-                    primitive_name
-                );
-                syn::parse_str(&formatted_str).unwrap()
+
+                let primitive_name = proc_macro2::Ident::new(primitive_name, Span::call_site());
+                let reference = ReferenceDisplay(lifetime, mutability);
+
+                syn::parse_quote_spanned!(Span::call_site() => #reference [#primitive_name])
             }
-            TypeName::PrimitiveSlice(None, name) => syn::parse_str(&format!(
-                "Box<[{}]>",
-                PRIMITIVE_TO_STRING.get(name).unwrap()
-            ))
-            .unwrap(),
-            TypeName::Unit => syn::parse_quote! {
-                ()
-            },
+            TypeName::PrimitiveSlice(None, name) => {
+                let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
+
+                let primitive_name = proc_macro2::Ident::new(primitive_name, Span::call_site());
+                syn::parse_quote_spanned!(Span::call_site() => Box<[#primitive_name]>)
+            }
+            TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
         }
     }
 
@@ -900,6 +843,15 @@ impl<'a> fmt::Display for ReferenceDisplay<'a> {
         }
 
         Ok(())
+    }
+}
+
+impl<'a> quote::ToTokens for ReferenceDisplay<'a> {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let lifetime = self.0.to_syn();
+        let mutability = self.1.to_syn();
+
+        tokens.append_all(quote::quote!(& #lifetime #mutability))
     }
 }
 
