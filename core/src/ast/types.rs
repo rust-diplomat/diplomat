@@ -1,7 +1,7 @@
 use proc_macro2::Span;
 use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
-use syn::*;
+use syn::Token;
 
 use lazy_static::lazy_static;
 use std::collections::HashMap;
@@ -230,13 +230,13 @@ impl From<&syn::TypePath> for PathType {
             .segments
             .last()
             .and_then(|last| {
-                if let PathArguments::AngleBracketed(angle_generics) = &last.arguments {
+                if let syn::PathArguments::AngleBracketed(angle_generics) = &last.arguments {
                     Some(
                         angle_generics
                             .args
                             .iter()
                             .map(|generic_arg| match generic_arg {
-                                GenericArgument::Lifetime(lifetime) => lifetime.into(),
+                                syn::GenericArgument::Lifetime(lifetime) => lifetime.into(),
                                 _ => panic!("generic type arguments are unsupported {other:?}"),
                             })
                             .collect(),
@@ -542,9 +542,12 @@ impl TypeName {
                 {
                     TypeName::Ordering
                 } else if p_len == 1 && p.path.segments[0].ident == "Box" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    if let syn::PathArguments::AngleBracketed(type_args) =
+                        &p.path.segments[0].arguments
                     {
-                        if let GenericArgument::Type(syn::Type::Slice(slice)) = &type_args.args[0] {
+                        if let syn::GenericArgument::Type(syn::Type::Slice(slice)) =
+                            &type_args.args[0]
+                        {
                             if let TypeName::Primitive(p) =
                                 TypeName::from_syn(&slice.elem, self_path_type)
                             {
@@ -552,7 +555,7 @@ impl TypeName {
                             } else {
                                 panic!("Owned slices only support primitives.")
                             }
-                        } else if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                        } else if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
                             if tpe.to_token_stream().to_string() == "DiplomatStr" {
                                 TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8)
                             } else if tpe.to_token_stream().to_string() == "DiplomatStr16" {
@@ -569,9 +572,10 @@ impl TypeName {
                         panic!("Expected angle brackets for Box type")
                     }
                 } else if p_len == 1 && p.path.segments[0].ident == "Option" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    if let syn::PathArguments::AngleBracketed(type_args) =
+                        &p.path.segments[0].arguments
                     {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                        if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
                             TypeName::Option(Box::new(TypeName::from_syn(tpe, self_path_type)))
                         } else {
                             panic!("Expected first type argument for Option to be a type")
@@ -588,10 +592,10 @@ impl TypeName {
                 } else if p_len == 1 && p.path.segments[0].ident == "Result"
                     || is_runtime_type(p, "DiplomatResult")
                 {
-                    if let PathArguments::AngleBracketed(type_args) =
+                    if let syn::PathArguments::AngleBracketed(type_args) =
                         &p.path.segments.last().unwrap().arguments
                     {
-                        if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
+                        if let (syn::GenericArgument::Type(ok), syn::GenericArgument::Type(err)) =
                             (&type_args.args[0], &type_args.args[1])
                         {
                             let ok = TypeName::from_syn(ok, self_path_type.clone());
@@ -746,7 +750,7 @@ pub enum LifetimeOrigin {
     PrimitiveSlice,
 }
 
-fn is_runtime_type(p: &TypePath, name: &str) -> bool {
+fn is_runtime_type(p: &syn::TypePath, name: &str) -> bool {
     (p.path.segments.len() == 1 && p.path.segments[0].ident == name)
         || (p.path.segments.len() == 2
             && p.path.segments[0].ident == "diplomat_runtime"
