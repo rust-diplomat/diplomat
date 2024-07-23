@@ -221,6 +221,10 @@ impl<'tcx> DartFormatter<'tcx> {
         }
     }
 
+    pub fn fmt_string_list(&self) -> &'static str {
+        "core.List<core.String>"
+    }
+
     pub fn fmt_primitive_list_view(&self, prim: hir::PrimitiveType) -> &'static str {
         use diplomat_core::hir::{FloatType, IntSizeType, IntType, PrimitiveType};
         match prim {

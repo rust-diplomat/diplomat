@@ -37,6 +37,7 @@ part 'RefListParameter.g.dart';
 part 'RenamedAttrEnum.g.dart';
 part 'RenamedAttrOpaque2.g.dart';
 part 'RenamedComparable.g.dart';
+part 'RenamedMyIndexer.g.dart';
 part 'RenamedMyIterable.g.dart';
 part 'RenamedMyIterator.g.dart';
 part 'RenamedOpaqueIterable.g.dart';
@@ -545,6 +546,17 @@ final class _ResultSizeVoidUnion extends ffi.Union {
 
 final class _ResultSizeVoid extends ffi.Struct {
   external _ResultSizeVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
+final class _ResultSliceUtf8VoidUnion extends ffi.Union {
+  external _SliceUtf8 ok;
+}
+
+final class _ResultSliceUtf8Void extends ffi.Struct {
+  external _ResultSliceUtf8VoidUnion union;
 
   @ffi.Bool()
   external bool isOk;

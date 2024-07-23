@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
 use crate::{ErrorStore, FileMap};
+use diplomat_core::hir::OutputOnly;
 use diplomat_core::hir::{
     self,
     borrowing_param::{
@@ -59,13 +60,6 @@ pub(crate) fn run<'cx>(
         helper_classes: &mut helper_classes,
         formatter: &formatter,
     };
-
-    // Needed for ListStringView
-    context.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
-    context.gen_slice(&hir::Slice::Str(
-        None,
-        hir::StringEncoding::UnvalidatedUtf16,
-    ));
 
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
@@ -248,11 +242,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     _ => None,
                 };
 
-                let ffi_cast_type_name = if let hir::Type::Slice(s) = field.ty {
-                    self.gen_slice(&s).into()
-                } else {
-                    self.gen_type_name_ffi(&field.ty, true)
-                };
+                let ffi_cast_type_name = self.gen_type_name_ffi(&field.ty, true);
 
                 let dart_type_name = self.gen_type_name(&field.ty);
 
@@ -442,13 +432,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
 
             param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
 
-            let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
-            let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
-
             if let hir::Type::Slice(slice) = param.ty {
                 // Two args on the ABI: pointer and size
-                param_types_ffi.push(self.formatter.fmt_pointer(&param_type_ffi).into());
-                param_types_ffi_cast.push(self.formatter.fmt_pointer(&param_type_ffi_cast).into());
+
+                let param_element_type_ffi = self.gen_slice_element_ty(&slice);
+                param_types_ffi.push(self.formatter.fmt_pointer(&param_element_type_ffi).into());
+                param_types_ffi_cast
+                    .push(self.formatter.fmt_pointer(&param_element_type_ffi).into());
                 param_names_ffi.push(format!("{param_name}Data").into());
 
                 param_types_ffi.push(self.formatter.fmt_usize(false).into());
@@ -485,6 +475,9 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                     is_borrowed,
                 });
             } else {
+                let param_type_ffi = self.gen_type_name_ffi(&param.ty, false);
+                let param_type_ffi_cast = self.gen_type_name_ffi(&param.ty, true);
+
                 if let hir::Type::Struct(..) = param.ty {
                     needs_temp_arena = true;
                 }
@@ -740,21 +733,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 }
                 self.formatter.fmt_enum_as_ffi(cast).into()
             }
-            Type::Slice(hir::Slice::Str(
-                _,
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            )) => self.formatter.fmt_utf8_primitive().into(),
-            Type::Slice(hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16)) => {
-                self.formatter.fmt_utf16_primitive().into()
-            }
-            Type::Slice(hir::Slice::Primitive(_, p)) => {
-                self.formatter.fmt_primitive_as_ffi(p, false).into()
-            }
-            Type::Slice(hir::Slice::Strs(encoding)) => match encoding {
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => "_SliceUtf8",
-                _ => "_SliceUtf16",
-            }
-            .into(),
+            Type::Slice(s) => self.gen_slice(&s).into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -774,13 +753,7 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.formatter.fmt_ffi_void()
             }
             .into(),
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => {
-                if let hir::OutType::Slice(s) = o {
-                    self.gen_slice(s).into()
-                } else {
-                    self.gen_type_name_ffi(o, cast)
-                }
-            }
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name_ffi(o, cast),
             ReturnType::Fallible(ref ok, ref err) => {
                 self.gen_result(ok.as_type(), err.as_ref()).into()
             }
@@ -1039,6 +1012,26 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
         }
     }
 
+    fn gen_slice_element_ty(&mut self, slice: &hir::Slice) -> Cow<'cx, str> {
+        match slice {
+            hir::Slice::Str(
+                _,
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+            ) => self.formatter.fmt_utf8_primitive().into(),
+            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
+                self.formatter.fmt_utf16_primitive().into()
+            }
+            hir::Slice::Primitive(_, p) => {
+                self.gen_type_name_ffi(&Type::<OutputOnly>::Primitive(*p), false)
+            }
+            hir::Slice::Strs(encoding) => self.gen_type_name_ffi(
+                &Type::<OutputOnly>::Slice(hir::Slice::Str(None, *encoding)),
+                false,
+            ),
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
     /// Generates a Dart helper class for a slice type.
     fn gen_slice(&mut self, slice: &hir::Slice) -> &'static str {
         let slice_ty = match slice {
@@ -1050,93 +1043,96 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
                 self.formatter.fmt_utf16_slice_type()
             }
             hir::Slice::Primitive(_, p) => self.formatter.fmt_slice_type(*p),
+            hir::Slice::Strs(encoding) => match encoding {
+                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => {
+                    "_SliceSliceUtf8"
+                }
+                _ => "_SliceSliceUtf16",
+            },
             _ => unreachable!("unknown AST/HIR variant"),
         };
 
-        let ffi_type = match slice {
-            hir::Slice::Str(
-                _,
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            ) => self.formatter.fmt_utf8_primitive(),
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => {
-                self.formatter.fmt_utf16_primitive()
-            }
-            hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_as_ffi(*p, false),
-            _ => unreachable!("unknown AST/HIR variant"),
-        };
+        let ffi_element_type = &self.gen_slice_element_ty(slice);
 
-        let dart_ty = match slice {
-            hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_list_type(*p),
-            hir::Slice::Str(..) => self.formatter.fmt_string(),
-            _ => unreachable!("unknown AST/HIR variant"),
-        };
+        self.helper_classes
+            .entry(slice_ty.into())
+            .or_insert_with(|| {
+                #[derive(askama::Template)]
+                #[template(path = "dart/slice.dart.jinja", escape = "none")]
+                struct SliceTemplate<'a> {
+                    slice_ty: &'a str,
+                    ffi_element_type: &'a str,
+                    dart_ty: &'a str,
+                    to_dart: &'a [&'a str],
+                }
 
-        let to_dart = match slice {
-            hir::Slice::Str(
-                _,
-                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
-            ) => vec![
-                "final r = Utf8Decoder().convert(_data.asTypedList(_length));",
-                "if (lifetimeEdges.isEmpty) {",
-                "  _diplomat_free(_data.cast(), _length, 1);", 
-                "}",
-                "return r;"
-            ],
-            hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => vec![
-                "final r = core.String.fromCharCodes(_data.asTypedList(_length));",
-                "if (lifetimeEdges.isEmpty) {",
-                "  _diplomat_free(_data.cast(), _length * 2, 2);", 
-                "}",
-                "return r;"
-            ],
-            hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => vec![
-                "final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);",
-                "if (lifetimeEdges.isEmpty) {",
-                "  _diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());", 
-                "}",
-                "return r;"
-            ],
-            hir::Slice::Primitive(_, p) =>
-                vec![
-                "final r = _data.asTypedList(_length);",
-                "if (lifetimeEdges.isEmpty) {",
-                match p {
-                    hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Char | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::I8) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length, align: 1));",
-                    hir::PrimitiveType::Int(hir::IntType::U16 | hir::IntType::I16) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 2, align: 2));",
-                    hir::PrimitiveType::Int(hir::IntType::U32 | hir::IntType::I32) | hir::PrimitiveType::Float(hir::FloatType::F32) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 4, align: 4));",
-                    hir::PrimitiveType::Int(hir::IntType::U64 | hir::IntType::I64) | hir::PrimitiveType::Float(hir::FloatType::F64) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 8, align: 8));",
-                    hir::PrimitiveType::IntSize(..) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * ffi.sizeOf<ffi.Size>(), align: ffi.sizeOf<ffi.Size>()));",
-                    hir::PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
-                },
-                "} else {",
-                "  // Keep lifetimeEdges alive",
-                "  _nopFree.attach(r, lifetimeEdges);",
-                "}",
-                "return r;"
-            ],
-            _ => unreachable!("unknown AST/HIR variant"),
-        };
-
-        #[derive(askama::Template)]
-        #[template(path = "dart/slice.dart.jinja", escape = "none")]
-        struct SliceTemplate<'a> {
-            ffi_type: &'a str,
-            slice_ty: &'a str,
-            dart_ty: &'a str,
-            to_dart: &'a [&'a str],
-        }
-
-        self.helper_classes.insert(
-            slice_ty.into(),
-            SliceTemplate {
-                ffi_type,
-                slice_ty,
-                dart_ty,
-                to_dart: &to_dart,
-            }
-            .render()
-            .unwrap(),
-        );
+                SliceTemplate {
+                    slice_ty,
+                    ffi_element_type,
+                    dart_ty: match slice {
+                        hir::Slice::Primitive(_, p) => self.formatter.fmt_primitive_list_type(*p),
+                        hir::Slice::Str(..) => self.formatter.fmt_string(),
+                        hir::Slice::Strs(..) => self.formatter.fmt_string_list(),
+                        _ => unreachable!("unknown AST/HIR variant"),
+                    },
+                    to_dart: &match slice {
+                        hir::Slice::Str(
+                            _,
+                            hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8,
+                        ) => vec![
+                            "final r = Utf8Decoder().convert(_data.asTypedList(_length));",
+                            "if (lifetimeEdges.isEmpty) {",
+                            "  _diplomat_free(_data.cast(), _length, 1);", 
+                            "}",
+                            "return r;"
+                        ],
+                        hir::Slice::Str(_, hir::StringEncoding::UnvalidatedUtf16) => vec![
+                            "final r = core.String.fromCharCodes(_data.asTypedList(_length));",
+                            "if (lifetimeEdges.isEmpty) {",
+                            "  _diplomat_free(_data.cast(), _length * 2, 2);", 
+                            "}",
+                            "return r;"
+                        ],
+                        hir::Slice::Primitive(_, hir::PrimitiveType::IntSize(_)) => vec![
+                            "final r = core.Iterable.generate(_length).map((i) => _data[i]).toList(growable: false);",
+                            "if (lifetimeEdges.isEmpty) {",
+                            "  _diplomat_free(_data.cast(), _length * ffi.sizeOf<ffi.Size>(), ffi.sizeOf<ffi.Size>());", 
+                            "}",
+                            "return r;"
+                        ],
+                        hir::Slice::Primitive(_, p) =>
+                            vec![
+                            "final r = _data.asTypedList(_length);",
+                            "if (lifetimeEdges.isEmpty) {",
+                            match p {
+                                hir::PrimitiveType::Bool | hir::PrimitiveType::Byte | hir::PrimitiveType::Char | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::I8) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length, align: 1));",
+                                hir::PrimitiveType::Int(hir::IntType::U16 | hir::IntType::I16) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 2, align: 2));",
+                                hir::PrimitiveType::Int(hir::IntType::U32 | hir::IntType::I32) | hir::PrimitiveType::Float(hir::FloatType::F32) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 4, align: 4));",
+                                hir::PrimitiveType::Int(hir::IntType::U64 | hir::IntType::I64) | hir::PrimitiveType::Float(hir::FloatType::F64) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * 8, align: 8));",
+                                hir::PrimitiveType::IntSize(..) => "  _rustFree.attach(r, (pointer: _data.cast(), bytes: _length * ffi.sizeOf<ffi.Size>(), align: ffi.sizeOf<ffi.Size>()));",
+                                hir::PrimitiveType::Int128(_) => panic!("i128 not supported in Dart"),
+                            },
+                            "} else {",
+                            "  // Keep lifetimeEdges alive",
+                            "  _nopFree.attach(r, lifetimeEdges);",
+                            "}",
+                            "return r;"
+                        ],
+                        hir::Slice::Strs(encoding) => vec![
+                            "final slices = _data.asTypedList(_length);",
+                            match *encoding {
+                                hir::StringEncoding::UnvalidatedUtf16 => "final r = core.Iterable.generate(_length).map((i) => core.String.fromCharCodes(slices[i].data.asTypedList(slices[i]._length)));",
+                                hir::StringEncoding::UnvalidatedUtf8 | hir::StringEncoding::Utf8 => "final r = core.Iterable.generate(_length).map((i) => Utf8Decoder().convert(slices[i].data.asTypedList(slices[i]._length)));",
+                                _ => unreachable!("unknown AST/HIR variant"),
+                            },
+                            "return r;",
+                        ],
+                        _ => unreachable!("unknown AST/HIR variant"),
+                    },
+                }
+                .render()
+                .unwrap()
+            });
 
         slice_ty
     }
