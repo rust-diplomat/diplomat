@@ -61,7 +61,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(any(c, kotlin, cpp, js), disable)]
+    #[diplomat::attr(not(supports = comparators), disable)]
     pub struct Comparable(u8);
 
     impl Comparable {
