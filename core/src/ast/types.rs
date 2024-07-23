@@ -3,10 +3,9 @@ use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
 use syn::Token;
 
-use lazy_static::lazy_static;
-use std::collections::HashMap;
 use std::fmt;
 use std::ops::ControlFlow;
+use std::str::FromStr;
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
@@ -447,14 +446,12 @@ impl TypeName {
                 syn::parse_quote_spanned!(Span::call_site() => &[&str])
             }
             TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
-
                 let primitive_name = name.to_ident();
                 let reference = ReferenceDisplay(lifetime, mutability);
 
                 syn::parse_quote_spanned!(Span::call_site() => #reference [#primitive_name])
             }
             TypeName::PrimitiveSlice(None, name) => {
-
                 let primitive_name = name.to_ident();
                 syn::parse_quote_spanned!(Span::call_site() => Box<[#primitive_name]>)
             }
@@ -505,11 +502,11 @@ impl TypeName {
                         if let Some(primitive) = p
                             .path
                             .get_ident()
-                            .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                            .and_then(|i| PrimitiveType::from_str(i.to_string().as_str()).ok())
                         {
                             return TypeName::PrimitiveSlice(
                                 Some((lifetime, mutability)),
-                                *primitive,
+                                primitive,
                             );
                         }
                     }
@@ -530,9 +527,9 @@ impl TypeName {
                 if let Some(primitive) = p
                     .path
                     .get_ident()
-                    .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                    .and_then(|i| PrimitiveType::from_str(i.to_string().as_str()).ok())
                 {
-                    TypeName::Primitive(*primitive)
+                    TypeName::Primitive(primitive)
                 } else if p_len >= 2
                     && p.path.segments[p_len - 2].ident == "cmp"
                     && p.path.segments[p_len - 1].ident == "Ordering"
@@ -936,28 +933,30 @@ impl fmt::Display for PrimitiveType {
     }
 }
 
-lazy_static! {
-    static ref PRIMITIVES_MAPPING: [(&'static str, PrimitiveType); 17] = [
-        ("i8", PrimitiveType::i8),
-        ("u8", PrimitiveType::u8),
-        ("i16", PrimitiveType::i16),
-        ("u16", PrimitiveType::u16),
-        ("i32", PrimitiveType::i32),
-        ("u32", PrimitiveType::u32),
-        ("i64", PrimitiveType::i64),
-        ("u64", PrimitiveType::u64),
-        ("i128", PrimitiveType::i128),
-        ("u128", PrimitiveType::u128),
-        ("isize", PrimitiveType::isize),
-        ("usize", PrimitiveType::usize),
-        ("f32", PrimitiveType::f32),
-        ("f64", PrimitiveType::f64),
-        ("bool", PrimitiveType::bool),
-        ("DiplomatChar", PrimitiveType::char),
-        ("DiplomatByte", PrimitiveType::byte),
-    ];
-    static ref STRING_TO_PRIMITIVE: HashMap<&'static str, PrimitiveType> =
-        PRIMITIVES_MAPPING.iter().cloned().collect();
+impl FromStr for PrimitiveType {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, ()> {
+        Ok(match s {
+            "i8" => PrimitiveType::i8,
+            "u8" => PrimitiveType::u8,
+            "i16" => PrimitiveType::i16,
+            "u16" => PrimitiveType::u16,
+            "i32" => PrimitiveType::i32,
+            "u32" => PrimitiveType::u32,
+            "i64" => PrimitiveType::i64,
+            "u64" => PrimitiveType::u64,
+            "i128" => PrimitiveType::i128,
+            "u128" => PrimitiveType::u128,
+            "isize" => PrimitiveType::isize,
+            "usize" => PrimitiveType::usize,
+            "f32" => PrimitiveType::f32,
+            "f64" => PrimitiveType::f64,
+            "bool" => PrimitiveType::bool,
+            "DiplomatChar" => PrimitiveType::char,
+            "DiplomatByte" => PrimitiveType::byte,
+            _ => return Err(()),
+        })
+    }
 }
 
 #[cfg(test)]
