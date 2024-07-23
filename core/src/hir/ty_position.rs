@@ -1,7 +1,7 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
-    Borrow, LinkedLifetimes, MaybeOwn, Mutability, OutStructId, ReturnableStructPath, StructDef,
-    StructId, StructPath, TypeContext, TypeDef, TypeId,
+    Borrow, Callback, IdentBuf, LinkedLifetimes, MaybeOwn, Mutability, NoCallback, OutStructId,
+    ReturnableStructPath, StructDef, StructId, StructPath, TypeContext, TypeDef, TypeId,
 };
 use core::fmt::Debug;
 
@@ -92,6 +92,7 @@ where
     for<'tcx> TypeDef<'tcx>: From<&'tcx StructDef<Self>>,
 {
     const IN_OUT_STATUS: InputOrOutput;
+    type CallbackInstantiation: Debug + ComputeId;
 
     /// Type representing how we can point to opaques, which must always be behind a pointer.
     ///
@@ -115,6 +116,10 @@ pub enum InputOrOutput {
     Input,
     Output,
     InputOutput,
+}
+
+pub trait ComputeId {
+    fn id(&self) -> Option<&IdentBuf>;
 }
 
 /// One of 3 types implementing [`TyPosition`], representing types that can be
@@ -146,6 +151,7 @@ impl TyPosition for Everywhere {
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
+    type CallbackInstantiation = NoCallback;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::Struct(def)
@@ -157,6 +163,7 @@ impl TyPosition for OutputOnly {
     type OpaqueOwnership = MaybeOwn;
     type StructId = OutStructId;
     type StructPath = ReturnableStructPath;
+    type CallbackInstantiation = NoCallback;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::OutStruct(def)
@@ -168,6 +175,7 @@ impl TyPosition for InputOnly {
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
+    type CallbackInstantiation = Callback;
 
     fn wrap_struct_def<'tcx>(_def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         panic!("Input-only structs are not currently supported");
