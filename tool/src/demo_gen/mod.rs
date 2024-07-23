@@ -37,7 +37,7 @@ pub(crate) fn run<'tcx>(
     #[template(path = "demo_gen/index.js.jinja", escape = "none")]
     struct IndexInfo {
         termini_exports: Vec<TerminusExport>,
-        termini: Vec<TerminusInfo>
+        pub termini: Vec<TerminusInfo>
     }
 
     let mut out_info = IndexInfo {
@@ -97,6 +97,8 @@ pub(crate) fn run<'tcx>(
             }
         }
 
+        generate_default_renderer_files(&termini, &files);
+
         if !termini.is_empty() {
             let mut imports = BTreeSet::new();
             for file_type in FILE_TYPES {
@@ -137,10 +139,25 @@ pub(crate) fn run<'tcx>(
 
     // TODO: Avoid overwriting these files if one already exists (but update if that is a file present somewhere).
     // I'm thinking of just putting these in their own folder for that.
+    // TODO: Some of these files should only be generated with certain command line options.
     files.add_file("rendering.mjs".into(), include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into());
     files.add_file("runtime.mjs".into(), include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into());
-    files.add_file("index.html".into(), include_str!("../../templates/demo_gen/default_renderer/index.html").into());
-
+    files.add_file("template.html".into(), include_str!("../../templates/demo_gen/default_renderer/template.html").into());
+    files.add_file("diplomat.config.mjs".into(), include_str!("../../templates/demo_gen/default_renderer/config.mjs").into());
 
     (files, errors)
+}
+
+fn generate_default_renderer_files(termini : &Vec<TerminusInfo>, files: &FileMap)  {
+    #[derive(Template)]
+    #[template(path = "demo_gen/default_renderer/termini.html.jinja")]
+    struct TerminiHTML<'a> {
+        pub t : &'a TerminusInfo
+    }
+
+    for terminus in termini {
+        files.add_file(format!("rendering/{}_{}.html", terminus.type_name, terminus.function_name), TerminiHTML {
+            t: terminus
+        }.render().unwrap());   
+    }
 }

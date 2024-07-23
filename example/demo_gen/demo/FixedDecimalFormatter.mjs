@@ -4,8 +4,8 @@ import { FixedDecimalFormatter } from "./js/FixedDecimalFormatter.mjs"
 import { FixedDecimalFormatterOptions } from "./js/FixedDecimalFormatterOptions.mjs"
 import { Locale } from "./js/Locale.mjs"
 export function formatWrite() {
-	var terminusArgs = arguments;
-	return (function (...args) { return args[0].formatWrite(...args.slice(1)) }).apply(
+    var terminusArgs = arguments;
+    return (function (...args) { return args[0].formatWrite(...args.slice(1)) }).apply(
         null,
         [
             FixedDecimalFormatter.tryNew.apply(
