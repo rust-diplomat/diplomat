@@ -136,7 +136,7 @@ impl<'tcx> JSFormatter<'tcx> {
     pub fn fmt_primitive_as_ffi(&self, primitive: hir::PrimitiveType) -> &'static str {
         match primitive {
             hir::PrimitiveType::Bool => "boolean",
-            hir::PrimitiveType::Char => "char",
+            hir::PrimitiveType::Char => "codepoint",
             hir::PrimitiveType::Int(hir::IntType::I64 | hir::IntType::U64)
             | hir::PrimitiveType::Int128(_) => "bigint",
             hir::PrimitiveType::Int(_)

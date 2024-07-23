@@ -1,5 +1,5 @@
 
-export { char } from './diplomat-runtime';
+export { codepoint } from './diplomat-runtime';
 
 
 export { ImportedStruct } from "./ImportedStruct"
