@@ -1,12 +1,11 @@
 use proc_macro2::Span;
-use quote::ToTokens;
+use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
-use syn::{punctuated::Punctuated, *};
+use syn::Token;
 
-use lazy_static::lazy_static;
-use std::collections::HashMap;
 use std::fmt;
 use std::ops::ControlFlow;
+use std::str::FromStr;
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
@@ -230,13 +229,13 @@ impl From<&syn::TypePath> for PathType {
             .segments
             .last()
             .and_then(|last| {
-                if let PathArguments::AngleBracketed(angle_generics) = &last.arguments {
+                if let syn::PathArguments::AngleBracketed(angle_generics) = &last.arguments {
                     Some(
                         angle_generics
                             .args
                             .iter()
                             .map(|generic_arg| match generic_arg {
-                                GenericArgument::Lifetime(lifetime) => lifetime.into(),
+                                syn::GenericArgument::Lifetime(lifetime) => lifetime.into(),
                                 _ => panic!("generic type arguments are unsupported {other:?}"),
                             })
                             .collect(),
@@ -371,103 +370,45 @@ impl TypeName {
     /// Converts the [`TypeName`] back into an AST node that can be spliced into a program.
     pub fn to_syn(&self) -> syn::Type {
         match self {
-            TypeName::Primitive(name) => {
-                syn::Type::Path(syn::parse_str(PRIMITIVE_TO_STRING.get(name).unwrap()).unwrap())
+            TypeName::Primitive(primitive) => {
+                let primitive = primitive.to_ident();
+                syn::parse_quote_spanned!(Span::call_site() => #primitive)
             }
-            TypeName::Ordering => syn::Type::Path(syn::parse_str("i8").unwrap()),
+            TypeName::Ordering => syn::parse_quote_spanned!(Span::call_site() => i8),
             TypeName::Named(name) | TypeName::SelfType(name) => {
                 // Self also gets expanded instead of turning into `Self` because
                 // this code is used to generate the `extern "C"` functions, which
                 // aren't in an impl block.
-                syn::Type::Path(name.to_syn())
+                let name = name.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => #name)
             }
             TypeName::Reference(lifetime, mutability, underlying) => {
-                syn::Type::Reference(TypeReference {
-                    and_token: syn::token::And(Span::call_site()),
-                    lifetime: lifetime.to_syn(),
-                    mutability: mutability.to_syn(),
-                    elem: Box::new(underlying.to_syn()),
-                })
+                let reference = ReferenceDisplay(lifetime, mutability);
+                let underlying = underlying.to_syn();
+
+                syn::parse_quote_spanned!(Span::call_site() => #reference #underlying)
             }
-            TypeName::Box(underlying) => syn::Type::Path(TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: syn::Ident::new("Box", Span::call_site()),
-                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                            colon2_token: None,
-                            lt_token: syn::token::Lt(Span::call_site()),
-                            args: Punctuated::from_iter(vec![GenericArgument::Type(
-                                underlying.to_syn(),
-                            )]),
-                            gt_token: syn::token::Gt(Span::call_site()),
-                        }),
-                    }]),
-                },
-            }),
-            TypeName::Option(underlying) => syn::Type::Path(TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: syn::Ident::new("Option", Span::call_site()),
-                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                            colon2_token: None,
-                            lt_token: syn::token::Lt(Span::call_site()),
-                            args: Punctuated::from_iter(vec![GenericArgument::Type(
-                                underlying.to_syn(),
-                            )]),
-                            gt_token: syn::token::Gt(Span::call_site()),
-                        }),
-                    }]),
-                },
-            }),
-            TypeName::Result(ok, err, true) => syn::Type::Path(TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![PathSegment {
-                        ident: syn::Ident::new("Result", Span::call_site()),
-                        arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                            colon2_token: None,
-                            lt_token: syn::token::Lt(Span::call_site()),
-                            args: Punctuated::from_iter(vec![
-                                GenericArgument::Type(ok.to_syn()),
-                                GenericArgument::Type(err.to_syn()),
-                            ]),
-                            gt_token: syn::token::Gt(Span::call_site()),
-                        }),
-                    }]),
-                },
-            }),
-            TypeName::Result(ok, err, false) => syn::Type::Path(TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: Punctuated::from_iter(vec![
-                        PathSegment {
-                            ident: syn::Ident::new("diplomat_runtime", Span::call_site()),
-                            arguments: PathArguments::None,
-                        },
-                        PathSegment {
-                            ident: syn::Ident::new("DiplomatResult", Span::call_site()),
-                            arguments: PathArguments::AngleBracketed(
-                                AngleBracketedGenericArguments {
-                                    colon2_token: None,
-                                    lt_token: syn::token::Lt(Span::call_site()),
-                                    args: Punctuated::from_iter(vec![
-                                        GenericArgument::Type(ok.to_syn()),
-                                        GenericArgument::Type(err.to_syn()),
-                                    ]),
-                                    gt_token: syn::token::Gt(Span::call_site()),
-                                },
-                            ),
-                        },
-                    ]),
-                },
-            }),
-            TypeName::Write => syn::parse_quote!(diplomat_runtime::DiplomatWrite),
+            TypeName::Box(underlying) => {
+                let underlying = underlying.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => Box<#underlying>)
+            }
+            TypeName::Option(underlying) => {
+                let underlying = underlying.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => Option<#underlying>)
+            }
+            TypeName::Result(ok, err, true) => {
+                let ok = ok.to_syn();
+                let err = err.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => Result<#ok, #err>)
+            }
+            TypeName::Result(ok, err, false) => {
+                let ok = ok.to_syn();
+                let err = err.to_syn();
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatResult<#ok, #err>)
+            }
+            TypeName::Write => {
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatWrite)
+            }
             TypeName::StrReference(Some(lifetime), StringEncoding::UnvalidatedUtf8) => {
                 syn::parse_str(&format!(
                     "{}DiplomatStr",
@@ -487,38 +428,34 @@ impl TypeName {
             )
             .unwrap(),
             TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8) => {
-                syn::parse_str("Box<DiplomatStr>").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => Box<DiplomatStr>)
             }
             TypeName::StrReference(None, StringEncoding::UnvalidatedUtf16) => {
-                syn::parse_str("Box<DiplomatStr16>").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => Box<DiplomatStr16>)
             }
             TypeName::StrReference(None, StringEncoding::Utf8) => {
-                syn::parse_str("Box<str>").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => Box<str>)
             }
             TypeName::StrSlice(StringEncoding::UnvalidatedUtf8) => {
-                syn::parse_str("&[&DiplomatStr]").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => &[&DiplomatStr])
             }
             TypeName::StrSlice(StringEncoding::UnvalidatedUtf16) => {
-                syn::parse_str("&[&DiplomatStr16]").unwrap()
+                syn::parse_quote_spanned!(Span::call_site() => &[&DiplomatStr16])
             }
-            TypeName::StrSlice(StringEncoding::Utf8) => syn::parse_str("&[&str]").unwrap(),
-            TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
-                let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
-                let formatted_str = format!(
-                    "{}[{}]",
-                    ReferenceDisplay(lifetime, mutability),
-                    primitive_name
-                );
-                syn::parse_str(&formatted_str).unwrap()
+            TypeName::StrSlice(StringEncoding::Utf8) => {
+                syn::parse_quote_spanned!(Span::call_site() => &[&str])
             }
-            TypeName::PrimitiveSlice(None, name) => syn::parse_str(&format!(
-                "Box<[{}]>",
-                PRIMITIVE_TO_STRING.get(name).unwrap()
-            ))
-            .unwrap(),
-            TypeName::Unit => syn::parse_quote! {
-                ()
-            },
+            TypeName::PrimitiveSlice(Some((lifetime, mutability)), primitive) => {
+                let primitive = primitive.to_ident();
+                let reference = ReferenceDisplay(lifetime, mutability);
+
+                syn::parse_quote_spanned!(Span::call_site() => #reference [#primitive])
+            }
+            TypeName::PrimitiveSlice(None, primitive) => {
+                let primitive = primitive.to_ident();
+                syn::parse_quote_spanned!(Span::call_site() => Box<[#primitive]>)
+            }
+            TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
         }
     }
 
@@ -565,11 +502,11 @@ impl TypeName {
                         if let Some(primitive) = p
                             .path
                             .get_ident()
-                            .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                            .and_then(|i| PrimitiveType::from_str(i.to_string().as_str()).ok())
                         {
                             return TypeName::PrimitiveSlice(
                                 Some((lifetime, mutability)),
-                                *primitive,
+                                primitive,
                             );
                         }
                     }
@@ -590,18 +527,21 @@ impl TypeName {
                 if let Some(primitive) = p
                     .path
                     .get_ident()
-                    .and_then(|i| STRING_TO_PRIMITIVE.get(i.to_string().as_str()))
+                    .and_then(|i| PrimitiveType::from_str(i.to_string().as_str()).ok())
                 {
-                    TypeName::Primitive(*primitive)
+                    TypeName::Primitive(primitive)
                 } else if p_len >= 2
                     && p.path.segments[p_len - 2].ident == "cmp"
                     && p.path.segments[p_len - 1].ident == "Ordering"
                 {
                     TypeName::Ordering
                 } else if p_len == 1 && p.path.segments[0].ident == "Box" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    if let syn::PathArguments::AngleBracketed(type_args) =
+                        &p.path.segments[0].arguments
                     {
-                        if let GenericArgument::Type(syn::Type::Slice(slice)) = &type_args.args[0] {
+                        if let syn::GenericArgument::Type(syn::Type::Slice(slice)) =
+                            &type_args.args[0]
+                        {
                             if let TypeName::Primitive(p) =
                                 TypeName::from_syn(&slice.elem, self_path_type)
                             {
@@ -609,7 +549,7 @@ impl TypeName {
                             } else {
                                 panic!("Owned slices only support primitives.")
                             }
-                        } else if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                        } else if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
                             if tpe.to_token_stream().to_string() == "DiplomatStr" {
                                 TypeName::StrReference(None, StringEncoding::UnvalidatedUtf8)
                             } else if tpe.to_token_stream().to_string() == "DiplomatStr16" {
@@ -626,9 +566,10 @@ impl TypeName {
                         panic!("Expected angle brackets for Box type")
                     }
                 } else if p_len == 1 && p.path.segments[0].ident == "Option" {
-                    if let PathArguments::AngleBracketed(type_args) = &p.path.segments[0].arguments
+                    if let syn::PathArguments::AngleBracketed(type_args) =
+                        &p.path.segments[0].arguments
                     {
-                        if let GenericArgument::Type(tpe) = &type_args.args[0] {
+                        if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
                             TypeName::Option(Box::new(TypeName::from_syn(tpe, self_path_type)))
                         } else {
                             panic!("Expected first type argument for Option to be a type")
@@ -645,10 +586,10 @@ impl TypeName {
                 } else if p_len == 1 && p.path.segments[0].ident == "Result"
                     || is_runtime_type(p, "DiplomatResult")
                 {
-                    if let PathArguments::AngleBracketed(type_args) =
+                    if let syn::PathArguments::AngleBracketed(type_args) =
                         &p.path.segments.last().unwrap().arguments
                     {
-                        if let (GenericArgument::Type(ok), GenericArgument::Type(err)) =
+                        if let (syn::GenericArgument::Type(ok), syn::GenericArgument::Type(err)) =
                             (&type_args.args[0], &type_args.args[1])
                         {
                             let ok = TypeName::from_syn(ok, self_path_type.clone());
@@ -803,7 +744,7 @@ pub enum LifetimeOrigin {
     PrimitiveSlice,
 }
 
-fn is_runtime_type(p: &TypePath, name: &str) -> bool {
+fn is_runtime_type(p: &syn::TypePath, name: &str) -> bool {
     (p.path.segments.len() == 1 && p.path.segments[0].ident == name)
         || (p.path.segments.len() == 2
             && p.path.segments[0].ident == "diplomat_runtime"
@@ -903,6 +844,15 @@ impl<'a> fmt::Display for ReferenceDisplay<'a> {
     }
 }
 
+impl<'a> quote::ToTokens for ReferenceDisplay<'a> {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        let lifetime = self.0.to_syn();
+        let mutability = self.1.to_syn();
+
+        tokens.append_all(quote::quote!(& #lifetime #mutability))
+    }
+}
+
 impl fmt::Display for PathType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.path.fmt(f)?;
@@ -944,11 +894,11 @@ pub enum PrimitiveType {
     byte,
 }
 
-impl fmt::Display for PrimitiveType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl PrimitiveType {
+    fn as_code_str(self) -> &'static str {
         match self {
             PrimitiveType::i8 => "i8",
-            PrimitiveType::u8 | PrimitiveType::byte => "u8",
+            PrimitiveType::u8 => "u8",
             PrimitiveType::i16 => "i16",
             PrimitiveType::u16 => "u16",
             PrimitiveType::i32 => "i32",
@@ -962,36 +912,51 @@ impl fmt::Display for PrimitiveType {
             PrimitiveType::f32 => "f32",
             PrimitiveType::f64 => "f64",
             PrimitiveType::bool => "bool",
+            PrimitiveType::char => "DiplomatChar",
+            PrimitiveType::byte => "DiplomatByte",
+        }
+    }
+
+    fn to_ident(self) -> proc_macro2::Ident {
+        proc_macro2::Ident::new(self.as_code_str(), Span::call_site())
+    }
+}
+
+impl fmt::Display for PrimitiveType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PrimitiveType::byte => "u8",
             PrimitiveType::char => "char",
+            _ => self.as_code_str(),
         }
         .fmt(f)
     }
 }
 
-lazy_static! {
-    static ref PRIMITIVES_MAPPING: [(&'static str, PrimitiveType); 17] = [
-        ("i8", PrimitiveType::i8),
-        ("u8", PrimitiveType::u8),
-        ("i16", PrimitiveType::i16),
-        ("u16", PrimitiveType::u16),
-        ("i32", PrimitiveType::i32),
-        ("u32", PrimitiveType::u32),
-        ("i64", PrimitiveType::i64),
-        ("u64", PrimitiveType::u64),
-        ("i128", PrimitiveType::i128),
-        ("u128", PrimitiveType::u128),
-        ("isize", PrimitiveType::isize),
-        ("usize", PrimitiveType::usize),
-        ("f32", PrimitiveType::f32),
-        ("f64", PrimitiveType::f64),
-        ("bool", PrimitiveType::bool),
-        ("DiplomatChar", PrimitiveType::char),
-        ("DiplomatByte", PrimitiveType::byte),
-    ];
-    static ref STRING_TO_PRIMITIVE: HashMap<&'static str, PrimitiveType> =
-        PRIMITIVES_MAPPING.iter().cloned().collect();
-    static ref PRIMITIVE_TO_STRING: HashMap<PrimitiveType, &'static str> =
-        PRIMITIVES_MAPPING.iter().map(|t| (t.1, t.0)).collect();
+impl FromStr for PrimitiveType {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, ()> {
+        Ok(match s {
+            "i8" => PrimitiveType::i8,
+            "u8" => PrimitiveType::u8,
+            "i16" => PrimitiveType::i16,
+            "u16" => PrimitiveType::u16,
+            "i32" => PrimitiveType::i32,
+            "u32" => PrimitiveType::u32,
+            "i64" => PrimitiveType::i64,
+            "u64" => PrimitiveType::u64,
+            "i128" => PrimitiveType::i128,
+            "u128" => PrimitiveType::u128,
+            "isize" => PrimitiveType::isize,
+            "usize" => PrimitiveType::usize,
+            "f32" => PrimitiveType::f32,
+            "f64" => PrimitiveType::f64,
+            "bool" => PrimitiveType::bool,
+            "DiplomatChar" => PrimitiveType::char,
+            "DiplomatByte" => PrimitiveType::byte,
+            _ => return Err(()),
+        })
+    }
 }
 
 #[cfg(test)]
