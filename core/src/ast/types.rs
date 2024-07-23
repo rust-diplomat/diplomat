@@ -371,8 +371,8 @@ impl TypeName {
     pub fn to_syn(&self) -> syn::Type {
         match self {
             TypeName::Primitive(name) => {
-                let ident = name.to_ident();
-                syn::parse_quote_spanned!(Span::call_site() => #ident)
+                let primitive = primitive.to_ident();
+                syn::parse_quote_spanned!(Span::call_site() => #primitive)
             }
             TypeName::Ordering => syn::parse_quote_spanned!(Span::call_site() => i8),
             TypeName::Named(name) | TypeName::SelfType(name) => {
