@@ -61,6 +61,13 @@ pub(crate) fn run<'cx>(
         formatter: &formatter,
     };
 
+    // Needed for ListStringView
+    context.gen_slice(&hir::Slice::Str(None, hir::StringEncoding::UnvalidatedUtf8));
+    context.gen_slice(&hir::Slice::Str(
+        None,
+        hir::StringEncoding::UnvalidatedUtf16,
+    ));
+
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             continue;
