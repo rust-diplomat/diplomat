@@ -452,8 +452,8 @@ impl TypeName {
                 syn::parse_quote_spanned!(Span::call_site() => #reference [#primitive])
             }
             TypeName::PrimitiveSlice(None, primitive) => {
-                let primitive_name = name.to_ident();
-                syn::parse_quote_spanned!(Span::call_site() => Box<[#primitive_name]>)
+                let primitive = name.to_ident();
+                syn::parse_quote_spanned!(Span::call_site() => Box<[#primitive]>)
             }
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
         }
