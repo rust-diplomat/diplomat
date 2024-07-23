@@ -1,9 +1,25 @@
+var lib = undefined;
+var templateDoc = undefined;
+
+export function initialize(templateDocument, library) {
+    lib = library;
+    templateDoc = templateDocument;
+}
+
+function generateTemplate(variable, selector) {
+    if (variable === undefined) {
+        variable = templateDoc.querySelector(selector).content;
+    }
+}
+
 class ParameterTemplate extends HTMLElement {
     default = null;
 
-    static baseTemplate = document.querySelector("#parameter").content;
-    constructor(template, ...args) {
+    static baseTemplate;
+    constructor(template, selector, ...args) {
         super();
+        generateTemplate(ParameterTemplate.baseTemplate, "#parameter");
+        generateTemplate(template, selector);
         let baseClone = ParameterTemplate.baseTemplate.cloneNode(true);
 
         let clone = template.cloneNode(true);
@@ -41,9 +57,9 @@ customElements.define("terminus-param", ParameterTemplate);
 
 class BooleanTemplate extends ParameterTemplate {
     default = false;
-    static template = document.querySelector("template#boolean").content;
+    static template;
     constructor() {
-        super(BooleanTemplate.template);
+        super(BooleanTemplate.template, "template#boolean");
     }
 }
 
@@ -51,9 +67,9 @@ customElements.define("terminus-param-boolean", BooleanTemplate);
 
 class NumberTemplate extends ParameterTemplate {
     default = 0;
-    static template = document.querySelector("template#number").content;
+    static template;
     constructor() {
-        super(NumberTemplate.template);
+        super(NumberTemplate.template, "template#number");
     }
     
     getEventValue(event) {
@@ -65,18 +81,19 @@ customElements.define("terminus-param-number", NumberTemplate);
 
 class StringTemplate extends ParameterTemplate {
     default = "";
-    static template = document.querySelector("template#string").content;
+    static template;
     constructor() {
-        super(StringTemplate.template);
+        super(StringTemplate.template, "template#string");
     }
 }
 
 customElements.define("terminus-param-string", StringTemplate);
 
 class EnumOption extends HTMLElement {
-    static template = document.querySelector("template#enum-option").content;
+    static template;
     constructor(optionText) {
         super();
+        generateTemplate(EnumOption.template, "template#enum-option");
         let clone = EnumOption.template.cloneNode(true);
 
         clone.querySelector("slot[name='option-text']").parentElement.innerText = optionText;
@@ -88,11 +105,11 @@ class EnumOption extends HTMLElement {
 customElements.define("terminus-enum-option", EnumOption);
 
 class EnumTemplate extends ParameterTemplate {
-    static template = document.querySelector("template#enum").content;
+    static template;
 
     #enumType;
     constructor(enumType) {
-        super(EnumTemplate.template, enumType);
+        super(EnumTemplate.template, "template#enum", enumType);
         this.#enumType = enumType;
     }
 
@@ -116,7 +133,7 @@ customElements.define("terminus-param-enum", EnumTemplate);
 class TerminusParams extends HTMLElement {
     #params = [];
 
-    constructor(params, lib, evaluateExternal){
+    constructor(params, evaluateExternal){
         super();
 
         for (var i = 0; i < params.length; i++) {
@@ -174,13 +191,17 @@ class TerminusParams extends HTMLElement {
 customElements.define("terminus-params", TerminusParams);
 
 export class TerminusRender extends HTMLElement {
-    static template = document.querySelector("template#terminus").content;
+    static template;
 
     #func = null;
     #parameters;
     #output;
-    constructor(terminus, library, evaluateExternal) {
+    constructor() {
         super();
+    }
+
+    attachTerminus(terminus, evaluateExternal) {
+        generateTemplate(TerminusRender.template, "template#terminus");
         let clone = TerminusRender.template.cloneNode(true);
 
         this.id = terminus.funcName;
@@ -195,7 +216,7 @@ export class TerminusRender extends HTMLElement {
         funcText.innerText = terminus.funcName;
         this.appendChild(funcText);
 
-        this.#parameters = new TerminusParams(terminus.parameters, library, evaluateExternal);
+        this.#parameters = new TerminusParams(terminus.parameters, evaluateExternal);
         this.#parameters.slot = "parameters";
         this.appendChild(this.#parameters);
 
