@@ -37,6 +37,7 @@ part 'RefListParameter.g.dart';
 part 'RenamedAttrEnum.g.dart';
 part 'RenamedAttrOpaque2.g.dart';
 part 'RenamedComparable.g.dart';
+part 'RenamedMyIndexer.g.dart';
 part 'RenamedMyIterable.g.dart';
 part 'RenamedMyIterator.g.dart';
 part 'RenamedOpaqueIterable.g.dart';
@@ -50,16 +51,15 @@ part 'Utf16Wrap.g.dart';
 /// A [Rune] is a Unicode code point, such as `a`, or `💡`.
 /// 
 /// The recommended way to obtain a [Rune] is to create it from a 
-/// [String], which is conceptually a list of [Runes]. For example,
-/// `'a'.runes.first` is equal to the [Rune] `a`.
+/// [String], which is conceptually a sequence of [Rune]s. For
+/// example, `'a'.runes.first` is equal to the [Rune] `a`.
 /// 
-/// Dart does not have a character/rune literal, so integer literals
-/// need to be used. For example the Unicode code point U+1F4A1, `💡`,
-/// can be represented by `0x1F4A1`. Note that only values in the ranges
-/// `0x0..0xD7FF` and `0xE000..0x10FFFF` (both inclusive) are Unicode
-/// code points, and hence valid [Rune]s.
+/// Dart does not have a character/rune literal (https://github.com/dart-lang/language/issues/886),
+/// so integer literals need to be used. For example the Unicode code point 
+/// U+1F4A1, `💡`, can be represented by `0x1F4A1`.
 ///
-/// A [String] can be constructed from a [Rune] using [String.fromCharCode]. 
+/// A [String] can be constructed from a [Rune] using (the [confusingly named](
+/// https://github.com/dart-lang/sdk/issues/56304)) [String.fromCharCode]. 
 typedef Rune = int;
 
 // ignore: unused_element
@@ -546,6 +546,17 @@ final class _ResultSizeVoidUnion extends ffi.Union {
 
 final class _ResultSizeVoid extends ffi.Struct {
   external _ResultSizeVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+}
+
+final class _ResultSliceUtf8VoidUnion extends ffi.Union {
+  external _SliceUtf8 ok;
+}
+
+final class _ResultSliceUtf8Void extends ffi.Struct {
+  external _ResultSliceUtf8VoidUnion union;
 
   @ffi.Bool()
   external bool isOk;
