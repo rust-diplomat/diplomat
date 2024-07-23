@@ -71,55 +71,6 @@ extension on ByteBuffer {
   int get length => lengthInBytes;
 }
 
-extension on String {
-  // ignore: unused_element
-  _Utf8View get utf8View => _Utf8View(this);
-  // ignore: unused_element
-  _Utf16View get utf16View => _Utf16View(this);
-}
-
-extension on core.List<String> {
-  // ignore: unused_element
-  _ListUtf8View get utf8View => _ListUtf8View(this);
-  // ignore: unused_element
-  _ListUtf16View get utf16View => _ListUtf16View(this);
-}
-
-extension on core.List<bool> {
-  // ignore: unused_element
-  _BoolListView get boolView => _BoolListView(this);
-}
-
-extension on core.List<int> {
-  // ignore: unused_element
-  _Int8ListView get int8View => _Int8ListView(this);
-  // ignore: unused_element
-  _Int16ListView get int16View => _Int16ListView(this);
-  // ignore: unused_element
-  _Int32ListView get int32View => _Int32ListView(this);
-  // ignore: unused_element
-  _Int64ListView get int64View => _Int64ListView(this);
-  // ignore: unused_element
-  _IsizeListView get isizeView => _IsizeListView(this);
-  // ignore: unused_element
-  _Uint8ListView get uint8View => _Uint8ListView(this);
-  // ignore: unused_element
-  _Uint16ListView get uint16View => _Uint16ListView(this);
-  // ignore: unused_element
-  _Uint32ListView get uint32View => _Uint32ListView(this);
-  // ignore: unused_element
-  _Uint64ListView get uint64View => _Uint64ListView(this);
-  // ignore: unused_element
-  _UsizeListView get usizeView => _UsizeListView(this);
-}
-
-extension on core.List<double> {
-  // ignore: unused_element
-  _Float32ListView get float32View => _Float32ListView(this);
-  // ignore: unused_element
-  _Float64ListView get float64View => _Float64ListView(this);
-}
-
 // ignore: unused_element
 class _Utf8View {
   final Uint8List _codeUnits;
@@ -135,6 +86,11 @@ class _Utf8View {
   int get length => _codeUnits.length;
 }
 
+extension on String {
+  // ignore: unused_element
+  _Utf8View get utf8View => _Utf8View(this);
+}
+
 // ignore: unused_element
 class _Utf16View {
   final core.List<int> _codeUnits;
@@ -147,6 +103,11 @@ class _Utf16View {
   }
 
   int get length => _codeUnits.length;
+}
+
+extension on String {
+  // ignore: unused_element
+  _Utf16View get utf16View => _Utf16View(this);
 }
 
 // ignore: unused_element
@@ -170,6 +131,11 @@ class _ListUtf8View {
   int get length => _strings.length;
 }
 
+extension on core.List<String> {
+  // ignore: unused_element
+  _ListUtf8View get utf8View => _ListUtf8View(this);
+}
+
 // ignore: unused_element
 class _ListUtf16View {
   final core.List<String> _strings;
@@ -190,6 +156,11 @@ class _ListUtf16View {
   int get length => _strings.length;
 }
 
+extension on core.List<String> {
+  // ignore: unused_element
+  _ListUtf16View get utf16View => _ListUtf16View(this);
+}
+
 // ignore: unused_element
 class _BoolListView {
   final core.List<bool> _values;
@@ -208,6 +179,11 @@ class _BoolListView {
   int get length => _values.length;
 }
 
+extension on core.List<bool> {
+  // ignore: unused_element
+  _BoolListView get boolView => _BoolListView(this);
+}
+
 class _Int8ListView {
   final core.List<int> _values;
 
@@ -219,6 +195,11 @@ class _Int8ListView {
   }
 
   int get length => _values.length;
+}
+
+extension on core.List<int> {
+  // ignore: unused_element
+  _Int8ListView get int8View => _Int8ListView(this);
 }
 
 class _Int16ListView {
@@ -234,6 +215,11 @@ class _Int16ListView {
   int get length => _values.length;
 }
 
+extension on core.List<int> {
+  // ignore: unused_element
+  _Int16ListView get int16View => _Int16ListView(this);
+}
+
 class _Int32ListView {
   final core.List<int> _values;
 
@@ -247,6 +233,11 @@ class _Int32ListView {
   int get length => _values.length;
 }
 
+extension on core.List<int> {
+  // ignore: unused_element
+  _Int32ListView get int32View => _Int32ListView(this);
+}
+
 class _Int64ListView {
   final core.List<int> _values;
 
@@ -258,6 +249,11 @@ class _Int64ListView {
   }
 
   int get length => _values.length;
+}
+
+extension on core.List<int> {
+  // ignore: unused_element
+  _Int64ListView get int64View => _Int64ListView(this);
 }
 
 // ignore: unused_element
@@ -278,6 +274,11 @@ class _IsizeListView {
   int get length => _values.length;
 }
 
+extension on core.List<int> {
+  // ignore: unused_element
+  _IsizeListView get isizeView => _IsizeListView(this);
+}
+
 class _Uint8ListView {
   final core.List<int> _values;
 
@@ -293,6 +294,11 @@ class _Uint8ListView {
   }
 
   int get length => _values.length;
+}
+
+extension on core.List<int> {
+  // ignore: unused_element
+  _Uint8ListView get uint8View => _Uint8ListView(this);
 }
 
 class _Uint16ListView {
@@ -312,6 +318,11 @@ class _Uint16ListView {
   int get length => _values.length;
 }
 
+extension on core.List<int> {
+  // ignore: unused_element
+  _Uint16ListView get uint16View => _Uint16ListView(this);
+}
+
 class _Uint32ListView {
   final core.List<int> _values;
 
@@ -329,6 +340,11 @@ class _Uint32ListView {
   int get length => _values.length;
 }
 
+extension on core.List<int> {
+  // ignore: unused_element
+  _Uint32ListView get uint32View => _Uint32ListView(this);
+}
+
 class _Uint64ListView {
   final core.List<int> _values;
 
@@ -344,6 +360,11 @@ class _Uint64ListView {
   }
 
   int get length => _values.length;
+}
+
+extension on core.List<int> {
+  // ignore: unused_element
+  _Uint64ListView get uint64View => _Uint64ListView(this);
 }
 
 // ignore: unused_element
@@ -364,6 +385,11 @@ class _UsizeListView {
   int get length => _values.length;
 }
 
+extension on core.List<int> {
+  // ignore: unused_element
+  _UsizeListView get usizeView => _UsizeListView(this);
+}
+
 class _Float32ListView {
   final core.List<double> _values;
 
@@ -377,6 +403,11 @@ class _Float32ListView {
   int get length => _values.length;
 }
 
+extension on core.List<double> {
+  // ignore: unused_element
+  _Float32ListView get float32View => _Float32ListView(this);
+}
+
 class _Float64ListView {
   final core.List<double> _values;
 
@@ -388,4 +419,9 @@ class _Float64ListView {
   }
 
   int get length => _values.length;
+}
+
+extension on core.List<double> {
+  // ignore: unused_element
+  _Float64ListView get float64View => _Float64ListView(this);
 }
