@@ -28,6 +28,14 @@ export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2"
 
+export { RenamedMyIterable } from "./RenamedMyIterable"
+
+export { RenamedMyIterator } from "./RenamedMyIterator"
+
+export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable"
+
+export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
+
 export { Unnamespaced } from "./Unnamespaced"
 
 export { Bar } from "./Bar"

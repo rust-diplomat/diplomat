@@ -26,6 +26,14 @@ export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
 
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2.mjs"
 
+export { RenamedMyIterable } from "./RenamedMyIterable.mjs"
+
+export { RenamedMyIterator } from "./RenamedMyIterator.mjs"
+
+export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable.mjs"
+
+export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator.mjs"
+
 export { Unnamespaced } from "./Unnamespaced.mjs"
 
 export { Bar } from "./Bar.mjs"

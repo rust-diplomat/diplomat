@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyEnum, MyStruct } from "diplomat-wasm-js2-feature-tests";
+import { MyEnum, MyStruct } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
     const s = MyStruct.new_("hello");
