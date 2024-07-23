@@ -132,6 +132,7 @@ impl Attrs {
         let backend = validator.primary_name();
         for attr in &ast.attrs {
             let mut auto_found = false;
+            let mut auto_used = false;
             let satisfies = match validator.satisfies_cfg(&attr.cfg, Some(&mut auto_found)) {
                 Ok(satisfies) => satisfies,
                 Err(e) => {
@@ -173,6 +174,7 @@ impl Attrs {
                             maybe_error_unsupported(auto_found, "constructor", backend, errors);
                             continue;
                         }
+                        auto_used = true;
                         match StandardAttribute::from_meta(&attr.meta) {
                             Ok(StandardAttribute::String(s)) if s.is_empty() => {
                                 this.namespace = None
@@ -203,36 +205,42 @@ impl Attrs {
                                 maybe_error_unsupported(auto_found, "constructor", backend, errors);
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Constructor
                         } else if path == "stringifier" {
                             if !support.stringifiers {
                                 maybe_error_unsupported(auto_found, "stringifier", backend, errors);
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Stringifier
                         } else if path == "iterable" {
                             if !support.iterables {
                                 maybe_error_unsupported(auto_found, "iterable", backend, errors);
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Iterable
                         } else if path == "iterator" {
                             if !support.iterators {
                                 maybe_error_unsupported(auto_found, "iterator", backend, errors);
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Iterator
                         } else if path == "indexer" {
                             if !support.indexing {
                                 maybe_error_unsupported(auto_found, "indexer", backend, errors);
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Indexer
                         } else {
                             if !support.comparators {
                                 maybe_error_unsupported(auto_found, "comparator", backend, errors);
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Comparison
                         };
 
@@ -246,18 +254,29 @@ impl Attrs {
                         }
                         let kind = if path == "named_constructor" {
                             if !support.named_constructors {
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "named_constructors",
+                                    backend,
+                                    errors,
+                                );
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::NamedConstructor
                         } else if path == "getter" {
                             if !support.accessors {
+                                maybe_error_unsupported(auto_found, "accessors", backend, errors);
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Getter
                         } else {
                             if !support.accessors {
+                                maybe_error_unsupported(auto_found, "accessors", backend, errors);
                                 continue;
                             }
+                            auto_used = true;
                             SpecialMethod::Setter
                         };
                         match StandardAttribute::from_meta(&attr.meta) {
@@ -274,8 +293,13 @@ impl Attrs {
                         }
                     } else {
                         errors.push(LoweringError::Other(format!(
-                        "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
-                    )));
+                            "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, indexer`"
+                        )));
+                    }
+                    if auto_found && !auto_used {
+                        errors.push(LoweringError::Other(format!(
+                            "Diplomat attribute {path} gated on 'auto' but is not one that works with 'auto'"
+                        )));
                     }
                 } else {
                     errors.push(LoweringError::Other(format!(
@@ -886,6 +910,12 @@ mod tests {
                     #[diplomat::attr(*, iterator)]
                     pub fn next(&mut self) -> Option<u8> {
                         self.0.next()
+                    }
+                    #[diplomat::attr(auto, rename = "bar")]
+                    pub fn auto_doesnt_work_on_renames(&self) {
+                    }
+                    #[diplomat::attr(auto, disable)]
+                    pub fn auto_doesnt_work_on_disables(&self) {
                     }
                 }
 

@@ -5,17 +5,17 @@
 pub mod ffi {
     #[derive(Clone)]
     #[diplomat::opaque]
-    #[diplomat::attr(auto, rename = "AttrOpaque1Renamed")]
+    #[diplomat::attr(*, rename = "AttrOpaque1Renamed")]
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
-        #[diplomat::attr(auto, rename = "totally_not_{0}")]
+        #[diplomat::attr(*, rename = "totally_not_{0}")]
         #[diplomat::attr(auto, constructor)]
         pub fn new() -> Box<AttrOpaque1> {
             Box::new(AttrOpaque1)
         }
 
-        #[diplomat::attr(auto, rename = "method_renamed")]
+        #[diplomat::attr(*, rename = "method_renamed")]
         #[diplomat::attr(auto, getter = "method")]
         pub fn method(&self) -> u8 {
             77
@@ -27,7 +27,7 @@ pub mod ffi {
             123
         }
 
-        #[diplomat::attr(auto, disable)]
+        #[diplomat::attr(*, disable)]
         pub fn method_disabled(&self) {
             println!("disabled in hir");
         }
@@ -42,13 +42,13 @@ pub mod ffi {
     pub enum AttrEnum {
         A,
         B,
-        #[diplomat::attr(auto, rename = "Renamed")]
+        #[diplomat::attr(*, rename = "Renamed")]
         C,
     }
 
     #[diplomat::opaque]
     #[diplomat::attr(auto, namespace = "")]
-    #[diplomat::attr(auto, rename = "Unnamespaced")]
+    #[diplomat::attr(*, rename = "Unnamespaced")]
     pub struct Unnamespaced;
 
     impl Unnamespaced {
