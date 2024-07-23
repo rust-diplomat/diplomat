@@ -239,29 +239,22 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         variable_name: Cow<'tcx, str>,
         offset: usize,
     ) -> Cow<'tcx, str> {
-        let o = if offset == 0 {
-            "".into()
+        let pointer = if offset == 0 {
+            variable_name
         } else {
-            format!(" + {}", offset)
+            format!("{variable_name} + {offset}").into()
         };
         match *ty {
-            Type::Enum(..) => {
-                format!("diplomatRuntime.enumDiscriminant(wasm, {variable_name}{o})").into()
-            }
-            Type::Opaque(..) => format!("diplomatRuntime.ptrRead(wasm, {variable_name}{o})").into(),
+            Type::Enum(..) => format!("diplomatRuntime.enumDiscriminant(wasm, {pointer})").into(),
+            Type::Opaque(..) => format!("diplomatRuntime.ptrRead(wasm, {pointer})").into(),
             // Structs always assume they're being passed a pointer, so they handle this in their constructors:
             // See NestedBorrowedFields
-            Type::Struct(..) | Type::Slice(..) => format!("{variable_name}{o}").into(),
+            Type::Struct(..) | Type::Slice(..) => pointer,
             Type::Primitive(p) => format!(
-                "{0}(new {1}(wasm.memory.buffer, {variable_name}{o}, 1))[0]{2}",
-                match p {
-                    PrimitiveType::Char => "String.fromCharCode(",
-                    _ => "",
-                },
-                self.formatter.fmt_primitive_slice(p),
-                match p {
+                "(new {ctor}(wasm.memory.buffer, {pointer}, 1))[0]{cmp}",
+                ctor = self.formatter.fmt_primitive_slice(p),
+                cmp = match p {
                     PrimitiveType::Bool => " == 1",
-                    PrimitiveType::Char => ")",
                     _ => "",
                 }
             )
@@ -532,12 +525,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
         struct_borrow_info: Option<&StructBorrowContext<'tcx>>,
     ) -> Cow<'tcx, str> {
         match *ty {
-            Type::Primitive(p) => match p {
-                PrimitiveType::Char => {
-                    format!("diplomatRuntime.extractCodePoint({js_name}, '{js_name}')").into()
-                }
-                _ => js_name.clone(),
-            },
+            Type::Primitive(..) => js_name.clone(),
             Type::Opaque(ref op) if op.is_optional() => format!("{js_name}.ffiValue ?? 0").into(),
             Type::Enum(..) | Type::Opaque(..) => format!("{js_name}.ffiValue").into(),
             Type::Struct(..) => self.gen_js_to_c_for_struct_type(js_name, struct_borrow_info),

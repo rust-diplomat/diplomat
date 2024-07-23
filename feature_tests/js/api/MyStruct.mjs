@@ -62,7 +62,7 @@ export class MyStruct {
         slice_cleanup_callbacks,
         appendArrayMap
     ) {
-        return [this.#a, this.#b, this.#c, this.#d, this.#e, diplomatRuntime.extractCodePoint(this.#f, 'this.#f'), this.#g.ffiValue]
+        return [this.#a, this.#b, this.#c, this.#d, this.#e, this.#f, this.#g.ffiValue]
     }
 
     // This struct contains borrowed fields, so this takes in a list of
@@ -81,7 +81,7 @@ export class MyStruct {
         this.#d = dDeref;
         const eDeref = (new Int32Array(wasm.memory.buffer, ptr + 16, 1))[0];
         this.#e = eDeref;
-        const fDeref = String.fromCharCode((new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0]);
+        const fDeref = (new Uint32Array(wasm.memory.buffer, ptr + 20, 1))[0];
         this.#f = fDeref;
         const gDeref = diplomatRuntime.enumDiscriminant(wasm, ptr + 24);
         this.#g = (() => {for (let i of MyEnum.values) { if(i[1] === gDeref) return MyEnum[i[0]]; } return null;})();
