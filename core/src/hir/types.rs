@@ -22,6 +22,7 @@ pub enum Type<P: TyPosition = Everywhere> {
     Struct(P::StructPath),
     Enum(EnumPath),
     Slice(Slice),
+    Callback(P::CallbackInstantiation), // only a Callback if P == InputOnly
 }
 
 /// Type that can appear in the `self` position.
@@ -31,6 +32,7 @@ pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
     Enum(EnumPath),
+    // TODO add Callbacks later
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -89,7 +91,10 @@ impl<P: TyPosition<StructPath = StructPath>> Type<P> {
                 let inner = field.ty.field_leaf_lifetime_counts(tcx);
                 (acc.0 + inner.0, acc.1 + inner.1)
             }),
-            Type::Opaque(_) | Type::Slice(_) => (1, 1),
+            // reasoning for Callback: the Params have no lifetime field, so no need to
+            // allocate per param. But, the callback itself has a lifetime
+            // and might have a Self later, if it is a member function on an object
+            Type::Opaque(_) | Type::Slice(_) | Type::Callback(_) => (1, 1),
             Type::Primitive(_) | Type::Enum(_) => (0, 0),
         }
     }
@@ -114,6 +119,7 @@ impl<P: TyPosition> Type<P> {
                     .map(|lt| std::slice::from_ref(lt).iter().copied())
                     .unwrap_or([].iter().copied()),
             ),
+            // TODO the Callback case
             _ => Either::Left([].iter().copied()),
         }
     }
@@ -124,7 +130,7 @@ impl<P: TyPosition> Type<P> {
             Self::Opaque(p) => TypeId::Opaque(p.tcx_id),
             Self::Enum(p) => TypeId::Enum(p.tcx_id),
             Self::Struct(p) => p.id(),
-            _ => return None,
+            _ => return None, // TODO get the ID for callbacks
         })
     }
 }

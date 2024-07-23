@@ -3,7 +3,10 @@
 use std::collections::BTreeSet;
 use std::ops::Deref;
 
-use super::{Attrs, Docs, Ident, IdentBuf, InputOnly, OutType, SelfType, Type, TypeContext};
+use super::{
+    Attrs, ComputeId, Docs, Everywhere, Ident, InputOnly, IdentBuf, OutType, OutputOnly, SelfType, TyPosition,
+    Type, TypeContext,
+};
 
 use super::lifetimes::{Lifetime, LifetimeEnv, Lifetimes, MaybeStatic};
 
@@ -35,6 +38,20 @@ pub struct Method {
     /// Resolved (and inherited) diplomat::attr attributes on this method
     pub attrs: Attrs,
 }
+
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct Callback {
+    pub id: IdentBuf, // this will just piggy-back off the name of the parameter the callback corresponds to for now
+    pub lifetime_env: LifetimeEnv,
+    pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
+    pub params: Vec<Param<OutputOnly>>,
+    pub output: Type, // this will be used in Rust (note: can technically be a callback)
+}
+
+// uninstantiatable; represents no callback allowed
+#[derive(Debug, Clone)]
+pub enum NoCallback {}
 
 /// Type that the method returns.
 #[derive(Debug, Clone)]
@@ -70,6 +87,18 @@ pub struct ParamSelf {
 pub struct Param {
     pub name: IdentBuf,
     pub ty: Type<InputOnly>,
+}
+
+impl ComputeId for NoCallback {
+    fn id(&self) -> Option<&IdentBuf> {
+        None
+    }
+}
+
+impl ComputeId for Callback {
+    fn id(&self) -> Option<&IdentBuf> {
+        Some(&self.id)
+    }
 }
 
 impl SuccessType {
