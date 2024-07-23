@@ -23,14 +23,6 @@ export function withDiplomatWrite(wasm, callback) {
 	}
 }
 
-export function extractCodePoint(str, param) {
-	const cp = str.codePointAt?.(0);
-	if ((!cp && cp !== 0) || [...str]?.length != 1) {
-	throw new TypeError(`Expected single-character string for char parameter ${param}, found ${str}`);
-	}
-	return cp;
-}
-
 // Get the pointer returned by an FFI function
 //
 // It's tempting to call `(new Uint32Array(wasm.memory.buffer, FFI_func(), 1))[0]`.

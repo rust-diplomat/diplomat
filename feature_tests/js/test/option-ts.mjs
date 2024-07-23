@@ -7,7 +7,7 @@ test("Verify option methods", t => {
     t.assert(on === null);
     const s = OptionOpaque.newStruct();
     s.a.assertInteger(101);
-    s.b.assertChar('餐');
+    s.b.assertChar('餐'.codePointAt(0));
     t.is(s.c, 904);
     s.d.assertInteger(926535);
     const sn = OptionOpaque.newStructNones();
