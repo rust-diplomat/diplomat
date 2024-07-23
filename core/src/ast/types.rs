@@ -370,7 +370,7 @@ impl TypeName {
     /// Converts the [`TypeName`] back into an AST node that can be spliced into a program.
     pub fn to_syn(&self) -> syn::Type {
         match self {
-            TypeName::Primitive(name) => {
+            TypeName::Primitive(primitive) => {
                 let primitive = primitive.to_ident();
                 syn::parse_quote_spanned!(Span::call_site() => #primitive)
             }
@@ -445,13 +445,13 @@ impl TypeName {
             TypeName::StrSlice(StringEncoding::Utf8) => {
                 syn::parse_quote_spanned!(Span::call_site() => &[&str])
             }
-            TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
+            TypeName::PrimitiveSlice(Some((lifetime, mutability)), primitive) => {
                 let primitive = primitive.to_ident();
                 let reference = ReferenceDisplay(lifetime, mutability);
 
                 syn::parse_quote_spanned!(Span::call_site() => #reference [#primitive])
             }
-            TypeName::PrimitiveSlice(None, name) => {
+            TypeName::PrimitiveSlice(None, primitive) => {
                 let primitive_name = name.to_ident();
                 syn::parse_quote_spanned!(Span::call_site() => Box<[#primitive_name]>)
             }
