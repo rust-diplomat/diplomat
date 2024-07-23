@@ -2,7 +2,7 @@
 
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
-#[diplomat::attr(*, namespace = "icu4x")]
+#[diplomat::attr(auto, namespace = "icu4x")]
 pub mod ffi {
     use diplomat_runtime::DiplomatWrite;
     use icu_provider::DataLocale;
@@ -36,7 +36,7 @@ pub mod ffi {
     }
 
     impl FixedDecimalFormatterOptions {
-        #[diplomat::attr(*, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn default() -> Self {
             Self {
                 grouping_strategy: FixedDecimalGroupingStrategy::Auto,
