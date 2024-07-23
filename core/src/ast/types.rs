@@ -372,8 +372,7 @@ impl TypeName {
     pub fn to_syn(&self) -> syn::Type {
         match self {
             TypeName::Primitive(name) => {
-                let s = PRIMITIVE_TO_STRING.get(name).unwrap();
-                let ident = proc_macro2::Ident::new(s, Span::call_site());
+                let ident = name.to_ident();
                 syn::parse_quote_spanned!(Span::call_site() => #ident)
             }
             TypeName::Ordering => syn::parse_quote_spanned!(Span::call_site() => i8),
@@ -448,17 +447,15 @@ impl TypeName {
                 syn::parse_quote_spanned!(Span::call_site() => &[&str])
             }
             TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
-                let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
 
-                let primitive_name = proc_macro2::Ident::new(primitive_name, Span::call_site());
+                let primitive_name = name.to_ident();
                 let reference = ReferenceDisplay(lifetime, mutability);
 
                 syn::parse_quote_spanned!(Span::call_site() => #reference [#primitive_name])
             }
             TypeName::PrimitiveSlice(None, name) => {
-                let primitive_name = PRIMITIVE_TO_STRING.get(name).unwrap();
 
-                let primitive_name = proc_macro2::Ident::new(primitive_name, Span::call_site());
+                let primitive_name = name.to_ident();
                 syn::parse_quote_spanned!(Span::call_site() => Box<[#primitive_name]>)
             }
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
@@ -900,11 +897,11 @@ pub enum PrimitiveType {
     byte,
 }
 
-impl fmt::Display for PrimitiveType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl PrimitiveType {
+    fn as_code_str(self) -> &'static str {
         match self {
             PrimitiveType::i8 => "i8",
-            PrimitiveType::u8 | PrimitiveType::byte => "u8",
+            PrimitiveType::u8 => "u8",
             PrimitiveType::i16 => "i16",
             PrimitiveType::u16 => "u16",
             PrimitiveType::i32 => "i32",
@@ -918,7 +915,22 @@ impl fmt::Display for PrimitiveType {
             PrimitiveType::f32 => "f32",
             PrimitiveType::f64 => "f64",
             PrimitiveType::bool => "bool",
+            PrimitiveType::char => "DiplomatChar",
+            PrimitiveType::byte => "DiplomatByte",
+        }
+    }
+
+    fn to_ident(self) -> proc_macro2::Ident {
+        proc_macro2::Ident::new(self.as_code_str(), Span::call_site())
+    }
+}
+
+impl fmt::Display for PrimitiveType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PrimitiveType::byte => "u8",
             PrimitiveType::char => "char",
+            _ => self.as_code_str(),
         }
         .fmt(f)
     }
@@ -946,8 +958,6 @@ lazy_static! {
     ];
     static ref STRING_TO_PRIMITIVE: HashMap<&'static str, PrimitiveType> =
         PRIMITIVES_MAPPING.iter().cloned().collect();
-    static ref PRIMITIVE_TO_STRING: HashMap<PrimitiveType, &'static str> =
-        PRIMITIVES_MAPPING.iter().map(|t| (t.1, t.0)).collect();
 }
 
 #[cfg(test)]
