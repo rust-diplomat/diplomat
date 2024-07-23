@@ -75,16 +75,16 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(any(c, cpp, js), disable)]
+    #[diplomat::attr(not(supports = iterators), disable)]
     pub struct MyIterable(Vec<u8>);
 
     #[diplomat::opaque]
-    #[diplomat::attr(any(c, cpp, js), disable)]
+    #[diplomat::attr(not(supports = iterators), disable)]
     pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
 
     #[diplomat::opaque]
-    #[diplomat::attr(any(c, cpp, js), disable)]
-    #[diplomat::attr(dart, disable)]
+    #[diplomat::attr(not(supports = indexing), disable)]
+    #[diplomat::attr(dart, disable)] // currently broken in Dart: #590
     pub struct MyIndexer(Vec<String>);
 
     impl MyIterable {
@@ -113,11 +113,11 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
-    #[diplomat::attr(any(c, cpp, js), disable)]
+    #[diplomat::attr(not(supports = iterators), disable)]
     struct OpaqueIterable(Vec<AttrOpaque1>);
 
     #[diplomat::opaque]
-    #[diplomat::attr(any(c, cpp, js), disable)]
+    #[diplomat::attr(not(supports = iterators), disable)]
     struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
 
     impl OpaqueIterable {
