@@ -2,7 +2,8 @@
 
 use super::lifetimes::LifetimeEnv;
 use super::{
-    Attrs, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition, Type,
+    Attrs, Callback, Everywhere, IdentBuf, Method, OutputOnly, SpecialMethodPresence, TyPosition,
+    Type,
 };
 use crate::ast::Docs;
 
@@ -19,6 +20,8 @@ pub enum TypeDef<'tcx> {
     OutStruct(&'tcx OutStructDef),
     Opaque(&'tcx OpaqueDef),
     Enum(&'tcx EnumDef),
+    Callback(&'tcx Callback),
+    Uninstantiable, // do we want this? right now it's a hack for avoiding doing all the types as input only
 }
 
 /// Structs that can only be returned from methods.
@@ -182,6 +185,8 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.name,
             Self::Opaque(ty) => &ty.name,
             Self::Enum(ty) => &ty.name,
+            Self::Callback(ty) => &ty.id,
+            Self::Uninstantiable => todo!(),
         }
     }
 
@@ -191,6 +196,8 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.docs,
             Self::Opaque(ty) => &ty.docs,
             Self::Enum(ty) => &ty.docs,
+            Self::Callback(_ty) => todo!(), // should there be docs? I don't think so
+            Self::Uninstantiable => todo!(),
         }
     }
     pub fn methods(&self) -> &'tcx [Method] {
@@ -199,6 +206,8 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.methods,
             Self::Opaque(ty) => &ty.methods,
             Self::Enum(ty) => &ty.methods,
+            Self::Callback(_ty) => todo!(), // no methods
+            Self::Uninstantiable => todo!(),
         }
     }
 
@@ -208,6 +217,8 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.attrs,
             Self::Opaque(ty) => &ty.attrs,
             Self::Enum(ty) => &ty.attrs,
+            Self::Callback(_ty) => todo!(), // no attrs
+            Self::Uninstantiable => todo!(),
         }
     }
 
@@ -217,6 +228,8 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.special_method_presence,
             Self::Opaque(ty) => &ty.special_method_presence,
             Self::Enum(ty) => &ty.special_method_presence,
+            Self::Callback(_ty) => todo!(), // no methods
+            Self::Uninstantiable => todo!(),
         }
     }
 }

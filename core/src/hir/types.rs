@@ -32,6 +32,7 @@ pub enum SelfType {
     Opaque(OpaquePath<NonOptional, Borrow>),
     Struct(StructPath),
     Enum(EnumPath),
+    // TODO add Callbacks later
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -115,6 +116,7 @@ impl<P: TyPosition> Type<P> {
                     .map(|lt| std::slice::from_ref(lt).iter().copied())
                     .unwrap_or([].iter().copied()),
             ),
+            // TODO the Callback case
             _ => Either::Left([].iter().copied()),
         }
     }
@@ -125,7 +127,7 @@ impl<P: TyPosition> Type<P> {
             Self::Opaque(p) => TypeId::Opaque(p.tcx_id),
             Self::Enum(p) => TypeId::Enum(p.tcx_id),
             Self::Struct(p) => p.id(),
-            _ => return None,
+            _ => return None, // TODO get the ID for callbacks
         })
     }
 }

@@ -3,8 +3,8 @@
 use super::lowering::{ErrorAndContext, ErrorStore, ItemAndInfo};
 use super::ty_position::StructPathLike;
 use super::{
-    AttributeValidator, Attrs, EnumDef, LoweringContext, LoweringError, MaybeStatic, OpaqueDef,
-    OutStructDef, StructDef, TypeDef,
+    AttributeValidator, Attrs, Callback, EnumDef, LoweringContext, LoweringError, MaybeStatic,
+    OpaqueDef, OutStructDef, StructDef, TypeDef,
 };
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
@@ -23,6 +23,7 @@ pub struct TypeContext {
     structs: Vec<StructDef>,
     opaques: Vec<OpaqueDef>,
     enums: Vec<EnumDef>,
+    callbacks: Vec<Callback>,
 }
 
 /// Key used to index into a [`TypeContext`] representing a struct.
@@ -42,12 +43,16 @@ pub struct OpaqueId(usize);
 pub struct EnumId(usize);
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CallbackId(usize);
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[non_exhaustive]
 pub enum TypeId {
     Struct(StructId),
     OutStruct(OutStructId),
     Opaque(OpaqueId),
     Enum(EnumId),
+    Callback(CallbackId),
 }
 
 enum Param<'a> {
@@ -89,6 +94,12 @@ impl TypeContext {
                     .enumerate()
                     .map(|(i, ty)| (TypeId::Enum(EnumId(i)), TypeDef::Enum(ty))),
             )
+            .chain(
+                self.callbacks
+                    .iter()
+                    .enumerate()
+                    .map(|(i, ty)| (TypeId::Callback(CallbackId(i)), TypeDef::Callback(ty))),
+            )
     }
 
     pub fn out_structs(&self) -> &[OutStructDef] {
@@ -113,6 +124,7 @@ impl TypeContext {
             TypeId::OutStruct(i) => TypeDef::OutStruct(self.resolve_out_struct(i)),
             TypeId::Opaque(i) => TypeDef::Opaque(self.resolve_opaque(i)),
             TypeId::Enum(i) => TypeDef::Enum(self.resolve_enum(i)),
+            TypeId::Callback(i) => TypeDef::Callback(self.resolve_callback(i)),
         }
     }
 
@@ -268,6 +280,7 @@ impl TypeContext {
                     structs,
                     opaques,
                     enums,
+                    callbacks: Vec::new(), // TODO: should we support callbacks in the AST
                 };
 
                 if !ctx.errors.is_empty() {
