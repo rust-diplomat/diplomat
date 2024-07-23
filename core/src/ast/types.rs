@@ -446,10 +446,10 @@ impl TypeName {
                 syn::parse_quote_spanned!(Span::call_site() => &[&str])
             }
             TypeName::PrimitiveSlice(Some((lifetime, mutability)), name) => {
-                let primitive_name = name.to_ident();
+                let primitive = primitive.to_ident();
                 let reference = ReferenceDisplay(lifetime, mutability);
 
-                syn::parse_quote_spanned!(Span::call_site() => #reference [#primitive_name])
+                syn::parse_quote_spanned!(Span::call_site() => #reference [#primitive])
             }
             TypeName::PrimitiveSlice(None, name) => {
                 let primitive_name = name.to_ident();
