@@ -1,7 +1,7 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
     Borrow, Callback, LinkedLifetimes, MaybeOwn, Mutability, NoCallback, OutStructId,
-    ReturnableStructPath, StructDef, StructId, StructPath, TypeContext, TypeDef, TypeId,
+    ReturnableStructPath, SetId, StructDef, StructId, StructPath, TypeContext, TypeDef, TypeId,
 };
 use core::fmt::Debug;
 
@@ -92,7 +92,7 @@ where
     for<'tcx> TypeDef<'tcx>: From<&'tcx StructDef<Self>>,
 {
     const IN_OUT_STATUS: InputOrOutput;
-    type CallbackInstantiation: Debug;
+    type CallbackInstantiation: Debug + SetId;
 
     /// Type representing how we can point to opaques, which must always be behind a pointer.
     ///
@@ -151,7 +151,8 @@ impl TyPosition for Everywhere {
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
-    type CallbackInstantiation = NoCallback;
+    type CallbackInstantiation = Callback; // TODO should be NoCallback, but just using
+                                           // Everywhere for Callbacks right now for testing
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::Struct(def)

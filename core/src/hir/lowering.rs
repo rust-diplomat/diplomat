@@ -515,6 +515,8 @@ impl<'ast> LoweringContext<'ast> {
             return Err(());
         }
 
+        println!("PARSED A METHOD {:?}", &hir_method);
+
         Ok(hir_method)
     }
 
@@ -719,6 +721,31 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::Unit => {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
+            }
+            // TODO need to ensure this is only appearing in an input position
+            // would be ideal to get InputOnly working here, but the issue is that callbacks will
+            // be the type of parameters of method, and currently Method params is a Vec<Param<Everywhere>>.
+            // can we change it to Param<InputOnly> -- are we sure Methods will appear
+            // only as taking arguments from the foreign language? i don't think so
+            ast::TypeName::Function(input_types, out_type) => {
+                let callback_id: IdentBuf = IdentBuf::from_buf("anon".into()).unwrap();
+                let params = input_types
+                    .iter()
+                    .map(|in_ty| {
+                        let hir_in_ty = self.lower_out_type(in_ty, ltl, in_path, false, false);
+                        let param_id: IdentBuf = IdentBuf::from_buf("na".into()).unwrap();
+                        Param {
+                            name: param_id,
+                            ty: hir_in_ty.unwrap(),
+                        }
+                    })
+                    .collect::<Vec<Param<OutputOnly>>>();
+                Ok(Type::Callback(Callback {
+                    id: callback_id,
+                    param_self: None,
+                    params,
+                    output: Box::new(self.lower_type(out_type, ltl, in_path)?),
+                }))
             }
         }
     }
@@ -958,6 +985,12 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
             }
+            ast::TypeName::Function(_, _) => {
+                self.errors.push(LoweringError::Other(
+                    "Function types can only be an input type".into(),
+                ));
+                Err(())
+            }
         }
     }
 
@@ -1064,10 +1097,17 @@ impl<'ast> LoweringContext<'ast> {
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
-        let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path);
+        let name = self.lower_ident(&param.name, "param name")?;
+        let mut ty = self.lower_type::<InputOnly>(&param.ty, ltl, in_path)?;
+        match ty {
+            Type::Callback(ref mut cb) => {
+                cb.set_id(&name);
+            }
+            _ => {}
+        }
+        println!("PARSED A CALLBACK ARG {:?}", &ty);
 
-        Ok(Param::new(name?, ty?))
+        Ok(Param::new(name, ty))
     }
 
     /// Lowers many [`ast::Param`]s into a vector of [`hir::Param`]s.

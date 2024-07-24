@@ -39,19 +39,35 @@ pub struct Method {
     pub attrs: Attrs,
 }
 
+pub trait SetId {
+    fn set_id(&mut self, new_id: &IdentBuf);
+}
+
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct Callback {
     pub id: IdentBuf, // this will just piggy-back off the name of the parameter the callback corresponds to for now
-    pub lifetime_env: LifetimeEnv,
+    // pub lifetime_env: LifetimeEnv,
     pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
     pub params: Vec<Param<OutputOnly>>,
-    pub output: Type, // this will be used in Rust (note: can technically be a callback)
+    pub output: Box<Type>, // this will be used in Rust (note: can technically be a callback)
 }
 
 // uninstantiatable; represents no callback allowed
 #[derive(Debug, Clone)]
 pub enum NoCallback {}
+
+impl SetId for Callback {
+    fn set_id(&mut self, new_id: &IdentBuf) {
+        self.id = new_id.clone();
+    }
+}
+
+impl SetId for NoCallback {
+    fn set_id(&mut self, _: &IdentBuf) {
+        panic!("Shouldn't be trying to set an ID when no callback is allowed");
+    }
+}
 
 /// Type that the method returns.
 #[derive(Debug, Clone)]

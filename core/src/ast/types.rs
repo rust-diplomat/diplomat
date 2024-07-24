@@ -378,6 +378,7 @@ pub enum TypeName {
     ///
     /// The path must be present! Ordering will be parsed as an AST type!
     Ordering,
+    Function(Vec<Box<TypeName>>, Box<TypeName>),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
@@ -576,6 +577,9 @@ impl TypeName {
             }
 
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
+            TypeName::Function(_input_types, _output_type) => {
+                todo!("Function type (AST) codegen not done");
+            }
         }
     }
 
@@ -876,12 +880,13 @@ impl TypeName {
                         {
                             let in_types = input_types
                                 .iter()
-                                .map(|in_ty| TypeName::from_syn(in_ty, self_path_type.clone()))
-                                .collect::<Vec<TypeName>>();
+                                .map(|in_ty| {
+                                    Box::new(TypeName::from_syn(in_ty, self_path_type.clone()))
+                                })
+                                .collect::<Vec<Box<TypeName>>>();
                             let out_type = TypeName::from_syn(output_type, self_path_type.clone());
-                            // TODO actually represent the function type
-                            // but basically, it should be TypeName::Function(in_types, out_type)
-                            todo!("Not supported yet, but we're working on it! You have a function type of {:?}->{:?}", in_types, out_type);
+                            let ret = TypeName::Function(in_types, Box::new(out_type));
+                            return ret;
                         }
                         panic!("Unsupported function type");
                     }
@@ -1097,6 +1102,13 @@ impl fmt::Display for TypeName {
             }
             TypeName::PrimitiveSlice(None, typ, _) => write!(f, "Box<[{typ}]>"),
             TypeName::Unit => "()".fmt(f),
+            TypeName::Function(input_types, out_type) => {
+                write!(f, "fn (")?;
+                for in_typ in input_types.iter() {
+                    write!(f, "{in_typ}")?;
+                }
+                write!(f, ")->{out_type}")
+            }
         }
     }
 }
