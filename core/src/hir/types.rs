@@ -130,7 +130,7 @@ impl<P: TyPosition> Type<P> {
             Self::Opaque(p) => TypeId::Opaque(p.tcx_id),
             Self::Enum(p) => TypeId::Enum(p.tcx_id),
             Self::Struct(p) => p.id(),
-            _ => return None, // TODO get the ID for callbacks
+            _ => return None,
         })
     }
 }
