@@ -849,6 +849,45 @@ impl TypeName {
                     todo!("Tuples are not currently supported")
                 }
             }
+            syn::Type::ImplTrait(tr) => {
+                let trait_bound = tr.bounds.first();
+                if tr.bounds.len() > 1 {
+                    todo!("Currently don't support implementing multiple traits");
+                }
+                if let Some(syn::TypeParamBound::Trait(TraitBound {
+                    path:
+                        syn::Path {
+                            segments: rel_segs, ..
+                        },
+                    ..
+                })) = trait_bound
+                {
+                    let path_seg = &rel_segs[0];
+                    if path_seg.ident.eq("Fn".into()) {
+                        // we're in a function type
+                        // get input and output args
+                        if let syn::PathArguments::Parenthesized(
+                            syn::ParenthesizedGenericArguments {
+                                inputs: input_types,
+                                output: syn::ReturnType::Type(_, output_type),
+                                ..
+                            },
+                        ) = &path_seg.arguments
+                        {
+                            let in_types = input_types
+                                .iter()
+                                .map(|in_ty| TypeName::from_syn(in_ty, self_path_type.clone()))
+                                .collect::<Vec<TypeName>>();
+                            let out_type = TypeName::from_syn(output_type, self_path_type.clone());
+                            // TODO actually represent the function type
+                            // but basically, it should be TypeName::Function(in_types, out_type)
+                            todo!("Not supported yet, but we're working on it! You have a function type of {:?}->{:?}", in_types, out_type);
+                        }
+                        panic!("Unsupported function type");
+                    }
+                }
+                panic!("Unsupported trait type");
+            }
             other => panic!("Unsupported type: {}", other.to_token_stream()),
         }
     }
