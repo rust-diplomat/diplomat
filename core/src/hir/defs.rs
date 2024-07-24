@@ -19,7 +19,6 @@ pub enum TypeDef<'tcx> {
     OutStruct(&'tcx OutStructDef),
     Opaque(&'tcx OpaqueDef),
     Enum(&'tcx EnumDef),
-    Uninstantiable, // do we want this? right now it's a hack for not allowing InputOnly structs
 }
 
 /// Structs that can only be returned from methods.
@@ -184,7 +183,6 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.name,
             Self::Opaque(ty) => &ty.name,
             Self::Enum(ty) => &ty.name,
-            Self::Uninstantiable => todo!(),
         }
     }
 
@@ -194,7 +192,6 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.docs,
             Self::Opaque(ty) => &ty.docs,
             Self::Enum(ty) => &ty.docs,
-            Self::Uninstantiable => todo!(),
         }
     }
     pub fn methods(&self) -> &'tcx [Method] {
@@ -203,7 +200,6 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.methods,
             Self::Opaque(ty) => &ty.methods,
             Self::Enum(ty) => &ty.methods,
-            Self::Uninstantiable => todo!(),
         }
     }
 
@@ -213,7 +209,6 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.attrs,
             Self::Opaque(ty) => &ty.attrs,
             Self::Enum(ty) => &ty.attrs,
-            Self::Uninstantiable => todo!(),
         }
     }
 
@@ -223,7 +218,6 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.special_method_presence,
             Self::Opaque(ty) => &ty.special_method_presence,
             Self::Enum(ty) => &ty.special_method_presence,
-            Self::Uninstantiable => todo!(),
         }
     }
 }
