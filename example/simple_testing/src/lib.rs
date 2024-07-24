@@ -1,11 +1,16 @@
-// // #[diplomat::bridge]
-// // mod ffi {
+#[diplomat::bridge]
+mod ffi {
 
-fn test_rust_fn(f: impl Fn(i32) -> i32) -> i32 {
-    f(10)
+    pub struct Wrapper {
+        cant_be_empty: bool,
+    }
+    impl Wrapper {
+        pub fn test_rust_fn(f: impl Fn(i32) -> i32) -> i32 {
+            f(10)
+        }
+    }
+
 }
-
-// // }
 
 // // ----------------------------------------------------------------------------------------------------
 
@@ -57,7 +62,7 @@ pub unsafe extern "system" fn diplomat_callback_create_for_jvm__callback(
 
 #[no_mangle]
 pub extern "C" fn DiplomatCallbackI32ToI32_test_rust_fn_test_call(cb_wrap: &DiplomatCallback<i32>) -> i32 {
-    test_rust_fn(move |arg0| unsafe {
+    crate::ffi::Wrapper::test_rust_fn(move |arg0| unsafe {
         (cb_wrap.run_callback)(cb_wrap.data, arg0)
     })
 }
