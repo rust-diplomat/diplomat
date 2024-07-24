@@ -89,18 +89,6 @@ pub struct Param {
     pub ty: Type<InputOnly>,
 }
 
-impl ComputeId for NoCallback {
-    fn id(&self) -> Option<&IdentBuf> {
-        None
-    }
-}
-
-impl ComputeId for Callback {
-    fn id(&self) -> Option<&IdentBuf> {
-        Some(&self.id)
-    }
-}
-
 impl SuccessType {
     /// Returns whether the variant is `Write`.
     pub fn is_write(&self) -> bool {

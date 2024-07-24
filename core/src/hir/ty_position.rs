@@ -1,6 +1,6 @@
 use super::lifetimes::{Lifetime, Lifetimes, MaybeStatic};
 use super::{
-    Borrow, Callback, IdentBuf, LinkedLifetimes, MaybeOwn, Mutability, NoCallback, OutStructId,
+    Borrow, Callback, LinkedLifetimes, MaybeOwn, Mutability, NoCallback, OutStructId,
     ReturnableStructPath, StructDef, StructId, StructPath, TypeContext, TypeDef, TypeId,
 };
 use core::fmt::Debug;
@@ -92,7 +92,7 @@ where
     for<'tcx> TypeDef<'tcx>: From<&'tcx StructDef<Self>>,
 {
     const IN_OUT_STATUS: InputOrOutput;
-    type CallbackInstantiation: Debug + ComputeId;
+    type CallbackInstantiation: Debug;
 
     /// Type representing how we can point to opaques, which must always be behind a pointer.
     ///
