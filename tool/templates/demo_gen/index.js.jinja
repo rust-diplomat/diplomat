@@ -10,6 +10,7 @@ export const RenderInfo = {
             func: {{terminus.type_name}}Demo.{{terminus.function_name}},
             // For avoiding webpacking minifying issues:
             funcName: "{{terminus.type_name}}.{{terminus.function_name}}",
+            html: "rendering/{{terminus.type_name}}_{{terminus.function_name}}.html",
             parameters: [
                 {% for param in terminus.params %}
                 {
