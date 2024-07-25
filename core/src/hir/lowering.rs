@@ -838,7 +838,7 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
             }
-            ast::TypeName::Function(input_types, out_type) => {
+            ast::TypeName::Function(_, _) => {
                 self.errors.push(LoweringError::Other(
                     "Callbacks need to be input-only".into(),
                 ));
