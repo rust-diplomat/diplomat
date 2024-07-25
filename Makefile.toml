@@ -152,6 +152,7 @@ script_runner = "@shell"
 script = '''
 cd example/demo_gen
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm demo/diplomat_example.wasm
+echo TODO: Migrate tests
 '''
 
 [tasks.test-dart-example]
