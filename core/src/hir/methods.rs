@@ -102,10 +102,7 @@ pub struct ParamSelf {
 #[non_exhaustive]
 pub struct Param {
     pub name: IdentBuf,
-<<<<<<< HEAD
     pub ty: Type<InputOnly>,
-=======
-    pub ty: CanBeInputType,
 }
 
 /// A parameter in a callback
@@ -114,7 +111,6 @@ pub struct Param {
 #[non_exhaustive]
 pub struct CallbackParam {
     pub ty: Type<OutputOnly>,
->>>>>>> 66c57b8 (Adding a wrapper for input-only types so that `Param`s can be both TyPosition InputOnly and Everywhere; propagating this through the tool)
 }
 
 impl SuccessType {
