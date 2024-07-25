@@ -22,7 +22,7 @@ class ParameterTemplate extends HTMLElement {
         generateTemplate(className, "template", selector);
         let baseClone = ParameterTemplate.baseTemplate.cloneNode(true);
 
-        let clone = template.cloneNode(true);
+        let clone = className["template"].cloneNode(true);
 
         this.initialize(clone, ...args);
 
