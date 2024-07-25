@@ -2,7 +2,7 @@ import * as lib from "./js/index.mjs";
 import { RenderInfo } from "./index.mjs";
 import { initialize } from "./rendering.mjs";
 
-let templates = document.getElementById("templates");
+let templates = document.getElementById("templates").contentDocument;
 initialize(templates, lib);
 
 let termini = document.querySelectorAll("terminus-render");

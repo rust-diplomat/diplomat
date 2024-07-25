@@ -6,9 +6,9 @@ export function initialize(templateDocument, library) {
     templateDoc = templateDocument;
 }
 
-function generateTemplate(variable, selector) {
-    if (variable === undefined) {
-        variable = templateDoc.querySelector(selector).content;
+function generateTemplate(className, variable, selector) {
+    if (className[variable] === undefined) {
+        className[variable] = templateDoc.querySelector(selector).content;
     }
 }
 
@@ -16,10 +16,10 @@ class ParameterTemplate extends HTMLElement {
     default = null;
 
     static baseTemplate;
-    constructor(template, selector, ...args) {
+    constructor(className, selector, ...args) {
         super();
-        generateTemplate(ParameterTemplate.baseTemplate, "#parameter");
-        generateTemplate(template, selector);
+        generateTemplate(ParameterTemplate, "baseTemplate", "#parameter");
+        generateTemplate(className, "template", selector);
         let baseClone = ParameterTemplate.baseTemplate.cloneNode(true);
 
         let clone = template.cloneNode(true);
@@ -59,7 +59,7 @@ class BooleanTemplate extends ParameterTemplate {
     default = false;
     static template;
     constructor() {
-        super(BooleanTemplate.template, "template#boolean");
+        super(BooleanTemplate, "template#boolean");
     }
 }
 
@@ -69,7 +69,7 @@ class NumberTemplate extends ParameterTemplate {
     default = 0;
     static template;
     constructor() {
-        super(NumberTemplate.template, "template#number");
+        super(NumberTemplate, "template#number");
     }
     
     getEventValue(event) {
@@ -83,7 +83,7 @@ class StringTemplate extends ParameterTemplate {
     default = "";
     static template;
     constructor() {
-        super(StringTemplate.template, "template#string");
+        super(StringTemplate, "template#string");
     }
 }
 
@@ -93,7 +93,7 @@ class EnumOption extends HTMLElement {
     static template;
     constructor(optionText) {
         super();
-        generateTemplate(EnumOption.template, "template#enum-option");
+        generateTemplate(EnumOption, "template", "template#enum-option");
         let clone = EnumOption.template.cloneNode(true);
 
         clone.querySelector("slot[name='option-text']").parentElement.innerText = optionText;
@@ -109,7 +109,7 @@ class EnumTemplate extends ParameterTemplate {
 
     #enumType;
     constructor(enumType) {
-        super(EnumTemplate.template, "template#enum", enumType);
+        super(EnumTemplate, "template#enum", enumType);
         this.#enumType = enumType;
     }
 
@@ -201,7 +201,7 @@ export class TerminusRender extends HTMLElement {
     }
 
     attachTerminus(terminus, evaluateExternal) {
-        generateTemplate(TerminusRender.template, "template#terminus");
+        generateTemplate(TerminusRender, "template", "template#terminus");
         let clone = TerminusRender.template.cloneNode(true);
 
         this.id = terminus.funcName;
