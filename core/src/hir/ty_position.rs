@@ -162,8 +162,7 @@ impl TyPosition for Everywhere {
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
-    type CallbackInstantiation = Callback; // TODO should be NoCallback, but just using
-                                           // Everywhere for Callbacks right now for testing
+    type CallbackInstantiation = NoCallback;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::Struct(def)

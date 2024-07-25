@@ -181,93 +181,101 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
         param_name: &str,
     ) -> ParamBorrowInfo<'tcx> {
         let mut is_borrowed = false;
-        if self.used_method_lifetimes.is_empty() {
-            if let hir::Type::Slice(..) = *ty {
-                return ParamBorrowInfo::TemporarySlice;
-            } else {
-                return ParamBorrowInfo::NotBorrowed;
-            }
-        }
+        match ty {
+            CanBeInputType::Everywhere(ty) => {
+                if self.used_method_lifetimes.is_empty() {
+                    if let hir::Type::Slice(..) = *ty {
+                        return ParamBorrowInfo::TemporarySlice;
+                    } else {
+                        return ParamBorrowInfo::NotBorrowed;
+                    }
+                }
 
-        // Structs have special handling: structs are purely Dart-side, so if you borrow
-        // from a struct, you really are borrowing from the internal fields.
-        if let hir::Type::Struct(s) = ty.unwrap_option() {
-            let mut borrowed_struct_lifetime_map = BTreeMap::<Lifetime, BTreeSet<Lifetime>>::new();
-            let link = s.link_lifetimes(self.tcx);
-            for (method_lifetime, method_lifetime_info) in &mut self.borrow_map {
-                // Note that ty.lifetimes()/s.lifetimes() is lifetimes
-                // in the *use* context, i.e. lifetimes on the Type that reference the
-                // indices of the method's lifetime arrays. Their *order* references
-                // the indices of the underlying struct def. We need to link the two,
-                // since the _fields_for_lifetime_foo() methods are named after
-                // the *def* context lifetime.
-                //
-                // Concretely, if we have struct `Foo<'a, 'b>` and our method
-                // accepts `Foo<'x, 'y>`, we need to output _fields_for_lifetime_a()/b not x/y.
-                //
-                // This is a struct so lifetimes_def_only() is fine to call
-                for (use_lt, def_lt) in link.lifetimes_def_only() {
-                    if let MaybeStatic::NonStatic(use_lt) = use_lt {
-                        if method_lifetime_info.all_longer_lifetimes.contains(&use_lt) {
-                            let edge = LifetimeEdge {
-                                param_name: param_name.into(),
-                                kind: LifetimeEdgeKind::StructLifetime(
-                                    link.def_env(),
-                                    def_lt,
-                                    ty.is_option(),
-                                ),
-                            };
-                            method_lifetime_info.incoming_edges.push(edge);
+                // Structs have special handling: structs are purely Dart-side, so if you borrow
+                // from a struct, you really are borrowing from the internal fields.
+                if let hir::Type::Struct(s) = ty {
+                    let mut borrowed_struct_lifetime_map =
+                        BTreeMap::<Lifetime, BTreeSet<Lifetime>>::new();
+                    let link = s.link_lifetimes(self.tcx);
+                    for (method_lifetime, method_lifetime_info) in &mut self.borrow_map {
+                        // Note that ty.lifetimes()/s.lifetimes() is lifetimes
+                        // in the *use* context, i.e. lifetimes on the Type that reference the
+                        // indices of the method's lifetime arrays. Their *order* references
+                        // the indices of the underlying struct def. We need to link the two,
+                        // since the _fields_for_lifetime_foo() methods are named after
+                        // the *def* context lifetime.
+                        //
+                        // Concretely, if we have struct `Foo<'a, 'b>` and our method
+                        // accepts `Foo<'x, 'y>`, we need to output _fields_for_lifetime_a()/b not x/y.
+                        //
+                        // This is a struct so lifetimes_def_only() is fine to call
+                        for (use_lt, def_lt) in link.lifetimes_def_only() {
+                            if let MaybeStatic::NonStatic(use_lt) = use_lt {
+                                if method_lifetime_info.all_longer_lifetimes.contains(&use_lt) {
+                                    let edge = LifetimeEdge {
+                                        param_name: param_name.into(),
+                                        kind: LifetimeEdgeKind::StructLifetime(
+                                            link.def_env(),
+                                            def_lt,
+                                        ),
+                                    };
+                                    method_lifetime_info.incoming_edges.push(edge);
 
-                            is_borrowed = true;
+                                    is_borrowed = true;
 
-                            borrowed_struct_lifetime_map
-                                .entry(def_lt)
-                                .or_default()
-                                .insert(*method_lifetime);
-                            // Do *not* break the inner loop here: even if we found *one* matching lifetime
-                            // in this struct that may not be all of them, there may be some other fields that are borrowed
+                                    borrowed_struct_lifetime_map
+                                        .entry(def_lt)
+                                        .or_default()
+                                        .insert(*method_lifetime);
+                                    // Do *not* break the inner loop here: even if we found *one* matching lifetime
+                                    // in this struct that may not be all of them, there may be some other fields that are borrowed
+                                }
+                            }
                         }
+                    }
+                    if is_borrowed {
+                        ParamBorrowInfo::Struct(StructBorrowInfo {
+                            env: link.def_env(),
+                            borrowed_struct_lifetime_map,
+                        })
+                    } else {
+                        ParamBorrowInfo::NotBorrowed
+                    }
+                } else {
+                    for method_lifetime in self.borrow_map.values_mut() {
+                        for lt in ty.lifetimes() {
+                            if let MaybeStatic::NonStatic(lt) = lt {
+                                if method_lifetime.all_longer_lifetimes.contains(&lt) {
+                                    let kind = match ty {
+                                        hir::Type::Slice(..) => LifetimeEdgeKind::SliceParam,
+                                        hir::Type::Opaque(..) => LifetimeEdgeKind::OpaqueParam,
+                                        _ => unreachable!("Types other than slices, opaques, and structs cannot have lifetimes")
+                                    };
+
+                                    let edge = LifetimeEdge {
+                                        param_name: param_name.into(),
+                                        kind,
+                                    };
+
+                                    method_lifetime.incoming_edges.push(edge);
+                                    is_borrowed = true;
+                                    // Break the inner loop: we've already determined this
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    match (is_borrowed, ty) {
+                        (true, &hir::Type::Slice(..)) => ParamBorrowInfo::BorrowedSlice,
+                        (false, &hir::Type::Slice(..)) => ParamBorrowInfo::TemporarySlice,
+                        (false, _) => ParamBorrowInfo::NotBorrowed,
+                        (true, _) => ParamBorrowInfo::BorrowedOpaque,
                     }
                 }
             }
-            if is_borrowed {
-                ParamBorrowInfo::Struct(StructBorrowInfo {
-                    env: link.def_env(),
-                    borrowed_struct_lifetime_map,
-                })
-            } else {
+            CanBeInputType::InputOnly(ty) => {
+                // TODO probably allow borrowing of callbacks when they can be members of objects
                 ParamBorrowInfo::NotBorrowed
-            }
-        } else {
-            for method_lifetime in self.borrow_map.values_mut() {
-                for lt in ty.lifetimes() {
-                    if let MaybeStatic::NonStatic(lt) = lt {
-                        if method_lifetime.all_longer_lifetimes.contains(&lt) {
-                            let kind = match ty {
-                                hir::Type::Slice(..) => LifetimeEdgeKind::SliceParam,
-                                hir::Type::Opaque(..) => LifetimeEdgeKind::OpaqueParam,
-                                _ => unreachable!("Types other than slices, opaques, and structs cannot have lifetimes")
-                            };
-
-                            let edge = LifetimeEdge {
-                                param_name: param_name.into(),
-                                kind,
-                            };
-
-                            method_lifetime.incoming_edges.push(edge);
-                            is_borrowed = true;
-                            // Break the inner loop: we've already determined this
-                            break;
-                        }
-                    }
-                }
-            }
-            match (is_borrowed, ty) {
-                (true, &hir::Type::Slice(..)) => ParamBorrowInfo::BorrowedSlice,
-                (false, &hir::Type::Slice(..)) => ParamBorrowInfo::TemporarySlice,
-                (false, _) => ParamBorrowInfo::NotBorrowed,
-                (true, _) => ParamBorrowInfo::BorrowedOpaque,
             }
         }
     }
