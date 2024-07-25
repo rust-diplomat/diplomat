@@ -22,10 +22,9 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIterable_destroy));
 
   factory RenamedMyIterable(core.List<int> x) {
-    final temp = ffi2.Arena();
-    final xView = x.uint8View;
-    final result = _namespace_MyIterable_new(xView.allocIn(temp), xView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (xData, xLength) = x._uint8AllocIn(temp.arena);
+    final result = _namespace_MyIterable_new(xData, xLength);
     return RenamedMyIterable._fromFfi(result, []);
   }
 

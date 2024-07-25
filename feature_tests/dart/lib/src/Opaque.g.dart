@@ -27,18 +27,16 @@ final class Opaque implements ffi.Finalizable {
   }
 
   static Opaque? tryFromUtf8(String input) {
-    final temp = ffi2.Arena();
-    final inputView = input.utf8View;
-    final result = _Opaque_try_from_utf8(inputView.allocIn(temp), inputView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (inputData, inputLength) = input._utf8AllocIn(temp.arena);
+    final result = _Opaque_try_from_utf8(inputData, inputLength);
     return result.address == 0 ? null : Opaque._fromFfi(result, []);
   }
 
   static Opaque fromStr(String input) {
-    final temp = ffi2.Arena();
-    final inputView = input.utf8View;
-    final result = _Opaque_from_str(inputView.allocIn(temp), inputView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (inputData, inputLength) = input._utf8AllocIn(temp.arena);
+    final result = _Opaque_from_str(inputData, inputLength);
     return Opaque._fromFfi(result, []);
   }
 
@@ -54,9 +52,8 @@ final class Opaque implements ffi.Finalizable {
   ///
   /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
   void assertStruct(MyStruct s) {
-    final temp = ffi2.Arena();
-    _Opaque_assert_struct(_ffi, s._toFfi(temp));
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    _Opaque_assert_struct(_ffi, s._toFfi(temp.arena));
   }
 
   static int returnsUsize() {

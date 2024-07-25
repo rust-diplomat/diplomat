@@ -28,9 +28,8 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
   ///
   /// See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
   static FixedDecimalFormatter? tryNew(Locale locale, DataProvider provider, FixedDecimalFormatterOptions options) {
-    final temp = ffi2.Arena();
-    final result = _icu4x_FixedDecimalFormatter_try_new_mv1(locale._ffi, provider._ffi, options._toFfi(temp));
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final result = _icu4x_FixedDecimalFormatter_try_new_mv1(locale._ffi, provider._ffi, options._toFfi(temp.arena));
     if (!result.isOk) {
       return null;
     }
