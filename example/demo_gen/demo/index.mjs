@@ -5,8 +5,8 @@ export * as FixedDecimalDemo from "./FixedDecimal.mjs";
 
 
 export const RenderInfo = {
-    termini: [
-        {
+    termini: {
+        "FixedDecimalFormatter.formatWrite": {
             func: FixedDecimalFormatterDemo.formatWrite,
             // For avoiding webpacking minifying issues:
             funcName: "FixedDecimalFormatter.formatWrite",
@@ -35,7 +35,7 @@ export const RenderInfo = {
             ]
         },
         
-        {
+        "FixedDecimal.toString": {
             func: FixedDecimalDemo.toString,
             // For avoiding webpacking minifying issues:
             funcName: "FixedDecimal.toString",
@@ -48,5 +48,5 @@ export const RenderInfo = {
                 
             ]
         }
-        ],
+        },
 };

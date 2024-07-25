@@ -4,9 +4,9 @@ export * as {{terminus.type_name}}Demo from "./{{terminus.js_file_name}}";
 {% endfor %}
 
 export const RenderInfo = {
-    termini: [
+    termini: {
         {%- for terminus in termini %}
-        {
+        "{{terminus.type_name}}.{{terminus.function_name}}": {
             func: {{terminus.type_name}}Demo.{{terminus.function_name}},
             // For avoiding webpacking minifying issues:
             funcName: "{{terminus.type_name}}.{{terminus.function_name}}",
@@ -20,5 +20,5 @@ export const RenderInfo = {
             ]
         }{% if !loop.last %},{% endif %}
         {% endfor -%}
-    ],
+    },
 };
