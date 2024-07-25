@@ -271,7 +271,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                     }
                 }
             }
-            CanBeInputType::InputOnly(ty) => {
+            CanBeInputType::InputOnly(_ty) => {
                 // TODO probably allow borrowing of callbacks when they can be members of objects
                 ParamBorrowInfo::NotBorrowed
             }

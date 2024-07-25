@@ -559,11 +559,7 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<CanBeInputType, ()> {
         match ty {
-            // TODO need to ensure this is only appearing in an input position
-            // would be ideal to get InputOnly working here, but the issue is that callbacks will
-            // be the type of parameters of method, and currently Method params is a Vec<Param<Everywhere>>.
-            // can we change it to Param<InputOnly> -- are we sure Methods will appear
-            // only as taking arguments from the foreign language? i don't think so
+            // callbacks are input-only
             ast::TypeName::Function(input_types, out_type) => {
                 let callback_id: IdentBuf = IdentBuf::from_buf("anon".into()).unwrap();
                 let params = input_types
@@ -582,6 +578,7 @@ impl<'ast> LoweringContext<'ast> {
                     output: Box::new(self.lower_type(out_type, ltl, in_path)?),
                 })))
             }
+            // all other types get parsed as the Everywhere TyPosition
             _ => Ok(CanBeInputType::Everywhere(
                 self.lower_type(ty, ltl, in_path)?,
             )),
@@ -784,7 +781,7 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
             }
-            ast::TypeName::Function(input_types, out_type) => {
+            ast::TypeName::Function(_, _) => {
                 self.errors.push(LoweringError::Other(
                     "Callbacks need to be input-only".into(),
                 ));
