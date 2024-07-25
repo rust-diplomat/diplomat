@@ -49,7 +49,7 @@ pub struct Callback {
     pub id: IdentBuf, // this will just piggy-back off the name of the parameter the callback corresponds to for now
     // pub lifetime_env: LifetimeEnv,
     pub param_self: Option<ParamSelf>, // for now it'll be none, but when we have callbacks as object methods it'll be relevant
-    pub params: Vec<Param<OutputOnly>>,
+    pub params: Vec<CallbackParam>,
     pub output: Box<Type>, // this will be used in Rust (note: can technically be a callback)
 }
 
@@ -102,7 +102,19 @@ pub struct ParamSelf {
 #[non_exhaustive]
 pub struct Param {
     pub name: IdentBuf,
+<<<<<<< HEAD
     pub ty: Type<InputOnly>,
+=======
+    pub ty: CanBeInputType,
+}
+
+/// A parameter in a callback
+/// No name, since all we get is the callback type signature
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct CallbackParam {
+    pub ty: Type<OutputOnly>,
+>>>>>>> 66c57b8 (Adding a wrapper for input-only types so that `Param`s can be both TyPosition InputOnly and Everywhere; propagating this through the tool)
 }
 
 impl SuccessType {
@@ -221,7 +233,11 @@ impl ParamSelf {
 }
 
 impl Param {
+<<<<<<< HEAD
     pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>) -> Self {
+=======
+    pub(super) fn new(name: IdentBuf, ty: CanBeInputType) -> Self {
+>>>>>>> 66c57b8 (Adding a wrapper for input-only types so that `Param`s can be both TyPosition InputOnly and Everywhere; propagating this through the tool)
         Self { name, ty }
     }
 }

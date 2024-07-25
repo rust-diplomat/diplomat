@@ -4,7 +4,8 @@ use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::TypeContext;
 use diplomat_core::hir::{
-    self, OpaqueOwner, ReturnableStructDef, StructPathLike, TyPosition, Type, TypeDef, TypeId,
+    self, CanBeInputType, OpaqueOwner, ReturnableStructDef, StructPathLike, TyPosition, Type,
+    TypeDef, TypeId,
 };
 use std::borrow::Cow;
 use std::fmt::Write;
@@ -171,13 +172,14 @@ impl<'cx, 'tcx> TyGenContext<'cx, 'tcx> {
         }
 
         for param in &method.params {
-            self.gen_ty_decl(
-                &param.ty,
-                param.name.as_str(),
-                false,
-                header,
-                &mut param_decls,
-            );
+            match &param.ty {
+                CanBeInputType::Everywhere(ty) => {
+                    self.gen_ty_decl(&ty, param.name.as_str(), false, header, &mut param_decls)
+                }
+                CanBeInputType::InputOnly(ty) => {
+                    self.gen_ty_decl(&ty, param.name.as_str(), false, header, &mut param_decls)
+                }
+            }
         }
 
         let return_ty: Cow<str> = match method.output {

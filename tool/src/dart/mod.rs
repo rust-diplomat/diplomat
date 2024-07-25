@@ -437,7 +437,13 @@ impl<'a, 'cx> TyGenContext<'a, 'cx> {
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-            param_decls_dart.push(format!("{} {param_name}", self.gen_type_name(&param.ty)));
+            param_decls_dart.push(format!(
+                "{} {param_name}",
+                match &param.ty {
+                    CanBeInputType::Everywhere(ty) => self.gen_type_name(&ty),
+                    CanBeInputType::InputOnly(ty) => self.gen_type_name(&ty),
+                }
+            ));
 
             if let hir::Type::Slice(slice) = param.ty {
                 // Two args on the ABI: pointer and size

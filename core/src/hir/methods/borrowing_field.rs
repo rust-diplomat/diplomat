@@ -155,14 +155,19 @@ impl<'m> BorrowingFieldVisitor<'m> {
 
                 for param in method.params.iter() {
                     let parent = ParentId::new(None, param.name.as_ref(), &mut parents);
-                    Self::from_type(
-                        &param.ty,
-                        tcx,
-                        parent,
-                        &method_lifetimes,
-                        &mut parents,
-                        &mut leaves,
-                    );
+                    match param.ty {
+                        CanBeInputType::Everywhere(ref p_ty) => {
+                            Self::from_type(
+                                p_ty,
+                                tcx,
+                                parent,
+                                &method_lifetimes,
+                                &mut parents,
+                                &mut leaves,
+                            );
+                        },
+                        CanBeInputType::InputOnly(_) => { /* no borrowing visitor for callbacks; no subfields */ }
+                    }
                 }
 
                 // sanity check that the preallocations were correct
