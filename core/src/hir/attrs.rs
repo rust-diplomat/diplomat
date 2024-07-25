@@ -6,8 +6,8 @@ use crate::ast;
 use crate::ast::attrs::{AttrInheritContext, DiplomatBackendAttrCfg, StandardAttribute};
 use crate::hir::lowering::ErrorStore;
 use crate::hir::{
-    EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType, SuccessType,
-    Type, TypeDef, TypeId,
+    CanBeInputType, EnumVariant, LoweringError, Method, Mutability, OpaqueId, ReturnType, SelfType,
+    SuccessType, Type, TypeDef, TypeId,
 };
 use syn::Meta;
 
@@ -517,7 +517,10 @@ impl Attrs {
                         if let Some(ref selfty) = method.param_self {
                             if let Some(param) = method.params.first() {
                                 match (&selfty.ty, &param.ty) {
-                                    (SelfType::Opaque(p), Type::Opaque(p2)) => {
+                                    (
+                                        SelfType::Opaque(p),
+                                        CanBeInputType::Everywhere(Type::Opaque(p2)),
+                                    ) => {
                                         if p.tcx_id != p2.tcx_id {
                                             errors.push(LoweringError::Other(
                                                 COMPARATOR_ERROR.into(),
@@ -540,14 +543,20 @@ impl Attrs {
                                             ));
                                         }
                                     }
-                                    (SelfType::Struct(p), Type::Struct(p2)) => {
+                                    (
+                                        SelfType::Struct(p),
+                                        CanBeInputType::Everywhere(Type::Struct(p2)),
+                                    ) => {
                                         if p.tcx_id != p2.tcx_id {
                                             errors.push(LoweringError::Other(
                                                 COMPARATOR_ERROR.into(),
                                             ));
                                         }
                                     }
-                                    (SelfType::Enum(p), Type::Enum(p2)) => {
+                                    (
+                                        SelfType::Enum(p),
+                                        CanBeInputType::Everywhere(Type::Enum(p2)),
+                                    ) => {
                                         if p.tcx_id != p2.tcx_id {
                                             errors.push(LoweringError::Other(
                                                 COMPARATOR_ERROR.into(),
