@@ -308,9 +308,17 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_info.name);
 
             // If we're a slice of strings or primitives. See [`hir::Types::Slice`].
-            if let hir::Type::Slice(slice) = param.ty {
-                let slice_expr =
-                    self.gen_js_to_c_for_type(&param.ty, param_info.name.clone(), None);
+            if let CanBeInputType::Everywhere(hir::Type::Slice(slice)) = param.ty {
+                let slice_expr = self.gen_js_to_c_for_type(
+                    match &param.ty {
+                        CanBeInputType::Everywhere(ty) => ty,
+                        CanBeInputType::InputOnly(_) => {
+                            panic!("We've already determined this is a slice")
+                        }
+                    },
+                    param_info.name.clone(),
+                    None,
+                );
 
                 let is_borrowed = match param_borrow_kind {
                     ParamBorrowInfo::TemporarySlice => false,
@@ -347,7 +355,7 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     slice_expr,
                 });
             } else {
-                if let hir::Type::Struct(..) = param.ty {
+                if let CanBeInputType::InputOnly(hir::Type::Struct(..)) = param.ty {
                     method_info.needs_slice_cleanup = true;
                 }
 
@@ -361,13 +369,18 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
                     } else {
                         None
                     };
-                method_info
-                    .param_conversions
-                    .push(self.gen_js_to_c_for_type(
-                        &param.ty,
+                method_info.param_conversions.push(match &param.ty {
+                    CanBeInputType::Everywhere(ty) => self.gen_js_to_c_for_type(
+                        &ty,
                         param_info.name.clone(),
                         struct_borrow_info.as_ref(),
-                    ));
+                    ),
+                    CanBeInputType::InputOnly(ty) => self.gen_js_to_c_for_type(
+                        &ty,
+                        param_info.name.clone(),
+                        struct_borrow_info.as_ref(),
+                    ),
+                });
             }
 
             method_info.parameters.push(param_info);
