@@ -53,6 +53,8 @@ jobs:
         with:
           crate: cargo-make
           version: 0.36.13
+      - name: Build demo
+        run: cargo make gen-demo-example
       - name: Build page
         run: cargo make test-demo-example
       - name: Setup Pages
