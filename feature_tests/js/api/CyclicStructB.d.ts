@@ -3,10 +3,10 @@ import type { CyclicStructA } from "./CyclicStructA"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class CyclicStructB {
-    
+
     get field() : number;
     set field(value: number); 
 
-    static getA(): CyclicStructA;
 
+    static getA(): CyclicStructA;
 }

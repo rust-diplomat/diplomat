@@ -3,7 +3,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class ErrorStruct {
-    
+
     #i;
     get i()  {
         return this.#i;
@@ -11,7 +11,7 @@ export class ErrorStruct {
     set i(value) {
         this.#i = value;
     }
-    
+
     #j;
     get j()  {
         return this.#j;

@@ -3,7 +3,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class BorrowedFieldsReturning {
-    
+
     #bytes;
     get bytes()  {
         return this.#bytes;

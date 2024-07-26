@@ -7,7 +7,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class NestedBorrowedFields {
-    
+
     #fields;
     get fields()  {
         return this.#fields;
@@ -15,7 +15,7 @@ export class NestedBorrowedFields {
     set fields(value) {
         this.#fields = value;
     }
-    
+
     #bounds;
     get bounds()  {
         return this.#bounds;
@@ -23,7 +23,7 @@ export class NestedBorrowedFields {
     set bounds(value) {
         this.#bounds = value;
     }
-    
+
     #bounds2;
     get bounds2()  {
         return this.#bounds2;
@@ -84,6 +84,7 @@ export class NestedBorrowedFields {
     get _fieldsForLifetimeZ() { 
         return [...bounds2._fieldsForLifetimeA, ...bounds2._fieldsForLifetimeB, ...bounds2._fieldsForLifetimeC];
     };
+
     static fromBarAndFooAndStrings(bar, foo, dstr16X, dstr16Z, utf8StrY, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
@@ -122,5 +123,4 @@ export class NestedBorrowedFields {
             wasm.diplomat_free(diplomat_receive_buffer, 72, 4);
         }
     }
-
 }
