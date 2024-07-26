@@ -216,7 +216,8 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             .flat_map(|method| self.generate_method_body(type_id, method, self.typescript))
             .collect::<Vec<_>>();
 
-        let special_method_body = self.generate_special_method_body(&struct_def.special_method_presence, self.typescript);
+        let special_method_body =
+            self.generate_special_method_body(&struct_def.special_method_presence, self.typescript);
         if !special_method_body.is_empty() {
             methods.push(special_method_body);
         }
