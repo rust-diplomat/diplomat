@@ -37,7 +37,8 @@ export class {{type_name}} {
 
     get ffiValue(){% if typescript %}: pointer;{% else %} {
         return this.#ptr;
-    }{% endif %}
+    }
+    {% endif -%}
 
 {% for method in methods %}
     {{ method|indent(4) }}
