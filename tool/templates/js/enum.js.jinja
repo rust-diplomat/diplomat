@@ -4,7 +4,11 @@
 */
 {% endif -%}
 export class {{type_name}} {
-{%- if !typescript %}
+{%- for variant in enum_def.variants -%}
+    {%- let variant_name = formatter.fmt_enum_variant(variant) %}
+    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
+{%- endfor %}
+{% if !typescript %}
     #value = undefined;
 
     static values = new Map([
@@ -12,11 +16,6 @@ export class {{type_name}} {
         ["{{formatter.fmt_enum_variant(variant)}}", {{variant.discriminant}}]{% if !loop.last %},{% endif %}
 {%- endfor %}
     ]);
-    
-{%~ for variant in enum_def.variants -%}
-    {%- let variant_name = formatter.fmt_enum_variant(variant) %}
-    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
-{%- endfor %}
 
     {# TODO: I think it's possible to allow for constructors,
     but we just need to check if a constructor will be generated. -#}
