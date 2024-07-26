@@ -31,21 +31,18 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_from_usize(number);
     
         try {
-    
             return new OpaqueMutexedString(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     change(number) {
         wasm.OpaqueMutexedString_change(this.ffiValue, number);
     
-        try {
-    
-        } finally {
+        try {}
         
-        }
+        finally {}
     }
 
     borrow() {
@@ -55,11 +52,10 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_borrow(this.ffiValue);
     
         try {
-    
             return new OpaqueMutexedString(result, aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static borrowOther(other) {
@@ -69,11 +65,10 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_borrow_other(other.ffiValue);
     
         try {
-    
             return new OpaqueMutexedString(result, aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     borrowSelfOrOther(other) {
@@ -83,22 +78,20 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_borrow_self_or_other(this.ffiValue, other.ffiValue);
     
         try {
-    
             return new OpaqueMutexedString(result, aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     getLenAndAdd(other) {
         const result = wasm.OpaqueMutexedString_get_len_and_add(this.ffiValue, other);
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     dummyStr() {
@@ -110,12 +103,11 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_dummy_str(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string8");
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
-        
         }
     }
 
@@ -123,10 +115,9 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_wrapper(this.ffiValue);
     
         try {
-    
             return new Utf16Wrap(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 }

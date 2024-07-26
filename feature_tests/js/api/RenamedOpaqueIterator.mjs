@@ -35,11 +35,10 @@ export class RenamedOpaqueIterator {
         const result = wasm.namespace_OpaqueIterator_next(this.ffiValue);
     
         try {
-    
             return result == 0 ? null : new AttrOpaque1Renamed(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     

@@ -39,12 +39,11 @@ export class CyclicStructA {
         const result = wasm.CyclicStructA_get_b(diplomat_receive_buffer);
     
         try {
-    
             return new CyclicStructB()._fromFFI(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 1, 1);
-        
         }
     }
 

@@ -32,12 +32,11 @@ export class Utf16Wrap {
         const result = wasm.Utf16Wrap_from_utf16(inputSlice.ptr, inputSlice.size);
     
         try {
-    
             return new Utf16Wrap(result, []);
-        } finally {
+        }
         
+        finally {
             inputSlice.free();
-        
         }
     }
 
@@ -47,12 +46,11 @@ export class Utf16Wrap {
         wasm.Utf16Wrap_get_debug_str(this.ffiValue, write);
     
         try {
-    
             return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_buffer_write_destroy(write);
-        
         }
     }
 
@@ -65,12 +63,11 @@ export class Utf16Wrap {
         const result = wasm.Utf16Wrap_borrow_cont(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string16");
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
-        
         }
     }
 }

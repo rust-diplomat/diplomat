@@ -33,12 +33,11 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size);
     
         try {
-    
             return new RenamedMyIterable(result, []);
-        } finally {
+        }
         
+        finally {
             xSlice.free();
-        
         }
     }
 
@@ -49,10 +48,9 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
     
         try {
-    
             return new RenamedMyIterator(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 }

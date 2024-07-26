@@ -104,10 +104,10 @@ export class NestedBorrowedFields {
         const result = wasm.NestedBorrowedFields_from_bar_and_foo_and_strings(diplomat_receive_buffer, bar.ffiValue, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, dstr16ZSlice.ptr, dstr16ZSlice.size, utf8StrYSlice.ptr, utf8StrYSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         try {
-    
             return new NestedBorrowedFields()._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
-        } finally {
+        }
         
+        finally {
             dstr16XSlice.garbageCollect();
         
             dstr16ZSlice.garbageCollect();
@@ -117,7 +117,6 @@ export class NestedBorrowedFields {
             utf8StrZSlice.garbageCollect();
         
             wasm.diplomat_free(diplomat_receive_buffer, 72, 4);
-        
         }
     }
 

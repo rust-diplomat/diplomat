@@ -32,11 +32,10 @@ export class Opaque {
         const result = wasm.Opaque_new();
     
         try {
-    
             return new Opaque(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static tryFromUtf8(input) {
@@ -45,12 +44,11 @@ export class Opaque {
         const result = wasm.Opaque_try_from_utf8(inputSlice.ptr, inputSlice.size);
     
         try {
-    
             return result == 0 ? null : new Opaque(result, []);
-        } finally {
+        }
         
+        finally {
             inputSlice.free();
-        
         }
     }
 
@@ -60,12 +58,11 @@ export class Opaque {
         const result = wasm.Opaque_from_str(inputSlice.ptr, inputSlice.size);
     
         try {
-    
             return new Opaque(result, []);
-        } finally {
+        }
         
+        finally {
             inputSlice.free();
-        
         }
     }
 
@@ -75,12 +72,11 @@ export class Opaque {
         wasm.Opaque_get_debug_str(this.ffiValue, write);
     
         try {
-    
             return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_buffer_write_destroy(write);
-        
         }
     }
 
@@ -89,14 +85,12 @@ export class Opaque {
         let slice_cleanup_callbacks = [];
         wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(slice_cleanup_callbacks, {}));
     
-        try {
-    
-        } finally {
+        try {}
         
+        finally {
             for (let cleanup of slice_cleanup_callbacks) {
                 cleanup();
             }
-        
         }
     }
 
@@ -104,11 +98,10 @@ export class Opaque {
         const result = wasm.Opaque_returns_usize();
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static returnsImported() {
@@ -117,12 +110,11 @@ export class Opaque {
         const result = wasm.Opaque_returns_imported(diplomat_receive_buffer);
     
         try {
-    
             return new ImportedStruct()._fromFFI(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
 
@@ -130,10 +122,9 @@ export class Opaque {
         const result = wasm.Opaque_cmp();
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
 }

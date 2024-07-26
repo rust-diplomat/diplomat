@@ -32,20 +32,17 @@ export class Unnamespaced {
         const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
         try {
-    
             return new Unnamespaced(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     useNamespaced(n) {
         wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
     
-        try {
-    
-        } finally {
+        try {}
         
-        }
+        finally {}
     }
 }

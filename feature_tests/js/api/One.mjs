@@ -38,11 +38,10 @@ export class One {
         const result = wasm.One_transitivity(hold.ffiValue, nohold.ffiValue);
     
         try {
-    
             return new One(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static cycle(hold, nohold) {
@@ -52,11 +51,10 @@ export class One {
         const result = wasm.One_cycle(hold.ffiValue, nohold.ffiValue);
     
         try {
-    
             return new One(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static manyDependents(a, b, c, d, nohold) {
@@ -66,11 +64,10 @@ export class One {
         const result = wasm.One_many_dependents(a.ffiValue, b.ffiValue, c.ffiValue, d.ffiValue, nohold.ffiValue);
     
         try {
-    
             return new One(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static returnOutlivesParam(hold, nohold) {
@@ -80,11 +77,10 @@ export class One {
         const result = wasm.One_return_outlives_param(hold.ffiValue, nohold.ffiValue);
     
         try {
-    
             return new One(result, [], longEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static diamondTop(top, left, right, bottom) {
@@ -94,11 +90,10 @@ export class One {
         const result = wasm.One_diamond_top(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
         try {
-    
             return new One(result, [], topEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static diamondLeft(top, left, right, bottom) {
@@ -108,11 +103,10 @@ export class One {
         const result = wasm.One_diamond_left(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
         try {
-    
             return new One(result, [], leftEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static diamondRight(top, left, right, bottom) {
@@ -122,11 +116,10 @@ export class One {
         const result = wasm.One_diamond_right(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
         try {
-    
             return new One(result, [], rightEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static diamondBottom(top, left, right, bottom) {
@@ -136,11 +129,10 @@ export class One {
         const result = wasm.One_diamond_bottom(top.ffiValue, left.ffiValue, right.ffiValue, bottom.ffiValue);
     
         try {
-    
             return new One(result, [], bottomEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static diamondAndNestedTypes(a, b, c, d, nohold) {
@@ -150,11 +142,10 @@ export class One {
         const result = wasm.One_diamond_and_nested_types(a.ffiValue, b.ffiValue, c.ffiValue, d.ffiValue, nohold.ffiValue);
     
         try {
-    
             return new One(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static implicitBounds(explicitHold, implicitHold, nohold) {
@@ -164,11 +155,10 @@ export class One {
         const result = wasm.One_implicit_bounds(explicitHold.ffiValue, implicitHold.ffiValue, nohold.ffiValue);
     
         try {
-    
             return new One(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static implicitBoundsDeep(explicit, implicit1, implicit2, nohold) {
@@ -178,10 +168,9 @@ export class One {
         const result = wasm.One_implicit_bounds_deep(explicit.ffiValue, implicit1.ffiValue, implicit2.ffiValue, nohold.ffiValue);
     
         try {
-    
             return new One(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 }

@@ -94,12 +94,11 @@ export class MyStruct {
         const result = wasm.MyStruct_new(diplomat_receive_buffer);
     
         try {
-    
             return new MyStruct()._fromFFI(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 28, 8);
-        
         }
     }
 
@@ -109,14 +108,13 @@ export class MyStruct {
         const result = wasm.MyStruct_into_a(...this._intoFFI());
     
         try {
-    
             return result;
-        } finally {
+        }
         
+        finally {
             for (let cleanup of slice_cleanup_callbacks) {
                 cleanup();
             }
-        
         }
     }
 
@@ -126,16 +124,15 @@ export class MyStruct {
         const result = wasm.MyStruct_returns_zst_result(diplomat_receive_buffer);
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 const cause = new MyZst();
                 throw new Error('MyZst', { cause });
             }
     
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
 

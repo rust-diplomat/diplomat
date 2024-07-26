@@ -38,10 +38,9 @@ export class RefList {
         const result = wasm.RefList_node(data.ffiValue);
     
         try {
-    
             return new RefList(result, [], bEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 }

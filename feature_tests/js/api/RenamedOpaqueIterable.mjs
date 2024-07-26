@@ -34,10 +34,9 @@ export class RenamedOpaqueIterable {
         const result = wasm.namespace_OpaqueIterable_iter(this.ffiValue);
     
         try {
-    
             return new RenamedOpaqueIterator(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 }

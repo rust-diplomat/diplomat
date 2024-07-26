@@ -32,12 +32,11 @@ export class OptionString {
         const result = wasm.OptionString_new(diplomatStrSlice.ptr, diplomatStrSlice.size);
     
         try {
-    
             return result == 0 ? null : new OptionString(result, []);
-        } finally {
+        }
         
+        finally {
             diplomatStrSlice.free();
-        
         }
     }
 
@@ -47,12 +46,11 @@ export class OptionString {
         const result = wasm.OptionString_write(this.ffiValue, write);
     
         try {
-    
             return result == 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_buffer_write_destroy(write);
-        
         }
     }
 
@@ -65,15 +63,14 @@ export class OptionString {
         const result = wasm.OptionString_borrow(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
                 return null;
             }
             return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string8");
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
-        
         }
     }
 }

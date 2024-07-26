@@ -103,16 +103,15 @@ export class BorrowedFieldsWithBounds {
         const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomat_receive_buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         try {
-    
             return new BorrowedFieldsWithBounds()._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
-        } finally {
+        }
         
+        finally {
             dstr16XSlice.garbageCollect();
         
             utf8StrZSlice.garbageCollect();
         
             wasm.diplomat_free(diplomat_receive_buffer, 24, 4);
-        
         }
     }
 
