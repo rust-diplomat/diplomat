@@ -109,7 +109,8 @@ where
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx>;
 }
 
-// directionality of the type
+/// Directionality of the type
+#[non_exhaustive]
 pub enum InputOrOutput {
     Input,
     Output,
