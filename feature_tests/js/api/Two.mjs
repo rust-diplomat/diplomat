@@ -13,11 +13,8 @@ export class Two {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     #aEdge = [];
-    
     #bEdge = [];
-    
     
     constructor(ptr, selfEdge, aEdge, bEdge) {
         

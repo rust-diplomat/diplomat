@@ -14,7 +14,6 @@ export class Float64Vec {
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
     
-    
     constructor(ptr, selfEdge) {
         
         this.#ptr = ptr;
