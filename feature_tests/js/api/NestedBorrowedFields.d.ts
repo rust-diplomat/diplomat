@@ -6,10 +6,13 @@ import type { Foo } from "./Foo"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class NestedBorrowedFields {
+    
     get fields() : BorrowedFields;
     set fields(value: BorrowedFields); 
+    
     get bounds() : BorrowedFieldsWithBounds;
     set bounds(value: BorrowedFieldsWithBounds); 
+    
     get bounds2() : BorrowedFieldsWithBounds;
     set bounds2(value: BorrowedFieldsWithBounds); 
 

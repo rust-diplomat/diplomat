@@ -3,10 +3,13 @@ import type { Bar } from "./Bar"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class BorrowedFields {
+    
     get a() : string;
     set a(value: string); 
+    
     get b() : string;
     set b(value: string); 
+    
     get c() : string;
     set c(value: string); 
 

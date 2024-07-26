@@ -7,6 +7,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class NestedBorrowedFields {
+    
     #fields;
     get fields()  {
         return this.#fields;
@@ -14,6 +15,7 @@ export class NestedBorrowedFields {
     set fields(value) {
         this.#fields = value;
     }
+    
     #bounds;
     get bounds()  {
         return this.#bounds;
@@ -21,6 +23,7 @@ export class NestedBorrowedFields {
     set bounds(value) {
         this.#bounds = value;
     }
+    
     #bounds2;
     get bounds2()  {
         return this.#bounds2;

@@ -4,6 +4,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class BorrowedFieldsWithBounds {
+    
     #fieldA;
     get fieldA()  {
         return this.#fieldA;
@@ -11,6 +12,7 @@ export class BorrowedFieldsWithBounds {
     set fieldA(value) {
         this.#fieldA = value;
     }
+    
     #fieldB;
     get fieldB()  {
         return this.#fieldB;
@@ -18,6 +20,7 @@ export class BorrowedFieldsWithBounds {
     set fieldB(value) {
         this.#fieldB = value;
     }
+    
     #fieldC;
     get fieldC()  {
         return this.#fieldC;

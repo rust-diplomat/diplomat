@@ -5,6 +5,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class MyStruct {
+    
     #a;
     get a()  {
         return this.#a;
@@ -12,6 +13,7 @@ export class MyStruct {
     set a(value) {
         this.#a = value;
     }
+    
     #b;
     get b()  {
         return this.#b;
@@ -19,6 +21,7 @@ export class MyStruct {
     set b(value) {
         this.#b = value;
     }
+    
     #c;
     get c()  {
         return this.#c;
@@ -26,6 +29,7 @@ export class MyStruct {
     set c(value) {
         this.#c = value;
     }
+    
     #d;
     get d()  {
         return this.#d;
@@ -33,6 +37,7 @@ export class MyStruct {
     set d(value) {
         this.#d = value;
     }
+    
     #e;
     get e()  {
         return this.#e;
@@ -40,6 +45,7 @@ export class MyStruct {
     set e(value) {
         this.#e = value;
     }
+    
     #f;
     get f()  {
         return this.#f;
@@ -47,6 +53,7 @@ export class MyStruct {
     set f(value) {
         this.#f = value;
     }
+    
     #g;
     get g()  {
         return this.#g;

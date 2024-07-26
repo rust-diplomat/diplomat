@@ -4,6 +4,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class ImportedStruct {
+    
     #foo;
     get foo()  {
         return this.#foo;
@@ -11,6 +12,7 @@ export class ImportedStruct {
     set foo(value) {
         this.#foo = value;
     }
+    
     #count;
     get count()  {
         return this.#count;
