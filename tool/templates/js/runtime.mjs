@@ -193,4 +193,35 @@ export class DiplomatBuf {
 	}
 }
 
+export class DiplomatWriteBuf extends DiplomatBuf {
+
+	#wasm;
+	#buffer;
+
+	constructor(wasm) {
+		this.#wasm = wasm;
+		this.#buffer = this.#wasm.diplomat_buffer_write_create(0);
+
+		this.free = wasm.diplomat_buffer_write_destroy.bind(write);
+		this.leak = () => { };
+		this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
+	}
+
+	readString8() {
+		return readString8(this.#wasm, this.ptr, this.size);
+	}
+
+	get buffer() {
+		return this.#buffer;
+	}
+
+	get ptr() {
+		return this.#wasm.diplomat_buffer_write_get_bytes(this.#buffer);
+	}
+
+	get size() {
+		return this.#wasm.diplomat_buffer_write_len(this.#buffer);
+	}
+}
+
 const DiplomatBufferFinalizer = new FinalizationRegistry(free => free());

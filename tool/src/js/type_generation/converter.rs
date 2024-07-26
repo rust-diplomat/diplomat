@@ -484,10 +484,10 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 						}
 						*/
 						// TODO: This could probably be its own diplomatRuntime function, instead of lots of little wasm calls.
-						method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
-						method_info.param_conversions.push("write".into());
-						method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
-						format!("{err_check}return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));")
+						method_info.alloc_expressions.push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
+						method_info.param_conversions.push("write.buffer".into());
+						method_info.cleanup_expressions.push("write.free();".into());
+						format!("{err_check}return write.readString8();")
 					},
 					SuccessType::OutType(ref o) => {
 						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomat_receive_buffer".into(), 0);
