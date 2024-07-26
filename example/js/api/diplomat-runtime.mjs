@@ -231,4 +231,53 @@ export class DiplomatWriteBuf {
 	}
 }
 
+export class DiplomatReceiveBuf {
+	#wasm;
+
+	#size;
+	#align;
+
+	#hasResult;
+
+	#buffer;
+
+	constructor(wasm, size, align, hasResult) {
+		this.#wasm = wasm;
+
+		this.#size = size;
+		this.#align = align;
+
+		this.#hasResult = hasResult;
+
+		this.#buffer = this.#wasm.diplomat_alloc(this.#size, this.#align);
+
+		this.leak = () => { };
+	}
+	
+	free() {
+		this.#wasm.diplomat_free(this.#buffer, this.#size, this.#align);
+	}
+
+	garbageCollect() {
+		DiplomatBufferFinalizer.register(this, this.free);
+	}
+
+	get buffer() {
+		return this.#buffer;
+	}
+
+	get resultFlag() {
+		if (this.#hasResult) {
+			return resultFlag(this.#wasm, this.#buffer, this.#size - 1);
+		} else {
+			return true;
+		}
+	}
+
+	get result() {
+
+	}
+
+}
+
 const DiplomatBufferFinalizer = new FinalizationRegistry(free => free());

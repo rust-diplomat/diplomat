@@ -41,22 +41,22 @@ export class FixedDecimalFormatter {
         
         let slice_cleanup_callbacks = [];
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomat_receive_buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI(slice_cleanup_callbacks, {}));
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomatReceive.buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI(slice_cleanup_callbacks, {}));
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new FixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return new FixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomatReceive), []);
         } finally {
         
             for (let cleanup of slice_cleanup_callbacks) {
                 cleanup();
             }
         
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         
         }
     }

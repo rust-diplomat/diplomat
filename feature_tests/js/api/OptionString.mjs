@@ -60,21 +60,21 @@ export class OptionString {
 
     borrow() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(9, 4);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.OptionString_borrow(diplomat_receive_buffer, this.ffiValue);
+        const result = wasm.OptionString_borrow(diplomatReceive.buffer, this.ffiValue);
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string8");
+            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomatReceive, "string8");
         } finally {
         
-            wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
+            diplomatReceive.free();
         
         }
     }

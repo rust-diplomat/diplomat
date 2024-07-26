@@ -90,15 +90,15 @@ export class MyStruct {
     }
     static new_() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(28, 8);
-        const result = wasm.MyStruct_new(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 28, 8, false);
+        const result = wasm.MyStruct_new(diplomatReceive.buffer);
     
         try {
     
-            return new MyStruct()._fromFFI(diplomat_receive_buffer);
+            return new MyStruct()._fromFFI(diplomatReceive.buffer);
         } finally {
         
-            wasm.diplomat_free(diplomat_receive_buffer, 28, 8);
+            diplomatReceive.free();
         
         }
     }
@@ -122,19 +122,19 @@ export class MyStruct {
 
     static returnsZstResult() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.MyStruct_returns_zst_result(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.MyStruct_returns_zst_result(diplomatReceive.buffer);
     
         try {
     
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
+            if (!diplomatReceive.resultFlag) {
                 const cause = new MyZst();
                 throw new Error('MyZst', { cause });
             }
     
         } finally {
         
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         
         }
     }

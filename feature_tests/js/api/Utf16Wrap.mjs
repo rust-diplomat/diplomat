@@ -60,18 +60,18 @@ export class Utf16Wrap {
 
     borrowCont() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Utf16Wrap_borrow_cont(diplomat_receive_buffer, this.ffiValue);
+        const result = wasm.Utf16Wrap_borrow_cont(diplomatReceive.buffer, this.ffiValue);
     
         try {
     
-            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string16");
+            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomatReceive.buffer, "string16");
         } finally {
         
-            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            diplomatReceive.free();
         
         }
     }

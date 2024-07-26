@@ -115,15 +115,15 @@ export class Opaque {
 
     static returnsImported() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.Opaque_returns_imported(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
+        const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
     
         try {
     
-            return new ImportedStruct()._fromFFI(diplomat_receive_buffer);
+            return new ImportedStruct()._fromFFI(diplomatReceive.buffer);
         } finally {
         
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         
         }
     }
