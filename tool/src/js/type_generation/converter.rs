@@ -380,12 +380,12 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             | ReturnType::Nullable(SuccessType::Write) => {
                 method_info
                     .alloc_expressions
-                    .push("const write = wasm.diplomat_buffer_write_create(0);".into());
-                method_info.param_conversions.push("write".into());
+                    .push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
+                method_info.param_conversions.push("write.buffer".into());
                 method_info
                     .cleanup_expressions
-                    .push("wasm.diplomat_buffer_write_destroy(write);".into());
-                Some("return result === 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
+                    .push("write.free();".into());
+                Some("return result === 0 ? null : write.readString8();".into())
             }
 
             // Result<Type, Error> or Option<Type>
