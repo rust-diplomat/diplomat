@@ -4,6 +4,7 @@
 {% endif -%}
 export class {{type_name}} {
     {%- for field in fields %}
+    
     {% if !typescript -%}
     #{{field.field_name}};
     {% endif -%}
