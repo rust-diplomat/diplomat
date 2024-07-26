@@ -4,11 +4,7 @@
 */
 {% endif -%}
 export class {{type_name}} {
-{%- for variant in enum_def.variants -%}
-    {%- let variant_name = formatter.fmt_enum_variant(variant) %}
-    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
-{%- endfor %}
-{% if !typescript %}
+{%- if !typescript %}
     #value = undefined;
 
     static values = new Map([
@@ -41,7 +37,11 @@ export class {{type_name}} {
 
     get ffiValue() {% if typescript %}: number;{% else %}{
         return {{type_name}}.values.get(this.#value);
-    }{% endif -%}
+    }{% endif %}
+{% for variant in enum_def.variants -%}
+    {%- let variant_name = formatter.fmt_enum_variant(variant) %}
+    static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
+{%- endfor -%}
 
 {% for method in methods %}
 
