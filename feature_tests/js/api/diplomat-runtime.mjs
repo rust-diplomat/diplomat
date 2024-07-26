@@ -206,7 +206,7 @@ export class DiplomatWriteBuf {
 		this.#wasm = wasm;
 		this.#buffer = this.#wasm.diplomat_buffer_write_create(0);
 
-		this.free = wasm.diplomat_buffer_write_destroy.bind(write);
+		this.free = wasm.diplomat_buffer_write_destroy.bind(this.#buffer);
 		this.leak = () => { };
 		this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
 	}
