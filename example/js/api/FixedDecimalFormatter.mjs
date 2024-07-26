@@ -49,7 +49,7 @@ export class FixedDecimalFormatter {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new FixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomatReceive), []);
+            return new FixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         } finally {
         
             for (let cleanup of slice_cleanup_callbacks) {

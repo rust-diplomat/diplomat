@@ -61,7 +61,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new OptionStruct(diplomatReceive);
+            return new OptionStruct(diplomatReceive.buffer);
         } finally {
         
             diplomatReceive.free();
@@ -79,7 +79,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Int32Array(wasm.memory.buffer, diplomatReceive, 1))[0];
+            return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         } finally {
         
             diplomatReceive.free();
@@ -97,7 +97,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Uint32Array(wasm.memory.buffer, diplomatReceive, 1))[0];
+            return (new Uint32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         } finally {
         
             diplomatReceive.free();
@@ -115,7 +115,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Int32Array(wasm.memory.buffer, diplomatReceive, 1))[0];
+            return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         } finally {
         
             diplomatReceive.free();
@@ -133,7 +133,7 @@ export class OptionOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Uint32Array(wasm.memory.buffer, diplomatReceive, 1))[0];
+            return (new Uint32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         } finally {
         
             diplomatReceive.free();

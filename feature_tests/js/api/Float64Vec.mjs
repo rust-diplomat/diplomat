@@ -220,7 +220,7 @@ export class Float64Vec {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Float64Array(wasm.memory.buffer, diplomatReceive, 1))[0];
+            return (new Float64Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         } finally {
         
             diplomatReceive.free();

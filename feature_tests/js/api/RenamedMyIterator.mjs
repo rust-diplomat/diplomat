@@ -43,7 +43,7 @@ export class RenamedMyIterator {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Uint8Array(wasm.memory.buffer, diplomatReceive, 1))[0];
+            return (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         } finally {
         
             diplomatReceive.free();

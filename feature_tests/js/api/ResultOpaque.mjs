@@ -41,7 +41,7 @@ export class ResultOpaque {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         } finally {
         
             diplomatReceive.free();
@@ -60,7 +60,7 @@ export class ResultOpaque {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         } finally {
         
             diplomatReceive.free();
@@ -79,7 +79,7 @@ export class ResultOpaque {
                 const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         } finally {
         
             diplomatReceive.free();
@@ -97,7 +97,7 @@ export class ResultOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         } finally {
         
             diplomatReceive.free();
@@ -116,7 +116,7 @@ export class ResultOpaque {
                 const cause = new ErrorStruct()._fromFFI(diplomatReceive.buffer);
                 throw new Error('ErrorStruct: ' + cause.toString(), { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         } finally {
         
             diplomatReceive.free();
@@ -153,7 +153,7 @@ export class ResultOpaque {
             if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Int32Array(wasm.memory.buffer, diplomatReceive, 1))[0];
+            return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         } finally {
         
             diplomatReceive.free();
@@ -172,7 +172,7 @@ export class ResultOpaque {
                 const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new Error('ResultOpaque: ' + cause.toString(), { cause });
             }
-            return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive)]];
+            return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
         } finally {
         
             diplomatReceive.free();
