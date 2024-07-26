@@ -345,20 +345,18 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         let align = layout.align();
 
                         method_info.alloc_expressions.push(
-							format!("const diplomat_receive_buffer = wasm.diplomat_alloc({size}, {align});")
+							format!("const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {size}, {align}, false);")
 							.into()
 						);
                         // This is the first thing in param converison order:
                         method_info
                             .param_conversions
-                            .insert(0, "diplomat_receive_buffer".into());
+                            .insert(0, "diplomatReceive.buffer".into());
                         method_info.cleanup_expressions.push(
-                            format!(
-                                "wasm.diplomat_free(diplomat_receive_buffer, {size}, {align});"
-                            )
+                            "diplomatReceive.free();"
                             .into(),
                         );
-                        result = "diplomat_receive_buffer";
+                        result = "diplomatReceive.buffer";
                     }
                     _ => (),
                 }
@@ -422,24 +420,19 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
                 method_info.alloc_expressions.push(
                     format!(
-                        "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
+                        "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {}, {}, true);",
                         size, align
                     )
                     .into(),
                 );
                 method_info
                     .param_conversions
-                    .insert(0, "diplomat_receive_buffer".into());
+                    .insert(0, "diplomatReceive.buffer".into());
                 method_info.cleanup_expressions.push(
-                    format!(
-                        "wasm.diplomat_free(diplomat_receive_buffer, {}, {});",
-                        size, align
-                    )
-                    .into(),
+                    "diplomatReceive.free();".into(),
                 );
 
-                let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {})) {{\n    {};\n}}\n",
-				size - 1,
+                let err_check = format!("if (!diplomatReceive.resultFlag) {{\n    {};\n}}\n",
 				match return_type {
 					ReturnType::Fallible(_, Some(e)) => {
 						// Because we don't add Result<_, Error> types to imports, we do that here:
@@ -448,7 +441,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 							self.imports.insert(self.formatter.fmt_import_statement(&type_name, false, "./".into()));
 						}
 
-						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
+						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomatReceive.buffer".into(), 0);
                         let type_name = self.formatter.fmt_type_name(e.id().unwrap());
                         let cause = self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment);
 						format!(
@@ -474,23 +467,22 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 						// Pretty sure you can't have a Result<Write, Err> and also return something else.
 						// So this is our ideal output:
 						/*
-						const write = alloc(0);
-						const diplomat_receive_buffer = diplomat.alloc(error_size, error_align);
-						wasm.c_func(write);
-						if (diplomat.resultFlag(wasm, diplomat_receive_buffer, error_size - 1)) {
+						const write = diplomatWriteBuf();
+						const diplomat_receive_buffer = diplomatReceiveBuf(wasm, error_size, error_align);
+						wasm.c_func(write.buffer);
+						if (diplomat.resultFlag) {
 							return write;
 						} else {
 							throw Error();
 						}
 						*/
-						// TODO: This could probably be its own diplomatRuntime function, instead of lots of little wasm calls.
 						method_info.alloc_expressions.push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
 						method_info.param_conversions.push("write.buffer".into());
 						method_info.cleanup_expressions.push("write.free();".into());
 						format!("{err_check}return write.readString8();")
 					},
 					SuccessType::OutType(ref o) => {
-						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomat_receive_buffer".into(), 0);
+						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomatReceive".into(), 0);
 						format!("{err_check}return {};", 
 						self.gen_c_to_js_for_type(o, ptr_deref, lifetime_environment))
 					},
