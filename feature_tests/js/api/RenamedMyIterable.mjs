@@ -3,7 +3,6 @@ import { RenamedMyIterator } from "./RenamedMyIterator.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RenamedMyIterable_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_MyIterable_destroy(ptr);
 });

@@ -3,7 +3,6 @@ import { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RenamedOpaqueIterator_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_OpaqueIterator_destroy(ptr);
 });

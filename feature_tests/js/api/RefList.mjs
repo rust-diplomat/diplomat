@@ -3,7 +3,6 @@ import { RefListParameter } from "./RefListParameter.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RefList_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.RefList_destroy(ptr);
 });

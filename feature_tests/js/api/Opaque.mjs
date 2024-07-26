@@ -4,7 +4,6 @@ import { MyStruct } from "./MyStruct.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const Opaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Opaque_destroy(ptr);
 });
