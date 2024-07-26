@@ -58,7 +58,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         let special_method_body =
             self.generate_special_method_body(&enum_def.special_method_presence, self.typescript);
-        methods.push(special_method_body);
+        if !special_method_body.is_empty() {
+            methods.push(special_method_body);
+        }
 
         #[derive(Template)]
         #[template(path = "js/enum.js.jinja", escape = "none")]
@@ -99,7 +101,9 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
 
         let special_method_body =
             self.generate_special_method_body(&opaque_def.special_method_presence, self.typescript);
-        methods.push(special_method_body);
+        if !special_method_body.is_empty() {
+            methods.push(special_method_body);
+        }
 
         let destructor = opaque_def.dtor_abi_name.as_str();
 
@@ -212,9 +216,10 @@ impl<'ctx, 'tcx> TyGenContext<'ctx, 'tcx> {
             .flat_map(|method| self.generate_method_body(type_id, method, self.typescript))
             .collect::<Vec<_>>();
 
-        methods.push(
-            self.generate_special_method_body(&struct_def.special_method_presence, self.typescript),
-        );
+        let special_method_body = self.generate_special_method_body(&struct_def.special_method_presence, self.typescript);
+        if !special_method_body.is_empty() {
+            methods.push(special_method_body);
+        }
 
         #[derive(Template)]
         #[template(path = "js/struct.js.jinja", escape = "none")]
