@@ -7,6 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const ResultOpaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.ResultOpaque_destroy(ptr);
 });
+
 export class ResultOpaque {
     // Internal ptr reference:
     #ptr = null;

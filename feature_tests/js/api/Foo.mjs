@@ -9,6 +9,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Foo_destroy(ptr);
 });
+
 export class Foo {
     // Internal ptr reference:
     #ptr = null;

@@ -5,6 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const Utf16Wrap_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Utf16Wrap_destroy(ptr);
 });
+
 export class Utf16Wrap {
     // Internal ptr reference:
     #ptr = null;

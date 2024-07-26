@@ -5,6 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const Float64Vec_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Float64Vec_destroy(ptr);
 });
+
 export class Float64Vec {
     // Internal ptr reference:
     #ptr = null;

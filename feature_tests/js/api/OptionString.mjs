@@ -5,6 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const OptionString_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.OptionString_destroy(ptr);
 });
+
 export class OptionString {
     // Internal ptr reference:
     #ptr = null;

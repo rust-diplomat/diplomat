@@ -5,6 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const RenamedMyIterator_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_MyIterator_destroy(ptr);
 });
+
 export class RenamedMyIterator {
     // Internal ptr reference:
     #ptr = null;

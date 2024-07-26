@@ -7,6 +7,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const AttrOpaque1Renamed_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_AttrOpaque1_destroy(ptr);
 });
+
 export class AttrOpaque1Renamed {
     // Internal ptr reference:
     #ptr = null;

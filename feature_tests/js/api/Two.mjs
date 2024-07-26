@@ -5,6 +5,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const Two_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Two_destroy(ptr);
 });
+
 export class Two {
     // Internal ptr reference:
     #ptr = null;

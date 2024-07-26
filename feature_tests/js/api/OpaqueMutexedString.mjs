@@ -6,6 +6,7 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 const OpaqueMutexedString_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.OpaqueMutexedString_destroy(ptr);
 });
+
 export class OpaqueMutexedString {
     // Internal ptr reference:
     #ptr = null;
