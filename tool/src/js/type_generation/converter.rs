@@ -482,7 +482,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 						format!("{err_check}return write.readString8();")
 					},
 					SuccessType::OutType(ref o) => {
-						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomatReceive".into(), 0);
+						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomatReceive.buffer".into(), 0);
 						format!("{err_check}return {};", 
 						self.gen_c_to_js_for_type(o, ptr_deref, lifetime_environment))
 					},
