@@ -39,7 +39,7 @@ export class FixedDecimalFormatterOptions {
     _fromFFI(ptr) {
         const groupingStrategyDeref = diplomatRuntime.enumDiscriminant(wasm, ptr);
         this.#groupingStrategy = FixedDecimalGroupingStrategy[Array.from(FixedDecimalGroupingStrategy.values.keys())[groupingStrategyDeref]];
-        const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] == 1;
+        const someOtherConfigDeref = (new Uint8Array(wasm.memory.buffer, ptr + 4, 1))[0] === 1;
         this.#someOtherConfig = someOtherConfigDeref;
 
         return this;
