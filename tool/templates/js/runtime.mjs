@@ -193,7 +193,11 @@ export class DiplomatBuf {
 	}
 }
 
-export class DiplomatWriteBuf extends DiplomatBuf {
+export class DiplomatWriteBuf {
+	free;
+	leak;
+	garbageCollect;
+
 
 	#wasm;
 	#buffer;
