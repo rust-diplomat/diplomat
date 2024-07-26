@@ -5,8 +5,6 @@ export class RefListParameter {
     
 
     get ffiValue(): pointer;
-
-
     
 
 }

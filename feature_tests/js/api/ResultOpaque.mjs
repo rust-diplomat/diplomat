@@ -27,8 +27,7 @@ export class ResultOpaque {
     get ffiValue() {
         return this.#ptr;
     }
-
-
+    
     static new_(i) {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);

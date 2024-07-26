@@ -5,8 +5,6 @@ export class RenamedMyIterator {
     
 
     get ffiValue(): pointer;
-
-
     #iteratorNext(): number | null;
 
     

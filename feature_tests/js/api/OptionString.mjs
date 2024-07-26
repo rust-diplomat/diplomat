@@ -25,8 +25,7 @@ export class OptionString {
     get ffiValue() {
         return this.#ptr;
     }
-
-
+    
     static new_(diplomatStr) {
         
         const diplomatStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, diplomatStr);

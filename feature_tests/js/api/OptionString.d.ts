@@ -5,8 +5,6 @@ export class OptionString {
     
 
     get ffiValue(): pointer;
-
-
     static new_(diplomatStr: string): OptionString | null;
 
     write(): string | null;

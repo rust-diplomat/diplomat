@@ -5,8 +5,6 @@ export class Utf16Wrap {
     
 
     get ffiValue(): pointer;
-
-
     static fromUtf16(input: string): Utf16Wrap;
 
     getDebugStr(): string;

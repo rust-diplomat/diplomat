@@ -26,8 +26,7 @@ export class OptionOpaque {
     get ffiValue() {
         return this.#ptr;
     }
-
-
+    
     static new_(i) {
         const result = wasm.OptionOpaque_new(i);
     

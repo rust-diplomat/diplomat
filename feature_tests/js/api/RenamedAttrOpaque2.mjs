@@ -25,8 +25,7 @@ export class RenamedAttrOpaque2 {
     get ffiValue() {
         return this.#ptr;
     }
-
-
+    
     
 
 }

@@ -26,8 +26,7 @@ export class RenamedOpaqueIterable {
     get ffiValue() {
         return this.#ptr;
     }
-
-
+    
     [Symbol.iterator]() {
         
         // This lifetime edge depends on lifetimes 'a

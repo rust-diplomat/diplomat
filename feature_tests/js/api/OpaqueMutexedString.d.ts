@@ -6,8 +6,6 @@ export class OpaqueMutexedString {
     
 
     get ffiValue(): pointer;
-
-
     static fromUsize(number: number): OpaqueMutexedString;
 
     change(number: number): void;

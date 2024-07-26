@@ -6,8 +6,6 @@ export class OptionOpaque {
     
 
     get ffiValue(): pointer;
-
-
     static new_(i: number): OptionOpaque | null;
 
     static newNone(): OptionOpaque | null;

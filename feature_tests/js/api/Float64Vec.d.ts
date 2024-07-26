@@ -5,8 +5,6 @@ export class Float64Vec {
     
 
     get ffiValue(): pointer;
-
-
     static newBool(v: Array<boolean>): Float64Vec;
 
     static newI16(v: Array<number>): Float64Vec;

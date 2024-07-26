@@ -25,8 +25,7 @@ export class RefListParameter {
     get ffiValue() {
         return this.#ptr;
     }
-
-
+    
     
 
 }

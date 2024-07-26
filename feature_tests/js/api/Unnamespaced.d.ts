@@ -7,8 +7,6 @@ export class Unnamespaced {
     
 
     get ffiValue(): pointer;
-
-
     static make(e: RenamedAttrEnum): Unnamespaced;
 
     useNamespaced(n: AttrOpaque1Renamed): void;

@@ -6,8 +6,6 @@ export class RenamedOpaqueIterable {
     
 
     get ffiValue(): pointer;
-
-
     [Symbol.iterator](): RenamedOpaqueIterator;
 
     

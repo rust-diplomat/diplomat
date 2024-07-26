@@ -33,8 +33,7 @@ export class Foo {
     get ffiValue() {
         return this.#ptr;
     }
-
-
+    
     static new_(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);

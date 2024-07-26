@@ -7,8 +7,6 @@ export class AttrOpaque1Renamed {
     
 
     get ffiValue(): pointer;
-
-
     static totallyNotNew(): AttrOpaque1Renamed;
 
     get methodRenamed(): number;

@@ -6,8 +6,6 @@ export class One {
     
 
     get ffiValue(): pointer;
-
-
     static transitivity(hold: One, nohold: One): One;
 
     static cycle(hold: Two, nohold: One): One;

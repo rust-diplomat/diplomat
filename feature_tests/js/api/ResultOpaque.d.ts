@@ -6,8 +6,6 @@ export class ResultOpaque {
     
 
     get ffiValue(): pointer;
-
-
     static new_(i: number): ResultOpaque;
 
     static newFailingFoo(): ResultOpaque;

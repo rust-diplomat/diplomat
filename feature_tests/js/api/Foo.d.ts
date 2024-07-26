@@ -9,8 +9,6 @@ export class Foo {
     
 
     get ffiValue(): pointer;
-
-
     static new_(x: string): Foo;
 
     get bar(): Bar;
