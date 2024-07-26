@@ -182,22 +182,19 @@ export class DiplomatBuf {
 	}
 
 	constructor(ptr, size, free) {
-	this.ptr = ptr;
-	this.size = size;
-	// Generated code calls one of methods these for each allocation, to either
-	// free directly after the FFI call, to leak (to create a &'static), or to
-	// register the buffer with the garbage collector (to create a &'a).
-	this.free = free;
-	this.leak = () => { };
-	this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
+		this.ptr = ptr;
+		this.size = size;
+		// Generated code calls one of methods these for each allocation, to either
+		// free directly after the FFI call, to leak (to create a &'static), or to
+		// register the buffer with the garbage collector (to create a &'a).
+		this.free = free;
+		this.leak = () => { };
+		this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
 	}
 }
 
 export class DiplomatWriteBuf {
-	free;
 	leak;
-	garbageCollect;
-
 
 	#wasm;
 	#buffer;
@@ -206,9 +203,15 @@ export class DiplomatWriteBuf {
 		this.#wasm = wasm;
 		this.#buffer = this.#wasm.diplomat_buffer_write_create(0);
 
-		this.free = wasm.diplomat_buffer_write_destroy.bind(this.#buffer);
 		this.leak = () => { };
-		this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
+	}
+	
+	free() {
+		this.#wasm.diplomat_buffer_write_destroy(this.#buffer);
+	}
+
+	garbageCollect() {
+		DiplomatBufferFinalizer.register(this, this.free);
 	}
 
 	readString8() {
