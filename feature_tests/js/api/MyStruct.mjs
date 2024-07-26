@@ -73,7 +73,7 @@ export class MyStruct {
     _fromFFI(ptr) {
         const aDeref = (new Uint8Array(wasm.memory.buffer, ptr, 1))[0];
         this.#a = aDeref;
-        const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] == 1;
+        const bDeref = (new Uint8Array(wasm.memory.buffer, ptr + 1, 1))[0] === 1;
         this.#b = bDeref;
         const cDeref = (new Uint8Array(wasm.memory.buffer, ptr + 2, 1))[0];
         this.#c = cDeref;

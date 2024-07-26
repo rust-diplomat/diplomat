@@ -39,7 +39,7 @@ export class RenamedOpaqueIterator {
     
         try {
     
-            return result == 0 ? null : new AttrOpaque1Renamed(result, []);
+            return result === 0 ? null : new AttrOpaque1Renamed(result, []);
         } finally {
         
         }

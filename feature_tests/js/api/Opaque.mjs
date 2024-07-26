@@ -48,7 +48,7 @@ export class Opaque {
     
         try {
     
-            return result == 0 ? null : new Opaque(result, []);
+            return result === 0 ? null : new Opaque(result, []);
         } finally {
         
             inputSlice.free();
