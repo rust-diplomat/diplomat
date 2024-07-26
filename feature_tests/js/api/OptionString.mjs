@@ -45,15 +45,15 @@ export class OptionString {
 
     write() {
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        const result = wasm.OptionString_write(this.ffiValue, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        const result = wasm.OptionString_write(this.ffiValue, write.buffer);
     
         try {
     
-            return result === 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return result === 0 ? null : write.readString8();
         } finally {
         
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         
         }
     }

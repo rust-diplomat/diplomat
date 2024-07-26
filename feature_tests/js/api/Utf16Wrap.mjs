@@ -45,15 +45,15 @@ export class Utf16Wrap {
 
     getDebugStr() {
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        wasm.Utf16Wrap_get_debug_str(this.ffiValue, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.Utf16Wrap_get_debug_str(this.ffiValue, write.buffer);
     
         try {
     
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return write.readString8();
         } finally {
         
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         
         }
     }

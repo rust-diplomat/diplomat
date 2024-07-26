@@ -63,15 +63,15 @@ export class FixedDecimalFormatter {
 
     formatWrite(value) {
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write.buffer);
     
         try {
     
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return write.readString8();
         } finally {
         
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         
         }
     }

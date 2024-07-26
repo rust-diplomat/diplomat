@@ -102,15 +102,15 @@ export class MyString {
 
     get str() {
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        wasm.MyString_get_str(this.ffiValue, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.MyString_get_str(this.ffiValue, write.buffer);
     
         try {
     
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return write.readString8();
         } finally {
         
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         
         }
     }
@@ -119,17 +119,17 @@ export class MyString {
         
         const fooSlice = diplomatRuntime.DiplomatBuf.str8(wasm, foo);
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        wasm.MyString_string_transform(fooSlice.ptr, fooSlice.size, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.MyString_string_transform(fooSlice.ptr, fooSlice.size, write.buffer);
     
         try {
     
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return write.readString8();
         } finally {
         
             fooSlice.free();
         
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         
         }
     }

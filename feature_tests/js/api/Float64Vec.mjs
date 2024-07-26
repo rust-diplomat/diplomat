@@ -179,15 +179,15 @@ export class Float64Vec {
 
     toString() {
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        wasm.Float64Vec_to_string(this.ffiValue, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.Float64Vec_to_string(this.ffiValue, write.buffer);
     
         try {
     
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return write.readString8();
         } finally {
         
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         
         }
     }
