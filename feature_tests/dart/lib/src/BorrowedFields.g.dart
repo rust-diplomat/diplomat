@@ -28,26 +28,26 @@ final class BorrowedFields {
   // ignore: unused_element
   _BorrowedFieldsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowedFieldsFfi>();
-    final aView = a.utf16View;
-    struct.a._length = aView.length;
-    struct.a._data = aView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
-    final bView = b.utf8View;
-    struct.b._length = bView.length;
-    struct.b._data = bView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
-    final cView = c.utf8View;
-    struct.c._length = cView.length;
-    struct.c._data = cView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    final (aData, aLength) = a._utf16AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    struct.a._length = aLength;
+    struct.a._data = aData;
+    final (bData, bLength) = b._utf8AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    struct.b._length = bLength;
+    struct.b._data = bData;
+    final (cData, cLength) = c._utf8AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    struct.c._length = cLength;
+    struct.c._data = cData;
     return struct;
   }
 
   static BorrowedFields fromBarAndStrings(Bar bar, String dstr16, String utf8Str) {
-    final dstr16View = dstr16.utf16View;
     final dstr16Arena = _FinalizedArena();
-    final utf8StrView = utf8Str.utf8View;
+    final (dstr16Data, dstr16Length) = dstr16._utf16AllocIn(dstr16Arena.arena);
     final utf8StrArena = _FinalizedArena();
+    final (utf8StrData, utf8StrLength) = utf8Str._utf8AllocIn(utf8StrArena.arena);
     // This lifetime edge depends on lifetimes: 'x
     core.List<Object> xEdges = [bar, dstr16Arena, utf8StrArena];
-    final result = _BorrowedFields_from_bar_and_strings(bar._ffi, dstr16View.allocIn(dstr16Arena.arena), dstr16View.length, utf8StrView.allocIn(utf8StrArena.arena), utf8StrView.length);
+    final result = _BorrowedFields_from_bar_and_strings(bar._ffi, dstr16Data, dstr16Length, utf8StrData, utf8StrLength);
     return BorrowedFields._fromFfi(result, xEdges);
   }
 

@@ -22,9 +22,9 @@ final class BorrowedFieldsReturning {
   // ignore: unused_element
   _BorrowedFieldsReturningFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowedFieldsReturningFfi>();
-    final bytesView = bytes.utf8View;
-    struct.bytes._length = bytesView.length;
-    struct.bytes._data = bytesView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    final (bytesData, bytesLength) = bytes._utf8AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    struct.bytes._length = bytesLength;
+    struct.bytes._data = bytesData;
     return struct;
   }
 

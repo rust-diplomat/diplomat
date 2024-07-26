@@ -84,9 +84,8 @@ final class MyStruct {
   }
 
   int intoA() {
-    final temp = ffi2.Arena();
-    final result = _MyStruct_into_a(_toFfi(temp));
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final result = _MyStruct_into_a(_toFfi(temp.arena));
     return result;
   }
 
