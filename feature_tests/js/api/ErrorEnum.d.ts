@@ -8,4 +8,7 @@ export class ErrorEnum {
     get value() : string;
 
     get ffiValue() : number;
+
+    static Foo : ErrorEnum;
+    static Bar : ErrorEnum;
 }

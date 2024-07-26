@@ -12,10 +12,6 @@ export class UnimportedEnum {
         ["C", 2]
     ]);
 
-    static A = new UnimportedEnum("A");
-    static B = new UnimportedEnum("B");
-    static C = new UnimportedEnum("C");
-
     constructor(value) {
         if (value instanceof UnimportedEnum) {
             this.#value = value.value;
@@ -37,4 +33,8 @@ export class UnimportedEnum {
     get ffiValue() {
         return UnimportedEnum.values.get(this.#value);
     }
+
+    static A = new UnimportedEnum("A");
+    static B = new UnimportedEnum("B");
+    static C = new UnimportedEnum("C");
 }

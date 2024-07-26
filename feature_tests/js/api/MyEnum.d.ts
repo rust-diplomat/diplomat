@@ -9,6 +9,13 @@ export class MyEnum {
 
     get ffiValue() : number;
 
+    static A : MyEnum;
+    static B : MyEnum;
+    static C : MyEnum;
+    static D : MyEnum;
+    static E : MyEnum;
+    static F : MyEnum;
+
     intoValue(): number;
 
     static getA(): MyEnum;
