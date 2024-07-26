@@ -5,6 +5,4 @@ export class RenamedAttrOpaque2 {
     
 
     get ffiValue(): pointer;
-    
-
 }

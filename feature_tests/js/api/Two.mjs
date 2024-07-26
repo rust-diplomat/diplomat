@@ -33,7 +33,4 @@ export class Two {
     get ffiValue() {
         return this.#ptr;
     }
-    
-    
-
 }

@@ -25,7 +25,7 @@ export class Float64Vec {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     static newBool(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.slice(wasm, v, "boolean");
@@ -225,7 +225,4 @@ export class Float64Vec {
         
         }
     }
-
-    
-
 }

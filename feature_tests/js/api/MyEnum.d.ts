@@ -26,6 +26,4 @@ export class MyEnum {
 
     static getA(): MyEnum;
 
-    
-
 }

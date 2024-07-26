@@ -7,6 +7,4 @@ export class ErrorStruct {
     get j() : number;
     set j(value: number); 
 
-    
-
 }

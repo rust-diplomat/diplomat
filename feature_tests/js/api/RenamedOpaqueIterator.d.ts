@@ -6,9 +6,9 @@ export class RenamedOpaqueIterator {
     
 
     get ffiValue(): pointer;
+
     #iteratorNext(): AttrOpaque1Renamed | null;
 
     
     next() : IteratorResult<AttrOpaque1Renamed>;
-
 }

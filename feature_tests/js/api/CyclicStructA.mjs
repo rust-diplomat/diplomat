@@ -48,6 +48,4 @@ export class CyclicStructA {
         }
     }
 
-    
-
 }

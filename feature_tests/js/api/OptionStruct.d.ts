@@ -13,6 +13,4 @@ export class OptionStruct {
     get d() : OptionOpaque | null;
     
 
-    
-
 }

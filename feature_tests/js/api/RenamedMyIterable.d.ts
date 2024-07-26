@@ -6,10 +6,8 @@ export class RenamedMyIterable {
     
 
     get ffiValue(): pointer;
+
     static new_(x: Array<number>): RenamedMyIterable;
 
     [Symbol.iterator](): RenamedMyIterator;
-
-    
-
 }

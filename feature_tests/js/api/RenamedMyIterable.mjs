@@ -26,7 +26,7 @@ export class RenamedMyIterable {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     static new_(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
@@ -55,7 +55,4 @@ export class RenamedMyIterable {
         
         }
     }
-
-    
-
 }

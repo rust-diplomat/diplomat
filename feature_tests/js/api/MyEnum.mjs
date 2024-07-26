@@ -71,6 +71,4 @@ export class MyEnum {
         }
     }
 
-    
-
 }

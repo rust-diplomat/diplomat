@@ -43,6 +43,4 @@ export class ContiguousEnum {
     static F = new ContiguousEnum("F");
 
 
-    
-
 }

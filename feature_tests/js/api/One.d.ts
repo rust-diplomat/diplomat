@@ -6,6 +6,7 @@ export class One {
     
 
     get ffiValue(): pointer;
+
     static transitivity(hold: One, nohold: One): One;
 
     static cycle(hold: Two, nohold: One): One;
@@ -27,7 +28,4 @@ export class One {
     static implicitBounds(explicitHold: One, implicitHold: One, nohold: One): One;
 
     static implicitBoundsDeep(explicit: One, implicit1: One, implicit2: One, nohold: One): One;
-
-    
-
 }

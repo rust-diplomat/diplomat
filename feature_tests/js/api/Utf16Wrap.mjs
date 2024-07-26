@@ -25,7 +25,7 @@ export class Utf16Wrap {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     static fromUtf16(input) {
         
         const inputSlice = diplomatRuntime.DiplomatBuf.str16(wasm, input);
@@ -73,7 +73,4 @@ export class Utf16Wrap {
         
         }
     }
-
-    
-
 }

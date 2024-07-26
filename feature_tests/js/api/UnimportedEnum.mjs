@@ -40,6 +40,4 @@ export class UnimportedEnum {
     static C = new UnimportedEnum("C");
 
 
-    
-
 }

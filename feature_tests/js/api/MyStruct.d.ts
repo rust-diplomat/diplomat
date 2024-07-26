@@ -24,6 +24,4 @@ export class MyStruct {
 
     static returnsZstResult(): void;
 
-    
-
 }

@@ -26,7 +26,7 @@ export class OpaqueMutexedString {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     static fromUsize(number) {
         const result = wasm.OpaqueMutexedString_from_usize(number);
     
@@ -129,7 +129,4 @@ export class OpaqueMutexedString {
         
         }
     }
-
-    
-
 }

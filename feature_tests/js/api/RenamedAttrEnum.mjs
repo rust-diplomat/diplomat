@@ -40,6 +40,4 @@ export class RenamedAttrEnum {
     static Renamed = new RenamedAttrEnum("Renamed");
 
 
-    
-
 }

@@ -9,6 +9,7 @@ export class Foo {
     
 
     get ffiValue(): pointer;
+
     static new_(x: string): Foo;
 
     get bar(): Bar;
@@ -20,7 +21,4 @@ export class Foo {
     static extractFromFields(fields: BorrowedFields): Foo;
 
     static extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: string): Foo;
-
-    
-
 }

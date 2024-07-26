@@ -30,7 +30,7 @@ export class One {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     static transitivity(hold, nohold) {
         
         // This lifetime edge depends on lifetimes 'a, 'b, 'c, 'd, 'e
@@ -184,7 +184,4 @@ export class One {
         
         }
     }
-
-    
-
 }

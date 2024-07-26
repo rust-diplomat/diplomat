@@ -41,6 +41,4 @@ export class BorrowedFieldsReturning {
     get _fieldsForLifetimeA() { 
         return [bytes];
     };
-    
-
 }

@@ -27,7 +27,7 @@ export class AttrOpaque1Renamed {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     static totallyNotNew() {
         const result = wasm.namespace_AttrOpaque1_new();
     
@@ -80,7 +80,4 @@ export class AttrOpaque1Renamed {
         
         }
     }
-
-    
-
 }

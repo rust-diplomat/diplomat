@@ -57,6 +57,4 @@ export class OptionStruct {
     constructor(ptr) {
         this._fromFFI(ptr);
     }
-    
-
 }

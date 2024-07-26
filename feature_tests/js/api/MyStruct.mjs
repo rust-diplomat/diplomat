@@ -139,6 +139,4 @@ export class MyStruct {
         }
     }
 
-    
-
 }

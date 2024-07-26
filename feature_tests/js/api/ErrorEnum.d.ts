@@ -14,6 +14,4 @@ export class ErrorEnum {
     static Bar : ErrorEnum;
 
 
-    
-
 }

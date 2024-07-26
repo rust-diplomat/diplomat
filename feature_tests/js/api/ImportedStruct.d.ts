@@ -8,6 +8,4 @@ export class ImportedStruct {
     get count() : number;
     set count(value: number); 
 
-    
-
 }

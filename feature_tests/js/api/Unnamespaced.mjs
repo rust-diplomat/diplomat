@@ -27,7 +27,7 @@ export class Unnamespaced {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     static make(e) {
         const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
@@ -48,7 +48,4 @@ export class Unnamespaced {
         
         }
     }
-
-    
-
 }

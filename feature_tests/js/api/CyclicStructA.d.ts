@@ -8,6 +8,4 @@ export class CyclicStructA {
 
     static getB(): CyclicStructB;
 
-    
-
 }

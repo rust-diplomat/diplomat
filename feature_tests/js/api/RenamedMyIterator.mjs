@@ -29,7 +29,7 @@ export class RenamedMyIterator {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     #iteratorNext() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
@@ -57,5 +57,4 @@ export class RenamedMyIterator {
     		done: out === null,
     	};
     }
-
 }

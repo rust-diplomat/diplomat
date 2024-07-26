@@ -27,7 +27,7 @@ export class Opaque {
     get ffiValue() {
         return this.#ptr;
     }
-    
+
     static new_() {
         const result = wasm.Opaque_new();
     
@@ -136,7 +136,4 @@ export class Opaque {
         
         }
     }
-
-    
-
 }

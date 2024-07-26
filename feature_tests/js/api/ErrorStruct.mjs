@@ -41,6 +41,4 @@ export class ErrorStruct {
 
         return this;
     }
-    
-
 }

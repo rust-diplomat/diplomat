@@ -37,6 +37,4 @@ export class ErrorEnum {
     static Bar = new ErrorEnum("Bar");
 
 
-    
-
 }
