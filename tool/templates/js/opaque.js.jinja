@@ -2,11 +2,12 @@
 /** {{docs}}
 */
 {% endif -%}
-{%- if !typescript %}
+{%- if !typescript -%}
 const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.{{destructor}}(ptr);
 });
-{% endif -%}
+{%~ endif -%}
+
 export class {{type_name}} {
     {% if !typescript -%}
     // Internal ptr reference:
