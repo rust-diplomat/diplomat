@@ -10,6 +10,10 @@ export class ErrorEnum {
         ["Foo", 0],
         ["Bar", 1]
     ]);
+
+    static Foo = new ErrorEnum("Foo");
+    static Bar = new ErrorEnum("Bar");
+
     constructor(value) {
         if (value instanceof ErrorEnum) {
             this.#value = value.value;
@@ -31,10 +35,4 @@ export class ErrorEnum {
     get ffiValue() {
         return ErrorEnum.values.get(this.#value);
     }
-
-    static Foo = new ErrorEnum("Foo");
-
-    static Bar = new ErrorEnum("Bar");
-
-
 }

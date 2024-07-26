@@ -14,6 +14,14 @@ export class MyEnum {
         ["E", 2],
         ["F", 3]
     ]);
+
+    static A = new MyEnum("A");
+    static B = new MyEnum("B");
+    static C = new MyEnum("C");
+    static D = new MyEnum("D");
+    static E = new MyEnum("E");
+    static F = new MyEnum("F");
+
     constructor(value) {
         if (value instanceof MyEnum) {
             this.#value = value.value;
@@ -36,19 +44,6 @@ export class MyEnum {
         return MyEnum.values.get(this.#value);
     }
 
-    static A = new MyEnum("A");
-
-    static B = new MyEnum("B");
-
-    static C = new MyEnum("C");
-
-    static D = new MyEnum("D");
-
-    static E = new MyEnum("E");
-
-    static F = new MyEnum("F");
-
-
     intoValue() {
         const result = wasm.MyEnum_into_value(this.ffiValue);
     
@@ -68,5 +63,4 @@ export class MyEnum {
         
         finally {}
     }
-
 }

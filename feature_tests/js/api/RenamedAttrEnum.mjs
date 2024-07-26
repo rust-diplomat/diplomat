@@ -11,6 +11,11 @@ export class RenamedAttrEnum {
         ["B", 1],
         ["Renamed", 2]
     ]);
+
+    static A = new RenamedAttrEnum("A");
+    static B = new RenamedAttrEnum("B");
+    static Renamed = new RenamedAttrEnum("Renamed");
+
     constructor(value) {
         if (value instanceof RenamedAttrEnum) {
             this.#value = value.value;
@@ -32,12 +37,4 @@ export class RenamedAttrEnum {
     get ffiValue() {
         return RenamedAttrEnum.values.get(this.#value);
     }
-
-    static A = new RenamedAttrEnum("A");
-
-    static B = new RenamedAttrEnum("B");
-
-    static Renamed = new RenamedAttrEnum("Renamed");
-
-
 }

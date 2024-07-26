@@ -12,6 +12,12 @@ export class ContiguousEnum {
         ["E", 2],
         ["F", 3]
     ]);
+
+    static C = new ContiguousEnum("C");
+    static D = new ContiguousEnum("D");
+    static E = new ContiguousEnum("E");
+    static F = new ContiguousEnum("F");
+
     constructor(value) {
         if (value instanceof ContiguousEnum) {
             this.#value = value.value;
@@ -33,14 +39,4 @@ export class ContiguousEnum {
     get ffiValue() {
         return ContiguousEnum.values.get(this.#value);
     }
-
-    static C = new ContiguousEnum("C");
-
-    static D = new ContiguousEnum("D");
-
-    static E = new ContiguousEnum("E");
-
-    static F = new ContiguousEnum("F");
-
-
 }

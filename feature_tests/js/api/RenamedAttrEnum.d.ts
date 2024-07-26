@@ -8,12 +8,4 @@ export class RenamedAttrEnum {
     get value() : string;
 
     get ffiValue() : number;
-
-    static A : RenamedAttrEnum;
-
-    static B : RenamedAttrEnum;
-
-    static Renamed : RenamedAttrEnum;
-
-
 }
