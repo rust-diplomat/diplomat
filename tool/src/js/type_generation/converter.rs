@@ -151,7 +151,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
                 if op.is_optional() {
                     format!(
-                        "{variable_name} == 0 ? null : new {type_name}({variable_name}, {edges})"
+                        "{variable_name} === 0 ? null : new {type_name}({variable_name}, {edges})"
                     )
                     .into()
                 } else {
@@ -254,7 +254,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 "(new {ctor}(wasm.memory.buffer, {pointer}, 1))[0]{cmp}",
                 ctor = self.formatter.fmt_primitive_slice(p),
                 cmp = match p {
-                    PrimitiveType::Bool => " == 1",
+                    PrimitiveType::Bool => " === 1",
                     _ => "",
                 }
             )
@@ -373,7 +373,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
             // Result<(), ()> or Option<()>
             ReturnType::Fallible(SuccessType::Unit, None)
-            | ReturnType::Nullable(SuccessType::Unit) => Some("return result == 1;".into()),
+            | ReturnType::Nullable(SuccessType::Unit) => Some("return result === 1;".into()),
 
             // Result<Write, ()> or Option<Write>.
             ReturnType::Fallible(SuccessType::Write, None)
@@ -385,7 +385,7 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 method_info
                     .cleanup_expressions
                     .push("wasm.diplomat_buffer_write_destroy(write);".into());
-                Some("return result == 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
+                Some("return result === 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
             }
 
             // Result<Type, Error> or Option<Type>

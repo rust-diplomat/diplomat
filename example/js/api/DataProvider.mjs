@@ -49,7 +49,7 @@ export class DataProvider {
     
         try {
     
-            return result == 1;
+            return result === 1;
         } finally {
         
         }
