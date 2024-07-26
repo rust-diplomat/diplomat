@@ -9,13 +9,9 @@ export class FixedDecimal {
 
     get ffiValue(): pointer;
 
-
     static new_(v: number): FixedDecimal;
 
     multiplyPow10(power: number): void;
 
     toString(): string | null;
-
-    
-
 }

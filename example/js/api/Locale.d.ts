@@ -11,9 +11,5 @@ export class Locale {
 
     get ffiValue(): pointer;
 
-
     static new_(name: string): Locale;
-
-    
-
 }

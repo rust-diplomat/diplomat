@@ -4,6 +4,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class FixedDecimalFormatterOptions {
+
     #groupingStrategy;
     get groupingStrategy()  {
         return this.#groupingStrategy;
@@ -11,6 +12,7 @@ export class FixedDecimalFormatterOptions {
     set groupingStrategy(value) {
         this.#groupingStrategy = value;
     }
+
     #someOtherConfig;
     get someOtherConfig()  {
         return this.#someOtherConfig;
@@ -42,21 +44,18 @@ export class FixedDecimalFormatterOptions {
 
         return this;
     }
+
     static default_() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
         const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomat_receive_buffer);
     
         try {
-    
             return new FixedDecimalFormatterOptions()._fromFFI(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
-
-    
-
 }

@@ -8,16 +8,4 @@ export class FixedDecimalGroupingStrategy {
     get value() : string;
 
     get ffiValue() : number;
-
-    static Auto : FixedDecimalGroupingStrategy;
-
-    static Never : FixedDecimalGroupingStrategy;
-
-    static Always : FixedDecimalGroupingStrategy;
-
-    static Min2 : FixedDecimalGroupingStrategy;
-
-
-    
-
 }
