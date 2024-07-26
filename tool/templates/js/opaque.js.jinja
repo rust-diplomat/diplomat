@@ -18,9 +18,9 @@ export class {{type_name}} {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    {% for lifetime in lifetimes.all_lifetimes() %}
+    {%- for lifetime in lifetimes.all_lifetimes() %}
     #{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
-    {% endfor %}
+    {%- endfor %}
     
     constructor(ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
         {% for lifetime in lifetimes.all_lifetimes() %}
