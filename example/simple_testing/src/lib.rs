@@ -1,4 +1,4 @@
-#[diplomat::bridge]
+// #[diplomat::bridge]
 mod ffi {
 
     pub struct Wrapper {
@@ -62,9 +62,39 @@ pub unsafe extern "system" fn diplomat_callback_create_for_jvm__callback(
 
 #[no_mangle]
 pub extern "C" fn DiplomatCallbackI32ToI32_test_rust_fn_test_call(cb_wrap: &DiplomatCallback<i32>) -> i32 {
-    crate::ffi::Wrapper::test_rust_fn(move |arg0| unsafe {
+    ffi::Wrapper::test_rust_fn(move |arg0| unsafe {
         (cb_wrap.run_callback)(cb_wrap.data, arg0)
     })
 }
 
+#[no_mangle]
+pub extern "C" fn DiplomatCallback_call_test_rust_fn(cb_wrap: &DiplomatCallback<()>) -> i32 {
+    ffi::Wrapper::test_rust_fn(move |arg0| unsafe {
+        std::mem::transmute::<*const c_void, unsafe extern "C" fn (i32) -> i32>(cb_wrap.data)(arg0)
+    })
+}
+
 pub type DiplomatCallbackI32ToI32 = Option<unsafe extern "C" fn(i32) -> i32>;
+
+// create a DiplomatCallback for C
+// this is the same for all callbacks, because `run_callback` will be a noop,
+// instead, we just call the wrapper.data directly as it'll be a function pointer
+#[no_mangle]
+pub unsafe extern "C" fn diplomat_callback_create_for_c(
+    callback: *const c_void,
+) -> *mut DiplomatCallback<()> {
+    // define the callback runner
+    unsafe extern "C" fn run_callback(_data: *const c_void) {
+        // no-op for C because the function pointer itself is all that's needed
+    }
+    unsafe extern "C" fn destructor(_this: *const c_void) {
+        // no-op for C b/c C manages the memory for its own function
+    }
+    let ret = DiplomatCallback::<()> {
+        data: callback,
+        run_callback: core::mem::transmute::<unsafe extern "C" fn (*const c_void), unsafe extern "C" fn(*const c_void, ...)>(run_callback),
+        destructor,
+    };
+
+    Box::into_raw(Box::new(ret))
+}

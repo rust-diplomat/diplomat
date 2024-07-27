@@ -12,6 +12,9 @@ mod write;
 pub use write::DiplomatWrite;
 pub use write::{diplomat_buffer_write_create, diplomat_buffer_write_destroy};
 
+mod callback;
+pub use callback::DiplomatCallback;
+
 mod result;
 pub use result::DiplomatResult;
 

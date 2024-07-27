@@ -1,6 +1,28 @@
-static_assert(sizeof(char) == sizeof(uint8_t), "your architecture's `char` is not 8 bits");
-static_assert(sizeof(char16_t) == sizeof(uint16_t), "your architecture's `char16_t` is not 16 bits");
-static_assert(sizeof(char32_t) == sizeof(uint32_t), "your architecture's `char32_t` is not 32 bits");
+#ifndef DIPLOMAT_RUNTIME_C_H
+#define DIPLOMAT_RUNTIME_C_H
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <sys/types.h>
+
+// uchar.h doesn't always exist, but char32_t is always available
+// in C++ anyway
+#ifndef __cplusplus
+#ifdef __APPLE__
+#include <stdint.h>
+typedef uint16_t char16_t;
+typedef uint32_t char32_t;
+#else
+#include <uchar.h>
+#endif
+#endif
+
+
+#ifdef __cplusplus
+namespace capi {
+extern "C" {
+#endif
 
 typedef struct DiplomatWrite {
     void* context;
@@ -12,6 +34,13 @@ typedef struct DiplomatWrite {
     bool (*grow)(struct DiplomatWrite*, size_t);
 } DiplomatWrite;
 
+DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+
+DiplomatWrite* diplomat_buffer_write_create(size_t cap);
+char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);
+size_t diplomat_buffer_write_len(DiplomatWrite* t);
+void diplomat_buffer_write_destroy(DiplomatWrite* t);
+
 bool diplomat_is_str(const char* buf, size_t len);
 
 typedef struct DiplomatCallback {
@@ -22,15 +51,13 @@ typedef struct DiplomatCallback {
 
 DiplomatCallback* diplomat_callback_create_for_c(const void* callback);
 
+int32_t DiplomatCallback_call_test_rust_fn(DiplomatCallback* cb_wrap);
+
 #define MAKE_SLICES(name, c_ty) \
     typedef struct Diplomat##name##View { \
         const c_ty* data; \
         size_t len; \
     } Diplomat##name##View; \
-    typedef struct Diplomat##name##ViewMut { \
-        c_ty* data; \
-        size_t len; \
-    } Diplomat##name##ViewMut; \
     typedef struct Diplomat##name##Array { \
         const c_ty* data; \
         size_t len; \
@@ -54,3 +81,11 @@ MAKE_SLICES(String, char)
 MAKE_SLICES(String16, char16_t)
 MAKE_SLICES(Strings, DiplomatStringView)
 MAKE_SLICES(Strings16, DiplomatString16View)
+
+
+#ifdef __cplusplus
+} // extern "C"
+} // namespace capi
+#endif
+
+#endif
