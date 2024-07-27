@@ -578,7 +578,7 @@ impl TypeName {
 
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
             TypeName::Function(_input_types, _output_type) => {
-                todo!("Function type (AST) codegen not done");
+                panic!("Function type (AST) codegen not done");
             }
         }
     }
