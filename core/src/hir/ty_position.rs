@@ -91,7 +91,7 @@ pub trait TyPosition: Debug + Copy
 where
     for<'tcx> TypeDef<'tcx>: From<&'tcx StructDef<Self>>,
 {
-    const IS_OUT_ONLY: bool;
+    const IN_OUT_STATUS: InputOrOutput;
 
     /// Type representing how we can point to opaques, which must always be behind a pointer.
     ///
@@ -109,24 +109,40 @@ where
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx>;
 }
 
-/// One of two types implementing [`TyPosition`], representing types that can be
+/// Directionality of the type
+#[non_exhaustive]
+pub enum InputOrOutput {
+    Input,
+    Output,
+    InputOutput,
+}
+
+/// One of 3 types implementing [`TyPosition`], representing types that can be
 /// used as both input and output to functions.
 ///
-/// The complement of this type is [`OutputOnly`].
+/// The restricted versions of this type are [`OutputOnly`] and [`InputOnly`].
 #[derive(Debug, Copy, Clone)]
 #[non_exhaustive]
 pub struct Everywhere;
 
-/// One of two types implementing [`TyPosition`], representing types that can
+/// One of 3 types implementing [`TyPosition`], representing types that can
 /// only be used as return types in functions.
 ///
-/// The complement of this type is [`Everywhere`].
+/// The directional opposite of this type is [`InputOnly`].
 #[derive(Debug, Copy, Clone)]
 #[non_exhaustive]
 pub struct OutputOnly;
 
+/// One of 3 types implementing [`TyPosition`], representing types that can
+/// only be used as input types in functions.
+///
+/// The directional opposite of this type is [`OutputOnly`].
+#[derive(Debug, Copy, Clone)]
+#[non_exhaustive]
+pub struct InputOnly;
+
 impl TyPosition for Everywhere {
-    const IS_OUT_ONLY: bool = false;
+    const IN_OUT_STATUS: InputOrOutput = InputOrOutput::InputOutput;
     type OpaqueOwnership = Borrow;
     type StructId = StructId;
     type StructPath = StructPath;
@@ -137,13 +153,24 @@ impl TyPosition for Everywhere {
 }
 
 impl TyPosition for OutputOnly {
-    const IS_OUT_ONLY: bool = true;
+    const IN_OUT_STATUS: InputOrOutput = InputOrOutput::Output;
     type OpaqueOwnership = MaybeOwn;
     type StructId = OutStructId;
     type StructPath = ReturnableStructPath;
 
     fn wrap_struct_def<'tcx>(def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
         TypeDef::OutStruct(def)
+    }
+}
+
+impl TyPosition for InputOnly {
+    const IN_OUT_STATUS: InputOrOutput = InputOrOutput::Input;
+    type OpaqueOwnership = Borrow;
+    type StructId = StructId;
+    type StructPath = StructPath;
+
+    fn wrap_struct_def<'tcx>(_def: &'tcx StructDef<Self>) -> TypeDef<'tcx> {
+        panic!("Input-only structs are not currently supported");
     }
 }
 
