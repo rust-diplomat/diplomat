@@ -20,6 +20,9 @@ pub use slices::{
 mod callback;
 pub use callback::DiplomatCallback;
 
+mod callback;
+pub use callback::DiplomatCallback;
+
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};
 
