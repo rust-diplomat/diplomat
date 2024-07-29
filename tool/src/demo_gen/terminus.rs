@@ -254,9 +254,20 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     }
                 }
                 if !usable_constructor {
-                    self.errors.push_error(format!("You must set a default constructor for the opaque type {}, as it is required for the function {}. Try adding #[diplomat::demo(default_constructor)] above a method that you wish to be the default constructor.", op.name.as_str(), node.method_js));
+                    self.errors.push_error(
+                        format!(
+                            "You must set a default constructor for the opaque type {}, \
+                            as it is required for the function {}. \
+                            Try adding #[diplomat::demo(default_constructor)] \
+                            above a method that you wish to be the default constructor.\
+                            You may also disable the type {0} in the backend: `#[diplomat::attr(demo_gen, disable)]`.", 
+                            op.name.as_str(), node.method_js)
+                    );
                     node.params.push(ParamInfo {
-                        js: format!("null/*Could not find a usable constructor for {}. Try adding #[diplomat::demo(default_constructor)]*/", op.name.as_str()),
+                        js: format!(
+                            "null \
+                            /*Could not find a usable constructor for {}. \
+                            Try adding #[diplomat::demo(default_constructor)]*/", op.name.as_str()),
                         label: String::default(),
                         type_name: String::default(),
                     });
