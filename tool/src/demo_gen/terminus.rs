@@ -120,12 +120,9 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
     /// Currently unused, plan to hopefully use this in the future for quickly grabbing parameter information.
     fn _get_type_demo_attrs(&self, ty: &Type) -> Option<DemoInfo> {
-        match ty {
-            Type::Enum(e) => Some(e.resolve(self.tcx).attrs.demo_attrs.clone()),
-            Type::Opaque(o) => Some(o.resolve(self.tcx).attrs.demo_attrs.clone()),
-            Type::Struct(s) => Some(s.resolve(self.tcx).attrs.demo_attrs.clone()),
-            _ => None,
-        }
+        ty.id().map(|id| {
+            self.tcx.resolve_type(id).attrs().demo_attrs.clone()
+        })
     }
 
     /// Take a parameter passed to a terminus (or a constructor), and either:
