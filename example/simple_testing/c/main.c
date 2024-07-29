@@ -8,7 +8,9 @@ int32_t callback(int32_t x) {
 }
 
 int main() {
-    DiplomatCallback* cb_wrapper = diplomat_callback_create_for_c(callback);
-    int32_t res = DiplomatCallback_call_test_rust_fn(cb_wrapper);
+    DiplomatCallback cb_wrapper = {
+        callback,
+    };
+    int32_t res = Wrapper_test_rust_fn(&cb_wrapper);
     printf("Result: %d\n", res);
 }
