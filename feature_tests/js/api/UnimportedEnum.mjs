@@ -11,6 +11,7 @@ export class UnimportedEnum {
         ["B", 1],
         ["C", 2]
     ]);
+
     constructor(value) {
         if (value instanceof UnimportedEnum) {
             this.#value = value.value;
@@ -34,12 +35,6 @@ export class UnimportedEnum {
     }
 
     static A = new UnimportedEnum("A");
-
     static B = new UnimportedEnum("B");
-
     static C = new UnimportedEnum("C");
-
-
-    
-
 }

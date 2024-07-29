@@ -8,7 +8,6 @@ export class AttrOpaque1Renamed {
 
     get ffiValue(): pointer;
 
-
     static totallyNotNew(): AttrOpaque1Renamed;
 
     get methodRenamed(): number;
@@ -18,7 +17,4 @@ export class AttrOpaque1Renamed {
     useUnnamespaced(un: Unnamespaced): void;
 
     useNamespaced(n: RenamedAttrEnum): void;
-
-    
-
 }

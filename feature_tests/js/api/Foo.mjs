@@ -6,10 +6,10 @@ import { BorrowedFieldsWithBounds } from "./BorrowedFieldsWithBounds.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const Foo_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Foo_destroy(ptr);
 });
+
 export class Foo {
     // Internal ptr reference:
     #ptr = null;
@@ -17,9 +17,7 @@ export class Foo {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     #aEdge = [];
-    
     
     constructor(ptr, selfEdge, aEdge) {
         
@@ -36,7 +34,6 @@ export class Foo {
         return this.#ptr;
     }
 
-
     static new_(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.str8(wasm, x);
@@ -46,12 +43,11 @@ export class Foo {
         const result = wasm.Foo_new(xSlice.ptr, xSlice.size);
     
         try {
-    
             return new Foo(result, [], aEdges);
-        } finally {
+        }
         
+        finally {
             xSlice.garbageCollect();
-        
         }
     }
 
@@ -65,11 +61,10 @@ export class Foo {
         const result = wasm.Foo_get_bar(this.ffiValue);
     
         try {
-    
             return new Bar(result, [], bEdges, aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static newStatic(x) {
@@ -81,12 +76,11 @@ export class Foo {
         const result = wasm.Foo_new_static(xSlice.ptr, xSlice.size);
     
         try {
-    
             return new Foo(result, [], aEdges);
-        } finally {
+        }
         
+        finally {
             xSlice.free();
-        
         }
     }
 
@@ -99,12 +93,11 @@ export class Foo {
         const result = wasm.Foo_as_returning(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             return new BorrowedFieldsReturning()._fromFFI(diplomat_receive_buffer, aEdges);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
-        
         }
     }
 
@@ -117,14 +110,13 @@ export class Foo {
         const result = wasm.Foo_extract_from_fields(...fields._intoFFI(slice_cleanup_callbacks, {aAppendArray: [aEdges],}));
     
         try {
-    
             return new Foo(result, [], aEdges);
-        } finally {
+        }
         
+        finally {
             for (let cleanup of slice_cleanup_callbacks) {
                 cleanup();
             }
-        
         }
     }
 
@@ -139,19 +131,15 @@ export class Foo {
         const result = wasm.Foo_extract_from_bounds(...bounds._intoFFI(slice_cleanup_callbacks, {bAppendArray: [aEdges],cAppendArray: [aEdges],}), anotherStringSlice.ptr, anotherStringSlice.size);
     
         try {
-    
             return new Foo(result, [], aEdges);
-        } finally {
+        }
         
+        finally {
             for (let cleanup of slice_cleanup_callbacks) {
                 cleanup();
             }
         
             anotherStringSlice.garbageCollect();
-        
         }
     }
-
-    
-
 }

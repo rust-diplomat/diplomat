@@ -5,10 +5,10 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 /** See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
 */
-
 const FixedDecimal_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_FixedDecimal_destroy_mv1(ptr);
 });
+
 export class FixedDecimal {
     // Internal ptr reference:
     #ptr = null;
@@ -16,7 +16,6 @@ export class FixedDecimal {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -30,26 +29,22 @@ export class FixedDecimal {
         return this.#ptr;
     }
 
-
     static new_(v) {
         const result = wasm.icu4x_FixedDecimal_new_mv1(v);
     
         try {
-    
             return new FixedDecimal(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     multiplyPow10(power) {
         wasm.icu4x_FixedDecimal_multiply_pow10_mv1(this.ffiValue, power);
     
-        try {
-    
-        } finally {
+        try {}
         
-        }
+        finally {}
     }
 
     toString() {
@@ -58,15 +53,11 @@ export class FixedDecimal {
         const result = wasm.icu4x_FixedDecimal_to_string_mv1(this.ffiValue, write);
     
         try {
-    
             return result === 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_buffer_write_destroy(write);
-        
         }
     }
-
-    
-
 }

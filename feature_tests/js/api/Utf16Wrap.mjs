@@ -2,10 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const Utf16Wrap_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Utf16Wrap_destroy(ptr);
 });
+
 export class Utf16Wrap {
     // Internal ptr reference:
     #ptr = null;
@@ -13,7 +13,6 @@ export class Utf16Wrap {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -27,19 +26,17 @@ export class Utf16Wrap {
         return this.#ptr;
     }
 
-
     static fromUtf16(input) {
         
         const inputSlice = diplomatRuntime.DiplomatBuf.str16(wasm, input);
         const result = wasm.Utf16Wrap_from_utf16(inputSlice.ptr, inputSlice.size);
     
         try {
-    
             return new Utf16Wrap(result, []);
-        } finally {
+        }
         
+        finally {
             inputSlice.free();
-        
         }
     }
 
@@ -49,12 +46,11 @@ export class Utf16Wrap {
         wasm.Utf16Wrap_get_debug_str(this.ffiValue, write);
     
         try {
-    
             return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_buffer_write_destroy(write);
-        
         }
     }
 
@@ -67,15 +63,11 @@ export class Utf16Wrap {
         const result = wasm.Utf16Wrap_borrow_cont(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string16");
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
-        
         }
     }
-
-    
-
 }

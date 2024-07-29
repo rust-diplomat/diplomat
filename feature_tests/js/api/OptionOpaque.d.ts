@@ -7,7 +7,6 @@ export class OptionOpaque {
 
     get ffiValue(): pointer;
 
-
     static new_(i: number): OptionOpaque | null;
 
     static newNone(): OptionOpaque | null;
@@ -29,7 +28,4 @@ export class OptionOpaque {
     assertInteger(i: number): void;
 
     static optionOpaqueArgument(arg: OptionOpaque | null): boolean;
-
-    
-
 }

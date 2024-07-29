@@ -4,10 +4,10 @@ import { RenamedAttrEnum } from "./RenamedAttrEnum.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const Unnamespaced_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_Unnamespaced_destroy(ptr);
 });
+
 export class Unnamespaced {
     // Internal ptr reference:
     #ptr = null;
@@ -15,7 +15,6 @@ export class Unnamespaced {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -29,28 +28,21 @@ export class Unnamespaced {
         return this.#ptr;
     }
 
-
     static make(e) {
         const result = wasm.namespace_Unnamespaced_make(e.ffiValue);
     
         try {
-    
             return new Unnamespaced(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     useNamespaced(n) {
         wasm.namespace_Unnamespaced_use_namespaced(this.ffiValue, n.ffiValue);
     
-        try {
-    
-        } finally {
+        try {}
         
-        }
+        finally {}
     }
-
-    
-
 }

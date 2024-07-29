@@ -3,10 +3,10 @@ import { RefListParameter } from "./RefListParameter.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RefList_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.RefList_destroy(ptr);
 });
+
 export class RefList {
     // Internal ptr reference:
     #ptr = null;
@@ -14,9 +14,7 @@ export class RefList {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     #aEdge = [];
-    
     
     constructor(ptr, selfEdge, aEdge) {
         
@@ -33,7 +31,6 @@ export class RefList {
         return this.#ptr;
     }
 
-
     static node(data) {
         
         // This lifetime edge depends on lifetimes 'b
@@ -41,13 +38,9 @@ export class RefList {
         const result = wasm.RefList_node(data.ffiValue);
     
         try {
-    
             return new RefList(result, [], bEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
-
-    
-
 }

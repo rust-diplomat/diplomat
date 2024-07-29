@@ -8,7 +8,6 @@ export class Opaque {
 
     get ffiValue(): pointer;
 
-
     static new_(): Opaque;
 
     static tryFromUtf8(input: string): Opaque | null;
@@ -24,7 +23,4 @@ export class Opaque {
     static returnsImported(): ImportedStruct;
 
     static cmp(): number;
-
-    
-
 }

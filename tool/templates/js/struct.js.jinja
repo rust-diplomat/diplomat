@@ -4,6 +4,7 @@
 {% endif -%}
 export class {{type_name}} {
     {%- for field in fields %}
+
     {% if !typescript -%}
     #{{field.field_name}};
     {% endif -%}
@@ -96,11 +97,11 @@ export class {{type_name}} {
         {%- endfor -%}
         ];
     };
-
     {%- endfor -%}
     {%- endif %}
 
 {%- for method in methods %}
+
     {{ method|indent(4) }}
-{% endfor %}
+{%- endfor %}
 }

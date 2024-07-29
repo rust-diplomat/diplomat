@@ -6,7 +6,6 @@ export class MyString {
 
     get ffiValue(): pointer;
 
-
     static new_(v: string): MyString;
 
     static newUnsafe(v: string): MyString;
@@ -20,7 +19,4 @@ export class MyString {
     get str(): string;
 
     static stringTransform(foo: string): string;
-
-    
-
 }

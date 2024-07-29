@@ -5,8 +5,4 @@ export class Two {
     
 
     get ffiValue(): pointer;
-
-
-    
-
 }

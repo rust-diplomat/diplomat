@@ -4,6 +4,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class BorrowedFields {
+
     #a;
     get a()  {
         return this.#a;
@@ -11,6 +12,7 @@ export class BorrowedFields {
     set a(value) {
         this.#a = value;
     }
+
     #b;
     get b()  {
         return this.#b;
@@ -18,6 +20,7 @@ export class BorrowedFields {
     set b(value) {
         this.#b = value;
     }
+
     #c;
     get c()  {
         return this.#c;
@@ -64,6 +67,7 @@ export class BorrowedFields {
     get _fieldsForLifetimeA() { 
         return [a, b, c];
     };
+
     static fromBarAndStrings(bar, dstr16, utf8Str) {
         
         const dstr16Slice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16);
@@ -77,19 +81,15 @@ export class BorrowedFields {
         const result = wasm.BorrowedFields_from_bar_and_strings(diplomat_receive_buffer, bar.ffiValue, dstr16Slice.ptr, dstr16Slice.size, utf8StrSlice.ptr, utf8StrSlice.size);
     
         try {
-    
             return new BorrowedFields()._fromFFI(diplomat_receive_buffer, xEdges);
-        } finally {
+        }
         
+        finally {
             dstr16Slice.garbageCollect();
         
             utf8StrSlice.garbageCollect();
         
             wasm.diplomat_free(diplomat_receive_buffer, 24, 4);
-        
         }
     }
-
-    
-
 }

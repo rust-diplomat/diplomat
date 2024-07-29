@@ -7,9 +7,5 @@ export class RefList {
 
     get ffiValue(): pointer;
 
-
     static node(data: RefListParameter): RefList;
-
-    
-
 }

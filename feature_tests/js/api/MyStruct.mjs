@@ -5,6 +5,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class MyStruct {
+
     #a;
     get a()  {
         return this.#a;
@@ -12,6 +13,7 @@ export class MyStruct {
     set a(value) {
         this.#a = value;
     }
+
     #b;
     get b()  {
         return this.#b;
@@ -19,6 +21,7 @@ export class MyStruct {
     set b(value) {
         this.#b = value;
     }
+
     #c;
     get c()  {
         return this.#c;
@@ -26,6 +29,7 @@ export class MyStruct {
     set c(value) {
         this.#c = value;
     }
+
     #d;
     get d()  {
         return this.#d;
@@ -33,6 +37,7 @@ export class MyStruct {
     set d(value) {
         this.#d = value;
     }
+
     #e;
     get e()  {
         return this.#e;
@@ -40,6 +45,7 @@ export class MyStruct {
     set e(value) {
         this.#e = value;
     }
+
     #f;
     get f()  {
         return this.#f;
@@ -47,6 +53,7 @@ export class MyStruct {
     set f(value) {
         this.#f = value;
     }
+
     #g;
     get g()  {
         return this.#g;
@@ -88,18 +95,18 @@ export class MyStruct {
 
         return this;
     }
+
     static new_() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(28, 8);
         const result = wasm.MyStruct_new(diplomat_receive_buffer);
     
         try {
-    
             return new MyStruct()._fromFFI(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 28, 8);
-        
         }
     }
 
@@ -109,14 +116,13 @@ export class MyStruct {
         const result = wasm.MyStruct_into_a(...this._intoFFI());
     
         try {
-    
             return result;
-        } finally {
+        }
         
+        finally {
             for (let cleanup of slice_cleanup_callbacks) {
                 cleanup();
             }
-        
         }
     }
 
@@ -126,19 +132,15 @@ export class MyStruct {
         const result = wasm.MyStruct_returns_zst_result(diplomat_receive_buffer);
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 const cause = new MyZst();
                 throw new Error('MyZst', { cause });
             }
     
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
-
-    
-
 }

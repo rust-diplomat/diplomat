@@ -4,10 +4,10 @@ import { Unnamespaced } from "./Unnamespaced.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const AttrOpaque1Renamed_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_AttrOpaque1_destroy(ptr);
 });
+
 export class AttrOpaque1Renamed {
     // Internal ptr reference:
     #ptr = null;
@@ -15,7 +15,6 @@ export class AttrOpaque1Renamed {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -29,60 +28,49 @@ export class AttrOpaque1Renamed {
         return this.#ptr;
     }
 
-
     static totallyNotNew() {
         const result = wasm.namespace_AttrOpaque1_new();
     
         try {
-    
             return new AttrOpaque1Renamed(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     get methodRenamed() {
         const result = wasm.namespace_AttrOpaque1_method(this.ffiValue);
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     get abirenamed() {
         const result = wasm.renamed_on_abi_only(this.ffiValue);
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     useUnnamespaced(un) {
         wasm.namespace_AttrOpaque1_use_unnamespaced(this.ffiValue, un.ffiValue);
     
-        try {
-    
-        } finally {
+        try {}
         
-        }
+        finally {}
     }
 
     useNamespaced(n) {
         wasm.namespace_AttrOpaque1_use_namespaced(this.ffiValue, n.ffiValue);
     
-        try {
-    
-        } finally {
+        try {}
         
-        }
+        finally {}
     }
-
-    
-
 }

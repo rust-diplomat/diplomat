@@ -7,10 +7,10 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 *
 *See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
 */
-
 const DataProvider_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_DataProvider_destroy_mv1(ptr);
 });
+
 export class DataProvider {
     // Internal ptr reference:
     #ptr = null;
@@ -18,7 +18,6 @@ export class DataProvider {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -32,29 +31,23 @@ export class DataProvider {
         return this.#ptr;
     }
 
-
     static newStatic() {
         const result = wasm.icu4x_DataProvider_new_static_mv1();
     
         try {
-    
             return new DataProvider(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static returnsResult() {
         const result = wasm.icu4x_DataProvider_returns_result_mv1();
     
         try {
-    
             return result === 1;
-        } finally {
-        
         }
+        
+        finally {}
     }
-
-    
-
 }

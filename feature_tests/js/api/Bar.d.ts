@@ -7,9 +7,5 @@ export class Bar {
 
     get ffiValue(): pointer;
 
-
     get foo(): Foo;
-
-    
-
 }

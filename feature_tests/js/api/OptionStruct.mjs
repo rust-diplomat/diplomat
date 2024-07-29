@@ -5,21 +5,25 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class OptionStruct {
+
     #a;
     get a()  {
         return this.#a;
     }
     
+
     #b;
     get b()  {
         return this.#b;
     }
     
+
     #c;
     get c()  {
         return this.#c;
     }
     
+
     #d;
     get d()  {
         return this.#d;
@@ -57,6 +61,4 @@ export class OptionStruct {
     constructor(ptr) {
         this._fromFFI(ptr);
     }
-    
-
 }

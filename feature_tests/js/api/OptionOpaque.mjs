@@ -3,10 +3,10 @@ import { OptionStruct } from "./OptionStruct.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const OptionOpaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.OptionOpaque_destroy(ptr);
 });
+
 export class OptionOpaque {
     // Internal ptr reference:
     #ptr = null;
@@ -14,7 +14,6 @@ export class OptionOpaque {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -28,27 +27,24 @@ export class OptionOpaque {
         return this.#ptr;
     }
 
-
     static new_(i) {
         const result = wasm.OptionOpaque_new(i);
     
         try {
-    
             return result === 0 ? null : new OptionOpaque(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static newNone() {
         const result = wasm.OptionOpaque_new_none();
     
         try {
-    
             return result === 0 ? null : new OptionOpaque(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static returns() {
@@ -57,15 +53,14 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_returns(diplomat_receive_buffer);
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 16)) {
                 return null;
             }
             return new OptionStruct(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 17, 4);
-        
         }
     }
 
@@ -75,15 +70,14 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_option_isize(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
             return (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
 
@@ -93,15 +87,14 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_option_usize(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
             return (new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
 
@@ -111,15 +104,14 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_option_i32(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
             return (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
 
@@ -129,15 +121,14 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_option_u32(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
             return (new Uint32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
 
@@ -147,12 +138,11 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct(diplomat_receive_buffer);
     
         try {
-    
             return new OptionStruct(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
-        
         }
     }
 
@@ -162,36 +152,29 @@ export class OptionOpaque {
         const result = wasm.OptionOpaque_new_struct_nones(diplomat_receive_buffer);
     
         try {
-    
             return new OptionStruct(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 16, 4);
-        
         }
     }
 
     assertInteger(i) {
         wasm.OptionOpaque_assert_integer(this.ffiValue, i);
     
-        try {
-    
-        } finally {
+        try {}
         
-        }
+        finally {}
     }
 
     static optionOpaqueArgument(arg) {
         const result = wasm.OptionOpaque_option_opaque_argument(arg.ffiValue ?? 0);
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
-
-    
-
 }
