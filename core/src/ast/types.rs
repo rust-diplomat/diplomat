@@ -926,7 +926,7 @@ impl TypeName {
                         if let syn::PathArguments::Parenthesized(
                             syn::ParenthesizedGenericArguments {
                                 inputs: input_types,
-                                output: syn::ReturnType::Type(_, output_type),
+                                output: output_type,
                                 ..
                             },
                         ) = &path_seg.arguments
@@ -937,11 +937,14 @@ impl TypeName {
                                     Box::new(TypeName::from_syn(in_ty, self_path_type.clone()))
                                 })
                                 .collect::<Vec<Box<TypeName>>>();
-                            let out_type = TypeName::from_syn(output_type, self_path_type.clone());
+                            let out_type = match output_type {
+                                syn::ReturnType::Type(_, output_type) => TypeName::from_syn(output_type, self_path_type.clone()),
+                                syn::ReturnType::Default => TypeName::Unit,
+                            };
                             let ret = TypeName::Function(in_types, Box::new(out_type));
                             return ret;
                         }
-                        panic!("Unsupported function type");
+                        panic!("Unsupported function type: {:?}", &path_seg.arguments);
                     }
                 }
                 panic!("Unsupported trait type");
