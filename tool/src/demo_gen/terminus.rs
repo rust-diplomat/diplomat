@@ -344,7 +344,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             // TODO: Currently haven't run into other methods that require special syntax to be called in this way, but this might change.
             let is_getter = match method.attrs.special_method {
                 Some(hir::SpecialMethod::Getter(_)) => true,
-                _ => false
+                _ => false,
             };
 
             format!(
