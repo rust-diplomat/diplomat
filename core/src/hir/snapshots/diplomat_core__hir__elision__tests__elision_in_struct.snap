@@ -81,5 +81,11 @@ Method {
             pattern: None,
         },
         special_method: None,
+        demo_attrs: DemoInfo {
+            enabled: false,
+            default_constructor: false,
+            external: false,
+            input_cfg: {},
+        },
     },
 }
