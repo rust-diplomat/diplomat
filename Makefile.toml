@@ -52,8 +52,6 @@ dependencies = [
 category = "Tests"
 dependencies = [
     "test-js-feature",
-    "test-js-example",
-    "test-js-example-app",
 ]
 
 [tasks.test-dart]
@@ -75,7 +73,7 @@ category = "Tests"
 dependencies = [
     "test-cpp-example",
     "test-c-example",
-    "test-js-example",
+    "test-demo-example",
     "test-dart-example",
     "test-kotlin-example",
 ]
@@ -132,18 +130,6 @@ cp ../../target/wasm32-unknown-unknown/debug/diplomat_feature_tests.wasm api/dip
 npm install && npm run test
 '''
 
-[tasks.test-js-example]
-category = "Tests"
-dependencies = ["build-example-wasm"]
-script_runner = "@shell"
-script = '''
-cd example/js
-cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm lib/api/diplomat_example.wasm
-cp -r ../demo_gen/demo/ lib/api/demo
-cd lib
-npm install && npm run test
-'''
-
 
 [tasks.test-demo-example]
 category = "Tests"
@@ -152,7 +138,7 @@ script_runner = "@shell"
 script = '''
 cd example/demo_gen
 cp ../../target/wasm32-unknown-unknown/debug/diplomat_example.wasm demo/diplomat_example.wasm
-echo TODO: Migrate tests
+npm install && npm run test
 '''
 
 [tasks.test-dart-example]
