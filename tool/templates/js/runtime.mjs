@@ -253,7 +253,7 @@ export class DiplomatWriteBuf {
 }
 
 /**
- * A number of Rust functions in WebAssembly require a buffer to populate struct, Option<> or Result<> types with information.
+ * A number of Rust functions in WebAssembly require a buffer to populate struct, slice, Option<> or Result<> types with information.
  * {@link DiplomatReceiveBuf} allocates a buffer in WebAssembly, which can then be passed into functions with the {@link DiplomatReceiveBuf.buffer}
  * property.
  */
