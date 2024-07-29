@@ -155,7 +155,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         Some(label)
                     }
                 })
-                .unwrap_or(param_name.clone());
+                .unwrap_or(heck::AsUpperCamelCase(param_name.clone()).to_string());
 
             let mut param_info = ParamInfo {
                 js: param_name,
