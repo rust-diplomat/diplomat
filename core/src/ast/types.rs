@@ -577,8 +577,61 @@ impl TypeName {
             }
 
             TypeName::Unit => syn::parse_quote_spanned!(Span::call_site() => ()),
-            TypeName::Function(_input_types, _output_type) => {
-                panic!("Function type (AST) codegen not done");
+            TypeName::Function(_input_types, output_type) => {
+                // original type
+                // let fn_type = syn::Type::ImplTrait(syn::TypeImplTrait {
+                //     impl_token: syn::Token![impl](Span::call_site()),
+                //     bounds: Punctuated::from_iter(vec![syn::TypeParamBound::Trait(TraitBound {
+                //         paren_token: None,
+                //         modifier: syn::TraitBoundModifier::None,
+                //         lifetimes: None,
+                //         path: syn::Path {
+                //             leading_colon: None,
+                //             segments: Punctuated::from_iter(vec![PathSegment {
+                //                 ident: syn::Ident::new("Fn", Span::call_site()),
+                //                 arguments: PathArguments::Parenthesized(
+                //                     ParenthesizedGenericArguments {
+                //                         paren_token: syn::token::Paren::default(),
+                //                         inputs: input_types
+                //                             .iter()
+                //                             .map(|in_ty| in_ty.to_syn())
+                //                             .collect(),
+                //                         output: syn::ReturnType::Type(
+                //                             syn::Token![->](Span::call_site()),
+                //                             Box::new(output_type.to_syn()),
+                //                         ),
+                //                     },
+                //                 ),
+                //             }]),
+                //         },
+                //     })]),
+                // });
+
+                // should be &DiplomatCallback<function_output_type>
+                syn::Type::Reference(TypeReference {
+                    and_token: syn::token::And(Span::call_site()),
+                    lifetime: None,
+                    mutability: None,
+                    elem: Box::new(syn::Type::Path(TypePath {
+                        qself: None,
+                        path: syn::Path {
+                            leading_colon: None,
+                            segments: Punctuated::from_iter(vec![PathSegment {
+                                ident: syn::parse_str("DiplomatCallback").unwrap(),
+                                arguments: PathArguments::AngleBracketed(
+                                    AngleBracketedGenericArguments {
+                                        colon2_token: None,
+                                        lt_token: syn::token::Lt(Span::call_site()),
+                                        args: Punctuated::from_iter(vec![GenericArgument::Type(
+                                            output_type.to_syn(),
+                                        )]),
+                                        gt_token: syn::token::Gt(Span::call_site()),
+                                    },
+                                ),
+                            }]),
+                        },
+                    })),
+                })
             }
         }
     }
