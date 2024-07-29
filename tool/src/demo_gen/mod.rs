@@ -18,7 +18,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.constructors = true;
     a.fallible_constructors = true;
 
-    return a;
+    a
 }
 
 /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
@@ -78,7 +78,7 @@ pub(crate) fn run<'tcx>(
                     .set_context_method(ty.name().as_str().into(), method.name.as_str().into());
 
                 let mut ctx = RenderTerminusContext {
-                    tcx: &tcx,
+                    tcx,
                     formatter: &formatter,
                     errors: &errors,
                     terminus_info: TerminusInfo {

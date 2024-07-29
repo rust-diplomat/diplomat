@@ -179,7 +179,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     Type::Enum(e) => {
                         let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
 
-                        if e.resolve(&self.tcx).attrs.disable {
+                        if e.resolve(self.tcx).attrs.disable {
                             self.errors
                                 .push_error(format!("Found usage of disabled type {type_name}"))
                         }
@@ -342,13 +342,9 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
 
             // TODO: Currently haven't run into other methods that require special syntax to be called in this way, but this might change.
-            let is_getter = if let Some(s) = &method.attrs.special_method {
-                match s {
-                    hir::SpecialMethod::Getter(_) => true,
-                    _ => false,
-                }
-            } else {
-                false
+            let is_getter = match method.attrs.special_method {
+                Some(hir::SpecialMethod::Getter(_)) => true,
+                _ => false
             };
 
             format!(

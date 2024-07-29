@@ -77,7 +77,7 @@ pub fn gen(
             // TODO: Command Line Options.
             // I.e., being able to replace this with just updating the imports:
             gen(
-                &entry,
+                entry,
                 "js",
                 &out_folder.join("js"),
                 docs_url_gen,
