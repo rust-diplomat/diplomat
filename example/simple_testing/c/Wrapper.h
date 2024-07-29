@@ -21,7 +21,9 @@ namespace capi {
 extern "C" {
 #endif
 
-int32_t Wrapper_test_rust_fn(DiplomatCallback* f);
+int32_t Wrapper_test_rust_fn(DiplomatCallback* f, int32_t x);
+
+void Wrapper_test_multiarg_callback(DiplomatCallback* f);
 void Wrapper_destroy(Wrapper* self);
 
 #ifdef __cplusplus
