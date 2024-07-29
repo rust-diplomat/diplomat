@@ -342,10 +342,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
 
             // TODO: Currently haven't run into other methods that require special syntax to be called in this way, but this might change.
-            let is_getter = match method.attrs.special_method {
-                Some(hir::SpecialMethod::Getter(_)) => true,
-                _ => false,
-            };
+            let is_getter = matches!(method.attrs.special_method, Some(hir::SpecialMethod::Getter(_)));
 
             format!(
                 "(function (...args) {{ return args[0].{method_name}{} }})",
