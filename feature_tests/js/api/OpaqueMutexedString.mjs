@@ -103,7 +103,7 @@ export class OpaqueMutexedString {
         const result = wasm.OpaqueMutexedString_dummy_str(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomatReceive.buffer, "string8");
+            return diplomatReceive.buffer.getString("string8");
         }
         
         finally {

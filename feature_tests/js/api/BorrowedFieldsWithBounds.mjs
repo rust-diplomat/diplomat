@@ -52,11 +52,11 @@ export class BorrowedFieldsWithBounds {
 
     _fromFFI(ptr, aEdges, bEdges, cEdges) {
         const fieldADeref = ptr;
-        this.#fieldA = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, fieldADeref, "string16");
+        this.#fieldA = fieldADeref.getString("string16");
         const fieldBDeref = ptr + 8;
-        this.#fieldB = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, fieldBDeref, "string8");
+        this.#fieldB = fieldBDeref.getString("string8");
         const fieldCDeref = ptr + 16;
-        this.#fieldC = diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, fieldCDeref, "string8");
+        this.#fieldC = fieldCDeref.getString("string8");
 
         return this;
     }

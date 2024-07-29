@@ -128,72 +128,6 @@ export class DiplomatBuf {
 	return new DiplomatBuf(ptr, list.length, () => wasm.diplomat_free(ptr, byteLength, elementSize));
 	}
 
-	static stringsFromPtr(wasm, stringsPtr, stringEncoding) {
-		const [ptr, size] = new Uint32Array(wasm.memory.buffer, stringsPtr, 2);
-
-		let strings = [];
-		for (var arrayPtr = ptr; arrayPtr < size; arrayPtr += 1) {
-			var out = this.stringFromPtr(wasm, arrayPtr, stringEncoding);
-			strings.push(out);
-		}
-		return strings;
-	}
-
-	static stringFromPtr(wasm, stringPtr, stringEncoding) {
-		const [ptr, size] = new Uint32Array(wasm.memory.buffer, stringPtr, 2);
-		switch (stringEncoding) {
-			case "string8":
-				return readString8(wasm, ptr, size);
-			case "string16":
-				return readString16(wasm, ptr, size);
-			default:
-				console.error("Unrecognized stringEncoding ", stringEncoding);
-				break;
-		}
-	}
-
-	static sliceFromPtr(wasm, slicePtr, bufferType) {
-		const [ptr, size] = new Uint32Array(wasm.memory.buffer, slicePtr, 2);
-
-		var arrayType;
-		switch (bufferType) {
-			case "u8":
-			case "boolean":
-				arrayType = Uint8Array;
-				break;
-			case "i8":
-				arrayType = Int8Array;
-				break;
-			case "u16":
-				arrayType = Uint16Array;
-				break;
-			case "i16":
-				arrayType = Int16Array;
-				break;
-			case "i32":
-				arrayType = Int32Array;
-				break;
-			case "u32":
-				arrayType = Uint32Array;
-				break;
-			case "i64":
-				arrayType = BigInt64Array;
-				break;
-			case "u64":
-				arrayType = BigUint64Array;
-				break;
-			case "f32":
-				arrayType = Float32Array;
-				break;
-			case "f64":
-				arrayType = Float64Array;
-				break;
-			default:
-				console.error("Unrecognized bufferType ", bufferType);
-		}
-		return arrayType.from(new arrayType(wasm.memory.buffer, ptr, size));
-	}
-
 	/**
 	 * Generated code calls one of methods these for each allocation, to either
 	 * free directly after the FFI call, to leak (to create a &'static), or to
@@ -253,7 +187,7 @@ export class DiplomatWriteBuf {
 }
 
 /**
- * A number of Rust functions in WebAssembly require a buffer to populate struct, Option<> or Result<> types with information.
+ * A number of Rust functions in WebAssembly require a buffer to populate struct, slice, Option<> or Result<> types with information.
  * {@link DiplomatReceiveBuf} allocates a buffer in WebAssembly, which can then be passed into functions with the {@link DiplomatReceiveBuf.buffer}
  * property.
  */
@@ -278,6 +212,89 @@ export class DiplomatReceiveBuf {
 		this.#buffer = this.#wasm.diplomat_alloc(this.#size, this.#align);
 
 		this.leak = () => { };
+	}
+
+	/**
+	 * Only used if the receive buffer points to a slice.
+	 * @param {string} sliceType The slice type we expect to be used. 
+	 * @returns A slice of the `sliceType` provided.
+	 */
+	getSlice(sliceType) {
+		const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
+
+		var arrayType;
+		switch (sliceType) {
+			case "u8":
+			case "boolean":
+				arrayType = Uint8Array;
+				break;
+			case "i8":
+				arrayType = Int8Array;
+				break;
+			case "u16":
+				arrayType = Uint16Array;
+				break;
+			case "i16":
+				arrayType = Int16Array;
+				break;
+			case "i32":
+				arrayType = Int32Array;
+				break;
+			case "u32":
+				arrayType = Uint32Array;
+				break;
+			case "i64":
+				arrayType = BigInt64Array;
+				break;
+			case "u64":
+				arrayType = BigUint64Array;
+				break;
+			case "f32":
+				arrayType = Float32Array;
+				break;
+			case "f64":
+				arrayType = Float64Array;
+				break;
+			default:
+				console.error("Unrecognized bufferType ", bufferType);
+		}
+		return arrayType.from(new arrayType(this.#wasm.memory.buffer, ptr, size));
+	}
+
+	/**
+	 * Returns a string, if the receive buffer points to a string.
+	 * @param {string} stringEncoding `string8` or `string16`. 
+	 * @param {number} buffer Buffer to use. Only used by `getStrings`, other wise {@link DiplomatReceiveBuf.buffer} is used.
+	 * @returns {string} String with encoding of the provided `stringEncoding`.
+	 */
+	getString(stringEncoding, buffer=null) {
+		let buf = buffer === null? this.#buffer : buffer;
+		const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, buf, 2);
+		switch (stringEncoding) {
+			case "string8":
+				return readString8(wasm, ptr, size);
+			case "string16":
+				return readString16(wasm, ptr, size);
+			default:
+				console.error("Unrecognized stringEncoding ", stringEncoding);
+				break;
+		}
+	}
+
+	/**
+	 * Returns an array of strings, assuming the receive buffer points to an array of strings.
+	 * @param {string} stringEncoding `string8` or `string16`. 
+	 * @returns {Array[string]} An array of strings with the encoding of the provided `stringEncoding`.
+	 */
+	getStrings(stringEncoding) {
+		const [ptr, size] = new Uint32Array(this.#wasm.memory.buffer, this.#buffer, 2);
+
+		let strings = [];
+		for (var arrayPtr = ptr; arrayPtr < size; arrayPtr += 1) {
+			var out = stringFromPtr(stringEncoding, arrayPtr);
+			strings.push(out);
+		}
+		return strings;
 	}
 	
 	free() {
