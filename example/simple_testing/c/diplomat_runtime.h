@@ -51,8 +51,6 @@ typedef struct DiplomatCallback {
 
 DiplomatCallback* diplomat_callback_create_for_c(const void* callback);
 
-int32_t DiplomatCallback_call_test_rust_fn(DiplomatCallback* cb_wrap);
-
 #define MAKE_SLICES(name, c_ty) \
     typedef struct Diplomat##name##View { \
         const c_ty* data; \

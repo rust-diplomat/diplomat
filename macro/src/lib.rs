@@ -60,7 +60,7 @@ fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
             let cb_ret_type = out_type.to_syn();
 
             let tokens = quote! {
-                move | (#(#cb_param_list,)*) | unsafe {
+                move | #(#cb_param_list,)* | unsafe {
                     std::mem::transmute::<*const c_void, unsafe extern "C" fn (#(#cb_arg_type_list,)*) -> #cb_ret_type>(#cb_wrap_ident.data)(#(#cb_param_list,)*)
                 }
             };
