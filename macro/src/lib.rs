@@ -94,6 +94,21 @@ fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) 
                 ),
             }));
         }
+        ast::TypeName::Function(..) => {
+            // rename the cbwrapper param
+            expanded_params.push(FnArg::Typed(PatType {
+                attrs: vec![],
+                pat: Box::new(Pat::Ident(PatIdent {
+                    attrs: vec![],
+                    by_ref: None,
+                    mutability: None,
+                    ident: Ident::new(&format!("{}_cb_wrap", param.name), Span::call_site()),
+                    subpat: None,
+                })),
+                colon_token: syn::token::Colon(Span::call_site()),
+                ty: Box::new(param.ty.to_syn()),
+            }));
+        }
         o => {
             expanded_params.push(FnArg::Typed(PatType {
                 attrs: vec![],
@@ -193,6 +208,23 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
         ast::TypeName::Result(_, _, _) => {
             let param = &param.name;
             expanded_params.push(parse2(quote!(#param.into())).unwrap());
+        }
+        ast::TypeName::Function(in_types, out_type) => {
+            let cb_wrap_ident = Ident::new(&format!("{}_cb_wrap", param.name), Span::call_site());
+            let mut cb_param_list = vec![];
+            let mut cb_arg_type_list = vec![];
+            for (index, in_ty) in in_types.into_iter().enumerate() {
+                cb_param_list.push(Ident::new(&format!("arg{}", index), Span::call_site()));
+                cb_arg_type_list.push(in_ty.to_syn());
+            }
+            let cb_ret_type = out_type.to_syn();
+
+            let tokens = quote! {
+                move | (#(#cb_param_list,)*) | unsafe {
+                    std::mem::transmute::<*const c_void, unsafe extern "C" fn (#(#cb_arg_type_list,)*) -> #cb_ret_type>(#cb_wrap_ident.data)(#(#cb_param_list,)*)
+                }
+            };
+            expanded_params.push(parse2(tokens).unwrap());
         }
         _ => {
             expanded_params.push(Expr::Path(ExprPath {
@@ -386,6 +418,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
     let (brace, mut new_contents) = input.content.unwrap();
 
     new_contents.push(parse2(quote! { use diplomat_runtime::*; }).unwrap());
+    new_contents.push(parse2(quote! { use core::ffi::c_void; }).unwrap());
 
     new_contents.iter_mut().for_each(|c| match c {
         Item::Struct(s) => {
