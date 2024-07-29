@@ -220,7 +220,7 @@ fn gen_params_invocation(param: &ast::Param, expanded_params: &mut Vec<Expr>) {
             let cb_ret_type = out_type.to_syn();
 
             let tokens = quote! {
-                move | (#(#cb_param_list,)*) | unsafe {
+                move | #(#cb_param_list,)* | unsafe {
                     std::mem::transmute::<*const c_void, unsafe extern "C" fn (#(#cb_arg_type_list,)*) -> #cb_ret_type>(#cb_wrap_ident.data)(#(#cb_param_list,)*)
                 }
             };

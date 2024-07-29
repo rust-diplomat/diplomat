@@ -20,8 +20,6 @@ typedef struct DiplomatCallback {
     void (*destructor)(const void*);
 } DiplomatCallback;
 
-DiplomatCallback* diplomat_callback_create_for_c(const void* callback);
-
 #define MAKE_SLICES(name, c_ty) \
     typedef struct Diplomat##name##View { \
         const c_ty* data; \
