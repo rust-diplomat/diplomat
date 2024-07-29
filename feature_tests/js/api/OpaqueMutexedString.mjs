@@ -96,18 +96,18 @@ export class OpaqueMutexedString {
 
     dummyStr() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.OpaqueMutexedString_dummy_str(diplomat_receive_buffer, this.ffiValue);
+        const result = wasm.OpaqueMutexedString_dummy_str(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string8");
+            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomatReceive.buffer, "string8");
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            diplomatReceive.free();
         }
     }
 

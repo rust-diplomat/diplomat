@@ -23,36 +23,47 @@ export function withDiplomatWrite(wasm, callback) {
 	}
 }
 
-// Get the pointer returned by an FFI function
-//
-// It's tempting to call `(new Uint32Array(wasm.memory.buffer, FFI_func(), 1))[0]`.
-// However, there's a chance that `wasm.memory.buffer` will be resized between
-// the time it's accessed and the time it's used, invalidating the view.
-// This function ensures that the view into wasm memory is fresh.
-//
-// This is used for methods that return multiple types into a wasm buffer, where
-// one of those types is another ptr. Call this method to get access to the returned
-// ptr, so the return buffer can be freed.
+/**
+ * Get the pointer returned by an FFI function.
+ * 
+ * It's tempting to call `(new Uint32Array(wasm.memory.buffer, FFI_func(), 1))[0]`.
+ * However, there's a chance that `wasm.memory.buffer` will be resized between
+ * the time it's accessed and the time it's used, invalidating the view.
+ * This function ensures that the view into wasm memory is fresh.
+ * 
+ * This is used for methods that return multiple types into a wasm buffer, where
+ * one of those types is another ptr. Call this method to get access to the returned
+ * ptr, so the return buffer can be freed.
+ * @param {WebAssembly.Exports} wasm Provided by diplomat generated files. 
+ * @param {number} ptr Pointer of a pointer, to be read.
+ * @returns {number} The underlying pointer.
+ */
 export function ptrRead(wasm, ptr) {
 	return (new Uint32Array(wasm.memory.buffer, ptr, 1))[0];
 }
 
-// Get the flag of a result type.
+/** 
+ * Get the flag of a result type.
+ */
 export function resultFlag(wasm, ptr, offset) {
 	return (new Uint8Array(wasm.memory.buffer, ptr + offset, 1))[0];
 }
 
-// Get the discriminant of a Rust enum.
+/** 
+ * Get the discriminant of a Rust enum.
+*/
 export function enumDiscriminant(wasm, ptr) {
 	return (new Int32Array(wasm.memory.buffer, ptr, 1))[0]
 }
 
-// A wrapper around a slice of WASM memory that can be freed manually or
-// automatically by the garbage collector.
-//
-// This type is necessary for Rust functions that take a `&str` or `&[T]`, since
-// they can create an edge to this object if they borrow from the str/slice,
-// or we can manually free the WASM memory if they don't.
+/** 
+ * A wrapper around a slice of WASM memory that can be freed manually or
+ * automatically by the garbage collector.
+ *
+ * This type is necessary for Rust functions that take a `&str` or `&[T]`, since
+ * they can create an edge to this object if they borrow from the str/slice,
+ * or we can manually free the WASM memory if they don't.
+ */
 export class DiplomatBuf {
 	static str8 = (wasm, string) => {
 	var utf8Length = 0;
@@ -98,7 +109,9 @@ export class DiplomatBuf {
 	const byteLength = list.length * elementSize;
 	const ptr = wasm.diplomat_alloc(byteLength, elementSize);
 
-	// Create an array view of the buffer. This gives us the `set` method which correctly handles untyped values
+	/** 
+	 * Create an array view of the buffer. This gives us the `set` method which correctly handles untyped values
+	 */
 	const destination =
 		rustType === "u8" || rustType === "boolean" ? new Uint8Array(wasm.memory.buffer, ptr, byteLength) :
 		rustType === "i8" ? new Int8Array(wasm.memory.buffer, ptr, byteLength) :
@@ -181,18 +194,26 @@ export class DiplomatBuf {
 		return arrayType.from(new arrayType(wasm.memory.buffer, ptr, size));
 	}
 
+	/**
+	 * Generated code calls one of methods these for each allocation, to either
+	 * free directly after the FFI call, to leak (to create a &'static), or to
+	 * register the buffer with the garbage collector (to create a &'a).
+	 */
+	free;
+
 	constructor(ptr, size, free) {
 		this.ptr = ptr;
 		this.size = size;
-		// Generated code calls one of methods these for each allocation, to either
-		// free directly after the FFI call, to leak (to create a &'static), or to
-		// register the buffer with the garbage collector (to create a &'a).
 		this.free = free;
 		this.leak = () => { };
 		this.garbageCollect = () => DiplomatBufferFinalizer.register(this, this.free);
 	}
 }
 
+/** 
+ * Helper class for creating and managing `diplomat_buffer_write`.
+ * Meant to minimize direct calls to `wasm`.
+ */
 export class DiplomatWriteBuf {
 	leak;
 
@@ -231,6 +252,11 @@ export class DiplomatWriteBuf {
 	}
 }
 
+/**
+ * A number of Rust functions in WebAssembly require a buffer to populate struct, Option<> or Result<> types with information.
+ * {@link DiplomatReceiveBuf} allocates a buffer in WebAssembly, which can then be passed into functions with the {@link DiplomatReceiveBuf.buffer}
+ * property.
+ */
 export class DiplomatReceiveBuf {
 	#wasm;
 
@@ -266,6 +292,11 @@ export class DiplomatReceiveBuf {
 		return this.#buffer;
 	}
 
+	/**
+	 * Only for when a DiplomatReceiveBuf is allocating a buffer for an `Option<>` or a `Result<>` type.
+	 * 
+	 * This just checks the last byte for a successful result (assuming that Rust's compiler does not change).
+	 */
 	get resultFlag() {
 		if (this.#hasResult) {
 			return resultFlag(this.#wasm, this.#buffer, this.#size - 1);
@@ -273,11 +304,6 @@ export class DiplomatReceiveBuf {
 			return true;
 		}
 	}
-
-	get result() {
-
-	}
-
 }
 
 const DiplomatBufferFinalizer = new FinalizationRegistry(free => free());

@@ -42,32 +42,32 @@ export class Utf16Wrap {
 
     getDebugStr() {
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        wasm.Utf16Wrap_get_debug_str(this.ffiValue, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.Utf16Wrap_get_debug_str(this.ffiValue, write.buffer);
     
         try {
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return write.readString8();
         }
         
         finally {
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         }
     }
 
     borrowCont() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Utf16Wrap_borrow_cont(diplomat_receive_buffer, this.ffiValue);
+        const result = wasm.Utf16Wrap_borrow_cont(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomat_receive_buffer, "string16");
+            return diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, diplomatReceive.buffer, "string16");
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            diplomatReceive.free();
         }
     }
 }

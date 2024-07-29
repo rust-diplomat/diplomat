@@ -124,18 +124,18 @@ export class Float64Vec {
 
     get asSlice() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Float64Vec_as_slice(diplomat_receive_buffer, this.ffiValue);
+        const result = wasm.Float64Vec_as_slice(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, diplomat_receive_buffer, "f64");
+            return diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, diplomatReceive.buffer, "f64");
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            diplomatReceive.free();
         }
     }
 
@@ -165,49 +165,49 @@ export class Float64Vec {
 
     toString() {
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        wasm.Float64Vec_to_string(this.ffiValue, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.Float64Vec_to_string(this.ffiValue, write.buffer);
     
         try {
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return write.readString8();
         }
         
         finally {
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         }
     }
 
     borrow() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(8, 4);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 8, 4, false);
         
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
-        const result = wasm.Float64Vec_borrow(diplomat_receive_buffer, this.ffiValue);
+        const result = wasm.Float64Vec_borrow(diplomatReceive.buffer, this.ffiValue);
     
         try {
-            return diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, diplomat_receive_buffer, "f64");
+            return diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, diplomatReceive.buffer, "f64");
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 8, 4);
+            diplomatReceive.free();
         }
     }
 
     get(i) {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(9, 8);
-        const result = wasm.Float64Vec_get(diplomat_receive_buffer, this.ffiValue, i);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 8, true);
+        const result = wasm.Float64Vec_get(diplomatReceive.buffer, this.ffiValue, i);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Float64Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+            return (new Float64Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 9, 8);
+            diplomatReceive.free();
         }
     }
 }
