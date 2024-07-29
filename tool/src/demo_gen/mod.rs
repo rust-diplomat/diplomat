@@ -11,7 +11,13 @@ use crate::{
 mod terminus;
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
-    js::attr_support()
+    let mut a = js::attr_support();
+
+    // For automagical construction detection:
+    a.constructors = true;
+    a.fallible_constructors = true;
+
+    return a;
 }
 
 /// Per https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing
