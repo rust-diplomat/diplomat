@@ -52,9 +52,9 @@ struct MethodDependency {
 }
 
 pub struct RenderTerminusContext<'ctx, 'tcx> {
-    pub tcx : &'tcx TypeContext,
-    pub formatter : &'ctx JSFormatter<'tcx>,
-    pub errors : &'ctx ErrorStore<'tcx, String>,
+    pub tcx: &'tcx TypeContext,
+    pub formatter: &'ctx JSFormatter<'tcx>,
+    pub errors: &'ctx ErrorStore<'tcx, String>,
     pub terminus_info: TerminusInfo,
 }
 
@@ -94,7 +94,7 @@ pub(super) struct TerminusInfo {
 impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
-    pub fn evaluate(&mut self, type_name : String, method : &Method) {
+    pub fn evaluate(&mut self, type_name: String, method: &Method) {
         // TODO: I think it would be nice to have a stack of the current namespace a given parameter.
         // For instance, ICU4XFixedDecimalFormatter.formatWrite() needs a constructed ICU4XFixedDecimal, which takes an i32 called v as input.
         // Someone just trying to read the .d.ts file will only see function formatWrite(v: number); which doesn't really help them figure out where that's from or why it's there.
@@ -107,22 +107,18 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         // And then we just treat the terminus as a regular constructor method:
         self.terminus_info.node_call_stack = self.evaluate_constructor(method, &mut root);
 
-
         let type_n = type_name.clone();
-        let format = self.formatter.fmt_import_statement(&type_n, false, "./js/".into());
+        let format = self
+            .formatter
+            .fmt_import_statement(&type_n, false, "./js/".into());
 
-        self.terminus_info
-            .imports
-            .insert(
-                format,
-            );
+        self.terminus_info.imports.insert(format);
     }
 
     /// Currently unused, plan to hopefully use this in the future for quickly grabbing parameter information.
     fn _get_type_demo_attrs(&self, ty: &Type) -> Option<DemoInfo> {
-        ty.id().map(|id| {
-            self.tcx.resolve_type(id).attrs().demo_attrs.clone()
-        })
+        ty.id()
+            .map(|id| self.tcx.resolve_type(id).attrs().demo_attrs.clone())
     }
 
     /// Take a parameter passed to a terminus (or a constructor), and either:
@@ -174,27 +170,22 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         match param_type {
             Type::Primitive(_) | Type::Enum(_) | Type::Slice(_) => {
                 let type_name = match param_type {
-                    Type::Primitive(p) => self
-                        .formatter
-                        .fmt_primitive_as_ffi(*p)
-                        .to_string(),
+                    Type::Primitive(p) => self.formatter.fmt_primitive_as_ffi(*p).to_string(),
                     Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().to_string(),
                     Type::Slice(hir::Slice::Primitive(_, p)) => {
                         self.formatter.fmt_primitive_list_type(*p).to_string()
                     }
                     Type::Slice(hir::Slice::Strs(..)) => "Array<String>".to_string(),
                     Type::Enum(e) => {
-                        let type_name = self
-                        .formatter
-                        .fmt_type_name(e.tcx_id.into())
-                        .to_string();
-                        
+                        let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
+
                         if e.resolve(&self.tcx).attrs.disable {
-                            self.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                            self.errors
+                                .push_error(format!("Found usage of disabled type {type_name}"))
                         }
 
                         type_name
-                    },
+                    }
                     _ => unreachable!("Unknown primitive type {:?}", param_type),
                 };
 
@@ -206,7 +197,8 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
                 let all_attrs = &o.resolve(self.tcx).attrs;
                 if all_attrs.disable {
-                    self.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                    self.errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
                 }
                 let attrs = &all_attrs.demo_attrs;
 
@@ -267,7 +259,9 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                         js: format!(
                             "null \
                             /*Could not find a usable constructor for {}. \
-                            Try adding #[diplomat::demo(default_constructor)]*/", op.name.as_str()),
+                            Try adding #[diplomat::demo(default_constructor)]*/",
+                            op.name.as_str()
+                        ),
                         label: String::default(),
                         type_name: String::default(),
                     });
@@ -278,16 +272,16 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
                 let type_name = self.formatter.fmt_type_name(s.tcx_id.into());
                 if st.attrs.disable {
-                    self.errors.push_error(format!("Found usage of disabled type {type_name}"))
+                    self.errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
                 }
 
                 self.terminus_info
                     .imports
-                    .insert(self.formatter.fmt_import_statement(
-                        &type_name,
-                        false,
-                        "./js/".into(),
-                    ));
+                    .insert(
+                        self.formatter
+                            .fmt_import_statement(&type_name, false, "./js/".into()),
+                    );
 
                 let mut child = MethodDependency::new("".to_string());
 
@@ -302,8 +296,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
                 for field in st.fields.iter() {
                     fields.push(
-                        self
-                            .formatter
+                        self.formatter
                             .fmt_param_name(field.name.as_str())
                             .to_string(),
                     );
@@ -347,7 +340,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         let method_name = self.formatter.fmt_method_name(method);
         if method.param_self.is_some() {
             // We represent as function () instead of () => since closures ignore the `this` args applied to them for whatever reason.
-            
+
             // TODO: Currently haven't run into other methods that require special syntax to be called in this way, but this might change.
             let is_getter = if let Some(s) = &method.attrs.special_method {
                 match s {
@@ -358,11 +351,10 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                 false
             };
 
-            format!("(function (...args) {{ return args[0].{method_name}{} }})", if !is_getter {
-                "(...args.slice(1))"
-            } else {
-                ""
-            })
+            format!(
+                "(function (...args) {{ return args[0].{method_name}{} }})",
+                if !is_getter { "(...args.slice(1))" } else { "" }
+            )
         } else {
             format!("{owner_type_name}.{method_name}")
         }
@@ -380,10 +372,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         for param in method.params.iter() {
             self.evaluate_param(
                 &param.ty,
-                self
-                    .formatter
-                    .fmt_param_name(param.name.as_str())
-                    .into(),
+                self.formatter.fmt_param_name(param.name.as_str()).into(),
                 node,
                 method.attrs.demo_attrs.clone(),
             );

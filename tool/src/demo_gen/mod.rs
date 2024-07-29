@@ -5,7 +5,8 @@ use diplomat_core::hir::{BackendAttrSupport, TypeContext};
 use terminus::{RenderTerminusContext, TerminusInfo};
 
 use crate::{
-    js::{self, formatter::JSFormatter, FileType}, ErrorStore, FileMap
+    js::{self, formatter::JSFormatter, FileType},
+    ErrorStore, FileMap,
 };
 
 mod terminus;
@@ -27,7 +28,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 /// This JS should include:
 /// Render Termini that can be called, and internal functions to construct dependencies that the Render Terminus function needs.
 pub(crate) fn run<'tcx>(
-    tcx : &'tcx TypeContext,
+    tcx: &'tcx TypeContext,
     docs: &'tcx diplomat_core::ast::DocsUrlGenerator,
 ) -> (FileMap, ErrorStore<'tcx, String>) {
     let formatter = JSFormatter::new(tcx, docs);
@@ -35,15 +36,15 @@ pub(crate) fn run<'tcx>(
     let files = FileMap::default();
 
     struct TerminusExport {
-        type_name : String,
-        js_file_name : String
+        type_name: String,
+        js_file_name: String,
     }
 
     #[derive(Template)]
     #[template(path = "demo_gen/index.js.jinja", escape = "none")]
     struct IndexInfo {
         termini_exports: Vec<TerminusExport>,
-        pub termini: Vec<TerminusInfo>
+        pub termini: Vec<TerminusInfo>,
     }
 
     let mut out_info = IndexInfo {
@@ -62,7 +63,7 @@ pub(crate) fn run<'tcx>(
 
         {
             let type_name = formatter.fmt_type_name(id);
-            
+
             let ty = tcx.resolve_type(id);
             if ty.attrs().disable {
                 continue;
@@ -72,8 +73,9 @@ pub(crate) fn run<'tcx>(
                 if method.attrs.disable || !method.output.success_type().is_write() {
                     continue;
                 }
-                
-                let _guard = errors.set_context_method(ty.name().as_str().into(), method.name.as_str().into());
+
+                let _guard = errors
+                    .set_context_method(ty.name().as_str().into(), method.name.as_str().into());
 
                 let mut ctx = RenderTerminusContext {
                     tcx: &tcx,
@@ -82,23 +84,23 @@ pub(crate) fn run<'tcx>(
                     terminus_info: TerminusInfo {
                         function_name: formatter.fmt_method_name(method),
                         params: Vec::new(),
-        
+
                         type_name: type_name.clone().into(),
-        
+
                         js_file_name: formatter
                             .fmt_file_name(&type_name, &crate::js::FileType::Module),
-        
+
                         node_call_stack: String::default(),
-        
+
                         // We set this in the init function of WebDemoGenerationContext.
                         typescript: false,
-        
+
                         imports: BTreeSet::new(),
                     },
                 };
 
                 ctx.evaluate(type_name.clone().into(), method);
-                
+
                 termini.push(ctx.terminus_info);
             }
         }
@@ -117,12 +119,11 @@ pub(crate) fn run<'tcx>(
                     terminus.typescript = file_type.is_typescript();
                     writeln!(method_str, "{}", terminus.render().unwrap()).unwrap();
 
-                    
                     imports.append(&mut terminus.imports);
                 }
 
                 let mut import_str = String::new();
-                
+
                 for import in imports.iter() {
                     writeln!(import_str, "{}", import).unwrap();
                 }
@@ -130,40 +131,55 @@ pub(crate) fn run<'tcx>(
                 files.add_file(file_name.to_string(), format!("{import_str}{method_str}"));
             }
 
-            // Only push the first one, 
+            // Only push the first one,
             out_info.termini_exports.push(TerminusExport {
                 type_name: termini[0].type_name.clone(),
-                js_file_name : termini[0].js_file_name.clone()
+                js_file_name: termini[0].js_file_name.clone(),
             });
-            
+
             out_info.termini.append(&mut termini);
         }
     }
 
-    files
-        .add_file("index.mjs".into(), out_info.render().unwrap());
+    files.add_file("index.mjs".into(), out_info.render().unwrap());
 
     // TODO: Avoid overwriting these files if one already exists (but update if that is a file present somewhere).
     // I'm thinking of just putting these in their own folder for that.
     // TODO: Some of these files should only be generated with certain command line options.
-    files.add_file("rendering.mjs".into(), include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into());
-    files.add_file("runtime.mjs".into(), include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into());
-    files.add_file("template.html".into(), include_str!("../../templates/demo_gen/default_renderer/template.html").into());
-    files.add_file("diplomat.config.mjs".into(), include_str!("../../templates/demo_gen/default_renderer/config.mjs").into());
+    files.add_file(
+        "rendering.mjs".into(),
+        include_str!("../../templates/demo_gen/default_renderer/rendering.mjs").into(),
+    );
+    files.add_file(
+        "runtime.mjs".into(),
+        include_str!("../../templates/demo_gen/default_renderer/runtime.mjs").into(),
+    );
+    files.add_file(
+        "template.html".into(),
+        include_str!("../../templates/demo_gen/default_renderer/template.html").into(),
+    );
+    files.add_file(
+        "diplomat.config.mjs".into(),
+        include_str!("../../templates/demo_gen/default_renderer/config.mjs").into(),
+    );
 
     (files, errors)
 }
 
-fn generate_default_renderer_files(termini : &Vec<TerminusInfo>, files: &FileMap)  {
+fn generate_default_renderer_files(termini: &Vec<TerminusInfo>, files: &FileMap) {
     #[derive(Template)]
     #[template(path = "demo_gen/default_renderer/termini.html.jinja")]
     struct TerminiHTML<'a> {
-        pub t : &'a TerminusInfo
+        pub t: &'a TerminusInfo,
     }
 
     for terminus in termini {
-        files.add_file(format!("rendering/{}_{}.html", terminus.type_name, terminus.function_name), TerminiHTML {
-            t: terminus
-        }.render().unwrap());   
+        files.add_file(
+            format!(
+                "rendering/{}_{}.html",
+                terminus.type_name, terminus.function_name
+            ),
+            TerminiHTML { t: terminus }.render().unwrap(),
+        );
     }
 }
