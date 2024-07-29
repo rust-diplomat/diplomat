@@ -12,6 +12,7 @@ export class {{type_name}} {
         ["{{formatter.fmt_enum_variant(variant)}}", {{variant.discriminant}}]{% if !loop.last %},{% endif %}
 {%- endfor %}
     ]);
+
     {# TODO: I think it's possible to allow for constructors,
     but we just need to check if a constructor will be generated. -#}
     constructor(value) {
@@ -40,8 +41,10 @@ export class {{type_name}} {
 {% for variant in enum_def.variants -%}
     {%- let variant_name = formatter.fmt_enum_variant(variant) %}
     static {{variant_name}} {% if typescript -%} : {{type_name}} {%- else -%} = new {{type_name}}("{{variant_name}}") {%- endif -%};
-{% endfor %}
+{%- endfor -%}
+
 {% for method in methods %}
+
     {{ method|indent(4) }}
-{% endfor %}
+{%- endfor %}
 }

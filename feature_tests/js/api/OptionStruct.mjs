@@ -5,21 +5,25 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class OptionStruct {
+
     #a;
     get a()  {
         return this.#a;
     }
     
+
     #b;
     get b()  {
         return this.#b;
     }
     
+
     #c;
     get c()  {
         return this.#c;
     }
     
+
     #d;
     get d()  {
         return this.#d;
@@ -43,13 +47,13 @@ export class OptionStruct {
     // should handle this when constructing edge arrays.
     _fromFFI(ptr) {
         const aDeref = diplomatRuntime.ptrRead(wasm, ptr);
-        this.#a = aDeref == 0 ? null : new OptionOpaque(aDeref, []);
+        this.#a = aDeref === 0 ? null : new OptionOpaque(aDeref, []);
         const bDeref = diplomatRuntime.ptrRead(wasm, ptr + 4);
-        this.#b = bDeref == 0 ? null : new OptionOpaqueChar(bDeref, []);
+        this.#b = bDeref === 0 ? null : new OptionOpaqueChar(bDeref, []);
         const cDeref = (new Uint32Array(wasm.memory.buffer, ptr + 8, 1))[0];
         this.#c = cDeref;
         const dDeref = diplomatRuntime.ptrRead(wasm, ptr + 12);
-        this.#d = dDeref == 0 ? null : new OptionOpaque(dDeref, []);
+        this.#d = dDeref === 0 ? null : new OptionOpaque(dDeref, []);
 
         return this;
     }
@@ -57,6 +61,4 @@ export class OptionStruct {
     constructor(ptr) {
         this._fromFFI(ptr);
     }
-    
-
 }

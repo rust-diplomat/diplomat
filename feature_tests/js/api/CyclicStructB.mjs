@@ -4,6 +4,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class CyclicStructB {
+
     #field;
     get field()  {
         return this.#field;
@@ -33,21 +34,18 @@ export class CyclicStructB {
 
         return this;
     }
+
     static getA() {
         
         const diplomat_receive_buffer = wasm.diplomat_alloc(1, 1);
         const result = wasm.CyclicStructB_get_a(diplomat_receive_buffer);
     
         try {
-    
             return new CyclicStructA()._fromFFI(diplomat_receive_buffer);
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_free(diplomat_receive_buffer, 1, 1);
-        
         }
     }
-
-    
-
 }

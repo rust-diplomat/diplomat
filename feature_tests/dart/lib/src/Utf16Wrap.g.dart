@@ -22,10 +22,9 @@ final class Utf16Wrap implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Utf16Wrap_destroy));
 
   factory Utf16Wrap(String input) {
-    final temp = ffi2.Arena();
-    final inputView = input.utf16View;
-    final result = _Utf16Wrap_from_utf16(inputView.allocIn(temp), inputView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (inputData, inputLength) = input._utf16AllocIn(temp.arena);
+    final result = _Utf16Wrap_from_utf16(inputData, inputLength);
     return Utf16Wrap._fromFfi(result, []);
   }
 

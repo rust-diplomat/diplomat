@@ -3,7 +3,7 @@ import type { DataProvider } from "./DataProvider"
 import type { FixedDecimal } from "./FixedDecimal"
 import type { FixedDecimalFormatterOptions } from "./FixedDecimalFormatterOptions"
 import type { Locale } from "./Locale"
-import type { pointer, char } from "./diplomat-runtime.d.ts";
+import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 
 /** An  Fixed Decimal Format object, capable of formatting a [`FixedDecimal`] as a string.
@@ -15,11 +15,7 @@ export class FixedDecimalFormatter {
 
     get ffiValue(): pointer;
 
-
     static tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions): FixedDecimalFormatter | null;
 
     formatWrite(value: FixedDecimal): string;
-
-    
-
 }

@@ -213,6 +213,8 @@ pub enum DiplomatBackendAttrCfg {
     Any(Vec<DiplomatBackendAttrCfg>),
     All(Vec<DiplomatBackendAttrCfg>),
     Star,
+    // "auto", smartly figure out based on the attribute used
+    Auto,
     BackendName(String),
     NameValue(String, String),
 }
@@ -222,7 +224,9 @@ impl Parse for DiplomatBackendAttrCfg {
         let lookahead = input.lookahead1();
         if lookahead.peek(Ident) {
             let name: Ident = input.parse()?;
-            if name == "not" {
+            if name == "auto" {
+                Ok(DiplomatBackendAttrCfg::Auto)
+            } else if name == "not" {
                 let content;
                 let _paren = syn::parenthesized!(content in input);
                 Ok(DiplomatBackendAttrCfg::Not(Box::new(content.parse()?)))

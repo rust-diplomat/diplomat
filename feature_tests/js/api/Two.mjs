@@ -2,10 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const Two_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Two_destroy(ptr);
 });
+
 export class Two {
     // Internal ptr reference:
     #ptr = null;
@@ -13,11 +13,8 @@ export class Two {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     #aEdge = [];
-    
     #bEdge = [];
-    
     
     constructor(ptr, selfEdge, aEdge, bEdge) {
         
@@ -36,8 +33,4 @@ export class Two {
     get ffiValue() {
         return this.#ptr;
     }
-
-
-    
-
 }

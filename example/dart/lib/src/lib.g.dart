@@ -18,16 +18,15 @@ part 'Locale.g.dart';
 /// A [Rune] is a Unicode code point, such as `a`, or `💡`.
 /// 
 /// The recommended way to obtain a [Rune] is to create it from a 
-/// [String], which is conceptually a list of [Runes]. For example,
-/// `'a'.runes.first` is equal to the [Rune] `a`.
+/// [String], which is conceptually a sequence of [Rune]s. For
+/// example, `'a'.runes.first` is equal to the [Rune] `a`.
 /// 
-/// Dart does not have a character/rune literal, so integer literals
-/// need to be used. For example the Unicode code point U+1F4A1, `💡`,
-/// can be represented by `0x1F4A1`. Note that only values in the ranges
-/// `0x0..0xD7FF` and `0xE000..0x10FFFF` (both inclusive) are Unicode
-/// code points, and hence valid [Rune]s.
+/// Dart does not have a character/rune literal (https://github.com/dart-lang/language/issues/886),
+/// so integer literals need to be used. For example the Unicode code point 
+/// U+1F4A1, `💡`, can be represented by `0x1F4A1`.
 ///
-/// A [String] can be constructed from a [Rune] using [String.fromCharCode]. 
+/// A [String] can be constructed from a [Rune] using (the [confusingly named](
+/// https://github.com/dart-lang/sdk/issues/56304)) [String.fromCharCode]. 
 typedef Rune = int;
 
 // ignore: unused_element
@@ -82,330 +81,153 @@ class _FinalizedArena {
 
 extension on ByteBuffer {
   // ignore: unused_element
-  ffi.Pointer<ffi.Uint8> allocIn(ffi.Allocator alloc) {
-    return alloc<ffi.Uint8>(length)..asTypedList(length).setRange(0, length, asUint8List());
-  }
-
-  int get length => lengthInBytes;
+  (ffi.Pointer<ffi.Uint8>, int) _rawBytesAllocIn(ffi.Allocator alloc) => (alloc<ffi.Uint8>(lengthInBytes)..asTypedList(lengthInBytes).setRange(0, lengthInBytes, asUint8List()), lengthInBytes);
 }
 
 extension on String {
   // ignore: unused_element
-  _Utf8View get utf8View => _Utf8View(this);
+  (ffi.Pointer<ffi.Uint8>, int) _utf8AllocIn(ffi.Allocator alloc) {
+    final encoded = Utf8Encoder().convert(this);
+    return (alloc<ffi.Uint8>(encoded.length)..asTypedList(encoded.length).setRange(0, encoded.length, encoded), length);
+  }
+}
+
+extension on String {
   // ignore: unused_element
-  _Utf16View get utf16View => _Utf16View(this);
+  (ffi.Pointer<ffi.Uint16>, int) _utf16AllocIn(ffi.Allocator alloc) => (alloc<ffi.Uint16>(codeUnits.length)..asTypedList(codeUnits.length).setRange(0, codeUnits.length, codeUnits), length);
 }
 
 extension on core.List<String> {
   // ignore: unused_element
-  _ListUtf8View get utf8View => _ListUtf8View(this);
+  (ffi.Pointer<_SliceUtf8>, int) _utf8SliceAllocIn(ffi.Allocator alloc) {
+    final slice = alloc<_SliceUtf8>(length);
+    for (var i = 0; i < length; i++) {
+      final (data, length) = this[i]._utf8AllocIn(alloc);
+      slice[i]._data = data;
+      slice[i]._length = length;
+    }
+    return (slice, length);
+  }
+}
+
+extension on core.List<String> {
   // ignore: unused_element
-  _ListUtf16View get utf16View => _ListUtf16View(this);
+  (ffi.Pointer<_SliceUtf16>, int) _utf16SliceAllocIn(ffi.Allocator alloc) {
+    final slice = alloc<_SliceUtf16>(length);
+    for (var i = 0; i < length; i++) {
+      final (data, length) = this[i]._utf16AllocIn(alloc);
+      slice[i]._data = data;
+      slice[i]._length = length;
+    }
+    return (slice, length);
+  }
 }
 
 extension on core.List<bool> {
   // ignore: unused_element
-  _BoolListView get boolView => _BoolListView(this);
+  (ffi.Pointer<ffi.Bool>, int) _boolAllocIn(ffi.Allocator alloc) {
+    final data = alloc<ffi.Bool>(length);
+    for (var i = 0; i < length; i++) {
+      data[i] = this[i];
+    }
+    return (data, length);
+  }
 }
 
 extension on core.List<int> {
   // ignore: unused_element
-  _Int8ListView get int8View => _Int8ListView(this);
+  (ffi.Pointer<ffi.Int8>, int) _int8AllocIn(ffi.Allocator alloc) => (alloc<ffi.Int8>(length)..asTypedList(length).setRange(0, length, this), length);
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _Int16ListView get int16View => _Int16ListView(this);
+  (ffi.Pointer<ffi.Int16>, int) _int16AllocIn(ffi.Allocator alloc) => (alloc<ffi.Int16>(length)..asTypedList(length).setRange(0, length, this), length);
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _Int32ListView get int32View => _Int32ListView(this);
+  (ffi.Pointer<ffi.Int32>, int) _int32AllocIn(ffi.Allocator alloc) => (alloc<ffi.Int32>(length)..asTypedList(length).setRange(0, length, this), length);
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _Int64ListView get int64View => _Int64ListView(this);
+  (ffi.Pointer<ffi.Int64>, int) _int64AllocIn(ffi.Allocator alloc) => (alloc<ffi.Int64>(length)..asTypedList(length).setRange(0, length, this), length);
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _IsizeListView get isizeView => _IsizeListView(this);
+  (ffi.Pointer<ffi.IntPtr>, int) _isizeAllocIn(ffi.Allocator alloc) {
+    final data = alloc<ffi.IntPtr>(length);
+    for (var i = 0; i < length; i++) {
+      data[i] = this[i];
+    }
+    return (data, length);
+  }
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _Uint8ListView get uint8View => _Uint8ListView(this);
+  (ffi.Pointer<ffi.Uint8>, int) _uint8AllocIn(ffi.Allocator alloc) {
+    final data = alloc<ffi.Uint8>(length);
+    for (var i = 0; i < length; i++) {
+      data[i] = min(255, max(0, this[i]));
+    }
+    return (data, length);
+  }
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _Uint16ListView get uint16View => _Uint16ListView(this);
+  (ffi.Pointer<ffi.Uint16>, int) _uint16AllocIn(ffi.Allocator alloc) {
+    final data = alloc<ffi.Uint16>(length);
+    for (var i = 0; i < length; i++) {
+      data[i] = min(65535, max(0, this[i]));
+    }
+    return (data, length);
+  }
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _Uint32ListView get uint32View => _Uint32ListView(this);
+  (ffi.Pointer<ffi.Uint32>, int) _uint32AllocIn(ffi.Allocator alloc) {
+    final data = alloc<ffi.Uint32>(length);
+    for (var i = 0; i < length; i++) {
+      data[i] = min(4294967295, max(0, this[i]));
+    }
+    return (data, length);
+  }
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _Uint64ListView get uint64View => _Uint64ListView(this);
+  (ffi.Pointer<ffi.Uint64>, int) _uint64AllocIn(ffi.Allocator alloc) {
+    final data = alloc<ffi.Uint64>(length);
+    for (var i = 0; i < length; i++) {
+      data[i] = max(0, this[i]);
+    }
+    return (data, length);
+  }
+}
+
+extension on core.List<int> {
   // ignore: unused_element
-  _UsizeListView get usizeView => _UsizeListView(this);
+  (ffi.Pointer<ffi.Size>, int) _usizeAllocIn(ffi.Allocator alloc) {
+    final data = alloc<ffi.Size>(length);
+    for (var i = 0; i < length; i++) {
+      data[i] = max(0, this[i]);
+    }
+    return (data, length);
+  }
 }
 
 extension on core.List<double> {
   // ignore: unused_element
-  _Float32ListView get float32View => _Float32ListView(this);
+  (ffi.Pointer<ffi.Float>, int) _float32AllocIn(ffi.Allocator alloc) => (alloc<ffi.Float>(length)..asTypedList(length).setRange(0, length, this), length);
+}
+
+extension on core.List<double> {
   // ignore: unused_element
-  _Float64ListView get float64View => _Float64ListView(this);
-}
-
-// ignore: unused_element
-class _Utf8View {
-  final Uint8List _codeUnits;
-
-  // Copies
-  _Utf8View(String string) : _codeUnits = Utf8Encoder().convert(string);
-
-  ffi.Pointer<ffi.Uint8> allocIn(ffi.Allocator alloc) {
-    // Copies
-    return alloc<ffi.Uint8>(length)..asTypedList(length).setRange(0, length, _codeUnits);
-  }
-
-  int get length => _codeUnits.length;
-}
-
-// ignore: unused_element
-class _Utf16View {
-  final core.List<int> _codeUnits;
-
-  _Utf16View(String string) : _codeUnits = string.codeUnits;
-
-  ffi.Pointer<ffi.Uint16> allocIn(ffi.Allocator alloc) {
-    // Copies
-    return alloc<ffi.Uint16>(length)..asTypedList(length).setRange(0, length, _codeUnits);
-  }
-
-  int get length => _codeUnits.length;
-}
-
-// ignore: unused_element
-class _ListUtf8View {
-  final core.List<String> _strings;
-
-  // Copies
-  _ListUtf8View(this._strings);
-
-  ffi.Pointer<_SliceUtf8> allocIn(ffi.Allocator alloc) {
-    final slice = alloc<_SliceUtf8>(length);
-    for (var i = 0; i < length; i++) {
-      final codeUnits = Utf8Encoder().convert(_strings[i]);
-      final str = alloc<ffi.Uint8>(codeUnits.length)..asTypedList(codeUnits.length).setRange(0, codeUnits.length, codeUnits);
-      slice[i]._data = str;
-      slice[i]._length = codeUnits.length;
-    }
-    return slice;
-  }
-
-  int get length => _strings.length;
-}
-
-// ignore: unused_element
-class _ListUtf16View {
-  final core.List<String> _strings;
-
-  _ListUtf16View(this._strings);
-
-  ffi.Pointer<_SliceUtf16> allocIn(ffi.Allocator alloc) {
-    final slice = alloc<_SliceUtf16>(length);
-    for (var i = 0; i < length; i++) {
-      final codeUnits = _strings[i].codeUnits;
-      final str = alloc<ffi.Uint16>(codeUnits.length)..asTypedList(codeUnits.length).setRange(0, codeUnits.length, codeUnits);
-      slice[i]._data = str;
-      slice[i]._length = codeUnits.length;
-    }
-    return slice;
-  }
-
-  int get length => _strings.length;
-}
-
-// ignore: unused_element
-class _BoolListView {
-  final core.List<bool> _values;
-
-  _BoolListView(this._values);
-
-  // Copies
-  ffi.Pointer<ffi.Bool> allocIn(ffi.Allocator alloc) {
-    final pointer = alloc<ffi.Bool>(_values.length);
-    for (var i = 0; i < _values.length; i++) {
-      pointer[i] = _values[i];
-    }
-    return pointer;
-  }
-
-  int get length => _values.length;
-}
-
-class _Int8ListView {
-  final core.List<int> _values;
-
-  _Int8ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Int8> allocIn(ffi.Allocator alloc) {
-    return alloc<ffi.Int8>(length)..asTypedList(length).setRange(0, length, _values);
-  }
-
-  int get length => _values.length;
-}
-
-class _Int16ListView {
-  final core.List<int> _values;
-
-  _Int16ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Int16> allocIn(ffi.Allocator alloc) {
-    return alloc<ffi.Int16>(length)..asTypedList(length).setRange(0, length, _values);
-  }
-
-  int get length => _values.length;
-}
-
-class _Int32ListView {
-  final core.List<int> _values;
-
-  _Int32ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Int32> allocIn(ffi.Allocator alloc) {
-    return alloc<ffi.Int32>(length)..asTypedList(length).setRange(0, length, _values);
-  }
-
-  int get length => _values.length;
-}
-
-class _Int64ListView {
-  final core.List<int> _values;
-
-  _Int64ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Int64> allocIn(ffi.Allocator alloc) {
-    return alloc<ffi.Int64>(length)..asTypedList(length).setRange(0, length, _values);
-  }
-
-  int get length => _values.length;
-}
-
-// ignore: unused_element
-class _IsizeListView {
-  final core.List<int> _values;
-
-  _IsizeListView(this._values);
-
-  // Copies
-  ffi.Pointer<ffi.IntPtr> allocIn(ffi.Allocator alloc) {
-    final pointer = alloc<ffi.IntPtr>(_values.length);
-    for (var i = 0; i < _values.length; i++) {
-      pointer[i] = _values[i];
-    }
-    return pointer;
-  }
-
-  int get length => _values.length;
-}
-
-class _Uint8ListView {
-  final core.List<int> _values;
-
-  _Uint8ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Uint8> allocIn(ffi.Allocator alloc) {
-    final pointer = alloc<ffi.Uint8>(_values.length);
-    for (var i = 0; i < _values.length; i++) {
-      pointer[i] = min(255, max(0, _values[i]));
-    }
-    return pointer;
-  }
-
-  int get length => _values.length;
-}
-
-class _Uint16ListView {
-  final core.List<int> _values;
-
-  _Uint16ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Uint16> allocIn(ffi.Allocator alloc) {
-    final pointer = alloc<ffi.Uint16>(_values.length);
-    for (var i = 0; i < _values.length; i++) {
-      pointer[i] = min(65535, max(0, _values[i]));
-    }
-    return pointer;
-  }
-
-  int get length => _values.length;
-}
-
-class _Uint32ListView {
-  final core.List<int> _values;
-
-  _Uint32ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Uint32> allocIn(ffi.Allocator alloc) {
-    final pointer = alloc<ffi.Uint32>(_values.length);
-    for (var i = 0; i < _values.length; i++) {
-      pointer[i] = min(4294967295, max(0, _values[i]));
-    }
-    return pointer;
-  }
-
-  int get length => _values.length;
-}
-
-class _Uint64ListView {
-  final core.List<int> _values;
-
-  _Uint64ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Uint64> allocIn(ffi.Allocator alloc) {
-    final pointer = alloc<ffi.Uint64>(_values.length);
-    for (var i = 0; i < _values.length; i++) {
-      pointer[i] = max(0, _values[i]);
-    }
-    return pointer;
-  }
-
-  int get length => _values.length;
-}
-
-// ignore: unused_element
-class _UsizeListView {
-  final core.List<int> _values;
-
-  _UsizeListView(this._values);
-
-  // Copies
-  ffi.Pointer<ffi.Size> allocIn(ffi.Allocator alloc) {
-    final pointer = alloc<ffi.Size>(_values.length);
-    for (var i = 0; i < _values.length; i++) {
-      pointer[i] = max(0, _values[i]);
-    }
-    return pointer;
-  }
-
-  int get length => _values.length;
-}
-
-class _Float32ListView {
-  final core.List<double> _values;
-
-  _Float32ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Float> allocIn(ffi.Allocator alloc) {
-    return alloc<ffi.Float>(length)..asTypedList(length).setRange(0, length, _values);
-  }
-
-  int get length => _values.length;
-}
-
-class _Float64ListView {
-  final core.List<double> _values;
-
-  _Float64ListView(this._values);
-
-  // ignore: unused_element
-  ffi.Pointer<ffi.Double> allocIn(ffi.Allocator alloc) {
-    return alloc<ffi.Double>(length)..asTypedList(length).setRange(0, length, _values);
-  }
-
-  int get length => _values.length;
+  (ffi.Pointer<ffi.Double>, int) _float64AllocIn(ffi.Allocator alloc) => (alloc<ffi.Double>(length)..asTypedList(length).setRange(0, length, this), length);
 }
 
 final class _ResultOpaqueVoidUnion extends ffi.Union {
@@ -455,6 +277,8 @@ final class _SliceUtf16 extends ffi.Struct {
     final r = core.String.fromCharCodes(_data.asTypedList(_length));
     if (lifetimeEdges.isEmpty) {
       _diplomat_free(_data.cast(), _length * 2, 2);
+    } else {
+      // Lifetime edges will be cleaned up
     }
     return r;
   }
@@ -489,6 +313,8 @@ final class _SliceUtf8 extends ffi.Struct {
     final r = Utf8Decoder().convert(_data.asTypedList(_length));
     if (lifetimeEdges.isEmpty) {
       _diplomat_free(_data.cast(), _length, 1);
+    } else {
+      // Lifetime edges will be cleaned up
     }
     return r;
   }

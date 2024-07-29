@@ -404,7 +404,6 @@ dependencies = [
  "displaydoc",
  "either",
  "insta",
- "lazy_static",
  "proc-macro2",
  "quote",
  "serde",

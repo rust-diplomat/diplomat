@@ -1,5 +1,5 @@
 
-export { char } from './diplomat-runtime';
+export { codepoint } from './diplomat-runtime';
 
 
 export { ImportedStruct } from "./ImportedStruct"
@@ -27,6 +27,14 @@ export { OptionStruct } from "./OptionStruct"
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2"
+
+export { RenamedMyIterable } from "./RenamedMyIterable"
+
+export { RenamedMyIterator } from "./RenamedMyIterator"
+
+export { RenamedOpaqueIterable } from "./RenamedOpaqueIterable"
+
+export { RenamedOpaqueIterator } from "./RenamedOpaqueIterator"
 
 export { Unnamespaced } from "./Unnamespaced"
 

@@ -7,10 +7,10 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 *
 *See the [Rust documentation for `Locale`](https://docs.rs/icu/latest/icu/locid/struct.Locale.html) for more information.
 */
-
 const Locale_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_Locale_destroy_mv1(ptr);
 });
+
 export class Locale {
     // Internal ptr reference:
     #ptr = null;
@@ -18,7 +18,6 @@ export class Locale {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -32,22 +31,17 @@ export class Locale {
         return this.#ptr;
     }
 
-
     static new_(name) {
         
         const nameSlice = diplomatRuntime.DiplomatBuf.str8(wasm, name);
         const result = wasm.icu4x_Locale_new_mv1(nameSlice.ptr, nameSlice.size);
     
         try {
-    
             return new Locale(result, []);
-        } finally {
+        }
         
+        finally {
             nameSlice.free();
-        
         }
     }
-
-    
-
 }

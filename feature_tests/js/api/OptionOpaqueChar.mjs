@@ -2,10 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const OptionOpaqueChar_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.OptionOpaqueChar_destroy(ptr);
 });
+
 export class OptionOpaqueChar {
     // Internal ptr reference:
     #ptr = null;
@@ -13,7 +13,6 @@ export class OptionOpaqueChar {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -27,17 +26,11 @@ export class OptionOpaqueChar {
         return this.#ptr;
     }
 
-
     assertChar(ch) {
-        wasm.OptionOpaqueChar_assert_char(this.ffiValue, diplomatRuntime.extractCodePoint(ch, 'ch'));
+        wasm.OptionOpaqueChar_assert_char(this.ffiValue, ch);
     
-        try {
-    
-        } finally {
+        try {}
         
-        }
+        finally {}
     }
-
-    
-
 }

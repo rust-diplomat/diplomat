@@ -22,56 +22,51 @@ final class Float64Vec implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Float64Vec_destroy));
 
   factory Float64Vec.bool(core.List<bool> v) {
-    final temp = ffi2.Arena();
-    final vView = v.boolView;
-    final result = _Float64Vec_new_bool(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._boolAllocIn(temp.arena);
+    final result = _Float64Vec_new_bool(vData, vLength);
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.i16(core.List<int> v) {
-    final temp = ffi2.Arena();
-    final vView = v.int16View;
-    final result = _Float64Vec_new_i16(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._int16AllocIn(temp.arena);
+    final result = _Float64Vec_new_i16(vData, vLength);
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.u16(core.List<int> v) {
-    final temp = ffi2.Arena();
-    final vView = v.uint16View;
-    final result = _Float64Vec_new_u16(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._uint16AllocIn(temp.arena);
+    final result = _Float64Vec_new_u16(vData, vLength);
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.isize(core.List<int> v) {
-    final temp = ffi2.Arena();
-    final vView = v.isizeView;
-    final result = _Float64Vec_new_isize(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._isizeAllocIn(temp.arena);
+    final result = _Float64Vec_new_isize(vData, vLength);
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.usize(core.List<int> v) {
-    final temp = ffi2.Arena();
-    final vView = v.usizeView;
-    final result = _Float64Vec_new_usize(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._usizeAllocIn(temp.arena);
+    final result = _Float64Vec_new_usize(vData, vLength);
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec.f64BeBytes(ByteBuffer v) {
-    final temp = ffi2.Arena();
-    final vView = v;
-    final result = _Float64Vec_new_f64_be_bytes(vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._rawBytesAllocIn(temp.arena);
+    final result = _Float64Vec_new_f64_be_bytes(vData, vLength);
     return Float64Vec._fromFfi(result, []);
   }
 
   factory Float64Vec(core.List<double> v) {
-    final vView = v.float64View;
-    final result = _Float64Vec_new_from_owned(vView.allocIn(_RustAlloc()), vView.length);
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._float64AllocIn(_RustAlloc());
+    final result = _Float64Vec_new_from_owned(vData, vLength);
     return Float64Vec._fromFfi(result, []);
   }
 
@@ -83,17 +78,15 @@ final class Float64Vec implements ffi.Finalizable {
   }
 
   void fillSlice(core.List<double> v) {
-    final temp = ffi2.Arena();
-    final vView = v.float64View;
-    _Float64Vec_fill_slice(_ffi, vView.allocIn(temp), vView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (vData, vLength) = v._float64AllocIn(temp.arena);
+    _Float64Vec_fill_slice(_ffi, vData, vLength);
   }
 
   void setValue(core.List<double> newSlice) {
-    final temp = ffi2.Arena();
-    final newSliceView = newSlice.float64View;
-    _Float64Vec_set_value(_ffi, newSliceView.allocIn(temp), newSliceView.length);
-    temp.releaseAll();
+    final temp = _FinalizedArena();
+    final (newSliceData, newSliceLength) = newSlice._float64AllocIn(temp.arena);
+    _Float64Vec_set_value(_ffi, newSliceData, newSliceLength);
   }
 
   @override

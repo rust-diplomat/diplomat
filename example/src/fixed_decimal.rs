@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "icu4x_{0}_mv1"]
-#[diplomat::attr(*, namespace = "icu4x")]
+#[diplomat::attr(auto, namespace = "icu4x")]
 pub mod ffi {
     use diplomat_runtime::DiplomatWrite;
     use writeable::Writeable;
@@ -12,7 +12,7 @@ pub mod ffi {
     impl FixedDecimal {
         /// Construct an [`FixedDecimal`] from an integer.
         #[diplomat::demo(input(v(label = "ICU4XFixedDecimal Value")))]
-        #[diplomat::attr(*, constructor)]
+        #[diplomat::attr(auto, constructor)]
         pub fn new(v: i32) -> Box<FixedDecimal> {
             Box::new(FixedDecimal(fixed_decimal::FixedDecimal::from(v)))
         }

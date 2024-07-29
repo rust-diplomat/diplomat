@@ -30,30 +30,30 @@ final class BorrowedFieldsWithBounds {
   // ignore: unused_element
   _BorrowedFieldsWithBoundsFfi _toFfi(ffi.Allocator temp, {core.List<core.List<Object>> aAppendArray = const [], core.List<core.List<Object>> bAppendArray = const [], core.List<core.List<Object>> cAppendArray = const []}) {
     final struct = ffi.Struct.create<_BorrowedFieldsWithBoundsFfi>();
-    final fieldAView = fieldA.utf16View;
-    struct.fieldA._length = fieldAView.length;
-    struct.fieldA._data = fieldAView.allocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
-    final fieldBView = fieldB.utf8View;
-    struct.fieldB._length = fieldBView.length;
-    struct.fieldB._data = fieldBView.allocIn(bAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(bAppendArray).arena : temp);
-    final fieldCView = fieldC.utf8View;
-    struct.fieldC._length = fieldCView.length;
-    struct.fieldC._data = fieldCView.allocIn(cAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(cAppendArray).arena : temp);
+    final (fieldAData, fieldALength) = fieldA._utf16AllocIn(aAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(aAppendArray).arena : temp);
+    struct.fieldA._length = fieldALength;
+    struct.fieldA._data = fieldAData;
+    final (fieldBData, fieldBLength) = fieldB._utf8AllocIn(bAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(bAppendArray).arena : temp);
+    struct.fieldB._length = fieldBLength;
+    struct.fieldB._data = fieldBData;
+    final (fieldCData, fieldCLength) = fieldC._utf8AllocIn(cAppendArray.isNotEmpty ? _FinalizedArena.withLifetime(cAppendArray).arena : temp);
+    struct.fieldC._length = fieldCLength;
+    struct.fieldC._data = fieldCData;
     return struct;
   }
 
   static BorrowedFieldsWithBounds fromFooAndStrings(Foo foo, String dstr16X, String utf8StrZ) {
-    final dstr16XView = dstr16X.utf16View;
     final dstr16XArena = _FinalizedArena();
-    final utf8StrZView = utf8StrZ.utf8View;
+    final (dstr16XData, dstr16XLength) = dstr16X._utf16AllocIn(dstr16XArena.arena);
     final utf8StrZArena = _FinalizedArena();
+    final (utf8StrZData, utf8StrZLength) = utf8StrZ._utf8AllocIn(utf8StrZArena.arena);
     // This lifetime edge depends on lifetimes: 'x, 'y, 'z
     core.List<Object> xEdges = [foo, dstr16XArena, utf8StrZArena];
     // This lifetime edge depends on lifetimes: 'y, 'z
     core.List<Object> yEdges = [foo, utf8StrZArena];
     // This lifetime edge depends on lifetimes: 'z
     core.List<Object> zEdges = [utf8StrZArena];
-    final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16XView.allocIn(dstr16XArena.arena), dstr16XView.length, utf8StrZView.allocIn(utf8StrZArena.arena), utf8StrZView.length);
+    final result = _BorrowedFieldsWithBounds_from_foo_and_strings(foo._ffi, dstr16XData, dstr16XLength, utf8StrZData, utf8StrZLength);
     return BorrowedFieldsWithBounds._fromFfi(result, xEdges, yEdges, zEdges);
   }
 

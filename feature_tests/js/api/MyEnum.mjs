@@ -14,6 +14,7 @@ export class MyEnum {
         ["E", 2],
         ["F", 3]
     ]);
+
     constructor(value) {
         if (value instanceof MyEnum) {
             this.#value = value.value;
@@ -37,40 +38,29 @@ export class MyEnum {
     }
 
     static A = new MyEnum("A");
-
     static B = new MyEnum("B");
-
     static C = new MyEnum("C");
-
     static D = new MyEnum("D");
-
     static E = new MyEnum("E");
-
     static F = new MyEnum("F");
-
 
     intoValue() {
         const result = wasm.MyEnum_into_value(this.ffiValue);
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static getA() {
         const result = wasm.MyEnum_get_a();
     
         try {
-    
             return (() => {for (let i of MyEnum.values) { if(i[1] === result) return MyEnum[i[0]]; } return null;})();
-        } finally {
-        
         }
+        
+        finally {}
     }
-
-    
-
 }

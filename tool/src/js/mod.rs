@@ -32,13 +32,22 @@ impl FileType {
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
+    a.namespacing = false;
     a.memory_sharing = false;
     a.non_exhaustive_structs = true;
     a.method_overloading = false;
     a.utf8_strings = false;
     a.utf16_strings = true;
-    // TODO: Actually fix.
-    a.fallible_constructors = true;
+
+    a.constructors = false;
+    a.named_constructors = false;
+    a.fallible_constructors = false;
+    a.accessors = true;
+    a.comparators = false;
+    a.stringifiers = false; // TODO
+    a.iterators = true;
+    a.iterables = true;
+    a.indexing = false;
 
     a
 }

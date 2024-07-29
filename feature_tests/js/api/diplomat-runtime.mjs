@@ -13,7 +13,7 @@ export function withDiplomatWrite(wasm, callback) {
 	try {
 	callback(write);
 	const outStringPtr = wasm.diplomat_buffer_write_get_bytes(write);
-	if (outStringPtr == null) {
+	if (outStringPtr === null) {
 		throw Error("Out of memory");
 	}
 	const outStringLen = wasm.diplomat_buffer_write_len(write);
@@ -21,14 +21,6 @@ export function withDiplomatWrite(wasm, callback) {
 	} finally {
 	wasm.diplomat_buffer_write_destroy(write);
 	}
-}
-
-export function extractCodePoint(str, param) {
-	const cp = str.codePointAt?.(0);
-	if ((!cp && cp !== 0) || [...str]?.length != 1) {
-	throw new TypeError(`Expected single-character string for char parameter ${param}, found ${str}`);
-	}
-	return cp;
 }
 
 // Get the pointer returned by an FFI function
@@ -80,7 +72,7 @@ export class DiplomatBuf {
 	const ptr = wasm.diplomat_alloc(utf8Length, 1);
 
 	const result = (new TextEncoder()).encodeInto(string, new Uint8Array(wasm.memory.buffer, ptr, utf8Length));
-	console.assert(string.length == result.read && utf8Length == result.written, "UTF-8 write error");
+	console.assert(string.length === result.read && utf8Length === result.written, "UTF-8 write error");
 
 	return new DiplomatBuf(ptr, utf8Length, () => wasm.diplomat_free(ptr, utf8Length, 1));
 	}
@@ -98,9 +90,9 @@ export class DiplomatBuf {
 	}
 
 	static slice = (wasm, list, rustType) => {
-	const elementSize = rustType == "u8" || rustType == "i8" || rustType == "boolean" ? 1 :
-		rustType == "u16" || rustType == "i16" ? 2 :
-		rustType == "u64" || rustType == "i64" || rustType == "f64" ? 8 :
+	const elementSize = rustType === "u8" || rustType === "i8" || rustType === "boolean" ? 1 :
+		rustType === "u16" || rustType === "i16" ? 2 :
+		rustType === "u64" || rustType === "i64" || rustType === "f64" ? 8 :
 			4;
 
 	const byteLength = list.length * elementSize;
@@ -108,15 +100,15 @@ export class DiplomatBuf {
 
 	// Create an array view of the buffer. This gives us the `set` method which correctly handles untyped values
 	const destination =
-		rustType == "u8" || rustType == "boolean" ? new Uint8Array(wasm.memory.buffer, ptr, byteLength) :
-		rustType == "i8" ? new Int8Array(wasm.memory.buffer, ptr, byteLength) :
-			rustType == "u16" ? new Uint16Array(wasm.memory.buffer, ptr, byteLength) :
-			rustType == "i16" ? new Int16Array(wasm.memory.buffer, ptr, byteLength) :
-				rustType == "i32" ? new Int32Array(wasm.memory.buffer, ptr, byteLength) :
-				rustType == "u64" ? new BigUint64Array(wasm.memory.buffer, ptr, byteLength) :
-					rustType == "i64" ? new BigInt64Array(wasm.memory.buffer, ptr, byteLength) :
-					rustType == "f32" ? new Float32Array(wasm.memory.buffer, ptr, byteLength) :
-						rustType == "f64" ? new Float64Array(wasm.memory.buffer, ptr, byteLength) :
+		rustType === "u8" || rustType === "boolean" ? new Uint8Array(wasm.memory.buffer, ptr, byteLength) :
+		rustType === "i8" ? new Int8Array(wasm.memory.buffer, ptr, byteLength) :
+			rustType === "u16" ? new Uint16Array(wasm.memory.buffer, ptr, byteLength) :
+			rustType === "i16" ? new Int16Array(wasm.memory.buffer, ptr, byteLength) :
+				rustType === "i32" ? new Int32Array(wasm.memory.buffer, ptr, byteLength) :
+				rustType === "u64" ? new BigUint64Array(wasm.memory.buffer, ptr, byteLength) :
+					rustType === "i64" ? new BigInt64Array(wasm.memory.buffer, ptr, byteLength) :
+					rustType === "f32" ? new Float32Array(wasm.memory.buffer, ptr, byteLength) :
+						rustType === "f64" ? new Float64Array(wasm.memory.buffer, ptr, byteLength) :
 						new Uint32Array(wasm.memory.buffer, ptr, byteLength);
 	destination.set(list);
 

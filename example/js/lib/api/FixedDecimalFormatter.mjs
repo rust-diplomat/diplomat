@@ -11,10 +11,10 @@ import * as diplomatRuntime from "./diplomat-runtime.mjs";
 *
 *See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
 */
-
 const FixedDecimalFormatter_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.icu4x_FixedDecimalFormatter_destroy_mv1(ptr);
 });
+
 export class FixedDecimalFormatter {
     // Internal ptr reference:
     #ptr = null;
@@ -22,7 +22,6 @@ export class FixedDecimalFormatter {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -36,7 +35,6 @@ export class FixedDecimalFormatter {
         return this.#ptr;
     }
 
-
     static tryNew(locale, provider, options) {
         
         let slice_cleanup_callbacks = [];
@@ -45,19 +43,18 @@ export class FixedDecimalFormatter {
         const result = wasm.icu4x_FixedDecimalFormatter_try_new_mv1(diplomat_receive_buffer, locale.ffiValue, provider.ffiValue, ...options._intoFFI(slice_cleanup_callbacks, {}));
     
         try {
-    
             if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
                 return null;
             }
             return new FixedDecimalFormatter(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
-        } finally {
+        }
         
+        finally {
             for (let cleanup of slice_cleanup_callbacks) {
                 cleanup();
             }
         
             wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
-        
         }
     }
 
@@ -67,15 +64,11 @@ export class FixedDecimalFormatter {
         wasm.icu4x_FixedDecimalFormatter_format_write_mv1(this.ffiValue, value.ffiValue, write);
     
         try {
-    
             return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
-        } finally {
+        }
         
+        finally {
             wasm.diplomat_buffer_write_destroy(write);
-        
         }
     }
-
-    
-
 }

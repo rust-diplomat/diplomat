@@ -24,11 +24,11 @@ final class Foo implements ffi.Finalizable {
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Foo_destroy));
 
   factory Foo(String x) {
-    final xView = x.utf8View;
     final xArena = _FinalizedArena();
+    final (xData, xLength) = x._utf8AllocIn(xArena.arena);
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [xArena];
-    final result = _Foo_new(xView.allocIn(xArena.arena), xView.length);
+    final result = _Foo_new(xData, xLength);
     return Foo._fromFfi(result, [], aEdges);
   }
 
@@ -42,12 +42,11 @@ final class Foo implements ffi.Finalizable {
   }
 
   factory Foo.static_(String x) {
-    final temp = ffi2.Arena();
-    final xView = x.utf8View;
+    final temp = _FinalizedArena();
+    final (xData, xLength) = x._utf8AllocIn(temp.arena);
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [];
-    final result = _Foo_new_static(xView.allocIn(temp), xView.length);
-    temp.releaseAll();
+    final result = _Foo_new_static(xData, xLength);
     return Foo._fromFfi(result, [], aEdges);
   }
 
@@ -59,23 +58,21 @@ final class Foo implements ffi.Finalizable {
   }
 
   factory Foo.extractFromFields(BorrowedFields fields) {
-    final temp = ffi2.Arena();
+    final temp = _FinalizedArena();
     // This lifetime edge depends on lifetimes: 'a
     core.List<Object> aEdges = [...fields._fieldsForLifetimeA];
-    final result = _Foo_extract_from_fields(fields._toFfi(temp, aAppendArray: [aEdges]));
-    temp.releaseAll();
+    final result = _Foo_extract_from_fields(fields._toFfi(temp.arena, aAppendArray: [aEdges]));
     return Foo._fromFfi(result, [], aEdges);
   }
 
   /// Test that the extraction logic correctly pins the right fields
   factory Foo.extractFromBounds(BorrowedFieldsWithBounds bounds, String anotherString) {
-    final temp = ffi2.Arena();
-    final anotherStringView = anotherString.utf8View;
+    final temp = _FinalizedArena();
     final anotherStringArena = _FinalizedArena();
+    final (anotherStringData, anotherStringLength) = anotherString._utf8AllocIn(anotherStringArena.arena);
     // This lifetime edge depends on lifetimes: 'a, 'y, 'z
     core.List<Object> aEdges = [...bounds._fieldsForLifetimeB, ...bounds._fieldsForLifetimeC, anotherStringArena];
-    final result = _Foo_extract_from_bounds(bounds._toFfi(temp, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherStringView.allocIn(anotherStringArena.arena), anotherStringView.length);
-    temp.releaseAll();
+    final result = _Foo_extract_from_bounds(bounds._toFfi(temp.arena, bAppendArray: [aEdges], cAppendArray: [aEdges]), anotherStringData, anotherStringLength);
     return Foo._fromFfi(result, [], aEdges);
   }
 }
