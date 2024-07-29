@@ -23,13 +23,13 @@ export function formatWrite() {
                         ]
                     ),
                     (function (...args) {
-                    	let out = new FixedDecimalFormatterOptions();
-                    	
-                    	out.groupingStrategy = args[0];
-                    	
-                    	out.someOtherConfig = args[1];
-                    	
-                    	return out;
+                        let out = new FixedDecimalFormatterOptions();
+                        
+                        out.groupingStrategy = args[0];
+                        
+                        out.someOtherConfig = args[1];
+                        
+                        return out;
                     }).apply(
                         null,
                         [
