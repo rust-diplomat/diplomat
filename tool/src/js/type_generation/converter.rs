@@ -204,30 +204,37 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             Type::Slice(slice) => {
                 // Slices are always returned to us by way of pointers, so we assume that we can just access DiplomatReceiveBuf's helper functions:
                 match slice {
-					hir::Slice::Primitive(_, primitive_type) => {
-						format!(r#"{variable_name}.getSlice("{}")"#, self.formatter.fmt_primitive_list_view(primitive_type)).into()
-					},
-					hir::Slice::Str(_, encoding) => {
-						format!(r#"{variable_name}.getString("string{}")"#, 
-						match encoding {
-							hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
-							hir::StringEncoding::UnvalidatedUtf16 => 16,
-							_ => unreachable!("Unknown string_encoding {encoding:?} found")
-						}).into()
-					},
-					hir::Slice::Strs(encoding) => {
-						// Old JS backend didn't support this.
-						// We basically iterate through and read each string into the array. 
-						// TODO: Need a test for this.
-						format!(r#"{variable_name}.getStrings("string{}")"#,
-						match encoding {
-							hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
-							hir::StringEncoding::UnvalidatedUtf16 => 16,
-							_ => unreachable!("Unknown string_encoding {encoding:?} found")
-						}).into()
-					},
-					_ => unreachable!("Unknown slice {slice:?} found"),
-				}
+                    hir::Slice::Primitive(_, primitive_type) => format!(
+                        r#"{variable_name}.getSlice("{}")"#,
+                        self.formatter.fmt_primitive_list_view(primitive_type)
+                    )
+                    .into(),
+                    hir::Slice::Str(_, encoding) => format!(
+                        r#"{variable_name}.getString("string{}")"#,
+                        match encoding {
+                            hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
+                            hir::StringEncoding::UnvalidatedUtf16 => 16,
+                            _ => unreachable!("Unknown string_encoding {encoding:?} found"),
+                        }
+                    )
+                    .into(),
+                    hir::Slice::Strs(encoding) => {
+                        // Old JS backend didn't support this.
+                        // We basically iterate through and read each string into the array.
+                        // TODO: Need a test for this.
+                        format!(
+                            r#"{variable_name}.getStrings("string{}")"#,
+                            match encoding {
+                                hir::StringEncoding::Utf8
+                                | hir::StringEncoding::UnvalidatedUtf8 => 8,
+                                hir::StringEncoding::UnvalidatedUtf16 => 16,
+                                _ => unreachable!("Unknown string_encoding {encoding:?} found"),
+                            }
+                        )
+                        .into()
+                    }
+                    _ => unreachable!("Unknown slice {slice:?} found"),
+                }
             }
             _ => unreachable!("AST/HIR variant {:?} unknown.", ty),
         }
