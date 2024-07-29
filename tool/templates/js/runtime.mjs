@@ -300,11 +300,7 @@ export class DiplomatReceiveBuf {
 	free() {
 		this.#wasm.diplomat_free(this.#buffer, this.#size, this.#align);
 	}
-
-	garbageCollect() {
-		DiplomatBufferFinalizer.register(this, this.free);
-	}
-
+	
 	get buffer() {
 		return this.#buffer;
 	}
