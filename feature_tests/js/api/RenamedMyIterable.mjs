@@ -3,10 +3,10 @@ import { RenamedMyIterator } from "./RenamedMyIterator.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RenamedMyIterable_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_MyIterable_destroy(ptr);
 });
+
 export class RenamedMyIterable {
     // Internal ptr reference:
     #ptr = null;
@@ -14,7 +14,6 @@ export class RenamedMyIterable {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -28,19 +27,17 @@ export class RenamedMyIterable {
         return this.#ptr;
     }
 
-
     static new_(x) {
         
         const xSlice = diplomatRuntime.DiplomatBuf.slice(wasm, x, "u8");
         const result = wasm.namespace_MyIterable_new(xSlice.ptr, xSlice.size);
     
         try {
-    
             return new RenamedMyIterable(result, []);
-        } finally {
+        }
         
+        finally {
             xSlice.free();
-        
         }
     }
 
@@ -51,13 +48,9 @@ export class RenamedMyIterable {
         const result = wasm.namespace_MyIterable_iter(this.ffiValue);
     
         try {
-    
             return new RenamedMyIterator(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
-
-    
-
 }

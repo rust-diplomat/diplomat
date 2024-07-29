@@ -6,7 +6,6 @@ export class Float64Vec {
 
     get ffiValue(): pointer;
 
-
     static newBool(v: Array<boolean>): Float64Vec;
 
     static newI16(v: Array<number>): Float64Vec;
@@ -32,7 +31,4 @@ export class Float64Vec {
     borrow(): Array<number>;
 
     get(i: number): number | null;
-
-    
-
 }

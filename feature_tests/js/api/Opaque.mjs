@@ -4,10 +4,10 @@ import { MyStruct } from "./MyStruct.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const Opaque_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Opaque_destroy(ptr);
 });
+
 export class Opaque {
     // Internal ptr reference:
     #ptr = null;
@@ -15,7 +15,6 @@ export class Opaque {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -29,16 +28,14 @@ export class Opaque {
         return this.#ptr;
     }
 
-
     static new_() {
         const result = wasm.Opaque_new();
     
         try {
-    
             return new Opaque(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static tryFromUtf8(input) {
@@ -47,12 +44,11 @@ export class Opaque {
         const result = wasm.Opaque_try_from_utf8(inputSlice.ptr, inputSlice.size);
     
         try {
-    
             return result === 0 ? null : new Opaque(result, []);
-        } finally {
+        }
         
+        finally {
             inputSlice.free();
-        
         }
     }
 
@@ -62,27 +58,25 @@ export class Opaque {
         const result = wasm.Opaque_from_str(inputSlice.ptr, inputSlice.size);
     
         try {
-    
             return new Opaque(result, []);
-        } finally {
+        }
         
+        finally {
             inputSlice.free();
-        
         }
     }
 
     getDebugStr() {
         
-        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.Opaque_get_debug_str(this.ffiValue, write.buffer);
+        const write = wasm.diplomat_buffer_write_create(0);
+        wasm.Opaque_get_debug_str(this.ffiValue, write);
     
         try {
-    
-            return write.readString8();
-        } finally {
+            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+        }
         
-            write.free();
-        
+        finally {
+            wasm.diplomat_buffer_write_destroy(write);
         }
     }
 
@@ -91,14 +85,12 @@ export class Opaque {
         let slice_cleanup_callbacks = [];
         wasm.Opaque_assert_struct(this.ffiValue, ...s._intoFFI(slice_cleanup_callbacks, {}));
     
-        try {
-    
-        } finally {
+        try {}
         
+        finally {
             for (let cleanup of slice_cleanup_callbacks) {
                 cleanup();
             }
-        
         }
     }
 
@@ -106,25 +98,23 @@ export class Opaque {
         const result = wasm.Opaque_returns_usize();
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static returnsImported() {
         
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
-        const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
+        const result = wasm.Opaque_returns_imported(diplomat_receive_buffer);
     
         try {
-    
-            return new ImportedStruct()._fromFFI(diplomatReceive.buffer);
-        } finally {
+            return new ImportedStruct()._fromFFI(diplomat_receive_buffer);
+        }
         
-            diplomatReceive.free();
-        
+        finally {
+            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
         }
     }
 
@@ -132,13 +122,9 @@ export class Opaque {
         const result = wasm.Opaque_cmp();
     
         try {
-    
             return result;
-        } finally {
-        
         }
+        
+        finally {}
     }
-
-    
-
 }

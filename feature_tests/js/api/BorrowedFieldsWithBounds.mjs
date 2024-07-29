@@ -4,6 +4,7 @@ import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
 export class BorrowedFieldsWithBounds {
+
     #fieldA;
     get fieldA()  {
         return this.#fieldA;
@@ -11,6 +12,7 @@ export class BorrowedFieldsWithBounds {
     set fieldA(value) {
         this.#fieldA = value;
     }
+
     #fieldB;
     get fieldB()  {
         return this.#fieldB;
@@ -18,6 +20,7 @@ export class BorrowedFieldsWithBounds {
     set fieldB(value) {
         this.#fieldB = value;
     }
+
     #fieldC;
     get fieldC()  {
         return this.#fieldC;
@@ -84,13 +87,14 @@ export class BorrowedFieldsWithBounds {
     get _fieldsForLifetimeC() { 
         return [fieldC];
     };
+
     static fromFooAndStrings(foo, dstr16X, utf8StrZ) {
         
         const dstr16XSlice = diplomatRuntime.DiplomatBuf.str16(wasm, dstr16X);
         
         const utf8StrZSlice = diplomatRuntime.DiplomatBuf.str8(wasm, utf8StrZ);
         
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 24, 4, false);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(24, 4);
         
         // This lifetime edge depends on lifetimes 'x, 'y, 'z
         let xEdges = [foo, dstr16XSlice, utf8StrZSlice];
@@ -100,22 +104,18 @@ export class BorrowedFieldsWithBounds {
         
         // This lifetime edge depends on lifetimes 'z
         let zEdges = [utf8StrZSlice];
-        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomatReceive.buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
+        const result = wasm.BorrowedFieldsWithBounds_from_foo_and_strings(diplomat_receive_buffer, foo.ffiValue, dstr16XSlice.ptr, dstr16XSlice.size, utf8StrZSlice.ptr, utf8StrZSlice.size);
     
         try {
-    
-            return new BorrowedFieldsWithBounds()._fromFFI(diplomatReceive.buffer, xEdges, yEdges, zEdges);
-        } finally {
+            return new BorrowedFieldsWithBounds()._fromFFI(diplomat_receive_buffer, xEdges, yEdges, zEdges);
+        }
         
+        finally {
             dstr16XSlice.garbageCollect();
         
             utf8StrZSlice.garbageCollect();
         
-            diplomatReceive.free();
-        
+            wasm.diplomat_free(diplomat_receive_buffer, 24, 4);
         }
     }
-
-    
-
 }

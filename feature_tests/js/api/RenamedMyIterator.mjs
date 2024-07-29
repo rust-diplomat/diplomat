@@ -2,10 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RenamedMyIterator_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_MyIterator_destroy(ptr);
 });
+
 export class RenamedMyIterator {
     // Internal ptr reference:
     #ptr = null;
@@ -13,9 +13,7 @@ export class RenamedMyIterator {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     #aEdge = [];
-    
     
     constructor(ptr, selfEdge, aEdge) {
         
@@ -32,22 +30,20 @@ export class RenamedMyIterator {
         return this.#ptr;
     }
 
-
     #iteratorNext() {
         
-        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 2, 1, true);
-        const result = wasm.namespace_MyIterator_next(diplomatReceive.buffer, this.ffiValue);
+        const diplomat_receive_buffer = wasm.diplomat_alloc(2, 1);
+        const result = wasm.namespace_MyIterator_next(diplomat_receive_buffer, this.ffiValue);
     
         try {
-    
-            if (!diplomatReceive.resultFlag) {
+            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 1)) {
                 return null;
             }
-            return (new Uint8Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
-        } finally {
+            return (new Uint8Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+        }
         
-            diplomatReceive.free();
-        
+        finally {
+            wasm.diplomat_free(diplomat_receive_buffer, 2, 1);
         }
     }
 
@@ -60,5 +56,4 @@ export class RenamedMyIterator {
     		done: out === null,
     	};
     }
-
 }

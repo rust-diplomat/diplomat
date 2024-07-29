@@ -3,10 +3,10 @@ import { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RenamedOpaqueIterator_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_OpaqueIterator_destroy(ptr);
 });
+
 export class RenamedOpaqueIterator {
     // Internal ptr reference:
     #ptr = null;
@@ -14,9 +14,7 @@ export class RenamedOpaqueIterator {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     #aEdge = [];
-    
     
     constructor(ptr, selfEdge, aEdge) {
         
@@ -33,16 +31,14 @@ export class RenamedOpaqueIterator {
         return this.#ptr;
     }
 
-
     #iteratorNext() {
         const result = wasm.namespace_OpaqueIterator_next(this.ffiValue);
     
         try {
-    
             return result === 0 ? null : new AttrOpaque1Renamed(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     
@@ -54,5 +50,4 @@ export class RenamedOpaqueIterator {
     		done: out === null,
     	};
     }
-
 }

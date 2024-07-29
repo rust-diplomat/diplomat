@@ -15,11 +15,7 @@ export class FixedDecimalFormatter {
 
     get ffiValue(): pointer;
 
-
     static tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions): FixedDecimalFormatter | null;
 
     formatWrite(value: FixedDecimal): string;
-
-    
-
 }

@@ -2,10 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RenamedAttrOpaque2_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_AttrOpaque2_destroy(ptr);
 });
+
 export class RenamedAttrOpaque2 {
     // Internal ptr reference:
     #ptr = null;
@@ -13,7 +13,6 @@ export class RenamedAttrOpaque2 {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -26,8 +25,4 @@ export class RenamedAttrOpaque2 {
     get ffiValue() {
         return this.#ptr;
     }
-
-
-    
-
 }

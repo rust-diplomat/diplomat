@@ -2,10 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const MyString_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.MyString_destroy(ptr);
 });
+
 export class MyString {
     // Internal ptr reference:
     #ptr = null;
@@ -13,7 +13,6 @@ export class MyString {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -27,19 +26,17 @@ export class MyString {
         return this.#ptr;
     }
 
-
     static new_(v) {
         
         const vSlice = diplomatRuntime.DiplomatBuf.str8(wasm, v);
         const result = wasm.MyString_new(vSlice.ptr, vSlice.size);
     
         try {
-    
             return new MyString(result, []);
-        } finally {
+        }
         
+        finally {
             vSlice.free();
-        
         }
     }
 
@@ -49,12 +46,11 @@ export class MyString {
         const result = wasm.MyString_new_unsafe(vSlice.ptr, vSlice.size);
     
         try {
-    
             return new MyString(result, []);
-        } finally {
+        }
         
+        finally {
             vSlice.free();
-        
         }
     }
 
@@ -64,11 +60,10 @@ export class MyString {
         const result = wasm.MyString_new_owned(vSlice.ptr, vSlice.size);
     
         try {
-    
             return new MyString(result, []);
-        } finally {
-        
         }
+        
+        finally {}
     }
 
     static newFromFirst(v) {
@@ -77,12 +72,11 @@ export class MyString {
         const result = wasm.MyString_new_from_first(vSlice.ptr, vSlice.size);
     
         try {
-    
             return new MyString(result, []);
-        } finally {
+        }
         
+        finally {
             vSlice.free();
-        
         }
     }
 
@@ -91,27 +85,24 @@ export class MyString {
         const newStrSlice = diplomatRuntime.DiplomatBuf.str8(wasm, newStr);
         wasm.MyString_set_str(this.ffiValue, newStrSlice.ptr, newStrSlice.size);
     
-        try {
-    
-        } finally {
+        try {}
         
+        finally {
             newStrSlice.free();
-        
         }
     }
 
     get str() {
         
-        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.MyString_get_str(this.ffiValue, write.buffer);
+        const write = wasm.diplomat_buffer_write_create(0);
+        wasm.MyString_get_str(this.ffiValue, write);
     
         try {
-    
-            return write.readString8();
-        } finally {
+            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+        }
         
-            write.free();
-        
+        finally {
+            wasm.diplomat_buffer_write_destroy(write);
         }
     }
 
@@ -119,21 +110,17 @@ export class MyString {
         
         const fooSlice = diplomatRuntime.DiplomatBuf.str8(wasm, foo);
         
-        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
-        wasm.MyString_string_transform(fooSlice.ptr, fooSlice.size, write.buffer);
+        const write = wasm.diplomat_buffer_write_create(0);
+        wasm.MyString_string_transform(fooSlice.ptr, fooSlice.size, write);
     
         try {
-    
-            return write.readString8();
-        } finally {
+            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+        }
         
+        finally {
             fooSlice.free();
         
-            write.free();
-        
+            wasm.diplomat_buffer_write_destroy(write);
         }
     }
-
-    
-
 }

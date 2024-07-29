@@ -2,10 +2,10 @@
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RefListParameter_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.RefListParameter_destroy(ptr);
 });
+
 export class RefListParameter {
     // Internal ptr reference:
     #ptr = null;
@@ -13,7 +13,6 @@ export class RefListParameter {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -26,8 +25,4 @@ export class RefListParameter {
     get ffiValue() {
         return this.#ptr;
     }
-
-
-    
-
 }

@@ -3,10 +3,10 @@ import { RenamedOpaqueIterator } from "./RenamedOpaqueIterator.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const RenamedOpaqueIterable_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.namespace_OpaqueIterable_destroy(ptr);
 });
+
 export class RenamedOpaqueIterable {
     // Internal ptr reference:
     #ptr = null;
@@ -14,7 +14,6 @@ export class RenamedOpaqueIterable {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     
     constructor(ptr, selfEdge) {
         
@@ -28,7 +27,6 @@ export class RenamedOpaqueIterable {
         return this.#ptr;
     }
 
-
     [Symbol.iterator]() {
         
         // This lifetime edge depends on lifetimes 'a
@@ -36,13 +34,9 @@ export class RenamedOpaqueIterable {
         const result = wasm.namespace_OpaqueIterable_iter(this.ffiValue);
     
         try {
-    
             return new RenamedOpaqueIterator(result, [], aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
-
-    
-
 }

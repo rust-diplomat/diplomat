@@ -3,11 +3,11 @@ import type { UnimportedEnum } from "./UnimportedEnum"
 import type { pointer, codepoint } from "./diplomat-runtime.d.ts";
 
 export class ImportedStruct {
+
     get foo() : UnimportedEnum;
     set foo(value: UnimportedEnum); 
+
     get count() : number;
     set count(value: number); 
-
-    
 
 }

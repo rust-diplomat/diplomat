@@ -10,10 +10,5 @@ export class ErrorEnum {
     get ffiValue() : number;
 
     static Foo : ErrorEnum;
-
     static Bar : ErrorEnum;
-
-
-    
-
 }

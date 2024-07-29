@@ -3,10 +3,10 @@ import { Foo } from "./Foo.mjs"
 import wasm from "./diplomat-wasm.mjs";
 import * as diplomatRuntime from "./diplomat-runtime.mjs";
 
-
 const Bar_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.Bar_destroy(ptr);
 });
+
 export class Bar {
     // Internal ptr reference:
     #ptr = null;
@@ -14,11 +14,8 @@ export class Bar {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    
     #bEdge = [];
-    
     #aEdge = [];
-    
     
     constructor(ptr, selfEdge, bEdge, aEdge) {
         
@@ -38,7 +35,6 @@ export class Bar {
         return this.#ptr;
     }
 
-
     get foo() {
         
         // This lifetime edge depends on lifetimes 'b, 'a
@@ -49,13 +45,9 @@ export class Bar {
         const result = wasm.Bar_foo(this.ffiValue);
     
         try {
-    
             return new Foo(result, bEdges, aEdges);
-        } finally {
-        
         }
+        
+        finally {}
     }
-
-    
-
 }

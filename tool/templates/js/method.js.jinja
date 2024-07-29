@@ -44,20 +44,22 @@
     );
 
     try {
-    {%~ match return_expression -%}
+    {%- match return_expression -%}
     {%- when Some with (statement) %}
-        {{ statement|indent(8) -}}
+        {{ statement|indent(8) }}
     {% when None -%}
-    {%- endmatch %}
-    } finally {
-    {% if needs_slice_cleanup %}
+    {%- endmatch -%}
+    }
+    
+    finally {
+    {%- if needs_slice_cleanup %}
         for (let cleanup of slice_cleanup_callbacks) {
             cleanup();
         }
     {% endif -%}
     {% for cleanup in cleanup_expressions %}
         {{cleanup|indent(8)}}
-    {% endfor %}
+    {% endfor -%}
     }
 }
 {%- endif -%}

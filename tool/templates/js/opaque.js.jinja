@@ -2,11 +2,14 @@
 /** {{docs}}
 */
 {% endif -%}
-{%- if !typescript %}
+{%- if !typescript -%}
+
 const {{type_name}}_box_destroy_registry = new FinalizationRegistry((ptr) => {
     wasm.{{destructor}}(ptr);
 });
+
 {% endif -%}
+
 export class {{type_name}} {
     {% if !typescript -%}
     // Internal ptr reference:
@@ -15,9 +18,9 @@ export class {{type_name}} {
     // Lifetimes are only to keep dependencies alive.
     // Since JS won't garbage collect until there are no incoming edges.
     #selfEdge = [];
-    {% for lifetime in lifetimes.all_lifetimes() %}
+    {%- for lifetime in lifetimes.all_lifetimes() %}
     #{{lifetimes.fmt_lifetime(lifetime)}}Edge = [];
-    {% endfor %}
+    {%- endfor %}
     
     constructor(ptr, selfEdge {%- for lifetime in lifetimes.all_lifetimes() %}, {{lifetimes.fmt_lifetime(lifetime)}}Edge{% endfor %}) {
         {% for lifetime in lifetimes.all_lifetimes() %}
@@ -34,9 +37,11 @@ export class {{type_name}} {
 
     get ffiValue(){% if typescript %}: pointer;{% else %} {
         return this.#ptr;
-    }{% endif %}
+    }
+    {%- endif -%}
 
-{% for method in methods %}
-    {{ method|indent(4) }}
-{% endfor %}
+{%- for method in methods %}
+
+    {{method|indent(4)}}
+{%- endfor %}
 }
