@@ -17,13 +17,13 @@ pub struct ParamInfo {
 }
 
 /// Represents a function that we'll be using when constructing the ultimate output of a RenderTerminus function. See [`TerminusInfo`] for full output.
-/// 
+///
 /// But this represents one step in the building block, so something like:
-/// 
+///
 /// ```typescript
 /// FixedDecimalFormatter.tryNew.apply(null, [...])
 /// ```
-/// 
+///
 /// Where we expand `...` with further MethodDependencies.
 #[derive(Template)]
 #[template(path = "demo_gen/method_dependency.js.jinja", escape = "none")]
@@ -53,20 +53,20 @@ impl MethodDependency {
 
 /// A terminus represents a function in the diplomat FFI that is meant to be called by an HTML rendering engine's JS.
 /// (per our design doc: https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing)
-/// 
+///
 /// Termini are (as of right now) automagically generated from every valid FFI function that `diplomat-tool demo_gen` can detect.
 /// Valid termini functions are determined in [`RenderTerminusContext::is_valid_terminus`]
-/// 
+///
 /// The template outputs the structure of a JS function that is meant to directly demonstrate how a diplomat FFI function could be used with direct user input.
-/// 
+///
 /// The text output will be something akin to the ends up working is a chain of [`MethodDependency`]s that construct every necessary struct and opaque type, until we reach primitive components that we can require direct user input for.
-/// 
+///
 /// ## Example
-/// 
+///
 /// To look at the `example` folder, we have `FixedDecimalFormatter`, which has ```rs format_write(&self, value: &FixedDecimal, write: &mut DiplomatWrite)```. Per [`RenderTerminusContext::is_valid_terminus`], this is a render terminus. So we want to generate a Javascript function that calls `formatWrite` for us.
 ///
 /// So, step by step:
-/// 
+///
 /// - formatWrite represents our root.
 /// - formatWrite requires `FixedDecimal` as a parameter, and so we need to call `FixedDecimal.new()`
 /// - We then add ICU4XFixedDecimal.new() as a child of our root, and add it as a parameter to be called by formatWrite.
@@ -118,7 +118,7 @@ pub(super) struct TerminusInfo {
 
 impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     /// See [`TerminusInfo`] for more information on termini.
-    /// 
+    ///
     /// Right now, we only check for the existence of `&mut DiplomatWrite` in the function parameters to determine a valid render termini.
     /// That is, if there exists a string/buffer output. (Also called "returning a writeable")
     pub fn is_valid_terminus(method: &Method) -> bool {
@@ -155,28 +155,34 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     }
 
     /// Helper function for quickly passing a parameter to both our node and the render terminus.
-    fn append_out_param(&mut self, param_name: String, type_name: String, node : &mut MethodDependency, attrs : Option<DemoInfo>) {
+    fn append_out_param(
+        &mut self,
+        param_name: String,
+        type_name: String,
+        node: &mut MethodDependency,
+        attrs: Option<DemoInfo>,
+    ) {
         // This only works for enums, since otherwise we break the type into its component parts.
         let label = attrs
-        .and_then(|attrs| {
-            let label = attrs
-                .input_cfg
-                .get(&param_name)
-                .map(|cfg| cfg.label.clone())
-                .unwrap_or_default();
+            .and_then(|attrs| {
+                let label = attrs
+                    .input_cfg
+                    .get(&param_name)
+                    .map(|cfg| cfg.label.clone())
+                    .unwrap_or_default();
 
-            if label.is_empty() {
-                None
-            } else {
-                Some(label)
-            }
-        })
-        .unwrap_or(heck::AsUpperCamelCase(param_name.clone()).to_string());
+                if label.is_empty() {
+                    None
+                } else {
+                    Some(label)
+                }
+            })
+            .unwrap_or(heck::AsUpperCamelCase(param_name.clone()).to_string());
 
         let mut param_info = ParamInfo {
-        js: param_name,
-        label,
-        type_name,
+            js: param_name,
+            label,
+            type_name,
         };
 
         self.terminus_info.out_params.push(param_info.clone());
@@ -332,33 +338,37 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     }
 
     /// Find an opaque constructor that suits our purposes (see the `usable_constructor` variable), then evaluate it with [`RenderTerminusContext::evaluate_constructor`].
-    fn find_op_constructor(&mut self, op : &OpaqueDef, type_name: String, node : &mut MethodDependency) {
+    fn find_op_constructor(
+        &mut self,
+        op: &OpaqueDef,
+        type_name: String,
+        node: &mut MethodDependency,
+    ) {
         let mut usable_constructor = false;
 
         for method in op.methods.iter() {
             let method_attrs = &method.attrs.demo_attrs;
 
             usable_constructor = method_attrs.default_constructor;
-            
+
             // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
             if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
                 method.attrs.special_method
             {
                 usable_constructor |= true;
             }
-            
+
             if usable_constructor {
                 self.terminus_info
-                .imports
-                .insert(self.formatter.fmt_import_statement(
-                    &type_name.clone(),
-                    false,
-                    "./js/".into(),
-                ));
+                    .imports
+                    .insert(self.formatter.fmt_import_statement(
+                        &type_name.clone(),
+                        false,
+                        "./js/".into(),
+                    ));
 
-                let mut child = MethodDependency::new(
-                    self.get_constructor_js(type_name.to_string(), method),
-                );
+                let mut child =
+                    MethodDependency::new(self.get_constructor_js(type_name.to_string(), method));
 
                 let call = self.evaluate_constructor(method, &mut child);
                 node.params.push(ParamInfo {
