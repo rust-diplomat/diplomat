@@ -45,7 +45,6 @@ pub mod ffi {
         g: MyEnum,
     }
 
-    #[diplomat::skip_if_ast]
     pub struct MyZst;
 
     impl Opaque {
@@ -99,17 +98,14 @@ pub mod ffi {
             *guard = format!("{number}");
         }
 
-        #[diplomat::skip_if_ast]
         pub fn borrow<'a>(&'a self) -> &'a OpaqueMutexedString {
             self
         }
 
-        #[diplomat::skip_if_ast]
         pub fn borrow_other<'a>(other: &'a OpaqueMutexedString) -> &'a OpaqueMutexedString {
             other
         }
 
-        #[diplomat::skip_if_ast]
         pub fn borrow_self_or_other<'a>(
             &'a self,
             other: &'a OpaqueMutexedString,
@@ -192,7 +188,6 @@ pub mod ffi {
             assert_eq!(self.g, MyEnum::B);
         }
 
-        #[diplomat::skip_if_ast]
         pub fn returns_zst_result() -> Result<(), MyZst> {
             Ok(())
         }
@@ -201,12 +196,10 @@ pub mod ffi {
     // Test that cycles between structs work even when
     // they reference each other in the methods
     #[derive(Default)]
-    #[diplomat::skip_if_ast]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
     #[derive(Default)]
-    #[diplomat::skip_if_ast]
     pub struct CyclicStructB {
         pub field: u8,
     }
