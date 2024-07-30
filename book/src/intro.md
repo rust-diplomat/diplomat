@@ -12,8 +12,23 @@ You can read the full design doc [here](https://github.com/rust-diplomat/diploma
 
 Diplomat does not do cross-crate global analysis, it restricts its view to specially tagged modules, and only generates bindings based on information found in those modules. This means that changing some struct in some dependency will not magically affect your generated C++/JS/etc APIs; all such change can only come from deliberate change to these tagged modules. This also means that Diplomat can cleanly define a subset of Rust used for declaring the exported API without impacting the flavor of Rust used in dependencies. One can imagine `#[diplomat::bridge]` blocks to almost be a DSL for bridging between your Rust APIs and a more general API shape that can be translated cleanly across languages.
 
-Diplomat is designed such that it should not be a large amount of effort to write new language targets for Diplomat.
+Diplomat is designed such that it should not be a large amount of effort to [write new language targets for Diplomat](developer.html).
 
+
+## Backends supported
+
+
+Diplomat currently supports the following backends:
+
+ - C
+ - C++
+ - JavaScript/TypeScript (using WASM)
+ - Dart
+ - Kotlin (using JNA)
+ 
+There is work in progress for a [Java backend] (using Panama), as well as a [demo-autogenerating backend]. We used to have a .NET backend but it was removed in a refactor, it may get added again.
+
+We're happy to fix bugs or add configurability in the current backends if their produced output does not match what you need in your language. Details on how to write new backends is documented [later in this book](developer.html): you can do so as a third party library depending on `diplomat_core`, but we are also happy to accept these into Diplomat with the understanding that we'll only do minimal work to keep them working over time.
 
 ## Setup
 
@@ -23,15 +38,18 @@ To install the `diplomat` CLI tool, run
 $ cargo install diplomat-tool
 ```
 
+Let's say this installs `diplomat-tool 0.8.0`
 
 You can then add `diplomat` as a dependency to your project like so:
 
 ```toml
-diplomat = "0.5.0"
-diplomat-runtime = "0.5.0"
+diplomat = "0.8.0"
+diplomat-runtime = "0.8.0"
 ```
 
 It is recommended to create a separate crate for the FFI interface. Diplomat will only read the contents of specially tagged modules so it is possible to mix Diplomat code with normal Rust code, but it is prefereable to minimize this since proc macros can make debugging hard.
 
 
  [Diplomat]: https://github.com/rust-diplomat/diplomat
+ [Java backend]: https://github.com/rust-diplomat/diplomat/issues/144
+ [demo-autogenerating backend]: https://github.com/rust-diplomat/diplomat/issues/604
