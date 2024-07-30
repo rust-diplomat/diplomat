@@ -43,11 +43,11 @@ export class RenamedOpaqueIterator {
 
     
     next() {
-    	const out = this.#iteratorNext();
+        const out = this.#iteratorNext();
     
-    	return {
-    		value: out,
-    		done: out === null,
-    	};
+        return {
+            value: out,
+            done: out === null,
+        };
     }
 }
