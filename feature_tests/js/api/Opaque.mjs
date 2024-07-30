@@ -68,15 +68,15 @@ export class Opaque {
 
     getDebugStr() {
         
-        const write = wasm.diplomat_buffer_write_create(0);
-        wasm.Opaque_get_debug_str(this.ffiValue, write);
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+        wasm.Opaque_get_debug_str(this.ffiValue, write.buffer);
     
         try {
-            return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));
+            return write.readString8();
         }
         
         finally {
-            wasm.diplomat_buffer_write_destroy(write);
+            write.free();
         }
     }
 
@@ -106,15 +106,15 @@ export class Opaque {
 
     static returnsImported() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.Opaque_returns_imported(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
+        const result = wasm.Opaque_returns_imported(diplomatReceive.buffer);
     
         try {
-            return new ImportedStruct()._fromFFI(diplomat_receive_buffer);
+            return new ImportedStruct()._fromFFI(diplomatReceive.buffer);
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 

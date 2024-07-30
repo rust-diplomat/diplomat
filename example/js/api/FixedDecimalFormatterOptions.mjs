@@ -47,15 +47,15 @@ export class FixedDecimalFormatterOptions {
 
     static default_() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, false);
+        const result = wasm.icu4x_FixedDecimalFormatterOptions_default_mv1(diplomatReceive.buffer);
     
         try {
-            return new FixedDecimalFormatterOptions()._fromFFI(diplomat_receive_buffer);
+            return new FixedDecimalFormatterOptions()._fromFFI(diplomatReceive.buffer);
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 }

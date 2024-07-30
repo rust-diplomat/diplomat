@@ -202,32 +202,39 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                 format!("(() => {{for (let i of {type_name}.values) {{ if(i[1] === {variable_name}) return {type_name}[i[0]]; }} return null;}})()").into()
             }
             Type::Slice(slice) => {
-                // Slices are always returned to us by way of pointers, so we take advantage of a helper function:
+                // Slices are always returned to us by way of pointers, so we assume that we can just access DiplomatReceiveBuf's helper functions:
                 match slice {
-					hir::Slice::Primitive(_, primitive_type) => {
-						format!(r#"diplomatRuntime.DiplomatBuf.sliceFromPtr(wasm, {variable_name}, "{}")"#, self.formatter.fmt_primitive_list_view(primitive_type)).into()
-					},
-					hir::Slice::Str(_, encoding) => {
-						format!(r#"diplomatRuntime.DiplomatBuf.stringFromPtr(wasm.memory.buffer, {variable_name}, "string{}")"#, 
-						match encoding {
-							hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
-							hir::StringEncoding::UnvalidatedUtf16 => 16,
-							_ => unreachable!("Unknown string_encoding {encoding:?} found")
-						}).into()
-					},
-					hir::Slice::Strs(encoding) => {
-						// Old JS backend didn't support this.
-						// We basically iterate through and read each string into the array. 
-						// TODO: Need a test for this.
-						format!(r#"diplomatRuntime.DiplomatBuf.stringsFromPtr(wasm, {variable_name}, "string{}")"#,
-						match encoding {
-							hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
-							hir::StringEncoding::UnvalidatedUtf16 => 16,
-							_ => unreachable!("Unknown string_encoding {encoding:?} found")
-						}).into()
-					},
-					_ => unreachable!("Unknown slice {slice:?} found"),
-				}
+                    hir::Slice::Primitive(_, primitive_type) => format!(
+                        r#"{variable_name}.getSlice("{}")"#,
+                        self.formatter.fmt_primitive_list_view(primitive_type)
+                    )
+                    .into(),
+                    hir::Slice::Str(_, encoding) => format!(
+                        r#"{variable_name}.getString("string{}")"#,
+                        match encoding {
+                            hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => 8,
+                            hir::StringEncoding::UnvalidatedUtf16 => 16,
+                            _ => unreachable!("Unknown string_encoding {encoding:?} found"),
+                        }
+                    )
+                    .into(),
+                    hir::Slice::Strs(encoding) => {
+                        // Old JS backend didn't support this.
+                        // We basically iterate through and read each string into the array.
+                        // TODO: Need a test for this.
+                        format!(
+                            r#"{variable_name}.getStrings("string{}")"#,
+                            match encoding {
+                                hir::StringEncoding::Utf8
+                                | hir::StringEncoding::UnvalidatedUtf8 => 8,
+                                hir::StringEncoding::UnvalidatedUtf16 => 16,
+                                _ => unreachable!("Unknown string_encoding {encoding:?} found"),
+                            }
+                        )
+                        .into()
+                    }
+                    _ => unreachable!("Unknown slice {slice:?} found"),
+                }
             }
             _ => unreachable!("AST/HIR variant {:?} unknown.", ty),
         }
@@ -327,12 +334,10 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             ReturnType::Infallible(SuccessType::Write) => {
                 method_info
                     .alloc_expressions
-                    .push("const write = wasm.diplomat_buffer_write_create(0);".into());
-                method_info.param_conversions.push("write".into());
-                method_info
-                    .cleanup_expressions
-                    .push("wasm.diplomat_buffer_write_destroy(write);".into());
-                Some("return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
+                    .push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
+                method_info.param_conversions.push("write.buffer".into());
+                method_info.cleanup_expressions.push("write.free();".into());
+                Some("return write.readString8();".into())
             }
 
             // Any out that is not a [`SuccessType::Write`].
@@ -345,20 +350,17 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                         let align = layout.align();
 
                         method_info.alloc_expressions.push(
-							format!("const diplomat_receive_buffer = wasm.diplomat_alloc({size}, {align});")
+							format!("const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {size}, {align}, false);")
 							.into()
 						);
                         // This is the first thing in param converison order:
                         method_info
                             .param_conversions
-                            .insert(0, "diplomat_receive_buffer".into());
-                        method_info.cleanup_expressions.push(
-                            format!(
-                                "wasm.diplomat_free(diplomat_receive_buffer, {size}, {align});"
-                            )
-                            .into(),
-                        );
-                        result = "diplomat_receive_buffer";
+                            .insert(0, "diplomatReceive.buffer".into());
+                        method_info
+                            .cleanup_expressions
+                            .push("diplomatReceive.free();".into());
+                        result = "diplomatReceive.buffer";
                     }
                     _ => (),
                 }
@@ -380,12 +382,10 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
             | ReturnType::Nullable(SuccessType::Write) => {
                 method_info
                     .alloc_expressions
-                    .push("const write = wasm.diplomat_buffer_write_create(0);".into());
-                method_info.param_conversions.push("write".into());
-                method_info
-                    .cleanup_expressions
-                    .push("wasm.diplomat_buffer_write_destroy(write);".into());
-                Some("return result === 0 ? null : diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));".into())
+                    .push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
+                method_info.param_conversions.push("write.buffer".into());
+                method_info.cleanup_expressions.push("write.free();".into());
+                Some("return result === 0 ? null : write.readString8();".into())
             }
 
             // Result<Type, Error> or Option<Type>
@@ -422,36 +422,41 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
 
                 method_info.alloc_expressions.push(
                     format!(
-                        "const diplomat_receive_buffer = wasm.diplomat_alloc({}, {});",
+                        "const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, {}, {}, true);",
                         size, align
                     )
                     .into(),
                 );
                 method_info
                     .param_conversions
-                    .insert(0, "diplomat_receive_buffer".into());
-                method_info.cleanup_expressions.push(
-                    format!(
-                        "wasm.diplomat_free(diplomat_receive_buffer, {}, {});",
-                        size, align
-                    )
-                    .into(),
-                );
+                    .insert(0, "diplomatReceive.buffer".into());
+                method_info
+                    .cleanup_expressions
+                    .push("diplomatReceive.free();".into());
 
-                let err_check = format!("if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, {})) {{\n    {};\n}}\n",
-				size - 1,
-				match return_type {
-					ReturnType::Fallible(_, Some(e)) => {
-						// Because we don't add Result<_, Error> types to imports, we do that here:
-						if !self.typescript {
-							let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-							self.imports.insert(self.formatter.fmt_import_statement(&type_name, false, "./".into()));
-						}
+                let err_check = format!(
+                    "if (!diplomatReceive.resultFlag) {{\n    {};\n}}\n",
+                    match return_type {
+                        ReturnType::Fallible(_, Some(e)) => {
+                            // Because we don't add Result<_, Error> types to imports, we do that here:
+                            if !self.typescript {
+                                let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+                                self.imports.insert(self.formatter.fmt_import_statement(
+                                    &type_name,
+                                    false,
+                                    "./".into(),
+                                ));
+                            }
 
-						let receive_deref = self.gen_c_to_js_deref_for_type(e, "diplomat_receive_buffer".into(), 0);
-                        let type_name = self.formatter.fmt_type_name(e.id().unwrap());
-                        let cause = self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment);
-						format!(
+                            let receive_deref = self.gen_c_to_js_deref_for_type(
+                                e,
+                                "diplomatReceive.buffer".into(),
+                                0,
+                            );
+                            let type_name = self.formatter.fmt_type_name(e.id().unwrap());
+                            let cause =
+                                self.gen_c_to_js_for_type(e, receive_deref, lifetime_environment);
+                            format!(
                             "const cause = {cause};\n    throw new Error({message}, {{ cause }})", 
                             message = match e {
                                 Type::Enum(..) => format!("'{type_name}: ' + cause.value"),
@@ -463,39 +468,51 @@ impl<'jsctx, 'tcx> TyGenContext<'jsctx, 'tcx> {
                                 _ => format!("'{type_name}: ' + cause.toString()"),
                             },
                         )
-					},
-                    ReturnType::Nullable(_) | ReturnType::Fallible(_, None)=> "return null".into(),
-                    return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
-				});
+                        }
+                        ReturnType::Nullable(_) | ReturnType::Fallible(_, None) =>
+                            "return null".into(),
+                        return_type => unreachable!("AST/HIR variant {:?} unknown.", return_type),
+                    }
+                );
 
-                Some(match ok {
-					SuccessType::Unit => err_check,
-					SuccessType::Write => {
-						// Pretty sure you can't have a Result<Write, Err> and also return something else.
-						// So this is our ideal output:
-						/*
-						const write = alloc(0);
-						const diplomat_receive_buffer = diplomat.alloc(error_size, error_align);
-						wasm.c_func(write);
-						if (diplomat.resultFlag(wasm, diplomat_receive_buffer, error_size - 1)) {
-							return write;
-						} else {
-							throw Error();
-						}
-						*/
-						// TODO: This could probably be its own diplomatRuntime function, instead of lots of little wasm calls.
-						method_info.alloc_expressions.push("const write = wasm.diplomat_buffer_write_create(0);".into());
-						method_info.param_conversions.push("write".into());
-						method_info.cleanup_expressions.push("wasm.diplomat_buffer_write_destroy(write);".into());
-						format!("{err_check}return diplomatRuntime.readString8(wasm, wasm.diplomat_buffer_write_get_bytes(write), wasm.diplomat_buffer_write_len(write));")
-					},
-					SuccessType::OutType(ref o) => {
-						let ptr_deref = self.gen_c_to_js_deref_for_type(o, "diplomat_receive_buffer".into(), 0);
-						format!("{err_check}return {};", 
-						self.gen_c_to_js_for_type(o, ptr_deref, lifetime_environment))
-					},
-					_ => unreachable!("AST/HIR variant {:?} unknown.", return_type)
-				}.into())
+                Some(
+                    match ok {
+                        SuccessType::Unit => err_check,
+                        SuccessType::Write => {
+                            // Pretty sure you can't have a Result<Write, Err> and also return something else.
+                            // So this is our ideal output:
+                            /*
+                            const write = diplomatWriteBuf();
+                            const diplomat_receive_buffer = diplomatReceiveBuf(wasm, error_size, error_align);
+                            wasm.c_func(write.buffer);
+                            if (diplomat.resultFlag) {
+                                return write;
+                            } else {
+                                throw Error();
+                            }
+                            */
+                            method_info.alloc_expressions.push(
+                                "const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into(),
+                            );
+                            method_info.param_conversions.push("write.buffer".into());
+                            method_info.cleanup_expressions.push("write.free();".into());
+                            format!("{err_check}return write.readString8();")
+                        }
+                        SuccessType::OutType(ref o) => {
+                            let ptr_deref = self.gen_c_to_js_deref_for_type(
+                                o,
+                                "diplomatReceive.buffer".into(),
+                                0,
+                            );
+                            format!(
+                                "{err_check}return {};",
+                                self.gen_c_to_js_for_type(o, ptr_deref, lifetime_environment)
+                            )
+                        }
+                        _ => unreachable!("AST/HIR variant {:?} unknown.", return_type),
+                    }
+                    .into(),
+                )
             }
 
             _ => unreachable!("AST/HIR variant {:?} unknown", return_type),

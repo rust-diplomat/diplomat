@@ -30,143 +30,143 @@ export class ResultOpaque {
 
     static new_(i) {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new(diplomat_receive_buffer, i);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.ResultOpaque_new(diplomatReceive.buffer, i);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
+            if (!diplomatReceive.resultFlag) {
+                const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 
     static newFailingFoo() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_failing_foo(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.ResultOpaque_new_failing_foo(diplomatReceive.buffer);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
+            if (!diplomatReceive.resultFlag) {
+                const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 
     static newFailingBar() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_failing_bar(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.ResultOpaque_new_failing_bar(diplomatReceive.buffer);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
+            if (!diplomatReceive.resultFlag) {
+                const cause = ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
                 throw new Error('ErrorEnum: ' + cause.value, { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 
     static newFailingUnit() {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_failing_unit(diplomat_receive_buffer);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.ResultOpaque_new_failing_unit(diplomatReceive.buffer);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 
     static newFailingStruct(i) {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(9, 4);
-        const result = wasm.ResultOpaque_new_failing_struct(diplomat_receive_buffer, i);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 9, 4, true);
+        const result = wasm.ResultOpaque_new_failing_struct(diplomatReceive.buffer, i);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 8)) {
-                const cause = new ErrorStruct()._fromFFI(diplomat_receive_buffer);
+            if (!diplomatReceive.resultFlag) {
+                const cause = new ErrorStruct()._fromFFI(diplomatReceive.buffer);
                 throw new Error('ErrorStruct: ' + cause.toString(), { cause });
             }
-            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            return new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 9, 4);
+            diplomatReceive.free();
         }
     }
 
     static newInErr(i) {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_in_err(diplomat_receive_buffer, i);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.ResultOpaque_new_in_err(diplomatReceive.buffer, i);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            if (!diplomatReceive.resultFlag) {
+                const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new Error('ResultOpaque: ' + cause.toString(), { cause });
             }
     
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 
     static newInt(i) {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_int(diplomat_receive_buffer, i);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.ResultOpaque_new_int(diplomatReceive.buffer, i);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
+            if (!diplomatReceive.resultFlag) {
                 return null;
             }
-            return (new Int32Array(wasm.memory.buffer, diplomat_receive_buffer, 1))[0];
+            return (new Int32Array(wasm.memory.buffer, diplomatReceive.buffer, 1))[0];
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 
     static newInEnumErr(i) {
         
-        const diplomat_receive_buffer = wasm.diplomat_alloc(5, 4);
-        const result = wasm.ResultOpaque_new_in_enum_err(diplomat_receive_buffer, i);
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 5, 4, true);
+        const result = wasm.ResultOpaque_new_in_enum_err(diplomatReceive.buffer, i);
     
         try {
-            if (!diplomatRuntime.resultFlag(wasm, diplomat_receive_buffer, 4)) {
-                const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomat_receive_buffer), []);
+            if (!diplomatReceive.resultFlag) {
+                const cause = new ResultOpaque(diplomatRuntime.ptrRead(wasm, diplomatReceive.buffer), []);
                 throw new Error('ResultOpaque: ' + cause.toString(), { cause });
             }
-            return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomat_receive_buffer)]];
+            return ErrorEnum[Array.from(ErrorEnum.values.keys())[diplomatRuntime.enumDiscriminant(wasm, diplomatReceive.buffer)]];
         }
         
         finally {
-            wasm.diplomat_free(diplomat_receive_buffer, 5, 4);
+            diplomatReceive.free();
         }
     }
 
