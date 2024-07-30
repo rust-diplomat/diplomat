@@ -70,7 +70,7 @@ pub(crate) fn run<'tcx>(
             }
 
             for method in methods {
-                if method.attrs.disable || !method.output.success_type().is_write() {
+                if method.attrs.disable || !RenderTerminusContext::is_valid_terminus(method) {
                     continue;
                 }
 
@@ -83,7 +83,7 @@ pub(crate) fn run<'tcx>(
                     errors: &errors,
                     terminus_info: TerminusInfo {
                         function_name: formatter.fmt_method_name(method),
-                        params: Vec::new(),
+                        out_params: Vec::new(),
 
                         type_name: type_name.clone().into(),
 

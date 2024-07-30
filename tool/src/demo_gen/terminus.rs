@@ -16,31 +16,15 @@ pub struct ParamInfo {
     pub type_name: String,
 }
 
-/// Represents a function that we'll be using when constructing the ultimate output of a RenderTerminus function.
-/// So because formatWrite is a render terminus, we'll need to actuall call the real formatWrite() in the body of the function.
-///
-/// formatWrite represents our root.
-/// formatWrite requires ICU4XFixedDecimal as a parameter, and so we need to call ICU4XFixedDecimal.new().
-/// We then add ICU4XFixedDecimal.new() as a child of our root, and add it as a parameter to be called by formatWrite.
-///
-/// The final render looks something like this:
+/// Represents a function that we'll be using when constructing the ultimate output of a RenderTerminus function. See [`TerminusInfo`] for full output.
+/// 
+/// But this represents one step in the building block, so something like:
+/// 
 /// ```typescript
-/// function formatWrite(locale : ICU4XLocale, provider : ICU4XDataProvider, options : ICU4XFixedDecimalFormatterOptions, v : number) {
-///     return ICU4XFixedDecimalFormatter.formatWrite
-///     .apply(
-///         ICU4XFixedDecimalFormatter.tryNew.call(
-///             null,
-///             locale,
-///             provider,
-///             options
-///         ),
-///         ICU4XFixedDecimal.new_.call(
-///             null,
-///             v
-///         ),
-///     );
-/// }
+/// FixedDecimalFormatter.tryNew.apply(null, [...])
 /// ```
+/// 
+/// Where we expand `...` with further MethodDependencies.
 #[derive(Template)]
 #[template(path = "demo_gen/method_dependency.js.jinja", escape = "none")]
 struct MethodDependency {
@@ -67,6 +51,47 @@ impl MethodDependency {
     }
 }
 
+/// A terminus represents a function in the diplomat FFI that is meant to be called by an HTML rendering engine's JS.
+/// (per our design doc: https://docs.google.com/document/d/1xRTmK0YtOfuAe7ClN6kqDaHyv5HpdIRIYQW6Zc_KKFU/edit?usp=sharing)
+/// 
+/// Termini are (as of right now) automagically generated from every valid FFI function that `diplomat-tool demo_gen` can detect.
+/// Valid termini functions are determined in [`RenderTerminusContext::is_valid_terminus`]
+/// 
+/// The template outputs the structure of a JS function that is meant to directly demonstrate how a diplomat FFI function could be used with direct user input.
+/// 
+/// The text output will be something akin to the ends up working is a chain of [`MethodDependency`]s that construct every necessary struct and opaque type, until we reach primitive components that we can require direct user input for.
+/// 
+/// ## Example
+/// 
+/// To look at the `example` folder, we have `FixedDecimalFormatter`, which has ```rs format_write(&self, value: &FixedDecimal, write: &mut DiplomatWrite)```. Per [`RenderTerminusContext::is_valid_terminus`], this is a render terminus. So we want to generate a Javascript function that calls `formatWrite` for us.
+///
+/// So, step by step:
+/// 
+/// - formatWrite represents our root.
+/// - formatWrite requires `FixedDecimal` as a parameter, and so we need to call `FixedDecimal.new()`
+/// - We then add ICU4XFixedDecimal.new() as a child of our root, and add it as a parameter to be called by formatWrite.
+///
+/// The final render looks something like this:
+/// ```typescript
+/// function formatWrite(locale : Locale, provider : DataProvider, options : FixedDecimalFormatterOptions, v : number) {
+///     return function(...args) { let self = args[0]; self.formatWrite(...args.slice(1)); }
+///     .apply(
+///         null,
+///         [
+///             FixedDecimalFormatter.tryNew.apply(
+///                 null,
+///                 [locale,
+///                 provider,
+///                 options]
+///             ),
+///             FixedDecimal.new_.apply(
+///                 null,
+///                 [v]
+///             ),
+///         ]
+///     );
+/// }
+/// ```
 #[derive(Template)]
 #[template(path = "demo_gen/terminus.js.jinja", escape = "none")]
 pub(super) struct TerminusInfo {
@@ -74,7 +99,7 @@ pub(super) struct TerminusInfo {
     pub function_name: String,
 
     /// Parameters that we require explicit user input from the render engine
-    pub params: Vec<ParamInfo>,
+    pub out_params: Vec<ParamInfo>,
 
     /// The type name of the type that this function belongs to.
     pub type_name: String,
@@ -92,6 +117,14 @@ pub(super) struct TerminusInfo {
 }
 
 impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
+    /// See [`TerminusInfo`] for more information on termini.
+    /// 
+    /// Right now, we only check for the existence of `&mut DiplomatWrite` in the function parameters to determine a valid render termini.
+    /// That is, if there exists a string/buffer output. (Also called "returning a writeable")
+    pub fn is_valid_terminus(method: &Method) -> bool {
+        method.output.success_type().is_write()
+    }
+
     /// Create a Render Terminus .js file from a method.
     /// We define this (for now) as any function that outputs [`hir::SuccessType::Write`]
     pub fn evaluate(&mut self, type_name: String, method: &Method) {
@@ -121,6 +154,38 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             .map(|id| self.tcx.resolve_type(id).attrs().demo_attrs.clone())
     }
 
+    /// Helper function for quickly passing a parameter to both our node and the render terminus.
+    fn append_out_param(&mut self, param_name: String, type_name: String, node : &mut MethodDependency, attrs : Option<DemoInfo>) {
+        // This only works for enums, since otherwise we break the type into its component parts.
+        let label = attrs
+        .and_then(|attrs| {
+            let label = attrs
+                .input_cfg
+                .get(&param_name)
+                .map(|cfg| cfg.label.clone())
+                .unwrap_or_default();
+
+            if label.is_empty() {
+                None
+            } else {
+                Some(label)
+            }
+        })
+        .unwrap_or(heck::AsUpperCamelCase(param_name.clone()).to_string());
+
+        let mut param_info = ParamInfo {
+        js: param_name,
+        label,
+        type_name,
+        };
+
+        self.terminus_info.out_params.push(param_info.clone());
+
+        // Grab arguments without having to name them
+        param_info.js = format!("terminusArgs[{}]", self.terminus_info.out_params.len() - 1);
+        node.params.push(param_info);
+    }
+
     /// Take a parameter passed to a terminus (or a constructor), and either:
     /// 1. Add it to the list of parameters that the terminus function takes for the render engine to call.
     /// 2. Go a step deeper and look at its possible constructors to call evaluate_param on.
@@ -133,38 +198,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
         node: &mut MethodDependency,
         method_attrs: DemoInfo,
     ) {
-        let attrs = Some(method_attrs); /*self.get_type_demo_attrs(param_type).or(Some(method_attrs));*/
-        // Helper function for quickly passing a parameter to both our node and the render terminus.
-        let out_param = |type_name| {
-            // This only works for enums, since otherwise we break the type into its component parts.
-            let label = attrs
-                .and_then(|attrs| {
-                    let label = attrs
-                        .input_cfg
-                        .get(&param_name)
-                        .map(|cfg| cfg.label.clone())
-                        .unwrap_or_default();
-
-                    if label.is_empty() {
-                        None
-                    } else {
-                        Some(label)
-                    }
-                })
-                .unwrap_or(heck::AsUpperCamelCase(param_name.clone()).to_string());
-
-            let mut param_info = ParamInfo {
-                js: param_name,
-                label,
-                type_name,
-            };
-
-            self.terminus_info.params.push(param_info.clone());
-
-            // Grab arguments without having to name them
-            param_info.js = format!("terminusArgs[{}]", self.terminus_info.params.len() - 1);
-            node.params.push(param_info);
-        };
+        let attrs = Some(method_attrs);
 
         // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
         match param_type {
@@ -189,7 +223,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     _ => unreachable!("Unknown primitive type {:?}", param_type),
                 };
 
-                out_param(type_name);
+                self.append_out_param(param_name, type_name, node, attrs);
             }
             Type::Opaque(o) => {
                 let op = o.resolve(self.tcx);
@@ -200,10 +234,9 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     self.errors
                         .push_error(format!("Found usage of disabled type {type_name}"))
                 }
-                let attrs = &all_attrs.demo_attrs;
 
-                if attrs.external {
-                    out_param(type_name.into());
+                if all_attrs.demo_attrs.external {
+                    self.append_out_param(param_name, type_name.into(), node, attrs);
                     return;
                 }
 

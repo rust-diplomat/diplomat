@@ -12,7 +12,7 @@ export const RenderInfo = {
             funcName: "{{terminus.type_name}}.{{terminus.function_name}}",
             html: "rendering/{{terminus.type_name}}_{{terminus.function_name}}.html",
             parameters: [
-                {% for param in terminus.params %}
+                {% for param in terminus.out_params %}
                 {
                     name: "{{param.label}}",
                     type: "{{param.type_name}}"
