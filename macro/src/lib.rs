@@ -61,7 +61,8 @@ fn param_conversion(param: &ast::Param) -> Option<proc_macro2::TokenStream> {
 
             let tokens = quote! {
                 move | #(#cb_param_list,)* | unsafe {
-                    std::mem::transmute::<*const c_void, unsafe extern "C" fn (#(#cb_arg_type_list,)*) -> #cb_ret_type>(#cb_wrap_ident.data)(#(#cb_param_list,)*)
+                    std::mem::transmute::<unsafe extern "C" fn (*const c_void, ...) -> #cb_ret_type, unsafe extern "C" fn (*const c_void, #(#cb_arg_type_list,)*) -> #cb_ret_type>
+                        (#cb_wrap_ident.run_callback)(#cb_wrap_ident.data, #(#cb_param_list,)*)
                 }
             };
             Some(parse2(tokens).unwrap())
