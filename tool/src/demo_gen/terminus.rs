@@ -208,29 +208,45 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
 
         // TODO: I think we need to check for struct and opaque types as to whether or not these have attributes that label them as provided as a parameter.
         match param_type {
-            Type::Primitive(_) | Type::Enum(_) | Type::Slice(_) => {
-                let type_name = match param_type {
-                    Type::Primitive(p) => self.formatter.fmt_primitive_as_ffi(*p).to_string(),
-                    Type::Slice(hir::Slice::Str(..)) => self.formatter.fmt_string().to_string(),
-                    Type::Slice(hir::Slice::Primitive(_, p)) => {
-                        self.formatter.fmt_primitive_list_type(*p).to_string()
-                    }
-                    Type::Slice(hir::Slice::Strs(..)) => "Array<String>".to_string(),
-                    Type::Enum(e) => {
-                        let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
+            // Types we can easily coerce into out parameters (i.e., get easy user input from):
+            Type::Primitive(p) => {
+                self.append_out_param(
+                    param_name,
+                    self.formatter.fmt_primitive_as_ffi(*p).to_string(),
+                    node,
+                    attrs,
+                );
+            }
+            Type::Enum(e) => {
+                let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
 
-                        if e.resolve(self.tcx).attrs.disable {
-                            self.errors
-                                .push_error(format!("Found usage of disabled type {type_name}"))
-                        }
-
-                        type_name
-                    }
-                    _ => unreachable!("Unknown primitive type {:?}", param_type),
-                };
+                if e.resolve(self.tcx).attrs.disable {
+                    self.errors
+                        .push_error(format!("Found usage of disabled type {type_name}"))
+                }
 
                 self.append_out_param(param_name, type_name, node, attrs);
             }
+            Type::Slice(hir::Slice::Str(..)) => {
+                self.append_out_param(
+                    param_name,
+                    self.formatter.fmt_string().to_string(),
+                    node,
+                    attrs,
+                );
+            }
+            Type::Slice(hir::Slice::Primitive(_, p)) => {
+                self.append_out_param(
+                    param_name,
+                    self.formatter.fmt_primitive_list_type(*p).to_string(),
+                    node,
+                    attrs,
+                );
+            }
+            Type::Slice(hir::Slice::Strs(..)) => {
+                self.append_out_param(param_name, "Array<String>".to_string(), node, attrs);
+            }
+            // Types we can't easily coerce into out parameters:
             Type::Opaque(o) => {
                 let op = o.resolve(self.tcx);
                 let type_name = self.formatter.fmt_type_name(o.tcx_id.into());
