@@ -8,7 +8,7 @@
     - [Structs and enums](./structs.md)
     - [Options](./option.md)
     - [Results](./result.md)
-    - [Writeable](./writeable.md)
+    - [Returning Strings: Writeable](./writeable.md)
   - [Documentation](docs.md)
   - [Lifetimes](lifetimes.md)
 - [Backend developer guide](developer.md)
