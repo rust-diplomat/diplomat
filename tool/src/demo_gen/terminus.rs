@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use diplomat_core::hir::{self, DemoInfo, Method, Type, TypeContext};
+use diplomat_core::hir::{self, DemoInfo, Method, OpaqueDef, Type, TypeContext};
 
 use crate::{js::formatter::JSFormatter, ErrorStore};
 
@@ -240,65 +240,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
                     return;
                 }
 
-                // We need to find a constructor that we can call.
-                // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
-                let mut usable_constructor = false;
-
-                for method in op.methods.iter() {
-                    if usable_constructor {
-                        break;
-                    }
-
-                    let method_attrs = &method.attrs.demo_attrs;
-                    usable_constructor |= method_attrs.default_constructor;
-                    if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
-                        method.attrs.special_method
-                    {
-                        usable_constructor |= true;
-                    }
-
-                    if usable_constructor {
-                        self.terminus_info
-                            .imports
-                            .insert(self.formatter.fmt_import_statement(
-                                &type_name.clone(),
-                                false,
-                                "./js/".into(),
-                            ));
-
-                        let mut child = MethodDependency::new(
-                            self.get_constructor_js(type_name.to_string(), method),
-                        );
-
-                        let call = self.evaluate_constructor(method, &mut child);
-                        node.params.push(ParamInfo {
-                            js: call,
-                            label: "".into(),
-                            type_name: String::default(),
-                        });
-                    }
-                }
-                if !usable_constructor {
-                    self.errors.push_error(
-                        format!(
-                            "You must set a default constructor for the opaque type {}, \
-                            as it is required for the function {}. \
-                            Try adding #[diplomat::demo(default_constructor)] \
-                            above a method that you wish to be the default constructor.\
-                            You may also disable the type {0} in the backend: `#[diplomat::attr(demo_gen, disable)]`.", 
-                            op.name.as_str(), node.method_js)
-                    );
-                    node.params.push(ParamInfo {
-                        js: format!(
-                            "null \
-                            /*Could not find a usable constructor for {}. \
-                            Try adding #[diplomat::demo(default_constructor)]*/",
-                            op.name.as_str()
-                        ),
-                        label: String::default(),
-                        type_name: String::default(),
-                    });
-                }
+                self.find_op_constructor(op, type_name.to_string(), node);
             }
             Type::Struct(s) => {
                 let st = s.resolve(self.tcx);
@@ -386,6 +328,68 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
             )
         } else {
             format!("{owner_type_name}.{method_name}")
+        }
+    }
+
+    /// Find an opaque constructor that suits our purposes (see the `usable_constructor` variable), then evaluate it with [`RenderTerminusContext::evaluate_constructor`].
+    fn find_op_constructor(&mut self, op : &OpaqueDef, type_name: String, node : &mut MethodDependency) {
+        let mut usable_constructor = false;
+
+        for method in op.methods.iter() {
+            let method_attrs = &method.attrs.demo_attrs;
+
+            usable_constructor = method_attrs.default_constructor;
+            
+            // Piggybacking off of the #[diplomat::attr(constructor)] macro for now as well as test attributes in attrs.rs
+            if let Some(diplomat_core::hir::SpecialMethod::Constructor) =
+                method.attrs.special_method
+            {
+                usable_constructor |= true;
+            }
+            
+            if usable_constructor {
+                self.terminus_info
+                .imports
+                .insert(self.formatter.fmt_import_statement(
+                    &type_name.clone(),
+                    false,
+                    "./js/".into(),
+                ));
+
+                let mut child = MethodDependency::new(
+                    self.get_constructor_js(type_name.to_string(), method),
+                );
+
+                let call = self.evaluate_constructor(method, &mut child);
+                node.params.push(ParamInfo {
+                    js: call,
+                    label: "".into(),
+                    type_name: String::default(),
+                });
+                break;
+            }
+        }
+
+        if !usable_constructor {
+            self.errors.push_error(
+                format!(
+                    "You must set a default constructor for the opaque type {}, \
+                    as it is required for the function {}. \
+                    Try adding #[diplomat::demo(default_constructor)] \
+                    above a method that you wish to be the default constructor.\
+                    You may also disable the type {0} in the backend: `#[diplomat::attr(demo_gen, disable)]`.", 
+                    op.name.as_str(), node.method_js)
+            );
+            node.params.push(ParamInfo {
+                js: format!(
+                    "null \
+                    /*Could not find a usable constructor for {}. \
+                    Try adding #[diplomat::demo(default_constructor)]*/",
+                    op.name.as_str()
+                ),
+                label: String::default(),
+                type_name: String::default(),
+            });
         }
     }
 
