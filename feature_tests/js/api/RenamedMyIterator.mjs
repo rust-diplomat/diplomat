@@ -49,11 +49,11 @@ export class RenamedMyIterator {
 
     
     next() {
-    	const out = this.#iteratorNext();
+        const out = this.#iteratorNext();
     
-    	return {
-    		value: out,
-    		done: out === null,
-    	};
+        return {
+            value: out,
+            done: out === null,
+        };
     }
 }
