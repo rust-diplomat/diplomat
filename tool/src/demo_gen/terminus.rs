@@ -98,12 +98,12 @@ pub(super) struct TerminusInfo {
     /// Name of the function for the render engine to call
     pub function_name: String,
 
-    /// Parameters provided to us by the rendering engine. 
-    /// 
+    /// Parameters provided to us by the rendering engine.
+    ///
     /// These EITHER:
-    /// 
+    ///
     /// a. Require user input that the render engine provides to us. These are primitives and slices, like strings or floats.
-    /// 
+    ///
     /// b. Are too complicated for us to automagically setup ourselves. These are opaque types tagged with `#[diplomat::demo(external)]`.
     /// The current use case is for say, a singleton or single source of data that must not be repeated. But I'm sure there are other instances
     /// where you don't want us to guess how to construct an opaque, and wish to do it yourself.
@@ -385,13 +385,18 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     }
 
     /// Search through each field in the struct, and find constructors for each.
-    fn evaluate_struct_fields(&mut self, st : &StructDef, type_name: String, node: &mut MethodDependency) {
+    fn evaluate_struct_fields(
+        &mut self,
+        st: &StructDef,
+        type_name: String,
+        node: &mut MethodDependency,
+    ) {
         self.terminus_info
-        .imports
-        .insert(
-            self.formatter
-                .fmt_import_statement(&type_name, false, "./js/".into()),
-        );
+            .imports
+            .insert(
+                self.formatter
+                    .fmt_import_statement(&type_name, false, "./js/".into()),
+            );
 
         let mut child = MethodDependency::new("".to_string());
 
