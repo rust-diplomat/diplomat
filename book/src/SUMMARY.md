@@ -11,4 +11,5 @@
     - [Returning Strings: Writeable](./writeable.md)
   - [Documentation](docs.md)
   - [Lifetimes](lifetimes.md)
+  - [ABI naming/renaming](abi.md)
 - [Backend developer guide](developer.md)
