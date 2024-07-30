@@ -224,7 +224,7 @@ to implement them early in order to test your ability to correctly call methods.
 - [ ] [**slices**](https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.Slice.html)
   - [ ] primitive slices
   - [ ] str slices
-  - [ ] owned slices should be kotlin arrays
+  - [ ] owned slices
   - [ ] slices of strings
   - [ ] strings
 - [ ] borrows. This is probably one of the trickiest things, as you need to ensure that managed objects don't get
