@@ -120,7 +120,6 @@ pub mod ffi {
 
     // FIXME(#191): This test breaks the C++ codegen
     impl<'b, 'a: 'b> Bar<'b, 'a> {
-        #[diplomat::skip_if_ast]
         #[diplomat::attr(auto, getter)]
         pub fn foo(&'b self) -> &'b Foo<'a> {
             self.0

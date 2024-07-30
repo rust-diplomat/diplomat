@@ -37,13 +37,6 @@ pub struct Attrs {
     /// During AST attribute inheritance, HIR backend attributes are copied over from impls to their methods since the HIR does
     /// not see the impl blocks.
     pub attrs: Vec<DiplomatBackendAttr>,
-    /// AST backends only. For using features that may panic AST backends, like returning references.
-    ///
-    /// This isn't a regular attribute since AST backends do not handle regular attributes. Do not use
-    /// in HIR backends,
-    ///
-    /// Not inherited
-    pub skip_if_ast: bool,
 
     /// Renames to apply to the underlying C symbol. Can be found on methods, impls, and bridge modules, and is inherited.
     ///
@@ -60,7 +53,6 @@ impl Attrs {
         match attr {
             Attr::Cfg(attr) => self.cfg.push(attr),
             Attr::DiplomatBackend(attr) => self.attrs.push(attr),
-            Attr::SkipIfAst => self.skip_if_ast = true,
             Attr::CRename(rename) => self.abi_rename.extend(&rename),
         }
     }
@@ -84,8 +76,6 @@ impl Attrs {
             cfg: self.cfg.clone(),
 
             attrs,
-            // HIR only, for methods only. not inherited
-            skip_if_ast: false,
             abi_rename,
         }
     }
@@ -111,7 +101,6 @@ impl From<&[Attribute]> for Attrs {
 enum Attr {
     Cfg(Attribute),
     DiplomatBackend(DiplomatBackendAttr),
-    SkipIfAst,
     CRename(RenameAttr),
     // More goes here
 }
@@ -120,7 +109,6 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
-    let skipast: syn::Path = syn::parse_str("diplomat::skip_if_ast").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
@@ -131,8 +119,6 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
             ))
         } else if a.path() == &crename_attr {
             Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
-        } else if a.path() == &skipast {
-            Some(Attr::SkipIfAst)
         } else {
             None
         }
@@ -156,9 +142,6 @@ impl Serialize for Attrs {
         }
         if !self.attrs.is_empty() {
             state.serialize_field("attrs", &self.attrs)?;
-        }
-        if self.skip_if_ast {
-            state.serialize_field("skip_if_ast", &self.skip_if_ast)?;
         }
         if !self.abi_rename.is_empty() {
             state.serialize_field("abi_rename", &self.abi_rename)?;
