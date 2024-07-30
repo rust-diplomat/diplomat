@@ -98,7 +98,15 @@ pub(super) struct TerminusInfo {
     /// Name of the function for the render engine to call
     pub function_name: String,
 
-    /// Parameters that we require explicit user input from the render engine
+    /// Parameters provided to us by the rendering engine. 
+    /// 
+    /// These EITHER:
+    /// 
+    /// a. Require user input that the render engine provides to us. These are primitives and slices, like strings or floats.
+    /// 
+    /// b. Are too complicated for us to automagically setup ourselves. These are opaque types tagged with `#[diplomat::demo(external)]`.
+    /// The current use case is for say, a singleton or single source of data that must not be repeated. But I'm sure there are other instances
+    /// where you don't want us to guess how to construct an opaque, and wish to do it yourself.
     pub out_params: Vec<ParamInfo>,
 
     /// The type name of the type that this function belongs to.
@@ -155,6 +163,7 @@ impl<'ctx, 'tcx> RenderTerminusContext<'ctx, 'tcx> {
     }
 
     /// Helper function for quickly passing a parameter to both our node and the render terminus.
+    /// Appends to [TerminusInfo::out_params]
     fn append_out_param(
         &mut self,
         param_name: String,
