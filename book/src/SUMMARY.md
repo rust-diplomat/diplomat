@@ -22,4 +22,5 @@
     - [Indexing](attrs/indexing.md)
     - [Comparators](attrs/comparators.md)
     - [Stringifiers](attrs/stringifiers.md)
+  - [Notes on Diplomat and safety](safety.md)
 - [Backend developer guide](developer.md)
