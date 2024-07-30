@@ -43,12 +43,6 @@ void diplomat_buffer_write_destroy(DiplomatWrite* t);
 
 bool diplomat_is_str(const char* buf, size_t len);
 
-typedef struct DiplomatCallback {
-    const void* data;
-    void (*run_callback)(const void*, ...);
-    void (*destructor)(const void*);
-} DiplomatCallback;
-
 #define MAKE_SLICES(name, c_ty) \
     typedef struct Diplomat##name##View { \
         const c_ty* data; \
