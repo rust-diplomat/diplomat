@@ -44,7 +44,7 @@ const RESERVED: &[&str] = &[
 ];
 
 /// Helper class for us to format JS identifiers from the HIR.
-pub struct JSFormatter<'tcx> {
+pub(crate) struct JSFormatter<'tcx> {
     /// Per [`CFormatter`]'s documentation we use it for support.
     tcx: &'tcx TypeContext,
 
